@@ -20,7 +20,7 @@ export default function TimelineMenu({
 }) {
   const sortedItems = [...items].sort((a, b) => a.time - b.time);
   return (
-    <Card>
+    <Card className="p-0">
       <div className="flex flex-col w-full text-neutral-500 gap-5">
         <div className="flex flex-row font-bold text-sm justify-between">
           <div className="flex flex-row gap-2">

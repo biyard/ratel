@@ -1,10 +1,8 @@
 import { spaceKeys } from '@/constants';
-import { updateSpaceChangeVisibility } from '@/lib/api/ratel/spaces.v3';
-import { optimisticUpdate } from '@/lib/hook-utils';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Space } from '../types/space';
 
-export function useSpaceUpdateChangeVisibilityMutation<T extends Space>() {
+// FIXME: USE Space UPDATE API
+export function useSpaceUpdateChangeVisibilityMutation() {
   const qc = useQueryClient();
 
   const mutation = useMutation({
@@ -16,14 +14,10 @@ export function useSpaceUpdateChangeVisibilityMutation<T extends Space>() {
       spacePk: string;
       changeVisibility: boolean;
     }) => {
-      await updateSpaceChangeVisibility(spacePk, changeVisibility);
+      throw new Error('Not implemented');
     },
     onSuccess: async (_, { spacePk, changeVisibility }) => {
       const spaceQK = spaceKeys.detail(spacePk);
-      await optimisticUpdate<T>({ queryKey: spaceQK }, (space) => {
-        space.change_visibility = changeVisibility;
-        return space;
-      });
       await qc.invalidateQueries({ queryKey: spaceQK });
     },
   });

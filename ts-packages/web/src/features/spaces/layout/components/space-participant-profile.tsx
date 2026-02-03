@@ -22,23 +22,17 @@ export default function SpaceParticipantProfile({
     .slice(0, 2);
 
   return (
-    <Row
-      className="gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700"
-      data-testid="space-participant-profile"
-    >
+    <Row className="p-3 flex" data-testid="space-participant-profile">
       <Avatar className="size-12">
         <AvatarImage src={profileUrl} alt={displayName} />
         <AvatarFallback>{initials}</AvatarFallback>
       </Avatar>
-      <Col className="gap-1">
-        <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+      <Col className="gap-1 flex-1">
+        <div className="text-base font-semibold text-gray-900 dark:text-gray-100">
           {displayName}
         </div>
-        <div className="text-xs text-gray-600 dark:text-gray-400">
+        <div className="text-sm text-gray-600 dark:text-gray-400">
           @{username}
-        </div>
-        <div className="mt-1 text-xs text-blue-600 dark:text-blue-400">
-          Participant Profile
         </div>
       </Col>
     </Row>

@@ -286,6 +286,7 @@ export const routes = createBrowserRouter([
                 id: 'space-post-detail',
                 path: 'posts/:postPk',
                 Component: SpaceBoardPage,
+                handle: { hideHeader: true },
               },
             ],
           }, // End of Boards Feature

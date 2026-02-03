@@ -1,18 +1,15 @@
-import { useMemo, useCallback, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router';
-import { Post, Settings } from '@/components/icons';
+import { useMemo, useCallback } from 'react';
+import { useLocation, useNavigate } from 'react-router';
 import { route } from '@/route';
-import { SPACE_MENUS } from './space-menus';
-import { SideMenu } from './types/space-menu';
+import { ADMIN_MENUS, BASE_MENUS, SPACE_MENUS } from './space-menus';
 import { useSpaceById } from '../hooks/use-space-by-id';
-import { useSuspenseUserInfo } from '@/hooks/use-user-info';
+import { useUserInfo } from '@/hooks/use-user-info';
 import useFileSpace from '../files/hooks/use-file-space';
 import { SpaceType } from '../types/space-type';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { usePublishSpaceMutation } from '../hooks/use-publish-mutation';
 import { useStartSpaceMutation } from '../hooks/use-start-mutation';
-import { useFinishSpaceMutation } from '../hooks/use-finish-mutation';
+// import { useFinishSpaceMutation } from '../hooks/use-finish-mutation';
 import { useDeleteSpaceMutation } from '../hooks/use-delete-mutation';
 import { useParticipateSpaceMutation } from '../hooks/use-participate-space-mutation';
 import { logger } from '@/lib/logger';
@@ -20,8 +17,13 @@ import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { Space } from '../types/space';
 import { UserDetailResponse } from '@/lib/api/ratel/users.v3';
 import { FileResponse } from '../files/types/file-response';
-import { SpaceStatus } from '../types/space-common';
-import PublishSpaceModal from '../modals/space-publish-modal';
+import { SpaceVisibility } from '../types/space-common';
+import PublishSpaceModal, { PublishType } from '../modals/space-publish-modal';
+import SpaceDeleteModal from '../modals/space-delete-modal';
+import SpaceStartModal from '../modals/space-start-modal';
+import { SpaceParticipantProfileProps } from './components/space-participant-profile';
+import { type I18nSpaceLayout, useSpaceLayoutI18n } from './space-layout-i18n';
+import { useSpaceUpdateTitleMutation } from '../hooks/use-space-update-title-mutation';
 
 export type SideMenuProps = {
   Icon: React.ComponentType<React.ComponentProps<'svg'>>;
@@ -29,148 +31,159 @@ export type SideMenuProps = {
   label: string;
 };
 
+export enum Role {
+  Admin,
+  Participant,
+  Candidate,
+  Viewer,
+}
+
+export interface LayoutAction {
+  label: string;
+  onClick: () => Promise<void> | void;
+}
+
 export interface SpaceLayoutController {
   space: Space;
   user: UserDetailResponse | null;
+  profile: SpaceParticipantProfileProps;
   files: FileResponse;
   menus: SideMenuProps[];
-  adminMenus: SideMenuProps[];
+  currentMenu: SideMenuProps;
   timelineItems: Array<{ label: string; time: number }>;
   navigate: ReturnType<typeof useNavigate>;
   popup: ReturnType<typeof usePopup>;
-  t: ReturnType<typeof useTranslation>['t'];
-  handlePublish: (publishType: string) => Promise<void>;
-  handleStart: () => Promise<void>;
-  handleFinish: () => Promise<void>;
-  handleDelete: () => Promise<void>;
-  handleActionPrivate: () => Promise<void>;
-  handleActionPublic: () => Promise<void>;
-  adminActions: Array<{ label: string; onClick: () => Promise<void> }>;
-  actions: Array<{ label: string; onClick: () => Promise<void> }>;
-  shouldShowLayout: boolean;
-  isAdmin: boolean;
+  i18n: I18nSpaceLayout;
+  adminActions: LayoutAction[];
+  candidateActions: LayoutAction[];
+  participantActions: LayoutAction[];
+
+  role: Role;
   handleTitleChange: (title: string) => void;
-  // Requirements management
-  requirementIndex: number;
-  setRequirementIndex: (index: number) => void;
-  handleNextRequirement: () => void;
-  shouldHideLayout: boolean;
-  setShouldHideLayout: (hide: boolean) => void;
 }
 
 export function useSpaceLayoutController(
   spacePk: string,
 ): SpaceLayoutController {
-  const { t } = useTranslation('Space');
+  const i18n = useSpaceLayoutI18n();
   const { data: space } = useSpaceById(spacePk);
-  const { data: user } = useSuspenseUserInfo();
+  const { data: user } = useUserInfo();
   const { data: files } = useFileSpace(spacePk);
   const navigate = useNavigate();
   const popup = usePopup();
   const publishSpace = usePublishSpaceMutation();
   const startSpace = useStartSpaceMutation();
-  const finishSpace = useFinishSpaceMutation();
+  // const finishSpace = useFinishSpaceMutation();
   const deleteSpace = useDeleteSpaceMutation();
   const participateSpace = useParticipateSpaceMutation();
+  const updateSpaceTitle = useSpaceUpdateTitleMutation();
 
-  // Requirements management state
-  const [requirementIndex, setRequirementIndex] = useState(() =>
-    space.requirements.findIndex((el) => !el.responded),
-  );
-  const [shouldHideLayout, setShouldHideLayout] = useState(false);
+  const location = useLocation();
 
-  const isMenuVisible = useCallback(
-    (menu: SideMenu): boolean => {
-      if (menu.label === 'menu_files') {
-        return files.files.length !== 0 || space.isAdmin();
-      }
-
-      if (menu.visible) {
-        return menu.visible(space);
-      }
-
-      return true;
-    },
-    [space, files],
-  );
-
-  const adminMenus: SideMenuProps[] = useMemo(
-    () => [
-      {
-        Icon: Settings,
-        to: route.spaceSetting(space.pk),
-        label: t('menu_admin_settings'),
-      },
-    ],
-    [space.pk, t],
-  );
-
-  const menus: SideMenuProps[] = useMemo(() => {
-    const baseMenus: SideMenuProps[] = [
-      {
-        Icon: Post,
-        to: route.spaceByType(space.spaceType, space.pk),
-        label: t('menu_overview'),
-      },
-    ];
-
-    const typeMenus = SPACE_MENUS[space.spaceType] || [];
-    const filteredMenus = typeMenus
-      .filter((menu) => isMenuVisible(menu))
-      .map((menu) => ({
-        Icon: menu.Icon,
-        to: typeof menu.to === 'function' ? menu.to(space) : menu.to,
-        label: t(menu.label),
-      }));
-
-    const allMenus = [...baseMenus, ...filteredMenus];
-
+  const role = useMemo(() => {
     if (space.isAdmin()) {
-      return [...allMenus, ...adminMenus];
+      // Admin
+      return Role.Admin;
     }
 
-    return allMenus;
-  }, [space, t, isMenuVisible, adminMenus]);
+    if (space.participated) {
+      // Already participated
+      return Role.Participant;
+    }
+
+    if (space.canParticipate && !space.blockParticipate) {
+      // can_participate === true
+      return Role.Candidate;
+    }
+    // 참여 불가 / 유저 액션으로 처리 불가능한 상태
+    // canParticipate === false || blockParticipate == true
+    return Role.Viewer;
+  }, [space]);
+
+  let profile: SpaceParticipantProfileProps | null = null;
+  if (user) {
+    profile = {
+      profileUrl: user.profile_url,
+      displayName: user.nickname,
+      username: user.username,
+    };
+  }
+  if (role === Role.Participant && space.anonymous_participation) {
+    profile = {
+      profileUrl: space.participantProfileUrl,
+      displayName: space.participantDisplayName,
+      username: space.participantUsername,
+    };
+  }
+
+  const menus: SideMenuProps[] = useMemo(() => {
+    const items = [...BASE_MENUS, ...(SPACE_MENUS[space.spaceType] || [])];
+    if (space.isAdmin()) {
+      items.push(...ADMIN_MENUS);
+    }
+    return items
+      .filter((menu) => {
+        if (!menu.visible) {
+          return true;
+        }
+        return menu.visible(space);
+      })
+      .map((menu) => ({
+        Icon: menu.Icon,
+        to: menu.to(space),
+        label: i18n[menu.label],
+      }));
+  }, [space, i18n]);
 
   const timelineItems = useMemo(
     () => [
       {
-        label: t('timeline_created_at_label'),
+        label: i18n.timeline_created_at_label,
         time: space.createdAt,
       },
     ],
-    [space.createdAt, t],
+    [space.createdAt, i18n.timeline_created_at_label],
   );
-
-  const handleActionPublish = async () => {
-    logger.debug('Action publish triggered');
-
-    popup
-      .open(<PublishSpaceModal onPublish={handlePublish} />)
-      .withTitle(t('publish_space'))
-      .withoutBackdropClose();
-  };
+  const currentMenu = useMemo(() => {
+    const currentPath = location.pathname;
+    // 현재 경로와 매칭되는 메뉴 중 가장 긴 경로를 찾기 (더 구체적인 메뉴 우선)
+    return menus
+      .filter((menu) => currentPath.startsWith(menu.to))
+      .sort((a, b) => b.to.length - a.to.length)[0];
+  }, [menus, location.pathname]);
 
   const handlePublish = useCallback(
-    async (publishType: string) => {
-      logger.debug('Publishing space with type:', publishType);
-
+    async (publishType: PublishType) => {
+      const visibility: SpaceVisibility = { type: publishType };
       try {
         await publishSpace.mutateAsync({
           spacePk: space.pk,
-          visibility: space.visibility,
+          visibility,
         });
 
-        showSuccessToast(t('success_publish_space'));
+        showSuccessToast(i18n.toast_publish_success);
       } catch (err) {
         logger.error('publish space failed: ', err);
-        showErrorToast(t('failed_publish_space'));
+        showErrorToast(i18n.toast_publish_failed);
       } finally {
         popup.close();
       }
     },
-    [publishSpace, space.pk, space.visibility, t, popup],
+    [
+      publishSpace,
+      space.pk,
+      i18n.toast_publish_success,
+      i18n.toast_publish_failed,
+      popup,
+    ],
   );
+
+  const handleActionPublish = useCallback(async () => {
+    popup
+      .open(<PublishSpaceModal onPublish={handlePublish} />)
+      .withTitle(i18n.publish_space_title)
+      .withoutBackdropClose();
+  }, [popup, handlePublish, i18n.publish_space_title]);
 
   const handleStart = useCallback(async () => {
     try {
@@ -179,30 +192,36 @@ export function useSpaceLayoutController(
         block: true,
       });
 
-      showSuccessToast(t('success_start_space'));
+      showSuccessToast(i18n.toast_start_success);
     } catch (err) {
       logger.error('start space failed: ', err);
-      showErrorToast(t('failed_start_space'));
+      showErrorToast(i18n.toast_start_failed);
     } finally {
       popup.close();
     }
-  }, [space.pk, startSpace, popup, t]);
+  }, [
+    space.pk,
+    startSpace,
+    popup,
+    i18n.toast_start_success,
+    i18n.toast_start_failed,
+  ]);
 
-  const handleFinish = useCallback(async () => {
-    try {
-      await finishSpace.mutateAsync({
-        spacePk: space.pk,
-        block: true,
-      });
+  // const handleFinish = useCallback(async () => {
+  //   try {
+  //     await finishSpace.mutateAsync({
+  //       spacePk: space.pk,
+  //       block: true,
+  //     });
 
-      showSuccessToast(t('success_finish_space'));
-    } catch (err) {
-      logger.error('finish space failed: ', err);
-      showErrorToast(t('failed_finish_space'));
-    } finally {
-      popup.close();
-    }
-  }, [space.pk, finishSpace, popup, t]);
+  //     showSuccessToast(t('success_finish_space'));
+  //   } catch (err) {
+  //     logger.error('finish space failed: ', err);
+  //     showErrorToast(t('failed_finish_space'));
+  //   } finally {
+  //     popup.close();
+  //   }
+  // }, [space.pk, finishSpace, popup, t]);
 
   const handleDelete = useCallback(async () => {
     try {
@@ -211,28 +230,50 @@ export function useSpaceLayoutController(
       });
 
       navigate(route.home());
-      showSuccessToast(t('success_delete_space'));
+      showSuccessToast(i18n.toast_delete_success);
     } catch (err) {
       logger.error('delete space failed: ', err);
-      showErrorToast(t('failed_delete_space'));
+      showErrorToast(i18n.toast_delete_failed);
     } finally {
       popup.close();
     }
-  }, [space.pk, deleteSpace, navigate, popup, t]);
+  }, [
+    deleteSpace,
+    i18n.toast_delete_failed,
+    i18n.toast_delete_success,
+    navigate,
+    popup,
+    space.pk,
+  ]);
 
-  const handleActionPrivate = useCallback(async () => {
-    await publishSpace.mutateAsync({
-      spacePk: space.pk,
-      visibility: { type: 'PRIVATE' },
-    });
-  }, [space.pk, publishSpace]);
+  const handleActionDelete = useCallback(async () => {
+    popup
+      .open(
+        <SpaceDeleteModal
+          spaceName={space.title}
+          onDelete={handleDelete}
+          onClose={() => {
+            popup.close();
+          }}
+        />,
+      )
+      .withTitle(i18n.delete_space_title)
+      .withoutBackdropClose();
+  }, [popup, handleDelete, space.title, i18n.delete_space_title]);
 
-  const handleActionPublic = useCallback(async () => {
-    await publishSpace.mutateAsync({
-      spacePk: space.pk,
-      visibility: { type: 'PUBLIC' },
-    });
-  }, [space.pk, publishSpace]);
+  const handleActionStart = useCallback(async () => {
+    popup
+      .open(
+        <SpaceStartModal
+          onStarted={handleStart}
+          onClose={() => {
+            popup.close();
+          }}
+        />,
+      )
+      .withTitle(i18n.start_space_title)
+      .withoutBackdropClose();
+  }, [popup, handleStart, i18n.start_space_title]);
 
   const handleParticipate = useCallback(async () => {
     logger.debug('handleParticipate is called');
@@ -246,55 +287,30 @@ export function useSpaceLayoutController(
       });
 
       logger.debug('Participation successful:', result);
-      showSuccessToast(t('success_participate_space'));
+      showSuccessToast(i18n.toast_participate_success);
     } catch (error) {
       logger.error('Failed to participate in space:', error);
-      showErrorToast(t('failed_participate_space'));
+      showErrorToast(i18n.toast_participate_failed);
     }
-  }, [space.pk, participateSpace, t]);
-
-  const canParticipate = useCallback(() => {
-    // User can participate if:
-    // 1. User is authenticated
-    // 2. User is not already a space admin
-    // 3. User is not already an anonymous space participant
-    if (space.participated) {
-      return false;
-    }
-
-    if (space.isAdmin()) {
-      return false;
-    }
-
-    return space.canParticipate;
-  }, [space]);
+  }, [
+    participateSpace,
+    space.pk,
+    i18n.toast_participate_success,
+    i18n.toast_participate_failed,
+  ]);
 
   const adminActions = useMemo(() => {
-    const ret: Array<{ label: string; onClick: () => Promise<void> }> = [
+    const ret: LayoutAction[] = [
       {
-        label: t('delete'),
-        onClick: handleDelete,
+        label: i18n.action_admin_delete,
+        onClick: handleActionDelete,
       },
     ];
 
-    if (space.isInProgress && space.isPublic && space.change_visibility) {
-      ret.unshift({
-        label: t('change_private'),
-        onClick: handleActionPrivate,
-      });
-    }
-
-    if (space.isInProgress && !space.isPublic && space.change_visibility) {
-      ret.unshift({
-        label: t('change_public'),
-        onClick: handleActionPublic,
-      });
-    }
-
     if (space.isInProgress && space.spaceType === SpaceType.Deliberation) {
       ret.unshift({
-        label: t('started'),
-        onClick: handleStart,
+        label: i18n.action_admin_start,
+        onClick: handleActionStart,
       });
     }
 
@@ -307,103 +323,92 @@ export function useSpaceLayoutController(
 
     if (space.isDraft) {
       ret.unshift({
-        label: t('publish'),
+        label: i18n.action_admin_publish,
         onClick: handleActionPublish,
       });
     }
 
     return ret;
   }, [
-    t,
-    handleDelete,
+    i18n.action_admin_delete,
+    i18n.action_admin_start,
+    i18n.action_admin_publish,
+    handleActionDelete,
     space.isInProgress,
-    space.isPublic,
-    space.change_visibility,
     space.spaceType,
     space.isDraft,
-    handleActionPrivate,
-    handleActionPublic,
-    handleStart,
+    handleActionStart,
     handleActionPublish,
   ]);
 
-  const viewerActions = useMemo(() => {
-    const ret: Array<{ label: string; onClick: () => Promise<void> }> = [
+  const candidateActions = useMemo(() => {
+    const ret: LayoutAction[] = [
       {
-        label: t('action_participate'),
+        label: i18n.action_candidate_participate,
         onClick: handleParticipate,
+      },
+      {
+        label: i18n.action_candidate_credentials,
+        onClick: () => {
+          navigate(route.credentials());
+        },
       },
     ];
 
     return ret;
-  }, [t, handleParticipate]);
+  }, [
+    i18n.action_candidate_participate,
+    i18n.action_candidate_credentials,
+    handleParticipate,
+    navigate,
+  ]);
 
   const participantActions = useMemo(() => {
-    const ret: Array<{ label: string; onClick: () => Promise<void> }> = [];
+    const ret: LayoutAction[] = [];
 
     return ret;
   }, []);
 
-  const actions = useMemo(() => {
-    if (space.isAdmin()) {
-      return adminActions;
-    } else if (
-      space.shouldParticipateManually() &&
-      canParticipate() &&
-      space.status === SpaceStatus.InProgress
-    ) {
-      return viewerActions;
-    }
+  const handleTitleChange = useCallback(
+    async (title: string) => {
+      logger.debug('Title change requested:', title);
+      try {
+        await updateSpaceTitle.mutateAsync({
+          spacePk: space.pk,
+          title,
+        });
+        showSuccessToast(i18n.toast_update_title_success);
+      } catch (error) {
+        logger.error('Failed to update space title', error);
+        showErrorToast(`${i18n.toast_update_title_failed}: ${error}`);
+      }
+    },
+    [
+      i18n.toast_update_title_failed,
+      i18n.toast_update_title_success,
+      space.pk,
+      updateSpaceTitle,
+    ],
+  );
 
-    return participantActions;
-  }, [space, adminActions, viewerActions, participantActions, canParticipate]);
-
-  const handleNextRequirement = useCallback(() => {
-    logger.debug(
-      'handleNextRequirement called, current index:',
-      requirementIndex,
-    );
-
-    const currentIdx = requirementIndex;
-
-    if (currentIdx >= space.requirements.length - 1) {
-      setRequirementIndex(currentIdx + 1);
-    } else {
-      // Navigate to next requirement or complete
-      setRequirementIndex(currentIdx + 1);
-    }
-  }, [requirementIndex, space.requirements.length]);
-
-  const handleTitleChange = useCallback((title: string) => {
-    // TODO: Implement title change logic
-    logger.debug('Title change requested:', title);
-  }, []);
+  //
 
   return {
     space,
     user,
     files,
     menus,
-    adminMenus,
     timelineItems,
     navigate,
     popup,
-    t,
-    handlePublish,
-    handleStart,
-    handleFinish,
-    handleDelete,
-    handleActionPrivate,
-    handleActionPublic,
-    adminActions,
-    actions,
-    shouldShowLayout: !shouldHideLayout,
-    isAdmin: space.isAdmin(),
+    profile,
+    i18n,
+
     handleTitleChange,
-    requirementIndex,
-    setRequirementIndex,
-    handleNextRequirement,
-    shouldHideLayout,
-    setShouldHideLayout,
+    role,
+    currentMenu,
+    adminActions,
+    candidateActions,
+    participantActions,
   };
 }
