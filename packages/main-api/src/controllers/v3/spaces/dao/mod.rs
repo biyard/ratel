@@ -7,8 +7,8 @@ pub use get_space_dao::*;
 pub mod list_space_dao_candidates;
 pub use list_space_dao_candidates::*;
 
-pub mod list_space_dao_reward;
-pub use list_space_dao_reward::*;
+pub mod get_space_dao_reward;
+pub use get_space_dao_reward::*;
 
 pub mod create_space_dao_reward;
 pub use create_space_dao_reward::*;
@@ -37,7 +37,7 @@ pub fn route() -> Router<AppState> {
         )
         .route(
             "/reward",
-            get(list_space_dao_reward_handler)
+            get(get_space_dao_reward_handler)
                 .post(create_space_dao_reward_handler)
                 .patch(update_space_dao_reward_handler),
         )

@@ -11,7 +11,6 @@ import { config } from '@/config';
 export function SpaceDaoViewerPage({ spacePk }: SpacePathProps) {
   logger.debug(`SpaceDaoViewerPage: spacePk=${spacePk}`);
   const { data: dao, isLoading } = useSpaceDao(spacePk);
-  const ctrl = useSpaceDaoViewerController(spacePk, dao);
   const { data: tokenList, isLoading: tokensLoading } = useSpaceDaoTokens(
     spacePk,
     50,
@@ -34,6 +33,27 @@ export function SpaceDaoViewerPage({ spacePk }: SpacePathProps) {
       return aIsUsdt ? -1 : 1;
     });
   }, [tokenList?.items]);
+
+  const selectedTokenItem =
+    orderedTokens.find(
+      (item) =>
+        item.token_address.toLowerCase() === selectedToken?.toLowerCase(),
+    ) ?? null;
+  const fallbackIsUsdt =
+    Boolean(selectedToken && config.usdt_address) &&
+    selectedToken?.toLowerCase() === config.usdt_address?.toLowerCase();
+  const selectedTokenBalance =
+    selectedTokenItem?.balance ?? (fallbackIsUsdt ? '0' : null);
+  const selectedTokenDecimals =
+    selectedTokenItem?.decimals ?? (fallbackIsUsdt ? 6 : null);
+
+  const ctrl = useSpaceDaoViewerController(
+    spacePk,
+    dao,
+    selectedToken,
+    selectedTokenBalance,
+    selectedTokenDecimals,
+  );
 
   useEffect(() => {
     if (selectedToken) return;
@@ -73,16 +93,19 @@ export function SpaceDaoViewerPage({ spacePk }: SpacePathProps) {
         dao={dao}
         recipientCount={ctrl.chainRecipientCount.get()}
         rewardRecipients={ctrl.visibleRewardRecipients}
-        rewardBookmark={ctrl.rewardRecipients?.bookmark ?? null}
+        rewardRemainingCount={ctrl.rewardMeta?.remaining_count ?? null}
+        rewardTotalCount={ctrl.rewardMeta?.total_count ?? null}
         rewardLoading={ctrl.rewardRecipientsLoading}
-        canPrevReward={ctrl.canPrevReward}
-        canNextReward={ctrl.canNextReward}
-        onPrevReward={ctrl.handlePrevReward}
-        onNextReward={ctrl.handleNextReward}
         showRewardRecipients={Boolean(ctrl.space?.isFinished)}
         showEdit={false}
-        canDistributeReward={ctrl.canDistributeReward}
-        isDistributingPage={ctrl.isDistributingPage.get()}
+        currentUserEvm={ctrl.currentUserEvm}
+        claimableAmount={ctrl.perRecipientDisplay}
+        isClaimable={ctrl.canClaimReward}
+        isClaiming={ctrl.isClaiming.get()}
+        onClaimReward={async (rewardSk) => {
+          await ctrl.handleClaimReward(rewardSk);
+          refreshTokens.mutate();
+        }}
         tokens={orderedTokens}
         selectedToken={selectedToken}
         onSelectToken={setSelectedToken}

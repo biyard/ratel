@@ -42,7 +42,9 @@ describe("SpaceDAO", function () {
 
       const config = await dao.getRewardDistributionConfig();
       expect(config.mode).to.equal(rewardDistributionConfig.mode);
-      expect(config.numOfTargets).to.equal(rewardDistributionConfig.numOfTargets);
+      expect(config.numOfTargets).to.equal(
+        rewardDistributionConfig.numOfTargets
+      );
     });
 
     it("reverts when admin count is less than 3", async function () {
@@ -141,78 +143,66 @@ describe("SpaceDAO", function () {
     });
   });
 
-  describe("Distribution", function () {
-    it("reverts for non-admins and invalid inputs", async function () {
-      const { dao, user } = await loadFixture(deploySpaceDaoFixture);
-      const recipients = [ethers.Wallet.createRandom().address];
-
-      await expect(
-        dao.connect(user).distribute(ethers.ZeroAddress, recipients, 1)
-      ).to.be.revertedWith("SpaceDAO: admin only");
-    });
-
-    it("reverts on invalid token, recipients, or value", async function () {
+  describe("Reward Claim", function () {
+    it("reverts on invalid token", async function () {
       const { dao, admin1 } = await loadFixture(deploySpaceDaoFixture);
-      const recipients = [ethers.Wallet.createRandom().address];
-
-      await expect(
-        dao.connect(admin1).distribute(ethers.ZeroAddress, recipients, 1)
-      ).to.be.revertedWith("SpaceDAO: invalid token");
-
-      await expect(
-        dao
-          .connect(admin1)
-          .distribute(ethers.Wallet.createRandom().address, [], 1)
-      ).to.be.revertedWith("SpaceDAO: empty recipients");
-
-      await expect(
-        dao
-          .connect(admin1)
-          .distribute(ethers.Wallet.createRandom().address, recipients, 0)
-      ).to.be.revertedWith("SpaceDAO: invalid value");
-    });
-
-    it("reverts when balance is insufficient or recipient is invalid", async function () {
-      const { dao, admin1, token } = await loadFixture(deploySpaceDaoFixture);
       const recipients = [ethers.Wallet.createRandom().address];
 
       await dao.connect(admin1).setRewardRecipientCount(recipients.length);
       await dao.connect(admin1).selectRewardRecipients(recipients);
 
       await expect(
-        dao.connect(admin1).distribute(await token.getAddress(), recipients, 1)
-      ).to.be.revertedWith("SpaceDAO: insufficient balance");
-
-      const amount = ethers.parseUnits("10", 18);
-      await token.transfer(await dao.getAddress(), amount);
-      await expect(
-        dao
-          .connect(admin1)
-          .distribute(await token.getAddress(), [ethers.ZeroAddress], amount)
-      ).to.be.revertedWith("SpaceDAO: invalid recipient");
+        dao.connect(admin1).claimReward(ethers.ZeroAddress)
+      ).to.be.revertedWith("SpaceDAO: invalid token");
     });
 
-    it("distributes tokens to recipients", async function () {
-      const { dao, admin1, token } = await loadFixture(deploySpaceDaoFixture);
-      const recipients = Array.from(
-        { length: 3 },
-        () => ethers.Wallet.createRandom().address
+    it("reverts when caller is not selected or already claimed", async function () {
+      const { dao, admin1, token, user } = await loadFixture(
+        deploySpaceDaoFixture
       );
+      const recipients = [admin1.address];
+
+      await dao.connect(admin1).setRewardRecipientCount(recipients.length);
+      await dao.connect(admin1).selectRewardRecipients(recipients);
+
+      await expect(
+        dao.connect(user).claimReward(await token.getAddress())
+      ).to.be.revertedWith("SpaceDAO: not selected");
+
+      const amount = ethers.parseUnits("5", 18);
+      await token.transfer(await dao.getAddress(), amount);
+      await dao.connect(admin1).claimReward(await token.getAddress());
+
+      await expect(
+        dao.connect(admin1).claimReward(await token.getAddress())
+      ).to.be.revertedWith("SpaceDAO: reward finished");
+    });
+
+    it("reverts when balance is zero", async function () {
+      const { dao, admin1, token } = await loadFixture(deploySpaceDaoFixture);
+      const recipients = [admin1.address];
+
+      await dao.connect(admin1).setRewardRecipientCount(recipients.length);
+      await dao.connect(admin1).selectRewardRecipients(recipients);
+
+      await expect(
+        dao.connect(admin1).claimReward(await token.getAddress())
+      ).to.be.revertedWith("SpaceDAO: invalid value");
+    });
+
+    it("allows selected recipient to claim once", async function () {
+      const { dao, admin1, token } = await loadFixture(deploySpaceDaoFixture);
+      const recipients = [admin1.address];
 
       await dao.connect(admin1).setRewardRecipientCount(recipients.length);
       await dao.connect(admin1).selectRewardRecipients(recipients);
 
       const value = ethers.parseUnits("5", 18);
-      const total = value * BigInt(recipients.length);
-      await token.transfer(await dao.getAddress(), total);
+      await token.transfer(await dao.getAddress(), value);
 
-      await dao
-        .connect(admin1)
-        .distribute(await token.getAddress(), recipients, value);
+      await dao.connect(admin1).claimReward(await token.getAddress());
 
-      for (const addr of recipients) {
-        expect(await token.balanceOf(addr)).to.equal(value);
-      }
+      expect(await token.balanceOf(admin1.address)).to.equal(value);
       expect(await token.balanceOf(await dao.getAddress())).to.equal(0);
     });
   });

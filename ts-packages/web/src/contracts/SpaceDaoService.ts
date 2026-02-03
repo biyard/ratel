@@ -15,6 +15,10 @@ const REWARD_DISTRIBUTION_ABI = [
   'function setRewardRecipientCount(uint256 numOfTargets)',
   'function selectRewardRecipients(address[] candidates) returns (address[])',
   'function getRewardRecipients() view returns (address[])',
+  'function getClaimAmount(address token) view returns (uint256)',
+  'function isRewardRecipient(address account) view returns (bool)',
+  'function isRewarded(address account) view returns (bool)',
+  'function claimReward(address token)',
 ];
 
 export interface CreateSpaceDAOResult {
@@ -132,6 +136,37 @@ export class SpaceDaoService {
     return Array.isArray(addresses) ? addresses : [];
   }
 
+  async isRewardRecipient(
+    daoAddress: string,
+    account: string,
+  ): Promise<boolean> {
+    const dao = new ethers.Contract(
+      daoAddress,
+      REWARD_DISTRIBUTION_ABI,
+      this.provider,
+    );
+    return Boolean(await dao.isRewardRecipient(account));
+  }
+
+  async isRewarded(daoAddress: string, account: string): Promise<boolean> {
+    const dao = new ethers.Contract(
+      daoAddress,
+      REWARD_DISTRIBUTION_ABI,
+      this.provider,
+    );
+    return Boolean(await dao.isRewarded(account));
+  }
+
+  async getClaimAmount(daoAddress: string, token: string): Promise<bigint> {
+    const dao = new ethers.Contract(
+      daoAddress,
+      REWARD_DISTRIBUTION_ABI,
+      this.provider,
+    );
+    const amount = await dao.getClaimAmount(token);
+    return BigInt(amount);
+  }
+
   async spaceDeposit(
     daoAddress: string,
     amount: string | bigint,
@@ -194,6 +229,20 @@ export class SpaceDaoService {
     );
 
     const tx = await dao.distribute(token, recipients, value);
+    const receipt = await tx.wait();
+    return receipt.hash;
+  }
+
+  async claimReward(daoAddress: string, token: string): Promise<string> {
+    if (!this.signer) await this.connectWallet();
+
+    const dao = new ethers.Contract(
+      daoAddress,
+      REWARD_DISTRIBUTION_ABI,
+      this.signer,
+    );
+
+    const tx = await dao.claimReward(token);
     const receipt = await tx.wait();
     return receipt.hash;
   }

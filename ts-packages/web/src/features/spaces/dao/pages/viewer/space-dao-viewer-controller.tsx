@@ -6,12 +6,19 @@ import { Space } from '@/features/spaces/types/space';
 import { SpaceDaoResponse } from '@/features/spaces/dao/hooks/use-space-dao';
 import { State } from '@/types/state';
 import {
-  SpaceDaoRewardListResponse,
+  SpaceDaoRewardResponseBody,
   useSpaceDaoReward,
 } from '@/features/spaces/dao/hooks/use-space-dao-reward';
 import { SpaceDaoService } from '@/contracts/SpaceDaoService';
 import { config } from '@/config';
 import { ethers } from 'ethers';
+import { useUserInfo } from '@/hooks/use-user-info';
+import { showErrorToast, showInfoToast, showSuccessToast } from '@/lib/toast';
+import {
+  getKaiaSigner,
+  KaiaWalletError,
+} from '@/lib/service/kaia-wallet-service';
+import { useUpdateSpaceDaoRewardMutation } from '@/features/spaces/dao/hooks/use-update-space-dao-reward-mutation';
 
 export class SpaceDaoViewerController {
   constructor(
@@ -21,41 +28,72 @@ export class SpaceDaoViewerController {
     public t: TFunction<'SpaceDaoEditor', undefined>,
     public provider: ethers.JsonRpcProvider | null,
     public chainRecipientCount: State<string | null>,
-    public rewardPageIndex: State<number>,
-    public rewardPages: SpaceDaoRewardListResponse[] | undefined,
+    public rewardData: SpaceDaoRewardResponseBody | undefined,
     public rewardLoading: boolean,
-    public rewardHasNextPage: boolean,
-    public rewardFetchingNextPage: boolean,
-    public fetchNextRewardPage: () => Promise<unknown>,
-    public isDistributingPage: State<boolean>,
+    public currentUserEvm: string | null,
+    public isRewardRecipient: State<boolean>,
+    public isRewarded: State<boolean>,
+    public isClaiming: State<boolean>,
+    public claimAmountRaw: State<string | null>,
+    public selectedToken: string | null,
+    public tokenBalance: string | null,
+    public tokenDecimals: number | null,
+    public updateRewardMutation: ReturnType<
+      typeof useUpdateSpaceDaoRewardMutation
+    >,
   ) {}
-
-  get canDistributeReward() {
-    return this.space?.isAdmin?.() ?? false;
-  }
-
-  get canPrevReward() {
-    return this.rewardPageIndex.get() > 0;
-  }
-
-  get canNextReward() {
-    const index = this.rewardPageIndex.get();
-    const pages = this.rewardPages ?? [];
-    return index < pages.length - 1 || this.rewardHasNextPage;
-  }
 
   get visibleRewardRecipients() {
     return this.rewardRecipients?.items ?? [];
   }
 
   get rewardRecipients() {
-    const pages = this.rewardPages ?? [];
-    const index = this.rewardPageIndex.get();
-    return pages[index] ?? pages[0];
+    const item = this.rewardData?.item;
+    return item ? { items: [item] } : undefined;
   }
 
   get rewardRecipientsLoading() {
-    return this.rewardLoading || this.rewardFetchingNextPage;
+    return this.rewardLoading;
+  }
+
+  get rewardMeta() {
+    return this.rewardData;
+  }
+
+  get remainingRewardCount() {
+    const meta = this.rewardMeta;
+    const remaining = meta?.remaining_count;
+    if (remaining != null && remaining > 0) return remaining;
+    const total = meta?.total_count;
+    if (total != null && total > 0) return total;
+    return 0;
+  }
+
+  get perRecipientAmount() {
+    const raw = this.claimAmountRaw.get();
+    if (!raw) return null;
+    try {
+      return BigInt(raw);
+    } catch {
+      return null;
+    }
+  }
+
+  get perRecipientDisplay() {
+    const perRecipient = this.perRecipientAmount;
+    const decimals = this.tokenDecimals ?? 0;
+    if (perRecipient == null) return null;
+    try {
+      return ethers.formatUnits(perRecipient, decimals);
+    } catch {
+      return perRecipient.toString();
+    }
+  }
+
+  get canClaimReward() {
+    if (!this.currentUserEvm) return false;
+    if (!this.isRewardRecipient.get() || this.isRewarded.get()) return false;
+    return this.perRecipientAmount != null && this.perRecipientAmount > 0n;
   }
 
   fetchRecipientCount = async () => {
@@ -74,41 +112,81 @@ export class SpaceDaoViewerController {
     }
   };
 
-  handleNextReward = async () => {
-    const pages = this.rewardPages ?? [];
-    const index = this.rewardPageIndex.get();
-    if (index < pages.length - 1) {
-      this.rewardPageIndex.set(index + 1);
+  handleClaimReward = async (rewardSk: string) => {
+    const dao = this.dao;
+    if (!dao?.contract_address || !this.currentUserEvm) return;
+    if (!this.canClaimReward) {
+      showErrorToast(this.t('error_reward_claim_not_allowed'));
       return;
     }
-    if (!this.rewardHasNextPage) return;
-    await this.fetchNextRewardPage();
-    this.rewardPageIndex.set(index + 1);
-  };
+    if (!this.selectedToken) {
+      showErrorToast(this.t('error_register_failed_unknown'));
+      return;
+    }
+    this.isClaiming.set(true);
+    try {
+      showInfoToast(this.t('toast_connecting_wallet'));
+      const signer = await getKaiaSigner(
+        config.env === 'prod' ? 'mainnet' : 'testnet',
+      );
+      const provider = signer.provider;
+      const daoService = new SpaceDaoService(provider);
+      await daoService.connectWallet();
+      await daoService.claimReward(dao.contract_address, this.selectedToken);
 
-  handlePrevReward = () => {
-    const index = this.rewardPageIndex.get();
-    if (index <= 0) return;
-    this.rewardPageIndex.set(index - 1);
+      await this.updateRewardMutation.mutateAsync({
+        spacePk: this.spacePk,
+        rewardSk,
+        rewardDistributed: true,
+      });
+
+      this.isRewarded.set(true);
+      showSuccessToast(this.t('toast_reward_claimed'));
+    } catch (error) {
+      console.error('Failed to claim reward:', error);
+      if (error instanceof KaiaWalletError) {
+        if (error.code === 'USER_REJECTED') {
+          showErrorToast(this.t('error_wallet_rejected'));
+        } else if (error.code === 'METAMASK_NOT_INSTALLED') {
+          showErrorToast(this.t('error_wallet_not_installed'));
+        } else {
+          showErrorToast(
+            this.t('error_wallet_generic', { message: error.message }),
+          );
+        }
+      } else if (error instanceof Error) {
+        showErrorToast(
+          this.t('error_reward_claim_failed', { message: error.message }),
+        );
+      } else {
+        showErrorToast(this.t('error_register_failed_unknown'));
+      }
+    } finally {
+      this.isClaiming.set(false);
+    }
   };
 }
 
 export function useSpaceDaoViewerController(
   spacePk: string,
   dao?: SpaceDaoResponse | null,
+  selectedToken?: string | null,
+  tokenBalance?: string | null,
+  tokenDecimals?: number | null,
 ) {
   const { data: space } = useSpaceById(spacePk);
   const { t } = useTranslation('SpaceDaoEditor');
   const chainRecipientCount = useState<string | null>(null);
-  const rewardPageIndex = useState(0);
-  const isDistributingPage = useState(false);
-  const {
-    data: reward,
-    isLoading: rewardLoading,
-    fetchNextPage: fetchNextRewardPage,
-    hasNextPage: rewardHasNextPage,
-    isFetchingNextPage: rewardFetchingNextPage,
-  } = useSpaceDaoReward(spacePk, 50, Boolean(dao?.contract_address));
+  const isRewardRecipient = useState(false);
+  const isRewarded = useState(false);
+  const isClaiming = useState(false);
+  const claimAmountRaw = useState<string | null>(null);
+  const { data: user } = useUserInfo();
+  const updateRewardMutation = useUpdateSpaceDaoRewardMutation();
+  const { data: reward, isLoading: rewardLoading } = useSpaceDaoReward(
+    spacePk,
+    Boolean(dao?.contract_address),
+  );
   const provider = useMemo(() => {
     if (!config.rpc_url) {
       return null;
@@ -123,18 +201,67 @@ export function useSpaceDaoViewerController(
     t,
     provider,
     new State(chainRecipientCount),
-    new State(rewardPageIndex),
-    reward?.pages,
+    reward,
     rewardLoading,
-    Boolean(rewardHasNextPage),
-    rewardFetchingNextPage,
-    fetchNextRewardPage,
-    new State(isDistributingPage),
+    user?.evm_address ?? null,
+    new State(isRewardRecipient),
+    new State(isRewarded),
+    new State(isClaiming),
+    new State(claimAmountRaw),
+    selectedToken ?? null,
+    tokenBalance ?? null,
+    tokenDecimals ?? null,
+    updateRewardMutation,
   );
 
   useEffect(() => {
     void ctrl.fetchRecipientCount();
   }, [dao?.contract_address, provider]);
+
+  useEffect(() => {
+    const loadClaimStatus = async () => {
+      if (!provider || !dao?.contract_address || !user?.evm_address) {
+        isRewardRecipient[1](false);
+        isRewarded[1](false);
+        return;
+      }
+      try {
+        const service = new SpaceDaoService(provider);
+        const [recipient, rewarded] = await Promise.all([
+          service.isRewardRecipient(dao.contract_address, user.evm_address),
+          service.isRewarded(dao.contract_address, user.evm_address),
+        ]);
+        isRewardRecipient[1](recipient);
+        isRewarded[1](rewarded);
+      } catch (error) {
+        console.error('Failed to fetch reward claim status:', error);
+        isRewardRecipient[1](false);
+        isRewarded[1](false);
+      }
+    };
+    void loadClaimStatus();
+  }, [dao?.contract_address, provider, user?.evm_address]);
+
+  useEffect(() => {
+    const loadClaimAmount = async () => {
+      if (!provider || !dao?.contract_address || !selectedToken) {
+        claimAmountRaw[1](null);
+        return;
+      }
+      try {
+        const service = new SpaceDaoService(provider);
+        const amount = await service.getClaimAmount(
+          dao.contract_address,
+          selectedToken,
+        );
+        claimAmountRaw[1](amount.toString());
+      } catch (error) {
+        console.error('Failed to fetch claim amount:', error);
+        claimAmountRaw[1](null);
+      }
+    };
+    void loadClaimAmount();
+  }, [dao?.contract_address, provider, selectedToken]);
 
   return ctrl;
 }
