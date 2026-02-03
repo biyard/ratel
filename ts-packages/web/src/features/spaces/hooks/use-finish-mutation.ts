@@ -45,11 +45,11 @@ export function useFinishSpaceMutation<T extends SpaceCommon>() {
         const provider = signer.provider;
         const service = new SpaceDaoService(provider);
         await service.connectWallet();
-        await service.sampleCandidates(
+        await service.selectRewardRecipients(
           daoAddress,
           candidates.map((item) => item.evm_address),
         );
-        const sampledAddresses = await service.getSampledAddresses(daoAddress);
+        const sampledAddresses = await service.getRewardRecipients(daoAddress);
         if (sampledAddresses.length > 0) {
           await call(
             'POST',

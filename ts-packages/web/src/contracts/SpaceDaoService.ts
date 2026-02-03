@@ -10,11 +10,11 @@ const ERC20_ABI = [
   'function name() view returns (string)',
 ];
 
-const SAMPLING_ABI = [
-  'function getSamplingConfig() view returns (tuple(uint8 mode,uint256 randomCount))',
-  'function setSamplingCount(uint256 randomCount)',
-  'function sample(address[] candidates) returns (address[])',
-  'function getSampledAddresses() view returns (address[])',
+const REWARD_DISTRIBUTION_ABI = [
+  'function getRewardDistributionConfig() view returns (tuple(uint8 mode,uint256 numOfTargets))',
+  'function setRewardRecipientCount(uint256 numOfTargets)',
+  'function selectRewardRecipients(address[] candidates) returns (address[])',
+  'function getRewardRecipients() view returns (address[])',
 ];
 
 export interface CreateSpaceDAOResult {
@@ -40,15 +40,15 @@ export class SpaceDaoService {
 
   async createSpaceDAO(
     admins: string[],
-    samplingCount: number,
+    rewardRecipientCount: number,
   ): Promise<CreateSpaceDAOResult> {
     if (!this.signer) await this.connectWallet();
 
     if (admins.length < 3) {
       throw new Error('At least 3 admins are required to create a DAO');
     }
-    if (!Number.isFinite(samplingCount) || samplingCount <= 0) {
-      throw new Error('Sampling count must be greater than 0');
+    if (!Number.isFinite(rewardRecipientCount) || rewardRecipientCount <= 0) {
+      throw new Error('Reward recipient count must be greater than 0');
     }
 
     const factory = new ethers.ContractFactory(
@@ -59,7 +59,7 @@ export class SpaceDaoService {
 
     const contract = await factory.deploy(admins, {
       mode: 0,
-      randomCount: samplingCount,
+      numOfTargets: rewardRecipientCount,
     });
     await contract.waitForDeployment();
 
@@ -75,41 +75,60 @@ export class SpaceDaoService {
     };
   }
 
-  async getSamplingCount(daoAddress: string): Promise<number> {
-    const dao = new ethers.Contract(daoAddress, SAMPLING_ABI, this.provider);
-    const config = await dao.getSamplingConfig();
-    const raw = config?.randomCount ?? config?.[1] ?? 0;
+  async getRewardRecipientCount(daoAddress: string): Promise<number> {
+    const dao = new ethers.Contract(
+      daoAddress,
+      REWARD_DISTRIBUTION_ABI,
+      this.provider,
+    );
+    const config = await dao.getRewardDistributionConfig();
+    const raw = config?.numOfTargets ?? config?.[1] ?? 0;
     return Number(raw);
   }
 
-  async setSamplingCount(daoAddress: string, count: number): Promise<string> {
+  async setRewardRecipientCount(
+    daoAddress: string,
+    count: number,
+  ): Promise<string> {
     if (!this.signer) await this.connectWallet();
     if (!Number.isFinite(count) || count <= 0) {
-      throw new Error('Sampling count must be greater than 0');
+      throw new Error('Reward recipient count must be greater than 0');
     }
-    const dao = new ethers.Contract(daoAddress, SAMPLING_ABI, this.signer);
-    const tx = await dao.setSamplingCount(count);
+    const dao = new ethers.Contract(
+      daoAddress,
+      REWARD_DISTRIBUTION_ABI,
+      this.signer,
+    );
+    const tx = await dao.setRewardRecipientCount(count);
     const receipt = await tx.wait();
     return receipt.hash;
   }
 
-  async sampleCandidates(
+  async selectRewardRecipients(
     daoAddress: string,
     candidates: string[],
   ): Promise<string> {
     if (!this.signer) await this.connectWallet();
     if (candidates.length === 0) {
-      throw new Error('Candidates are required to sample');
+      throw new Error('Candidates are required to select rewards');
     }
-    const dao = new ethers.Contract(daoAddress, SAMPLING_ABI, this.signer);
-    const tx = await dao.sample(candidates);
+    const dao = new ethers.Contract(
+      daoAddress,
+      REWARD_DISTRIBUTION_ABI,
+      this.signer,
+    );
+    const tx = await dao.selectRewardRecipients(candidates);
     const receipt = await tx.wait();
     return receipt.hash;
   }
 
-  async getSampledAddresses(daoAddress: string): Promise<string[]> {
-    const dao = new ethers.Contract(daoAddress, SAMPLING_ABI, this.provider);
-    const addresses = await dao.getSampledAddresses();
+  async getRewardRecipients(daoAddress: string): Promise<string[]> {
+    const dao = new ethers.Contract(
+      daoAddress,
+      REWARD_DISTRIBUTION_ABI,
+      this.provider,
+    );
+    const addresses = await dao.getRewardRecipients();
     return Array.isArray(addresses) ? addresses : [];
   }
 

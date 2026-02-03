@@ -12,14 +12,14 @@ describe("SpaceDAO", function () {
     const token = await MockToken.deploy();
 
     const SpaceDAO = await ethers.getContractFactory("SpaceDAO");
-    const samplingConfig = { mode: 0, randomCount: 3 };
-    const dao = await SpaceDAO.deploy(admins, samplingConfig);
+    const rewardDistributionConfig = { mode: 0, numOfTargets: 3 };
+    const dao = await SpaceDAO.deploy(admins, rewardDistributionConfig);
 
     return {
       dao,
       token,
       admins,
-      samplingConfig,
+      rewardDistributionConfig,
       deployer,
       admin1,
       admin2,
@@ -30,8 +30,8 @@ describe("SpaceDAO", function () {
   }
 
   describe("Deployment", function () {
-    it("deploys with valid admins and sampling config", async function () {
-      const { dao, admins, samplingConfig } = await loadFixture(
+    it("deploys with valid admins and reward distribution config", async function () {
+      const { dao, admins, rewardDistributionConfig } = await loadFixture(
         deploySpaceDaoFixture
       );
 
@@ -40,9 +40,9 @@ describe("SpaceDAO", function () {
       expect(await dao.getIsAdmin(admins[1])).to.equal(true);
       expect(await dao.getIsAdmin(admins[2])).to.equal(true);
 
-      const config = await dao.getSamplingConfig();
-      expect(config.mode).to.equal(samplingConfig.mode);
-      expect(config.randomCount).to.equal(samplingConfig.randomCount);
+      const config = await dao.getRewardDistributionConfig();
+      expect(config.mode).to.equal(rewardDistributionConfig.mode);
+      expect(config.numOfTargets).to.equal(rewardDistributionConfig.numOfTargets);
     });
 
     it("reverts when admin count is less than 3", async function () {
@@ -52,7 +52,7 @@ describe("SpaceDAO", function () {
       await expect(
         SpaceDAO.deploy([admin1.address, admin2.address], {
           mode: 0,
-          randomCount: 1,
+          numOfTargets: 1,
         })
       ).to.be.revertedWith("SpaceDAO: at least 3 admins required");
     });
@@ -64,21 +64,21 @@ describe("SpaceDAO", function () {
       await expect(
         SpaceDAO.deploy([ethers.ZeroAddress, admin2.address, admin3.address], {
           mode: 0,
-          randomCount: 1,
+          numOfTargets: 1,
         })
       ).to.be.revertedWith("SpaceDAO: invalid admin");
 
       await expect(
         SpaceDAO.deploy([admin1.address, admin1.address, admin3.address], {
           mode: 0,
-          randomCount: 1,
+          numOfTargets: 1,
         })
       ).to.be.revertedWith("SpaceDAO: duplicate admin");
     });
   });
 
-  describe("Sampling", function () {
-    it("allows admin to sample randomly and stores results", async function () {
+  describe("RewardDistribution selection", function () {
+    it("allows admin to select recipients randomly and stores results", async function () {
       const { dao, admin1 } = await loadFixture(deploySpaceDaoFixture);
 
       const candidates = Array.from(
@@ -86,11 +86,13 @@ describe("SpaceDAO", function () {
         () => ethers.Wallet.createRandom().address
       );
 
-      const sampled = await dao.connect(admin1).sample.staticCall(candidates);
-      await dao.connect(admin1).sample(candidates);
+      const selected = await dao
+        .connect(admin1)
+        .selectRewardRecipients.staticCall(candidates);
+      await dao.connect(admin1).selectRewardRecipients(candidates);
 
-      expect(sampled.length).to.equal(3);
-      const stored = await dao.getSampledAddresses();
+      expect(selected.length).to.equal(3);
+      const stored = await dao.getRewardRecipients();
       expect(stored.length).to.equal(3);
 
       const candidateSet = new Set(candidates.map((a) => a.toLowerCase()));
@@ -101,24 +103,24 @@ describe("SpaceDAO", function () {
       }
     });
 
-    it("caps sample size to candidate length", async function () {
+    it("caps selection size to candidate length", async function () {
       const { dao, admin1 } = await loadFixture(deploySpaceDaoFixture);
       const candidates = Array.from(
         { length: 2 },
         () => ethers.Wallet.createRandom().address
       );
 
-      await dao.connect(admin1).sample(candidates);
-      const stored = await dao.getSampledAddresses();
+      await dao.connect(admin1).selectRewardRecipients(candidates);
+      const stored = await dao.getRewardRecipients();
       expect(stored.length).to.equal(2);
     });
 
-    it("reverts when non-admin calls sample", async function () {
+    it("reverts when non-admin calls select", async function () {
       const { dao, user } = await loadFixture(deploySpaceDaoFixture);
       const candidates = [ethers.Wallet.createRandom().address];
-      await expect(dao.connect(user).sample(candidates)).to.be.revertedWith(
-        "SpaceDAO: admin only"
-      );
+      await expect(
+        dao.connect(user).selectRewardRecipients(candidates)
+      ).to.be.revertedWith("SpaceDAO: admin only");
     });
 
     it("reverts when mode is not random", async function () {
@@ -126,16 +128,16 @@ describe("SpaceDAO", function () {
       const SpaceDAO = await ethers.getContractFactory("SpaceDAO");
       const dao = await SpaceDAO.deploy(
         [admin1.address, admin2.address, admin3.address],
-        { mode: 1, randomCount: 2 }
+        { mode: 1, numOfTargets: 2 }
       );
 
       const candidates = Array.from(
         { length: 3 },
         () => ethers.Wallet.createRandom().address
       );
-      await expect(dao.connect(admin1).sample(candidates)).to.be.revertedWith(
-        "SpaceDAO: mode not supported"
-      );
+      await expect(
+        dao.connect(admin1).selectRewardRecipients(candidates)
+      ).to.be.revertedWith("SpaceDAO: mode not supported");
     });
   });
 
@@ -174,8 +176,8 @@ describe("SpaceDAO", function () {
       const { dao, admin1, token } = await loadFixture(deploySpaceDaoFixture);
       const recipients = [ethers.Wallet.createRandom().address];
 
-      await dao.connect(admin1).setSamplingCount(recipients.length);
-      await dao.connect(admin1).sample(recipients);
+      await dao.connect(admin1).setRewardRecipientCount(recipients.length);
+      await dao.connect(admin1).selectRewardRecipients(recipients);
 
       await expect(
         dao.connect(admin1).distribute(await token.getAddress(), recipients, 1)
@@ -197,8 +199,8 @@ describe("SpaceDAO", function () {
         () => ethers.Wallet.createRandom().address
       );
 
-      await dao.connect(admin1).setSamplingCount(recipients.length);
-      await dao.connect(admin1).sample(recipients);
+      await dao.connect(admin1).setRewardRecipientCount(recipients.length);
+      await dao.connect(admin1).selectRewardRecipients(recipients);
 
       const value = ethers.parseUnits("5", 18);
       const total = value * BigInt(recipients.length);

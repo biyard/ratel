@@ -56,7 +56,9 @@ export class SpaceDaoViewerController {
     }
     try {
       const service = new SpaceDaoService(this.provider);
-      const count = await service.getSamplingCount(this.dao.contract_address);
+      const count = await service.getRewardRecipientCount(
+        this.dao.contract_address,
+      );
       this.chainSamplingCount.set(String(count));
     } catch (error) {
       console.error('Failed to fetch sampling count:', error);

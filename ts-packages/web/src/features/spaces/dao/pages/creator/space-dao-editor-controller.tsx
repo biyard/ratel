@@ -96,7 +96,9 @@ export class SpaceDaoEditorController {
 
     try {
       const service = new SpaceDaoService(this.provider);
-      const count = await service.getSamplingCount(this.dao.contract_address);
+      const count = await service.getRewardRecipientCount(
+        this.dao.contract_address,
+      );
       this.chainSamplingCount.set(String(count));
     } catch (error) {
       console.error('Failed to fetch sampling count:', error);
@@ -292,7 +294,7 @@ export class SpaceDaoEditorController {
 
       const daoService = new SpaceDaoService(provider);
       await daoService.connectWallet();
-      await daoService.setSamplingCount(dao.contract_address, sampling);
+      await daoService.setRewardRecipientCount(dao.contract_address, sampling);
       this.chainSamplingCount.set(String(sampling));
       showSuccessToast(this.t('toast_updated'));
     } catch (error) {
