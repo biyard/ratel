@@ -6,7 +6,7 @@ import { route } from '@/route';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { LoginModal } from '@/components/popup/login-popup';
 import { useTranslation } from 'react-i18next';
-import { NavLink } from 'react-router';
+import { NavLink, useMatches } from 'react-router';
 import { useUserInfo } from '@/hooks/use-user-info';
 import Footer from '@/components/footer';
 import MobileSideMenu from '@/components/mobile-side-menu';
@@ -25,6 +25,13 @@ export default function ClientLayout({
   const popup = usePopup();
   const { data } = useUserInfo();
   const [mobileExtends, setMobileExtends] = useState(false);
+  const matches = useMatches();
+
+  // Check if current route should hide header
+  const hideHeader = matches.some(
+    (match) =>
+      match.handle && (match.handle as { hideHeader?: boolean }).hideHeader,
+  );
 
   // Track page views automatically
   usePageTracking();
@@ -52,17 +59,25 @@ export default function ClientLayout({
 
   return (
     <>
-      <Header
-        mobileExtends={mobileExtends}
-        setMobileExtends={setMobileExtends}
-      />
-      <div className="w-full min-h-[calc(100vh-var(--header-height))]">
+      {!hideHeader && (
+        <Header
+          mobileExtends={mobileExtends}
+          setMobileExtends={setMobileExtends}
+        />
+      )}
+      <div
+        className={
+          hideHeader
+            ? 'w-full min-h-screen'
+            : 'w-full min-h-[calc(100vh-var(--header-height))]'
+        }
+      >
         {children}
       </div>
       <Footer />
 
       {/* Mobile Side Menu for authenticated users */}
-      {data && (
+      {!hideHeader && data && (
         <MobileSideMenu
           isOpen={mobileExtends}
           onClose={() => setMobileExtends(false)}
@@ -70,7 +85,7 @@ export default function ClientLayout({
       )}
 
       {/* Mobile Menu for non-authenticated users */}
-      {!data && (
+      {!hideHeader && !data && (
         <div
           className={
             mobileExtends
