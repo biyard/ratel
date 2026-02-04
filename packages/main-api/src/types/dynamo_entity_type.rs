@@ -65,6 +65,7 @@ pub enum EntityType {
     SpaceCommon,
     SpaceDao,
     SpaceDaoIncentive(String),
+    SpaceDaoIncentiveScore(String),
     SpaceDaoToken(String),
     SpaceParticipant,
     SpaceInvitation,

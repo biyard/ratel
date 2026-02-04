@@ -24,11 +24,6 @@ type SpaceDaoInfoCardProps = {
     rankingRatio?: string,
   ) => Promise<void>;
   showEdit?: boolean;
-  currentUserEvm?: string | null;
-  claimableAmount?: string | null;
-  isClaimable?: boolean;
-  isClaiming?: boolean;
-  showClaim?: boolean;
   // withdrawal props removed
   tokens?: SpaceDaoTokenResponse[];
   tokensLoading?: boolean;

@@ -4,7 +4,7 @@ use crate::features::spaces::panels::SpacePanelParticipant;
 use crate::features::spaces::rewards::{
     PollRewardKey, RewardAction, RewardKey, SpaceReward, UserReward,
 };
-use crate::features::spaces::{SpaceParticipant, polls::*};
+use crate::features::spaces::{SpaceDaoIncentiveScore, SpaceParticipant, polls::*};
 use crate::models::user::User;
 use crate::types::{
     Age, Answer, CompositePartition, EntityType, Gender, Partition, TeamGroupPermission,
@@ -60,7 +60,7 @@ pub async fn respond_poll_handler(
         return Err(Error::PollNotInProgress);
     }
 
-    if !validate_answers(poll.questions, req.answers.clone()) {
+    if !validate_answers(poll.clone().questions, req.answers.clone()) {
         return Err(Error::PollAnswersMismatchQuestions);
     }
 
@@ -94,6 +94,7 @@ pub async fn respond_poll_handler(
 
     if user_response.is_none() {
         let user_pk = user.pk.clone();
+        let score = req.answers.len() as i64;
         let create_tx = PollUserAnswer::new(
             poll.pk.clone(),
             poll_pk.clone(),
@@ -115,6 +116,24 @@ pub async fn respond_poll_handler(
                 reward,
                 user_pk.clone(),
                 Some(space.user_pk.clone()),
+            )
+            .await?;
+        }
+
+        if poll.is_default_poll() {
+            SpaceDaoIncentiveScore::add_pre_score(
+                &dynamo.client,
+                &space_pk,
+                &user_pk,
+                score,
+            )
+            .await?;
+        } else {
+            SpaceDaoIncentiveScore::add_post_score(
+                &dynamo.client,
+                &space_pk,
+                &user_pk,
+                score,
             )
             .await?;
         }
