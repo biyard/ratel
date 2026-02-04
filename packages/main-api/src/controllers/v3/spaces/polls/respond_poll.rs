@@ -7,8 +7,8 @@ use crate::features::spaces::rewards::{
 use crate::features::spaces::{SpaceDaoIncentiveScore, SpaceParticipant, polls::*};
 use crate::models::user::User;
 use crate::types::{
-    Age, Answer, CompositePartition, EntityType, Gender, Partition, TeamGroupPermission,
-    validate_answers,
+    Age, Answer, CompositePartition, EntityType, Gender, Partition, ResourcePermissions,
+    TeamGroupPermission, validate_answers,
 };
 use crate::types::{RespondentAttr, SpaceStatus};
 use crate::utils::time::get_now_timestamp_millis;
@@ -56,7 +56,13 @@ pub async fn respond_poll_handler(
         .ok_or(Error::NotFoundPoll)?;
 
     // Space Status Check
-    if !space.can_participate() || poll.status() != PollStatus::InProgress {
+
+    let is_admin = space.is_space_admin(&dynamo.client, &user).await;
+    let is_participant = space.is_participant(&dynamo.client, &user.pk).await;
+    if !is_participant && !is_admin {
+        return Err(Error::UserNotParticipant);
+    }
+    if poll.status() != PollStatus::InProgress {
         return Err(Error::PollNotInProgress);
     }
 

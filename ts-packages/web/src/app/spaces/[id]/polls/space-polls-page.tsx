@@ -1,5 +1,4 @@
 import { useParams } from 'react-router';
-import '@/features/spaces/polls/poll-side-menus';
 import { useSpaceById } from '@/features/spaces/hooks/use-space-by-id';
 import { SpacePollsEditorPage } from '@/features/spaces/polls/pages/creator/list/space-polls-editor-page';
 import { SpacePollsViewerPage } from '@/features/spaces/polls/pages/viewer/list/space-polls-viewer-page';

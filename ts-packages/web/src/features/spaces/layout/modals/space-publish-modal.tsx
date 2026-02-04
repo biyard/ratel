@@ -1,4 +1,3 @@
-'use client';
 import { Lock2 } from '@/assets/icons/security';
 import { Internet } from '@/assets/icons/internet-script';
 import { Button } from '@/components/ui/button';
@@ -6,9 +5,8 @@ import { useMemo, useState } from 'react';
 import SelectableCardList, {
   CardItemProps,
 } from '@/components/selectable-card-list';
-import { usePopup } from '@/lib/contexts/popup-service';
-import { useTranslation } from 'react-i18next';
 import { LoadingIndicator } from '@/app/loading';
+import { useSpaceLayoutI18n } from '../space-layout-i18n';
 
 export const PublishType = {
   Private: 'private',
@@ -17,52 +15,52 @@ export const PublishType = {
 
 export type PublishType = (typeof PublishType)[keyof typeof PublishType];
 
-export const openModal = (
-  popup: ReturnType<typeof usePopup>,
-  onPublish: (type: PublishType) => Promise<void>,
-  title: string,
-) =>
-  popup
-    .open(
-      <PublishSpaceModal
-        onPublish={async (publishType) => {
-          try {
-            await onPublish(publishType);
-            popup.close();
-          } catch (error) {
-            console.error('Error publishing space:', error);
-          }
-        }}
-      />,
-    )
-    .withTitle(title)
-    .withoutBackdropClose();
+// export const openModal = (
+//   popup: ReturnType<typeof usePopup>,
+//   onPublish: (type: PublishType) => Promise<void>,
+//   title: string,
+// ) =>
+//   popup
+//     .open(
+//       <PublishSpaceModal
+//         onPublish={async (publishType) => {
+//           try {
+//             await onPublish(publishType);
+//             popup.close();
+//           } catch (error) {
+//             console.error('Error publishing space:', error);
+//           }
+//         }}
+//       />,
+//     )
+//     .withTitle(title)
+//     .withoutBackdropClose();
 
 export default function PublishSpaceModal({
   onPublish,
 }: {
   onPublish: (type: PublishType) => Promise<void>;
 }) {
-  const { t } = useTranslation('SpacePublishModal');
+  const i18n = useSpaceLayoutI18n();
 
   const items: CardItemProps[] = useMemo(
     () => [
       {
         value: PublishType.Private,
         Icon: <Lock2 className="[&>path]:stroke-neutral-500" />,
-        label: t('private_publish_label'),
-        description: t('private_publish_description'),
+        label: i18n.publish_modal_private,
+        description: i18n.publish_modal_private_desc,
       },
       {
         value: PublishType.Public,
         Icon: (
           <Internet className="[&>path]:stroke-neutral-500 [&>circle]:stroke-neutral-500" />
         ),
-        label: t('public_publish_label'),
-        description: t('public_publish_description'),
+        label: i18n.publish_modal_public,
+        description: i18n.publish_modal_public_desc,
       },
     ],
-    [t],
+    [i18n],
   );
 
   const [selectedType, setSelectedType] = useState<PublishType | null>(null);
@@ -93,7 +91,7 @@ export default function PublishSpaceModal({
         }}
       >
         {!isLoading ? (
-          t('button_publish')
+          i18n.publish_modal_button_publish
         ) : (
           <LoadingIndicator className="h-12" />
         )}

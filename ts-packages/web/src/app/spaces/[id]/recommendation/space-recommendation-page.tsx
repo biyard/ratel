@@ -1,5 +1,4 @@
 import { useParams } from 'react-router';
-import '@/features/spaces/deliberations/deliberation-side-menus';
 import { useSpaceById } from '@/features/spaces/hooks/use-space-by-id';
 import { SpaceRecommendationEditorPage } from '@/features/spaces/recommendations/pages/creator/space-recommendation-editor-page';
 import { SpaceRecommendationViewerPage } from '@/features/spaces/recommendations/pages/viewer/space-recommendation-viewer-page';

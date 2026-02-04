@@ -1,5 +1,4 @@
 import { useParams } from 'react-router';
-import '@/features/spaces/deliberations/deliberation-side-menus';
 import { useSpaceById } from '@/features/spaces/hooks/use-space-by-id';
 import { SpaceDaoEditorPage } from '@/features/spaces/dao/pages/creator/space-dao-editor-page';
 
