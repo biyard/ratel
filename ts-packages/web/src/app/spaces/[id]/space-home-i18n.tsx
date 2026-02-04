@@ -158,7 +158,7 @@ export const i18nSpaceHome = {
     menu_boards: '게시판',
     menu_members: '멤버',
     menu_files: '파일',
-    menu_dao: '다오',
+    menu_dao: 'DAO',
     menu_quiz: '퀴즈',
     menu_recommendations: '권고사항',
 

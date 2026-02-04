@@ -17,10 +17,10 @@ import { SpaceDaoResponse } from '@/features/spaces/dao/hooks/use-space-dao';
 import { ethers } from 'ethers';
 import { State } from '@/types/state';
 import {
-  SpaceDaoRewardResponseBody,
-  useSpaceDaoReward,
-} from '@/features/spaces/dao/hooks/use-space-dao-reward';
-import { useUpdateSpaceDaoRewardMutation } from '@/features/spaces/dao/hooks/use-update-space-dao-reward-mutation';
+  SpaceDaoIncentiveResponseBody,
+  useSpaceDaoIncentive,
+} from '@/features/spaces/dao/hooks/use-space-dao-incentive';
+import { useUpdateSpaceDaoIncentiveMutation } from '@/features/spaces/dao/hooks/use-update-space-dao-incentive-mutation';
 import { useUserInfo } from '@/hooks/use-user-info';
 
 export class SpaceDaoEditorController {
@@ -34,17 +34,17 @@ export class SpaceDaoEditorController {
     public t: TFunction<'SpaceDaoEditor', undefined>,
     public provider: ethers.JsonRpcProvider | null,
     public adminAddresses: State<string>,
-    public rewardCount: State<string>,
-    public rewardMode: State<number>,
+    public incentiveCount: State<string>,
+    public incentiveMode: State<number>,
     public rankingBps: State<string>,
     public chainRecipientCount: State<string | null>,
-    public chainRewardMode: State<number | null>,
+    public chainIncentiveMode: State<number | null>,
     public chainRankingBps: State<number | null>,
     public isPopupOpen: State<boolean>,
     public isRegistering: State<boolean>,
     public isUpdating: State<boolean>,
-    public rewardData: SpaceDaoRewardResponseBody | undefined,
-    public rewardLoading: boolean,
+    public incentiveData: SpaceDaoIncentiveResponseBody | undefined,
+    public incentiveLoading: boolean,
     public currentUserEvm: string | null,
     public isIncentiveRecipient: State<boolean>,
     public isIncentiveClaimed: State<boolean>,
@@ -57,8 +57,8 @@ export class SpaceDaoEditorController {
     public preferredTokenBalance: string | null,
     public preferredTokenDecimals: number | null,
     public createSpaceDaoMutation: ReturnType<typeof useCreateSpaceDaoMutation>,
-    public updateRewardMutation: ReturnType<
-      typeof useUpdateSpaceDaoRewardMutation
+    public updateIncentiveMutation: ReturnType<
+      typeof useUpdateSpaceDaoIncentiveMutation
     >,
   ) {}
 
@@ -77,28 +77,28 @@ export class SpaceDaoEditorController {
   }
 
   get canSubmitInputs() {
-    const count = Number(this.rewardCount.get());
+    const count = Number(this.incentiveCount.get());
     if (!Number.isFinite(count) || count <= 0 || count > 100) {
       return false;
     }
-    if (this.rewardMode.get() !== 2) {
+    if (this.incentiveMode.get() !== 2) {
       return true;
     }
     const ratio = Number(this.rankingBps.get());
     return Number.isFinite(ratio) && ratio >= 0 && ratio <= 100;
   }
 
-  get visibleRewardRecipients() {
-    return this.rewardRecipients?.items ?? [];
+  get visibleIncentiveRecipients() {
+    return this.incentiveRecipients?.items ?? [];
   }
 
-  get rewardRecipients() {
-    const item = this.rewardData?.item;
+  get incentiveRecipients() {
+    const item = this.incentiveData?.item;
     return item ? { items: [item] } : undefined;
   }
 
-  get rewardRecipientsLoading() {
-    return this.rewardLoading;
+  get incentiveRecipientsLoading() {
+    return this.incentiveLoading;
   }
 
   get activeTokenAddress() {
@@ -113,12 +113,12 @@ export class SpaceDaoEditorController {
     return this.preferredTokenDecimals ?? this.tokenDecimals ?? null;
   }
 
-  get rewardMeta() {
-    return this.rewardData;
+  get incentiveMeta() {
+    return this.incentiveData;
   }
 
-  get remainingRewardCount() {
-    const meta = this.rewardMeta;
+  get remainingIncentiveCount() {
+    const meta = this.incentiveMeta;
     const remaining = meta?.remaining_count;
     if (remaining != null && remaining > 0) return remaining;
     const total = meta?.total_count;
@@ -147,7 +147,7 @@ export class SpaceDaoEditorController {
     }
   }
 
-  get canClaimReward() {
+  get canClaimIncentive() {
     if (!this.currentUserEvm) return false;
     if (!this.isIncentiveRecipient.get() || this.isIncentiveClaimed.get())
       return false;
@@ -165,21 +165,21 @@ export class SpaceDaoEditorController {
         this.dao.contract_address,
       );
       this.chainRecipientCount.set(String(config.numOfTargets));
-      this.chainRewardMode.set(config.mode);
+      this.chainIncentiveMode.set(config.mode);
       this.chainRankingBps.set(config.rankingBps);
     } catch (error) {
-      console.error('Failed to fetch reward recipient count:', error);
+      console.error('Failed to fetch incentive recipient count:', error);
       this.chainRecipientCount.set(null);
-      this.chainRewardMode.set(null);
+      this.chainIncentiveMode.set(null);
       this.chainRankingBps.set(null);
     }
   };
 
-  handleClaimReward = async (rewardSk: string) => {
+  handleClaimIncentive = async (incentiveSk: string) => {
     const dao = this.dao;
     if (!dao?.contract_address || !this.currentUserEvm) return;
-    if (!this.canClaimReward) {
-      showErrorToast(this.t('error_reward_claim_not_allowed'));
+    if (!this.canClaimIncentive) {
+      showErrorToast(this.t('error_incentive_claim_not_allowed'));
       return;
     }
 
@@ -200,19 +200,19 @@ export class SpaceDaoEditorController {
       await daoService.connectWallet();
       await daoService.claimIncentive(dao.contract_address, tokenAddress);
 
-      await this.updateRewardMutation.mutateAsync({
+      await this.updateIncentiveMutation.mutateAsync({
         spacePk: this.spacePk,
-        rewardSk,
-        rewardDistributed: true,
+        incentiveSk,
+        incentiveDistributed: true,
       });
 
       this.isIncentiveClaimed.set(true);
-      showSuccessToast(this.t('toast_reward_claimed'));
+      showSuccessToast(this.t('toast_incentive_claimed'));
     } catch (error) {
-      console.error('Failed to claim reward:', error);
+      console.error('Failed to claim incentive:', error);
       if (error instanceof Error) {
         showErrorToast(
-          this.t('error_reward_claim_failed', { message: error.message }),
+          this.t('error_incentive_claim_failed', { message: error.message }),
         );
       } else {
         showErrorToast(this.t('error_register_failed_unknown'));
@@ -264,12 +264,12 @@ export class SpaceDaoEditorController {
       const daoService = new SpaceDaoService(provider);
       await daoService.connectWallet();
 
-      const count = Number(this.rewardCount.get());
+      const count = Number(this.incentiveCount.get());
       if (!Number.isFinite(count) || count <= 0 || count > 100) {
-        showErrorToast(this.t('error_invalid_reward_count'));
+        showErrorToast(this.t('error_invalid_incentive_count'));
         return;
       }
-      const mode = this.rewardMode.get();
+      const mode = this.incentiveMode.get();
       const rankingRatio = Number(this.rankingBps.get());
       const rankingBps =
         mode === 2 && Number.isFinite(rankingRatio)
@@ -330,9 +330,9 @@ export class SpaceDaoEditorController {
     return Array.from(unique);
   }
 
-  handleUpdateDao = async (rewardCount: string, rankingRatio?: string) => {
+  handleUpdateDao = async (incentiveCount: string, rankingRatio?: string) => {
     const dao = this.dao;
-    const count = Number(rewardCount);
+    const count = Number(incentiveCount);
     const ratioValue =
       rankingRatio != null && rankingRatio !== '' ? Number(rankingRatio) : null;
 
@@ -341,7 +341,7 @@ export class SpaceDaoEditorController {
       return;
     }
     if (!Number.isFinite(count) || count <= 0 || count > 100) {
-      showErrorToast(this.t('error_invalid_reward_count'));
+      showErrorToast(this.t('error_invalid_incentive_count'));
       return;
     }
     if (
@@ -400,11 +400,11 @@ export function useSpaceDaoEditorController(
   const { data: space } = useSpaceById(spacePk);
   const { t } = useTranslation('SpaceDaoEditor');
   const adminAddresses = useState('');
-  const rewardCount = useState('');
-  const rewardMode = useState(0);
+  const incentiveCount = useState('');
+  const incentiveMode = useState(0);
   const rankingBps = useState('30');
   const chainRecipientCount = useState<string | null>(null);
-  const chainRewardMode = useState<number | null>(null);
+  const chainIncentiveMode = useState<number | null>(null);
   const chainRankingBps = useState<number | null>(null);
   const isPopupOpen = useState(false);
   const isRegistering = useState(false);
@@ -415,11 +415,9 @@ export function useSpaceDaoEditorController(
   const claimAmountRaw = useState<string | null>(null);
   const { data: user } = useUserInfo();
   const createSpaceDaoMutation = useCreateSpaceDaoMutation();
-  const updateRewardMutation = useUpdateSpaceDaoRewardMutation();
-  const { data: reward, isLoading: rewardLoading } = useSpaceDaoReward(
-    spacePk,
-    Boolean(dao?.contract_address),
-  );
+  const updateIncentiveMutation = useUpdateSpaceDaoIncentiveMutation();
+  const { data: incentiveData, isLoading: incentiveLoading } =
+    useSpaceDaoIncentive(spacePk, Boolean(dao?.contract_address));
 
   const provider = useMemo(() => {
     if (!config.rpc_url) {
@@ -445,17 +443,17 @@ export function useSpaceDaoEditorController(
     t,
     provider,
     new State(adminAddresses),
-    new State(rewardCount),
-    new State(rewardMode),
+    new State(incentiveCount),
+    new State(incentiveMode),
     new State(rankingBps),
     new State(chainRecipientCount),
-    new State(chainRewardMode),
+    new State(chainIncentiveMode),
     new State(chainRankingBps),
     new State(isPopupOpen),
     new State(isRegistering),
     new State(isUpdating),
-    reward,
-    rewardLoading,
+    incentiveData,
+    incentiveLoading,
     user?.evm_address ?? null,
     new State(isIncentiveRecipient),
     new State(isIncentiveClaimed),
@@ -468,7 +466,7 @@ export function useSpaceDaoEditorController(
     preferredTokenBalance ?? null,
     preferredTokenDecimals ?? null,
     createSpaceDaoMutation,
-    updateRewardMutation,
+    updateIncentiveMutation,
   );
 
   useEffect(() => {
@@ -484,14 +482,14 @@ export function useSpaceDaoEditorController(
       }
       try {
         const service = new SpaceDaoService(provider);
-        const [recipient, rewarded] = await Promise.all([
+        const [recipient, incentiveClaimed] = await Promise.all([
           service.isIncentiveRecipient(dao.contract_address, user.evm_address),
           service.isIncentiveClaimed(dao.contract_address, user.evm_address),
         ]);
         isIncentiveRecipient[1](recipient);
-        isIncentiveClaimed[1](rewarded);
+        isIncentiveClaimed[1](incentiveClaimed);
       } catch (error) {
-        console.error('Failed to fetch reward claim status:', error);
+        console.error('Failed to fetch incentive claim status:', error);
         isIncentiveRecipient[1](false);
         isIncentiveClaimed[1](false);
       }

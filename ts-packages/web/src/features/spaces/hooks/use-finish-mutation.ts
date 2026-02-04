@@ -78,7 +78,7 @@ export function useFinishSpaceMutation<T extends SpaceCommon>() {
         queryKey: spaceDaoKeys.candidates(spacePk),
       });
       await queryClient.invalidateQueries({
-        queryKey: spaceDaoKeys.rewardBase(spacePk),
+        queryKey: spaceDaoKeys.incentiveBase(spacePk),
       });
     },
   });

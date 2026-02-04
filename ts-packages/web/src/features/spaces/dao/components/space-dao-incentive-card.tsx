@@ -1,31 +1,31 @@
 import { useTranslation } from 'react-i18next';
 import { CheckIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button';
-import { SpaceDaoRewardResponse } from '@/features/spaces/dao/hooks/use-space-dao-reward';
+import { SpaceDaoIncentiveResponse } from '@/features/spaces/dao/hooks/use-space-dao-incentive';
 
-type SpaceDaoRewardCardProps = {
-  rewardRecipient?: SpaceDaoRewardResponse | null;
+type SpaceDaoIncentiveCardProps = {
+  incentiveRecipient?: SpaceDaoIncentiveResponse | null;
   remainingCount?: number | null;
   totalCount?: number | null;
-  rewardLoading?: boolean;
+  incentiveLoading?: boolean;
   currentUserEvm?: string | null;
   claimableAmount?: string | null;
   isClaimable?: boolean;
   isClaiming?: boolean;
-  onClaimReward?: (rewardSk: string) => void;
+  onClaimIncentive?: (incentiveSk: string) => void;
 };
 
-export function SpaceDaoRewardCard({
-  rewardRecipient,
+export function SpaceDaoIncentiveCard({
+  incentiveRecipient,
   remainingCount,
   totalCount,
-  rewardLoading = false,
+  incentiveLoading = false,
   currentUserEvm,
   claimableAmount,
   isClaimable = false,
   isClaiming = false,
-  onClaimReward,
-}: SpaceDaoRewardCardProps) {
+  onClaimIncentive,
+}: SpaceDaoIncentiveCardProps) {
   const { t } = useTranslation('SpaceDaoEditor');
 
   const renderAddress = (address: string) => {
@@ -33,40 +33,43 @@ export function SpaceDaoRewardCard({
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
-  const walletAddress = rewardRecipient?.evm_address ?? currentUserEvm ?? null;
+  const walletAddress =
+    incentiveRecipient?.evm_address ?? currentUserEvm ?? null;
   const canClaim =
-    Boolean(rewardRecipient) &&
+    Boolean(incentiveRecipient) &&
     Boolean(currentUserEvm) &&
     walletAddress?.toLowerCase() === currentUserEvm?.toLowerCase();
 
   return (
     <div className="mt-6 space-y-4 w-full">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-text-secondary">{t('dao_reward_title')}</p>
+        <p className="text-sm text-text-secondary">
+          {t('dao_incentive_title')}
+        </p>
       </div>
 
-      {rewardLoading ? (
+      {incentiveLoading ? (
         <div className="text-sm text-text-secondary">
           {t('dao_selected_loading')}
         </div>
-      ) : rewardRecipient ? (
+      ) : incentiveRecipient ? (
         <div className="rounded-xl border border-input-box-border bg-background px-4 py-4">
           <div className="grid grid-cols-1 gap-3 text-sm">
             <div className="flex items-center justify-between">
               <span className="text-text-secondary">
-                {t('dao_reward_total')}
+                {t('dao_incentive_total')}
               </span>
               <span className="text-text-primary">{totalCount ?? '-'}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-text-secondary">
-                {t('dao_reward_remaining')}
+                {t('dao_incentive_remaining')}
               </span>
               <span className="text-text-primary">{remainingCount ?? '-'}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-text-secondary">
-                {t('dao_reward_wallet')}
+                {t('dao_incentive_wallet')}
               </span>
               <span className="text-text-primary">
                 {walletAddress ? renderAddress(walletAddress) : '-'}
@@ -74,14 +77,14 @@ export function SpaceDaoRewardCard({
             </div>
             <div className="flex items-center justify-between">
               <span className="text-text-secondary">
-                {t('dao_reward_amount')}
+                {t('dao_incentive_amount')}
               </span>
               <span className="text-text-primary">
                 {claimableAmount ?? '-'}
               </span>
             </div>
             <div className="flex items-center justify-end pt-2">
-              {rewardRecipient.reward_distributed ? (
+              {incentiveRecipient.incentive_distributed ? (
                 <span className="inline-flex items-center gap-1 text-green-600 text-xs">
                   <CheckIcon className="w-4 h-4" />
                   {t('dao_selected_claimed')}
@@ -91,8 +94,8 @@ export function SpaceDaoRewardCard({
                   type="button"
                   variant="rounded_primary"
                   size="sm"
-                  onClick={() => onClaimReward?.(rewardRecipient.sk)}
-                  disabled={!isClaimable || !onClaimReward || isClaiming}
+                  onClick={() => onClaimIncentive?.(incentiveRecipient.sk)}
+                  disabled={!isClaimable || !onClaimIncentive || isClaiming}
                 >
                   {isClaiming
                     ? t('dao_selected_claiming')

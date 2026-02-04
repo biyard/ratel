@@ -92,18 +92,18 @@ export function SpaceDaoViewerPage({ spacePk }: SpacePathProps) {
       <SpaceDaoInfoCard
         dao={dao}
         recipientCount={ctrl.chainRecipientCount.get()}
-        rewardRecipients={ctrl.visibleRewardRecipients}
-        rewardRemainingCount={ctrl.rewardMeta?.remaining_count ?? null}
-        rewardTotalCount={ctrl.rewardMeta?.total_count ?? null}
-        rewardLoading={ctrl.rewardRecipientsLoading}
-        showRewardRecipients={Boolean(ctrl.space?.isFinished)}
+        incentiveRecipients={ctrl.visibleIncentiveRecipients}
+        incentiveRemainingCount={ctrl.incentiveMeta?.remaining_count ?? null}
+        incentiveTotalCount={ctrl.incentiveMeta?.total_count ?? null}
+        incentiveLoading={ctrl.incentiveRecipientsLoading}
+        showIncentiveRecipients={Boolean(ctrl.space?.isFinished)}
         showEdit={false}
         currentUserEvm={ctrl.currentUserEvm}
         claimableAmount={ctrl.perRecipientDisplay}
-        isClaimable={ctrl.canClaimReward}
+        isClaimable={ctrl.canClaimIncentive}
         isClaiming={ctrl.isClaiming.get()}
-        onClaimReward={async (rewardSk) => {
-          await ctrl.handleClaimReward(rewardSk);
+        onClaimIncentive={async (incentiveSk) => {
+          await ctrl.handleClaimIncentive(incentiveSk);
           refreshTokens.mutate();
         }}
         tokens={orderedTokens}
