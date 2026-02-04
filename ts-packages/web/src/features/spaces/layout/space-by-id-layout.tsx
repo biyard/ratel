@@ -9,7 +9,6 @@ import {
   PostInfoSection,
   TitleSection,
 } from '@/components/post-header';
-import TimelineMenu from '@/features/spaces/components/side-menu/timeline';
 
 import {
   useSpaceLayoutController,
@@ -25,6 +24,8 @@ import AdminActionCard from './components/admin-action-card';
 import ViewerActionCard from './components/viewer-action-card';
 import { Hamburger } from '@/components/icons';
 import Logo from '@/assets/icons/logo/logo-letter.svg?react';
+import { Button } from '@/components/ui/button';
+import TimelineMenu from './components/timeline';
 
 function GeneralLayout({ ctrl }: { ctrl: SpaceLayoutController }) {
   const matches = useMatches();
@@ -46,15 +47,22 @@ function GeneralLayout({ ctrl }: { ctrl: SpaceLayoutController }) {
     >
       {/* Mobile Header - Only visible on mobile */}
       <div className="tablet:hidden fixed top-0 left-0 right-0 z-50 bg-bg border-b border-divider">
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="grid grid-cols-3 items-center px-4 py-3">
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle menu"
-            className="p-2"
+            className="p-2 justify-self-start"
           >
-            <Hamburger className="size-6" />
+            <Hamburger className="size-6 *:stroke-text-primary" />
           </button>
-          <Logo className="w-full" />
+
+          <button
+            onClick={ctrl.handleBackToHome}
+            className="justify-self-center w-full"
+          >
+            <Logo className="w-full" />
+          </button>
+
           <div />
         </div>
       </div>
@@ -81,9 +89,12 @@ function GeneralLayout({ ctrl }: { ctrl: SpaceLayoutController }) {
         )}
       >
         <div className="flex-1 overflow-y-auto flex flex-col gap-4 px-3 divide-y divide-divider">
-          <div className="px-4 py-5 hidden tablet:block">
+          <button
+            className="px-4 py-5 hidden tablet:block"
+            onClick={ctrl.handleBackToHome}
+          >
             <Logo className="w-[95px] h-[35px]" />
-          </div>
+          </button>
           {ctrl.role == Role.Admin && (
             <AdminActionCard
               title={ctrl.i18n.admin_title}
@@ -106,8 +117,6 @@ function GeneralLayout({ ctrl }: { ctrl: SpaceLayoutController }) {
             onMenuClick={() => setIsMobileMenuOpen(false)}
           />
 
-          <div className="flex flex-col" />
-
           <TimelineMenu
             isEditing={false}
             handleSetting={() => {}}
@@ -116,13 +125,21 @@ function GeneralLayout({ ctrl }: { ctrl: SpaceLayoutController }) {
           />
         </div>
 
-        <div className="shrink-0">
-          {ctrl.profile && (
+        <div className="shrink-0 p-3">
+          {ctrl.profile ? (
             <SpaceParticipantProfile
               profileUrl={ctrl.profile.profileUrl}
               displayName={ctrl.profile.displayName}
               username={ctrl.profile.username}
             />
+          ) : (
+            <Button
+              variant="primary"
+              className="w-full"
+              onClick={ctrl.handleLogin}
+            >
+              {ctrl.i18n.login}
+            </Button>
           )}
         </div>
       </Col>

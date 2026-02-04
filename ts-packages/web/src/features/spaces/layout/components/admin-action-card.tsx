@@ -16,7 +16,33 @@ export type AdminCardProps = React.HTMLAttributes<HTMLDivElement> & {
   description: string;
   actions: LayoutAction[];
 };
-
+export function CardSkeleton({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Card
+      variant="default"
+      rounded="default"
+      className="gap-2.5 bg-divider px-3 py-4 border-[0.5px] border-card-enable-border"
+    >
+      <div className="flex flex-col gap-1 w-full">
+        <h3 className="font-bold text-[15px]/[18px] text-text-primary">
+          {title}
+        </h3>
+        <p className="font-medium text-[13px]/[20px] text-text-secondary">
+          {description}
+        </p>
+      </div>
+      {children}
+    </Card>
+  );
+}
 export default function AdminActionCard({
   actions,
   title,
@@ -25,15 +51,7 @@ export default function AdminActionCard({
   const [hold, setHold] = useState(-1);
 
   return (
-    <Card variant="outlined" rounded="default" className="gap-2.5 bg-divider">
-      <div className="flex flex-col gap-1 w-full">
-        <h3 className="font-bold text-[15px] leading-[18px] tracking-[-0.16px] text-text-primary">
-          {title}
-        </h3>
-        <p className="font-medium text-[13px] leading-5 text-neutral-400">
-          {description}
-        </p>
-      </div>
+    <CardSkeleton title={title} description={description}>
       {hold === -1 ? (
         <ActionDropdown
           actions={actions.map((action) => ({
@@ -45,7 +63,7 @@ export default function AdminActionCard({
       ) : (
         <></>
       )}
-    </Card>
+    </CardSkeleton>
   );
 }
 

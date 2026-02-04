@@ -29,6 +29,7 @@ import { useSpaceUpdateTitleMutation } from '../hooks/use-space-update-title-mut
 import PublishSpaceModal, { PublishType } from './modals/space-publish-modal';
 import SpaceDeleteModal from './modals/space-delete-modal';
 import SpaceStartModal from './modals/space-start-modal';
+import { LoginModal } from '@/components/popup/login-popup';
 
 export type SideMenuProps = {
   Icon: React.ComponentType<React.ComponentProps<'svg'>>;
@@ -44,6 +45,7 @@ export enum Role {
   Admin,
   Participant,
   Viewer,
+  None,
 }
 
 export interface LayoutAction {
@@ -68,6 +70,8 @@ export interface SpaceLayoutController {
 
   role: Role;
   handleTitleChange: (title: string) => void;
+  handleLogin: () => void;
+  handleBackToHome: () => void;
 }
 
 export function useSpaceLayoutController(
@@ -100,6 +104,9 @@ export function useSpaceLayoutController(
   }, [navigate, spacePk, space, preTaskRequired]);
 
   const role = useMemo(() => {
+    if (!user) {
+      return Role.None;
+    }
     if (space.isAdmin()) {
       // Admin
       return Role.Admin;
@@ -111,7 +118,7 @@ export function useSpaceLayoutController(
     }
 
     return Role.Viewer;
-  }, [space]);
+  }, [space, user]);
 
   let profile: SpaceParticipantProfileProps | null = null;
   if (user) {
@@ -410,7 +417,16 @@ export function useSpaceLayoutController(
     ],
   );
 
-  //
+  const handleBackToHome = useCallback(() => {
+    navigate(route.home());
+  }, [navigate]);
+
+  const handleLogin = useCallback(() => {
+    popup
+      .open(<LoginModal />)
+      .withTitle(i18n.login)
+      .withoutBackdropClose();
+  }, [i18n.login, popup]);
 
   return {
     space,
@@ -423,11 +439,13 @@ export function useSpaceLayoutController(
     profile,
     i18n,
 
-    handleTitleChange,
     role,
     currentMenu,
     adminActions,
     viewerActions,
     participantActions,
+    handleTitleChange,
+    handleLogin,
+    handleBackToHome,
   };
 }

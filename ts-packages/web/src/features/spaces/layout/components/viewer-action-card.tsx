@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import Card from '@/components/card';
 import { Check, RemoveCircle, Warning } from '@/assets/icons/validations';
 import { LayoutAction } from '../use-space-layout-controller';
+import { CardSkeleton } from './admin-action-card';
 
 enum CredentialStatus {
   Active = 'active',
@@ -59,16 +60,7 @@ export default function ViewerActionCard({
   actions,
 }: ParticipationCardProps) {
   return (
-    <Card variant="outlined" rounded="default" className="gap-2.5 bg-divider">
-      <div className="flex flex-col gap-1 w-full">
-        <h3 className="font-bold text-[15px] leading-[18px] tracking-[-0.16px] text-text-primary">
-          {title}
-        </h3>
-        <p className="font-medium text-[13px] leading-5 text-neutral-400">
-          {description}
-        </p>
-      </div>
-
+    <CardSkeleton title={title} description={description}>
       {/* Attribute Tags */}
       {verifiedCredentials && verifiedCredentials.length > 0 && (
         <div className="flex gap-1 items-center flex-wrap">
@@ -101,6 +93,6 @@ export default function ViewerActionCard({
           {actions[1].label}
         </Button>
       </div>
-    </Card>
+    </CardSkeleton>
   );
 }
