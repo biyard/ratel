@@ -13,6 +13,7 @@ type SpaceDaoCandidateResponse = {
   display_name: string;
   profile_url: string;
   evm_address: string;
+  score?: number;
 };
 
 type SpaceDaoCandidateListResponse = {
@@ -45,11 +46,14 @@ export function useFinishSpaceMutation<T extends SpaceCommon>() {
         const provider = signer.provider;
         const service = new SpaceDaoService(provider);
         await service.connectWallet();
-        await service.selectRewardRecipients(
+        // FIXME: use real score-based weighting once scoring pipeline is ready.
+        await service.selectIncentiveRecipients(
           daoAddress,
           candidates.map((item) => item.evm_address),
+          candidates.map(() => 1),
         );
-        const selectedAddresses = await service.getRewardRecipients(daoAddress);
+        const selectedAddresses =
+          await service.getIncentiveRecipients(daoAddress);
         if (selectedAddresses.length > 0) {
           await call(
             'POST',

@@ -10,6 +10,7 @@ import { useSpaceDaoTokens } from '@/features/spaces/dao/hooks/use-space-dao-tok
 import { useRefreshSpaceDaoTokensMutation } from '@/features/spaces/dao/hooks/use-refresh-space-dao-tokens-mutation';
 import { useEffect, useMemo, useState } from 'react';
 import { config } from '@/config';
+import RadioButton from '@/components/radio-button';
 
 export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
   logger.debug(`SpaceDaoEditorPage: spacePk=${spacePk}`);
@@ -125,6 +126,8 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
             <SpaceDaoInfoCard
               dao={dao}
               recipientCount={ctrl.chainRecipientCount.get()}
+              rewardMode={ctrl.chainRewardMode.get()}
+              rankingBps={ctrl.chainRankingBps.get()}
               isUpdating={ctrl.isUpdating.get()}
               onUpdateDao={ctrl.handleUpdateDao}
               rewardRecipients={ctrl.visibleRewardRecipients}
@@ -200,16 +203,115 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
               <div className="grid gap-5">
                 <div>
                   <label className="text-sm text-text-secondary mb-2 block">
+                    {t('reward_mode_label')}
+                  </label>
+                  <div className="flex flex-col gap-2">
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => ctrl.rewardMode.set(0)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          ctrl.rewardMode.set(0);
+                        }
+                      }}
+                      className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer"
+                    >
+                      <RadioButton
+                        selected={ctrl.rewardMode.get() === 0}
+                        onClick={() => ctrl.rewardMode.set(0)}
+                      />
+                      {t('reward_mode_random')}
+                    </div>
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => ctrl.rewardMode.set(1)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          ctrl.rewardMode.set(1);
+                        }
+                      }}
+                      className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer"
+                    >
+                      <RadioButton
+                        selected={ctrl.rewardMode.get() === 1}
+                        onClick={() => ctrl.rewardMode.set(1)}
+                      />
+                      {t('reward_mode_ranking')}
+                    </div>
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => ctrl.rewardMode.set(2)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          ctrl.rewardMode.set(2);
+                        }
+                      }}
+                      className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer"
+                    >
+                      <RadioButton
+                        selected={ctrl.rewardMode.get() === 2}
+                        onClick={() => ctrl.rewardMode.set(2)}
+                      />
+                      {t('reward_mode_mixed')}
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm text-text-secondary mb-2 block">
                     {t('reward_count_label')}
                   </label>
                   <Input
                     type="number"
                     min={0}
+                    max={100}
                     value={ctrl.rewardCount.get()}
-                    onChange={(e) => ctrl.rewardCount.set(e.target.value)}
+                    onChange={(e) => {
+                      const next = e.target.value;
+                      const numeric = Number(next);
+                      if (
+                        next === '' ||
+                        (Number.isFinite(numeric) &&
+                          numeric >= 0 &&
+                          numeric <= 100)
+                      ) {
+                        ctrl.rewardCount.set(next);
+                      }
+                    }}
                     placeholder={t('reward_count_placeholder')}
                   />
                 </div>
+                {ctrl.rewardMode.get() === 2 && (
+                  <div>
+                    <label className="text-sm text-text-secondary mb-2 block">
+                      {t('reward_mode_ranking_ratio_label')}
+                    </label>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={ctrl.rankingBps.get()}
+                      onChange={(e) => {
+                        const next = e.target.value;
+                        const numeric = Number(next);
+                        if (
+                          next === '' ||
+                          (Number.isFinite(numeric) &&
+                            numeric >= 0 &&
+                            numeric <= 100)
+                        ) {
+                          ctrl.rankingBps.set(next);
+                        }
+                      }}
+                      placeholder={t('reward_mode_ranking_ratio_placeholder')}
+                    />
+                  </div>
+                )}
               </div>
 
               <button
