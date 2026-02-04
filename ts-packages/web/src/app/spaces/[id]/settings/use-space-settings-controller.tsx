@@ -67,9 +67,9 @@ export class SpaceSettingsController {
     return this.data.space.data?.anonymous_participation ?? false;
   }
 
-  get changeVisibility() {
-    return this.data.space.data?.change_visibility ?? false;
-  }
+  // get changeVisibility() {
+  //   return this.data.space.data?.change_visibility ?? false;
+  // }
 }
 
 export function useSpaceSettingsController(spacePk: string) {

@@ -1,5 +1,4 @@
 import { useParams } from 'react-router';
-import '@/features/spaces/sprint-leagues/sprint-league-side-menus';
 import { useSpaceById } from '@/features/spaces/hooks/use-space-by-id';
 import SprintLeagueEditor from '@/features/spaces/sprint-leagues/components/editer';
 import SprintLeagueGame from '@/features/spaces/sprint-leagues/components/game';

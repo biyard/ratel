@@ -1,5 +1,5 @@
-import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
+import { useSpaceLayoutI18n } from '../space-layout-i18n';
 
 export default function SpaceEndModal({
   onEnded,
@@ -8,7 +8,7 @@ export default function SpaceEndModal({
   onEnded: () => void | Promise<void>;
   onClose?: () => void;
 }) {
-  const { t } = useTranslation('Space');
+  const i18n = useSpaceLayoutI18n();
   const [isEnd, setIsEnd] = useState(false);
 
   const handleEnd = async () => {
@@ -23,9 +23,9 @@ export default function SpaceEndModal({
   };
 
   return (
-    <div className="flex flex-col mt-6 w-[500px] max-tablet:w-full">
+    <div className="flex flex-col mt-6 w-mobile max-tablet:w-full">
       <div className="mb-6 text-base font-medium text-center text-desc-text">
-        {t('end_warning')}
+        {i18n.end_modal_desc}
       </div>
 
       <div className="flex flex-row gap-4 justify-end mt-4">
@@ -33,7 +33,7 @@ export default function SpaceEndModal({
           onClick={onClose}
           className="px-10 text-base font-bold transition-colors hover:text-white min-w-30 py-[14.5px] bg-cancel-button-bg text-cancel-button-text light:hover:text-hover"
         >
-          {t('cancel')}
+          {i18n.cancel}
         </button>
         <button
           data-testid="start-space-button"
@@ -45,7 +45,7 @@ export default function SpaceEndModal({
               : 'bg-neutral-700 light:bg-neutral-300 text-neutral-500 cursor-not-allowed'
           } transition-colors`}
         >
-          {isEnd ? t('ending') : t('end_button')}
+          {isEnd ? i18n.end_modal_button_ending : i18n.end_modal_button_end}
         </button>
       </div>
     </div>

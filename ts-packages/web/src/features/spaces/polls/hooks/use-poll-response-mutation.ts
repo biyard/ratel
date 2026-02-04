@@ -5,7 +5,7 @@ import { call } from '@/lib/api/ratel/call';
 import { Poll } from '../types/poll';
 import { optimisticUpdate } from '@/lib/hook-utils';
 import { Space } from '../../types/space';
-import { SpaceRequirementType } from '../../types/space-requirement';
+import { SpaceRequirementType } from '../../requirments/types';
 
 export function usePollResponseMutation() {
   const mutation = useMutation({

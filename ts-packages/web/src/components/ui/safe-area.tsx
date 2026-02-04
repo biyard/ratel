@@ -4,21 +4,18 @@ import { cn } from '@/lib/utils';
 import { Slot } from '@radix-ui/react-slot';
 import { cva, VariantProps } from 'class-variance-authority';
 
-export const safeAreaVariants = cva(
-  'mx-auto max-w-desktop py-1 max-desktop:px-2.5',
-  {
-    variants: {
-      variant: {
-        default: ' flex flex-col gap-10',
-        row: ' flex flex-row gap-10',
-      },
-    },
-
-    defaultVariants: {
-      variant: 'default',
+const safeAreaVariants = cva('mx-auto', {
+  variants: {
+    variant: {
+      default: 'flex flex-col gap-10',
+      row: 'flex flex-row gap-10',
     },
   },
-);
+
+  defaultVariants: {
+    variant: 'default',
+  },
+});
 
 export function SafeArea({
   className,
