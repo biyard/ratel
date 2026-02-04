@@ -1,11 +1,14 @@
 pub mod dto;
 pub mod list_payments;
 
+#[cfg(test)]
+pub mod tests;
+
 pub use dto::*;
 pub use list_payments::*;
 
-use bdk::prelude::{axum::routing::*, *};
+use crate::*;
 
-pub fn route() -> crate::Result<by_axum::axum::Router<crate::AppState>> {
-    Ok(axum::Router::new().route("/", get(list_all_payments_handler)))
+pub fn route() -> Result<Router<AppState>> {
+    Ok(Router::new().route("/", get(list_all_payments_handler)))
 }
