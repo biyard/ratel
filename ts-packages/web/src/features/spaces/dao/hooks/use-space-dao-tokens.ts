@@ -1,4 +1,5 @@
 import {
+  InfiniteData,
   useInfiniteQuery,
   UseInfiniteQueryResult,
 } from '@tanstack/react-query';
@@ -24,7 +25,7 @@ export function useSpaceDaoTokens(
   spacePk: string,
   limit = 50,
   enabled = true,
-): UseInfiniteQueryResult<SpaceDaoTokenListResponse> {
+): UseInfiniteQueryResult<InfiniteData<SpaceDaoTokenListResponse>> {
   return useInfiniteQuery({
     queryKey: spaceDaoKeys.tokens(spacePk),
     queryFn: async ({ pageParam }) => {
@@ -42,14 +43,6 @@ export function useSpaceDaoTokens(
       );
     },
     getNextPageParam: (lastPage) => lastPage.bookmark ?? undefined,
-    select: (data) => {
-      const items = data.pages.flatMap((page) => page.items);
-      const last = data.pages[data.pages.length - 1];
-      return {
-        items,
-        bookmark: last?.bookmark ?? null,
-      };
-    },
     enabled: Boolean(spacePk) && enabled,
     refetchOnWindowFocus: false,
     initialPageParam: null,
