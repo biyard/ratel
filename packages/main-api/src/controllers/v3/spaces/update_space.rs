@@ -258,12 +258,11 @@ pub async fn update_space_handler(
 
             space.anonymous_participation = anonymous_participation;
         }
-        //FIXME: REMOVE THIS CODE. Why do we need this?
-        // We already have visibility `UpdateSpaceRequest::Visibility`
-        UpdateSpaceRequest::ChangeVisibility { change_visibility } => {
-            su = su.with_change_visibility(change_visibility);
-
-            space.change_visibility = change_visibility;
+        UpdateSpaceRequest::ChangeVisibility { .. } => {
+            tracing::error!("ChangeVisibility is deprecated");
+            return Err(Error::InternalServerError(
+                "ChangeVisibility is deprecated".to_string(),
+            ));
         }
         UpdateSpaceRequest::Quota { quotas } => {
             let remains = space.remains + (quotas - space.quota);

@@ -204,7 +204,7 @@ impl
             files: space.files,
             anonymous_participation: space.anonymous_participation,
             can_participate: false,
-            change_visibility: space.change_visibility,
+            change_visibility: false,
             participated,
             participant_display_name,
             participant_profile_url,
