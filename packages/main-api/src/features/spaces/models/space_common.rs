@@ -70,8 +70,7 @@ pub struct SpaceCommon {
 
     #[serde(default)]
     pub anonymous_participation: bool,
-    //FIXME: Remove this field.
-    //We already have publish_state to control the visibility of the space.
+    #[deprecated(note = "Use Visibility variant instead")]
     #[serde(default)]
     pub change_visibility: bool,
     #[serde(default)]
