@@ -72,7 +72,7 @@ export const SPACE_MENUS: Record<SpaceType, SideMenu[]> = {
       label: Label.Poll,
       tag: {
         label: 'Vote',
-        visible: (space) => space.participated,
+        visible: (space) => !space.participated,
       },
     },
     {
@@ -105,7 +105,7 @@ export const SPACE_MENUS: Record<SpaceType, SideMenu[]> = {
       label: Label.Files,
       tag: {
         label: 'Post',
-        visible: (space) => space.participated,
+        visible: (space) => !space.participated,
       },
     },
     {
@@ -114,7 +114,7 @@ export const SPACE_MENUS: Record<SpaceType, SideMenu[]> = {
       label: Label.Poll,
       tag: {
         label: 'Vote',
-        visible: (space) => space.participated,
+        visible: (space) => !space.participated,
       },
     },
     {
