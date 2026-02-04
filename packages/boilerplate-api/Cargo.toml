@@ -15,14 +15,14 @@ bdk = { workspace = true, features = ["be"] }
 by-macros = { workspace = true }
 by-axum = { workspace = true }
 
-aws-sdk-dynamodb = "1.92.0"
-serde_dynamo = { version = "4.2.14", features = ["aws-sdk-dynamodb+1"] }
-thiserror = "2.0.16"
-uuid = { version = "1.10.1", features = ["v7"] }
-chrono = "0.4.39"
-serde_with = "3.14.0"
-percent-encoding = "2.3.2"
-base64 = "0.22.1"
-tokio = { version = "1.40.0", features = ["full"] }
-reqwest = { version = "0.12", features = ["json"] }
-hyper = "1.6.0"
+aws-sdk-dynamodb = { workspace = true }
+serde_dynamo = { workspace = true }
+thiserror = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+serde_with = { workspace = true }
+percent-encoding = { workspace = true }
+base64 = { workspace = true }
+tokio = { workspace = true }
+reqwest = { workspace = true }
+hyper = { workspace = true }
