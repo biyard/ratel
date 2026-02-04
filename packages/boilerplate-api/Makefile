@@ -1,4 +1,4 @@
-ENV ?= local
+ENV ?= dev
 
 COMMIT ?= $(shell git rev-parse --short HEAD)
 
@@ -8,11 +8,12 @@ AWS_REGION ?= $(shell aws configure get region)
 AWS_ACCOUNT_ID ?= $(shell aws sts get-caller-identity --query "Account" --output text)
 
 DYNAMO_TABLE_PREFIX ?= ratel-$(ENV)
-DYNAMO_ENDPOINT ?= http://localhost:4566
+DYNAMO_ENDPOINT ?= none
 
 RUST_LOG ?= debug
 
 PORT ?= 3000
+UPSTREAM_URL ?= https://dev.ratel.foundation
 
 BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) \
@@ -24,7 +25,8 @@ BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					ENV=$(ENV) \
 					COMMIT=$(COMMIT) \
 					RUST_LOG=$(RUST_LOG) \
-					PORT=$(PORT)
+					PORT=$(PORT) \
+					UPSTREAM_URL=$(UPSTREAM_URL)
 
 RUST_FLAG ?=
 WATCH_TARGET = -w src -w $(PWD)/

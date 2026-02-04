@@ -24,3 +24,5 @@ serde_with = "3.14.0"
 percent-encoding = "2.3.2"
 base64 = "0.22.1"
 tokio = { version = "1.40.0", features = ["full"] }
+reqwest = { version = "0.12", features = ["json"] }
+hyper = "1.6.0"
