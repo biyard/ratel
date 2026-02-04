@@ -1,6 +1,7 @@
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
 import { Outlet, useParams, useMatches } from 'react-router';
 import { Row } from '@/components/ui/row';
+import { cn } from '@/lib/utils';
 
 import { Col } from '@/components/ui/col';
 import {
@@ -22,24 +23,67 @@ import SpaceSideMenu from './components/space-side-menu';
 
 import AdminActionCard from './components/admin-action-card';
 import ViewerActionCard from './components/viewer-action-card';
+import { Hamburger } from '@/components/icons';
+import Logo from '@/assets/icons/logo/logo-letter.svg?react';
 
 function GeneralLayout({ ctrl }: { ctrl: SpaceLayoutController }) {
   const matches = useMatches();
-  const hideHeader = matches.some(
+  const hideSpaceHeader = matches.some(
     (match) =>
-      match.handle && (match.handle as { hideHeader?: boolean }).hideHeader,
+      match.handle &&
+      (match.handle as { hideSpaceHeader?: boolean }).hideSpaceHeader,
   );
   const isAdmin = ctrl.role == Role.Admin;
+
+  // Mobile Menu State
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Determine role for ActionCard
   return (
     <Row
       data-testid="space-layout-root"
-      className="flex flex-row items-start gap-0 flex-nowrap h-[calc(100vh-var(--header-height))]"
+      className="flex flex-row items-start gap-0 flex-nowrap h-screen relative"
     >
-      {/* Left Sidebar - Fixed */}
-      <Col className="max-w-[250px] shrink-0 bg-component-bg flex flex-col h-full divide-y divide-divider py-2">
+      {/* Mobile Header - Only visible on mobile */}
+      <div className="tablet:hidden fixed top-0 left-0 right-0 z-50 bg-bg border-b border-divider">
+        <div className="flex items-center justify-between px-4 py-3">
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Toggle menu"
+            className="p-2"
+          >
+            <Hamburger className="size-6" />
+          </button>
+          <Logo className="w-full" />
+          <div />
+        </div>
+      </div>
+
+      {/* Backdrop overlay - Only on mobile when menu is open */}
+      {isMobileMenuOpen && (
+        <div
+          className="tablet:hidden fixed inset-0 bg-black/50 z-30"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Left Sidebar - Responsive */}
+      <Col
+        className={cn(
+          'max-w-[250px] shrink-0 bg-component-bg flex flex-col divide-y divide-divider py-2.5',
+          // Mobile: fixed positioning with slide animation, below mobile header
+          'fixed tablet:relative top-14 tablet:top-0 left-0 z-40',
+          'h-[calc(100vh-3.5rem)] tablet:h-full',
+          'transition-transform duration-300 ease-in-out',
+          isMobileMenuOpen
+            ? 'translate-x-0'
+            : '-translate-x-full tablet:translate-x-0',
+        )}
+      >
         <div className="flex-1 overflow-y-auto flex flex-col gap-4 px-3 divide-y divide-divider">
+          <div className="px-4 py-5 hidden tablet:block">
+            <Logo className="w-[95px] h-[35px]" />
+          </div>
           {ctrl.role == Role.Admin && (
             <AdminActionCard
               title={ctrl.i18n.admin_title}
@@ -56,7 +100,11 @@ function GeneralLayout({ ctrl }: { ctrl: SpaceLayoutController }) {
             />
           )}
 
-          <SpaceSideMenu menus={ctrl.menus} selectedMenu={ctrl.currentMenu} />
+          <SpaceSideMenu
+            menus={ctrl.menus}
+            selectedMenu={ctrl.currentMenu}
+            onMenuClick={() => setIsMobileMenuOpen(false)}
+          />
 
           <div className="flex flex-col" />
 
@@ -81,9 +129,9 @@ function GeneralLayout({ ctrl }: { ctrl: SpaceLayoutController }) {
 
       {/* Main Content */}
       <Col className="flex-1 h-full overflow-y-auto">
-        <Col className="gap-4 min-w-0 max-w-desktop mx-auto p-2">
+        <Col className="gap-4 min-w-0 w-full max-w-desktop mx-auto p-2 pt-5">
           {/* Title, Author - Sticky Header */}
-          {!hideHeader && (
+          {!hideSpaceHeader && (
             <div className="sticky top-0 bg-bg z-10 pb-4">
               <Col className="gap-10 w-full min-w-0">
                 <TitleSection
@@ -129,7 +177,6 @@ export default function SpaceByIdLayout() {
   const ctrl = useSpaceLayoutController(spacePk!);
   // const participateSpace = useParticipateSpaceMutation();
   // const popup = usePopup();
-  // const { t } = useTranslation('Space');
   // const participationAttemptedRef = useRef(false);
 
   // useEffect(() => {

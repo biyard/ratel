@@ -255,6 +255,7 @@ export const routes = createBrowserRouter([
         id: 'space-layout',
         path: 'spaces/:spacePk',
         Component: SpaceByIdLayout,
+        handle: { hideHeader: true },
         children: [
           // Space Common
 
@@ -287,7 +288,7 @@ export const routes = createBrowserRouter([
                 id: 'space-post-detail',
                 path: 'posts/:postPk',
                 Component: SpaceBoardPage,
-                handle: { hideHeader: true },
+                handle: { hideSpaceHeader: true },
               },
             ],
           }, // End of Boards Feature
@@ -394,7 +395,7 @@ export const routes = createBrowserRouter([
             id: 'space-requirement-page',
             path: 'requirements',
             Component: SpaceRequirementPage,
-            handle: { hideHeader: true },
+            handle: { hideSpaceHeader: true },
           },
         ],
       }, // End of Space Layout

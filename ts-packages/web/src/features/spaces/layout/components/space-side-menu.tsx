@@ -2,12 +2,12 @@ import Card from '@/components/card';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router';
 import { Badge } from '@/components/ui/badge';
-import { Lock } from '@/components/icons';
 import { Unlock1 } from '@/assets/icons/security';
 
 export type SpaceSideMenuProps = React.HTMLAttributes<HTMLDivElement> & {
   menus?: SideMenuProps[];
   selectedMenu: SideMenuProps;
+  onMenuClick?: () => void;
 };
 
 export type SideMenuProps = {
@@ -23,6 +23,7 @@ export type SideMenuProps = {
 export default function SpaceSideMenu({
   menus,
   selectedMenu,
+  onMenuClick,
 }: SpaceSideMenuProps) {
   const selectedIndex = selectedMenu
     ? menus?.findIndex((item) => item.to === selectedMenu.to)
@@ -41,9 +42,9 @@ export default function SpaceSideMenu({
             'w-full cursor-pointer flex items-center justify-between rounded-sm data-[active=true]:bg-primary/5',
             'flex-row gap-3 px-1 py-2',
           )}
-          // onClick={() => {
-          //   setSelected(i);
-          // }}
+          onClick={() => {
+            onMenuClick?.();
+          }}
         >
           <div className="flex items-center gap-3">
             <item.Icon className="[&>path]:stroke-neutral-500 [&>rect]:stroke-neutral-500 size-5" />
