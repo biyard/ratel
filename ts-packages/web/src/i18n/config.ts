@@ -87,6 +87,7 @@ import { i18nTeamDao } from '@/features/teams/dao/i18n';
 import { i18nTeamRewardsPage } from '@/features/teams/rewards/i18n';
 import { i18nTeamSettingsPage } from '@/features/teams/settings/i18n';
 import { i18nSpaceDaoEditor } from '@/features/spaces/dao/pages/creator/space-dao-editor-i18n';
+import { i18nSpaceLayout } from '@/features/spaces/layout/space-layout-i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 // NOTE: it should be migrated to namespace based code splitting later
@@ -135,7 +136,8 @@ Object.entries({
   SpaceSurveyReport: i18nSpaceSurveyReportComponent,
   SpaceFile: i18nSpaceFileComponent,
   SpaceTypeSelectModal: i18nSpaceTypeSelectModal,
-  Space: i18nSpaceHome,
+  SpaceHome: i18nSpaceHome,
+  SpaceLayout: i18nSpaceLayout,
   SpacePollSubmitSurvey: i18nSubmitSurveyModal,
   SpaceCompleteSurvey: i18nCompleteSurveyModal,
   SpacePollAnalyze: i18nSpacePollAnalyze,

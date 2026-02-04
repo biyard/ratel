@@ -160,6 +160,8 @@ pub enum Error {
     ParticipationBlocked,
     #[error("User lacks verified attributes required for participation")]
     LackOfVerifiedAttributes,
+    #[error("Quota is full")]
+    FullQuota,
 
     // members feature 3050 ~
     #[rest_error(code = 3050)]
@@ -189,6 +191,8 @@ pub enum Error {
     ImmutablePollUserAnswer,
     #[error("Poll Result not found")]
     NotFoundPollResult,
+    #[error("User is not a participant in the space")]
+    UserNotParticipant,
 
     #[rest_error(code = 3300)]
     #[error("Sprint League not found")]

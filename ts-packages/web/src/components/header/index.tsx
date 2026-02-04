@@ -168,7 +168,7 @@ export default function Header(props: HeaderProps) {
   const nextTheme = seq[(seq.indexOf(theme) + 1) % seq.length];
 
   return (
-    <header className="border-b border-divider px-2.5 py-2.5 flex items-center justify-center !bg-bg h-[var(--header-height)] z-999">
+    <header className="border-b border-divider px-2.5 py-2.5 flex items-center justify-center bg-bg! h-(--header-height) z-999">
       <nav className="flex justify-between items-center mx-2.5 w-full gap-12.5 max-w-desktop">
         <div className="flex gap-5 items-center">
           <NavLink
