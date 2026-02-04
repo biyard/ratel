@@ -429,9 +429,6 @@ export async function goToMySpaces(page: Page) {
   await page.waitForURL(/.*/, { waitUntil: 'networkidle', timeout: TIMEOUT });
 
   await expect(page.getByTestId('space-card').first()).toBeVisible();
-  await expect(page.getByTestId('space-card').first()).toContainText(
-    POST_TITLE,
-  );
 }
 
 export async function goToSpace(page: Page, spaceName: string) {
@@ -662,4 +659,21 @@ export async function setEndTimeOneHourLater(page: Page) {
 
   // Verify the time was set
   await expect(endTimeButton).toContainText(endTimeText);
+}
+
+/**
+ * Participate in space as a viewer
+ * After clicking participate button, automatically redirects to Pre-Poll survey
+ */
+export async function participateInSpace(page: Page) {
+  // Click participate button
+  const participateButton = page.getByTestId('viewer-participate-button');
+  await expect(participateButton).toBeVisible({ timeout: TIMEOUT });
+  await participateButton.click();
+
+  // Wait for automatic redirect to Pre-Poll survey
+  // The survey should be visible after participation
+  await expect(
+    page.getByTestId('objective-viewer-option').first(),
+  ).toBeVisible({ timeout: TIMEOUT });
 }

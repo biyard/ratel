@@ -1,5 +1,5 @@
-import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
+import { useSpaceLayoutI18n } from '../space-layout-i18n';
 
 export default function SpaceDeleteModal({
   spaceName,
@@ -10,7 +10,7 @@ export default function SpaceDeleteModal({
   onDelete: () => void | Promise<void>;
   onClose?: () => void;
 }) {
-  const { t } = useTranslation('Space');
+  const i18n = useSpaceLayoutI18n();
   const [inputValue, setInputValue] = useState('');
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -32,9 +32,9 @@ export default function SpaceDeleteModal({
   };
 
   return (
-    <div className="w-[500px] max-tablet:w-full flex flex-col mt-6">
+    <div className="w-mobile max-tablet:w-full flex flex-col mt-6">
       <div className="text-center font-medium text-desc-text text-base mb-6">
-        {t('delete_warning')}
+        {i18n.delete_modal_delete_warning}
       </div>
 
       <div className="mb-6">
@@ -42,7 +42,7 @@ export default function SpaceDeleteModal({
           htmlFor="spaceNameVerification"
           className="block text-desc-text text-sm mb-2"
         >
-          {t('delete_label')}
+          {i18n.delete_modal_delete_label}
         </label>
         <input
           id="spaceNameVerification"
@@ -50,7 +50,7 @@ export default function SpaceDeleteModal({
           value={inputValue}
           onChange={handleInputChange}
           className="w-full p-3 bg-input-box-bg border border-input-box-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
-          placeholder={t('delete_placeholder', { spaceName })}
+          placeholder={i18n.delete_modal_delete_placeholder(spaceName)}
         />
       </div>
 
@@ -59,7 +59,7 @@ export default function SpaceDeleteModal({
           onClick={onClose}
           className="min-w-30 px-10 py-[14.5px] bg-cancel-button-bg font-bold text-base text-cancel-button-text hover:text-white light:hover:text-hover transition-colors"
         >
-          {t('cancel')}
+          {i18n.cancel}
         </button>
         <button
           onClick={handleDelete}
@@ -70,7 +70,9 @@ export default function SpaceDeleteModal({
               : 'bg-neutral-700 light:bg-neutral-300 text-neutral-500 cursor-not-allowed'
           } transition-colors`}
         >
-          {isDeleting ? t('deleting') : t('delete_button')}
+          {isDeleting
+            ? i18n.delete_modal_button_deleting
+            : i18n.delete_modal_button_delete}
         </button>
       </div>
     </div>
