@@ -2778,6 +2778,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "boilerplate-api"
+version = "0.1.0"
+dependencies = [
+ "aws-sdk-dynamodb",
+ "base64 0.22.1",
+ "bdk",
+ "by-axum",
+ "by-macros",
+ "chrono",
+ "hyper 1.7.0",
+ "percent-encoding",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_dynamo",
+ "serde_json",
+ "serde_with 3.14.1",
+ "thiserror 2.0.17",
+ "tokio",
+ "uuid 1.18.1",
+]
+
+[[package]]
 name = "bon"
 version = "3.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
