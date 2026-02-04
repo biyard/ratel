@@ -38,11 +38,15 @@ type SpaceDaoInfoCardProps = {
   onClaimIncentive?: (incentiveSk: string) => void;
   // withdrawal props removed
   tokens?: SpaceDaoTokenResponse[];
-  selectedToken?: string | null;
-  onSelectToken?: (tokenAddress: string) => void;
   tokensLoading?: boolean;
   onRefreshTokens?: () => void;
   isRefreshingTokens?: boolean;
+  tokenHasPrev?: boolean;
+  tokenHasNext?: boolean;
+  tokenHasAny?: boolean;
+  isFetchingNextTokenPage?: boolean;
+  onPrevTokens?: () => void;
+  onNextTokens?: () => void;
 };
 
 export function SpaceDaoInfoCard({
@@ -64,11 +68,15 @@ export function SpaceDaoInfoCard({
   isClaiming = false,
   onClaimIncentive,
   tokens = [],
-  selectedToken,
-  onSelectToken,
   tokensLoading = false,
   onRefreshTokens,
   isRefreshingTokens = false,
+  tokenHasPrev = false,
+  tokenHasNext = false,
+  tokenHasAny = false,
+  isFetchingNextTokenPage = false,
+  onPrevTokens,
+  onNextTokens,
 }: SpaceDaoInfoCardProps) {
   const { t } = useTranslation('SpaceDaoEditor');
   const [copied, setCopied] = useState(false);
@@ -83,33 +91,7 @@ export function SpaceDaoInfoCard({
     ? `${config.block_explorer_url}/address/${dao.contract_address}`
     : null;
 
-  const tokensWithDefault = (() => {
-    if (!config.usdt_address) return tokens;
-    const hasUsdt = tokens.some(
-      (item) =>
-        item.token_address.toLowerCase() === config.usdt_address.toLowerCase(),
-    );
-    if (hasUsdt) return tokens;
-    return [
-      {
-        token_address: config.usdt_address,
-        symbol: 'USDT',
-        decimals: 6,
-        balance: '0',
-        updated_at: Date.now(),
-        sk: `TOKEN#${config.usdt_address}`,
-        pk: `SPACE_DAO#${dao.contract_address}`,
-      },
-      ...tokens,
-    ];
-  })();
-
-  const selectedTokenItem =
-    tokensWithDefault.find((item) => item.token_address === selectedToken) ??
-    null;
-  const formattedTokenBalance = selectedTokenItem
-    ? formatTokenBalance(selectedTokenItem.balance, selectedTokenItem.decimals)
-    : null;
+  const tokenRows = tokens;
 
   const handleCopy = async () => {
     try {
@@ -245,55 +227,95 @@ export function SpaceDaoInfoCard({
           )}
         </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center gap-2.5">
-            <p className="text-text-secondary text-sm">
-              {t('dao_info_token_label')}
-            </p>
-            {onRefreshTokens && (
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={() => {
-                  if (!isRefreshingTokens) onRefreshTokens();
-                }}
-                className={`${
-                  isRefreshingTokens
-                    ? 'opacity-60 cursor-not-allowed'
-                    : 'cursor-pointer hover:bg-muted/40'
-                }`}
-                aria-disabled={isRefreshingTokens}
-              >
-                <ArrowPathIcon
-                  className={`h-4 w-4 ${
-                    isRefreshingTokens ? 'animate-spin' : ''
+        {(tokensLoading || tokenHasAny) && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2.5">
+              <p className="text-text-secondary text-sm">
+                {t('dao_info_token_label')}
+              </p>
+              {onRefreshTokens && (
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => {
+                    if (!isRefreshingTokens) onRefreshTokens();
+                  }}
+                  className={`${
+                    isRefreshingTokens
+                      ? 'opacity-60 cursor-not-allowed'
+                      : 'cursor-pointer hover:bg-muted/40'
                   }`}
-                />
-              </div>
-            )}
+                  aria-disabled={isRefreshingTokens}
+                >
+                  <ArrowPathIcon
+                    className={`h-4 w-4 ${
+                      isRefreshingTokens ? 'animate-spin' : ''
+                    }`}
+                  />
+                </div>
+              )}
+            </div>
+            <div className="flex items-center justify-end gap-2 text-sm">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onPrevTokens}
+                disabled={!tokenHasPrev}
+              >
+                {t('dao_selected_prev')}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onNextTokens}
+                disabled={!tokenHasNext || isFetchingNextTokenPage}
+              >
+                {t('dao_selected_next')}
+              </Button>
+            </div>
+            <div className="rounded-md border border-border bg-background">
+              {tokensLoading ? (
+                <div className="px-3 py-2 text-sm text-text-secondary">
+                  {t('dao_info_token_loading')}
+                </div>
+              ) : tokenRows.length === 0 ? (
+                <div className="px-3 py-2 text-sm text-text-secondary">
+                  {t('dao_info_token_empty')}
+                </div>
+              ) : (
+                <table className="w-full table-fixed text-sm">
+                  <thead className="text-text-secondary">
+                    <tr className="border-b border-border">
+                      <th className="px-3 py-2 text-left font-medium">
+                        {t('dao_info_token_table_token')}
+                      </th>
+                      <th className="px-3 py-2 text-right font-medium">
+                        {t('dao_info_token_table_balance')}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tokenRows.map((item) => (
+                      <tr
+                        key={item.token_address}
+                        className="border-b border-border last:border-0"
+                      >
+                        <td className="px-3 py-2 text-text-primary">
+                          {item.symbol || item.token_address}
+                        </td>
+                        <td className="px-3 py-2 text-right text-text-primary">
+                          {formatTokenBalance(item.balance, item.decimals)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
           </div>
-          <select
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-text-primary"
-            value={selectedToken ?? ''}
-            onChange={(e) => onSelectToken?.(e.target.value)}
-            disabled={tokensLoading || tokensWithDefault.length === 0}
-          >
-            {tokensWithDefault.length === 0 ? (
-              <option value="">{t('dao_info_token_empty')}</option>
-            ) : (
-              tokensWithDefault.map((item) => (
-                <option key={item.token_address} value={item.token_address}>
-                  {item.symbol || item.token_address}
-                </option>
-              ))
-            )}
-          </select>
-          <p className="text-base text-text-primary">
-            {tokensLoading
-              ? t('dao_info_token_loading')
-              : (formattedTokenBalance ?? t('dao_info_balance_unavailable'))}
-          </p>
-        </div>
+        )}
 
         <div className="flex flex-wrap items-center justify-end gap-2">
           {onUpdateDao && showEdit && (

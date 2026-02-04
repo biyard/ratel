@@ -12,21 +12,41 @@ import { useEffect, useMemo, useState } from 'react';
 import { config } from '@/config';
 import RadioButton from '@/components/radio-button';
 
+const isZeroBalance = (balance?: string | null) =>
+  !balance || /^0+$/.test(balance);
+
 export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
   logger.debug(`SpaceDaoEditorPage: spacePk=${spacePk}`);
   const { t } = useTranslation('SpaceDaoEditor');
   const { data: dao, isLoading } = useSpaceDao(spacePk);
-  const { data: tokenList, isLoading: tokensLoading } = useSpaceDaoTokens(
-    spacePk,
-    50,
-    Boolean(dao?.contract_address),
-  );
+  const {
+    data: tokenList,
+    isLoading: tokensLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useSpaceDaoTokens(spacePk, 5, Boolean(dao?.contract_address));
   const refreshTokens = useRefreshSpaceDaoTokensMutation(spacePk);
   const [selectedToken, setSelectedToken] = useState<string | null>(null);
   const [didRefreshTokens, setDidRefreshTokens] = useState(false);
+  const [tokenPageIndex, setTokenPageIndex] = useState(0);
+
+  const allTokens = useMemo(
+    () => tokenList?.pages.flatMap((page) => page.items) ?? [],
+    [tokenList?.pages],
+  );
+  const filteredTokens = useMemo(() => {
+    const usdt = config.usdt_address?.toLowerCase();
+    if (!usdt) return allTokens;
+    return allTokens.filter((item) => {
+      const isUsdt = item.token_address.toLowerCase() === usdt;
+      if (!isUsdt) return true;
+      return !isZeroBalance(item.balance);
+    });
+  }, [allTokens]);
 
   const orderedTokens = useMemo(() => {
-    const items = tokenList?.items ?? [];
+    const items = filteredTokens;
     const usdt = config.usdt_address?.toLowerCase();
     if (!usdt || items.length === 0) {
       return items;
@@ -37,7 +57,32 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
       if (aIsUsdt === bIsUsdt) return 0;
       return aIsUsdt ? -1 : 1;
     });
-  }, [tokenList?.items]);
+  }, [filteredTokens]);
+  const hasAnyTokens = filteredTokens.length > 0;
+
+  const tokenPages = tokenList?.pages ?? [];
+  const tokenPage = tokenPages[tokenPageIndex] ?? tokenPages[0];
+  const visibleTokens = useMemo(() => {
+    const items =
+      tokenPage?.items?.filter((item) => {
+        const usdt = config.usdt_address?.toLowerCase();
+        if (!usdt) return true;
+        const isUsdt = item.token_address.toLowerCase() === usdt;
+        if (!isUsdt) return true;
+        return !isZeroBalance(item.balance);
+      }) ?? [];
+    const usdt = config.usdt_address?.toLowerCase();
+    if (!usdt || items.length === 0) return items;
+    return [...items].sort((a, b) => {
+      const aIsUsdt = a.token_address.toLowerCase() === usdt;
+      const bIsUsdt = b.token_address.toLowerCase() === usdt;
+      if (aIsUsdt === bIsUsdt) return 0;
+      return aIsUsdt ? -1 : 1;
+    });
+  }, [tokenPage, tokenPage?.items]);
+  const hasPrevPage = tokenPageIndex > 0;
+  const canGoNext =
+    tokenPageIndex < tokenPages.length - 1 || Boolean(hasNextPage);
 
   useEffect(() => {
     if (selectedToken) return;
@@ -62,6 +107,12 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
     refreshTokens.mutate();
     setDidRefreshTokens(true);
   }, [dao?.contract_address, didRefreshTokens, refreshTokens]);
+
+  useEffect(() => {
+    if (tokenPageIndex > 0 && tokenPageIndex > tokenPages.length - 1) {
+      setTokenPageIndex(Math.max(tokenPages.length - 1, 0));
+    }
+  }, [tokenPageIndex, tokenPages.length]);
 
   const selectedTokenItem =
     orderedTokens.find(
@@ -146,12 +197,27 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
                 await ctrl.handleClaimIncentive(incentiveSk);
                 refreshTokens.mutate();
               }}
-              tokens={orderedTokens}
-              selectedToken={selectedToken}
-              onSelectToken={setSelectedToken}
+              tokens={visibleTokens}
+              tokenHasAny={hasAnyTokens}
               tokensLoading={tokensLoading}
               onRefreshTokens={() => refreshTokens.mutate()}
               isRefreshingTokens={refreshTokens.isPending}
+              tokenHasPrev={hasPrevPage}
+              tokenHasNext={canGoNext}
+              isFetchingNextTokenPage={isFetchingNextPage}
+              onPrevTokens={() =>
+                setTokenPageIndex((prev) => Math.max(prev - 1, 0))
+              }
+              onNextTokens={async () => {
+                if (tokenPageIndex < tokenPages.length - 1) {
+                  setTokenPageIndex((prev) => prev + 1);
+                  return;
+                }
+                if (hasNextPage) {
+                  await fetchNextPage();
+                  setTokenPageIndex((prev) => prev + 1);
+                }
+              }}
             />
           ) : (
             <>
