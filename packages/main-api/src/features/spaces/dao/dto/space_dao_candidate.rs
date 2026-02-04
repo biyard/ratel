@@ -7,4 +7,6 @@ pub struct SpaceDaoCandidate {
     pub display_name: String,
     pub profile_url: String,
     pub evm_address: String,
+    #[serde(default)]
+    pub score: i64,
 }

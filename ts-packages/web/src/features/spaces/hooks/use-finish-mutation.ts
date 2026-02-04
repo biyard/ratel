@@ -46,11 +46,13 @@ export function useFinishSpaceMutation<T extends SpaceCommon>() {
         const provider = signer.provider;
         const service = new SpaceDaoService(provider);
         await service.connectWallet();
-        // FIXME: use real score-based weighting once scoring pipeline is ready.
+        const scores = candidates.map((item) =>
+          typeof item.score === 'number' ? item.score : 0,
+        );
         await service.selectIncentiveRecipients(
           daoAddress,
           candidates.map((item) => item.evm_address),
-          candidates.map(() => 1),
+          scores,
         );
         const selectedAddresses =
           await service.getIncentiveRecipients(daoAddress);

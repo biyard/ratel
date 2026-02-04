@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::features::spaces::SpaceDaoCandidate;
+use crate::features::spaces::{SpaceDaoCandidate, SpaceDaoIncentiveScore};
 use crate::features::spaces::SpaceParticipant;
 use crate::models::user::UserEvmAddress;
 use crate::types::EntityType;
@@ -40,17 +40,27 @@ pub async fn collect_space_dao_candidate_addresses(
     }
 
     let mut seen_addresses = HashSet::new();
+    let (scores, _) =
+        SpaceDaoIncentiveScore::find_by_space(cli, space_pk, SpaceDaoIncentiveScore::opt_all())
+            .await?;
+    let mut score_map: HashMap<String, i64> = HashMap::new();
+    for item in scores {
+        score_map.insert(item.user_pk.to_string(), item.total_score());
+    }
+
     let mut candidates = Vec::new();
     for participant in unique_users {
         let key = participant.user_pk.to_string();
         if let Some(evm_address) = evm_map.get(&key) {
             if seen_addresses.insert(evm_address.clone()) {
+                let score = score_map.get(&key).copied().unwrap_or(0);
                 candidates.push(SpaceDaoCandidate {
                     user_pk: key,
                     username: participant.username,
                     display_name: participant.display_name,
                     profile_url: participant.profile_url,
                     evm_address: evm_address.clone(),
+                    score,
                 });
             }
         }
