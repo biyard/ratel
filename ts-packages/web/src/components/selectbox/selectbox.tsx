@@ -59,7 +59,7 @@ export default function SelectBox({
       </button>
 
       {isOpen && (
-        <ul className="absolute left-0 top-full mt-2 w-full bg-card-bg border border-yellow-500 rounded-md shadow-lg text-sm py-1 z-[9999] overflow-visible h-[100px] overflow-y-scroll">
+        <ul className="absolute left-0 top-full mt-2 w-full bg-card-bg border border-yellow-500 rounded-md shadow-lg text-sm py-1 z-9999 overflow-visible h-[100px] overflow-y-scroll">
           {groups.map((option, index) => (
             <li
               key={option.id}
