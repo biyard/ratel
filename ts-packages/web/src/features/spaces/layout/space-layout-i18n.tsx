@@ -93,6 +93,12 @@ export interface I18nSpaceLayout extends Record<Label, string> {
   start_modal_warning: string;
   start_modal_button_start: string;
   start_modal_button_starting: string;
+
+  // Profile Dropdown Menu
+  profile_dark_theme: string;
+  profile_sign_out: string;
+
+  login: string;
 }
 
 export const i18nSpaceLayout = {
@@ -193,6 +199,12 @@ export const i18nSpaceLayout = {
       'Once started, participants can begin their activities.',
     start_modal_button_start: 'Start Space',
     start_modal_button_starting: 'Starting...',
+
+    // Profile Dropdown Menu
+    profile_dark_theme: 'Dark Theme',
+    profile_sign_out: 'Sign Out',
+
+    login: 'Login',
   },
   ko: {
     cancel: '취소',
@@ -290,6 +302,12 @@ export const i18nSpaceLayout = {
       '스페이스를 시작하면 참여자들이 활동을 시작할 수 있습니다.',
     start_modal_button_start: '시작하기',
     start_modal_button_starting: '시작 중...',
+
+    // Profile Dropdown Menu
+    profile_dark_theme: '다크 테마',
+    profile_sign_out: '로그아웃',
+
+    login: '로그인',
   },
 };
 
@@ -373,5 +391,9 @@ export function useSpaceLayoutI18n() {
     start_modal_warning: t('start_modal_warning'),
     start_modal_button_start: t('start_modal_button_start'),
     start_modal_button_starting: t('start_modal_button_starting'),
+
+    profile_dark_theme: t('profile_dark_theme'),
+    profile_sign_out: t('profile_sign_out'),
+    login: t('login'),
   };
 }

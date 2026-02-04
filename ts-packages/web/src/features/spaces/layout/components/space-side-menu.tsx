@@ -1,4 +1,3 @@
-import Card from '@/components/card';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router';
 import { Badge } from '@/components/ui/badge';
@@ -30,7 +29,7 @@ export default function SpaceSideMenu({
     : -1;
 
   return (
-    <Card className={cn('flex flex-col gap-2.5 w-full p-0')}>
+    <div className="flex flex-col gap-2.5 w-full py-3">
       {menus.map((item, i) => (
         <Link
           key={`side-menu-item-${item.label}`}
@@ -47,7 +46,7 @@ export default function SpaceSideMenu({
           }}
         >
           <div className="flex items-center gap-3">
-            <item.Icon className="[&>path]:stroke-neutral-500 [&>rect]:stroke-neutral-500 size-5" />
+            <item.Icon className="[&>path]:stroke-text-secondary [&>rect]:stroke-text-secondary size-5" />
             <div className="text-sm font-bold text-text-primary">
               {item.label}
             </div>
@@ -64,6 +63,6 @@ export default function SpaceSideMenu({
           )}
         </Link>
       ))}
-    </Card>
+    </div>
   );
 }
