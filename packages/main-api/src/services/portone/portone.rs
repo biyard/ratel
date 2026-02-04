@@ -256,8 +256,8 @@ impl PortOne {
             return Err(Error::PortOnePaymentListError(err_text));
         }
 
-        let j: serde_json::Value = res.json().await?;
-        debug!("PortOne list payments response: {:?}", j);
-        Ok(serde_json::from_value(j)?)
+        let response: PaymentListResponse = res.json().await?;
+        debug!("PortOne list payments response: {:?}", response);
+        Ok(response)
     }
 }
