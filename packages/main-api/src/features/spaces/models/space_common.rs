@@ -220,12 +220,7 @@ impl SpaceCommon {
         let user_attributes = user.get_attributes(cli).await?;
         let age: Option<u8> = user_attributes.age().and_then(|v| u8::try_from(v).ok());
         let gender = user_attributes.gender;
-        tracing::info!(
-            "age: {:?}, gender: {:?}, remains: {}",
-            age,
-            gender,
-            self.remains
-        );
+
         if self.remains <= 0 {
             return Err(Error::FullQuota);
         }
