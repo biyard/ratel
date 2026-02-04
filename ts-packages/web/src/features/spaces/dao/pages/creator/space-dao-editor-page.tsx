@@ -126,22 +126,24 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
             <SpaceDaoInfoCard
               dao={dao}
               recipientCount={ctrl.chainRecipientCount.get()}
-              rewardMode={ctrl.chainRewardMode.get()}
+              incentiveMode={ctrl.chainIncentiveMode.get()}
               rankingBps={ctrl.chainRankingBps.get()}
               isUpdating={ctrl.isUpdating.get()}
               onUpdateDao={ctrl.handleUpdateDao}
-              rewardRecipients={ctrl.visibleRewardRecipients}
-              rewardRemainingCount={ctrl.rewardMeta?.remaining_count ?? null}
-              rewardTotalCount={ctrl.rewardMeta?.total_count ?? null}
-              rewardLoading={ctrl.rewardRecipientsLoading}
-              showRewardRecipients={Boolean(ctrl.space?.isFinished)}
+              incentiveRecipients={ctrl.visibleIncentiveRecipients}
+              incentiveRemainingCount={
+                ctrl.incentiveMeta?.remaining_count ?? null
+              }
+              incentiveTotalCount={ctrl.incentiveMeta?.total_count ?? null}
+              incentiveLoading={ctrl.incentiveRecipientsLoading}
+              showIncentiveRecipients={Boolean(ctrl.space?.isFinished)}
               showEdit={Boolean(ctrl.space?.isDraft)}
               currentUserEvm={ctrl.currentUserEvm}
               claimableAmount={ctrl.perRecipientDisplay}
-              isClaimable={ctrl.canClaimReward}
+              isClaimable={ctrl.canClaimIncentive}
               isClaiming={ctrl.isClaiming.get()}
-              onClaimReward={async (rewardSk) => {
-                await ctrl.handleClaimReward(rewardSk);
+              onClaimIncentive={async (incentiveSk) => {
+                await ctrl.handleClaimIncentive(incentiveSk);
                 refreshTokens.mutate();
               }}
               tokens={orderedTokens}
@@ -203,74 +205,74 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
               <div className="grid gap-5">
                 <div>
                   <label className="text-sm text-text-secondary mb-2 block">
-                    {t('reward_mode_label')}
+                    {t('incentive_mode_label')}
                   </label>
                   <div className="flex flex-col gap-2">
                     <div
                       role="button"
                       tabIndex={0}
-                      onClick={() => ctrl.rewardMode.set(0)}
+                      onClick={() => ctrl.incentiveMode.set(0)}
                       onKeyDown={(event) => {
                         if (event.key === 'Enter' || event.key === ' ') {
                           event.preventDefault();
-                          ctrl.rewardMode.set(0);
+                          ctrl.incentiveMode.set(0);
                         }
                       }}
                       className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer"
                     >
                       <RadioButton
-                        selected={ctrl.rewardMode.get() === 0}
-                        onClick={() => ctrl.rewardMode.set(0)}
+                        selected={ctrl.incentiveMode.get() === 0}
+                        onClick={() => ctrl.incentiveMode.set(0)}
                       />
-                      {t('reward_mode_random')}
+                      {t('incentive_mode_random')}
                     </div>
                     <div
                       role="button"
                       tabIndex={0}
-                      onClick={() => ctrl.rewardMode.set(1)}
+                      onClick={() => ctrl.incentiveMode.set(1)}
                       onKeyDown={(event) => {
                         if (event.key === 'Enter' || event.key === ' ') {
                           event.preventDefault();
-                          ctrl.rewardMode.set(1);
+                          ctrl.incentiveMode.set(1);
                         }
                       }}
                       className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer"
                     >
                       <RadioButton
-                        selected={ctrl.rewardMode.get() === 1}
-                        onClick={() => ctrl.rewardMode.set(1)}
+                        selected={ctrl.incentiveMode.get() === 1}
+                        onClick={() => ctrl.incentiveMode.set(1)}
                       />
-                      {t('reward_mode_ranking')}
+                      {t('incentive_mode_ranking')}
                     </div>
                     <div
                       role="button"
                       tabIndex={0}
-                      onClick={() => ctrl.rewardMode.set(2)}
+                      onClick={() => ctrl.incentiveMode.set(2)}
                       onKeyDown={(event) => {
                         if (event.key === 'Enter' || event.key === ' ') {
                           event.preventDefault();
-                          ctrl.rewardMode.set(2);
+                          ctrl.incentiveMode.set(2);
                         }
                       }}
                       className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer"
                     >
                       <RadioButton
-                        selected={ctrl.rewardMode.get() === 2}
-                        onClick={() => ctrl.rewardMode.set(2)}
+                        selected={ctrl.incentiveMode.get() === 2}
+                        onClick={() => ctrl.incentiveMode.set(2)}
                       />
-                      {t('reward_mode_mixed')}
+                      {t('incentive_mode_mixed')}
                     </div>
                   </div>
                 </div>
                 <div>
                   <label className="text-sm text-text-secondary mb-2 block">
-                    {t('reward_count_label')}
+                    {t('incentive_count_label')}
                   </label>
                   <Input
                     type="number"
                     min={0}
                     max={100}
-                    value={ctrl.rewardCount.get()}
+                    value={ctrl.incentiveCount.get()}
                     onChange={(e) => {
                       const next = e.target.value;
                       const numeric = Number(next);
@@ -280,16 +282,16 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
                           numeric >= 0 &&
                           numeric <= 100)
                       ) {
-                        ctrl.rewardCount.set(next);
+                        ctrl.incentiveCount.set(next);
                       }
                     }}
-                    placeholder={t('reward_count_placeholder')}
+                    placeholder={t('incentive_count_placeholder')}
                   />
                 </div>
-                {ctrl.rewardMode.get() === 2 && (
+                {ctrl.incentiveMode.get() === 2 && (
                   <div>
                     <label className="text-sm text-text-secondary mb-2 block">
-                      {t('reward_mode_ranking_ratio_label')}
+                      {t('incentive_mode_ranking_ratio_label')}
                     </label>
                     <Input
                       type="number"
@@ -308,7 +310,9 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
                           ctrl.rankingBps.set(next);
                         }
                       }}
-                      placeholder={t('reward_mode_ranking_ratio_placeholder')}
+                      placeholder={t(
+                        'incentive_mode_ranking_ratio_placeholder',
+                      )}
                     />
                   </div>
                 )}

@@ -2,34 +2,34 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { call } from '@/lib/api/ratel/call';
 import { spaceDaoKeys } from '@/constants';
 
-export type UpdateSpaceDaoRewardRequest = {
+export type UpdateSpaceDaoIncentiveRequest = {
   reward_sk: string;
   reward_distributed: boolean;
 };
 
-export function useUpdateSpaceDaoRewardMutation() {
+export function useUpdateSpaceDaoIncentiveMutation() {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationKey: ['update-space-dao-reward'],
+    mutationKey: ['update-space-dao-incentive'],
     mutationFn: async ({
       spacePk,
-      rewardSk,
-      rewardDistributed,
+      incentiveSk,
+      incentiveDistributed,
     }: {
       spacePk: string;
-      rewardSk: string;
-      rewardDistributed: boolean;
+      incentiveSk: string;
+      incentiveDistributed: boolean;
     }) => {
-      return call<UpdateSpaceDaoRewardRequest, void>(
+      return call<UpdateSpaceDaoIncentiveRequest, void>(
         'PATCH',
         `/v3/spaces/${encodeURIComponent(spacePk)}/dao/reward`,
-        { reward_sk: rewardSk, reward_distributed: rewardDistributed },
+        { reward_sk: incentiveSk, reward_distributed: incentiveDistributed },
       );
     },
     onSuccess: async (_, { spacePk }) => {
       await qc.invalidateQueries({
-        queryKey: spaceDaoKeys.rewardBase(spacePk),
+        queryKey: spaceDaoKeys.incentiveBase(spacePk),
       });
     },
   });

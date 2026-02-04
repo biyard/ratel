@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Card from '@/components/card';
 import { SpaceDaoResponse } from '@/features/spaces/dao/hooks/use-space-dao';
-import { SpaceDaoRewardResponse } from '@/features/spaces/dao/hooks/use-space-dao-reward';
+import { SpaceDaoIncentiveResponse } from '@/features/spaces/dao/hooks/use-space-dao-incentive';
 import { SpaceDaoTokenResponse } from '@/features/spaces/dao/hooks/use-space-dao-tokens';
-import { SpaceDaoRewardCard } from './space-dao-reward-card';
+import { SpaceDaoIncentiveCard } from './space-dao-incentive-card';
 import { config } from '@/config';
 import {
   ArrowPathIcon,
@@ -19,20 +19,23 @@ type SpaceDaoInfoCardProps = {
   dao: SpaceDaoResponse;
   isUpdating?: boolean;
   recipientCount?: string | number | null;
-  rewardMode?: number | null;
+  incentiveMode?: number | null;
   rankingBps?: number | null;
-  onUpdateDao?: (rewardCount: string, rankingRatio?: string) => Promise<void>;
-  rewardRecipients?: SpaceDaoRewardResponse[];
-  rewardRemainingCount?: number | null;
-  rewardTotalCount?: number | null;
-  rewardLoading?: boolean;
-  showRewardRecipients?: boolean;
+  onUpdateDao?: (
+    incentiveCount: string,
+    rankingRatio?: string,
+  ) => Promise<void>;
+  incentiveRecipients?: SpaceDaoIncentiveResponse[];
+  incentiveRemainingCount?: number | null;
+  incentiveTotalCount?: number | null;
+  incentiveLoading?: boolean;
+  showIncentiveRecipients?: boolean;
   showEdit?: boolean;
   currentUserEvm?: string | null;
   claimableAmount?: string | null;
   isClaimable?: boolean;
   isClaiming?: boolean;
-  onClaimReward?: (rewardSk: string) => void;
+  onClaimIncentive?: (incentiveSk: string) => void;
   // withdrawal props removed
   tokens?: SpaceDaoTokenResponse[];
   selectedToken?: string | null;
@@ -46,20 +49,20 @@ export function SpaceDaoInfoCard({
   dao,
   isUpdating = false,
   recipientCount,
-  rewardMode,
+  incentiveMode,
   rankingBps,
   onUpdateDao,
-  rewardRecipients,
-  rewardRemainingCount,
-  rewardTotalCount,
-  rewardLoading = false,
-  showRewardRecipients = true,
+  incentiveRecipients,
+  incentiveRemainingCount,
+  incentiveTotalCount,
+  incentiveLoading = false,
+  showIncentiveRecipients = true,
   showEdit = true,
   currentUserEvm,
   claimableAmount,
   isClaimable = false,
   isClaiming = false,
-  onClaimReward,
+  onClaimIncentive,
   tokens = [],
   selectedToken,
   onSelectToken,
@@ -70,7 +73,7 @@ export function SpaceDaoInfoCard({
   const { t } = useTranslation('SpaceDaoEditor');
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [rewardCountValue, setRewardCountValue] = useState(
+  const [incentiveCountValue, setIncentiveCountValue] = useState(
     String(recipientCount ?? ''),
   );
   const [rankingRatioValue, setRankingRatioValue] = useState(
@@ -119,7 +122,7 @@ export function SpaceDaoInfoCard({
   };
 
   const handleEdit = () => {
-    setRewardCountValue(String(recipientCount ?? ''));
+    setIncentiveCountValue(String(recipientCount ?? ''));
     setRankingRatioValue(
       rankingBps != null ? String(Math.round(rankingBps / 100)) : '',
     );
@@ -132,8 +135,8 @@ export function SpaceDaoInfoCard({
 
   const handleSaveEdit = async () => {
     if (!onUpdateDao) return;
-    const ratio = rewardMode === 2 ? rankingRatioValue.trim() : undefined;
-    await onUpdateDao(rewardCountValue, ratio);
+    const ratio = incentiveMode === 2 ? rankingRatioValue.trim() : undefined;
+    await onUpdateDao(incentiveCountValue, ratio);
     setIsEditing(false);
   };
 
@@ -176,22 +179,22 @@ export function SpaceDaoInfoCard({
         <div className="grid grid-cols-1 gap-4 text-sm">
           <div>
             <p className="text-text-secondary mb-1">
-              {t('dao_info_reward_mode')}
+              {t('dao_info_incentive_mode')}
             </p>
             <p className="text-base text-text-primary">
-              {formatRewardMode(t, rewardMode)}
+              {formatIncentiveMode(t, incentiveMode)}
             </p>
           </div>
           <div>
             <p className="text-text-secondary mb-1">
-              {t('dao_info_reward_count')}
+              {t('dao_info_incentive_count')}
             </p>
             {isEditing ? (
               <Input
                 type="number"
                 min={1}
                 max={100}
-                value={rewardCountValue}
+                value={incentiveCountValue}
                 onChange={(e) => {
                   const next = e.target.value;
                   const numeric = Number(next);
@@ -199,7 +202,7 @@ export function SpaceDaoInfoCard({
                     next === '' ||
                     (Number.isFinite(numeric) && numeric >= 0 && numeric <= 100)
                   ) {
-                    setRewardCountValue(next);
+                    setIncentiveCountValue(next);
                   }
                 }}
               />
@@ -209,10 +212,10 @@ export function SpaceDaoInfoCard({
               </p>
             )}
           </div>
-          {rewardMode === 2 && (
+          {incentiveMode === 2 && (
             <div>
               <p className="text-text-secondary mb-1">
-                {t('dao_info_reward_ranking_ratio')}
+                {t('dao_info_incentive_ranking_ratio')}
               </p>
               {isEditing ? (
                 <Input
@@ -351,17 +354,17 @@ export function SpaceDaoInfoCard({
         </div>
       </div>
 
-      {showRewardRecipients && (
-        <SpaceDaoRewardCard
-          rewardRecipient={rewardRecipients?.[0] ?? null}
-          remainingCount={rewardRemainingCount ?? null}
-          totalCount={rewardTotalCount ?? null}
-          rewardLoading={rewardLoading}
+      {showIncentiveRecipients && (
+        <SpaceDaoIncentiveCard
+          incentiveRecipient={incentiveRecipients?.[0] ?? null}
+          remainingCount={incentiveRemainingCount ?? null}
+          totalCount={incentiveTotalCount ?? null}
+          incentiveLoading={incentiveLoading}
           currentUserEvm={currentUserEvm}
           claimableAmount={claimableAmount}
           isClaimable={isClaimable}
           isClaiming={isClaiming}
-          onClaimReward={onClaimReward}
+          onClaimIncentive={onClaimIncentive}
         />
       )}
     </Card>
@@ -377,13 +380,13 @@ function formatTokenBalance(balance: string, decimals: number) {
   }
 }
 
-function formatRewardMode(
+function formatIncentiveMode(
   t: ReturnType<typeof useTranslation>['t'],
   mode?: number | null,
 ) {
-  if (mode === 1) return t('reward_mode_ranking');
-  if (mode === 2) return t('reward_mode_mixed');
-  if (mode === 0) return t('reward_mode_random');
+  if (mode === 1) return t('incentive_mode_ranking');
+  if (mode === 2) return t('incentive_mode_mixed');
+  if (mode === 0) return t('incentive_mode_random');
   return '-';
 }
 

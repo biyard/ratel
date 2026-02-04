@@ -166,8 +166,8 @@ export const spaceDaoKeys = {
   dao: (spacePk: string) => [...spaceKeys.detail(spacePk), 'dao'] as const,
   candidates: (spacePk: string) =>
     [...spaceDaoKeys.dao(spacePk), 'candidates'] as const,
-  rewardBase: (spacePk: string) =>
-    [...spaceDaoKeys.dao(spacePk), 'reward'] as const,
+  incentiveBase: (spacePk: string) =>
+    [...spaceDaoKeys.dao(spacePk), 'incentive'] as const,
   tokens: (spacePk: string) =>
     [...spaceDaoKeys.dao(spacePk), 'tokens'] as const,
 };
