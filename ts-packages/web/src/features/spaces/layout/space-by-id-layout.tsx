@@ -175,48 +175,6 @@ function GeneralLayout({ ctrl }: { ctrl: SpaceLayoutController }) {
 export default function SpaceByIdLayout() {
   const { spacePk } = useParams<{ spacePk: string }>();
   const ctrl = useSpaceLayoutController(spacePk!);
-  // const participateSpace = useParticipateSpaceMutation();
-  // const popup = usePopup();
-  // const participationAttemptedRef = useRef(false);
-
-  // useEffect(() => {
-  //   if (participationAttemptedRef.current || participateSpace.isPending) {
-  //     return;
-  //   }
-
-  //   const space = ctrl.space;
-
-  //   if (!space) return;
-
-  //   const shouldAutoParticipate = space.canParticipate;
-
-  //   if (!shouldAutoParticipate) return;
-
-  //   participationAttemptedRef.current = true;
-
-  //   (async () => {
-  //     try {
-  //       await participateSpace.mutateAsync({
-  //         spacePk: spacePk ?? '',
-  //         verifiablePresentation: '',
-  //       });
-  //     } catch (err) {
-  //       logger.debug('auto participate failed: ', err);
-  //       console.log('auto participate failed: ', err);
-
-  //       popup.open(<SpaceAuthorizePopup />).withTitle(t('authorize_title'));
-  //     }
-  //   })();
-  // }, [
-  //   spacePk,
-  //   ctrl.space.pk,
-  //   ctrl.space.canParticipate,
-  //   ctrl.space.status,
-  //   participateSpace,
-  //   popup,
-  //   t,
-  //   ctrl.space,
-  // ]);
 
   // NOTE: Must authorize permission for viewer/participant/admin before
   return (

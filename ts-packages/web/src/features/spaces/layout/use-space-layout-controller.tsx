@@ -23,12 +23,12 @@ import { Space } from '../types/space';
 import { UserDetailResponse } from '@/lib/api/ratel/users.v3';
 import { FileResponse } from '../files/types/file-response';
 import { SpaceVisibility } from '../types/space-common';
-import PublishSpaceModal, { PublishType } from '../modals/space-publish-modal';
-import SpaceDeleteModal from '../modals/space-delete-modal';
-import SpaceStartModal from '../modals/space-start-modal';
 import { SpaceParticipantProfileProps } from './components/space-participant-profile';
-import { type I18nSpaceLayout, useSpaceLayoutI18n } from './space-layout-i18n';
+import { useSpaceLayoutI18n } from './space-layout-i18n';
 import { useSpaceUpdateTitleMutation } from '../hooks/use-space-update-title-mutation';
+import PublishSpaceModal, { PublishType } from './modals/space-publish-modal';
+import SpaceDeleteModal from './modals/space-delete-modal';
+import SpaceStartModal from './modals/space-start-modal';
 
 export type SideMenuProps = {
   Icon: React.ComponentType<React.ComponentProps<'svg'>>;
@@ -61,7 +61,7 @@ export interface SpaceLayoutController {
   timelineItems: Array<{ label: string; time: number }>;
   navigate: ReturnType<typeof useNavigate>;
   popup: ReturnType<typeof usePopup>;
-  i18n: I18nSpaceLayout;
+  i18n: ReturnType<typeof useSpaceLayoutI18n>;
   adminActions: LayoutAction[];
   viewerActions: LayoutAction[];
   participantActions: LayoutAction[];
@@ -200,9 +200,9 @@ export function useSpaceLayoutController(
   const handleActionPublish = useCallback(async () => {
     popup
       .open(<PublishSpaceModal onPublish={handlePublish} />)
-      .withTitle(i18n.publish_space_title)
+      .withTitle(i18n.publish_modal_title)
       .withoutBackdropClose();
-  }, [popup, handlePublish, i18n.publish_space_title]);
+  }, [popup, handlePublish, i18n.publish_modal_title]);
 
   const handleStart = useCallback(async () => {
     try {
@@ -276,9 +276,9 @@ export function useSpaceLayoutController(
           }}
         />,
       )
-      .withTitle(i18n.delete_space_title)
+      .withTitle(i18n.delete_modal_title)
       .withoutBackdropClose();
-  }, [popup, handleDelete, space.title, i18n.delete_space_title]);
+  }, [popup, handleDelete, space.title, i18n.delete_modal_title]);
 
   const handleActionStart = useCallback(async () => {
     popup
@@ -290,9 +290,9 @@ export function useSpaceLayoutController(
           }}
         />,
       )
-      .withTitle(i18n.start_space_title)
+      .withTitle(i18n.start_modal_title)
       .withoutBackdropClose();
-  }, [popup, handleStart, i18n.start_space_title]);
+  }, [popup, handleStart, i18n.start_modal_title]);
 
   const handleParticipate = useCallback(async () => {
     logger.debug('handleParticipate is called');
