@@ -35,9 +35,6 @@ pub async fn create_reward_handler(
     Path(SpacePathParam { space_pk }): SpacePath,
     Json(req): Json<CreateRewardSpaceRequest>,
 ) -> Result<Json<SpaceRewardResponse>, Error> {
-    if !config::get().reward {
-        return Err(Error::RewardDisabled);
-    }
     permissions.permitted(TeamGroupPermission::SpaceEdit)?;
     let mut updater_txs = vec![];
 
