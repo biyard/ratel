@@ -10,15 +10,16 @@ const ERC20_ABI = [
   'function name() view returns (string)',
 ];
 
-const REWARD_DISTRIBUTION_ABI = [
-  'function getRewardDistributionConfig() view returns (tuple(uint8 mode,uint256 numOfTargets))',
-  'function setRewardRecipientCount(uint256 numOfTargets)',
-  'function selectRewardRecipients(address[] candidates) returns (address[])',
-  'function getRewardRecipients() view returns (address[])',
-  'function getClaimAmount(address token) view returns (uint256)',
-  'function isRewardRecipient(address account) view returns (bool)',
-  'function isRewarded(address account) view returns (bool)',
-  'function claimReward(address token)',
+const INCENTIVE_DISTRIBUTION_ABI = [
+  'function getIncentiveDistributionConfig() view returns (tuple(uint8 mode,uint256 numOfTargets,uint16 rankingBps))',
+  'function setIncentiveRecipientCount(uint256 numOfTargets)',
+  'function setIncentiveRankingBps(uint16 rankingBps)',
+  'function selectIncentiveRecipients(address[] candidates,uint256[] scores) returns (address[])',
+  'function getIncentiveRecipients() view returns (address[])',
+  'function getIncentiveAmount(address token) view returns (uint256)',
+  'function isIncentiveRecipient(address account) view returns (bool)',
+  'function isIncentiveClaimed(address account) view returns (bool)',
+  'function claimIncentive(address token)',
 ];
 
 export interface CreateSpaceDAOResult {
@@ -44,15 +45,20 @@ export class SpaceDaoService {
 
   async createSpaceDAO(
     admins: string[],
-    rewardRecipientCount: number,
+    incentiveRecipientCount: number,
+    rankingBps = 0,
+    mode = 0,
   ): Promise<CreateSpaceDAOResult> {
     if (!this.signer) await this.connectWallet();
 
     if (admins.length < 1) {
       throw new Error('At least 1 admin is required to create a DAO');
     }
-    if (!Number.isFinite(rewardRecipientCount) || rewardRecipientCount <= 0) {
-      throw new Error('Reward recipient count must be greater than 0');
+    if (
+      !Number.isFinite(incentiveRecipientCount) ||
+      incentiveRecipientCount <= 0
+    ) {
+      throw new Error('Incentive recipient count must be greater than 0');
     }
 
     const factory = new ethers.ContractFactory(
@@ -62,8 +68,9 @@ export class SpaceDaoService {
     );
 
     const contract = await factory.deploy(admins, {
-      mode: 0,
-      numOfTargets: rewardRecipientCount,
+      mode,
+      numOfTargets: incentiveRecipientCount,
+      rankingBps,
     });
     await contract.waitForDeployment();
 
@@ -79,91 +86,133 @@ export class SpaceDaoService {
     };
   }
 
-  async getRewardRecipientCount(daoAddress: string): Promise<number> {
+  async getIncentiveRecipientCount(daoAddress: string): Promise<number> {
     const dao = new ethers.Contract(
       daoAddress,
-      REWARD_DISTRIBUTION_ABI,
+      INCENTIVE_DISTRIBUTION_ABI,
       this.provider,
     );
-    const config = await dao.getRewardDistributionConfig();
+    const config = await dao.getIncentiveDistributionConfig();
     const raw = config?.numOfTargets ?? config?.[1] ?? 0;
     return Number(raw);
   }
 
-  async setRewardRecipientCount(
+  async getIncentiveDistributionConfig(daoAddress: string): Promise<{
+    mode: number;
+    numOfTargets: number;
+    rankingBps: number;
+  }> {
+    const dao = new ethers.Contract(
+      daoAddress,
+      INCENTIVE_DISTRIBUTION_ABI,
+      this.provider,
+    );
+    const config = await dao.getIncentiveDistributionConfig();
+    const mode = Number(config?.mode ?? config?.[0] ?? 0);
+    const numOfTargets = Number(config?.numOfTargets ?? config?.[1] ?? 0);
+    const rankingBps = Number(config?.rankingBps ?? config?.[2] ?? 0);
+    return { mode, numOfTargets, rankingBps };
+  }
+
+  async setIncentiveRecipientCount(
     daoAddress: string,
     count: number,
   ): Promise<string> {
     if (!this.signer) await this.connectWallet();
     if (!Number.isFinite(count) || count <= 0) {
-      throw new Error('Reward recipient count must be greater than 0');
+      throw new Error('Incentive recipient count must be greater than 0');
     }
     const dao = new ethers.Contract(
       daoAddress,
-      REWARD_DISTRIBUTION_ABI,
+      INCENTIVE_DISTRIBUTION_ABI,
       this.signer,
     );
-    const tx = await dao.setRewardRecipientCount(count);
+    const tx = await dao.setIncentiveRecipientCount(count);
     const receipt = await tx.wait();
     return receipt.hash;
   }
 
-  async selectRewardRecipients(
+  async setIncentiveRankingBps(
+    daoAddress: string,
+    rankingBps: number,
+  ): Promise<string> {
+    if (!this.signer) await this.connectWallet();
+    if (!Number.isFinite(rankingBps) || rankingBps < 0 || rankingBps > 10000) {
+      throw new Error('Ranking ratio must be between 0 and 100');
+    }
+    const dao = new ethers.Contract(
+      daoAddress,
+      INCENTIVE_DISTRIBUTION_ABI,
+      this.signer,
+    );
+    const tx = await dao.setIncentiveRankingBps(rankingBps);
+    const receipt = await tx.wait();
+    return receipt.hash;
+  }
+
+  async selectIncentiveRecipients(
     daoAddress: string,
     candidates: string[],
+    scores: number[],
   ): Promise<string> {
     if (!this.signer) await this.connectWallet();
     if (candidates.length === 0) {
-      throw new Error('Candidates are required to select rewards');
+      throw new Error('Candidates are required to select incentives');
+    }
+    if (scores.length !== candidates.length) {
+      throw new Error('Scores length must match candidates length');
     }
     const dao = new ethers.Contract(
       daoAddress,
-      REWARD_DISTRIBUTION_ABI,
+      INCENTIVE_DISTRIBUTION_ABI,
       this.signer,
     );
-    const tx = await dao.selectRewardRecipients(candidates);
+    const tx = await dao.selectIncentiveRecipients(candidates, scores);
     const receipt = await tx.wait();
     return receipt.hash;
   }
 
-  async getRewardRecipients(daoAddress: string): Promise<string[]> {
+  async getIncentiveRecipients(daoAddress: string): Promise<string[]> {
     const dao = new ethers.Contract(
       daoAddress,
-      REWARD_DISTRIBUTION_ABI,
+      INCENTIVE_DISTRIBUTION_ABI,
       this.provider,
     );
-    const addresses = await dao.getRewardRecipients();
+    const addresses = await dao.getIncentiveRecipients();
     return Array.isArray(addresses) ? addresses : [];
   }
 
-  async isRewardRecipient(
+  async isIncentiveRecipient(
     daoAddress: string,
     account: string,
   ): Promise<boolean> {
     const dao = new ethers.Contract(
       daoAddress,
-      REWARD_DISTRIBUTION_ABI,
+      INCENTIVE_DISTRIBUTION_ABI,
       this.provider,
     );
-    return Boolean(await dao.isRewardRecipient(account));
+    return Boolean(await dao.isIncentiveRecipient(account));
   }
 
-  async isRewarded(daoAddress: string, account: string): Promise<boolean> {
+  async isIncentiveClaimed(
+    daoAddress: string,
+    account: string,
+  ): Promise<boolean> {
     const dao = new ethers.Contract(
       daoAddress,
-      REWARD_DISTRIBUTION_ABI,
+      INCENTIVE_DISTRIBUTION_ABI,
       this.provider,
     );
-    return Boolean(await dao.isRewarded(account));
+    return Boolean(await dao.isIncentiveClaimed(account));
   }
 
-  async getClaimAmount(daoAddress: string, token: string): Promise<bigint> {
+  async getIncentiveAmount(daoAddress: string, token: string): Promise<bigint> {
     const dao = new ethers.Contract(
       daoAddress,
-      REWARD_DISTRIBUTION_ABI,
+      INCENTIVE_DISTRIBUTION_ABI,
       this.provider,
     );
-    const amount = await dao.getClaimAmount(token);
+    const amount = await dao.getIncentiveAmount(token);
     return BigInt(amount);
   }
 
@@ -233,16 +282,16 @@ export class SpaceDaoService {
     return receipt.hash;
   }
 
-  async claimReward(daoAddress: string, token: string): Promise<string> {
+  async claimIncentive(daoAddress: string, token: string): Promise<string> {
     if (!this.signer) await this.connectWallet();
 
     const dao = new ethers.Contract(
       daoAddress,
-      REWARD_DISTRIBUTION_ABI,
+      INCENTIVE_DISTRIBUTION_ABI,
       this.signer,
     );
 
-    const tx = await dao.claimReward(token);
+    const tx = await dao.claimIncentive(token);
     const receipt = await tx.wait();
     return receipt.hash;
   }

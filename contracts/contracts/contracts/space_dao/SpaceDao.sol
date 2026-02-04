@@ -10,36 +10,45 @@ contract SpaceDAO {
     address[] private _admins;
     mapping(address => bool) private _isAdmin;
 
-    enum RewardDistributionMode {
+    enum IncentiveDistributionMode {
         Random,
         Ranking,
         Mixed
     }
 
-    struct RewardDistributionConfig {
-        RewardDistributionMode mode;
+    struct IncentiveDistributionConfig {
+        IncentiveDistributionMode mode;
         uint256 numOfTargets;
+        uint16 rankingBps;
     }
 
-    RewardDistributionConfig private _rewardDistributionConfig;
-    address[] private _rewardRecipients;
-    mapping(address => bool) private _isRewardRecipient;
-    mapping(address => bool) private _isRewarded;
-    uint256 private _rewardEpoch;
-    mapping(address => uint256) private _rewardAmountByToken;
-    mapping(address => uint256) private _rewardAmountEpoch;
+    IncentiveDistributionConfig private _incentiveDistributionConfig;
+    address[] private _incentiveRecipients;
+    mapping(address => bool) private _isIncentiveRecipient;
+    mapping(address => bool) private _isIncentiveClaimed;
+    uint256 private _incentiveEpoch;
+    mapping(address => uint256) private _incentiveAmountByToken;
+    mapping(address => uint256) private _incentiveAmountEpoch;
 
-    event RewardDistributionSelected(RewardDistributionMode mode, uint256 count);
-    event RewardDistributionConfigUpdated(RewardDistributionMode mode, uint256 numOfTargets);
-    event RewardClaimed(address indexed token, address indexed recipient, uint256 value);
+    event IncentiveDistributionSelected(IncentiveDistributionMode mode, uint256 count);
+    event IncentiveDistributionConfigUpdated(
+        IncentiveDistributionMode mode,
+        uint256 numOfTargets,
+        uint16 rankingBps
+    );
+    event IncentiveClaimed(address indexed token, address indexed recipient, uint256 value);
 
     modifier onlyAdmin() {
         require(_isAdmin[msg.sender], "SpaceDAO: admin only");
         _;
     }
 
-    constructor(address[] memory admins, RewardDistributionConfig memory rewardDistributionConfig) {
+    constructor(address[] memory admins, IncentiveDistributionConfig memory incentiveDistributionConfig) {
         require(admins.length > 0, "SpaceDAO: empty admins");
+        require(
+            incentiveDistributionConfig.rankingBps <= 10000,
+            "SpaceDAO: invalid ranking bps"
+        );
         for (uint256 i = 0; i < admins.length; i++) {
             address admin = admins[i];
             require(admin != address(0), "SpaceDAO: invalid admin");
@@ -47,7 +56,7 @@ contract SpaceDAO {
             _isAdmin[admin] = true;
             _admins.push(admin);
         }
-        _rewardDistributionConfig = rewardDistributionConfig;
+        _incentiveDistributionConfig = incentiveDistributionConfig;
     }
 
     function getAdmins() external view returns (address[] memory) {
@@ -58,121 +67,142 @@ contract SpaceDAO {
         return _isAdmin[account];
     }
 
-    function getRewardDistributionConfig() external view returns (RewardDistributionConfig memory) {
-        return _rewardDistributionConfig;
+    function getIncentiveDistributionConfig() external view returns (IncentiveDistributionConfig memory) {
+        return _incentiveDistributionConfig;
     }
 
-    function setRewardRecipientCount(uint256 numOfTargets) external onlyAdmin {
+    function setIncentiveRecipientCount(uint256 numOfTargets) external onlyAdmin {
         require(numOfTargets > 0, "SpaceDAO: invalid recipient count");
-        _rewardDistributionConfig = RewardDistributionConfig({
-            mode: _rewardDistributionConfig.mode,
-            numOfTargets: numOfTargets
+        _incentiveDistributionConfig = IncentiveDistributionConfig({
+            mode: _incentiveDistributionConfig.mode,
+            numOfTargets: numOfTargets,
+            rankingBps: _incentiveDistributionConfig.rankingBps
         });
-        emit RewardDistributionConfigUpdated(_rewardDistributionConfig.mode, numOfTargets);
+        emit IncentiveDistributionConfigUpdated(
+            _incentiveDistributionConfig.mode,
+            numOfTargets,
+            _incentiveDistributionConfig.rankingBps
+        );
     }
 
-    function getRewardRecipients() external view returns (address[] memory) {
-        return _rewardRecipients;
+    function setIncentiveRankingBps(uint16 rankingBps) external onlyAdmin {
+        require(rankingBps <= 10000, "SpaceDAO: invalid ranking bps");
+        _incentiveDistributionConfig = IncentiveDistributionConfig({
+            mode: _incentiveDistributionConfig.mode,
+            numOfTargets: _incentiveDistributionConfig.numOfTargets,
+            rankingBps: rankingBps
+        });
+        emit IncentiveDistributionConfigUpdated(
+            _incentiveDistributionConfig.mode,
+            _incentiveDistributionConfig.numOfTargets,
+            rankingBps
+        );
     }
 
-    function isRewardRecipient(address account) external view returns (bool) {
-        return _isRewardRecipient[account];
+    function getIncentiveRecipients() external view returns (address[] memory) {
+        return _incentiveRecipients;
     }
 
-    function isRewarded(address account) external view returns (bool) {
-        return _isRewarded[account];
+    function isIncentiveRecipient(address account) external view returns (bool) {
+        return _isIncentiveRecipient[account];
     }
 
-    function getClaimAmount(address token) external view returns (uint256) {
+    function isIncentiveClaimed(address account) external view returns (bool) {
+        return _isIncentiveClaimed[account];
+    }
+
+    function getIncentiveAmount(address token) external view returns (uint256) {
         if (token == address(0)) {
             return 0;
         }
-        uint256 count = _rewardRecipients.length;
+        uint256 count = _incentiveRecipients.length;
         if (count == 0) {
             return 0;
         }
-        if (_rewardAmountEpoch[token] == _rewardEpoch) {
-            return _rewardAmountByToken[token];
+        if (_incentiveAmountEpoch[token] == _incentiveEpoch) {
+            return _incentiveAmountByToken[token];
         }
         uint256 balance = IERC20(token).balanceOf(address(this));
         return balance / count;
     }
 
-    function selectRewardRecipients(address[] calldata candidates)
+    function selectIncentiveRecipients(address[] calldata candidates, uint256[] calldata scores)
         external
         onlyAdmin
         returns (address[] memory)
     {
         require(candidates.length > 0, "SpaceDAO: empty candidates");
-        require(
-            _rewardDistributionConfig.mode == RewardDistributionMode.Random,
-            "SpaceDAO: mode not supported"
-        );
+        require(candidates.length == scores.length, "SpaceDAO: invalid scores");
 
-        uint256 count = _rewardDistributionConfig.numOfTargets;
+        uint256 count = _incentiveDistributionConfig.numOfTargets;
         require(count > 0, "SpaceDAO: invalid recipient count");
 
         if (count > candidates.length) {
             count = candidates.length;
         }
 
-        address[] memory pool = new address[](candidates.length);
-        for (uint256 i = 0; i < candidates.length; i++) {
-            pool[i] = candidates[i];
+        uint256 positiveCount = 0;
+        for (uint256 i = 0; i < scores.length; i++) {
+            if (scores[i] > 0) {
+                positiveCount += 1;
+            }
+        }
+        if (count > positiveCount) {
+            count = positiveCount;
         }
 
-        address[] memory picked = new address[](count);
-        for (uint256 i = 0; i < count; i++) {
-            uint256 j = _randomIndex(pool.length - i, i) + i;
-            address tmp = pool[i];
-            pool[i] = pool[j];
-            pool[j] = tmp;
-            picked[i] = pool[i];
+        bool[] memory excluded = new bool[](candidates.length);
+        address[] memory picked;
+        if (_incentiveDistributionConfig.mode == IncentiveDistributionMode.Ranking) {
+            picked = _selectByRanking(candidates, scores, count, excluded);
+        } else if (_incentiveDistributionConfig.mode == IncentiveDistributionMode.Mixed) {
+            picked = _selectByMixed(candidates, scores, count, excluded);
+        } else {
+            picked = _selectByWeightedRandom(candidates, scores, count, excluded, 0);
         }
 
-        for (uint256 i = 0; i < _rewardRecipients.length; i++) {
-            address prev = _rewardRecipients[i];
-            _isRewardRecipient[prev] = false;
-            _isRewarded[prev] = false;
+        for (uint256 i = 0; i < _incentiveRecipients.length; i++) {
+            address prev = _incentiveRecipients[i];
+            _isIncentiveRecipient[prev] = false;
+            _isIncentiveClaimed[prev] = false;
         }
-        delete _rewardRecipients;
+        delete _incentiveRecipients;
         for (uint256 i = 0; i < picked.length; i++) {
             address pickedAddr = picked[i];
             require(pickedAddr != address(0), "SpaceDAO: invalid recipient");
-            _isRewardRecipient[pickedAddr] = true;
-            _isRewarded[pickedAddr] = false;
-            _rewardRecipients.push(pickedAddr);
+            _isIncentiveRecipient[pickedAddr] = true;
+            _isIncentiveClaimed[pickedAddr] = false;
+            _incentiveRecipients.push(pickedAddr);
         }
-        _rewardEpoch += 1;
+        _incentiveEpoch += 1;
 
-        emit RewardDistributionSelected(_rewardDistributionConfig.mode, picked.length);
+        emit IncentiveDistributionSelected(_incentiveDistributionConfig.mode, picked.length);
         return picked;
     }
 
-    function claimReward(address token) external {
+    function claimIncentive(address token) external {
         require(token != address(0), "SpaceDAO: invalid token");
 
         address recipient = msg.sender;
-        require(_isRewardRecipient[recipient], "SpaceDAO: not selected");
-        require(!_isRewarded[recipient], "SpaceDAO: reward finished");
+        require(_isIncentiveRecipient[recipient], "SpaceDAO: not selected");
+        require(!_isIncentiveClaimed[recipient], "SpaceDAO: incentive finished");
 
         IERC20 erc20 = IERC20(token);
-        uint256 count = _rewardRecipients.length;
+        uint256 count = _incentiveRecipients.length;
         require(count > 0, "SpaceDAO: invalid recipient count");
-        uint256 value = _rewardAmountByToken[token];
-        if (_rewardAmountEpoch[token] != _rewardEpoch) {
+        uint256 value = _incentiveAmountByToken[token];
+        if (_incentiveAmountEpoch[token] != _incentiveEpoch) {
             uint256 balance = erc20.balanceOf(address(this));
             value = balance / count;
             require(value > 0, "SpaceDAO: invalid value");
-            _rewardAmountByToken[token] = value;
-            _rewardAmountEpoch[token] = _rewardEpoch;
+            _incentiveAmountByToken[token] = value;
+            _incentiveAmountEpoch[token] = _incentiveEpoch;
         }
         require(erc20.balanceOf(address(this)) >= value, "SpaceDAO: insufficient balance");
-
+        _isIncentiveClaimed[recipient] = true;
         require(erc20.transfer(recipient, value), "SpaceDAO: transfer failed");
-        _isRewarded[recipient] = true;
 
-        emit RewardClaimed(token, recipient, value);
+        emit IncentiveClaimed(token, recipient, value);
     }
 
     function _randomIndex(uint256 range, uint256 nonce) internal view returns (uint256) {
@@ -182,5 +212,190 @@ contract SpaceDAO {
         return uint256(
             keccak256(abi.encodePacked(block.prevrandao, block.timestamp, msg.sender, nonce))
         ) % range;
+    }
+
+    function _selectByRanking(
+        address[] memory candidates,
+        uint256[] memory scores,
+        uint256 count,
+        bool[] memory excluded
+    ) internal pure returns (address[] memory) {
+        address[] memory picked = new address[](count);
+        uint256 pickedCount = 0;
+        for (uint256 k = 0; k < count; k++) {
+            uint256 bestScore = 0;
+            uint256 bestIdx = type(uint256).max;
+            for (uint256 i = 0; i < candidates.length; i++) {
+                if (excluded[i]) {
+                    continue;
+                }
+                uint256 score = scores[i];
+                if (bestIdx == type(uint256).max || score > bestScore) {
+                    bestScore = score;
+                    bestIdx = i;
+                }
+            }
+            if (bestIdx == type(uint256).max || bestScore == 0) {
+                break;
+            }
+            excluded[bestIdx] = true;
+            picked[pickedCount] = candidates[bestIdx];
+            pickedCount += 1;
+        }
+        if (pickedCount == count) {
+            return picked;
+        }
+
+        address[] memory trimmed = new address[](pickedCount);
+        for (uint256 i = 0; i < pickedCount; i++) {
+            trimmed[i] = picked[i];
+        }
+        return trimmed;
+    }
+
+    function _selectByMixed(
+        address[] memory candidates,
+        uint256[] memory scores,
+        uint256 count,
+        bool[] memory excluded
+    ) internal view returns (address[] memory) {
+        uint256 rankCount = (count * _incentiveDistributionConfig.rankingBps) / 10000;
+        if (rankCount > count) {
+            rankCount = count;
+        }
+        uint256 randomCount = count - rankCount;
+
+        address[] memory picked = new address[](count);
+        uint256 pickedCount = 0;
+        if (rankCount > 0) {
+            address[] memory ranked = _selectByRanking(
+                candidates,
+                scores,
+                rankCount,
+                excluded
+            );
+            for (uint256 i = 0; i < ranked.length; i++) {
+                picked[pickedCount] = ranked[i];
+                pickedCount += 1;
+            }
+        }
+
+        if (randomCount > 0) {
+            address[] memory randoms = _selectByWeightedRandom(
+                candidates,
+                scores,
+                randomCount,
+                excluded,
+                rankCount
+            );
+            for (uint256 i = 0; i < randoms.length; i++) {
+                picked[pickedCount] = randoms[i];
+                pickedCount += 1;
+            }
+        }
+
+        if (pickedCount == count) {
+            return picked;
+        }
+
+        address[] memory trimmed = new address[](pickedCount);
+        for (uint256 i = 0; i < pickedCount; i++) {
+            trimmed[i] = picked[i];
+        }
+        return trimmed;
+    }
+
+    function _selectByWeightedRandom(
+        address[] memory candidates,
+        uint256[] memory scores,
+        uint256 count,
+        bool[] memory excluded,
+        uint256 nonceOffset
+    ) internal view returns (address[] memory) {
+        uint256 n = scores.length;
+        uint256[] memory bit = new uint256[](n + 1);
+        uint256[] memory weights = new uint256[](n);
+        for (uint256 i = 0; i < n; i++) {
+            uint256 w = excluded[i] ? 0 : scores[i];
+            weights[i] = w;
+            if (w > 0) {
+                _bitAdd(bit, i + 1, w);
+            }
+        }
+
+        address[] memory picked = new address[](count);
+        uint256 pickedCount = 0;
+        for (uint256 k = 0; k < count; k++) {
+            uint256 totalWeight = _bitSum(bit, n);
+            if (totalWeight == 0) {
+                break;
+            }
+
+            uint256 rand = _randomIndex(totalWeight, nonceOffset + k);
+            uint256 chosen = _bitFind(bit, rand + 1);
+            require(chosen < n, "SpaceDAO: no candidates");
+
+            excluded[chosen] = true;
+            picked[pickedCount] = candidates[chosen];
+            pickedCount += 1;
+
+            uint256 w = weights[chosen];
+            if (w > 0) {
+                weights[chosen] = 0;
+                _bitSub(bit, chosen + 1, w);
+            }
+        }
+        if (pickedCount == count) {
+            return picked;
+        }
+
+        address[] memory trimmed = new address[](pickedCount);
+        for (uint256 i = 0; i < pickedCount; i++) {
+            trimmed[i] = picked[i];
+        }
+        return trimmed;
+    }
+
+    function _bitAdd(uint256[] memory bit, uint256 idx, uint256 delta) internal pure {
+        uint256 n = bit.length - 1;
+        while (idx <= n) {
+            bit[idx] += delta;
+            idx += idx & (~idx + 1); // index += lowbit(index)
+        }
+    }
+
+    function _bitSub(uint256[] memory bit, uint256 idx, uint256 delta) internal pure {
+        uint256 n = bit.length - 1;
+        while (idx <= n) {
+            bit[idx] -= delta;
+            idx += idx & (~idx + 1); // index += lowbit(index)
+        }
+    }
+
+    function _bitSum(uint256[] memory bit, uint256 idx) internal pure returns (uint256) {
+        uint256 sum = 0;
+        while (idx > 0) {
+            sum += bit[idx];
+            idx -= idx & (~idx + 1); //index -= lowbit(index)
+        }
+        return sum;
+    }
+
+    function _bitFind(uint256[] memory bit, uint256 target) internal pure returns (uint256) {
+        uint256 idx = 0;
+        uint256 bitMask = 1;
+        uint256 n = bit.length - 1;
+        while (bitMask <= n) {
+            bitMask <<= 1; //2의 거듭제곱
+        }
+        uint256 sum = 0;
+        for (uint256 step = bitMask; step > 0; step >>= 1) { // bitmask, bitmask/2, bitmask/4, ...
+            uint256 next = idx + step;
+            if (next <= n && sum + bit[next] < target) {
+                sum += bit[next];
+                idx = next;
+            }
+        }
+        return idx; // 0-based index
     }
 }

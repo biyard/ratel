@@ -19,7 +19,9 @@ type SpaceDaoInfoCardProps = {
   dao: SpaceDaoResponse;
   isUpdating?: boolean;
   recipientCount?: string | number | null;
-  onUpdateDao?: (rewardCount: string) => Promise<void>;
+  rewardMode?: number | null;
+  rankingBps?: number | null;
+  onUpdateDao?: (rewardCount: string, rankingRatio?: string) => Promise<void>;
   rewardRecipients?: SpaceDaoRewardResponse[];
   rewardRemainingCount?: number | null;
   rewardTotalCount?: number | null;
@@ -44,6 +46,8 @@ export function SpaceDaoInfoCard({
   dao,
   isUpdating = false,
   recipientCount,
+  rewardMode,
+  rankingBps,
   onUpdateDao,
   rewardRecipients,
   rewardRemainingCount,
@@ -68,6 +72,9 @@ export function SpaceDaoInfoCard({
   const [isEditing, setIsEditing] = useState(false);
   const [rewardCountValue, setRewardCountValue] = useState(
     String(recipientCount ?? ''),
+  );
+  const [rankingRatioValue, setRankingRatioValue] = useState(
+    rankingBps != null ? String(Math.round(rankingBps / 100)) : '',
   );
   const explorerUrl = config.block_explorer_url
     ? `${config.block_explorer_url}/address/${dao.contract_address}`
@@ -113,6 +120,9 @@ export function SpaceDaoInfoCard({
 
   const handleEdit = () => {
     setRewardCountValue(String(recipientCount ?? ''));
+    setRankingRatioValue(
+      rankingBps != null ? String(Math.round(rankingBps / 100)) : '',
+    );
     setIsEditing(true);
   };
 
@@ -122,7 +132,8 @@ export function SpaceDaoInfoCard({
 
   const handleSaveEdit = async () => {
     if (!onUpdateDao) return;
-    await onUpdateDao(rewardCountValue);
+    const ratio = rewardMode === 2 ? rankingRatioValue.trim() : undefined;
+    await onUpdateDao(rewardCountValue, ratio);
     setIsEditing(false);
   };
 
@@ -165,14 +176,32 @@ export function SpaceDaoInfoCard({
         <div className="grid grid-cols-1 gap-4 text-sm">
           <div>
             <p className="text-text-secondary mb-1">
+              {t('dao_info_reward_mode')}
+            </p>
+            <p className="text-base text-text-primary">
+              {formatRewardMode(t, rewardMode)}
+            </p>
+          </div>
+          <div>
+            <p className="text-text-secondary mb-1">
               {t('dao_info_reward_count')}
             </p>
             {isEditing ? (
               <Input
                 type="number"
                 min={1}
+                max={100}
                 value={rewardCountValue}
-                onChange={(e) => setRewardCountValue(e.target.value)}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  const numeric = Number(next);
+                  if (
+                    next === '' ||
+                    (Number.isFinite(numeric) && numeric >= 0 && numeric <= 100)
+                  ) {
+                    setRewardCountValue(next);
+                  }
+                }}
               />
             ) : (
               <p className="text-base text-text-primary">
@@ -180,6 +209,37 @@ export function SpaceDaoInfoCard({
               </p>
             )}
           </div>
+          {rewardMode === 2 && (
+            <div>
+              <p className="text-text-secondary mb-1">
+                {t('dao_info_reward_ranking_ratio')}
+              </p>
+              {isEditing ? (
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={rankingRatioValue}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    const numeric = Number(next);
+                    if (
+                      next === '' ||
+                      (Number.isFinite(numeric) &&
+                        numeric >= 0 &&
+                        numeric <= 100)
+                    ) {
+                      setRankingRatioValue(next);
+                    }
+                  }}
+                />
+              ) : (
+                <p className="text-base text-text-primary">
+                  {formatRankingRatio(rankingBps)}
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -315,4 +375,19 @@ function formatTokenBalance(balance: string, decimals: number) {
   } catch {
     return balance;
   }
+}
+
+function formatRewardMode(
+  t: ReturnType<typeof useTranslation>['t'],
+  mode?: number | null,
+) {
+  if (mode === 1) return t('reward_mode_ranking');
+  if (mode === 2) return t('reward_mode_mixed');
+  if (mode === 0) return t('reward_mode_random');
+  return '-';
+}
+
+function formatRankingRatio(rankingBps?: number | null) {
+  if (rankingBps == null) return '-';
+  return `${(rankingBps / 100).toFixed(2)}%`;
 }
