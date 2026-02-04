@@ -18,8 +18,11 @@ fn parse_partition(user_pk_str: &str) -> Option<Partition> {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct PaymentBookmark {
     page: i32,
+    #[serde(default)]
     page_size: i32,
+    #[serde(default)]
     total_count: i64,
+    #[serde(default)]
     total_pages: i32,
 }
 
