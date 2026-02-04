@@ -1,7 +1,7 @@
 use crate::controllers::v3::spaces::{SpacePath, SpacePathParam};
 use crate::features::spaces::{SpaceDao, SpaceDaoCandidate};
 use crate::types::{EntityType, Permissions, TeamGroupPermission};
-use crate::utils::space_dao_reward::collect_space_dao_candidate_addresses;
+use crate::utils::space_dao_incentive::collect_space_dao_candidate_addresses;
 use crate::{AppState, Error};
 use aide::NoApi;
 use axum::Json;

@@ -7,11 +7,11 @@ pub use get_space_dao::*;
 pub mod list_space_dao_candidates;
 pub use list_space_dao_candidates::*;
 
-pub mod get_space_dao_reward;
-pub use get_space_dao_reward::*;
+pub mod get_space_dao_incentive;
+pub use get_space_dao_incentive::*;
 
-pub mod create_space_dao_reward;
-pub use create_space_dao_reward::*;
+pub mod create_space_dao_incentive;
+pub use create_space_dao_incentive::*;
 
 pub mod list_space_dao_tokens;
 pub use list_space_dao_tokens::*;
@@ -19,8 +19,8 @@ pub use list_space_dao_tokens::*;
 pub mod refresh_space_dao_tokens;
 pub use refresh_space_dao_tokens::*;
 
-pub mod update_space_dao_reward;
-pub use update_space_dao_reward::*;
+pub mod update_space_dao_incentive;
+pub use update_space_dao_incentive::*;
 
 #[cfg(test)]
 pub mod tests;
@@ -36,10 +36,10 @@ pub fn route() -> Router<AppState> {
             get(get_space_dao_handler).post(create_space_dao_handler),
         )
         .route(
-            "/reward",
-            get(get_space_dao_reward_handler)
-                .post(create_space_dao_reward_handler)
-                .patch(update_space_dao_reward_handler),
+            "/incentive",
+            get(get_space_dao_incentive_handler)
+                .post(create_space_dao_incentive_handler)
+                .patch(update_space_dao_incentive_handler),
         )
         .route("/candidates", get(list_space_dao_candidates_handler))
         .route("/tokens", get(list_space_dao_tokens_handler))

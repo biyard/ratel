@@ -3,8 +3,8 @@ import { call } from '@/lib/api/ratel/call';
 import { spaceDaoKeys } from '@/constants';
 
 export type UpdateSpaceDaoIncentiveRequest = {
-  reward_sk: string;
-  reward_distributed: boolean;
+  incentive_sk: string;
+  incentive_distributed: boolean;
 };
 
 export function useUpdateSpaceDaoIncentiveMutation() {
@@ -23,8 +23,11 @@ export function useUpdateSpaceDaoIncentiveMutation() {
     }) => {
       return call<UpdateSpaceDaoIncentiveRequest, void>(
         'PATCH',
-        `/v3/spaces/${encodeURIComponent(spacePk)}/dao/reward`,
-        { reward_sk: incentiveSk, reward_distributed: incentiveDistributed },
+        `/v3/spaces/${encodeURIComponent(spacePk)}/dao/incentive`,
+        {
+          incentive_sk: incentiveSk,
+          incentive_distributed: incentiveDistributed,
+        },
       );
     },
     onSuccess: async (_, { spacePk }) => {
