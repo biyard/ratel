@@ -1,43 +1,26 @@
-use super::dto::{AdminPaymentDetail, AdminPaymentListResponse};
+use super::dto::AdminPaymentDetail;
 use crate::models::dynamo_tables::main::user::User;
 use crate::services::portone::PaymentItem;
-use crate::types::{EntityType, Partition};
+use crate::types::{EntityType, ListItemsResponse, Pagination, Partition};
 use crate::*;
-use axum::{
-    Json,
-    extract::{Query, State},
-};
-use bdk::prelude::*;
 use std::collections::{HashMap, HashSet};
 
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, OperationIo)]
-pub struct ListPaymentsQuery {
-    #[serde(default = "default_page")]
-    pub page: i32,
-    #[serde(default = "default_page_size")]
-    pub page_size: i32,
-}
+const PAGE_SIZE: i32 = 10;
 
-fn default_page() -> i32 {
-    0
-}
-
-fn default_page_size() -> i32 {
-    10
-}
-
-/// Parse user_pk from Portone customer.id
-/// Format: "USER#{uuid}##PAYMENT" -> "USER#{uuid}"
 fn parse_user_pk(payment: &PaymentItem) -> Option<String> {
     payment.customer.id.strip_suffix("##PAYMENT").map(String::from)
 }
 
-/// Extract UUID from user_pk string
-/// Format: "USER#{uuid}" -> Partition::User(uuid)
 fn parse_partition(user_pk_str: &str) -> Option<Partition> {
-    user_pk_str
-        .strip_prefix("USER#")
-        .map(|uuid| Partition::User(uuid.to_string()))
+    user_pk_str.parse().ok()
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct PaymentBookmark {
+    page: i32,
+    page_size: i32,
+    total_count: i64,
+    total_pages: i32,
 }
 
 /// List all payments (ServiceAdmin only)
@@ -45,11 +28,20 @@ fn parse_partition(user_pk_str: &str) -> Option<Partition> {
 /// Returns payment history from Portone with user info from DynamoDB
 pub async fn list_all_payments_handler(
     State(AppState { dynamo, portone, .. }): State<AppState>,
-    Query(query): Query<ListPaymentsQuery>,
-) -> Result<Json<AdminPaymentListResponse>> {
+    Query(Pagination { bookmark }): Query<Pagination>,
+) -> Result<Json<ListItemsResponse<AdminPaymentDetail>>> {
     let cli = &dynamo.client;
 
-    let payment_list = portone.list_payments(query.page, query.page_size).await?;
+    let page = if let Some(ref bookmark_str) = bookmark {
+        match serde_json::from_str::<PaymentBookmark>(bookmark_str) {
+            Ok(bm) => bm.page,
+            Err(_) => 0,
+        }
+    } else {
+        0
+    };
+
+    let payment_list = portone.list_payments(page, PAGE_SIZE).await?;
 
     // 1. Pre-parse all user_pk strings
     let payment_user_pks: Vec<Option<String>> = payment_list
@@ -82,16 +74,14 @@ pub async fn list_all_payments_handler(
     // 4. Build response with user info
     let items: Vec<AdminPaymentDetail> = payment_list
         .items
-        .iter()
+        .into_iter()
         .zip(payment_user_pks.iter())
         .map(|(payment, user_pk_opt)| {
-            let mut detail = AdminPaymentDetail::from(payment);
+            let mut detail: AdminPaymentDetail = payment.into();
 
             if let Some(user_pk_str) = user_pk_opt {
                 if let Some(user) = users.get(user_pk_str) {
-                    if let Partition::User(user_id) = &user.pk {
-                        detail = detail.with_user(user_id.clone(), user.email.clone(), user.display_name.clone());
-                    }
+                    detail = detail.with_user(user.email.clone(), user.display_name.clone());
                 }
             }
 
@@ -99,8 +89,19 @@ pub async fn list_all_payments_handler(
         })
         .collect();
 
-    Ok(Json(AdminPaymentListResponse {
+    // 5. Create bookmark with pagination info
+    let page_info = payment_list.page;
+    let total_pages = ((page_info.total_count as i32) + PAGE_SIZE - 1) / PAGE_SIZE;
+
+    let bookmark = serde_json::to_string(&PaymentBookmark {
+        page: page_info.number,
+        page_size: PAGE_SIZE,
+        total_count: page_info.total_count,
+        total_pages,
+    })?;
+
+    Ok(Json(ListItemsResponse {
         items,
-        page: payment_list.page,
+        bookmark: Some(bookmark),
     }))
 }
