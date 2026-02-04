@@ -31,7 +31,7 @@ export default function RewardsPage() {
   const estimatedTokens =
     rewards.total_points > 0
       ? Math.round(
-          (rewards.user_points / rewards.total_points) *
+          (rewards.points / rewards.total_points) *
             rewards.monthly_token_supply,
         )
       : 0;
@@ -43,14 +43,14 @@ export default function RewardsPage() {
       <PointsSummaryCard
         i18n={i18n}
         totalPoints={rewards.total_points}
-        userPoints={rewards.user_points}
+        userPoints={rewards.points}
         monthlyTokenSupply={rewards.monthly_token_supply}
         estimatedTokens={estimatedTokens}
         tokenSymbol={rewards.token_symbol}
       />
       <ExchangePreviewCard
         i18n={i18n}
-        totalPoints={rewards.user_points}
+        totalPoints={rewards.points}
         estimatedTokens={estimatedTokens}
         name={rewards.project_name}
         tokenSymbol={rewards.token_symbol}

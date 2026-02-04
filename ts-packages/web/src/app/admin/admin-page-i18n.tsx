@@ -11,6 +11,8 @@ export const i18nAdmin = {
     users_desc: 'Manage user accounts, roles, and permissions',
     rewards: 'Rewards',
     rewards_desc: 'Manage reward points and conditions',
+    migrations: 'Migrations',
+    migrations_desc: 'Run data migrations',
   },
   ko: {
     title: '관리자 콘솔',
@@ -22,6 +24,8 @@ export const i18nAdmin = {
     users_desc: '사용자 계정, 역할 및 권한 관리',
     rewards: '리워드',
     rewards_desc: '리워드 포인트 및 조건 관리',
+    migrations: '마이그레이션',
+    migrations_desc: '데이터 마이그레이션',
   },
 };
 
@@ -35,6 +39,8 @@ export interface AdminI18n {
   usersDesc: string;
   rewards: string;
   rewardsDesc: string;
+  migrations: string;
+  migrationsDesc: string;
 }
 
 export function useAdminI18n(): AdminI18n {
@@ -50,5 +56,7 @@ export function useAdminI18n(): AdminI18n {
     usersDesc: t('users_desc'),
     rewards: t('rewards'),
     rewardsDesc: t('rewards_desc'),
+    migrations: t('migrations'),
+    migrationsDesc: t('migrations_desc'),
   };
 }
