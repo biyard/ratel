@@ -57,8 +57,8 @@ export function useFinishSpaceMutation<T extends SpaceCommon>() {
         if (selectedAddresses.length > 0) {
           await call(
             'POST',
-            `/v3/spaces/${encodeURIComponent(spacePk)}/dao/reward`,
-            { reward_addresses: selectedAddresses },
+            `/v3/spaces/${encodeURIComponent(spacePk)}/dao/incentive`,
+            { incentive_addresses: selectedAddresses },
           );
         }
       }

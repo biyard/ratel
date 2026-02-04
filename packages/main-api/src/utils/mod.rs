@@ -21,7 +21,7 @@ pub mod sqs_client;
 pub mod telegram;
 pub mod time;
 // pub mod users;
-pub mod space_dao_reward;
+pub mod space_dao_incentive;
 pub mod validator;
 pub mod wallets;
 

@@ -1,7 +1,7 @@
 use crate::controllers::v3::spaces::SpacePathParam;
-use crate::features::spaces::{SpaceDao, SpaceDaoCandidate, SpaceDaoRewardUser};
+use crate::features::spaces::{SpaceDao, SpaceDaoCandidate, SpaceDaoIncentiveUser};
 use crate::types::{EntityType, Permissions, TeamGroupPermission};
-use crate::utils::space_dao_reward::collect_space_dao_candidate_addresses;
+use crate::utils::space_dao_incentive::collect_space_dao_candidate_addresses;
 use crate::{AppState, Error, transact_write_items};
 use aide::NoApi;
 use aws_sdk_dynamodb::types::TransactWriteItem;
@@ -11,20 +11,20 @@ use bdk::prelude::*;
 use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
-pub struct CreateSpaceDaoRewardRequest {
-    pub reward_addresses: Vec<String>,
+pub struct CreateSpaceDaoIncentiveRequest {
+    pub incentive_addresses: Vec<String>,
 }
 
-pub async fn create_space_dao_reward_handler(
+pub async fn create_space_dao_incentive_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(permissions): NoApi<Permissions>,
     Path(SpacePathParam { space_pk }): Path<SpacePathParam>,
-    Json(req): Json<CreateSpaceDaoRewardRequest>,
-) -> Result<Json<Vec<SpaceDaoRewardUser>>, Error> {
+    Json(req): Json<CreateSpaceDaoIncentiveRequest>,
+) -> Result<Json<Vec<SpaceDaoIncentiveUser>>, Error> {
     permissions.permitted(TeamGroupPermission::SpaceEdit)?;
 
-    if req.reward_addresses.is_empty() {
-        return Err(Error::BadRequest("reward_addresses is empty".to_string()));
+    if req.incentive_addresses.is_empty() {
+        return Err(Error::BadRequest("incentive_addresses is empty".to_string()));
     }
 
     let dao = SpaceDao::get(&dynamo.client, space_pk.clone(), Some(EntityType::SpaceDao))
@@ -32,7 +32,7 @@ pub async fn create_space_dao_reward_handler(
         .ok_or(Error::DaoNotFound)?;
 
     let mut target_set = HashSet::new();
-    for addr in req.reward_addresses {
+    for addr in req.incentive_addresses {
         target_set.insert(addr.to_lowercase());
     }
 
@@ -43,15 +43,15 @@ pub async fn create_space_dao_reward_handler(
         candidate_map.insert(candidate.evm_address.to_lowercase(), candidate);
     }
 
-    let (existing, _) = SpaceDaoRewardUser::query(
+    let (existing, _) = SpaceDaoIncentiveUser::query(
         &dynamo.client,
         space_pk.clone(),
-        SpaceDaoRewardUser::opt_all().sk("SPACE_DAO_REWARD#".to_string()),
+        SpaceDaoIncentiveUser::opt_all().sk("SPACE_DAO_INCENTIVE#".to_string()),
     )
     .await
     .map_err(|err| {
         tracing::error!(
-            "create_space_dao_reward: failed to load existing reward users: space={} err={:?}",
+            "create_space_dao_incentive: failed to load existing incentive users: space={} err={:?}",
             space_pk,
             err
         );
@@ -62,7 +62,7 @@ pub async fn create_space_dao_reward_handler(
         existing_set.insert(item.evm_address.to_lowercase());
     }
 
-    let mut pending: Vec<SpaceDaoRewardUser> = Vec::new();
+    let mut pending: Vec<SpaceDaoIncentiveUser> = Vec::new();
     for addr in target_set {
         if existing_set.contains(&addr) {
             continue;
@@ -74,7 +74,7 @@ pub async fn create_space_dao_reward_handler(
             .user_pk
             .parse()
             .map_err(|_| Error::BadRequest("invalid user pk".to_string()))?;
-        let item = SpaceDaoRewardUser::new(
+        let item = SpaceDaoIncentiveUser::new(
             space_pk.clone(),
             user_pk,
             candidate.username.clone(),

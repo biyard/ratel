@@ -12,7 +12,7 @@ use bdk::prelude::*;
     schemars::JsonSchema,
     aide::OperationIo,
 )]
-pub struct SpaceDaoRewardUser {
+pub struct SpaceDaoIncentiveUser {
     pub pk: Partition,
     pub sk: EntityType,
 
@@ -22,7 +22,7 @@ pub struct SpaceDaoRewardUser {
     #[serde(default)]
     pub updated_at: i64,
     #[dynamo(
-        prefix = "SPACE_DAO_REWARD",
+        prefix = "SPACE_DAO_INCENTIVE",
         name = "find_by_space",
         index = "gsi2",
         pk
@@ -41,10 +41,10 @@ pub struct SpaceDaoRewardUser {
     #[serde(default)]
     pub evm_address: String,
     #[serde(default)]
-    pub reward_distributed: bool,
+    pub incentive_distributed: bool,
 }
 
-impl SpaceDaoRewardUser {
+impl SpaceDaoIncentiveUser {
     pub fn keys(space_pk: &Partition, sk: &EntityType) -> (Partition, EntityType) {
         (space_pk.clone(), sk.clone())
     }
@@ -58,7 +58,7 @@ impl SpaceDaoRewardUser {
         evm_address: String,
     ) -> Self {
         let now = get_now_timestamp_millis();
-        let sk = EntityType::SpaceDaoReward(user_pk.to_string());
+        let sk = EntityType::SpaceDaoIncentive(user_pk.to_string());
 
         Self {
             pk: space_pk.clone(),
@@ -71,7 +71,7 @@ impl SpaceDaoRewardUser {
             display_name,
             profile_url,
             evm_address,
-            reward_distributed: false,
+            incentive_distributed: false,
         }
     }
 }

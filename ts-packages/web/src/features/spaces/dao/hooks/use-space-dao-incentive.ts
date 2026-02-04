@@ -10,7 +10,7 @@ type SpaceDaoIncentiveRawResponse = {
   display_name: string;
   profile_url: string;
   evm_address: string;
-  reward_distributed: boolean;
+  incentive_distributed: boolean;
   created_at?: number;
   updated_at?: number;
 };
@@ -49,14 +49,9 @@ export function useSpaceDaoIncentive(
     queryFn: async () => {
       const data = await call<void, SpaceDaoIncentiveRawResponseBody>(
         'GET',
-        `/v3/spaces/${encodeURIComponent(spacePk)}/dao/reward`,
+        `/v3/spaces/${encodeURIComponent(spacePk)}/dao/incentive`,
       );
-      const item = data.item
-        ? {
-            ...data.item,
-            incentive_distributed: data.item.reward_distributed,
-          }
-        : null;
+      const item = data.item ?? null;
       return {
         item,
         remaining_count: data.remaining_count,
