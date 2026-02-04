@@ -11,10 +11,6 @@ use bdk::prelude::*;
 pub struct CreateSpaceDaoRequest {
     pub contract_address: String,
     pub deploy_block: i64,
-    #[serde(default)]
-    pub require_pre_survey: bool,
-    #[serde(default)]
-    pub require_post_survey: bool,
 }
 
 pub async fn create_space_dao_handler(
@@ -41,8 +37,6 @@ pub async fn create_space_dao_handler(
         space_pk,
         req.contract_address,
         req.deploy_block,
-        req.require_pre_survey,
-        req.require_post_survey,
     );
 
     dao.upsert(&dynamo.client).await?;

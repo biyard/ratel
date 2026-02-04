@@ -48,8 +48,8 @@ export class SpaceDaoService {
   ): Promise<CreateSpaceDAOResult> {
     if (!this.signer) await this.connectWallet();
 
-    if (admins.length < 3) {
-      throw new Error('At least 3 admins are required to create a DAO');
+    if (admins.length < 1) {
+      throw new Error('At least 1 admin is required to create a DAO');
     }
     if (!Number.isFinite(rewardRecipientCount) || rewardRecipientCount <= 0) {
       throw new Error('Reward recipient count must be greater than 0');

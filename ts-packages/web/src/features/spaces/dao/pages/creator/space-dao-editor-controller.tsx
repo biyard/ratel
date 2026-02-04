@@ -29,6 +29,7 @@ export class SpaceDaoEditorController {
     public space: Space | undefined,
     public dao: SpaceDaoResponse | null | undefined,
     public eligibleAdmins: ReturnType<typeof useDaoData>['eligibleAdmins'],
+    public teamMembers: ReturnType<typeof useDaoData>['members'],
     public permissions: ReturnType<typeof useDaoData>['permissions'],
     public t: TFunction<'SpaceDaoEditor', undefined>,
     public provider: ethers.JsonRpcProvider | null,
@@ -38,8 +39,6 @@ export class SpaceDaoEditorController {
     public isPopupOpen: State<boolean>,
     public isRegistering: State<boolean>,
     public isUpdating: State<boolean>,
-    public requirePreSurvey: State<boolean>,
-    public requirePostSurvey: State<boolean>,
     public rewardData: SpaceDaoRewardResponseBody | undefined,
     public rewardLoading: boolean,
     public currentUserEvm: string | null,
@@ -64,7 +63,13 @@ export class SpaceDaoEditorController {
   }
 
   get canRegisterDao() {
-    return this.eligibleAdmins.length >= 3 && this.permissions?.isAdmin();
+    if (this.isTeamSpace) {
+      if (!this.permissions?.isAdmin()) {
+        return false;
+      }
+      return this.teamMembers.some((member) => Boolean(member.evm_address));
+    }
+    return Boolean(this.currentUserEvm);
   }
 
   get canSubmitInputs() {
@@ -203,14 +208,19 @@ export class SpaceDaoEditorController {
 
   handleOpenRegistrationPopup = () => {
     if (!this.canRegisterDao) {
-      showErrorToast(this.t('error_insufficient_admins'));
+      showErrorToast(
+        this.isTeamSpace
+          ? this.t('error_insufficient_admins')
+          : this.t('insufficient_admins_personal'),
+      );
       return;
     }
     if (!this.canSubmitInputs) {
       showErrorToast(this.t('error_missing_inputs'));
       return;
     }
-    this.isPopupOpen.set(true);
+    const admins = this.getDefaultAdminAddresses();
+    void this.handleRegisterDao(admins);
   };
 
   handleClosePopup = () => {
@@ -220,7 +230,7 @@ export class SpaceDaoEditorController {
   };
 
   handleRegisterDao = async (selectedAdminAddresses: string[]) => {
-    if (selectedAdminAddresses.length < 3) {
+    if (selectedAdminAddresses.length === 0) {
       showErrorToast(this.t('error_invalid_admin_selection'));
       return;
     }
@@ -249,8 +259,6 @@ export class SpaceDaoEditorController {
         req: {
           contract_address: result.daoAddress,
           deploy_block: result.deployBlock,
-          require_pre_survey: this.requirePreSurvey.get(),
-          require_post_survey: this.requirePostSurvey.get(),
         },
       });
 
@@ -281,6 +289,18 @@ export class SpaceDaoEditorController {
       this.isRegistering.set(false);
     }
   };
+
+  getDefaultAdminAddresses() {
+    if (!this.isTeamSpace) {
+      return this.currentUserEvm ? [this.currentUserEvm] : [];
+    }
+    const unique = new Set<string>();
+    for (const member of this.teamMembers) {
+      if (!member.evm_address) continue;
+      unique.add(member.evm_address);
+    }
+    return Array.from(unique);
+  }
 
   handleUpdateDao = async (rewardCount: string) => {
     const dao = this.dao;
@@ -341,8 +361,6 @@ export function useSpaceDaoEditorController(
   const isPopupOpen = useState(false);
   const isRegistering = useState(false);
   const isUpdating = useState(false);
-  const requirePreSurvey = useState(false);
-  const requirePostSurvey = useState(false);
   const isRewardRecipient = useState(false);
   const isRewarded = useState(false);
   const isClaiming = useState(false);
@@ -354,6 +372,7 @@ export function useSpaceDaoEditorController(
     spacePk,
     Boolean(dao?.contract_address),
   );
+
   const provider = useMemo(() => {
     if (!config.rpc_url) {
       return null;
@@ -362,13 +381,18 @@ export function useSpaceDaoEditorController(
   }, []);
 
   const teamUsername = space?.authorUsername ?? '';
-  const { eligibleAdmins, permissions } = useDaoData(teamUsername);
+  const isTeamSpace = (space?.authorType ?? null) === UserType.Team;
+  const { eligibleAdmins, permissions, members } = useDaoData(
+    teamUsername,
+    Boolean(teamUsername) && isTeamSpace,
+  );
 
   const ctrl = new SpaceDaoEditorController(
     spacePk,
     space,
     dao,
     eligibleAdmins,
+    members,
     permissions,
     t,
     provider,
@@ -378,8 +402,6 @@ export function useSpaceDaoEditorController(
     new State(isPopupOpen),
     new State(isRegistering),
     new State(isUpdating),
-    new State(requirePreSurvey),
-    new State(requirePostSurvey),
     reward,
     rewardLoading,
     user?.evm_address ?? null,

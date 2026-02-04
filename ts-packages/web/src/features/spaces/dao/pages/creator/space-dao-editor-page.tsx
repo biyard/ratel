@@ -3,7 +3,6 @@ import { SpacePathProps } from '@/features/space-path-props';
 import { Input } from '@/components/ui/input';
 import { logger } from '@/lib/logger';
 import { useSpaceDaoEditorController } from './space-dao-editor-controller';
-import { RegisterDaoPopup } from '@/features/teams/dao/components/register-dao-popup';
 import Card from '@/components/card';
 import { useSpaceDao } from '@/features/spaces/dao/hooks/use-space-dao';
 import { SpaceDaoInfoCard } from '@/features/spaces/dao/components/space-dao-info-card';
@@ -11,7 +10,6 @@ import { useSpaceDaoTokens } from '@/features/spaces/dao/hooks/use-space-dao-tok
 import { useRefreshSpaceDaoTokensMutation } from '@/features/spaces/dao/hooks/use-refresh-space-dao-tokens-mutation';
 import { useEffect, useMemo, useState } from 'react';
 import { config } from '@/config';
-import { Checkbox } from '@/components/checkbox/checkbox';
 
 export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
   logger.debug(`SpaceDaoEditorPage: spacePk=${spacePk}`);
@@ -115,10 +113,10 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
         </div>
 
         <div className="w-full">
-          {!ctrl.isTeamSpace && (
-            <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
-              <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                {t('team_only')}
+          {!ctrl.isTeamSpace && !dao && (
+            <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                {t('personal_space_notice')}
               </p>
             </div>
           )}
@@ -163,7 +161,9 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
                         {t('admin_requirements')}
                       </h4>
                       <p className="text-sm text-blue-800 dark:text-blue-200 whitespace-pre-line">
-                        {t('admin_requirements_description')}
+                        {ctrl.isTeamSpace
+                          ? t('admin_requirements_description')
+                          : t('admin_requirements_description_personal')}
                       </p>
                     </div>
                   </div>
@@ -172,32 +172,27 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <p className="text-sm text-text-secondary mb-1">
-                      {t('eligible_admins_count', {
-                        count: ctrl.eligibleAdmins.length,
-                      })}
+                      {ctrl.isTeamSpace
+                        ? t('eligible_admins_count', {
+                            count: ctrl.teamMembers.filter((m) => m.evm_address)
+                              .length,
+                          })
+                        : t('personal_admin_requirement')}
                     </p>
                     <p className="text-xs text-text-tertiary">
-                      {t('min_admins_required')}
+                      {ctrl.isTeamSpace
+                        ? t('min_admins_required')
+                        : t('personal_admin_requirement_hint')}
                     </p>
                   </div>
-
-                  {ctrl.eligibleAdmins.length >= 3 ? (
-                    <div className="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full text-sm font-medium">
-                      ✓ {t('ready_label')}
-                    </div>
-                  ) : (
-                    <div className="px-3 py-1 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-full text-sm font-medium">
-                      {t('need_more_label', {
-                        count: 3 - ctrl.eligibleAdmins.length,
-                      })}
-                    </div>
-                  )}
                 </div>
 
-                {!ctrl.canRegisterDao && ctrl.eligibleAdmins.length < 3 && (
+                {!ctrl.canRegisterDao && (
                   <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
                     <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                      {t('insufficient_admins')}
+                      {ctrl.isTeamSpace
+                        ? t('insufficient_admins')
+                        : t('insufficient_admins_personal')}
                     </p>
                   </div>
                 )}
@@ -215,34 +210,11 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
                     placeholder={t('reward_count_placeholder')}
                   />
                 </div>
-                <div className="grid gap-3">
-                  <label className="text-sm text-text-secondary block">
-                    {t('reward_requirements_label')}
-                  </label>
-                  <Checkbox
-                    id="reward-require-pre"
-                    value={ctrl.requirePreSurvey.get()}
-                    onChange={(checked) => ctrl.requirePreSurvey.set(checked)}
-                  >
-                    {t('reward_require_pre')}
-                  </Checkbox>
-                  <Checkbox
-                    id="reward-require-post"
-                    value={ctrl.requirePostSurvey.get()}
-                    onChange={(checked) => ctrl.requirePostSurvey.set(checked)}
-                  >
-                    {t('reward_require_post')}
-                  </Checkbox>
-                </div>
               </div>
 
               <button
                 onClick={ctrl.handleOpenRegistrationPopup}
-                disabled={
-                  !ctrl.canRegisterDao ||
-                  !ctrl.isTeamSpace ||
-                  !ctrl.canSubmitInputs
-                }
+                disabled={!ctrl.canRegisterDao || !ctrl.canSubmitInputs}
                 className="mt-6 w-full px-6 py-3 bg-primary text-white rounded-md font-medium hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary"
               >
                 {t('register_dao')}
@@ -250,15 +222,6 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
             </>
           )}
         </div>
-
-        {ctrl.isPopupOpen.get() && (
-          <RegisterDaoPopup
-            eligibleAdmins={ctrl.eligibleAdmins}
-            onRegister={ctrl.handleRegisterDao}
-            onCancel={ctrl.handleClosePopup}
-            isRegistering={ctrl.isRegistering.get()}
-          />
-        )}
       </Card>
     </div>
   );

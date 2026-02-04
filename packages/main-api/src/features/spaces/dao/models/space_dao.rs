@@ -26,10 +26,6 @@ pub struct SpaceDao {
     #[serde(default)]
     pub last_block: i64,
     #[serde(default)]
-    pub require_pre_survey: bool,
-    #[serde(default)]
-    pub require_post_survey: bool,
-    #[serde(default)]
     pub remaining_count: i64,
     #[serde(default)]
     pub total_count: i64,
@@ -40,8 +36,6 @@ impl SpaceDao {
         space_pk: SpacePartition,
         contract_address: String,
         deploy_block: i64,
-        require_pre_survey: bool,
-        require_post_survey: bool,
     ) -> Self {
         let now = get_now_timestamp_millis();
         Self {
@@ -52,8 +46,6 @@ impl SpaceDao {
             contract_address,
             deploy_block,
             last_block: 0,
-            require_pre_survey,
-            require_post_survey,
             remaining_count: 0,
             total_count: 0,
         }

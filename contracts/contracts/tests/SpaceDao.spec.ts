@@ -47,16 +47,15 @@ describe("SpaceDAO", function () {
       );
     });
 
-    it("reverts when admin count is less than 3", async function () {
-      const [admin1, admin2] = await ethers.getSigners();
+    it("reverts when admin count is zero", async function () {
       const SpaceDAO = await ethers.getContractFactory("SpaceDAO");
 
       await expect(
-        SpaceDAO.deploy([admin1.address, admin2.address], {
+        SpaceDAO.deploy([], {
           mode: 0,
           numOfTargets: 1,
         })
-      ).to.be.revertedWith("SpaceDAO: at least 3 admins required");
+      ).to.be.revertedWith("SpaceDAO: empty admins");
     });
 
     it("reverts on invalid or duplicate admins", async function () {

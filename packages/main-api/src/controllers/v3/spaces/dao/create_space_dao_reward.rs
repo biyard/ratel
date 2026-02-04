@@ -36,13 +36,8 @@ pub async fn create_space_dao_reward_handler(
         target_set.insert(addr.to_lowercase());
     }
 
-    let candidates = collect_space_dao_candidate_addresses(
-        &dynamo.client,
-        &space_pk,
-        dao.require_pre_survey,
-        dao.require_post_survey,
-    )
-    .await?;
+    let candidates =
+        collect_space_dao_candidate_addresses(&dynamo.client, &space_pk).await?;
     let mut candidate_map: HashMap<String, SpaceDaoCandidate> = HashMap::new();
     for candidate in candidates {
         candidate_map.insert(candidate.evm_address.to_lowercase(), candidate);
