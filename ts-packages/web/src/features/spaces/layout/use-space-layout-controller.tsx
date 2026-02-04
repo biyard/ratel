@@ -34,6 +34,10 @@ export type SideMenuProps = {
   Icon: React.ComponentType<React.ComponentProps<'svg'>>;
   to: string;
   label: string;
+  tag?: {
+    label: string;
+    visible: boolean;
+  };
 };
 
 export enum Role {
@@ -143,8 +147,12 @@ export function useSpaceLayoutController(
         Icon: menu.Icon,
         to: menu.to(space),
         label: i18n[menu.label],
+        tag: {
+          label: menu.tag?.label,
+          visible: menu.tag?.visible(space),
+        },
       }));
-  }, [space, i18n]);
+  }, [space, i18n, preTaskRequired]);
 
   const timelineItems = useMemo(
     () => [
