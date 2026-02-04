@@ -1,9 +1,9 @@
 import { useParams } from 'react-router';
 import '@/features/spaces/deliberations/deliberation-side-menus';
 import { useSpaceById } from '@/features/spaces/hooks/use-space-by-id';
-import { SpaceDaoEditorPage } from '@/features/spaces/dao/pages/creator/space-dao-editor-page';
+import { SpaceIncentivePage } from '@/features/spaces/dao/pages/incentive/space-incentive-page';
 
-export default function SpaceDaoPage() {
+export default function SpaceIncentiveRoutePage() {
   const { spacePk } = useParams<{ spacePk: string }>();
   const { data: space } = useSpaceById(spacePk);
 
@@ -15,9 +15,5 @@ export default function SpaceDaoPage() {
     throw new Error('Space not found');
   }
 
-  if (space.isAdmin()) {
-    return <SpaceDaoEditorPage spacePk={spacePk} />;
-  }
-
-  return null;
+  return <SpaceIncentivePage spacePk={spacePk} />;
 }

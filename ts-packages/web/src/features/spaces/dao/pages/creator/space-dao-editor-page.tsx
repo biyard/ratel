@@ -181,22 +181,7 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
               rankingBps={ctrl.chainRankingBps.get()}
               isUpdating={ctrl.isUpdating.get()}
               onUpdateDao={ctrl.handleUpdateDao}
-              incentiveRecipients={ctrl.visibleIncentiveRecipients}
-              incentiveRemainingCount={
-                ctrl.incentiveMeta?.remaining_count ?? null
-              }
-              incentiveTotalCount={ctrl.incentiveMeta?.total_count ?? null}
-              incentiveLoading={ctrl.incentiveRecipientsLoading}
-              showIncentiveRecipients={Boolean(ctrl.space?.isFinished)}
               showEdit={Boolean(ctrl.space?.isDraft)}
-              currentUserEvm={ctrl.currentUserEvm}
-              claimableAmount={ctrl.perRecipientDisplay}
-              isClaimable={ctrl.canClaimIncentive}
-              isClaiming={ctrl.isClaiming.get()}
-              onClaimIncentive={async (incentiveSk) => {
-                await ctrl.handleClaimIncentive(incentiveSk);
-                refreshTokens.mutate();
-              }}
               tokens={visibleTokens}
               tokenHasAny={hasAnyTokens}
               tokensLoading={tokensLoading}
