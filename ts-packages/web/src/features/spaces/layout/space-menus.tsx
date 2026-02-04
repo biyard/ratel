@@ -18,6 +18,10 @@ export type SideMenu = {
   to: (space: Space) => string;
   label: string;
   visible?: (space: Space) => boolean;
+  tag?: {
+    label: string;
+    visible: (space: Space) => boolean;
+  };
 };
 
 export enum Label {
@@ -66,6 +70,10 @@ export const SPACE_MENUS: Record<SpaceType, SideMenu[]> = {
         return route.spacePollById(space.pk, pollPk);
       },
       label: Label.Poll,
+      tag: {
+        label: 'Vote',
+        visible: (space) => space.participated,
+      },
     },
     {
       Icon: User,
@@ -95,11 +103,19 @@ export const SPACE_MENUS: Record<SpaceType, SideMenu[]> = {
       Icon: Post,
       to: (space) => route.spaceFiles(space.pk),
       label: Label.Files,
+      tag: {
+        label: 'Post',
+        visible: (space) => space.participated,
+      },
     },
     {
       Icon: Vote,
       to: (space) => route.spacePolls(space.pk),
       label: Label.Poll,
+      tag: {
+        label: 'Vote',
+        visible: (space) => space.participated,
+      },
     },
     {
       Icon: Post,
