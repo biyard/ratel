@@ -5,6 +5,7 @@ pub mod config;
 pub mod controllers;
 pub mod error;
 pub mod models;
+pub mod proxy;
 pub mod types;
 
 pub use api_main::*;
