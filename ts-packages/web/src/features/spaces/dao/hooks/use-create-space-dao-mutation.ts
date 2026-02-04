@@ -5,15 +5,11 @@ import { spaceDaoKeys } from '@/constants';
 export type CreateSpaceDaoRequest = {
   contract_address: string;
   deploy_block: number;
-  require_pre_survey?: boolean;
-  require_post_survey?: boolean;
 };
 
 export type SpaceDaoResponse = {
   contract_address: string;
   deploy_block: number;
-  require_pre_survey?: boolean;
-  require_post_survey?: boolean;
 };
 
 export function useCreateSpaceDaoMutation() {

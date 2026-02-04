@@ -29,13 +29,8 @@ pub async fn list_space_dao_candidates_handler(
         }));
     };
 
-    let candidates = collect_space_dao_candidate_addresses(
-        &dynamo.client,
-        &space_pk,
-        dao.require_pre_survey,
-        dao.require_post_survey,
-    )
-    .await?;
+    let candidates =
+        collect_space_dao_candidate_addresses(&dynamo.client, &space_pk).await?;
 
     Ok(Json(ListSpaceDaoCandidatesResponse {
         dao_address: Some(dao.contract_address),

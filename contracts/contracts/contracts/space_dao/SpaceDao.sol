@@ -39,7 +39,7 @@ contract SpaceDAO {
     }
 
     constructor(address[] memory admins, RewardDistributionConfig memory rewardDistributionConfig) {
-        require(admins.length >= 3, "SpaceDAO: at least 3 admins required");
+        require(admins.length > 0, "SpaceDAO: empty admins");
         for (uint256 i = 0; i < admins.length; i++) {
             address admin = admins[i];
             require(admin != address(0), "SpaceDAO: invalid admin");
