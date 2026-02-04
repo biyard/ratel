@@ -12,6 +12,7 @@ type SpaceDaoIncentiveCardProps = {
   claimableAmount?: string | null;
   isClaimable?: boolean;
   isClaiming?: boolean;
+  showClaim?: boolean;
   onClaimIncentive?: (incentiveSk: string) => void;
 };
 
@@ -24,6 +25,7 @@ export function SpaceDaoIncentiveCard({
   claimableAmount,
   isClaimable = false,
   isClaiming = false,
+  showClaim = true,
   onClaimIncentive,
 }: SpaceDaoIncentiveCardProps) {
   const { t } = useTranslation('SpaceDaoEditor');
@@ -83,30 +85,32 @@ export function SpaceDaoIncentiveCard({
                 {claimableAmount ?? '-'}
               </span>
             </div>
-            <div className="flex items-center justify-end pt-2">
-              {incentiveRecipient.incentive_distributed ? (
-                <span className="inline-flex items-center gap-1 text-green-600 text-xs">
-                  <CheckIcon className="w-4 h-4" />
-                  {t('dao_selected_claimed')}
-                </span>
-              ) : canClaim ? (
-                <Button
-                  type="button"
-                  variant="rounded_primary"
-                  size="sm"
-                  onClick={() => onClaimIncentive?.(incentiveRecipient.sk)}
-                  disabled={!isClaimable || !onClaimIncentive || isClaiming}
-                >
-                  {isClaiming
-                    ? t('dao_selected_claiming')
-                    : t('dao_selected_claim')}
-                </Button>
-              ) : (
-                <span className="text-text-secondary text-xs">
-                  {t('dao_selected_pending')}
-                </span>
-              )}
-            </div>
+            {showClaim && (
+              <div className="flex items-center justify-end pt-2">
+                {incentiveRecipient.incentive_distributed ? (
+                  <span className="inline-flex items-center gap-1 text-green-600 text-xs">
+                    <CheckIcon className="w-4 h-4" />
+                    {t('dao_selected_claimed')}
+                  </span>
+                ) : canClaim ? (
+                  <Button
+                    type="button"
+                    variant="rounded_primary"
+                    size="sm"
+                    onClick={() => onClaimIncentive?.(incentiveRecipient.sk)}
+                    disabled={!isClaimable || !onClaimIncentive || isClaiming}
+                  >
+                    {isClaiming
+                      ? t('dao_selected_claiming')
+                      : t('dao_selected_claim')}
+                  </Button>
+                ) : (
+                  <span className="text-text-secondary text-xs">
+                    {t('dao_selected_pending')}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
       ) : (

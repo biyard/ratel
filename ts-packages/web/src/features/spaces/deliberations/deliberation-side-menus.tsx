@@ -55,9 +55,19 @@ addSideMenusForSpaceType(SpaceType.Deliberation, [
     to: (space) => {
       return route.spaceDao(space.pk);
     },
-    visible: (space) =>
-      config.experiment && (space.isAdmin() || Boolean(space.daoAddress)),
+    visible: (space) => config.experiment && space.isAdmin(),
     label: 'menu_dao',
+  },
+  {
+    Icon: Discuss,
+    to: (space) => {
+      return route.spaceIncentive(space.pk);
+    },
+    visible: (space) =>
+      config.experiment &&
+      (space.isAdmin() || Boolean(space.daoAddress)) &&
+      space.isFinished,
+    label: 'menu_incentive',
   },
   // {
   //   Icon: Discuss,

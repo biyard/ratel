@@ -2,9 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Card from '@/components/card';
 import { SpaceDaoResponse } from '@/features/spaces/dao/hooks/use-space-dao';
-import { SpaceDaoIncentiveResponse } from '@/features/spaces/dao/hooks/use-space-dao-incentive';
 import { SpaceDaoTokenResponse } from '@/features/spaces/dao/hooks/use-space-dao-tokens';
-import { SpaceDaoIncentiveCard } from './space-dao-incentive-card';
 import { config } from '@/config';
 import {
   ArrowPathIcon,
@@ -25,17 +23,12 @@ type SpaceDaoInfoCardProps = {
     incentiveCount: string,
     rankingRatio?: string,
   ) => Promise<void>;
-  incentiveRecipients?: SpaceDaoIncentiveResponse[];
-  incentiveRemainingCount?: number | null;
-  incentiveTotalCount?: number | null;
-  incentiveLoading?: boolean;
-  showIncentiveRecipients?: boolean;
   showEdit?: boolean;
   currentUserEvm?: string | null;
   claimableAmount?: string | null;
   isClaimable?: boolean;
   isClaiming?: boolean;
-  onClaimIncentive?: (incentiveSk: string) => void;
+  showClaim?: boolean;
   // withdrawal props removed
   tokens?: SpaceDaoTokenResponse[];
   tokensLoading?: boolean;
@@ -56,17 +49,7 @@ export function SpaceDaoInfoCard({
   incentiveMode,
   rankingBps,
   onUpdateDao,
-  incentiveRecipients,
-  incentiveRemainingCount,
-  incentiveTotalCount,
-  incentiveLoading = false,
-  showIncentiveRecipients = true,
   showEdit = true,
-  currentUserEvm,
-  claimableAmount,
-  isClaimable = false,
-  isClaiming = false,
-  onClaimIncentive,
   tokens = [],
   tokensLoading = false,
   onRefreshTokens,
@@ -375,20 +358,6 @@ export function SpaceDaoInfoCard({
           )}
         </div>
       </div>
-
-      {showIncentiveRecipients && (
-        <SpaceDaoIncentiveCard
-          incentiveRecipient={incentiveRecipients?.[0] ?? null}
-          remainingCount={incentiveRemainingCount ?? null}
-          totalCount={incentiveTotalCount ?? null}
-          incentiveLoading={incentiveLoading}
-          currentUserEvm={currentUserEvm}
-          claimableAmount={claimableAmount}
-          isClaimable={isClaimable}
-          isClaiming={isClaiming}
-          onClaimIncentive={onClaimIncentive}
-        />
-      )}
     </Card>
   );
 }

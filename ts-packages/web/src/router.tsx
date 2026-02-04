@@ -73,6 +73,7 @@ import { MembershipPlan } from './features/membership/components/membership-plan
 import Providers from './providers/providers';
 import { PdfViewerLoader } from './features/spaces/files/components/pdf-viewer-loader';
 import SpaceDaoPage from './app/spaces/[id]/dao/space-dao-page';
+import SpaceIncentivePage from './app/spaces/[id]/incentive/space-incentive-page';
 
 export const routes = createBrowserRouter([
   // PDF Viewer - Completely standalone without any layout
@@ -305,6 +306,11 @@ export const routes = createBrowserRouter([
             path: 'dao',
             Component: SpaceDaoPage,
           }, // End of Dao Feature
+          {
+            id: 'space-incentive-page',
+            path: 'incentive',
+            Component: SpaceIncentivePage,
+          },
           {
             id: 'space-sprint-league-feature',
             path: 'sprint-leagues',
