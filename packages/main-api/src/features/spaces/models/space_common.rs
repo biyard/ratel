@@ -70,11 +70,29 @@ pub struct SpaceCommon {
 
     #[serde(default)]
     pub anonymous_participation: bool,
+    #[deprecated(note = "Use Visibility variant instead")]
     #[serde(default)]
     pub change_visibility: bool,
     #[serde(default)]
     // participants is the number of participants. It is incremented when a user participates in the space.
     // It is only used for spaces enabling explicit participation such as anonymous participation.
+
+    /*
+    TODO: Participate 로직 개선
+
+    `participate_space_handler` 에서는
+    Space Visibility 에 따라 서로 다른 로직으로 처리하고 있음.
+        1. SpaceVisibility::Public => 초대 없이도 참여 가능
+        2. SpaceVisibility::Team, Private => 초대 받은 멤버만 참여 가능
+
+    `get_space_handler` 에서는
+        can_participate 필드에서는 SpaceInvitationMember::get() 결과만 사용하고 있음.
+        위 조건을 반영해야함.
+
+    SpaceVisibility::Team 인 경우, Team Member 는 글 조회는 가능하지만,
+        초대 받지 않은 경우, 참여가 불가능함.
+
+     */
     pub participants: i64,
 
     // space pdf files
@@ -83,6 +101,14 @@ pub struct SpaceCommon {
     #[serde(default)]
     pub block_participate: bool,
 
+    // FIXME
+    /*
+    AS-IS
+        SpacePanelQuota 와 SpaceCommon Quota, Remain 가 별도로 동작함
+    TO-DO
+        1. SpacePanelQuota 등록 시, SpaceCommon 의 Quota / Remain 가 함께 업데이트.
+        2. PATCH /spaces/{space_id} body: { quotas: i64 } Update 로직 제거
+     */
     #[serde(default = "max_quota")]
     pub quota: i64,
     #[serde(default = "max_quota")]
@@ -144,17 +170,6 @@ impl SpaceCommon {
             false
         }
     }
-
-    pub fn can_participate(&self) -> bool {
-        if self.status.is_none() {
-            return false;
-        }
-
-        match self.status.as_ref().unwrap() {
-            SpaceStatus::InProgress | SpaceStatus::Started => true,
-            _ => false,
-        }
-    }
 }
 
 impl SpaceCommon {
@@ -174,6 +189,15 @@ impl SpaceCommon {
                 && (self.status == Some(SpaceStatus::Waiting) || self.status.is_none()))
     }
 
+    pub async fn get_participant(
+        &self,
+        cli: &aws_sdk_dynamodb::Client,
+        user_pk: &Partition,
+    ) -> Result<Option<SpaceParticipant>> {
+        let (pk, sk) = SpaceParticipant::keys(self.pk.clone(), user_pk.clone());
+
+        SpaceParticipant::get(cli, &pk, Some(&sk)).await
+    }
     pub async fn check_if_satisfying_panel_attribute(
         &self,
         cli: &aws_sdk_dynamodb::Client,
@@ -197,7 +221,7 @@ impl SpaceCommon {
         let gender = user_attributes.gender;
 
         if self.remains <= 0 {
-            return Err(Error::LackOfVerifiedAttributes);
+            return Err(Error::FullQuota);
         }
 
         for q in panel_quota {
@@ -246,7 +270,6 @@ impl SpaceCommon {
         Err(Error::LackOfVerifiedAttributes)
     }
 }
-
 #[async_trait::async_trait]
 impl ResourcePermissions for SpaceCommon {
     fn viewer_permissions(&self) -> Permissions {
@@ -268,9 +291,7 @@ impl ResourcePermissions for SpaceCommon {
     }
 
     async fn is_participant(&self, cli: &aws_sdk_dynamodb::Client, requester: &Partition) -> bool {
-        let (pk, sk) = SpaceParticipant::keys(self.pk.clone(), requester.clone());
-
-        SpaceParticipant::get(cli, &pk, Some(&sk))
+        self.get_participant(cli, requester)
             .await
             .map(|sp| sp.is_some())
             .unwrap_or(false)

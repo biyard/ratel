@@ -27,7 +27,7 @@ import SpacePollPage from './app/spaces/[id]/poll/space-poll-page';
 import { TestReportPage } from './app/test-report/test-report-page';
 import { StorybookPage } from './app/storybook/stroybook-page';
 import ThreadNotFound from './app/(social)/threads/[id]/thread-not-found';
-import SpaceByIdLayout from './app/spaces/[id]/space-by-id-layout';
+import SpaceByIdLayout from './features/spaces/layout/space-by-id-layout';
 import { SpaceHomePage } from './app/spaces/[id]/space-home-page';
 import { SpaceSettingsPage } from './app/spaces/[id]/settings/space-settings-page';
 import { SpaceRewardsPage } from './app/spaces/[id]/rewards/space-rewards-page';
@@ -36,6 +36,7 @@ import SpaceDiscussionPage from './app/spaces/[id]/discussions/space-discussion-
 import SpaceFilePage from './app/spaces/[id]/file/space-file-page';
 import SpaceRecommendationPage from './app/spaces/[id]/recommendation/space-recommendation-page';
 import DiscussionPage from './app/spaces/[id]/discussions/[discussion-id]/discussion-page';
+import SpaceRequirementPage from './app/spaces/[id]/requirements/space-requirment-page';
 
 // Admin
 import AdminPage from './app/admin/page';
@@ -54,7 +55,7 @@ import ResetPasswordPage from './app/(auth)/reset-password/page';
 
 import CreatePostPage from './features/posts/components/create-post-page';
 import SpacePollsPage from './app/spaces/[id]/polls/space-polls-page';
-import SpaceAnalyzesPage from './app/spaces/[id]/analyzes/space_analyzes-page';
+import SpaceAnalyzesPage from './app/spaces/[id]/analyzes/space-analyzes-page';
 import CreateArtworkPage from './features/posts/components/create-artwork-page';
 import SpaceArtNftPreviewPage from './app/spaces/[id]/art-nfts/space-art-nft-page';
 import SpaceArtNftArtTwinPage from './app/spaces/[id]/art-nfts/space-art-nft-twin-page';
@@ -255,6 +256,7 @@ export const routes = createBrowserRouter([
         id: 'space-layout',
         path: 'spaces/:spacePk',
         Component: SpaceByIdLayout,
+        handle: { hideHeader: true },
         children: [
           // Space Common
 
@@ -287,6 +289,7 @@ export const routes = createBrowserRouter([
                 id: 'space-post-detail',
                 path: 'posts/:postPk',
                 Component: SpaceBoardPage,
+                handle: { hideSpaceHeader: true },
               },
             ],
           }, // End of Boards Feature
@@ -331,21 +334,13 @@ export const routes = createBrowserRouter([
                 path: ':pollPk',
                 Component: SpacePollPage,
               },
-            ],
-          }, // End of Poll Feature
-
-          // Space Analyze Feature
-          {
-            id: 'space-poll-analyze-feature',
-            path: 'polls',
-            children: [
               {
                 id: 'poll-analyze-by-id',
                 path: ':pollPk/analyzes',
                 Component: SpaceAnalyzePage,
               },
             ],
-          }, // End of Analyze Feature
+          }, // End of Poll Feature
           // Space Discussion Feature
           {
             id: 'space-discussion',
@@ -396,6 +391,12 @@ export const routes = createBrowserRouter([
                 Component: SpaceArtNftArtTwinPage,
               },
             ],
+          },
+          {
+            id: 'space-requirement-page',
+            path: 'requirements',
+            Component: SpaceRequirementPage,
+            handle: { hideSpaceHeader: true },
           },
         ],
       }, // End of Space Layout
