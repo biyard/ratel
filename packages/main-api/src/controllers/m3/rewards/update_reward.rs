@@ -4,20 +4,28 @@ use crate::*;
 use axum::{extract::State, Json};
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, JsonSchema, OperationIo)]
-pub struct UpsertRewardRequest {
+pub struct UpdateRewardRequest {
     pub action: RewardAction,
     pub point: i64,
     pub period: RewardPeriod,
     pub condition: RewardCondition,
 }
 
-pub async fn upsert_reward_handler(
+pub async fn update_reward_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Json(req): Json<UpsertRewardRequest>,
+    Json(req): Json<UpdateRewardRequest>,
 ) -> Result<Json<Reward>> {
     let cli = &dynamo.client;
 
-    // Upsert: create if not exists, update if exists
+    // Verify reward exists
+    if Reward::get(cli, Partition::Reward, Some(req.action.clone()))
+        .await?
+        .is_none()
+    {
+        return Err(Error::RewardNotFound);
+    }
+
+    // Update existing reward using updater pattern
     let reward = Reward::updater(&Partition::Reward, &req.action)
         .with_point(req.point)
         .with_period(req.period)

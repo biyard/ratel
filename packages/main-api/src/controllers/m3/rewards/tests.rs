@@ -1,6 +1,6 @@
 use crate::features::spaces::rewards::{Reward, RewardAction, RewardCondition, RewardPeriod};
 use crate::types::*;
-use crate::{get, put, tests::v3_setup::TestContextV3};
+use crate::{get, post, put, tests::v3_setup::TestContextV3};
 
 /// Helper function to delete a reward if it exists
 async fn delete_reward_if_exists(cli: &aws_sdk_dynamodb::Client, action: RewardAction) {
@@ -11,7 +11,7 @@ async fn delete_reward_if_exists(cli: &aws_sdk_dynamodb::Client, action: RewardA
 }
 
 #[tokio::test]
-async fn test_upsert_reward_create() {
+async fn test_create_reward() {
     let TestContextV3 {
         app,
         ddb,
@@ -22,7 +22,7 @@ async fn test_upsert_reward_create() {
     // Ensure reward doesn't exist
     delete_reward_if_exists(&ddb, RewardAction::PollRespond).await;
 
-    let (status, _headers, body) = put! {
+    let (status, _headers, body) = post! {
         app: app,
         path: "/m3/rewards",
         headers: admin_user.1.clone(),
@@ -45,7 +45,7 @@ async fn test_upsert_reward_create() {
 }
 
 #[tokio::test]
-async fn test_upsert_reward_update() {
+async fn test_update_reward() {
     let TestContextV3 {
         app,
         ddb,
@@ -64,7 +64,7 @@ async fn test_upsert_reward_update() {
     );
     reward.create(&ddb).await.unwrap();
 
-    // Upsert (update) with new values
+    // Update with new values
     let (status, _headers, body) = put! {
         app: app,
         path: "/m3/rewards",
@@ -88,7 +88,76 @@ async fn test_upsert_reward_update() {
 }
 
 #[tokio::test]
-async fn test_upsert_reward_unauthorized() {
+async fn test_create_duplicate_reward() {
+    let TestContextV3 {
+        app,
+        ddb,
+        admin_user,
+        ..
+    } = TestContextV3::setup().await;
+
+    // Create a reward first
+    delete_reward_if_exists(&ddb, RewardAction::PollRespond).await;
+    let reward = Reward::new(
+        RewardAction::PollRespond,
+        100,
+        RewardPeriod::Daily,
+        RewardCondition::None,
+    );
+    reward.create(&ddb).await.unwrap();
+
+    // Try to create duplicate
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: "/m3/rewards",
+        headers: admin_user.1.clone(),
+        body: {
+            "action": "PollRespond",
+            "point": 200,
+            "period": "Weekly",
+            "condition": "None"
+        }
+    };
+
+    assert_eq!(status, 409); // Conflict
+
+    // Cleanup
+    delete_reward_if_exists(&ddb, RewardAction::PollRespond).await;
+}
+
+#[tokio::test]
+async fn test_update_nonexistent_reward() {
+    let TestContextV3 {
+        app,
+        ddb,
+        admin_user,
+        ..
+    } = TestContextV3::setup().await;
+
+    // Ensure reward doesn't exist
+    delete_reward_if_exists(&ddb, RewardAction::PollRespond).await;
+
+    // Try to update non-existent reward
+    let (status, _headers, _body) = put! {
+        app: app,
+        path: "/m3/rewards",
+        headers: admin_user.1.clone(),
+        body: {
+            "action": "PollRespond",
+            "point": 200,
+            "period": "Weekly",
+            "condition": "None"
+        }
+    };
+
+    assert_eq!(status, 404); // Not found
+
+    // Cleanup
+    delete_reward_if_exists(&ddb, RewardAction::PollRespond).await;
+}
+
+#[tokio::test]
+async fn test_create_reward_unauthorized() {
     let TestContextV3 {
         app,
         ddb,
@@ -99,7 +168,7 @@ async fn test_upsert_reward_unauthorized() {
     // Ensure reward doesn't exist
     delete_reward_if_exists(&ddb, RewardAction::PollRespond).await;
 
-    let (status, _headers, _body) = put! {
+    let (status, _headers, _body) = post! {
         app: app,
         path: "/m3/rewards",
         headers: test_user.1,
@@ -118,7 +187,7 @@ async fn test_upsert_reward_unauthorized() {
 }
 
 #[tokio::test]
-async fn test_upsert_reward_idempotent() {
+async fn test_create_then_update_flow() {
     let TestContextV3 {
         app,
         ddb,
@@ -129,8 +198,8 @@ async fn test_upsert_reward_idempotent() {
     // Ensure reward doesn't exist
     delete_reward_if_exists(&ddb, RewardAction::None).await;
 
-    // First upsert
-    let (status1, _headers1, body1) = put! {
+    // Create reward
+    let (status1, _headers1, body1) = post! {
         app: app,
         path: "/m3/rewards",
         headers: admin_user.1.clone(),
@@ -145,24 +214,25 @@ async fn test_upsert_reward_idempotent() {
 
     assert_eq!(status1, 200);
     assert_eq!(body1.point, 50);
+    assert_eq!(body1.period, RewardPeriod::Once);
 
-    // Second upsert with same values (idempotent)
+    // Update reward with different values
     let (status2, _headers2, body2) = put! {
         app: app,
         path: "/m3/rewards",
         headers: admin_user.1.clone(),
         body: {
             "action": "None",
-            "point": 50,
-            "period": "Once",
-            "condition": {"MaxClaims": 100}
+            "point": 75,
+            "period": "Daily",
+            "condition": {"MaxClaims": 200}
         },
         response_type: Reward
     };
 
     assert_eq!(status2, 200);
-    assert_eq!(body2.point, 50);
-    assert_eq!(body2.period, RewardPeriod::Once);
+    assert_eq!(body2.point, 75);
+    assert_eq!(body2.period, RewardPeriod::Daily);
 
     // Cleanup
     delete_reward_if_exists(&ddb, RewardAction::None).await;
