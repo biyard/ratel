@@ -8,8 +8,8 @@ use crate::utils::time::get_now_timestamp_millis;
 use crate::*;
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
-pub struct UpdateRewardRequest {
-    pub entity_type: EntityType,
+pub struct UpdateSpaceRewardRequest {
+    pub action_key: EntityType,
     pub behavior: RewardUserBehavior,
 
     #[serde(default)]
@@ -17,19 +17,19 @@ pub struct UpdateRewardRequest {
     pub credits: i64,
 }
 
-pub async fn update_reward_handler(
+pub async fn update_space_reward_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(permissions): NoApi<Permissions>,
     NoApi(user): NoApi<User>,
     Path(SpacePathParam { space_pk }): SpacePath,
-    Json(req): Json<UpdateRewardRequest>,
+    Json(req): Json<UpdateSpaceRewardRequest>,
 ) -> Result<Json<SpaceRewardResponse>> {
     permissions.permitted(TeamGroupPermission::SpaceEdit)?;
 
     let mut space_reward = SpaceReward::get_by_action(
         &dynamo.client,
         space_pk.into(),
-        req.entity_type,
+        req.action_key,
         req.behavior,
     )
     .await?;

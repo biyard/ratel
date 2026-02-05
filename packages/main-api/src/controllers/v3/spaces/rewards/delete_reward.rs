@@ -6,25 +6,25 @@ use crate::spaces::SpacePathParam;
 use crate::*;
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
-pub struct DeleteRewardRequest {
-    entity_type: EntityType,
+pub struct DeleteSpaceRewardRequest {
+    action_key: EntityType,
     behavior: RewardUserBehavior,
 }
 
-pub async fn delete_reward_handler(
+pub async fn delete_space_reward_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(permissions): NoApi<Permissions>,
     NoApi(user): NoApi<User>,
 
     Path(SpacePathParam { space_pk }): SpacePath,
-    Json(req): Json<DeleteRewardRequest>,
+    Json(req): Json<DeleteSpaceRewardRequest>,
 ) -> Result<Json<()>> {
     permissions.permitted(TeamGroupPermission::SpaceEdit)?;
 
     let space_reward = SpaceReward::get_by_action(
         &dynamo.client,
         space_pk.into(),
-        req.entity_type,
+        req.action_key,
         req.behavior,
     )
     .await?;
