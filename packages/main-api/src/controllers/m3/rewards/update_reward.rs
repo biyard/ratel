@@ -1,11 +1,13 @@
-use crate::features::spaces::rewards::{Reward, RewardAction, RewardCondition, RewardPeriod};
+use crate::features::spaces::rewards::{
+    Reward, RewardCondition, RewardPeriod, RewardUserBehavior,
+};
 use crate::types::*;
 use crate::*;
 use axum::{extract::State, Json};
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, JsonSchema, OperationIo)]
 pub struct UpdateRewardRequest {
-    pub action: RewardAction,
+    pub behavior: RewardUserBehavior,
     pub point: i64,
     pub period: RewardPeriod,
     pub condition: RewardCondition,
@@ -18,7 +20,7 @@ pub async fn update_reward_handler(
     let cli = &dynamo.client;
 
     // Verify reward exists
-    if Reward::get(cli, Partition::Reward, Some(req.action.clone()))
+    if Reward::get(cli, Partition::Reward, Some(req.behavior.clone()))
         .await?
         .is_none()
     {
@@ -26,7 +28,7 @@ pub async fn update_reward_handler(
     }
 
     // Update existing reward using updater pattern
-    let reward = Reward::updater(&Partition::Reward, &req.action)
+    let reward = Reward::updater(&Partition::Reward, &req.behavior)
         .with_point(req.point)
         .with_period(req.period)
         .with_condition(req.condition)
