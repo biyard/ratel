@@ -1,21 +1,21 @@
 import { spaceKeys } from '@/constants';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { call } from '@/lib/api/ratel/call';
-import { DeleteRewardRequest } from '../types';
+import { DeleteSpaceRewardRequest } from '../types';
 
-export function useDeleteRewardMutation() {
+export function useDeleteSpaceRewardMutation() {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationKey: ['delete-reward'],
+    mutationKey: ['delete-space-reward'],
     mutationFn: async ({
       spacePk,
       req,
     }: {
       spacePk: string;
-      req: DeleteRewardRequest;
+      req: DeleteSpaceRewardRequest;
     }) => {
-      await call<DeleteRewardRequest, void>(
+      await call<DeleteSpaceRewardRequest, void>(
         'DELETE',
         `/v3/spaces/${encodeURIComponent(spacePk)}/rewards`,
         req,

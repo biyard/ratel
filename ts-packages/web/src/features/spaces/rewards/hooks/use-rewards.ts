@@ -3,22 +3,22 @@ import { ListResponse } from '@/lib/api/ratel/common';
 import { logger } from '@/lib/logger';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { rewardsKeys } from '@/constants';
-import { FeatureType } from '../types/feature-type';
-import { RewardAction, RewardCondition, RewardPeriod } from '../types';
+import { RewardAction } from '../types';
+import { RewardUserBehavior, RewardCondition, RewardPeriod } from '../types';
 
-export interface RewardResponse {
-  reward_action: RewardAction;
+export interface Reward {
+  reward_behavior: RewardUserBehavior;
   point: number;
   period: RewardPeriod;
   condition: RewardCondition;
 }
 
-export function useRewards(feature?: FeatureType) {
+export function useRewards(action?: RewardAction) {
   return useInfiniteQuery({
-    queryKey: feature
-      ? rewardsKeys.rewards_by_feature(feature)
+    queryKey: action
+      ? rewardsKeys.rewards_by_action(action)
       : rewardsKeys.rewards(),
-    queryFn: async ({ pageParam }): Promise<ListResponse<RewardResponse>> => {
+    queryFn: async ({ pageParam }): Promise<ListResponse<Reward>> => {
       try {
         const params = new URLSearchParams();
         if (pageParam) {
@@ -29,7 +29,7 @@ export function useRewards(feature?: FeatureType) {
         const queryString = params.toString();
         const path = `/v3/rewards${queryString ? `?${queryString}` : ''}`;
 
-        const ret: ListResponse<RewardResponse> = await call('GET', path);
+        const ret: ListResponse<Reward> = await call('GET', path);
         return ret;
       } catch (e) {
         logger.error('Failed to fetch global rewards', e);

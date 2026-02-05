@@ -4,15 +4,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { SpaceRewardResponse } from '../types/space-reward-response';
+import { SpaceRewardResponse } from '../types';
 import { RewardForm } from '../components/reward-form';
 import { RewardFormData } from '../pages/editor';
 import { SpaceRewardsI18n } from '../i18n';
-import { RewardConfigItem } from '../hooks/use-reward-config';
+import { Reward } from '../hooks/use-rewards';
 
 interface RewardModalProps {
   i18n: SpaceRewardsI18n;
-  configs: RewardConfigItem[] | null;
+  rewards: Reward[] | null;
   isOpen: boolean;
   onClose: () => void;
   editingReward: SpaceRewardResponse | null;
@@ -22,7 +22,7 @@ interface RewardModalProps {
 
 export function RewardModal({
   i18n,
-  configs,
+  rewards,
   isOpen,
   onClose,
   editingReward,
@@ -30,9 +30,9 @@ export function RewardModal({
   isSubmitting,
 }: RewardModalProps) {
   const t = i18n.settings;
-  const rewardActions = editingReward
-    ? [editingReward.reward_action]
-    : (configs?.map((config) => config.reward_action) ?? []);
+  const rewardBehaviors = editingReward
+    ? [editingReward.behavior]
+    : (rewards?.map((reward) => reward.reward_behavior) ?? []);
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent>
@@ -45,7 +45,7 @@ export function RewardModal({
         <RewardForm
           i18n={i18n}
           initialData={editingReward}
-          rewardActions={rewardActions}
+          rewardBehaviors={rewardBehaviors}
           onSubmit={onSubmit}
           onCancel={onClose}
           isSubmitting={isSubmitting}

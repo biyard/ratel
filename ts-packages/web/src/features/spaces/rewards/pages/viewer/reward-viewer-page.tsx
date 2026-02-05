@@ -1,10 +1,10 @@
 import { SpacePathProps } from '@/features/space-path-props';
 import { useRewardViewerController } from './reward-viewer-controller';
 import { Col } from '@/components/ui/col';
-import { SpaceRewardResponse } from '../../types/space-reward-response';
+import { SpaceRewardResponse } from '../../types';
 import { SpaceRewardsI18n } from '../../i18n';
 import { GiftIcon } from 'lucide-react';
-import { getRewardActionI18nKey } from '../../types/reward-type';
+import { getRewardUserBehaviorI18nKey } from '../../types/reward-user-behavior';
 
 function RewardViewCard({
   reward,
@@ -22,8 +22,8 @@ function RewardViewCard({
         <div className="flex-1">
           <h4 className="text-base font-semibold text-c-wg-100">
             {t[
-              getRewardActionI18nKey(reward.reward_action) as keyof typeof t
-            ] || reward.reward_action}{' '}
+              getRewardUserBehaviorI18nKey(reward.behavior) as keyof typeof t
+            ] || reward.behavior}{' '}
           </h4>
           {reward.description && (
             <p className="text-sm text-c-wg-60">{reward.description}</p>
@@ -43,7 +43,7 @@ function RewardViewCard({
 export function RewardViewerPage({ spacePk }: SpacePathProps) {
   const ctrl = useRewardViewerController(spacePk);
   const t = ctrl.i18n.settings;
-  const rewards = ctrl.rewards.items;
+  const rewards = ctrl.spaceRewards;
 
   if (rewards.length === 0) {
     return (

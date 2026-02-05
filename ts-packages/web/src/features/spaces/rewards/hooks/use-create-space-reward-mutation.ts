@@ -3,11 +3,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { call } from '@/lib/api/ratel/call';
 import { CreateSpaceRewardRequest, SpaceRewardResponse } from '../types';
 
-export function useCreateRewardMutation() {
+export function useCreateSpaceRewardMutation() {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationKey: ['create-reward'],
+    mutationKey: ['create-space-reward'],
     mutationFn: async ({
       spacePk,
       req,

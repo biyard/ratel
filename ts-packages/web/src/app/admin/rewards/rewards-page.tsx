@@ -4,7 +4,7 @@ import { useAdminRewardsI18n, AdminRewardsI18n } from './rewards-page-i18n';
 import { useAllTransactions } from './hooks/use-all-transactions';
 import {
   RewardCondition,
-  RewardAction,
+  RewardUserBehavior,
   RewardPeriod,
 } from '@/features/spaces/rewards/types';
 import {
@@ -12,16 +12,17 @@ import {
   getConditionType,
   getConditionValue,
 } from '@/features/spaces/rewards/types';
-import {
-  RewardResponse,
-  UpdateRewardRequest,
-} from './hooks/use-update-reward-mutation';
+import { UpdateRewardRequest } from './hooks/use-update-reward-mutation';
+import { Reward } from '@/features/spaces/rewards/hooks/use-rewards';
 
 type TabType = 'rules' | 'transactions';
 
-function getActionLabel(action: RewardAction, i18n: AdminRewardsI18n): string {
-  switch (action) {
-    case RewardAction.PollRespond:
+function getBehaviorLabel(
+  behavior: RewardUserBehavior,
+  i18n: AdminRewardsI18n,
+): string {
+  switch (behavior) {
+    case RewardUserBehavior.RespondPoll:
       return i18n.actionPollRespond;
     default:
       return i18n.actionNone;
@@ -78,8 +79,8 @@ function RewardTable({
   onEdit,
   i18n,
 }: {
-  rewards: RewardResponse[];
-  onEdit: (reward: RewardResponse) => void;
+  rewards: Reward[];
+  onEdit: (reward: Reward) => void;
   i18n: AdminRewardsI18n;
 }) {
   if (rewards.length === 0) {
@@ -111,9 +112,9 @@ function RewardTable({
         </thead>
         <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
           {rewards.map((reward) => (
-            <tr key={reward.reward_action}>
+            <tr key={reward.reward_behavior}>
               <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                {getActionLabel(reward.reward_action, i18n)}
+                {getBehaviorLabel(reward.reward_behavior, i18n)}
               </td>
               <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
                 {reward.point.toLocaleString()}
@@ -263,46 +264,48 @@ function TransactionTable({ i18n }: { i18n: AdminRewardsI18n }) {
   );
 }
 
-function getAvailableActions(
-  existingRewards: RewardResponse[],
-  editingReward: RewardResponse | null,
-): RewardAction[] {
+function getAvailableBehaviors(
+  existingRewards: Reward[],
+  editingReward: Reward | null,
+): RewardUserBehavior[] {
   // Get all possible actions from the enum
-  const allActions = Object.values(RewardAction);
+  const allBehaviors = Object.values(RewardUserBehavior);
 
   // Get the set of already-used actions
-  const usedActions = new Set(existingRewards.map((r) => r.reward_action));
+  const usedBehaviors = new Set(existingRewards.map((r) => r.reward_behavior));
 
   // Filter out used actions, but keep the current reward's action if editing
-  return allActions.filter((action) => {
+  return allBehaviors.filter((behavior) => {
     // If we're editing, always include the current reward's action
-    if (editingReward && action === editingReward.reward_action) {
+    if (editingReward && behavior === editingReward.reward_behavior) {
       return true;
     }
     // Otherwise, only include if not already used
-    return !usedActions.has(action);
+    return !usedBehaviors.has(behavior);
   });
 }
 
 function RewardForm({
   reward,
-  availableActions,
+  availableBehaviors,
   onCreate,
   onUpdate,
   onCancel,
   isSubmitting,
   i18n,
 }: {
-  reward: RewardResponse | null;
-  availableActions: RewardAction[];
+  reward: Reward | null;
+  availableBehaviors: RewardUserBehavior[];
   onCreate: (request: UpdateRewardRequest) => Promise<void>;
   onUpdate: (request: UpdateRewardRequest) => Promise<void>;
   onCancel: () => void;
   isSubmitting: boolean;
   i18n: AdminRewardsI18n;
 }) {
-  const [action, setAction] = useState<RewardAction>(
-    reward?.reward_action || availableActions[0] || RewardAction.PollRespond,
+  const [behavior, setBehavior] = useState<RewardUserBehavior>(
+    reward?.reward_behavior ||
+      availableBehaviors[0] ||
+      RewardUserBehavior.RespondPoll,
   );
   const [point, setPoint] = useState(reward?.point || 0);
   const [period, setPeriod] = useState<RewardPeriod>(
@@ -331,7 +334,7 @@ function RewardForm({
     }
 
     const request = {
-      action,
+      behavior: behavior,
       point,
       period,
       condition,
@@ -357,17 +360,17 @@ function RewardForm({
               {i18n.actionLabel}
             </label>
             <select
-              value={action}
+              value={behavior}
               onChange={(e) => {
                 if (reward) return;
-                setAction(e.target.value as RewardAction);
+                setBehavior(e.target.value as RewardUserBehavior);
               }}
               disabled={!!reward}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white disabled:opacity-20"
             >
-              {availableActions.map((actionOption) => (
-                <option key={actionOption} value={actionOption}>
-                  {getActionLabel(actionOption, i18n)}
+              {availableBehaviors.map((behaviorOption) => (
+                <option key={behaviorOption} value={behaviorOption}>
+                  {getBehaviorLabel(behaviorOption, i18n)}
                 </option>
               ))}
             </select>
@@ -519,7 +522,7 @@ export function RewardsPage() {
                   <button
                     onClick={() => ctrl.openForm()}
                     disabled={
-                      getAvailableActions(ctrl.rewards, null).length === 0
+                      getAvailableBehaviors(ctrl.rewards, null).length === 0
                     }
                     className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
@@ -540,7 +543,7 @@ export function RewardsPage() {
       {ctrl.isFormOpen && (
         <RewardForm
           reward={ctrl.editingReward}
-          availableActions={getAvailableActions(
+          availableBehaviors={getAvailableBehaviors(
             ctrl.rewards,
             ctrl.editingReward,
           )}
