@@ -4,7 +4,7 @@ import { rewardsKeys } from '@/constants';
 import { UpdateRewardRequest } from './use-update-reward-mutation';
 import { Reward } from '@/features/spaces/rewards/hooks/use-rewards';
 
-export function useCreateGlobalRewardMutation() {
+export function useCreateRewardMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({

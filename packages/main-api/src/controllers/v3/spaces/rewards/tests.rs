@@ -321,7 +321,7 @@ async fn test_update_reward_success() {
         path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "action_key": poll_sk.to_string(), "behavior": "RespondPoll",
+            "sk": reward_key.to_string(),
             "description": "Updated Description",
             "credits": 15
         },
@@ -397,7 +397,7 @@ async fn test_update_reward_reduce_credits() {
         path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "action_key": poll_sk.to_string(), "behavior": "RespondPoll",
+            "sk": reward_key.to_string(),
             "description": "Description",
             "credits": 10
         },
@@ -455,7 +455,7 @@ async fn test_update_reward_without_permission() {
         path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
         headers: user2.1.clone(),
         body: {
-            "action_key": poll_sk.to_string(), "behavior": "RespondPoll",
+            "sk": reward_key.to_string(),
             "description": "Should fail",
             "credits": 15
         },
@@ -511,7 +511,7 @@ async fn test_delete_reward_success() {
         path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "action_key": poll_sk.to_string(), "behavior": "RespondPoll"
+            "sk": reward_key.to_string(),
         },
         response_type: serde_json::Value
     };
@@ -556,8 +556,7 @@ async fn test_delete_reward_nonexistent() {
         path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "action_key": poll_sk.to_string(),
-            "behavior": "RespondPoll"
+            "sk": reward_key.to_string(),
         },
         response_type: serde_json::Value
     };
@@ -604,7 +603,7 @@ async fn test_delete_reward_without_permission() {
         path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
         headers: user2.1.clone(),
         body: {
-            "action_key": poll_sk.to_string(), "behavior": "RespondPoll"
+            "sk": reward_key.to_string(),
         },
         response_type: serde_json::Value
     };

@@ -52,16 +52,4 @@ impl Reward {
             condition,
         }
     }
-
-    pub async fn get_by_reward_action(
-        cli: &aws_sdk_dynamodb::Client,
-        reward_action: &RewardAction,
-    ) -> Result<Self> {
-        let pk = Partition::Reward;
-        let m = Reward::get(cli, pk, Some(reward_action))
-            .await?
-            .ok_or(Error::SpaceRewardNotFound)?;
-
-        Ok(m)
-    }
 }

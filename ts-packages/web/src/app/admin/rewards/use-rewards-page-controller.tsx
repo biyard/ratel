@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react';
 import { useUserInfo } from '@/hooks/use-user-info';
 import { useNavigate } from 'react-router';
 import { route } from '@/route';
-import { UpdateRewardRequest } from './hooks/use-update-reward-mutation';
+import {
+  UpdateRewardRequest,
+  useUpdateRewardMutation,
+} from './hooks/use-update-reward-mutation';
 import {
   Reward,
   useRewards,
 } from '@/features/spaces/rewards/hooks/use-rewards';
-import { useCreateGlobalRewardMutation } from './hooks/use-create-reward-mutation';
+import { useCreateRewardMutation } from './hooks/use-create-reward-mutation';
 import { UserType } from '@/lib/api/ratel/users.v3';
 
 export class RewardsPageController {
@@ -39,8 +42,8 @@ export function useRewardsPageController() {
     hasNextPage,
   } = useRewards();
 
-  const createReward = useCreateGlobalRewardMutation();
-  const updateReward = useCreateGlobalRewardMutation();
+  const createReward = useCreateRewardMutation();
+  const updateReward = useUpdateRewardMutation();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingReward, setEditingReward] = useState<Reward | null>(null);
