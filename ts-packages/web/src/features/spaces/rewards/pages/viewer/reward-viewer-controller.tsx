@@ -17,12 +17,7 @@ export class RewardViewerController {
 export function useRewardViewerController(spacePk: string) {
   const i18n = useSpaceRewardsI18n();
   const { data: space } = useSpaceById(spacePk);
-  const { data: spaceRewards } = useSpaceRewards(spacePk);
+  const { data: spaceRewards = [] } = useSpaceRewards(spacePk);
 
-  return new RewardViewerController(
-    spacePk,
-    i18n,
-    space,
-    spaceRewards?.pages.flatMap((page) => page.items) ?? [],
-  );
+  return new RewardViewerController(spacePk, i18n, space, spaceRewards);
 }

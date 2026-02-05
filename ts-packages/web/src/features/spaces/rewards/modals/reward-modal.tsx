@@ -12,7 +12,7 @@ import { Reward } from '../hooks/use-rewards';
 
 interface RewardModalProps {
   i18n: SpaceRewardsI18n;
-  rewards: Reward[] | null;
+  rewards: Reward[] | undefined;
   isOpen: boolean;
   onClose: () => void;
   editingReward: SpaceRewardResponse | null;

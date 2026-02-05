@@ -1,4 +1,4 @@
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 import { spaceKeys } from '@/constants';
 import { call } from '@/lib/api/ratel/call';
@@ -7,30 +7,26 @@ import { ListResponse } from '@/lib/api/ratel/common';
 import { logger } from '@/lib/logger';
 
 export function useSpaceRewards(spacePk: string, entityType?: string) {
-  return useInfiniteQuery({
+  return useQuery({
     queryKey: entityType
       ? spaceKeys.rewards_by_entityType(spacePk, entityType)
       : spaceKeys.rewards(spacePk),
-    queryFn: async ({
-      pageParam,
-    }): Promise<ListResponse<SpaceRewardResponse>> => {
+    queryFn: async (): Promise<SpaceRewardResponse[]> => {
       try {
+        // Build query string with action_key if entityType is provided
         const params = new URLSearchParams();
-        if (pageParam) {
-          params.set('bookmark', pageParam);
+        if (entityType) {
+          params.set('action_key', entityType);
         }
-        params.set('limit', '20');
         const queryString = params.toString();
         const path = `/v3/spaces/${encodeURIComponent(spacePk)}/rewards${queryString ? `?${queryString}` : ''}`;
 
         const ret: ListResponse<SpaceRewardResponse> = await call('GET', path);
-        return ret;
+        return ret.items;
       } catch (e) {
-        logger.error('Failed to fetch global rewards', e);
+        logger.error('Failed to fetch space rewards', e);
         throw new Error(e);
       }
     },
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (lastPage) => lastPage.bookmark ?? undefined,
   });
 }
