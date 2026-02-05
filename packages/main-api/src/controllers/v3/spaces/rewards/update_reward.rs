@@ -1,7 +1,5 @@
 use crate::features::membership::UserMembership;
-use crate::features::spaces::rewards::RewardAction;
-use crate::features::spaces::rewards::RewardKey;
-use crate::features::spaces::rewards::RewardTypeRequest;
+use crate::features::spaces::rewards::RewardUserBehavior;
 use crate::features::spaces::rewards::SpaceReward;
 use crate::features::spaces::rewards::SpaceRewardResponse;
 use crate::spaces::SpacePath;
@@ -11,7 +9,8 @@ use crate::*;
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
 pub struct UpdateRewardRequest {
-    pub sk: RewardKey,
+    pub entity_type: EntityType,
+    pub behavior: RewardUserBehavior,
 
     #[serde(default)]
     pub description: String,
@@ -27,8 +26,13 @@ pub async fn update_reward_handler(
 ) -> Result<Json<SpaceRewardResponse>> {
     permissions.permitted(TeamGroupPermission::SpaceEdit)?;
 
-    let mut space_reward =
-        SpaceReward::get_by_reward_key(&dynamo.client, space_pk.into(), req.sk).await?;
+    let mut space_reward = SpaceReward::get_by_action(
+        &dynamo.client,
+        space_pk.into(),
+        req.entity_type,
+        req.behavior,
+    )
+    .await?;
 
     let credit_delta = space_reward.credits - req.credits;
 

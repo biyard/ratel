@@ -42,7 +42,7 @@ pub async fn list_rewards_handler(
 ) -> Result<Json<ListItemsResponse<SpaceRewardResponse>>> {
     permissions.permitted(TeamGroupPermission::SpaceRead)?;
 
-    let (space_rewards, bookmark) = SpaceReward::list_by_feature(
+    let (space_rewards, bookmark) = SpaceReward::list_by_action(
         &dynamo.client,
         space_pk.clone().into(),
         query.entity_type,
@@ -51,7 +51,7 @@ pub async fn list_rewards_handler(
     .await?;
 
     let user_rewards = if let Some(user) = user {
-        let user_reward_keys = space_rewards
+        let user_reward_keys: Vec<_> = space_rewards
             .iter()
             .map(|reward| {
                 UserReward::keys(
@@ -60,7 +60,7 @@ pub async fn list_rewards_handler(
                     reward.sk.clone(),
                 )
             })
-            .collect::<Vec<_>>();
+            .collect::<Result<Vec<_>>>()?;
         UserReward::batch_get(&dynamo.client, user_reward_keys).await?
     } else {
         vec![]

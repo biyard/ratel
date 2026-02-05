@@ -1,5 +1,5 @@
 use crate::features::spaces::rewards::{
-    RewardCondition, RewardKey, RewardPeriod, SpaceReward, UserRewardHistory,
+    RewardCondition, RewardPeriod, SpaceReward, SpaceRewardSk, UserRewardHistory,
 };
 use crate::services::biyard::Biyard;
 use crate::types::*;
@@ -15,21 +15,21 @@ use crate::*;
     serde::Serialize,
     serde::Deserialize,
 )]
-/// SpaceReward: 스페이스에 설정한 리워드
+/// UserReward: 유저가 특정 리워드를 획득한 통계
 ///
 /// Key Structure:
-/// - PK: USER#{USER_pk}##SPACE#{SPACE_PK}
-/// - SK: {EntityType}#{RewardKey}
+/// - PK: USER#{user_pk}##SPACE#{space_pk} or TEAM#{team_pk}##SPACE#{space_pk}
+/// - SK: SpaceReward##{EntityType}##{RewardUserBehavior}
 ///
 /// Examples:
-/// POLL RESPOND : PK: USER_REWARD#{USER_pk}##SPACE#{SPACE_PK}, SK: POLL#{POLL_ID}#RESPOND
-/// SPACE BOARD Comment : PK: USER_REWARD#{USER_pk}##SPACE#{SPACE_PK}, SK: SPACE_BOARD#{SPACE_BOARD_ID}#Comment
-/// SPACE BOARD LIKE : PK: USER_REWARD#{USER_pk}##SPACE#{SPACE_PK}, SK: SPACE_BOARD#{SPACE_BOARD_ID}#LIKE
-/// - Get All Rewards: UserReward::query(pk)
-/// - Get Specific Entity Reward: UserReward::query_begins_with_sk(EntityType)
+/// - PK: USER#{USER_ID}##SPACE#{SPACE_ID}
+/// - SK: SpaceReward##Poll##CreatePoll
+///
+/// - PK: TEAM#{TEAM_ID}##SPACE#{SPACE_ID}
+/// - SK: SpaceReward##Post##CreatePost
 pub struct UserReward {
     pub pk: CompositePartition,
-    pub sk: RewardKey,
+    pub sk: SpaceRewardSk,
 
     pub created_at: i64,
     pub updated_at: i64,
@@ -39,36 +39,35 @@ pub struct UserReward {
 }
 
 impl UserReward {
-    pub fn new(space_reward: SpaceReward, target_pk: Partition) -> Self {
-        let (pk, sk) = Self::keys(target_pk, space_reward.get_space_pk(), space_reward.sk);
+    pub fn new(space_reward: SpaceReward, target_pk: Partition) -> Result<Self> {
+        let (pk, sk) = Self::keys(target_pk, space_reward.pk.into(), space_reward.sk)?;
         let now = time::get_now_timestamp_millis();
-        Self {
+        Ok(Self {
             pk,
             sk,
             created_at: now,
             updated_at: now,
             total_claims: 0,
             total_points: 0,
-        }
+        })
     }
 
     pub fn keys(
         target_pk: Partition,
         space_pk: SpacePartition,
-        reward_key: RewardKey,
-    ) -> (CompositePartition, RewardKey) {
-        let id = match target_pk {
-            Partition::User(id) => id.clone(),
-            Partition::Team(id) => id.clone(),
-            _ => panic!("Biyard target_pk must be of Partition::User or Partition::Team type"),
-        };
-
-        let reward: UserRewardPartition = UserRewardPartition(id);
-
-        (
-            CompositePartition(reward.into(), space_pk.into()),
-            reward_key,
-        )
+        reward_key: SpaceRewardSk,
+    ) -> Result<(CompositePartition, SpaceRewardSk)> {
+        match target_pk {
+            Partition::User(_) | Partition::Team(_) => {
+                Ok((CompositePartition(target_pk, space_pk.into()), reward_key))
+            }
+            _ => {
+                return Err(Error::InvalidPartitionKey(
+                    "Biyard target_pk must be of Partition::User or Partition::Team type"
+                        .to_string(),
+                ));
+            }
+        }
     }
 
     pub async fn award(
@@ -79,10 +78,13 @@ impl UserReward {
         owner_pk: Option<Partition>, // Team Or User
     ) -> Result<Self> {
         let now = time::get_now_timestamp_millis();
-        let space_pk = space_reward.get_space_pk();
+        let space_pk = space_reward.pk.clone();
 
-        let (user_reward_pk, user_reward_sk) =
-            Self::keys(target_pk.clone(), space_pk.clone(), space_reward.sk.clone());
+        let (user_reward_pk, user_reward_sk) = Self::keys(
+            target_pk.clone(),
+            space_pk.clone().into(),
+            space_reward.sk.clone(),
+        )?;
         let user_reward =
             Self::get(cli, user_reward_pk.clone(), Some(user_reward_sk.clone())).await?;
 
@@ -94,22 +96,22 @@ impl UserReward {
                 RewardCondition::None => {}
                 RewardCondition::MaxClaims(max) => {
                     if space_reward.total_claims >= *max {
-                        return Err(Error::RewardMaxClaimsReached);
+                        return Err(Error::SpaceRewardMaxClaimsReached);
                     }
                 }
                 RewardCondition::MaxPoints(max) => {
                     if space_reward.total_points >= *max {
-                        return Err(Error::RewardMaxPointsReached);
+                        return Err(Error::SpaceRewardMaxPointsReached);
                     }
                 }
                 RewardCondition::MaxUserClaims(max) => {
                     if user_reward.total_claims >= *max {
-                        return Err(Error::RewardMaxUserClaimsReached);
+                        return Err(Error::SpaceRewardMaxUserClaimsReached);
                     }
                 }
                 RewardCondition::MaxUserPoints(max) => {
                     if user_reward.total_points >= *max {
-                        return Err(Error::RewardMaxUserPointsReached);
+                        return Err(Error::SpaceRewardMaxUserPointsReached);
                     }
                 }
             }
@@ -125,7 +127,7 @@ impl UserReward {
 
             user_reward
         } else {
-            let mut user_reward = Self::new(space_reward.clone(), target_pk.clone());
+            let mut user_reward = Self::new(space_reward.clone(), target_pk.clone())?;
             user_reward.total_claims += 1;
             user_reward.total_points += space_reward.get_amount();
             txs.push(user_reward.create_transact_write_item());
@@ -134,7 +136,7 @@ impl UserReward {
 
         // Update SpaceReward
         txs.push(
-            SpaceReward::updater(&space_reward.pk, &space_reward.sk)
+            SpaceReward::updater(&space_pk, &space_reward.sk)
                 .increase_total_claims(1)
                 .increase_total_points(space_reward.get_amount())
                 .with_updated_at(now)
@@ -209,7 +211,7 @@ impl UserReward {
                     .await;
             }
 
-            return Err(Error::RewardAlreadyClaimedInPeriod);
+            return Err(Error::SpaceRewardAlreadyClaimedInPeriod);
         }
 
         Ok(user_reward)

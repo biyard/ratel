@@ -1,4 +1,6 @@
-use crate::features::spaces::rewards::{FeatureType, RewardAction, RewardCondition, RewardPeriod};
+use crate::features::spaces::rewards::{
+    RewardAction, RewardCondition, RewardPeriod, RewardUserBehavior,
+};
 use crate::types::*;
 use crate::*;
 
@@ -12,13 +14,25 @@ use crate::*;
     serde::Serialize,
     serde::Deserialize,
 )]
-
+/// Reward: 전역 리워드 설정
+///
+/// Key Structure:
+/// - PK: Reward
+/// - SK: {RewardUserBehavior}
+///
+/// Examples:
+/// - PK: Reward
+/// - SK: CreatePoll
 pub struct Reward {
     pub pk: Partition,
-    pub sk: RewardAction,
+    pub sk: RewardUserBehavior,
 
+    #[dynamo(index = "gsi1", sk)]
     pub created_at: i64,
     pub updated_at: i64,
+
+    #[dynamo(name = "find_by_action", prefix = "ACTION", index = "gsi1", pk)]
+    pub action: RewardAction,
 
     pub point: i64,
     pub period: RewardPeriod,
@@ -27,7 +41,7 @@ pub struct Reward {
 
 impl Reward {
     pub fn new(
-        reward_action: RewardAction,
+        user_behavior: RewardUserBehavior,
         point: i64,
         period: RewardPeriod,
         condition: RewardCondition,
@@ -36,7 +50,8 @@ impl Reward {
 
         Self {
             pk: Partition::Reward,
-            sk: reward_action,
+            action: user_behavior.action(),
+            sk: user_behavior,
             created_at: now,
             updated_at: now,
 
@@ -53,25 +68,8 @@ impl Reward {
         let pk = Partition::Reward;
         let m = Reward::get(cli, pk, Some(reward_action))
             .await?
-            .ok_or(Error::RewardNotFound)?;
+            .ok_or(Error::SpaceRewardNotFound)?;
 
         Ok(m)
-    }
-
-    pub async fn list_by_feature(
-        cli: &aws_sdk_dynamodb::Client,
-        feature: &FeatureType,
-        bookmark: Option<String>,
-    ) -> Result<(Vec<Self>, Option<String>)> {
-        let pk = Partition::Reward;
-        let begin_sk = feature.get_sk_prefix();
-
-        let mut opt = RewardQueryOption::builder().limit(100).sk(begin_sk);
-        if let Some(bookmark) = bookmark {
-            opt = opt.bookmark(bookmark);
-        }
-        let (items, next) = Self::query(cli, pk, opt).await?;
-
-        Ok((items, next))
     }
 }
