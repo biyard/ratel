@@ -10,7 +10,6 @@ use by_axum::axum::extract::Query;
 #[derive(Debug, Clone, Default, serde::Deserialize, schemars::JsonSchema)]
 pub struct ListRewardsQuery {
     pub action: Option<RewardAction>,
-    pub bookmark: Option<String>,
 }
 
 #[derive(
@@ -54,11 +53,11 @@ pub struct ListRewardsResponse {
 
 pub async fn list_rewards_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Query(ListRewardsQuery { action, bookmark }): Query<ListRewardsQuery>,
+    Query(ListRewardsQuery { action }): Query<ListRewardsQuery>,
 ) -> Result<Json<ListItemsResponse<RewardResponse>>> {
-    tracing::debug!("action: {:?}, bookmark: {:?}", action, bookmark);
-    let opt = Reward::opt_with_bookmark(bookmark);
-    let (items, bookmark) = if let Some(action) = action {
+    let opt = Reward::opt_all();
+
+    let (items, _) = if let Some(action) = action {
         let pk = Reward::compose_gsi1_pk(action);
         Reward::find_by_action(&dynamo.client, &pk, opt).await?
     } else {
@@ -69,5 +68,8 @@ pub async fn list_rewards_handler(
         .map(|item| RewardResponse::from(item))
         .collect();
 
-    Ok(Json(ListItemsResponse { items, bookmark }))
+    Ok(Json(ListItemsResponse {
+        items,
+        bookmark: None,
+    }))
 }

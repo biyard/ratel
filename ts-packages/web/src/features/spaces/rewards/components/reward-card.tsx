@@ -19,7 +19,6 @@ export function RewardCard({
   onDelete,
 }: RewardCardProps) {
   const t = i18n.settings;
-  console.log('reward.behavior', reward.behavior);
   return (
     <div
       data-testid="reward-card"

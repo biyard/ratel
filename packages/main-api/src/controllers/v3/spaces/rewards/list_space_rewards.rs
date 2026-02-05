@@ -29,8 +29,6 @@ use aide::NoApi;
 pub struct ListRewardQuery {
     #[schemars(description = "Action key to filter by e.g)PollSk")]
     pub action_key: Option<EntityType>,
-    #[schemars(description = "Bookmark to start from")]
-    pub bookmark: Option<String>,
 }
 pub async fn list_space_rewards_handler(
     State(AppState { dynamo, .. }): State<AppState>,
@@ -42,13 +40,9 @@ pub async fn list_space_rewards_handler(
 ) -> Result<Json<ListItemsResponse<SpaceRewardResponse>>> {
     permissions.permitted(TeamGroupPermission::SpaceRead)?;
 
-    let (space_rewards, bookmark) = SpaceReward::list_by_action(
-        &dynamo.client,
-        space_pk.clone().into(),
-        query.action_key,
-        query.bookmark,
-    )
-    .await?;
+    let space_rewards =
+        SpaceReward::list_by_action(&dynamo.client, space_pk.clone().into(), query.action_key)
+            .await?;
 
     let user_rewards = if let Some(user) = user {
         let user_reward_keys: Vec<_> = space_rewards
@@ -71,6 +65,6 @@ pub async fn list_space_rewards_handler(
                 }
             })
             .collect(),
-        bookmark,
+        bookmark: None,
     }))
 }

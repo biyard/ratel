@@ -90,14 +90,14 @@ impl SpaceReward {
         cli: &aws_sdk_dynamodb::Client,
         space_pk: SpacePartition,
         action: Option<EntityType>,
-        bookmark: Option<String>,
-    ) -> Result<(Vec<Self>, Option<String>)> {
+    ) -> Result<Vec<Self>> {
         let pk: Partition = space_pk.clone().into();
         let sk = RewardKey::get_space_reward_sk_prefix(space_pk, action);
-        let opt = SpaceReward::opt_with_bookmark(bookmark).sk(sk);
 
-        let (items, next) = Self::query(cli, pk, opt).await?;
+        let opt = SpaceReward::opt_all().sk(sk);
 
-        Ok((items, next))
+        let (items, _) = Self::query(cli, pk, opt).await?;
+
+        Ok(items)
     }
 }

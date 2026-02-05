@@ -49,12 +49,8 @@ function RewardSectionContent({
   const i18n = useSpaceRewardsI18n();
   const t = i18n.settings;
 
-  const spaceRewardsQuery = useSpaceRewards(spacePk, entityKey);
-  const spaceRewards =
-    spaceRewardsQuery.data?.pages.flatMap((page) => page.items) ?? [];
-
-  const rewardsQuery = useRewards(action);
-  const rewards = rewardsQuery.data?.pages.flatMap((page) => page.items) ?? [];
+  const { data: spaceRewards = [] } = useSpaceRewards(spacePk, entityKey);
+  const { data: rewards = [] } = useRewards(action);
 
   const hasAvailableRewardTypes = rewards.length > spaceRewards.length;
 

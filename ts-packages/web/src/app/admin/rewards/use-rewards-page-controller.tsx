@@ -17,8 +17,6 @@ export class RewardsPageController {
   constructor(
     public rewards: Reward[],
     public isLoading: boolean,
-    public fetchNextPage: () => Promise<void>,
-    public hasNextPage: boolean | undefined,
     public error: Error | null,
     public isFormOpen: boolean,
     public editingReward: Reward | null,
@@ -35,11 +33,9 @@ export function useRewardsPageController() {
   const navigate = useNavigate();
   const isAdmin = user?.user_type === UserType.Admin;
   const {
-    data: rewards,
+    data: rewards = [],
     isLoading,
     error,
-    fetchNextPage,
-    hasNextPage,
   } = useRewards();
 
   const createReward = useCreateRewardMutation();
@@ -85,14 +81,9 @@ export function useRewardsPageController() {
   };
 
   return new RewardsPageController(
-    rewards?.pages.flatMap((page) => page.items) ?? [],
+    rewards,
     isLoading,
-    async () => {
-      await fetchNextPage();
-    },
-    hasNextPage,
     error,
-
     isFormOpen,
     editingReward,
     openForm,
