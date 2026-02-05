@@ -116,11 +116,11 @@ impl From<Reward> for RewardKey {
 impl RewardKey {
     pub fn get_space_reward_sk_prefix(
         space_pk: SpacePartition,
-        action_sk: Option<EntityType>,
+        action_key: Option<EntityType>,
     ) -> String {
-        match action_sk {
-            Some(action_sk) => {
-                format!("{}##{}##{}", EntityType::SpaceReward, space_pk, action_sk)
+        match action_key {
+            Some(action_key) => {
+                format!("{}##{}##{}", EntityType::SpaceReward, space_pk, action_key)
             }
             None => {
                 format!("{}##{}", EntityType::SpaceReward, space_pk)

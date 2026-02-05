@@ -1,5 +1,5 @@
 use crate::features::spaces::rewards::{
-    RewardKey, RewardPeriod, SpaceReward, UserRewardHistoryKey,
+    RewardKey, RewardPeriod, SpaceReward, TimeKey, UserRewardHistoryKey,
 };
 use crate::services::biyard::Biyard;
 use crate::types::*;
@@ -23,9 +23,7 @@ impl UserRewardHistory {
         let time_key = space_reward.period.to_time_key(now);
         let amount = space_reward.get_amount();
 
-        let pk = CompositePartition(target_pk, Partition::Reward);
-
-        let sk = UserRewardHistoryKey(space_reward.sk, time_key);
+        let (pk, sk) = Self::key(target_pk, space_reward, time_key);
 
         Self {
             pk,
@@ -34,6 +32,16 @@ impl UserRewardHistory {
             created_at: now,
             ..Default::default()
         }
+    }
+
+    pub fn key(
+        target_pk: Partition,
+        space_reward: SpaceReward,
+        time_key: TimeKey,
+    ) -> (CompositePartition, UserRewardHistoryKey) {
+        let pk = CompositePartition(target_pk, Partition::Reward);
+        let sk = UserRewardHistoryKey(space_reward.sk, time_key);
+        (pk, sk)
     }
 
     pub fn set_transaction(&mut self, transaction_id: String, month: String) -> &mut Self {
