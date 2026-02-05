@@ -1,6 +1,6 @@
 use crate::Result;
 use crate::features::spaces::rewards::{
-    Reward, RewardAction, RewardCondition, RewardPeriod, RewardQueryOption,
+    Reward, RewardAction, RewardCondition, RewardPeriod, RewardQueryOption, RewardUserBehavior,
 };
 use crate::*;
 use bdk::prelude::*;
@@ -23,7 +23,7 @@ pub struct ListRewardsQuery {
     aide::OperationIo,
 )]
 pub struct RewardResponse {
-    pub reward_action: RewardAction,
+    pub reward_behavior: RewardUserBehavior,
     pub point: i64,
     pub period: RewardPeriod,
     pub condition: RewardCondition,
@@ -32,7 +32,7 @@ pub struct RewardResponse {
 impl From<Reward> for RewardResponse {
     fn from(value: Reward) -> Self {
         Self {
-            reward_action: value.action,
+            reward_behavior: value.sk,
             point: value.point,
             period: value.period,
             condition: value.condition,
