@@ -1,9 +1,7 @@
 use crate::features::did::VerifiedAttributes;
 use crate::features::spaces::panels::SpacePanelParticipant;
 
-use crate::features::spaces::rewards::{
-    RewardAction, RewardUserBehavior, SpaceReward, SpaceRewardSk, UserReward,
-};
+use crate::features::spaces::rewards::{RewardAction, RewardUserBehavior, SpaceReward, UserReward};
 use crate::features::spaces::{SpaceParticipant, polls::*};
 use crate::models::user::User;
 use crate::types::{

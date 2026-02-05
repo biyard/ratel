@@ -14,15 +14,7 @@ use crate::*;
     serde::Serialize,
     serde::Deserialize,
 )]
-/// Reward: 전역 리워드 설정
-///
-/// Key Structure:
-/// - PK: Reward
-/// - SK: {RewardUserBehavior}
-///
-/// Examples:
-/// - PK: Reward
-/// - SK: CreatePoll
+
 pub struct Reward {
     pub pk: Partition,
     pub sk: RewardUserBehavior,
