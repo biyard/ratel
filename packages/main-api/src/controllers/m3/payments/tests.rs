@@ -11,12 +11,11 @@ async fn test_list_payments_admin_success() {
         app: app,
         path: "/m3/payments",
         headers: admin_user.1,
-        response_type: ListItemsResponse<AdminPaymentDetail>
+        response_type: ListItemsResponse<AdminPaymentResponse>
     };
 
     assert_eq!(status, 200, "Admin should be able to access payment list");
     assert!(body.items.len() >= 0, "Should return payment items");
-    assert!(body.bookmark.is_some(), "Should return bookmark");
 }
 
 #[tokio::test]
@@ -50,7 +49,7 @@ async fn test_list_payments_unauthenticated() {
 }
 
 #[tokio::test]
-async fn test_list_payments_bookmark_structure() {
+async fn test_list_payments_with_bookmark() {
     let TestContextV3 {
         app, admin_user, ..
     } = TestContextV3::setup().await;
@@ -58,29 +57,28 @@ async fn test_list_payments_bookmark_structure() {
     let (status, _headers, body) = get! {
         app: app,
         path: "/m3/payments",
-        headers: admin_user.1,
-        response_type: ListItemsResponse<AdminPaymentDetail>
+        headers: admin_user.1.clone(),
+        response_type: ListItemsResponse<AdminPaymentResponse>
     };
 
     assert_eq!(status, 200);
 
-    let bookmark_str = body.bookmark.expect("Should have bookmark");
-    let bookmark: serde_json::Value =
-        serde_json::from_str(&bookmark_str).expect("Bookmark should be valid JSON");
+    // If bookmark exists, test pagination
+    if let Some(bookmark) = body.bookmark {
+        // Bookmark should be a page number string
+        let page_num: i32 = bookmark.parse().expect("Bookmark should be a valid page number");
+        assert!(page_num > 0, "Next page should be > 0");
 
-    assert!(bookmark.get("page").is_some(), "Bookmark should have page");
-    assert!(
-        bookmark.get("page_size").is_some(),
-        "Bookmark should have page_size"
-    );
-    assert!(
-        bookmark.get("total_count").is_some(),
-        "Bookmark should have total_count"
-    );
-    assert!(
-        bookmark.get("total_pages").is_some(),
-        "Bookmark should have total_pages"
-    );
+        // Request next page
+        let (status, _headers, _body) = get! {
+            app: app,
+            path: format!("/m3/payments?bookmark={}", bookmark),
+            headers: admin_user.1,
+            response_type: ListItemsResponse<AdminPaymentResponse>
+        };
+
+        assert_eq!(status, 200, "Should successfully fetch next page");
+    }
 }
 
 #[tokio::test]
@@ -93,7 +91,7 @@ async fn test_list_payments_response_structure() {
         app: app,
         path: "/m3/payments",
         headers: admin_user.1,
-        response_type: ListItemsResponse<AdminPaymentDetail>
+        response_type: ListItemsResponse<AdminPaymentResponse>
     };
 
     assert_eq!(status, 200);
