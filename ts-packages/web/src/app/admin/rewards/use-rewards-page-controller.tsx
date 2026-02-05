@@ -3,10 +3,8 @@ import { useRewardsData } from './use-rewards-data';
 import { useUserInfo } from '@/hooks/use-user-info';
 import { useNavigate } from 'react-router';
 import { route } from '@/route';
-import {
-  RewardResponse,
-  UpdateRewardRequest,
-} from './hooks/use-update-reward-mutation';
+import { UpdateRewardRequest } from './hooks/use-update-reward-mutation';
+import { RewardResponse } from '@/features/spaces/rewards/hooks/use-rewards';
 
 const USER_TYPE_ADMIN = 98;
 

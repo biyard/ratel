@@ -92,6 +92,7 @@ export const feedKeys = {
 // - Feature-level invalidation: Use QK_SPACES > space_pk > 'feature_name'
 // - Granular control: Target specific sub-keys for precise updates
 
+const QK_REWARDS = 'rewards';
 const QK_SPACES = 'spaces';
 export const spaceKeys = {
   all: [QK_SPACES] as const,
@@ -160,6 +161,8 @@ export const spaceKeys = {
 
   rewards: (spacePk: string) =>
     [...spaceKeys.detail(spacePk), QK_REWARDS] as const,
+  rewards_by_entityType: (spacePk: string, entityType: string) =>
+    [...spaceKeys.rewards(spacePk), entityType] as const,
 };
 
 const QK_TEAMS = 'teams';
@@ -172,10 +175,8 @@ export const teamKeys = {
     [...teamKeys.detail(teamName), 'groups'] as const,
   group: (teamName: string, groupId: string) =>
     [...teamKeys.groups(teamName), groupId] as const,
-  reward: (teamPk: string, month: string) =>
-    [...teamKeys.detail(teamPk), 'reward', month] as const,
-  reward_lists: (teamPk: string, month: string) =>
-    [...teamKeys.detail(teamPk), 'reward_lists', month] as const,
+  rewards: (teamPk: string, month: string) =>
+    [...teamKeys.detail(teamPk), QK_REWARDS, month] as const,
 };
 
 export const QK_MEMBERSHIPS = 'memberships';
@@ -187,15 +188,12 @@ const QK_USERS = 'users';
 export const userKeys = {
   all: [QK_USERS] as const,
   detail: () => [...userKeys.all, 'detail'] as const,
-  rewards: (month?: string) => [...userKeys.all, 'rewards', month] as const,
-  reward_lists: (month?: string) =>
-    [...userKeys.all, 'reward_lists', month] as const,
+  rewards: (month?: string) => [...userKeys.all, QK_REWARDS, month] as const,
 };
 
-const QK_REWARDS = 'rewards';
 export const rewardsKeys = {
   all: [QK_REWARDS] as const,
-  global_rewards: () => [...rewardsKeys.all, 'global_rewards'] as const,
-  global_rewards_detail: (featureType: FeatureType) =>
-    [...rewardsKeys.global_rewards(), featureType] as const,
+  rewards: () => [...rewardsKeys.all, 'global_rewards'] as const,
+  rewards_by_feature: (featureType: FeatureType) =>
+    [...rewardsKeys.rewards(), featureType] as const,
 };
