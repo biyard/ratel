@@ -1,0 +1,19 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { call } from '@/lib/api/ratel/call';
+import { rewardsKeys } from '@/constants';
+import {
+  RewardResponse,
+  UpdateRewardRequest,
+} from './use-update-reward-mutation';
+
+export function useCreateGlobalRewardMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (request: UpdateRewardRequest): Promise<RewardResponse> =>
+      call('POST', '/m3/rewards', request),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: rewardsKeys.global_rewards() });
+    },
+  });
+}

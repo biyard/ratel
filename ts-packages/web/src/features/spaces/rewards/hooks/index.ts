@@ -9,4 +9,5 @@ export {
   useListGlobalRewards,
   QK_GLOBAL_REWARDS,
 } from './use-list-global-rewards';
+export { useCreateGlobalRewardMutation } from './use-create-global-reward-mutation';
 export { useUpdateGlobalRewardMutation } from './use-update-global-reward-mutation';

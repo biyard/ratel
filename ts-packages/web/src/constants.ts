@@ -1,4 +1,5 @@
 import { FeedStatus } from './features/posts/types/post';
+import { FeatureType } from './features/spaces/rewards/types/feature-type';
 
 // LocalStorage keys
 export const SK_IDENTITY_KEY = 'identity';
@@ -118,7 +119,8 @@ export const spaceKeys = {
     [...spaceKeys.detail(spacePk), 'topics'] as const,
 
   files: (spacePk: string) => [...spaceKeys.detail(spacePk), 'files'] as const,
-  file_links: (spacePk: string) => [...spaceKeys.files(spacePk), 'links'] as const,
+  file_links: (spacePk: string) =>
+    [...spaceKeys.files(spacePk), 'links'] as const,
 
   recommendations: (spacePk: string) =>
     [...spaceKeys.detail(spacePk), 'recommendations'] as const,
@@ -157,7 +159,7 @@ export const spaceKeys = {
     [...spaceKeys.art_nft(spacePk, nftPk), 'trades'] as const,
 
   rewards: (spacePk: string) =>
-    [...spaceKeys.detail(spacePk), 'rewards'] as const,
+    [...spaceKeys.detail(spacePk), QK_REWARDS] as const,
 };
 
 const QK_TEAMS = 'teams';
@@ -188,4 +190,12 @@ export const userKeys = {
   rewards: (month?: string) => [...userKeys.all, 'rewards', month] as const,
   reward_lists: (month?: string) =>
     [...userKeys.all, 'reward_lists', month] as const,
+};
+
+const QK_REWARDS = 'rewards';
+export const rewardsKeys = {
+  all: [QK_REWARDS] as const,
+  global_rewards: () => [...rewardsKeys.all, 'global_rewards'] as const,
+  global_rewards_detail: (featureType: FeatureType) =>
+    [...rewardsKeys.global_rewards(), featureType] as const,
 };

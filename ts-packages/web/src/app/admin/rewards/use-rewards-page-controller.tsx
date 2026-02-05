@@ -3,25 +3,24 @@ import { useRewardsData } from './use-rewards-data';
 import { useUserInfo } from '@/hooks/use-user-info';
 import { useNavigate } from 'react-router';
 import { route } from '@/route';
-import type {
-  GlobalRewardResponse,
-  UpdateGlobalRewardRequest,
-} from '@/features/spaces/rewards/types';
+import {
+  RewardResponse,
+  UpdateRewardRequest,
+} from './hooks/use-update-reward-mutation';
 
 const USER_TYPE_ADMIN = 98;
 
 export class RewardsPageController {
   constructor(
-    public rewards: GlobalRewardResponse[],
+    public rewards: RewardResponse[],
     public isLoading: boolean,
     public error: Error | null,
     public isFormOpen: boolean,
-    public editingReward: GlobalRewardResponse | null,
-    public openEditForm: (reward: GlobalRewardResponse) => void,
+    public editingReward: RewardResponse | null,
+    public openForm: (reward?: RewardResponse) => void,
     public closeForm: () => void,
-    public handleUpdateReward: (
-      request: UpdateGlobalRewardRequest,
-    ) => Promise<void>,
+    public handleCreateReward: (request: UpdateRewardRequest) => Promise<void>,
+    public handleUpdateReward: (request: UpdateRewardRequest) => Promise<void>,
     public isSubmitting: boolean,
   ) {}
 }
@@ -31,12 +30,20 @@ export function useRewardsPageController() {
   const navigate = useNavigate();
   const isAdmin = user?.user_type === USER_TYPE_ADMIN;
 
-  const { rewards, isLoading, error, updateReward, isUpdating } =
-    useRewardsData();
+  const {
+    rewards,
+    isLoading,
+    error,
+    createReward,
+    updateReward,
+    isCreating,
+    isUpdating,
+  } = useRewardsData();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingReward, setEditingReward] =
-    useState<GlobalRewardResponse | null>(null);
+  const [editingReward, setEditingReward] = useState<RewardResponse | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!userLoading && !isAdmin) {
@@ -44,8 +51,8 @@ export function useRewardsPageController() {
     }
   }, [isAdmin, userLoading, navigate]);
 
-  const openEditForm = (reward: GlobalRewardResponse) => {
-    setEditingReward(reward);
+  const openForm = (reward?: RewardResponse) => {
+    setEditingReward(reward || null);
     setIsFormOpen(true);
   };
 
@@ -54,7 +61,17 @@ export function useRewardsPageController() {
     setEditingReward(null);
   };
 
-  const handleUpdateReward = async (request: UpdateGlobalRewardRequest) => {
+  const handleCreateReward = async (request: UpdateRewardRequest) => {
+    try {
+      await createReward(request);
+      closeForm();
+    } catch (error) {
+      console.error('Failed to create reward:', error);
+      throw error;
+    }
+  };
+
+  const handleUpdateReward = async (request: UpdateRewardRequest) => {
     try {
       await updateReward(request);
       closeForm();
@@ -70,9 +87,10 @@ export function useRewardsPageController() {
     error,
     isFormOpen,
     editingReward,
-    openEditForm,
+    openForm,
     closeForm,
+    handleCreateReward,
     handleUpdateReward,
-    isUpdating,
+    isCreating || isUpdating,
   );
 }
