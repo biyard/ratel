@@ -53,13 +53,7 @@ pub async fn list_rewards_handler(
     let user_rewards = if let Some(user) = user {
         let user_reward_keys: Vec<_> = space_rewards
             .iter()
-            .map(|reward| {
-                UserReward::keys(
-                    user.pk.clone().into(),
-                    space_pk.clone().into(),
-                    reward.sk.clone(),
-                )
-            })
+            .map(|reward| UserReward::keys(user.pk.clone().into(), reward.sk.clone()))
             .collect::<Result<Vec<_>>>()?;
         UserReward::batch_get(&dynamo.client, user_reward_keys).await?
     } else {

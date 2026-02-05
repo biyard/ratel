@@ -1,19 +1,8 @@
 use crate::features::spaces::rewards::{
-    RewardAction, RewardCondition, RewardPeriod, RewardUserBehavior, SpaceRewardSk,
+    RewardAction, RewardCondition, RewardKey, RewardPeriod, RewardUserBehavior,
 };
 use crate::types::*;
 use crate::*;
-
-/// SpaceReward: 스페이스에 설정한 리워드
-///
-/// Key Structure:
-/// - PK: SPACE#{space_pk}
-/// - SK: SpaceReward##{EntityType}##{RewardUserBehavior}
-///
-/// Examples:
-/// - Get All Rewards: SpaceReward::query(pk)
-/// - Get Specific Entity Reward: SpaceReward::query_begins_with_sk(EntityType)
-/// - Get Specific Reward: SpaceReward::get(pk, sk)
 
 #[derive(
     Debug,
@@ -25,19 +14,10 @@ use crate::*;
     serde::Serialize,
     serde::Deserialize,
 )]
-/// SpaceReward: 스페이스에 설정한 리워드
-///
-/// Key Structure:
-/// - PK: SPACE#{space_pk}
-/// - SK: SpaceReward##{EntityType}##{RewardUserBehavior}
-///
-/// Examples:
-/// - Get All Rewards: SpaceReward::query(pk)
-/// - Get Specific Entity Reward: SpaceReward::query_begins_with_sk(EntityType)
-/// - Get Specific Reward: SpaceReward::get(pk, sk)
+
 pub struct SpaceReward {
     pub pk: Partition,
-    pub sk: SpaceRewardSk,
+    pub sk: RewardKey,
 
     pub created_at: i64,
     pub updated_at: i64,
@@ -68,7 +48,7 @@ impl SpaceReward {
         period: RewardPeriod,
         condition: RewardCondition,
     ) -> Self {
-        let sk = SpaceRewardSk(entity_type, behavior.clone());
+        let sk = RewardKey::from((space_pk.clone(), entity_type, behavior.clone()));
 
         let now = now();
 
@@ -98,8 +78,9 @@ impl SpaceReward {
         action: EntityType,
         behavior: RewardUserBehavior,
     ) -> Result<Self> {
-        let pk: Partition = space_pk.into();
-        let sk = SpaceRewardSk(action, behavior);
+        let pk: Partition = space_pk.clone().into();
+        let sk = RewardKey::from((space_pk, action, behavior));
+
         Self::get(cli, pk, Some(sk))
             .await?
             .ok_or(Error::SpaceRewardNotFound)
@@ -111,12 +92,8 @@ impl SpaceReward {
         action: Option<EntityType>,
         bookmark: Option<String>,
     ) -> Result<(Vec<Self>, Option<String>)> {
-        let pk: Partition = space_pk.into();
-        let sk = if let Some(action) = action {
-            SpaceRewardSk::get_sk_prefix(action)
-        } else {
-            EntityType::SpaceReward.to_string()
-        };
+        let pk: Partition = space_pk.clone().into();
+        let sk = RewardKey::get_space_reward_sk_prefix(space_pk, action);
         let opt = SpaceReward::opt_with_bookmark(bookmark).sk(sk);
 
         let (items, next) = Self::query(cli, pk, opt).await?;

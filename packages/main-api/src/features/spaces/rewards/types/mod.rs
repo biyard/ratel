@@ -1,8 +1,8 @@
-pub mod space_reward_key;
-pub use space_reward_key::*;
+pub mod reward_key;
+pub use reward_key::*;
 
-pub mod user_history_key;
-pub use user_history_key::*;
+pub mod user_reward_history_key;
+pub use user_reward_history_key::*;
 
 pub mod reward_condition;
 pub use reward_condition::*;

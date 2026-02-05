@@ -174,6 +174,7 @@ pub enum EntityType {
     Notification(String), // notification id
 
     //
+    Reward,
     SpaceReward,
 
     ContentReport,
