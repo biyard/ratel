@@ -1,29 +1,19 @@
-use super::dto::AdminPaymentDetail;
+use super::dto::AdminPaymentResponse;
 use crate::models::dynamo_tables::main::user::User;
 use crate::services::portone::PaymentItem;
-use crate::types::{EntityType, ListItemsResponse, Pagination, Partition};
+use crate::types::{CompositePartition, EntityType, ListItemsResponse, Pagination, Partition};
 use crate::*;
 use std::collections::{HashMap, HashSet};
 
 const PAGE_SIZE: i32 = 10;
 
-fn parse_user_pk(payment: &PaymentItem) -> Option<String> {
-    payment.customer.id.strip_suffix("##PAYMENT").map(String::from)
-}
-
-fn parse_partition(user_pk_str: &str) -> Option<Partition> {
-    user_pk_str.parse().ok()
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct PaymentBookmark {
-    page: i32,
-    #[serde(default)]
-    page_size: i32,
-    #[serde(default)]
-    total_count: i64,
-    #[serde(default)]
-    total_pages: i32,
+fn parse_user_partition(payment: &PaymentItem) -> Option<Partition> {
+    payment
+        .customer
+        .id
+        .parse::<CompositePartition>()
+        .ok()
+        .map(|cp| cp.0)
 }
 
 /// List all payments (ServiceAdmin only)
@@ -32,35 +22,38 @@ struct PaymentBookmark {
 pub async fn list_all_payments_handler(
     State(AppState { dynamo, portone, .. }): State<AppState>,
     Query(Pagination { bookmark }): Query<Pagination>,
-) -> Result<Json<ListItemsResponse<AdminPaymentDetail>>> {
+) -> Result<Json<ListItemsResponse<AdminPaymentResponse>>> {
     let cli = &dynamo.client;
 
-    let page = if let Some(ref bookmark_str) = bookmark {
-        match serde_json::from_str::<PaymentBookmark>(bookmark_str) {
-            Ok(bm) => bm.page,
-            Err(_) => 0,
-        }
-    } else {
-        0
-    };
+    let page: i32 = bookmark
+        .as_ref()
+        .and_then(|b| b.parse().ok())
+        .unwrap_or(0);
 
     let payment_list = portone.list_payments(page, PAGE_SIZE).await?;
 
-    // 1. Pre-parse all user_pk strings
-    let payment_user_pks: Vec<Option<String>> = payment_list
+    // 1. Parse user partitions from all payments
+    let payment_user_partitions: Vec<Option<Partition>> = payment_list
         .items
         .iter()
-        .map(parse_user_pk)
+        .map(parse_user_partition)
         .collect();
 
     // 2. Extract unique user keys for batch get
-    let mut seen = HashSet::new();
-    let user_keys: Vec<(Partition, EntityType)> = payment_user_pks
-        .iter()
-        .filter_map(|pk| pk.as_ref())
-        .filter(|pk_str| seen.insert(pk_str.to_string()))
-        .filter_map(|pk_str| parse_partition(pk_str).map(|p| (p, EntityType::User)))
-        .collect();
+    let user_keys: Vec<(Partition, EntityType)> = {
+        let mut seen = HashSet::new();
+        payment_user_partitions
+            .iter()
+            .filter_map(|p| {
+                let partition = p.as_ref()?;
+                if seen.insert(partition.to_string()) {
+                    Some((partition.clone(), EntityType::User))
+                } else {
+                    None
+                }
+            })
+            .collect()
+    };
 
     // 3. Batch get all users
     let users: HashMap<String, User> = if !user_keys.is_empty() {
@@ -75,15 +68,15 @@ pub async fn list_all_payments_handler(
     };
 
     // 4. Build response with user info
-    let items: Vec<AdminPaymentDetail> = payment_list
+    let items: Vec<AdminPaymentResponse> = payment_list
         .items
         .into_iter()
-        .zip(payment_user_pks.iter())
-        .map(|(payment, user_pk_opt)| {
-            let mut detail: AdminPaymentDetail = payment.into();
+        .zip(payment_user_partitions.iter())
+        .map(|(payment, user_partition_opt)| {
+            let mut detail: AdminPaymentResponse = payment.into();
 
-            if let Some(user_pk_str) = user_pk_opt {
-                if let Some(user) = users.get(user_pk_str) {
+            if let Some(user_partition) = user_partition_opt {
+                if let Some(user) = users.get(&user_partition.to_string()) {
                     detail = detail.with_user(user.email.clone(), user.display_name.clone());
                 }
             }
@@ -92,19 +85,16 @@ pub async fn list_all_payments_handler(
         })
         .collect();
 
-    // 5. Create bookmark with pagination info
-    let page_info = payment_list.page;
-    let total_pages = ((page_info.total_count as i32) + PAGE_SIZE - 1) / PAGE_SIZE;
-
-    let bookmark = serde_json::to_string(&PaymentBookmark {
-        page: page_info.number,
-        page_size: PAGE_SIZE,
-        total_count: page_info.total_count,
-        total_pages,
-    })?;
+    // 5. Calculate next bookmark
+    let fetched = ((page + 1) * PAGE_SIZE) as i64;
+    let next_bookmark = if fetched < payment_list.page.total_count {
+        Some((page + 1).to_string())
+    } else {
+        None
+    };
 
     Ok(Json(ListItemsResponse {
         items,
-        bookmark: Some(bookmark),
+        bookmark: next_bookmark,
     }))
 }

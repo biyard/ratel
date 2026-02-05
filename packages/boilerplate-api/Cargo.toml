@@ -1,0 +1,28 @@
+[package]
+name = "boilerplate-api"
+version = "0.1.0"
+authors.workspace = true
+description.workspace = true
+edition.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+
+bdk = { workspace = true, features = ["be"] }
+by-macros = { workspace = true }
+by-axum = { workspace = true }
+
+aws-sdk-dynamodb = { workspace = true }
+serde_dynamo = { workspace = true }
+thiserror = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+serde_with = { workspace = true }
+percent-encoding = { workspace = true }
+base64 = { workspace = true }
+tokio = { workspace = true }
+reqwest = { workspace = true }
+hyper = { workspace = true }
