@@ -20,6 +20,7 @@ pub struct SpaceDao {
     pub created_at: i64,
     pub updated_at: i64,
 
+    #[serde(default)]
     pub contract_address: String,
     #[serde(default)]
     pub deploy_block: i64,
@@ -32,11 +33,7 @@ pub struct SpaceDao {
 }
 
 impl SpaceDao {
-    pub fn new(
-        space_pk: SpacePartition,
-        contract_address: String,
-        deploy_block: i64,
-    ) -> Self {
+    pub fn new(space_pk: SpacePartition, contract_address: String, deploy_block: i64) -> Self {
         let now = get_now_timestamp_millis();
         Self {
             pk: space_pk.into(),
