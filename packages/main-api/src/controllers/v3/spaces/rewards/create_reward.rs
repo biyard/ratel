@@ -21,22 +21,22 @@ use bdk::prelude::*;
 use aide::NoApi;
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
-pub struct CreateRewardSpaceRequest {
-    entity_type: EntityType,
+pub struct CreateSpaceRewardRequest {
+    action_key: EntityType,
     behavior: RewardUserBehavior,
     #[serde(default)]
     description: String,
     credits: i64,
 }
 
-pub async fn create_reward_handler(
+pub async fn create_space_reward_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(permissions): NoApi<Permissions>,
     NoApi(user): NoApi<User>,
     Path(SpacePathParam { space_pk }): SpacePath,
-    Json(req): Json<CreateRewardSpaceRequest>,
+    Json(req): Json<CreateSpaceRewardRequest>,
 ) -> Result<Json<SpaceRewardResponse>, Error> {
-    let action = RewardAction::try_from(&req.entity_type)?;
+    let action = RewardAction::try_from(&req.action_key)?;
     if action != req.behavior.action() {
         return Err(Error::BehaviorNotMatchAction);
     }
@@ -60,11 +60,13 @@ pub async fn create_reward_handler(
             .decrease_remaining_credits(req.credits)
             .transact_write_item(),
     );
-    let reward = Reward::get_by_reward_action(&dynamo.client, &action).await?;
+    let reward = Reward::get(&dynamo.client, Partition::Reward, Some(&req.behavior))
+        .await?
+        .ok_or(Error::RewardNotFound)?;
 
     let space_reward = SpaceReward::new(
         space_pk.into(),
-        req.entity_type,
+        req.action_key,
         req.behavior,
         req.description,
         req.credits,

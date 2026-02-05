@@ -303,10 +303,11 @@ pub enum Error {
     RewardNotFound,
 
     // SpaceReward errors 10,100 ~
-    #[error("Reward already claimed in this period")]
+    #[error("Space Reward already claimed in this period")]
     #[rest_error(status = 400, code = 10200)]
     SpaceRewardAlreadyClaimedInPeriod,
-    #[error("Reward not found")]
+    #[error("Space Reward not found")]
+    #[rest_error(status = 404)]
     SpaceRewardNotFound,
     #[error("Reward max claims reached")]
     SpaceRewardMaxClaimsReached,
