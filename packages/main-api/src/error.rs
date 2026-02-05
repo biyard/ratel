@@ -296,7 +296,7 @@ pub enum Error {
 
     // Reward errors 10,000 ~
     #[error("Reward already exists")]
-    #[rest_error(status = 400, code = 10100)]
+    #[rest_error(status = 409, code = 10100)]
     RewardAlreadyExists,
     #[error("Reward not found")]
     #[rest_error(status = 404)]

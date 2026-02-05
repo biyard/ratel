@@ -1,12 +1,18 @@
-use crate::features::spaces::rewards::{Reward, RewardAction, RewardCondition, RewardPeriod};
-use crate::types::*;
+use crate::features::spaces::rewards::{
+    Reward, RewardAction, RewardCondition, RewardPeriod, RewardUserBehavior,
+};
 use crate::{get, post, put, tests::v3_setup::TestContextV3};
+use crate::{patch, types::*};
 
 /// Helper function to delete a reward if it exists
-async fn delete_reward_if_exists(cli: &aws_sdk_dynamodb::Client, action: RewardAction) {
-    if Reward::get_by_reward_action(cli, &action).await.is_ok() {
-        let pk = Partition::Reward;
-        Reward::delete(cli, pk, Some(action)).await.unwrap();
+async fn delete_reward_if_exists(cli: &aws_sdk_dynamodb::Client, behavior: RewardUserBehavior) {
+    let pk = Partition::Reward;
+    if Reward::get(cli, pk.clone(), Some(behavior.clone()))
+        .await
+        .unwrap()
+        .is_some()
+    {
+        Reward::delete(cli, pk, Some(behavior)).await.unwrap();
     }
 }
 
@@ -20,14 +26,14 @@ async fn test_create_reward() {
     } = TestContextV3::setup().await;
 
     // Ensure reward doesn't exist
-    delete_reward_if_exists(&ddb, RewardAction::PollRespond).await;
+    delete_reward_if_exists(&ddb, RewardUserBehavior::RespondPoll).await;
 
     let (status, _headers, body) = post! {
         app: app,
         path: "/m3/rewards",
         headers: admin_user.1.clone(),
         body: {
-            "action": "PollRespond",
+            "behavior": "RespondPoll",
             "point": 100,
             "period": "Daily",
             "condition": "None"
@@ -36,12 +42,12 @@ async fn test_create_reward() {
     };
 
     assert_eq!(status, 200);
-    assert_eq!(body.sk, RewardAction::PollRespond);
+    assert_eq!(body.sk, RewardUserBehavior::RespondPoll);
     assert_eq!(body.point, 100);
     assert_eq!(body.period, RewardPeriod::Daily);
 
     // Cleanup
-    delete_reward_if_exists(&ddb, RewardAction::PollRespond).await;
+    delete_reward_if_exists(&ddb, RewardUserBehavior::RespondPoll).await;
 }
 
 #[tokio::test]
@@ -54,10 +60,10 @@ async fn test_update_reward() {
     } = TestContextV3::setup().await;
 
     // Create a reward first
-    delete_reward_if_exists(&ddb, RewardAction::PollRespond).await;
+    delete_reward_if_exists(&ddb, RewardUserBehavior::RespondPoll).await;
 
     let reward = Reward::new(
-        RewardAction::PollRespond,
+        RewardUserBehavior::RespondPoll,
         100,
         RewardPeriod::Daily,
         RewardCondition::None,
@@ -65,12 +71,12 @@ async fn test_update_reward() {
     reward.create(&ddb).await.unwrap();
 
     // Update with new values
-    let (status, _headers, body) = put! {
+    let (status, _headers, body) = patch! {
         app: app,
         path: "/m3/rewards",
         headers: admin_user.1.clone(),
         body: {
-            "action": "PollRespond",
+            "behavior": "RespondPoll",
             "point": 200,
             "period": "Weekly",
             "condition": {"MaxUserClaims": 10}
@@ -84,7 +90,7 @@ async fn test_update_reward() {
     assert_eq!(body.condition, RewardCondition::MaxUserClaims(10));
 
     // Cleanup
-    delete_reward_if_exists(&ddb, RewardAction::PollRespond).await;
+    delete_reward_if_exists(&ddb, RewardUserBehavior::RespondPoll).await;
 }
 
 #[tokio::test]
@@ -97,9 +103,9 @@ async fn test_create_duplicate_reward() {
     } = TestContextV3::setup().await;
 
     // Create a reward first
-    delete_reward_if_exists(&ddb, RewardAction::PollRespond).await;
+    delete_reward_if_exists(&ddb, RewardUserBehavior::RespondPoll).await;
     let reward = Reward::new(
-        RewardAction::PollRespond,
+        RewardUserBehavior::RespondPoll,
         100,
         RewardPeriod::Daily,
         RewardCondition::None,
@@ -112,7 +118,7 @@ async fn test_create_duplicate_reward() {
         path: "/m3/rewards",
         headers: admin_user.1.clone(),
         body: {
-            "action": "PollRespond",
+            "behavior": "RespondPoll",
             "point": 200,
             "period": "Weekly",
             "condition": "None"
@@ -122,7 +128,7 @@ async fn test_create_duplicate_reward() {
     assert_eq!(status, 409); // Conflict
 
     // Cleanup
-    delete_reward_if_exists(&ddb, RewardAction::PollRespond).await;
+    delete_reward_if_exists(&ddb, RewardUserBehavior::RespondPoll).await;
 }
 
 #[tokio::test]
@@ -135,15 +141,15 @@ async fn test_update_nonexistent_reward() {
     } = TestContextV3::setup().await;
 
     // Ensure reward doesn't exist
-    delete_reward_if_exists(&ddb, RewardAction::PollRespond).await;
+    delete_reward_if_exists(&ddb, RewardUserBehavior::RespondPoll).await;
 
     // Try to update non-existent reward
-    let (status, _headers, _body) = put! {
+    let (status, _headers, _body) = patch! {
         app: app,
         path: "/m3/rewards",
         headers: admin_user.1.clone(),
         body: {
-            "action": "PollRespond",
+            "behavior": "RespondPoll",
             "point": 200,
             "period": "Weekly",
             "condition": "None"
@@ -153,7 +159,7 @@ async fn test_update_nonexistent_reward() {
     assert_eq!(status, 404); // Not found
 
     // Cleanup
-    delete_reward_if_exists(&ddb, RewardAction::PollRespond).await;
+    delete_reward_if_exists(&ddb, RewardUserBehavior::RespondPoll).await;
 }
 
 #[tokio::test]
@@ -166,14 +172,14 @@ async fn test_create_reward_unauthorized() {
     } = TestContextV3::setup().await;
 
     // Ensure reward doesn't exist
-    delete_reward_if_exists(&ddb, RewardAction::PollRespond).await;
+    delete_reward_if_exists(&ddb, RewardUserBehavior::RespondPoll).await;
 
     let (status, _headers, _body) = post! {
         app: app,
         path: "/m3/rewards",
         headers: test_user.1,
         body: {
-            "action": "PollRespond",
+            "behavior": "RespondPoll",
             "point": 100,
             "period": "Daily",
             "condition": "None"
@@ -183,7 +189,7 @@ async fn test_create_reward_unauthorized() {
     assert_eq!(status, 401); // Middleware returns 401 for non-admin users
 
     // Cleanup
-    delete_reward_if_exists(&ddb, RewardAction::PollRespond).await;
+    delete_reward_if_exists(&ddb, RewardUserBehavior::RespondPoll).await;
 }
 
 #[tokio::test]
@@ -196,7 +202,7 @@ async fn test_create_then_update_flow() {
     } = TestContextV3::setup().await;
 
     // Ensure reward doesn't exist
-    delete_reward_if_exists(&ddb, RewardAction::None).await;
+    delete_reward_if_exists(&ddb, RewardUserBehavior::RespondPoll).await;
 
     // Create reward
     let (status1, _headers1, body1) = post! {
@@ -204,7 +210,7 @@ async fn test_create_then_update_flow() {
         path: "/m3/rewards",
         headers: admin_user.1.clone(),
         body: {
-            "action": "None",
+            "behavior": "RespondPoll",
             "point": 50,
             "period": "Once",
             "condition": {"MaxClaims": 100}
@@ -217,12 +223,12 @@ async fn test_create_then_update_flow() {
     assert_eq!(body1.period, RewardPeriod::Once);
 
     // Update reward with different values
-    let (status2, _headers2, body2) = put! {
+    let (status2, _headers2, body2) = patch! {
         app: app,
         path: "/m3/rewards",
         headers: admin_user.1.clone(),
         body: {
-            "action": "None",
+            "behavior": "RespondPoll",
             "point": 75,
             "period": "Daily",
             "condition": {"MaxClaims": 200}
@@ -235,5 +241,5 @@ async fn test_create_then_update_flow() {
     assert_eq!(body2.period, RewardPeriod::Daily);
 
     // Cleanup
-    delete_reward_if_exists(&ddb, RewardAction::None).await;
+    delete_reward_if_exists(&ddb, RewardUserBehavior::RespondPoll).await;
 }
