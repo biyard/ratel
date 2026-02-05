@@ -6,15 +6,18 @@ export const i18nAdminRewards = {
     loading: 'Loading rewards...',
     load_error: 'Failed to load rewards',
     save: 'Save',
-    cancel: 'Cancel',
     edit: 'Edit',
+    cancel: 'Cancel',
+    add_reward: 'Add Reward',
+    edit_reward: 'Edit Reward',
+    action_label: 'Reward Action',
     reward_action: 'Reward Action',
     point: 'Points',
     period: 'Period',
     condition: 'Condition',
     no_rewards: 'No rewards configured',
-    update_success: 'Reward updated successfully',
-    update_error: 'Failed to update reward',
+    save_success: 'Reward saved successfully',
+    save_error: 'Failed to save reward',
     // Reward actions
     action_none: 'None',
     action_poll_respond: 'Poll Response',
@@ -51,15 +54,18 @@ export const i18nAdminRewards = {
     loading: '리워드 로딩 중...',
     load_error: '리워드 로딩 실패',
     save: '저장',
-    cancel: '취소',
     edit: '수정',
+    cancel: '취소',
+    add_reward: '리워드 추가',
+    edit_reward: '리워드 수정',
+    action_label: '리워드 액션',
     reward_action: '리워드 액션',
     point: '포인트',
     period: '기간',
     condition: '조건',
     no_rewards: '설정된 리워드가 없습니다',
-    update_success: '리워드가 성공적으로 업데이트되었습니다',
-    update_error: '리워드 업데이트 실패',
+    save_success: '리워드가 성공적으로 저장되었습니다',
+    save_error: '리워드 저장 실패',
     // Reward actions
     action_none: '없음',
     action_poll_respond: '설문 응답',
@@ -98,15 +104,18 @@ export interface AdminRewardsI18n {
   loading: string;
   loadError: string;
   save: string;
-  cancel: string;
   edit: string;
+  cancel: string;
+  addReward: string;
+  editReward: string;
+  actionLabel: string;
   rewardAction: string;
   point: string;
   period: string;
   condition: string;
   noRewards: string;
-  updateSuccess: string;
-  updateError: string;
+  saveSuccess: string;
+  saveError: string;
   actionNone: string;
   actionPollRespond: string;
   periodOnce: string;
@@ -142,15 +151,18 @@ export function useAdminRewardsI18n(): AdminRewardsI18n {
     loading: t('loading'),
     loadError: t('load_error'),
     save: t('save'),
-    cancel: t('cancel'),
     edit: t('edit'),
+    cancel: t('cancel'),
+    addReward: t('add_reward'),
+    editReward: t('edit_reward'),
+    actionLabel: t('action_label'),
     rewardAction: t('reward_action'),
+    saveSuccess: t('save_success'),
+    saveError: t('save_error'),
     point: t('point'),
     period: t('period'),
     condition: t('condition'),
     noRewards: t('no_rewards'),
-    updateSuccess: t('update_success'),
-    updateError: t('update_error'),
     actionNone: t('action_none'),
     actionPollRespond: t('action_poll_respond'),
     periodOnce: t('period_once'),
