@@ -1,22 +1,28 @@
 import { Space } from '@/features/spaces/types/space';
-import { ListRewardsResponse } from '../../types/list-rewards-response';
+
 import { SpaceRewardsI18n, useSpaceRewardsI18n } from '../../i18n';
 import { useSpaceById } from '@/features/spaces/hooks/use-space-by-id';
-import useSpaceRewards from '../../hooks/use-space-rewards';
+import { useSpaceRewards } from '../../hooks';
+import { SpaceRewardResponse } from '../../types';
 
 export class RewardViewerController {
   constructor(
     public spacePk: string,
     public i18n: SpaceRewardsI18n,
     public space: Space,
-    public rewards: ListRewardsResponse,
+    public spaceRewards: SpaceRewardResponse[],
   ) {}
 }
 
 export function useRewardViewerController(spacePk: string) {
   const i18n = useSpaceRewardsI18n();
   const { data: space } = useSpaceById(spacePk);
-  const { data: rewards } = useSpaceRewards(spacePk);
+  const { data: spaceRewards } = useSpaceRewards(spacePk);
 
-  return new RewardViewerController(spacePk, i18n, space, rewards);
+  return new RewardViewerController(
+    spacePk,
+    i18n,
+    space,
+    spaceRewards?.pages.flatMap((page) => page.items) ?? [],
+  );
 }

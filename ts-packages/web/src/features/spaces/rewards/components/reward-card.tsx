@@ -1,9 +1,9 @@
 import { Col } from '@/components/ui/col';
 import { Button } from '@/components/ui/button';
-import { SpaceRewardResponse } from '../types/space-reward-response';
+import { SpaceRewardResponse } from '../types';
 import { Edit2Icon, Trash2Icon } from 'lucide-react';
 import { SpaceRewardsI18n } from '../i18n';
-import { getRewardActionI18nKey } from '../types/reward-type';
+import { getRewardUserBehaviorI18nKey } from '../types/reward-user-behavior';
 
 interface RewardCardProps {
   i18n: SpaceRewardsI18n;
@@ -19,7 +19,7 @@ export function RewardCard({
   onDelete,
 }: RewardCardProps) {
   const t = i18n.settings;
-  console.log('reward.reward_action', reward.reward_action);
+  console.log('reward.behavior', reward.behavior);
   return (
     <div
       data-testid="reward-card"
@@ -30,8 +30,8 @@ export function RewardCard({
           <div className="flex-1">
             <h4 className="text-lg font-semibold text-c-wg-100">
               {t[
-                getRewardActionI18nKey(reward.reward_action) as keyof typeof t
-              ] || reward.reward_action}
+                getRewardUserBehaviorI18nKey(reward.behavior) as keyof typeof t
+              ] || reward.behavior}
             </h4>
             {reward.description && (
               <p className="text-sm text-c-wg-60 mt-1">{reward.description}</p>

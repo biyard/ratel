@@ -2,14 +2,14 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { call } from '@/lib/api/ratel/call';
 import { rewardsKeys } from '@/constants';
 import {
-  RewardAction,
+  RewardUserBehavior,
   RewardCondition,
   RewardPeriod,
 } from '@/features/spaces/rewards/types';
-import { RewardResponse } from '@/features/spaces/rewards/hooks/use-rewards';
+import { Reward } from '@/features/spaces/rewards/hooks/use-rewards';
 
 export interface UpdateRewardRequest {
-  action: RewardAction;
+  behavior: RewardUserBehavior;
   point: number;
   period: RewardPeriod;
   condition: RewardCondition;
@@ -19,7 +19,7 @@ export function useUpdateRewardMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (request: UpdateRewardRequest): Promise<RewardResponse> =>
+    mutationFn: (request: UpdateRewardRequest): Promise<Reward> =>
       call('PATCH', '/m3/rewards', request),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: rewardsKeys.rewards() });

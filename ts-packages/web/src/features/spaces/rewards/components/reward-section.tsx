@@ -2,22 +2,21 @@ import { Suspense } from 'react';
 import { Col } from '@/components/ui/col';
 import { Button } from '@/components/ui/button';
 import { RewardCard } from './reward-card';
-import useSpaceRewards from '../hooks/use-space-rewards';
-import useRewardConfig, { RewardConfigItem } from '../hooks/use-reward-config';
+import { useRewards, useSpaceRewards } from '../hooks';
 import { PlusIcon, ClipboardListIcon } from 'lucide-react';
 import { useSpaceRewardsI18n } from '../i18n';
-import { SpaceRewardResponse } from '../types/space-reward-response';
-import { FeatureType } from '../types/feature-type';
+import { RewardAction, SpaceRewardResponse } from '../types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Reward } from '../hooks/use-rewards';
 
 interface RewardSectionProps {
+  title: string;
   spacePk: string;
-  featureType: FeatureType;
-  entityType: string;
-  entityTitle: string;
-  onAddReward: (entityType: string, configs: RewardConfigItem[]) => void;
-  onEditReward: (reward: SpaceRewardResponse, entityType: string) => void;
-  onDeleteReward: (reward: SpaceRewardResponse) => void;
+  action: RewardAction;
+  entityKey?: string;
+  onAddSpaceReward: (entityKey: string, availableRewards: Reward[]) => void;
+  onEditSpaceReward: (spaceReward: SpaceRewardResponse) => void;
+  onDeleteSpaceReward: (spaceReward: SpaceRewardResponse) => void;
 }
 
 function RewardSectionSkeleton() {
@@ -40,22 +39,24 @@ function RewardSectionSkeleton() {
 
 function RewardSectionContent({
   spacePk,
-  featureType,
-  entityTitle,
-  entityType,
-  onAddReward,
-  onEditReward,
-  onDeleteReward,
+  action,
+  entityKey,
+  title,
+  onAddSpaceReward,
+  onEditSpaceReward,
+  onDeleteSpaceReward,
 }: RewardSectionProps) {
   const i18n = useSpaceRewardsI18n();
   const t = i18n.settings;
 
-  const {
-    data: { items: rewards },
-  } = useSpaceRewards(spacePk, entityType);
-  const { data: rewardConfig } = useRewardConfig(featureType);
+  const spaceRewardsQuery = useSpaceRewards(spacePk, entityKey);
+  const spaceRewards =
+    spaceRewardsQuery.data?.pages.flatMap((page) => page.items) ?? [];
 
-  const hasAvailableRewardTypes = rewardConfig.items.length >= rewards.length;
+  const rewardsQuery = useRewards(action);
+  const rewards = rewardsQuery.data?.pages.flatMap((page) => page.items) ?? [];
+
+  const hasAvailableRewardTypes = rewards.length > spaceRewards.length;
 
   return (
     <div className="border border-c-wg-20 rounded-lg overflow-hidden">
@@ -63,9 +64,9 @@ function RewardSectionContent({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ClipboardListIcon className="w-4 h-4 text-c-wg-60" />
-            <h3 className="font-medium text-c-wg-100">{entityTitle}</h3>
+            <h3 className="font-medium text-c-wg-100">{title}</h3>
             <span className="text-xs text-c-wg-60">
-              ({rewards.length} {t.reward_label})
+              ({spaceRewards.length} {t.reward_label})
             </span>
           </div>
           {hasAvailableRewardTypes && (
@@ -73,7 +74,7 @@ function RewardSectionContent({
               data-testid="reward-add-button"
               variant="outline"
               size="sm"
-              onClick={() => onAddReward(entityType, rewardConfig.items)}
+              onClick={() => onAddSpaceReward(entityKey, rewards)}
             >
               <PlusIcon className="w-4 h-4" />
               {t.create_reward}
@@ -83,19 +84,19 @@ function RewardSectionContent({
       </div>
 
       <div className="p-4">
-        {rewards.length === 0 ? (
+        {spaceRewards.length === 0 ? (
           <div className="text-center py-4 text-c-wg-60 text-sm">
             {t.no_rewards}
           </div>
         ) : (
           <Col className="gap-3">
-            {rewards.map((reward) => (
+            {spaceRewards.map((reward) => (
               <RewardCard
                 key={reward.sk}
                 i18n={i18n}
                 reward={reward}
-                onEdit={() => onEditReward(reward, entityType)}
-                onDelete={() => onDeleteReward(reward)}
+                onEdit={() => onEditSpaceReward(reward)}
+                onDelete={() => onDeleteSpaceReward(reward)}
               />
             ))}
           </Col>

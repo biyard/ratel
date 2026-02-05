@@ -9,9 +9,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { SpaceRewardResponse } from '../types/space-reward-response';
+import { SpaceRewardResponse } from '../types';
 import { SpaceRewardsI18n } from '../i18n';
-import { RewardAction, getRewardActionI18nKey } from '../types/reward-type';
+import {
+  RewardUserBehavior,
+  getRewardUserBehaviorI18nKey,
+} from '../types/reward-user-behavior';
 import { RewardFormData } from '../pages/editor/reward-editor-controller';
 
 interface RewardFormProps {
@@ -20,7 +23,7 @@ interface RewardFormProps {
   onSubmit: (data: RewardFormData) => Promise<void>;
   onCancel: () => void;
   isSubmitting: boolean;
-  rewardActions: RewardAction[];
+  rewardBehaviors: RewardUserBehavior[];
 }
 
 export function RewardForm({
@@ -29,12 +32,12 @@ export function RewardForm({
   onSubmit,
   onCancel,
   isSubmitting,
-  rewardActions,
+  rewardBehaviors,
 }: RewardFormProps) {
   const t = i18n.settings;
 
-  const [action, setAction] = useState<RewardAction | undefined>(
-    initialData?.reward_action ?? rewardActions[0] ?? undefined,
+  const [behavior, setBehavior] = useState<RewardUserBehavior | undefined>(
+    initialData?.behavior ?? rewardBehaviors[0] ?? undefined,
   );
   const [description, setDescription] = useState(
     initialData?.description ?? '',
@@ -45,8 +48,8 @@ export function RewardForm({
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!action) {
-      newErrors.action = t.reward_type_required;
+    if (!behavior) {
+      newErrors.behavior = t.reward_type_required;
     }
 
     if (credits < 1) {
@@ -63,7 +66,7 @@ export function RewardForm({
     if (!validate()) return;
 
     await onSubmit({
-      reward_action: action!,
+      behavior: behavior!,
       description: description.trim(),
       credits,
     });
@@ -74,30 +77,31 @@ export function RewardForm({
       <Col className="gap-4">
         <div>
           <label className="block text-sm font-medium text-c-wg-80 mb-1">
-            {t.reward_action}
+            {t.reward_behavior}
           </label>
           <Select
-            value={action}
-            onValueChange={(value) => setAction(value as RewardAction)}
+            value={behavior}
+            onValueChange={(value) => setBehavior(value as RewardUserBehavior)}
           >
             <SelectTrigger
-              data-testid="reward-action-select"
+              data-testid="reward-behavior-select"
               className="w-full"
-              aria-invalid={!!errors.action}
+              aria-invalid={!!errors.behavior}
             >
               <SelectValue placeholder={t.select_reward_type} />
             </SelectTrigger>
             <SelectContent>
-              {rewardActions.map((rewardAction) => (
-                <SelectItem key={rewardAction} value={rewardAction}>
-                  {t[getRewardActionI18nKey(rewardAction) as keyof typeof t] ||
-                    rewardAction}
+              {rewardBehaviors.map((rewardBehavior) => (
+                <SelectItem key={rewardBehavior} value={rewardBehavior}>
+                  {t[
+                    getRewardUserBehaviorI18nKey(rewardBehavior) as keyof typeof t
+                  ] || rewardBehavior}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {errors.action && (
-            <p className="text-sm text-red-500 mt-1">{errors.action}</p>
+          {errors.behavior && (
+            <p className="text-sm text-red-500 mt-1">{errors.behavior}</p>
           )}
         </div>
 

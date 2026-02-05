@@ -1,5 +1,5 @@
 import { FeedStatus } from './features/posts/types/post';
-import { FeatureType } from './features/spaces/rewards/types/feature-type';
+import { RewardAction } from './features/spaces/rewards/types';
 
 // LocalStorage keys
 export const SK_IDENTITY_KEY = 'identity';
@@ -175,8 +175,11 @@ export const teamKeys = {
     [...teamKeys.detail(teamName), 'groups'] as const,
   group: (teamName: string, groupId: string) =>
     [...teamKeys.groups(teamName), groupId] as const,
-  rewards: (teamPk: string, month: string) =>
-    [...teamKeys.detail(teamPk), QK_REWARDS, month] as const,
+
+  point: (teamPk: string, month: string) =>
+    [...teamKeys.detail(teamPk), 'point', month] as const,
+  point_transactions: (teamPk: string, month: string) =>
+    [...teamKeys.point(teamPk, month), 'transactions'] as const,
 };
 
 export const QK_MEMBERSHIPS = 'memberships';
@@ -188,12 +191,14 @@ const QK_USERS = 'users';
 export const userKeys = {
   all: [QK_USERS] as const,
   detail: () => [...userKeys.all, 'detail'] as const,
-  rewards: (month?: string) => [...userKeys.all, QK_REWARDS, month] as const,
+  point: (month: string) => [...userKeys.all, 'point', month] as const,
+  point_transactions: (month: string) =>
+    [...userKeys.point(month), 'transactions'] as const,
 };
 
 export const rewardsKeys = {
   all: [QK_REWARDS] as const,
-  rewards: () => [...rewardsKeys.all, 'global_rewards'] as const,
-  rewards_by_feature: (featureType: FeatureType) =>
-    [...rewardsKeys.rewards(), featureType] as const,
+  rewards: () => [...rewardsKeys.all, 'rewards'] as const,
+  rewards_by_action: (action: RewardAction) =>
+    [...rewardsKeys.rewards(), action] as const,
 };

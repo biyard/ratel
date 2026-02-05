@@ -1,21 +1,25 @@
 import { useState, useEffect } from 'react';
-import { useRewardsData } from './use-rewards-data';
 import { useUserInfo } from '@/hooks/use-user-info';
 import { useNavigate } from 'react-router';
 import { route } from '@/route';
 import { UpdateRewardRequest } from './hooks/use-update-reward-mutation';
-import { RewardResponse } from '@/features/spaces/rewards/hooks/use-rewards';
-
-const USER_TYPE_ADMIN = 98;
+import {
+  Reward,
+  useRewards,
+} from '@/features/spaces/rewards/hooks/use-rewards';
+import { useCreateGlobalRewardMutation } from './hooks/use-create-reward-mutation';
+import { UserType } from '@/lib/api/ratel/users.v3';
 
 export class RewardsPageController {
   constructor(
-    public rewards: RewardResponse[],
+    public rewards: Reward[],
     public isLoading: boolean,
+    public fetchNextPage: () => Promise<void>,
+    public hasNextPage: boolean | undefined,
     public error: Error | null,
     public isFormOpen: boolean,
-    public editingReward: RewardResponse | null,
-    public openForm: (reward?: RewardResponse) => void,
+    public editingReward: Reward | null,
+    public openForm: (reward?: Reward) => void,
     public closeForm: () => void,
     public handleCreateReward: (request: UpdateRewardRequest) => Promise<void>,
     public handleUpdateReward: (request: UpdateRewardRequest) => Promise<void>,
@@ -26,22 +30,20 @@ export class RewardsPageController {
 export function useRewardsPageController() {
   const { data: user, isLoading: userLoading } = useUserInfo();
   const navigate = useNavigate();
-  const isAdmin = user?.user_type === USER_TYPE_ADMIN;
-
+  const isAdmin = user?.user_type === UserType.Admin;
   const {
-    rewards,
+    data: rewards,
     isLoading,
     error,
-    createReward,
-    updateReward,
-    isCreating,
-    isUpdating,
-  } = useRewardsData();
+    fetchNextPage,
+    hasNextPage,
+  } = useRewards();
+
+  const createReward = useCreateGlobalRewardMutation();
+  const updateReward = useCreateGlobalRewardMutation();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingReward, setEditingReward] = useState<RewardResponse | null>(
-    null,
-  );
+  const [editingReward, setEditingReward] = useState<Reward | null>(null);
 
   useEffect(() => {
     if (!userLoading && !isAdmin) {
@@ -49,7 +51,7 @@ export function useRewardsPageController() {
     }
   }, [isAdmin, userLoading, navigate]);
 
-  const openForm = (reward?: RewardResponse) => {
+  const openForm = (reward?: Reward) => {
     setEditingReward(reward || null);
     setIsFormOpen(true);
   };
@@ -61,7 +63,7 @@ export function useRewardsPageController() {
 
   const handleCreateReward = async (request: UpdateRewardRequest) => {
     try {
-      await createReward(request);
+      await createReward.mutateAsync(request);
       closeForm();
     } catch (error) {
       console.error('Failed to create reward:', error);
@@ -71,7 +73,7 @@ export function useRewardsPageController() {
 
   const handleUpdateReward = async (request: UpdateRewardRequest) => {
     try {
-      await updateReward(request);
+      await updateReward.mutateAsync(request);
       closeForm();
     } catch (error) {
       console.error('Failed to update reward:', error);
@@ -80,15 +82,20 @@ export function useRewardsPageController() {
   };
 
   return new RewardsPageController(
-    rewards,
+    rewards?.pages.flatMap((page) => page.items) ?? [],
     isLoading,
+    async () => {
+      await fetchNextPage();
+    },
+    hasNextPage,
     error,
+
     isFormOpen,
     editingReward,
     openForm,
     closeForm,
     handleCreateReward,
     handleUpdateReward,
-    isCreating || isUpdating,
+    createReward.isPending || updateReward.isPending,
   );
 }
