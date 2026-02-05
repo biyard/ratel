@@ -1,6 +1,6 @@
 use crate::Result;
 use crate::features::spaces::rewards::{
-    FeatureType, Reward, RewardAction, RewardCondition, RewardPeriod, RewardQueryOption,
+    Reward, RewardAction, RewardCondition, RewardPeriod, RewardQueryOption,
 };
 use crate::*;
 use bdk::prelude::*;
@@ -9,8 +9,7 @@ use by_axum::axum::extract::Query;
 
 #[derive(Debug, Clone, Default, serde::Deserialize, schemars::JsonSchema)]
 pub struct ListRewardsQuery {
-    /// Filter by feature type: "poll", "board"
-    pub feature: Option<FeatureType>,
+    pub action: Option<RewardAction>,
     pub bookmark: Option<String>,
 }
 
@@ -33,7 +32,7 @@ pub struct RewardResponse {
 impl From<Reward> for RewardResponse {
     fn from(value: Reward) -> Self {
         Self {
-            reward_action: value.sk,
+            reward_action: value.action,
             point: value.point,
             period: value.period,
             condition: value.condition,
@@ -55,18 +54,15 @@ pub struct ListRewardsResponse {
 
 pub async fn list_rewards_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Query(ListRewardsQuery { feature, bookmark }): Query<ListRewardsQuery>,
+    Query(ListRewardsQuery { action, bookmark }): Query<ListRewardsQuery>,
 ) -> Result<Json<ListItemsResponse<RewardResponse>>> {
-    tracing::debug!("feature: {:?}, bookmark: {:?}", feature, bookmark);
-    let (items, bookmark) = if let Some(feature) = feature {
-        Reward::list_by_feature(&dynamo.client, &feature, bookmark).await?
+    tracing::debug!("action: {:?}, bookmark: {:?}", action, bookmark);
+    let opt = Reward::opt_with_bookmark(bookmark);
+    let (items, bookmark) = if let Some(action) = action {
+        let pk = Reward::compose_gsi1_pk(action);
+        Reward::find_by_action(&dynamo.client, &pk, opt).await?
     } else {
-        Reward::query(
-            &dynamo.client,
-            Partition::Reward,
-            RewardQueryOption::builder().limit(100),
-        )
-        .await?
+        Reward::query(&dynamo.client, Partition::Reward, opt).await?
     };
     let items = items
         .into_iter()

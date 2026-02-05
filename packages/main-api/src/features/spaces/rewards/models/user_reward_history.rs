@@ -1,16 +1,16 @@
 use crate::features::spaces::rewards::{
-    RewardAction, RewardKey, RewardPeriod, SpaceReward, UserRewardHistoryKey,
+    RewardAction, RewardPeriod, SpaceReward, SpaceRewardSk, UserRewardHistoryKey,
 };
 use crate::services::biyard::Biyard;
 use crate::types::*;
 use crate::*;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, DynamoEntity, JsonSchema, OperationIo)]
-/// UserReward: 유저가 획득한 리워드 기록 ( 중복 지급 제한용 ) 실제 목록은 Biyard Service 통해 조회
+/// UserRewardHistory: 유저가 획득한 리워드 기록 ( 중복 지급 제한용 ) 실제 목록은 Biyard Service 통해 조회
 ///
 /// Key Structure:
-/// - PK: USER#{user_pk}##REWARD
-/// - SK: REWARD_TYPE#{time_key}
+/// - PK: USER#{user_pk}##REWARD_HISTORY##SPACE#{space_pk} or TEAM#{team_pk}##REWARD_HISTORY##SPACE#{space_pk}
+/// - SK: SpaceReward##{EntityType}##{RewardUserBehavior}###{time_key}
 ///
 /// time_key는 period에 따라 달라짐:
 /// - Once: "ONCE"
@@ -21,15 +21,15 @@ use crate::*;
 /// - Unlimited: "1733850123456" (timestamp)
 ///
 /// Examples:
-/// - PK: USER#{USER_ID}##REWARD_HISTORY
-/// - SK: SPACE_POLL#{POLL_UUID}#Respond#TIMESTAMP
+/// - PK: USER#{USER_ID}##REWARD_HISTORY##SPACE#{SPACE_ID}
+/// - SK: SpaceReward##Poll##CreatePoll###ONCE
 ///
-/// - PK: USER#{USER_ID}##REWARD_HISTORY
-/// - SK: SPACE_BOARD#{BOARD_UUID}#Respond#TIMESTAMP
+/// - PK: TEAM#{TEAM_ID}##REWARD_HISTORY##SPACE#{SPACE_ID}
+/// - SK: SpaceReward##Post##CreatePost###20251201
 
 pub struct UserRewardHistory {
-    pub pk: CompositePartition,   // USER#{user_pk}##REWARD_HISTORY
-    pub sk: UserRewardHistoryKey, // Feature#{feature_key}#{reward_action}#{time_key}
+    pub pk: CompositePartition, // USER#{user_pk}##REWARD_HISTORY##SPACE#{space_pk}
+    pub sk: UserRewardHistoryKey, // SpaceReward##{EntityType}##{RewardUserBehavior}###{time_key}
 
     pub point: i64,
     pub created_at: i64,
@@ -45,7 +45,7 @@ impl UserRewardHistory {
         let amount = space_reward.get_amount();
         let (pk, sk) = Self::keys(
             target_pk,
-            space_reward.get_space_pk(),
+            space_reward.pk.clone().into(),
             space_reward.sk,
             time_key,
         );
@@ -66,7 +66,7 @@ impl UserRewardHistory {
     pub fn keys(
         target_pk: Partition,
         space_pk: SpacePartition,
-        reward_key: RewardKey,
+        reward_key: SpaceRewardSk,
         time_key: String,
     ) -> (CompositePartition, UserRewardHistoryKey) {
         let id = match target_pk {
