@@ -4,7 +4,6 @@ import type {
   AdminListResponse,
   PromoteToAdminRequest,
   DemoteAdminResponse,
-  AdminPaymentListResponse,
 } from '@/features/admin/types/admin-user';
 
 /**
@@ -48,15 +47,4 @@ export async function demoteAdmin(
  */
 export async function runTeamsMigration(): Promise<void> {
   return await call('POST', '/m3/migrations/teams');
-}
-
-/**
- * List all payments (Admin only)
- * GET /m3/payments
- */
-export async function listPayments(
-  page: number = 0,
-): Promise<AdminPaymentListResponse> {
-  const bookmark = JSON.stringify({ page });
-  return call('GET', `/m3/payments?bookmark=${encodeURIComponent(bookmark)}`);
 }
