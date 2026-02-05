@@ -308,9 +308,9 @@ pub enum Error {
     RewardMaxUserClaimsReached,
     #[error("User reward max points reached")]
     RewardMaxUserPointsReached,
-    #[error("Reward disabled")]
-    #[rest_error(status = 500)]
-    RewardDisabled,
+    #[error("Reward already exists")]
+    #[rest_error(status = 400)]
+    RewardAlreadyExists,
 
     // DID feature errors 11,000 ~
     #[error("Invalid DID format")]
