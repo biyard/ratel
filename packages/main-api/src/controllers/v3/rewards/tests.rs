@@ -4,7 +4,7 @@ use crate::features::spaces::discussions::dto::{
     CreateDiscussionResponse, DeleteDiscussionResponse, GetDiscussionResponse,
     ListDiscussionResponse, SpaceDiscussionMemberResponse,
 };
-use crate::features::spaces::rewards::RewardAction;
+use crate::features::spaces::rewards::{RewardAction, RewardUserBehavior};
 use crate::types::{Partition, SpaceType};
 use crate::*;
 use crate::{
@@ -30,7 +30,7 @@ async fn test_list_rewards() {
     let poll_respond = body
         .items
         .iter()
-        .find(|r| r.reward_action == RewardAction::PollRespond);
+        .find(|r| r.reward_behavior == RewardUserBehavior::RespondPoll);
     assert!(
         poll_respond.is_some(),
         "PollRespond reward type should exist"
@@ -50,5 +50,8 @@ async fn test_list_rewards_filtered_by_poll() {
 
     assert_eq!(status, 200);
     assert_eq!(body.items.len(), 1, "Should have 1 poll reward type");
-    assert_eq!(body.items[0].reward_action, RewardAction::PollRespond);
+    assert_eq!(
+        body.items[0].reward_behavior,
+        RewardUserBehavior::RespondPoll
+    );
 }
