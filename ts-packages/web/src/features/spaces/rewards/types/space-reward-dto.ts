@@ -38,3 +38,23 @@ export class SpaceRewardResponse {
     this.user_claims = json.user_claims ?? 0;
   }
 }
+
+export type RewardTypeRequest = {
+  poll_sk: string;
+};
+
+export interface CreateSpaceRewardRequest {
+  reward: RewardTypeRequest;
+  description?: string;
+  credits: number;
+}
+
+export interface UpdateSpaceRewardRequest {
+  sk: string;
+  description?: string;
+  credits: number;
+}
+
+export interface DeleteRewardRequest {
+  sk: string;
+}
