@@ -1,8 +1,8 @@
 import { usePaymentsPageController } from './use-payments-page-controller';
 import { useAdminPaymentsI18n, AdminPaymentsI18n } from './payments-page-i18n';
-import type { AdminPaymentDetail } from '@/features/admin/types/admin-user';
+import type { AdminPaymentResponse } from '@/features/admin/types/admin-user';
 import { RefundRequester } from '@/features/admin/types/admin-user';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 function getStatusLabel(status: string, i18n: AdminPaymentsI18n): string {
   const statusMap: Record<string, string> = {
@@ -58,7 +58,7 @@ function formatDate(dateStr: string | null): string {
 interface RefundModalProps {
   isOpen: boolean;
   onClose: () => void;
-  payment: AdminPaymentDetail | null;
+  payment: AdminPaymentResponse | null;
   i18n: AdminPaymentsI18n;
 }
 
@@ -178,122 +178,33 @@ function RefundModal({ isOpen, onClose, payment, i18n }: RefundModalProps) {
   );
 }
 
-interface PaginationProps {
-  currentPage: number;
-  totalPages: number;
-  totalCount: number;
-  pageSize: number;
-  onPageChange: (page: number) => void;
-  i18n: AdminPaymentsI18n;
-}
-
-function Pagination({
-  currentPage,
-  totalPages,
-  totalCount,
-  pageSize,
-  onPageChange,
-  i18n,
-}: PaginationProps) {
-  const start = currentPage * pageSize + 1;
-  const end = Math.min((currentPage + 1) * pageSize, totalCount);
-
-  const getPageNumbers = () => {
-    const pages: (number | string)[] = [];
-    const maxVisiblePages = 5;
-
-    if (totalPages <= maxVisiblePages) {
-      for (let i = 0; i < totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      if (currentPage < 3) {
-        for (let i = 0; i < 4; i++) {
-          pages.push(i);
-        }
-        pages.push('...');
-        pages.push(totalPages - 1);
-      } else if (currentPage > totalPages - 4) {
-        pages.push(0);
-        pages.push('...');
-        for (let i = totalPages - 4; i < totalPages; i++) {
-          pages.push(i);
-        }
-      } else {
-        pages.push(0);
-        pages.push('...');
-        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-          pages.push(i);
-        }
-        pages.push('...');
-        pages.push(totalPages - 1);
-      }
-    }
-    return pages;
-  };
-
-  if (totalPages <= 1) return null;
-
-  return (
-    <div className="mt-6 flex flex-col items-center justify-between gap-4 sm:flex-row">
-      <div className="text-sm text-gray-600 dark:text-gray-400">
-        {i18n.showing
-          .replace('{start}', String(start))
-          .replace('{end}', String(end))
-          .replace('{total}', String(totalCount))}
-      </div>
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() => onPageChange(currentPage - 1)}
-          disabled={currentPage === 0}
-          className="rounded-md border border-gray-300 px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-        >
-          {i18n.prev}
-        </button>
-        <div className="flex gap-1">
-          {getPageNumbers().map((page, index) =>
-            typeof page === 'number' ? (
-              <button
-                key={index}
-                onClick={() => onPageChange(page)}
-                className={`rounded-md px-3 py-1 text-sm font-medium ${
-                  page === currentPage
-                    ? 'bg-blue-600 text-white'
-                    : 'border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'
-                }`}
-              >
-                {page + 1}
-              </button>
-            ) : (
-              <span
-                key={index}
-                className="px-2 py-1 text-sm text-gray-500 dark:text-gray-400"
-              >
-                {page}
-              </span>
-            ),
-          )}
-        </div>
-        <button
-          onClick={() => onPageChange(currentPage + 1)}
-          disabled={currentPage >= totalPages - 1}
-          className="rounded-md border border-gray-300 px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-        >
-          {i18n.next}
-        </button>
-      </div>
-    </div>
-  );
-}
-
 export function PaymentsPage() {
   const i18n = useAdminPaymentsI18n();
   const controller = usePaymentsPageController();
   const [selectedPayment, setSelectedPayment] =
-    useState<AdminPaymentDetail | null>(null);
+    useState<AdminPaymentResponse | null>(null);
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
+  const observer = useRef<IntersectionObserver | null>(null);
 
-  const handleRefundClick = (payment: AdminPaymentDetail) => {
+  const lastPaymentRef = useCallback(
+    (node: HTMLTableRowElement) => {
+      if (controller.isFetchingNextPage) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && controller.hasNextPage) {
+          controller.fetchNextPage();
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [
+      controller.isFetchingNextPage,
+      controller.fetchNextPage,
+      controller.hasNextPage,
+    ],
+  );
+
+  const handleRefundClick = (payment: AdminPaymentResponse) => {
     setSelectedPayment(payment);
     setIsRefundModalOpen(true);
   };
@@ -363,17 +274,19 @@ export function PaymentsPage() {
                     {i18n.paidAt}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                    {i18n.subscription}
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     {i18n.actions}
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                {controller.payments.map((payment) => (
+                {controller.payments.map((payment, index) => (
                   <tr
                     key={payment.payment_id}
+                    ref={
+                      index === controller.payments.length - 1
+                        ? lastPaymentRef
+                        : null
+                    }
                     className="hover:bg-gray-50 dark:hover:bg-gray-800"
                   >
                     <td className="px-4 py-3 text-sm">
@@ -401,15 +314,6 @@ export function PaymentsPage() {
                       {formatDate(payment.paid_at)}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm">
-                      {payment.is_subscription ? (
-                        <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-300">
-                          {i18n.yes}
-                        </span>
-                      ) : (
-                        <span className="text-gray-400">{i18n.no}</span>
-                      )}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm">
                       <button
                         onClick={() => handleRefundClick(payment)}
                         disabled={
@@ -427,14 +331,19 @@ export function PaymentsPage() {
             </table>
           </div>
 
-          <Pagination
-            currentPage={controller.currentPage}
-            totalPages={controller.totalPages}
-            totalCount={controller.totalCount}
-            pageSize={controller.pageSize}
-            onPageChange={(page) => controller.goToPage(page)}
-            i18n={i18n}
-          />
+          {controller.isFetchingNextPage && (
+            <div className="mt-4 flex justify-center">
+              <div className="text-gray-500 dark:text-gray-400">
+                {i18n.loading}
+              </div>
+            </div>
+          )}
+
+          {!controller.hasNextPage && controller.payments.length > 0 && (
+            <div className="mt-6 text-center text-gray-400">
+              🎉 모든 결제 내역을 불러왔습니다.
+            </div>
+          )}
         </>
       )}
 

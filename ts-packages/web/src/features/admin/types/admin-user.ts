@@ -29,13 +29,12 @@ export interface DemoteAdminResponse {
   message: string;
 }
 
-export interface AdminPaymentDetail {
+export interface AdminPaymentResponse {
   payment_id: string;
   status: string;
   currency: string;
   paid_at: string | null;
   order_name: string;
-  is_subscription: boolean;
   user_email: string | null;
   user_name: string | null;
   total: number;
@@ -53,14 +52,7 @@ export interface RefundRequest {
   requester: RefundRequester;
 }
 
-export interface PaymentBookmark {
-  page: number;
-  page_size: number;
-  total_count: number;
-  total_pages: number;
-}
-
 export interface AdminPaymentListResponse {
-  items: AdminPaymentDetail[];
+  items: AdminPaymentResponse[];
   bookmark: string | null;
 }
