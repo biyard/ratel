@@ -2,7 +2,7 @@ use crate::services::portone::PaymentItem;
 use crate::*;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema, OperationIo)]
-pub struct AdminPaymentDetail {
+pub struct AdminPaymentResponse {
     pub payment_id: String,
     pub status: String,
     pub currency: String,
@@ -14,7 +14,7 @@ pub struct AdminPaymentDetail {
     pub total: i64,
 }
 
-impl From<PaymentItem> for AdminPaymentDetail {
+impl From<PaymentItem> for AdminPaymentResponse {
     fn from(item: PaymentItem) -> Self {
         Self {
             payment_id: item.id,
@@ -30,7 +30,7 @@ impl From<PaymentItem> for AdminPaymentDetail {
     }
 }
 
-impl AdminPaymentDetail {
+impl AdminPaymentResponse {
     pub fn with_user(mut self, email: String, name: String) -> Self {
         self.user_email = Some(email);
         self.user_name = Some(name);
