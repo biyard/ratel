@@ -10,7 +10,9 @@
           "point": { "N": "10000" },
           "period": { "S": "Once" },
           "action": { "S": "Poll" },
-          "condition": { "S": "None" }
+          "condition": { "S": "None" },
+          "gsi1_pk": { "S": "ACTION#POLL" },
+          "gsi1_sk": { "S": "1764227900883722" }
         }
       }
     }

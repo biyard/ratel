@@ -44,7 +44,7 @@ async fn test_list_rewards_filtered_by_poll() {
 
     let (status, _headers, body) = get! {
         app: app,
-        path: "/v3/rewards?feature=poll",
+        path: "/v3/rewards?action=poll",
         response_type: ListRewardsResponse
     };
 
