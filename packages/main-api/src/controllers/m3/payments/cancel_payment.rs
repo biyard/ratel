@@ -1,5 +1,5 @@
 use super::dto::{AdminCancelPaymentRequest, AdminCancelPaymentResponse};
-use crate::features::membership::{Membership, MembershipStatus, MembershipTier, UserMembership};
+use crate::features::membership::{MembershipTier, UserMembership};
 use crate::types::{EntityType, Partition};
 use crate::*;
 
@@ -13,33 +13,35 @@ pub async fn cancel_payment_handler(
 ) -> Result<Json<AdminCancelPaymentResponse>> {
     let cli = &dynamo.client;
 
-    // 1. Cancel payment via Portone API
+    // 1. Get payment info from PortOne
+    let payment = portone.get_payment(&payment_id).await?;
+    
+    // 2. Extract user_pk
+    let user_pk = payment
+        .user_partition()
+        .ok_or_else(|| Error::InvalidPartitionKey(payment.customer.id.clone()))?;
+
+    // 3. Cancel payment via Portone API
     let cancel_response = portone
-        .cancel_payment(&payment_id, req.reason, req.amount, req.requester)
+        .cancel_payment(
+            &payment_id,
+            req.reason,
+            None, // Full refund
+            Some(crate::services::portone::PortoneCancelRequester::Admin),
+        )
         .await?;
 
-    // 2. Parse user_pk string to Partition
-    let user_pk: Partition = req
-        .user_pk
-        .parse()
-        .map_err(|_| Error::InvalidPartitionKey(req.user_pk.clone()))?;
-
-    // 3. Get Free membership to retrieve credits info
+    // 4. Downgrade user membership to Free tier
     let free_membership_pk = Partition::Membership(MembershipTier::Free.to_string());
-    let free_membership = Membership::get(cli, free_membership_pk.clone(), Some(EntityType::Membership))
-        .await?
-        .ok_or_else(|| Error::NoMembershipFound)?;
-
-    // 4. Update user membership to Free tier with Active
     UserMembership::updater(&user_pk, &EntityType::UserMembership)
-        .with_membership_pk(free_membership.pk.clone().into())
+        .with_membership_pk(free_membership_pk.into())
         .with_auto_renew(false)
         .execute(cli)
         .await?;
 
     debug!(
-        "Payment {} cancelled and user {} membership reset to Free with {} credits",
-        payment_id, req.user_pk, free_membership.credits
+        "Payment {} cancelled and user {} membership downgraded to Free",
+        payment_id, user_pk
     );
 
     Ok(Json(cancel_response.cancellation.into()))

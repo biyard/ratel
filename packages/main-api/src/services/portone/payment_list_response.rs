@@ -22,6 +22,16 @@ pub struct PaymentItem {
     pub billing_key: Option<String>,
 }
 
+impl PaymentItem {
+    pub fn user_partition(&self) -> Option<crate::types::Partition> {
+        self.customer
+            .id
+            .parse::<crate::types::CompositePartition>()
+            .ok()
+            .map(|cp| cp.0)
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, OperationIo)]
 #[serde(rename_all = "camelCase")]
 pub struct PaymentCustomer {

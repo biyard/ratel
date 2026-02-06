@@ -47,9 +47,6 @@ impl AdminPaymentResponse {
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, OperationIo)]
 pub struct AdminCancelPaymentRequest {
     pub reason: String,
-    pub amount: Option<i64>,
-    pub requester: Option<CancelRequester>,
-    pub user_pk: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, OperationIo)]
