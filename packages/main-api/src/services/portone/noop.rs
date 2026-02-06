@@ -122,13 +122,11 @@ impl PortOne {
                 },
                 amount: PaymentAmount {
                     total: 10000,
-                    tax_free: None,
                     vat: None,
                     supply: None,
                     discount: None,
                     paid: 10000,
                     cancelled: None,
-                    cancelled_tax_free: None,
                 },
                 billing_key: None,
             }],
@@ -136,6 +134,26 @@ impl PortOne {
                 number: page,
                 size: page_size,
                 total_count: 1,
+            },
+        })
+    }
+
+    pub async fn cancel_payment(
+        &self,
+        payment_id: &str,
+        reason: String,
+        amount: Option<i64>,
+        _requester: Option<PortoneCancelRequester>,
+    ) -> Result<CancelPaymentResponse> {
+        // Return mock cancel payment response for testing
+        Ok(CancelPaymentResponse {
+            cancellation: PaymentCancellation {
+                status: "SUCCEEDED".to_string(),
+                id: format!("cancel-{}", payment_id),
+                total_amount: amount.unwrap_or(10000),
+                reason,
+                cancelled_at: Some("2025-02-03T12:00:00Z".to_string()),
+                requested_at: "2025-02-03T12:00:00Z".to_string(),
             },
         })
     }
