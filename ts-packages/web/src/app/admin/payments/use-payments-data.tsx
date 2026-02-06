@@ -1,5 +1,6 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { call } from '@/lib/api/ratel/call';
+import { adminKeys } from '@/constants';
 import type { AdminPaymentListResponse } from '@/features/admin/types/admin-user';
 
 export async function listPayments(
@@ -18,7 +19,7 @@ export async function listPayments(
 
 export function getOptions() {
   return {
-    queryKey: ['admin-payments'],
+    queryKey: adminKeys.payments(),
     queryFn: ({
       pageParam,
     }: {
