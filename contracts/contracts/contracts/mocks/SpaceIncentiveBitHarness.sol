@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-contract SpaceDaoBitHarness {
+contract SpaceIncentiveBitHarness {
     function findIndex(
         uint256[] calldata scores,
         bool[] calldata excluded,

@@ -6,7 +6,7 @@ interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
 }
 
-contract SpaceDAO {
+contract SpaceIncentive {
     address[] private _admins;
     mapping(address => bool) private _isAdmin;
 
@@ -39,20 +39,20 @@ contract SpaceDAO {
     event IncentiveClaimed(address indexed token, address indexed recipient, uint256 value);
 
     modifier onlyAdmin() {
-        require(_isAdmin[msg.sender], "SpaceDAO: admin only");
+        require(_isAdmin[msg.sender], "SpaceIncentive: admin only");
         _;
     }
 
     constructor(address[] memory admins, IncentiveDistributionConfig memory incentiveDistributionConfig) {
-        require(admins.length > 0, "SpaceDAO: empty admins");
+        require(admins.length > 0, "SpaceIncentive: empty admins");
         require(
             incentiveDistributionConfig.rankingBps <= 10000,
-            "SpaceDAO: invalid ranking bps"
+            "SpaceIncentive: invalid ranking bps"
         );
         for (uint256 i = 0; i < admins.length; i++) {
             address admin = admins[i];
-            require(admin != address(0), "SpaceDAO: invalid admin");
-            require(!_isAdmin[admin], "SpaceDAO: duplicate admin");
+            require(admin != address(0), "SpaceIncentive: invalid admin");
+            require(!_isAdmin[admin], "SpaceIncentive: duplicate admin");
             _isAdmin[admin] = true;
             _admins.push(admin);
         }
@@ -72,7 +72,7 @@ contract SpaceDAO {
     }
 
     function setIncentiveRecipientCount(uint256 numOfTargets) external onlyAdmin {
-        require(numOfTargets > 0, "SpaceDAO: invalid recipient count");
+        require(numOfTargets > 0, "SpaceIncentive: invalid recipient count");
         _incentiveDistributionConfig = IncentiveDistributionConfig({
             mode: _incentiveDistributionConfig.mode,
             numOfTargets: numOfTargets,
@@ -86,7 +86,7 @@ contract SpaceDAO {
     }
 
     function setIncentiveRankingBps(uint16 rankingBps) external onlyAdmin {
-        require(rankingBps <= 10000, "SpaceDAO: invalid ranking bps");
+        require(rankingBps <= 10000, "SpaceIncentive: invalid ranking bps");
         _incentiveDistributionConfig = IncentiveDistributionConfig({
             mode: _incentiveDistributionConfig.mode,
             numOfTargets: _incentiveDistributionConfig.numOfTargets,
@@ -131,11 +131,11 @@ contract SpaceDAO {
         onlyAdmin
         returns (address[] memory)
     {
-        require(candidates.length > 0, "SpaceDAO: empty candidates");
-        require(candidates.length == scores.length, "SpaceDAO: invalid scores");
+        require(candidates.length > 0, "SpaceIncentive: empty candidates");
+        require(candidates.length == scores.length, "SpaceIncentive: invalid scores");
 
         uint256 count = _incentiveDistributionConfig.numOfTargets;
-        require(count > 0, "SpaceDAO: invalid recipient count");
+        require(count > 0, "SpaceIncentive: invalid recipient count");
 
         if (count > candidates.length) {
             count = candidates.length;
@@ -169,7 +169,7 @@ contract SpaceDAO {
         delete _incentiveRecipients;
         for (uint256 i = 0; i < picked.length; i++) {
             address pickedAddr = picked[i];
-            require(pickedAddr != address(0), "SpaceDAO: invalid recipient");
+            require(pickedAddr != address(0), "SpaceIncentive: invalid recipient");
             _isIncentiveRecipient[pickedAddr] = true;
             _isIncentiveClaimed[pickedAddr] = false;
             _incentiveRecipients.push(pickedAddr);
@@ -181,26 +181,26 @@ contract SpaceDAO {
     }
 
     function claimIncentive(address token) external {
-        require(token != address(0), "SpaceDAO: invalid token");
+        require(token != address(0), "SpaceIncentive: invalid token");
 
         address recipient = msg.sender;
-        require(_isIncentiveRecipient[recipient], "SpaceDAO: not selected");
-        require(!_isIncentiveClaimed[recipient], "SpaceDAO: incentive finished");
+        require(_isIncentiveRecipient[recipient], "SpaceIncentive: not selected");
+        require(!_isIncentiveClaimed[recipient], "SpaceIncentive: incentive finished");
 
         IERC20 erc20 = IERC20(token);
         uint256 count = _incentiveRecipients.length;
-        require(count > 0, "SpaceDAO: invalid recipient count");
+        require(count > 0, "SpaceIncentive: invalid recipient count");
         uint256 value = _incentiveAmountByToken[token];
         if (_incentiveAmountEpoch[token] != _incentiveEpoch) {
             uint256 balance = erc20.balanceOf(address(this));
             value = balance / count;
-            require(value > 0, "SpaceDAO: invalid value");
+            require(value > 0, "SpaceIncentive: invalid value");
             _incentiveAmountByToken[token] = value;
             _incentiveAmountEpoch[token] = _incentiveEpoch;
         }
-        require(erc20.balanceOf(address(this)) >= value, "SpaceDAO: insufficient balance");
+        require(erc20.balanceOf(address(this)) >= value, "SpaceIncentive: insufficient balance");
         _isIncentiveClaimed[recipient] = true;
-        require(erc20.transfer(recipient, value), "SpaceDAO: transfer failed");
+        require(erc20.transfer(recipient, value), "SpaceIncentive: transfer failed");
 
         emit IncentiveClaimed(token, recipient, value);
     }
@@ -333,7 +333,7 @@ contract SpaceDAO {
 
             uint256 rand = _randomIndex(totalWeight, nonceOffset + k);
             uint256 chosen = _bitFind(bit, rand + 1);
-            require(chosen < n, "SpaceDAO: no candidates");
+            require(chosen < n, "SpaceIncentive: no candidates");
 
             excluded[chosen] = true;
             picked[pickedCount] = candidates[chosen];

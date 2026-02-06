@@ -275,7 +275,7 @@ export class SpaceDaoEditorController {
         mode === 2 && Number.isFinite(rankingRatio)
           ? Math.round(rankingRatio * 100)
           : 0;
-      const result = await daoService.createSpaceDAO(
+      const result = await daoService.createSpaceIncentive(
         selectedAdminAddresses,
         count,
         rankingBps,
