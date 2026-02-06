@@ -118,7 +118,8 @@ export const spaceKeys = {
     [...spaceKeys.detail(spacePk), 'topics'] as const,
 
   files: (spacePk: string) => [...spaceKeys.detail(spacePk), 'files'] as const,
-  file_links: (spacePk: string) => [...spaceKeys.files(spacePk), 'links'] as const,
+  file_links: (spacePk: string) =>
+    [...spaceKeys.files(spacePk), 'links'] as const,
 
   recommendations: (spacePk: string) =>
     [...spaceKeys.detail(spacePk), 'recommendations'] as const,
@@ -188,4 +189,12 @@ export const userKeys = {
   rewards: (month?: string) => [...userKeys.all, 'rewards', month] as const,
   reward_lists: (month?: string) =>
     [...userKeys.all, 'reward_lists', month] as const,
+};
+
+const QK_ADMIN = 'admin';
+export const adminKeys = {
+  all: [QK_ADMIN] as const,
+  payments: () => [...adminKeys.all, 'payments'] as const,
+  users: () => [...adminKeys.all, 'users'] as const,
+  memberships: () => [...adminKeys.all, 'memberships'] as const,
 };
