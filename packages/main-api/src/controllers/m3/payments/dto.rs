@@ -8,7 +8,6 @@ pub struct AdminPaymentResponse {
     pub currency: String,
     pub paid_at: Option<String>,
     pub order_name: String,
-    pub is_subscription: bool,
     pub user_email: Option<String>,
     pub user_name: Option<String>,
     pub total: i64,
@@ -23,7 +22,6 @@ impl From<PaymentItem> for AdminPaymentResponse {
             paid_at: item.paid_at,
             order_name: item.order_name,
             total: item.amount.total,
-            is_subscription: item.billing_key.is_some(),
             user_email: None,
             user_name: None,
         }

@@ -45,6 +45,7 @@ import AttributeCodesPage from './app/admin/attribute-codes/page';
 import AdminUsersPage from './app/admin/users/page';
 import { RewardsPage as AdminRewardsPage } from './app/admin/rewards/rewards-page';
 import MigrationsPage from './app/admin/migrations/page';
+import { PaymentsPage as AdminPaymentsPage } from './app/admin/payments/payments-page';
 import TelegramPage from './app/telegram/page';
 import SpaceAnalyzePage from './app/spaces/[id]/analyze/space-analyze-page';
 import SpacePanelPage from './app/spaces/[id]/panels/space-panel-page';
@@ -459,6 +460,11 @@ export const routes = createBrowserRouter([
         id: 'admin-migrations-page',
         path: 'admin/migrations',
         Component: MigrationsPage,
+      },
+      {
+        id: 'admin-payments-page',
+        path: 'admin/payments',
+        Component: AdminPaymentsPage,
       }, // End of Admin Routes
 
       {
