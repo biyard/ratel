@@ -1,20 +1,10 @@
 use super::dto::AdminPaymentResponse;
 use crate::models::dynamo_tables::main::user::User;
-use crate::services::portone::PaymentItem;
-use crate::types::{CompositePartition, EntityType, ListItemsResponse, Pagination, Partition};
+use crate::types::{EntityType, ListItemsResponse, Pagination, Partition};
 use crate::*;
 use std::collections::{HashMap, HashSet};
 
 const PAGE_SIZE: i32 = 10;
-
-fn parse_user_partition(payment: &PaymentItem) -> Option<Partition> {
-    payment
-        .customer
-        .id
-        .parse::<CompositePartition>()
-        .ok()
-        .map(|cp| cp.0)
-}
 
 /// List all payments (ServiceAdmin only)
 ///
@@ -36,7 +26,7 @@ pub async fn list_all_payments_handler(
     let payment_user_partitions: Vec<Option<Partition>> = payment_list
         .items
         .iter()
-        .map(parse_user_partition)
+        .map(|p| p.user_partition())
         .collect();
 
     // 2. Extract unique user keys for batch get
