@@ -1,9 +1,9 @@
 import { SpacePathProps } from '@/features/space-path-props';
 import { useTranslation } from 'react-i18next';
-import { useSpaceDao } from '@/features/spaces/dao/hooks/use-space-dao';
+import { useSpaceIncentive } from '@/features/spaces/incentive/hooks/use-space-incentive';
 import Card from '@/components/card';
 import { useEffect, useMemo, useState } from 'react';
-import { useSpaceDaoTokens } from '@/features/spaces/dao/hooks/use-space-dao-tokens';
+import { useSpaceIncentiveTokens } from '@/features/spaces/incentive/hooks/use-space-incentive-tokens';
 import { config } from '@/config';
 import { useSpaceIncentiveController } from './space-incentive-controller';
 import { Button } from '@/components/ui/button';
@@ -12,12 +12,12 @@ const isZeroBalance = (balance?: string | null) =>
   !balance || /^0+$/.test(balance);
 
 export function SpaceIncentivePage({ spacePk }: SpacePathProps) {
-  const { t } = useTranslation('SpaceDaoEditor');
-  const { data: dao, isLoading } = useSpaceDao(spacePk);
-  const { data: tokenList } = useSpaceDaoTokens(
+  const { t } = useTranslation('SpaceIncentiveEditor');
+  const { data: incentive, isLoading } = useSpaceIncentive(spacePk);
+  const { data: tokenList } = useSpaceIncentiveTokens(
     spacePk,
     50,
-    Boolean(dao?.contract_address),
+    Boolean(incentive?.contract_address),
   );
   const [selectedToken, setSelectedToken] = useState<string | null>(null);
 
@@ -73,13 +73,13 @@ export function SpaceIncentivePage({ spacePk }: SpacePathProps) {
 
   const ctrl = useSpaceIncentiveController(
     spacePk,
-    dao,
+    incentive,
     selectedToken,
     selectedTokenDecimals,
   );
   const currentUserItem = ctrl.currentUserItem;
 
-  if (isLoading || !dao) {
+  if (isLoading || !incentive) {
     return null;
   }
 
@@ -89,7 +89,7 @@ export function SpaceIncentivePage({ spacePk }: SpacePathProps) {
         <div className="space-y-4 w-full">
           <div>
             <h1 className="text-2xl font-semibold text-text-primary">
-              {t('dao_incentive_title')}
+              {t('incentive_incentive_title')}
             </h1>
           </div>
 
@@ -98,7 +98,7 @@ export function SpaceIncentivePage({ spacePk }: SpacePathProps) {
               <div className="grid grid-cols-1 gap-3 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-text-secondary">
-                    {t('dao_incentive_wallet')}
+                    {t('incentive_incentive_wallet')}
                   </span>
                   <span className="text-text-primary">
                     {ctrl.currentUserEvm ?? '-'}
@@ -106,7 +106,7 @@ export function SpaceIncentivePage({ spacePk }: SpacePathProps) {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-text-secondary">
-                    {t('dao_incentive_amount')}
+                    {t('incentive_incentive_amount')}
                   </span>
                   <span className="text-text-primary">
                     {ctrl.perRecipientDisplay ?? '-'}
@@ -115,7 +115,7 @@ export function SpaceIncentivePage({ spacePk }: SpacePathProps) {
                 <div className="flex items-center justify-end pt-2">
                   {currentUserItem.claimed ? (
                     <span className="text-text-secondary text-xs">
-                      {t('dao_selected_claimed')}
+                      {t('incentive_selected_claimed')}
                     </span>
                   ) : (
                     <Button
@@ -126,8 +126,8 @@ export function SpaceIncentivePage({ spacePk }: SpacePathProps) {
                       disabled={ctrl.isClaiming.get()}
                     >
                       {ctrl.isClaiming.get()
-                        ? t('dao_selected_claiming')
-                        : t('dao_selected_claim')}
+                        ? t('incentive_selected_claiming')
+                        : t('incentive_selected_claim')}
                     </Button>
                   )}
                 </div>
@@ -138,29 +138,29 @@ export function SpaceIncentivePage({ spacePk }: SpacePathProps) {
           <div className="rounded-xl border border-input-box-border bg-background px-4 py-4">
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm text-text-secondary">
-                {t('dao_selected_title')}
+                {t('incentive_selected_title')}
               </p>
             </div>
             {ctrl.recipientsLoading ? (
               <div className="text-sm text-text-secondary">
-                {t('dao_selected_loading')}
+                {t('incentive_selected_loading')}
               </div>
             ) : ctrl.recipients.length === 0 ? (
               <div className="text-sm text-text-secondary">
-                {t('dao_selected_empty')}
+                {t('incentive_selected_empty')}
               </div>
             ) : (
               <table className="w-full table-fixed text-sm">
                 <thead className="text-text-secondary">
                   <tr className="border-b border-border">
                     <th className="px-2 py-2 text-left font-medium">
-                      {t('dao_selected_evm')}
+                      {t('incentive_selected_evm')}
                     </th>
                     <th className="px-2 py-2 text-right font-medium">
-                      {t('dao_selected_amount')}
+                      {t('incentive_selected_amount')}
                     </th>
                     <th className="px-2 py-2 text-right font-medium">
-                      {t('dao_selected_status')}
+                      {t('incentive_selected_status')}
                     </th>
                   </tr>
                 </thead>
@@ -178,8 +178,8 @@ export function SpaceIncentivePage({ spacePk }: SpacePathProps) {
                       </td>
                       <td className="px-2 py-2 text-right text-text-secondary">
                         {item.claimed
-                          ? t('dao_selected_claimed')
-                          : t('dao_selected_pending')}
+                          ? t('incentive_selected_claimed')
+                          : t('incentive_selected_pending')}
                       </td>
                     </tr>
                   ))}

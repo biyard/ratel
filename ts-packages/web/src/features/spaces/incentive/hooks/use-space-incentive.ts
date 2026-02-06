@@ -1,8 +1,8 @@
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
 import { call, RatelSdkError } from '@/lib/api/ratel/call';
-import { spaceDaoKeys } from '@/constants';
+import { spaceIncentiveKeys } from '@/constants';
 
-export type SpaceDaoResponse = {
+export type SpaceIncentiveResponse = {
   contract_address: string;
   deploy_block?: number;
   created_at?: number;
@@ -23,14 +23,14 @@ function isNotFound(error: unknown) {
   return text.toLowerCase().includes('not found');
 }
 
-export function useSpaceDao(
+export function useSpaceIncentive(
   spacePk: string,
-): UseQueryResult<SpaceDaoResponse | null> {
+): UseQueryResult<SpaceIncentiveResponse | null> {
   return useQuery({
-    queryKey: spaceDaoKeys.dao(spacePk),
+    queryKey: spaceIncentiveKeys.incentive(spacePk),
     queryFn: async () => {
       try {
-        return await call<void, SpaceDaoResponse>(
+        return await call<void, SpaceIncentiveResponse>(
           'GET',
           `/v3/spaces/${encodeURIComponent(spacePk)}/incentives`,
         );

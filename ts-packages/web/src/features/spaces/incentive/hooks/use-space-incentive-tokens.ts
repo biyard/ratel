@@ -4,9 +4,9 @@ import {
   UseInfiniteQueryResult,
 } from '@tanstack/react-query';
 import { call } from '@/lib/api/ratel/call';
-import { spaceDaoKeys } from '@/constants';
+import { spaceIncentiveKeys } from '@/constants';
 
-export type SpaceDaoTokenResponse = {
+export type SpaceIncentiveTokenResponse = {
   pk: string;
   sk: string;
   token_address: string;
@@ -16,18 +16,18 @@ export type SpaceDaoTokenResponse = {
   updated_at?: number;
 };
 
-export type SpaceDaoTokenListResponse = {
-  items: SpaceDaoTokenResponse[];
+export type SpaceIncentiveTokenListResponse = {
+  items: SpaceIncentiveTokenResponse[];
   bookmark?: string | null;
 };
 
-export function useSpaceDaoTokens(
+export function useSpaceIncentiveTokens(
   spacePk: string,
   limit = 50,
   enabled = true,
-): UseInfiniteQueryResult<InfiniteData<SpaceDaoTokenListResponse>> {
+): UseInfiniteQueryResult<InfiniteData<SpaceIncentiveTokenListResponse>> {
   return useInfiniteQuery({
-    queryKey: spaceDaoKeys.tokens(spacePk),
+    queryKey: spaceIncentiveKeys.tokens(spacePk),
     queryFn: async ({ pageParam }) => {
       const params = new URLSearchParams();
       params.set('limit', String(limit));
@@ -35,7 +35,7 @@ export function useSpaceDaoTokens(
         params.set('bookmark', String(pageParam));
       }
       const query = params.toString();
-      return call<void, SpaceDaoTokenListResponse>(
+      return call<void, SpaceIncentiveTokenListResponse>(
         'GET',
         `/v3/spaces/${encodeURIComponent(spacePk)}/incentives/tokens${
           query ? `?${query}` : ''

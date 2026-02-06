@@ -1,6 +1,6 @@
 import { useParams } from 'react-router';
 import { useSpaceById } from '@/features/spaces/hooks/use-space-by-id';
-import { SpaceIncentivePage } from '@/features/spaces/dao/pages/incentive/space-incentive-page';
+import { SpaceIncentivePage } from '@/features/spaces/incentive/pages/incentive/space-incentive-page';
 
 export default function SpaceIncentiveRoutePage() {
   const { spacePk } = useParams<{ spacePk: string }>();

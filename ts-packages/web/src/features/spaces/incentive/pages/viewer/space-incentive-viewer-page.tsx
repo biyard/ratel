@@ -1,27 +1,27 @@
 import { SpacePathProps } from '@/features/space-path-props';
 import { logger } from '@/lib/logger';
-import { useSpaceDaoViewerController } from './space-dao-viewer-controller';
-import { useSpaceDao } from '@/features/spaces/dao/hooks/use-space-dao';
-import { SpaceDaoInfoCard } from '@/features/spaces/dao/components/space-dao-info-card';
-import { useSpaceDaoTokens } from '@/features/spaces/dao/hooks/use-space-dao-tokens';
-import { useRefreshSpaceDaoTokensMutation } from '@/features/spaces/dao/hooks/use-refresh-space-dao-tokens-mutation';
+import { useSpaceIncentiveViewerController } from './space-incentive-viewer-controller';
+import { useSpaceIncentive } from '@/features/spaces/incentive/hooks/use-space-incentive';
+import { SpaceIncentiveInfoCard } from '@/features/spaces/incentive/components/space-incentive-info-card';
+import { useSpaceIncentiveTokens } from '@/features/spaces/incentive/hooks/use-space-incentive-tokens';
+import { useRefreshSpaceIncentiveTokensMutation } from '@/features/spaces/incentive/hooks/use-refresh-space-incentive-tokens-mutation';
 import { useEffect, useMemo, useState } from 'react';
 import { config } from '@/config';
 
 const isZeroBalance = (balance?: string | null) =>
   !balance || /^0+$/.test(balance);
 
-export function SpaceDaoViewerPage({ spacePk }: SpacePathProps) {
-  logger.debug(`SpaceDaoViewerPage: spacePk=${spacePk}`);
-  const { data: dao, isLoading } = useSpaceDao(spacePk);
+export function SpaceIncentiveViewerPage({ spacePk }: SpacePathProps) {
+  logger.debug(`SpaceIncentiveViewerPage: spacePk=${spacePk}`);
+  const { data: incentive, isLoading } = useSpaceIncentive(spacePk);
   const {
     data: tokenList,
     isLoading: tokensLoading,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useSpaceDaoTokens(spacePk, 5, Boolean(dao?.contract_address));
-  const refreshTokens = useRefreshSpaceDaoTokensMutation(spacePk);
+  } = useSpaceIncentiveTokens(spacePk, 5, Boolean(incentive?.contract_address));
+  const refreshTokens = useRefreshSpaceIncentiveTokensMutation(spacePk);
   const [selectedToken, setSelectedToken] = useState<string | null>(null);
   const [didRefreshTokens, setDidRefreshTokens] = useState(false);
   const [tokenPageIndex, setTokenPageIndex] = useState(0);
@@ -92,9 +92,9 @@ export function SpaceDaoViewerPage({ spacePk }: SpacePathProps) {
   const selectedTokenDecimals =
     selectedTokenItem?.decimals ?? (fallbackIsUsdt ? 6 : null);
 
-  const ctrl = useSpaceDaoViewerController(
+  const ctrl = useSpaceIncentiveViewerController(
     spacePk,
-    dao,
+    incentive,
     selectedToken,
     selectedTokenBalance,
     selectedTokenDecimals,
@@ -119,10 +119,10 @@ export function SpaceDaoViewerPage({ spacePk }: SpacePathProps) {
   }, [selectedToken, orderedTokens]);
 
   useEffect(() => {
-    if (!dao?.contract_address || didRefreshTokens) return;
+    if (!incentive?.contract_address || didRefreshTokens) return;
     refreshTokens.mutate();
     setDidRefreshTokens(true);
-  }, [dao?.contract_address, didRefreshTokens, refreshTokens]);
+  }, [incentive?.contract_address, didRefreshTokens, refreshTokens]);
 
   useEffect(() => {
     if (tokenPageIndex > 0 && tokenPageIndex > tokenPages.length - 1) {
@@ -134,14 +134,14 @@ export function SpaceDaoViewerPage({ spacePk }: SpacePathProps) {
     return null;
   }
 
-  if (!dao) {
+  if (!incentive) {
     return null;
   }
 
   return (
     <div className="flex flex-col w-full max-w-[1152px] gap-5">
-      <SpaceDaoInfoCard
-        dao={dao}
+      <SpaceIncentiveInfoCard
+        incentive={incentive}
         recipientCount={ctrl.chainRecipientCount.get()}
         showEdit={false}
         tokens={visibleTokens}

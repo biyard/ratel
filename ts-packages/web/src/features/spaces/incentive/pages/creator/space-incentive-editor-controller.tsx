@@ -10,28 +10,28 @@ import {
   getKaiaSigner,
   KaiaWalletError,
 } from '@/lib/service/kaia-wallet-service';
-import { SpaceDaoService } from '@/contracts/SpaceDaoService';
+import { SpaceIncentiveService } from '@/contracts/SpaceIncentiveService';
 import { config } from '@/config';
-import { useCreateSpaceDaoMutation } from '@/features/spaces/dao/hooks/use-create-space-dao-mutation';
-import { SpaceDaoResponse } from '@/features/spaces/dao/hooks/use-space-dao';
+import { useCreateSpaceIncentiveMutation } from '@/features/spaces/incentive/hooks/use-create-space-incentive-mutation';
+import { SpaceIncentiveResponse } from '@/features/spaces/incentive/hooks/use-space-incentive';
 import { ethers } from 'ethers';
 import { State } from '@/types/state';
 import {
-  SpaceDaoIncentiveResponseBody,
-  useSpaceDaoIncentive,
-} from '@/features/spaces/dao/hooks/use-space-dao-incentive';
-import { useUpdateSpaceDaoIncentiveMutation } from '@/features/spaces/dao/hooks/use-update-space-dao-incentive-mutation';
+  SpaceIncentiveIncentiveResponseBody,
+  useSpaceIncentiveIncentive,
+} from '@/features/spaces/incentive/hooks/use-space-incentive-incentive';
+import { useUpdateSpaceIncentiveMutation } from '@/features/spaces/incentive/hooks/use-update-space-incentive-mutation';
 import { useUserInfo } from '@/hooks/use-user-info';
 
-export class SpaceDaoEditorController {
+export class SpaceIncentiveEditorController {
   constructor(
     public spacePk: string,
     public space: Space | undefined,
-    public dao: SpaceDaoResponse | null | undefined,
+    public incentive: SpaceIncentiveResponse | null | undefined,
     public eligibleAdmins: ReturnType<typeof useDaoData>['eligibleAdmins'],
     public teamMembers: ReturnType<typeof useDaoData>['members'],
     public permissions: ReturnType<typeof useDaoData>['permissions'],
-    public t: TFunction<'SpaceDaoEditor', undefined>,
+    public t: TFunction<'SpaceIncentiveEditor', undefined>,
     public provider: ethers.JsonRpcProvider | null,
     public adminAddresses: State<string>,
     public incentiveCount: State<string>,
@@ -43,7 +43,7 @@ export class SpaceDaoEditorController {
     public isPopupOpen: State<boolean>,
     public isRegistering: State<boolean>,
     public isUpdating: State<boolean>,
-    public incentiveData: SpaceDaoIncentiveResponseBody | undefined,
+    public incentiveData: SpaceIncentiveIncentiveResponseBody | undefined,
     public incentiveLoading: boolean,
     public currentUserEvm: string | null,
     public isIncentiveRecipient: State<boolean>,
@@ -56,9 +56,11 @@ export class SpaceDaoEditorController {
     public preferredToken: string | null,
     public preferredTokenBalance: string | null,
     public preferredTokenDecimals: number | null,
-    public createSpaceDaoMutation: ReturnType<typeof useCreateSpaceDaoMutation>,
+    public createSpaceIncentiveMutation: ReturnType<
+      typeof useCreateSpaceIncentiveMutation
+    >,
     public updateIncentiveMutation: ReturnType<
-      typeof useUpdateSpaceDaoIncentiveMutation
+      typeof useUpdateSpaceIncentiveMutation
     >,
   ) {}
 
@@ -66,7 +68,7 @@ export class SpaceDaoEditorController {
     return (this.space?.authorType ?? null) === UserType.Team;
   }
 
-  get canRegisterDao() {
+  get canRegisterIncentive() {
     if (this.isTeamSpace) {
       if (!this.permissions?.isAdmin()) {
         return false;
@@ -155,14 +157,14 @@ export class SpaceDaoEditorController {
   }
 
   fetchRecipientCount = async () => {
-    if (!this.provider || !this.dao?.contract_address) {
+    if (!this.provider || !this.incentive?.contract_address) {
       return;
     }
 
     try {
-      const service = new SpaceDaoService(this.provider);
+      const service = new SpaceIncentiveService(this.provider);
       const config = await service.getIncentiveDistributionConfig(
-        this.dao.contract_address,
+        this.incentive.contract_address,
       );
       this.chainRecipientCount.set(String(config.numOfTargets));
       this.chainIncentiveMode.set(config.mode);
@@ -176,8 +178,8 @@ export class SpaceDaoEditorController {
   };
 
   handleClaimIncentive = async (incentiveSk: string) => {
-    const dao = this.dao;
-    if (!dao?.contract_address || !this.currentUserEvm) return;
+    const incentive = this.incentive;
+    if (!incentive?.contract_address || !this.currentUserEvm) return;
     if (!this.canClaimIncentive) {
       showErrorToast(this.t('error_incentive_claim_not_allowed'));
       return;
@@ -196,9 +198,12 @@ export class SpaceDaoEditorController {
         config.env === 'prod' ? 'mainnet' : 'testnet',
       );
       const provider = signer.provider;
-      const daoService = new SpaceDaoService(provider);
-      await daoService.connectWallet();
-      await daoService.claimIncentive(dao.contract_address, tokenAddress);
+      const incentiveService = new SpaceIncentiveService(provider);
+      await incentiveService.connectWallet();
+      await incentiveService.claimIncentive(
+        incentive.contract_address,
+        tokenAddress,
+      );
 
       await this.updateIncentiveMutation.mutateAsync({
         spacePk: this.spacePk,
@@ -223,7 +228,7 @@ export class SpaceDaoEditorController {
   };
 
   handleOpenRegistrationPopup = () => {
-    if (!this.canRegisterDao) {
+    if (!this.canRegisterIncentive) {
       showErrorToast(
         this.isTeamSpace
           ? this.t('error_insufficient_admins')
@@ -236,7 +241,7 @@ export class SpaceDaoEditorController {
       return;
     }
     const admins = this.getDefaultAdminAddresses();
-    void this.handleRegisterDao(admins);
+    void this.handleRegisterIncentive(admins);
   };
 
   handleClosePopup = () => {
@@ -245,7 +250,7 @@ export class SpaceDaoEditorController {
     }
   };
 
-  handleRegisterDao = async (selectedAdminAddresses: string[]) => {
+  handleRegisterIncentive = async (selectedAdminAddresses: string[]) => {
     if (selectedAdminAddresses.length === 0) {
       showErrorToast(this.t('error_invalid_admin_selection'));
       return;
@@ -260,9 +265,9 @@ export class SpaceDaoEditorController {
       );
       const provider = signer.provider;
 
-      showInfoToast(this.t('toast_creating_dao'));
-      const daoService = new SpaceDaoService(provider);
-      await daoService.connectWallet();
+      showInfoToast(this.t('toast_creating_incentive'));
+      const incentiveService = new SpaceIncentiveService(provider);
+      await incentiveService.connectWallet();
 
       const count = Number(this.incentiveCount.get());
       if (!Number.isFinite(count) || count <= 0 || count > 100) {
@@ -275,17 +280,17 @@ export class SpaceDaoEditorController {
         mode === 2 && Number.isFinite(rankingRatio)
           ? Math.round(rankingRatio * 100)
           : 0;
-      const result = await daoService.createSpaceIncentive(
+      const result = await incentiveService.createSpaceIncentive(
         selectedAdminAddresses,
         count,
         rankingBps,
         mode,
       );
 
-      await this.createSpaceDaoMutation.mutateAsync({
+      await this.createSpaceIncentiveMutation.mutateAsync({
         spacePk: this.spacePk,
         req: {
-          contract_address: result.daoAddress,
+          contract_address: result.incentiveAddress,
           deploy_block: result.deployBlock,
         },
       });
@@ -294,7 +299,7 @@ export class SpaceDaoEditorController {
       showSuccessToast(this.t('toast_registered'));
       this.isPopupOpen.set(false);
     } catch (error) {
-      console.error('Failed to register Space DAO:', error);
+      console.error('Failed to register Space Incentive:', error);
 
       if (error instanceof KaiaWalletError) {
         if (error.code === 'USER_REJECTED') {
@@ -330,13 +335,16 @@ export class SpaceDaoEditorController {
     return Array.from(unique);
   }
 
-  handleUpdateDao = async (incentiveCount: string, rankingRatio?: string) => {
-    const dao = this.dao;
+  handleUpdateIncentive = async (
+    incentiveCount: string,
+    rankingRatio?: string,
+  ) => {
+    const incentive = this.incentive;
     const count = Number(incentiveCount);
     const ratioValue =
       rankingRatio != null && rankingRatio !== '' ? Number(rankingRatio) : null;
 
-    if (!dao?.contract_address) {
+    if (!incentive?.contract_address) {
       showErrorToast(this.t('error_register_failed_unknown'));
       return;
     }
@@ -360,12 +368,15 @@ export class SpaceDaoEditorController {
       );
       const provider = signer.provider;
 
-      const daoService = new SpaceDaoService(provider);
-      await daoService.connectWallet();
-      await daoService.setIncentiveRecipientCount(dao.contract_address, count);
+      const incentiveService = new SpaceIncentiveService(provider);
+      await incentiveService.connectWallet();
+      await incentiveService.setIncentiveRecipientCount(
+        incentive.contract_address,
+        count,
+      );
       if (ratioValue != null) {
-        await daoService.setIncentiveRankingBps(
-          dao.contract_address,
+        await incentiveService.setIncentiveRankingBps(
+          incentive.contract_address,
           Math.round(ratioValue * 100),
         );
         this.chainRankingBps.set(Math.round(ratioValue * 100));
@@ -373,7 +384,7 @@ export class SpaceDaoEditorController {
       this.chainRecipientCount.set(String(count));
       showSuccessToast(this.t('toast_updated'));
     } catch (error) {
-      console.error('Failed to update Space DAO:', error);
+      console.error('Failed to update Space Incentive:', error);
       if (error instanceof Error) {
         showErrorToast(
           this.t('error_register_failed', { message: error.message }),
@@ -387,9 +398,9 @@ export class SpaceDaoEditorController {
   };
 }
 
-export function useSpaceDaoEditorController(
+export function useSpaceIncentiveEditorController(
   spacePk: string,
-  dao?: SpaceDaoResponse | null,
+  incentive?: SpaceIncentiveResponse | null,
   selectedToken?: string | null,
   tokenBalance?: string | null,
   tokenDecimals?: number | null,
@@ -398,7 +409,7 @@ export function useSpaceDaoEditorController(
   preferredTokenDecimals?: number | null,
 ) {
   const { data: space } = useSpaceById(spacePk);
-  const { t } = useTranslation('SpaceDaoEditor');
+  const { t } = useTranslation('SpaceIncentiveEditor');
   const adminAddresses = useState('');
   const incentiveCount = useState('');
   const incentiveMode = useState(0);
@@ -414,10 +425,10 @@ export function useSpaceDaoEditorController(
   const isClaiming = useState(false);
   const claimAmountRaw = useState<string | null>(null);
   const { data: user } = useUserInfo();
-  const createSpaceDaoMutation = useCreateSpaceDaoMutation();
-  const updateIncentiveMutation = useUpdateSpaceDaoIncentiveMutation();
+  const createSpaceIncentiveMutation = useCreateSpaceIncentiveMutation();
+  const updateIncentiveMutation = useUpdateSpaceIncentiveMutation();
   const { data: incentiveData, isLoading: incentiveLoading } =
-    useSpaceDaoIncentive(spacePk, Boolean(dao?.contract_address));
+    useSpaceIncentiveIncentive(spacePk, Boolean(incentive?.contract_address));
 
   const provider = useMemo(() => {
     if (!config.rpc_url) {
@@ -433,10 +444,10 @@ export function useSpaceDaoEditorController(
     Boolean(teamUsername) && isTeamSpace,
   );
 
-  const ctrl = new SpaceDaoEditorController(
+  const ctrl = new SpaceIncentiveEditorController(
     spacePk,
     space,
-    dao,
+    incentive,
     eligibleAdmins,
     members,
     permissions,
@@ -465,26 +476,32 @@ export function useSpaceDaoEditorController(
     preferredToken ?? null,
     preferredTokenBalance ?? null,
     preferredTokenDecimals ?? null,
-    createSpaceDaoMutation,
+    createSpaceIncentiveMutation,
     updateIncentiveMutation,
   );
 
   useEffect(() => {
     void ctrl.fetchRecipientCount();
-  }, [dao?.contract_address, provider]);
+  }, [incentive?.contract_address, provider]);
 
   useEffect(() => {
     const loadClaimStatus = async () => {
-      if (!provider || !dao?.contract_address || !user?.evm_address) {
+      if (!provider || !incentive?.contract_address || !user?.evm_address) {
         isIncentiveRecipient[1](false);
         isIncentiveClaimed[1](false);
         return;
       }
       try {
-        const service = new SpaceDaoService(provider);
+        const service = new SpaceIncentiveService(provider);
         const [recipient, incentiveClaimed] = await Promise.all([
-          service.isIncentiveRecipient(dao.contract_address, user.evm_address),
-          service.isIncentiveClaimed(dao.contract_address, user.evm_address),
+          service.isIncentiveRecipient(
+            incentive.contract_address,
+            user.evm_address,
+          ),
+          service.isIncentiveClaimed(
+            incentive.contract_address,
+            user.evm_address,
+          ),
         ]);
         isIncentiveRecipient[1](recipient);
         isIncentiveClaimed[1](incentiveClaimed);
@@ -495,19 +512,19 @@ export function useSpaceDaoEditorController(
       }
     };
     void loadClaimStatus();
-  }, [dao?.contract_address, provider, user?.evm_address]);
+  }, [incentive?.contract_address, provider, user?.evm_address]);
 
   useEffect(() => {
     const loadClaimAmount = async () => {
       const token = preferredToken ?? selectedToken ?? null;
-      if (!provider || !dao?.contract_address || !token) {
+      if (!provider || !incentive?.contract_address || !token) {
         claimAmountRaw[1](null);
         return;
       }
       try {
-        const service = new SpaceDaoService(provider);
+        const service = new SpaceIncentiveService(provider);
         const amount = await service.getIncentiveAmount(
-          dao.contract_address,
+          incentive.contract_address,
           token,
         );
         claimAmountRaw[1](amount.toString());
@@ -517,7 +534,7 @@ export function useSpaceDaoEditorController(
       }
     };
     void loadClaimAmount();
-  }, [dao?.contract_address, provider, preferredToken, selectedToken]);
+  }, [incentive?.contract_address, provider, preferredToken, selectedToken]);
 
   return ctrl;
 }

@@ -1,25 +1,25 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { call } from '@/lib/api/ratel/call';
-import { spaceDaoKeys } from '@/constants';
+import { spaceIncentiveKeys } from '@/constants';
 
-type RefreshSpaceDaoTokensResponse = {
+type RefreshSpaceIncentiveTokensResponse = {
   updated: number;
   last_block: number;
 };
 
-export function useRefreshSpaceDaoTokensMutation(spacePk: string) {
+export function useRefreshSpaceIncentiveTokensMutation(spacePk: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async () => {
-      return call<void, RefreshSpaceDaoTokensResponse>(
+      return call<void, RefreshSpaceIncentiveTokensResponse>(
         'POST',
         `/v3/spaces/${encodeURIComponent(spacePk)}/incentives/tokens/refresh`,
       );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: spaceDaoKeys.tokens(spacePk),
+        queryKey: spaceIncentiveKeys.tokens(spacePk),
       });
     },
   });

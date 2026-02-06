@@ -26,7 +26,7 @@ export interface I18nSpaceLayout extends Record<Label, string> {
   menu_boards: string;
   menu_members: string;
   menu_files: string;
-  menu_dao: string;
+  menu_incentive_setting: string;
   menu_incentive: string;
   menu_quiz: string;
   menu_recommendations: string;
@@ -120,7 +120,7 @@ export const i18nSpaceLayout = {
     menu_boards: 'Boards',
     menu_members: 'Members',
     menu_files: 'Files',
-    menu_dao: 'DAO',
+    menu_incentive_setting: 'Incentive Setting',
     menu_incentive: 'Incentives',
     menu_quiz: 'Quizzes',
     menu_recommendations: 'Recommendations',
@@ -227,7 +227,7 @@ export const i18nSpaceLayout = {
     menu_boards: '게시판',
     menu_members: '멤버',
     menu_files: '파일',
-    menu_dao: 'DAO',
+    menu_incentive_setting: '인센티브 설정',
     menu_incentive: '인센티브',
     menu_quiz: '퀴즈',
     menu_recommendations: '권고사항',
@@ -337,7 +337,7 @@ export function useSpaceLayoutI18n() {
     menu_boards: t('menu_boards'),
     menu_members: t('menu_members'),
     menu_files: t('menu_files'),
-    menu_dao: t('menu_dao'),
+    menu_incentive_setting: t('menu_incentive_setting'),
     menu_incentive: t('menu_incentive'),
     menu_quiz: t('menu_quiz'),
     menu_recommendations: t('menu_recommendations'),
