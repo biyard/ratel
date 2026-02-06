@@ -128,6 +128,7 @@ jobs:
           REDIRECT_DOMAIN: https://dev.ratel.foundation
 
           KAIA_ENDPOINT: https://public-en-kairos.node.kaia.io
+          KAIA_ARCHIVE_ENDPOINT: https://archive-en-kairos.node.kaia.io
           KAIA_FEEPAYER_KEY: ${{ secrets.DEV_KAIA_KEY }}
           KAIA_FEEPAYER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
           KAIA_OWNER_KEY: ${{ secrets.DEV_KAIA_KEY }}

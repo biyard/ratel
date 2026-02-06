@@ -11,7 +11,6 @@ import { config } from '@/config';
 import { route } from '@/route';
 import { SpaceType } from '../types/space-type';
 import { Space } from '../types/space';
-import { UserType } from '@/lib/api/ratel/users.v3';
 
 export type SideMenu = {
   Icon: React.ComponentType<React.ComponentProps<'svg'>>;
@@ -32,7 +31,8 @@ export enum Label {
   Boards = 'menu_boards',
   Members = 'menu_members',
   Files = 'menu_files',
-  Dao = 'menu_dao',
+  IncentiveSetting = 'menu_incentive_setting',
+  Incentive = 'menu_incentive',
   Quiz = 'menu_quiz',
   AdminSettings = 'menu_admin_settings',
   Rewards = 'menu_rewards',
@@ -124,12 +124,18 @@ export const SPACE_MENUS: Record<SpaceType, SideMenu[]> = {
     },
     {
       Icon: Discuss,
-      to: (space) => route.spaceDao(space.pk),
+      to: (space) => route.spaceIncentiveSetting(space.pk),
+      visible: (space) => config.experiment && space.isAdmin(),
+      label: Label.IncentiveSetting,
+    },
+    {
+      Icon: Discuss,
+      to: (space) => route.spaceIncentive(space.pk),
       visible: (space) =>
         config.experiment &&
-        space.authorType === UserType.Team &&
-        (space.isAdmin() || Boolean(space.daoAddress)),
-      label: Label.Dao,
+        (space.isAdmin() || Boolean(space.incentiveAddress)) &&
+        space.isFinished,
+      label: Label.Incentive,
     },
     {
       Icon: User,

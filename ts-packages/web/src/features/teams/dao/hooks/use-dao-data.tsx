@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { useSuspenseFindTeam } from '@/features/teams/hooks/use-find-team';
-import { useSuspenseTeamMembers } from '@/features/teams/hooks/use-team-members';
+import { useFindTeam } from '@/features/teams/hooks/use-find-team';
+import { useTeamMembers } from '@/features/teams/hooks/use-team-members';
 import { TeamMember } from '@/features/teams/types/team_member';
 import { TeamGroupPermissions } from '@/features/auth/utils/team-group-permissions';
 
@@ -8,13 +8,15 @@ export interface EligibleAdmin extends TeamMember {
   evm_address: string;
 }
 
-export function useDaoData(username: string) {
-  const { data: team } = useSuspenseFindTeam(username);
-  const { data: membersResponse } = useSuspenseTeamMembers(username);
+export function useDaoData(username: string, enabled = true) {
+  const { data: team } = useFindTeam(enabled ? username : undefined);
+  const { data: membersResponse } = useTeamMembers(
+    enabled ? username : undefined,
+  );
 
   const members = useMemo(
-    () => membersResponse?.items ?? [],
-    [membersResponse?.items],
+    () => (enabled ? (membersResponse?.items ?? []) : []),
+    [membersResponse?.items, enabled],
   );
 
   const eligibleAdmins = useMemo(() => {
@@ -36,7 +38,7 @@ export function useDaoData(username: string) {
     });
   }, [members]);
 
-  const permissions = team.permissions
+  const permissions = team?.permissions
     ? new TeamGroupPermissions(team.permissions)
     : null;
 

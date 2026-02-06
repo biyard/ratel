@@ -82,6 +82,7 @@ impl Config {
 #[derive(Debug, Clone, Copy)]
 pub struct KaiaConfig {
     pub endpoint: &'static str,
+    pub archive_endpoint: &'static str,
     pub owner_key: &'static str,
     pub owner_address: &'static str,
     pub feepayer_key: &'static str,
@@ -107,6 +108,8 @@ impl Default for Config {
             kaia: KaiaConfig {
                 endpoint: option_env!("KAIA_ENDPOINT")
                     .unwrap_or("https://public-en-kairos.node.kaia.io"),
+                archive_endpoint: option_env!("KAIA_ARCHIVE_ENDPOINT")
+                    .unwrap_or("https://archive-en-kairos.node.kaia.io"),
                 owner_key: option_env!("KAIA_OWNER_KEY").expect("You must set KAIA_OWNER_KEY"),
                 owner_address: option_env!("KAIA_OWNER_ADDR")
                     .expect("You must set KAIA_OWNER_ADDRESS"),
@@ -153,8 +156,7 @@ impl Default for Config {
                     .expect("You must set NOVA_MICRO_MODEL_ID"),
                 nova_lite_model_id: option_env!("NOVA_LITE_MODEL_ID")
                     .expect("You must set NOVA_LITE_MODEL_ID"),
-                agent_id: option_env!("BEDROCK_AGENT_ID")
-                    .expect("You must set BEDROCK_AGENT_ID"),
+                agent_id: option_env!("BEDROCK_AGENT_ID").expect("You must set BEDROCK_AGENT_ID"),
                 agent_alias_id: option_env!("BEDROCK_AGENT_ALIAS_ID")
                     .expect("You must set BEDROCK_AGENT_ALIAS_ID"),
             },

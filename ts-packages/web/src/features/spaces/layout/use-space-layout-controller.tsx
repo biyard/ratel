@@ -30,6 +30,7 @@ import PublishSpaceModal, { PublishType } from './modals/space-publish-modal';
 import SpaceDeleteModal from './modals/space-delete-modal';
 import SpaceStartModal from './modals/space-start-modal';
 import { LoginModal } from '@/components/popup/login-popup';
+import { useFinishSpaceMutation } from '../hooks/use-finish-mutation';
 
 export type SideMenuProps = {
   Icon: React.ComponentType<React.ComponentProps<'svg'>>;
@@ -85,7 +86,7 @@ export function useSpaceLayoutController(
   const popup = usePopup();
   const publishSpace = usePublishSpaceMutation();
   const startSpace = useStartSpaceMutation();
-  // const finishSpace = useFinishSpaceMutation();
+  const finishSpace = useFinishSpaceMutation();
   const deleteSpace = useDeleteSpaceMutation();
   const participateSpace = useParticipateSpaceMutation();
   const updateSpaceTitle = useSpaceUpdateTitleMutation();
@@ -233,21 +234,27 @@ export function useSpaceLayoutController(
     i18n.toast_start_failed,
   ]);
 
-  // const handleFinish = useCallback(async () => {
-  //   try {
-  //     await finishSpace.mutateAsync({
-  //       spacePk: space.pk,
-  //       block: true,
-  //     });
+  const handleActionFinish = useCallback(async () => {
+    try {
+      await finishSpace.mutateAsync({
+        spacePk: space.pk,
+        block: true,
+      });
 
-  //     showSuccessToast(t('success_finish_space'));
-  //   } catch (err) {
-  //     logger.error('finish space failed: ', err);
-  //     showErrorToast(t('failed_finish_space'));
-  //   } finally {
-  //     popup.close();
-  //   }
-  // }, [space.pk, finishSpace, popup, t]);
+      showSuccessToast(i18n.toast_finish_success);
+    } catch (err) {
+      logger.error('finish space failed: ', err);
+      showErrorToast(i18n.toast_finish_failed);
+    } finally {
+      popup.close();
+    }
+  }, [
+    space.pk,
+    finishSpace,
+    popup,
+    i18n.toast_finish_success,
+    i18n.toast_finish_failed,
+  ]);
 
   const handleDelete = useCallback(async () => {
     try {
@@ -340,12 +347,12 @@ export function useSpaceLayoutController(
       });
     }
 
-    // if (space.isStarted) {
-    //   ret.unshift({
-    //     label: t('finished'),
-    //     onClick: handleFinish,
-    //   });
-    // }
+    if (space.isStarted) {
+      ret.unshift({
+        label: i18n.action_admin_finish,
+        onClick: handleActionFinish,
+      });
+    }
 
     if (space.isDraft) {
       ret.unshift({

@@ -118,7 +118,8 @@ export const spaceKeys = {
     [...spaceKeys.detail(spacePk), 'topics'] as const,
 
   files: (spacePk: string) => [...spaceKeys.detail(spacePk), 'files'] as const,
-  file_links: (spacePk: string) => [...spaceKeys.files(spacePk), 'links'] as const,
+  file_links: (spacePk: string) =>
+    [...spaceKeys.files(spacePk), 'links'] as const,
 
   recommendations: (spacePk: string) =>
     [...spaceKeys.detail(spacePk), 'recommendations'] as const,
@@ -158,6 +159,18 @@ export const spaceKeys = {
 
   rewards: (spacePk: string) =>
     [...spaceKeys.detail(spacePk), 'rewards'] as const,
+};
+
+// Space Incentive query keys
+export const spaceIncentiveKeys = {
+  incentive: (spacePk: string) =>
+    [...spaceKeys.detail(spacePk), 'incentive'] as const,
+  candidates: (spacePk: string) =>
+    [...spaceIncentiveKeys.incentive(spacePk), 'candidates'] as const,
+  incentiveBase: (spacePk: string) =>
+    [...spaceIncentiveKeys.incentive(spacePk), 'user'] as const,
+  tokens: (spacePk: string) =>
+    [...spaceIncentiveKeys.incentive(spacePk), 'tokens'] as const,
 };
 
 const QK_TEAMS = 'teams';

@@ -63,8 +63,10 @@ pub enum EntityType {
     // Space common entity types
     // SPACE_PK index is aligned by gsi2-index
     SpaceCommon,
-    SpaceDao,
-    SpaceDaoSample(String),
+    SpaceIncentive,
+    SpaceIncentiveUser(String),
+    SpaceIncentiveScore(String),
+    SpaceIncentiveToken(String),
     SpaceParticipant,
     SpaceInvitation,
     SpaceTemplate(String),          // template name
@@ -177,6 +179,8 @@ pub enum EntityType {
     Reward(String), // Type
 
     ContentReport,
+
+    Cursor,
 }
 
 impl TryInto<Partition> for EntityType {
