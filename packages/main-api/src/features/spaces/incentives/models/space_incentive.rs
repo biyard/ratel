@@ -47,8 +47,4 @@ impl SpaceIncentive {
             total_count: 0,
         }
     }
-
-    pub fn compose_type_sk(key: impl std::fmt::Display) -> String {
-        key.to_string()
-    }
 }

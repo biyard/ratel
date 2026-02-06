@@ -34,7 +34,7 @@ impl SpaceIncentiveToken {
     ) -> Self {
         let token_address = token_address.to_string();
         Self {
-            pk: Self::compose_pk(incentive_address),
+            pk: Partition::SpaceIncentive(incentive_address.to_string().to_lowercase()),
             sk: EntityType::SpaceIncentiveToken(token_address.clone()),
             token_address,
             symbol,
@@ -44,21 +44,18 @@ impl SpaceIncentiveToken {
         }
     }
 
-    pub fn compose_pk(incentive_address: impl std::fmt::Display) -> Partition {
-        Partition::SpaceIncentive(incentive_address.to_string().to_lowercase())
-    }
-
-    pub fn compose_sk(key: impl std::fmt::Display) -> String {
-        key.to_string()
-    }
-
     pub async fn find_by_incentive_address(
         cli: &aws_sdk_dynamodb::Client,
         incentive_address: &str,
         opt: SpaceIncentiveTokenQueryOption,
     ) -> crate::Result<(Vec<Self>, Option<String>)> {
         let opt = opt.sk(EntityType::SpaceIncentiveToken(String::new()).to_string());
-        Self::query(cli, Self::compose_pk(incentive_address), opt).await
+        Self::query(
+            cli,
+            Partition::SpaceIncentive(incentive_address.to_string().to_lowercase()),
+            opt,
+        )
+        .await
     }
 
     pub async fn list_token_addresses(
@@ -66,7 +63,8 @@ impl SpaceIncentiveToken {
         incentive_address: impl std::fmt::Display,
     ) -> crate::Result<HashSet<String>> {
         let (items, _) =
-            Self::find_by_incentive_address(cli, &incentive_address.to_string(), Self::opt_all()).await?;
+            Self::find_by_incentive_address(cli, &incentive_address.to_string(), Self::opt_all())
+                .await?;
         Ok(items.into_iter().map(|item| item.token_address).collect())
     }
 
