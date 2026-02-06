@@ -323,10 +323,10 @@ pub enum Error {
     #[error("attribute code not found")]
     AttributeCodeNotFound,
 
-    // Dao errors 11,050 ~
-    #[error("Not Found DAO")]
+    // Incentive errors 11,050 ~
+    #[error("Not Found Incentive")]
     #[rest_error(code = 10000)]
-    DaoNotFound,
+    IncentiveNotFound,
 
     #[error("analyze not found")]
     AnalyzeNotFound,

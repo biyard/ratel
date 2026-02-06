@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use crate::config;
 use crate::controllers::v3::spaces::{SpacePath, SpacePathParam};
-use crate::features::spaces::{SpaceDao, SpaceDaoToken};
+use crate::features::spaces::{SpaceIncentive, SpaceIncentiveToken};
 use crate::types::{EntityType, Permissions, TeamGroupPermission};
 use crate::utils::evm_token::{fetch_token_state, fetch_transfer_logs, format_addr, parse_address};
 use crate::{AppState, Error};
@@ -14,24 +14,25 @@ use ethers::providers::{Http, Middleware, Provider};
 use ethers::types::{Address, U64};
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
-pub struct RefreshSpaceDaoTokensResponse {
+pub struct RefreshSpaceIncentiveTokensResponse {
     pub updated: i64,
     pub last_block: i64,
 }
 
-pub async fn refresh_space_dao_tokens_handler(
+pub async fn refresh_space_incentive_tokens_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(permissions): NoApi<Permissions>,
     Path(SpacePathParam { space_pk }): SpacePath,
-) -> Result<Json<RefreshSpaceDaoTokensResponse>, Error> {
+) -> Result<Json<RefreshSpaceIncentiveTokensResponse>, Error> {
     permissions.permitted(TeamGroupPermission::SpaceRead)?;
 
-    let dao = SpaceDao::get(&dynamo.client, &space_pk, Some(EntityType::SpaceDao)).await?;
-    let Some(dao) = dao else {
-        return Err(Error::DaoNotFound);
+    let incentive =
+        SpaceIncentive::get(&dynamo.client, &space_pk, Some(EntityType::SpaceIncentive)).await?;
+    let Some(incentive) = incentive else {
+        return Err(Error::IncentiveNotFound);
     };
 
-    let dao_addr = parse_address(&dao.contract_address)?;
+    let incentive_addr = parse_address(&incentive.contract_address)?;
 
     let conf = config::get();
     let provider = Provider::<Http>::try_from(conf.kaia.archive_endpoint).map_err(|err| {
@@ -39,16 +40,16 @@ pub async fn refresh_space_dao_tokens_handler(
         Error::InternalServerError("archive provider init failed".to_string())
     })?;
 
-    let mut last_block = if dao.last_block > 0 {
-        U64::from(dao.last_block as u64)
-    } else if dao.deploy_block > 0 {
-        U64::from(dao.deploy_block as u64)
+    let mut last_block = if incentive.last_block > 0 {
+        U64::from(incentive.last_block as u64)
+    } else if incentive.deploy_block > 0 {
+        U64::from(incentive.deploy_block as u64)
     } else {
         U64::from(0)
     };
 
     if last_block.is_zero() {
-        return Ok(Json(RefreshSpaceDaoTokensResponse {
+        return Ok(Json(RefreshSpaceIncentiveTokensResponse {
             updated: 0,
             last_block: 0,
         }));
@@ -62,17 +63,19 @@ pub async fn refresh_space_dao_tokens_handler(
     let mut updated = 0;
 
     if last_block < latest {
-        let logs = fetch_transfer_logs(&provider, dao_addr, last_block + 1, latest).await?;
-        let mut token_set = load_existing_tokens(&dynamo.client, dao_addr).await?;
+        let logs =
+            fetch_transfer_logs(&provider, incentive_addr, last_block + 1, latest).await?;
+        let mut token_set = load_existing_tokens(&dynamo.client, incentive_addr).await?;
         for log in logs {
             token_set.insert(log.address);
         }
 
         for token in token_set {
-            let (symbol, decimals, balance) = fetch_token_state(&provider, token, dao_addr).await;
-            SpaceDaoToken::upsert_balance(
+            let (symbol, decimals, balance) =
+                fetch_token_state(&provider, token, incentive_addr).await;
+            SpaceIncentiveToken::upsert_balance(
                 &dynamo.client,
-                format_addr(dao_addr),
+                format_addr(incentive_addr),
                 format_addr(token),
                 symbol.to_string(),
                 decimals as i64,
@@ -83,14 +86,14 @@ pub async fn refresh_space_dao_tokens_handler(
             updated += 1;
         }
 
-        let mut updated_dao = dao.clone();
-        updated_dao.last_block = latest.as_u64() as i64;
-        updated_dao.updated_at = chrono::Utc::now().timestamp_millis();
-        updated_dao.upsert(&dynamo.client).await?;
+        let mut updated_incentive = incentive.clone();
+        updated_incentive.last_block = latest.as_u64() as i64;
+        updated_incentive.updated_at = chrono::Utc::now().timestamp_millis();
+        updated_incentive.upsert(&dynamo.client).await?;
         last_block = latest;
     }
 
-    Ok(Json(RefreshSpaceDaoTokensResponse {
+    Ok(Json(RefreshSpaceIncentiveTokensResponse {
         updated,
         last_block: last_block.as_u64() as i64,
     }))
@@ -98,10 +101,11 @@ pub async fn refresh_space_dao_tokens_handler(
 
 async fn load_existing_tokens(
     cli: &aws_sdk_dynamodb::Client,
-    dao_addr: Address,
+    incentive_addr: Address,
 ) -> Result<HashSet<Address>, Error> {
     let mut token_set = HashSet::new();
-    let items = SpaceDaoToken::list_token_addresses(cli, format_addr(dao_addr)).await?;
+    let items =
+        SpaceIncentiveToken::list_token_addresses(cli, format_addr(incentive_addr)).await?;
     for token_address in items {
         if let Ok(parsed) = token_address.parse::<Address>() {
             token_set.insert(parsed);

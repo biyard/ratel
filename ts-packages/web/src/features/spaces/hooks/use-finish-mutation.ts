@@ -17,7 +17,7 @@ type SpaceDaoCandidateResponse = {
 };
 
 type SpaceDaoCandidateListResponse = {
-  dao_address: string | null;
+  incentive_address: string | null;
   candidates: SpaceDaoCandidateResponse[];
 };
 
@@ -34,12 +34,12 @@ export function useFinishSpaceMutation<T extends SpaceCommon>() {
     }) => {
       const res = await call<void, SpaceDaoCandidateListResponse>(
         'GET',
-        `/v3/spaces/${encodeURIComponent(spacePk)}/dao/candidates`,
+        `/v3/spaces/${encodeURIComponent(spacePk)}/incentives/candidates`,
       );
-      const daoAddress = res?.dao_address ?? null;
+      const incentiveAddress = res?.incentive_address ?? null;
       const candidates = res?.candidates ?? [];
 
-      if (daoAddress && candidates.length > 0) {
+      if (incentiveAddress && candidates.length > 0) {
         const signer = await getKaiaSigner(
           config.env === 'prod' ? 'mainnet' : 'testnet',
         );
@@ -50,16 +50,16 @@ export function useFinishSpaceMutation<T extends SpaceCommon>() {
           typeof item.score === 'number' ? item.score : 0,
         );
         await service.selectIncentiveRecipients(
-          daoAddress,
+          incentiveAddress,
           candidates.map((item) => item.evm_address),
           scores,
         );
         const selectedAddresses =
-          await service.getIncentiveRecipients(daoAddress);
+          await service.getIncentiveRecipients(incentiveAddress);
         if (selectedAddresses.length > 0) {
           await call(
             'POST',
-            `/v3/spaces/${encodeURIComponent(spacePk)}/dao/incentive`,
+            `/v3/spaces/${encodeURIComponent(spacePk)}/incentives/user`,
             { incentive_addresses: selectedAddresses },
           );
         }

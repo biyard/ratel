@@ -14,7 +14,7 @@ export function useRefreshSpaceDaoTokensMutation(spacePk: string) {
     mutationFn: async () => {
       return call<void, RefreshSpaceDaoTokensResponse>(
         'POST',
-        `/v3/spaces/${encodeURIComponent(spacePk)}/dao/tokens/refresh`,
+        `/v3/spaces/${encodeURIComponent(spacePk)}/incentives/tokens/refresh`,
       );
     },
     onSuccess: () => {

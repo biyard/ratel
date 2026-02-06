@@ -26,7 +26,7 @@ export function useCreateSpaceDaoMutation() {
     }) => {
       return call<CreateSpaceDaoRequest, SpaceDaoResponse>(
         'POST',
-        `/v3/spaces/${encodeURIComponent(spacePk)}/dao`,
+        `/v3/spaces/${encodeURIComponent(spacePk)}/incentives`,
         req,
       );
     },

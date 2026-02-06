@@ -1,16 +1,16 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::features::spaces::{SpaceDaoCandidate, SpaceDaoIncentiveScore};
+use crate::features::spaces::{SpaceIncentiveCandidate, SpaceIncentiveScore};
 use crate::features::spaces::SpaceParticipant;
 use crate::models::user::UserEvmAddress;
 use crate::types::EntityType;
 use crate::Result;
 use bdk::prelude::*;
 
-pub async fn collect_space_dao_candidate_addresses(
+pub async fn collect_space_incentive_candidate_addresses(
     cli: &aws_sdk_dynamodb::Client,
     space_pk: &crate::types::Partition,
-) -> Result<Vec<SpaceDaoCandidate>> {
+) -> Result<Vec<SpaceIncentiveCandidate>> {
     let (participants, _bookmark) =
         SpaceParticipant::find_by_space(cli, space_pk, SpaceParticipant::opt_all()).await?;
 
@@ -41,7 +41,7 @@ pub async fn collect_space_dao_candidate_addresses(
 
     let mut seen_addresses = HashSet::new();
     let (scores, _) =
-        SpaceDaoIncentiveScore::find_by_space(cli, space_pk, SpaceDaoIncentiveScore::opt_all())
+        SpaceIncentiveScore::find_by_space(cli, space_pk, SpaceIncentiveScore::opt_all())
             .await?;
     let mut score_map: HashMap<String, i64> = HashMap::new();
     for item in scores {
@@ -54,7 +54,7 @@ pub async fn collect_space_dao_candidate_addresses(
         if let Some(evm_address) = evm_map.get(&key) {
             if seen_addresses.insert(evm_address.clone()) {
                 let score = score_map.get(&key).copied().unwrap_or(0);
-                candidates.push(SpaceDaoCandidate {
+                candidates.push(SpaceIncentiveCandidate {
                     user_pk: key,
                     username: participant.username,
                     display_name: participant.display_name,

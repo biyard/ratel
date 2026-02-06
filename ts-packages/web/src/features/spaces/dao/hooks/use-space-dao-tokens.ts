@@ -37,7 +37,7 @@ export function useSpaceDaoTokens(
       const query = params.toString();
       return call<void, SpaceDaoTokenListResponse>(
         'GET',
-        `/v3/spaces/${encodeURIComponent(spacePk)}/dao/tokens${
+        `/v3/spaces/${encodeURIComponent(spacePk)}/incentives/tokens${
           query ? `?${query}` : ''
         }`,
       );

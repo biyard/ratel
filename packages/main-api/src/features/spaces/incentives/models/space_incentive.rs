@@ -13,7 +13,7 @@ use bdk::prelude::*;
     schemars::JsonSchema,
     aide::OperationIo,
 )]
-pub struct SpaceDao {
+pub struct SpaceIncentive {
     pub pk: Partition,
     pub sk: EntityType,
 
@@ -32,12 +32,12 @@ pub struct SpaceDao {
     pub total_count: i64,
 }
 
-impl SpaceDao {
+impl SpaceIncentive {
     pub fn new(space_pk: SpacePartition, contract_address: String, deploy_block: i64) -> Self {
         let now = get_now_timestamp_millis();
         Self {
             pk: space_pk.into(),
-            sk: EntityType::SpaceDao,
+            sk: EntityType::SpaceIncentive,
             created_at: now,
             updated_at: now,
             contract_address,

@@ -25,7 +25,7 @@ pub fn format_addr(addr: Address) -> String {
 
 pub async fn fetch_transfer_logs(
     provider: &Provider<Http>,
-    dao_addr: Address,
+    contract_addr: Address,
     from: U64,
     to: U64,
 ) -> Result<Vec<Log>, Error> {
@@ -34,7 +34,7 @@ pub async fn fetch_transfer_logs(
 
     let from_block = BlockNumber::Number(from);
     let to_block = BlockNumber::Number(to);
-    let topic_addr = H256::from(dao_addr);
+    let topic_addr = H256::from(contract_addr);
 
     let filter_from = Filter::new()
         .topic0(transfer_sig)
@@ -72,7 +72,7 @@ pub async fn fetch_transfer_logs(
 pub async fn fetch_token_state(
     provider: &Provider<Http>,
     token: Address,
-    dao_addr: Address,
+    contract_addr: Address,
 ) -> (String, u8, U256) {
     let contract = ERC20Minimal::new(token, Arc::new(provider.clone()));
     let symbol = contract
@@ -82,7 +82,7 @@ pub async fn fetch_token_state(
         .unwrap_or_else(|_| format_addr(token));
     let decimals = contract.decimals().call().await.unwrap_or(18);
     let balance = contract
-        .balance_of(dao_addr)
+        .balance_of(contract_addr)
         .call()
         .await
         .unwrap_or_default();

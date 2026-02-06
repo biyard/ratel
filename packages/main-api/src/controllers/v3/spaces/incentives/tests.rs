@@ -1,5 +1,5 @@
 use crate::controllers::v3::spaces::tests::setup_space;
-use crate::features::spaces::{SpaceDao, SpaceDaoIncentiveUser, SpaceParticipant};
+use crate::features::spaces::{SpaceIncentive, SpaceIncentiveUser, SpaceParticipant};
 use crate::models::user::UserEvmAddress;
 use crate::types::*;
 use crate::tests::v3_setup::TestContextV3;
@@ -7,19 +7,19 @@ use crate::*;
 use std::str::FromStr;
 
 #[tokio::test]
-async fn test_create_space_dao() {
+async fn test_create_space_incentive() {
     let (ctx, space_pk) = setup_space(SpaceType::Poll).await;
     let TestContextV3 { app, test_user, .. } = ctx;
 
     let (status, _headers, body) = post! {
         app: app,
-        path: format!("/v3/spaces/{}/dao", space_pk.to_string()),
+        path: format!("/v3/spaces/{}/incentives", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
             "contract_address": "0x0000000000000000000000000000000000000001",
             "deploy_block": 100
         },
-        response_type: SpaceDao
+        response_type: SpaceIncentive
     };
 
     assert_eq!(status, 200);
@@ -31,26 +31,26 @@ async fn test_create_space_dao() {
 }
 
 #[tokio::test]
-async fn test_get_space_dao() {
+async fn test_get_space_incentive() {
     let (ctx, space_pk) = setup_space(SpaceType::Poll).await;
     let TestContextV3 { app, test_user, .. } = ctx;
 
     let (_status, _headers, _body) = post! {
         app: app,
-        path: format!("/v3/spaces/{}/dao", space_pk.to_string()),
+        path: format!("/v3/spaces/{}/incentives", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
             "contract_address": "0x0000000000000000000000000000000000000002",
             "deploy_block": 0
         },
-        response_type: SpaceDao
+        response_type: SpaceIncentive
     };
 
     let (status, _headers, body) = get! {
         app: app,
-        path: format!("/v3/spaces/{}/dao", space_pk.to_string()),
+        path: format!("/v3/spaces/{}/incentives", space_pk.to_string()),
         headers: test_user.1.clone(),
-        response_type: SpaceDao
+        response_type: SpaceIncentive
     };
 
     assert_eq!(status, 200);
@@ -62,13 +62,13 @@ async fn test_get_space_dao() {
 }
 
 #[tokio::test]
-async fn test_get_space_dao_not_found() {
+async fn test_get_space_incentive_not_found() {
     let (ctx, space_pk) = setup_space(SpaceType::Poll).await;
     let TestContextV3 { app, test_user, .. } = ctx;
 
     let (status, _headers, _body) = get! {
         app: app,
-        path: format!("/v3/spaces/{}/dao", space_pk.to_string()),
+        path: format!("/v3/spaces/{}/incentives", space_pk.to_string()),
         headers: test_user.1.clone(),
         response_type: serde_json::Value
     };
@@ -77,7 +77,7 @@ async fn test_get_space_dao_not_found() {
 }
 
 #[tokio::test]
-async fn test_create_and_get_space_dao_incentive() {
+async fn test_create_and_get_space_incentive_user() {
     let (ctx, space_pk) = setup_space(SpaceType::Poll).await;
     let user2 = ctx.create_another_user().await;
     let TestContextV3 {
@@ -89,13 +89,13 @@ async fn test_create_and_get_space_dao_incentive() {
 
     let (_status, _headers, _body) = post! {
         app: app,
-        path: format!("/v3/spaces/{}/dao", space_pk.to_string()),
+        path: format!("/v3/spaces/{}/incentives", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
             "contract_address": "0x0000000000000000000000000000000000000001",
             "deploy_block": 100
         },
-        response_type: SpaceDao
+        response_type: SpaceIncentive
     };
 
     let space_partition = Partition::from_str(&space_pk).unwrap();
@@ -131,12 +131,12 @@ async fn test_create_and_get_space_dao_incentive() {
 
     let (status, _headers, body) = post! {
         app: app,
-        path: format!("/v3/spaces/{}/dao/incentive", space_pk.to_string()),
+        path: format!("/v3/spaces/{}/incentives/user", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
             "incentive_addresses": [evm1.clone(), evm2.clone()]
         },
-        response_type: Vec<SpaceDaoIncentiveUser>
+        response_type: Vec<SpaceIncentiveUser>
     };
 
     assert_eq!(status, 200);
@@ -144,7 +144,7 @@ async fn test_create_and_get_space_dao_incentive() {
 
     let (status, _headers, body) = get! {
         app: app,
-        path: format!("/v3/spaces/{}/dao/incentive", space_pk.to_string()),
+        path: format!("/v3/spaces/{}/incentives/user", space_pk.to_string()),
         headers: test_user.1.clone(),
         response_type: serde_json::Value
     };
@@ -156,7 +156,7 @@ async fn test_create_and_get_space_dao_incentive() {
 }
 
 #[tokio::test]
-async fn test_update_space_dao_incentive() {
+async fn test_update_space_incentive_user() {
     let (ctx, space_pk) = setup_space(SpaceType::Poll).await;
     let user2 = ctx.create_another_user().await;
     let TestContextV3 {
@@ -168,13 +168,13 @@ async fn test_update_space_dao_incentive() {
 
     let (_status, _headers, _body) = post! {
         app: app,
-        path: format!("/v3/spaces/{}/dao", space_pk.to_string()),
+        path: format!("/v3/spaces/{}/incentives", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
             "contract_address": "0x0000000000000000000000000000000000000002",
             "deploy_block": 100
         },
-        response_type: SpaceDao
+        response_type: SpaceIncentive
     };
 
     let space_partition = Partition::from_str(&space_pk).unwrap();
@@ -210,23 +210,23 @@ async fn test_update_space_dao_incentive() {
 
     let (_status, _headers, body) = post! {
         app: app,
-        path: format!("/v3/spaces/{}/dao/incentive", space_pk.to_string()),
+        path: format!("/v3/spaces/{}/incentives/user", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
             "incentive_addresses": [evm1.clone(), evm2.clone()]
         },
-        response_type: Vec<SpaceDaoIncentiveUser>
+        response_type: Vec<SpaceIncentiveUser>
     };
 
     let (status, _headers, updated) = patch! {
         app: app,
-        path: format!("/v3/spaces/{}/dao/incentive", space_pk.to_string()),
+        path: format!("/v3/spaces/{}/incentives/user", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
             "incentive_sk": body[0].sk.to_string(),
             "incentive_distributed": true
         },
-        response_type: Vec<SpaceDaoIncentiveUser>
+        response_type: Vec<SpaceIncentiveUser>
     };
 
     assert_eq!(status, 200);
@@ -234,7 +234,7 @@ async fn test_update_space_dao_incentive() {
 
     let (status, _headers, body) = get! {
         app: app,
-        path: format!("/v3/spaces/{}/dao/incentive", space_pk.to_string()),
+        path: format!("/v3/spaces/{}/incentives/user", space_pk.to_string()),
         headers: test_user.1.clone(),
         response_type: serde_json::Value
     };
