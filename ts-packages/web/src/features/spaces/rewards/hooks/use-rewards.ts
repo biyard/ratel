@@ -20,7 +20,7 @@ export function useRewards(action?: RewardAction) {
       : rewardsKeys.rewards(),
     queryFn: async (): Promise<Reward[]> => {
       try {
-        const path = `/v3/rewards${action ? `?action=${action}` : ''}`;
+        const path = `/v3/rewards${action ? `?action=${action.toLowerCase()}` : ''}`;
         const ret: ListResponse<Reward> = await call('GET', path);
         return ret.items;
       } catch (e) {

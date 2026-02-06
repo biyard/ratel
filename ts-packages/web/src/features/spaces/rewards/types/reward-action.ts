@@ -5,15 +5,6 @@ export enum RewardAction {
 
 import { RewardUserBehavior } from './reward-user-behavior';
 
-export function getRewardActionI18nKey(type: RewardAction): string {
-  switch (type) {
-    case RewardAction.Poll:
-      return 'poll';
-    default:
-      return 'unknown';
-  }
-}
-
 export function getRewardUserBehaviorFromAction(
   action: RewardAction,
 ): RewardUserBehavior[] {

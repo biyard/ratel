@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { SpaceRewardResponse } from '../types';
 import { Edit2Icon, Trash2Icon } from 'lucide-react';
 import { SpaceRewardsI18n } from '../i18n';
-import { getRewardUserBehaviorI18nKey } from '../types/reward-user-behavior';
+import { useRewardBehaviorLabel } from '../types/reward-i18n';
 
 interface RewardCardProps {
   i18n: SpaceRewardsI18n;
@@ -19,6 +19,7 @@ export function RewardCard({
   onDelete,
 }: RewardCardProps) {
   const t = i18n.settings;
+  const getBehaviorLabel = useRewardBehaviorLabel();
   return (
     <div
       data-testid="reward-card"
@@ -28,9 +29,7 @@ export function RewardCard({
         <div className="flex justify-between items-start">
           <div className="flex-1">
             <h4 className="text-lg font-semibold text-c-wg-100">
-              {t[
-                getRewardUserBehaviorI18nKey(reward.behavior) as keyof typeof t
-              ] || reward.behavior}
+              {getBehaviorLabel(reward.behavior)}
             </h4>
             {reward.description && (
               <p className="text-sm text-c-wg-60 mt-1">{reward.description}</p>

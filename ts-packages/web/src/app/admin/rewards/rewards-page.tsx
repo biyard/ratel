@@ -12,67 +12,15 @@ import {
   getConditionType,
   getConditionValue,
 } from '@/features/spaces/rewards/types';
+import {
+  useRewardBehaviorLabel,
+  useRewardPeriodLabel,
+  useRewardConditionLabel,
+} from '@/features/spaces/rewards/types';
 import { UpdateRewardRequest } from './hooks/use-update-reward-mutation';
 import { Reward } from '@/features/spaces/rewards/hooks/use-rewards';
 
 type TabType = 'rules' | 'transactions';
-
-function getBehaviorLabel(
-  behavior: RewardUserBehavior,
-  i18n: AdminRewardsI18n,
-): string {
-  switch (behavior) {
-    case RewardUserBehavior.RespondPoll:
-      return i18n.actionPollRespond;
-    default:
-      return i18n.actionNone;
-  }
-}
-
-function getPeriodLabel(period: RewardPeriod, i18n: AdminRewardsI18n): string {
-  switch (period) {
-    case RewardPeriod.Once:
-      return i18n.periodOnce;
-    case RewardPeriod.Hourly:
-      return i18n.periodHourly;
-    case RewardPeriod.Daily:
-      return i18n.periodDaily;
-    case RewardPeriod.Weekly:
-      return i18n.periodWeekly;
-    case RewardPeriod.Monthly:
-      return i18n.periodMonthly;
-    case RewardPeriod.Yearly:
-      return i18n.periodYearly;
-    case RewardPeriod.Unlimited:
-      return i18n.periodUnlimited;
-    default:
-      return period;
-  }
-}
-
-function getConditionLabel(
-  condition: RewardCondition,
-  i18n: AdminRewardsI18n,
-): string {
-  const conditionType = getConditionType(condition);
-  const conditionValue = getConditionValue(condition);
-  if (conditionType === ConditionType.None) {
-    return i18n.conditionNone;
-  }
-  if (conditionType === ConditionType.MaxClaims) {
-    return `${i18n.conditionMaxClaims}: ${conditionValue}`;
-  }
-  if (conditionType === ConditionType.MaxPoints) {
-    return `${i18n.conditionMaxPoints}: ${conditionValue}`;
-  }
-  if (conditionType === ConditionType.MaxUserClaims) {
-    return `${i18n.conditionMaxUserClaims}: ${conditionValue}`;
-  }
-  if (conditionType === ConditionType.MaxUserPoints) {
-    return `${i18n.conditionMaxUserPoints}: ${conditionValue}`;
-  }
-  return String(condition);
-}
 
 function RewardTable({
   rewards,
@@ -83,6 +31,10 @@ function RewardTable({
   onEdit: (reward: Reward) => void;
   i18n: AdminRewardsI18n;
 }) {
+  const getBehaviorLabel = useRewardBehaviorLabel();
+  const getPeriodLabel = useRewardPeriodLabel();
+  const getConditionLabel = useRewardConditionLabel();
+
   if (rewards.length === 0) {
     return (
       <div className="py-8 text-center text-gray-500">{i18n.noRewards}</div>
@@ -111,30 +63,39 @@ function RewardTable({
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
-          {rewards.map((reward) => (
-            <tr key={reward.reward_behavior}>
-              <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                {getBehaviorLabel(reward.reward_behavior, i18n)}
-              </td>
-              <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
-                {reward.point.toLocaleString()}
-              </td>
-              <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
-                {getPeriodLabel(reward.period, i18n)}
-              </td>
-              <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
-                {getConditionLabel(reward.condition, i18n)}
-              </td>
-              <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                <button
-                  onClick={() => onEdit(reward)}
-                  className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                >
-                  {i18n.edit}
-                </button>
-              </td>
-            </tr>
-          ))}
+          {rewards.map((reward) => {
+            const conditionType = getConditionType(reward.condition);
+            const conditionValue = getConditionValue(reward.condition);
+            const conditionLabel =
+              conditionType === ConditionType.None
+                ? getConditionLabel(conditionType)
+                : `${getConditionLabel(conditionType)}: ${conditionValue}`;
+
+            return (
+              <tr key={reward.reward_behavior}>
+                <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                  {getBehaviorLabel(reward.reward_behavior)}
+                </td>
+                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                  {reward.point.toLocaleString()}
+                </td>
+                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                  {getPeriodLabel(reward.period)}
+                </td>
+                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                  {conditionLabel}
+                </td>
+                <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
+                  <button
+                    onClick={() => onEdit(reward)}
+                    className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                  >
+                    {i18n.edit}
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -323,6 +284,10 @@ function RewardForm({
     useState<ConditionType>(defaultConditionType);
   const [conditionValue, setConditionValue] = useState(defaultConditionValue);
 
+  const getBehaviorLabel = useRewardBehaviorLabel();
+  const getPeriodLabel = useRewardPeriodLabel();
+  const getConditionLabel = useRewardConditionLabel();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -370,7 +335,7 @@ function RewardForm({
             >
               {availableBehaviors.map((behaviorOption) => (
                 <option key={behaviorOption} value={behaviorOption}>
-                  {getBehaviorLabel(behaviorOption, i18n)}
+                  {getBehaviorLabel(behaviorOption)}
                 </option>
               ))}
             </select>
@@ -397,15 +362,11 @@ function RewardForm({
               onChange={(e) => setPeriod(e.target.value as RewardPeriod)}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             >
-              <option value={RewardPeriod.Once}>{i18n.periodOnce}</option>
-              <option value={RewardPeriod.Hourly}>{i18n.periodHourly}</option>
-              <option value={RewardPeriod.Daily}>{i18n.periodDaily}</option>
-              <option value={RewardPeriod.Weekly}>{i18n.periodWeekly}</option>
-              <option value={RewardPeriod.Monthly}>{i18n.periodMonthly}</option>
-              <option value={RewardPeriod.Yearly}>{i18n.periodYearly}</option>
-              <option value={RewardPeriod.Unlimited}>
-                {i18n.periodUnlimited}
-              </option>
+              {Object.values(RewardPeriod).map((p) => (
+                <option key={p} value={p}>
+                  {getPeriodLabel(p)}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -420,15 +381,11 @@ function RewardForm({
               }
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             >
-              <option value="None">{i18n.conditionNone}</option>
-              <option value="MaxClaims">{i18n.conditionMaxClaims}</option>
-              <option value="MaxPoints">{i18n.conditionMaxPoints}</option>
-              <option value="MaxUserClaims">
-                {i18n.conditionMaxUserClaims}
-              </option>
-              <option value="MaxUserPoints">
-                {i18n.conditionMaxUserPoints}
-              </option>
+              {Object.values(ConditionType).map((ct) => (
+                <option key={ct} value={ct}>
+                  {getConditionLabel(ct)}
+                </option>
+              ))}
             </select>
           </div>
 

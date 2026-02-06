@@ -32,11 +32,7 @@ export function useRewardsPageController() {
   const { data: user, isLoading: userLoading } = useUserInfo();
   const navigate = useNavigate();
   const isAdmin = user?.user_type === UserType.Admin;
-  const {
-    data: rewards = [],
-    isLoading,
-    error,
-  } = useRewards();
+  const { data: rewards = [], isLoading, error } = useRewards();
 
   const createReward = useCreateRewardMutation();
   const updateReward = useUpdateRewardMutation();

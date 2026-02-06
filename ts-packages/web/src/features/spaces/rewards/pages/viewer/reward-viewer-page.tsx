@@ -4,7 +4,7 @@ import { Col } from '@/components/ui/col';
 import { SpaceRewardResponse } from '../../types';
 import { SpaceRewardsI18n } from '../../i18n';
 import { GiftIcon } from 'lucide-react';
-import { getRewardUserBehaviorI18nKey } from '../../types/reward-user-behavior';
+import { useRewardBehaviorLabel } from '../../types/reward-i18n';
 
 function RewardViewCard({
   reward,
@@ -13,6 +13,7 @@ function RewardViewCard({
   reward: SpaceRewardResponse;
   t: SpaceRewardsI18n['settings'];
 }) {
+  const getBehaviorLabel = useRewardBehaviorLabel();
   return (
     <div className="border border-c-wg-20 rounded-lg p-4 bg-c-bg-card">
       <div className="flex items-center gap-3">
@@ -21,9 +22,7 @@ function RewardViewCard({
         </div>
         <div className="flex-1">
           <h4 className="text-base font-semibold text-c-wg-100">
-            {t[
-              getRewardUserBehaviorI18nKey(reward.behavior) as keyof typeof t
-            ] || reward.behavior}{' '}
+            {getBehaviorLabel(reward.behavior)}
           </h4>
           {reward.description && (
             <p className="text-sm text-c-wg-60">{reward.description}</p>

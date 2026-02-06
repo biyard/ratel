@@ -1,16 +1,5 @@
 export enum RewardUserBehavior {
-  RespondPoll = 'RespondPoll',
+  RespondPoll = 'RESPOND_POLL',
   // BoardComment = 'BoardComment',
   // ParticipateQuiz = 'ParticipateQuiz',
-}
-
-export function getRewardUserBehaviorI18nKey(
-  behavior: RewardUserBehavior,
-): string {
-  switch (behavior) {
-    case RewardUserBehavior.RespondPoll:
-      return 'respond_poll';
-    default:
-      return 'unknown';
-  }
 }
