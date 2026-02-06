@@ -150,8 +150,8 @@ pub enum EntityType {
 
     // Membership
     Membership,
-    UserMembership,  // PK: {USER_PK}, SK: UserMembership
-    TeamMembership,  // PK: {TEAM_PK}, SK: TeamMembership
+    UserMembership, // PK: {USER_PK}, SK: UserMembership
+    TeamMembership, // PK: {TEAM_PK}, SK: TeamMembership
 
     // ServiceAdmin
     ServiceAdmin, // PK: SERVICE_ADMIN#{USER_PK}, SK: ServiceAdmin
@@ -174,7 +174,8 @@ pub enum EntityType {
     Notification(String), // notification id
 
     //
-    Reward(String), // Type
+    Reward,
+    SpaceReward,
 
     ContentReport,
 }

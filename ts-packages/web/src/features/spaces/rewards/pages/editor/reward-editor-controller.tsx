@@ -2,34 +2,35 @@ import { useState } from 'react';
 
 import { State } from '@/types/state';
 import { Space } from '@/features/spaces/types/space';
-import { SpaceRewardResponse } from '../../types/space-reward-response';
-import { useCreateRewardMutation } from '../../hooks/use-create-reward-mutation';
-import { useUpdateRewardMutation } from '../../hooks/use-update-reward-mutation';
-import { useDeleteRewardMutation } from '../../hooks/use-delete-reward-mutation';
+import {
+  CreateSpaceRewardRequest,
+  RewardAction,
+  SpaceRewardResponse,
+  UpdateSpaceRewardRequest,
+} from '../../types';
+import {
+  useCreateSpaceRewardMutation,
+  useUpdateSpaceRewardMutation,
+  useDeleteSpaceRewardMutation,
+} from '../../hooks';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
-import { CreateRewardRequest } from '../../types/create-reward-request';
-import { UpdateRewardRequest } from '../../types/update-reward-request';
 import { SpaceRewardsI18n, useSpaceRewardsI18n } from '../../i18n';
-import {
-  convertRewardActionToRequest,
-  RewardAction,
-} from '../../types/reward-type';
+import { RewardUserBehavior } from '../../types/reward-user-behavior';
 import { useSpaceById } from '@/features/spaces/hooks/use-space-by-id';
 import usePoll from '@/features/spaces/polls/hooks/use-poll';
-import { FeatureType } from '../../types/feature-type';
-import { RewardConfigItem } from '../../hooks/use-reward-config';
+import { Reward } from '../../hooks/use-rewards';
 
 export interface RewardFormData {
-  reward_action: RewardAction;
+  behavior: RewardUserBehavior;
   credits: number;
   description?: string;
 }
 
 export interface RewardFeature {
   title: string;
-  entityType: string;
-  featureType: FeatureType;
+  action: RewardAction;
+  entityKey?: string; // Poll_SK, Board_SK, Quiz_SK, ...
 }
 
 export class RewardEditorController {
@@ -41,46 +42,43 @@ export class RewardEditorController {
     public rewardFeatures: RewardFeature[],
 
     public targetEntity: State<string | null>,
-    public targetRewardConfigs: State<RewardConfigItem[] | null>,
+    public targetRewards: State<Reward[] | null>,
     public editingReward: State<SpaceRewardResponse | null>,
     public isModalOpen: State<boolean>,
 
-    public createReward: ReturnType<typeof useCreateRewardMutation>,
-    public updateReward: ReturnType<typeof useUpdateRewardMutation>,
-    public deleteReward: ReturnType<typeof useDeleteRewardMutation>,
+    public createSpaceReward: ReturnType<typeof useCreateSpaceRewardMutation>,
+    public updateSpaceReward: ReturnType<typeof useUpdateSpaceRewardMutation>,
+    public deleteSpaceReward: ReturnType<typeof useDeleteSpaceRewardMutation>,
   ) {}
 
-  openCreateModal = (entity: string, configs: RewardConfigItem[]) => {
-    this.targetEntity.set(entity);
-    this.targetRewardConfigs.set(configs);
-    // this.editingReward.set(null);
+  openCreateModal = (entityKey: string, rewards: Reward[]) => {
+    this.targetEntity.set(entityKey);
+    this.targetRewards.set(rewards);
     this.isModalOpen.set(true);
   };
 
   openEditModal = (reward: SpaceRewardResponse) => {
-    // this.targetEntity.set(null);
-    // this.targetRewardConfigs.set(null);
     this.editingReward.set(reward);
     this.isModalOpen.set(true);
   };
 
   closeModal = () => {
     this.targetEntity.set(null);
-    this.targetRewardConfigs.set(null);
+    this.targetRewards.set(null);
     this.editingReward.set(null);
     this.isModalOpen.set(false);
   };
 
   handleCreate = async (data: RewardFormData, entity: string) => {
     try {
-      console.log('REWARD_ACTION', data.reward_action);
-      const req: CreateRewardRequest = {
-        reward: convertRewardActionToRequest(data.reward_action, entity),
+      const req: CreateSpaceRewardRequest = {
+        action_key: entity,
+        behavior: data.behavior,
         description: data.description,
         credits: data.credits,
       };
 
-      await this.createReward.mutateAsync({
+      await this.createSpaceReward.mutateAsync({
         spacePk: this.spacePk,
         req,
       });
@@ -95,13 +93,13 @@ export class RewardEditorController {
 
   handleUpdate = async (data: RewardFormData, reward: SpaceRewardResponse) => {
     try {
-      const req: UpdateRewardRequest = {
+      const req: UpdateSpaceRewardRequest = {
         sk: reward.sk,
         description: data.description,
         credits: data.credits,
       };
 
-      await this.updateReward.mutateAsync({
+      await this.updateSpaceReward.mutateAsync({
         spacePk: this.spacePk,
         req,
       });
@@ -116,9 +114,11 @@ export class RewardEditorController {
 
   handleDelete = async (reward: SpaceRewardResponse) => {
     try {
-      await this.deleteReward.mutateAsync({
+      await this.deleteSpaceReward.mutateAsync({
         spacePk: this.spacePk,
-        req: { sk: reward.sk },
+        req: {
+          sk: reward.sk,
+        },
       });
 
       showSuccessToast(this.i18n.settings.delete_success);
@@ -149,19 +149,19 @@ export function useRewardEditorController(spacePk: string) {
   const rewardFeatures: RewardFeature[] = [
     ...(pollsData?.polls.map((poll) => ({
       title: poll.questions[0]?.title || `Poll ${poll.sk.split('#').pop()}`,
-      entityType: poll.sk,
-      featureType: FeatureType.POLL,
+      action: RewardAction.Poll,
+      entityKey: poll.sk,
     })) || []),
   ];
 
-  const configs = useState<RewardConfigItem[] | null>(null);
+  const rewards = useState<Reward[] | null>(null);
   const editingEntity = useState<string | null>(null);
   const editingReward = useState<SpaceRewardResponse | null>(null);
   const isModalOpen = useState<boolean>(false);
 
-  const createReward = useCreateRewardMutation();
-  const updateReward = useUpdateRewardMutation();
-  const deleteReward = useDeleteRewardMutation();
+  const createSpaceReward = useCreateSpaceRewardMutation();
+  const updateSpaceReward = useUpdateSpaceRewardMutation();
+  const deleteSpaceReward = useDeleteSpaceRewardMutation();
 
   return new RewardEditorController(
     spacePk,
@@ -169,11 +169,11 @@ export function useRewardEditorController(spacePk: string) {
     space,
     rewardFeatures,
     new State(editingEntity),
-    new State(configs),
+    new State(rewards),
     new State(editingReward),
     new State(isModalOpen),
-    createReward,
-    updateReward,
-    deleteReward,
+    createSpaceReward,
+    updateSpaceReward,
+    deleteSpaceReward,
   );
 }

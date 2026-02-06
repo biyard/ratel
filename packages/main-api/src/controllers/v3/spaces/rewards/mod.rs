@@ -20,9 +20,9 @@ use by_axum::axum::*;
 pub fn route() -> Router<AppState> {
     Router::new().route(
         "/",
-        get(list_rewards_handler)
-            .post(create_reward_handler)
-            .put(update_reward_handler)
-            .delete(delete_reward_handler),
+        get(list_space_rewards_handler)
+            .post(create_space_reward_handler)
+            .put(update_space_reward_handler)
+            .delete(delete_space_reward_handler),
     )
 }

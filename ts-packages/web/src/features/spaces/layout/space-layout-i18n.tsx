@@ -227,7 +227,7 @@ export const i18nSpaceLayout = {
 
     // Admin Menus
     menu_admin_settings: '설정',
-    menu_rewards: '보상 설정',
+    menu_rewards: '보상',
     menu_analyze: '분석',
     menu_nft_preview: 'ArtNFT',
     menu_nft_settings: '설정',

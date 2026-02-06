@@ -1,7 +1,18 @@
 use crate::*;
 use chrono::Datelike;
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema, OperationIo, DynamoEnum)]
+#[derive(
+    Debug,
+    Default,
+    Clone,
+    Serialize,
+    Deserialize,
+    JsonSchema,
+    OperationIo,
+    DynamoEnum,
+    Eq,
+    PartialEq,
+)]
 pub enum RewardCondition {
     #[default]
     None,

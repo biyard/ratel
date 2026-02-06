@@ -29,14 +29,14 @@ export function RewardEditorPage({ spacePk }: SpacePathProps) {
         <Col className="gap-4">
           {ctrl.rewardFeatures.map((rewardFeature) => (
             <RewardSection
-              key={rewardFeature.entityType}
+              key={`${rewardFeature.action}-${rewardFeature.entityKey}`}
               spacePk={spacePk}
-              entityTitle={rewardFeature.title}
-              entityType={rewardFeature.entityType}
-              featureType={rewardFeature.featureType}
-              onAddReward={ctrl.openCreateModal}
-              onEditReward={ctrl.openEditModal}
-              onDeleteReward={ctrl.handleDelete}
+              title={rewardFeature.title}
+              action={rewardFeature.action}
+              entityKey={rewardFeature.entityKey}
+              onAddSpaceReward={ctrl.openCreateModal}
+              onEditSpaceReward={ctrl.openEditModal}
+              onDeleteSpaceReward={ctrl.handleDelete}
             />
           ))}
         </Col>
@@ -44,13 +44,13 @@ export function RewardEditorPage({ spacePk }: SpacePathProps) {
 
       <RewardModal
         i18n={ctrl.i18n}
-        configs={ctrl.targetRewardConfigs.get()}
+        rewards={ctrl.targetRewards.get()}
         isOpen={ctrl.isModalOpen.get()}
         onClose={ctrl.closeModal}
         editingReward={ctrl.editingReward.get()}
         onSubmit={ctrl.handleSubmit}
         isSubmitting={
-          ctrl.createReward.isPending || ctrl.updateReward.isPending
+          ctrl.createSpaceReward.isPending || ctrl.updateSpaceReward.isPending
         }
       />
     </>

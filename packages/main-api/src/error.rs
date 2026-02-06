@@ -297,23 +297,33 @@ pub enum Error {
     #[rest_error(code = 10050)]
     Biyard(#[from] crate::services::biyard::BiyardError),
 
-    // Reward errors 10,100 ~
-    #[error("Reward already claimed in this period")]
-    #[rest_error(status = 400, code = 10100)]
-    RewardAlreadyClaimedInPeriod,
+    // Reward errors 10,000 ~
+    #[error("Reward already exists")]
+    #[rest_error(status = 409, code = 10100)]
+    RewardAlreadyExists,
     #[error("Reward not found")]
+    #[rest_error(status = 404)]
     RewardNotFound,
+
+    // SpaceReward errors 10,100 ~
+    #[error("Space Reward already claimed in this period")]
+    #[rest_error(status = 400, code = 10200)]
+    SpaceRewardAlreadyClaimedInPeriod,
+    #[error("Space Reward not found")]
+    #[rest_error(status = 404)]
+    SpaceRewardNotFound,
     #[error("Reward max claims reached")]
-    RewardMaxClaimsReached,
+    SpaceRewardMaxClaimsReached,
     #[error("Reward max points reached")]
-    RewardMaxPointsReached,
+    SpaceRewardMaxPointsReached,
     #[error("User reward max claims reached")]
-    RewardMaxUserClaimsReached,
+    SpaceRewardMaxUserClaimsReached,
     #[error("User reward max points reached")]
-    RewardMaxUserPointsReached,
-    #[error("Reward disabled")]
-    #[rest_error(status = 500)]
-    RewardDisabled,
+    SpaceRewardMaxUserPointsReached,
+    #[error("Invalid entity type")]
+    InvalidEntityType,
+    #[error("Behavior not match entity type")]
+    BehaviorNotMatchAction,
 
     // DID feature errors 11,000 ~
     #[error("Invalid DID format")]

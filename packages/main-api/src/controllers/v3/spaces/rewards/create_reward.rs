@@ -1,7 +1,7 @@
 use crate::controllers::v3::spaces::{SpacePath, SpacePathParam};
 use crate::features::membership::{UserMembership, user_membership};
 use crate::features::spaces::rewards::{
-    Reward, RewardAction, RewardKey, RewardTypeRequest, SpaceReward, SpaceRewardResponse,
+    Reward, RewardAction, RewardUserBehavior, SpaceReward, SpaceRewardResponse,
 };
 use crate::models::space::SpaceCommon;
 use crate::types::{EntityType, SpacePublishState};
@@ -21,22 +21,24 @@ use bdk::prelude::*;
 use aide::NoApi;
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
-pub struct CreateRewardSpaceRequest {
-    reward: RewardTypeRequest,
+pub struct CreateSpaceRewardRequest {
+    action_key: EntityType,
+    behavior: RewardUserBehavior,
     #[serde(default)]
     description: String,
     credits: i64,
 }
 
-pub async fn create_reward_handler(
+pub async fn create_space_reward_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(permissions): NoApi<Permissions>,
     NoApi(user): NoApi<User>,
     Path(SpacePathParam { space_pk }): SpacePath,
-    Json(req): Json<CreateRewardSpaceRequest>,
+    Json(req): Json<CreateSpaceRewardRequest>,
 ) -> Result<Json<SpaceRewardResponse>, Error> {
-    if !config::get().reward {
-        return Err(Error::RewardDisabled);
+    let action = RewardAction::try_from(&req.action_key)?;
+    if action != req.behavior.action() {
+        return Err(Error::BehaviorNotMatchAction);
     }
     permissions.permitted(TeamGroupPermission::SpaceEdit)?;
     let mut updater_txs = vec![];
@@ -58,13 +60,14 @@ pub async fn create_reward_handler(
             .decrease_remaining_credits(req.credits)
             .transact_write_item(),
     );
-    let reward_action: RewardAction = req.reward.clone().into();
-    let reward_key = RewardKey::from(req.reward);
-    let reward = Reward::get_by_reward_action(&dynamo.client, &reward_action).await?;
+    let reward = Reward::get(&dynamo.client, Partition::Reward, Some(&req.behavior))
+        .await?
+        .ok_or(Error::RewardNotFound)?;
 
     let space_reward = SpaceReward::new(
         space_pk.into(),
-        reward_key,
+        req.action_key,
+        req.behavior,
         req.description,
         req.credits,
         reward.point,
