@@ -39,12 +39,18 @@ export const i18nAdminPayments = {
     refund_title: 'Request Refund',
     refund_reason: 'Refund Reason',
     refund_reason_placeholder: 'Enter reason for refund',
-    refund_amount: 'Refund Amount',
-    refund_requester: 'Requested By',
-    refund_requester_admin: 'Admin',
-    refund_requester_user: 'User',
     refund_submit: 'Submit Refund Request',
     refund_cancel: 'Cancel',
+    refund_success_title: 'Refund Completed',
+    refund_success_confirm: 'Confirm',
+    refund_cancellation_id: 'Cancellation ID',
+    refund_amount_label: 'Refund Amount',
+    refund_reason_label: 'Reason',
+    refund_cancelled_at: 'Processed At',
+    refund_processing: 'Processing...',
+    refund_error_no_user: 'User information not found',
+    refund_error_failed: 'Failed to process refund',
+    all_payments_loaded: '🎉 All payment records loaded.',
   },
   ko: {
     title: '결제 내역',
@@ -84,12 +90,18 @@ export const i18nAdminPayments = {
     refund_title: '환불 요청',
     refund_reason: '취소 사유',
     refund_reason_placeholder: '취소 사유를 입력하세요',
-    refund_amount: '취소 총 금액',
-    refund_requester: '결제 취소 요청 주체',
-    refund_requester_admin: '관리자',
-    refund_requester_user: '사용자',
     refund_submit: '환불 요청',
     refund_cancel: '취소',
+    refund_success_title: '환불이 완료되었습니다',
+    refund_success_confirm: '확인',
+    refund_cancellation_id: '취소 ID',
+    refund_amount_label: '환불 금액',
+    refund_reason_label: '사유',
+    refund_cancelled_at: '처리 시각',
+    refund_processing: '처리 중...',
+    refund_error_no_user: '사용자 정보를 찾을 수 없습니다.',
+    refund_error_failed: '환불 처리 중 오류가 발생했습니다.',
+    all_payments_loaded: '🎉 모든 결제 내역을 불러왔습니다.',
   },
 };
 
@@ -126,12 +138,18 @@ export interface AdminPaymentsI18n {
   refundTitle: string;
   refundReason: string;
   refundReasonPlaceholder: string;
-  refundAmount: string;
-  refundRequester: string;
-  refundRequesterAdmin: string;
-  refundRequesterUser: string;
   refundSubmit: string;
   refundCancel: string;
+  refundSuccessTitle: string;
+  refundSuccessConfirm: string;
+  refundCancellationId: string;
+  refundAmountLabel: string;
+  refundReasonLabel: string;
+  refundCancelledAt: string;
+  refundProcessing: string;
+  refundErrorNoUser: string;
+  refundErrorFailed: string;
+  allPaymentsLoaded: string;
 }
 
 export function useAdminPaymentsI18n(): AdminPaymentsI18n {
@@ -170,11 +188,17 @@ export function useAdminPaymentsI18n(): AdminPaymentsI18n {
     refundTitle: t('refund_title'),
     refundReason: t('refund_reason'),
     refundReasonPlaceholder: t('refund_reason_placeholder'),
-    refundAmount: t('refund_amount'),
-    refundRequester: t('refund_requester'),
-    refundRequesterAdmin: t('refund_requester_admin'),
-    refundRequesterUser: t('refund_requester_user'),
     refundSubmit: t('refund_submit'),
     refundCancel: t('refund_cancel'),
+    refundSuccessTitle: t('refund_success_title'),
+    refundSuccessConfirm: t('refund_success_confirm'),
+    refundCancellationId: t('refund_cancellation_id'),
+    refundAmountLabel: t('refund_amount_label'),
+    refundReasonLabel: t('refund_reason_label'),
+    refundCancelledAt: t('refund_cancelled_at'),
+    refundProcessing: t('refund_processing'),
+    refundErrorNoUser: t('refund_error_no_user'),
+    refundErrorFailed: t('refund_error_failed'),
+    allPaymentsLoaded: t('all_payments_loaded'),
   };
 }

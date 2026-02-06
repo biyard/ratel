@@ -35,21 +35,24 @@ export interface AdminPaymentResponse {
   currency: string;
   paid_at: string | null;
   order_name: string;
+  user_pk: string | null;
   user_email: string | null;
   user_name: string | null;
   total: number;
+  cancelled: number | null;
 }
 
-export enum RefundRequester {
-  Admin = 'admin',
-  User = 'user',
-}
-
-export interface RefundRequest {
-  payment_id: string;
+export interface AdminCancelPaymentRequest {
   reason: string;
-  amount: number;
-  requester: RefundRequester;
+}
+
+export interface AdminCancelPaymentResponse {
+  status: string;
+  cancellation_id: string;
+  total_amount: number;
+  reason: string;
+  cancelled_at: string | null;
+  requested_at: string;
 }
 
 export interface AdminPaymentListResponse {
