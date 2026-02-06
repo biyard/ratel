@@ -47,10 +47,6 @@ export const i18nSpaceRewards: Record<lang, SpaceRewardsI18n> = {
         'Are you sure you want to delete this reward? This action cannot be undone.',
 
       poll_reward_section: 'Poll Rewards',
-      respond_poll: 'Poll Response',
-      respond_poll_reward: 'Poll Response Reward',
-
-      unknown_reward: 'Reward',
 
       reward_behavior: 'Reward Behavior',
       reward_type_required: 'Please select a reward type',
@@ -103,10 +99,6 @@ export const i18nSpaceRewards: Record<lang, SpaceRewardsI18n> = {
         '이 리워드를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
 
       poll_reward_section: '설문 리워드',
-      respond_poll: '설문 응답',
-      respond_poll_reward: '설문 응답 리워드',
-
-      unknown_reward: '리워드',
 
       reward_behavior: '리워드 동작',
       reward_type_required: '리워드 타입을 선택해주세요',
@@ -164,9 +156,6 @@ interface SettingsI18n {
   delete_confirm_message: string;
 
   poll_reward_section: string;
-  respond_poll: string;
-  respond_poll_reward: string;
-  unknown_reward: string;
 
   reward_behavior: string;
   reward_type_required: string;
@@ -219,9 +208,6 @@ export function useSpaceRewardsI18n(): SpaceRewardsI18n {
       delete_confirm_message: t('settings.delete_confirm_message'),
 
       poll_reward_section: t('settings.poll_reward_section'),
-      respond_poll: t('settings.respond_poll'),
-      respond_poll_reward: t('settings.respond_poll_reward'),
-      unknown_reward: t('settings.unknown_reward'),
 
       reward_behavior: t('settings.reward_behavior'),
       reward_type_required: t('settings.reward_type_required'),

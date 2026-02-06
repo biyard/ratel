@@ -11,10 +11,8 @@ import {
 } from '@/components/ui/select';
 import { SpaceRewardResponse } from '../types';
 import { SpaceRewardsI18n } from '../i18n';
-import {
-  RewardUserBehavior,
-  getRewardUserBehaviorI18nKey,
-} from '../types/reward-user-behavior';
+import { RewardUserBehavior } from '../types/reward-user-behavior';
+import { useRewardBehaviorLabel } from '../types/reward-i18n';
 import { RewardFormData } from '../pages/editor/reward-editor-controller';
 
 interface RewardFormProps {
@@ -35,6 +33,7 @@ export function RewardForm({
   rewardBehaviors,
 }: RewardFormProps) {
   const t = i18n.settings;
+  const getBehaviorLabel = useRewardBehaviorLabel();
 
   const [behavior, setBehavior] = useState<RewardUserBehavior | undefined>(
     initialData?.behavior ?? rewardBehaviors[0] ?? undefined,
@@ -93,9 +92,7 @@ export function RewardForm({
             <SelectContent>
               {rewardBehaviors.map((rewardBehavior) => (
                 <SelectItem key={rewardBehavior} value={rewardBehavior}>
-                  {t[
-                    getRewardUserBehaviorI18nKey(rewardBehavior) as keyof typeof t
-                  ] || rewardBehavior}
+                  {getBehaviorLabel(rewardBehavior)}
                 </SelectItem>
               ))}
             </SelectContent>

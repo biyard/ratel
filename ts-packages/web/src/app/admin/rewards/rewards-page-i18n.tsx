@@ -18,23 +18,6 @@ export const i18nAdminRewards = {
     no_rewards: 'No rewards configured',
     save_success: 'Reward saved successfully',
     save_error: 'Failed to save reward',
-    // Reward actions
-    action_none: 'None',
-    action_poll_respond: 'Poll Response',
-    // Periods
-    period_once: 'Once',
-    period_hourly: 'Hourly',
-    period_daily: 'Daily',
-    period_weekly: 'Weekly',
-    period_monthly: 'Monthly',
-    period_yearly: 'Yearly',
-    period_unlimited: 'Unlimited',
-    // Conditions
-    condition_none: 'None',
-    condition_max_claims: 'Max Claims',
-    condition_max_points: 'Max Points',
-    condition_max_user_claims: 'Max User Claims',
-    condition_max_user_points: 'Max User Points',
     // Tabs
     tab_rules: 'Reward Rules',
     tab_transactions: 'Point Transactions',
@@ -66,23 +49,6 @@ export const i18nAdminRewards = {
     no_rewards: '설정된 리워드가 없습니다',
     save_success: '리워드가 성공적으로 저장되었습니다',
     save_error: '리워드 저장 실패',
-    // Reward actions
-    action_none: '없음',
-    action_poll_respond: '설문 응답',
-    // Periods
-    period_once: '1회',
-    period_hourly: '시간당',
-    period_daily: '일간',
-    period_weekly: '주간',
-    period_monthly: '월간',
-    period_yearly: '연간',
-    period_unlimited: '무제한',
-    // Conditions
-    condition_none: '없음',
-    condition_max_claims: '최대 청구 횟수',
-    condition_max_points: '최대 포인트',
-    condition_max_user_claims: '유저당 최대 청구 횟수',
-    condition_max_user_points: '유저당 최대 포인트',
     // Tabs
     tab_rules: '리워드 규칙',
     tab_transactions: '포인트 지급 내역',
@@ -116,20 +82,6 @@ export interface AdminRewardsI18n {
   noRewards: string;
   saveSuccess: string;
   saveError: string;
-  actionNone: string;
-  actionPollRespond: string;
-  periodOnce: string;
-  periodHourly: string;
-  periodDaily: string;
-  periodWeekly: string;
-  periodMonthly: string;
-  periodYearly: string;
-  periodUnlimited: string;
-  conditionNone: string;
-  conditionMaxClaims: string;
-  conditionMaxPoints: string;
-  conditionMaxUserClaims: string;
-  conditionMaxUserPoints: string;
   tabRules: string;
   tabTransactions: string;
   userId: string;
@@ -163,20 +115,6 @@ export function useAdminRewardsI18n(): AdminRewardsI18n {
     period: t('period'),
     condition: t('condition'),
     noRewards: t('no_rewards'),
-    actionNone: t('action_none'),
-    actionPollRespond: t('action_poll_respond'),
-    periodOnce: t('period_once'),
-    periodHourly: t('period_hourly'),
-    periodDaily: t('period_daily'),
-    periodWeekly: t('period_weekly'),
-    periodMonthly: t('period_monthly'),
-    periodYearly: t('period_yearly'),
-    periodUnlimited: t('period_unlimited'),
-    conditionNone: t('condition_none'),
-    conditionMaxClaims: t('condition_max_claims'),
-    conditionMaxPoints: t('condition_max_points'),
-    conditionMaxUserClaims: t('condition_max_user_claims'),
-    conditionMaxUserPoints: t('condition_max_user_points'),
     tabRules: t('tab_rules'),
     tabTransactions: t('tab_transactions'),
     userId: t('user_id'),
