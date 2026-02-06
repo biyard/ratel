@@ -289,10 +289,13 @@ pub enum Error {
     #[error("PortOne billing key error")]
     PortOneBillingKeyError,
     #[error("PortOne payment list error: {0}")]
-    #[rest_error(status = 500, code = 10001)]
+    #[rest_error(status = 500)]
     PortOnePaymentListError(String),
+    #[error("PortOne payment not found: {0}")]
+    #[rest_error(status = 500)]
+    PortOnePaymentNotFound(String),
     #[error("PortOne cancel payment error: {0}")]
-    #[rest_error(status = 500, code = 10002)]
+    #[rest_error(status = 500)]
     PortOneCancelPaymentError(String),
 
     // Biyard API errors 10,050 ~
