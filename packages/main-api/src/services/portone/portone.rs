@@ -298,4 +298,26 @@ impl PortOne {
         debug!("PortOne cancel payment response: {:?}", response);
         Ok(response)
     }
+
+    pub async fn get_payment(&self, payment_id: &str) -> Result<PaymentItem> {
+        let url = format!("{}/payments/{}", BASE_URL, payment_id);
+        
+        debug!("PortOne get payment request URL: {}", url);
+        
+        let res = self
+            .cli
+            .get(&url)
+            .send()
+            .await?;
+        
+        if !res.status().is_success() {
+            let err_text = res.text().await?;
+            error!("PortOne get payment error: {}", err_text);
+            return Err(Error::PortOnePaymentNotFound(err_text));
+        }
+        
+        let response: PaymentItem = res.json().await?;
+        debug!("PortOne get payment response: {:?}", response);
+        Ok(response)
+    }
 }
