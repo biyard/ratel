@@ -6,6 +6,7 @@ export const i18nSpaceRewards: Record<lang, SpaceRewardsI18n> = {
     sidemenu: {
       title: 'Reward',
       totalPoint: 'Total Point',
+      viewer_title: 'Available Rewards',
     },
     settings: {
       title: 'Reward Settings',
@@ -58,6 +59,7 @@ export const i18nSpaceRewards: Record<lang, SpaceRewardsI18n> = {
     sidemenu: {
       title: '리워드',
       totalPoint: '총 포인트',
+      viewer_title: '수령 가능한 리워드',
     },
     settings: {
       title: '리워드 설정',
@@ -116,6 +118,7 @@ export interface SpaceRewardsI18n {
 interface SideMenu {
   title: string;
   totalPoint: string;
+  viewer_title: string;
 }
 
 interface SettingsI18n {
@@ -169,6 +172,7 @@ export function useSpaceRewardsI18n(): SpaceRewardsI18n {
     sidemenu: {
       title: t('sidemenu.title'),
       totalPoint: t('sidemenu.totalPoint'),
+      viewer_title: t('sidemenu.viewer_title'),
     },
     settings: {
       title: t('settings.title'),

@@ -208,7 +208,7 @@ export function RewardViewerPage({ spacePk }: SpacePathProps) {
   return (
     <Col className="gap-4 p-4">
       <h2 className="text-xl font-bold text-c-wg-100">
-        {ctrl.i18n.sidemenu.title}
+        {ctrl.i18n.sidemenu.viewer_title}
       </h2>
 
       <Col className="gap-3">
