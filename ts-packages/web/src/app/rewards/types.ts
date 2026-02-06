@@ -17,7 +17,7 @@ export interface MyRewardsResponse {
 
   month: string;
   total_points: number;
-  user_points: number;
+  points: number;
   monthly_token_supply: number;
 }
 

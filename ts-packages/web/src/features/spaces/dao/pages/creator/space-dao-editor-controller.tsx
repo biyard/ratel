@@ -279,7 +279,9 @@ export class SpaceDaoEditorController {
     } catch (error) {
       console.error('Failed to update Space DAO:', error);
       if (error instanceof Error) {
-        showErrorToast(this.t('error_register_failed', { message: error.message }));
+        showErrorToast(
+          this.t('error_register_failed', { message: error.message }),
+        );
       } else {
         showErrorToast(this.t('error_register_failed_unknown'));
       }

@@ -160,6 +160,8 @@ pub enum Error {
     ParticipationBlocked,
     #[error("User lacks verified attributes required for participation")]
     LackOfVerifiedAttributes,
+    #[error("Quota is full")]
+    FullQuota,
 
     // members feature 3050 ~
     #[rest_error(code = 3050)]
@@ -189,6 +191,8 @@ pub enum Error {
     ImmutablePollUserAnswer,
     #[error("Poll Result not found")]
     NotFoundPollResult,
+    #[error("User is not a participant in the space")]
+    UserNotParticipant,
 
     #[rest_error(code = 3300)]
     #[error("Sprint League not found")]
@@ -284,6 +288,9 @@ pub enum Error {
     NoUserPurchaseFound,
     #[error("PortOne billing key error")]
     PortOneBillingKeyError,
+    #[error("PortOne payment list error: {0}")]
+    #[rest_error(status = 500, code = 10001)]
+    PortOnePaymentListError(String),
 
     // Biyard API errors 10,050 ~
     #[error("Biyard error: {0}")]

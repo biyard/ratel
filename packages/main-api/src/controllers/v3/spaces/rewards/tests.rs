@@ -1,5 +1,6 @@
 use crate::controllers::v3::me::memberships::change_membership::ChangeMembershipResponse;
 use crate::controllers::v3::me::memberships::tests::seed_test_user_payment;
+use crate::controllers::v3::spaces::participate_space::ParticipateSpaceResponse;
 use crate::controllers::v3::spaces::polls::RespondPollSpaceResponse;
 use crate::controllers::v3::spaces::polls::tests::setup_published_poll_space;
 use crate::features::membership::*;
@@ -685,6 +686,18 @@ async fn test_poll_respond_increases_user_claim() {
         },
     ];
 
+    // user2 participates in the space before responding to poll
+    let (status, _headers, _res) = post! {
+        app: app,
+        path: format!("/v3/spaces/{}/participate", space_pk.to_string()),
+        headers: user2.1.clone(),
+        body: {
+            "verifiable_presentation": ""
+        },
+        response_type: ParticipateSpaceResponse
+    };
+    assert_eq!(status, 200, "user2 failed to participate");
+
     // user2 responds to the poll
     let (status, _headers, _res) = post! {
         app: app,
@@ -829,7 +842,19 @@ async fn test_full_flow_membership_to_reward_configuration() {
         "Credits should be 30 after creating reward (40 - 10)"
     );
 
-    // Step 7: Another user (user2) responds to the poll
+    // Step 7: Another user (user2) participates and responds to the poll
+    // user2 participates in the space before responding to poll
+    let (status, _headers, _res) = post! {
+        app: app,
+        path: format!("/v3/spaces/{}/participate", space_pk.to_string()),
+        headers: user2.1.clone(),
+        body: {
+            "verifiable_presentation": ""
+        },
+        response_type: ParticipateSpaceResponse
+    };
+    assert_eq!(status, 200, "user2 failed to participate");
+
     let answers = vec![
         Answer::SingleChoice {
             answer: Some(1),

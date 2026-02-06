@@ -1,5 +1,4 @@
 import { useParams } from 'react-router';
-import '@/features/spaces/art-nfts/nft-side-menus';
 import { useSpaceById } from '@/features/spaces/hooks/use-space-by-id';
 import SpaceArtNftArtTwinEditorPage from '@/features/spaces/art-nfts/pages/art-twin/editor';
 import SpaceArtNftArtTwinViewerPage from '@/features/spaces/art-nfts/pages/art-twin/viewer';

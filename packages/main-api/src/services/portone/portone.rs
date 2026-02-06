@@ -225,4 +225,39 @@ impl PortOne {
 
         Ok(res)
     }
+
+    pub async fn list_payments(&self, page: i32, page_size: i32) -> Result<PaymentListResponse> {
+        let portone_conf = config::get().portone;
+
+        let url = format!("{}/payments", BASE_URL);
+
+        let body = serde_json::json!({
+            "page": {
+                "number": page,
+                "size": page_size
+            },
+            "filter": {
+                "storeId": portone_conf.store_id
+            }
+        });
+
+        debug!("PortOne list payments request URL: {}, body: {:?}", url, body);
+
+        let res = self
+            .cli
+            .get(&url)
+            .json(&body)
+            .send()
+            .await?;
+
+        if !res.status().is_success() {
+            let err_text = res.text().await?;
+            error!("PortOne list payments error: {}", err_text);
+            return Err(Error::PortOnePaymentListError(err_text));
+        }
+
+        let response: PaymentListResponse = res.json().await?;
+        debug!("PortOne list payments response: {:?}", response);
+        Ok(response)
+    }
 }

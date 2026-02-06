@@ -56,7 +56,7 @@ export function TitleSection({
     <Row className="items-center">
       {editMode && canEdit ? (
         <Input
-          className="border-b border-transparent !border-b-white focus:!border-transparent focus:rounded-md font-bold text-text-primary text-[24px]/[30px] placeholder:text-neutral-300 placeholder:font-medium rounded-none"
+          className="border-b border-transparent border-b-white! focus:border-transparent! focus:rounded-md font-bold text-text-primary text-[24px]/[30px] placeholder:text-neutral-300 placeholder:font-medium rounded-none"
           value={internalTitle}
           onChange={(e) => {
             setInternalTitle(e.target.value);
@@ -67,7 +67,7 @@ export function TitleSection({
       ) : (
         <div className="flex flex-row justify-between items-center w-full overflow-ellipsis">
           <div
-            className="font-bold text-text-primary text-[20px]/[30px]"
+            className="font-bold text-text-primary text-[28px]/[32px]"
             onClick={() => {
               if (canEdit) setEditMode(true);
             }}
@@ -113,12 +113,8 @@ export function PostInfoSection({
 }: PostInfoSectionProps) {
   const { t } = useTranslation('SprintSpace');
   return (
-    <div className="flex flex-row items-center w-full max-mobile:flex-col">
-      {/* <div className="flex flex-row gap-2.5 items-center max-tablet:hidden"> */}
-      {/* <SpaceType /> */}
-      {/* {!isDraft ? <Onboard /> : <></>} */}
-      {/* </div> */}
-      <div className="flex flex-row gap-x-5 flex-wrap [&>*>svg>*]:stroke-neutral-500 [&>*>svg]:size-5">
+    <div className="flex flex-row items-center max-mobile:flex-col">
+      <div className="flex flex-row gap-x-5 flex-nowrap [&>*>svg>*]:stroke-neutral-500 [&>*>svg]:size-5">
         <div className="flex flex-row gap-1">
           <ThumbsUp className="[&>path]:stroke-neutral-500" />
           <div className="font-medium text-[15px] text-text-primary">
@@ -193,7 +189,7 @@ export function AuthorSection({
   createdAt,
 }: ProfileSectionProps) {
   return (
-    <div className="flex flex-row justify-between items-center w-full text-sm text-c-wg-50">
+    <div className="flex flex-row gap-4 items-center w-full text-sm text-c-wg-50">
       <div className="flex gap-2 items-center">
         <img
           src={profileImage || '/default-profile.png'}

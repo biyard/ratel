@@ -9,7 +9,7 @@ import { SpaceType } from './space-type';
 import { TeamGroupPermissions } from '@/features/auth/utils/team-group-permissions';
 import { BoosterType } from './booster-type';
 import FileModel from '../files/types/file';
-import { SpaceRequirement } from './space-requirement';
+import { SpaceRequirement } from '../requirments/types';
 
 export class Space {
   readonly permissions: TeamGroupPermissions;
@@ -38,7 +38,8 @@ export class Space {
   public files: FileModel[] | undefined;
   public anonymous_participation: boolean;
   public canParticipate: boolean;
-  public change_visibility: boolean;
+  //FIXME: REMOVE THIS CODE.
+  // public change_visibility: boolean;
   public participated: boolean;
   public participantDisplayName: string | null;
   public participantProfileUrl: string | null;
@@ -77,7 +78,6 @@ export class Space {
     this.files = json.files;
     this.anonymous_participation = json.anonymous_participation;
     this.canParticipate = json.can_participate;
-    this.change_visibility = json.change_visibility;
     this.participated = json.participated;
     this.participantDisplayName = json.participant_display_name || null;
     this.participantProfileUrl = json.participant_profile_url || null;
