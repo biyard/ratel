@@ -23,12 +23,12 @@ const INCENTIVE_DISTRIBUTION_ABI = [
 ];
 
 export interface CreateSpaceIncentiveResult {
-  daoAddress: string;
+  incentiveAddress: string;
   transactionHash: string;
   deployBlock: number;
 }
 
-export class SpaceDaoService {
+export class SpaceIncentiveService {
   private provider: ethers.AbstractProvider;
   private signer: ethers.JsonRpcSigner | null = null;
 
@@ -52,9 +52,7 @@ export class SpaceDaoService {
     if (!this.signer) await this.connectWallet();
 
     if (admins.length < 1) {
-      throw new Error(
-        'At least 1 admin is required to create an incentive DAO',
-      );
+      throw new Error('At least 1 admin is required to create an incentive');
     }
     if (
       !Number.isFinite(incentiveRecipientCount) ||
@@ -82,34 +80,34 @@ export class SpaceDaoService {
     const deployBlock = deployReceipt?.blockNumber ?? 0;
 
     return {
-      daoAddress: addr,
+      incentiveAddress: addr,
       transactionHash: txHash,
       deployBlock,
     };
   }
 
-  async getIncentiveRecipientCount(daoAddress: string): Promise<number> {
-    const dao = new ethers.Contract(
-      daoAddress,
+  async getIncentiveRecipientCount(incentiveAddress: string): Promise<number> {
+    const incentive = new ethers.Contract(
+      incentiveAddress,
       INCENTIVE_DISTRIBUTION_ABI,
       this.provider,
     );
-    const config = await dao.getIncentiveDistributionConfig();
+    const config = await incentive.getIncentiveDistributionConfig();
     const raw = config?.numOfTargets ?? config?.[1] ?? 0;
     return Number(raw);
   }
 
-  async getIncentiveDistributionConfig(daoAddress: string): Promise<{
+  async getIncentiveDistributionConfig(incentiveAddress: string): Promise<{
     mode: number;
     numOfTargets: number;
     rankingBps: number;
   }> {
-    const dao = new ethers.Contract(
-      daoAddress,
+    const incentive = new ethers.Contract(
+      incentiveAddress,
       INCENTIVE_DISTRIBUTION_ABI,
       this.provider,
     );
-    const config = await dao.getIncentiveDistributionConfig();
+    const config = await incentive.getIncentiveDistributionConfig();
     const mode = Number(config?.mode ?? config?.[0] ?? 0);
     const numOfTargets = Number(config?.numOfTargets ?? config?.[1] ?? 0);
     const rankingBps = Number(config?.rankingBps ?? config?.[2] ?? 0);
@@ -117,43 +115,43 @@ export class SpaceDaoService {
   }
 
   async setIncentiveRecipientCount(
-    daoAddress: string,
+    incentiveAddress: string,
     count: number,
   ): Promise<string> {
     if (!this.signer) await this.connectWallet();
     if (!Number.isFinite(count) || count <= 0) {
       throw new Error('Incentive recipient count must be greater than 0');
     }
-    const dao = new ethers.Contract(
-      daoAddress,
+    const incentive = new ethers.Contract(
+      incentiveAddress,
       INCENTIVE_DISTRIBUTION_ABI,
       this.signer,
     );
-    const tx = await dao.setIncentiveRecipientCount(count);
+    const tx = await incentive.setIncentiveRecipientCount(count);
     const receipt = await tx.wait();
     return receipt.hash;
   }
 
   async setIncentiveRankingBps(
-    daoAddress: string,
+    incentiveAddress: string,
     rankingBps: number,
   ): Promise<string> {
     if (!this.signer) await this.connectWallet();
     if (!Number.isFinite(rankingBps) || rankingBps < 0 || rankingBps > 10000) {
       throw new Error('Ranking ratio must be between 0 and 100');
     }
-    const dao = new ethers.Contract(
-      daoAddress,
+    const incentive = new ethers.Contract(
+      incentiveAddress,
       INCENTIVE_DISTRIBUTION_ABI,
       this.signer,
     );
-    const tx = await dao.setIncentiveRankingBps(rankingBps);
+    const tx = await incentive.setIncentiveRankingBps(rankingBps);
     const receipt = await tx.wait();
     return receipt.hash;
   }
 
   async selectIncentiveRecipients(
-    daoAddress: string,
+    incentiveAddress: string,
     candidates: string[],
     scores: number[],
   ): Promise<string> {
@@ -164,149 +162,155 @@ export class SpaceDaoService {
     if (scores.length !== candidates.length) {
       throw new Error('Scores length must match candidates length');
     }
-    const dao = new ethers.Contract(
-      daoAddress,
+    const incentive = new ethers.Contract(
+      incentiveAddress,
       INCENTIVE_DISTRIBUTION_ABI,
       this.signer,
     );
-    const tx = await dao.selectIncentiveRecipients(candidates, scores);
+    const tx = await incentive.selectIncentiveRecipients(candidates, scores);
     const receipt = await tx.wait();
     return receipt.hash;
   }
 
-  async getIncentiveRecipients(daoAddress: string): Promise<string[]> {
-    const dao = new ethers.Contract(
-      daoAddress,
+  async getIncentiveRecipients(incentiveAddress: string): Promise<string[]> {
+    const incentive = new ethers.Contract(
+      incentiveAddress,
       INCENTIVE_DISTRIBUTION_ABI,
       this.provider,
     );
-    const addresses = await dao.getIncentiveRecipients();
+    const addresses = await incentive.getIncentiveRecipients();
     return Array.isArray(addresses) ? addresses : [];
   }
 
   async isIncentiveRecipient(
-    daoAddress: string,
+    incentiveAddress: string,
     account: string,
   ): Promise<boolean> {
-    const dao = new ethers.Contract(
-      daoAddress,
+    const incentive = new ethers.Contract(
+      incentiveAddress,
       INCENTIVE_DISTRIBUTION_ABI,
       this.provider,
     );
-    return Boolean(await dao.isIncentiveRecipient(account));
+    return Boolean(await incentive.isIncentiveRecipient(account));
   }
 
   async isIncentiveClaimed(
-    daoAddress: string,
+    incentiveAddress: string,
     account: string,
   ): Promise<boolean> {
-    const dao = new ethers.Contract(
-      daoAddress,
+    const incentive = new ethers.Contract(
+      incentiveAddress,
       INCENTIVE_DISTRIBUTION_ABI,
       this.provider,
     );
-    return Boolean(await dao.isIncentiveClaimed(account));
+    return Boolean(await incentive.isIncentiveClaimed(account));
   }
 
-  async getIncentiveAmount(daoAddress: string, token: string): Promise<bigint> {
-    const dao = new ethers.Contract(
-      daoAddress,
+  async getIncentiveAmount(
+    incentiveAddress: string,
+    token: string,
+  ): Promise<bigint> {
+    const incentive = new ethers.Contract(
+      incentiveAddress,
       INCENTIVE_DISTRIBUTION_ABI,
       this.provider,
     );
-    const amount = await dao.getIncentiveAmount(token);
+    const amount = await incentive.getIncentiveAmount(token);
     return BigInt(amount);
   }
 
   async spaceDeposit(
-    daoAddress: string,
+    incentiveAddress: string,
     amount: string | bigint,
     decimals = 6,
     autoApprove = true,
   ): Promise<string> {
     if (!this.signer) await this.connectWallet();
 
-    const dao = new ethers.Contract(
-      daoAddress,
+    const incentive = new ethers.Contract(
+      incentiveAddress,
       SpaceIncentiveArtifact.abi,
       this.signer,
     );
 
-    const usdtAddress: string = await dao.getUsdt();
+    const usdtAddress: string = await incentive.getUsdt();
     const token = new ethers.Contract(usdtAddress, ERC20_ABI, this.signer);
 
     const value =
       typeof amount === 'bigint' ? amount : ethers.parseUnits(amount, decimals);
 
     if (autoApprove) {
-      const approveTx = await token.approve(daoAddress, value);
+      const approveTx = await token.approve(incentiveAddress, value);
       await approveTx.wait();
     }
 
-    const tx = await dao.deposit(value);
+    const tx = await incentive.deposit(value);
     const receipt = await tx.wait();
     return receipt.hash;
   }
 
   async spaceDistributeWithdrawal(
-    daoAddress: string,
+    incentiveAddress: string,
     recipients: string[],
   ): Promise<string> {
     if (!this.signer) await this.connectWallet();
 
-    const dao = new ethers.Contract(
-      daoAddress,
+    const incentive = new ethers.Contract(
+      incentiveAddress,
       SpaceIncentiveArtifact.abi,
       this.signer,
     );
 
-    const tx = await dao.distributeWithdrawal(recipients);
+    const tx = await incentive.distributeWithdrawal(recipients);
     const receipt = await tx.wait();
     return receipt.hash;
   }
 
   async distribute(
-    daoAddress: string,
+    incentiveAddress: string,
     token: string,
     recipients: string[],
     value: bigint,
   ): Promise<string> {
     if (!this.signer) await this.connectWallet();
 
-    const dao = new ethers.Contract(
-      daoAddress,
+    const incentive = new ethers.Contract(
+      incentiveAddress,
       SpaceIncentiveArtifact.abi,
       this.signer,
     );
 
-    const tx = await dao.distribute(token, recipients, value);
+    const tx = await incentive.distribute(token, recipients, value);
     const receipt = await tx.wait();
     return receipt.hash;
   }
 
-  async claimIncentive(daoAddress: string, token: string): Promise<string> {
+  async claimIncentive(
+    incentiveAddress: string,
+    token: string,
+  ): Promise<string> {
     if (!this.signer) await this.connectWallet();
 
-    const dao = new ethers.Contract(
-      daoAddress,
+    const incentive = new ethers.Contract(
+      incentiveAddress,
       INCENTIVE_DISTRIBUTION_ABI,
       this.signer,
     );
 
-    const tx = await dao.claimIncentive(token);
+    const tx = await incentive.claimIncentive(token);
     const receipt = await tx.wait();
     return receipt.hash;
   }
 
   async proposeShareWithdrawal(
-    daoAddress: string,
+    incentiveAddress: string,
     amount: string | bigint,
     decimals = 6,
   ): Promise<string> {
     if (!this.signer) await this.connectWallet();
 
-    const dao = new ethers.Contract(
-      daoAddress,
+    const incentive = new ethers.Contract(
+      incentiveAddress,
       SpaceIncentiveArtifact.abi,
       this.signer,
     );
@@ -314,40 +318,42 @@ export class SpaceDaoService {
     const value =
       typeof amount === 'bigint' ? amount : ethers.parseUnits(amount, decimals);
 
-    const tx = await dao.proposeShareWithdrawal(value);
+    const tx = await incentive.proposeShareWithdrawal(value);
     const receipt = await tx.wait();
     return receipt.hash;
   }
 
   async approveShareWithdrawal(
-    daoAddress: string,
+    incentiveAddress: string,
     id: number,
   ): Promise<string> {
     if (!this.signer) await this.connectWallet();
 
-    const dao = new ethers.Contract(
-      daoAddress,
+    const incentive = new ethers.Contract(
+      incentiveAddress,
       SpaceIncentiveArtifact.abi,
       this.signer,
     );
 
-    const tx = await dao.approveShareWithdrawal(id);
+    const tx = await incentive.approveShareWithdrawal(id);
     const receipt = await tx.wait();
     return receipt.hash;
   }
 
-  async getShareWithdrawProposalCount(daoAddress: string): Promise<number> {
-    const dao = new ethers.Contract(
-      daoAddress,
+  async getShareWithdrawProposalCount(
+    incentiveAddress: string,
+  ): Promise<number> {
+    const incentive = new ethers.Contract(
+      incentiveAddress,
       SpaceIncentiveArtifact.abi,
       this.provider,
     );
-    const count = await dao.getShareWithdrawProposalCount();
+    const count = await incentive.getShareWithdrawProposalCount();
     return Number(count);
   }
 
   async getShareWithdrawProposal(
-    daoAddress: string,
+    incentiveAddress: string,
     id: number,
   ): Promise<{
     proposer: string;
@@ -355,13 +361,13 @@ export class SpaceDaoService {
     approvals: string;
     executed: boolean;
   }> {
-    const dao = new ethers.Contract(
-      daoAddress,
+    const incentive = new ethers.Contract(
+      incentiveAddress,
       SpaceIncentiveArtifact.abi,
       this.provider,
     );
     const [proposer, amount, approvals, executed] =
-      await dao.getShareWithdrawProposal(id);
+      await incentive.getShareWithdrawProposal(id);
     return {
       proposer,
       amount: amount.toString(),
@@ -371,74 +377,74 @@ export class SpaceDaoService {
   }
 
   async isShareWithdrawApproved(
-    daoAddress: string,
+    incentiveAddress: string,
     id: number,
     approver: string,
   ): Promise<boolean> {
-    const dao = new ethers.Contract(
-      daoAddress,
+    const incentive = new ethers.Contract(
+      incentiveAddress,
       SpaceIncentiveArtifact.abi,
       this.provider,
     );
-    return dao.isShareWithdrawApproved(id, approver);
+    return incentive.isShareWithdrawApproved(id, approver);
   }
 
-  async getDepositorCount(daoAddress: string): Promise<number> {
-    const dao = new ethers.Contract(
-      daoAddress,
+  async getDepositorCount(incentiveAddress: string): Promise<number> {
+    const incentive = new ethers.Contract(
+      incentiveAddress,
       SpaceIncentiveArtifact.abi,
       this.provider,
     );
-    const count = await dao.getDepositorCount();
+    const count = await incentive.getDepositorCount();
     return Number(count);
   }
 
   async getDepositorDeposit(
-    daoAddress: string,
+    incentiveAddress: string,
     depositor: string,
   ): Promise<string> {
-    const dao = new ethers.Contract(
-      daoAddress,
+    const incentive = new ethers.Contract(
+      incentiveAddress,
       SpaceIncentiveArtifact.abi,
       this.provider,
     );
-    const value = await dao.getDepositorDeposit(depositor);
+    const value = await incentive.getDepositorDeposit(depositor);
     return value.toString();
   }
 
   async getAvailableShare(
-    daoAddress: string,
+    incentiveAddress: string,
     depositor: string,
   ): Promise<string> {
-    const dao = new ethers.Contract(
-      daoAddress,
+    const incentive = new ethers.Contract(
+      incentiveAddress,
       SpaceIncentiveArtifact.abi,
       this.provider,
     );
-    const value = await dao.getAvailableShare(depositor);
+    const value = await incentive.getAvailableShare(depositor);
     return value.toString();
   }
 
-  async getSpaceBalance(daoAddress: string): Promise<string> {
-    const dao = new ethers.Contract(
-      daoAddress,
+  async getSpaceBalance(incentiveAddress: string): Promise<string> {
+    const incentive = new ethers.Contract(
+      incentiveAddress,
       SpaceIncentiveArtifact.abi,
       this.provider,
     );
 
-    const balance = await dao.getBalance();
+    const balance = await incentive.getBalance();
     return balance.toString();
   }
 
   async setSpaceWithdrawalAmount(
-    daoAddress: string,
+    incentiveAddress: string,
     amount: string | bigint,
     decimals = 6,
   ): Promise<string> {
     if (!this.signer) await this.connectWallet();
 
-    const dao = new ethers.Contract(
-      daoAddress,
+    const incentive = new ethers.Contract(
+      incentiveAddress,
       SpaceIncentiveArtifact.abi,
       this.signer,
     );
@@ -446,19 +452,19 @@ export class SpaceDaoService {
     const value =
       typeof amount === 'bigint' ? amount : ethers.parseUnits(amount, decimals);
 
-    const tx = await dao.setWithdrawalAmount(value);
+    const tx = await incentive.setWithdrawalAmount(value);
     const receipt = await tx.wait();
     return receipt.hash;
   }
 
-  async getSpaceWithdrawalAmount(daoAddress: string): Promise<string> {
-    const dao = new ethers.Contract(
-      daoAddress,
+  async getSpaceWithdrawalAmount(incentiveAddress: string): Promise<string> {
+    const incentive = new ethers.Contract(
+      incentiveAddress,
       SpaceIncentiveArtifact.abi,
       this.provider,
     );
 
-    const amount = await dao.getWithdrawalAmount();
+    const amount = await incentive.getWithdrawalAmount();
     return amount.toString();
   }
 }

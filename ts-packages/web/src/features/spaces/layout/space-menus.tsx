@@ -31,7 +31,7 @@ export enum Label {
   Boards = 'menu_boards',
   Members = 'menu_members',
   Files = 'menu_files',
-  Dao = 'menu_dao',
+  IncentiveSetting = 'menu_incentive_setting',
   Incentive = 'menu_incentive',
   Quiz = 'menu_quiz',
   AdminSettings = 'menu_admin_settings',
@@ -124,16 +124,16 @@ export const SPACE_MENUS: Record<SpaceType, SideMenu[]> = {
     },
     {
       Icon: Discuss,
-      to: (space) => route.spaceDao(space.pk),
+      to: (space) => route.spaceIncentiveSetting(space.pk),
       visible: (space) => config.experiment && space.isAdmin(),
-      label: Label.Dao,
+      label: Label.IncentiveSetting,
     },
     {
       Icon: Discuss,
       to: (space) => route.spaceIncentive(space.pk),
       visible: (space) =>
         config.experiment &&
-        (space.isAdmin() || Boolean(space.daoAddress)) &&
+        (space.isAdmin() || Boolean(space.incentiveAddress)) &&
         space.isFinished,
       label: Label.Incentive,
     },

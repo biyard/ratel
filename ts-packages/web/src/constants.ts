@@ -161,15 +161,16 @@ export const spaceKeys = {
     [...spaceKeys.detail(spacePk), 'rewards'] as const,
 };
 
-// Space DAO query keys
-export const spaceDaoKeys = {
-  dao: (spacePk: string) => [...spaceKeys.detail(spacePk), 'dao'] as const,
+// Space Incentive query keys
+export const spaceIncentiveKeys = {
+  incentive: (spacePk: string) =>
+    [...spaceKeys.detail(spacePk), 'incentive'] as const,
   candidates: (spacePk: string) =>
-    [...spaceDaoKeys.dao(spacePk), 'candidates'] as const,
+    [...spaceIncentiveKeys.incentive(spacePk), 'candidates'] as const,
   incentiveBase: (spacePk: string) =>
-    [...spaceDaoKeys.dao(spacePk), 'incentive'] as const,
+    [...spaceIncentiveKeys.incentive(spacePk), 'user'] as const,
   tokens: (spacePk: string) =>
-    [...spaceDaoKeys.dao(spacePk), 'tokens'] as const,
+    [...spaceIncentiveKeys.incentive(spacePk), 'tokens'] as const,
 };
 
 const QK_TEAMS = 'teams';

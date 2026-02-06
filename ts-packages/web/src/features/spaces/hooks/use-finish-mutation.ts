@@ -1,13 +1,13 @@
-import { spaceDaoKeys, spaceKeys } from '@/constants';
+import { spaceIncentiveKeys, spaceKeys } from '@/constants';
 import { optimisticUpdate } from '@/lib/hook-utils';
 import { SpaceCommon, SpaceStatus } from '@/features/spaces/types/space-common';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { call } from '@/lib/api/ratel/call';
-import { SpaceDaoService } from '@/contracts/SpaceDaoService';
+import { SpaceIncentiveService } from '@/contracts/SpaceIncentiveService';
 import { getKaiaSigner } from '@/lib/service/kaia-wallet-service';
 import { config } from '@/config';
 
-type SpaceDaoCandidateResponse = {
+type SpaceIncentiveCandidateResponse = {
   user_pk: string;
   username: string;
   display_name: string;
@@ -16,9 +16,9 @@ type SpaceDaoCandidateResponse = {
   score?: number;
 };
 
-type SpaceDaoCandidateListResponse = {
+type SpaceIncentiveCandidateListResponse = {
   incentive_address: string | null;
-  candidates: SpaceDaoCandidateResponse[];
+  candidates: SpaceIncentiveCandidateResponse[];
 };
 
 export function useFinishSpaceMutation<T extends SpaceCommon>() {
@@ -32,7 +32,7 @@ export function useFinishSpaceMutation<T extends SpaceCommon>() {
       spacePk: string;
       block?: boolean;
     }) => {
-      const res = await call<void, SpaceDaoCandidateListResponse>(
+      const res = await call<void, SpaceIncentiveCandidateListResponse>(
         'GET',
         `/v3/spaces/${encodeURIComponent(spacePk)}/incentives/candidates`,
       );
@@ -44,7 +44,7 @@ export function useFinishSpaceMutation<T extends SpaceCommon>() {
           config.env === 'prod' ? 'mainnet' : 'testnet',
         );
         const provider = signer.provider;
-        const service = new SpaceDaoService(provider);
+        const service = new SpaceIncentiveService(provider);
         await service.connectWallet();
         const scores = candidates.map((item) =>
           typeof item.score === 'number' ? item.score : 0,
@@ -77,10 +77,10 @@ export function useFinishSpaceMutation<T extends SpaceCommon>() {
         return space;
       });
       await queryClient.invalidateQueries({
-        queryKey: spaceDaoKeys.candidates(spacePk),
+        queryKey: spaceIncentiveKeys.candidates(spacePk),
       });
       await queryClient.invalidateQueries({
-        queryKey: spaceDaoKeys.incentiveBase(spacePk),
+        queryKey: spaceIncentiveKeys.incentiveBase(spacePk),
       });
     },
   });

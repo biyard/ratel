@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Card from '@/components/card';
-import { SpaceDaoResponse } from '@/features/spaces/dao/hooks/use-space-dao';
-import { SpaceDaoTokenResponse } from '@/features/spaces/dao/hooks/use-space-dao-tokens';
+import { SpaceIncentiveResponse } from '@/features/spaces/incentive/hooks/use-space-incentive';
+import { SpaceIncentiveTokenResponse } from '@/features/spaces/incentive/hooks/use-space-incentive-tokens';
 import { config } from '@/config';
 import {
   ArrowPathIcon,
@@ -13,19 +13,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ethers } from 'ethers';
 
-type SpaceDaoInfoCardProps = {
-  dao: SpaceDaoResponse;
+type SpaceIncentiveInfoCardProps = {
+  incentive: SpaceIncentiveResponse;
   isUpdating?: boolean;
   recipientCount?: string | number | null;
   incentiveMode?: number | null;
   rankingBps?: number | null;
-  onUpdateDao?: (
+  onUpdateIncentive?: (
     incentiveCount: string,
     rankingRatio?: string,
   ) => Promise<void>;
   showEdit?: boolean;
   // withdrawal props removed
-  tokens?: SpaceDaoTokenResponse[];
+  tokens?: SpaceIncentiveTokenResponse[];
   tokensLoading?: boolean;
   onRefreshTokens?: () => void;
   isRefreshingTokens?: boolean;
@@ -37,13 +37,13 @@ type SpaceDaoInfoCardProps = {
   onNextTokens?: () => void;
 };
 
-export function SpaceDaoInfoCard({
-  dao,
+export function SpaceIncentiveInfoCard({
+  incentive,
   isUpdating = false,
   recipientCount,
   incentiveMode,
   rankingBps,
-  onUpdateDao,
+  onUpdateIncentive,
   showEdit = true,
   tokens = [],
   tokensLoading = false,
@@ -54,8 +54,8 @@ export function SpaceDaoInfoCard({
   isFetchingNextTokenPage = false,
   onPrevTokens,
   onNextTokens,
-}: SpaceDaoInfoCardProps) {
-  const { t } = useTranslation('SpaceDaoEditor');
+}: SpaceIncentiveInfoCardProps) {
+  const { t } = useTranslation('SpaceIncentiveEditor');
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [incentiveCountValue, setIncentiveCountValue] = useState(
@@ -65,14 +65,14 @@ export function SpaceDaoInfoCard({
     rankingBps != null ? String(Math.round(rankingBps / 100)) : '',
   );
   const explorerUrl = config.block_explorer_url
-    ? `${config.block_explorer_url}/address/${dao.contract_address}`
+    ? `${config.block_explorer_url}/address/${incentive.contract_address}`
     : null;
 
   const tokenRows = tokens;
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(dao.contract_address);
+      await navigator.clipboard.writeText(incentive.contract_address);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
@@ -93,9 +93,9 @@ export function SpaceDaoInfoCard({
   };
 
   const handleSaveEdit = async () => {
-    if (!onUpdateDao) return;
+    if (!onUpdateIncentive) return;
     const ratio = incentiveMode === 2 ? rankingRatioValue.trim() : undefined;
-    await onUpdateDao(incentiveCountValue, ratio);
+    await onUpdateIncentive(incentiveCountValue, ratio);
     setIsEditing(false);
   };
 
@@ -105,26 +105,26 @@ export function SpaceDaoInfoCard({
         <div className="flex items-start justify-between gap-4">
           <div>
             <h3 className="text-xl font-semibold text-text-primary mb-1">
-              {t('dao_info_title')}
+              {t('incentive_info_title')}
             </h3>
             <p className="text-sm text-text-secondary">
-              {t('dao_info_description')}
+              {t('incentive_info_description')}
             </p>
           </div>
           <div className="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full text-sm font-medium">
-            {t('dao_info_status_active')}
+            {t('incentive_info_status_active')}
           </div>
         </div>
 
         <div className="light:bg-slate-50 bg-neutral-500/40 rounded-md px-4 py-3">
           <div className="flex items-center justify-between gap-3">
             <code className="text-base font-mono text-text-primary break-all">
-              {dao.contract_address}
+              {incentive.contract_address}
             </code>
             <button
               onClick={handleCopy}
               className="shrink-0 p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded transition-colors"
-              title={t('dao_info_copy')}
+              title={t('incentive_info_copy')}
             >
               {copied ? (
                 <CheckIcon className="w-5 h-5 text-green-600" />
@@ -138,7 +138,7 @@ export function SpaceDaoInfoCard({
         <div className="grid grid-cols-1 gap-4 text-sm">
           <div>
             <p className="text-text-secondary mb-1">
-              {t('dao_info_incentive_mode')}
+              {t('incentive_info_incentive_mode')}
             </p>
             <p className="text-base text-text-primary">
               {formatIncentiveMode(t, incentiveMode)}
@@ -146,7 +146,7 @@ export function SpaceDaoInfoCard({
           </div>
           <div>
             <p className="text-text-secondary mb-1">
-              {t('dao_info_incentive_count')}
+              {t('incentive_info_incentive_count')}
             </p>
             {isEditing ? (
               <Input
@@ -174,7 +174,7 @@ export function SpaceDaoInfoCard({
           {incentiveMode === 2 && (
             <div>
               <p className="text-text-secondary mb-1">
-                {t('dao_info_incentive_ranking_ratio')}
+                {t('incentive_info_incentive_ranking_ratio')}
               </p>
               {isEditing ? (
                 <Input
@@ -207,7 +207,7 @@ export function SpaceDaoInfoCard({
         <div className="space-y-2">
           <div className="flex items-center gap-2.5">
             <p className="text-text-secondary text-sm">
-              {t('dao_info_token_label')}
+              {t('incentive_info_token_label')}
             </p>
             {onRefreshTokens && (
               <div
@@ -239,7 +239,7 @@ export function SpaceDaoInfoCard({
               onClick={onPrevTokens}
               disabled={!tokenHasPrev}
             >
-              {t('dao_selected_prev')}
+              {t('incentive_selected_prev')}
             </Button>
             <Button
               type="button"
@@ -248,27 +248,27 @@ export function SpaceDaoInfoCard({
               onClick={onNextTokens}
               disabled={!tokenHasNext || isFetchingNextTokenPage}
             >
-              {t('dao_selected_next')}
+              {t('incentive_selected_next')}
             </Button>
           </div>
           <div className="rounded-md border border-border bg-background">
             {tokensLoading ? (
               <div className="px-3 py-2 text-sm text-text-secondary">
-                {t('dao_info_token_loading')}
+                {t('incentive_info_token_loading')}
               </div>
             ) : tokenRows.length === 0 ? (
               <div className="px-3 py-2 text-sm text-text-secondary">
-                {t('dao_info_token_empty')}
+                {t('incentive_info_token_empty')}
               </div>
             ) : (
               <table className="w-full table-fixed text-sm">
                 <thead className="text-text-secondary">
                   <tr className="border-b border-border">
                     <th className="px-3 py-2 text-left font-medium">
-                      {t('dao_info_token_table_token')}
+                      {t('incentive_info_token_table_token')}
                     </th>
                     <th className="px-3 py-2 text-right font-medium">
-                      {t('dao_info_token_table_balance')}
+                      {t('incentive_info_token_table_balance')}
                     </th>
                   </tr>
                 </thead>
@@ -293,7 +293,7 @@ export function SpaceDaoInfoCard({
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-2">
-          {onUpdateDao && showEdit && (
+          {onUpdateIncentive && showEdit && (
             <>
               {isEditing ? (
                 <>
@@ -304,7 +304,7 @@ export function SpaceDaoInfoCard({
                     onClick={handleCancelEdit}
                     disabled={isUpdating}
                   >
-                    {t('dao_info_edit_cancel')}
+                    {t('incentive_info_edit_cancel')}
                   </Button>
                   <Button
                     type="button"
@@ -314,8 +314,8 @@ export function SpaceDaoInfoCard({
                     disabled={isUpdating}
                   >
                     {isUpdating
-                      ? t('dao_info_edit_saving')
-                      : t('dao_info_edit_save')}
+                      ? t('incentive_info_edit_saving')
+                      : t('incentive_info_edit_save')}
                   </Button>
                 </>
               ) : (
@@ -325,7 +325,7 @@ export function SpaceDaoInfoCard({
                   size="sm"
                   onClick={handleEdit}
                 >
-                  {t('dao_info_edit_button')}
+                  {t('incentive_info_edit_button')}
                 </Button>
               )}
             </>

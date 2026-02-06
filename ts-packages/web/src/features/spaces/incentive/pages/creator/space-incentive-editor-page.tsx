@@ -2,12 +2,12 @@ import { useTranslation } from 'react-i18next';
 import { SpacePathProps } from '@/features/space-path-props';
 import { Input } from '@/components/ui/input';
 import { logger } from '@/lib/logger';
-import { useSpaceDaoEditorController } from './space-dao-editor-controller';
+import { useSpaceIncentiveEditorController } from './space-incentive-editor-controller';
 import Card from '@/components/card';
-import { useSpaceDao } from '@/features/spaces/dao/hooks/use-space-dao';
-import { SpaceDaoInfoCard } from '@/features/spaces/dao/components/space-dao-info-card';
-import { useSpaceDaoTokens } from '@/features/spaces/dao/hooks/use-space-dao-tokens';
-import { useRefreshSpaceDaoTokensMutation } from '@/features/spaces/dao/hooks/use-refresh-space-dao-tokens-mutation';
+import { useSpaceIncentive } from '@/features/spaces/incentive/hooks/use-space-incentive';
+import { SpaceIncentiveInfoCard } from '@/features/spaces/incentive/components/space-incentive-info-card';
+import { useSpaceIncentiveTokens } from '@/features/spaces/incentive/hooks/use-space-incentive-tokens';
+import { useRefreshSpaceIncentiveTokensMutation } from '@/features/spaces/incentive/hooks/use-refresh-space-incentive-tokens-mutation';
 import { useEffect, useMemo, useState } from 'react';
 import { config } from '@/config';
 import RadioButton from '@/components/radio-button';
@@ -15,18 +15,18 @@ import RadioButton from '@/components/radio-button';
 const isZeroBalance = (balance?: string | null) =>
   !balance || /^0+$/.test(balance);
 
-export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
-  logger.debug(`SpaceDaoEditorPage: spacePk=${spacePk}`);
-  const { t } = useTranslation('SpaceDaoEditor');
-  const { data: dao, isLoading } = useSpaceDao(spacePk);
+export function SpaceIncentiveEditorPage({ spacePk }: SpacePathProps) {
+  logger.debug(`SpaceIncentiveEditorPage: spacePk=${spacePk}`);
+  const { t } = useTranslation('SpaceIncentiveEditor');
+  const { data: incentive, isLoading } = useSpaceIncentive(spacePk);
   const {
     data: tokenList,
     isLoading: tokensLoading,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useSpaceDaoTokens(spacePk, 5, Boolean(dao?.contract_address));
-  const refreshTokens = useRefreshSpaceDaoTokensMutation(spacePk);
+  } = useSpaceIncentiveTokens(spacePk, 5, Boolean(incentive?.contract_address));
+  const refreshTokens = useRefreshSpaceIncentiveTokensMutation(spacePk);
   const [selectedToken, setSelectedToken] = useState<string | null>(null);
   const [didRefreshTokens, setDidRefreshTokens] = useState(false);
   const [tokenPageIndex, setTokenPageIndex] = useState(0);
@@ -103,10 +103,10 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
   }, [selectedToken, orderedTokens]);
 
   useEffect(() => {
-    if (!dao?.contract_address || didRefreshTokens) return;
+    if (!incentive?.contract_address || didRefreshTokens) return;
     refreshTokens.mutate();
     setDidRefreshTokens(true);
-  }, [dao?.contract_address, didRefreshTokens, refreshTokens]);
+  }, [incentive?.contract_address, didRefreshTokens, refreshTokens]);
 
   useEffect(() => {
     if (tokenPageIndex > 0 && tokenPageIndex > tokenPages.length - 1) {
@@ -139,9 +139,9 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
   const selectedTokenDecimals =
     selectedTokenItem?.decimals ?? (fallbackIsUsdt ? 6 : null);
 
-  const ctrl = useSpaceDaoEditorController(
+  const ctrl = useSpaceIncentiveEditorController(
     spacePk,
-    dao,
+    incentive,
     selectedToken,
     selectedTokenBalance,
     selectedTokenDecimals,
@@ -165,7 +165,7 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
         </div>
 
         <div className="w-full">
-          {!ctrl.isTeamSpace && !dao && (
+          {!ctrl.isTeamSpace && !incentive && (
             <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
               <p className="text-sm text-blue-800 dark:text-blue-200">
                 {t('personal_space_notice')}
@@ -173,14 +173,14 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
             </div>
           )}
 
-          {dao ? (
-            <SpaceDaoInfoCard
-              dao={dao}
+          {incentive ? (
+            <SpaceIncentiveInfoCard
+              incentive={incentive}
               recipientCount={ctrl.chainRecipientCount.get()}
               incentiveMode={ctrl.chainIncentiveMode.get()}
               rankingBps={ctrl.chainRankingBps.get()}
               isUpdating={ctrl.isUpdating.get()}
-              onUpdateDao={ctrl.handleUpdateDao}
+              onUpdateIncentive={ctrl.handleUpdateIncentive}
               showEdit={Boolean(ctrl.space?.isDraft)}
               tokens={visibleTokens}
               tokenHasAny={hasAnyTokens}
@@ -243,7 +243,7 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
                   </div>
                 </div>
 
-                {!ctrl.canRegisterDao && (
+                {!ctrl.canRegisterIncentive && (
                   <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
                     <p className="text-sm text-yellow-800 dark:text-yellow-200">
                       {ctrl.isTeamSpace
@@ -371,10 +371,10 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
 
               <button
                 onClick={ctrl.handleOpenRegistrationPopup}
-                disabled={!ctrl.canRegisterDao || !ctrl.canSubmitInputs}
+                disabled={!ctrl.canRegisterIncentive || !ctrl.canSubmitInputs}
                 className="mt-6 w-full px-6 py-3 bg-primary text-white rounded-md font-medium hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary"
               >
-                {t('register_dao')}
+                {t('register_incentive')}
               </button>
             </>
           )}

@@ -1,38 +1,40 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { call } from '@/lib/api/ratel/call';
-import { spaceDaoKeys } from '@/constants';
+import { spaceIncentiveKeys } from '@/constants';
 
-export type CreateSpaceDaoRequest = {
+export type CreateSpaceIncentiveRequest = {
   contract_address: string;
   deploy_block: number;
 };
 
-export type SpaceDaoResponse = {
+export type SpaceIncentiveResponse = {
   contract_address: string;
   deploy_block: number;
 };
 
-export function useCreateSpaceDaoMutation() {
+export function useCreateSpaceIncentiveMutation() {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationKey: ['create-space-dao'],
+    mutationKey: ['create-space-incentive'],
     mutationFn: async ({
       spacePk,
       req,
     }: {
       spacePk: string;
-      req: CreateSpaceDaoRequest;
+      req: CreateSpaceIncentiveRequest;
     }) => {
-      return call<CreateSpaceDaoRequest, SpaceDaoResponse>(
+      return call<CreateSpaceIncentiveRequest, SpaceIncentiveResponse>(
         'POST',
         `/v3/spaces/${encodeURIComponent(spacePk)}/incentives`,
         req,
       );
     },
     onSuccess: async (data, { spacePk }) => {
-      qc.setQueryData(spaceDaoKeys.dao(spacePk), data);
-      await qc.invalidateQueries({ queryKey: spaceDaoKeys.dao(spacePk) });
+      qc.setQueryData(spaceIncentiveKeys.incentive(spacePk), data);
+      await qc.invalidateQueries({
+        queryKey: spaceIncentiveKeys.incentive(spacePk),
+      });
     },
   });
 }

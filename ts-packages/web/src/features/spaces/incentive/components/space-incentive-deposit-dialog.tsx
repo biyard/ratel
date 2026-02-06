@@ -8,7 +8,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
-type SpaceDaoDepositDialogProps = {
+type SpaceIncentiveDepositDialogProps = {
   open: boolean;
   depositAmount: string;
   isDepositing: boolean;
@@ -17,15 +17,15 @@ type SpaceDaoDepositDialogProps = {
   onConfirmDeposit: () => void;
 };
 
-export function SpaceDaoDepositDialog({
+export function SpaceIncentiveDepositDialog({
   open,
   depositAmount,
   isDepositing,
   onClose,
   onDepositAmountChange,
   onConfirmDeposit,
-}: SpaceDaoDepositDialogProps) {
-  const { t } = useTranslation('SpaceDaoEditor');
+}: SpaceIncentiveDepositDialogProps) {
+  const { t } = useTranslation('SpaceIncentiveEditor');
 
   return (
     <Dialog
@@ -38,12 +38,12 @@ export function SpaceDaoDepositDialog({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t('dao_info_deposit_title')}</DialogTitle>
+          <DialogTitle>{t('incentive_info_deposit_title')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
             <label className="text-sm text-text-secondary mb-2 block">
-              {t('dao_info_deposit_amount_label')}
+              {t('incentive_info_deposit_amount_label')}
             </label>
             <div className="flex flex-row w-full justify-start items-center gap-2">
               <Input
@@ -51,7 +51,7 @@ export function SpaceDaoDepositDialog({
                 min={0}
                 value={depositAmount}
                 onChange={(e) => onDepositAmountChange(e.target.value)}
-                placeholder={t('dao_info_deposit_amount_placeholder')}
+                placeholder={t('incentive_info_deposit_amount_placeholder')}
               />
               <div className="text-sm text-text-secondary">USDT</div>
             </div>
@@ -64,7 +64,7 @@ export function SpaceDaoDepositDialog({
               onClick={onClose}
               disabled={isDepositing}
             >
-              {t('dao_info_deposit_cancel')}
+              {t('incentive_info_deposit_cancel')}
             </Button>
             <Button
               type="button"
@@ -74,8 +74,8 @@ export function SpaceDaoDepositDialog({
               disabled={isDepositing}
             >
               {isDepositing
-                ? t('dao_info_deposit_processing')
-                : t('dao_info_deposit_confirm')}
+                ? t('incentive_info_deposit_processing')
+                : t('incentive_info_deposit_confirm')}
             </Button>
           </div>
         </div>

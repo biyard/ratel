@@ -73,7 +73,7 @@ export const i18nSpaceHome = {
     menu_boards: 'Boards',
     menu_members: 'Members',
     menu_files: 'Files',
-    menu_dao: 'DAO',
+    menu_incentive_setting: 'Incentive Setting',
     menu_incentive: 'Incentive',
     menu_quiz: 'Quizzes',
     menu_recommendations: 'Recommendations',

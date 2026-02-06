@@ -1,8 +1,8 @@
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
 import { call } from '@/lib/api/ratel/call';
-import { spaceDaoKeys } from '@/constants';
+import { spaceIncentiveKeys } from '@/constants';
 
-type SpaceDaoIncentiveRawResponse = {
+type SpaceIncentiveIncentiveRawResponse = {
   pk: string;
   sk: string;
   user_pk: string;
@@ -15,7 +15,7 @@ type SpaceDaoIncentiveRawResponse = {
   updated_at?: number;
 };
 
-export type SpaceDaoIncentiveResponse = {
+export type SpaceIncentiveIncentiveResponse = {
   pk: string;
   sk: string;
   user_pk: string;
@@ -28,26 +28,26 @@ export type SpaceDaoIncentiveResponse = {
   updated_at?: number;
 };
 
-type SpaceDaoIncentiveRawResponseBody = {
-  item?: SpaceDaoIncentiveRawResponse | null;
+type SpaceIncentiveIncentiveRawResponseBody = {
+  item?: SpaceIncentiveIncentiveRawResponse | null;
   remaining_count?: number;
   total_count?: number;
 };
 
-export type SpaceDaoIncentiveResponseBody = {
-  item?: SpaceDaoIncentiveResponse | null;
+export type SpaceIncentiveIncentiveResponseBody = {
+  item?: SpaceIncentiveIncentiveResponse | null;
   remaining_count?: number;
   total_count?: number;
 };
 
-export function useSpaceDaoIncentive(
+export function useSpaceIncentiveIncentive(
   spacePk: string,
   enabled = true,
-): UseQueryResult<SpaceDaoIncentiveResponseBody> {
+): UseQueryResult<SpaceIncentiveIncentiveResponseBody> {
   return useQuery({
-    queryKey: spaceDaoKeys.incentiveBase(spacePk),
+    queryKey: spaceIncentiveKeys.incentiveBase(spacePk),
     queryFn: async () => {
-      const data = await call<void, SpaceDaoIncentiveRawResponseBody>(
+      const data = await call<void, SpaceIncentiveIncentiveRawResponseBody>(
         'GET',
         `/v3/spaces/${encodeURIComponent(spacePk)}/incentives/user`,
       );
