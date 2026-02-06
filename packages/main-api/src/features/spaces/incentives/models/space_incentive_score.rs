@@ -26,9 +26,7 @@ pub struct SpaceIncentiveScore {
     pub user_pk: Partition,
 
     #[serde(default)]
-    pub pre_score: i64,
-    #[serde(default)]
-    pub post_score: i64,
+    pub score: i64,
 }
 
 impl SpaceIncentiveScore {
@@ -50,13 +48,12 @@ impl SpaceIncentiveScore {
             updated_at: now,
             space_pk,
             user_pk,
-            pre_score: 0,
-            post_score: 0,
+            score: 0,
         }
     }
 
     pub fn total_score(&self) -> i64 {
-        self.pre_score + self.post_score
+        self.score
     }
 
     pub async fn get_by_user(
@@ -76,14 +73,14 @@ impl SpaceIncentiveScore {
     ) -> Result<()> {
         let now = get_now_timestamp_millis();
         if let Some(mut item) = Self::get_by_user(cli, space_pk, user_pk).await? {
-            item.pre_score += score;
+            item.score += score;
             item.updated_at = now;
             item.upsert(cli).await?;
             return Ok(());
         }
 
         let mut item = Self::new(space_pk.clone(), user_pk.clone());
-        item.pre_score = score;
+        item.score = score;
         item.updated_at = now;
         item.upsert(cli).await?;
         Ok(())
@@ -97,14 +94,14 @@ impl SpaceIncentiveScore {
     ) -> Result<()> {
         let now = get_now_timestamp_millis();
         if let Some(mut item) = Self::get_by_user(cli, space_pk, user_pk).await? {
-            item.post_score += score;
+            item.score += score;
             item.updated_at = now;
             item.upsert(cli).await?;
             return Ok(());
         }
 
         let mut item = Self::new(space_pk.clone(), user_pk.clone());
-        item.post_score = score;
+        item.score = score;
         item.updated_at = now;
         item.upsert(cli).await?;
         Ok(())
