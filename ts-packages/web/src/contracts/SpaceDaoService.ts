@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 
-import SpaceDaoArtifact from './artifacts/SpaceDao.json';
+import SpaceIncentiveArtifact from './artifacts/SpaceIncentive.json';
 
 const ERC20_ABI = [
   'function balanceOf(address owner) view returns (uint256)',
@@ -22,7 +22,7 @@ const INCENTIVE_DISTRIBUTION_ABI = [
   'function claimIncentive(address token)',
 ];
 
-export interface CreateSpaceDAOResult {
+export interface CreateSpaceIncentiveResult {
   daoAddress: string;
   transactionHash: string;
   deployBlock: number;
@@ -43,16 +43,18 @@ export class SpaceDaoService {
     this.signer = await this.provider.getSigner();
   }
 
-  async createSpaceDAO(
+  async createSpaceIncentive(
     admins: string[],
     incentiveRecipientCount: number,
     rankingBps = 0,
     mode = 0,
-  ): Promise<CreateSpaceDAOResult> {
+  ): Promise<CreateSpaceIncentiveResult> {
     if (!this.signer) await this.connectWallet();
 
     if (admins.length < 1) {
-      throw new Error('At least 1 admin is required to create a DAO');
+      throw new Error(
+        'At least 1 admin is required to create an incentive DAO',
+      );
     }
     if (
       !Number.isFinite(incentiveRecipientCount) ||
@@ -62,8 +64,8 @@ export class SpaceDaoService {
     }
 
     const factory = new ethers.ContractFactory(
-      SpaceDaoArtifact.abi,
-      SpaceDaoArtifact.bytecode,
+      SpaceIncentiveArtifact.abi,
+      SpaceIncentiveArtifact.bytecode,
       this.signer!,
     );
 
@@ -226,7 +228,7 @@ export class SpaceDaoService {
 
     const dao = new ethers.Contract(
       daoAddress,
-      SpaceDaoArtifact.abi,
+      SpaceIncentiveArtifact.abi,
       this.signer,
     );
 
@@ -254,7 +256,7 @@ export class SpaceDaoService {
 
     const dao = new ethers.Contract(
       daoAddress,
-      SpaceDaoArtifact.abi,
+      SpaceIncentiveArtifact.abi,
       this.signer,
     );
 
@@ -273,7 +275,7 @@ export class SpaceDaoService {
 
     const dao = new ethers.Contract(
       daoAddress,
-      SpaceDaoArtifact.abi,
+      SpaceIncentiveArtifact.abi,
       this.signer,
     );
 
@@ -305,7 +307,7 @@ export class SpaceDaoService {
 
     const dao = new ethers.Contract(
       daoAddress,
-      SpaceDaoArtifact.abi,
+      SpaceIncentiveArtifact.abi,
       this.signer,
     );
 
@@ -325,7 +327,7 @@ export class SpaceDaoService {
 
     const dao = new ethers.Contract(
       daoAddress,
-      SpaceDaoArtifact.abi,
+      SpaceIncentiveArtifact.abi,
       this.signer,
     );
 
@@ -337,7 +339,7 @@ export class SpaceDaoService {
   async getShareWithdrawProposalCount(daoAddress: string): Promise<number> {
     const dao = new ethers.Contract(
       daoAddress,
-      SpaceDaoArtifact.abi,
+      SpaceIncentiveArtifact.abi,
       this.provider,
     );
     const count = await dao.getShareWithdrawProposalCount();
@@ -355,7 +357,7 @@ export class SpaceDaoService {
   }> {
     const dao = new ethers.Contract(
       daoAddress,
-      SpaceDaoArtifact.abi,
+      SpaceIncentiveArtifact.abi,
       this.provider,
     );
     const [proposer, amount, approvals, executed] =
@@ -375,7 +377,7 @@ export class SpaceDaoService {
   ): Promise<boolean> {
     const dao = new ethers.Contract(
       daoAddress,
-      SpaceDaoArtifact.abi,
+      SpaceIncentiveArtifact.abi,
       this.provider,
     );
     return dao.isShareWithdrawApproved(id, approver);
@@ -384,7 +386,7 @@ export class SpaceDaoService {
   async getDepositorCount(daoAddress: string): Promise<number> {
     const dao = new ethers.Contract(
       daoAddress,
-      SpaceDaoArtifact.abi,
+      SpaceIncentiveArtifact.abi,
       this.provider,
     );
     const count = await dao.getDepositorCount();
@@ -397,7 +399,7 @@ export class SpaceDaoService {
   ): Promise<string> {
     const dao = new ethers.Contract(
       daoAddress,
-      SpaceDaoArtifact.abi,
+      SpaceIncentiveArtifact.abi,
       this.provider,
     );
     const value = await dao.getDepositorDeposit(depositor);
@@ -410,7 +412,7 @@ export class SpaceDaoService {
   ): Promise<string> {
     const dao = new ethers.Contract(
       daoAddress,
-      SpaceDaoArtifact.abi,
+      SpaceIncentiveArtifact.abi,
       this.provider,
     );
     const value = await dao.getAvailableShare(depositor);
@@ -420,7 +422,7 @@ export class SpaceDaoService {
   async getSpaceBalance(daoAddress: string): Promise<string> {
     const dao = new ethers.Contract(
       daoAddress,
-      SpaceDaoArtifact.abi,
+      SpaceIncentiveArtifact.abi,
       this.provider,
     );
 
@@ -437,7 +439,7 @@ export class SpaceDaoService {
 
     const dao = new ethers.Contract(
       daoAddress,
-      SpaceDaoArtifact.abi,
+      SpaceIncentiveArtifact.abi,
       this.signer,
     );
 
@@ -452,7 +454,7 @@ export class SpaceDaoService {
   async getSpaceWithdrawalAmount(daoAddress: string): Promise<string> {
     const dao = new ethers.Contract(
       daoAddress,
-      SpaceDaoArtifact.abi,
+      SpaceIncentiveArtifact.abi,
       this.provider,
     );
 
