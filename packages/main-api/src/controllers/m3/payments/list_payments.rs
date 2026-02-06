@@ -77,7 +77,11 @@ pub async fn list_all_payments_handler(
 
             if let Some(user_partition) = user_partition_opt {
                 if let Some(user) = users.get(&user_partition.to_string()) {
-                    detail = detail.with_user(user.email.clone(), user.display_name.clone());
+                    detail = detail.with_user(
+                        user_partition.to_string(),
+                        user.email.clone(),
+                        user.display_name.clone(),
+                    );
                 }
             }
 
