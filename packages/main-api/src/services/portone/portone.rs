@@ -260,4 +260,42 @@ impl PortOne {
         debug!("PortOne list payments response: {:?}", response);
         Ok(response)
     }
+
+    pub async fn cancel_payment(
+        &self,
+        payment_id: &str,
+        reason: String,
+        amount: Option<i64>,
+        requester: Option<PortoneCancelRequester>,
+    ) -> Result<CancelPaymentResponse> {
+        let portone_conf = config::get().portone;
+
+        let url = format!("{}/payments/{}/cancel", BASE_URL, payment_id);
+
+        let body = CancelPaymentRequest {
+            store_id: portone_conf.store_id.to_string(),
+            reason,
+            amount,
+            requester,
+        };
+
+        debug!("PortOne cancel payment request URL: {}, body: {:?}", url, body);
+
+        let res = self
+            .cli
+            .post(&url)
+            .json(&body)
+            .send()
+            .await?;
+
+        if !res.status().is_success() {
+            let err_text = res.text().await?;
+            error!("PortOne cancel payment error: {}", err_text);
+            return Err(Error::PortOneCancelPaymentError(err_text));
+        }
+
+        let response: CancelPaymentResponse = res.json().await?;
+        debug!("PortOne cancel payment response: {:?}", response);
+        Ok(response)
+    }
 }
