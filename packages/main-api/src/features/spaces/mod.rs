@@ -10,14 +10,14 @@ pub mod templates;
 
 pub mod analyzes;
 pub mod artworks;
-pub mod dao;
+pub mod incentives;
 pub mod models;
 pub mod sprint_leagues;
 pub mod topics;
 mod types;
 
+pub use incentives::*;
 pub use models::*;
-pub use dao::*;
 pub use types::*;
 
 pub mod rewards;

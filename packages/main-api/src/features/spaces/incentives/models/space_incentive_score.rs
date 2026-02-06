@@ -11,7 +11,7 @@ use crate::*;
     schemars::JsonSchema,
     aide::OperationIo,
 )]
-pub struct SpaceDaoIncentiveScore {
+pub struct SpaceIncentiveScore {
     pub pk: Partition,
     pub sk: EntityType,
 
@@ -31,17 +31,17 @@ pub struct SpaceDaoIncentiveScore {
     pub post_score: i64,
 }
 
-impl SpaceDaoIncentiveScore {
+impl SpaceIncentiveScore {
     pub fn keys(space_pk: &Partition, user_pk: &Partition) -> (Partition, EntityType) {
         (
             space_pk.clone(),
-            EntityType::SpaceDaoIncentiveScore(user_pk.to_string()),
+            EntityType::SpaceIncentiveScore(user_pk.to_string()),
         )
     }
 
     pub fn new(space_pk: Partition, user_pk: Partition) -> Self {
         let now = get_now_timestamp_millis();
-        let sk = EntityType::SpaceDaoIncentiveScore(user_pk.to_string());
+        let sk = EntityType::SpaceIncentiveScore(user_pk.to_string());
 
         Self {
             pk: space_pk.clone(),
@@ -113,9 +113,9 @@ impl SpaceDaoIncentiveScore {
     pub async fn find_by_space(
         cli: &aws_sdk_dynamodb::Client,
         space_pk: &Partition,
-        opt: SpaceDaoIncentiveScoreQueryOption,
+        opt: SpaceIncentiveScoreQueryOption,
     ) -> Result<(Vec<Self>, Option<String>)> {
-        let opt = opt.sk(EntityType::SpaceDaoIncentiveScore(String::new()).to_string());
+        let opt = opt.sk(EntityType::SpaceIncentiveScore(String::new()).to_string());
         Self::query(cli, space_pk.clone(), opt).await
     }
 }

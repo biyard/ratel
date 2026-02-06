@@ -49,7 +49,7 @@ export function useSpaceDaoIncentive(
     queryFn: async () => {
       const data = await call<void, SpaceDaoIncentiveRawResponseBody>(
         'GET',
-        `/v3/spaces/${encodeURIComponent(spacePk)}/dao/incentive`,
+        `/v3/spaces/${encodeURIComponent(spacePk)}/incentives/user`,
       );
       const item = data.item ?? null;
       return {

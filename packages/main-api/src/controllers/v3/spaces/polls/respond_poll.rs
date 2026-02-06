@@ -4,7 +4,7 @@ use crate::features::spaces::panels::SpacePanelParticipant;
 use crate::features::spaces::rewards::{
     PollRewardKey, RewardAction, RewardKey, SpaceReward, UserReward,
 };
-use crate::features::spaces::{SpaceDaoIncentiveScore, SpaceParticipant, polls::*};
+use crate::features::spaces::{SpaceIncentiveScore, SpaceParticipant, polls::*};
 use crate::models::user::User;
 use crate::types::{
     Age, Answer, CompositePartition, EntityType, Gender, Partition, ResourcePermissions,
@@ -127,7 +127,7 @@ pub async fn respond_poll_handler(
         }
 
         if poll.is_default_poll() {
-            SpaceDaoIncentiveScore::add_pre_score(
+            SpaceIncentiveScore::add_pre_score(
                 &dynamo.client,
                 &space_pk,
                 &user_pk,
@@ -135,7 +135,7 @@ pub async fn respond_poll_handler(
             )
             .await?;
         } else {
-            SpaceDaoIncentiveScore::add_post_score(
+            SpaceIncentiveScore::add_post_score(
                 &dynamo.client,
                 &space_pk,
                 &user_pk,

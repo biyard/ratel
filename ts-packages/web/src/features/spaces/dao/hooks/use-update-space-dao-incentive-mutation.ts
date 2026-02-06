@@ -23,7 +23,7 @@ export function useUpdateSpaceDaoIncentiveMutation() {
     }) => {
       return call<UpdateSpaceDaoIncentiveRequest, void>(
         'PATCH',
-        `/v3/spaces/${encodeURIComponent(spacePk)}/dao/incentive`,
+        `/v3/spaces/${encodeURIComponent(spacePk)}/incentives/user`,
         {
           incentive_sk: incentiveSk,
           incentive_distributed: incentiveDistributed,

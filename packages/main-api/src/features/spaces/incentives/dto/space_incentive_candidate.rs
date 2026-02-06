@@ -1,7 +1,7 @@
 use bdk::prelude::*;
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
-pub struct SpaceDaoCandidate {
+pub struct SpaceIncentiveCandidate {
     pub user_pk: String,
     pub username: String,
     pub display_name: String,

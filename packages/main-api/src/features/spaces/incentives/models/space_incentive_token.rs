@@ -12,7 +12,7 @@ use std::collections::HashSet;
     schemars::JsonSchema,
     aide::OperationIo,
 )]
-pub struct SpaceDaoToken {
+pub struct SpaceIncentiveToken {
     pub pk: Partition,
     pub sk: EntityType,
 
@@ -23,9 +23,9 @@ pub struct SpaceDaoToken {
     pub updated_at: i64,
 }
 
-impl SpaceDaoToken {
+impl SpaceIncentiveToken {
     pub fn new(
-        dao_address: impl std::fmt::Display,
+        incentive_address: impl std::fmt::Display,
         token_address: impl std::fmt::Display,
         symbol: String,
         decimals: i64,
@@ -34,8 +34,8 @@ impl SpaceDaoToken {
     ) -> Self {
         let token_address = token_address.to_string();
         Self {
-            pk: Self::compose_pk(dao_address),
-            sk: EntityType::SpaceDaoToken(token_address.clone()),
+            pk: Self::compose_pk(incentive_address),
+            sk: EntityType::SpaceIncentiveToken(token_address.clone()),
             token_address,
             symbol,
             decimals,
@@ -44,35 +44,35 @@ impl SpaceDaoToken {
         }
     }
 
-    pub fn compose_pk(dao_address: impl std::fmt::Display) -> Partition {
-        Partition::SpaceDao(dao_address.to_string().to_lowercase())
+    pub fn compose_pk(incentive_address: impl std::fmt::Display) -> Partition {
+        Partition::SpaceIncentive(incentive_address.to_string().to_lowercase())
     }
 
     pub fn compose_sk(key: impl std::fmt::Display) -> String {
         key.to_string()
     }
 
-    pub async fn find_by_dao_address(
+    pub async fn find_by_incentive_address(
         cli: &aws_sdk_dynamodb::Client,
-        dao_address: &str,
-        opt: SpaceDaoTokenQueryOption,
+        incentive_address: &str,
+        opt: SpaceIncentiveTokenQueryOption,
     ) -> crate::Result<(Vec<Self>, Option<String>)> {
-        let opt = opt.sk(EntityType::SpaceDaoToken(String::new()).to_string());
-        Self::query(cli, Self::compose_pk(dao_address), opt).await
+        let opt = opt.sk(EntityType::SpaceIncentiveToken(String::new()).to_string());
+        Self::query(cli, Self::compose_pk(incentive_address), opt).await
     }
 
     pub async fn list_token_addresses(
         cli: &aws_sdk_dynamodb::Client,
-        dao_address: impl std::fmt::Display,
+        incentive_address: impl std::fmt::Display,
     ) -> crate::Result<HashSet<String>> {
         let (items, _) =
-            Self::find_by_dao_address(cli, &dao_address.to_string(), Self::opt_all()).await?;
+            Self::find_by_incentive_address(cli, &incentive_address.to_string(), Self::opt_all()).await?;
         Ok(items.into_iter().map(|item| item.token_address).collect())
     }
 
     pub async fn upsert_balance(
         cli: &aws_sdk_dynamodb::Client,
-        dao_address: impl std::fmt::Display,
+        incentive_address: impl std::fmt::Display,
         token_address: impl std::fmt::Display,
         symbol: String,
         decimals: i64,
@@ -80,7 +80,7 @@ impl SpaceDaoToken {
         updated_at: i64,
     ) -> crate::Result<()> {
         let item = Self::new(
-            dao_address,
+            incentive_address,
             token_address,
             symbol,
             decimals,

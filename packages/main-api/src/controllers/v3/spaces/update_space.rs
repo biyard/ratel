@@ -1,12 +1,9 @@
 use crate::controllers::v3::spaces::dto::*;
+use crate::features::spaces::files::{FileLink, FileLinkTarget, SpaceFile};
 use crate::features::spaces::members::{
     SpaceEmailVerification, SpaceInvitationMember, SpaceInvitationMemberQueryOption,
 };
 use crate::features::spaces::polls::{Poll, PollQueryOption};
-use crate::features::spaces::{
-    SpaceDao,
-    files::{FileLink, FileLinkTarget, SpaceFile},
-};
 use crate::features::telegrams::{TelegramChannel, get_space_created_message};
 use crate::models::space::SpaceCommon;
 

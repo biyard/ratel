@@ -92,7 +92,7 @@ pub enum Partition {
     UserReward(String),        // USER_REWARD#{user_id}
     UserRewardHistory(String), // USER_REWARD_HISTORY#{user_id}
 
-    SpaceDao(String), // SPACE_DAO#{contract_address}
+    SpaceIncentive(String), // SPACE_INCENTIVE#{contract_address}
 }
 
 impl Partition {

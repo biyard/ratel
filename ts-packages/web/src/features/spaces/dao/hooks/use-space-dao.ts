@@ -32,7 +32,7 @@ export function useSpaceDao(
       try {
         return await call<void, SpaceDaoResponse>(
           'GET',
-          `/v3/spaces/${encodeURIComponent(spacePk)}/dao`,
+          `/v3/spaces/${encodeURIComponent(spacePk)}/incentives`,
         );
       } catch (error) {
         if (isNotFound(error)) {
