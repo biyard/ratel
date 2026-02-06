@@ -103,10 +103,6 @@ export const SPACE_MENUS: Record<SpaceType, SideMenu[]> = {
       Icon: Post,
       to: (space) => route.spaceFiles(space.pk),
       label: Label.Files,
-      tag: {
-        label: 'Post',
-        visible: (space) => !space.participated,
-      },
     },
     {
       Icon: Vote,
@@ -121,6 +117,10 @@ export const SPACE_MENUS: Record<SpaceType, SideMenu[]> = {
       Icon: Post,
       to: (space) => route.spaceBoards(space.pk),
       label: Label.Boards,
+      tag: {
+        label: 'Post',
+        visible: (space) => !space.participated,
+      },
     },
     {
       Icon: Discuss,
