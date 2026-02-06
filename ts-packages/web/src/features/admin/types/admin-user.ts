@@ -42,16 +42,8 @@ export interface AdminPaymentResponse {
   cancelled: number | null;
 }
 
-export enum RefundRequester {
-  Admin = 'ADMIN',
-  Customer = 'CUSTOMER',
-}
-
 export interface AdminCancelPaymentRequest {
   reason: string;
-  amount?: number;
-  requester?: RefundRequester;
-  user_pk: string;
 }
 
 export interface AdminCancelPaymentResponse {
