@@ -1,8 +1,8 @@
 import { usePaymentsPageController } from './use-payments-page-controller';
 import { useAdminPaymentsI18n, AdminPaymentsI18n } from './payments-page-i18n';
 import type { AdminPaymentResponse } from '@/features/admin/types/admin-user';
-import { RefundRequester } from '@/features/admin/types/admin-user';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { RefundModal } from '@/features/admin/components/refund-modal';
+import { useState, useRef, useCallback } from 'react';
 
 function getStatusLabel(status: string, i18n: AdminPaymentsI18n): string {
   const statusMap: Record<string, string> = {
@@ -55,129 +55,6 @@ function formatDate(dateStr: string | null): string {
   }).format(date);
 }
 
-interface RefundModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  payment: AdminPaymentResponse | null;
-  i18n: AdminPaymentsI18n;
-}
-
-function RefundModal({ isOpen, onClose, payment, i18n }: RefundModalProps) {
-  const [reason, setReason] = useState('');
-  const [amount, setAmount] = useState(0);
-  const [requester, setRequester] = useState<RefundRequester>(
-    RefundRequester.Admin,
-  );
-
-  // payment가 변경될 때 amount를 최대값(원래 금액)으로 설정
-  useEffect(() => {
-    if (payment) {
-      setAmount(payment.total);
-    }
-  }, [payment]);
-
-  if (!isOpen || !payment) return null;
-
-  const maxAmount = payment.total;
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // TODO: Implement refund API call
-    console.log('Refund request:', {
-      payment_id: payment.payment_id,
-      reason,
-      amount,
-      requester,
-    });
-    onClose();
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
-        <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
-          {i18n.refundTitle}
-        </h2>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              {i18n.paymentId}
-            </label>
-            <input
-              type="text"
-              value={payment.payment_id}
-              disabled
-              className="w-full rounded-md border border-gray-300 bg-gray-100 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              {i18n.refundReason}
-            </label>
-            <textarea
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder={i18n.refundReasonPlaceholder}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700"
-              rows={3}
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              {i18n.refundAmount}
-            </label>
-            <input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(Number(e.target.value))}
-              max={maxAmount}
-              min={0}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700"
-              required
-            />
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              최대 환불 가능 금액: {formatCurrency(maxAmount, payment.currency)}
-            </p>
-          </div>
-          <div className="mb-6">
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              {i18n.refundRequester}
-            </label>
-            <select
-              value={requester}
-              onChange={(e) => setRequester(e.target.value as RefundRequester)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700"
-            >
-              <option value={RefundRequester.Admin}>
-                {i18n.refundRequesterAdmin}
-              </option>
-              <option value={RefundRequester.User}>
-                {i18n.refundRequesterUser}
-              </option>
-            </select>
-          </div>
-          <div className="flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-            >
-              {i18n.refundCancel}
-            </button>
-            <button
-              type="submit"
-              className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-            >
-              {i18n.refundSubmit}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
 export function PaymentsPage() {
   const i18n = useAdminPaymentsI18n();
   const controller = usePaymentsPageController();
@@ -197,11 +74,7 @@ export function PaymentsPage() {
       });
       if (node) observer.current.observe(node);
     },
-    [
-      controller.isFetchingNextPage,
-      controller.fetchNextPage,
-      controller.hasNextPage,
-    ],
+    [controller],
   );
 
   const handleRefundClick = (payment: AdminPaymentResponse) => {
