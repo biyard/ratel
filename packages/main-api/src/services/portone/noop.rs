@@ -106,4 +106,37 @@ impl PortOne {
             revoked_at: Some("2025-11-03T11:01:50.08942321Z".to_string()),
         })
     }
+
+    pub async fn list_payments(&self, page: i32, page_size: i32) -> Result<PaymentListResponse> {
+        // Return mock payment list for testing
+        Ok(PaymentListResponse {
+            items: vec![PaymentItem {
+                id: "test-payment-1".to_string(),
+                status: "PAID".to_string(),
+                currency: "KRW".to_string(),
+                paid_at: Some("2025-02-03T10:00:00Z".to_string()),
+                order_name: "Test Order 1".to_string(),
+                customer: PaymentCustomer {
+                    id: "USER#test-user-1##PAYMENT".to_string(),
+                    name: Some("Test User 1".to_string()),
+                },
+                amount: PaymentAmount {
+                    total: 10000,
+                    tax_free: None,
+                    vat: None,
+                    supply: None,
+                    discount: None,
+                    paid: 10000,
+                    cancelled: None,
+                    cancelled_tax_free: None,
+                },
+                billing_key: None,
+            }],
+            page: PageInfo {
+                number: page,
+                size: page_size,
+                total_count: 1,
+            },
+        })
+    }
 }
