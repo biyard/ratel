@@ -77,6 +77,7 @@ import { i18nSpaceBoardsEditor } from '@/features/spaces/boards/pages/creator/sp
 import { i18nSpaceBoardsEditorDetail } from '@/features/spaces/boards/pages/creator/detail/space-boards-editor-detail-i18n';
 import { i18nAttributeCodes } from '@/app/admin/attribute-codes/attribute-codes-page-i18n';
 import { i18nAdminRewards } from '@/app/admin/rewards/rewards-page-i18n';
+import { i18nAdminPayments } from '@/app/admin/payments/payments-page-i18n';
 import { Errors } from '@/features/errors/i18n';
 import { MySpaces } from '@/app/(social)/my-spaces/i18n';
 import { i18nCompleteSurveyModal } from '@/features/spaces/polls/components/modal/complete_survey/complete-survey-modal-i18n';
@@ -163,6 +164,7 @@ Object.entries({
   Notifications: i18nNotifications,
   AttributeCodes: i18nAttributeCodes,
   AdminRewards: i18nAdminRewards,
+  AdminPayments: i18nAdminPayments,
   Nav: i18nHeader,
   ListDrafts: i18nListDrafts,
   CreatePostPage,

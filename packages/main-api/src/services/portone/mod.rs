@@ -4,6 +4,7 @@ mod billing_key_request;
 mod billing_key_response;
 mod channel_response;
 mod identify_response;
+mod payment_list_response;
 mod payment_schedule_response;
 mod verified_customer;
 
@@ -13,6 +14,7 @@ pub use billing_key_request::*;
 pub use billing_key_response::*;
 pub use channel_response::*;
 pub use identify_response::*;
+pub use payment_list_response::*;
 pub use payment_schedule_response::*;
 pub use verified_customer::*;
 
