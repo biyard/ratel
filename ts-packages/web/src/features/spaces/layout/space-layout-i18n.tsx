@@ -39,6 +39,7 @@ export interface I18nSpaceLayout extends Record<Label, string> {
   menu_admin_settings: string;
   menu_rewards: string;
   menu_analyze: string;
+  menu_report: string;
 
   // Admin Action
   action_admin_start: string;
@@ -129,6 +130,7 @@ export const i18nSpaceLayout = {
     menu_admin_settings: 'Settings',
     menu_rewards: 'Rewards',
     menu_analyze: 'Analyze',
+    menu_report: 'Report',
     menu_nft_preview: 'ArtNFT',
     menu_nft_settings: 'Settings',
     menu_nft_art_twin: 'Art Twin',
@@ -238,6 +240,7 @@ export const i18nSpaceLayout = {
     menu_admin_settings: '설정',
     menu_rewards: '보상',
     menu_analyze: '분석',
+    menu_report: '보고서',
     menu_nft_preview: 'ArtNFT',
     menu_nft_settings: '설정',
     menu_nft_art_twin: 'Art Twin',
@@ -345,6 +348,7 @@ export function useSpaceLayoutI18n() {
     menu_admin_settings: t('menu_admin_settings'),
     menu_rewards: t('menu_rewards'),
     menu_analyze: t('menu_analyze'),
+    menu_report: t('menu_report'),
     menu_nft_preview: t('menu_nft_preview'),
     menu_nft_settings: t('menu_nft_settings'),
     menu_nft_art_twin: t('menu_nft_art_twin'),
