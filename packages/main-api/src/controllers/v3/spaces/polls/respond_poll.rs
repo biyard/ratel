@@ -1,9 +1,7 @@
 use crate::features::did::VerifiedAttributes;
 use crate::features::spaces::panels::SpacePanelParticipant;
 
-use crate::features::spaces::rewards::{
-    PollRewardKey, RewardAction, RewardKey, SpaceReward, UserReward,
-};
+use crate::features::spaces::rewards::{RewardUserBehavior, SpaceReward, UserReward};
 use crate::features::spaces::{SpaceIncentiveScore, SpaceParticipant, polls::*};
 use crate::models::user::User;
 use crate::types::{
@@ -89,10 +87,11 @@ pub async fn respond_poll_handler(
     }
 
     // Response Poll Reward
-    let reward = SpaceReward::get_by_reward_key(
+    let reward = SpaceReward::get_by_action(
         &dynamo.client,
         space_pk.clone().into(),
-        (poll.sk.clone().into(), PollRewardKey::Respond).into(),
+        poll.sk.clone(),
+        RewardUserBehavior::RespondPoll,
     )
     .await;
 
@@ -127,21 +126,9 @@ pub async fn respond_poll_handler(
         }
 
         if poll.is_default_poll() {
-            SpaceIncentiveScore::add_pre_score(
-                &dynamo.client,
-                &space_pk,
-                &user_pk,
-                score,
-            )
-            .await?;
+            SpaceIncentiveScore::add_pre_score(&dynamo.client, &space_pk, &user_pk, score).await?;
         } else {
-            SpaceIncentiveScore::add_post_score(
-                &dynamo.client,
-                &space_pk,
-                &user_pk,
-                score,
-            )
-            .await?;
+            SpaceIncentiveScore::add_post_score(&dynamo.client, &space_pk, &user_pk, score).await?;
         }
     } else {
         let (pk, sk) = PollUserAnswer::keys(&user.pk.clone(), &poll_pk.clone(), &poll.pk.clone());

@@ -16,7 +16,7 @@ export async function getMyRewards(month?: string): Promise<MyRewardsResponse> {
 
 export function useMyRewards(month?: string) {
   return useQuery({
-    queryKey: [...userKeys.rewards(month)],
+    queryKey: userKeys.point(month),
     queryFn: () => getMyRewards(month),
   });
 }

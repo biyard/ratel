@@ -1,7 +1,6 @@
 use crate::features::membership::UserMembership;
-use crate::features::spaces::rewards::RewardAction;
 use crate::features::spaces::rewards::RewardKey;
-use crate::features::spaces::rewards::RewardTypeRequest;
+use crate::features::spaces::rewards::RewardUserBehavior;
 use crate::features::spaces::rewards::SpaceReward;
 use crate::features::spaces::rewards::SpaceRewardResponse;
 use crate::spaces::SpacePath;
@@ -10,7 +9,7 @@ use crate::utils::time::get_now_timestamp_millis;
 use crate::*;
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
-pub struct UpdateRewardRequest {
+pub struct UpdateSpaceRewardRequest {
     pub sk: RewardKey,
 
     #[serde(default)]
@@ -18,17 +17,18 @@ pub struct UpdateRewardRequest {
     pub credits: i64,
 }
 
-pub async fn update_reward_handler(
+pub async fn update_space_reward_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(permissions): NoApi<Permissions>,
     NoApi(user): NoApi<User>,
     Path(SpacePathParam { space_pk }): SpacePath,
-    Json(req): Json<UpdateRewardRequest>,
+    Json(req): Json<UpdateSpaceRewardRequest>,
 ) -> Result<Json<SpaceRewardResponse>> {
     permissions.permitted(TeamGroupPermission::SpaceEdit)?;
 
-    let mut space_reward =
-        SpaceReward::get_by_reward_key(&dynamo.client, space_pk.into(), req.sk).await?;
+    let mut space_reward = SpaceReward::get(&dynamo.client, space_pk, Some(req.sk))
+        .await?
+        .ok_or(Error::SpaceRewardNotFound)?;
 
     let credit_delta = space_reward.credits - req.credits;
 

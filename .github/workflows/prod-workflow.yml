@@ -153,7 +153,6 @@ jobs:
           PORTONE_KPN_CHANNEL_KEY: ${{ secrets.PORTONE_KPN_BILLING_KEY_CHANNEL_KEY }}
           PORTONE_STORE_ID: ${{ secrets.PORTONE_STORE_ID }}
           ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
-          REWARD: false
 
           FCM_ENABLED: true
           RATEL_PROJECT_ID: ${{ secrets.RATEL_PROJECT_ID }}
