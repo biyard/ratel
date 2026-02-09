@@ -6,15 +6,17 @@ import { route } from '@/route';
 import { type AdminPaymentResponse } from '@/features/admin/types/admin-user';
 import { UserType } from '@/lib/api/ratel/users.v3';
 
-export interface PaymentsPageController {
-  payments: AdminPaymentResponse[];
-  isLoading: boolean;
-  error: Error | null;
-  isAdmin: boolean;
-  isCheckingAdmin: boolean;
-  hasNextPage: boolean;
-  isFetchingNextPage: boolean;
-  fetchNextPage: () => void;
+export class PaymentsPageController {
+  constructor(
+    public payments: AdminPaymentResponse[],
+    public isLoading: boolean,
+    public error: Error | null,
+    public isAdmin: boolean,
+    public isCheckingAdmin: boolean,
+    public hasNextPage: boolean,
+    public isFetchingNextPage: boolean,
+    public fetchNextPage: () => void,
+  ) {}
 }
 
 export function usePaymentsPageController(): PaymentsPageController {
@@ -46,14 +48,14 @@ export function usePaymentsPageController(): PaymentsPageController {
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  return {
+  return new PaymentsPageController(
     payments,
     isLoading,
     error,
     isAdmin,
     isCheckingAdmin,
-    hasNextPage: hasNextPage ?? false,
+    hasNextPage ?? false,
     isFetchingNextPage,
-    fetchNextPage: handleFetchNextPage,
-  };
+    handleFetchNextPage,
+  );
 }
