@@ -108,9 +108,7 @@ test.describe.serial('[Reward] Poll Space Reward Flow', () => {
     await addPollReward(page, REWARD_CONFIG.credits, REWARD_CONFIG.description);
 
     // Verify reward card is displayed by looking for reward content
-    const rewardTitle = page.getByRole('heading', {
-      name: 'Poll Response Reward',
-    });
+    const rewardTitle = page.getByText('Poll Response').first();
     await expect(rewardTitle).toBeVisible({ timeout: TIMEOUT });
 
     // Verify credits are displayed

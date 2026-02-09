@@ -1,26 +1,25 @@
 import { spaceKeys } from '@/constants';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { call } from '@/lib/api/ratel/call';
-import { SpaceRewardResponse } from '../types/space-reward-response';
-import { UpdateRewardRequest } from '../types/update-reward-request';
+import { UpdateSpaceRewardRequest } from '../types';
+import { SpaceRewardResponse } from '../types';
 
-export function useUpdateRewardMutation() {
+export function useUpdateSpaceRewardMutation() {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationKey: ['update-reward'],
+    mutationKey: ['update-space-reward'],
     mutationFn: async ({
       spacePk,
       req,
     }: {
       spacePk: string;
-      req: UpdateRewardRequest;
+      req: UpdateSpaceRewardRequest;
     }) => {
-      const response = await call<UpdateRewardRequest, SpaceRewardResponse>(
-        'PUT',
-        `/v3/spaces/${encodeURIComponent(spacePk)}/rewards`,
-        req,
-      );
+      const response = await call<
+        UpdateSpaceRewardRequest,
+        SpaceRewardResponse
+      >('PUT', `/v3/spaces/${encodeURIComponent(spacePk)}/rewards`, req);
       return new SpaceRewardResponse(response);
     },
 

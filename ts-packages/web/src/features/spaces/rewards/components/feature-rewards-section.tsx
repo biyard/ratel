@@ -1,7 +1,7 @@
 import { Col } from '@/components/ui/col';
 import { Button } from '@/components/ui/button';
 import { Poll } from '@/features/spaces/polls/types/poll';
-import { SpaceRewardResponse } from '../types/space-reward-response';
+import { SpaceRewardResponse } from '../types';
 import { RewardCard } from './reward-card';
 import { PlusIcon } from 'lucide-react';
 import { SpaceRewardsI18n } from '../i18n';
