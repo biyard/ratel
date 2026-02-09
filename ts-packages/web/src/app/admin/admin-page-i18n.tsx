@@ -13,6 +13,8 @@ export const i18nAdmin = {
     rewards_desc: 'Manage reward points and conditions',
     migrations: 'Migrations',
     migrations_desc: 'Run data migrations',
+    payments: 'Payment History',
+    payments_desc: 'User payment history, refund management',
   },
   ko: {
     title: '관리자 콘솔',
@@ -26,6 +28,8 @@ export const i18nAdmin = {
     rewards_desc: '리워드 포인트 및 조건 관리',
     migrations: '마이그레이션',
     migrations_desc: '데이터 마이그레이션',
+    payments: '결제 내역',
+    payments_desc: '사용자 결제 내역, 환불 관리',
   },
 };
 
@@ -41,6 +45,8 @@ export interface AdminI18n {
   rewardsDesc: string;
   migrations: string;
   migrationsDesc: string;
+  payments: string;
+  paymentsDesc: string;
 }
 
 export function useAdminI18n(): AdminI18n {
@@ -58,5 +64,7 @@ export function useAdminI18n(): AdminI18n {
     rewardsDesc: t('rewards_desc'),
     migrations: t('migrations'),
     migrationsDesc: t('migrations_desc'),
+    payments: t('payments'),
+    paymentsDesc: t('payments_desc'),
   };
 }

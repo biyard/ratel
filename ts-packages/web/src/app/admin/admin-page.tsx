@@ -43,6 +43,13 @@ export function AdminPage() {
       icon: '🧩',
       color: 'border-l-teal-500',
     },
+    {
+      to: route.adminPayments(),
+      title: i18n.payments,
+      description: i18n.paymentsDesc,
+      icon: '💰',
+      color: 'border-l-orange-500',
+    },
   ];
 
   return (
