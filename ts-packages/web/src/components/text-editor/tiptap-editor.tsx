@@ -16,7 +16,10 @@ import Placeholder from '@tiptap/extension-placeholder';
 import Video from './extensions/video';
 import { ThemeAwareColor } from './extensions/theme-aware-color';
 import { ThemeAwareHighlight } from './extensions/theme-aware-highlight';
-import { getThemeAdjustedColor, getThemeAdjustedHighlight } from './color-utils';
+import {
+  getThemeAdjustedColor,
+  getThemeAdjustedHighlight,
+} from './color-utils';
 import {
   forwardRef,
   useCallback,
@@ -81,6 +84,8 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [showFoldToggle, setShowFoldToggle] = useState(false);
     const bubbleHostRef = useRef<HTMLDivElement | null>(null);
+    const uploadAssetRef = useRef(uploadAsset);
+    const uploadVideoRef = useRef(uploadVideo);
     const bubbleEnabledRef = useRef(showBubbleToolbar);
     const bubbleKeepAliveRef = useRef(false);
     const bubbleSelectionRef = useRef<Editor['state']['selection'] | null>(
@@ -90,6 +95,14 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
     useEffect(() => {
       bubbleEnabledRef.current = showBubbleToolbar;
     }, [showBubbleToolbar]);
+
+    useEffect(() => {
+      uploadAssetRef.current = uploadAsset;
+    }, [uploadAsset]);
+
+    useEffect(() => {
+      uploadVideoRef.current = uploadVideo;
+    }, [uploadVideo]);
 
     const shouldShowBubble = useCallback(
       ({
@@ -129,8 +142,8 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
 
       if (file.type.startsWith('image/')) {
         if (file.size > maxImageSizeMB * 1024 * 1024) return false;
-        if (uploadAsset) {
-          const { url } = await uploadAsset(file);
+        if (uploadAssetRef.current) {
+          const { url } = await uploadAssetRef.current(file);
           insertImage(ed, url, file.name);
           return false;
         }
@@ -139,8 +152,8 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
 
       if (file.type.startsWith('video/')) {
         if (file.size > maxVideoSizeMB * 1024 * 1024) return false;
-        if (uploadVideo) {
-          const { url } = await uploadVideo(file);
+        if (uploadVideoRef.current) {
+          const { url } = await uploadVideoRef.current(file);
           insertVideo(ed, url);
           return false;
         }
@@ -243,8 +256,6 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
         },
       },
       [
-        uploadAsset,
-        uploadVideo,
         maxImageSizeMB,
         maxVideoSizeMB,
         editable,
@@ -287,7 +298,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
       if (!editor || editor.isDestroyed) return;
 
       const editorElement = editor.view.dom;
-      
+
       const coloredElements = editorElement.querySelectorAll('[data-color]');
       coloredElements.forEach((el) => {
         const originalColor = el.getAttribute('data-color');
@@ -296,8 +307,9 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
           (el as HTMLElement).style.color = adjustedColor;
         }
       });
-      
-      const highlightedElements = editorElement.querySelectorAll('[data-highlight]');
+
+      const highlightedElements =
+        editorElement.querySelectorAll('[data-highlight]');
       highlightedElements.forEach((el) => {
         const originalColor = el.getAttribute('data-highlight');
         if (originalColor) {
@@ -513,8 +525,8 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
                 e.currentTarget.value = '';
                 return;
               }
-              if (uploadVideo && editor) {
-                const { url } = await uploadVideo(file);
+              if (uploadVideoRef.current && editor) {
+                const { url } = await uploadVideoRef.current(file);
                 insertVideo(editor, url);
               }
               e.currentTarget.value = '';
