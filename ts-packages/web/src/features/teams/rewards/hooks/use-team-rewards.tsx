@@ -19,7 +19,7 @@ export async function getTeamRewards(
 
 export function useTeamRewards(teamPk: string, month?: string) {
   return useQuery({
-    queryKey: teamKeys.reward(teamPk, month),
+    queryKey: teamKeys.point(teamPk, month),
     queryFn: () => getTeamRewards(teamPk, month),
   });
 }

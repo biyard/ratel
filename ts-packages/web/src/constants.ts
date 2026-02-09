@@ -1,4 +1,5 @@
 import { FeedStatus } from './features/posts/types/post';
+import { RewardAction } from './features/spaces/rewards/types';
 
 // LocalStorage keys
 export const SK_IDENTITY_KEY = 'identity';
@@ -91,6 +92,7 @@ export const feedKeys = {
 // - Feature-level invalidation: Use QK_SPACES > space_pk > 'feature_name'
 // - Granular control: Target specific sub-keys for precise updates
 
+const QK_REWARDS = 'rewards';
 const QK_SPACES = 'spaces';
 export const spaceKeys = {
   all: [QK_SPACES] as const,
@@ -118,7 +120,8 @@ export const spaceKeys = {
     [...spaceKeys.detail(spacePk), 'topics'] as const,
 
   files: (spacePk: string) => [...spaceKeys.detail(spacePk), 'files'] as const,
-  file_links: (spacePk: string) => [...spaceKeys.files(spacePk), 'links'] as const,
+  file_links: (spacePk: string) =>
+    [...spaceKeys.files(spacePk), 'links'] as const,
 
   recommendations: (spacePk: string) =>
     [...spaceKeys.detail(spacePk), 'recommendations'] as const,
@@ -157,7 +160,9 @@ export const spaceKeys = {
     [...spaceKeys.art_nft(spacePk, nftPk), 'trades'] as const,
 
   rewards: (spacePk: string) =>
-    [...spaceKeys.detail(spacePk), 'rewards'] as const,
+    [...spaceKeys.detail(spacePk), QK_REWARDS] as const,
+  rewards_by_entityType: (spacePk: string, entityType: string) =>
+    [...spaceKeys.rewards(spacePk), entityType] as const,
 };
 
 const QK_TEAMS = 'teams';
@@ -170,10 +175,11 @@ export const teamKeys = {
     [...teamKeys.detail(teamName), 'groups'] as const,
   group: (teamName: string, groupId: string) =>
     [...teamKeys.groups(teamName), groupId] as const,
-  reward: (teamPk: string, month: string) =>
-    [...teamKeys.detail(teamPk), 'reward', month] as const,
-  reward_lists: (teamPk: string, month: string) =>
-    [...teamKeys.detail(teamPk), 'reward_lists', month] as const,
+
+  point: (teamPk: string, month: string) =>
+    [...teamKeys.detail(teamPk), 'point', month] as const,
+  point_transactions: (teamPk: string, month: string) =>
+    [...teamKeys.point(teamPk, month), 'transactions'] as const,
 };
 
 export const QK_MEMBERSHIPS = 'memberships';
@@ -185,7 +191,14 @@ const QK_USERS = 'users';
 export const userKeys = {
   all: [QK_USERS] as const,
   detail: () => [...userKeys.all, 'detail'] as const,
-  rewards: (month?: string) => [...userKeys.all, 'rewards', month] as const,
-  reward_lists: (month?: string) =>
-    [...userKeys.all, 'reward_lists', month] as const,
+  point: (month: string) => [...userKeys.all, 'point', month] as const,
+  point_transactions: (month: string) =>
+    [...userKeys.point(month), 'transactions'] as const,
+};
+
+export const rewardsKeys = {
+  all: [QK_REWARDS] as const,
+  rewards: () => [...rewardsKeys.all, 'rewards'] as const,
+  rewards_by_action: (action: RewardAction) =>
+    [...rewardsKeys.rewards(), action] as const,
 };
