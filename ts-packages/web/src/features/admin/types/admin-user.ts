@@ -28,3 +28,31 @@ export interface DemoteAdminResponse {
   success: boolean;
   message: string;
 }
+
+export interface AdminPaymentResponse {
+  payment_id: string;
+  status: string;
+  currency: string;
+  paid_at: string | null;
+  order_name: string;
+  user_email: string | null;
+  user_name: string | null;
+  total: number;
+}
+
+export enum RefundRequester {
+  Admin = 'admin',
+  User = 'user',
+}
+
+export interface RefundRequest {
+  payment_id: string;
+  reason: string;
+  amount: number;
+  requester: RefundRequester;
+}
+
+export interface AdminPaymentListResponse {
+  items: AdminPaymentResponse[];
+  bookmark: string | null;
+}
