@@ -6,6 +6,7 @@ import {
   User,
   Vote,
   Settings,
+  Draft,
 } from '@/components/icons';
 import { config } from '@/config';
 import { route } from '@/route';
@@ -37,6 +38,7 @@ export enum Label {
   AdminSettings = 'menu_admin_settings',
   Rewards = 'menu_rewards',
   Analyze = 'menu_analyze',
+  Report = 'menu_report',
   Requirements = 'menu_requirements',
 }
 
@@ -154,6 +156,15 @@ export const SPACE_MENUS: Record<SpaceType, SideMenu[]> = {
       to: (space) => route.spaceAnalyzePolls(space.pk),
       visible: (space) => !space.isDraft && space.isAdmin(),
       label: Label.Analyze,
+    },
+    {
+      Icon: Draft,
+      to: (space) => route.spaceReport(space.pk),
+      visible: (space) =>
+        !space.isDraft &&
+        space.isFinished &&
+        (space.participated || space.isAdmin()),
+      label: Label.Report,
     },
   ],
 
