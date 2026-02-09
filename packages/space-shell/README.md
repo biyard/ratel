@@ -1,58 +1,254 @@
 # Development
 
-Your new jumpstart project includes basic organization with an organized `assets` folder and a `components` folder.
-If you chose to develop with the router feature, you will also have a `views` folder.
+## Adding Space Page
+
+This guide walks through adding a new page to the space shell. We use `dashboard` as a reference example.
+
+### 1. Create the page package
+
+Create a new package `packages/space-page-{name}/` with the following structure:
 
 ```
-project/
-├─ assets/ # Any assets that are used by the app should be placed here
-├─ src/
-│  ├─ main.rs # The entrypoint for the app. It also defines the routes for the app.
-│  ├─ components/
-│  │  ├─ mod.rs # Defines the components module
-│  │  ├─ hero.rs # The Hero component for use in the home page
-│  │  ├─ echo.rs # The echo component uses server functions to communicate with the server
-│  ├─ views/ # The views each route will render in the app.
-│  │  ├─ mod.rs # Defines the module for the views route and re-exports the components for each route
-│  │  ├─ blog.rs # The component that will render at the /blog/:id route
-│  │  ├─ home.rs # The component that will render at the / route
-├─ Cargo.toml # The Cargo.toml file defines the dependencies and feature flags for your project
+packages/space-page-{name}/
+├── Cargo.toml
+├── assets/
+│   ├── favicon.ico
+│   ├── main.css
+│   └── tailwind.css
+└── src/
+    ├── app.rs
+    ├── assets.rs
+    ├── lib.rs
+    ├── main.rs
+    ├── menu.rs
+    ├── route.rs
+    └── views/
+        ├── mod.rs
+        ├── creator_page.rs
+        ├── participant_page.rs
+        ├── candidate_page.rs
+        └── viewer_page.rs
 ```
 
-### Automatic Tailwind (Dioxus 0.7+)
-
-As of Dioxus 0.7, there no longer is a need to manually install tailwind. Simply `dx serve` and you're good to go!
-
-Automatic tailwind is supported by checking for a file called `tailwind.css` in your app's manifest directory (next to Cargo.toml). To customize the file, use the dioxus.toml:
+### 2. Define Cargo.toml
 
 ```toml
-[application]
-tailwind_input = "my.css"
-tailwind_output = "assets/out.css"
+[package]
+name = "space-page-{name}"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dioxus = { workspace = true }
+common = { workspace = true }
+
+[features]
+default = []
+web = ["dioxus/web", "common/web"]
+desktop = ["dioxus/desktop"]
+mobile = ["dioxus/mobile"]
+server = ["dioxus/server", "common/server"]
 ```
 
-### Tailwind Manual Install
+### 3. Create source files
 
-To use tailwind plugins or manually customize tailwind, you can can install the Tailwind CLI and use it directly.
+**`src/lib.rs`** - Module declarations and public exports:
 
-1. Install npm: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
-2. Install the Tailwind CSS CLI: https://tailwindcss.com/docs/installation/tailwind-cli
-3. Run the following command in the root of the project to start the Tailwind CSS compiler:
+```rust
+mod app;
+mod assets;
+mod menu;
+mod route;
+mod views;
 
-```bash
-npx @tailwindcss/cli -i ./input.css -o ./assets/tailwind.css --watch
+pub use assets::*;
+use dioxus::prelude::*;
+
+pub use app::App;
+pub use menu::get_nav_item;
+
+use common::*;
+use route::Route;
 ```
 
-### Serving Your App
+**`src/assets.rs`** - Asset references:
 
-Run the following command in the root of your project to start developing with the default platform:
+```rust
+use dioxus::prelude::*;
 
-```bash
-dx serve --platform web
+pub const FAVICON: Asset = asset!("/assets/favicon.ico");
+pub const MAIN_CSS: Asset = asset!("/assets/main.css");
+pub const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
 ```
 
-To run for a different platform, use the `--platform platform` flag. E.g.
-```bash
-dx serve --platform desktop
+**`src/app.rs`** - Entry component routed from the shell:
+
+```rust
+use crate::*;
+
+#[component]
+pub fn App(space_id: SpacePartition, rest: Vec<String>) -> Element {
+    if !rest.is_empty() {
+        return rsx! {
+            h2 { "Rest: {rest:?}" }
+        };
+    }
+
+    rsx! {
+        Router::<Route> {}
+    }
+}
+```
+
+**`src/route.rs`** - Internal page routes:
+
+```rust
+use crate::*;
+use crate::views::HomePage;
+
+#[derive(Debug, Clone, Routable, PartialEq)]
+#[rustfmt::skip]
+pub enum Route {
+    #[route("/spaces/:space_id/{name}")]
+    HomePage { space_id: SpacePartition },
+}
+```
+
+**`src/menu.rs`** - Navigation item for the sidebar. Returns `None` to hide from users without permission:
+
+```rust
+use crate::*;
+
+pub fn get_nav_item(
+    space_id: SpacePartition,
+    _role: SpaceUserRole,
+) -> Option<(Element, SpacePage, NavigationTarget)> {
+    Some((
+        icon(),
+        SpacePage::{Name},       // Must match the SpacePage enum variant
+        Route::HomePage { space_id }.into(),
+    ))
+}
+
+#[component]
+pub fn icon() -> Element {
+    rsx! {
+        svg {
+            // SVG icon content
+        }
+    }
+}
+```
+
+**`src/views/mod.rs`** - Role-based page dispatch:
+
+```rust
+use crate::*;
+
+mod creator_page;
+mod viewer_page;
+// ... other role pages
+
+use creator_page::*;
+use viewer_page::*;
+
+#[component]
+pub fn HomePage(space_id: SpacePartition) -> Element {
+    let role = use_server_future(move || async move { SpaceUserRole::Viewer })?.value();
+
+    match role().unwrap_or_default() {
+        SpaceUserRole::Creator => rsx! { CreatorPage { space_id } },
+        SpaceUserRole::Viewer => rsx! { ViewerPage { space_id } },
+        // ... other roles
+    }
+}
+```
+
+**`src/views/creator_page.rs`** (and other role pages):
+
+```rust
+use super::*;
+
+#[component]
+pub fn CreatorPage(space_id: SpacePartition) -> Element {
+    rsx! {
+        "Creator page"
+    }
+}
+```
+
+**`src/main.rs`** - Standalone dev entry point:
+
+```rust
+use dioxus::prelude::*;
+use space_page_{name}::*;
+
+fn main() {
+    dioxus::launch(App);
+}
+
+#[component]
+fn App() -> Element {
+    rsx! {
+        document::Link { rel: "icon", href: FAVICON }
+        document::Link { rel: "stylesheet", href: MAIN_CSS }
+        document::Link { rel: "stylesheet", href: TAILWIND_CSS }
+        Router::<Route> {}
+    }
+}
+```
+
+### 4. Add SpacePage variant
+
+Add a new variant to `SpacePage` enum in `packages/common/src/types/space_page.rs`:
+
+```rust
+pub enum SpacePage {
+    // ... existing variants
+    #[translate(ko = "한글 이름")]
+    {Name},
+}
+```
+
+### 5. Register in space-shell
+
+**`packages/space-shell/Cargo.toml`** - Add the dependency and feature flags:
+
+```toml
+[dependencies]
+space-page-{name} = { path = "../space-page-{name}/", optional = true }
+
+[features]
+web = ["...", "space-page-{name}/web"]
+desktop = ["...", "space-page-{name}/desktop"]
+mobile = ["...", "space-page-{name}/mobile"]
+server = ["...", "space-page-{name}/server"]
+```
+
+**`packages/space-shell/src/lib.rs`** - Import the page:
+
+```rust
+use space_page_{name} as {name};
+```
+
+**`packages/space-shell/src/route.rs`** - Add the route variant:
+
+```rust
+use {name}::App as {Name}App;
+
+pub enum Route {
+    // ... existing routes
+    #[route("/{name}/:..rest")]
+    {Name}App { space_id: SpacePartition, rest: Vec<String> },
+}
+```
+
+**`packages/space-shell/src/layout.rs`** - Add to the navigation menu:
+
+```rust
+let menus = vec![
+    // ... existing items
+    {name}::get_nav_item(space_id.clone(), role),
+];
 ```
 
