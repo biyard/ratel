@@ -22,6 +22,16 @@ pub struct PaymentItem {
     pub billing_key: Option<String>,
 }
 
+impl PaymentItem {
+    pub fn user_partition(&self) -> Option<crate::types::Partition> {
+        self.customer
+            .id
+            .parse::<crate::types::CompositePartition>()
+            .ok()
+            .map(|cp| cp.0)
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, OperationIo)]
 #[serde(rename_all = "camelCase")]
 pub struct PaymentCustomer {
@@ -35,8 +45,6 @@ pub struct PaymentCustomer {
 pub struct PaymentAmount {
     pub total: i64,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub tax_free: Option<i64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub vat: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub supply: Option<i64>,
@@ -45,8 +53,6 @@ pub struct PaymentAmount {
     pub paid: i64,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cancelled: Option<i64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub cancelled_tax_free: Option<i64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, OperationIo)]

@@ -214,3 +214,11 @@ export const rewardsKeys = {
   rewards_by_action: (action: RewardAction) =>
     [...rewardsKeys.rewards(), action] as const,
 };
+
+const QK_ADMIN = 'admin';
+export const adminKeys = {
+  all: [QK_ADMIN] as const,
+  payments: () => [...adminKeys.all, 'payments'] as const,
+  users: () => [...adminKeys.all, 'users'] as const,
+  memberships: () => [...adminKeys.all, 'memberships'] as const,
+};
