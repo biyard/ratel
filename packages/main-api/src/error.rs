@@ -336,6 +336,11 @@ pub enum Error {
     #[error("attribute code not found")]
     AttributeCodeNotFound,
 
+    // Incentive errors 11,050 ~
+    #[error("Not Found Incentive")]
+    #[rest_error(code = 10000)]
+    IncentiveNotFound,
+
     #[error("analyze not found")]
     AnalyzeNotFound,
 

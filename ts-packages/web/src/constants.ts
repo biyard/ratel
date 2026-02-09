@@ -165,6 +165,18 @@ export const spaceKeys = {
     [...spaceKeys.rewards(spacePk), entityType] as const,
 };
 
+// Space Incentive query keys
+export const spaceIncentiveKeys = {
+  incentive: (spacePk: string) =>
+    [...spaceKeys.detail(spacePk), 'incentive'] as const,
+  candidates: (spacePk: string) =>
+    [...spaceIncentiveKeys.incentive(spacePk), 'candidates'] as const,
+  incentiveBase: (spacePk: string) =>
+    [...spaceIncentiveKeys.incentive(spacePk), 'user'] as const,
+  tokens: (spacePk: string) =>
+    [...spaceIncentiveKeys.incentive(spacePk), 'tokens'] as const,
+};
+
 const QK_TEAMS = 'teams';
 export const teamKeys = {
   all: [QK_TEAMS] as const,

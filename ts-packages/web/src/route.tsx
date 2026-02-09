@@ -71,7 +71,10 @@ export const route = {
   },
   spaceBoards: (spaceId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/boards`,
-  spaceDao: (spaceId: string) => `/spaces/${encodeURIComponent(spaceId)}/dao`,
+  spaceIncentiveSetting: (spaceId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/incentive-setting`,
+  spaceIncentive: (spaceId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/incentive`,
   spaceCreatePost: (spaceId: string, postPk?: string) => {
     let to = `/spaces/${encodeURIComponent(spaceId)}/boards/create`;
     const params: string[] = [];

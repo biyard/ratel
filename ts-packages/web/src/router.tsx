@@ -75,7 +75,8 @@ import RewardsPage from './app/rewards/page';
 import { MembershipPlan } from './features/membership/components/membership-plan';
 import Providers from './providers/providers';
 import { PdfViewerLoader } from './features/spaces/files/components/pdf-viewer-loader';
-import SpaceDaoPage from './app/spaces/[id]/dao/space-dao-page';
+import SpaceIncentiveSettingPage from './app/spaces/[id]/incentive-setting/space-incentive-setting-page';
+import SpaceIncentivePage from './app/spaces/[id]/incentive/space-incentive-page';
 
 export const routes = createBrowserRouter([
   // PDF Viewer - Completely standalone without any layout
@@ -304,12 +305,17 @@ export const routes = createBrowserRouter([
             path: 'rewards',
             Component: SpaceRewardsPage,
           },
-          // Space Dao Feature
+          // Space Incentive Setting Feature
           {
-            id: 'space-dao-page',
-            path: 'dao',
-            Component: SpaceDaoPage,
-          }, // End of Dao Feature
+            id: 'space-incentive-setting-page',
+            path: 'incentive-setting',
+            Component: SpaceIncentiveSettingPage,
+          }, // End of Incentive Setting Feature
+          {
+            id: 'space-incentive-page',
+            path: 'incentive',
+            Component: SpaceIncentivePage,
+          },
           {
             id: 'space-sprint-league-feature',
             path: 'sprint-leagues',

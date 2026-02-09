@@ -88,7 +88,7 @@ import { i18nTeamGroups } from '@/features/teams/groups/i18n';
 import { i18nTeamDao } from '@/features/teams/dao/i18n';
 import { i18nTeamRewardsPage } from '@/features/teams/rewards/i18n';
 import { i18nTeamSettingsPage } from '@/features/teams/settings/i18n';
-import { i18nSpaceDaoEditor } from '@/features/spaces/dao/pages/creator/space-dao-editor-i18n';
+import { i18nSpaceIncentiveEditor } from '@/features/spaces/incentive/pages/creator/space-incentive-editor-i18n';
 import { i18nSpaceLayout } from '@/features/spaces/layout/space-layout-i18n';
 export const LANGUAGES = ['en', 'ko'];
 
@@ -185,7 +185,7 @@ Object.entries({
   MyRewards: i18nRewardsPage,
   TeamGroups: i18nTeamGroups,
   TeamDao: i18nTeamDao,
-  SpaceDaoEditor: i18nSpaceDaoEditor,
+  SpaceIncentiveEditor: i18nSpaceIncentiveEditor,
   RewardTypes: i18nRewardTypes,
   TeamRewards: i18nTeamRewardsPage,
   TeamSettings: i18nTeamSettingsPage,
