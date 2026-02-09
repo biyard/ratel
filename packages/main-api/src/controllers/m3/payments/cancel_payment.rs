@@ -39,7 +39,7 @@ pub async fn cancel_payment_handler(
         .execute(cli)
         .await?;
 
-    debug!(
+    tracing::debug!(
         "Payment {} cancelled and user {} membership downgraded to Free",
         payment_id, user_pk
     );
