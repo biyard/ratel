@@ -13,6 +13,11 @@ space-page-dashboard = { path = "../space-page-dashboard/", optional = true }
 space-page-overview = { path = "../space-page-overview/", optional = true }
 space-page-actions = { path = "../space-page-actions/", optional = true }
 space-page-apps = { path = "../space-page-apps/", optional = true }
+aws-sdk-dynamodb = { workspace = true, optional = true }
+serde_dynamo = { workspace = true, optional = true }
+serde = { workspace = true }
+base64 = { workspace = true, optional = true }
+tracing = { version = "0.1", optional = true }
 
 [features]
 default = ["web"]
@@ -23,4 +28,4 @@ desktop = ["dioxus/desktop", "space-page-overview/desktop", "space-page-dashboar
 # The feature that are only required for the mobile = ["dioxus/mobile"] build target should be optional and only enabled in the mobile = ["dioxus/mobile"] feature
 mobile = ["dioxus/mobile", "space-page-overview/mobile", "space-page-dashboard/mobile", "space-page-actions/mobile", "space-page-apps/mobile"]
 # The feature that are only required for the server = ["dioxus/server"] build target should be optional and only enabled in the server = ["dioxus/server"] feature
-server = ["dioxus/server", "common/server", "space-page-overview/server", "space-page-dashboard/server", "common/server", "space-page-actions/server", "space-page-apps/server"]
+server = ["dioxus/server", "common/server", "space-page-overview/server", "space-page-dashboard/server", "common/server", "space-page-actions/server", "space-page-apps/server", "aws-sdk-dynamodb", "serde_dynamo", "base64", "tracing"]

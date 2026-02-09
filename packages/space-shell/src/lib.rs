@@ -2,6 +2,8 @@
 pub mod assets;
 mod components;
 pub mod layout;
+#[cfg(feature = "server")]
+pub mod models;
 pub mod route;
 pub mod views;
 

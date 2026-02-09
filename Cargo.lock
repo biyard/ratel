@@ -3773,6 +3773,8 @@ name = "common"
 version = "0.1.0"
 dependencies = [
  "aide",
+ "aws-sdk-dynamodb",
+ "base64 0.22.1",
  "bdk",
  "by-macros",
  "dioxus-translate",
@@ -17131,12 +17133,17 @@ dependencies = [
 name = "space-shell"
 version = "0.1.0"
 dependencies = [
+ "aws-sdk-dynamodb",
+ "base64 0.22.1",
  "common",
  "dioxus",
+ "serde",
+ "serde_dynamo",
  "space-page-actions",
  "space-page-apps",
  "space-page-dashboard",
  "space-page-overview",
+ "tracing",
 ]
 
 [[package]]

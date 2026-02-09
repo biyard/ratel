@@ -3,11 +3,12 @@ use crate::*;
 pub fn get_nav_item(
     space_id: SpacePartition,
     _role: SpaceUserRole,
-) -> Option<(Element, SpacePage, NavigationTarget)> {
+) -> Option<(Element, SpacePage, NavigationTarget, i64)> {
     Some((
         icon(),
         SpacePage::Dashboard,
         Route::HomePage { space_id }.into(),
+        0,
     ))
 }
 

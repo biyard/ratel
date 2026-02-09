@@ -70,6 +70,7 @@ pub enum EntityType {
     SpaceTemplate(String),          // template name
     SpaceEmailVerification(String), //email
     SpaceRequirement(String),       // use SpaceRequirementType
+    SpaceNavItem(String),           // SpacePage name
 
     // Poll Feature entity types
     SpacePoll(String), // SpacePoll#{uuid or space_id}

@@ -3,11 +3,11 @@ use crate::*;
 pub fn get_nav_item(
     space_id: SpacePartition,
     role: SpaceUserRole,
-) -> Option<(Element, SpacePage, NavigationTarget)> {
+) -> Option<(Element, SpacePage, NavigationTarget, i64)> {
     if role != SpaceUserRole::Creator {
         return None;
     }
-    Some((icon(), SpacePage::Apps, Route::HomePage { space_id }.into()))
+    Some((icon(), SpacePage::Apps, Route::HomePage { space_id }.into(), 3))
 }
 
 #[component]

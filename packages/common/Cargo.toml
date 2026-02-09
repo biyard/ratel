@@ -22,8 +22,10 @@ serde_dynamo = { workspace = true, optional = true }
 schemars = { workspace = true, optional = true }
 aide = { workspace = true, optional = true }
 ssi = { version = "0.12.0", features = ["bbs"], optional = true }
+aws-sdk-dynamodb = { workspace = true, optional = true }
+base64 = { workspace = true, optional = true }
 
 [features]
 default = []
-server = ["bdk/be", "serde_dynamo", "schemars", "aide", "ssi"]
+server = ["bdk/be", "serde_dynamo", "schemars", "aide", "ssi", "aws-sdk-dynamodb", "base64"]
 web = []

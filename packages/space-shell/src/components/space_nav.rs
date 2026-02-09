@@ -5,16 +5,18 @@ pub struct SpaceNavItem {
     pub icon: Element,
     pub label: SpacePage,
     pub link: NavigationTarget,
+    pub order: i64,
 }
 
-impl TryFrom<Option<(Element, SpacePage, NavigationTarget)>> for SpaceNavItem {
-    fn try_from(value: Option<(Element, SpacePage, NavigationTarget)>) -> Result<Self> {
+impl TryFrom<Option<(Element, SpacePage, NavigationTarget, i64)>> for SpaceNavItem {
+    fn try_from(value: Option<(Element, SpacePage, NavigationTarget, i64)>) -> Result<Self> {
         let value = value.ok_or_else(|| crate::Error::UnauthorizedAccess)?;
 
         Ok(Self {
             icon: value.0,
             label: value.1,
             link: value.2,
+            order: value.3,
         })
     }
 
