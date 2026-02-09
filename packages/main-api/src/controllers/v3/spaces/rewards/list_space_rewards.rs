@@ -27,12 +27,10 @@ use aide::NoApi;
 )]
 
 pub struct ListRewardQuery {
-    #[schemars(description = "Entity type to filter by e.g)POLL")]
-    pub entity_type: Option<EntityType>,
-    #[schemars(description = "Bookmark to start from")]
-    pub bookmark: Option<String>,
+    #[schemars(description = "Action key to filter by e.g)PollSk")]
+    pub action_key: Option<EntityType>,
 }
-pub async fn list_rewards_handler(
+pub async fn list_space_rewards_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(permissions): NoApi<Permissions>,
     NoApi(user): NoApi<Option<User>>,
@@ -42,25 +40,15 @@ pub async fn list_rewards_handler(
 ) -> Result<Json<ListItemsResponse<SpaceRewardResponse>>> {
     permissions.permitted(TeamGroupPermission::SpaceRead)?;
 
-    let (space_rewards, bookmark) = SpaceReward::list_by_feature(
-        &dynamo.client,
-        space_pk.clone().into(),
-        query.entity_type,
-        query.bookmark,
-    )
-    .await?;
+    let space_rewards =
+        SpaceReward::list_by_action(&dynamo.client, space_pk.clone().into(), query.action_key)
+            .await?;
 
     let user_rewards = if let Some(user) = user {
-        let user_reward_keys = space_rewards
+        let user_reward_keys: Vec<_> = space_rewards
             .iter()
-            .map(|reward| {
-                UserReward::keys(
-                    user.pk.clone().into(),
-                    space_pk.clone().into(),
-                    reward.sk.clone(),
-                )
-            })
-            .collect::<Vec<_>>();
+            .map(|reward| UserReward::keys(user.pk.clone().into(), reward.sk.clone()))
+            .collect::<Result<Vec<_>>>()?;
         UserReward::batch_get(&dynamo.client, user_reward_keys).await?
     } else {
         vec![]
@@ -77,6 +65,6 @@ pub async fn list_rewards_handler(
                 }
             })
             .collect(),
-        bookmark,
+        bookmark: None,
     }))
 }
