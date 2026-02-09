@@ -3,25 +3,8 @@ import type {
   AdminCancelPaymentResponse,
 } from '@/features/admin/types/admin-user';
 import type { AdminPaymentsI18n } from '@/app/admin/payments/payments-page-i18n';
-
-function formatCurrency(amount: number, currency: string): string {
-  return new Intl.NumberFormat('ko-KR', {
-    style: 'currency',
-    currency: currency || 'KRW',
-  }).format(amount);
-}
-
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return '-';
-  const date = new Date(dateStr);
-  return new Intl.DateTimeFormat('ko-KR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date);
-}
+import { formatCurrency, formatDate } from '@/features/admin/utils/format';
+import { Button } from '@/components/ui/button';
 
 interface RefundModalProps {
   isOpen: boolean;
@@ -119,12 +102,13 @@ export function RefundModal({
               </div>
             )}
           </div>
-          <button
+          <Button
             onClick={onSuccessConfirm}
-            className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="w-full"
+            variant="rounded_primary"
           >
             {i18n.refundSuccessConfirm}
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -170,21 +154,22 @@ export function RefundModal({
             />
           </div>
           <div className="flex justify-end gap-3">
-            <button
+            <Button
               type="button"
               onClick={onClose}
               disabled={isProcessing}
-              className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              variant="rounded_secondary"
             >
               {i18n.refundCancel}
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={isProcessing}
-              className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+              variant="rounded_primary"
+              className="bg-red-600 hover:bg-red-700 text-white border-red-600 hover:border-red-700"
             >
               {isProcessing ? i18n.refundProcessing : i18n.refundSubmit}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

@@ -1,5 +1,7 @@
 import type { AdminPaymentResponse } from '@/features/admin/types/admin-user';
 import type { AdminPaymentsI18n } from '@/app/admin/payments/payments-page-i18n';
+import { formatCurrency, formatDate } from '@/features/admin/utils/format';
+import { Button } from '@/components/ui/button';
 
 function getStatusLabel(status: string, i18n: AdminPaymentsI18n): string {
   const statusMap: Record<string, string> = {
@@ -31,25 +33,6 @@ function getStatusColor(status: string): string {
     colorMap[status] ||
     'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
   );
-}
-
-function formatCurrency(amount: number, currency: string): string {
-  return new Intl.NumberFormat('ko-KR', {
-    style: 'currency',
-    currency: currency || 'KRW',
-  }).format(amount);
-}
-
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return '-';
-  const date = new Date(dateStr);
-  return new Intl.DateTimeFormat('ko-KR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date);
 }
 
 interface PaymentsTableProps {
@@ -122,16 +105,18 @@ export function PaymentsTable({
                 {formatDate(payment.paid_at)}
               </td>
               <td className="whitespace-nowrap px-4 py-3 text-sm">
-                <button
+                <Button
                   onClick={() => onRefundClick(payment)}
                   disabled={
                     payment.status === 'CANCELLED' ||
                     payment.status === 'FAILED'
                   }
-                  className="rounded bg-red-100 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-200 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800"
+                  variant="rounded_primary"
+                  size="sm"
+                  className="bg-red-600 hover:bg-red-700 text-white border-red-600 hover:border-red-700"
                 >
                   {i18n.refund}
-                </button>
+                </Button>
               </td>
             </tr>
           ))}
