@@ -90,6 +90,8 @@ import { i18nTeamRewardsPage } from '@/features/teams/rewards/i18n';
 import { i18nTeamSettingsPage } from '@/features/teams/settings/i18n';
 import { i18nSpaceIncentiveEditor } from '@/features/spaces/incentive/pages/creator/space-incentive-editor-i18n';
 import { i18nSpaceLayout } from '@/features/spaces/layout/space-layout-i18n';
+import { i18nSpaceReportPage } from '@/features/spaces/reports/pages/creator/space-report-page-i18n';
+import { i18nSpaceHtmlViewer } from '@/features/spaces/files/pages/html-viewer/space-html-viewer-i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 // NOTE: it should be migrated to namespace based code splitting later
@@ -189,6 +191,8 @@ Object.entries({
   RewardTypes: i18nRewardTypes,
   TeamRewards: i18nTeamRewardsPage,
   TeamSettings: i18nTeamSettingsPage,
+  SpaceReportPage: i18nSpaceReportPage,
+  SpaceHtmlViewer: i18nSpaceHtmlViewer,
 }).forEach(([key, value]) => {
   resources.en[key] = value.en;
   resources.ko[key] = value.ko;

@@ -37,6 +37,7 @@ import SpaceFilePage from './app/spaces/[id]/file/space-file-page';
 import SpaceRecommendationPage from './app/spaces/[id]/recommendation/space-recommendation-page';
 import DiscussionPage from './app/spaces/[id]/discussions/[discussion-id]/discussion-page';
 import SpaceRequirementPage from './app/spaces/[id]/requirements/space-requirment-page';
+import { SpaceReportPage } from './app/spaces/[id]/report/space-report-page';
 
 // Admin
 import AdminPage from './app/admin/page';
@@ -77,6 +78,7 @@ import Providers from './providers/providers';
 import { PdfViewerLoader } from './features/spaces/files/components/pdf-viewer-loader';
 import SpaceIncentiveSettingPage from './app/spaces/[id]/incentive-setting/space-incentive-setting-page';
 import SpaceIncentivePage from './app/spaces/[id]/incentive/space-incentive-page';
+import { SpaceHtmlViewerPage } from './features/spaces/files/pages/html-viewer/space-html-viewer-page';
 
 export const routes = createBrowserRouter([
   // PDF Viewer - Completely standalone without any layout
@@ -86,6 +88,16 @@ export const routes = createBrowserRouter([
     Component: () => (
       <Providers>
         <PdfViewerLoader />
+      </Providers>
+    ),
+  },
+  // HTML Viewer for Report - Completely standalone without any layout
+  {
+    id: 'space-html-viewer-standalone',
+    path: '/spaces/:spacePk/report/view',
+    Component: () => (
+      <Providers>
+        <SpaceHtmlViewerPage />
       </Providers>
     ),
   },
@@ -405,6 +417,11 @@ export const routes = createBrowserRouter([
             Component: SpaceRequirementPage,
             handle: { hideSpaceHeader: true },
           },
+          {
+            id: 'space-report-page',
+            path: 'report',
+            Component: SpaceReportPage,
+          }, // End of Report Feature
         ],
       }, // End of Space Layout
       {
