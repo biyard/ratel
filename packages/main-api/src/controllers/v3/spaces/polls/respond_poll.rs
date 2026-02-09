@@ -2,7 +2,7 @@ use crate::features::did::VerifiedAttributes;
 use crate::features::spaces::panels::SpacePanelParticipant;
 
 use crate::features::spaces::rewards::{RewardUserBehavior, SpaceReward, UserReward};
-use crate::features::spaces::{SpaceParticipant, polls::*};
+use crate::features::spaces::{SpaceIncentiveScore, SpaceParticipant, polls::*};
 use crate::models::user::User;
 use crate::types::{
     Age, Answer, CompositePartition, EntityType, Gender, Partition, ResourcePermissions,
@@ -64,7 +64,7 @@ pub async fn respond_poll_handler(
         return Err(Error::PollNotInProgress);
     }
 
-    if !validate_answers(poll.questions, req.answers.clone()) {
+    if !validate_answers(poll.clone().questions, req.answers.clone()) {
         return Err(Error::PollAnswersMismatchQuestions);
     }
 
@@ -99,6 +99,7 @@ pub async fn respond_poll_handler(
 
     if user_response.is_none() {
         let user_pk = user.pk.clone();
+        let score = req.answers.len() as i64;
         let create_tx = PollUserAnswer::new(
             poll.pk.clone(),
             poll_pk.clone(),
@@ -122,6 +123,12 @@ pub async fn respond_poll_handler(
                 Some(space.user_pk.clone()),
             )
             .await?;
+        }
+
+        if poll.is_default_poll() {
+            SpaceIncentiveScore::add_pre_score(&dynamo.client, &space_pk, &user_pk, score).await?;
+        } else {
+            SpaceIncentiveScore::add_post_score(&dynamo.client, &space_pk, &user_pk, score).await?;
         }
     } else {
         let (pk, sk) = PollUserAnswer::keys(&user.pk.clone(), &poll_pk.clone(), &poll.pk.clone());

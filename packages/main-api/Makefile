@@ -48,6 +48,7 @@ DATABASE_URL ?= "postgresql://postgres:postgres@postgres:5432/ratel"
 DYNAMO_ENDPOINT ?= http://localstack:4566
 DYNAMO_TABLE_PREFIX ?= ratel-$(ENV)
 KAIA_ENDPOINT ?= https://public-en-kairos.node.kaia.io
+KAIA_ARCHIVE_ENDPOINT ?= https://archive-en-kairos.node.kaia.io
 KAIA_OWNER_ADDR ?= $(strip $(shell ./key.sh | awk '{print $$1}'))
 KAIA_OWNER_KEY ?= $(strip $(shell ./key.sh | awk '{print $$2}'))
 KAIA_FEEPAYER_ADDR ?= $(strip $(shell ./key.sh | awk '{print $$1}'))
@@ -96,6 +97,7 @@ BUILD_ENV ?= ENV=$(ENV) \
 								WATERMARK_QUEUE_URL=$(WATERMARK_QUEUE_URL) \
 								PRIVATE_BUCKET_NAME=$(PRIVATE_BUCKET_NAME) \
 								KAIA_ENDPOINT=$(KAIA_ENDPOINT) \
+								KAIA_ARCHIVE_ENDPOINT=$(KAIA_ARCHIVE_ENDPOINT) \
 								KAIA_OWNER_ADDR=$(KAIA_OWNER_ADDR) \
 								KAIA_OWNER_KEY=$(KAIA_OWNER_KEY) \
 								KAIA_FEEPAYER_ADDR=$(KAIA_FEEPAYER_ADDR) \

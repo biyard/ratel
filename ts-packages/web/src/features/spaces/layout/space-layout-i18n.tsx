@@ -26,7 +26,8 @@ export interface I18nSpaceLayout extends Record<Label, string> {
   menu_boards: string;
   menu_members: string;
   menu_files: string;
-  menu_dao: string;
+  menu_incentive_setting: string;
+  menu_incentive: string;
   menu_quiz: string;
   menu_recommendations: string;
   menu_sprint_league: string;
@@ -41,6 +42,7 @@ export interface I18nSpaceLayout extends Record<Label, string> {
 
   // Admin Action
   action_admin_start: string;
+  action_admin_finish: string;
   action_admin_delete: string;
   action_admin_publish: string;
 
@@ -55,6 +57,8 @@ export interface I18nSpaceLayout extends Record<Label, string> {
   toast_start_failed: string;
   toast_delete_success: string;
   toast_delete_failed: string;
+  toast_finish_success: string;
+  toast_finish_failed: string;
   toast_publish_success: string;
   toast_publish_failed: string;
   toast_update_title_success: string;
@@ -116,7 +120,8 @@ export const i18nSpaceLayout = {
     menu_boards: 'Boards',
     menu_members: 'Members',
     menu_files: 'Files',
-    menu_dao: 'DAO',
+    menu_incentive_setting: 'Incentive Setting',
+    menu_incentive: 'Incentives',
     menu_quiz: 'Quizzes',
     menu_recommendations: 'Recommendations',
     menu_sprint_league: 'Sprint League',
@@ -142,6 +147,7 @@ export const i18nSpaceLayout = {
 
     // Admin Action
     action_admin_start: 'Start',
+    action_admin_finish: 'Finish',
     action_admin_delete: 'Delete',
     action_admin_publish: 'Publish',
     action_viewer_participate: 'Participate',
@@ -154,6 +160,8 @@ export const i18nSpaceLayout = {
     toast_start_failed: 'Failed to start space.',
     toast_delete_success: 'Success to delete space.',
     toast_delete_failed: 'Failed to delete space.',
+    toast_finish_success: 'Success to finish space.',
+    toast_finish_failed: 'Failed to finish space.',
     toast_publish_success: 'Success to publish space.',
     toast_publish_failed: 'Failed to publish space.',
     toast_update_title_success: 'Success to update space title.',
@@ -219,7 +227,8 @@ export const i18nSpaceLayout = {
     menu_boards: '게시판',
     menu_members: '멤버',
     menu_files: '파일',
-    menu_dao: 'DAO',
+    menu_incentive_setting: '인센티브 설정',
+    menu_incentive: '인센티브',
     menu_quiz: '퀴즈',
     menu_recommendations: '권고사항',
     menu_requirements: '사전 조건',
@@ -246,6 +255,7 @@ export const i18nSpaceLayout = {
 
     // Admin Action
     action_admin_start: '시작하기',
+    action_admin_finish: '종료하기',
     action_admin_delete: '삭제하기',
     action_admin_publish: '게시하기',
     action_viewer_participate: '참여하기',
@@ -258,6 +268,8 @@ export const i18nSpaceLayout = {
     toast_start_failed: '스페이스 시작에 실패했습니다.',
     toast_delete_success: '스페이스를 성공적으로 삭제했습니다.',
     toast_delete_failed: '스페이스 삭제에 실패했습니다.',
+    toast_finish_success: '스페이스를 성공적으로 종료했습니다.',
+    toast_finish_failed: '스페이스 종료에 실패했습니다.',
     toast_publish_success: '스페이스를 성공적으로 게시했습니다.',
     toast_publish_failed: '스페이스 게시에 실패했습니다.',
     toast_update_title_success: '스페이스 제목을 성공적으로 변경했습니다.',
@@ -325,7 +337,8 @@ export function useSpaceLayoutI18n() {
     menu_boards: t('menu_boards'),
     menu_members: t('menu_members'),
     menu_files: t('menu_files'),
-    menu_dao: t('menu_dao'),
+    menu_incentive_setting: t('menu_incentive_setting'),
+    menu_incentive: t('menu_incentive'),
     menu_quiz: t('menu_quiz'),
     menu_recommendations: t('menu_recommendations'),
     menu_sprint_league: t('menu_sprint_league'),
@@ -346,6 +359,7 @@ export function useSpaceLayoutI18n() {
     viewer_credentials_button_label: t('viewer_credentials_button_label'),
 
     action_admin_start: t('action_admin_start'),
+    action_admin_finish: t('action_admin_finish'),
     action_admin_delete: t('action_admin_delete'),
     action_admin_publish: t('action_admin_publish'),
     action_viewer_participate: t('action_viewer_participate'),
@@ -357,6 +371,8 @@ export function useSpaceLayoutI18n() {
     toast_start_failed: t('toast_start_failed'),
     toast_delete_success: t('toast_delete_success'),
     toast_delete_failed: t('toast_delete_failed'),
+    toast_finish_success: t('toast_finish_success'),
+    toast_finish_failed: t('toast_finish_failed'),
     toast_publish_success: t('toast_publish_success'),
     toast_publish_failed: t('toast_publish_failed'),
     toast_update_title_success: t('toast_update_title_success'),
