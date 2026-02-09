@@ -1,9 +1,7 @@
 use crate::features::did::VerifiedAttributes;
 use crate::features::spaces::panels::SpacePanelParticipant;
 
-use crate::features::spaces::rewards::{
-    PollRewardKey, RewardAction, RewardKey, SpaceReward, UserReward,
-};
+use crate::features::spaces::rewards::{RewardUserBehavior, SpaceReward, UserReward};
 use crate::features::spaces::{SpaceParticipant, polls::*};
 use crate::models::user::User;
 use crate::types::{
@@ -89,10 +87,11 @@ pub async fn respond_poll_handler(
     }
 
     // Response Poll Reward
-    let reward = SpaceReward::get_by_reward_key(
+    let reward = SpaceReward::get_by_action(
         &dynamo.client,
         space_pk.clone().into(),
-        (poll.sk.clone().into(), PollRewardKey::Respond).into(),
+        poll.sk.clone(),
+        RewardUserBehavior::RespondPoll,
     )
     .await;
 

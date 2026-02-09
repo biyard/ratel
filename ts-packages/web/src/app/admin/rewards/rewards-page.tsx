@@ -1,88 +1,40 @@
 import { useState } from 'react';
 import { useRewardsPageController } from './use-rewards-page-controller';
 import { useAdminRewardsI18n, AdminRewardsI18n } from './rewards-page-i18n';
-import { useAllTransactions } from './_hooks/use-all-transactions';
-import type {
-  GlobalRewardResponse,
-  GlobalRewardAction,
-  UpdateGlobalRewardRequest,
+import { useAllTransactions } from './hooks/use-all-transactions';
+import {
   RewardCondition,
+  RewardUserBehavior,
+  RewardPeriod,
 } from '@/features/spaces/rewards/types';
 import {
   ConditionType,
   getConditionType,
   getConditionValue,
-  RewardPeriod,
 } from '@/features/spaces/rewards/types';
+import {
+  useRewardBehaviorLabel,
+  useRewardPeriodLabel,
+  useRewardConditionLabel,
+} from '@/features/spaces/rewards/types';
+import { UpdateRewardRequest } from './hooks/use-update-reward-mutation';
+import { Reward } from '@/features/spaces/rewards/hooks/use-rewards';
 
 type TabType = 'rules' | 'transactions';
-
-function getActionLabel(
-  action: GlobalRewardAction,
-  i18n: AdminRewardsI18n,
-): string {
-  switch (action) {
-    case 'PollRespond':
-      return i18n.actionPollRespond;
-    default:
-      return i18n.actionNone;
-  }
-}
-
-function getPeriodLabel(period: RewardPeriod, i18n: AdminRewardsI18n): string {
-  switch (period) {
-    case RewardPeriod.Once:
-      return i18n.periodOnce;
-    case RewardPeriod.Hourly:
-      return i18n.periodHourly;
-    case RewardPeriod.Daily:
-      return i18n.periodDaily;
-    case RewardPeriod.Weekly:
-      return i18n.periodWeekly;
-    case RewardPeriod.Monthly:
-      return i18n.periodMonthly;
-    case RewardPeriod.Yearly:
-      return i18n.periodYearly;
-    case RewardPeriod.Unlimited:
-      return i18n.periodUnlimited;
-    default:
-      return period;
-  }
-}
-
-function getConditionLabel(
-  condition: RewardCondition,
-  i18n: AdminRewardsI18n,
-): string {
-  const conditionType = getConditionType(condition);
-  const conditionValue = getConditionValue(condition);
-  if (conditionType === ConditionType.None) {
-    return i18n.conditionNone;
-  }
-  if (conditionType === ConditionType.MaxClaims) {
-    return `${i18n.conditionMaxClaims}: ${conditionValue}`;
-  }
-  if (conditionType === ConditionType.MaxPoints) {
-    return `${i18n.conditionMaxPoints}: ${conditionValue}`;
-  }
-  if (conditionType === ConditionType.MaxUserClaims) {
-    return `${i18n.conditionMaxUserClaims}: ${conditionValue}`;
-  }
-  if (conditionType === ConditionType.MaxUserPoints) {
-    return `${i18n.conditionMaxUserPoints}: ${conditionValue}`;
-  }
-  return String(condition);
-}
 
 function RewardTable({
   rewards,
   onEdit,
   i18n,
 }: {
-  rewards: GlobalRewardResponse[];
-  onEdit: (reward: GlobalRewardResponse) => void;
+  rewards: Reward[];
+  onEdit: (reward: Reward) => void;
   i18n: AdminRewardsI18n;
 }) {
+  const getBehaviorLabel = useRewardBehaviorLabel();
+  const getPeriodLabel = useRewardPeriodLabel();
+  const getConditionLabel = useRewardConditionLabel();
+
   if (rewards.length === 0) {
     return (
       <div className="py-8 text-center text-gray-500">{i18n.noRewards}</div>
@@ -111,30 +63,39 @@ function RewardTable({
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
-          {rewards.map((reward) => (
-            <tr key={reward.reward_action}>
-              <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                {getActionLabel(reward.reward_action, i18n)}
-              </td>
-              <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
-                {reward.point.toLocaleString()}
-              </td>
-              <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
-                {getPeriodLabel(reward.period, i18n)}
-              </td>
-              <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
-                {getConditionLabel(reward.condition, i18n)}
-              </td>
-              <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                <button
-                  onClick={() => onEdit(reward)}
-                  className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                >
-                  {i18n.edit}
-                </button>
-              </td>
-            </tr>
-          ))}
+          {rewards.map((reward) => {
+            const conditionType = getConditionType(reward.condition);
+            const conditionValue = getConditionValue(reward.condition);
+            const conditionLabel =
+              conditionType === ConditionType.None
+                ? getConditionLabel(conditionType)
+                : `${getConditionLabel(conditionType)}: ${conditionValue}`;
+
+            return (
+              <tr key={reward.reward_behavior}>
+                <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                  {getBehaviorLabel(reward.reward_behavior)}
+                </td>
+                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                  {reward.point.toLocaleString()}
+                </td>
+                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                  {getPeriodLabel(reward.period)}
+                </td>
+                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                  {conditionLabel}
+                </td>
+                <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
+                  <button
+                    onClick={() => onEdit(reward)}
+                    className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                  >
+                    {i18n.edit}
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -264,28 +225,68 @@ function TransactionTable({ i18n }: { i18n: AdminRewardsI18n }) {
   );
 }
 
-function RewardEditForm({
+function getAvailableBehaviors(
+  existingRewards: Reward[],
+  editingReward: Reward | null,
+): RewardUserBehavior[] {
+  // Get all possible actions from the enum
+  const allBehaviors = Object.values(RewardUserBehavior);
+
+  // Get the set of already-used actions
+  const usedBehaviors = new Set(existingRewards.map((r) => r.reward_behavior));
+
+  // Filter out used actions, but keep the current reward's action if editing
+  return allBehaviors.filter((behavior) => {
+    // If we're editing, always include the current reward's action
+    if (editingReward && behavior === editingReward.reward_behavior) {
+      return true;
+    }
+    // Otherwise, only include if not already used
+    return !usedBehaviors.has(behavior);
+  });
+}
+
+function RewardForm({
   reward,
-  onSubmit,
+  availableBehaviors,
+  onCreate,
+  onUpdate,
   onCancel,
   isSubmitting,
   i18n,
 }: {
-  reward: GlobalRewardResponse;
-  onSubmit: (request: UpdateGlobalRewardRequest) => Promise<void>;
+  reward: Reward | null;
+  availableBehaviors: RewardUserBehavior[];
+  onCreate: (request: UpdateRewardRequest) => Promise<void>;
+  onUpdate: (request: UpdateRewardRequest) => Promise<void>;
   onCancel: () => void;
   isSubmitting: boolean;
   i18n: AdminRewardsI18n;
 }) {
-  const [point, setPoint] = useState(reward.point);
-  const [period, setPeriod] = useState<RewardPeriod>(reward.period);
+  const [behavior, setBehavior] = useState<RewardUserBehavior>(
+    reward?.reward_behavior ||
+      availableBehaviors[0] ||
+      RewardUserBehavior.RespondPoll,
+  );
+  const [point, setPoint] = useState(reward?.point || 0);
+  const [period, setPeriod] = useState<RewardPeriod>(
+    reward?.period || RewardPeriod.Once,
+  );
 
-  const defaultConditionType = getConditionType(reward.condition);
-  const defaultConditionValue = getConditionValue(reward.condition);
+  const defaultConditionType = reward
+    ? getConditionType(reward.condition)
+    : ConditionType.None;
+  const defaultConditionValue = reward
+    ? getConditionValue(reward.condition)
+    : 0;
 
   const [conditionType, setConditionType] =
     useState<ConditionType>(defaultConditionType);
   const [conditionValue, setConditionValue] = useState(defaultConditionValue);
+
+  const getBehaviorLabel = useRewardBehaviorLabel();
+  const getPeriodLabel = useRewardPeriodLabel();
+  const getConditionLabel = useRewardConditionLabel();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -297,21 +298,49 @@ function RewardEditForm({
       condition = { [conditionType]: conditionValue } as RewardCondition;
     }
 
-    await onSubmit({
-      action: reward.reward_action,
+    const request = {
+      behavior: behavior,
       point,
       period,
       condition,
-    });
+    };
+
+    // Call create or update based on whether we're editing
+    if (reward) {
+      await onUpdate(request);
+    } else {
+      await onCreate(request);
+    }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
         <h2 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
-          {i18n.edit}: {getActionLabel(reward.reward_action, i18n)}
+          {reward ? i18n.editReward : i18n.addReward}
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              {i18n.actionLabel}
+            </label>
+            <select
+              value={behavior}
+              onChange={(e) => {
+                if (reward) return;
+                setBehavior(e.target.value as RewardUserBehavior);
+              }}
+              disabled={!!reward}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white disabled:opacity-20"
+            >
+              {availableBehaviors.map((behaviorOption) => (
+                <option key={behaviorOption} value={behaviorOption}>
+                  {getBehaviorLabel(behaviorOption)}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               {i18n.point}
@@ -333,15 +362,11 @@ function RewardEditForm({
               onChange={(e) => setPeriod(e.target.value as RewardPeriod)}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             >
-              <option value={RewardPeriod.Once}>{i18n.periodOnce}</option>
-              <option value={RewardPeriod.Hourly}>{i18n.periodHourly}</option>
-              <option value={RewardPeriod.Daily}>{i18n.periodDaily}</option>
-              <option value={RewardPeriod.Weekly}>{i18n.periodWeekly}</option>
-              <option value={RewardPeriod.Monthly}>{i18n.periodMonthly}</option>
-              <option value={RewardPeriod.Yearly}>{i18n.periodYearly}</option>
-              <option value={RewardPeriod.Unlimited}>
-                {i18n.periodUnlimited}
-              </option>
+              {Object.values(RewardPeriod).map((p) => (
+                <option key={p} value={p}>
+                  {getPeriodLabel(p)}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -356,15 +381,11 @@ function RewardEditForm({
               }
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             >
-              <option value="None">{i18n.conditionNone}</option>
-              <option value="MaxClaims">{i18n.conditionMaxClaims}</option>
-              <option value="MaxPoints">{i18n.conditionMaxPoints}</option>
-              <option value="MaxUserClaims">
-                {i18n.conditionMaxUserClaims}
-              </option>
-              <option value="MaxUserPoints">
-                {i18n.conditionMaxUserPoints}
-              </option>
+              {Object.values(ConditionType).map((ct) => (
+                <option key={ct} value={ct}>
+                  {getConditionLabel(ct)}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -407,7 +428,7 @@ function RewardEditForm({
 export function RewardsPage() {
   const ctrl = useRewardsPageController();
   const i18n = useAdminRewardsI18n();
-  const [activeTab, setActiveTab] = useState<TabType>('transactions');
+  const [activeTab, setActiveTab] = useState<TabType>('rules');
 
   return (
     <div className="mx-auto w-full max-w-desktop p-6">
@@ -419,16 +440,6 @@ export function RewardsPage() {
       <div className="mb-4 border-b border-gray-200 dark:border-gray-700">
         <nav className="-mb-px flex gap-4">
           <button
-            onClick={() => setActiveTab('transactions')}
-            className={`py-2 px-4 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'transactions'
-                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-            }`}
-          >
-            {i18n.tabTransactions}
-          </button>
-          <button
             onClick={() => setActiveTab('rules')}
             className={`py-2 px-4 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'rules'
@@ -437,6 +448,16 @@ export function RewardsPage() {
             }`}
           >
             {i18n.tabRules}
+          </button>
+          <button
+            onClick={() => setActiveTab('transactions')}
+            className={`py-2 px-4 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'transactions'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+            }`}
+          >
+            {i18n.tabTransactions}
           </button>
         </nav>
       </div>
@@ -453,20 +474,38 @@ export function RewardsPage() {
                 {i18n.loadError}: {ctrl.error.message}
               </div>
             ) : (
-              <RewardTable
-                rewards={ctrl.rewards}
-                onEdit={ctrl.openEditForm}
-                i18n={i18n}
-              />
+              <div>
+                <div className="flex justify-start px-6 py-6">
+                  <button
+                    onClick={() => ctrl.openForm()}
+                    disabled={
+                      getAvailableBehaviors(ctrl.rewards, null).length === 0
+                    }
+                    className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {i18n.addReward}
+                  </button>
+                </div>
+                <RewardTable
+                  rewards={ctrl.rewards}
+                  onEdit={(reward) => ctrl.openForm(reward)}
+                  i18n={i18n}
+                />
+              </div>
             )}
           </>
         )}
       </div>
 
-      {ctrl.isFormOpen && ctrl.editingReward && (
-        <RewardEditForm
+      {ctrl.isFormOpen && (
+        <RewardForm
           reward={ctrl.editingReward}
-          onSubmit={ctrl.handleUpdateReward}
+          availableBehaviors={getAvailableBehaviors(
+            ctrl.rewards,
+            ctrl.editingReward,
+          )}
+          onCreate={ctrl.handleCreateReward}
+          onUpdate={ctrl.handleUpdateReward}
           onCancel={ctrl.closeForm}
           isSubmitting={ctrl.isSubmitting}
           i18n={i18n}
