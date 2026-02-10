@@ -1,0 +1,26 @@
+[package]
+name = "space-shell"
+version = "0.1.0"
+authors = ["hackartists <hackartists@gmail.com>"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+dioxus = { workspace = true }
+common = { workspace = true }
+space-page-dashboard = { path = "../space-page-dashboard/", optional = true }
+space-page-overview = { path = "../space-page-overview/", optional = true }
+space-page-actions = { path = "../space-page-actions/", optional = true }
+space-page-apps = { path = "../space-page-apps/", optional = true }
+
+[features]
+default = ["web"]
+# The feature that are only required for the web = ["dioxus/web"] build target should be optional and only enabled in the web = ["dioxus/web"] feature
+web = ["dioxus/web", "common/web", "space-page-overview/web", "space-page-dashboard/web", "space-page-actions/web", "space-page-apps/web"]
+# The feature that are only required for the desktop = ["dioxus/desktop"] build target should be optional and only enabled in the desktop = ["dioxus/desktop"] feature
+desktop = ["dioxus/desktop", "space-page-overview/desktop", "space-page-dashboard/desktop", "space-page-actions/desktop", "space-page-apps/desktop"]
+# The feature that are only required for the mobile = ["dioxus/mobile"] build target should be optional and only enabled in the mobile = ["dioxus/mobile"] feature
+mobile = ["dioxus/mobile", "space-page-overview/mobile", "space-page-dashboard/mobile", "space-page-actions/mobile", "space-page-apps/mobile"]
+# The feature that are only required for the server = ["dioxus/server"] build target should be optional and only enabled in the server = ["dioxus/server"] feature
+server = ["dioxus/server", "common/server", "space-page-overview/server", "space-page-dashboard/server", "common/server", "space-page-actions/server", "space-page-apps/server"]

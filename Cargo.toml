@@ -1,5 +1,5 @@
 [workspace]
-members = ["packages/*"]
+members = ["packages/*", "packages/space-shell", "packages/space-page-overview"]
 resolver = "2"
 exclude = ["deps", "benchmark/*"]
 
@@ -20,6 +20,8 @@ dioxus-translate = { path = "packages/dioxus-translate", version = "0.1.*" }
 dioxus-translate-types = { path = "packages/dioxus-translate-types", version = "0.1.*" }
 dioxus-translate-macro = { path = "packages/dioxus-translate-macro", version = "0.1.*" }
 by-macros = { path = "packages/by-macros", version = "0.6.*" }
+common = { path = "packages/common" }
+
 bigdecimal = "0.4.7"
 
 serde = { version = "1.0", features = ["derive"] }
@@ -60,6 +62,8 @@ serde_with = "3.14.0"
 percent-encoding = "2.3.2"
 base64 = "0.22.1"
 hyper = "1.6.0"
+
+dioxus = { version = "0.7.1", features = ["router", "fullstack"] }
 
 [profile.wasm-dev]
 inherits = "dev"
