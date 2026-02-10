@@ -19,16 +19,14 @@ pub fn Main(space_id: ReadSignal<SpacePartition>) -> Element {
     let space_id = use_resource(move || future(space_id()));
 
     match space_id() {
-        Some(id) => rsx! {
-            div {
-                class: "p-4",
-                h1 { class: "text-2xl font-bold mb-4", "Dashboard Main" }
-                p { "Space ID: { id.to_string() }" }
-
-                Link {
-                    to: Route::Sub { space_id: id.clone() },
-                    class: "text-blue-500 hover:underline",
-                    "Go to Sub Page"
+        Some(id) => {
+            // let extensions = use_resource(|| fetch_extensions_from_db(id));
+            let extensions = vec![];  // 임시: 빈 배열
+            
+            rsx! {
+                views::HomePage {
+                    space_id: id,
+                    extensions: extensions
                 }
             }
         },
