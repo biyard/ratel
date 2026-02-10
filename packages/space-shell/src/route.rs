@@ -11,16 +11,16 @@ pub enum Route {
         #[nest("/:space_id")]
             #[layout(SpaceLayout)]
                 #[route("/dashboard/:..rest")]
-                DashboardApp { space_id: SpacePartition, rest: Vec<String> },
+                Dashboard { space_id: SpacePartition, rest: Vec<String> },
                 #[route("/overview/:..rest")]
-                OverviewApp { space_id: SpacePartition, rest: Vec<String> },
+                Overview { space_id: SpacePartition, rest: Vec<String> },
                 #[route("/actions/:..rest")]
-                ActionsApp { space_id: SpacePartition, rest: Vec<String> },
+                Actions { space_id: SpacePartition, rest: Vec<String> },
                 #[route("/apps/:..rest")]
-                AppsApp { space_id: SpacePartition, rest: Vec<String> },
+                Apps { space_id: SpacePartition, rest: Vec<String> },
                 
-                #[redirect("/", |space_id: SpacePartition| Route::DashboardApp { space_id, rest : vec![] })]
-                #[redirect("/:..rest", |space_id: SpacePartition, rest: Vec<String>| Route::DashboardApp { space_id, rest })]
+                #[redirect("/", |space_id: SpacePartition| Route::Dashboard { space_id, rest : vec![] })]
+                #[redirect("/:..rest", |space_id: SpacePartition, rest: Vec<String>| Route::Dashboard { space_id, rest })]
             #[end_layout]
         #[redirect("/:..rest", |rest: Vec<String>| Route::PageNotFound{ route: rest })]
         #[end_nest]
@@ -50,7 +50,7 @@ macro_rules! define_app_wrapper {
     };
 }
 
-define_app_wrapper!(DashboardApp, DashboardRoute);
-define_app_wrapper!(OverviewApp, OverviewRoute);
-define_app_wrapper!(ActionsApp, ActionsRoute);
-define_app_wrapper!(AppsApp, AppsRoute);
+define_app_wrapper!(Dashboard, DashboardRoute);
+define_app_wrapper!(Overview, OverviewRoute);
+define_app_wrapper!(Actions, ActionsRoute);
+define_app_wrapper!(Apps, AppsRoute);
