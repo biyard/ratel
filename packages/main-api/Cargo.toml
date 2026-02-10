@@ -108,11 +108,12 @@ reqwest.workspace = true
 url = "2.5.7"
 
 [features]
-default = []
+default = ["server"]
 full-test = []
 no-secret = []
 bypass = []
 model-only = []
+server = []
 lambda = ["by-axum/lambda"]
 
 [build-dependencies]
