@@ -49,3 +49,6 @@ user.json
 
 # Google Cloud Secret
 */.gcp/*
+
+# Generated Css
+/packages/*/assets/tailwind.css
