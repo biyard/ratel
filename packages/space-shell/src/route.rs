@@ -4,10 +4,16 @@ use apps::Route as AppsRoute;
 use dashboard::Route as DashboardRoute;
 use overview::Route as OverviewRoute;
 
+/*
+## https://github.com/ealmloff/dioxus/blob/master/packages/router/src/components/child_router.rs
+For now, Child Router only support simple static prefixes
+ */
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
+
 pub enum Route {
     #[nest("/spaces")]
+    
         #[nest("/:space_id")]
             #[layout(SpaceLayout)]
                 #[route("/dashboard/:..rest")]
@@ -39,6 +45,10 @@ fn PageNotFound(route: Vec<String>) -> Element {
     }
 }
 
+/// Defines a wrapper component for a space sub-app.
+///
+/// - Arg[0]: Component name to register in the Route (e.g., `Dashboard`)
+/// - Arg[1]: Actual route enum for the sub-app (e.g., `DashboardRoute`)
 macro_rules! define_app_wrapper {
     ($wrapper_name:ident, $route_module:ident) => {
         #[component]
