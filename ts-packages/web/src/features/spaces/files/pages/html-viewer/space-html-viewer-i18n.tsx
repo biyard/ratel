@@ -1,0 +1,36 @@
+export const i18nSpaceHtmlViewer = {
+  en: {
+    loading: 'Loading...',
+    loading_report: 'Loading report...',
+    analysis_report: 'Analysis Report',
+    back: 'Back',
+    toggle_theme: 'Toggle theme',
+    download: 'Print',
+    zoom_out: 'Zoom out',
+    zoom_in: 'Zoom in',
+    access_denied: 'Access Denied',
+    access_denied_message: 'Only space members can view reports.',
+    go_back: 'Go Back',
+    report_not_available: 'Report Not Available',
+    report_not_available_message:
+      'The report content is not yet available. Please make sure you have saved the report content.',
+    back_to_report_editor: 'Back to Report Editor',
+  },
+  ko: {
+    loading: '로딩 중...',
+    loading_report: '보고서 로딩 중...',
+    analysis_report: '분석 보고서',
+    back: '뒤로',
+    toggle_theme: '테마 전환',
+    download: '인쇄',
+    zoom_out: '축소',
+    zoom_in: '확대',
+    access_denied: '접근 거부',
+    access_denied_message: '스페이스 멤버만 보고서를 볼 수 있습니다.',
+    go_back: '뒤로 가기',
+    report_not_available: '보고서를 사용할 수 없습니다',
+    report_not_available_message:
+      '보고서 내용이 아직 제공되지 않습니다. 보고서 내용을 저장했는지 확인해주세요.',
+    back_to_report_editor: '보고서 편집기로 돌아가기',
+  },
+};
