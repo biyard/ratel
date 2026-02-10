@@ -7,7 +7,7 @@ pub fn get_nav_item(
     Some((
         icon(),
         SpacePage::Dashboard,
-        Route::HomePage { space_id }.into(),
+        Route::Main { space_id }.into(),
     ))
 }
 
