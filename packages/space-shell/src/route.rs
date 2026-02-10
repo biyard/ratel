@@ -3,6 +3,7 @@ use actions::App as ActionsApp;
 use apps::App as AppsApp;
 use dashboard::App as DashboardApp;
 use overview::App as OverviewApp;
+use report::App as ReportApp;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
@@ -17,5 +18,6 @@ pub enum Route {
     ActionsApp { space_id: SpacePartition, rest: Vec<String> },
     #[route("/apps/:..rest")]
     AppsApp { space_id: SpacePartition, rest: Vec<String> },
-
+    #[route("/report/:..rest")]
+    ReportApp { space_id: SpacePartition, rest: Vec<String> },
 }

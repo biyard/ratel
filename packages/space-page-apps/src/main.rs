@@ -9,16 +9,15 @@ fn main() {
 fn App() -> Element {
     rsx! {
         document::Link { rel: "icon", href: FAVICON }
-        document::Link { rel: "stylesheet", href: MAIN_CSS } document::Link { rel: "stylesheet", href: TAILWIND_CSS }
+        document::Link { rel: "stylesheet", href: MAIN_CSS }
+        document::Link { rel: "stylesheet", href: TAILWIND_CSS }
         Router::<Route> {}
     }
 }
 
 #[component]
 fn Home() -> Element {
-    rsx! {
-        "Home"
-    }
+    rsx! { "Home" }
 }
 
 #[derive(Debug, Clone, Routable, PartialEq)]
@@ -28,6 +27,6 @@ pub enum Route {
     Home {},
 
     #[nest("/spaces/:space_id")]
-    #[child("/overview")]
+    #[child("/apps")]
     Child { child: OverviewRoute },
 }

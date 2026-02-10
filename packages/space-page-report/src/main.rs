@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use space_page_dashboard::*;
+use space_page_overview::*;
 
 fn main() {
     dioxus::launch(App);
@@ -27,6 +27,6 @@ pub enum Route {
     Home {},
 
     #[nest("/spaces/:space_id")]
-    #[child("/dashboard")]
+    #[child("/report")]
     Child { child: OverviewRoute },
 }
