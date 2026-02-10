@@ -1,8 +1,22 @@
 use super::*;
+use crate::components::DashboardGrid;
 
+/// Creator Dashboard - receives Extension data as props from Space Shell
 #[component]
-pub fn CreatorPage(space_id: SpacePartition) -> Element {
-    rsx! {
-        "Creator page"
+pub fn CreatorPage(
+    space_id: SpacePartition,
+    extensions: Vec<DashboardExtension>,
+) -> Element {
+    if extensions.is_empty() {
+        rsx! {
+            div { "No dashboard extensions available." }
+        }
+    } else {
+        rsx! {
+            div {
+                class: "flex flex-col gap-6 w-full",
+                DashboardGrid { extensions }
+            }
+        }
     }
 }
