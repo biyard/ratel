@@ -13,21 +13,3 @@ fn App() -> Element {
         Router::<Route> {}
     }
 }
-
-#[component]
-fn Home() -> Element {
-    rsx! {
-        "Home"
-    }
-}
-
-#[derive(Debug, Clone, Routable, PartialEq)]
-#[rustfmt::skip]
-pub enum Route {
-    #[route("/")]
-    Home {},
-
-    #[nest("/spaces/:space_id")]
-    #[child("/overview")]
-    Child { child: OverviewRoute },
-}
