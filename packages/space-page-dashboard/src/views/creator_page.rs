@@ -1,7 +1,6 @@
 use super::*;
 use crate::components::DashboardGrid;
 
-/// Creator Dashboard - receives Extension data as props from Space Shell
 #[component]
 pub fn CreatorPage(
     space_id: SpacePartition,
@@ -14,7 +13,7 @@ pub fn CreatorPage(
     } else {
         rsx! {
             div {
-                class: "flex flex-col gap-6 w-full",
+                class: "w-full h-full min-h-0",
                 DashboardGrid { extensions }
             }
         }

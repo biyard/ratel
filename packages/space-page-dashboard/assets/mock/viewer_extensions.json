@@ -1,0 +1,88 @@
+[
+  {
+    "id": "info-card-1",
+    "component_type": "INFO_CARD",
+    "order": 1,
+    "title": "Points",
+    "col_span": 2,
+    "row_span": 2,
+    "data": {
+      "icon": "🎁",
+      "icon_bg": "#22C55E",
+      "main_value": "100,000",
+      "main_label": "Total Points Available",
+      "unit": "",
+      "items": [
+        {
+          "label": "✕ 10 Boost",
+          "value": "10,000"
+        }
+      ]
+    }
+  },
+  {
+    "id": "stat-card-1",
+    "component_type": "STAT_CARD",
+    "order": 2,
+    "title": "Incentive",
+    "col_span": 2,
+    "row_span": 2,
+    "data": {
+      "icon": "💰",
+      "icon_bg": "#A855F7",
+      "label": "Incentive Pool",
+      "value": "1,245",
+      "trend": 0.0,
+      "trend_label": "USDT"
+    }
+  },
+  {
+    "id": "ranking-table-1",
+    "component_type": "RANKING_TABLE",
+    "order": 3,
+    "title": "Leaderboard",
+    "col_span": 4,
+    "row_span": 4,
+    "data": {
+      "columns": ["Rank", "Participant", "Point", "Score"],
+      "entries": [
+        {
+          "rank": 1,
+          "name": "hello Ratel 1",
+          "avatar": "",
+          "score": 1450.0,
+          "change": 25
+        },
+        {
+          "rank": 2,
+          "name": "hello Ratel 2",
+          "avatar": "",
+          "score": 1450.0,
+          "change": 25
+        },
+        {
+          "rank": 3,
+          "name": "hello Ratel 3",
+          "avatar": "",
+          "score": 1450.0,
+          "change": 25
+        },
+        {
+          "rank": 4,
+          "name": "hello Ratel 4",
+          "avatar": "",
+          "score": 1450.0,
+          "change": 25
+        },
+        {
+          "rank": 5,
+          "name": "hello Ratel 5",
+          "avatar": "",
+          "score": 1450.0,
+          "change": 25
+        }
+      ],
+      "page_size": 10
+    }
+  }
+]
