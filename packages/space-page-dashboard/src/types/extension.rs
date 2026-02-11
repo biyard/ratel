@@ -1,11 +1,11 @@
 use crate::*;
 use serde::{Deserialize, Serialize};
 
-// ─── Widget Type ────────────────────────────────────────────
+// ─── Component Type ────────────────────────────────────────────
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-pub enum DashboardWidgetType {
+pub enum DashboardComponentType {
     StatCard,
     StatSummary,
     ProgressList,
@@ -19,24 +19,28 @@ pub enum DashboardWidgetType {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct DashboardExtension {
     pub id: String,
-    pub widget_type: DashboardWidgetType,
+    pub component_type: DashboardComponentType,
     pub order: i32,
-    pub title: String,
-    /// Grid column span (1–4). Defaults to 1.
-    #[serde(default = "default_span")]
-    pub span: u8,
-    pub data: DashboardWidgetData,
+    #[serde(default = "default_col_span")]
+    pub col_span: u8,
+    #[serde(default = "default_row_span")]
+    pub row_span: u8,
+    pub data: DashboardComponentData,
 }
 
-fn default_span() -> u8 {
+fn default_col_span() -> u8 {
     1
 }
 
-// ─── Widget Data (type-safe enum) ───────────────────────────
+fn default_row_span() -> u8 {
+    1
+}
+
+// ─── Component Data ───────────────────────────
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum DashboardWidgetData {
+pub enum DashboardComponentData {
     StatCard(StatCardData),
     StatSummary(StatSummaryData),
     ProgressList(ProgressListData),
@@ -45,11 +49,12 @@ pub enum DashboardWidgetData {
     RankingTable(RankingTableData),
 }
 
-// ─── Stat Card (simple) ────────────────────────────────────
+// ─── Stat Card ────────────────────────────────────
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct StatCardData {
     pub icon: String,
+    pub icon_bg: String,
     pub label: String,
     pub value: String,
     pub trend: f64,
@@ -57,7 +62,7 @@ pub struct StatCardData {
     pub trend_label: String,
 }
 
-// ─── Stat Summary (complex: main value + sub-stats) ────────
+// ─── Stat Summary ────────
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct StatSummaryData {
@@ -103,7 +108,7 @@ fn default_color() -> String {
     "#3B82F6".to_string()
 }
 
-// ─── Tab Chart (horizontal bars with tabs) ──────────────────
+// ─── Tab Chart ──────────────────
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TabChartData {
@@ -130,7 +135,7 @@ pub struct TabChartCategory {
     pub color: String,
 }
 
-// ─── Info Card (key-value pairs) ────────────────────────────
+// ─── Info Card ────────────────────────────
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct InfoCardData {
