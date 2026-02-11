@@ -32,7 +32,7 @@ RUST_FLAG ?=
 WATCH_TARGET = -w src -w $(PWD)/
 
 run:
-	$(BUILD_ENV) dx serve --port $(PORT) --platform web
+	$(BUILD_ENV) dx serve --port $(PORT) --platform web --hotpatch
 
 build:
 	$(BUILD_ENV) dx build

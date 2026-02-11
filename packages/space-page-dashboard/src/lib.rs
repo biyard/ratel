@@ -1,9 +1,7 @@
-mod assets;
 mod menu;
 pub mod route;
 mod views;
 
-pub use assets::*;
 use dioxus::prelude::*;
 
 pub use menu::get_nav_item;
