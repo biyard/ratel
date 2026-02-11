@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import 'tw-animate-css';
 
+@source "../../packages/*/src/**/*.rs";
+
 @custom-variant light (&:where([data-theme=light], [data-theme=light] *));
 
 /* ==========================================================================
