@@ -19,3 +19,4 @@ pub use aide::OperationIo;
 pub type Result<T> = std::result::Result<T, Error>;
 
 pub use dioxus_components as components;
+pub use icons;

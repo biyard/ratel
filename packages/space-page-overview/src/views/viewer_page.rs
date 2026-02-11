@@ -11,13 +11,8 @@ pub fn ViewerPage(space_id: SpacePartition) -> Element {
 
     rsx! {
         div { class: "flex flex-col gap-4 flex-1 h-full",
-        button {
-            onclick: move |_| editable.toggle(),
-            "변경"
-        }
-        div {
-            "상태 : {editable}"
-        }
+            button { onclick: move |_| editable.toggle(), "변경" }
+            div { "상태 : {editable}" }
             Typo { variant: Variant::H1, weight: Weight::Extrabold, "TIPTAP EDITOR" }
             TiptapEditor {
                 class: "w-full h-full",
