@@ -17128,6 +17128,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "space-page-report"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+]
+
+[[package]]
 name = "space-shell"
 version = "0.1.0"
 dependencies = [
@@ -17137,6 +17145,7 @@ dependencies = [
  "space-page-apps",
  "space-page-dashboard",
  "space-page-overview",
+ "space-page-report",
 ]
 
 [[package]]
