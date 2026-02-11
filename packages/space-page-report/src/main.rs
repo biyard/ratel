@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use space_page_dashboard::*;
+use space_page_report::*;
 
 fn main() {
     dioxus::launch(App);
