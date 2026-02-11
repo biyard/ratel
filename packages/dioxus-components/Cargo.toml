@@ -1,0 +1,15 @@
+[package]
+name = "dioxus-components"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+
+[dependencies]
+dioxus = { workspace = true }
+web-sys = { version = "0.3.85", features = ["CustomEvent"] }
+
+[features]
+web = ["dioxus/web"]
+desktop = ["dioxus/desktop"]
+mobile = ["dioxus/mobile"]
+server = ["dioxus/server"]
