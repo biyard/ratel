@@ -1,5 +1,4 @@
 #![allow(unused)]
-pub mod assets;
 mod components;
 pub mod layout;
 pub mod route;
@@ -8,7 +7,6 @@ pub mod views;
 pub use layout::SpaceLayout;
 pub use views::Home;
 
-pub use assets::*;
 pub use route::Route;
 
 use common::*;
