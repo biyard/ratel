@@ -22,3 +22,4 @@ use space_page_actions as actions;
 use space_page_apps as apps;
 use space_page_dashboard as dashboard;
 use space_page_overview as overview;
+use space_page_report as report;

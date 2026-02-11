@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use space_page_dashboard::*;
+use space_page_report::*;
 
 fn main() {
     dioxus::launch(App);
@@ -12,9 +12,8 @@ pub const MAIN_CSS: Asset = asset!("/assets/main.css");
 #[component]
 fn App() -> Element {
     rsx! {
-        document::Link { rel: "icon", href: FAVICON }
-        document::Link { rel: "stylesheet", href: MAIN_CSS }
-        // document::Link { rel: "stylesheet", href: TAILWIND_CSS }
+        // document::Link { rel: "icon", href: FAVICON }
+        // document::Link { rel: "stylesheet", href: MAIN_CSS } document::Link { rel: "stylesheet", href: TAILWIND_CSS }
         Router::<Route> {}
     }
 }
