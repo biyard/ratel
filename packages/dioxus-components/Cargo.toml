@@ -6,6 +6,7 @@ edition.workspace = true
 
 [dependencies]
 dioxus = { workspace = true }
+web-sys = { version = "0.3.85", features = ["CustomEvent"] }
 
 [features]
 web = ["dioxus/web"]
