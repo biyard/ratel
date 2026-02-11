@@ -61,14 +61,22 @@ export function SpaceIncentivePage({ spacePk }: SpacePathProps) {
     selectedTokenItem?.decimals ?? (fallbackIsUsdt ? 6 : null);
 
   useEffect(() => {
-    if (selectedToken || orderedTokens.length === 0) return;
+    if (selectedToken) return;
     const usdt = config.usdt_address?.toLowerCase();
-    const usdtItem = usdt
-      ? orderedTokens.find((item) => item.token_address.toLowerCase() === usdt)
-      : null;
-    setSelectedToken(
-      (usdtItem?.token_address ?? orderedTokens[0].token_address) || null,
-    );
+    if (orderedTokens.length > 0) {
+      const usdtItem = usdt
+        ? orderedTokens.find(
+            (item) => item.token_address.toLowerCase() === usdt,
+          )
+        : null;
+      setSelectedToken(
+        (usdtItem?.token_address ?? orderedTokens[0].token_address) || null,
+      );
+      return;
+    }
+    if (usdt) {
+      setSelectedToken(usdt);
+    }
   }, [orderedTokens, selectedToken]);
 
   const ctrl = useSpaceIncentiveController(
