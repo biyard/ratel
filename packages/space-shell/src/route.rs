@@ -3,6 +3,7 @@ use actions::Route as ActionsRoute;
 use apps::Route as AppsRoute;
 use dashboard::Route as DashboardRoute;
 use overview::Route as OverviewRoute;
+use report::Route as ReportRoute;
 
 /*
 ## https://github.com/ealmloff/dioxus/blob/master/packages/router/src/components/child_router.rs
@@ -24,6 +25,8 @@ pub enum Route {
                 Actions { space_id: SpacePartition, rest: Vec<String> },
                 #[route("/apps/:..rest")]
                 Apps { space_id: SpacePartition, rest: Vec<String> },
+                #[route("/report/:..rest")]
+                Report { space_id: SpacePartition, rest: Vec<String> },
                 
                 #[redirect("/", |space_id: SpacePartition| Route::Dashboard { space_id, rest : vec![] })]
                 #[redirect("/:..rest", |space_id: SpacePartition, rest: Vec<String>| Route::Dashboard { space_id, rest })]
@@ -64,3 +67,4 @@ define_app_wrapper!(Dashboard, DashboardRoute);
 define_app_wrapper!(Overview, OverviewRoute);
 define_app_wrapper!(Actions, ActionsRoute);
 define_app_wrapper!(Apps, AppsRoute);
+define_app_wrapper!(Report, ReportRoute);
