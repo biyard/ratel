@@ -22,7 +22,7 @@ dioxus-translate-macro = { path = "packages/dioxus-translate-macro", version = "
 by-macros = { path = "packages/by-macros", version = "0.6.*" }
 common = { path = "packages/common" }
 
-icons = { path = "packages/dioxus-icons" }
+icons = { path = "packages/icons" }
 
 bigdecimal = "0.4.7"
 

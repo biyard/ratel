@@ -1,4 +1,4 @@
-# dioxus-icons
+# icons
 
 SVG icon components library for Dioxus. Automatically converts SVG files to type-safe Dioxus components at build time.
 
