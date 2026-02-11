@@ -17,3 +17,5 @@ pub use schemars::JsonSchema;
 pub use aide::OperationIo;
 
 pub type Result<T> = std::result::Result<T, Error>;
+
+pub use icons;
