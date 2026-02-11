@@ -22,7 +22,7 @@ serde_dynamo = { workspace = true, optional = true }
 schemars = { workspace = true, optional = true }
 aide = { workspace = true, optional = true }
 ssi = { version = "0.12.0", features = ["bbs"], optional = true }
-
+dioxus-components = { workspace = true }
 icons = { workspace = true }
 
 [features]

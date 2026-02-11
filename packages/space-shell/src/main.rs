@@ -2,6 +2,9 @@ use dioxus::prelude::*;
 use space_shell::*;
 
 fn main() {
+    let config = config::get();
+    dioxus::logger::init(config.log_level).expect("logger failed to init");
+
     dioxus::launch(App);
 }
 

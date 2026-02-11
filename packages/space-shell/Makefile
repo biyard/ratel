@@ -24,7 +24,6 @@ BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					RUST_LOG=$(RUST_LOG) \
 					ENV=$(ENV) \
 					COMMIT=$(COMMIT) \
-					RUST_LOG=$(RUST_LOG) \
 					PORT=$(PORT) \
 					UPSTREAM_URL=$(UPSTREAM_URL)
 
@@ -32,7 +31,7 @@ RUST_FLAG ?=
 WATCH_TARGET = -w src -w $(PWD)/
 
 run:
-	$(BUILD_ENV) dx serve --port $(PORT) --platform web --hotpatch
+	$(BUILD_ENV) dx serve --port $(PORT) --platform web
 
 build:
 	$(BUILD_ENV) dx build
