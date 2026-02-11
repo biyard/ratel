@@ -506,6 +506,8 @@ a {
 
 :root {
   --header-height: 88px;
+  --space-top-height: 65px;
+  --space-body-padding: 20px;
 }
 
 @media (max-width: 500px) {
@@ -825,4 +827,74 @@ a {
 
 [data-theme='light'] {
   --color-space-bg: #FFFFFF;
+}
+
+/* ==========================================================================
+   Space Page Dashboard
+   ========================================================================== */
+
+@theme static {
+  --color-dashboard-bg: #1D1D1D;
+  --color-dashboard-card-bg: #171717;
+  --color-dashboard-card-bg-dark: #1A1A1A;
+  
+  --color-dashboard-text-primary: #FFFFFF;
+  --color-dashboard-text-secondary: #A3A3A3;
+  --color-dashboard-text-tertiary: #737373;
+  
+  --color-dashboard-border: #262626;
+  
+  --color-dashboard-icon-bg-blue: #3B82F6;
+  --color-dashboard-icon-bg-green: #22C55E;
+  --color-dashboard-icon-bg-purple: #A855F7;
+  --color-dashboard-icon-bg-orange: #F97316;
+  --color-dashboard-icon-bg-cyan: #06B6D4;
+  --color-dashboard-icon-bg-pink: #EC4899;
+  
+  --color-dashboard-badge-bg: #DC2626;
+  
+  --color-dashboard-avatar-bg: #3B82F6;
+  
+  --color-table-header-bg: #1A1A1A;
+  --color-table-header-text: #A3A3A3;
+  --color-table-row-hover: #1F1F1F;
+  --color-table-stroke: #262626;
+  --color-table-bg: #171717;
+  --color-table-rank-1: #FFD700;
+  --color-table-rank-2: #C0C0C0;
+  --color-table-rank-3: #CD7F32;
+  --color-table-rank-default: #737373;
+}
+
+[data-theme='light'] {
+  --color-dashboard-bg: #FFFFFF;
+  --color-dashboard-card-bg: #F9F9F9;
+  --color-dashboard-card-bg-dark: #F5F5F5;
+  
+  --color-dashboard-text-primary: #171717;
+  --color-dashboard-text-secondary: #525252;
+  --color-dashboard-text-tertiary: #737373;
+  
+  --color-dashboard-border: #E5E5E5;
+  
+  --color-dashboard-icon-bg-blue: #3B82F6;
+  --color-dashboard-icon-bg-green: #22C55E;
+  --color-dashboard-icon-bg-purple: #A855F7;
+  --color-dashboard-icon-bg-orange: #F97316;
+  --color-dashboard-icon-bg-cyan: #06B6D4;
+  --color-dashboard-icon-bg-pink: #EC4899;
+  
+  --color-dashboard-badge-bg: #DC2626;
+  
+  --color-dashboard-avatar-bg: #3B82F6;
+  
+  --color-table-header-bg: #F5F5F5;
+  --color-table-header-text: #737373;
+  --color-table-row-hover: #FAFAFA;
+  --color-table-stroke: #E5E5E5;
+  --color-table-bg: #F9F9F9;
+  --color-table-rank-1: #FFD700;
+  --color-table-rank-2: #C0C0C0;
+  --color-table-rank-3: #CD7F32;
+  --color-table-rank-default: #737373;
 }
