@@ -17144,10 +17144,13 @@ name = "space-stream-worker"
 version = "0.1.0"
 dependencies = [
  "aws-config",
+ "aws-sdk-dynamodb",
  "aws-sdk-s3",
  "aws_lambda_events 0.17.0",
  "chrono",
+ "futures",
  "lambda_runtime 0.14.4",
+ "main-api",
  "serde",
  "serde_dynamo",
  "serde_json",

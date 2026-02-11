@@ -9,16 +9,16 @@
       "dynamodb": {
         "ApproximateCreationDateTime": 1700000000,
         "Keys": {
-          "pk": { "S": "SPACE#LOCAL-EXAMPLE" },
+          "pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
           "sk": { "S": "SPACE" }
         },
         "NewImage": {
-          "pk": { "S": "SPACE#LOCAL-EXAMPLE" },
+          "pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
           "status": { "S": "Finished" },
           "updated_at": { "N": "1700000001" }
         },
         "OldImage": {
-          "pk": { "S": "SPACE#LOCAL-EXAMPLE" },
+          "pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
           "status": { "S": "InProgress" },
           "updated_at": { "N": "1699999999" }
         },
