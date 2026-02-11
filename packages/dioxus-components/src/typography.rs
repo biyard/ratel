@@ -3,7 +3,7 @@ use std::fmt;
 
 pub const TYPOGRAPHY_JS: Asset = asset!(
     "/assets/typography.js",
-    AssetOptions::js().with_preload(true)
+    AssetOptions::js()
 );
 
 #[derive(Debug, Clone, Copy, PartialEq)]

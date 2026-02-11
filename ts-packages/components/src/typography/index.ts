@@ -99,7 +99,6 @@ class RatelTypo extends HTMLElement {
       .filter(Boolean);
 
     this._isInternalUpdating = true;
-    console.log("NEXT", nextClasses);
     try {
       if (this._appliedClasses.length > 0) {
         this.classList.remove(...this._appliedClasses);

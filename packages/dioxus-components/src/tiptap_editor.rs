@@ -1,9 +1,7 @@
 use dioxus::prelude::*;
+use web_sys::wasm_bindgen::JsCast;
 
-pub const TIPTAP_EDITOR_JS: Asset = asset!(
-    "/assets/tiptap-editor.js",
-    AssetOptions::js().with_preload(true)
-);
+pub const TIPTAP_EDITOR_JS: Asset = asset!("/assets/tiptap-editor.js", AssetOptions::js());
 
 #[derive(Debug, Props, Clone, PartialEq)]
 pub struct TiptapEditorProps {
@@ -29,9 +27,15 @@ pub fn TiptapEditor(props: TiptapEditorProps) -> Element {
                 content: "{props.content}",
                 editable: if props.editable { "true" } else { "false" },
                 placeholder: "{props.placeholder}",
-                oninput: move |evt: FormEvent| {
-                    if let Some(handler) = &props.on_content_change {
-                        handler.call(evt.value());
+                onchange: move |evt| {
+                    if let Some(raw_event) = evt.data().downcast::<web_sys::Event>() {
+                        if let Some(custom_event) = raw_event.dyn_ref::<web_sys::CustomEvent>() {
+                            if let Some(val) = custom_event.detail().as_string() {
+                                if let Some(handler) = &props.on_content_change {
+                                    handler.call(val);
+                                }
+                            }
+                        }
                     }
                 },
             }
