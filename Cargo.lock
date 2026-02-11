@@ -3775,7 +3775,7 @@ dependencies = [
  "aide",
  "bdk",
  "by-macros",
- "dioxus-component",
+ "dioxus-components",
  "dioxus-translate",
  "percent-encoding",
  "schemars 1.0.4",
@@ -4987,7 +4987,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "dioxus-component"
+name = "dioxus-components"
 version = "0.1.0"
 dependencies = [
  "dioxus",
@@ -17133,7 +17133,6 @@ version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
- "dioxus-component",
 ]
 
 [[package]]
