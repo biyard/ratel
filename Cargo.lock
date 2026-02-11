@@ -17140,6 +17140,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "space-stream-worker"
+version = "0.1.0"
+dependencies = [
+ "aws-config",
+ "aws-sdk-s3",
+ "aws_lambda_events 0.17.0",
+ "chrono",
+ "lambda_runtime 0.14.4",
+ "serde",
+ "serde_dynamo",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "spin"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"

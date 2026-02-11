@@ -1,0 +1,31 @@
+{
+  "Records": [
+    {
+      "eventID": "1",
+      "eventName": "MODIFY",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000000,
+        "Keys": {
+          "pk": { "S": "SPACE#LOCAL-EXAMPLE" },
+          "sk": { "S": "SPACE" }
+        },
+        "NewImage": {
+          "pk": { "S": "SPACE#LOCAL-EXAMPLE" },
+          "status": { "S": "Finished" },
+          "updated_at": { "N": "1700000001" }
+        },
+        "OldImage": {
+          "pk": { "S": "SPACE#LOCAL-EXAMPLE" },
+          "status": { "S": "InProgress" },
+          "updated_at": { "N": "1699999999" }
+        },
+        "SequenceNumber": "111",
+        "SizeBytes": 26,
+        "StreamViewType": "NEW_AND_OLD_IMAGES"
+      }
+    }
+  ]
+}
