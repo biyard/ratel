@@ -3775,6 +3775,7 @@ dependencies = [
  "aide",
  "bdk",
  "by-macros",
+ "dioxus-component",
  "dioxus-translate",
  "percent-encoding",
  "schemars 1.0.4",
@@ -4983,6 +4984,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ccd67ab405e1915a47df9769cd5408545d1b559d5c01ce7a0f442caef520d1f3"
 dependencies = [
  "wasm-bindgen",
+]
+
+[[package]]
+name = "dioxus-component"
+version = "0.1.0"
+dependencies = [
+ "dioxus",
 ]
 
 [[package]]
@@ -17125,6 +17133,7 @@ version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "dioxus-component",
 ]
 
 [[package]]
