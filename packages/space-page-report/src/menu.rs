@@ -4,6 +4,7 @@ pub fn get_nav_item(
     space_id: SpacePartition,
     _role: SpaceUserRole,
 ) -> Option<(Element, SpacePage, NavigationTarget)> {
+    // TODO: implement space status
     Some((
         icon(),
         SpacePage::Report,
