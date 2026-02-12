@@ -2,50 +2,467 @@
   "Records": [
     {
       "eventID": "1",
-      "eventName": "INSERT",
+      "eventName": "MODIFY",
       "eventVersion": "1.1",
       "eventSource": "aws:dynamodb",
       "awsRegion": "ap-northeast-2",
       "dynamodb": {
         "ApproximateCreationDateTime": 1700000000,
         "Keys": {
-          "pk": { "S": "SPACE_POLL_USER_ANSWER#USER#11111111-1111-1111-1111-111111111111" },
-          "sk": {
-            "S": "SPACE_POLL_USER_ANSWER#SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d#POLL#22222222-2222-2222-2222-222222222222"
-          }
+          "pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "sk": { "S": "SPACE_COMMON" }
         },
         "NewImage": {
-          "pk": { "S": "SPACE_POLL_USER_ANSWER#USER#11111111-1111-1111-1111-111111111111" },
-          "sk": {
-            "S": "SPACE_POLL_USER_ANSWER#SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d#POLL#22222222-2222-2222-2222-222222222222"
-          },
-          "created_at": { "N": "1700000001" },
-          "answers": {
-            "L": [
-              {
-                "M": {
-                  "question_id": { "S": "Q1" },
-                  "value": { "S": "Yes" }
-                }
-              }
-            ]
-          },
-          "respondent": {
-            "M": {
-              "age": { "N": "25" },
-              "gender": { "S": "F" }
-            }
-          },
-          "user_pk": { "S": "USER#11111111-1111-1111-1111-111111111111" },
-          "display_name": { "S": "test-user" },
-          "profile_url": {
-            "S": "https://metadata.ratel.foundation/ratel/default-profile.png"
-          },
-          "username": { "S": "test-user" }
+          "pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "sk": { "S": "SPACE_COMMON" },
+          "space_pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "title": { "S": "블록체인 기반 공론형 여론조사" },
+          "overview": { "S": "공론형 여론조사와 블록체인 적용 가능성에 대한 요약." },
+          "status": { "S": "InProgress" },
+          "created_at": { "N": "1699999000" },
+          "updated_at": { "N": "1700000001" }
+        },
+        "OldImage": {
+          "pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "sk": { "S": "SPACE_COMMON" },
+          "status": { "S": "Draft" },
+          "updated_at": { "N": "1699998000" }
         },
         "SequenceNumber": "111",
-        "SizeBytes": 300,
+        "SizeBytes": 320,
         "StreamViewType": "NEW_AND_OLD_IMAGES"
+      }
+    },
+    {
+      "eventID": "2",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000005,
+        "Keys": {
+          "pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "sk": { "S": "DELIBERATION_SURVEY#SURVEY#001" }
+        },
+        "NewImage": {
+          "pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "sk": { "S": "DELIBERATION_SURVEY#SURVEY#001" },
+          "space_pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "title": { "S": "사전 설문" },
+          "questions": {
+            "L": [
+              { "S": "비동의 간음죄 도입에 찬성하십니까?" },
+              { "S": "동의 기준 명확성이 필요하다고 생각하십니까?" }
+            ]
+          },
+          "created_at": { "N": "1700000005" }
+        },
+        "SequenceNumber": "112",
+        "SizeBytes": 280,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "3",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000010,
+        "Keys": {
+          "pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "sk": { "S": "DELIBERATION_RESPONSE#RESP#001" }
+        },
+        "NewImage": {
+          "pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "sk": { "S": "DELIBERATION_RESPONSE#RESP#001" },
+          "space_pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "user_pk": { "S": "USER#001" },
+          "answers": {
+            "L": [
+              { "S": "찬성" },
+              { "S": "필요" }
+            ]
+          },
+          "created_at": { "N": "1700000010" }
+        },
+        "SequenceNumber": "113",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "4",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000011,
+        "Keys": {
+          "pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "sk": { "S": "DELIBERATION_RESPONSE#RESP#002" }
+        },
+        "NewImage": {
+          "pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "sk": { "S": "DELIBERATION_RESPONSE#RESP#002" },
+          "space_pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "user_pk": { "S": "USER#002" },
+          "answers": {
+            "L": [
+              { "S": "반대" },
+              { "S": "필요" }
+            ]
+          },
+          "created_at": { "N": "1700000011" }
+        },
+        "SequenceNumber": "114",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "5",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000012,
+        "Keys": {
+          "pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "sk": { "S": "DELIBERATION_RESPONSE#RESP#003" }
+        },
+        "NewImage": {
+          "pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "sk": { "S": "DELIBERATION_RESPONSE#RESP#003" },
+          "space_pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "user_pk": { "S": "USER#003" },
+          "answers": {
+            "L": [
+              { "S": "찬성" },
+              { "S": "불필요" }
+            ]
+          },
+          "created_at": { "N": "1700000012" }
+        },
+        "SequenceNumber": "115",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "6",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000020,
+        "Keys": {
+          "pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "sk": { "S": "SPACE_POLL#poll-001" }
+        },
+        "NewImage": {
+          "pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "sk": { "S": "SPACE_POLL#poll-001" },
+          "title": { "S": "비동의 간음죄 도입" },
+          "options": {
+            "L": [
+              { "S": "찬성" },
+              { "S": "반대" },
+              { "S": "유보" }
+            ]
+          },
+          "created_at": { "N": "1700000020" }
+        },
+        "SequenceNumber": "116",
+        "SizeBytes": 240,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "7",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000025,
+        "Keys": {
+          "pk": { "S": "SPACE_POLL_USER_ANSWER#USER#001" },
+          "sk": { "S": "SPACE_POLL_USER_ANSWER#SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d#POLL#poll-001" }
+        },
+        "NewImage": {
+          "pk": { "S": "SPACE_POLL_USER_ANSWER#USER#001" },
+          "sk": { "S": "SPACE_POLL_USER_ANSWER#SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d#POLL#poll-001" },
+          "space_pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "poll_id": { "S": "poll-001" },
+          "answer": { "S": "찬성" },
+          "created_at": { "N": "1700000025" }
+        },
+        "SequenceNumber": "117",
+        "SizeBytes": 230,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "8",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000026,
+        "Keys": {
+          "pk": { "S": "SPACE_POLL_USER_ANSWER#USER#002" },
+          "sk": { "S": "SPACE_POLL_USER_ANSWER#SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d#POLL#poll-001" }
+        },
+        "NewImage": {
+          "pk": { "S": "SPACE_POLL_USER_ANSWER#USER#002" },
+          "sk": { "S": "SPACE_POLL_USER_ANSWER#SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d#POLL#poll-001" },
+          "space_pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "poll_id": { "S": "poll-001" },
+          "answer": { "S": "반대" },
+          "created_at": { "N": "1700000026" }
+        },
+        "SequenceNumber": "118",
+        "SizeBytes": 230,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "9",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000027,
+        "Keys": {
+          "pk": { "S": "SPACE_POLL_USER_ANSWER#USER#003" },
+          "sk": { "S": "SPACE_POLL_USER_ANSWER#SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d#POLL#poll-001" }
+        },
+        "NewImage": {
+          "pk": { "S": "SPACE_POLL_USER_ANSWER#USER#003" },
+          "sk": { "S": "SPACE_POLL_USER_ANSWER#SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d#POLL#poll-001" },
+          "space_pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "poll_id": { "S": "poll-001" },
+          "answer": { "S": "유보" },
+          "created_at": { "N": "1700000027" }
+        },
+        "SequenceNumber": "119",
+        "SizeBytes": 230,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "10",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000030,
+        "Keys": {
+          "pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "sk": { "S": "SPACE_POST#post-001" }
+        },
+        "NewImage": {
+          "pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "sk": { "S": "SPACE_POST#post-001" },
+          "title": { "S": "토론 게시물 예시" },
+          "html_contents": { "S": "<p>토론 게시물 내용</p>" },
+          "category_name": { "S": "의견" },
+          "user_pk": { "S": "USER#001" },
+          "created_at": { "N": "1700000030" },
+          "updated_at": { "N": "1700000030" }
+        },
+        "SequenceNumber": "120",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "11",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000035,
+        "Keys": {
+          "pk": { "S": "SPACE_POST#post-001" },
+          "sk": { "S": "SPACE_POST_COMMENT#comment-001" }
+        },
+        "NewImage": {
+          "pk": { "S": "SPACE_POST#post-001" },
+          "sk": { "S": "SPACE_POST_COMMENT#comment-001" },
+          "space_pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "author_pk": { "S": "USER#002" },
+          "author_display_name": { "S": "참여자2" },
+          "content": { "S": "댓글 예시 내용" },
+          "created_at": { "N": "1700000035" }
+        },
+        "SequenceNumber": "121",
+        "SizeBytes": 240,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "12",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000036,
+        "Keys": {
+          "pk": { "S": "SPACE_POST#post-001" },
+          "sk": { "S": "SPACE_POST_COMMENT#comment-002" }
+        },
+        "NewImage": {
+          "pk": { "S": "SPACE_POST#post-001" },
+          "sk": { "S": "SPACE_POST_COMMENT#comment-002" },
+          "space_pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "author_pk": { "S": "USER#003" },
+          "author_display_name": { "S": "참여자3" },
+          "content": { "S": "두번째 댓글 예시" },
+          "created_at": { "N": "1700000036" }
+        },
+        "SequenceNumber": "122",
+        "SizeBytes": 240,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "13",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000037,
+        "Keys": {
+          "pk": { "S": "SPACE_POST#post-001" },
+          "sk": { "S": "SPACE_POST_COMMENT#comment-003" }
+        },
+        "NewImage": {
+          "pk": { "S": "SPACE_POST#post-001" },
+          "sk": { "S": "SPACE_POST_COMMENT#comment-003" },
+          "space_pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "author_pk": { "S": "USER#001" },
+          "author_display_name": { "S": "참여자1" },
+          "content": { "S": "세번째 댓글 예시" },
+          "created_at": { "N": "1700000037" }
+        },
+        "SequenceNumber": "123",
+        "SizeBytes": 240,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "14",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000038,
+        "Keys": {
+          "pk": { "S": "SPACE_POST#post-001" },
+          "sk": { "S": "SPACE_POST_COMMENT#comment-004" }
+        },
+        "NewImage": {
+          "pk": { "S": "SPACE_POST#post-001" },
+          "sk": { "S": "SPACE_POST_COMMENT#comment-004" },
+          "space_pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "author_pk": { "S": "USER#002" },
+          "author_display_name": { "S": "참여자2" },
+          "content": { "S": "네번째 댓글 예시" },
+          "created_at": { "N": "1700000038" }
+        },
+        "SequenceNumber": "124",
+        "SizeBytes": 240,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "15",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000039,
+        "Keys": {
+          "pk": { "S": "SPACE_POST#post-001" },
+          "sk": { "S": "SPACE_POST_COMMENT#comment-005" }
+        },
+        "NewImage": {
+          "pk": { "S": "SPACE_POST#post-001" },
+          "sk": { "S": "SPACE_POST_COMMENT#comment-005" },
+          "space_pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "author_pk": { "S": "USER#004" },
+          "author_display_name": { "S": "참여자4" },
+          "content": { "S": "다섯번째 댓글 예시" },
+          "created_at": { "N": "1700000039" }
+        },
+        "SequenceNumber": "125",
+        "SizeBytes": 240,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "16",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000040,
+        "Keys": {
+          "pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "sk": { "S": "SPACE_ANALYZE" }
+        },
+        "NewImage": {
+          "pk": { "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d" },
+          "sk": { "S": "SPACE_ANALYZE" },
+          "created_at": { "N": "1700000040" },
+          "lda_topics": {
+            "L": [
+              { "M": { "topic": { "S": "토픽1" }, "keyword": { "S": "동의" } } },
+              { "M": { "topic": { "S": "토픽2" }, "keyword": { "S": "무고" } } }
+            ]
+          },
+          "tf_idf": {
+            "L": [
+              { "M": { "keyword": { "S": "동의" }, "tf_idf": { "N": "2.34" } } },
+              { "M": { "keyword": { "S": "무고" }, "tf_idf": { "N": "1.27" } } }
+            ]
+          },
+          "network": {
+            "M": {
+              "nodes": {
+                "L": [
+                  { "M": { "node": { "S": "동의" }, "degree_centrality": { "N": "0.82" }, "betweenness_centrality": { "N": "0.24" } } },
+                  { "M": { "node": { "S": "무고" }, "degree_centrality": { "N": "0.60" }, "betweenness_centrality": { "N": "0.18" } } }
+                ]
+              },
+              "edges": {
+                "L": [
+                  { "M": { "source": { "S": "동의" }, "target": { "S": "무고" }, "weight": { "N": "3" } } }
+                ]
+              }
+            }
+          },
+          "remove_topics": { "L": [{ "S": "잡담" }] }
+        },
+        "SequenceNumber": "126",
+        "SizeBytes": 520,
+        "StreamViewType": "NEW_IMAGE"
       }
     }
   ]

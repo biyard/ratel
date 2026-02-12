@@ -3,8 +3,6 @@ use aws_sdk_bedrockruntime::types::{ContentBlock, ConversationRole, Message};
 use aws_sdk_bedrockruntime::Client as BedrockClient;
 use dioxus::prelude::ServerFnError;
 
-use crate::apis::create_ai_report::CreateAIReportRequest;
-
 const MAX_SNAPSHOT_CHARS: usize = 60_000;
 
 fn truncate_snapshot(snapshot_json: &str) -> String {
@@ -43,7 +41,6 @@ pub async fn build_bedrock_client() -> Result<BedrockClient, ServerFnError> {
 pub async fn generate_html_contents(
     space_pk: &str,
     snapshot_json: &str,
-    _req: &CreateAIReportRequest,
 ) -> Result<String, ServerFnError> {
     let config = crate::config::server_config::get();
     let model_id = config.bedrock_model_id;
