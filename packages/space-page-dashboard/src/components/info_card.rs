@@ -4,61 +4,44 @@ use crate::*;
 pub fn InfoCard(data: InfoCardData) -> Element {
     rsx! {
         div {
-            class: "bg-[var(--color-dashboard-card-bg)] rounded-2xl p-[1.875rem] flex flex-col w-full h-full min-h-0",
-            
+            class: "flex flex-col w-full h-full min-h-0 bg-space-dashboard-card rounded-2xl",
+            style: "padding: 1.875rem;",
+
             // Header Section
-            div {
-                class: "flex items-start justify-between mb-2",
-                
+            div { class: "flex items-center justify-between mb-5",
+
                 // Left: Icon
                 div {
-                    class: "w-8 h-8 rounded-lg flex items-center justify-center",
-                    style: "background-color: {data.icon_bg};",
-                    span {
-                        class: "text-lg",
-                        "{data.icon}"
-                    }
+                    class: "flex items-center justify-center bg-blue-500",
+                    style: "width: 2.75rem; height: 2.75rem; border-radius: 0.625rem;",
+                    span { class: "text-2xl", "{data.icon}" }
                 }
-                
+
                 // Right: Main Stats
-                div {
-                    class: "text-right",
-                    div {
-                        class: "text-xl font-bold text-[var(--color-dashboard-text-primary)]",
+                div { class: "text-right flex-1",
+                    div { class: "text-2xl font-bold text-white",
                         "{data.main_value}"
                         if !data.unit.is_empty() {
-                            span {
-                                class: "ml-1 text-sm text-[var(--color-dashboard-text-secondary)]",
-                                "{data.unit}"
-                            }
+                            span { class: "ml-1 text-[15px] text-white", "{data.unit}" }
                         }
                     }
-                    div {
-                        class: "text-xs text-[var(--color-dashboard-text-secondary)] mt-0.5",
+                    div { class: "text-[15px] font-semibold mt-1 text-space-dashboard-muted",
                         "{data.main_label}"
                     }
                 }
             }
-            
+
             // Info Items
-            div {
-                class: "space-y-2 pt-2 border-t border-[var(--color-dashboard-border)] flex-1 min-h-0 overflow-y-auto pr-1",
-                
+            div { class: "space-y-2 pt-2 border-t border-separator flex-1 min-h-0 overflow-y-auto pr-1",
+
                 for item in data.items.iter() {
-                    div {
-                        class: "flex items-center justify-between",
-                        
+                    div { class: "flex items-center justify-between text-white",
+
                         // Label
-                        span {
-                            class: "text-xs text-[var(--color-dashboard-text-primary)] truncate",
-                            "{item.label}"
-                        }
-                        
+                        span { class: "text-xs truncate", "{item.label}" }
+
                         // Value
-                        span {
-                            class: "text-sm font-semibold text-[var(--color-dashboard-text-primary)]",
-                            "{item.value}"
-                        }
+                        span { class: "text-xs font-semibold", "{item.value}" }
                     }
                 }
             }
