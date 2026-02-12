@@ -6,7 +6,7 @@ use aws_sdk_s3::Client as S3Client;
 use lambda_runtime::{Error as LambdaError, LambdaEvent};
 #[cfg(not(feature = "local-run"))]
 use lambda_runtime::{run, service_fn};
-use tracing::{error, info};
+use tracing::info;
 use tracing_subscriber::EnvFilter;
 use utils::aggregate::update_space_aggregate;
 use utils::s3::build_s3_client;
