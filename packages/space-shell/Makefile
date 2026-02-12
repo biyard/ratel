@@ -7,8 +7,9 @@ AWS_SECRET_ACCESS_KEY ?= $(shell aws configure get aws_secret_access_key $(AWS_F
 AWS_REGION ?= $(shell aws configure get region)
 AWS_ACCOUNT_ID ?= $(shell aws sts get-caller-identity --query "Account" --output text)
 
+DATABASE_TYPE = dynamo
+DYNAMO_ENDPOINT ?= http://localhost:4566
 DYNAMO_TABLE_PREFIX ?= ratel-$(ENV)
-DYNAMO_ENDPOINT ?= none
 
 RUST_LOG ?= debug
 
@@ -20,7 +21,9 @@ BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					AWS_REGION=$(AWS_REGION) \
 					AWS_ACCOUNT_ID=$(AWS_ACCOUNT_ID) \
 					DYNAMO_TABLE_PREFIX=$(DYNAMO_TABLE_PREFIX) \
-					DYNAMO_ENDPOINT=$(DYNAMO_ENDPOINT) \
+					TABLE_PREFIX=$(DYNAMO_TABLE_PREFIX) \
+					DYNAMODB_ENDPOINT=$(DYNAMO_ENDPOINT) \
+					DATABASE_TYPE=$(DATABASE_TYPE) \
 					RUST_LOG=$(RUST_LOG) \
 					ENV=$(ENV) \
 					COMMIT=$(COMMIT) \

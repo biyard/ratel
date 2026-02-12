@@ -34,6 +34,8 @@ pub enum Route {
         #[redirect("/:..rest", |rest: Vec<String>| Route::PageNotFound{ route: rest })]
         #[end_nest]
     #[end_nest]
+    #[route("/home")]
+    Home {},
     #[route("/")]
     PageNotFound { route: Vec<String> },
 
