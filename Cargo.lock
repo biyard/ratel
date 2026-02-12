@@ -17268,8 +17268,12 @@ dependencies = [
 name = "space-page-report"
 version = "0.1.0"
 dependencies = [
+ "aws-config",
+ "aws-sdk-bedrockruntime",
+ "aws-sdk-s3",
  "common",
  "dioxus",
+ "serde",
 ]
 
 [[package]]
