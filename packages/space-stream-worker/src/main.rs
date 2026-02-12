@@ -2,15 +2,15 @@ mod config;
 mod utils;
 
 use aws_lambda_events::dynamodb::{Event as DynamoEvent, EventRecord};
+use aws_sdk_s3::Client as S3Client;
 use lambda_runtime::{Error as LambdaError, LambdaEvent};
 #[cfg(not(feature = "local-run"))]
 use lambda_runtime::{run, service_fn};
-use serde_dynamo::{AttributeValue as StreamAttr, Item as StreamItem};
 use tracing::{error, info};
 use tracing_subscriber::EnvFilter;
-use aws_sdk_s3::Client as S3Client;
-use utils::s3::{build_s3_client, upload_object};
-use std::str::FromStr;
+use utils::aggregate::update_space_aggregate;
+use utils::s3::build_s3_client;
+use utils::stream::{is_space_related_pk, resolve_space_identifiers};
 
 #[cfg(not(feature = "local-run"))]
 #[tokio::main]
@@ -96,141 +96,7 @@ async fn persist_event_record(
         return Ok(());
     }
 
-    let event_key = format!(
-        "{}/spaces/{}/snapshots/{}_{}_snapshot.json",
-        env,
-        ids.space_pk,
-        sanitize_key(ids.pk.as_str()),
-        sanitize_key(ids.sk.as_str())
-    );
-    let payload = serde_json::to_vec(record).map_err(|e| {
-        error!("failed to serialize stream record: {e}");
-        LambdaError::from("event serialize failed")
-    })?;
-
-    upload_object(s3, bucket_name, &event_key, payload, "application/json").await?;
-
-    let metadata_key = format!("{}.metadata.json", event_key);
-    let metadata_json =
-        build_record_metadata(ids.space_pk.as_str(), ids.pk.as_str(), ids.sk.as_str())?;
-    upload_object(
-        s3,
-        bucket_name,
-        &metadata_key,
-        metadata_json,
-        "application/json",
-    )
-    .await?;
+    update_space_aggregate(s3, bucket_name, env, record, &ids).await?;
 
     Ok(())
-}
-
-struct StreamIdentifiers {
-    space_pk: String,
-    pk: String,
-    sk: String,
-}
-
-fn resolve_space_identifiers(
-    record: &EventRecord,
-) -> Option<StreamIdentifiers> {
-    let new_pk = attr_string_stream(&record.change.new_image, "pk");
-    let new_sk = attr_string_stream(&record.change.new_image, "sk");
-    let key_pk = attr_string_stream(&record.change.keys, "pk");
-    let key_sk = attr_string_stream(&record.change.keys, "sk");
-    let old_pk = attr_string_stream(&record.change.old_image, "pk");
-    let old_sk = attr_string_stream(&record.change.old_image, "sk");
-
-    let pk = new_pk.or(key_pk).or(old_pk)?;
-    let sk = new_sk
-        .or(key_sk)
-        .or(old_sk)
-        .unwrap_or_else(|| "UNKNOWN".to_string());
-
-    let explicit_space_pk = attr_string_stream(&record.change.new_image, "space_pk")
-        .or_else(|| attr_string_stream(&record.change.keys, "space_pk"))
-        .or_else(|| attr_string_stream(&record.change.old_image, "space_pk"));
-
-    let entity = main_api::types::EntityType::from_str(&sk).ok();
-    if matches!(entity, Some(main_api::types::EntityType::SpacePost(_)))
-        && explicit_space_pk.is_none()
-    {
-        return None;
-    }
-
-    let space_pk = explicit_space_pk
-        .or_else(|| parse_space_pk_from_sk(&sk))
-        .or_else(|| {
-            if pk.starts_with("SPACE#") {
-                Some(pk.clone())
-            } else {
-                None
-            }
-        });
-
-    let space_pk = space_pk?;
-
-    Some(StreamIdentifiers { space_pk, pk, sk })
-}
-
-fn build_record_metadata(space_pk: &str, pk: &str, sk: &str) -> Result<Vec<u8>, LambdaError> {
-    let value = serde_json::json!({
-        "metadataAttributes": {
-            "space_pk": {
-                "value": {
-                    "type": "STRING",
-                    "stringValue": space_pk
-                },
-                "includeForEmbedding": false
-            },
-            "pk": {
-                "value": {
-                    "type": "STRING",
-                    "stringValue": pk
-                },
-                "includeForEmbedding": false
-            },
-            "sk": {
-                "value": {
-                    "type": "STRING",
-                    "stringValue": sk
-                },
-                "includeForEmbedding": false
-            }
-        }
-    });
-    serde_json::to_vec(&value).map_err(|e| {
-        error!("failed to serialize record metadata: {e}");
-        LambdaError::from("record metadata serialize failed")
-    })
-}
-
-fn is_space_related_pk(pk: &str) -> bool {
-    pk.starts_with("SPACE#")
-        || pk.starts_with("SPACE_POST#")
-        || pk.starts_with("SPACE_POLL_USER_ANSWER#")
-}
-
-fn sanitize_key(value: &str) -> String {
-    value.replace('/', "_")
-}
-
-fn attr_string_stream(image: &StreamItem, key: &str) -> Option<String> {
-    image.get(key).and_then(|value| match value {
-        StreamAttr::S(v) => Some(v.clone()),
-        StreamAttr::N(v) => Some(v.clone()),
-        _ => None,
-    })
-}
-
-fn parse_space_pk_from_sk(sk: &str) -> Option<String> {
-    const PREFIX: &str = "SPACE_POLL_USER_ANSWER#SPACE#";
-    const POLL_MARKER: &str = "#POLL#";
-
-    if let Some(rest) = sk.strip_prefix(PREFIX) {
-        if let Some((space_id, _poll_part)) = rest.split_once(POLL_MARKER) {
-            return Some(format!("SPACE#{}", space_id));
-        }
-    }
-    None
 }
