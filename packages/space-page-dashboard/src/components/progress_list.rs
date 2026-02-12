@@ -4,74 +4,55 @@ use crate::*;
 pub fn ProgressList(data: ProgressListData) -> Element {
     rsx! {
         div {
-            class: "bg-[var(--color-dashboard-card-bg)] rounded-2xl p-[1.875rem] flex flex-col w-full h-full min-h-0",
-            
+            class: "flex flex-col w-full h-full min-h-0 bg-space-dashboard-card rounded-2xl",
+            style: "padding: 1.875rem;",
+
             // Header Section
-            div {
-                class: "flex items-start justify-between mb-2",
-                
+            div { class: "flex items-center justify-between mb-5",
+
                 // Left: Icon
                 div {
-                    class: "w-8 h-8 rounded-lg flex items-center justify-center",
-                    style: "background-color: {data.icon_bg};",
-                    span {
-                        class: "text-lg",
-                        "{data.icon}"
-                    }
+                    class: "flex items-center justify-center bg-yellow-500",
+                    style: "width: 2.75rem; height: 2.75rem; border-radius: 0.625rem;",
+                    span { class: "text-2xl", "{data.icon}" }
                 }
-                
+
                 // Right: Main Stats
-                div {
-                    class: "text-right",
-                    div {
-                        class: "text-xl font-bold text-[var(--color-dashboard-text-primary)]",
-                        "{data.main_value}"
-                    }
-                    div {
-                        class: "text-xs text-[var(--color-dashboard-text-secondary)] mt-0.5",
+                div { class: "text-right flex-1",
+                    div { class: "text-2xl font-bold text-white", "{data.main_value}" }
+                    div { class: "text-[15px] font-semibold mt-1 text-space-dashboard-muted",
                         "{data.main_label}"
                     }
                 }
             }
-            
+
             // Progress Items
-            div {
-                class: "space-y-2 min-h-0 flex-1 overflow-y-auto pr-1",
-                
+            div { class: "space-y-5 min-h-0 flex-1 overflow-y-auto pr-1",
+
                 for item in data.items.iter() {
-                    div {
-                        class: "space-y-1.5",
-                        
+                    div { class: "space-y-2",
+
                         // Label and Value Row
-                        div {
-                            class: "flex items-center justify-between",
-                            
+                        div { class: "flex items-center justify-between text-white",
+
                             // Label
-                            span {
-                                class: "text-xs text-[var(--color-dashboard-text-primary)] truncate",
-                                "{item.label}"
-                            }
-                            
+                            span { class: "text-xs truncate", "{item.label}" }
+
                             // Current Value
-                            span {
-                                class: "text-sm font-semibold text-[var(--color-dashboard-text-primary)]",
-                                "{item.current:.0}"
-                            }
+                            span { class: "text-xs font-semibold", "{item.current:.0}" }
                         }
-                        
+
                         // Progress Bar
-                        div {
-                            class: "w-full bg-[var(--color-dashboard-progress-bg)] rounded-full h-1.5 overflow-hidden",
-                            
+                        div { class: "w-full rounded-full h-2 overflow-hidden bg-popover",
+
                             div {
-                                class: "h-full rounded-full transition-all duration-300",
-                                style: "width: {(item.current / item.total * 100.0).min(100.0):.1}%; background-color: {item.color};",
+                                class: "h-full rounded-full transition-all duration-300 bg-yellow-500",
+                                style: "width: {(item.current / item.total * 100.0).min(100.0):.1}%;",
                             }
                         }
-                        
+
                         // Completed Text
-                        div {
-                            class: "text-xs text-[var(--color-dashboard-text-secondary)]",
+                        div { class: "text-xs text-space-dashboard-muted",
                             "{item.current:.0} / {item.total:.0} Completed"
                         }
                     }
