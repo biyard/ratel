@@ -12,8 +12,7 @@ pub fn ViewerPage(
         }
     } else {
         rsx! {
-            div {
-                class: "w-full h-full min-h-0",
+            div { class: "w-full h-full min-h-0",
                 DashboardGrid { extensions }
             }
         }
