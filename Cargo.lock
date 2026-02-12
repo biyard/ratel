@@ -17117,6 +17117,8 @@ version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

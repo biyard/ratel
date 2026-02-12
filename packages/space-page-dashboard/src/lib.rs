@@ -1,4 +1,3 @@
-mod assets;
 pub mod components;
 mod menu;
 pub mod route;
