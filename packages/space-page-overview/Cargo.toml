@@ -12,7 +12,7 @@ common = { workspace = true }
 
 [features]
 default = []
-web = ["dioxus/web", "common/web"]
+web = ["common/web", "dioxus/web"]
 desktop = ["dioxus/desktop"]
 mobile = ["dioxus/mobile"]
-server = ["dioxus/server", "common/server"]
+server = ["common/server", "dioxus/server"]
