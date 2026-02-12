@@ -1,48 +1,16 @@
 mod config;
 mod utils;
 
-use aws_lambda_events::dynamodb::Event as DynamoEvent;
+use aws_lambda_events::dynamodb::{Event as DynamoEvent, EventRecord};
 use lambda_runtime::{Error as LambdaError, LambdaEvent};
 #[cfg(not(feature = "local-run"))]
 use lambda_runtime::{run, service_fn};
-use serde::Serialize;
 use serde_dynamo::{AttributeValue as StreamAttr, Item as StreamItem};
 use tracing::{error, info};
 use tracing_subscriber::EnvFilter;
-
-use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_s3::Client as S3Client;
-use main_api::features::spaces::{
-    analyzes::SpaceAnalyze,
-    boards::models::space_post::SpacePost,
-    boards::models::space_post_comment::SpacePostComment,
-    models::SpaceCommon,
-    panels::SpacePanelParticipant,
-    polls::{Poll, PollQuestion, PollUserAnswer},
-};
-use main_api::types::{EntityType, Partition};
-use std::str::FromStr;
-use utils::dynamo::{
-    build_dynamo_client, fetch_all_panel_participants, fetch_all_polls, fetch_all_posts,
-    fetch_poll_user_answers, fetch_post_comments, map_model_error,
-};
 use utils::s3::{build_s3_client, upload_object};
-
-#[derive(Debug, Serialize)]
-struct SpaceSnapshot {
-    space_pk: String,
-    status: String,
-    updated_at: Option<i64>,
-    captured_at: i64,
-    space: Option<SpaceCommon>,
-    analyze: Option<SpaceAnalyze>,
-    polls: Vec<Poll>,
-    poll_question: Option<PollQuestion>,
-    poll_user_answers: Vec<PollUserAnswer>,
-    panel_participants: Vec<SpacePanelParticipant>,
-    posts: Vec<SpacePost>,
-    post_comments: Vec<SpacePostComment>,
-}
+use std::str::FromStr;
 
 #[cfg(not(feature = "local-run"))]
 #[tokio::main]
@@ -69,33 +37,9 @@ async fn handler(event: LambdaEvent<DynamoEvent>) -> Result<(), LambdaError> {
     let conf = config::get();
     let bucket_name = conf.private_bucket_name;
     let s3 = build_s3_client().await?;
-    let dynamo = build_dynamo_client(conf.dynamo_endpoint).await?;
 
     for record in event.records {
-        if record.event_name != "MODIFY" {
-            continue;
-        }
-        let change = record.change;
-        let new_image = &change.new_image;
-        let new_status = attr_string_stream(new_image, "status");
-        if !matches!(new_status.as_deref(), Some("Finished") | Some("FINISHED")) {
-            continue;
-        }
-
-        let old_status = attr_string_stream(&change.old_image, "status");
-        if matches!(old_status.as_deref(), Some("Finished") | Some("FINISHED")) {
-            continue;
-        }
-
-        handle_finish_record(
-            &s3,
-            &dynamo,
-            bucket_name,
-            conf.env,
-            new_image,
-            new_status.as_deref(),
-        )
-        .await?;
+        persist_event_record(&s3, bucket_name, conf.env, &record).await?;
     }
 
     Ok(())
@@ -138,60 +82,98 @@ fn load_event_payload() -> Result<DynamoEvent, LambdaError> {
     })
 }
 
-async fn handle_finish_record(
+async fn persist_event_record(
     s3: &S3Client,
-    dynamo: &DynamoClient,
     bucket_name: &str,
     env: &str,
-    new_image: &StreamItem,
-    status: Option<&str>,
+    record: &EventRecord,
 ) -> Result<(), LambdaError> {
-    let space_pk = match attr_string_stream(new_image, "pk") {
-        Some(pk) => pk,
-        None => {
-            error!("stream record missing pk");
-            return Ok(());
-        }
+    let Some(ids) = resolve_space_identifiers(record) else {
+        return Ok(());
     };
 
-    let updated_at = attr_i64_stream(new_image, "updated_at");
-    let captured_at = chrono::Utc::now().timestamp_millis();
-    let status = status.unwrap_or("Finished").to_string();
-
-    let snapshot = build_snapshot(dynamo, &space_pk, status, updated_at, captured_at).await?;
-
-    let snapshot_json = serde_json::to_vec(&snapshot).map_err(|e| {
-        error!("failed to serialize snapshot: {e}");
-        LambdaError::from("snapshot serialize failed")
-    })?;
-
-    let key = format!("{}/spaces/{}/snapshots/snapshot.json", env, space_pk);
-    if let Err(err) = upload_object(s3, bucket_name, &key, snapshot_json, "application/json").await
-    {
-        error!("failed to upload snapshot: {err:?}");
-        return Err(LambdaError::from("snapshot upload failed"));
+    if !is_space_related_pk(ids.pk.as_str()) {
+        return Ok(());
     }
 
-    let metadata_key = format!("{}.metadata.json", key);
-    let metadata_json = build_snapshot_metadata(space_pk.as_str())?;
-    if let Err(err) = upload_object(
+    let event_key = format!(
+        "{}/spaces/{}/snapshots/{}_{}_snapshot.json",
+        env,
+        ids.space_pk,
+        sanitize_key(ids.pk.as_str()),
+        sanitize_key(ids.sk.as_str())
+    );
+    let payload = serde_json::to_vec(record).map_err(|e| {
+        error!("failed to serialize stream record: {e}");
+        LambdaError::from("event serialize failed")
+    })?;
+
+    upload_object(s3, bucket_name, &event_key, payload, "application/json").await?;
+
+    let metadata_key = format!("{}.metadata.json", event_key);
+    let metadata_json =
+        build_record_metadata(ids.space_pk.as_str(), ids.pk.as_str(), ids.sk.as_str())?;
+    upload_object(
         s3,
         bucket_name,
         &metadata_key,
         metadata_json,
         "application/json",
     )
-    .await
-    {
-        error!("failed to upload snapshot metadata: {err:?}");
-        return Err(LambdaError::from("snapshot metadata upload failed"));
-    }
+    .await?;
 
-    info!("snapshot uploaded for space_pk={}", space_pk);
     Ok(())
 }
 
-fn build_snapshot_metadata(space_pk: &str) -> Result<Vec<u8>, LambdaError> {
+struct StreamIdentifiers {
+    space_pk: String,
+    pk: String,
+    sk: String,
+}
+
+fn resolve_space_identifiers(
+    record: &EventRecord,
+) -> Option<StreamIdentifiers> {
+    let new_pk = attr_string_stream(&record.change.new_image, "pk");
+    let new_sk = attr_string_stream(&record.change.new_image, "sk");
+    let key_pk = attr_string_stream(&record.change.keys, "pk");
+    let key_sk = attr_string_stream(&record.change.keys, "sk");
+    let old_pk = attr_string_stream(&record.change.old_image, "pk");
+    let old_sk = attr_string_stream(&record.change.old_image, "sk");
+
+    let pk = new_pk.or(key_pk).or(old_pk)?;
+    let sk = new_sk
+        .or(key_sk)
+        .or(old_sk)
+        .unwrap_or_else(|| "UNKNOWN".to_string());
+
+    let explicit_space_pk = attr_string_stream(&record.change.new_image, "space_pk")
+        .or_else(|| attr_string_stream(&record.change.keys, "space_pk"))
+        .or_else(|| attr_string_stream(&record.change.old_image, "space_pk"));
+
+    let entity = main_api::types::EntityType::from_str(&sk).ok();
+    if matches!(entity, Some(main_api::types::EntityType::SpacePost(_)))
+        && explicit_space_pk.is_none()
+    {
+        return None;
+    }
+
+    let space_pk = explicit_space_pk
+        .or_else(|| parse_space_pk_from_sk(&sk))
+        .or_else(|| {
+            if pk.starts_with("SPACE#") {
+                Some(pk.clone())
+            } else {
+                None
+            }
+        });
+
+    let space_pk = space_pk?;
+
+    Some(StreamIdentifiers { space_pk, pk, sk })
+}
+
+fn build_record_metadata(space_pk: &str, pk: &str, sk: &str) -> Result<Vec<u8>, LambdaError> {
     let value = serde_json::json!({
         "metadataAttributes": {
             "space_pk": {
@@ -200,13 +182,37 @@ fn build_snapshot_metadata(space_pk: &str) -> Result<Vec<u8>, LambdaError> {
                     "stringValue": space_pk
                 },
                 "includeForEmbedding": false
+            },
+            "pk": {
+                "value": {
+                    "type": "STRING",
+                    "stringValue": pk
+                },
+                "includeForEmbedding": false
+            },
+            "sk": {
+                "value": {
+                    "type": "STRING",
+                    "stringValue": sk
+                },
+                "includeForEmbedding": false
             }
         }
     });
     serde_json::to_vec(&value).map_err(|e| {
-        error!("failed to serialize snapshot metadata: {e}");
-        LambdaError::from("snapshot metadata serialize failed")
+        error!("failed to serialize record metadata: {e}");
+        LambdaError::from("record metadata serialize failed")
     })
+}
+
+fn is_space_related_pk(pk: &str) -> bool {
+    pk.starts_with("SPACE#")
+        || pk.starts_with("SPACE_POST#")
+        || pk.starts_with("SPACE_POLL_USER_ANSWER#")
+}
+
+fn sanitize_key(value: &str) -> String {
+    value.replace('/', "_")
 }
 
 fn attr_string_stream(image: &StreamItem, key: &str) -> Option<String> {
@@ -217,68 +223,14 @@ fn attr_string_stream(image: &StreamItem, key: &str) -> Option<String> {
     })
 }
 
-fn attr_i64_stream(image: &StreamItem, key: &str) -> Option<i64> {
-    image.get(key).and_then(|value| match value {
-        StreamAttr::N(v) => v.parse::<i64>().ok(),
-        StreamAttr::S(v) => v.parse::<i64>().ok(),
-        _ => None,
-    })
-}
+fn parse_space_pk_from_sk(sk: &str) -> Option<String> {
+    const PREFIX: &str = "SPACE_POLL_USER_ANSWER#SPACE#";
+    const POLL_MARKER: &str = "#POLL#";
 
-async fn build_snapshot(
-    dynamo: &DynamoClient,
-    space_pk_raw: &str,
-    status: String,
-    updated_at: Option<i64>,
-    captured_at: i64,
-) -> Result<SpaceSnapshot, LambdaError> {
-    let space_pk = Partition::from_str(space_pk_raw).map_err(|e| {
-        error!("invalid space_pk {}: {e}", space_pk_raw);
-        LambdaError::from("invalid space_pk")
-    })?;
-
-    let (space, analyze, poll_question, polls, panel_participants, posts) = tokio::try_join!(
-        async {
-            SpaceCommon::get(dynamo, space_pk.clone(), Some(EntityType::SpaceCommon))
-                .await
-                .map_err(|e| map_model_error("space_common", e))
-        },
-        async {
-            SpaceAnalyze::get(dynamo, space_pk.clone(), Some(EntityType::SpaceAnalyze))
-                .await
-                .map_err(|e| map_model_error("space_analyze", e))
-        },
-        async {
-            PollQuestion::get(
-                dynamo,
-                space_pk.clone(),
-                Some(EntityType::SpacePollQuestion),
-            )
-            .await
-            .map_err(|e| map_model_error("poll_question", e))
-        },
-        fetch_all_polls(dynamo, &space_pk),
-        fetch_all_panel_participants(dynamo, &space_pk),
-        fetch_all_posts(dynamo, &space_pk),
-    )?;
-
-    let (poll_user_answers, post_comments) = tokio::try_join!(
-        fetch_poll_user_answers(dynamo, &space_pk, &polls),
-        fetch_post_comments(dynamo, &posts),
-    )?;
-
-    Ok(SpaceSnapshot {
-        space_pk: space_pk_raw.to_string(),
-        status,
-        updated_at,
-        captured_at,
-        space,
-        analyze,
-        polls,
-        poll_question,
-        poll_user_answers,
-        panel_participants,
-        posts,
-        post_comments,
-    })
+    if let Some(rest) = sk.strip_prefix(PREFIX) {
+        if let Some((space_id, _poll_part)) = rest.split_once(POLL_MARKER) {
+            return Some(format!("SPACE#{}", space_id));
+        }
+    }
+    None
 }
