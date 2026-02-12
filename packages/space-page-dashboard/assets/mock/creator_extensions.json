@@ -2,10 +2,6 @@
   {
     "id": "stat-summary-1",
     "component_type": "STAT_SUMMARY",
-    "order": 1,
-    "title": "Views",
-    "col_span": 1,
-    "row_span": 2,
     "data": {
       "icon": "📊",
       "icon_bg": "#3B82F6",
@@ -46,10 +42,6 @@
   {
     "id": "progress-list-1",
     "component_type": "PROGRESS_LIST",
-    "order": 2,
-    "title": "Actions",
-    "col_span": 1,
-    "row_span": 2,
     "data": {
       "icon": "💡",
       "icon_bg": "#FCB300",
@@ -80,10 +72,6 @@
   {
     "id": "tab-chart-1",
     "component_type": "TAB_CHART",
-    "order": 3,
-    "title": "Participants",
-    "col_span": 1,
-    "row_span": 2,
     "data": {
       "icon": "👥",
       "icon_bg": "#06B6D4",
@@ -119,10 +107,6 @@
   {
     "id": "info-card-1",
     "component_type": "INFO_CARD",
-    "order": 4,
-    "title": "Points",
-    "col_span": 1,
-    "row_span": 1,
     "data": {
       "icon": "🎁",
       "icon_bg": "#22C55E",
@@ -140,26 +124,21 @@
   {
     "id": "stat-card-1",
     "component_type": "STAT_CARD",
-    "order": 5,
-    "title": "Incentive",
-    "col_span": 1,
-    "row_span": 1,
     "data": {
       "icon": "💰",
       "icon_bg": "#A855F7",
       "label": "Incentive Pool",
       "value": "1,245",
       "trend": 0.0,
-      "trend_label": "USDT"
+      "trend_label": "USDT",
+      "total_winners": "10",
+      "rank_rate": "show",
+      "incentive_pool": "0xA3f9...D2F4"
     }
   },
   {
     "id": "ranking-table-1",
     "component_type": "RANKING_TABLE",
-    "order": 6,
-    "title": "Leaderboard",
-    "col_span": 4,
-    "row_span": 4,
     "data": {
       "columns": ["Rank", "Participant", "Point", "Score"],
       "entries": [
@@ -229,6 +208,13 @@
         {
           "rank": 1,
           "name": "hello Ratel 10",
+          "avatar": "",
+          "score": 1450.0,
+          "change": 25
+        },
+        {
+          "rank": 1,
+          "name": "hello Ratel 11",
           "avatar": "",
           "score": 1450.0,
           "change": 25

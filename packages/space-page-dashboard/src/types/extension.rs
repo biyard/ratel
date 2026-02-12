@@ -14,26 +14,47 @@ pub enum DashboardComponentType {
     RankingTable,
 }
 
+impl DashboardComponentType {
+    pub fn default_grid_size(&self) -> (u8, u8) {
+        match self {
+            Self::StatSummary => (1, 2),
+            Self::ProgressList => (1, 2),
+            Self::TabChart => (1, 2),
+            Self::InfoCard => (1, 1),
+            Self::StatCard => (1, 1),
+            Self::RankingTable => (4, 4),
+        }
+    }
+
+    pub fn default_order(&self) -> i32 {
+        match self {
+            Self::StatSummary => 1,
+            Self::ProgressList => 2,
+            Self::TabChart => 3,
+            Self::InfoCard => 4,
+            Self::StatCard => 5,
+            Self::RankingTable => 6,
+        }
+    }
+}
+
 // ─── Top-level Extension ────────────────────────────────────
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct DashboardExtension {
     pub id: String,
     pub component_type: DashboardComponentType,
-    pub order: i32,
-    #[serde(default = "default_col_span")]
-    pub col_span: u8,
-    #[serde(default = "default_row_span")]
-    pub row_span: u8,
     pub data: DashboardComponentData,
 }
 
-fn default_col_span() -> u8 {
-    1
-}
+impl DashboardExtension {
+    pub fn grid_size(&self) -> (u8, u8) {
+        self.component_type.default_grid_size()
+    }
 
-fn default_row_span() -> u8 {
-    1
+    pub fn order(&self) -> i32 {
+        self.component_type.default_order()
+    }
 }
 
 // ─── Component Data ───────────────────────────
@@ -60,6 +81,12 @@ pub struct StatCardData {
     pub trend: f64,
     #[serde(default)]
     pub trend_label: String,
+    #[serde(default)]
+    pub total_winners: String,
+    #[serde(default)]
+    pub rank_rate: String,
+    #[serde(default)]
+    pub incentive_pool: String,
 }
 
 // ─── Stat Summary ────────

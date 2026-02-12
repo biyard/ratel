@@ -2,10 +2,6 @@
   {
     "id": "info-card-1",
     "component_type": "INFO_CARD",
-    "order": 1,
-    "title": "Points",
-    "col_span": 2,
-    "row_span": 2,
     "data": {
       "icon": "🎁",
       "icon_bg": "#22C55E",
@@ -23,26 +19,21 @@
   {
     "id": "stat-card-1",
     "component_type": "STAT_CARD",
-    "order": 2,
-    "title": "Incentive",
-    "col_span": 2,
-    "row_span": 2,
     "data": {
       "icon": "💰",
       "icon_bg": "#A855F7",
       "label": "Incentive Pool",
       "value": "1,245",
       "trend": 0.0,
-      "trend_label": "USDT"
+      "trend_label": "USDT",
+      "total_winners": "10",
+      "rank_rate": "show",
+      "incentive_pool": "0xA3f9...D2F4"
     }
   },
   {
     "id": "ranking-table-1",
     "component_type": "RANKING_TABLE",
-    "order": 3,
-    "title": "Leaderboard",
-    "col_span": 4,
-    "row_span": 4,
     "data": {
       "columns": ["Rank", "Participant", "Point", "Score"],
       "entries": [
