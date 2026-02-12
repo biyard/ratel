@@ -2,11 +2,6 @@ use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CreateAIReportRequest {
-    pub name: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateAIReportResponse {
     pub html_contents: String,
 }
@@ -14,10 +9,7 @@ pub struct CreateAIReportResponse {
 // FIXME: implement middleware and authorization
 #[cfg(feature = "server")]
 #[post("/v3/spaces/{space_pk}/analyze/ai-contents")]
-pub async fn create_ai_report(
-    space_pk: String,
-    req: CreateAIReportRequest,
-) -> Result<CreateAIReportResponse, ServerFnError> {
+pub async fn create_ai_report(space_pk: String) -> Result<CreateAIReportResponse, ServerFnError> {
     let config = crate::config::server_config::get();
     let snapshot_key = format!("{}/spaces/{}/snapshots/snapshot.json", config.env, space_pk);
 
@@ -26,6 +18,6 @@ pub async fn create_ai_report(
         super::utils::s3::load_snapshot_json(&s3, config.bucket_name, &snapshot_key).await?;
 
     let html_contents =
-        super::utils::bedrock::generate_html_contents(&space_pk, &snapshot_json, &req).await?;
+        super::utils::bedrock::generate_html_contents(&space_pk, &snapshot_json).await?;
     Ok(CreateAIReportResponse { html_contents })
 }
