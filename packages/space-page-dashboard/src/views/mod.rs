@@ -20,31 +20,21 @@ pub fn HomePage(
     let role = SpaceUserRole::Creator;
 
     rsx! {
-        {match role {
-            SpaceUserRole::Creator => rsx! {
-                    CreatorPage {
-                        space_id,
-                        extensions: crate::route::get_creator_extensions()
-                    }
+        {
+            match role {
+                SpaceUserRole::Creator => rsx! {
+                    CreatorPage { space_id, extensions: crate::route::get_creator_extensions() }
                 },
                 SpaceUserRole::Participant => rsx! {
-                    ParticipantPage {
-                        space_id,
-                        extensions: crate::route::get_participant_extensions()
-                    }
+                    ParticipantPage { space_id, extensions: crate::route::get_participant_extensions() }
                 },
                 SpaceUserRole::Candidate => rsx! {
-                    CandidatePage {
-                        space_id,
-                        extensions: crate::route::get_candidate_extensions()
-                    }
+                    CandidatePage { space_id, extensions: crate::route::get_candidate_extensions() }
                 },
                 SpaceUserRole::Viewer => rsx! {
-                    ViewerPage {
-                        space_id,
-                        extensions: crate::route::get_viewer_extensions()
-                    }
+                    ViewerPage { space_id, extensions: crate::route::get_viewer_extensions() }
                 },
-            }}
+            }
+        }
     }
 }
