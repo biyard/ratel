@@ -1,5 +1,6 @@
 #![allow(unused)]
 mod components;
+pub mod config;
 pub mod layout;
 pub mod route;
 pub mod views;
