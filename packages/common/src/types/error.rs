@@ -15,10 +15,40 @@ pub enum Error {
 
     #[error("Unauthorized access")]
     UnauthorizedAccess,
+
+    #[error("Internal server error: {0}")]
+    InternalServerError(String),
+
+    #[error("Bookmark is invalid")]
+    InvalidBookmark,
+
+    #[cfg(feature = "server")]
+    #[error("AWS error: {0}")]
+    Aws(#[from] crate::utils::aws::error::AwsError),
 }
 
 impl From<String> for Error {
     fn from(s: String) -> Self {
         Error::Unknown(s)
+    }
+}
+
+impl From<base64::DecodeError> for Error {
+    fn from(e: base64::DecodeError) -> Self {
+        Error::Unknown(e.to_string())
+    }
+}
+
+#[cfg(feature = "server")]
+impl From<aws_sdk_dynamodb::Error> for Error {
+    fn from(e: aws_sdk_dynamodb::Error) -> Self {
+        Error::Aws(crate::utils::aws::error::AwsError::from(e))
+    }
+}
+
+#[cfg(feature = "server")]
+impl From<serde_dynamo::Error> for Error {
+    fn from(e: serde_dynamo::Error) -> Self {
+        Error::Aws(crate::utils::aws::error::AwsError::from(e))
     }
 }
