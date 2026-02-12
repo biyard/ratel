@@ -28,3 +28,6 @@ impl Session {
         }
     }
 }
+
+#[cfg(feature = "server")]
+pub use tower_sessions::Session as TowerSession;

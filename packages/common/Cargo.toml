@@ -18,6 +18,7 @@ percent-encoding = { workspace = true }
 async-trait = "0.1.88"
 chrono = { workspace = true }
 base64 = { workspace = true }
+dioxus = { workspace = true }
 
 # Server-only dependencies
 bdk = { workspace = true, optional = true }

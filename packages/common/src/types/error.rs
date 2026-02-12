@@ -22,6 +22,9 @@ pub enum Error {
     #[error("Bookmark is invalid")]
     InvalidBookmark,
 
+    #[error("No session found")]
+    NoSessionFound,
+
     #[cfg(feature = "server")]
     #[error("AWS error: {0}")]
     Aws(#[from] crate::utils::aws::error::AwsError),
@@ -36,6 +39,24 @@ impl From<String> for Error {
 impl From<base64::DecodeError> for Error {
     fn from(e: base64::DecodeError) -> Self {
         Error::Unknown(e.to_string())
+    }
+}
+
+#[cfg(feature = "server")]
+impl bdk::prelude::axum::response::IntoResponse for Error {
+    fn into_response(self) -> bdk::prelude::axum::response::Response {
+        use bdk::prelude::axum::http::StatusCode;
+        use bdk::prelude::axum::response::IntoResponse;
+
+        let status = match &self {
+            Error::UnauthorizedAccess | Error::NoSessionFound => StatusCode::UNAUTHORIZED,
+            Error::InvalidPartitionKey(_) | Error::NotSupported(_) | Error::InvalidBookmark => {
+                StatusCode::BAD_REQUEST
+            }
+            _ => StatusCode::INTERNAL_SERVER_ERROR,
+        };
+
+        (status, self.to_string()).into_response()
     }
 }
 
