@@ -14,8 +14,7 @@ pub fn RankingTable(data: RankingTableData) -> Element {
         div { class: "flex flex-col w-full h-full min-h-0 bg-space-dashboard-card rounded-2xl overflow-hidden",
 
             // Header
-            div {
-                class: "py-4 px-[30px] bg-space-dashboard-header",
+            div { class: "py-4 px-[30px] bg-space-dashboard-header",
 
                 div { class: "flex",
 
