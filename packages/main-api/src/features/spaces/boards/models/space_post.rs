@@ -234,7 +234,7 @@ impl SpacePost {
         let post = SpacePost::updater(&pk, sk)
             .increase_comments(1)
             .transact_write_item();
-        let comment = SpacePostComment::new(space_post_pk, content, user);
+        let comment = SpacePostComment::new(space_pk.clone(), space_post_pk, content, user);
         let comment_tx = comment.create_transact_write_item();
 
         cli.transact_write_items()

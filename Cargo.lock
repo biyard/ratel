@@ -3799,6 +3799,7 @@ dependencies = [
  "aide",
  "bdk",
  "by-macros",
+ "dioxus",
  "dioxus-components",
  "dioxus-translate",
  "icons",
@@ -3809,6 +3810,7 @@ dependencies = [
  "serde_json",
  "serde_with 3.14.1",
  "ssi",
+ "strum 0.27.2",
  "thiserror 2.0.17",
 ]
 
@@ -5589,6 +5591,7 @@ dependencies = [
  "dioxus-translate-types",
  "schemars 1.0.4",
  "serde",
+ "web-sys",
 ]
 
 [[package]]
@@ -17238,6 +17241,7 @@ version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "serde",
 ]
 
 [[package]]
@@ -17270,8 +17274,12 @@ dependencies = [
 name = "space-page-report"
 version = "0.1.0"
 dependencies = [
+ "aws-config",
+ "aws-sdk-bedrockruntime",
+ "aws-sdk-s3",
  "common",
  "dioxus",
+ "serde",
 ]
 
 [[package]]
@@ -17285,6 +17293,26 @@ dependencies = [
  "space-page-dashboard",
  "space-page-overview",
  "space-page-report",
+]
+
+[[package]]
+name = "space-stream-worker"
+version = "0.1.0"
+dependencies = [
+ "aws-config",
+ "aws-sdk-dynamodb",
+ "aws-sdk-s3",
+ "aws_lambda_events 0.17.0",
+ "chrono",
+ "futures",
+ "lambda_runtime 0.14.4",
+ "main-api",
+ "serde",
+ "serde_dynamo",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
