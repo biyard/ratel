@@ -2,6 +2,7 @@ use crate::*;
 pub use thiserror::Error;
 
 #[derive(Debug, Error)]
+#[cfg_attr(not(feature = "server"), derive(Serialize, Deserialize))]
 pub enum Error {
     #[error("Unknown: {0}")]
     Unknown(String),
@@ -71,5 +72,11 @@ impl From<aws_sdk_dynamodb::Error> for Error {
 impl From<serde_dynamo::Error> for Error {
     fn from(e: serde_dynamo::Error) -> Self {
         Error::Aws(crate::utils::aws::error::AwsError::from(e))
+    }
+}
+
+impl From<ServerFnError> for Error {
+    fn from(e: ServerFnError) -> Self {
+        Error::Unknown(format!("Server function error: {}", e))
     }
 }
