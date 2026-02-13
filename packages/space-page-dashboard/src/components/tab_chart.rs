@@ -27,8 +27,7 @@ pub fn TabChart(data: TabChartData) -> Element {
             }
 
             // Tab Buttons
-            div {
-                class: "flex gap-0 mb-2 bg-black rounded-lg border border-white overflow-hidden",
+            div { class: "flex gap-0 mb-2 bg-black rounded-lg border border-white overflow-hidden",
 
                 for (idx , tab) in data.tabs.iter().enumerate() {
                     button {

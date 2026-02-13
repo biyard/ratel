@@ -3,15 +3,13 @@ use crate::*;
 #[component]
 pub fn StatCard(data: StatCardData) -> Element {
     rsx! {
-        div {
-            class: "flex flex-col gap-2.5 w-full h-full min-h-0 p-[30px] bg-space-dashboard-card rounded-2xl",
+        div { class: "flex flex-col gap-2.5 w-full h-full min-h-0 p-[30px] bg-space-dashboard-card rounded-2xl",
 
             // Header Section
             div { class: "flex items-start justify-between",
 
                 // Left: Icon
-                div {
-                    class: "flex items-center justify-center w-11 h-11 bg-brand-primary rounded-[10px]",
+                div { class: "flex items-center justify-center w-11 h-11 bg-brand-primary rounded-[10px]",
                     span { class: "text-2xl", "{data.icon}" }
                 }
 
