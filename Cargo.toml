@@ -1,7 +1,7 @@
 [workspace]
-members = ["packages/*", "packages/space-shell", "packages/space-page-overview"]
+members = ["packages/*", "packages/space-page-overview", "packages/space-shell"]
 resolver = "2"
-exclude = ["deps", "benchmark/*"]
+exclude = ["benchmark/*", "deps"]
 
 [workspace.package]
 authors = ["Biyard"]
@@ -22,17 +22,20 @@ dioxus-translate-macro = { path = "packages/dioxus-translate-macro", version = "
 by-macros = { path = "packages/by-macros", version = "0.6.*" }
 common = { path = "packages/common" }
 
+dioxus-components = { path = "packages/dioxus-components" }
+icons = { path = "packages/icons" }
+
 bigdecimal = "0.4.7"
 
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 dto = { path = "./packages/dto" }
 sqlx = { version = "0.8.3", features = [
-  "sqlite",
+  "bigdecimal",
   "postgres",
   "runtime-tokio",
+  "sqlite",
   "time",
-  "bigdecimal",
 ] }
 tokio = { version = "1.40.0", features = ["full"] }
 tracing = "0.1.41"
@@ -41,15 +44,15 @@ reqwest = { version = "0.12.12", features = ["blocking", "json", "multipart"] }
 schemars = { version = "1.0.4", features = ["uuid1"] }
 aide = { version = "0.15", git = "https://github.com/tamasfe/aide.git", features = [
   "axum",
-  "axum-query",
   "axum-extra",
   "axum-extra-headers",
   "axum-extra-query",
   "axum-json",
-  "swagger",
+  "axum-query",
+  "macros",
   "redoc",
   "scalar",
-  "macros",
+  "swagger",
 ] }
 axum = { version = "0.8.1", features = ["macros"] }
 
@@ -63,7 +66,7 @@ percent-encoding = "2.3.2"
 base64 = "0.22.1"
 hyper = "1.6.0"
 
-dioxus = { version = "0.7.1", features = ["router", "fullstack"] }
+dioxus = { version = "0.7.1", features = ["fullstack", "router"] }
 
 [profile.wasm-dev]
 inherits = "dev"
