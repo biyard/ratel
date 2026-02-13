@@ -52,23 +52,34 @@ pub async fn generate_section_html(
         "You are generating one section of a report.\n\
 Return ONLY valid HTML fragments (no markdown, no code fences/backticks).\n\
 Do not include literal \"\\\\n\" sequences or any stray text outside HTML tags.\n\
+Use a formal report tone in Korean (보고서형 문체, 객관적/분석적).\n\
 Structure must be:\n\
 <section>\n\
   <h1>SECTION TITLE</h1>\n\
   <ol>\n\
-    <li><strong>Subheading</strong>\n\
-        <ul>\n\
-          <li>Detail sentence.</li>\n\
-          <li>Detail sentence.</li>\n\
-        </ul>\n\
+    <li><strong>Top Subheading</strong>\n\
+      <ul>\n\
+        <li><strong>Sub-subheading</strong>\n\
+          <ul>\n\
+            <li>Detail sentence.</li>\n\
+            <li>Detail sentence.</li>\n\
+            <li>Detail sentence.</li>\n\
+          </ul>\n\
+        </li>\n\
+      </ul>\n\
     </li>\n\
   </ol>\n\
 </section>\n\
-Use the subheadings EXACTLY as provided in \"Subheadings\" (same order).\n\
+Use the top-level subheadings EXACTLY as provided in \"Subheadings\" (same order).\n\
+If a top-level subheading includes child items in parentheses, treat those as required sub-subheadings in the nested list.\n\
 Do NOT include numbering text like \"1.\" inside the <strong> text (the <ol> handles numbering).\n\
-Each top-level item must contain a nested <ul> with 2-5 bullet sentences.\n\
+Each top-level item must contain a nested <ul> of sub-subheadings.\n\
+Each sub-subheading must contain a nested <ul> with AT LEAST 3 bullet sentences.\n\
 Each bullet detail must be a complete sentence and end with a period.\n\
+Each bullet should be at least 80 characters and include analysis or reasoning, not just listing.\n\
+When possible, include numeric facts (counts, ratios, dates) drawn from the JSON.\n\
 If data is missing, still include the subheading and write a bullet like \"해당 데이터 없음\".\n\
+If a subheading includes conditions like \"성별 정보 존재 시\" or \"나이 정보 존재 시\", omit that subheading entirely when the data is not available in the JSON.\n\
 Add at least one <table> if the data supports it.\n\
 Section Title: {section_title}\n\
 Subheadings: {section_focus}\n\

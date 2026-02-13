@@ -58,16 +58,18 @@ fn init_tracing() {
 
 #[cfg(feature = "local-run")]
 fn load_event_payload() -> Result<DynamoEvent, LambdaError> {
+    use tracing::error;
+
     let path = {
         let cwd = std::env::current_dir().ok();
         let cwd_candidate = cwd
             .as_ref()
-            .map(|dir| dir.join("fixtures/space-finish-event.json"));
+            .map(|dir| dir.join("fixtures/space-stream-event.json"));
         if let Some(candidate) = cwd_candidate.as_ref().filter(|p| p.exists()) {
             candidate.to_string_lossy().to_string()
         } else {
             format!(
-                "{}/fixtures/space-finish-event.json",
+                "{}/fixtures/space-stream-event.json",
                 env!("CARGO_MANIFEST_DIR")
             )
         }
