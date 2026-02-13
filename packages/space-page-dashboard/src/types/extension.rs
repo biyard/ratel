@@ -1,66 +1,40 @@
 use crate::*;
 use serde::{Deserialize, Serialize};
 
-// ─── Component Type ────────────────────────────────────────────
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-pub enum DashboardComponentType {
-    StatCard,
-    StatSummary,
-    ProgressList,
-    TabChart,
-    InfoCard,
-    RankingTable,
-}
-
-impl DashboardComponentType {
-    pub fn default_grid_size(&self) -> (u8, u8) {
-        match self {
-            Self::StatSummary => (1, 2),
-            Self::ProgressList => (1, 2),
-            Self::TabChart => (1, 2),
-            Self::InfoCard => (1, 1),
-            Self::StatCard => (1, 1),
-            Self::RankingTable => (4, 4),
-        }
-    }
-
-    pub fn default_order(&self) -> i32 {
-        match self {
-            Self::StatSummary => 1,
-            Self::ProgressList => 2,
-            Self::TabChart => 3,
-            Self::InfoCard => 4,
-            Self::StatCard => 5,
-            Self::RankingTable => 6,
-        }
-    }
-}
-
-// ─── Top-level Extension ────────────────────────────────────
-
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct DashboardExtension {
     pub id: String,
-    pub component_type: DashboardComponentType,
     pub data: DashboardComponentData,
 }
 
 impl DashboardExtension {
     pub fn grid_size(&self) -> (u8, u8) {
-        self.component_type.default_grid_size()
+        match &self.data {
+            DashboardComponentData::StatSummary(_) => (1, 2),
+            DashboardComponentData::ProgressList(_) => (1, 2),
+            DashboardComponentData::TabChart(_) => (1, 2),
+            DashboardComponentData::InfoCard(_) => (1, 1),
+            DashboardComponentData::StatCard(_) => (1, 1),
+            DashboardComponentData::RankingTable(_) => (4, 4),
+        }
     }
 
     pub fn order(&self) -> i32 {
-        self.component_type.default_order()
+        match &self.data {
+            DashboardComponentData::StatSummary(_) => 1,
+            DashboardComponentData::ProgressList(_) => 2,
+            DashboardComponentData::TabChart(_) => 3,
+            DashboardComponentData::InfoCard(_) => 4,
+            DashboardComponentData::StatCard(_) => 5,
+            DashboardComponentData::RankingTable(_) => 6,
+        }
     }
 }
 
 // ─── Component Data ───────────────────────────
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(untagged)]
+#[serde(tag = "type", content = "value", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum DashboardComponentData {
     StatCard(StatCardData),
     StatSummary(StatSummaryData),
