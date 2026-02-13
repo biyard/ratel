@@ -6,6 +6,8 @@ AWS_ACCESS_KEY_ID ?= $(shell aws configure get aws_access_key_id $(AWS_FLAG))
 AWS_SECRET_ACCESS_KEY ?= $(shell aws configure get aws_secret_access_key $(AWS_FLAG))
 AWS_REGION ?= $(shell aws configure get region)
 AWS_ACCOUNT_ID ?= $(shell aws sts get-caller-identity --query "Account" --output text)
+BUCKET_NAME ?= metadata.ratel.foundation
+BEDROCK_MODEL_ID ?=
 
 DYNAMO_TABLE_PREFIX ?= ratel-$(ENV)
 DYNAMO_ENDPOINT ?= none
@@ -26,9 +28,14 @@ BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					COMMIT=$(COMMIT) \
 					RUST_LOG=$(RUST_LOG) \
 					PORT=$(PORT) \
-					UPSTREAM_URL=$(UPSTREAM_URL)
+					UPSTREAM_URL=$(UPSTREAM_URL) \
+					BUCKET_NAME=$(BUCKET_NAME) \
+					BEDROCK_MODEL_ID=$(BEDROCK_MODEL_ID)
 
 RUST_FLAG ?=
 
 run:
 	$(BUILD_ENV) dx serve --port $(PORT) --platform web
+
+run.server:
+	$(BUILD_ENV) dx serve --port $(PORT) --platform server

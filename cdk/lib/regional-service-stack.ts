@@ -17,6 +17,7 @@ import * as r53Targets from "aws-cdk-lib/aws-route53-targets";
 import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
 
 export interface RegionalServiceStackProps extends StackProps {
   // Domain parts, e.g. "dev2.ratel.foundation"
@@ -124,6 +125,53 @@ export class RegionalServiceStack extends Stack {
         ],
       })
     );
+
+    if (this.region === "ap-northeast-2") {
+      const mainTableStreamArn = cdk.Fn.importValue(
+        `ratel-${props.stage}-main-stream-arn`
+      );
+      const mainTableWithStream = dynamodb.Table.fromTableAttributes(
+        this,
+        "MainTableWithStream",
+        {
+          tableName,
+          tableStreamArn: mainTableStreamArn,
+        }
+      );
+
+      const spaceStreamLambda = new lambda.Function(this, "SpaceStreamWorker", {
+        runtime: lambda.Runtime.PROVIDED_AL2023,
+        code: lambda.Code.fromAsset("space-stream-worker"),
+        handler: "bootstrap",
+        environment: {
+          REGION: this.region,
+          DISABLE_ANSI: "true",
+          NO_COLOR: "true",
+        },
+        memorySize: 256,
+        timeout: Duration.seconds(150),
+      });
+
+      const privateBucketName = process.env.PRIVATE_BUCKET_NAME;
+      if (privateBucketName) {
+        spaceStreamLambda.addToRolePolicy(
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: ["s3:GetObject", "s3:HeadObject", "s3:PutObject"],
+            resources: [`arn:aws:s3:::${privateBucketName}/*`],
+          })
+        );
+      }
+
+      spaceStreamLambda.addEventSource(
+        new lambdaEventSources.DynamoEventSource(mainTableWithStream, {
+          startingPosition: lambda.StartingPosition.LATEST,
+          batchSize: 10,
+          bisectBatchOnError: true,
+          retryAttempts: 3,
+        })
+      );
+    }
 
     startSurveyLambda.addToRolePolicy(
       new iam.PolicyStatement({

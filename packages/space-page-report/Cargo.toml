@@ -9,10 +9,20 @@ edition = "2021"
 [dependencies]
 dioxus = { workspace = true }
 common = { workspace = true }
+serde = { workspace = true }
+aws-config = { version = "1", optional = true }
+aws-sdk-s3 = { version = "1", optional = true }
+aws-sdk-bedrockruntime = { version = "1", optional = true }
 
 [features]
 default = []
 web = ["dioxus/web", "common/web"]
 desktop = ["dioxus/desktop"]
 mobile = ["dioxus/mobile"]
-server = ["dioxus/server", "common/server"]
+server = [
+  "dioxus/server",
+  "common/server",
+  "aws-config",
+  "aws-sdk-s3",
+  "aws-sdk-bedrockruntime",
+]

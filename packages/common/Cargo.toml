@@ -24,8 +24,13 @@ aide = { workspace = true, optional = true }
 ssi = { version = "0.12.0", features = ["bbs"], optional = true }
 dioxus-components = { workspace = true }
 icons = { workspace = true }
+strum = { version = "0.27.2", features = ["derive"] }
+
+dioxus = { workspace = true }
 
 [features]
 default = []
-server = ["aide", "bdk/be", "schemars", "serde_dynamo", "ssi"]
-web = []
+server = ["aide", "bdk/be", "schemars", "serde_dynamo", "ssi", "dioxus/server"]
+web = ["dioxus/web"]
+mobile = ["dioxus/mobile"]
+desktop = ["dioxus/desktop"]

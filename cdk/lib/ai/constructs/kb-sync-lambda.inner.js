@@ -4,6 +4,19 @@ const {
 } = require("@aws-sdk/client-bedrock-agent");
 const { S3Client, HeadObjectCommand } = require("@aws-sdk/client-s3");
 
+function parseSpacePkFromKey(key) {
+  const parts = key.split("/").filter(Boolean);
+  if (parts.length < 5) return null;
+  if (parts[1] !== "spaces") return null;
+
+  const stage = parts[0];
+  const spacePk = parts[2];
+  const kind = parts[3];
+
+  if (!stage || !spacePk || !kind) return null;
+  return { stage, spacePk, kind };
+}
+
 exports.handler = async (event) => {
   const bedrockClient = new BedrockAgentClient({
     region: process.env.AWS_REGION,
@@ -27,6 +40,13 @@ exports.handler = async (event) => {
     return { statusCode: 200, body: "Skipped - outside prefix" };
   }
 
+  const parsed = parseSpacePkFromKey(key);
+  if (!parsed) {
+    console.error(`Invalid key format (cannot parse stage/space_pk): ${key}`);
+    return { statusCode: 400, body: "Invalid key format" };
+  }
+  const { stage, spacePk } = parsed;
+
   // Check file extension OR ContentType to verify it's a PDF
   const isPdfExtension = key.toLowerCase().endsWith(".pdf");
   let isPdfContentType = false;
@@ -35,11 +55,11 @@ exports.handler = async (event) => {
     try {
       // Files uploaded without extension - check ContentType metadata
       const headResult = await s3Client.send(
-        new HeadObjectCommand({ Bucket: bucket, Key: key }),
+        new HeadObjectCommand({ Bucket: bucket, Key: key })
       );
       isPdfContentType = headResult.ContentType === "application/pdf";
       console.log(
-        `ContentType: ${headResult.ContentType}, is PDF: ${isPdfContentType}`,
+        `ContentType: ${headResult.ContentType}, is PDF: ${isPdfContentType}`
       );
     } catch (error) {
       console.error("Error checking file metadata:", error);
@@ -47,14 +67,14 @@ exports.handler = async (event) => {
     }
   }
 
-  if (!isPdfExtension && !isPdfContentType) {
-    console.log(`Skipping non-PDF file: ${key}`);
-    return { statusCode: 200, body: "Skipped - not a PDF file" };
+  const isJsonExtension = key.toLowerCase().endsWith(".json");
+
+  if (!isPdfExtension && !isPdfContentType && !isJsonExtension) {
+    console.log(`Skipping unsupported file: ${key}`);
+    return { statusCode: 200, body: "Skipped - unsupported file type" };
   }
 
-  console.log(
-    "Triggering direct document ingestion for PDF (CUSTOM data source)",
-  );
+  console.log("Triggering direct document ingestion (CUSTOM data source)");
 
   try {
     const s3Uri = `s3://${bucket}/${key}`;
@@ -78,9 +98,18 @@ exports.handler = async (event) => {
                 },
               },
             },
+            metadata: {
+              type: "INLINE",
+              inlineAttributes: [
+                {
+                  key: "space_pk",
+                  value: { type: "STRING", stringValue: spacePk },
+                },
+              ],
+            },
           },
         ],
-      }),
+      })
     );
 
     console.log("Direct document ingestion completed:", {
@@ -104,6 +133,8 @@ exports.handler = async (event) => {
       body: JSON.stringify({
         message: "Direct document ingestion successful",
         documentUri: s3Uri,
+        space_pk: spacePk,
+        stage,
         details: response.documentDetails,
       }),
     };

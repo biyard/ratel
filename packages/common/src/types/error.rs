@@ -1,7 +1,7 @@
 use crate::*;
 pub use thiserror::Error;
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Serialize, Deserialize)]
 pub enum Error {
     #[error("Unknown: {0}")]
     Unknown(String),
@@ -20,5 +20,11 @@ pub enum Error {
 impl From<String> for Error {
     fn from(s: String) -> Self {
         Error::Unknown(s)
+    }
+}
+
+impl From<ServerFnError> for Error {
+    fn from(e: ServerFnError) -> Self {
+        Error::Unknown(format!("Server function error: {}", e))
     }
 }
