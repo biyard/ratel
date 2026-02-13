@@ -3801,6 +3801,7 @@ dependencies = [
  "aws-config",
  "aws-credential-types",
  "aws-sdk-dynamodb",
+ "aws-sdk-s3",
  "base64 0.22.1",
  "bdk",
  "by-macros",
@@ -3814,10 +3815,13 @@ dependencies = [
  "serde",
  "serde_dynamo",
  "serde_json",
+ "serde_repr",
  "serde_with 3.14.1",
  "ssi",
  "thiserror 2.0.17",
  "tower-sessions 0.15.0",
+ "tracing",
+ "uuid 1.18.1",
 ]
 
 [[package]]
@@ -17284,6 +17288,7 @@ dependencies = [
  "common",
  "dioxus",
  "reqwest 0.12.28",
+ "serde",
  "space-page-actions",
  "space-page-apps",
  "space-page-dashboard",
