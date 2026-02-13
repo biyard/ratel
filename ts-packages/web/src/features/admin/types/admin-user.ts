@@ -28,3 +28,34 @@ export interface DemoteAdminResponse {
   success: boolean;
   message: string;
 }
+
+export interface AdminPaymentResponse {
+  payment_id: string;
+  status: string;
+  currency: string;
+  paid_at: string | null;
+  order_name: string;
+  user_pk: string | null;
+  user_email: string | null;
+  user_name: string | null;
+  total: number;
+  cancelled: number | null;
+}
+
+export interface AdminCancelPaymentRequest {
+  reason: string;
+}
+
+export interface AdminCancelPaymentResponse {
+  status: string;
+  cancellation_id: string;
+  total_amount: number;
+  reason: string;
+  cancelled_at: string | null;
+  requested_at: string;
+}
+
+export interface AdminPaymentListResponse {
+  items: AdminPaymentResponse[];
+  bookmark: string | null;
+}

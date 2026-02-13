@@ -127,6 +127,60 @@ jobs:
           make dist
           make test
 
+  space-stream-worker:
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: packages/space-stream-worker
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+          toolchain: stable
+
+      - name: Build space-stream-worker
+        env:
+          AWS_ACCOUNT_ID: 000000000000
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_REGION: ap-northeast-2
+          ENV: test
+          DOMAIN: dev.ratel.foundation
+          DYNAMO_TABLE_PREFIX: ratel-test
+          DYNAMO_ENDPOINT: http://localhost:4566
+          PRIVATE_BUCKET_NAME: metadata.ratel.foundation
+        run: |
+          cargo build --release
+
+  contracts-test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: contracts
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: |
+          npm ci
+
+      - name: Run contract tests
+        run: |
+          make test
+
   survey-worker-lambda:
     runs-on: ubuntu-22.04
 

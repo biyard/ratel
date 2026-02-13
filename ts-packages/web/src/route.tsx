@@ -71,7 +71,10 @@ export const route = {
   },
   spaceBoards: (spaceId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/boards`,
-  spaceDao: (spaceId: string) => `/spaces/${encodeURIComponent(spaceId)}/dao`,
+  spaceIncentiveSetting: (spaceId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/incentive-setting`,
+  spaceIncentive: (spaceId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/incentive`,
   spaceCreatePost: (spaceId: string, postPk?: string) => {
     let to = `/spaces/${encodeURIComponent(spaceId)}/boards/create`;
     const params: string[] = [];
@@ -101,6 +104,10 @@ export const route = {
     `/spaces/${encodeURIComponent(spaceId)}/polls/analyzes`,
   spaceAnalyzePollById: (spaceId: string, pollId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/polls/${encodeURIComponent(pollId)}/analyzes`,
+  spaceReport: (spaceId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/report`,
+  spaceReportViewer: (spaceId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/report/view`,
   spaceFiles: (spaceId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/files`,
   spacePdfViewer: (spaceId: string, fileId: string) =>
@@ -116,6 +123,8 @@ export const route = {
     `/spaces/${encodeURIComponent(spacePk)}/nfts`,
   spaceNftArtTwin: (spacePk: string) =>
     `/spaces/${encodeURIComponent(spacePk)}/nfts/art-twin`,
+  spaceRequirements: (spaceId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/requirements`,
 
   // Admin routes
   admin: () => '/admin',
@@ -123,6 +132,8 @@ export const route = {
   adminAttributeCodes: () => '/admin/attribute-codes',
   adminUsers: () => '/admin/users',
   adminRewards: () => '/admin/rewards',
+  adminMigrations: () => '/admin/migrations',
+  adminPayments: () => '/admin/payments',
   newPost: (postPk?: string, teamPk?: string) => {
     let to = '/posts/new';
     const params: string[] = [];

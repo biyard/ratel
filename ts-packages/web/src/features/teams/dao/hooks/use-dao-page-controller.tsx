@@ -12,7 +12,7 @@ import { config } from '@/config';
 import { showErrorToast, showSuccessToast, showInfoToast } from '@/lib/toast';
 
 export function useDaoPageController(username: string) {
-  const { team, eligibleAdmins, permissions } = useDaoData(username);
+  const { team, eligibleAdmins, permissions } = useDaoData(username, true);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const updateTeamMutation = useUpdateTeam();

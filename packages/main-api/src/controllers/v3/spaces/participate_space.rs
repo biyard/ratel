@@ -11,7 +11,7 @@ pub struct ParticipateSpaceRequest {
     pub verifiable_presentation: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, OperationIo, JsonSchema)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, OperationIo, JsonSchema)]
 pub struct ParticipateSpaceResponse {
     pub username: String,
     pub display_name: String,
@@ -100,14 +100,14 @@ pub async fn participate_space_handler(
         .increase_participants(1)
         .with_updated_at(now);
 
-    let invitation =
-        SpaceInvitationMember::updater(&pk, &sk).with_status(InvitationStatus::Accepted);
+    let invitation = SpaceInvitationMember::new(space.pk.clone(), user.clone())
+        .with_status(InvitationStatus::Accepted);
 
     transact_write!(
         &dynamo.client,
         sp.create_transact_write_item(),
         new_space.transact_write_item(),
-        invitation.transact_write_item(),
+        invitation.upsert_transact_write_item(),
     )?;
 
     tracing::debug!("space participants: {:?}", sp);

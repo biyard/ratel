@@ -1,0 +1,40 @@
+ENV ?= dev
+
+COMMIT ?= $(shell git rev-parse --short HEAD)
+
+AWS_ACCESS_KEY_ID ?= $(shell aws configure get aws_access_key_id $(AWS_FLAG))
+AWS_SECRET_ACCESS_KEY ?= $(shell aws configure get aws_secret_access_key $(AWS_FLAG))
+AWS_REGION ?= $(shell aws configure get region)
+AWS_ACCOUNT_ID ?= $(shell aws sts get-caller-identity --query "Account" --output text)
+
+DATABASE_TYPE = dynamo
+DYNAMO_ENDPOINT ?= http://localhost:4566
+DYNAMO_TABLE_PREFIX ?= ratel-$(ENV)
+
+RUST_LOG ?= debug
+
+PORT ?= 8000
+UPSTREAM_URL ?= https://dev.ratel.foundation
+
+BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
+					AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) \
+					AWS_REGION=$(AWS_REGION) \
+					AWS_ACCOUNT_ID=$(AWS_ACCOUNT_ID) \
+					DYNAMO_TABLE_PREFIX=$(DYNAMO_TABLE_PREFIX) \
+					TABLE_PREFIX=$(DYNAMO_TABLE_PREFIX) \
+					DYNAMODB_ENDPOINT=$(DYNAMO_ENDPOINT) \
+					DATABASE_TYPE=$(DATABASE_TYPE) \
+					RUST_LOG=$(RUST_LOG) \
+					ENV=$(ENV) \
+					COMMIT=$(COMMIT) \
+					PORT=$(PORT) \
+					UPSTREAM_URL=$(UPSTREAM_URL)
+
+RUST_FLAG ?=
+WATCH_TARGET = -w src -w $(PWD)/
+
+run:
+	$(BUILD_ENV) dx serve --port $(PORT) --platform web
+
+build:
+	$(BUILD_ENV) dx build

@@ -4,6 +4,8 @@ import type {
   AdminListResponse,
   PromoteToAdminRequest,
   DemoteAdminResponse,
+  AdminCancelPaymentRequest,
+  AdminCancelPaymentResponse,
 } from '@/features/admin/types/admin-user';
 
 /**
@@ -39,4 +41,23 @@ export async function demoteAdmin(
   userId: string,
 ): Promise<DemoteAdminResponse> {
   return await call('DELETE', `/m3/admin/${userId}`);
+}
+
+/**
+ * Run teams migration
+ * POST /m3/migrations/teams
+ */
+export async function runTeamsMigration(): Promise<void> {
+  return await call('POST', '/m3/migrations/teams');
+}
+
+/**
+ * Cancel a payment (refund)
+ * POST /m3/payments/:payment_id/cancel
+ */
+export async function cancelPayment(
+  paymentId: string,
+  request: AdminCancelPaymentRequest,
+): Promise<AdminCancelPaymentResponse> {
+  return await call('POST', `/m3/payments/${paymentId}/cancel`, request);
 }

@@ -1,5 +1,19 @@
+import { useTranslation } from 'react-i18next';
+
 export const i18nSpaceHome = {
   en: {
+    failedPdfUpload: 'Failed to PDF upload',
+    onlyPdfFiles: 'Only PDF files can uploaded',
+    fileSizeLimit: 'Each file must be less than 50MB.',
+    failedIssueUploadUrl: 'Failed to issue upload URL.',
+    completePdfUpload: 'Complete to PDF upload',
+    successUpdateFiles: 'Success to update space files',
+    failedUpdateFiles: 'Failed to update space files',
+    successUpdateContent: 'Success to update space content',
+    failedUpdateContent: 'Failed to update space content',
+    successUpdateTitle: 'Success to update space title',
+    failedUpdateTitle: 'Failed to update space title',
+    failedUploadImage: 'Failed to upload image',
     change_private: 'Convert Private',
     change_public: 'Convert Public',
     publish_space: 'Publish Space',
@@ -59,7 +73,8 @@ export const i18nSpaceHome = {
     menu_boards: 'Boards',
     menu_members: 'Members',
     menu_files: 'Files',
-    menu_dao: 'DAO',
+    menu_incentive_setting: 'Incentive Setting',
+    menu_incentive: 'Incentive',
     menu_quiz: 'Quizzes',
     menu_recommendations: 'Recommendations',
     menu_sprint_league: 'Sprint League',
@@ -100,104 +115,50 @@ export const i18nSpaceHome = {
     go_home: 'Go to Home',
   },
   ko: {
-    change_private: '비공개 전환',
-    change_public: '공개 전환',
-    publish_space: '스페이스 게시',
-    start_space: '스페이스 시작',
-    end_space: '스페이스 종료',
-    delete_space: '스페이스 삭제',
-    unsupported_space_type: '지원되지 않는 스페이스 유형입니다.',
-    no_authorized_user: '인증되지 않은 사용자입니다.',
-    untitled_space: '제목 없는 스페이스',
-    start_warning:
-      '이 작업은 되돌릴 수 없습니다. 스페이스를 시작할 경우 유저 참여가 제한됩니다.',
-    end_warning:
-      '이 작업은 되돌릴 수 없습니다. 스페이스를 종료할 경우 스페이스 내에서 유저의 모든 참여가 제한됩니다.',
-    start_button: '스페이스 시작하기',
-    starting: '시작 중....',
-    end_button: '스페이스 종료하기',
-    ending: '종료 중....',
-
-    delete_title: '스페이스 삭제 <name></name>',
-    delete_warning:
-      '이 작업은 되돌릴 수 없습니다. 스페이스와 그 안의 모든 콘텐츠가 영구적으로 삭제됩니다.',
-    delete_label: '확인을 위해 아래와 동일하게 스페이스 이름을 입력하세요:',
-    delete_placeholder: '확인을 위해 "{{spaceName}}"을(를) 입력하세요',
-    cancel: '취소',
-    delete_button: '스페이스 삭제',
-    deleting: '삭제 중...',
-    go_public: '공개하기',
-    save: '저장하기',
-    edit: '편집하기',
-    make_public: '공개로 만들기',
-    publish: '게시하기',
-    see_committee_list: '참여자 리스트 확인하기',
-    change_category: '카테고리 변경하기',
-    delete: '삭제하기',
-    started: '시작하기',
-    finished: '종료하기',
-    private: '개인',
-    public: '공개',
-    onboard: '온보딩',
-    input_title: '제목을 입력하세요.',
-    enable_anonymous_option_failed:
-      'Deliberation 스페이스를 게시하기 전에 익명 속성을 활성화해야합니다.',
-    make_public_title: '스페이스는 곧 공개될 예정입니다.',
-    make_public_desc_line1: '공개로 전환하면 이 스페이스는 모두에게 보입니다',
-    make_public_desc_line2: '그리고 <b>다시 비공개로 되돌릴 수 없습니다.</b>',
-
-    // Timeline
-    timeline_title: '타임라인',
-    timeline_created_at_label: '생성됨',
-
-    // Menus
-    menu_overview: '개요',
-    menu_poll: '설문',
-    menu_discussions: '토론',
-    menu_panels: '패널',
-    menu_boards: '게시판',
-    menu_members: '멤버',
-    menu_files: '파일',
-    menu_dao: '다오',
-    menu_quiz: '퀴즈',
-    menu_recommendations: '권고사항',
-
-    menu_sprint_league: 'Sprint League',
-
-    // Admin Menus
-    menu_admin_settings: '설정',
-    menu_rewards: '보상 설정',
-    menu_analyze: '분석',
-
-    // Actions
-    action_participate: '참여하기',
-
-    authorize_title: '속성 검증 실패',
-    authorize_desc_1: '스페이스가 요구하는 속성이 부족합니다.',
-    authorize_desc_2: '자격 증명 페이지로 가서 검증 후 다시 접속해보세요.',
-    go_credentials: '자격 증명 페이지로 이동하기',
-    success_publish_space: '스페이스를 성공적으로 게시했습니다.',
-    failed_publish_space:
-      '스페이스 게시에 실패했습니다. 잠시 후 다시 시도해보세요.',
-    success_delete_space: '스페이스를 성공적으로 삭제했습니다.',
-    failed_delete_space:
-      '스페이스 삭제에 실패했습니다. 잠시 후 다시 시도해보세요.',
-    success_start_space: '스페이스를 성공적으로 시작했습니다.',
-    failed_start_space:
-      '스페이스 시작에 실패했습니다. 잠시 후 다시 시도해보세요.',
-    success_finish_space: '스페이스를 성공적으로 종료했습니다.',
-    failed_finish_space:
-      '스페이스 종료에 실패했습니다. 잠시 후 다시 시도해보세요.',
-    success_participate_space: '스페이스에 성공적으로 참여했습니다.',
-    failed_participate_space:
-      '스페이스 참여에 실패했습니다. 잠시 후 다시 시도해보세요.',
-
-    upload_media: '미디어 업로드',
-    uploading: '업로드 중…',
-    upload_file_size_limit: '동영상은 최대 50MB까지만 업로드 가능합니다.',
-
-    end_space_title: '종료된 스페이스',
-    end_space_desc: '종료된 스페이스입니다.',
-    go_home: '홈으로 이동하기',
+    failedPdfUpload: 'PDF 업로드 실패',
+    onlyPdfFiles: 'PDF 파일만 업로드 가능합니다.',
+    fileSizeLimit: '파일 크기는 50MB 이하여야 합니다.',
+    failedIssueUploadUrl: '업로드 URL 발급에 실패했습니다.',
+    completePdfUpload: 'PDF 업로드 완료',
+    successUpdateFiles: '스페이스 파일 업데이트 성공',
+    failedUpdateFiles: '스페이스 파일 업데이트 실패',
+    successUpdateContent: '스페이스 내용 업데이트 성공',
+    failedUpdateContent: '스페이스 내용 업데이트 실패',
+    successUpdateTitle: '스페이스 제목 업데이트 성공',
+    failedUpdateTitle: '스페이스 제목 업데이트 실패',
+    failedUploadImage: '이미지 업로드 실패',
   },
 };
+
+export interface I18nSpaceHome {
+  failedPdfUpload: string;
+  onlyPdfFiles: string;
+  fileSizeLimit: string;
+  failedIssueUploadUrl: string;
+  completePdfUpload: string;
+  successUpdateFiles: string;
+  failedUpdateFiles: string;
+  successUpdateContent: string;
+  failedUpdateContent: string;
+  successUpdateTitle: string;
+  failedUpdateTitle: string;
+  failedUploadImage: string;
+}
+
+export function useSpaceHomeI18n(): I18nSpaceHome {
+  const { t } = useTranslation('SpaceHome');
+  return {
+    failedPdfUpload: t('failedPdfUpload'),
+    onlyPdfFiles: t('onlyPdfFiles'),
+    fileSizeLimit: t('fileSizeLimit'),
+    failedIssueUploadUrl: t('failedIssueUploadUrl'),
+    completePdfUpload: t('completePdfUpload'),
+    successUpdateFiles: t('successUpdateFiles'),
+    failedUpdateFiles: t('failedUpdateFiles'),
+    successUpdateContent: t('successUpdateContent'),
+    failedUpdateContent: t('failedUpdateContent'),
+    successUpdateTitle: t('successUpdateTitle'),
+    failedUpdateTitle: t('failedUpdateTitle'),
+    failedUploadImage: t('failedUploadImage'),
+  };
+}

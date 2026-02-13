@@ -27,7 +27,7 @@ import SpacePollPage from './app/spaces/[id]/poll/space-poll-page';
 import { TestReportPage } from './app/test-report/test-report-page';
 import { StorybookPage } from './app/storybook/stroybook-page';
 import ThreadNotFound from './app/(social)/threads/[id]/thread-not-found';
-import SpaceByIdLayout from './app/spaces/[id]/space-by-id-layout';
+import SpaceByIdLayout from './features/spaces/layout/space-by-id-layout';
 import { SpaceHomePage } from './app/spaces/[id]/space-home-page';
 import { SpaceSettingsPage } from './app/spaces/[id]/settings/space-settings-page';
 import { SpaceRewardsPage } from './app/spaces/[id]/rewards/space-rewards-page';
@@ -36,6 +36,8 @@ import SpaceDiscussionPage from './app/spaces/[id]/discussions/space-discussion-
 import SpaceFilePage from './app/spaces/[id]/file/space-file-page';
 import SpaceRecommendationPage from './app/spaces/[id]/recommendation/space-recommendation-page';
 import DiscussionPage from './app/spaces/[id]/discussions/[discussion-id]/discussion-page';
+import SpaceRequirementPage from './app/spaces/[id]/requirements/space-requirment-page';
+import { SpaceReportPage } from './app/spaces/[id]/report/space-report-page';
 
 // Admin
 import AdminPage from './app/admin/page';
@@ -43,6 +45,8 @@ import { MembershipsPage } from './app/admin/memberships/memberships-page';
 import AttributeCodesPage from './app/admin/attribute-codes/page';
 import AdminUsersPage from './app/admin/users/page';
 import { RewardsPage as AdminRewardsPage } from './app/admin/rewards/rewards-page';
+import MigrationsPage from './app/admin/migrations/page';
+import { PaymentsPage as AdminPaymentsPage } from './app/admin/payments/payments-page';
 import TelegramPage from './app/telegram/page';
 import SpaceAnalyzePage from './app/spaces/[id]/analyze/space-analyze-page';
 import SpacePanelPage from './app/spaces/[id]/panels/space-panel-page';
@@ -53,7 +57,7 @@ import ResetPasswordPage from './app/(auth)/reset-password/page';
 
 import CreatePostPage from './features/posts/components/create-post-page';
 import SpacePollsPage from './app/spaces/[id]/polls/space-polls-page';
-import SpaceAnalyzesPage from './app/spaces/[id]/analyzes/space_analyzes-page';
+import SpaceAnalyzesPage from './app/spaces/[id]/analyzes/space-analyzes-page';
 import CreateArtworkPage from './features/posts/components/create-artwork-page';
 import SpaceArtNftPreviewPage from './app/spaces/[id]/art-nfts/space-art-nft-page';
 import SpaceArtNftArtTwinPage from './app/spaces/[id]/art-nfts/space-art-nft-twin-page';
@@ -72,7 +76,9 @@ import RewardsPage from './app/rewards/page';
 import { MembershipPlan } from './features/membership/components/membership-plan';
 import Providers from './providers/providers';
 import { PdfViewerLoader } from './features/spaces/files/components/pdf-viewer-loader';
-import SpaceDaoPage from './app/spaces/[id]/dao/space-dao-page';
+import SpaceIncentiveSettingPage from './app/spaces/[id]/incentive-setting/space-incentive-setting-page';
+import SpaceIncentivePage from './app/spaces/[id]/incentive/space-incentive-page';
+import { SpaceHtmlViewerPage } from './features/spaces/files/pages/html-viewer/space-html-viewer-page';
 
 export const routes = createBrowserRouter([
   // PDF Viewer - Completely standalone without any layout
@@ -82,6 +88,16 @@ export const routes = createBrowserRouter([
     Component: () => (
       <Providers>
         <PdfViewerLoader />
+      </Providers>
+    ),
+  },
+  // HTML Viewer for Report - Completely standalone without any layout
+  {
+    id: 'space-html-viewer-standalone',
+    path: '/spaces/:spacePk/report/view',
+    Component: () => (
+      <Providers>
+        <SpaceHtmlViewerPage />
       </Providers>
     ),
   },
@@ -254,6 +270,7 @@ export const routes = createBrowserRouter([
         id: 'space-layout',
         path: 'spaces/:spacePk',
         Component: SpaceByIdLayout,
+        handle: { hideHeader: true },
         children: [
           // Space Common
 
@@ -286,6 +303,7 @@ export const routes = createBrowserRouter([
                 id: 'space-post-detail',
                 path: 'posts/:postPk',
                 Component: SpaceBoardPage,
+                handle: { hideSpaceHeader: true },
               },
             ],
           }, // End of Boards Feature
@@ -299,12 +317,17 @@ export const routes = createBrowserRouter([
             path: 'rewards',
             Component: SpaceRewardsPage,
           },
-          // Space Dao Feature
+          // Space Incentive Setting Feature
           {
-            id: 'space-dao-page',
-            path: 'dao',
-            Component: SpaceDaoPage,
-          }, // End of Dao Feature
+            id: 'space-incentive-setting-page',
+            path: 'incentive-setting',
+            Component: SpaceIncentiveSettingPage,
+          }, // End of Incentive Setting Feature
+          {
+            id: 'space-incentive-page',
+            path: 'incentive',
+            Component: SpaceIncentivePage,
+          },
           {
             id: 'space-sprint-league-feature',
             path: 'sprint-leagues',
@@ -330,21 +353,13 @@ export const routes = createBrowserRouter([
                 path: ':pollPk',
                 Component: SpacePollPage,
               },
-            ],
-          }, // End of Poll Feature
-
-          // Space Analyze Feature
-          {
-            id: 'space-poll-analyze-feature',
-            path: 'polls',
-            children: [
               {
                 id: 'poll-analyze-by-id',
                 path: ':pollPk/analyzes',
                 Component: SpaceAnalyzePage,
               },
             ],
-          }, // End of Analyze Feature
+          }, // End of Poll Feature
           // Space Discussion Feature
           {
             id: 'space-discussion',
@@ -396,6 +411,17 @@ export const routes = createBrowserRouter([
               },
             ],
           },
+          {
+            id: 'space-requirement-page',
+            path: 'requirements',
+            Component: SpaceRequirementPage,
+            handle: { hideSpaceHeader: true },
+          },
+          {
+            id: 'space-report-page',
+            path: 'report',
+            Component: SpaceReportPage,
+          }, // End of Report Feature
         ],
       }, // End of Space Layout
       {
@@ -452,6 +478,16 @@ export const routes = createBrowserRouter([
         id: 'admin-rewards-page',
         path: 'admin/rewards',
         Component: AdminRewardsPage,
+      },
+      {
+        id: 'admin-migrations-page',
+        path: 'admin/migrations',
+        Component: MigrationsPage,
+      },
+      {
+        id: 'admin-payments-page',
+        path: 'admin/payments',
+        Component: AdminPaymentsPage,
       }, // End of Admin Routes
 
       {

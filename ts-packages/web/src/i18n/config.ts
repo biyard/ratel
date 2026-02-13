@@ -53,6 +53,7 @@ import { i18nSpacePollViewerPage } from '@/features/spaces/polls/pages/viewer/sp
 import { i18nSpaceFileEditor } from '@/features/spaces/files/pages/creator/space-file-editor-i18n';
 import { i18nSpaceRecommendationEditor } from '@/features/spaces/recommendations/pages/creator/space-recommendation-editor-i18n';
 import { i18nAdmin } from '@/app/admin/admin-page-i18n';
+import { i18nAdminMigrations } from '@/app/admin/migrations/migrations-page-i18n';
 import { i18nAdmins } from '@/app/admin/users/admins-page-i18n';
 import { i18nMemberships } from '@/features/membership/i18n';
 import { i18nNotifications } from '@/features/notification/i18n';
@@ -76,16 +77,21 @@ import { i18nSpaceBoardsEditor } from '@/features/spaces/boards/pages/creator/sp
 import { i18nSpaceBoardsEditorDetail } from '@/features/spaces/boards/pages/creator/detail/space-boards-editor-detail-i18n';
 import { i18nAttributeCodes } from '@/app/admin/attribute-codes/attribute-codes-page-i18n';
 import { i18nAdminRewards } from '@/app/admin/rewards/rewards-page-i18n';
+import { i18nAdminPayments } from '@/app/admin/payments/payments-page-i18n';
 import { Errors } from '@/features/errors/i18n';
 import { MySpaces } from '@/app/(social)/my-spaces/i18n';
 import { i18nCompleteSurveyModal } from '@/features/spaces/polls/components/modal/complete_survey/complete-survey-modal-i18n';
 import { i18nSpaceRewards } from '@/features/spaces/rewards/i18n';
+import { i18nRewardTypes } from '@/features/spaces/rewards/types/reward-i18n';
 import { i18nRewardsPage } from '@/app/rewards/rewards-page-i18n';
 import { i18nTeamGroups } from '@/features/teams/groups/i18n';
 import { i18nTeamDao } from '@/features/teams/dao/i18n';
 import { i18nTeamRewardsPage } from '@/features/teams/rewards/i18n';
 import { i18nTeamSettingsPage } from '@/features/teams/settings/i18n';
-import { i18nSpaceDaoEditor } from '@/features/spaces/dao/pages/creator/space-dao-editor-i18n';
+import { i18nSpaceIncentiveEditor } from '@/features/spaces/incentive/pages/creator/space-incentive-editor-i18n';
+import { i18nSpaceLayout } from '@/features/spaces/layout/space-layout-i18n';
+import { i18nSpaceReportPage } from '@/features/spaces/reports/pages/creator/space-report-page-i18n';
+import { i18nSpaceHtmlViewer } from '@/features/spaces/files/pages/html-viewer/space-html-viewer-i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 // NOTE: it should be migrated to namespace based code splitting later
@@ -134,7 +140,8 @@ Object.entries({
   SpaceSurveyReport: i18nSpaceSurveyReportComponent,
   SpaceFile: i18nSpaceFileComponent,
   SpaceTypeSelectModal: i18nSpaceTypeSelectModal,
-  Space: i18nSpaceHome,
+  SpaceHome: i18nSpaceHome,
+  SpaceLayout: i18nSpaceLayout,
   SpacePollSubmitSurvey: i18nSubmitSurveyModal,
   SpaceCompleteSurvey: i18nCompleteSurveyModal,
   SpacePollAnalyze: i18nSpacePollAnalyze,
@@ -153,11 +160,13 @@ Object.entries({
   SpaceMemberEditor: i18nSpaceMemberEditorPage,
   SpaceMemberViewer: i18nSpaceMemberViewerPage,
   Admin: i18nAdmin,
+  AdminMigrations: i18nAdminMigrations,
   Admins: i18nAdmins,
   Memberships: i18nMemberships,
   Notifications: i18nNotifications,
   AttributeCodes: i18nAttributeCodes,
   AdminRewards: i18nAdminRewards,
+  AdminPayments: i18nAdminPayments,
   Nav: i18nHeader,
   ListDrafts: i18nListDrafts,
   CreatePostPage,
@@ -178,9 +187,12 @@ Object.entries({
   MyRewards: i18nRewardsPage,
   TeamGroups: i18nTeamGroups,
   TeamDao: i18nTeamDao,
-  SpaceDaoEditor: i18nSpaceDaoEditor,
+  SpaceIncentiveEditor: i18nSpaceIncentiveEditor,
+  RewardTypes: i18nRewardTypes,
   TeamRewards: i18nTeamRewardsPage,
   TeamSettings: i18nTeamSettingsPage,
+  SpaceReportPage: i18nSpaceReportPage,
+  SpaceHtmlViewer: i18nSpaceHtmlViewer,
 }).forEach(([key, value]) => {
   resources.en[key] = value.en;
   resources.ko[key] = value.ko;

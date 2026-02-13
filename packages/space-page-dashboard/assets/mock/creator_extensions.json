@@ -1,0 +1,283 @@
+[
+  {
+    "id": "stat-summary-1",
+    "data": {
+      "type": "STAT_SUMMARY",
+      "value": {
+        "icon": "📊",
+        "icon_bg": "#3B82F6",
+        "main_value": "21,245",
+        "main_label": "Space Views",
+        "items": [
+          {
+            "label": "Total Participants",
+            "value": "50",
+            "icon": "👥",
+            "trend": 54.0,
+            "trend_label": "7d"
+          },
+          {
+            "label": "Total Likes",
+            "value": "50",
+            "icon": "👍",
+            "trend": 54.0,
+            "trend_label": "7d"
+          },
+          {
+            "label": "Total Comments",
+            "value": "50",
+            "icon": "💬",
+            "trend": 54.0,
+            "trend_label": "7d"
+          },
+          {
+            "label": "Total Post",
+            "value": "50",
+            "icon": "📝",
+            "trend": 54.0,
+            "trend_label": "7d"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "progress-list-1",
+    "data": {
+      "type": "PROGRESS_LIST",
+      "value": {
+        "icon": "💡",
+        "icon_bg": "#FCB300",
+        "main_value": "29",
+        "main_label": "Participations Action",
+        "items": [
+          {
+            "label": "Study Completion",
+            "current": 9,
+            "total": 100,
+            "color": "#FCB300"
+          },
+          {
+            "label": "Survey Completion",
+            "current": 20,
+            "total": 100,
+            "color": "#FCB300"
+          },
+          {
+            "label": "Vote Completion",
+            "current": 20,
+            "total": 100,
+            "color": "#FCB300"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "tab-chart-1",
+    "data": {
+      "type": "TAB_CHART",
+      "value": {
+        "icon": "👥",
+        "icon_bg": "#06B6D4",
+        "main_value": "100",
+        "main_label": "Total Participants",
+        "tabs": [
+          {
+            "label": "Age",
+            "categories": [
+              {
+                "name": "10-",
+                "value": 15.4,
+                "percentage": "15.4%",
+                "color": "#FCB300"
+              },
+              {
+                "name": "20-",
+                "value": 15.4,
+                "percentage": "15.4%",
+                "color": "#FCB300"
+              },
+              {
+                "name": "55+",
+                "value": 15.4,
+                "percentage": "15.4%",
+                "color": "#FCB300"
+              }
+            ]
+          },
+          {
+            "label": "Gender",
+            "categories": [
+              {
+                "name": "M",
+                "value": 50.0,
+                "percentage": "50%",
+                "color": "#FCB300"
+              },
+              {
+                "name": "F",
+                "value": 50.0,
+                "percentage": "50%",
+                "color": "#FCB300"
+              }
+            ]
+          },
+          {
+            "label": "Country",
+            "categories": [
+              {
+                "name": "KR",
+                "value": 70.0,
+                "percentage": "70%",
+                "color": "#FCB300"
+              },
+              {
+                "name": "US",
+                "value": 20.0,
+                "percentage": "20%",
+                "color": "#FCB300"
+              },
+              {
+                "name": "JP",
+                "value": 10.0,
+                "percentage": "10%",
+                "color": "#FCB300"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "info-card-1",
+    "data": {
+      "type": "INFO_CARD",
+      "value": {
+        "icon": "🎁",
+        "icon_bg": "#22C55E",
+        "main_value": "100,000",
+        "main_label": "Total Points Available",
+        "unit": "",
+        "items": [
+          {
+            "label": "✕ 10 Boost",
+            "value": "10,000"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "stat-card-1",
+    "data": {
+      "type": "STAT_CARD",
+      "value": {
+        "icon": "💰",
+        "icon_bg": "#A855F7",
+        "label": "Incentive Pool",
+        "value": "1,245",
+        "trend": 0.0,
+        "trend_label": "USDT",
+        "total_winners": "10",
+        "rank_rate": "show",
+        "incentive_pool": "0xA3f9...D2F4"
+      }
+    }
+  },
+  {
+    "id": "ranking-table-1",
+    "data": {
+      "type": "RANKING_TABLE",
+      "value": {
+        "columns": [
+          "Rank",
+          "Participant",
+          "Point",
+          "Score"
+        ],
+        "entries": [
+          {
+            "rank": 1,
+            "name": "hello Ratel 1",
+            "avatar": "",
+            "score": 1450.0,
+            "change": 25
+          },
+          {
+            "rank": 1,
+            "name": "hello Ratel 2",
+            "avatar": "",
+            "score": 1450.0,
+            "change": 25
+          },
+          {
+            "rank": 1,
+            "name": "hello Ratel 3",
+            "avatar": "",
+            "score": 1450.0,
+            "change": 25
+          },
+          {
+            "rank": 1,
+            "name": "hello Ratel 4",
+            "avatar": "",
+            "score": 1450.0,
+            "change": 25
+          },
+          {
+            "rank": 1,
+            "name": "hello Ratel 5",
+            "avatar": "",
+            "score": 1450.0,
+            "change": 25
+          },
+          {
+            "rank": 1,
+            "name": "hello Ratel 6",
+            "avatar": "",
+            "score": 1450.0,
+            "change": 25
+          },
+          {
+            "rank": 1,
+            "name": "hello Ratel 7",
+            "avatar": "",
+            "score": 1450.0,
+            "change": 25
+          },
+          {
+            "rank": 1,
+            "name": "hello Ratel 8",
+            "avatar": "",
+            "score": 1450.0,
+            "change": 25
+          },
+          {
+            "rank": 1,
+            "name": "hello Ratel 9",
+            "avatar": "",
+            "score": 1450.0,
+            "change": 25
+          },
+          {
+            "rank": 1,
+            "name": "hello Ratel 10",
+            "avatar": "",
+            "score": 1450.0,
+            "change": 25
+          },
+          {
+            "rank": 1,
+            "name": "hello Ratel 11",
+            "avatar": "",
+            "score": 1450.0,
+            "change": 25
+          }
+        ],
+        "page_size": 10
+      }
+    }
+  }
+]
