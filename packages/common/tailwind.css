@@ -828,3 +828,28 @@ a {
 [data-theme="light"] {
   --color-space-bg: #ffffff;
 }
+
+/* =============================================================
+   Space Page Actions(sp-act)
+   ========================================================== */
+
+@theme static {
+  --color-sp-act-card-bg: #1A1A1A;
+  --color-sp-act-card-stroke: #404040;
+  --color-sp-act-icon-neutral: #737373;
+}
+
+[data-theme='light'] {
+  --color-sp-act-card-bg: #FFFFFF;
+  --color-sp-act-card-stroke: #E5E5E5;
+  --color-sp-act-icon-neutral: #737373;
+}
+
+
+/* =============================================================
+   Headings
+   ========================================================== */
+
+h3 {
+  @apply font-bold text-[24px]/[28px] tracking-[-0.24px]
+}
