@@ -44,7 +44,7 @@ impl From<base64::DecodeError> for Error {
 }
 
 #[cfg(feature = "server")]
-impl bdk::prelude::axum::response::IntoResponse for Error {
+impl dioxus::fullstack::axum::response::IntoResponse for Error {
     fn into_response(self) -> bdk::prelude::axum::response::Response {
         use bdk::prelude::axum::http::StatusCode;
         use bdk::prelude::axum::response::IntoResponse;
