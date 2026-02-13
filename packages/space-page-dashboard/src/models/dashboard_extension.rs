@@ -10,7 +10,6 @@ pub struct DashboardExtensionEntity {
     pub created_at: i64,
     pub updated_at: i64,
 
-    pub extension_id: String,
     pub data: String,
 }
 
@@ -21,10 +20,9 @@ impl DashboardExtensionEntity {
 
         Self {
             pk: Partition::Space(space_id.to_string()),
-            sk: EntityType::SpaceDashboardExtension(extension_id.clone()),
+            sk: EntityType::SpaceDashboardExtension(extension_id),
             created_at: now,
             updated_at: now,
-            extension_id,
             data,
         }
     }
@@ -34,10 +32,9 @@ impl DashboardExtensionEntity {
 
         Self {
             pk: Partition::Space(space_id.to_string()),
-            sk: EntityType::SpaceDashboardExtension(extension_id.clone()),
+            sk: EntityType::SpaceDashboardExtension(extension_id),
             created_at: now,
             updated_at: now,
-            extension_id,
             data,
         }
     }
