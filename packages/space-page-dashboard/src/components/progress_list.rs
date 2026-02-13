@@ -4,30 +4,28 @@ use crate::*;
 pub fn ProgressList(data: ProgressListData) -> Element {
     rsx! {
         div {
-            class: "flex flex-col w-full h-full min-h-0 bg-space-dashboard-card rounded-2xl",
-            style: "padding: 1.875rem;",
+            class: "flex flex-col w-full h-full min-h-0 p-[30px] bg-space-dashboard-card rounded-2xl",
 
             // Header Section
             div { class: "flex items-center justify-between mb-5",
 
                 // Left: Icon
                 div {
-                    class: "flex items-center justify-center bg-yellow-500",
-                    style: "width: 2.75rem; height: 2.75rem; border-radius: 0.625rem;",
+                    class: "flex items-center justify-center w-11 h-11 bg-yellow-500 rounded-[10px]",
                     span { class: "text-2xl", "{data.icon}" }
                 }
 
                 // Right: Main Stats
-                div { class: "text-right flex-1",
+                div { class: "flex-1 text-right",
                     div { class: "text-2xl font-bold text-white", "{data.main_value}" }
-                    div { class: "text-[15px] font-semibold mt-1 text-space-dashboard-muted",
+                    div { class: "mt-1 text-[15px] font-semibold text-space-dashboard-muted",
                         "{data.main_label}"
                     }
                 }
             }
 
             // Progress Items
-            div { class: "space-y-5 min-h-0 flex-1 overflow-y-auto pr-1",
+            div { class: "flex-1 min-h-0 pr-1 space-y-5 overflow-y-auto",
 
                 for item in data.items.iter() {
                     div { class: "space-y-2",
@@ -43,10 +41,10 @@ pub fn ProgressList(data: ProgressListData) -> Element {
                         }
 
                         // Progress Bar
-                        div { class: "w-full rounded-full h-2 overflow-hidden bg-popover",
+                        div { class: "w-full h-2 bg-popover rounded-full overflow-hidden",
 
                             div {
-                                class: "h-full rounded-full transition-all duration-300 bg-yellow-500",
+                                class: "h-full bg-yellow-500 rounded-full transition-all duration-300",
                                 style: "width: {(item.current / item.total * 100.0).min(100.0):.1}%;",
                             }
                         }

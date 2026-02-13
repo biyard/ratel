@@ -11,17 +11,16 @@ pub fn RankingTable(data: RankingTableData) -> Element {
     let page_entries = &data.entries[start_idx..end_idx];
 
     rsx! {
-        div { class: "w-full h-full min-h-0 flex flex-col rounded-2xl overflow-hidden bg-space-dashboard-card",
+        div { class: "flex flex-col w-full h-full min-h-0 bg-space-dashboard-card rounded-2xl overflow-hidden",
 
             // Header
             div {
-                class: "bg-space-dashboard-header",
-                style: "padding: 1rem 1.875rem;",
+                class: "py-4 px-[30px] bg-space-dashboard-header",
 
                 div { class: "flex",
 
                     for col in data.columns.iter() {
-                        div { class: "px-4 py-4 text-left text-[13px] font-semibold tracking-[-0.14px] flex-1 text-text-primary",
+                        div { class: "flex-1 px-4 py-4 text-left text-[13px] font-semibold tracking-[-0.14px] text-text-primary",
 
                             div { class: "flex items-center gap-1",
                                 span { "{col}" }
@@ -32,7 +31,7 @@ pub fn RankingTable(data: RankingTableData) -> Element {
             }
 
             // Table Body
-            div { style: "padding: 0 1.875rem;",
+            div { class: "px-[30px]",
 
                 table { class: "w-full",
 
@@ -59,7 +58,7 @@ pub fn RankingTable(data: RankingTableData) -> Element {
                                                 alt: "{entry.name}",
                                             }
                                         } else {
-                                            div { class: "w-6 h-6 rounded-full flex items-center justify-center bg-space-dashboard-accent",
+                                            div { class: "flex items-center justify-center w-6 h-6 bg-space-dashboard-accent rounded-full",
                                                 span { class: "text-xs font-medium text-space-dashboard-dark",
                                                     "{entry.name.chars().next().unwrap_or('U')}"
                                                 }
@@ -89,7 +88,7 @@ pub fn RankingTable(data: RankingTableData) -> Element {
             }
 
             // Pagination
-            div { style: "padding: 1rem 1.875rem;",
+            div { class: "py-4 px-[30px]",
                 Pagination { current_page, total_pages }
             }
         }
