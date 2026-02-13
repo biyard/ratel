@@ -4,6 +4,47 @@ pub use dioxus_translate_types::Translator;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+#[cfg(target_arch = "wasm32")]
+const STORAGE_KEY: &str = "language";
+
+pub fn use_translate<T: Translator>() -> T {
+    translate::<T>(&use_language())
+}
+
+pub fn use_language() -> Language {
+    #[cfg(target_arch = "wasm32")]
+    {
+        if let Some(lang) = read_local_storage(STORAGE_KEY) {
+            if let Ok(l) = lang.parse::<Language>() {
+                return l;
+            }
+        }
+
+        if let Some(lang) = browser_language() {
+            if let Ok(l) = lang.parse::<Language>() {
+                return l;
+            }
+        }
+    }
+
+    Language::default()
+}
+
+#[cfg(target_arch = "wasm32")]
+fn read_local_storage(key: &str) -> Option<String> {
+    web_sys::window()?
+        .local_storage()
+        .ok()??
+        .get_item(key)
+        .ok()?
+}
+
+#[cfg(target_arch = "wasm32")]
+fn browser_language() -> Option<String> {
+    let lang = web_sys::window()?.navigator().language()?;
+    Some(lang.split('-').next().unwrap_or(&lang).to_string())
+}
+
 pub fn translate<T: Translator>(lang: &Language) -> T {
     match lang {
         #[cfg(feature = "ko")]

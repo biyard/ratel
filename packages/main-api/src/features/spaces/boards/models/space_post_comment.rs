@@ -26,6 +26,9 @@ pub struct SpacePostComment {
     #[dynamo(index = "gsi1", sk)]
     pub sk: EntityType,
 
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub space_pk: Option<Partition>,
+
     #[serde(default)]
     pub created_at: i64,
     #[serde(default)]
@@ -65,6 +68,7 @@ pub struct SpacePostComment {
 }
 impl SpacePostComment {
     pub fn new(
+        space_pk: Partition,
         pk: Partition,
         content: String,
         User {
@@ -81,6 +85,7 @@ impl SpacePostComment {
         Self {
             pk,
             sk: EntityType::SpacePostComment(uuid.to_string()),
+            space_pk: Some(space_pk),
             created_at: now,
             updated_at: now,
             content,
@@ -140,7 +145,7 @@ impl SpacePostComment {
             .increase_comments(1)
             .transact_write_item();
 
-        let mut comment = Self::new(space_post_pk, content, user)
+        let mut comment = Self::new(space_pk, space_post_pk, content, user)
             .with_parent_comment_sk(parent_comment_sk.clone());
 
         let uuid = uuid::Uuid::new_v4().to_string();
