@@ -1,11 +1,11 @@
 use aws_config::{Region, SdkConfig};
-pub use aws_sdk_dynamodb::Client;
+pub use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_dynamodb::{Config, config::Credentials};
 #[derive(Debug, Clone)]
-pub struct DynamoClient;
+pub struct DynamoBuilder;
 
-impl DynamoClient {
-    pub fn new(config: &SdkConfig, local_endpoint: Option<String>) -> Client {
+impl DynamoBuilder {
+    pub fn new(config: &SdkConfig, local_endpoint: Option<String>) -> DynamoClient {
         let mut config = config.clone();
 
         if let Some(endpoint) = local_endpoint {
@@ -13,16 +13,16 @@ impl DynamoClient {
         }
         let aws_config = Config::from(&config);
 
-        let client = Client::from_conf(aws_config);
+        let client = DynamoClient::from_conf(aws_config);
         client
     }
 
     #[cfg(test)]
-    pub fn mock(config: SdkConfig) -> Client {
+    pub fn mock(config: SdkConfig) -> DynamoClient {
         let aws_config: aws_sdk_dynamodb::Config = aws_sdk_dynamodb::config::Builder::from(&config)
             .endpoint_url("http://localhost:4566")
             .build();
-        let client = Client::from_conf(aws_config);
+        let client = DynamoClient::from_conf(aws_config);
         client
     }
 }

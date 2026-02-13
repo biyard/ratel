@@ -9,6 +9,7 @@ edition = "2021"
 [dependencies]
 dioxus = { workspace = true }
 common = { workspace = true }
+serde = { workspace = true }
 reqwest = { workspace = true, optional = true }
 space-page-dashboard = { path = "../space-page-dashboard/", optional = true }
 space-page-overview = { path = "../space-page-overview/", optional = true }
@@ -57,3 +58,5 @@ server = [
     "space-page-overview/server",
     "space-page-report/server",
 ]
+
+layout_test = ["web"]

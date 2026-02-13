@@ -3,6 +3,8 @@ use aws_credential_types::Credentials;
 
 pub mod dynamo;
 
+pub mod s3;
+
 pub mod error;
 
 pub fn get_aws_config(

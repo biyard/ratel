@@ -13,6 +13,8 @@ fn main() {
 
     #[cfg(feature = "server")]
     {
+        use common::utils::aws::dynamo::DynamoBuilder;
+
         let common::by_types::config::DatabaseConfig::DynamoDb { endpoint, .. } = &config.dynamodb
         else {
             panic!("Only DynamoDB is supported");
@@ -23,13 +25,17 @@ fn main() {
             config.aws.secret_access_key.to_string(),
             config.aws.region.to_string(),
         );
-        let dynamo_client = DynamoClient::new(&aws_sdk_config, endpoint.map(|e| e.to_string()));
-        let state = AppState {
+        let dynamo_client = DynamoBuilder::new(&aws_sdk_config, endpoint.map(|e| e.to_string()));
+        let app_state = AppState {
             upstream_url: config.upstream_url.to_string(),
         };
         dioxus::serve(move || {
+            use common::middlewares::client_state::ClientState;
+            let app_state = app_state.clone();
             let dynamo_client = dynamo_client.clone();
-            let state = state.clone();
+            let state = ClientState {
+                dynamo: dynamo_client.clone(),
+            };
             let session_layer = common::middlewares::session_layer::get_session_layer(
                 &dynamo_client,
                 //FIXME: use "ENV"
@@ -40,7 +46,7 @@ fn main() {
 
                 Ok(dioxus::server::router(App)
                     .layer(session_layer)
-                    .layer(Extension(dynamo_client))
+                    .layer(Extension(app_state))
                     .layer(Extension(state)))
             }
         });
