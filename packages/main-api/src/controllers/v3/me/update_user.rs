@@ -54,7 +54,7 @@ pub async fn update_user_handler(
         }
         UpdateUserRequest::EvmAddress { evm_address } => {
             UserEvmAddress::new(user.pk.clone(), evm_address)
-                .create(&dynamo.client)
+                .upsert(&dynamo.client)
                 .await?;
         }
         UpdateUserRequest::Profile {
