@@ -1,6 +1,20 @@
 use super::*;
+use crate::components::DashboardGrid;
 
 #[component]
-pub fn CreatorPage(space_id: SpacePartition) -> Element {
-    rsx! { "Creator page" }
+pub fn CreatorPage(
+    space_id: SpacePartition,
+    extensions: Vec<DashboardExtension>,
+) -> Element {
+    if extensions.is_empty() {
+        rsx! {
+            div { "No dashboard extensions available." }
+        }
+    } else {
+        rsx! {
+            div { class: "w-full h-full min-h-0",
+                DashboardGrid { extensions }
+            }
+        }
+    }
 }

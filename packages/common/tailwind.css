@@ -853,3 +853,45 @@ a {
 h3 {
   @apply font-bold text-[24px]/[28px] tracking-[-0.24px]
 }
+
+/* ==========================================================================
+   Space Page Dashboard
+   ========================================================================== */
+
+   @theme static {
+    --color-space-dashboard-card-bg: #171717;
+    --color-space-dashboard-header-bg: #262626;
+    --color-space-dashboard-accent: #FCB300;
+    --color-space-dashboard-text-dark: #1A1A1A;
+    --color-space-dashboard-text-muted: #8C8C8C;
+  }
+  
+  @layer utilities {
+    /* Space Dashboard Backgrounds */
+    .bg-space-dashboard-card {
+      background-color: var(--color-space-dashboard-card-bg);
+    }
+    .bg-space-dashboard-header {
+      background-color: var(--color-space-dashboard-header-bg);
+    }
+    .bg-space-dashboard-accent {
+      background-color: var(--color-space-dashboard-accent);
+    }
+  
+    /* Space Dashboard Text Colors */
+    .text-space-dashboard-dark {
+      color: var(--color-space-dashboard-text-dark);
+    }
+    .text-space-dashboard-muted {
+      color: var(--color-space-dashboard-text-muted);
+    }
+    .text-space-dashboard-accent {
+      color: var(--color-space-dashboard-accent);
+    }
+  
+    /* Space Dashboard Border Colors */
+    .border-space-dashboard-accent {
+      border-color: var(--color-space-dashboard-accent);
+    }
+  }
+  
