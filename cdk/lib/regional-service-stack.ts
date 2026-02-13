@@ -157,7 +157,7 @@ export class RegionalServiceStack extends Stack {
         spaceStreamLambda.addToRolePolicy(
           new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,
-            actions: ["s3:PutObject"],
+            actions: ["s3:GetObject", "s3:HeadObject", "s3:PutObject"],
             resources: [`arn:aws:s3:::${privateBucketName}/*`],
           })
         );
