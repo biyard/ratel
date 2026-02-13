@@ -14,5 +14,8 @@ dioxus-translate-types.workspace = true
 serde.workspace = true
 schemars.workspace = true
 
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+web-sys = { version = "0.3", features = ["Window", "Storage", "Navigator"] }
+
 [features]
 ko = ["dioxus-translate-types/ko","dioxus-translate-macro/ko"]
