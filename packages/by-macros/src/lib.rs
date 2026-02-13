@@ -75,6 +75,11 @@ pub fn dynamo_entity_derive(input: TokenStream) -> TokenStream {
     dynamo_entity_impl(input)
 }
 
+#[proc_macro_derive(DummyDynamoEntity, attributes(dynamo))]
+pub fn dummy_dynamo_entity_derive(_input: TokenStream) -> TokenStream {
+    TokenStream::new()
+}
+
 #[proc_macro_derive(SubPartition)]
 pub fn sub_partition_derive(input: TokenStream) -> TokenStream {
     let _ = tracing_subscriber::fmt()

@@ -23,6 +23,12 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 pub use icons;
 
+pub mod macros;
+#[cfg(feature = "server")]
+pub mod middlewares;
+pub mod models;
+pub mod utils;
+
 pub use components::*;
 
 use dioxus::prelude::*;
