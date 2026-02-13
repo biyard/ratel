@@ -144,6 +144,7 @@ pub enum EntityType {
     SpacePanel(String),
     SpacePanelAttribute(String, String),
     SpacePanelParticipant(String), //user_pk
+    SpaceDashboardExtension(String),
 
     SpaceInvitationMember(String),
     SpaceSurveyResponse(String), //Space pk
