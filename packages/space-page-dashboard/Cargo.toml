@@ -11,10 +11,12 @@ dioxus = { workspace = true }
 common = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+uuid = { workspace = true, optional = true }
+chrono = { workspace = true, optional = true }
 
 [features]
 default = []
 web = ["dioxus/web", "common/web"]
 desktop = ["dioxus/desktop"]
 mobile = ["dioxus/mobile"]
-server = ["dioxus/server", "common/server"]
+server = ["dioxus/server", "common/server", "uuid", "chrono"]

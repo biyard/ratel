@@ -11,30 +11,42 @@ use participant_page::*;
 use viewer_page::*;
 
 #[component]
-pub fn HomePage(
-    space_id: SpacePartition,
-) -> Element {
-    // TODO: Fetch the user's role from the database
+pub fn HomePage(space_id: SpacePartition) -> Element {
+    let sid = space_id.to_string();
 
-    // TODO: Fetch dashboard extension data from the database
-    let role = SpaceUserRole::Creator;
+    let user_role = {
+        let sid = sid.clone();
+        use_resource(move || {
+            let sid = sid.clone();
+            async move { crate::api::get_user_role_in_space(sid).await }
+        })
+    };
 
-    rsx! {
-        {
-            match role {
-                SpaceUserRole::Creator => rsx! {
-                    CreatorPage { space_id, extensions: crate::route::get_creator_extensions() }
-                },
-                SpaceUserRole::Participant => rsx! {
-                    ParticipantPage { space_id, extensions: crate::route::get_participant_extensions() }
-                },
-                SpaceUserRole::Candidate => rsx! {
-                    CandidatePage { space_id, extensions: crate::route::get_candidate_extensions() }
-                },
-                SpaceUserRole::Viewer => rsx! {
-                    ViewerPage { space_id, extensions: crate::route::get_viewer_extensions() }
-                },
-            }
-        }
+    let extensions = {
+        let sid = sid.clone();
+        use_resource(move || {
+            let sid = sid.clone();
+            async move { crate::api::fetch_dashboard_extensions(sid).await }
+        })
+    };
+
+    match (user_role(), extensions()) {
+        (Some(Ok(role)), Some(Ok(exts))) => match role {
+            SpaceUserRole::Creator => rsx! {
+                CreatorPage { space_id: space_id.clone(), extensions: exts }
+            },
+            SpaceUserRole::Participant => rsx! {
+                ParticipantPage { space_id: space_id.clone(), extensions: exts }
+            },
+            SpaceUserRole::Candidate => rsx! {
+                CandidatePage { space_id: space_id.clone(), extensions: exts }
+            },
+            SpaceUserRole::Viewer => rsx! {
+                ViewerPage { space_id: space_id.clone(), extensions: exts }
+            },
+        },
+        _ => rsx! {
+            div { class: "p-4", "Loading..." }
+        },
     }
 }
