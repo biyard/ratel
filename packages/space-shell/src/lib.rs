@@ -4,10 +4,9 @@ pub mod config;
 pub mod controllers;
 pub mod layout;
 pub mod route;
-pub mod views;
+mod views;
 
 pub use layout::SpaceLayout;
-pub use views::Home;
 
 pub use route::Route;
 

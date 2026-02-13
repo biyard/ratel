@@ -9,12 +9,12 @@ use report::Route as ReportRoute;
 ## https://github.com/ealmloff/dioxus/blob/master/packages/router/src/components/child_router.rs
 For now, Child Router only support simple static prefixes
  */
+#[cfg(not(feature = "layout_test"))]
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
-
 pub enum Route {
     #[nest("/spaces")]
-    
+
         #[nest("/:space_id")]
             #[layout(SpaceLayout)]
                 #[route("/dashboard/:..rest")]
@@ -27,18 +27,26 @@ pub enum Route {
                 Apps { space_id: SpacePartition, rest: Vec<String> },
                 #[route("/report/:..rest")]
                 Report { space_id: SpacePartition, rest: Vec<String> },
-                
+
                 #[redirect("/", |space_id: SpacePartition| Route::Dashboard { space_id, rest : vec![] })]
                 #[redirect("/:..rest", |space_id: SpacePartition, rest: Vec<String>| Route::Dashboard { space_id, rest })]
             #[end_layout]
         #[redirect("/:..rest", |rest: Vec<String>| Route::PageNotFound{ route: rest })]
         #[end_nest]
     #[end_nest]
-    #[route("/home")]
-    Home {},
     #[route("/")]
     PageNotFound { route: Vec<String> },
 
+}
+
+#[cfg(feature = "layout_test")]
+use crate::views::LoginTest;
+#[cfg(feature = "layout_test")]
+#[derive(Debug, Clone, Routable, PartialEq)]
+#[rustfmt::skip]
+pub enum Route {
+    #[route("/")]
+    LoginTest {},
 }
 
 #[component]
