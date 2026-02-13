@@ -29,3 +29,4 @@ serde_dynamo = { workspace = true }
 [features]
 default = []
 local-run = []
+lambda = []
