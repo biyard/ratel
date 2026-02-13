@@ -58,14 +58,10 @@ pub fn Main(space_id: ReadSignal<SpacePartition>) -> Element {
 pub fn Sub(space_id: SpacePartition) -> Element {
     rsx! {
         div { class: "p-4",
-        div { class: "p-4",
             h1 { class: "text-2xl font-bold mb-4", "Dashboard Sub Page" }
             p { "Space ID: { space_id.to_string() }" }
 
             Link {
-                to: Route::Main {
-                    space_id: space_id.clone(),
-                },
                 to: Route::Main {
                     space_id: space_id.clone(),
                 },
