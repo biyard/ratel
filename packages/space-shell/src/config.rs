@@ -7,26 +7,12 @@ use common::by_types::config::{AwsConfig, DatabaseConfig};
 #[derive(Debug)]
 pub struct Config {
     pub common: CommonConfig,
-    #[cfg(feature = "server")]
-    pub aws: AwsConfig,
-    #[cfg(feature = "server")]
-    pub dynamodb: DatabaseConfig,
-    pub upstream_url: &'static str,
-    pub log_level: Level,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Config {
             common: CommonConfig::default(),
-            #[cfg(feature = "server")]
-            aws: AwsConfig::default(),
-            #[cfg(feature = "server")]
-            dynamodb: DatabaseConfig::default(),
-            upstream_url: option_env!("UPSTREAM_URL").unwrap_or("https://dev.ratel.foundation"),
-            log_level: option_env!("RUST_LOG")
-                .map(|s| s.parse::<Level>().unwrap_or(Level::INFO))
-                .unwrap_or(Level::INFO),
         }
     }
 }

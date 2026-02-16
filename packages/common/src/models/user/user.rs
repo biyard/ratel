@@ -4,7 +4,6 @@ use crate::{
         extract::{FromRef, FromRequest, FromRequestParts, Request},
         http::request::Parts,
     },
-    middlewares::client_state::ClientState,
     utils::aws::dynamo::DynamoClient,
 };
 #[cfg(feature = "server")]
@@ -72,15 +71,14 @@ pub const SESSION_KEY_USER_ID: &str = "user_id";
 async fn extract_user_from_parts<S>(parts: &mut Parts, state: &S) -> Result<User>
 where
     S: Send + Sync,
-    ClientState: FromRef<S>,
     Session: FromRequestParts<S, Rejection: std::fmt::Debug>,
 {
     if let Some(user) = parts.extensions.get::<User>() {
         return Ok(user.clone());
     }
 
-    let clients = ClientState::from_ref(state);
-    let dynamo_client = clients.dynamo;
+    let conf = ServerConfig::default();
+    let dynamo_client = conf.dynamodb();
 
     let session = Session::from_request_parts(parts, state)
         .await
@@ -98,7 +96,7 @@ where
         })?
         .ok_or(crate::Error::NoSessionFound)?;
 
-    let user = User::get(&dynamo_client, user_pk, Some(EntityType::User))
+    let user = User::get(dynamo_client, user_pk, Some(EntityType::User))
         .await
         .map_err(|e| {
             tracing::error!("failed to get user from db: {:?}", e);
@@ -131,7 +129,6 @@ where
 impl<S> FromRequestParts<S> for User
 where
     S: Send + Sync,
-    ClientState: FromRef<S>,
     Session: FromRequestParts<S, Rejection: std::fmt::Debug>,
 {
     type Rejection = crate::Error;
@@ -194,7 +191,6 @@ impl From<OptionalUser> for Option<User> {
 impl<S> FromRequestParts<S> for OptionalUser
 where
     S: Send + Sync,
-    ClientState: FromRef<S>,
     Session: FromRequestParts<S, Rejection: std::fmt::Debug>,
 {
     type Rejection = crate::Error;

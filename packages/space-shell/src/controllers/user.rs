@@ -1,15 +1,7 @@
-#[cfg(feature = "server")]
-use common::axum::extract::{Extension, FromRef, FromRequest, Request, State};
-#[cfg(feature = "server")]
-use common::{middlewares::client_state::ClientState, models::session::TowerSession};
-use common::{
-    models::user::{OptionalUser, User},
-    Partition,
-};
+use crate::*;
+use common::models::*;
 use dioxus::fullstack::Form;
-use dioxus::prelude::*;
 use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "server")]
 use crate::AppState;
@@ -28,11 +20,13 @@ pub struct LoginRequest {
 /*
 FIXME: Use password and support Google Login
  */
-#[post("/api/login", state: State<ClientState>, app_state: State<AppState>, session : Extension<TowerSession>)]
+#[post("/api/login", session : Extension<TowerSession>)]
 pub async fn login(form: Form<LoginRequest>) -> std::result::Result<(), ServerFnError> {
     use common::{models::user::SESSION_KEY_USER_ID, EntityType};
-    info!("Login request: {}", form.email);
-    let (users, _) = User::find_by_email(&state.dynamo, &form.email, User::opt_one())
+    let c = crate::config::get();
+    let cli = &c.common.dynamodb();
+    debug!("Login request: {}", form.email);
+    let (users, _) = User::find_by_email(cli, &form.email, User::opt_one())
         .await
         .map_err(|e| {
             error!("Failed to query user by email '{}': {:?}", form.email, e);

@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::*;
 
 #[derive(Clone, Debug, Copy, Default)]
@@ -21,5 +23,23 @@ impl Environment {
                 Environment::Local
             } // default to Local if unrecognized
         }
+    }
+}
+
+impl Into<String> for Environment {
+    fn into(self) -> String {
+        match self {
+            Environment::Local => "local".to_string(),
+            Environment::Dev => "dev".to_string(),
+            Environment::Staging => "stg".to_string(),
+            Environment::Production => "prod".to_string(),
+        }
+    }
+}
+
+impl Display for Environment {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s: String = (*self).into();
+        write!(f, "{}", s)
     }
 }
