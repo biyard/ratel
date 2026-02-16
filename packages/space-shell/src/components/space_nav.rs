@@ -1,3 +1,9 @@
+mod space_user_login;
+mod space_user_profile;
+
+pub use space_user_login::*;
+pub use space_user_profile::*;
+
 use crate::*;
 
 #[derive(Clone, PartialEq)]
@@ -24,14 +30,22 @@ impl TryFrom<Option<(Element, SpacePage, NavigationTarget)>> for SpaceNavItem {
 #[component]
 pub fn SpaceNav(logo: String, menus: Vec<SpaceNavItem>) -> Element {
     rsx! {
-        div { class: "col-span-1 gap-2.5 shrink-0 flex flex-col divide-y divide-divider py-2.5 top-14 tablet:top-0 left-0 z-40 h-full transition-transform duration-300 ease-in-out -translate-x-full tablet:translate-x-0",
-            img { src: "{logo}", class: "w-25 mt-5 mb-2.5 mx-4" }
+        div { class: "col-span-1 gap-2.5 shrink-0 flex flex-col divide-y divide-divider pt-2.5 top-14 tablet:top-0 left-0 z-40 h-screen transition-transform duration-300 ease-in-out -translate-x-full tablet:translate-x-0 justify-between",
+            div { class: "w-full flex flex-col gap-2.5",
+                img { src: "{logo}", class: "w-25 mt-5 mb-2.5 mx-4" }
 
-            div { class: "flex flex-col gap-1.5 px-4 pt-2.5 items-start font-bold text-xs/[14px]",
-                for item in menus.iter() {
-                    NavItem { item: item.clone() }
+                div { class: "flex flex-col gap-1.5 px-4 pt-2.5 items-start font-bold text-xs/[14px]",
+                    for item in menus.iter() {
+                        NavItem { item: item.clone() }
+                    }
                 }
             }
+            SpaceUserProfile {
+                image: "https://metadata.ratel.foundation/logos/logo.png",
+                display_name: "Ratel Foundation",
+                user_role: SpaceUserRole::Creator,
+            }
+
         }
     }
 }
