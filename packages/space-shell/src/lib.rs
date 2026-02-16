@@ -4,6 +4,8 @@ pub mod config;
 pub mod controllers;
 pub mod layout;
 pub mod route;
+#[cfg(feature = "server")]
+pub mod server;
 mod views;
 
 pub use layout::SpaceLayout;

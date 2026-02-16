@@ -17264,10 +17264,12 @@ dependencies = [
 name = "space-page-dashboard"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "common",
  "dioxus",
  "serde",
  "serde_json",
+ "uuid 1.18.1",
 ]
 
 [[package]]
@@ -17296,6 +17298,7 @@ version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "main-api",
  "reqwest 0.12.28",
  "serde",
  "space-page-actions",

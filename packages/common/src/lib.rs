@@ -1,6 +1,9 @@
 #![allow(unused_imports)]
 pub mod components;
+pub mod config;
 pub mod types;
+
+pub use config::*;
 
 #[cfg(feature = "server")]
 pub use bdk::prelude::*;
@@ -12,6 +15,8 @@ pub use serde::{Deserialize, Serialize};
 pub use serde_with::{DeserializeFromStr, SerializeDisplay};
 pub use strum::*;
 pub use types::*;
+
+pub use dioxus::logger::tracing::{debug, error, info, warn};
 
 #[cfg(feature = "server")]
 pub use schemars::JsonSchema;

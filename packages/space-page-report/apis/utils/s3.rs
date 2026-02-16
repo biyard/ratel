@@ -8,6 +8,7 @@ pub async fn build_s3_client() -> Result<S3Client, ServerFnError> {
     Ok(S3Client::new(&aws_config))
 }
 
+#[allow(dead_code)]
 pub async fn load_snapshot_json(
     s3: &S3Client,
     bucket: &str,
