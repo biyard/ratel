@@ -3,7 +3,7 @@ use space_shell::*;
 
 fn main() {
     let config = config::get();
-    dioxus::logger::init(config.log_level).expect("logger failed to init");
+    dioxus::logger::init(config.common.log_level.into()).expect("logger failed to init");
 
     #[cfg(not(feature = "server"))]
     dioxus::launch(App);

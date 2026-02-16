@@ -16,6 +16,9 @@ pub use serde_with::{DeserializeFromStr, SerializeDisplay};
 pub use strum::*;
 pub use types::*;
 
+#[cfg(feature = "server")]
+pub use axum::extract::{Extension, FromRef, FromRequest, Request, State};
+
 pub use dioxus::logger::tracing::{debug, error, info, warn};
 
 #[cfg(feature = "server")]
