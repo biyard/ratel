@@ -17298,7 +17298,6 @@ version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
- "main-api",
  "reqwest 0.12.28",
  "serde",
  "space-page-actions",
@@ -17306,6 +17305,7 @@ dependencies = [
  "space-page-dashboard",
  "space-page-overview",
  "space-page-report",
+ "tokio",
 ]
 
 [[package]]

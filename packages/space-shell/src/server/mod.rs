@@ -1,9 +1,15 @@
+mod admin_routes;
+mod proxy_middleware;
+mod proxy_registry;
+
 use crate::*;
 use common::utils::aws::{dynamo::DynamoClient, get_aws_config};
+use proxy_registry::ProxyRegistry;
 
 pub fn serve(app: fn() -> Element) {
     use common::utils::aws::dynamo::DynamoBuilder;
     let config = config::get();
+    let registry = ProxyRegistry::new();
 
     dioxus::serve(move || {
         let cli = config.common.dynamodb();
@@ -11,10 +17,18 @@ pub fn serve(app: fn() -> Element) {
             cli,
             config.common.env.to_string(),
         );
+        let registry = registry.clone();
         async move {
-            use common::axum::Extension;
+            use common::axum::{middleware, Extension};
 
-            Ok(dioxus::server::router(app).layer(session_layer))
+            let dioxus_router = dioxus::server::router(app);
+            let admin = admin_routes::admin_router(registry.clone());
+
+            Ok(dioxus_router
+                .merge(admin)
+                .layer(middleware::from_fn(proxy_middleware::proxy_middleware))
+                .layer(Extension(registry))
+                .layer(session_layer))
         }
     });
 }
