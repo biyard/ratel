@@ -12,7 +12,10 @@ fn main() {
         fs::create_dir_all(&output_dir).ok();
     }
 
-    println!("cargo:rerun-if-changed={}", svg_dir.display());
+    // Watch build.rs itself; the resources/ directory watch doesn't track
+    // recursive file edits inside subdirectories.
+    println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rerun-if-changed=resources");
 
     let mut icon_groups: std::collections::BTreeMap<String, Vec<(PathBuf, String)>> =
         std::collections::BTreeMap::new();
