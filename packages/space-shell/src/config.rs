@@ -1,3 +1,4 @@
+use common::CommonConfig;
 use dioxus::logger::tracing::Level;
 
 #[cfg(feature = "server")]
@@ -5,6 +6,7 @@ use common::by_types::config::{AwsConfig, DatabaseConfig};
 
 #[derive(Debug)]
 pub struct Config {
+    pub common: CommonConfig,
     #[cfg(feature = "server")]
     pub aws: AwsConfig,
     #[cfg(feature = "server")]
@@ -16,12 +18,13 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Config {
+            common: CommonConfig::default(),
             #[cfg(feature = "server")]
             aws: AwsConfig::default(),
             #[cfg(feature = "server")]
             dynamodb: DatabaseConfig::default(),
             upstream_url: option_env!("UPSTREAM_URL").unwrap_or("https://dev.ratel.foundation"),
-            log_level: option_env!("LOG_LEVEL")
+            log_level: option_env!("RUST_LOG")
                 .map(|s| s.parse::<Level>().unwrap_or(Level::INFO))
                 .unwrap_or(Level::INFO),
         }
