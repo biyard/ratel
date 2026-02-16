@@ -255,4 +255,3 @@ fn should_skip_attribute(name: &str, value: &str) -> bool {
         _ => false,
     }
 }
-[WARN] No classes were found in STDIN
