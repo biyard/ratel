@@ -21,7 +21,8 @@
     "@tiptap/extension-table": "^2.26.2",
     "@tiptap/extension-table-row": "^2.26.2",
     "@tiptap/extension-table-header": "^2.26.2",
-    "@tiptap/extension-table-cell": "^2.26.2"
+    "@tiptap/extension-table-cell": "^2.26.2",
+    "firebase": "^11.0.0"
   },
   "devDependencies": {
     "tsx": "^4.19.0",

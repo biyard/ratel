@@ -4,6 +4,7 @@ mod space_user_profile;
 pub use space_user_login::*;
 pub use space_user_profile::*;
 
+use crate::controllers::user::get_user;
 use crate::*;
 
 #[derive(Clone, PartialEq)]
@@ -29,6 +30,8 @@ impl TryFrom<Option<(Element, SpacePage, NavigationTarget)>> for SpaceNavItem {
 
 #[component]
 pub fn SpaceNav(logo: String, menus: Vec<SpaceNavItem>) -> Element {
+    let user = use_loader(move || get_user())?;
+
     rsx! {
         div { class: "col-span-1 gap-2.5 shrink-0 flex flex-col divide-y divide-divider pt-2.5 top-14 tablet:top-0 left-0 z-40 h-screen transition-transform duration-300 ease-in-out -translate-x-full tablet:translate-x-0 justify-between",
             div { class: "w-full flex flex-col gap-2.5",
@@ -40,12 +43,15 @@ pub fn SpaceNav(logo: String, menus: Vec<SpaceNavItem>) -> Element {
                     }
                 }
             }
-            SpaceUserProfile {
-                image: "https://metadata.ratel.foundation/logos/logo.png",
-                display_name: "Ratel Foundation",
-                user_role: SpaceUserRole::Creator,
+            if let Some(user) = user.read().as_ref() {
+                SpaceUserProfile {
+                    image: user.profile_url.clone(),
+                    display_name: user.display_name.clone(),
+                    user_role: SpaceUserRole::Creator,
+                }
+            } else {
+                SpaceUserLogin {}
             }
-
         }
     }
 }
