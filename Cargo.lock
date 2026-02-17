@@ -2519,7 +2519,7 @@ dependencies = [
  "serde_urlencoded",
  "sqlx",
  "tracing",
- "validator",
+ "validator 0.20.0",
 ]
 
 [[package]]
@@ -3144,7 +3144,7 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
- "validator",
+ "validator 0.20.0",
 ]
 
 [[package]]
@@ -3160,7 +3160,7 @@ dependencies = [
  "serde_json",
  "sqlx",
  "tracing",
- "validator",
+ "validator 0.20.0",
 ]
 
 [[package]]
@@ -5872,7 +5872,7 @@ dependencies = [
  "sqlx",
  "untrusted 0.9.0",
  "uuid 1.18.1",
- "validator",
+ "validator 0.20.0",
 ]
 
 [[package]]
@@ -10459,7 +10459,7 @@ dependencies = [
  "url",
  "urlencoding",
  "uuid 1.18.1",
- "validator",
+ "validator 0.20.0",
  "x402-axum",
  "x402-rs",
 ]
@@ -13180,6 +13180,38 @@ name = "range-traits"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d20581732dd76fa913c7dff1a2412b714afe3573e94d41c34719de73337cc8ab"
+
+[[package]]
+name = "ratel-auth"
+version = "0.1.0"
+dependencies = [
+ "aws-sdk-dynamodb",
+ "aws-sdk-sesv2",
+ "aws-sdk-sns",
+ "base64 0.22.1",
+ "bdk",
+ "chrono",
+ "common",
+ "dioxus",
+ "hex",
+ "hmac 0.12.1",
+ "percent-encoding",
+ "rand 0.9.2",
+ "regex",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_dynamo",
+ "serde_json",
+ "serde_with 3.14.1",
+ "sha2 0.10.9",
+ "sha3",
+ "tokio",
+ "tower-sessions 0.15.0",
+ "tracing",
+ "url",
+ "uuid 1.18.1",
+ "validator 0.19.0",
+]
 
 [[package]]
 name = "rav1e"
@@ -20442,6 +20474,22 @@ dependencies = [
 
 [[package]]
 name = "validator"
+version = "0.19.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d0b4a29d8709210980a09379f27ee31549b73292c87ab9899beee1c0d3be6303"
+dependencies = [
+ "idna",
+ "once_cell",
+ "regex",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "url",
+ "validator_derive 0.19.0",
+]
+
+[[package]]
+name = "validator"
 version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43fb22e1a008ece370ce08a3e9e4447a910e92621bb49b85d6e48a45397e7cfa"
@@ -20453,7 +20501,21 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "url",
- "validator_derive",
+ "validator_derive 0.20.0",
+]
+
+[[package]]
+name = "validator_derive"
+version = "0.19.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bac855a2ce6f843beb229757e6e570a42e837bcb15e5f449dd48d5747d41bf77"
+dependencies = [
+ "darling 0.20.11",
+ "once_cell",
+ "proc-macro-error2",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.106",
 ]
 
 [[package]]
