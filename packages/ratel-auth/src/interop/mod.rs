@@ -1,6 +1,10 @@
+use wasm_bindgen::prelude::*;
+use wasm_bindgen_futures::JsFuture;
+use web_sys::js_sys::Promise;
+
 use crate::*;
 
-#[wasm_bindgen(js_namespace = ["window", "ratel", "common", "firebase"])]
+#[wasm_bindgen(js_namespace = ["window", "ratel", "auth", "firebase"])]
 extern "C" {
     #[wasm_bindgen(js_name = initialize)]
     pub fn initialize(config: &JsValue);
@@ -18,7 +22,7 @@ pub struct UserInfo {
     pub photo_url: Option<String>,
 }
 
-pub async fn sign_in() -> Result<UserInfo> {
+pub async fn sign_in() -> common::Result<UserInfo> {
     let js_value = JsFuture::from(sign_in_promise())
         .await
         .map_err(|e| Error::Unknown(format!("{:?}", e)))?;

@@ -26,12 +26,9 @@ pub mod models;
 pub mod utils;
 
 pub use components::*;
+pub use dioxus;
 
 use dioxus::prelude::*;
-
-pub use wasm_bindgen::prelude::*;
-pub use wasm_bindgen_futures::JsFuture;
-pub use web_sys::js_sys::Promise;
 
 #[cfg(feature = "server")]
 pub mod server_lib;
