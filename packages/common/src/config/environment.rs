@@ -1,19 +1,25 @@
-use std::fmt::Display;
+use std::{fmt::Display, str::FromStr};
 
 use crate::*;
 
-#[derive(Clone, Debug, Copy, Default)]
+#[derive(Clone, Debug, Copy)]
 pub enum Environment {
-    #[default]
     Local,
     Dev,
     Staging,
     Production,
 }
 
-impl Environment {
-    pub fn from_str(s: &str) -> Self {
-        match s.to_lowercase().as_str() {
+impl Default for Environment {
+    fn default() -> Self {
+        let default_env = option_env!("ENV").unwrap_or("local");
+        default_env.parse().unwrap_or(Environment::Local)
+    }
+}
+
+impl FromStr for Environment {
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        let e = match s.to_lowercase().as_str() {
             "local" => Environment::Local,
             "dev" | "development" => Environment::Dev,
             "staging" => Environment::Staging,
@@ -21,9 +27,13 @@ impl Environment {
             _ => {
                 warn!("Unrecognized environment '{}', defaulting to Local", s);
                 Environment::Local
-            } // default to Local if unrecognized
-        }
+            }
+        };
+
+        Ok(e)
     }
+
+    type Err = String;
 }
 
 impl Into<String> for Environment {
