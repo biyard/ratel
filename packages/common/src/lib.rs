@@ -40,3 +40,7 @@ pub mod utils;
 pub use components::*;
 
 use dioxus::prelude::*;
+
+pub use wasm_bindgen::prelude::*;
+pub use wasm_bindgen_futures::JsFuture;
+pub use web_sys::js_sys::Promise;

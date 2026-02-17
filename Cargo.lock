@@ -3813,6 +3813,7 @@ dependencies = [
  "percent-encoding",
  "schemars 1.0.4",
  "serde",
+ "serde-wasm-bindgen",
  "serde_dynamo",
  "serde_json",
  "serde_repr",
@@ -3823,6 +3824,9 @@ dependencies = [
  "tower-sessions 0.15.0",
  "tracing",
  "uuid 1.18.1",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
 ]
 
 [[package]]
@@ -20591,6 +20595,8 @@ dependencies = [
  "cfg-if 1.0.3",
  "once_cell",
  "rustversion",
+ "serde",
+ "serde_json",
  "wasm-bindgen-macro",
  "wasm-bindgen-shared",
 ]

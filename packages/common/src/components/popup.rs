@@ -41,32 +41,26 @@ pub fn PopupZone() -> Element {
 
                 if closable {
                     button {
-                        class: "group absolute top-[25px] right-[25px] rounded-sm cursor-pointer bg-transparent hover:bg-secondary",
+                        class: "absolute bg-transparent rounded-sm cursor-pointer group top-[25px] right-[25px] hover:bg-secondary",
                         onclick: move |_| {
                             popup.close();
                         },
-                        icons::validations::Clear {
-                            class: "[&>path]:stroke-neutral-80 group-hover:[&>path]:stroke-text-primary",
-                        }
+                        icons::validations::Clear { class: "[&>path]:stroke-neutral-80 group-hover:[&>path]:stroke-text-primary" }
                     }
                 }
 
                 div {
                     id: "{id}",
-                    class: "flex flex-col items-center justify-center gap-[25px]",
+                    class: "flex flex-col justify-center items-center gap-[25px]",
 
                     if let Some(title) = title {
-                        div {
-                            class: "text-[20px] font-bold text-text-primary max-tablet:mt-6",
+                        div { class: "font-bold text-[20px] text-text-primary max-tablet:mt-6",
                             "{title}"
                         }
                     }
 
                     if let Some(description) = description {
-                        div {
-                            class: "text-text-primary-muted",
-                            "{description}"
-                        }
+                        div { class: "text-text-primary-muted", "{description}" }
                     }
 
                     {content}

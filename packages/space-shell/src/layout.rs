@@ -29,7 +29,7 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
 
             div { class: "flex flex-col col-span-6 col-start-2 min-h-0",
                 SpaceTop {}
-                div { class: "flex overflow-auto absolute p-5 top-[65px] grow bg-space-body-bg rounded-tl-[10px] h-[calc(100%-65px)]",
+                div { class: "flex overflow-auto p-5 w-full top-[65px] grow bg-space-body-bg rounded-tl-[10px] h-[calc(100%-65px)]",
                     Outlet::<Route> {}
                 }
             }
