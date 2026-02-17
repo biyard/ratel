@@ -7,8 +7,6 @@ fn main() {
     let workspace_root = manifest_path.parent().unwrap().parent().unwrap();
     let assets_dir = manifest_path.join("assets");
 
-    // No cargo:rerun-if-changed directives: Cargo reruns this build script
-    // on every build by default when none are specified.
     let status = Command::new("pnpm")
         .args(["--filter", "@ratel/components", "build"])
         .env("ASSETS_DIR", &assets_dir)

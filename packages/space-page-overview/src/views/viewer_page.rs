@@ -15,7 +15,7 @@ pub fn ViewerPage(space_id: SpacePartition) -> Element {
             div { "상태 : {editable}" }
             Typo { variant: Variant::H1, weight: Weight::Extrabold, "TIPTAP EDITOR" }
             TiptapEditor {
-                class: "w-full",
+                class: "w-full h-fit",
                 content: content(),
                 editable: editable(),
                 placeholder: "Type here...",

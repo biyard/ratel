@@ -31,7 +31,7 @@ impl PopupService {
         self.state.read().clone()
     }
 
-    pub fn open(&mut self, content: Element) {
+    pub fn open(&mut self, content: Element) -> &mut Self {
         self.state.set(Some(PopupConfig {
             id: "popup-zone".to_string(),
             title: None,
@@ -41,6 +41,7 @@ impl PopupService {
             backdrop_closable: true,
             overflow: false,
         }));
+        self
     }
 
     pub fn close(&mut self) {

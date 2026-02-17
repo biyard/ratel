@@ -23,7 +23,7 @@ pub fn TiptapEditor(props: TiptapEditorProps) -> Element {
         Fragment {
             document::Script { src: TIPTAP_EDITOR_JS }
             tiptap-editor {
-                class: "overflow-hidden {props.class}",
+                class: "{props.class}",
                 content: "{props.content}",
                 editable: if props.editable { "true" } else { "false" },
                 placeholder: "{props.placeholder}",
