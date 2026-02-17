@@ -1,5 +1,5 @@
 use crate::*;
-// use ratel_auth::LoginModal;
+use ratel_auth::LoginModal;
 
 #[component]
 pub fn SpaceUserLogin() -> Element {
@@ -11,8 +11,9 @@ pub fn SpaceUserLogin() -> Element {
         button {
             class: "flex justify-end items-center p-4 w-full cursor-pointer hover:opacity-80",
             onclick: move |_| {
-                // LoginModal {}
-                popup.open(rsx! {}).with_title(tr.title);
+                popup.open(rsx! {
+                    LoginModal {}
+                }).with_title(tr.title);
             },
             "Sign In"
         }
