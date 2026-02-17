@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use crate::*;
 use dioxus::logger::tracing::Level;
 
@@ -12,13 +14,18 @@ pub enum LogLevel {
 
 impl Default for LogLevel {
     fn default() -> Self {
-        LogLevel::Info
+        let default_level = option_env!("RUST_LOG").unwrap_or("info");
+        println!("RUST_LOG is set to '{}'", default_level);
+
+        default_level.parse().unwrap_or(LogLevel::Info)
     }
 }
 
-impl LogLevel {
-    pub fn from_str(s: &str) -> Self {
-        match s.to_lowercase().as_str() {
+impl FromStr for LogLevel {
+    type Err = String;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        let l = match s.to_lowercase().as_str() {
             "trace" => LogLevel::Trace,
             "debug" => LogLevel::Debug,
             "info" => LogLevel::Info,
@@ -28,7 +35,9 @@ impl LogLevel {
                 warn!("Unrecognized log level '{}', defaulting to Info", s);
                 LogLevel::Info
             } // default to Info if unrecognized
-        }
+        };
+
+        Ok(l)
     }
 }
 

@@ -6,6 +6,8 @@ fn main() {
     let config = config::get();
     dioxus::logger::init(config.common.log_level.into()).expect("logger failed to init");
 
+    info!("Starting app with config: {:?}", config);
+
     #[cfg(not(feature = "server"))]
     space_shell::web::launch(App);
 
@@ -26,7 +28,6 @@ fn App() -> Element {
         document::Link { rel: "icon", href: FAVICON }
         document::Link { rel: "stylesheet", href: TAILWIND_CSS }
         Setup {}
-
         Router::<Route> {}
     }
 }
