@@ -61,7 +61,7 @@ pub fn LoginModal() -> Element {
                 button {
                     class: "flex flex-row gap-5 items-center px-5 w-full cursor-pointer rounded-[10px] bg-[#000203] py-5.5",
                     onclick: move |_| async {
-                        let u = sign_in().await.expect("Failed to sign in");
+                        let u = sign_in().await;
                         debug!("User info: {:?}", u);
                     },
                     svg {
