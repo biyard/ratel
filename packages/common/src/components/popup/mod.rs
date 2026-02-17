@@ -1,6 +1,8 @@
+mod service;
+
 use crate::*;
 
-use super::popup_service::use_popup;
+pub use service::*;
 
 #[component]
 pub fn PopupZone() -> Element {
