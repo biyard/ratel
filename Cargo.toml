@@ -68,6 +68,11 @@ hyper = "1.6.0"
 
 dioxus = { version = "0.7.1", features = ["fullstack", "router"] }
 
+web-sys = "0.3"
+wasm-bindgen = { version = "0.2", features = [] }
+wasm-bindgen-futures = "0.4"
+serde-wasm-bindgen = "0.6"
+
 [profile.wasm-dev]
 inherits = "dev"
 opt-level = 1

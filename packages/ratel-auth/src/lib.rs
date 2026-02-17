@@ -1,25 +1,10 @@
-#![allow(unused)]
-pub mod config;
-pub mod constants;
-pub mod types;
+#![allow(unused_imports)]
+mod components;
+pub mod interop;
+mod route;
+mod views;
 
-#[cfg(feature = "server")]
-pub mod controllers;
-#[cfg(feature = "server")]
-pub(crate) mod macros;
-#[cfg(feature = "server")]
-pub mod models;
-#[cfg(feature = "server")]
-pub mod utils;
-
-#[cfg(feature = "server")]
-pub mod server;
-
-#[cfg(not(feature = "server"))]
-pub mod web;
-
-pub mod route;
-
+pub use components::*;
 pub use route::Route;
 
 use common::*;

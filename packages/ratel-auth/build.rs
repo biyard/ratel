@@ -29,9 +29,9 @@ fn main() {
     std::fs::create_dir_all(&assets_dir).expect("failed to create assets directory");
     std::fs::copy(
         js_dir.join("dist/main.js"),
-        assets_dir.join("ratel-common.js"),
+        assets_dir.join("ratel-auth.js"),
     )
-    .expect("failed to copy dist/main.js to assets/ratel-common.js");
+    .expect("failed to copy dist/main.js to assets/ratel-auth.js");
 
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed={}", js_dir.join("src").display());

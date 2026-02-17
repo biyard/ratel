@@ -5,7 +5,7 @@ if (typeof window !== "undefined") {
     window.ratel = {};
   }
 
-  window.ratel.common = {
+  window.ratel.auth = {
     firebase,
   };
 }
