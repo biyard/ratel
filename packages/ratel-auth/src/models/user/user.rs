@@ -1,19 +1,16 @@
 #[cfg(feature = "server")]
-use crate::{
+use common::{
     axum::{
-        extract::{FromRef, FromRequest, FromRequestParts, Request},
+        extract::{FromRequestParts},
         http::request::Parts,
     },
-    utils::aws::dynamo::DynamoClient,
+    ServerConfig,
 };
 #[cfg(feature = "server")]
 use tower_sessions::Session;
 
-use crate::macros::dynamo_entity::DynamoEntity;
-use crate::{
-    models::user::{Theme, UserType},
-    *,
-};
+use crate::models::user::{Theme, UserType};
+use crate::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default, PartialEq, DynamoEntity)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
@@ -65,6 +62,41 @@ pub struct User {
     pub points: i64,
 }
 
+#[cfg(feature = "server")]
+impl User {
+    pub fn new(
+        display_name: String,
+        email: String,
+        profile_url: String,
+        term_agreed: bool,
+        informed_agreed: bool,
+        user_type: UserType,
+        username: String,
+        password: Option<String>,
+    ) -> Self {
+        let uid = uuid::Uuid::new_v4().to_string();
+        let pk = Partition::User(uid);
+        let sk = EntityType::User;
+        let now = common::utils::time::now();
+
+        Self {
+            pk,
+            sk,
+            created_at: now,
+            updated_at: now,
+            display_name,
+            email,
+            profile_url,
+            term_agreed,
+            informed_agreed,
+            user_type,
+            username,
+            password,
+            ..Default::default()
+        }
+    }
+}
+
 pub const SESSION_KEY_USER_ID: &str = "user_id";
 
 #[cfg(feature = "server")]
@@ -84,7 +116,7 @@ where
         .await
         .map_err(|e| {
             tracing::error!("no session found from request: {:?}", e);
-            crate::Error::NoSessionFound
+            common::Error::NoSessionFound
         })?;
 
     let user_pk: Partition = session
@@ -92,15 +124,15 @@ where
         .await
         .map_err(|e| {
             tracing::error!("no user id found from session: {:?}", e);
-            crate::Error::NoSessionFound
+            common::Error::NoSessionFound
         })?
-        .ok_or(crate::Error::NoSessionFound)?;
+        .ok_or(common::Error::NoSessionFound)?;
 
     let user = User::get(dynamo_client, user_pk, Some(EntityType::User))
         .await
         .map_err(|e| {
             tracing::error!("failed to get user from db: {:?}", e);
-            crate::Error::NoSessionFound
+            common::Error::NoSessionFound
         });
 
     if user.is_err() {
@@ -108,7 +140,7 @@ where
         if let Err(e) = session.flush().await {
             tracing::error!("failed to flush session: {:?}", e);
         }
-        return Err(crate::Error::NoSessionFound);
+        return Err(common::Error::NoSessionFound);
     }
 
     let user = user.unwrap();
@@ -117,7 +149,7 @@ where
         if let Err(e) = session.flush().await {
             tracing::error!("failed to flush session: {:?}", e);
         }
-        return Err(crate::Error::NoSessionFound);
+        return Err(common::Error::NoSessionFound);
     }
 
     let user = user.unwrap();
@@ -131,7 +163,7 @@ where
     S: Send + Sync,
     Session: FromRequestParts<S, Rejection: std::fmt::Debug>,
 {
-    type Rejection = crate::Error;
+    type Rejection = common::Error;
 
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self> {
         tracing::debug!("extracting user from request parts");
@@ -139,46 +171,6 @@ where
     }
 }
 
-/*
-Note:
-Case 1:
-```
-    impl FromRequestParts<ClientState> for Option<User> {
-        type Rejection = crate::Error;
-
-        async fn from_request_parts(parts: &mut Parts, state: &ClientState) -> Result<Self> {
-
-            Ok(User::from_request_parts(parts, state).await.ok())
-        }
-    }
-```
-Dioxus Extractor required `impl<S> FromRequestParts<S> for Option<User>.`.
-So when we use
-#[get("/api/user", state: State<AppState>, user: Option<User>) ]
-pub fn some_api() ...
-it occurs error.
-
-Case 2:
-```
-    impl<S> FromRequestParts<S> for Option<User>
-    where
-        S: Send + Sync,
-        ClientState: FromRef<S>,
-        Session: FromRequestParts<S, Rejection: std::fmt::Debug>,
-    {
-    ...
-    }
-```
-Because of Rust Orphan Rule (https://doc.rust-lang.org/book/ch10-02-traits.html#orphan-rules),
-we cannot implement like this.
-
-So we need to use a wrapper struct to handle optional user.
-#[get("/api/user", state: State<AppState>, user: OptionalUser) ]
-So we use this struct to handle optional user.
-
-TODO:
-- Check if this is still true.
- */
 pub struct OptionalUser(pub Option<User>);
 
 impl From<OptionalUser> for Option<User> {
@@ -193,7 +185,7 @@ where
     S: Send + Sync,
     Session: FromRequestParts<S, Rejection: std::fmt::Debug>,
 {
-    type Rejection = crate::Error;
+    type Rejection = common::Error;
 
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self> {
         Ok(OptionalUser(

@@ -6,4 +6,5 @@ pub use aide::OperationIo;
 
 pub use bdk::prelude::*;
 
+pub use aws_sdk_dynamodb;
 pub use bdk;

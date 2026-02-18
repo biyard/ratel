@@ -1,8 +1,7 @@
-// NOTE: This model has been migrated to ratel-auth::models::user_refresh_token
-use crate::utils::sha256_baseurl::sha256_base64url;
 use crate::*;
 
-#[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, DynamoEntity)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct UserRefreshToken {
     pub pk: Partition,
     pub sk: EntityType,
@@ -22,12 +21,13 @@ pub struct UserRefreshToken {
     pub revoked: bool,
 }
 
+#[cfg(feature = "server")]
 impl UserRefreshToken {
     pub fn new(user: &User, device_id: String) -> (Self, String) {
         let sk = EntityType::UserRefreshToken(device_id.clone());
-        let plain_token = sorted_uuid();
-        let token_hash = sha256_base64url(&plain_token);
-        let created_at = now();
+        let plain_token = uuid::Uuid::now_v7().to_string();
+        let token_hash = common::utils::sha256::sha256_base64url(&plain_token);
+        let created_at = common::utils::time::now();
 
         (
             Self {

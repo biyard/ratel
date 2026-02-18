@@ -1,3 +1,17 @@
+// NOTE: User models have been migrated to ratel-auth::models
+// - User: common::models::user (canonical struct definition)
+// - UserEvmAddress: ratel-auth::models::user_evm_address
+// - UserMetadata: ratel-auth::models::user_metadata
+// - UserNotification: ratel-auth::models::user_notification
+// - UserOAuth: ratel-auth::models::user_oauth
+// - UserPhoneNumber: ratel-auth::models::user_phone_number
+// - UserPrincipal: ratel-auth::models::user_principal
+// - UserReferralCode: ratel-auth::models::user_referral_code
+// - UserRefreshToken: ratel-auth::models::user_refresh_token
+// - UserRelationship: ratel-auth::models::user_relationship
+// - UserTeam: ratel-auth::models::user_team
+// - UserTeamGroup: ratel-auth::models::user_team_group
+// - UserTelegram: ratel-auth::models::user_telegram
 pub mod user;
 pub mod user_evm_address;
 pub mod user_metadata;

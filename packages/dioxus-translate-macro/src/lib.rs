@@ -166,8 +166,8 @@ pub fn translate_derive(input: TokenStream) -> TokenStream {
     let mut en_arms = Vec::new();
     #[cfg(feature = "ko")]
     let mut ko_arms = Vec::new();
-    let mut display_arms = Vec::new();
-    let mut from_str_arms = Vec::new();
+    // let mut display_arms = Vec::new();
+    // let mut from_str_arms = Vec::new();
 
     let mut idents: Vec<Ident> = Vec::new();
     let mut unit_variants = Vec::new();
@@ -245,31 +245,31 @@ pub fn translate_derive(input: TokenStream) -> TokenStream {
             }
         };
 
-        let assigner = if field_names.len() > 0 {
-            quote! {
-                #enum_name::#variant_ident { #(#field_names: Default::default(),)* }
-            }
-        } else if tuple_len > 0 {
-            let mut defaults = vec![];
-            for _ in 0..tuple_len {
-                defaults.push(quote! { Default::default() });
-            }
-            quote! {
-                #enum_name::#variant_ident( #(#defaults,)* )
-            }
-        } else {
-            quote! {
-                #enum_name::#variant_ident
-            }
-        };
+        // let assigner = if field_names.len() > 0 {
+        //     quote! {
+        //         #enum_name::#variant_ident { #(#field_names: Default::default(),)* }
+        //     }
+        // } else if tuple_len > 0 {
+        //     let mut defaults = vec![];
+        //     for _ in 0..tuple_len {
+        //         defaults.push(quote! { Default::default() });
+        //     }
+        //     quote! {
+        //         #enum_name::#variant_ident( #(#defaults,)* )
+        //     }
+        // } else {
+        //     quote! {
+        //         #enum_name::#variant_ident
+        //     }
+        // };
 
         en_arms.push(quote! {
             #arm_name => #en_str,
         });
 
-        display_arms.push(quote! {
-            #arm_name => write!(f, #lower_name),
-        });
+        // display_arms.push(quote! {
+        //     #arm_name => write!(f, #lower_name),
+        // });
 
         if let Some((_, expr)) = &variant.discriminant {
             let value = LitStr::new(
@@ -277,23 +277,23 @@ pub fn translate_derive(input: TokenStream) -> TokenStream {
                 proc_macro2::Span::call_site(),
             );
 
-            from_str_arms.push(quote! {
-                #value => Ok(#assigner),
-            });
+            // from_str_arms.push(quote! {
+            //     #value => Ok(#assigner),
+            // });
         }
 
-        from_str_arms.push(quote! {
-            #en_str | #lower_name => Ok(#assigner),
-        });
+        // from_str_arms.push(quote! {
+        //     #en_str | #lower_name => Ok(#assigner),
+        // });
 
         #[cfg(feature = "ko")]
         {
             ko_arms.push(quote! {
                 #arm_name => #ko_str,
             });
-            from_str_arms.push(quote! {
-                #ko_str => Ok(#assigner),
-            });
+            // from_str_arms.push(quote! {
+            //     #ko_str => Ok(#assigner),
+            // });
         }
     }
 
@@ -324,25 +324,25 @@ pub fn translate_derive(input: TokenStream) -> TokenStream {
             }
         }
 
-        impl std::fmt::Display for #enum_name {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                match self {
-                    #(#display_arms)*
-                }
-            }
-        }
+        // impl std::fmt::Display for #enum_name {
+        //     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        //         match self {
+        //             #(#display_arms)*
+        //         }
+        //     }
+        // }
 
 
-        impl std::str::FromStr for #enum_name {
-            type Err = String;
+        // impl std::str::FromStr for #enum_name {
+        //     type Err = String;
 
-            fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-                match s {
-                    #(#from_str_arms)*
-                    _ => Err(format!("invalid field")),
-                }
-            }
-        }
+        //     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        //         match s {
+        //             #(#from_str_arms)*
+        //             _ => Err(format!("invalid field")),
+        //         }
+        //     }
+        // }
     };
 
     r#gen.into()

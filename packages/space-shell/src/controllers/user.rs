@@ -1,5 +1,6 @@
 use crate::*;
 use common::models::*;
+use ratel_auth::models::user::{OptionalUser, User, SESSION_KEY_USER_ID};
 use dioxus::fullstack::Form;
 use serde::de::DeserializeOwned;
 
@@ -22,7 +23,6 @@ FIXME: Use password and support Google Login
  */
 #[post("/api/login", session : Extension<TowerSession>)]
 pub async fn login(form: Form<LoginRequest>) -> std::result::Result<(), ServerFnError> {
-    use common::{models::user::SESSION_KEY_USER_ID, EntityType};
     let c = crate::config::get();
     let cli = &c.common.dynamodb();
     debug!("Login request: {}", form.email);
@@ -63,7 +63,7 @@ struct GoogleUserInfo {
 pub async fn oauth_login(
     form: Form<OAuthLoginRequest>,
 ) -> std::result::Result<(), ServerFnError> {
-    use common::models::user::SESSION_KEY_USER_ID;
+    // SESSION_KEY_USER_ID is now imported at the top from ratel_auth
 
     let c = crate::config::get();
     let cli = &c.common.dynamodb();

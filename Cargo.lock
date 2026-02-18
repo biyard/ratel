@@ -3809,8 +3809,11 @@ dependencies = [
  "dioxus",
  "dioxus-components",
  "dioxus-translate",
+ "hex",
+ "hmac 0.12.1",
  "icons",
  "percent-encoding",
+ "reqwest 0.12.28",
  "schemars 1.0.4",
  "serde",
  "serde-wasm-bindgen",
@@ -3818,11 +3821,14 @@ dependencies = [
  "serde_json",
  "serde_repr",
  "serde_with 3.14.1",
+ "sha2 0.10.9",
+ "sha3",
  "ssi",
  "strum 0.27.2",
  "thiserror 2.0.17",
  "tower-sessions 0.15.0",
  "tracing",
+ "url",
  "uuid 1.18.1",
  "wasm-bindgen",
 ]
@@ -13183,19 +13189,31 @@ checksum = "d20581732dd76fa913c7dff1a2412b714afe3573e94d41c34719de73337cc8ab"
 name = "ratel-auth"
 version = "0.1.0"
 dependencies = [
+ "aide",
+ "aws-sdk-dynamodb",
+ "base64 0.22.1",
+ "chrono",
  "common",
+ "hex",
+ "hmac 0.12.1",
+ "percent-encoding",
+ "reqwest 0.12.28",
+ "schemars 1.0.4",
  "serde",
  "serde-wasm-bindgen",
+ "serde_dynamo",
+ "serde_json",
+ "serde_repr",
+ "serde_with 3.14.1",
+ "sha2 0.10.9",
+ "sha3",
+ "tower-sessions 0.15.0",
+ "tracing",
+ "url",
+ "uuid 1.18.1",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
-]
-
-[[package]]
-name = "ratel-auth-old"
-version = "0.1.0"
-dependencies = [
- "common",
 ]
 
 [[package]]

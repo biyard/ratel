@@ -1,8 +1,7 @@
-// NOTE: This model has been migrated to ratel-auth::models::user_evm_address
-use crate::types::*;
-use bdk::prelude::*;
+use crate::*;
 
-#[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, DynamoEntity)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct UserEvmAddress {
     pub pk: Partition,
 
