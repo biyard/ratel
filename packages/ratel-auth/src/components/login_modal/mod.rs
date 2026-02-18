@@ -1,4 +1,4 @@
-use crate::controllers::login::{LoginRequest, login_handler};
+use crate::controllers::login::{login_handler, LoginRequest};
 use crate::interop::sign_in;
 use crate::*;
 
@@ -19,7 +19,14 @@ pub fn LoginModal() -> Element {
             div { class: "flex flex-col gap-4 w-full",
                 div { class: "flex flex-row gap-1 justify-start items-center w-full text-sm",
                     label { class: "font-medium text-text-primary", {tr.new_user} }
-                    button { class: "text-primary/70 light:text-primary hover:text-primary",
+                    button {
+                        class: "text-primary/70 light:text-primary hover:text-primary",
+                        onclick: move |_| {
+                            popup.close();
+                            popup.open(rsx! {
+                                SignupModal {}
+                            });
+                        },
                         {tr.create_account}
                     }
                 }
@@ -67,9 +74,9 @@ pub fn LoginModal() -> Element {
                     }
                 }
                 div { class: "flex flex-row gap-2.5 justify-between items-center w-full text-sm",
-                    a {
+                    Link {
                         class: "text-sm text-primary/70 hover:text-primary",
-                        href: "/forgot-password",
+                        to: Route::ForgotPassword {},
                         {tr.forgot_password}
                     }
                     button {
@@ -87,11 +94,11 @@ pub fn LoginModal() -> Element {
 
                             loading.set(true);
                             let result = login_handler(LoginRequest::Email {
-                                email: email.read().clone(),
-                                password: password.read().clone(),
-                                device_id: None,
-                            })
-                            .await;
+                                    email: email.read().clone(),
+                                    password: password.read().clone(),
+                                    device_id: None,
+                                })
+                                .await;
                             loading.set(false);
 
                             match result {
@@ -103,7 +110,11 @@ pub fn LoginModal() -> Element {
                                 }
                             }
                         },
-                        if loading() { {tr.loading} } else { {tr.continue_btn} }
+                        if loading() {
+                            {tr.loading}
+                        } else {
+                            {tr.continue_btn}
+                        }
                     }
                 }
             }
@@ -119,10 +130,10 @@ pub fn LoginModal() -> Element {
                         match sign_in().await {
                             Ok(user_info) => {
                                 let result = login_handler(LoginRequest::OAuth {
-                                    provider: Provider::Google,
-                                    access_token: user_info.access_token,
-                                })
-                                .await;
+                                        provider: Provider::Google,
+                                        access_token: user_info.access_token,
+                                    })
+                                    .await;
                                 loading.set(false);
 
                                 match result {
