@@ -1,3 +1,4 @@
+// NOTE: User struct has been migrated to common::models::user
 use crate::features::did::VerifiedAttributes;
 use crate::features::membership::Membership;
 use crate::features::membership::UserMembership;

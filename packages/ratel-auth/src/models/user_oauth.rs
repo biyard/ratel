@@ -1,8 +1,9 @@
-// NOTE: This model has been migrated to ratel-auth::models::user_oauth
-use crate::types::*;
-use bdk::prelude::*;
+use crate::*;
 
-#[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
+// Provider enum is now in common::types::oauth_provider
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, DynamoEntity)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct UserOAuth {
     pub pk: Partition,
 

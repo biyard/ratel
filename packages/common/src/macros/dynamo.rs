@@ -1,4 +1,7 @@
-// NOTE: These macros have been migrated to common::macros::dynamo
+/// Transact write macros for DynamoDB operations.
+/// Migrated from packages/main-api/src/macros/dynamo.rs
+
+#[cfg(feature = "server")]
 #[macro_export]
 macro_rules! transact_write {
     ($cli:expr $(, $tx:expr )* $(,)?) => {{
@@ -14,6 +17,7 @@ macro_rules! transact_write {
     }};
 }
 
+#[cfg(feature = "server")]
 #[macro_export]
 macro_rules! transact_write_items {
     ($cli:expr, $tx:expr $(,)? ) => {{
@@ -25,6 +29,7 @@ macro_rules! transact_write_items {
     }};
 }
 
+#[cfg(feature = "server")]
 #[macro_export]
 macro_rules! transact_write_all_items {
     ($cli:expr, $tx:expr $(,)? ) => {{
@@ -40,6 +45,7 @@ macro_rules! transact_write_all_items {
     }};
 }
 
+#[cfg(feature = "server")]
 #[macro_export]
 macro_rules! transact_write_all_items_with_failover {
     ($cli:expr, $tx:expr $(,)? ) => {{

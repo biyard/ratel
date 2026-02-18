@@ -1,10 +1,7 @@
-// NOTE: This model has been migrated to ratel-auth::models::user_metadata
-use crate::features::membership::{UserMembership, UserMembershipResponse};
-
+use crate::*;
 use super::*;
-use bdk::prelude::*;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
+#[derive(Debug, Clone, Serialize, Deserialize, DynamoEntity)]
 #[serde(untagged)]
 #[dynamo(pk_prefix = "EMAIL", index = "gsi3", name = "find_by_email")]
 pub enum UserMetadata {
@@ -18,10 +15,11 @@ pub enum UserMetadata {
     UserTelegram(UserTelegram),
     UserTeam(UserTeam),
     UserTeamGroup(UserTeamGroup),
-    UserMembership(UserMembership),
+    // NOTE: UserMembership variant is defined in main-api (features::membership)
 }
 
-#[derive(Default, serde::Serialize, schemars::JsonSchema)]
+#[derive(Default, Serialize)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub struct UserResponse {
     pub pk: String,
     pub email: String,
@@ -55,7 +53,9 @@ impl From<User> for UserResponse {
         }
     }
 }
-#[derive(Default, serde::Serialize, schemars::JsonSchema)]
+
+#[derive(Default, Serialize)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub struct UserDetailResponse {
     #[serde(flatten)]
     pub user: UserResponse,
@@ -64,10 +64,8 @@ pub struct UserDetailResponse {
     pub phone_number: Option<String>,
     pub principal: Option<String>,
     pub evm_address: Option<String>,
-    //FIXME: Change Telegram Model
-    // pub telegram_id: Option<i64>,
     pub teams: Option<Vec<UserTeamResponse>>,
-    pub membership: Option<UserMembershipResponse>,
+    // NOTE: membership field is defined in main-api (features::membership::UserMembershipResponse)
     pub is_identified: bool,
     pub has_billing_key: bool,
 }
@@ -93,18 +91,12 @@ impl From<Vec<UserMetadata>> for UserDetailResponse {
                 UserMetadata::UserEvmAddress(user_evm_address) => {
                     res.evm_address = Some(user_evm_address.evm_address);
                 }
-                // UserMetadata::UserTelegram(user_telegram) => {
-                //     res.telegram = Some(user_telegram.telegram_raw);
-                // }
                 UserMetadata::UserTeam(user_team) => {
                     let team: UserTeamResponse = user_team.into();
                     if res.teams.is_none() {
                         res.teams = Some(vec![]);
                     }
                     res.teams.as_mut().unwrap().push(team);
-                }
-                UserMetadata::UserMembership(membership) => {
-                    res.membership = Some(membership.into());
                 }
                 UserMetadata::UserTeamGroup(_)
                 | UserMetadata::UserTelegram(_)
