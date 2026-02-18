@@ -227,7 +227,7 @@ pub fn translate_derive(input: TokenStream) -> TokenStream {
         let en_str = syn::LitStr::new(&en_translation.borrow(), proc_macro2::Span::call_site());
         #[cfg(feature = "ko")]
         let ko_str = syn::LitStr::new(&ko_translation.borrow(), proc_macro2::Span::call_site());
-        let lower_name = syn::LitStr::new(
+        let _lower_name = syn::LitStr::new(
             &variant_ident.to_string().to_lowercase(),
             proc_macro2::Span::call_site(),
         );
@@ -272,7 +272,7 @@ pub fn translate_derive(input: TokenStream) -> TokenStream {
         // });
 
         if let Some((_, expr)) = &variant.discriminant {
-            let value = LitStr::new(
+            let _value = LitStr::new(
                 expr.to_token_stream().to_string().as_str(),
                 proc_macro2::Span::call_site(),
             );

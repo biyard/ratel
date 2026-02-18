@@ -1,8 +1,16 @@
+use crate::controllers::login::{LoginRequest, login_handler};
 use crate::interop::sign_in;
 use crate::*;
 
 #[component]
 pub fn LoginModal() -> Element {
+    let mut email = use_signal(|| String::new());
+    let mut password = use_signal(|| String::new());
+    let mut show_password = use_signal(|| false);
+    let mut loading = use_signal(|| false);
+    let mut error_message: Signal<Option<String>> = use_signal(|| None);
+    let mut popup = use_popup();
+
     rsx! {
         div {
             class: "flex flex-col gap-5 w-100 max-w-100 mx-1.25 max-mobile:w-full! max-mobile:max-w-full!",
@@ -14,6 +22,11 @@ pub fn LoginModal() -> Element {
                         "Create an account"
                     }
                 }
+
+                if let Some(err) = error_message() {
+                    div { class: "text-sm text-red-500", "{err}" }
+                }
+
                 div { class: "flex flex-col gap-2.5 w-full",
                     label { class: "text-sm", "Email address" }
                     div { class: "relative w-full",
@@ -22,14 +35,19 @@ pub fn LoginModal() -> Element {
                             class: "flex px-5 w-full min-w-0 h-9 text-base font-light border outline-none md:text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none shadow-xs transition-[color,box-shadow] file:text-text-primary file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground aria-invalid:ring-destructive/20 aria-invalid:outline aria-invalid:border-c-p-50 bg-input-box-bg border-input-box-border rounded-[10px] py-5.5 text-text-primary dark:bg-input/30 dark:aria-invalid:ring-destructive/40 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[1px]",
                             "data-slot": "input",
                             "data-testid": "email-input",
+                            disabled: loading(),
                             name: "username",
                             placeholder: "Enter your email address",
                             r#type: "email",
+                            value: email(),
+                            oninput: move |ev| {
+                                email.set(ev.data().value());
+                            },
                         }
                     }
                 }
                 div {
-                    aria_hidden: "true",
+                    aria_hidden: if show_password() { "false" } else { "true" },
                     class: "flex flex-col gap-2.5 w-full aria-hidden:hidden",
                     label { class: "text-sm", "Password" }
                     div { class: "relative w-full",
@@ -37,8 +55,13 @@ pub fn LoginModal() -> Element {
                             class: "flex px-5 w-full min-w-0 h-9 text-base font-light border outline-none md:text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none shadow-xs transition-[color,box-shadow] text-text-primary file:text-text-primary file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium selection:bg-primary selection:text-primary-foreground border-input-box-border bg-input-box-bg placeholder:text-muted-foreground aria-invalid:ring-destructive/20 aria-invalid:outline aria-invalid:border-c-p-50 rounded-[10px] py-5.5 dark:bg-input/30 dark:aria-invalid:ring-destructive/40 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[1px]",
                             "data-slot": "input",
                             "data-testid": "password-input",
+                            disabled: loading(),
                             placeholder: "Enter your password",
                             r#type: "password",
+                            value: password(),
+                            oninput: move |ev| {
+                                password.set(ev.data().value());
+                            },
                         }
                     }
                 }
@@ -52,7 +75,34 @@ pub fn LoginModal() -> Element {
                         class: "inline-flex gap-2.5 justify-center items-center py-1.5 px-4 h-auto text-xs font-bold whitespace-nowrap rounded-full transition-all outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none [&amp;_svg]:pointer-events-none [&amp;_svg]:size-[15px] shrink-0 [&amp;_svg]:shrink-0 font-[var(--font-raleway)] bg-btn-secondary-bg text-btn-secondary-text border-btn-secondary-outline web light:bg-neutral-600 hover:bg-btn-secondary-hover-bg hover:border-btn-secondary-hover-outline hover:text-btn-secondary-hover-text disabled:bg-btn-secondary--disable-bg disabled:border-btn-secondary-disable-outline disabled:text-btn-secondary-disable-text",
                         "data-slot": "button",
                         "data-testid": "continue-button",
-                        "Continue"
+                        disabled: loading(),
+                        onclick: move |_| async move {
+                            error_message.set(None);
+
+                            if !show_password() {
+                                show_password.set(true);
+                                return;
+                            }
+
+                            loading.set(true);
+                            let result = login_handler(LoginRequest::Email {
+                                email: email.read().clone(),
+                                password: password.read().clone(),
+                                device_id: None,
+                            })
+                            .await;
+                            loading.set(false);
+
+                            match result {
+                                Ok(_) => {
+                                    popup.close();
+                                }
+                                Err(e) => {
+                                    error_message.set(Some(format!("{e}")));
+                                }
+                            }
+                        },
+                        if loading() { "Loading..." } else { "Continue" }
                     }
                 }
             }
@@ -60,9 +110,34 @@ pub fn LoginModal() -> Element {
             div { class: "flex flex-col gap-2.5",
                 button {
                     class: "flex flex-row gap-5 items-center px-5 w-full cursor-pointer rounded-[10px] bg-[#000203] py-5.5",
-                    onclick: move |_| async {
-                        let u = sign_in().await;
-                        debug!("User info: {:?}", u);
+                    disabled: loading(),
+                    onclick: move |_| async move {
+                        error_message.set(None);
+                        loading.set(true);
+
+                        match sign_in().await {
+                            Ok(user_info) => {
+                                let result = login_handler(LoginRequest::OAuth {
+                                    provider: Provider::Google,
+                                    access_token: user_info.access_token,
+                                })
+                                .await;
+                                loading.set(false);
+
+                                match result {
+                                    Ok(_) => {
+                                        popup.close();
+                                    }
+                                    Err(e) => {
+                                        error_message.set(Some(format!("{e}")));
+                                    }
+                                }
+                            }
+                            Err(e) => {
+                                loading.set(false);
+                                error_message.set(Some(format!("{e}")));
+                            }
+                        }
                     },
                     svg {
                         fill: "none",

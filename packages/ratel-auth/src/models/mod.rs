@@ -1,3 +1,5 @@
+pub mod email_template;
+pub mod email_verification;
 pub mod phone_verification;
 pub mod user;
 pub mod user_evm_address;
@@ -13,6 +15,8 @@ pub mod user_team;
 pub mod user_team_group;
 pub mod user_telegram;
 
+pub use email_template::*;
+pub use email_verification::*;
 pub use phone_verification::*;
 pub use user::*;
 pub use user_evm_address::*;

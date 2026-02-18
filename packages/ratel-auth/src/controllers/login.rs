@@ -37,7 +37,7 @@ pub struct LoginResponse {
 
 #[post("/api/auth/login", session: Extension<tower_sessions::Session>)]
 pub async fn login_handler(req: LoginRequest) -> Result<LoginResponse> {
-    let conf = common::config::ServerConfig::default();
+    let conf = crate::config::get();
     let cli = conf.dynamodb();
     let Extension(session) = session;
 
