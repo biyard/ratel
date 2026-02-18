@@ -1,5 +1,6 @@
 use crate::controllers::login::{login_handler, LoginRequest};
 use crate::interop::sign_in;
+use crate::views::ForgotPassword;
 use crate::*;
 
 #[component]
@@ -74,9 +75,14 @@ pub fn LoginModal() -> Element {
                     }
                 }
                 div { class: "flex flex-row gap-2.5 justify-between items-center w-full text-sm",
-                    Link {
+                    button {
                         class: "text-sm text-primary/70 hover:text-primary",
-                        to: Route::ForgotPassword {},
+                        onclick: move |_| {
+                            popup.close();
+                            popup.open(rsx! {
+                                ForgotPassword {}
+                            });
+                        },
                         {tr.forgot_password}
                     }
                     button {
