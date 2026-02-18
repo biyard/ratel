@@ -12,7 +12,10 @@ fn main() {
         fs::create_dir_all(&output_dir).ok();
     }
 
-    println!("cargo:rerun-if-changed={}", svg_dir.display());
+    // Watch build.rs itself; the resources/ directory watch doesn't track
+    // recursive file edits inside subdirectories.
+    // println!("cargo:rerun-if-changed=build.rs");
+    // println!("cargo:rerun-if-changed=resources");
 
     let mut icon_groups: std::collections::BTreeMap<String, Vec<(PathBuf, String)>> =
         std::collections::BTreeMap::new();
@@ -31,9 +34,7 @@ fn main() {
                         let module_name = dir_name.replace('-', "_");
                         let files_with_names: Vec<(PathBuf, String)> = svg_files
                             .iter()
-                            .filter_map(|p| {
-                                extract_component_name(p).map(|name| (p.clone(), name))
-                            })
+                            .filter_map(|p| extract_component_name(p).map(|name| (p.clone(), name)))
                             .collect();
                         icon_groups.insert(module_name, files_with_names);
                     }

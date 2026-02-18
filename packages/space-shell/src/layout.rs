@@ -2,6 +2,8 @@ use crate::*;
 
 #[component]
 pub fn SpaceLayout(space_id: SpacePartition) -> Element {
+    use_context_provider(|| PopupService::new());
+
     // FIXME: Temporarily set role to Viewer
     let role = SpaceUserRole::Creator;
 
@@ -19,18 +21,19 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
     .collect::<Vec<SpaceNavItem>>();
 
     rsx! {
-        div { class: "bg-space-bg w-full grid grid-cols-7 h-screen text-font-primary",
+        div { class: "grid overflow-hidden grid-cols-7 w-full h-screen bg-space-bg text-font-primary",
             SpaceNav {
                 logo: "https://metadata.ratel.foundation/logos/logo.png",
                 menus,
             }
-
-            div { class: "col-span-6 flex flex-col",
+            div { class: "flex flex-col col-span-6 col-start-2 min-h-0",
                 SpaceTop {}
-                div { class: "bg-space-body-bg flex grow rounded-tl-[10px] overflow-auto p-5",
+                div { class: "flex overflow-auto p-5 w-full top-[65px] grow bg-space-body-bg rounded-tl-[10px] h-[calc(100%-65px)]",
                     Outlet::<Route> {}
                 }
             }
         }
+
+        PopupZone {}
     }
 }

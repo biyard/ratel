@@ -1,3 +1,4 @@
+// NOTE: This model has been migrated to ratel-auth::models::user_evm_address
 use crate::types::*;
 use bdk::prelude::*;
 

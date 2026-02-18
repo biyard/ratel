@@ -2,7 +2,7 @@ use crate::*;
 
 #[component]
 pub fn RankingTable(data: RankingTableData) -> Element {
-    let mut current_page = use_signal(|| 0usize);
+    let current_page = use_signal(|| 0usize);
     let page_size = data.page_size;
     let total_pages = (data.entries.len() + page_size - 1) / page_size;
 

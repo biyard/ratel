@@ -1,3 +1,4 @@
+// NOTE: This model has been migrated to ratel-auth::models::user_notification
 use futures::future::join_all;
 
 use crate::{

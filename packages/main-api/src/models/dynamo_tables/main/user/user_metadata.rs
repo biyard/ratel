@@ -1,3 +1,4 @@
+// NOTE: This model has been migrated to ratel-auth::models::user_metadata
 use crate::features::membership::{UserMembership, UserMembershipResponse};
 
 use super::*;

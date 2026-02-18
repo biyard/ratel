@@ -61,6 +61,9 @@ importers:
       '@tiptap/starter-kit':
         specifier: ^2.26.1
         version: 2.26.3
+      firebase:
+        specifier: ^11.0.0
+        version: 11.10.0
     devDependencies:
       tsx:
         specifier: ^4.19.0

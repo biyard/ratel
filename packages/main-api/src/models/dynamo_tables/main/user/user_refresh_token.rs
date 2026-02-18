@@ -1,3 +1,4 @@
+// NOTE: This model has been migrated to ratel-auth::models::user_refresh_token
 use crate::utils::sha256_baseurl::sha256_base64url;
 use crate::*;
 

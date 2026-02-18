@@ -10,12 +10,12 @@ pub fn ViewerPage(space_id: SpacePartition) -> Element {
     let mut editable = use_signal(|| false);
 
     rsx! {
-        div { class: "flex flex-col gap-4 flex-1 h-full",
+        div { class: "flex flex-col gap-4",
             button { onclick: move |_| editable.toggle(), "변경" }
             div { "상태 : {editable}" }
             Typo { variant: Variant::H1, weight: Weight::Extrabold, "TIPTAP EDITOR" }
             TiptapEditor {
-                class: "w-full h-full",
+                class: "w-full h-fit",
                 content: content(),
                 editable: editable(),
                 placeholder: "Type here...",

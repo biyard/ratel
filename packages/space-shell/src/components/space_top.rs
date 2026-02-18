@@ -3,6 +3,8 @@ use crate::*;
 #[component]
 pub fn SpaceTop() -> Element {
     rsx! {
-        div { class: "h-[65px] px-3 flex flex-row items-center justify-between", "Space top" }
+        div { class: "flex flex-row justify-between items-center px-3 min-h-[65px]",
+            "Space top"
+        }
     }
 }
