@@ -1,31 +1,30 @@
+use crate::*;
+use ethers::core::k256::sha2::Sha256;
 use hmac::{Hmac, Mac};
-use sha2::Sha256;
-
 use serde::Deserialize;
 
-#[derive(Debug, Deserialize)]
-pub struct TelegramUser {
-    pub id: i64,
-    pub username: Option<String>,
-    pub first_name: Option<String>,
-    pub last_name: Option<String>,
-    pub photo_url: Option<String>,
-}
+// https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app
 
-pub fn parse_telegram_raw(
-    telegram_raw: String,
-    telegram_token: &str,
-) -> Result<TelegramUser, crate::Error> {
+pub fn parse_telegram_raw(telegram_raw: String) -> Result<TelegramUser> {
+    let config = config::get();
+    let telegram_token = config.telegram_token.unwrap_or_default();
+
     let validation_result = (|| {
         let mut params: Vec<(String, String)> =
             url::form_urlencoded::parse(telegram_raw.as_bytes())
                 .into_owned()
                 .collect();
+        tracing::debug!("Telegram raw params: {:?}", params);
 
         let received_hash = params
             .iter()
             .position(|(key, _)| key == "hash")
-            .map(|index| params.remove(index).1)?;
+            .map(|index| params.remove(index).1)
+            .ok_or_else(|| {
+                tracing::warn!("Missing hash parameter in Telegram raw data");
+                ()
+            })
+            .ok()?;
 
         params.sort_by(|a, b| a.0.cmp(&b.0));
 
@@ -44,6 +43,7 @@ pub fn parse_telegram_raw(
         let calculated_hash = hex::encode(mac.finalize().into_bytes());
 
         if calculated_hash == received_hash {
+            tracing::debug!("Telegram raw validation successful");
             let user_str = params
                 .into_iter()
                 .find(|(key, _)| key == "user")
@@ -54,7 +54,20 @@ pub fn parse_telegram_raw(
         }
     })();
 
-    validation_result.ok_or_else(|| {
-        crate::Error::InternalServerError("Failed to validate and parse Telegram data".into())
-    })
+    if let Some(validation_result) = validation_result {
+        Ok(validation_result)
+    } else {
+        return Err(Error::InternalServerError(
+            "Failed to validate and parse Telegram data".into(),
+        ));
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct TelegramUser {
+    pub id: i64,
+    pub username: Option<String>,
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
+    pub photo_url: Option<String>,
 }

@@ -3809,6 +3809,7 @@ dependencies = [
  "dioxus",
  "dioxus-components",
  "dioxus-translate",
+ "ethers",
  "hex",
  "hmac 0.12.1",
  "icons",

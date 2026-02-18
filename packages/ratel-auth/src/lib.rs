@@ -1,5 +1,6 @@
 #![allow(unused_imports, dead_code)]
 mod components;
+mod config;
 pub mod controllers;
 pub mod interop;
 pub mod models;
