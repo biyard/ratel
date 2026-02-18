@@ -1,8 +1,8 @@
-use dioxus::prelude::*;
-use space_page_overview::*;
+use common::dioxus::prelude::*;
+use ratel_auth::*;
 
 fn main() {
-    dioxus::launch(App);
+    common::dioxus::launch(App);
 }
 
 pub const FAVICON: Asset = asset!("/assets/favicon.ico");

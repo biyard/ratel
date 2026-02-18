@@ -53,6 +53,36 @@ pub enum Error {
     #[translate(en = "Please sign in first", ko = "먼저 로그인 해주세요.")]
     Session(#[from] tower_sessions::session::Error),
 
+    #[error("Bad request: {0}")]
+    #[translate(en = "Bad request", ko = "잘못된 요청입니다.")]
+    BadRequest(String),
+
+    #[error("Duplicate entry: {0}")]
+    #[translate(en = "Duplicate entry", ko = "중복된 항목입니다.")]
+    Duplicate(String),
+
+    #[error("Not found: {0}")]
+    #[translate(en = "Not found", ko = "찾을 수 없습니다.")]
+    NotFound(String),
+
+    #[error("Exceeded maximum attempt for email verification")]
+    #[translate(
+        en = "Exceeded maximum attempt for email verification",
+        ko = "이메일 인증 최대 시도 횟수를 초과했습니다."
+    )]
+    ExceededAttemptEmailVerification,
+
+    #[error("Exceeded maximum attempt for phone verification")]
+    #[translate(
+        en = "Exceeded maximum attempt for phone verification",
+        ko = "전화 인증 최대 시도 횟수를 초과했습니다."
+    )]
+    ExceededAttemptPhoneVerification,
+
+    #[error("Send SMS Failed: {0}")]
+    #[translate(en = "Send SMS Failed", ko = "SMS 전송에 실패했습니다.")]
+    SendSmsFailed(String),
+
     #[error("not found verification code")]
     #[translate(
         en = "Verification code not found",
@@ -93,9 +123,12 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
 
         let status = match &self {
             Error::UnauthorizedAccess | Error::NoSessionFound => StatusCode::UNAUTHORIZED,
-            Error::InvalidPartitionKey(_) | Error::NotSupported(_) | Error::InvalidBookmark => {
-                StatusCode::BAD_REQUEST
-            }
+            Error::InvalidPartitionKey(_)
+            | Error::NotSupported(_)
+            | Error::InvalidBookmark
+            | Error::BadRequest(_)
+            | Error::Duplicate(_) => StatusCode::BAD_REQUEST,
+            Error::NotFound(_) => StatusCode::NOT_FOUND,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
@@ -134,9 +167,15 @@ impl dioxus::fullstack::AsStatusCode for Error {
             Error::InvalidPartitionKey(_)
             | Error::NotSupported(_)
             | Error::InvalidBookmark
+            | Error::BadRequest(_)
+            | Error::Duplicate(_)
+            | Error::ExceededAttemptEmailVerification
+            | Error::ExceededAttemptPhoneVerification
+            | Error::SendSmsFailed(_)
             | Error::NotFoundVerificationCode
             | Error::ExpiredVerification
             | Error::InvalidVerificationCode => StatusCode::BAD_REQUEST,
+            Error::NotFound(_) => StatusCode::NOT_FOUND,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

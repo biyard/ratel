@@ -95,6 +95,34 @@ impl User {
             ..Default::default()
         }
     }
+
+    pub fn new_phone(phone: String) -> Self {
+        let uid = uuid::Uuid::new_v4().to_string();
+        let pk = Partition::User(uid);
+        let sk = EntityType::User;
+
+        let now = common::utils::time::now();
+        let display_name = names::Generator::with_naming(names::Name::Numbered)
+            .next()
+            .unwrap()
+            .replace('-', " ");
+
+        Self {
+            pk,
+            sk,
+            created_at: now,
+            updated_at: now,
+            display_name: display_name.clone(),
+            email: phone.to_string(),
+            profile_url: "".to_string(),
+            term_agreed: true,
+            informed_agreed: false,
+            user_type: UserType::Individual,
+            username: display_name,
+            password: None,
+            ..Default::default()
+        }
+    }
 }
 
 pub const SESSION_KEY_USER_ID: &str = "user_id";
