@@ -20,8 +20,6 @@ pub fn SpaceUserLogin() -> Element {
     }
 }
 
-use crate::*;
-
 translate! {
     SpaceUserLoginTranslate;
 

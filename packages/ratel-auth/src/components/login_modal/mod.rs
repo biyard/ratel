@@ -4,6 +4,7 @@ use crate::*;
 
 #[component]
 pub fn LoginModal() -> Element {
+    let tr: LoginModalTranslate = use_translate();
     let mut email = use_signal(|| String::new());
     let mut password = use_signal(|| String::new());
     let mut show_password = use_signal(|| false);
@@ -17,9 +18,9 @@ pub fn LoginModal() -> Element {
             id: "login_popup",
             div { class: "flex flex-col gap-4 w-full",
                 div { class: "flex flex-row gap-1 justify-start items-center w-full text-sm",
-                    label { class: "font-medium text-text-primary", "New user?" }
+                    label { class: "font-medium text-text-primary", {tr.new_user} }
                     button { class: "text-primary/70 light:text-primary hover:text-primary",
-                        "Create an account"
+                        {tr.create_account}
                     }
                 }
 
@@ -28,7 +29,7 @@ pub fn LoginModal() -> Element {
                 }
 
                 div { class: "flex flex-col gap-2.5 w-full",
-                    label { class: "text-sm", "Email address" }
+                    label { class: "text-sm", {tr.email_address} }
                     div { class: "relative w-full",
                         input {
                             autocomplete: "email",
@@ -37,7 +38,7 @@ pub fn LoginModal() -> Element {
                             "data-testid": "email-input",
                             disabled: loading(),
                             name: "username",
-                            placeholder: "Enter your email address",
+                            placeholder: "{tr.email_placeholder}",
                             r#type: "email",
                             value: email(),
                             oninput: move |ev| {
@@ -49,14 +50,14 @@ pub fn LoginModal() -> Element {
                 div {
                     aria_hidden: if show_password() { "false" } else { "true" },
                     class: "flex flex-col gap-2.5 w-full aria-hidden:hidden",
-                    label { class: "text-sm", "Password" }
+                    label { class: "text-sm", {tr.password} }
                     div { class: "relative w-full",
                         input {
                             class: "flex px-5 w-full min-w-0 h-9 text-base font-light border outline-none md:text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none shadow-xs transition-[color,box-shadow] text-text-primary file:text-text-primary file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium selection:bg-primary selection:text-primary-foreground border-input-box-border bg-input-box-bg placeholder:text-muted-foreground aria-invalid:ring-destructive/20 aria-invalid:outline aria-invalid:border-c-p-50 rounded-[10px] py-5.5 dark:bg-input/30 dark:aria-invalid:ring-destructive/40 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[1px]",
                             "data-slot": "input",
                             "data-testid": "password-input",
                             disabled: loading(),
-                            placeholder: "Enter your password",
+                            placeholder: "{tr.password_placeholder}",
                             r#type: "password",
                             value: password(),
                             oninput: move |ev| {
@@ -69,7 +70,7 @@ pub fn LoginModal() -> Element {
                     a {
                         class: "text-sm text-primary/70 hover:text-primary",
                         href: "/forgot-password",
-                        "Forgot password?"
+                        {tr.forgot_password}
                     }
                     button {
                         class: "inline-flex gap-2.5 justify-center items-center py-1.5 px-4 h-auto text-xs font-bold whitespace-nowrap rounded-full transition-all outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none [&amp;_svg]:pointer-events-none [&amp;_svg]:size-[15px] shrink-0 [&amp;_svg]:shrink-0 font-[var(--font-raleway)] bg-btn-secondary-bg text-btn-secondary-text border-btn-secondary-outline web light:bg-neutral-600 hover:bg-btn-secondary-hover-bg hover:border-btn-secondary-hover-outline hover:text-btn-secondary-hover-text disabled:bg-btn-secondary--disable-bg disabled:border-btn-secondary-disable-outline disabled:text-btn-secondary-disable-text",
@@ -102,11 +103,11 @@ pub fn LoginModal() -> Element {
                                 }
                             }
                         },
-                        if loading() { "Loading..." } else { "Continue" }
+                        if loading() { {tr.loading} } else { {tr.continue_btn} }
                     }
                 }
             }
-            div { class: "font-light text-center rule-with-text align-center", "Or" }
+            div { class: "font-light text-center rule-with-text align-center", {tr.or} }
             div { class: "flex flex-col gap-2.5",
                 button {
                     class: "flex flex-row gap-5 items-center px-5 w-full cursor-pointer rounded-[10px] bg-[#000203] py-5.5",
@@ -174,17 +175,74 @@ pub fn LoginModal() -> Element {
                             }
                         }
                     }
-                    div { class: "text-base font-semibold text-white", "Continue With Google" }
+                    div { class: "text-base font-semibold text-white", {tr.continue_with_google} }
                 }
             }
             div { class: "flex flex-row gap-2.5 justify-center items-center w-full",
                 div { class: "font-medium cursor-pointer text-neutral-400 text-xs/3.5",
-                    "Privacy Policy"
+                    {tr.privacy_policy}
                 }
                 div { class: "font-medium cursor-pointer text-neutral-400 text-xs/3.5",
-                    "Terms of Service"
+                    {tr.terms_of_service}
                 }
             }
         }
     }
+}
+
+translate! {
+    LoginModalTranslate;
+
+    new_user: {
+        en: "New user?",
+        ko: "새 사용자?",
+    },
+    create_account: {
+        en: "Create an account",
+        ko: "계정 만들기",
+    },
+    email_address: {
+        en: "Email address",
+        ko: "이메일 주소",
+    },
+    email_placeholder: {
+        en: "Enter your email address",
+        ko: "이메일 주소를 입력하세요",
+    },
+    password: {
+        en: "Password",
+        ko: "비밀번호",
+    },
+    password_placeholder: {
+        en: "Enter your password",
+        ko: "비밀번호를 입력하세요",
+    },
+    forgot_password: {
+        en: "Forgot password?",
+        ko: "비밀번호를 잊으셨나요?",
+    },
+    continue_btn: {
+        en: "Continue",
+        ko: "계속",
+    },
+    loading: {
+        en: "Loading...",
+        ko: "로딩 중...",
+    },
+    or: {
+        en: "Or",
+        ko: "또는",
+    },
+    continue_with_google: {
+        en: "Continue With Google",
+        ko: "Google로 계속하기",
+    },
+    privacy_policy: {
+        en: "Privacy Policy",
+        ko: "개인정보 처리방침",
+    },
+    terms_of_service: {
+        en: "Terms of Service",
+        ko: "서비스 이용약관",
+    },
 }
