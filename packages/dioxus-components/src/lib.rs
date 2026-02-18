@@ -1,3 +1,6 @@
+pub mod firebase_auth;
+pub use firebase_auth::{FirebaseAuth, FirebaseLoginEvent};
+
 pub mod tiptap_editor;
 pub use tiptap_editor::TiptapEditor;
 

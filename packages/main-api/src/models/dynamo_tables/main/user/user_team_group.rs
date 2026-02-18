@@ -1,3 +1,4 @@
+// NOTE: This model has been migrated to ratel-auth::models::user_team_group
 use crate::{models::team::team_group::TeamGroup, types::*};
 use bdk::prelude::*;
 

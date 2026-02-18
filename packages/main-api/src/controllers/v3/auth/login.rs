@@ -1,3 +1,4 @@
+// NOTE: This handler has been migrated to ratel-auth::controllers::login
 use crate::models::{
     PhoneVerification, PhoneVerificationQueryOption, UserPhoneNumber, UserQueryOption,
     UserRefreshToken, UserTelegram, UserTelegramQueryOption,
