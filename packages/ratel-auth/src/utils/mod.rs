@@ -5,6 +5,4 @@ pub mod password {
     pub use common::utils::password::*;
 }
 #[cfg(feature = "server")]
-pub mod telegram {
-    pub use common::utils::telegram::*;
-}
+pub mod telegram;
