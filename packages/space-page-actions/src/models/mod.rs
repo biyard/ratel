@@ -1,3 +1,1 @@
-//FIXME: remove this model.
-mod space_poll;
-pub use space_poll::*;
+pub use space_action_poll::models::*;
