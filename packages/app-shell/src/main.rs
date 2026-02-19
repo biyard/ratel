@@ -23,6 +23,8 @@ pub const MAIN_JS: Asset = asset!("/assets/ratel-app-shell.js");
 
 #[component]
 fn App() -> Element {
+    use_context_provider(|| PopupService::new());
+
     rsx! {
         document::Link { rel: "icon", href: FAVICON }
         document::Link { rel: "stylesheet", href: MAIN_CSS }
@@ -31,5 +33,7 @@ fn App() -> Element {
         AuthProvider {}
         ratel_post::Provider {}
         Router::<Route> {}
+        PopupZone {}
+
     }
 }
