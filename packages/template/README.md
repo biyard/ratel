@@ -19,7 +19,7 @@ make generate NAME=<package-name>
 
 ```bash
 cd packages/template
-make generate NAME=space-action-vote
+make generate NAME=space-action-poll
 ```
 
 You will be prompted for:
@@ -29,7 +29,7 @@ Project description? [default: A Dioxus app]
 Default dev server port? [default: 8000]
 ```
 
-This creates the `packages/space-action-vote/` directory.
+This creates the `packages/space-action-poll/` directory.
 
 ## Generated Structure
 
@@ -59,18 +59,3 @@ This creates the `packages/space-action-vote/` directory.
     └── server/mod.rs        # Server (session + DynamoDB)
 ```
 
-## Running After Generation
-
-```bash
-cd packages/<package-name>
-make run
-```
-
-## Placeholders
-
-| Placeholder | Type | Description | Default |
-|---|---|---|---|
-| `project-name` | built-in | Package name (kebab-case) | from `--name` flag |
-| `crate_name` | built-in | Crate name (snake_case) | auto-derived |
-| `description` | interactive | Project description | `A Dioxus app` |
-| `port` | interactive | Dev server port | `8000` |
