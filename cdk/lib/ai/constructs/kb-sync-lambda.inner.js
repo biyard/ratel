@@ -68,10 +68,15 @@ exports.handler = async (event) => {
   }
 
   const isJsonExtension = key.toLowerCase().endsWith(".json");
+  const isMetadataJson = key.toLowerCase().endsWith(".metadata.json");
 
   if (!isPdfExtension && !isPdfContentType && !isJsonExtension) {
     console.log(`Skipping unsupported file: ${key}`);
     return { statusCode: 200, body: "Skipped - unsupported file type" };
+  }
+  if (isMetadataJson) {
+    console.log(`Skipping metadata file: ${key}`);
+    return { statusCode: 200, body: "Skipped - metadata file" };
   }
 
   console.log("Triggering direct document ingestion (CUSTOM data source)");
@@ -99,7 +104,7 @@ exports.handler = async (event) => {
               },
             },
             metadata: {
-              type: "INLINE",
+              type: "IN_LINE_ATTRIBUTE",
               inlineAttributes: [
                 {
                   key: "space_pk",
