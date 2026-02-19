@@ -2,7 +2,7 @@ use crate::models::Post;
 use crate::types::*;
 use crate::*;
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct PostResponse {
     pub pk: Partition,
