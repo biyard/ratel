@@ -1,7 +1,7 @@
 use app_shell::config;
 use app_shell::*;
 use common::*;
-// use ratel_auth::AuthProvider;
+use ratel_auth::AuthProvider;
 
 use dioxus::prelude::*;
 
@@ -28,7 +28,7 @@ fn App() -> Element {
         document::Link { rel: "stylesheet", href: MAIN_CSS }
         document::Link { rel: "stylesheet", href: TAILWIND_CSS }
         document::Script { src: MAIN_JS }
-        // AuthProvider {}
+        AuthProvider {}
         Router::<Route> {}
     }
 }
