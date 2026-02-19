@@ -1,6 +1,4 @@
-use percent_encoding::percent_decode_str;
 use serde::{Deserialize, Serialize};
-use std::str::FromStr;
 
 use crate::models::*;
 use crate::*;
@@ -12,15 +10,9 @@ pub struct CreateAIReportResponse {
 
 // FIXME: implement middleware and authorization
 #[post("/v3/spaces/{space_pk}/analyze/ai-contents")]
-pub async fn create_ai_report(space_pk: String) -> Result<CreateAIReportResponse> {
-    let decoded = percent_decode_str(&space_pk)
-        .decode_utf8()
-        .map_err(|e| Error::InternalServerError(format!("invalid space_pk encoding: {e}")))?;
-    let partition = Partition::from_str(&decoded)
-        .map_err(|e| Error::InternalServerError(format!("invalid space_pk: {e}")))?;
-    if !matches!(partition, Partition::Space(_)) {
-        return Err(Error::InvalidPartitionKey("space_pk must be a Space partition".into()).into());
-    }
+pub async fn create_ai_report(space_pk: SpacePartition) -> Result<CreateAIReportResponse> {
+    let partition = Partition::Space(space_pk.to_string());
+    let space_pk_filter = partition.to_string();
 
     let sections: Vec<(&str, Vec<&str>)> = vec![
         (
@@ -64,7 +56,9 @@ pub async fn create_ai_report(space_pk: String) -> Result<CreateAIReportResponse
         let mut list_items = Vec::new();
         for subheading in subheadings {
             let item_html = crate::utils::aws::bedrock::generate_subsection_html_kb(
-                &space_pk, title, subheading,
+                &space_pk_filter,
+                title,
+                subheading,
             )
             .await?;
             if !item_html.trim().is_empty() {
