@@ -2,8 +2,6 @@ use crate::*;
 
 #[component]
 pub fn SpaceLayout(space_id: SpacePartition) -> Element {
-    use_context_provider(|| PopupService::new());
-
     // FIXME: Temporarily set role to Viewer
     let role = SpaceUserRole::Creator;
 
