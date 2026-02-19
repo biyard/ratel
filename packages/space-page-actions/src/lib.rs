@@ -1,13 +1,19 @@
-mod menu;
-mod route;
-mod types;
-mod views;
+pub mod controllers;
+
+pub mod models;
+pub use models::*;
+
+pub mod config;
+
+pub mod route;
+pub mod views;
 use dioxus::prelude::*;
 
+pub mod menu;
 pub use menu::get_nav_item;
+
 pub use route::Route;
 
-use common::*;
-use types::*;
+pub use common::*;
 
-// type Result<T> = common::Result<T>;
+type Result<T> = common::Result<T>;
