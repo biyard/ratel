@@ -152,7 +152,8 @@ export class RegionalServiceStack extends Stack {
         timeout: Duration.seconds(150),
       });
 
-      const privateBucketName = process.env.PRIVATE_BUCKET_NAME;
+      const privateBucketName =
+        process.env.PRIVATE_BUCKET_NAME ?? "metadata.ratel.foundation";
       if (privateBucketName) {
         spaceStreamLambda.addToRolePolicy(
           new iam.PolicyStatement({

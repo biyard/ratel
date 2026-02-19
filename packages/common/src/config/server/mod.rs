@@ -1,5 +1,7 @@
 pub mod aws_config;
-mod dynamodb;
+pub mod aws_ses;
+pub mod aws_sns;
+pub mod dynamodb;
 
 use super::*;
 

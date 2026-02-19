@@ -23,3 +23,17 @@ impl Default for AwsConfig {
         }
     }
 }
+
+impl AwsConfig {
+    pub fn dynamodb(&self) -> &aws_sdk_dynamodb::Client {
+        &super::dynamodb::DB
+    }
+
+    pub fn sns(&self) -> &crate::utils::aws::SnsClient {
+        &super::aws_sns::SNS_CLIENT
+    }
+
+    pub fn ses(&self) -> &crate::utils::aws::SesClient {
+        &super::aws_ses::SES_CLIENT
+    }
+}
