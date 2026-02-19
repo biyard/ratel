@@ -33,5 +33,7 @@ fn App() -> Element {
         AuthProvider {}
         ratel_post::Provider {}
         Router::<Route> {}
+        PopupZone {}
+
     }
 }
