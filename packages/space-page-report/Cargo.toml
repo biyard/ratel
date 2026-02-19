@@ -13,6 +13,8 @@ serde = { workspace = true }
 aws-config = { version = "1", optional = true }
 aws-sdk-s3 = { version = "1", optional = true }
 aws-sdk-bedrockruntime = { version = "1", optional = true }
+aws-sdk-bedrockagentruntime = { version = "1", optional = true }
+aws-smithy-types = { version = "1", optional = true }
 
 [features]
 default = []
@@ -25,4 +27,6 @@ server = [
   "aws-config",
   "aws-sdk-s3",
   "aws-sdk-bedrockruntime",
+  "aws-sdk-bedrockagentruntime",
+  "aws-smithy-types",
 ]

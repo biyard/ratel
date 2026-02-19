@@ -3,6 +3,7 @@ pub struct ServerConfig {
     pub env: &'static str,
     pub bucket_name: &'static str,
     pub bedrock_model_id: &'static str,
+    pub bedrock_knowledge_base_id: &'static str,
 }
 
 impl Default for ServerConfig {
@@ -12,6 +13,8 @@ impl Default for ServerConfig {
             bucket_name: option_env!("BUCKET_NAME").expect("You must set BUCKET_NAME"),
             bedrock_model_id: option_env!("BEDROCK_MODEL_ID")
                 .expect("You must set BEDROCK_MODEL_ID"),
+            bedrock_knowledge_base_id: option_env!("BEDROCK_KNOWLEDGE_BASE_ID")
+                .expect("You must set BEDROCK_KNOWLEDGE_BASE_ID"),
         }
     }
 }
