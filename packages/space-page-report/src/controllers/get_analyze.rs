@@ -1,7 +1,5 @@
 use crate::models::SpaceAnalyze;
 use crate::*;
-use percent_encoding::percent_decode_str;
-use std::str::FromStr;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GetAnalyzeResponse {
@@ -10,17 +8,8 @@ pub struct GetAnalyzeResponse {
 
 // FIXME: implement middleware and authorization
 #[get("/v3/spaces/{space_pk}/analyze")]
-pub async fn get_analyze(space_pk: String) -> Result<GetAnalyzeResponse> {
-    let decoded = percent_decode_str(&space_pk)
-        .decode_utf8()
-        .map_err(|e| Error::InternalServerError(format!("invalid space_pk encoding: {e}")))?;
-    let partition = Partition::from_str(&decoded)
-        .map_err(|e| Error::InternalServerError(format!("invalid space_pk: {e}")))?;
-    if !matches!(partition, Partition::Space(_)) {
-        return Err(Error::InvalidPartitionKey(format!(
-            "invalid space_pk partition"
-        )));
-    }
+pub async fn get_analyze(space_pk: SpacePartition) -> Result<GetAnalyzeResponse> {
+    let partition = Partition::Space(space_pk.to_string());
 
     let conf = ServerConfig::default();
     let dynamo = conf.dynamodb();
