@@ -4,7 +4,6 @@ mod space_user_profile;
 pub use space_user_login::*;
 pub use space_user_profile::*;
 
-use crate::controllers::user::get_user;
 use crate::*;
 
 #[derive(Clone, PartialEq)]
@@ -30,7 +29,7 @@ impl TryFrom<Option<(Element, SpacePage, NavigationTarget)>> for SpaceNavItem {
 
 #[component]
 pub fn SpaceNav(logo: String, menus: Vec<SpaceNavItem>) -> Element {
-    let user = use_loader(move || get_user())?;
+    let user = use_user()?;
 
     rsx! {
         div { class: "flex left-0 top-14 z-40 flex-col col-span-1 gap-2.5 justify-between pt-2.5 h-screen divide-y transition-transform duration-300 ease-in-out -translate-x-full shrink-0 divide-divider tablet:top-0 tablet:translate-x-0",
