@@ -29,7 +29,6 @@ fn App() -> Element {
         document::Link { rel: "stylesheet", href: TAILWIND_CSS }
         document::Script { src: MAIN_JS }
         AuthProvider {}
-        ratel_post::Provider {}
         Router::<Route> {}
     }
 }
