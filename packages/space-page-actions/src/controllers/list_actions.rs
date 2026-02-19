@@ -1,17 +1,15 @@
 use crate::*;
 
+// TODO: If bookmark-based pagination is needed, consider introducing a separate DynamoDB entity
 #[get("/api/actions")]
 pub async fn list_actions(
     space_pk: SpacePartition,
-    bookmark: Option<String>,
-) -> Result<ListResponse<SpaceAction>> {
-    //TODO: Update Action List
+    // bookmark: Option<String>,
+) -> Result<Vec<SpaceAction>> {
     let cli = crate::config::get().common.dynamodb();
+    let poll_future = SpacePoll::query(cli, space_pk, SpacePoll::opt_all());
+    let ((polls, _),) = tokio::try_join!(poll_future)?;
 
-    let opt = SpaceAction::opt_with_bookmark(bookmark);
-    let (actions, next_bookmark) = SpaceAction::query(cli, space_pk, opt).await?;
-    Ok(ListResponse {
-        items: actions,
-        bookmark: next_bookmark,
-    })
+    let actions = polls.into_iter().map(|poll| poll.into()).collect();
+    Ok(actions)
 }
