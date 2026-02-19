@@ -17334,8 +17334,10 @@ name = "space-page-report"
 version = "0.1.0"
 dependencies = [
  "aws-config",
+ "aws-sdk-bedrockagentruntime",
  "aws-sdk-bedrockruntime",
  "aws-sdk-s3",
+ "aws-smithy-types",
  "common",
  "dioxus",
  "serde",
