@@ -1,7 +1,7 @@
+use common::components::PopupService;
 use dioxus::prelude::*;
 use ratel_auth::AuthProvider;
 use space_shell::*;
-
 fn main() {
     let config = config::get();
     dioxus::logger::init(config.common.log_level.into()).expect("logger failed to init");

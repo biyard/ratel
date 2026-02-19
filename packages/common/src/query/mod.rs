@@ -9,7 +9,7 @@ pub type QueryKey = Vec<String>;
 
 #[derive(Clone)]
 pub struct QueryStore {
-    versions: Signal<HashMap<String, u64>>,
+    versions: Signal<HashMap<QueryKey, u64>>,
 }
 
 impl QueryStore {
@@ -19,43 +19,54 @@ impl QueryStore {
         }
     }
 
-    fn version(&self, key: &str) -> u64 {
+    fn version(&self, key: &QueryKey) -> u64 {
         self.versions.read().get(key).copied().unwrap_or_default()
     }
 
-    pub fn invalidate(&mut self, key: impl Into<String>) {
-        let key = key.into();
+    /// Invalidate all queries whose key starts with the given prefix.
+    ///
+    /// e.g. `invalidate(&["Space"])` invalidates
+    /// `["Space"]`, `["Space", "UUID"]`, `["Space", "UUID", "actions"]`, etc.
+    pub fn invalidate(&mut self, prefix: &[impl AsRef<str>]) {
+        let prefix: QueryKey = prefix.iter().map(|s| s.as_ref().to_string()).collect();
+        let mut versions = self.versions.write();
 
-        {
-            let mut versions = self.versions.write();
+        let keys_to_bump: Vec<QueryKey> = versions
+            .keys()
+            .filter(|k| k.starts_with(&prefix))
+            .cloned()
+            .collect();
+
+        for key in keys_to_bump {
             let next = versions
                 .get(&key)
                 .copied()
                 .unwrap_or_default()
                 .saturating_add(1);
-            versions.insert(key.clone(), next);
+            versions.insert(key, next);
+        }
+
+        if !versions.contains_key(&prefix) {
+            versions.insert(prefix, 1);
         }
     }
 
     pub fn clear(&mut self) {
-        {
-            let mut versions = self.versions.write();
-            for version in versions.values_mut() {
-                *version = version.saturating_add(1);
-            }
+        let mut versions = self.versions.write();
+        for version in versions.values_mut() {
+            *version = version.saturating_add(1);
         }
     }
 }
 
 pub fn use_query_store() -> QueryStore {
-    // Shared per app root.
     use_root_context(QueryStore::new)
 }
 
 #[allow(clippy::result_large_err)]
 #[track_caller]
 pub fn use_query<F, T, E>(
-    key: impl Into<String>,
+    key: &[impl AsRef<str>],
     mut future: impl FnMut() -> F + 'static,
 ) -> dioxus::prelude::Result<Loader<T>, Loading>
 where
@@ -64,12 +75,10 @@ where
     E: Into<dioxus::CapturedError> + 'static,
 {
     let query = use_query_store();
-    let key = key.into();
+    let key: QueryKey = key.iter().map(|s| s.as_ref().to_string()).collect();
 
     use_loader(move || {
-        // Reactive dependency for this key.
         let _version = query.version(&key);
-
         future()
     })
 }

@@ -111,7 +111,7 @@ pub fn LoginModal() -> Element {
                                 Ok(_) => {
                                     let mut query = use_query_store();
                                     // use USER_QUERY_KEY
-                                    query.invalidate("User");
+                                    query.invalidate(&["User"]);
                                     popup.close();
                                 }
                                 Err(e) => {
