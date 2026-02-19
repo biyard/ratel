@@ -18,11 +18,11 @@ impl Config {
         self.common.aws.dynamodb()
     }
 
-    pub fn sns(&self) -> &crate::utils::aws::SnsClient {
+    pub fn sns(&self) -> &common::utils::aws::SnsClient {
         self.common.aws.sns()
     }
 
-    pub fn ses(&self) -> &crate::utils::aws::SesClient {
+    pub fn ses(&self) -> &common::utils::aws::SesClient {
         self.common.aws.ses()
     }
 }
