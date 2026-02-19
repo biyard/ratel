@@ -17338,10 +17338,12 @@ dependencies = [
  "aws-sdk-bedrockruntime",
  "aws-sdk-s3",
  "aws-smithy-types",
+ "base64 0.22.1",
  "common",
  "dioxus",
  "percent-encoding",
  "serde",
+ "serde_dynamo",
 ]
 
 [[package]]
