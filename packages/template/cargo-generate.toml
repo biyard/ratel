@@ -1,14 +1,3 @@
 [template]
-cargo_generate_version = ">=0.10.0"
-exclude = ["assets/**"]
-ignore = ["Makefile", "generate.sh", "README.md"]
-
-[placeholders.description]
-type = "string"
-prompt = "Project description?"
-default = "A Dioxus app"
-
-[placeholders.port]
-type = "string"
-prompt = "Default dev server port?"
-default = "8000"
+cargo_generate_version = ">=0.23.0"
+ignore = [".DS_Store", ".git/", "Makefile", "README.md", "assets/"]
