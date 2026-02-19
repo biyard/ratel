@@ -3844,6 +3844,7 @@ dependencies = [
  "ssi",
  "strum 0.27.2",
  "thiserror 2.0.17",
+ "tokio",
  "tower-sessions 0.15.0",
  "tracing",
  "url",
