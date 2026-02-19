@@ -179,8 +179,6 @@ pub enum EntityType {
     SpaceReward,
 
     ContentReport,
-
-    SpaceAction(String, String),
 }
 
 impl TryInto<Partition> for EntityType {

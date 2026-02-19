@@ -1,7 +1,5 @@
 use crate::*;
-use common::macros::DynamoEnum;
-#[derive(Debug, Clone, Default, DynamoEnum, Translate)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[derive(Debug, Clone, Default, Translate, Serialize, Deserialize)]
 // #[serde_with(crate = "::common::serde_with")]
 pub enum SpaceActionType {
     #[default]
