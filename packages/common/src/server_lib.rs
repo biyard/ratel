@@ -16,3 +16,5 @@ pub use serde_dynamo;
 
 // Re-export for DynamoEnum
 pub use percent_encoding;
+
+pub use tokio;
