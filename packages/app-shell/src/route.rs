@@ -1,0 +1,32 @@
+use crate::*;
+
+use crate::views::Index;
+use ratel_auth::Route as AuthRoute;
+use space_shell::Route as SpaceRoute;
+
+#[derive(Debug, Clone, Routable, PartialEq)]
+#[rustfmt::skip]
+pub enum Route {
+    #[route("/")]
+    Index { },
+
+    #[route("/auth/:..rest")]
+    Auth { rest: Vec<String> },
+
+    #[route("/spaces/:..rest")]
+    Space { rest: Vec<String> },
+}
+
+macro_rules! define_app_wrapper {
+    ($wrapper_name:ident, $route_module:ident) => {
+        #[component]
+        pub fn $wrapper_name(rest: Vec<String>) -> Element {
+            rsx! {
+                Router::<$route_module> {}
+            }
+        }
+    };
+}
+
+define_app_wrapper!(Auth, AuthRoute);
+define_app_wrapper!(Space, SpaceRoute);
