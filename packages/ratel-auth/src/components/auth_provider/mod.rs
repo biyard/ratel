@@ -6,7 +6,7 @@ pub fn AuthProvider() -> Element {
     {
         use crate::interop::initialize;
 
-        let fb_conf = FirebaseConfig::default().into();
+        let fb_conf = common::FirebaseConfig::default().into();
         initialize(&fb_conf);
     }
 

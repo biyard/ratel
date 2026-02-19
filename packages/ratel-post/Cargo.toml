@@ -1,0 +1,27 @@
+[package]
+name = "ratel-post"
+version = "0.1.0"
+authors = ["hackartists <hackartists@gmail.com>"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+common = { workspace = true }
+dioxus = { workspace = true }
+ratel-auth = { workspace = true, optional = true }
+
+web-sys = { workspace = true }
+wasm-bindgen = { workspace = true }
+wasm-bindgen-futures = { workspace = true }
+serde-wasm-bindgen = { workspace = true }
+
+
+[features]
+default = []
+web = ["common/web", "ratel-auth/web"]
+desktop = ["common/desktop","ratel-auth/desktop"]
+mobile = ["common/mobile","ratel-auth/mobile"]
+server = [
+    "common/server", "ratel-auth/server"
+]
