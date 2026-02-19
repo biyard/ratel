@@ -1,0 +1,29 @@
+[package]
+name = "app-shell"
+version = "0.1.0"
+authors = ["hackartists <hackartists@gmail.com>"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+common = { workspace = true }
+dioxus = { workspace = true }
+ratel-auth = { path = "../ratel-auth/", optional = true }
+space-shell = { path = "../space-shell/", optional = true }
+
+web-sys = { workspace = true }
+wasm-bindgen = { workspace = true }
+wasm-bindgen-futures = { workspace = true }
+serde-wasm-bindgen = { workspace = true }
+
+
+[features]
+default = []
+bypass = ["ratel-auth?/bypass"]
+web = ["common/web", "ratel-auth/web", "space-shell/web"]
+desktop = ["common/desktop","ratel-auth/desktop", "space-shell/desktop"]
+mobile = ["common/mobile","ratel-auth/mobile", "space-shell/mobile"]
+server = [
+    "common/server", "ratel-auth/server", "space-shell/server"
+]
