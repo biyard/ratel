@@ -1,9 +1,6 @@
 #[cfg(feature = "server")]
 use common::{
-    axum::{
-        extract::{FromRequestParts},
-        http::request::Parts,
-    },
+    axum::{extract::FromRequestParts, http::request::Parts},
     ServerConfig,
 };
 #[cfg(feature = "server")]
@@ -221,3 +218,4 @@ where
         ))
     }
 }
+
