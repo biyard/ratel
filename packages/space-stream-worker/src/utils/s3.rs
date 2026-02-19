@@ -60,6 +60,13 @@ pub async fn get_object_if_exists(
         }
         Err(err) => {
             if let SdkError::ServiceError(service_err) = &err {
+                let code = service_err.err().code();
+                let message = service_err.err().message();
+                error!(
+                    "s3 get_object service error: code={:?} message={:?}",
+                    code,
+                    message
+                );
                 if service_err.err().is_no_such_key() {
                     return Ok(None);
                 }
