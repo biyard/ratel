@@ -161,6 +161,13 @@ export class RegionalServiceStack extends Stack {
             resources: [`arn:aws:s3:::${privateBucketName}/*`],
           })
         );
+        spaceStreamLambda.addToRolePolicy(
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: ["s3:ListBucket"],
+            resources: [`arn:aws:s3:::${privateBucketName}`],
+          })
+        );
       }
 
       spaceStreamLambda.addEventSource(
