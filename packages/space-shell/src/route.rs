@@ -3,7 +3,6 @@ use actions::Route as ActionsRoute;
 use apps::Route as AppsRoute;
 use dashboard::Route as DashboardRoute;
 use overview::Route as OverviewRoute;
-use ratel_auth::Route as AuthRoute;
 use report::Route as ReportRoute;
 
 /*
@@ -14,11 +13,7 @@ For now, Child Router only support simple static prefixes
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
 pub enum Route {
-    #[route("/auth/:..rest")]
-    Auth { rest: Vec<String> },
-
     #[nest("/spaces")]
-
         #[nest("/:space_id")]
             #[layout(SpaceLayout)]
                 #[route("/dashboard/:..rest")]
@@ -77,20 +72,8 @@ macro_rules! define_space_app_wrapper {
     };
 }
 
-macro_rules! define_app_wrapper {
-    ($wrapper_name:ident, $route_module:ident) => {
-        #[component]
-        pub fn $wrapper_name(rest: Vec<String>) -> Element {
-            rsx! {
-                Router::<$route_module> {}
-            }
-        }
-    };
-}
-
 define_space_app_wrapper!(Dashboard, DashboardRoute);
 define_space_app_wrapper!(Overview, OverviewRoute);
 define_space_app_wrapper!(Actions, ActionsRoute);
 define_space_app_wrapper!(Apps, AppsRoute);
 define_space_app_wrapper!(Report, ReportRoute);
-define_app_wrapper!(Auth, AuthRoute);
