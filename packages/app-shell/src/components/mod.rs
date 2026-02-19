@@ -1,7 +1,3 @@
-mod auth_provider;
-mod login_modal;
-mod sign_up_modal;
+mod app_menu;
 
-pub use auth_provider::*;
-pub use login_modal::*;
-pub use sign_up_modal::*;
+pub use app_menu::*;
