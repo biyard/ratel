@@ -6,13 +6,17 @@ use aws_sdk_bedrockagentruntime::{
     },
     Client as BedrockAgentClient,
 };
-use aws_sdk_bedrockruntime::types::{ContentBlock, ConversationRole, Message};
+use aws_sdk_bedrockruntime::types::{
+    ContentBlock, ConversationRole, InferenceConfiguration, Message,
+};
 use aws_sdk_bedrockruntime::Client as BedrockClient;
 use aws_smithy_types::Document;
 use common::tracing::{debug, info};
 use dioxus::prelude::ServerFnError;
 
 const MAX_SECTION_CONTEXT_CHARS: usize = 120_000;
+const MIN_SUBSECTION_CHARS: usize = 1200;
+const MAX_OUTPUT_TOKENS: i32 = 4096;
 
 fn truncate_context(snapshot_json: &str) -> String {
     if snapshot_json.chars().count() <= MAX_SECTION_CONTEXT_CHARS {
@@ -51,12 +55,14 @@ pub async fn build_bedrock_agent_client() -> Result<BedrockAgentClient, ServerFn
     Ok(BedrockAgentClient::new(&aws_config))
 }
 
-pub async fn generate_section_html_kb(
+pub async fn generate_subsection_html_kb(
     space_pk: &str,
     section_title: &str,
-    section_focus: &str,
+    subheading_spec: &str,
 ) -> Result<String, ServerFnError> {
     let config = crate::config::server_config::get();
+    let agent = build_bedrock_agent_client().await?;
+    let (subheading_title, sub_subs) = parse_subheading_spec(subheading_spec);
 
     let filter = RetrievalFilter::Equals(
         FilterAttribute::builder()
@@ -70,13 +76,19 @@ pub async fn generate_section_html_kb(
         .vector_search_configuration(
             KnowledgeBaseVectorSearchConfiguration::builder()
                 .filter(filter)
-                .number_of_results(12)
+                .number_of_results(10)
                 .build(),
         )
         .build();
 
-    let agent = build_bedrock_agent_client().await?;
-    let query = format!("{section_title} {section_focus} 관련 공공정책·여론조사 일반론 요약");
+    let query = format!(
+        "{section_title} {subheading_title} {} 관련 데이터 요약",
+        if sub_subs.is_empty() {
+            "".to_string()
+        } else {
+            format!("(하위: {})", sub_subs.join(", "))
+        }
+    );
     let retrieval_query = KnowledgeBaseQuery::builder().text(query).build();
     let retrieved = agent
         .retrieve()
@@ -87,34 +99,10 @@ pub async fn generate_section_html_kb(
         .await
         .map_err(|e| ServerFnError::new(format!("bedrock retrieve failed: {e:?}")))?;
 
-    let retrieved = if retrieved.retrieval_results().is_empty() {
-        info!("kb retrieve: 0 results with space_pk filter, retrying without filter");
-        let no_filter_config = KnowledgeBaseRetrievalConfiguration::builder()
-            .vector_search_configuration(
-                KnowledgeBaseVectorSearchConfiguration::builder()
-                    .number_of_results(12)
-                    .build(),
-            )
-            .build();
-        agent
-            .retrieve()
-            .knowledge_base_id(config.bedrock_knowledge_base_id)
-            .retrieval_query(
-                KnowledgeBaseQuery::builder()
-                    .text(format!(
-                        "{section_title} {section_focus} 관련 공공정책·여론조사 일반론 요약"
-                    ))
-                    .build(),
-            )
-            .retrieval_configuration(no_filter_config)
-            .send()
-            .await
-            .map_err(|e| {
-                ServerFnError::new(format!("bedrock retrieve failed (no filter): {e:?}"))
-            })?
-    } else {
-        retrieved
-    };
+    if retrieved.retrieval_results().is_empty() {
+        info!("kb retrieve: 0 results for subsection {}", subheading_title);
+        return Ok(String::new());
+    }
 
     let mut raw_context = String::new();
     for result in retrieved.retrieval_results() {
@@ -123,78 +111,65 @@ pub async fn generate_section_html_kb(
             raw_context.push('\n');
         }
     }
-
-    info!(
-        "kb retrieve: results={} raw_chars={}",
-        retrieved.retrieval_results().len(),
-        raw_context.chars().count()
-    );
-    if !raw_context.is_empty() {
-        let sample: String = raw_context.chars().take(300).collect();
-        debug!("kb retrieve sample: {}", sample);
-    }
-
-    info!(
-        "kb sanitize: sanitized_chars={}",
-        raw_context.chars().count()
-    );
-    if !raw_context.is_empty() {
-        let sample: String = raw_context.chars().take(300).collect();
-        debug!("kb sanitized sample: {}", sample);
-    }
     let snapshot_payload = truncate_context(&raw_context);
 
+    let subheadings_line = if sub_subs.is_empty() {
+        "No sub-subheadings. Write bullet sentences directly under the subheading.".to_string()
+    } else {
+        format!(
+            "Required sub-subheadings (use these exact titles, same order): {}",
+            sub_subs.join(", ")
+        )
+    };
+
+    let analysis_boost = analysis_detail_boost(section_title, &subheading_title);
     let prompt = format!(
-        "You are generating one section of a report.\n\
-Return ONLY valid HTML fragments (no markdown, no code fences/backticks).\n\
+        "You are generating ONE list item for a report section.\n\
+Return ONLY a single <li>...</li> fragment (no <section>, no <h1>, no <ol> wrapper).\n\
 Do not include literal \"\\\\n\" sequences or any stray text outside HTML tags.\n\
-Use a formal report tone in Korean (보고서형 문체, 객관적/분석적).\n\
+Use a concise report tone in Korean using 음슴체 only (간결·객관적). Avoid \"~다\" endings.\n\
+End every sentence with \"~함\", \"~됨\", \"~있음\", \"~없음\", or \"~임\".\n\
 Safety constraints:\n\
-- Only discuss high-level, neutral policy/process considerations and anonymized aggregate trends.\n\
 - Never fabricate numbers, percentages, dates, counts, or comparisons.\n\
-Only use numeric facts that appear in the provided Context.\n\
-If the Context lacks numeric evidence for a claim, write \"해당 데이터 없음\" instead of inventing numbers.\n\
+- Only use numeric facts that appear in the provided Context.\n\
+- If data is missing for this subheading, return an empty string (no tags).\n\
+Detail requirements:\n\
+{analysis_boost}\n\
+Table requirements:\n\
+- Do NOT include any <table> in this output.\n\
 Structure must be:\n\
-<section>\n\
-  <h1>SECTION TITLE</h1>\n\
-  <ol>\n\
-    <li><strong>Top Subheading</strong>\n\
+<li><strong>SUBHEADING</strong>\n\
+  <ul>\n\
+    <li><strong>Sub-subheading</strong>\n\
       <ul>\n\
-        <li><strong>Sub-subheading</strong>\n\
-          <ul>\n\
-            <li>Detail sentence.</li>\n\
-            <li>Detail sentence.</li>\n\
-            <li>Detail sentence.</li>\n\
-          </ul>\n\
-        </li>\n\
+        <li>Detail sentence.</li>\n\
+        <li>Detail sentence.</li>\n\
+        <li>Detail sentence.</li>\n\
       </ul>\n\
     </li>\n\
-  </ol>\n\
-</section>\n\
-Use the top-level subheadings EXACTLY as provided in \"Subheadings\" (same order).\n\
-If a top-level subheading includes child items in parentheses, treat those as required sub-subheadings in the nested list.\n\
-Do NOT include numbering text like \"1.\" inside the <strong> text (the <ol> handles numbering).\n\
-Each top-level item must contain a nested <ul> of sub-subheadings.\n\
-Each sub-subheading must contain a nested <ul> with AT LEAST 3 bullet sentences.\n\
-Each bullet detail must be a complete sentence and end with a period.\n\
-Each bullet should be at least 80 characters and include analysis or reasoning, not just listing.\n\
-When possible, include numeric facts (counts, ratios, dates) drawn from the context.\n\
-Never fabricate numbers, percentages, dates, counts, or comparisons.\n\
-Only use numeric facts that appear in the provided Context.\n\
-If the Context lacks numeric evidence for a claim, write \"해당 데이터 없음\" instead of inventing numbers.\n\
-If data is missing, still include the subheading and write a bullet like \"해당 데이터 없음\".\n\
-If a subheading includes conditions like \"성별 정보 존재 시\" or \"나이 정보 존재 시\", omit that subheading entirely when the data is not available.\n\
-Add at least one <table> if the data supports it.\n\
+  </ul>\n\
+</li>\n\
+If there are no sub-subheadings, then use:\n\
+<li><strong>SUBHEADING</strong>\n\
+  <ul>\n\
+    <li>Detail sentence.</li>\n\
+    <li>Detail sentence.</li>\n\
+    <li>Detail sentence.</li>\n\
+  </ul>\n\
+</li>\n\
+Each bullet must be a complete sentence ending with a period.\n\
+Each bullet should be at least 110 characters.\n\
+Use 3 to 5 bullets, aiming for 5 when Context supports it.\n\
+{subheadings_line}\n\
 Section Title: {section_title}\n\
-Subheadings: {section_focus}\n\
-Space PK: {space_pk}\n\
+Subheading: {subheading_title}\n\
 Context:\n\
 {snapshot_payload}"
     );
 
     let message = Message::builder()
         .role(ConversationRole::User)
-        .content(ContentBlock::Text(prompt))
+        .content(ContentBlock::Text(prompt.clone()))
         .build()
         .map_err(|e| ServerFnError::new(format!("bedrock message build failed: {e:?}")))?;
 
@@ -202,6 +177,11 @@ Context:\n\
     let response = client
         .converse()
         .model_id(config.bedrock_model_id)
+        .inference_config(
+            InferenceConfiguration::builder()
+                .max_tokens(MAX_OUTPUT_TOKENS)
+                .build(),
+        )
         .messages(message)
         .send()
         .await
@@ -220,17 +200,196 @@ Context:\n\
         }
     }
 
-    html = strip_code_fences(&html)
+    html = normalize_fragment_output(&html);
+    if !is_valid_subsection_html(&html) || html.contains("<table") {
+        for attempt in 0..2 {
+            let retry_prompt = if attempt == 0 {
+                format!(
+                    "{prompt}\n\
+RETRY: The previous output was incomplete or too short.\n\
+Regenerate the entire <li> fragment from scratch.\n\
+Do not truncate sentences, and do not leave any list items unfinished.\n\
+Do NOT include any <table> elements."
+                )
+            } else {
+                format!(
+                    "{prompt}\n\
+RETRY: Formatting rule violation. Regenerate following the rules strictly.\n\
+Do NOT include any <table> elements."
+                )
+            };
+
+            let message = Message::builder()
+                .role(ConversationRole::User)
+                .content(ContentBlock::Text(retry_prompt))
+                .build()
+                .map_err(|e| ServerFnError::new(format!("bedrock message build failed: {e:?}")))?;
+
+            let response = client
+                .converse()
+                .model_id(config.bedrock_model_id)
+                .inference_config(
+                    InferenceConfiguration::builder()
+                        .max_tokens(MAX_OUTPUT_TOKENS)
+                        .build(),
+                )
+                .messages(message)
+                .send()
+                .await
+                .map_err(|e| ServerFnError::new(format!("bedrock converse failed: {e:?}")))?;
+
+            let mut retry_html = String::new();
+            if let Some(output) = response.output() {
+                if let Ok(message) = output.as_message() {
+                    for block in message.content() {
+                        if let Ok(text) = block.as_text() {
+                            retry_html.push_str(text);
+                        } else if let ContentBlock::Text(text) = block {
+                            retry_html.push_str(&text);
+                        }
+                    }
+                }
+            }
+            html = normalize_fragment_output(&retry_html);
+            if is_valid_subsection_html(&html) && !html.contains("<table") {
+                break;
+            }
+        }
+    }
+
+    Ok(html)
+}
+
+fn normalize_fragment_output(raw: &str) -> String {
+    strip_code_fences(raw)
         .replace("\\n", "")
         .replace("\\t", "")
         .replace("\\r", "")
         .replace('\n', "")
         .replace('\r', "")
-        .replace('\t', "");
+        .replace('\t', "")
+        .replace('\u{FFFD}', "")
+        .trim()
+        .to_string()
+}
 
-    if html.trim().is_empty() {
-        return Err(ServerFnError::new("kb returned empty html"));
+fn is_valid_subsection_html(html: &str) -> bool {
+    if html.len() < MIN_SUBSECTION_CHARS {
+        return false;
     }
+    if !html.starts_with("<li") || !html.contains("</li>") {
+        return false;
+    }
+    if !ends_with_complete_sentence(html) || !all_list_items_complete(html) {
+        return false;
+    }
+    if contains_formal_ended(html) {
+        return false;
+    }
+    if html.contains('\u{FFFD}') {
+        return false;
+    }
+    true
+}
 
-    Ok(html)
+fn contains_formal_ended(html: &str) -> bool {
+    let mut text = String::new();
+    let mut in_tag = false;
+    for ch in html.chars() {
+        match ch {
+            '<' => in_tag = true,
+            '>' => in_tag = false,
+            _ if !in_tag => text.push(ch),
+            _ => {}
+        }
+    }
+    text.contains("다.") || text.contains("다!") || text.contains("다?")
+}
+
+fn parse_subheading_spec(spec: &str) -> (String, Vec<String>) {
+    if let Some(start) = spec.find("(하위:") {
+        let title = spec[..start].trim().to_string();
+        let rest = &spec[(start + "(하위:".len())..];
+        let end = rest.find(')').unwrap_or(rest.len());
+        let inner = rest[..end].trim();
+        let subsubs = inner
+            .split(',')
+            .map(|s| s.trim().trim_end_matches("[표 필요]").to_string())
+            .filter(|s| !s.is_empty())
+            .collect::<Vec<_>>();
+        (title, subsubs)
+    } else {
+        (spec.trim().to_string(), Vec::new())
+    }
+}
+
+fn analysis_detail_boost(section_title: &str, subheading_title: &str) -> &'static str {
+    if section_title == "분석 결과" && subheading_title.contains("토론 내용 분석") {
+        "Provide richer analytical detail similar to a report summary. \
+Use exactly 5 bullet sentences for each sub-subheading in this item. \
+If the Context contains topic weights, coherence scores, centrality metrics, or keyword rankings, \
+explicitly reference them and explain their implications. \
+Explain contrasts between topics (e.g., which topic emphasizes which keywords) and connect to interpretation. \
+Avoid vague statements like \"중요함\" without citing specific context evidence."
+    } else if section_title == "분석 결과" {
+        "Provide concrete analytical interpretations grounded in Context. \
+Use exactly 5 bullet sentences for this item when possible. \
+If specific metrics or rankings exist, cite them and explain their meaning. \
+Avoid generic summaries without evidence."
+    } else {
+        "Provide concrete, evidence-based detail when Context supports it. Avoid generic filler."
+    }
+}
+
+fn ends_with_complete_sentence(html: &str) -> bool {
+    let mut text = String::new();
+    let mut in_tag = false;
+    for ch in html.chars() {
+        match ch {
+            '<' => in_tag = true,
+            '>' => in_tag = false,
+            _ if !in_tag => text.push(ch),
+            _ => {}
+        }
+    }
+    let trimmed = text.trim();
+    if trimmed.is_empty() {
+        return false;
+    }
+    matches!(
+        trimmed.chars().last(),
+        Some('.') | Some('!') | Some('?') | Some('。')
+    )
+}
+
+fn all_list_items_complete(html: &str) -> bool {
+    let mut parts = html.split("<li");
+    let _ = parts.next();
+    for part in parts {
+        let Some(end) = part.find("</li>") else {
+            return false;
+        };
+        let segment = &part[..end];
+        let mut text = String::new();
+        let mut in_tag = false;
+        for ch in segment.chars() {
+            match ch {
+                '<' => in_tag = true,
+                '>' => in_tag = false,
+                _ if !in_tag => text.push(ch),
+                _ => {}
+            }
+        }
+        let trimmed = text.trim();
+        if trimmed.is_empty() {
+            return false;
+        }
+        if !matches!(
+            trimmed.chars().last(),
+            Some('.') | Some('!') | Some('?') | Some('。')
+        ) {
+            return false;
+        }
+    }
+    true
 }
