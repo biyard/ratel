@@ -17324,12 +17324,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "space-action-poll"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "serde",
+ "serde_with 3.14.1",
+ "uuid 1.18.1",
+]
+
+[[package]]
 name = "space-page-actions"
 version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
  "serde",
+ "space-action-poll",
 ]
 
 [[package]]

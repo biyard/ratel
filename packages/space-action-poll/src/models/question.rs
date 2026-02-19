@@ -21,7 +21,6 @@ impl Default for Question {
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-
 pub struct LinearScaleQuestion {
     pub title: String,
     pub description: Option<String>,
@@ -35,7 +34,6 @@ pub struct LinearScaleQuestion {
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-
 pub struct DropdownQuestion {
     pub title: String,
     pub description: Option<String>,
@@ -46,7 +44,6 @@ pub struct DropdownQuestion {
 
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-
 pub struct CheckboxQuestion {
     pub title: String,
     pub description: Option<String>,
@@ -58,7 +55,6 @@ pub struct CheckboxQuestion {
 
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-
 pub struct SubjectiveQuestion {
     pub title: String,
     pub description: String,
@@ -67,7 +63,6 @@ pub struct SubjectiveQuestion {
 
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-
 pub struct ChoiceQuestion {
     pub title: String,
     pub description: Option<String>,
