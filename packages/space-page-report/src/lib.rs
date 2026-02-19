@@ -2,13 +2,16 @@
 mod config;
 pub mod controllers;
 mod menu;
+pub mod models;
 mod route;
 pub mod utils;
 mod views;
 
-use dioxus::prelude::*;
-
 pub use menu::get_nav_item;
+pub use models::*;
 pub use route::Route;
 
 use common::*;
+use dioxus::prelude::*;
+
+type Result<T> = common::Result<T>;

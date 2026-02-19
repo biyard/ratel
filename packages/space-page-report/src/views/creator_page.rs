@@ -8,10 +8,40 @@ use dioxus::prelude::spawn;
 #[component]
 pub fn CreatorPage(space_id: SpacePartition) -> Element {
     let tr: ReportTranslate = use_translate();
+    let space_id_load = space_id.clone();
+    let space_id_generate = space_id.clone();
+    let space_id_save = space_id.clone();
     let mut content = use_signal(String::new);
     let mut editable = use_signal(|| false);
     let mut is_loading = use_signal(|| false);
+    let mut is_saving = use_signal(|| false);
     let mut error = use_signal(|| None as Option<String>);
+    let mut did_load = use_signal(|| false);
+    let mut editor_key = use_signal(|| 0u32);
+
+    use_effect(move || {
+        if did_load() {
+            return;
+        }
+        did_load.set(true);
+        let space_pk = space_id_load.clone();
+        let mut content = content.clone();
+        let mut error = error.clone();
+        let mut editor_key = editor_key.clone();
+        spawn(async move {
+            match crate::views::get_ai_report(space_pk).await {
+                Ok(resp) => {
+                    if let Some(html) = resp.html_contents {
+                        if !html.trim().is_empty() {
+                            content.set(html);
+                            editor_key.set(editor_key() + 1);
+                        }
+                    }
+                }
+                Err(err) => error.set(Some(err.to_string())),
+            }
+        });
+    });
 
     rsx! {
         div { class: "flex flex-col gap-4 w-full items-center",
@@ -25,13 +55,16 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
                         }
                         is_loading.set(true);
                         error.set(None);
-                        let space_pk = space_id.clone();
+                        let space_pk = space_id_generate.clone();
                         let mut content = content.clone();
                         let mut is_loading = is_loading.clone();
                         let mut error = error.clone();
                         spawn(async move {
                             match crate::views::request_ai_report(space_pk).await {
-                                Ok(resp) => content.set(resp.html_contents),
+                                Ok(resp) => {
+                                    content.set(resp.html_contents);
+                                    editor_key.set(editor_key() + 1);
+                                }
                                 Err(err) => error.set(Some(err.to_string())),
                             }
                             is_loading.set(false);
@@ -47,21 +80,44 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
             if let Some(message) = error() {
                 div { class: "text-red-500 w-full max-w-5xl", "{tr.generate_failed}: {message}" }
             }
-            div { class: "w-full max-w-5xl rounded-lg bg-card p-6 flex flex-col min-h-0 overflow-hidden",
+            div { class: "w-full max-w-5xl rounded-lg bg-card p-6 flex flex-col",
                 div { class: "flex items-center justify-end flex-shrink-0",
                     div { class: "flex items-center gap-3",
                         if !editable() {
                             button {
                                 class: "cursor-pointer w-5 h-5 [&>path]:stroke-1",
                                 aria_label: tr.btn_edit,
-                                onclick: move |_| editable.set(true),
+                                onclick: move |_| {
+                                    if is_loading() || is_saving() {
+                                        return;
+                                    }
+                                    editable.set(true);
+                                },
                                 Edit1 { class: "w-5 h-5 [&>path]:stroke-1 [&>path]:stroke-white" }
                             }
                         } else {
                             button {
                                 class: "cursor-pointer w-5 h-5 [&>path]:stroke-1",
                                 aria_label: tr.btn_save,
-                                onclick: move |_| editable.set(false),
+                                onclick: move |_| {
+                                    if is_loading() || is_saving() {
+                                        return;
+                                    }
+                                    is_saving.set(true);
+                                    error.set(None);
+                                    let space_pk = space_id_save.clone();
+                                    let html = content();
+                                    let mut is_saving = is_saving.clone();
+                                    let mut error = error.clone();
+                                    let mut editable = editable.clone();
+                                    spawn(async move {
+                                        match crate::views::save_ai_report(space_pk, html).await {
+                                            Ok(_) => editable.set(false),
+                                            Err(err) => error.set(Some(err.to_string())),
+                                        }
+                                        is_saving.set(false);
+                                    });
+                                },
                                 Save { class: "w-5 h-5 [&>path]:stroke-1 [&>path]:stroke-white" }
                             }
                         }
@@ -69,6 +125,7 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
                 }
                 div { class: "flex flex-col w-full min-h-0 flex-1 overflow-hidden",
                     TiptapEditor {
+                        key: "{editor_key()}",
                         class: "w-full h-fit",
                         content: content(),
                         editable: editable(),

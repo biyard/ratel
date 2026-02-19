@@ -1,5 +1,9 @@
-use dioxus::prelude::*;
+use percent_encoding::percent_decode_str;
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
+
+use crate::models::*;
+use crate::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateAIReportResponse {
@@ -8,7 +12,16 @@ pub struct CreateAIReportResponse {
 
 // FIXME: implement middleware and authorization
 #[post("/v3/spaces/{space_pk}/analyze/ai-contents")]
-pub async fn create_ai_report(space_pk: String) -> Result<CreateAIReportResponse, ServerFnError> {
+pub async fn create_ai_report(space_pk: String) -> Result<CreateAIReportResponse> {
+    let decoded = percent_decode_str(&space_pk)
+        .decode_utf8()
+        .map_err(|e| Error::InternalServerError(format!("invalid space_pk encoding: {e}")))?;
+    let partition = Partition::from_str(&decoded)
+        .map_err(|e| Error::InternalServerError(format!("invalid space_pk: {e}")))?;
+    if !matches!(partition, Partition::Space(_)) {
+        return Err(Error::InvalidPartitionKey("space_pk must be a Space partition".into()).into());
+    }
+
     let sections: Vec<(&str, Vec<&str>)> = vec![
         (
             "연구 개요",
@@ -51,9 +64,7 @@ pub async fn create_ai_report(space_pk: String) -> Result<CreateAIReportResponse
         let mut list_items = Vec::new();
         for subheading in subheadings {
             let item_html = crate::utils::aws::bedrock::generate_subsection_html_kb(
-                &space_pk,
-                title,
-                subheading,
+                &space_pk, title, subheading,
             )
             .await?;
             if !item_html.trim().is_empty() {
@@ -75,5 +86,14 @@ pub async fn create_ai_report(space_pk: String) -> Result<CreateAIReportResponse
     }
 
     let html_contents = html_sections.join("");
+
+    let conf = ServerConfig::default();
+    let dynamo = conf.dynamodb();
+    SpaceAnalyze::updater(partition, EntityType::SpaceAnalyze)
+        .with_html_contents(html_contents.clone())
+        .execute(dynamo)
+        .await
+        .map_err(|e| Error::InternalServerError(format!("failed to update analyze: {e:?}")))?;
+
     Ok(CreateAIReportResponse { html_contents })
 }
