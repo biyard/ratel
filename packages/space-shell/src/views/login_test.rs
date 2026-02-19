@@ -1,5 +1,5 @@
 use crate::{
-    controllers::user::{LoginRequest, login},
+    controllers::user::{login, LoginRequest},
     *,
 };
 use dioxus::fullstack::Form;
@@ -22,7 +22,7 @@ pub fn LoginTest() -> Element {
     let mut password = use_signal(|| String::default());
 
     let submit_client = move |_evt: MouseEvent| {
-        let query = query.clone();
+        let mut query = query.clone();
 
         async move {
             // Write the client
