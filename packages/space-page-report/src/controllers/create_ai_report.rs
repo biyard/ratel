@@ -7,7 +7,6 @@ pub struct CreateAIReportResponse {
 }
 
 // FIXME: implement middleware and authorization
-#[cfg(feature = "server")]
 #[post("/v3/spaces/{space_pk}/analyze/ai-contents")]
 pub async fn create_ai_report(space_pk: String) -> Result<CreateAIReportResponse, ServerFnError> {
     let sections: Vec<(&str, Vec<&str>)> = vec![
@@ -51,9 +50,12 @@ pub async fn create_ai_report(space_pk: String) -> Result<CreateAIReportResponse
     for (idx, (title, subheadings)) in sections.into_iter().enumerate() {
         let mut list_items = Vec::new();
         for subheading in subheadings {
-            let item_html =
-                super::utils::bedrock::generate_subsection_html_kb(&space_pk, title, subheading)
-                    .await?;
+            let item_html = crate::utils::aws::bedrock::generate_subsection_html_kb(
+                &space_pk,
+                title,
+                subheading,
+            )
+            .await?;
             if !item_html.trim().is_empty() {
                 list_items.push(item_html);
             }

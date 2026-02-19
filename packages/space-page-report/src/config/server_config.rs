@@ -1,3 +1,4 @@
+#[allow(unused)]
 #[derive(Debug, Clone)]
 pub struct ServerConfig {
     pub env: &'static str,

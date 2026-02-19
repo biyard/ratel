@@ -10,6 +10,7 @@ edition = "2021"
 dioxus = { workspace = true }
 common = { workspace = true }
 serde = { workspace = true }
+percent-encoding = { workspace = true }
 aws-config = { version = "1", optional = true }
 aws-sdk-s3 = { version = "1", optional = true }
 aws-sdk-bedrockruntime = { version = "1", optional = true }
