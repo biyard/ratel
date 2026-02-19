@@ -33,6 +33,18 @@ pub struct PostResponse {
 }
 
 impl PostResponse {
+    pub fn url(&self) -> String {
+        if let Some(space_pk) = &self.space_pk {
+            format!("/spaces/{}", Into::<SpacePartition>::into(space_pk.clone()))
+        } else {
+            format!("/posts/{}", Into::<FeedPartition>::into(self.pk.clone()))
+        }
+    }
+
+    pub fn has_space(&self) -> bool {
+        self.space_pk.is_some()
+    }
+
     pub fn with_like(mut self, liked: bool) -> Self {
         self.liked = liked;
         self

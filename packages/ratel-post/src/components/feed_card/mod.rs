@@ -60,8 +60,8 @@ pub fn FeedCard(
     let link_href = href.unwrap_or_default();
 
     rsx! {
-        div { class: "relative flex flex-col border rounded-[10px] bg-card-bg-secondary border-card-enable-border",
-            a { class: "block", href: "{link_href}",
+        div { class: "flex relative flex-col border rounded-[10px] bg-card-bg-secondary border-card-enable-border",
+            Link { class: "block", to: post.url(),
                 FeedBody { post: post.clone(), on_edit }
             }
             FeedFooter {
@@ -121,11 +121,13 @@ fn FeedBody(post: PostResponse, on_edit: Option<EventHandler<MouseEvent>>) -> El
                     }
                 }
                 if on_edit.is_some() {
-                    EditButton { onclick: move |e: MouseEvent| {
-                        if let Some(handler) = &on_edit {
-                            handler.call(e);
-                        }
-                    } }
+                    EditButton {
+                        onclick: move |e: MouseEvent| {
+                            if let Some(handler) = &on_edit {
+                                handler.call(e);
+                            }
+                        },
+                    }
                 }
             }
             h2 { class: "px-5 w-full font-bold align-middle line-clamp-2 text-xl/[25px] tracking-[0.5px] text-text-primary",
@@ -137,7 +139,7 @@ fn FeedBody(post: PostResponse, on_edit: Option<EventHandler<MouseEvent>>) -> El
                     name: author_display_name,
                     author_type,
                 }
-                p { class: "text-sm align-middle font-light text-text-primary",
+                p { class: "text-sm font-light align-middle text-text-primary",
                     "{time_ago(created_at)}"
                 }
             }
@@ -151,7 +153,7 @@ fn FeedBody(post: PostResponse, on_edit: Option<EventHandler<MouseEvent>>) -> El
 fn FeedContents(contents: String, urls: Vec<String>) -> Element {
     rsx! {
         div { class: "break-all text-desc-text",
-            div { class: "border-none px-5",
+            div { class: "px-5 border-none",
                 div {
                     style: "min-height: 50px; max-height: 200px; overflow: hidden;",
                     dangerous_inner_html: "{contents}",
@@ -183,8 +185,8 @@ fn FeedFooter(
     let comment_href = format!("{}#comments", href);
 
     rsx! {
-        div { class: "flex flex-row items-center justify-between border-t w-full px-5 border-divider",
-            div { class: "flex flex-row w-full justify-between items-center",
+        div { class: "flex flex-row justify-between items-center px-5 w-full border-t border-divider",
+            div { class: "flex flex-row justify-between items-center w-full",
                 IconText {
                     class: like_class,
                     onclick: move |_e: MouseEvent| {
@@ -193,9 +195,7 @@ fn FeedFooter(
                         }
                     },
                     if is_liked {
-                        icons::emoji::ThumbsUp {
-                            class: "[&>path]:fill-primary [&>path]:stroke-primary",
-                        }
+                        icons::emoji::ThumbsUp { class: "[&>path]:fill-primary [&>path]:stroke-primary" }
                     } else {
                         icons::emoji::ThumbsUp {}
                     }
@@ -223,11 +223,7 @@ fn FeedFooter(
 }
 
 #[component]
-fn UserBadge(
-    profile_url: String,
-    name: String,
-    author_type: ratel_auth::UserType,
-) -> Element {
+fn UserBadge(profile_url: String, name: String, author_type: ratel_auth::UserType) -> Element {
     let img_class = if author_type == ratel_auth::UserType::Team {
         "w-6 h-6 rounded-sm object-cover"
     } else {
@@ -253,9 +249,7 @@ fn SpaceTag() -> Element {
     rsx! {
         span { class: "flex flex-row gap-1 justify-start items-center px-2 rounded-sm border border-label-color-border bg-label-color-bg",
             icons::home::Palace { class: "w-3.5 h-3.5 [&>path]:stroke-label-color-text [&_g>path:nth-child(n+2)]:stroke-web-bg" }
-            div { class: "font-semibold text-xs/[25px] text-label-color-text",
-                "SPACE"
-            }
+            div { class: "font-semibold text-xs/[25px] text-label-color-text", "SPACE" }
         }
     }
 }
@@ -283,7 +277,7 @@ fn IconText(
 ) -> Element {
     rsx! {
         div {
-            class: "inline-flex flex-row items-center gap-1.5 whitespace-nowrap leading-none text-text-primary text-[15px] px-3 py-3 {class}",
+            class: "inline-flex flex-row gap-1.5 items-center py-3 px-3 leading-none whitespace-nowrap text-text-primary text-[15px] {class}",
             onclick: move |e: MouseEvent| {
                 if let Some(handler) = &onclick {
                     handler.call(e);
