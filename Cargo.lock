@@ -878,6 +878,7 @@ dependencies = [
  "common",
  "dioxus",
  "ratel-auth",
+ "ratel-post",
  "serde-wasm-bindgen",
  "space-shell",
  "wasm-bindgen",
@@ -13235,6 +13236,19 @@ dependencies = [
  "url",
  "uuid 1.18.1",
  "validator",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
+name = "ratel-post"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "ratel-auth",
+ "serde-wasm-bindgen",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",

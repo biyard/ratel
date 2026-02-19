@@ -2,9 +2,11 @@
 pub mod config;
 mod constants;
 pub mod interop;
+mod provider;
 mod route;
 pub mod views;
 
+pub use provider::Provider;
 pub use route::Route;
 
 use common::*;

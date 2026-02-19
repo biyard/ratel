@@ -2,6 +2,7 @@ use crate::*;
 
 use crate::views::Index;
 use ratel_auth::Route as AuthRoute;
+use ratel_post::Route as PostRoute;
 use space_shell::Route as SpaceRoute;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
@@ -15,6 +16,9 @@ pub enum Route {
 
     #[route("/spaces/:..rest")]
     Space { rest: Vec<String> },
+
+    #[route("/posts/:..rest")]
+    Post { rest: Vec<String> },
 }
 
 macro_rules! define_app_wrapper {
@@ -30,3 +34,4 @@ macro_rules! define_app_wrapper {
 
 define_app_wrapper!(Auth, AuthRoute);
 define_app_wrapper!(Space, SpaceRoute);
+define_app_wrapper!(Post, PostRoute);

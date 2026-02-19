@@ -9,8 +9,9 @@ edition = "2021"
 [dependencies]
 common = { workspace = true }
 dioxus = { workspace = true }
-ratel-auth = { path = "../ratel-auth/", optional = true }
-space-shell = { path = "../space-shell/", optional = true }
+ratel-auth = { workspace = true, optional = true }
+ratel-post = { workspace = true, optional = true }
+space-shell = { workspace = true, optional = true }
 
 web-sys = { workspace = true }
 wasm-bindgen = { workspace = true }
@@ -21,9 +22,7 @@ serde-wasm-bindgen = { workspace = true }
 [features]
 default = []
 bypass = ["ratel-auth?/bypass"]
-web = ["common/web", "ratel-auth/web", "space-shell/web"]
-desktop = ["common/desktop","ratel-auth/desktop", "space-shell/desktop"]
-mobile = ["common/mobile","ratel-auth/mobile", "space-shell/mobile"]
-server = [
-    "common/server", "ratel-auth/server", "space-shell/server"
-]
+web = ["common/web", "ratel-auth/web", "space-shell/web", "ratel-post/web"]
+desktop = ["common/desktop","ratel-auth/desktop", "space-shell/desktop", "ratel-post/desktop"]
+mobile = ["common/mobile","ratel-auth/mobile", "space-shell/mobile", "ratel-post/mobile"]
+server = ["common/server", "ratel-auth/server", "space-shell/server", "ratel-post/server"]
