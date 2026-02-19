@@ -17340,6 +17340,7 @@ dependencies = [
  "aws-smithy-types",
  "common",
  "dioxus",
+ "percent-encoding",
  "serde",
 ]
 
