@@ -20,16 +20,18 @@ pub enum Route {
 
         #[route("/posts/:..rest")]
         Post { rest: Vec<String> },
+
+        #[route("/:username/:..rest")]
+        UserHome { username: String, rest: Vec<String> },
+
+        #[route("/teams/:teamname/:..rest")]
+        TeamHome { teamname: String, rest: Vec<String> },
     #[end_layout]
 
     #[route("/spaces/:..rest")]
     Space { rest: Vec<String> },
 
-    #[route("/:username/:..rest")]
-    UserHome { username: String, rest: Vec<String> },
-
-    #[route("/teams/:teamname/:..rest")]
-    TeamHome { teamname: String, rest: Vec<String> },
+    
 
 }
 

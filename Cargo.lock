@@ -13417,6 +13417,7 @@ version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "icons",
  "ratel-user-credential",
  "ratel-user-draft",
  "ratel-user-membership",
