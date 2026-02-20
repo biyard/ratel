@@ -7,20 +7,23 @@ use std::collections::HashMap;
 
 pub type QueryKey = Vec<String>;
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct QueryStore {
-    versions: Signal<HashMap<QueryKey, u64>>,
+    versions: Store<HashMap<QueryKey, u64>>,
 }
 
 impl QueryStore {
     fn new() -> Self {
         Self {
-            versions: Signal::new(HashMap::new()),
+            versions: Store::new(HashMap::new()),
         }
     }
 
     fn version(&self, key: &QueryKey) -> u64 {
-        self.versions.read().get(key).copied().unwrap_or_default()
+        self.versions
+            .get(key.clone())
+            .map(|v| *v.read())
+            .unwrap_or_default()
     }
 
     /// Invalidate all queries whose key starts with the given prefix.
@@ -29,32 +32,27 @@ impl QueryStore {
     /// `["Space"]`, `["Space", "UUID"]`, `["Space", "UUID", "actions"]`, etc.
     pub fn invalidate(&mut self, prefix: &[impl AsRef<str>]) {
         let prefix: QueryKey = prefix.iter().map(|s| s.as_ref().to_string()).collect();
-        let mut versions = self.versions.write();
 
-        let keys_to_bump: Vec<QueryKey> = versions
-            .keys()
-            .filter(|k| k.starts_with(&prefix))
-            .cloned()
-            .collect();
-
-        for key in keys_to_bump {
-            let next = versions
-                .get(&key)
-                .copied()
-                .unwrap_or_default()
-                .saturating_add(1);
-            versions.insert(key, next);
+        let mut has_exact = false;
+        for (k, mut v) in self.versions.iter() {
+            if *k == prefix {
+                has_exact = true;
+            }
+            if k.starts_with(&prefix) {
+                let next = (*v.read()).saturating_add(1);
+                v.set(next);
+            }
         }
 
-        if !versions.contains_key(&prefix) {
-            versions.insert(prefix, 1);
+        if !has_exact {
+            self.versions.insert(prefix, 1);
         }
     }
 
     pub fn clear(&mut self) {
-        let mut versions = self.versions.write();
-        for version in versions.values_mut() {
-            *version = version.saturating_add(1);
+        for (_, mut version) in self.versions.iter() {
+            let next = (*version.read()).saturating_add(1);
+            version.set(next);
         }
     }
 }
