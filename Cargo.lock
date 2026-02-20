@@ -879,6 +879,7 @@ dependencies = [
  "dioxus",
  "ratel-auth",
  "ratel-post",
+ "ratel-team-shell",
  "ratel-user-shell",
  "serde-wasm-bindgen",
  "space-shell",
@@ -13269,6 +13270,85 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
+]
+
+[[package]]
+name = "ratel-team-dao"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "serde",
+]
+
+[[package]]
+name = "ratel-team-draft"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "serde",
+]
+
+[[package]]
+name = "ratel-team-group"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "serde",
+]
+
+[[package]]
+name = "ratel-team-home"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "serde",
+]
+
+[[package]]
+name = "ratel-team-member"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "serde",
+]
+
+[[package]]
+name = "ratel-team-reward"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "serde",
+]
+
+[[package]]
+name = "ratel-team-setting"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "serde",
+]
+
+[[package]]
+name = "ratel-team-shell"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "ratel-team-dao",
+ "ratel-team-draft",
+ "ratel-team-group",
+ "ratel-team-home",
+ "ratel-team-member",
+ "ratel-team-reward",
+ "ratel-team-setting",
+ "serde",
 ]
 
 [[package]]

@@ -13,6 +13,7 @@ ratel-auth = { workspace = true, optional = true }
 ratel-post = { workspace = true, optional = true }
 space-shell = { workspace = true, optional = true }
 ratel-user-shell = { workspace = true, optional = true }
+ratel-team-shell = { workspace = true, optional = true }
 
 web-sys = { workspace = true }
 wasm-bindgen = { workspace = true }
@@ -29,6 +30,7 @@ web = [
   "space-shell/web",
   "ratel-post/web",
   "ratel-user-shell/web",
+  "ratel-team-shell/web",
 ]
 desktop = [
   "common/desktop",
@@ -36,6 +38,7 @@ desktop = [
   "space-shell/desktop",
   "ratel-post/desktop",
   "ratel-user-shell/desktop",
+  "ratel-team-shell/desktop",
 ]
 mobile = [
   "common/mobile",
@@ -43,6 +46,7 @@ mobile = [
   "space-shell/mobile",
   "ratel-post/mobile",
   "ratel-user-shell/mobile",
+  "ratel-team-shell/mobile",
 ]
 server = [
   "common/server",
@@ -50,4 +54,5 @@ server = [
   "space-shell/server",
   "ratel-post/server",
   "ratel-user-shell/server",
+  "ratel-team-shell/server",
 ]

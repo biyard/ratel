@@ -4,20 +4,14 @@ use views::Home;
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
 pub enum Route {
-    #[layout(layout::AppLayout)]
+    #[nest("/teams/:teamname/members")]
         #[route("/")]
-        Home {},
-    #[end_layout]
-
-    #[route("/:..route")]
-    PageNotFound { route: Vec<String> },
+        Main { teamname: String },
 }
 
 #[component]
-fn PageNotFound(route: Vec<String>) -> Element {
+pub fn Main(teamname: String) -> Element {
     rsx! {
-        h1 { "Page not found" }
-        p { "We are terribly sorry, but the page you requested doesn't exist." }
-        pre { color: "red", "log:\nattempted to navigate to: {route:?}" }
+        views::Home { teamname }
     }
 }

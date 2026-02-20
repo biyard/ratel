@@ -4,6 +4,7 @@ use crate::views::Index;
 use layout::AppLayout;
 use ratel_auth::Route as AuthRoute;
 use ratel_post::Route as PostRoute;
+use ratel_team_shell::Route as TeamRoute;
 use ratel_user_shell::Route as UserRoute;
 use space_shell::Route as SpaceRoute;
 
@@ -27,6 +28,9 @@ pub enum Route {
     #[route("/:username/:..rest")]
     UserHome { username: String, rest: Vec<String> },
 
+    #[route("/teams/:teamname/:..rest")]
+    TeamHome { teamname: String, rest: Vec<String> },
+
 }
 
 macro_rules! define_app_wrapper {
@@ -49,5 +53,13 @@ pub fn UserHome(username: String, rest: Vec<String>) -> Element {
     let _ = (username, rest);
     rsx! {
         Router::<UserRoute> {}
+    }
+}
+
+#[component]
+pub fn TeamHome(teamname: String, rest: Vec<String>) -> Element {
+    let _ = (teamname, rest);
+    rsx! {
+        Router::<TeamRoute> {}
     }
 }
