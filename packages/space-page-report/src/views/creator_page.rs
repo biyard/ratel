@@ -17,7 +17,6 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
     let mut is_saving = use_signal(|| false);
     let mut error = use_signal(|| None as Option<String>);
     let mut did_load = use_signal(|| false);
-    let mut editor_key = use_signal(|| 0u32);
 
     use_effect(move || {
         if did_load() {
@@ -27,14 +26,12 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
         let space_pk = space_id_load.clone();
         let mut content = content.clone();
         let mut error = error.clone();
-        let mut editor_key = editor_key.clone();
         spawn(async move {
             match crate::controllers::get_analyze(space_pk).await {
                 Ok(resp) => {
                     if let Some(html) = resp.html_contents {
                         if !html.trim().is_empty() {
                             content.set(html);
-                            editor_key.set(editor_key() + 1);
                         }
                     }
                 }
@@ -63,7 +60,6 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
                             match crate::controllers::create_ai_report(space_pk).await {
                                 Ok(resp) => {
                                     content.set(resp.html_contents);
-                                    editor_key.set(editor_key() + 1);
                                 }
                                 Err(err) => error.set(Some(err.to_string())),
                             }
@@ -132,7 +128,6 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
                 }
                 div { class: "flex flex-col w-full min-h-0 flex-1 overflow-hidden",
                     TiptapEditor {
-                        key: "{editor_key()}",
                         class: "w-full h-fit",
                         content: content(),
                         editable: editable(),

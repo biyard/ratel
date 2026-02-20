@@ -6,7 +6,6 @@ pub fn ViewerPage(space_id: SpacePartition) -> Element {
     let mut content = use_signal(String::new);
     let editable = use_signal(|| false);
     let mut did_load = use_signal(|| false);
-    let editor_key = use_signal(|| 0u32);
 
     use_effect(move || {
         if did_load() {
@@ -15,13 +14,11 @@ pub fn ViewerPage(space_id: SpacePartition) -> Element {
         did_load.set(true);
         let space_pk = space_id.clone();
         let mut content = content.clone();
-        let mut editor_key = editor_key.clone();
         spawn(async move {
             if let Ok(resp) = crate::controllers::get_analyze(space_pk).await {
                 if let Some(html) = resp.html_contents {
                     if !html.trim().is_empty() {
                         content.set(html);
-                        editor_key.set(editor_key() + 1);
                     }
                 }
             }
@@ -39,7 +36,6 @@ pub fn ViewerPage(space_id: SpacePartition) -> Element {
                 }
                 div { class: "flex flex-col w-full min-h-0 flex-1 overflow-hidden",
                     TiptapEditor {
-                        key: "{editor_key()}",
                         class: "w-full h-fit",
                         content: content(),
                         editable: editable(),
