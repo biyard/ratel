@@ -8,6 +8,7 @@ use ratel_user_membership::Route as MembershipRoute;
 use ratel_user_post::Route as PostRoute;
 use ratel_user_reward::Route as RewardRoute;
 use ratel_user_setting::Route as SettingRoute;
+use ratel_user_space::Route as SpaceRoute;
 
 macro_rules! define_user_app_wrapper {
     ($wrapper_name:ident, $route_module:ident) => {
@@ -27,6 +28,7 @@ define_user_app_wrapper!(UserSettings, SettingRoute);
 define_user_app_wrapper!(UserMemberships, MembershipRoute);
 define_user_app_wrapper!(UserDrafts, DraftRoute);
 define_user_app_wrapper!(UserCredentials, CredentialRoute);
+define_user_app_wrapper!(UserSpaces, SpaceRoute);
 
 #[component]
 fn UserHomeRoot(username: String) -> Element {
@@ -55,6 +57,8 @@ pub enum Route {
             UserDrafts { username: String, rest: Vec<String> },
             #[route("/credentials/:..rest")]
             UserCredentials { username: String, rest: Vec<String> },
+            #[route("/spaces/:..rest")]
+            UserSpaces { username: String, rest: Vec<String> },
         #[end_layout]
     #[end_nest]
 

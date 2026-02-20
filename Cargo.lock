@@ -13424,6 +13424,17 @@ dependencies = [
  "ratel-user-post",
  "ratel-user-reward",
  "ratel-user-setting",
+ "ratel-user-space",
+ "serde",
+]
+
+[[package]]
+name = "ratel-user-space"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "ratel-auth",
  "serde",
 ]
 
