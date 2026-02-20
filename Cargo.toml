@@ -24,7 +24,7 @@ common = { path = "packages/common" }
 ratel-auth = { path = "packages/ratel-auth" }
 space-shell = { path = "packages/space-shell" }
 ratel-post = { path = "packages/ratel-post" }
-ratel-user-home = { path = "packages/ratel-user-home" }
+ratel-user-shell = { path = "packages/ratel-user-shell" }
 
 dioxus-components = { path = "packages/dioxus-components" }
 icons = { path = "packages/icons" }
