@@ -10,17 +10,33 @@ use crate::{controllers::get_space::get_space, *};
 
 #[component]
 pub fn SpaceTop(space_id: SpacePartition) -> Element {
-    let space = use_loader(move || get_space(space_id.clone()))?();
-    debug!("space data: {:?}", space);
+    let space_pk = space_id.clone();
+    let mut space = use_loader(move || get_space(space_id.clone()))?;
+    let space_data = space();
+
+    let show_participate = matches!(
+        space_data.status,
+        Some(ratel_post::types::SpaceStatus::InProgress)
+    ) && !space_data.participated
+        && space_data.can_participate;
+
+    debug!("space data: {:?}", space_data);
 
     rsx! {
         div { class: "flex flex-row justify-between items-center px-[12px] py-[17.5px] min-h-[65px]",
             div { class: "flex flex-row w-full justify-start items-center gap-2.5",
-                SpaceLabel {}
-                SpaceTitle {}
+                SpaceLabel { status: space_data.status }
+                SpaceTitle { title: space_data.title.clone() }
             }
 
-            SpaceParticipantButton {}
+            if show_participate {
+                SpaceParticipantButton {
+                    space_id: space_pk.clone(),
+                    on_participated: move |_| {
+                        space.restart();
+                    },
+                }
+            }
         }
     }
 }

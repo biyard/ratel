@@ -1,4 +1,6 @@
-use crate::models::File;
+#[cfg(feature = "server")]
+use crate::models::UserAttributesExt;
+use crate::models::{File, Gender, SpacePanelParticipant, SpacePanelQuota};
 use crate::*;
 use ratel_post::types::{BoosterType, SpacePublishState, SpaceStatus, SpaceType, SpaceVisibility};
 use serde::{Deserialize, Serialize};
@@ -68,4 +70,146 @@ pub struct SpaceCommon {
 
 fn max_quota() -> i64 {
     1_000_000
+}
+
+#[cfg(feature = "server")]
+impl SpaceCommon {
+    pub async fn check_if_satisfying_panel_attribute(
+        &self,
+        cli: &aws_sdk_dynamodb::Client,
+        user: &ratel_auth::User,
+    ) -> Result<()> {
+        let panel_quota = SpacePanelQuota::query(
+            cli,
+            CompositePartition(self.pk.clone(), Partition::PanelAttribute),
+            SpacePanelQuota::opt_all().sk("SPACE_PANEL_ATTRIBUTE#".to_string()),
+        )
+        .await
+        .unwrap_or_default()
+        .0;
+
+        if panel_quota.is_empty() {
+            return Ok(());
+        }
+
+        let user_attributes = user.get_attributes(cli).await?;
+        let age: Option<u8> = user_attributes.age().and_then(|v| u8::try_from(v).ok());
+        let gender = user_attributes.gender;
+
+        if self.remains <= 0 {
+            return Err(Error::FullQuota);
+        }
+
+        for q in panel_quota {
+            if q.remains <= 0 {
+                continue;
+            }
+
+            if let EntityType::SpacePanelAttribute(label, _) = &q.sk {
+                if label.eq_ignore_ascii_case("university") {
+                    continue;
+                }
+            }
+
+            if match_by_sk(age, gender, &q.sk) {
+                let pk = q.pk;
+                let sk = q.sk;
+
+                let (panel_pk, panel_sk) =
+                    SpacePanelParticipant::keys(&self.pk.clone(), &user.pk.clone());
+
+                let participant =
+                    SpacePanelParticipant::get(cli, panel_pk, Some(panel_sk.clone())).await?;
+
+                if participant.is_none() {
+                    let participants = SpacePanelParticipant::new(self.pk.clone(), user.clone());
+
+                    let space_updater =
+                        SpaceCommon::updater(self.pk.clone(), EntityType::SpaceCommon)
+                            .decrease_remains(1);
+
+                    let quota_updater =
+                        SpacePanelQuota::updater(pk.clone(), sk.clone()).decrease_remains(1);
+
+                    transact_write!(
+                        cli,
+                        participants.create_transact_write_item(),
+                        space_updater.transact_write_item(),
+                        quota_updater.transact_write_item(),
+                    )?;
+                }
+
+                return Ok(());
+            }
+        }
+
+        Err(Error::LackOfVerifiedAttributes)
+    }
+}
+
+#[cfg(feature = "server")]
+fn match_by_sk(age: Option<u8>, gender: Option<Gender>, sk: &EntityType) -> bool {
+    if age.is_none() && gender.is_none() {
+        return false;
+    }
+
+    let (label_raw, value_raw) = match sk {
+        EntityType::SpacePanelAttribute(label, value) => (label.as_str(), value.as_str()),
+        _ => return false,
+    };
+
+    let label = label_raw.to_ascii_lowercase();
+    let value = value_raw.to_ascii_lowercase();
+
+    match label.as_str() {
+        "verifiable_attribute" => match value.as_str() {
+            v if v.starts_with("age") => match_age_rule(age, v),
+            v if v.starts_with("gender") => match_gender_rule(gender, v),
+            _ => false,
+        },
+        "collective_attribute" => true,
+        "gender" => {
+            let encoded = format!("gender:{value}");
+            match_gender_rule(gender, &encoded)
+        }
+        "university" => true,
+        _ => false,
+    }
+}
+
+#[cfg(feature = "server")]
+fn match_age_rule(age: Option<u8>, v: &str) -> bool {
+    if v == "age" {
+        return age.is_some();
+    }
+
+    if let Some(rest) = v.strip_prefix("age:") {
+        if let Some((min_s, max_s)) = rest.split_once('-') {
+            if let (Ok(min), Ok(max)) = (min_s.trim().parse::<u8>(), max_s.trim().parse::<u8>()) {
+                return age.map(|a| a >= min && a <= max).unwrap_or(false);
+            }
+        } else if let Ok(specific) = rest.trim().parse::<u8>() {
+            return age.map(|a| a == specific).unwrap_or(false);
+        }
+    }
+
+    true
+}
+
+#[cfg(feature = "server")]
+fn match_gender_rule(gender: Option<Gender>, v: &str) -> bool {
+    if v == "gender" {
+        return gender.is_some();
+    }
+
+    if let Some(rest) = v.strip_prefix("gender:") {
+        let want = rest.trim().to_ascii_lowercase();
+        return match (want.as_str(), gender) {
+            ("male", Some(Gender::Male)) => true,
+            ("female", Some(Gender::Female)) => true,
+            _ => false,
+        };
+    }
+
+    true
 }
