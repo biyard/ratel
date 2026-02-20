@@ -1,5 +1,5 @@
-use crate::*;
 use super::*;
+use crate::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DynamoEntity)]
 #[serde(untagged)]
@@ -47,7 +47,7 @@ impl From<User> for UserResponse {
             user_type: user.user_type as u8,
             followers_count: user.followers_count,
             followings_count: user.followings_count,
-            theme: user.theme as u8,
+            theme: 1u8,
             point: user.points,
             username: user.username,
         }
