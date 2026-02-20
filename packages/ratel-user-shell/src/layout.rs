@@ -52,7 +52,7 @@ fn UserSidemenu(username: String) -> Element {
                     },
                 }
                 UserSidemenuLink {
-                    to: Route::UserMemberships {
+                    to: Route::UserSpaces {
                         username: username.clone(),
                         rest: vec![],
                     },
