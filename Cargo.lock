@@ -879,6 +879,7 @@ dependencies = [
  "dioxus",
  "ratel-auth",
  "ratel-post",
+ "ratel-user-home",
  "serde-wasm-bindgen",
  "space-shell",
  "wasm-bindgen",
@@ -13271,6 +13272,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ratel-user-home"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "serde",
+]
+
+[[package]]
 name = "rav1e"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -17359,11 +17369,16 @@ dependencies = [
 name = "space-page-dashboard"
 version = "0.1.0"
 dependencies = [
+ "aws-sdk-dynamodb",
+ "base64 0.22.1",
  "chrono",
  "common",
  "dioxus",
+ "ratel-auth",
  "serde",
+ "serde_dynamo",
  "serde_json",
+ "tracing",
  "uuid 1.18.1",
 ]
 
@@ -19439,15 +19454,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "06794f8f6c5c898b3275aebefa6b8a1cb24cd2c6c79397ab15774837a0bc5755"
 dependencies = [
  "winapi-util",
-]
-
-[[package]]
-name = "test-package"
-version = "0.1.0"
-dependencies = [
- "common",
- "dioxus",
- "serde",
 ]
 
 [[package]]

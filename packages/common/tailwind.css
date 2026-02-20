@@ -877,6 +877,9 @@ h3 {
   .bg-space-dashboard-accent {
     background-color: var(--color-space-dashboard-accent);
   }
+  .bg-space-dashboard-green {
+    background-color: var(--color-green-500);
+  }
 
   /* Space Dashboard Text Colors */
   .text-space-dashboard-dark {
@@ -893,6 +896,20 @@ h3 {
   .border-space-dashboard-accent {
     border-color: var(--color-space-dashboard-accent);
   }
+
+  /* Icon Colors */
+  .text-icon-primary {
+    color: var(--color-icon-primary);
+  }
+
+  /* Space Dashboard Fonts */
+  .sp-dash-font-inter {
+    font-family: var(--font-inter);
+  }
+  .sp-dash-font-raleway {
+    font-family: var(--font-raleway);
+  }
+
 }
 
 

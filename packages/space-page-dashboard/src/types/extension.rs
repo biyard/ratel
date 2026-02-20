@@ -9,12 +9,12 @@ pub struct DashboardExtension {
 impl DashboardExtension {
     pub fn grid_size(&self) -> (u8, u8) {
         match &self.data {
-            DashboardComponentData::StatSummary(_) => (1, 2),
-            DashboardComponentData::ProgressList(_) => (1, 2),
-            DashboardComponentData::TabChart(_) => (1, 2),
-            DashboardComponentData::InfoCard(_) => (1, 1),
-            DashboardComponentData::StatCard(_) => (1, 1),
-            DashboardComponentData::RankingTable(_) => (4, 4),
+            DashboardComponentData::StatSummary(_) => (1, 4),
+            DashboardComponentData::ProgressList(_) => (1, 4),
+            DashboardComponentData::TabChart(_) => (1, 4),
+            DashboardComponentData::InfoCard(_) => (1, 2),
+            DashboardComponentData::StatCard(_) => (1, 2),
+            DashboardComponentData::RankingTable(_) => (4, 3),
         }
     }
 
