@@ -30,7 +30,7 @@ pub struct SpacePollUserAnswer {
 impl SpacePollUserAnswer {
     pub fn new(
         space_pk: Partition,
-        poll_pk: Partition,
+        poll_sk: EntityType,
         answers: Vec<Answer>,
         respondent: Option<RespondentAttr>,
         User {
@@ -43,7 +43,7 @@ impl SpacePollUserAnswer {
     ) -> Self {
         let user_pk = pk;
         let created_at = get_now_timestamp_millis();
-        let (pk, sk) = Self::keys(&user_pk, &poll_pk, &space_pk);
+        let (pk, sk) = Self::keys(&user_pk, &poll_sk, &space_pk);
         Self {
             pk: pk.clone(),
             sk,
@@ -59,22 +59,22 @@ impl SpacePollUserAnswer {
 
     pub fn keys(
         user_pk: &Partition,
-        poll_pk: &Partition,
+        poll_sk: &EntityType,
         space_pk: &Partition,
     ) -> (Partition, EntityType) {
         (
             Partition::SpacePollUserAnswer(user_pk.to_string()),
-            EntityType::SpacePollUserAnswer(space_pk.to_string(), poll_pk.to_string()),
+            EntityType::SpacePollUserAnswer(space_pk.to_string(), poll_sk.to_string()),
         )
     }
 
     pub async fn find_one(
         cli: &aws_sdk_dynamodb::Client,
         space_pk: &Partition,
-        poll_pk: &Partition,
+        poll_sk: &EntityType,
         user_pk: &Partition,
     ) -> crate::Result<Option<Self>> {
-        let (pk, sk) = Self::keys(user_pk, poll_pk, space_pk);
+        let (pk, sk) = Self::keys(user_pk, poll_sk, space_pk);
         Self::get(cli, &pk, Some(sk)).await
     }
 
@@ -118,7 +118,7 @@ impl SpacePollUserAnswer {
         loop {
             let (responses, new_bookmark) = Self::find_by_space_pk(
                 cli,
-                &EntityType::SpacePollUserAnswer(space_pk.to_string(), poll_pk.to_string()),
+                &EntityType::SpacePollUserAnswer(space_pk.to_string(), poll_sk.to_string()),
                 if let Some(b) = &bookmark {
                     SpacePollUserAnswerQueryOption::builder().bookmark(b.clone())
                 } else {
