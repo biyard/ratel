@@ -57,14 +57,14 @@ mobile = [
 server = [
     "common/server",
     "dioxus/server",
-    "reqwest",
-    "tokio",
     "ratel-auth/server",
+    "reqwest",
     "space-page-actions/server",
     "space-page-apps/server",
     "space-page-dashboard/server",
     "space-page-overview/server",
     "space-page-report/server",
+    "tokio",
 ]
 
 layout_test = ["web"]

@@ -2,7 +2,6 @@ use common::utils::time::get_now_timestamp_millis;
 
 use crate::*;
 
-use super::Question;
 use crate::macros::DynamoEntity;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, DynamoEntity)]
