@@ -1,4 +1,6 @@
+use crate::context::UserContext;
 use crate::controllers::login::{login_handler, LoginRequest};
+use crate::hooks::use_user_context;
 use crate::interop::sign_in;
 use crate::views::ForgotPassword;
 use crate::*;
@@ -12,6 +14,7 @@ pub fn LoginModal() -> Element {
     let mut loading = use_signal(|| false);
     let mut error_message: Signal<Option<String>> = use_signal(|| None);
     let mut popup = use_popup();
+    let mut user_ctx = use_user_context();
 
     rsx! {
         div {
@@ -108,7 +111,13 @@ pub fn LoginModal() -> Element {
                             loading.set(false);
 
                             match result {
-                                Ok(_) => {
+                                Ok(user) => {
+                                    user_ctx
+                                        .set(UserContext {
+                                            user: Some(user.user),
+                                            refresh_token: user.refresh_token,
+                                        });
+
                                     popup.close();
                                 }
                                 Err(e) => {
@@ -143,7 +152,13 @@ pub fn LoginModal() -> Element {
                                 loading.set(false);
 
                                 match result {
-                                    Ok(_) => {
+                                    Ok(user) => {
+                                        user_ctx
+                                            .set(UserContext {
+                                                user: Some(user.user),
+                                                refresh_token: user.refresh_token,
+                                            });
+
                                         popup.close();
                                     }
                                     Err(e) => {
