@@ -6,6 +6,7 @@ pub mod types;
 pub use config::*;
 
 pub use by_macros::*;
+
 pub use dioxus_translate;
 pub use dioxus_translate::*;
 pub use serde::{Deserialize, Serialize};
@@ -24,11 +25,13 @@ pub mod macros;
 pub mod middlewares;
 pub mod models;
 pub mod utils;
+pub use macros::dynamo_entity::DynamoEntity;
 
 pub use components::*;
 pub use dioxus;
 
 use dioxus::prelude::*;
+use serde_repr::{Deserialize_repr, Serialize_repr};
 
 #[cfg(feature = "server")]
 pub mod server_lib;
@@ -39,3 +42,7 @@ pub use server_lib::*;
 pub use chrono;
 pub use serde;
 pub use serde_json;
+pub use serde_wasm_bindgen;
+pub use wasm_bindgen;
+pub use wasm_bindgen_futures;
+pub use web_sys;
