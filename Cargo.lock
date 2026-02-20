@@ -3849,6 +3849,8 @@ dependencies = [
  "url",
  "uuid 1.18.1",
  "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
 ]
 
 [[package]]
@@ -19437,6 +19439,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "06794f8f6c5c898b3275aebefa6b8a1cb24cd2c6c79397ab15774837a0bc5755"
 dependencies = [
  "winapi-util",
+]
+
+[[package]]
+name = "test-package"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "serde",
 ]
 
 [[package]]
