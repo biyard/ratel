@@ -1,5 +1,6 @@
-use crate::models::*;
+use crate::models::SpaceParticipant;
 use crate::*;
+use common::models::space::SpaceCommon;
 use common::types::{Partition, SpacePartition};
 use ratel_auth::models::user::{OptionalUser, User};
 use ratel_post::models::Post;
@@ -68,7 +69,7 @@ pub async fn get_space(space_pk: SpacePartition) -> Result<dto::GetSpaceResponse
         created_at: space.created_at,
         updated_at: space.updated_at,
         urls: post.urls,
-        space_type: space.space_type,
+        space_type: post.space_type.unwrap_or_default(),
         features: vec![],
         status: space.status,
         permissions: permissions.into(),
@@ -84,8 +85,8 @@ pub async fn get_space(space_pk: SpacePartition) -> Result<dto::GetSpaceResponse
         rewards: space.rewards,
         visibility: space.visibility,
         publish_state: space.publish_state,
-        booster: space.booster,
-        files: space.files,
+        booster: post.booster.unwrap_or_default(),
+        files: None,
         anonymous_participation: space.anonymous_participation,
         can_participate,
         participated,

@@ -14,13 +14,9 @@ pub fn SpaceTop(space_id: SpacePartition) -> Element {
     let mut space = use_loader(move || get_space(space_id.clone()))?;
     let space_data = space();
 
-    let show_participate = matches!(
-        space_data.status,
-        Some(ratel_post::types::SpaceStatus::InProgress)
-    ) && !space_data.participated
+    let show_participate = matches!(space_data.status, Some(common::SpaceStatus::InProgress))
+        && !space_data.participated
         && space_data.can_participate;
-
-    debug!("space data: {:?}", space_data);
 
     rsx! {
         div { class: "flex flex-row justify-between items-center px-[12px] py-[17.5px] min-h-[65px]",
