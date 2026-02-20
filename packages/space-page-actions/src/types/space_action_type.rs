@@ -1,5 +1,5 @@
 use crate::*;
-#[derive(Debug, Clone, Default, Translate, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Translate, Serialize, Deserialize, PartialEq)]
 // #[serde_with(crate = "::common::serde_with")]
 pub enum SpaceActionType {
     #[default]

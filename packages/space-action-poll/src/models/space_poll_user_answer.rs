@@ -56,6 +56,30 @@ impl SpacePollUserAnswer {
             username: Some(username),
         }
     }
+    // FIXME: Because of EntityType(String, String) Type cannot deserialize from string
+    // So we need to parse it manually
+    /*
+        This test code is failed.
+        #[cfg(test)]
+        mod tests {
+            use super::*;
+            use std::str::FromStr;
+
+            #[test]
+            fn test_dynamo_key_roundtrip() {
+                let space_pk = Partition::Space("UID1".to_string());
+                let poll_sk = EntityType::SpacePoll("UID2".to_string());
+                let original = EntityType::SpacePollUserAnswer(space_pk.to_string(), poll_sk.to_string());
+                let serialized = original.to_string();
+                let deserialized = EntityType::from_str(&serialized).unwrap();
+                assert_eq!(original, deserialized);
+            }
+        }
+    */
+    pub fn parse_wrong_sk(sk: String) -> String {
+        let (_, poll_sk) = sk.split_once('#').unwrap();
+        poll_sk.to_string()
+    }
 
     pub fn keys(
         user_pk: &Partition,
