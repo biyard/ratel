@@ -13357,6 +13357,7 @@ version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "ratel-auth",
  "serde",
 ]
 
@@ -13366,6 +13367,7 @@ version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "ratel-auth",
  "serde",
 ]
 
@@ -13375,6 +13377,7 @@ version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "ratel-auth",
  "serde",
 ]
 
@@ -13384,6 +13387,7 @@ version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "ratel-auth",
  "serde",
 ]
 
@@ -13393,6 +13397,7 @@ version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "ratel-auth",
  "serde",
 ]
 
@@ -13402,6 +13407,7 @@ version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "ratel-auth",
  "serde",
 ]
 
