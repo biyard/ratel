@@ -1,5 +1,5 @@
 use crate::*;
-use ratel_post::types::SpaceStatus;
+use common::SpaceStatus;
 
 #[component]
 pub fn SpaceLabel(status: Option<SpaceStatus>) -> Element {
