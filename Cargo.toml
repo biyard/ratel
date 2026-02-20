@@ -6,7 +6,7 @@ members = [
   "packages/space-shell",
 ]
 resolver = "2"
-exclude = ["benchmark/*", "deps"]
+exclude = ["benchmark/*", "deps", "packages/template"]
 
 [workspace.package]
 authors = ["Biyard"]
@@ -29,6 +29,7 @@ common = { path = "packages/common" }
 ratel-auth = { path = "packages/ratel-auth" }
 space-shell = { path = "packages/space-shell" }
 ratel-post = { path = "packages/ratel-post" }
+ratel-user-home = { path = "packages/ratel-user-home" }
 
 dioxus-components = { path = "packages/dioxus-components" }
 icons = { path = "packages/icons" }

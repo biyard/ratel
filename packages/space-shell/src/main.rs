@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use space_shell::*;
 use ratel_auth::AuthProvider;
+use space_shell::*;
 
 fn main() {
     let config = config::get();
@@ -22,6 +22,8 @@ pub const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
 /// Components should be annotated with `#[component]` to support props, better error messages, and autocomplete
 #[component]
 fn App() -> Element {
+    use_context_provider(|| PopupService::new());
+
     rsx! {
         document::Link { rel: "icon", href: FAVICON }
         document::Link { rel: "stylesheet", href: TAILWIND_CSS }
