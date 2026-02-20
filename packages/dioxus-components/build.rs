@@ -8,6 +8,13 @@ fn main() {
     let assets_dir = manifest_path.join("assets");
 
     let status = Command::new("pnpm")
+        .args(["--filter", "@ratel/components", "install"])
+        .current_dir(workspace_root)
+        .status()
+        .expect("failed to run pnpm install");
+    assert!(status.success(), "pnpm install for @ratel/components failed");
+
+    let status = Command::new("pnpm")
         .args(["--filter", "@ratel/components", "build"])
         .env("ASSETS_DIR", &assets_dir)
         .current_dir(workspace_root)

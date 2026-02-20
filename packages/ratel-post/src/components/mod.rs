@@ -1,7 +1,5 @@
-mod auth_provider;
-mod login_modal;
-mod sign_up_modal;
+mod feed_card;
+mod feed_list;
 
-pub use auth_provider::*;
-pub use login_modal::*;
-pub use sign_up_modal::*;
+pub use feed_card::FeedCard;
+pub use feed_list::*;
