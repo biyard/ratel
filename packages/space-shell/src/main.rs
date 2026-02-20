@@ -1,7 +1,7 @@
+use common::{components::PopupService, use_query_store, PopupZone};
 use dioxus::prelude::*;
 use ratel_auth::AuthProvider;
 use space_shell::*;
-
 fn main() {
     let config = config::get();
     dioxus::logger::init(config.common.log_level.into()).expect("logger failed to init");
@@ -23,11 +23,13 @@ pub const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
 #[component]
 fn App() -> Element {
     use_context_provider(|| PopupService::new());
-
+    use_query_store();
     rsx! {
         document::Link { rel: "icon", href: FAVICON }
         document::Link { rel: "stylesheet", href: TAILWIND_CSS }
         AuthProvider {}
         Router::<Route> {}
+        PopupZone {}
+
     }
 }
