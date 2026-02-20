@@ -13341,6 +13341,7 @@ version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "icons",
  "ratel-team-dao",
  "ratel-team-draft",
  "ratel-team-group",
