@@ -8,6 +8,7 @@ edition.workspace = true
 dioxus = { workspace = true }
 common = { workspace = true }
 serde = { workspace = true }
+icons = { workspace = true }
 ratel-user-post = { path = "../ratel-user-post/", optional = true }
 ratel-user-reward = { path = "../ratel-user-reward/", optional = true }
 ratel-user-setting = { path = "../ratel-user-setting/", optional = true }
