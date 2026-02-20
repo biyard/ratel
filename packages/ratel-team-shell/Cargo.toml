@@ -8,6 +8,7 @@ edition.workspace = true
 dioxus = { workspace = true }
 common = { workspace = true }
 serde = { workspace = true }
+icons = { workspace = true }
 ratel-team-home = { path = "../ratel-team-home/", optional = true }
 ratel-team-draft = { path = "../ratel-team-draft/", optional = true }
 ratel-team-group = { path = "../ratel-team-group/", optional = true }
