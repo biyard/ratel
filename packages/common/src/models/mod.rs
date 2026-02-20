@@ -1,4 +1,5 @@
 pub mod session;
+pub mod space;
 
 pub use session::*;
 

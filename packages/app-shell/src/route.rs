@@ -4,6 +4,7 @@ use crate::views::Index;
 use layout::AppLayout;
 use ratel_auth::Route as AuthRoute;
 use ratel_post::Route as PostRoute;
+use ratel_user_home::App as UserHomeApp;
 use space_shell::Route as SpaceRoute;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
@@ -22,6 +23,9 @@ pub enum Route {
 
     #[route("/spaces/:..rest")]
     Space { rest: Vec<String> },
+
+    #[route("/:username/:..rest")]
+    UserHomeApp { username: String, rest: Vec<String> },
 
 }
 

@@ -7,24 +7,28 @@ pub fn Pagination(current_page: Signal<usize>, total_pages: usize) -> Element {
     }
 
     rsx! {
-        div { class: "flex items-center justify-end gap-2 pt-4",
+        div { class: "flex items-center justify-end gap-2 pt-4 max-mobile:pt-3",
 
             // Previous Button
             button {
-                class: if current_page() == 0 { "flex items-center justify-center w-8 h-8 text-sm text-white/30 border border-white/30 rounded-lg" } else { "flex items-center justify-center w-8 h-8 text-sm text-white border border-white rounded-lg" },
+                class: if current_page() == 0 { "flex h-8 w-8 items-center justify-center rounded-lg text-sm text-text-primary opacity-30" } else { "flex h-8 w-8 items-center justify-center rounded-lg text-sm text-text-primary transition-colors hover:bg-white/10" },
                 disabled: current_page() == 0,
                 onclick: move |_| {
                     if current_page() > 0 {
                         current_page.set(current_page() - 1);
                     }
                 },
-                "‹"
+                icons::arrows::ChevronLeft {
+                    width: "16",
+                    height: "16",
+                    class: "h-4 w-4 [&>path]:stroke-current",
+                }
             }
 
             // Page Numbers
             for page_num in 0..total_pages {
                 button {
-                    class: if current_page() == page_num { "flex items-center justify-center w-8 h-8 text-[14px] font-bold text-space-dashboard-accent border border-space-dashboard-accent rounded-lg transition-colors" } else { "flex items-center justify-center w-8 h-8 text-[14px] font-bold text-white border border-white rounded-lg transition-colors" },
+                    class: if current_page() == page_num { "flex h-8 w-8 flex-col items-center justify-center gap-2.5 rounded-lg border border-space-dashboard-accent px-4 py-2 text-[14px] font-bold text-space-dashboard-accent transition-colors" } else { "flex h-8 w-8 flex-col items-center justify-center gap-2.5 rounded-lg border border-space-dashboard-accent px-4 py-2 text-[14px] font-bold text-text-primary transition-colors hover:bg-white/5" },
                     onclick: move |_| current_page.set(page_num),
                     "{page_num + 1}"
                 }
@@ -32,16 +36,19 @@ pub fn Pagination(current_page: Signal<usize>, total_pages: usize) -> Element {
 
             // Next Button
             button {
-                class: if current_page() >= total_pages - 1 { "flex items-center justify-center w-8 h-8 text-sm text-white/30 border border-white/30 rounded-lg" } else { "flex items-center justify-center w-8 h-8 text-sm text-white border border-white rounded-lg" },
+                class: if current_page() >= total_pages - 1 { "flex h-8 w-8 items-center justify-center rounded-lg text-sm text-text-primary opacity-30" } else { "flex h-8 w-8 items-center justify-center rounded-lg text-sm text-text-primary transition-colors hover:bg-white/10" },
                 disabled: current_page() >= total_pages - 1,
                 onclick: move |_| {
                     if current_page() < total_pages - 1 {
                         current_page.set(current_page() + 1);
                     }
                 },
-                "›"
+                icons::arrows::ChevronLeft {
+                    width: "16",
+                    height: "16",
+                    class: "h-4 w-4 rotate-180 [&>path]:stroke-current",
+                }
             }
         }
     }
 }
-
