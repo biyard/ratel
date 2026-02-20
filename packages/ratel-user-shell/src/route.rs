@@ -1,3 +1,4 @@
+use crate::layout::UserLayout;
 use crate::*;
 use views::Home;
 
@@ -30,14 +31,16 @@ define_user_app_wrapper!(UserCredentials, CredentialRoute);
 #[component]
 fn UserHomeRoot(username: String) -> Element {
     let _ = username;
-    rsx! { Home {} }
+    rsx! {
+        Home {}
+    }
 }
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
 pub enum Route {
     #[nest("/:username")]
-        #[layout(layout::AppLayout)]
+        #[layout(UserLayout)]
             #[route("/")]
             UserHomeRoot { username: String },
             #[route("/posts/:..rest")]
