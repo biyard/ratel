@@ -1,3 +1,12 @@
 [template]
 cargo_generate_version = ">=0.23.0"
-ignore = [".DS_Store", ".git/", "README.md", "assets/", "js/node_modules/", "js/dist/"]
+ignore = [
+    ".DS_Store",
+    ".git/",
+    "README.md",
+    "js/dist/",
+    "js/node_modules/",
+]
+exclude = [
+    "assets/",
+]
