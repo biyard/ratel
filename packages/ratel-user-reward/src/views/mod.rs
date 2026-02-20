@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use ratel_auth::models::user::UserType;
+use ratel_auth::UserType;
 
 mod admin_page;
 mod viewer_page;
@@ -12,7 +12,11 @@ pub fn Home(username: String) -> Element {
     let user_type = UserType::Admin;
 
     match user_type {
-        UserType::Admin => rsx! { AdminPage { username } },
-        _ => rsx! { ViewerPage { username } },
+        UserType::Admin => rsx! {
+            AdminPage { username }
+        },
+        _ => rsx! {
+            ViewerPage { username }
+        },
     }
 }

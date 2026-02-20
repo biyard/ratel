@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use ratel_auth::models::user::UserType;
+use ratel_auth::UserType;
 
 mod admin_page;
 mod viewer_page;
