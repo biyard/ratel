@@ -1,7 +1,7 @@
 use crate::*;
 
 #[component]
-pub fn AuthProvider() -> Element {
+pub fn Provider() -> Element {
     #[cfg(feature = "web")]
     {
         use crate::interop::initialize;

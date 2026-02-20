@@ -33,7 +33,7 @@ impl PopupService {
 
     pub fn open(&mut self, content: Element) -> &mut Self {
         self.state.set(Some(PopupConfig {
-            id: "popup-zone".to_string(),
+            id: "popup-zone-1".to_string(),
             title: None,
             description: None,
             content,

@@ -7,55 +7,66 @@ use std::collections::HashMap;
 
 pub type QueryKey = Vec<String>;
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct QueryStore {
-    versions: Signal<HashMap<String, u64>>,
+    versions: Store<HashMap<QueryKey, u64>>,
 }
 
 impl QueryStore {
     fn new() -> Self {
         Self {
-            versions: Signal::new(HashMap::new()),
+            versions: Store::new(HashMap::new()),
         }
     }
 
-    fn version(&self, key: &str) -> u64 {
-        self.versions.read().get(key).copied().unwrap_or_default()
+    fn register(&mut self, key: &QueryKey) {
+        if self.versions.get(key.clone()).is_none() {
+            self.versions.insert(key.clone(), 0);
+        }
     }
 
-    pub fn invalidate(&mut self, key: impl Into<String>) {
-        let key = key.into();
+    fn version(&self, key: &QueryKey) -> u64 {
+        self.versions
+            .get(key.clone())
+            .map(|v| *v.read())
+            .unwrap_or_default()
+    }
 
-        {
-            let mut versions = self.versions.write();
-            let next = versions
-                .get(&key)
-                .copied()
-                .unwrap_or_default()
-                .saturating_add(1);
-            versions.insert(key.clone(), next);
+    pub fn invalidate(&mut self, prefix: &[impl AsRef<str>]) {
+        let prefix: QueryKey = prefix.iter().map(|s| s.as_ref().to_string()).collect();
+
+        let mut has_exact = false;
+        for (k, mut v) in self.versions.iter() {
+            if k == prefix {
+                has_exact = true;
+            }
+            if k.starts_with(&prefix) {
+                let next = (*v.read()).saturating_add(1);
+                v.set(next);
+            }
+        }
+
+        if !has_exact {
+            self.versions.insert(prefix, 1);
         }
     }
 
     pub fn clear(&mut self) {
-        {
-            let mut versions = self.versions.write();
-            for version in versions.values_mut() {
-                *version = version.saturating_add(1);
-            }
+        for (_, mut version) in self.versions.iter() {
+            let next = (*version.read()).saturating_add(1);
+            version.set(next);
         }
     }
 }
 
 pub fn use_query_store() -> QueryStore {
-    // Shared per app root.
     use_root_context(QueryStore::new)
 }
 
 #[allow(clippy::result_large_err)]
 #[track_caller]
 pub fn use_query<F, T, E>(
-    key: impl Into<String>,
+    key: &[impl AsRef<str>],
     mut future: impl FnMut() -> F + 'static,
 ) -> dioxus::prelude::Result<Loader<T>, Loading>
 where
@@ -63,13 +74,18 @@ where
     T: 'static + Clone + PartialEq + Serialize + DeserializeOwned,
     E: Into<dioxus::CapturedError> + 'static,
 {
-    let query = use_query_store();
-    let key = key.into();
+    let mut query = use_query_store();
+    let key: QueryKey = key.iter().map(|s| s.as_ref().to_string()).collect();
 
-    use_loader(move || {
-        // Reactive dependency for this key.
+    use_effect(use_reactive((&key,), {
+        let mut query = query;
+        move |(key,)| {
+            query.register(&key);
+        }
+    }));
+
+    use_loader(use_reactive((&key,), move |(key,)| {
         let _version = query.version(&key);
-
         future()
-    })
+    }))
 }
