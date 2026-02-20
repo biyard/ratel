@@ -4,7 +4,7 @@ use dioxus::prelude::*;
 use ratel_auth::models::user::User;
 use std::collections::HashMap;
 
-pub const USER_QUERY_KEY: &str = "User";
+pub const USER_QUERY_KEY: &[&str] = &["User"];
 
 #[track_caller]
 pub fn use_user(
