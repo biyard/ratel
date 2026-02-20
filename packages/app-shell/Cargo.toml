@@ -12,7 +12,7 @@ dioxus = { workspace = true }
 ratel-auth = { workspace = true, optional = true }
 ratel-post = { workspace = true, optional = true }
 space-shell = { workspace = true, optional = true }
-ratel-user-home = { workspace = true, optional = true }
+ratel-user-shell = { workspace = true, optional = true }
 
 web-sys = { workspace = true }
 wasm-bindgen = { workspace = true }
@@ -23,7 +23,31 @@ serde-wasm-bindgen = { workspace = true }
 [features]
 default = []
 bypass = ["ratel-auth?/bypass"]
-web = ["common/web", "ratel-auth/web", "space-shell/web", "ratel-post/web", "ratel-user-home/web"]
-desktop = ["common/desktop","ratel-auth/desktop", "space-shell/desktop", "ratel-post/desktop", "ratel-user-home/desktop"]
-mobile = ["common/mobile","ratel-auth/mobile", "space-shell/mobile", "ratel-post/mobile", "ratel-user-home/mobile"]
-server = ["common/server", "ratel-auth/server", "space-shell/server", "ratel-post/server", "ratel-user-home/server"]
+web = [
+  "common/web",
+  "ratel-auth/web",
+  "space-shell/web",
+  "ratel-post/web",
+  "ratel-user-shell/web",
+]
+desktop = [
+  "common/desktop",
+  "ratel-auth/desktop",
+  "space-shell/desktop",
+  "ratel-post/desktop",
+  "ratel-user-shell/desktop",
+]
+mobile = [
+  "common/mobile",
+  "ratel-auth/mobile",
+  "space-shell/mobile",
+  "ratel-post/mobile",
+  "ratel-user-shell/mobile",
+]
+server = [
+  "common/server",
+  "ratel-auth/server",
+  "space-shell/server",
+  "ratel-post/server",
+  "ratel-user-shell/server",
+]
