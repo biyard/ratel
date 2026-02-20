@@ -879,6 +879,7 @@ dependencies = [
  "dioxus",
  "ratel-auth",
  "ratel-post",
+ "ratel-user-home",
  "serde-wasm-bindgen",
  "space-shell",
  "wasm-bindgen",
@@ -13268,6 +13269,15 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
+]
+
+[[package]]
+name = "ratel-user-home"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "serde",
 ]
 
 [[package]]
