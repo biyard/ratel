@@ -18,6 +18,115 @@ const MAX_SECTION_CONTEXT_CHARS: usize = 120_000;
 const MIN_SUBSECTION_CHARS: usize = 1200;
 const MAX_OUTPUT_TOKENS: i32 = 4096;
 
+struct Bedrock;
+
+impl Bedrock {
+    async fn build_client() -> Result<BedrockClient, ServerFnError> {
+        let aws_config = aws_config::load_defaults(BehaviorVersion::latest()).await;
+        Ok(BedrockClient::new(&aws_config))
+    }
+
+    async fn build_agent_client() -> Result<BedrockAgentClient, ServerFnError> {
+        let aws_config = aws_config::load_defaults(BehaviorVersion::latest()).await;
+        Ok(BedrockAgentClient::new(&aws_config))
+    }
+
+    fn get_space_filter(space_pk: &str) -> Result<RetrievalFilter, ServerFnError> {
+        Ok(RetrievalFilter::Equals(
+            FilterAttribute::builder()
+                .key("space_pk")
+                .value(Document::String(space_pk.to_string()))
+                .build()
+                .map_err(|e| ServerFnError::new(format!("kb filter build failed: {e:?}")))?,
+        ))
+    }
+
+    async fn query_kb(
+        filter: RetrievalFilter,
+        query: String,
+    ) -> Result<Option<String>, ServerFnError> {
+        let config = crate::config::server_config::get();
+        let agent = Self::build_agent_client().await?;
+
+        let retrieval_config = KnowledgeBaseRetrievalConfiguration::builder()
+            .vector_search_configuration(
+                KnowledgeBaseVectorSearchConfiguration::builder()
+                    .filter(filter)
+                    .number_of_results(10)
+                    .build(),
+            )
+            .build();
+
+        let retrieval_query = KnowledgeBaseQuery::builder().text(query).build();
+        let retrieved = agent
+            .retrieve()
+            .knowledge_base_id(config.bedrock_knowledge_base_id)
+            .retrieval_query(retrieval_query)
+            .retrieval_configuration(retrieval_config)
+            .send()
+            .await
+            .map_err(|e| ServerFnError::new(format!("bedrock retrieve failed: {e:?}")))?;
+
+        if retrieved.retrieval_results().is_empty() {
+            return Ok(None);
+        }
+
+        let mut raw_context = String::new();
+        for result in retrieved.retrieval_results() {
+            if let Some(content) = result.content() {
+                raw_context.push_str(content.text());
+                raw_context.push('\n');
+            }
+        }
+
+        Ok(Some(raw_context))
+    }
+}
+
+impl Bedrock {
+    async fn query_chat(client: &BedrockClient, prompt: String) -> Result<String, ServerFnError> {
+        let config = crate::config::server_config::get();
+        let message = Message::builder()
+            .role(ConversationRole::User)
+            .content(ContentBlock::Text(prompt))
+            .build()
+            .map_err(|e| ServerFnError::new(format!("bedrock message build failed: {e:?}")))?;
+
+        let response = client
+            .converse()
+            .model_id(config.bedrock_model_id)
+            .inference_config(
+                InferenceConfiguration::builder()
+                    .max_tokens(MAX_OUTPUT_TOKENS)
+                    .build(),
+            )
+            .messages(message)
+            .send()
+            .await
+            .map_err(|e| ServerFnError::new(format!("bedrock converse failed: {e:?}")))?;
+
+        let mut html = String::new();
+        if let Some(output) = response.output() {
+            if let Ok(message) = output.as_message() {
+                for block in message.content() {
+                    if let Ok(text) = block.as_text() {
+                        html.push_str(text);
+                    } else if let ContentBlock::Text(text) = block {
+                        html.push_str(&text);
+                    }
+                }
+            }
+        }
+
+        Ok(html)
+    }
+
+    async fn converse(prompt: String) -> Result<String, ServerFnError> {
+        let client = Self::build_client().await?;
+        Self::query_chat(&client, prompt).await
+    }
+}
+
 fn truncate_context(snapshot_json: &str) -> String {
     if snapshot_json.chars().count() <= MAX_SECTION_CONTEXT_CHARS {
         return snapshot_json.to_string();
@@ -45,41 +154,14 @@ fn strip_code_fences(raw: &str) -> String {
     }
     s.trim().to_string()
 }
-pub async fn build_bedrock_client() -> Result<BedrockClient, ServerFnError> {
-    let aws_config = aws_config::load_defaults(BehaviorVersion::latest()).await;
-    Ok(BedrockClient::new(&aws_config))
-}
-
-pub async fn build_bedrock_agent_client() -> Result<BedrockAgentClient, ServerFnError> {
-    let aws_config = aws_config::load_defaults(BehaviorVersion::latest()).await;
-    Ok(BedrockAgentClient::new(&aws_config))
-}
 
 pub async fn generate_subsection_html_kb(
     space_pk: &str,
     section_title: &str,
-    subheading_spec: &str,
+    subheading_title: &str,
+    sub_subs: &[String],
 ) -> Result<String, ServerFnError> {
-    let config = crate::config::server_config::get();
-    let agent = build_bedrock_agent_client().await?;
-    let (subheading_title, sub_subs) = parse_subheading_spec(subheading_spec);
-
-    let filter = RetrievalFilter::Equals(
-        FilterAttribute::builder()
-            .key("space_pk")
-            .value(Document::String(space_pk.to_string()))
-            .build()
-            .map_err(|e| ServerFnError::new(format!("kb filter build failed: {e:?}")))?,
-    );
-
-    let retrieval_config = KnowledgeBaseRetrievalConfiguration::builder()
-        .vector_search_configuration(
-            KnowledgeBaseVectorSearchConfiguration::builder()
-                .filter(filter)
-                .number_of_results(10)
-                .build(),
-        )
-        .build();
+    let filter = Bedrock::get_space_filter(space_pk)?;
 
     let query = format!(
         "{section_title} {subheading_title} {} 관련 데이터 요약",
@@ -89,28 +171,13 @@ pub async fn generate_subsection_html_kb(
             format!("(하위: {})", sub_subs.join(", "))
         }
     );
-    let retrieval_query = KnowledgeBaseQuery::builder().text(query).build();
-    let retrieved = agent
-        .retrieve()
-        .knowledge_base_id(config.bedrock_knowledge_base_id)
-        .retrieval_query(retrieval_query)
-        .retrieval_configuration(retrieval_config)
-        .send()
-        .await
-        .map_err(|e| ServerFnError::new(format!("bedrock retrieve failed: {e:?}")))?;
-
-    if retrieved.retrieval_results().is_empty() {
-        info!("kb retrieve: 0 results for subsection {}", subheading_title);
-        return Ok(String::new());
-    }
-
-    let mut raw_context = String::new();
-    for result in retrieved.retrieval_results() {
-        if let Some(content) = result.content() {
-            raw_context.push_str(content.text());
-            raw_context.push('\n');
+    let raw_context = match Bedrock::query_kb(filter, query).await? {
+        Some(result) => result,
+        None => {
+            info!("kb retrieve: 0 results for subsection {}", subheading_title);
+            return Ok(String::new());
         }
-    }
+    };
     let snapshot_payload = truncate_context(&raw_context);
 
     let subheadings_line = if sub_subs.is_empty() {
@@ -122,7 +189,7 @@ pub async fn generate_subsection_html_kb(
         )
     };
 
-    let analysis_boost = analysis_detail_boost(section_title, &subheading_title);
+    let analysis_boost = analysis_detail_boost(section_title, subheading_title);
     let prompt = format!(
         "You are generating ONE list item for a report section.\n\
 Return ONLY a single <li>...</li> fragment (no <section>, no <h1>, no <ol> wrapper).\n\
@@ -167,38 +234,7 @@ Context:\n\
 {snapshot_payload}"
     );
 
-    let message = Message::builder()
-        .role(ConversationRole::User)
-        .content(ContentBlock::Text(prompt.clone()))
-        .build()
-        .map_err(|e| ServerFnError::new(format!("bedrock message build failed: {e:?}")))?;
-
-    let client = build_bedrock_client().await?;
-    let response = client
-        .converse()
-        .model_id(config.bedrock_model_id)
-        .inference_config(
-            InferenceConfiguration::builder()
-                .max_tokens(MAX_OUTPUT_TOKENS)
-                .build(),
-        )
-        .messages(message)
-        .send()
-        .await
-        .map_err(|e| ServerFnError::new(format!("bedrock converse failed: {e:?}")))?;
-
-    let mut html = String::new();
-    if let Some(output) = response.output() {
-        if let Ok(message) = output.as_message() {
-            for block in message.content() {
-                if let Ok(text) = block.as_text() {
-                    html.push_str(text);
-                } else if let ContentBlock::Text(text) = block {
-                    html.push_str(&text);
-                }
-            }
-        }
-    }
+    let mut html = Bedrock::converse(prompt.clone()).await?;
 
     html = normalize_fragment_output(&html);
     if !is_valid_subsection_html(&html) || html.contains("<table") {
@@ -219,37 +255,7 @@ Do NOT include any <table> elements."
                 )
             };
 
-            let message = Message::builder()
-                .role(ConversationRole::User)
-                .content(ContentBlock::Text(retry_prompt))
-                .build()
-                .map_err(|e| ServerFnError::new(format!("bedrock message build failed: {e:?}")))?;
-
-            let response = client
-                .converse()
-                .model_id(config.bedrock_model_id)
-                .inference_config(
-                    InferenceConfiguration::builder()
-                        .max_tokens(MAX_OUTPUT_TOKENS)
-                        .build(),
-                )
-                .messages(message)
-                .send()
-                .await
-                .map_err(|e| ServerFnError::new(format!("bedrock converse failed: {e:?}")))?;
-
-            let mut retry_html = String::new();
-            if let Some(output) = response.output() {
-                if let Ok(message) = output.as_message() {
-                    for block in message.content() {
-                        if let Ok(text) = block.as_text() {
-                            retry_html.push_str(text);
-                        } else if let ContentBlock::Text(text) = block {
-                            retry_html.push_str(&text);
-                        }
-                    }
-                }
-            }
+            let retry_html = Bedrock::converse(retry_prompt).await?;
             html = normalize_fragment_output(&retry_html);
             if is_valid_subsection_html(&html) && !html.contains("<table") {
                 break;
@@ -304,23 +310,6 @@ fn contains_formal_ended(html: &str) -> bool {
         }
     }
     text.contains("다.") || text.contains("다!") || text.contains("다?")
-}
-
-fn parse_subheading_spec(spec: &str) -> (String, Vec<String>) {
-    if let Some(start) = spec.find("(하위:") {
-        let title = spec[..start].trim().to_string();
-        let rest = &spec[(start + "(하위:".len())..];
-        let end = rest.find(')').unwrap_or(rest.len());
-        let inner = rest[..end].trim();
-        let subsubs = inner
-            .split(',')
-            .map(|s| s.trim().trim_end_matches("[표 필요]").to_string())
-            .filter(|s| !s.is_empty())
-            .collect::<Vec<_>>();
-        (title, subsubs)
-    } else {
-        (spec.trim().to_string(), Vec::new())
-    }
 }
 
 fn analysis_detail_boost(section_title: &str, subheading_title: &str) -> &'static str {

@@ -20,8 +20,10 @@ impl Default for ServerConfig {
     }
 }
 
+#[allow(unused)]
 static mut CONFIG: Option<ServerConfig> = None;
 
+#[allow(unused)]
 #[allow(static_mut_refs)]
 pub fn get() -> &'static ServerConfig {
     unsafe {
