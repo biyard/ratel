@@ -16,3 +16,5 @@ pub use space_user_role::*;
 
 mod list_response;
 pub use list_response::ListResponse;
+
+pub mod attribute;
