@@ -23,7 +23,6 @@ use super::SpaceParticipant;
     schemars::JsonSchema,
     aide::OperationIo,
 )]
-
 pub struct SpaceCommon {
     pub pk: Partition,
     pub sk: EntityType,
