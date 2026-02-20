@@ -25,6 +25,7 @@ ratel-auth = { path = "packages/ratel-auth" }
 space-shell = { path = "packages/space-shell" }
 ratel-post = { path = "packages/ratel-post" }
 ratel-user-shell = { path = "packages/ratel-user-shell" }
+ratel-team-shell = { path = "packages/ratel-team-shell" }
 
 dioxus-components = { path = "packages/dioxus-components" }
 icons = { path = "packages/icons" }
