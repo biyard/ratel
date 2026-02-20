@@ -19,6 +19,12 @@ impl QueryStore {
         }
     }
 
+    fn register(&mut self, key: &QueryKey) {
+        if self.versions.get(key.clone()).is_none() {
+            self.versions.insert(key.clone(), 0);
+        }
+    }
+
     fn version(&self, key: &QueryKey) -> u64 {
         self.versions
             .get(key.clone())
@@ -26,16 +32,12 @@ impl QueryStore {
             .unwrap_or_default()
     }
 
-    /// Invalidate all queries whose key starts with the given prefix.
-    ///
-    /// e.g. `invalidate(&["Space"])` invalidates
-    /// `["Space"]`, `["Space", "UUID"]`, `["Space", "UUID", "actions"]`, etc.
     pub fn invalidate(&mut self, prefix: &[impl AsRef<str>]) {
         let prefix: QueryKey = prefix.iter().map(|s| s.as_ref().to_string()).collect();
 
         let mut has_exact = false;
         for (k, mut v) in self.versions.iter() {
-            if *k == prefix {
+            if k == prefix {
                 has_exact = true;
             }
             if k.starts_with(&prefix) {
@@ -72,11 +74,18 @@ where
     T: 'static + Clone + PartialEq + Serialize + DeserializeOwned,
     E: Into<dioxus::CapturedError> + 'static,
 {
-    let query = use_query_store();
+    let mut query = use_query_store();
     let key: QueryKey = key.iter().map(|s| s.as_ref().to_string()).collect();
 
-    use_loader(move || {
+    use_effect(use_reactive((&key,), {
+        let mut query = query;
+        move |(key,)| {
+            query.register(&key);
+        }
+    }));
+
+    use_loader(use_reactive((&key,), move |(key,)| {
         let _version = query.version(&key);
         future()
-    })
+    }))
 }
