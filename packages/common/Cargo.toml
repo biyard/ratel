@@ -46,7 +46,9 @@ url = { version = "2", optional = true }
 reqwest = { workspace = true, optional = true }
 strum = { version = "0.27.2", features = ["derive"] }
 wasm-bindgen = { workspace = true }
+wasm-bindgen-futures = { workspace = true }
 serde-wasm-bindgen = { workspace = true }
+web-sys = { workspace = true }
 
 ethers = { version = "=2.0.14", optional = true }
 

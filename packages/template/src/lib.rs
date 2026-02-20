@@ -8,6 +8,8 @@ pub mod models;
 pub mod route;
 
 #[cfg(not(feature = "server"))]
+pub mod interop;
+#[cfg(not(feature = "server"))]
 pub mod web;
 
 #[cfg(feature = "server")]
