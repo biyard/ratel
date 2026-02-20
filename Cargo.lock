@@ -17391,11 +17391,16 @@ dependencies = [
 name = "space-shell"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
+ "aws-sdk-dynamodb",
+ "base64 0.22.1",
  "common",
  "dioxus",
  "ratel-auth",
+ "ratel-post",
  "reqwest 0.12.28",
  "serde",
+ "serde_dynamo",
  "space-page-actions",
  "space-page-apps",
  "space-page-dashboard",
@@ -19439,15 +19444,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "06794f8f6c5c898b3275aebefa6b8a1cb24cd2c6c79397ab15774837a0bc5755"
 dependencies = [
  "winapi-util",
-]
-
-[[package]]
-name = "test-package"
-version = "0.1.0"
-dependencies = [
- "common",
- "dioxus",
- "serde",
 ]
 
 [[package]]
