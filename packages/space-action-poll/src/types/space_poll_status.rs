@@ -1,3 +1,5 @@
+use crate::*;
+
 use crate::macros::DynamoEnum;
 
 #[derive(

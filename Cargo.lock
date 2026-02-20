@@ -17355,9 +17355,8 @@ version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "ratel-auth",
  "serde",
- "serde_with 3.14.1",
- "uuid 1.18.1",
 ]
 
 [[package]]
@@ -17366,6 +17365,7 @@ version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "ratel-auth",
  "serde",
  "space-action-poll",
 ]

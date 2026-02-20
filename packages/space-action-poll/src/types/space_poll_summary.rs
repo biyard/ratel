@@ -1,21 +1,14 @@
+use crate::*;
+
+use super::Question;
+use serde_with::{DisplayFromStr, serde_as};
 use std::collections::HashMap;
 
-use crate::models::Question;
-use crate::types::Answer;
-use serde_with::{DisplayFromStr, serde_as};
-
 #[serde_as]
-#[derive(
-    Debug,
-    Clone,
-    Eq,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-)]
+#[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 #[serde(rename_all = "snake_case", tag = "answer_type")]
-pub enum PollSummary {
+pub enum SpacePollSummary {
     SingleChoice {
         total_count: i64,
         #[schemars(with = "std::collections::HashMap<String, i64>")]
@@ -60,10 +53,10 @@ pub enum PollSummary {
     },
 }
 
-impl PollSummary {
+impl SpacePollSummary {
     pub fn aggregate_answer(&mut self, answer: Answer) {
         match self {
-            PollSummary::SingleChoice {
+            SpacePollSummary::SingleChoice {
                 answers,
                 other_answers,
                 total_count,
@@ -88,7 +81,7 @@ impl PollSummary {
                     }
                 }
             }
-            PollSummary::MultipleChoice {
+            SpacePollSummary::MultipleChoice {
                 answers,
                 other_answers,
                 total_count,
@@ -115,7 +108,7 @@ impl PollSummary {
                     }
                 }
             }
-            PollSummary::ShortAnswer {
+            SpacePollSummary::ShortAnswer {
                 answers,
                 total_count,
             } => {
@@ -126,7 +119,7 @@ impl PollSummary {
                     }
                 }
             }
-            PollSummary::Subjective {
+            SpacePollSummary::Subjective {
                 answers,
                 total_count,
             } => {
@@ -137,7 +130,7 @@ impl PollSummary {
                     }
                 }
             }
-            PollSummary::Checkbox {
+            SpacePollSummary::Checkbox {
                 answers,
                 total_count,
             } => {
@@ -150,7 +143,7 @@ impl PollSummary {
                     }
                 }
             }
-            PollSummary::Dropdown {
+            SpacePollSummary::Dropdown {
                 answers,
                 total_count,
             } => {
@@ -161,7 +154,7 @@ impl PollSummary {
                     }
                 }
             }
-            PollSummary::LinearScale {
+            SpacePollSummary::LinearScale {
                 answers,
                 total_count,
             } => {
@@ -176,36 +169,36 @@ impl PollSummary {
     }
 }
 
-impl From<Question> for PollSummary {
+impl From<Question> for SpacePollSummary {
     fn from(question: Question) -> Self {
         match question {
-            Question::SingleChoice(_) => PollSummary::SingleChoice {
+            Question::SingleChoice(_) => SpacePollSummary::SingleChoice {
                 answers: HashMap::new(),
                 other_answers: HashMap::new(),
                 total_count: 0,
             },
-            Question::MultipleChoice(_) => PollSummary::MultipleChoice {
+            Question::MultipleChoice(_) => SpacePollSummary::MultipleChoice {
                 answers: HashMap::new(),
                 other_answers: HashMap::new(),
                 total_count: 0,
             },
-            Question::ShortAnswer(_) => PollSummary::ShortAnswer {
+            Question::ShortAnswer(_) => SpacePollSummary::ShortAnswer {
                 answers: HashMap::new(),
                 total_count: 0,
             },
-            Question::Subjective(_) => PollSummary::Subjective {
+            Question::Subjective(_) => SpacePollSummary::Subjective {
                 total_count: 0,
                 answers: HashMap::new(),
             },
-            Question::Checkbox(_) => PollSummary::Checkbox {
+            Question::Checkbox(_) => SpacePollSummary::Checkbox {
                 total_count: 0,
                 answers: HashMap::new(),
             },
-            Question::Dropdown(_) => PollSummary::Dropdown {
+            Question::Dropdown(_) => SpacePollSummary::Dropdown {
                 total_count: 0,
                 answers: HashMap::new(),
             },
-            Question::LinearScale(_) => PollSummary::LinearScale {
+            Question::LinearScale(_) => SpacePollSummary::LinearScale {
                 total_count: 0,
                 answers: HashMap::new(),
             },

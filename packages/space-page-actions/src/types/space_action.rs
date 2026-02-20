@@ -16,10 +16,12 @@ pub struct SpaceAction {
 
     pub started_at: Option<i64>,
     pub ended_at: Option<i64>,
+
+    pub user_participated: bool,
 }
 
-impl From<SpacePoll> for SpaceAction {
-    fn from(poll: SpacePoll) -> Self {
+impl From<(SpacePoll, bool)> for SpaceAction {
+    fn from((poll, user_participated): (SpacePoll, bool)) -> Self {
         Self {
             action_type: SpaceActionType::Poll,
             title: poll.topic,
@@ -30,6 +32,7 @@ impl From<SpacePoll> for SpaceAction {
             total_point: Some(poll.total_point),
             started_at: Some(poll.started_at),
             ended_at: Some(poll.ended_at),
+            user_participated,
         }
     }
 }

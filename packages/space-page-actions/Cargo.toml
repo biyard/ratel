@@ -10,11 +10,17 @@ edition = "2021"
 dioxus = { workspace = true }
 common = { workspace = true }
 serde = { workspace = true }
+ratel-auth = { workspace = true, optional = true }
 space-action-poll = { path = "../space-action-poll/", optional = true }
 
 [features]
 default = []
-web = ["common/web", "dioxus/web", "space-action-poll/web"]
+web = ["common/web", "dioxus/web", "ratel-auth/web", "space-action-poll/web"]
 desktop = ["dioxus/desktop"]
 mobile = ["dioxus/mobile"]
-server = ["common/server", "dioxus/server", "space-action-poll/server"]
+server = [
+    "common/server",
+    "dioxus/server",
+    "ratel-auth/server",
+    "space-action-poll/server",
+]
