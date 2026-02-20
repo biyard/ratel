@@ -9,21 +9,23 @@ pub async fn list_actions(
     // bookmark: Option<String>,
 ) -> Result<Vec<SpaceAction>> {
     let cli = crate::config::get().common.dynamodb();
-    let space_pk_partition: Partition = space_pk.into();
-    let poll_future = SpacePoll::query(cli, space_pk, SpacePoll::opt_all());
+
+    let poll_future = SpacePoll::query(cli, space_pk.clone(), SpacePoll::opt_all());
     let ((polls, _),) = tokio::try_join!(poll_future)?;
 
     let actions = if let Some(user) = user.0 {
+        let space_pk_partition: Partition = space_pk.into();
+
         let keys: Vec<_> = polls
             .iter()
-            .map(|poll| SpacePollUserAnswer::keys(&user.pk, &poll.sk.into(), &space_pk_partition))
+            .map(|poll| SpacePollUserAnswer::keys(&user.pk, &poll.sk, &space_pk_partition))
             .collect();
         let (user_participated,) = tokio::try_join!(SpacePollUserAnswer::batch_get(cli, keys))?;
 
-        let participated_pks: HashSet<String> = user_participated
-            .iter()
-            .filter_map(|a| match &a.pk {
-                Partition::SpacePollUserAnswer(pk) => Some(pk.clone()),
+        let participated_poll_sks: HashSet<String> = user_participated
+            .into_iter()
+            .filter_map(|a| match a.sk {
+                EntityType::SpacePollUserAnswer(_, poll_sk) => Some(poll_sk),
                 _ => None,
             })
             .collect();
@@ -31,7 +33,7 @@ pub async fn list_actions(
         polls
             .into_iter()
             .map(|poll| {
-                let participated = participated_pks.contains(&user.pk.to_string());
+                let participated = participated_poll_sks.contains(&poll.sk.to_string());
                 (poll, participated).into()
             })
             .collect()
