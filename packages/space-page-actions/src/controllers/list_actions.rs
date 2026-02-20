@@ -11,13 +11,16 @@ pub async fn list_actions(
     let ((polls, _),) = tokio::try_join!(poll_future)?;
 
     // Check User Participated
-    // batch_get
-    // let keys = polls
-    //     .iter()
-    //     .map(|poll| SpacePollUserAnswer::key(space_pk, poll.pk))
-    //     .collect();
-    // let user_participated_future = SpacePollUserAnswer::batch_get(cli, keys);
-    // let ((user_participated, _),) = tokio::try_join!(user_participated_future)?;
-    let actions = polls.into_iter().map(|poll| (poll, false).into()).collect();
+
+    let keys = polls
+        .iter()
+        .map(|poll| SpacePollUserAnswer::key(space_pk, poll.pk))
+        .collect();
+    let user_participated_future = SpacePollUserAnswer::batch_get(cli, keys);
+    let ((user_participated, _),) = tokio::try_join!(user_participated_future)?;
+    let actions = polls
+        .into_iter()
+        .map(|poll| (poll, user_participated.contains(&poll.pk)).into())
+        .collect();
     Ok(actions)
 }

@@ -56,4 +56,111 @@ impl SpacePoll {
             total_score: 0,
         })
     }
+
+    pub fn is_default_poll(&self) -> bool {
+        match &self.sk {
+            EntityType::SpacePoll(id) => {
+                if let Partition::Space(space_id) = &self.pk {
+                    return id == space_id;
+                }
+                false
+            }
+            _ => false,
+        }
+    }
+
+    pub fn status(&self) -> PollStatus {
+        let now = get_now_timestamp_millis();
+        if now < self.started_at {
+            PollStatus::NotStarted
+        } else if now >= self.started_at && now <= self.ended_at {
+            PollStatus::InProgress
+        } else {
+            PollStatus::Finish
+        }
+    }
+
+    pub fn sanitize_schedule_name(raw: &str) -> String {
+        let mut s: String = raw
+            .chars()
+            .map(|c| {
+                if c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '.' {
+                    c
+                } else {
+                    '-'
+                }
+            })
+            .collect();
+
+        if s.len() > 64 {
+            s.truncate(64);
+        }
+        s
+    }
+
+    pub async fn delete_one(
+        cli: &aws_sdk_dynamodb::Client,
+        space_pk: &Partition,
+    ) -> crate::Result<()> {
+        let space_id = match space_pk {
+            Partition::Space(v) => v.to_string(),
+            _ => return Ok(()),
+        };
+
+        let poll = SpacePoll::get(
+            cli,
+            space_pk,
+            Some(EntityType::SpacePoll(space_id.clone())),
+        )
+        .await?;
+
+        if poll.is_none() {
+            return Ok(());
+        }
+
+        SpacePoll::delete(
+            cli,
+            space_pk,
+            Some(EntityType::SpacePoll(space_id.clone())),
+        )
+        .await?;
+
+        Ok(())
+    }
+}
+
+#[cfg(feature = "server")]
+impl TryFrom<Partition> for SpacePoll {
+    type Error = crate::Error;
+
+    fn try_from(value: Partition) -> crate::Result<Self> {
+        let uuid = match value {
+            Partition::Space(ref s) => s.clone(),
+            _ => {
+                return Err(crate::Error::InternalServerError(
+                    "server error".to_string(),
+                ));
+            }
+        };
+
+        let pk = value;
+        let sk = EntityType::SpacePoll(uuid);
+        let now = get_now_timestamp_millis();
+
+        Ok(Self {
+            pk,
+            sk,
+            created_at: now,
+            updated_at: now,
+            user_response_count: 0,
+            response_editable: false,
+            started_at: now,
+            ended_at: now + 7 * 24 * 60 * 60 * 1000,
+            topic: String::new(),
+            description: String::new(),
+            questions: Vec::new(),
+            total_point: 0,
+            total_score: 0,
+        })
+    }
 }

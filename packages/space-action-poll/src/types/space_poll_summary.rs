@@ -1,26 +1,22 @@
 use crate::*;
 
 use super::Question;
-use serde_with::{DisplayFromStr, serde_as};
+
 use std::collections::HashMap;
 
-#[serde_as]
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 #[serde(rename_all = "snake_case", tag = "answer_type")]
 pub enum SpacePollSummary {
     SingleChoice {
         total_count: i64,
-        #[schemars(with = "std::collections::HashMap<String, i64>")]
-        #[serde_as(as = "HashMap<DisplayFromStr, _>")]
         answers: HashMap<i32, i64>,
         #[serde(default)]
         other_answers: HashMap<String, i64>,
     },
     MultipleChoice {
         total_count: i64,
-        #[schemars(with = "std::collections::HashMap<String, i64>")]
-        #[serde_as(as = "HashMap<DisplayFromStr, _>")]
+
         answers: HashMap<i32, i64>,
         #[serde(default)]
         other_answers: HashMap<String, i64>,
@@ -35,20 +31,14 @@ pub enum SpacePollSummary {
     },
     Checkbox {
         total_count: i64,
-        #[schemars(with = "std::collections::HashMap<String, i64>")]
-        #[serde_as(as = "HashMap<DisplayFromStr, _>")]
         answers: HashMap<i32, i64>,
     },
     Dropdown {
         total_count: i64,
-        #[schemars(with = "std::collections::HashMap<String, i64>")]
-        #[serde_as(as = "HashMap<DisplayFromStr, _>")]
         answers: HashMap<i32, i64>,
     },
     LinearScale {
         total_count: i64,
-        #[schemars(with = "std::collections::HashMap<String, i64>")]
-        #[serde_as(as = "HashMap<DisplayFromStr, _>")]
         answers: HashMap<i32, i64>,
     },
 }
