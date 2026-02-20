@@ -4,7 +4,7 @@ use crate::views::Index;
 use layout::AppLayout;
 use ratel_auth::Route as AuthRoute;
 use ratel_post::Route as PostRoute;
-use ratel_user_home::App as UserHomeApp;
+use ratel_user_shell::App as UserHomeApp;
 use space_shell::Route as SpaceRoute;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
