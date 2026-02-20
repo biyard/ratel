@@ -1,8 +1,7 @@
-use common::{EntityType, Partition};
+use common::{DynamoEntity, EntityType, Partition};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-// #[derive(Debug, Clone, Default, Serialize, Deserialize, DynamoEntity)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, DynamoEntity)]
 pub struct DashboardExtensionEntity {
     pub pk: Partition, // PK: `SPACE#{space_id}`
     pub sk: EntityType, // SK: `SPACE_DASHBOARD_EXTENSION#{extension_id}`
