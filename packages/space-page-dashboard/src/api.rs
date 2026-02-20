@@ -1,9 +1,9 @@
+use common::SpaceUserRole;
+#[cfg(feature = "server")]
+use common::{EntityType, Partition};
 use dioxus::prelude::*;
-use common::{EntityType, Partition, SpaceUserRole};
 #[cfg(feature = "server")]
 use ratel_auth::models::user::SESSION_KEY_USER_ID;
-#[cfg(not(feature = "server"))]
-const SESSION_KEY_USER_ID: &str = "user_id";
 
 #[get(
     "/api/spaces/:space_id/user-role",
@@ -19,8 +19,11 @@ pub async fn get_user_role_in_space(space_id: String) -> Result<SpaceUserRole, S
         .map_err(|e| ServerFnError::new(format!("Failed to query space common: {e}")))?
         .ok_or_else(|| ServerFnError::new("Space not found".to_string()))?;
 
+    #[cfg(feature = "server")]
+    let session_key_user_id = SESSION_KEY_USER_ID;
+
     let user_pk: Option<Partition> = session
-        .get(SESSION_KEY_USER_ID)
+        .get(session_key_user_id)
         .await
         .map_err(|e| ServerFnError::new(format!("Failed to read session user: {e}")))?;
 
