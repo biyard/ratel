@@ -12,6 +12,10 @@ common = { workspace = true }
 serde = { workspace = true }
 reqwest = { workspace = true, optional = true }
 tokio = { workspace = true, optional = true }
+serde_dynamo = { workspace = true, optional = true }
+aws-sdk-dynamodb = { workspace = true, optional = true }
+base64 = { workspace = true, optional = true }
+async-trait = { workspace = true, optional = true }
 
 ratel-auth = { path = "../ratel-auth/", optional = true }
 space-page-dashboard = { path = "../space-page-dashboard/", optional = true }
@@ -19,6 +23,7 @@ space-page-overview = { path = "../space-page-overview/", optional = true }
 space-page-actions = { path = "../space-page-actions/", optional = true }
 space-page-apps = { path = "../space-page-apps/", optional = true }
 space-page-report = { path = "../space-page-report/", optional = true }
+ratel-post = { path = "../ratel-post/", optional = true }
 
 [features]
 default = []
@@ -27,6 +32,7 @@ web = [
     "common/web",
     "dioxus/web",
     "ratel-auth/web",
+    "ratel-post/web",
     "space-page-actions/web",
     "space-page-apps/web",
     "space-page-dashboard/web",
@@ -37,6 +43,7 @@ web = [
 desktop = [
     "dioxus/desktop",
     "ratel-auth/desktop",
+    "ratel-post/desktop",
     "space-page-actions/desktop",
     "space-page-apps/desktop",
     "space-page-dashboard/desktop",
@@ -47,6 +54,7 @@ desktop = [
 mobile = [
     "dioxus/mobile",
     "ratel-auth/mobile",
+    "ratel-post/mobile",
     "space-page-actions/mobile",
     "space-page-apps/mobile",
     "space-page-dashboard/mobile",
@@ -59,12 +67,17 @@ server = [
     "dioxus/server",
     "reqwest",
     "tokio",
+    "serde_dynamo",
+    "aws-sdk-dynamodb",
+    "base64",
+    "async-trait",
     "ratel-auth/server",
     "space-page-actions/server",
     "space-page-apps/server",
     "space-page-dashboard/server",
     "space-page-overview/server",
     "space-page-report/server",
+    "ratel-post/server",
 ]
 
 layout_test = ["web"]

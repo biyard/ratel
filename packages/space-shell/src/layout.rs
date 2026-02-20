@@ -25,7 +25,7 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
                 menus,
             }
             div { class: "flex flex-col col-span-6 col-start-2 min-h-0",
-                SpaceTop {}
+                SpaceTop { space_id }
                 div { class: "flex overflow-auto p-5 w-full top-[65px] grow bg-space-body-bg rounded-tl-[10px] h-[calc(100%-65px)]",
                     Outlet::<Route> {}
                 }
