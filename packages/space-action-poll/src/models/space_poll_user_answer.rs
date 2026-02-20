@@ -1,10 +1,13 @@
 use std::collections::HashMap;
 
+use common::attribute::*;
+use common::utils::time::get_now_timestamp_millis;
 use ratel_auth::User;
 
 use crate::*;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default, JsonSchema)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct SpacePollUserAnswer {
     pub pk: Partition, // User Partition
     #[dynamo(prefix = "POLL_PK", index = "gsi1", name = "find_by_space_pk", pk)]
@@ -23,6 +26,7 @@ pub struct SpacePollUserAnswer {
     pub username: Option<String>,
 }
 
+#[cfg(feature = "server")]
 impl SpacePollUserAnswer {
     pub fn new(
         space_pk: Partition,
@@ -77,7 +81,7 @@ impl SpacePollUserAnswer {
     pub async fn summarize_responses_with_attribute(
         cli: &aws_sdk_dynamodb::Client,
         space_pk: &Partition,
-        poll_pk: &Partition,
+        poll_sk: &EntityType,
     ) -> crate::Result<(
         Vec<SpacePollSummary>,
         HashMap<String, Vec<SpacePollSummary>>,
@@ -86,55 +90,30 @@ impl SpacePollUserAnswer {
         Vec<SpacePollUserAnswer>,
         Vec<SpacePollUserAnswer>,
     )> {
-        let polls = Poll::query(
-            &cli,
-            space_pk,
-            PollQueryOption::builder().sk("SPACE_POLL#".to_string()),
-        )
-        .await?;
-        let final_pk = poll_pk.clone();
-        let mut sample_pk = poll_pk.clone();
+        let poll = SpacePoll::get(&cli, space_pk, Some(poll_sk.clone()))
+            .await?
+            .ok_or(Error::NotFound("Poll Not found".to_string()))?;
 
-        for poll in polls.0 {
-            let id = match poll.clone().sk {
-                EntityType::SpacePoll(id) => id,
-                _ => "".to_string(),
-            };
-            if poll.clone().is_default_poll() {
-                sample_pk = Partition::Poll(id.clone());
-                break;
-            }
-        }
+        let final_pk = poll_sk.clone();
+        let mut sample_pk = poll_sk.clone();
 
-        let question =
-            PollQuestion::get(cli, &space_pk, Some(EntityType::SpacePollQuestion)).await?;
-        let Some(question) = question else {
-            return Ok((
-                vec![],
-                HashMap::new(),
-                HashMap::new(),
-                HashMap::new(),
-                vec![],
-                vec![],
-            ));
-        };
+        let question = poll.questions;
 
-        let seed: Vec<PollSummary> = question
-            .questions
+        let seed: Vec<SpacePollSummary> = question
             .iter()
             .cloned()
-            .map(PollSummary::from)
+            .map(SpacePollSummary::from)
             .collect();
 
         use std::collections::HashMap as Map;
 
         let mut overall = seed.clone();
-        let mut gender_map: Map<Gender, Vec<PollSummary>> = Map::new();
-        let mut age_map: Map<AgeBand, Vec<PollSummary>> = Map::new();
-        let mut school_map: Map<String, Vec<PollSummary>> = Map::new();
+        let mut gender_map: Map<Gender, Vec<SpacePollSummary>> = Map::new();
+        let mut age_map: Map<AgeBand, Vec<SpacePollSummary>> = Map::new();
+        let mut school_map: Map<String, Vec<SpacePollSummary>> = Map::new();
 
         let mut bookmark: Option<String> = None;
-        let mut final_all: Vec<PollUserAnswer> = Vec::new();
+        let mut final_all: Vec<SpacePollUserAnswer> = Vec::new();
 
         loop {
             let (responses, new_bookmark) = Self::find_by_space_pk(
@@ -203,7 +182,7 @@ impl SpacePollUserAnswer {
         let (sample_aligned, final_aligned) = if sample_pk == final_pk {
             (final_all, vec![])
         } else {
-            let mut sample_all: Vec<PollUserAnswer> = Vec::new();
+            let mut sample_all: Vec<SpacePollUserAnswer> = Vec::new();
             let mut sb: Option<String> = None;
             loop {
                 let (chunk, next) = Self::find_by_space_pk(
@@ -224,7 +203,7 @@ impl SpacePollUserAnswer {
                 }
             }
 
-            let mut sample_by_user: HashMap<String, PollUserAnswer> = HashMap::new();
+            let mut sample_by_user: HashMap<String, SpacePollUserAnswer> = HashMap::new();
             for s in sample_all {
                 if let Partition::SpacePollUserAnswer(user) = &s.pk {
                     sample_by_user.insert(user.clone(), s);
@@ -244,7 +223,7 @@ impl SpacePollUserAnswer {
             (sample_out, final_out)
         };
 
-        let by_gender: HashMap<String, Vec<PollSummary>> = gender_map
+        let by_gender: HashMap<String, Vec<SpacePollSummary>> = gender_map
             .into_iter()
             .map(|(k, v)| {
                 let key = match k {
@@ -255,7 +234,7 @@ impl SpacePollUserAnswer {
             })
             .collect();
 
-        let by_age: HashMap<String, Vec<PollSummary>> = age_map
+        let by_age: HashMap<String, Vec<SpacePollSummary>> = age_map
             .into_iter()
             .map(|(band, v)| (band.label().to_string(), v))
             .collect();
