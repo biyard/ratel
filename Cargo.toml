@@ -1,7 +1,7 @@
 [workspace]
 members = ["packages/*", "packages/space-page-overview", "packages/space-shell", "packages/ratel-auth"]
 resolver = "2"
-exclude = ["benchmark/*", "deps"]
+exclude = ["benchmark/*", "deps", "packages/template"]
 
 [workspace.package]
 authors = ["Biyard"]
