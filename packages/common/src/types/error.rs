@@ -65,6 +65,10 @@ pub enum Error {
     #[translate(en = "Not found", ko = "찾을 수 없습니다.")]
     NotFound(String),
 
+    #[error("User has no permission")]
+    #[translate(en = "No permission", ko = "권한이 없습니다.")]
+    NoPermission,
+
     #[error("Exceeded maximum attempt for email verification")]
     #[translate(
         en = "Exceeded maximum attempt for email verification",
@@ -82,6 +86,22 @@ pub enum Error {
     #[error("Send SMS Failed: {0}")]
     #[translate(en = "Send SMS Failed", ko = "SMS 전송에 실패했습니다.")]
     SendSmsFailed(String),
+
+    #[error("User participation is blocked for this space")]
+    #[translate(en = "Participation is blocked", ko = "참여가 제한되어 있습니다.")]
+    ParticipationBlocked,
+
+    #[error("User lacks verified attributes required for participation")]
+    #[translate(en = "Missing verified attributes", ko = "필수 인증 속성이 없습니다.")]
+    LackOfVerifiedAttributes,
+
+    #[error("Quota is full")]
+    #[translate(en = "Quota is full", ko = "정원이 초과되었습니다.")]
+    FullQuota,
+
+    #[error("User is already participating in the space")]
+    #[translate(en = "Already participating", ko = "이미 참여 중입니다.")]
+    AlreadyParticipating,
 
     #[error("not found verification code")]
     #[translate(
@@ -127,7 +147,12 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             | Error::NotSupported(_)
             | Error::InvalidBookmark
             | Error::BadRequest(_)
-            | Error::Duplicate(_) => StatusCode::BAD_REQUEST,
+            | Error::Duplicate(_)
+            | Error::NoPermission
+            | Error::ParticipationBlocked
+            | Error::LackOfVerifiedAttributes
+            | Error::FullQuota
+            | Error::AlreadyParticipating => StatusCode::BAD_REQUEST,
             Error::NotFound(_) => StatusCode::NOT_FOUND,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
@@ -169,6 +194,11 @@ impl dioxus::fullstack::AsStatusCode for Error {
             | Error::InvalidBookmark
             | Error::BadRequest(_)
             | Error::Duplicate(_)
+            | Error::NoPermission
+            | Error::ParticipationBlocked
+            | Error::LackOfVerifiedAttributes
+            | Error::FullQuota
+            | Error::AlreadyParticipating
             | Error::ExceededAttemptEmailVerification
             | Error::ExceededAttemptPhoneVerification
             | Error::SendSmsFailed(_)
