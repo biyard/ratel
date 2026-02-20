@@ -29,7 +29,7 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
         let mut error = error.clone();
         let mut editor_key = editor_key.clone();
         spawn(async move {
-            match crate::views::get_ai_report(space_pk).await {
+            match crate::controllers::get_analyze(space_pk).await {
                 Ok(resp) => {
                     if let Some(html) = resp.html_contents {
                         if !html.trim().is_empty() {
@@ -60,7 +60,7 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
                         let mut is_loading = is_loading.clone();
                         let mut error = error.clone();
                         spawn(async move {
-                            match crate::views::request_ai_report(space_pk).await {
+                            match crate::controllers::create_ai_report(space_pk).await {
                                 Ok(resp) => {
                                     content.set(resp.html_contents);
                                     editor_key.set(editor_key() + 1);
@@ -111,7 +111,14 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
                                     let mut error = error.clone();
                                     let mut editable = editable.clone();
                                     spawn(async move {
-                                        match crate::views::save_ai_report(space_pk, html).await {
+                                        match crate::controllers::update_analyze(
+                                            space_pk,
+                                            crate::controllers::UpdateAnalyzeHtmlRequest {
+                                                html_contents: html,
+                                            },
+                                        )
+                                        .await
+                                        {
                                             Ok(_) => editable.set(false),
                                             Err(err) => error.set(Some(err.to_string())),
                                         }

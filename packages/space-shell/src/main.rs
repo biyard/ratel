@@ -1,3 +1,4 @@
+use common::PopupService;
 use dioxus::prelude::*;
 use ratel_auth::AuthProvider;
 use space_shell::*;

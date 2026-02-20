@@ -17,7 +17,7 @@ pub fn ViewerPage(space_id: SpacePartition) -> Element {
         let mut content = content.clone();
         let mut editor_key = editor_key.clone();
         spawn(async move {
-            if let Ok(resp) = crate::views::get_ai_report(space_pk).await {
+            if let Ok(resp) = crate::controllers::get_analyze(space_pk).await {
                 if let Some(html) = resp.html_contents {
                     if !html.trim().is_empty() {
                         content.set(html);

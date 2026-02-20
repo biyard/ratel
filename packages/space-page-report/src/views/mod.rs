@@ -1,14 +1,12 @@
 use crate::*;
 
 mod candidate_page;
-mod controller;
 mod creator_page;
 mod i18n;
 mod participant_page;
 mod viewer_page;
 
 use candidate_page::*;
-use controller::*;
 use creator_page::*;
 use i18n::*;
 use participant_page::*;
