@@ -1,7 +1,7 @@
 use super::SpaceActionType;
 use crate::*;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default, PartialEq)]
 // #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct SpaceAction {
     pub action_type: SpaceActionType,
