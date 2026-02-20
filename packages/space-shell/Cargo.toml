@@ -21,7 +21,7 @@ space-page-apps = { path = "../space-page-apps/", optional = true }
 space-page-report = { path = "../space-page-report/", optional = true }
 
 [features]
-default = ["web"]
+default = []
 # The feature that are only required for the web = ["dioxus/web"] build target should be optional and only enabled in the web = ["dioxus/web"] feature
 web = [
     "common/web",

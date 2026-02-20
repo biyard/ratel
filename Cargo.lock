@@ -872,6 +872,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a23eb6b1614318a8071c9b2521f36b424b2c83db5eb3a0fead4a6c0809af6e61"
 
 [[package]]
+name = "app-shell"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "ratel-auth",
+ "ratel-post",
+ "serde-wasm-bindgen",
+ "space-shell",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
 name = "approx"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3802,6 +3817,8 @@ dependencies = [
  "aws-credential-types",
  "aws-sdk-dynamodb",
  "aws-sdk-s3",
+ "aws-sdk-sesv2",
+ "aws-sdk-sns",
  "base64 0.22.1",
  "bdk",
  "by-macros",
@@ -13221,6 +13238,33 @@ dependencies = [
  "url",
  "uuid 1.18.1",
  "validator",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
+name = "ratel-post"
+version = "0.1.0"
+dependencies = [
+ "aide",
+ "aws-sdk-dynamodb",
+ "base64 0.22.1",
+ "chrono",
+ "common",
+ "dioxus",
+ "percent-encoding",
+ "ratel-auth",
+ "regex",
+ "schemars 1.0.4",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_dynamo",
+ "serde_repr",
+ "serde_with 3.14.1",
+ "tower-sessions 0.15.0",
+ "tracing",
+ "uuid 1.18.1",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
