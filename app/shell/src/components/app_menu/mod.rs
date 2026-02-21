@@ -100,6 +100,7 @@ pub fn AppMenu() -> Element {
                         },
                     }
 
+                    ThemeSwitcher {}
                     // Language toggle
                     LanguageToggle {}
 
