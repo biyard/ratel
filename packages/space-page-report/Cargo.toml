@@ -10,9 +10,14 @@ edition = "2021"
 dioxus = { workspace = true }
 common = { workspace = true }
 serde = { workspace = true }
+base64 = { workspace = true, optional = true }
+serde_dynamo = { workspace = true, optional = true }
+percent-encoding = { workspace = true }
 aws-config = { version = "1", optional = true }
 aws-sdk-s3 = { version = "1", optional = true }
 aws-sdk-bedrockruntime = { version = "1", optional = true }
+aws-sdk-bedrockagentruntime = { version = "1", optional = true }
+aws-smithy-types = { version = "1", optional = true }
 
 [features]
 default = []
@@ -22,7 +27,11 @@ mobile = ["dioxus/mobile"]
 server = [
   "dioxus/server",
   "common/server",
+  "base64",
+  "serde_dynamo",
   "aws-config",
   "aws-sdk-s3",
   "aws-sdk-bedrockruntime",
+  "aws-sdk-bedrockagentruntime",
+  "aws-smithy-types",
 ]
