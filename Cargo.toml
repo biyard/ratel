@@ -1,9 +1,7 @@
 [workspace]
 members = [
+  "app/**/*",
   "packages/*",
-  "packages/ratel-auth",
-  "packages/space-page-overview",
-  "packages/space-shell",
 ]
 resolver = "2"
 exclude = ["benchmark/*", "deps", "packages/template"]
@@ -25,12 +23,12 @@ dioxus-translate = { path = "packages/dioxus-translate", version = "0.1.*" }
 dioxus-translate-types = { path = "packages/dioxus-translate-types", version = "0.1.*" }
 dioxus-translate-macro = { path = "packages/dioxus-translate-macro", version = "0.1.*" }
 by-macros = { path = "packages/by-macros", version = "0.6.*" }
-common = { path = "packages/common" }
-ratel-auth = { path = "packages/ratel-auth" }
-space-shell = { path = "packages/space-shell" }
-ratel-post = { path = "packages/ratel-post" }
-ratel-user-shell = { path = "packages/ratel-user-shell" }
-ratel-team-shell = { path = "packages/ratel-team-shell" }
+common = { path = "app/common" }
+# ratel-auth = { path = "packages/ratel-auth" }
+# space-shell = { path = "packages/space-shell" }
+# ratel-post = { path = "packages/ratel-post" }
+# ratel-user-shell = { path = "packages/ratel-user-shell" }
+# ratel-team-shell = { path = "packages/ratel-team-shell" }
 
 dioxus-components = { path = "packages/dioxus-components" }
 icons = { path = "packages/icons" }
