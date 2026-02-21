@@ -1,3 +1,4 @@
+use super::*;
 use crate::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Default, Translate, strum::Display, strum::EnumString)]
@@ -23,11 +24,26 @@ impl Theme {
         }
     }
 
-    pub fn icon(&self) -> &'static str {
+    pub fn icon(&self) -> Element {
         match self {
-            Theme::Light => "☀",
-            Theme::Dark => "🌙",
-            Theme::System => "💻",
+            Theme::Light => rsx! {
+                Sun {
+                    class: "[&>path]:stroke-icon-primary [&>circle]:stroke-icon-primary",
+                    height: "24",
+                }
+            },
+            Theme::Dark => rsx! {
+                Moon {
+                    class: "[&>path]:stroke-icon-primary [&>circle]:stroke-icon-primary",
+                    height: "24",
+                }
+            },
+            Theme::System => rsx! {
+                SunMoon {
+                    class: "[&>path]:stroke-icon-primary [&>circle]:stroke-icon-primary",
+                    height: "24",
+                }
+            },
         }
     }
 }

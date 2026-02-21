@@ -1,8 +1,14 @@
 mod interop_theme;
+mod moon;
+mod sun;
+mod sun_moon;
 mod theme;
 mod theme_service;
 
 pub use interop_theme::*;
+pub use moon::*;
+pub use sun::*;
+pub use sun_moon::*;
 pub use theme::*;
 pub use theme_service::*;
 
@@ -20,13 +26,13 @@ pub fn ThemeSwitcher() -> Element {
     rsx! {
         div { class: "relative",
             button {
-                class: "flex gap-2 items-center py-2 px-3 rounded-lg transition-colors cursor-pointer bg-card text-foreground hover:bg-accent-hover",
+                class: "flex flex-col items-center py-2 px-3 rounded-lg transition-colors cursor-pointer hover:bg-accent-hover",
                 onclick: move |_| {
                     let v = *open.read();
                     open.set(!v);
                 },
 
-                span { class: "text-sm", "{current.icon()}" }
+                span { class: "text-sm", {current.icon()} }
                 span { class: "text-sm font-medium", "{current.label()}" }
             }
 
@@ -37,7 +43,7 @@ pub fn ThemeSwitcher() -> Element {
                             class: {
                                 let selected = if option == current { "bg-accent-hover" } else { "" };
                                 format!(
-                                    "flex items-center gap-2 w-full px-3 py-2 text-sm text-foreground hover:bg-accent-hover cursor-pointer transition-colors {selected}",
+                                    "flex gap-2 items-center w-full px-3 py-2 text-sm hover:bg-accent-hover cursor-pointer transition-colors {selected}",
                                 )
                             },
                             onclick: move |_| {
@@ -45,7 +51,7 @@ pub fn ThemeSwitcher() -> Element {
                                 open.set(false);
                             },
 
-                            span { "{option.icon()}" }
+                            span { {option.icon()} }
                             span { "{option.label()}" }
                         }
                     }

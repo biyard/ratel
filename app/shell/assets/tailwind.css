@@ -2735,6 +2735,11 @@
       fill: none;
     }
   }
+  .\[\&\>circle\]\:stroke-icon-primary {
+    &>circle {
+      stroke: var(--color-icon-primary);
+    }
+  }
   .\[\&\>circle\]\:stroke-neutral-500 {
     &>circle {
       stroke: var(--color-neutral-500);
@@ -2768,6 +2773,11 @@
   .\[\&\>path\]\:stroke-font-primary {
     &>path {
       stroke: var(--color-font-primary);
+    }
+  }
+  .\[\&\>path\]\:stroke-icon-primary {
+    &>path {
+      stroke: var(--color-icon-primary);
     }
   }
   .\[\&\>path\]\:stroke-label-color-text {
