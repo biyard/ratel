@@ -103,6 +103,8 @@ pub enum EntityType {
     SpaceArtwork,
     SpaceArtworkTrade(String), // Transaction hash
 
+    SpaceIncentive,
+
     Space,
     SpaceMember,
     Feed,
