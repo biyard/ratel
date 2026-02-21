@@ -23,6 +23,7 @@ pub const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
 /// Components should be annotated with `#[component]` to support props, better error messages, and autocomplete
 #[component]
 fn App() -> Element {
+    use_context_provider(|| LayoverService::new());
     use_context_provider(|| PopupService::new());
     use_query_store();
     rsx! {
