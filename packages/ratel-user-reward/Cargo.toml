@@ -1,0 +1,18 @@
+[package]
+name = "ratel-user-reward"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+
+[dependencies]
+dioxus = { workspace = true }
+common = { workspace = true }
+serde = { workspace = true }
+ratel-auth = { path = "../ratel-auth/", optional = true }
+
+[features]
+default = []
+web = ["common/web", "dioxus/web", "ratel-auth/web"]
+desktop = ["dioxus/desktop", "ratel-auth/desktop"]
+mobile = ["dioxus/mobile", "ratel-auth/mobile"]
+server = ["common/server", "dioxus/server", "ratel-auth/server"]

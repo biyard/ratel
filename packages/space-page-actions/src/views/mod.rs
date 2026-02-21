@@ -1,22 +1,16 @@
-use crate::*;
-
-mod creator_page;
+use crate::{controllers::list_actions, *};
 mod i18n;
-mod new;
-
-use creator_page::*;
-use i18n::*;
-
-pub use new::*;
-
+use i18n::ListActionPageTranslate;
 #[component]
-pub fn HomePage(space_id: SpacePartition) -> Element {
-    let role = use_server_future(move || async move { SpaceUserRole::Creator })?;
-
-    match role.value()().unwrap_or_default() {
-        SpaceUserRole::Creator => rsx! {
-            CreatorPage { space_id }
-        },
-        _ => rsx! {},
+pub fn ListActionPage(space_id: SpacePartition) -> Element {
+    let tr: ListActionPageTranslate = use_translate();
+    let actions = use_loader(move || list_actions(space_id.clone()))?;
+    rsx! {
+        div {
+            id: "new-action-page",
+            class: "flex flex-col gap-5 items-start w-full",
+            h3 { "{tr.title}" }
+            h3 { "{actions.len()}" }
+        }
     }
 }

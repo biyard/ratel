@@ -42,9 +42,10 @@ translate! {
 pub fn AppMenu() -> Element {
     let tr: AppMenuTranslate = use_translate();
     let mut popup = use_popup();
+    let user_ctx = ratel_auth::hooks::use_user_context();
 
     // TODO: Replace with actual auth state when available
-    let logged_in = false;
+    let logged_in = user_ctx().is_logged_in();
 
     rsx! {
         header { class: "flex justify-center items-center py-2.5 px-2.5 border-b border-divider bg-bg! h-(--header-height) z-999",

@@ -1,7 +1,12 @@
 [workspace]
-members = ["packages/*", "packages/space-page-overview", "packages/space-shell", "packages/ratel-auth"]
+members = [
+  "packages/*",
+  "packages/ratel-auth",
+  "packages/space-page-overview",
+  "packages/space-shell",
+]
 resolver = "2"
-exclude = ["benchmark/*", "deps"]
+exclude = ["benchmark/*", "deps", "packages/template"]
 
 [workspace.package]
 authors = ["Biyard"]
@@ -24,6 +29,8 @@ common = { path = "packages/common" }
 ratel-auth = { path = "packages/ratel-auth" }
 space-shell = { path = "packages/space-shell" }
 ratel-post = { path = "packages/ratel-post" }
+ratel-user-shell = { path = "packages/ratel-user-shell" }
+ratel-team-shell = { path = "packages/ratel-team-shell" }
 
 dioxus-components = { path = "packages/dioxus-components" }
 icons = { path = "packages/icons" }
