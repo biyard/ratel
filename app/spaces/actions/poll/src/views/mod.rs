@@ -1,2 +1,2 @@
-mod home;
-pub use home::Home;
+mod main;
+pub use main::MainPage;
