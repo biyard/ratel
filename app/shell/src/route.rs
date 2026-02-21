@@ -1,6 +1,7 @@
 use crate::*;
 
 use crate::views::Index;
+use dioxus::router::components::child_router::ChildRouter;
 use layout::AppLayout;
 use ratel_auth::Route as AuthRoute;
 use ratel_post::Route as PostRoute;
@@ -36,8 +37,16 @@ macro_rules! define_app_wrapper {
     ($wrapper_name:ident, $route_module:ident) => {
         #[component]
         pub fn $wrapper_name(rest: Vec<String>) -> Element {
+            let router = use_context::<dioxus::router::RouterContext>();
+            let route: $route_module = router.current();
             rsx! {
-                Router::<$route_module> {}
+                ChildRouter::<$route_module> {
+                    route,
+                    format_route_as_root_route: |r: $route_module| r.to_string(),
+                    parse_route_from_root_route: |url: &str| {
+                        <$route_module as std::str::FromStr>::from_str(url).ok()
+                    },
+                }
             }
         }
     };
@@ -49,16 +58,30 @@ define_app_wrapper!(Post, PostRoute);
 
 #[component]
 pub fn UserHome(username: String, rest: Vec<String>) -> Element {
-    let _ = (username, rest);
+    let router = use_context::<dioxus::router::RouterContext>();
+    let route: UserRoute = router.current();
+
     rsx! {
-        Router::<UserRoute> {}
+        ChildRouter::<UserRoute> {
+            route,
+            format_route_as_root_route: |r: UserRoute| r.to_string(),
+            parse_route_from_root_route: |url: &str| { <UserRoute as std::str::FromStr>::from_str(url).ok() },
+
+        }
     }
 }
 
 #[component]
 pub fn TeamHome(teamname: String, rest: Vec<String>) -> Element {
-    let _ = (teamname, rest);
+    let router = use_context::<dioxus::router::RouterContext>();
+    let route: TeamRoute = router.current();
+
     rsx! {
-        Router::<TeamRoute> {}
+        ChildRouter::<TeamRoute> {
+            route,
+            format_route_as_root_route: |r: TeamRoute| r.to_string(),
+            parse_route_from_root_route: |url: &str| { <TeamRoute as std::str::FromStr>::from_str(url).ok() },
+
+        }
     }
 }

@@ -1,26 +1,18 @@
 use crate::{DeserializeFromStr, DynamoEnum, SerializeDisplay};
 
 #[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    SerializeDisplay,
-    DeserializeFromStr,
-    Default,
-    DynamoEnum,
+    Debug, Clone, Copy, PartialEq, Eq, SerializeDisplay, DeserializeFromStr, Default, DynamoEnum,
 )]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
-pub enum Provider {
+pub enum OauthProvider {
     #[default]
     Google,
 }
 
-impl Provider {
+impl OauthProvider {
     pub fn oidc_userinfo_url(&self) -> &'static str {
         match self {
-            Provider::Google => "https://openidconnect.googleapis.com/v1/userinfo",
+            OauthProvider::Google => "https://openidconnect.googleapis.com/v1/userinfo",
         }
     }
 }
@@ -32,7 +24,7 @@ struct UserInfo {
 }
 
 #[cfg(feature = "server")]
-impl Provider {
+impl OauthProvider {
     pub async fn get_email(&self, access_token: &str) -> crate::Result<String> {
         let url = self.oidc_userinfo_url();
         let UserInfo { email } = reqwest::Client::new()
@@ -45,7 +37,9 @@ impl Provider {
             .map_err(|e| crate::Error::InternalServerError(format!("OAuth request failed: {}", e)))?
             .json()
             .await
-            .map_err(|e| crate::Error::InternalServerError(format!("OAuth response parse failed: {}", e)))?;
+            .map_err(|e| {
+                crate::Error::InternalServerError(format!("OAuth response parse failed: {}", e))
+            })?;
 
         Ok(email)
     }

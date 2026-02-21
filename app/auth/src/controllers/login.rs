@@ -19,7 +19,7 @@ pub enum LoginRequest {
         device_id: Option<String>,
     },
     OAuth {
-        provider: Provider,
+        provider: OauthProvider,
         access_token: String,
     },
     Telegram {
@@ -186,7 +186,7 @@ pub async fn login_with_phone(
 #[cfg(feature = "server")]
 pub async fn login_with_oauth(
     cli: &aws_sdk_dynamodb::Client,
-    provider: Provider,
+    provider: OauthProvider,
     access_token: String,
 ) -> Result<User> {
     let email = provider.get_email(&access_token).await?;

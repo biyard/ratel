@@ -15,13 +15,13 @@ pub struct UserOAuth {
         index = "gsi1",
         pk
     )]
-    pub provider: Provider,
+    pub provider: OauthProvider,
     #[dynamo(index = "gsi1", sk)]
     pub uid: String,
 }
 
 impl UserOAuth {
-    pub fn new(pk: Partition, provider: Provider, uid: String) -> Self {
+    pub fn new(pk: Partition, provider: OauthProvider, uid: String) -> Self {
         let sk = EntityType::UserOAuth;
 
         Self {

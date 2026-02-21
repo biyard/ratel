@@ -145,7 +145,7 @@ pub fn LoginModal() -> Element {
                         match sign_in().await {
                             Ok(user_info) => {
                                 let result = login_handler(LoginRequest::OAuth {
-                                        provider: Provider::Google,
+                                        provider: OauthProvider::Google,
                                         access_token: user_info.access_token,
                                     })
                                     .await;
