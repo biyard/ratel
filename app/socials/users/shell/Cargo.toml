@@ -9,13 +9,13 @@ dioxus = { workspace = true }
 common = { workspace = true }
 serde = { workspace = true }
 icons = { workspace = true }
-ratel-user-post = { path = "../ratel-user-post/", optional = true }
-ratel-user-reward = { path = "../ratel-user-reward/", optional = true }
-ratel-user-setting = { path = "../ratel-user-setting/", optional = true }
-ratel-user-membership = { path = "../ratel-user-membership/", optional = true }
-ratel-user-draft = { path = "../ratel-user-draft/", optional = true }
-ratel-user-credential = { path = "../ratel-user-credential/", optional = true }
-ratel-user-space = { path = "../ratel-user-space/", optional = true }
+ratel-user-post = { workspace = true, optional = true }
+ratel-user-reward = { workspace = true, optional = true }
+ratel-user-setting = { workspace = true, optional = true }
+ratel-user-membership = { workspace = true, optional = true }
+ratel-user-draft = { workspace = true, optional = true }
+ratel-user-credential = { workspace = true, optional = true }
+ratel-user-space = { workspace = true, optional = true }
 
 [features]
 default = []

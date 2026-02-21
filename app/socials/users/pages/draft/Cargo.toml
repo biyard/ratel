@@ -1,5 +1,5 @@
 [package]
-name = "ratel-user-space"
+name = "ratel-user-draft"
 version = "0.1.0"
 authors.workspace = true
 edition.workspace = true
@@ -8,7 +8,7 @@ edition.workspace = true
 dioxus = { workspace = true }
 common = { workspace = true }
 serde = { workspace = true }
-ratel-auth = { path = "../ratel-auth/", optional = true }
+ratel-auth = { workspace = true, optional = true }
 
 [features]
 default = []
