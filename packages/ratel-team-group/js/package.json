@@ -1,0 +1,14 @@
+{
+  "name": "js",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "npx webpack --mode production -d false",
+    "build-dev": "npx webpack --mode development"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "webpack": "^5.105.2",
+    "webpack-cli": "^6.0.1"
+  }
+}
