@@ -48,7 +48,7 @@ pub fn AppMenu() -> Element {
     let logged_in = user_ctx().is_logged_in();
 
     rsx! {
-        header { class: "flex justify-center items-center py-2.5 px-2.5 border-b border-divider bg-bg! h-(--header-height) z-999",
+        header { class: "flex justify-center items-center py-2.5 px-2.5 border-b border-divider bg-bg! h-(--header-height) z-999 text-menu-text",
             nav { class: "flex justify-between items-center mx-2.5 w-full gap-12.5 max-w-desktop [&>path]:stroke-menu-text group-hover:[&>path]:stroke-menu-text/80",
                 // Logo
                 div { class: "flex gap-5 items-center",
@@ -100,6 +100,7 @@ pub fn AppMenu() -> Element {
                         },
                     }
 
+                    ThemeSwitcher {}
                     // Language toggle
                     LanguageToggle {}
 
