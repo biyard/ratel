@@ -25,6 +25,8 @@ pub fn CreateActionModal(space_id: SpacePartition) -> Element {
     let create_action = {
         let nav = nav.clone();
         let space_id = space_id.clone();
+        let layover = layover;
+
         let mut is_creating = is_creating;
 
         move |_| {
@@ -33,6 +35,7 @@ pub fn CreateActionModal(space_id: SpacePartition) -> Element {
             }
 
             is_creating.set(true);
+            let mut layover = layover;
 
             let nav = nav.clone();
             let space_id = space_id.clone();
