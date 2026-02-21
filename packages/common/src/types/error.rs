@@ -125,6 +125,12 @@ pub enum Error {
     #[error("not found space")]
     #[translate(en = "Not found space", ko = "스페이스를 찾을 수 없습니다.")]
     SpaceNotFound,
+    #[error("not found author")]
+    #[translate(
+        en = "Not found space author",
+        ko = "스페이스 작성자를 찾을 수 없습니다."
+    )]
+    InvalidSpaceAuthor,
 }
 
 impl From<String> for Error {
