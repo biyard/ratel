@@ -46,7 +46,7 @@ pub enum SignupType {
         code: String,
     },
     OAuth {
-        provider: Provider,
+        provider: OauthProvider,
         access_token: String,
     },
     Telegram {
@@ -195,7 +195,7 @@ async fn signup_with_oauth(
         informed_agreed,
         ..
     }: SignupRequest,
-    provider: Provider,
+    provider: OauthProvider,
     access_token: String,
 ) -> Result<User> {
     tracing::debug!("Verifying id_token with provider: {:?}", provider);

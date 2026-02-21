@@ -4,96 +4,369 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Ratel is a decentralized legislative platform built with Rust and TypeScript, designed to bridge the gap between crypto users and policymakers. The project consists of multiple Rust services and a Vite/React web frontend.
+Ratel is a decentralized legislative platform built with Rust (Dioxus fullstack) and DynamoDB, designed to bridge the gap between crypto users and policymakers. The primary web application is built using Dioxus 0.7 with fullstack rendering (SSR + client-side hydration), with DynamoDB as the database.
 
 ## Architecture
 
-This is a monorepo with a workspace structure:
+This is a monorepo with a Cargo workspace structure:
 
-- **packages/** - Rust workspace packages (APIs, workers, shared DTOs)
-- **ts-packages/** - TypeScript packages (Vite/React web frontend)
-- **kaia/** - Blockchain contracts
-- **tests/** - Playwright integration tests
+- **app/** - Dioxus fullstack application modules (auth, posts, spaces, socials, shell)
+- **packages/** - Rust workspace packages (APIs, workers, shared libraries, macros)
+- **ts-packages/** - TypeScript packages (legacy Vite/React web frontend)
+- **kaia/** - Blockchain contracts (Hardhat)
+- **contracts/** - Primary blockchain contracts (Hardhat)
 
-### Key Components
+### Dioxus App Modules (`app/`)
 
-#### Core Services
+The main web application is composed of modular Dioxus packages under `app/`. Each module follows a consistent structure with feature flags for multi-platform support (`web`, `server`, `desktop`, `mobile`).
 
-- **main-api** (`packages/main-api/`) - Primary REST API built with Axum
-- **fetcher** (`packages/fetcher/`) - Data fetching service for legislative information
-- **survey-worker** (`packages/survey-worker/`) - AWS Lambda worker for survey operations
-- **image-worker** (`packages/image-worker/`) - Image processing service
-- **telegram-bot** (`packages/telegram-bot/`) - Telegram integration
-- **web** (`ts-packages/web/`) - Vite frontend with React 19
+#### App Shell (`app/shell/`)
 
-#### Support Packages
+Main application entry point that orchestrates all sub-modules via Dioxus Router.
+
+- **Package:** `app-shell`
+- **Entry:** `src/main.rs` with `Dioxus.toml` configuration
+- **Routing:** `src/route.rs` defines top-level routes using `ChildRouter`
+- **Layout:** `src/layout.rs` wraps all pages in `AppLayout`
+- **Port:** 8000 (via `dx serve`)
+
+**Routes:**
+- `/` - Index/home page
+- `/auth/:..rest` - Authentication (delegates to `ratel-auth`)
+- `/posts/:..rest` - Post feed (delegates to `ratel-post`)
+- `/:username/:..rest` - User profile (delegates to `ratel-user-shell`)
+- `/teams/:teamname/:..rest` - Team pages (delegates to `ratel-team-shell`)
+- `/spaces/:..rest` - Space pages (delegates to `space-shell`)
+
+#### Common (`app/common/`)
+
+Foundational shared library used by all other app modules.
+
+- **Package:** `common`
+- **Provides:** Types, models, components, configuration, utilities, AWS integration
+- **Key types:**
+  - `Partition` enum - DynamoDB partition key variants (~90 entity types)
+  - `EntityType` enum - DynamoDB sort key variants (~130 entity types)
+  - `User` model - DynamoEntity with 6 GSIs (email, username, phone, user_type, etc.)
+- **Config:** `src/config/server/` (DynamoDB, S3, SES, SNS), `src/config/web/` (Firebase)
+- **Components:** Badge, Button, Layover, Popup, ThemeSwitcher
+- **Tailwind:** `tailwind.css` is the shared TailwindCSS v4 entrypoint for all Dioxus apps
+- **Utils:** `src/utils/aws/` (DynamoDB, S3, SES, SNS helpers), password, sha256, time
+
+#### Auth (`app/auth/`)
+
+- **Package:** `ratel-auth`
+- **Handles:** Login, signup, email/phone verification (SES/SNS), password reset, OAuth, logout
+- **Models:** User, EmailVerification, PhoneVerification, UserOAuth, UserRefreshToken, UserTelegram, UserEVMAddress
+- **Components:** AuthProvider, LoginModal, SignUpModal
+- **Routes:** `/auth` (login), `/auth/forgot-password` (reset)
+
+#### Posts (`app/posts/`)
+
+- **Package:** `ratel-post`
+- **Handles:** Post CRUD, comments, likes, shares, visibility
+- **Models:** Post, PostComment, PostLike, PostCommentLike, PostRepost, PostArtwork
+- **Types:** PostType (Post, Article, Poll), PostStatus (Draft, Published, Archived), Visibility
+- **Components:** FeedCard, FeedList
+
+#### Spaces (`app/spaces/`)
+
+Governance/legislative spaces with panels, voting, and proposals.
+
+```
+app/spaces/
+  shell/          - space-shell (main container, navigation, layout)
+  pages/
+    overview/     - space-page-overview
+    dashboard/    - space-page-dashboard
+    actions/      - space-page-actions
+    apps/         - space-page-apps
+    report/       - space-page-report
+  actions/
+    poll/         - space-action-poll (voting)
+```
+
+- **Shell models:** Space, SpacePanelParticipant, SpacePanelQuota, VerifiedAttributes
+- **Components:** SpaceNav (sidebar), SpaceTop (header with title, participate button)
+
+#### Socials - Users (`app/socials/users/`)
+
+User profile and dashboard.
+
+```
+app/socials/users/
+  shell/          - ratel-user-shell (layout, routing)
+  pages/
+    post/         - ratel-user-post
+    reward/       - ratel-user-reward
+    setting/      - ratel-user-setting
+    membership/   - ratel-user-membership
+    draft/        - ratel-user-draft
+    credential/   - ratel-user-credential (DID)
+    space/        - ratel-user-space
+```
+
+#### Socials - Teams (`app/socials/teams/`)
+
+Team management and organization.
+
+```
+app/socials/teams/
+  shell/          - ratel-team-shell (layout, routing)
+  pages/
+    home/         - ratel-team-home
+    draft/        - ratel-team-draft
+    group/        - ratel-team-group
+    member/       - ratel-team-member
+    dao/          - ratel-team-dao (governance)
+    reward/       - ratel-team-reward
+    setting/      - ratel-team-setting
+```
+
+#### Interops (`app/interops/web-components/`)
+
+- **Package:** `dioxus-components`
+- Reusable Dioxus components library for web integration
+
+### Dioxus App Module Structure
+
+Each app module follows a consistent internal structure:
+
+```
+src/
+  lib.rs          - Public API exports
+  main.rs         - Entry point
+  route.rs        - Dioxus Router routes
+  layout.rs       - Layout wrapper component
+  config.rs       - Configuration
+  provider.rs     - State provider
+  constants.rs    - Constants
+  controllers/    - Server-side request handlers (feature: server)
+  models/         - DynamoDB entities with DynamoEntity derive (feature: server)
+  components/     - Dioxus UI components
+  views/          - Page-level view components
+  hooks/          - Dioxus hooks for state management
+  interop/        - JavaScript interoperability (feature: web)
+  server/         - Server-only functionality (feature: server)
+  web/            - Web-only functionality (feature: web)
+  utils/          - Helper functions
+  dto/            - Data transfer objects
+  types/          - Custom type definitions
+```
+
+### Feature Flags (All App Modules)
+
+All Dioxus app packages use consistent feature flags:
+
+- `web` - Dioxus web renderer, browser UI components
+- `server` - Dioxus server renderer, DynamoDB, AWS SDK, backend handlers
+- `desktop` - Dioxus desktop (Tauri) target
+- `mobile` - Dioxus mobile (Android/iOS) target
+- `bypass` - Skip authentication for testing (auth module only)
+
+### JavaScript Interop Pattern
+
+Dioxus app modules interact with JavaScript via `wasm_bindgen` FFI. Each module registers its JS functions under a namespaced global object `window.ratel.<module>`.
+
+#### How It Works
+
+There are 3 layers:
+
+1. **JavaScript source** (`<module>/js/src/` or `<module>/assets/`) - Plain JS functions
+2. **JS bundle entry** (`index.js`) - Registers exports onto `window.ratel.<namespace>`
+3. **Rust FFI binding** (`src/interop/mod.rs`) - Declares `extern "C"` functions via `wasm_bindgen`
+
+#### Step 1: Write JavaScript Functions
+
+Create JS source files with exported functions:
+
+```js
+// app/common/js/src/theme.js
+const STORAGE_KEY = "ratel-common-theme";
+
+export function load_theme() {
+  return window.localStorage.getItem(STORAGE_KEY);
+}
+
+export function save_theme(theme) {
+  window.localStorage.setItem(STORAGE_KEY, theme);
+}
+
+export function apply_theme(theme) {
+  if (theme === "system") {
+    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark";
+    } else {
+      theme = "light";
+    }
+  }
+  window.document.documentElement.setAttribute("data-theme", theme);
+}
+```
+
+#### Step 2: Register on `window.ratel` Namespace
+
+Create an entry point that mounts exports onto the global namespace:
+
+```js
+// app/common/js/src/index.js
+import * as theme from "./theme";
+
+if (typeof window !== "undefined") {
+  if (typeof window.ratel === "undefined") {
+    window.ratel = {};
+  }
+
+  window.ratel.common = {
+    theme,
+  };
+}
+```
+
+The namespace convention is `window.ratel.<module_name>` with nested sub-modules as needed. Examples across the codebase:
+
+| Module | JS Namespace |
+| :--- | :--- |
+| common/theme | `window.ratel.common.theme` |
+| app-shell | `window.ratel.app_shell` |
+| ratel-auth (firebase) | `window.ratel.auth.firebase` |
+| ratel-post | `window.ratel.post` |
+| ratel-user-shell | `window.ratel.ratel_user_shell` |
+| ratel-team-shell | `window.ratel.ratel_team_shell` |
+
+#### Step 3: Build the JS Bundle
+
+For modules with complex JS (e.g., `app/common/js/`), use webpack to bundle:
+
+```json
+// package.json
+{
+  "scripts": {
+    "build": "npx webpack --mode production -d false",
+    "build-dev": "npx webpack --mode development"
+  }
+}
+```
+
+The output goes to `dist/main.js`. For simple modules, a hand-written minified `.js` file in `assets/` is sufficient (e.g., `app/shell/assets/ratel-app-shell.js`).
+
+#### Step 4: Declare Rust FFI Bindings
+
+Use `#[wasm_bindgen]` with `js_namespace` matching the global path:
+
+```rust
+// app/common/src/components/theme_switcher/interop_theme.rs
+use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen(js_namespace = ["window", "ratel", "common", "theme"])]
+extern "C" {
+    pub fn load_theme() -> Option<String>;
+    pub fn save_theme(theme: &str);
+    pub fn apply_theme(theme: &str);
+}
+```
+
+The `js_namespace` array maps directly to the nested object path on `window`.
+
+#### Step 5: Load the JS Bundle in Dioxus
+
+Include the JS file as a Dioxus `Asset` and load it via `document::Script`:
+
+```rust
+// app/shell/src/main.rs
+pub const MAIN_JS: Asset = asset!("/assets/ratel-app-shell.js");
+
+#[component]
+fn App() -> Element {
+    rsx! {
+        document::Script { src: MAIN_JS }
+        // ...
+    }
+}
+```
+
+#### Step 6: Call from Rust Components
+
+Use the imported functions directly in Dioxus components/services. Gate calls with `#[cfg(not(feature = "server"))]` since JS is unavailable during SSR:
+
+```rust
+// app/common/src/components/theme_switcher/theme_service.rs
+impl ThemeService {
+    pub fn init() {
+        #[cfg(not(feature = "server"))]
+        let saved = load_theme().unwrap_or_default().parse().unwrap_or_default();
+        #[cfg(feature = "server")]
+        let saved = Theme::default();
+
+        let svc = Self {
+            theme: use_signal(move || saved),
+        };
+        #[cfg(not(feature = "server"))]
+        apply_theme(saved.to_string().as_str());
+
+        use_context_provider(move || svc);
+    }
+
+    pub fn set(&mut self, theme: Theme) {
+        self.theme.set(theme);
+        let theme = theme.to_string();
+        save_theme(&theme);   // calls JS via wasm_bindgen
+        apply_theme(&theme);  // calls JS via wasm_bindgen
+    }
+}
+```
+
+#### Key Rules
+
+- **Always guard JS calls** with `#[cfg(not(feature = "server"))]` - JS is only available in the browser
+- **Namespace must match exactly** between `index.js` registration and `js_namespace` array in Rust
+- **Function names must match** between JS exports and `extern "C"` declarations (use `#[wasm_bindgen(js_name = ...)]` if renaming)
+- **JS files go in `assets/`** for Dioxus `asset!()` macro access, or in `js/dist/` if webpack-bundled
+
+### Support Packages (`packages/`)
+
+#### Framework Libraries
 
 - **by-macros** (`packages/by-macros/`) - Procedural macros including DynamoEntity derive (v0.6.\*)
 - **by-axum** (`packages/by-axum/`) - Axum framework extensions (v0.2.\*)
 - **by-types** (`packages/by-types/`) - Shared type definitions (v0.3.\*)
-- **bdk** (`packages/bdk/`) - Blockchain development kit with Ethereum support
+- **bdk** (`packages/bdk/`) - Biyard Development Kit with Ethereum support
 - **btracing** (`packages/btracing/`) - Tracing and observability utilities
-- **dto** (`packages/dto/`) - Shared data transfer objects
-- **dioxus-translate** (`packages/dioxus-translate/`) - i18n translation framework
 - **rest-api** (`packages/rest-api/`) - REST API utilities with test support
-- **migrator** (`packages/migrator/`) - Database migration utilities
 
-### Frontend
+#### Data & Translation
 
-#### Package Management & Runtime
+- **dto** (`packages/dto/`) - Shared data transfer objects
+- **dioxus-translate** (`packages/dioxus-translate/`) - i18n translation framework for Dioxus
+- **icons** (`packages/icons/`) - Icon component library
 
-- **Package Manager:** pnpm 10.18.2
-- **Node Version:** 22.14
-- **React:** 19.2.0
-- **Vite:** 7.1.9
-- **TypeScript:** 5.9.3
-- **TailwindCSS:** v4.1.14
+#### Backend Services
 
-#### Key Dependencies
-
-- **State Management:** Zustand 5.0.8
-- **Data Fetching:** TanStack React Query 5.90.2, Axios 1.12.2
-- **Blockchain:** Ethers.js 6.15.0
-- **Rich Text Editor:** Tiptap 2.26+ (with tables, collaboration support)
-- **UI Components:** Radix UI, Heroicons, Lucide React
-- **Charts:** Recharts 3.3.0
-- **Forms & Validation:** Zod 4.1.12, React Hook Form
-- **Utilities:** dayjs, date-fns, i18next, DOMPurify
-
-#### Testing Infrastructure
-
-- **Framework:** Playwright 1.56.1
-- **Test Projects:** `anonymous`, `authenticated`, `admin`, `e2e-web`
-- **Test Patterns:** `*.anon.spec.ts`, `*.auth.spec.ts`, `*.admin.spec.ts`
-- **Configuration:** `/playwright.config.ts`
-
-#### Page Structure
-
-- All page implementations are placed in `ts-packages/web/src/app` as similar tree of routes.
-- Each page directory will contains below
-  - `{name}-page.tsx` is a main component for the page.
-  - `use-{name}-page-controller.tsx` implement controller class to manage and handle events on the page. And also it manage `use-{name}-data.tsx`.
-  - `use-{name}-data.tsx` fetches all remote data needed by the page.
-  - `{name}-page-i18n.tsx` defines `ko` and `en` languages.
-  - `{name}-page.anon.spec.tsx` is Playwright tests for anonymous users for the page.
-  - `{name}-page.auth.spec.tsx` is Playwright tests for authenticated users for the page.
-  - `{name}-page.stories.tsx` is for Storybook file for the page.
-
-#### Feature Modules
-
-- `ts-packages/web/src/features` defines `feature`-based modules.
-  - `features/{name}/components` implements feature components and their storybook files
-  - `features/{name}/hooks` implements hooks for the feature
-  - `features/{name}/utils` provides utility functions for the feature
+- **main-api** (`packages/main-api/`) - Primary REST API built with Axum (v3 endpoints)
+- **fetcher** (`packages/fetcher/`) - Data fetching service for legislative information
+- **survey-worker** (`packages/survey-worker/`) - AWS Lambda worker for survey operations
+- **space-stream-worker** (`packages/space-stream-worker/`) - DynamoDB Streams Lambda worker
+- **image-worker** (`packages/image-worker/`) - Image processing Lambda
+- **migrator** (`packages/migrator/`) - DynamoDB migration utilities
 
 ## Build System
 
-### Rust Services
+### Rust Workspace
 
-- Rust workspace managed by Cargo
-- Each service has its own Makefile
-- Uses custom build profiles (wasm-dev, server-dev, android-dev)
-- Common dependencies defined in workspace Cargo.toml
+- Rust edition 2024, resolver v2
+- Workspace managed by Cargo with members from `app/*` and `packages/*`
+- Dioxus 0.7.1 with fullstack + router features
+- Common dependencies defined in workspace `Cargo.toml`
+- Custom build profiles: `wasm-dev` (opt-level=1), `server-dev`, `android-dev`
+- `DYNAMO_TABLE_PREFIX` environment variable required at compile time for DynamoEntity
+
+### Dioxus App
+
+- Built and served with `dx serve` (Dioxus CLI)
+- TailwindCSS v4 configured via `app/common/tailwind.css`
+- Source scanning: `@source "../**/*/src/**/*.{rs,css}"`
+- Theme support: dark (default) and light via `data-theme` attribute
+- Dioxus.toml per app module for configuration
 
 ## Development Commands
 
@@ -101,46 +374,37 @@ This is a monorepo with a workspace structure:
 
 ```bash
 # Start all services with Docker Compose
-docker-compose --profile development up -d
+docker compose --profile development up -d
 
-# Start specific services
-docker-compose up -d redis hasura main-api web
-
-# Include telegram bot (requires TELEGRAM_TOKEN)
-docker-compose --profile telegram up -d
+# Start infrastructure only (LocalStack, DynamoDB)
+make infra
 
 # View logs
-docker-compose logs -f ratel-main-api-1
-docker-compose logs -f ratel-fetcher-1
-docker-compose logs -f ratel-web-1
+docker compose logs -f ratel-main-api-1
 
 # Stop all services
-docker-compose down
-
-# Code changes will be reflected automatically to each docker
+make stop
 ```
 
 ### Root Makefile Commands
 
 ```bash
-# Start all services with Docker Compose
-make run
+make run          # Start all services with Docker Compose (profile: development)
+make stop         # Stop all services
+make infra        # Start infrastructure only (LocalStack, DynamoDB Admin)
+make build SERVICE=main-api  # Build specific service
+make deploy       # Deploy to AWS via CDK
+make serve SERVICE=main-api  # Run specific service locally
+```
 
-# Stop all services
-make stop
+### Dioxus App Development
 
-# Build main-api and web together
-make build-with-web
+```bash
+# Run Dioxus app shell (port 8000)
+cd app/shell && make run
 
-# Deploy to AWS via CDK
-make deploy
-
-# Run specific service locally (without Docker)
-make serve SERVICE=main-api
-make serve SERVICE=fetcher
-
-# Run tests
-make test
+# Equivalent to:
+DYNAMO_TABLE_PREFIX=ratel-dev dx serve --port 8000 --web
 ```
 
 ### Service-Specific Development
@@ -151,50 +415,34 @@ cd packages/main-api && make run      # Dev with cargo-watch
 cd packages/main-api && make build    # Build release binary
 cd packages/main-api && make test     # Run Rust tests
 
-# Web frontend
-cd ts-packages/web && make run        # Dev server on port 8080
-cd ts-packages/web && make build      # Production build
-cd ts-packages/web && make test       # Playwright tests
-cd ts-packages/web && make storybook  # Storybook on port 6006
-
 # Fetcher
 cd packages/fetcher && make run
 cd packages/fetcher && make build
-
-# Build for different environments
-ENV=dev make build SERVICE=main-api
-```
-
-### Linting/Formatting
-
-```bash
-# Vite/React linting
-cd ts-packages/web && npm run lint
 ```
 
 ## Key Technologies
 
-- **Backend**: Rust 2024, Axum 0.8.1, DynamoDB, Tokio, Askama (SSR)
-- **Frontend**: Vite 7, React 19, TailwindCSS v4.1, Zustand, TanStack Query
-- **Testing**: Playwright 1.56, Tokio test framework, custom HTTP test macros
-- **Infrastructure**: AWS (Lambda, S3, RDS, SQS, Bedrock), Docker, LocalStack
-- **Blockchain**: Ethers.js 6.15, Kaia network (Ethereum-compatible)
-- **Authentication**: Firebase, JWT, DID/Verifiable Credentials
+- **Frontend/Fullstack**: Dioxus 0.7.1 (fullstack SSR + WASM hydration), TailwindCSS v4
+- **Backend**: Rust 2024, Axum 0.8.1, Tokio
+- **Database**: DynamoDB (via aws-sdk-dynamodb + serde_dynamo + DynamoEntity derive macro)
+- **AWS Services**: Lambda, S3, SES (email), SNS (SMS), Bedrock (AI), DynamoDB Streams
+- **Blockchain**: Ethers 2.0.14 (Rust) / Ethers.js 6.15 (TS), Kaia network
+- **Authentication**: Firebase, tower-sessions, DID/Verifiable Credentials
 - **Payments**: Portone gateway, Binance API
-- **AI**: AWS Bedrock agents
-- **Messaging**: Telegram Bot API, FCM notifications
-- **API Spec**: Aide (OpenAPI/Swagger documentation)
+- **AI**: AWS Bedrock agents, MCP (Model Context Protocol)
+- **Messaging**: Telegram Bot API
+- **API Spec**: Aide (OpenAPI/Swagger) for main-api v3 endpoints
+- **Infrastructure**: Docker, LocalStack, AWS CDK
 
 ## Docker Services
 
 The docker-compose.yaml provides:
 
 - **main-api** - REST API (port 3000)
+- **space-shell** - Dioxus app shell (port 8000)
 - **fetcher** - Legislative data fetching (port 3001)
 - **survey-worker** - Survey worker service (port 3002)
-- **image-worker** - Image processing service
-- **telegram-bot** - Telegram bot (optional, requires TELEGRAM_TOKEN)
-- **web** - Vite/React frontend (port 8080)
+- **web** - Legacy Vite/React frontend (port 8080)
 - **storybook** - Component documentation (port 6006)
 - **localstack** - AWS services emulation (port 4566)
 - **localstack-init** - DynamoDB table initialization
@@ -202,91 +450,46 @@ The docker-compose.yaml provides:
 
 Access points:
 
-- Web Application: http://localhost:8080
+- Dioxus App: http://localhost:8000
 - Main API: http://localhost:3000
-- Fetcher API: http://localhost:3001
-- Survey Worker: http://localhost:3002
-- Storybook: http://localhost:6006
 - DynamoDB Admin: http://localhost:8081
 - LocalStack: http://localhost:4566
 
 ## Environment Configuration
-
-Copy `.env.example` to `.env` and configure:
 
 ### Backend Environment Variables
 
 - `ENV` - Environment (dev, staging, prod)
 - `PORT` - Service port
 - `RUST_LOG` - Logging level
-- `WEB_BUILD` - Web build configuration
-- `DYNAMO_ENDPOINT` - DynamoDB endpoint (http://localstack:4566 for local)
-- `DYNAMO_TABLE_PREFIX` - Table prefix (ratel-local for dev)
+- `DYNAMO_TABLE_PREFIX` - Table prefix (ratel-local for local dev, ratel-dev for dev) **Required at compile time**
+- `DYNAMO_ENDPOINT` - DynamoDB endpoint (http://localstack:4566 for local, `none` for AWS)
 - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION` - AWS credentials
+- `UPSTREAM_URL` - Upstream URL for proxy (Dioxus app)
+- `COMMIT` - Git commit hash
 - `TELEGRAM_TOKEN` - Telegram bot authentication token
 - `FIREBASE_PROJECT_ID` - Firebase project identifier
 - `PORTONE_*` - Payment gateway credentials
 - `BEDROCK_AGENT_*` - AWS Bedrock AI agent configuration
 - `BIYARD_*` - External Biyard API integration
 
-### Frontend Environment Variables (VITE\_\*)
-
-- `VITE_API_URL` - Backend API base URL
-- `VITE_LOG_LEVEL` - Frontend logging level
-- `VITE_RPC_URL` - Blockchain RPC endpoint
-- `VITE_BLOCK_EXPLORER_URL` - Blockchain explorer URL (Kaia network)
-- `VITE_USDT_ADDRESS` - Blockchain USDT token contract address (Kaia network)
-- `VITE_FIREBASE_*` - Firebase authentication config
-- `VITE_PORTONE_*` - Payment UI configuration
-- `VITE_OPERATOR_ADDRESS` - Blockchain operator address
-
-## Development Notes
-
-- The web frontend requires environment setup via `ts-packages/web/setup-env.sh`
-- Services use environment variables for configuration
-- AWS integration for cloud deployments (disabled in local Docker setup)
-- Telegram SDK integration for bot functionality
-- Real-time features using WebSockets and collaborative editing
-- Database migrations run automatically on startup when MIGRATE=true
-
-## Advanced Features
-
-### Notable Platform Capabilities
-
-- **MCP Integration** - Model Context Protocol server for LLM interactions
-- **Decentralized Identity** - DID (Decentralized Identifiers) & Verifiable Credentials
-- **Collaborative Editing** - Real-time document collaboration using Tiptap + Yjs
-- **Real-time Notifications** - Multi-channel delivery via WebSockets, Telegram, and FCM
-- **Reward System** - Complex points and membership tier management
-- **AI Assistance** - AWS Bedrock agent integration for legislative drafting
-- **Document Processing** - PDF generation and manipulation
-- **Workspace Management** - Multi-space organization with granular permissions
-- **DAO Governance** - Blockchain-based voting and proposal systems
-
-## CI/CD Workflows
-
-### GitHub Actions
-
-- **dev-workflow.yml** - Automated development branch builds and tests
-- **pr-workflow.yml** - Pull request validation and checks
-- **prod-workflow.yml** - Production deployment automation
-
-### Deployment Infrastructure
-
-- **AWS CDK** - Infrastructure as Code (TypeScript)
-- **ECR** - Container registry for Docker images
-- **Lambda** - Serverless function deployments
-- **CloudFormation** - Stack management and orchestration
-
 ## DynamoDB Configuration
 
 ### Local Development Setup
 
 - **Endpoint:** `http://localstack:4566`
-- **Table Prefix:** `ratel-local` (development environment)
-- **Main Table:** `ratel-local-main` (unified table with multiple GSIs)
-- **Global Secondary Indexes:** Email-based, username-based, timestamp-based queries
+- **Table Prefix:** `ratel-local` (local development)
+- **Main Table:** `ratel-local-main` (unified single-table design with multiple GSIs)
+- **Global Secondary Indexes:** gsi1 through gsi6+ for email, username, phone, status, visibility queries
 - **Admin UI:** Available at http://localhost:8081
+
+### Single-Table Design
+
+The project uses DynamoDB single-table design with composite keys:
+
+- **Partition Key (pk):** Uses `Partition` enum variants (e.g., `USER#<id>`, `FEED#<id>`, `SPACE#<id>`)
+- **Sort Key (sk):** Uses `EntityType` enum variants (e.g., `User`, `Post`, `SpaceCommon`)
+- **GSIs:** Multiple global secondary indexes for alternative access patterns
 
 ### Table Initialization
 
@@ -296,10 +499,10 @@ Copy `.env.example` to `.env` and configure:
 
 ## Main API
 
-Main Api package is the main backend APIs for Ratel written by Rust.
+Main API package is the primary backend REST API for Ratel written in Rust.
 
-- location: `packages/main-api`
-- Language: Rust
+- Location: `packages/main-api`
+- Language: Rust (Axum 0.8.1)
 
 ### API Architecture
 
@@ -330,12 +533,6 @@ Located at `packages/main-api/src/features/`:
 - **did/** - Decentralized Identity implementation
 - **migration/** - Data migration utilities
 - **telegrams/** - Telegram bot integration logic
-
-#### v3 Endpoints
-
-- `v3` endpoints are implemented based on Axum native convention
-- `v3` endpoints use DynamoDB models implemented in `packages/main-api/src/models/dynamo_tables/main`
-- API documentation available via Aide (OpenAPI/Swagger)
 
 ### Testing Backend APIs
 
@@ -440,42 +637,6 @@ async fn test_get_post() {
 6. **Test error cases** - Verify correct error codes and messages for invalid requests
 7. **Always run tests before committing** - Execute `cd packages/main-api && make test` to ensure all tests pass
 
-#### Common Test Scenarios
-
-For a typical API handler, write tests for:
-
-- ✅ Successful request with valid data
-- ✅ Request with authentication vs without authentication
-- ✅ Request with invalid/missing parameters
-- ✅ Request for non-existent resources (404)
-- ✅ Unauthorized access (401/403)
-- ✅ Related data fetching (e.g., with comments, likes, etc.)
-- ✅ Permission-based data filtering (e.g., hiding space info)
-
-#### Example Test Suite Structure
-
-```rust
-// Test successful operations
-#[tokio::test]
-async fn test_get_post_when_authenticated() { /* ... */ }
-
-// Test guest access
-#[tokio::test]
-async fn test_get_post_when_not_authenticated() { /* ... */ }
-
-// Test with related data
-#[tokio::test]
-async fn test_get_post_with_comments() { /* ... */ }
-
-// Test error cases
-#[tokio::test]
-async fn test_get_nonexistent_post() { /* ... */ }
-
-// Test permissions
-#[tokio::test]
-async fn test_get_post_permissions() { /* ... */ }
-```
-
 ## by_macro
 
 `by_macro` package provides macros to simplify the code.
@@ -559,184 +720,19 @@ impl EmailVerification {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use std::{thread::sleep, time::Duration};
-
-    use super::*;
-
-    #[tokio::test]
-    async fn test_email_verification_new() {
-        let conf = aws_sdk_dynamodb::Config::builder()
-            .credentials_provider(aws_sdk_dynamodb::config::Credentials::new(
-                "test", "test", None, None, "dynamo",
-            ))
-            .region(Some(aws_sdk_dynamodb::config::Region::new("us-east-1")))
-            .endpoint_url("http://localhost:4566")
-            .behavior_version_latest()
-            .build();
-
-        let cli = aws_sdk_dynamodb::Client::from_conf(conf);
-        let now = chrono::Utc::now().timestamp();
-        let expired_at = now + 3600; // 1 hour later
-        let email = format!("a+{}@example.com", now);
-
-        let ev = EmailVerification::new(email.to_string(), "aaaa".to_string(), expired_at);
-
-        assert_eq!(EmailVerification::table_name(), "ratel-local-main");
-        assert_eq!(EmailVerification::pk_field(), "pk");
-        assert_eq!(EmailVerification::sk_field(), Some("sk"));
-
-        assert!(
-            ev.create(&cli).await.is_ok(),
-            "failed to create email verification"
-        );
-
-        let fetched_ev = EmailVerification::get(&cli, ev.pk.clone(), Some(ev.sk.clone())).await;
-
-        assert!(fetched_ev.is_ok(), "failed to fetch email verification");
-        let fetched_ev = fetched_ev.unwrap();
-        assert!(fetched_ev.is_some(), "email verification not found");
-        let fetched_ev = fetched_ev.unwrap();
-        assert_eq!(fetched_ev.email, ev.email);
-        assert_eq!(fetched_ev.value, ev.value);
-        assert_eq!(fetched_ev.expired_at, ev.expired_at);
-    }
-
-    #[tokio::test]
-    async fn test_email_verification_delete() {
-        let conf = aws_sdk_dynamodb::Config::builder()
-            .credentials_provider(aws_sdk_dynamodb::config::Credentials::new(
-                "test", "test", None, None, "dynamo",
-            ))
-            .region(Some(aws_sdk_dynamodb::config::Region::new("us-east-1")))
-            .endpoint_url("http://localhost:4566")
-            .behavior_version_latest()
-            .build();
-
-        let cli = aws_sdk_dynamodb::Client::from_conf(conf);
-        let now = chrono::Utc::now().timestamp();
-        let expired_at = now + 3600; // 1 hour later
-        let email = format!("d+{}@example.com", now);
-        let ev = EmailVerification::new(email.to_string(), "aaaa".to_string(), expired_at);
-        assert!(
-            ev.create(&cli).await.is_ok(),
-            "failed to create email verification"
-        );
-        let fetched_ev = EmailVerification::get(&cli, ev.pk.clone(), Some(ev.sk.clone())).await;
-        assert!(fetched_ev.is_ok(), "failed to fetch email verification");
-        let fetched_ev = fetched_ev.unwrap();
-        assert!(fetched_ev.is_some(), "email verification not found");
-        let fetched_ev = fetched_ev.unwrap();
-        assert_eq!(fetched_ev.email, ev.email);
-        assert_eq!(fetched_ev.value, ev.value);
-        assert_eq!(fetched_ev.expired_at, ev.expired_at);
-        assert!(
-            EmailVerification::delete(&cli, ev.pk.clone(), Some(ev.sk.clone()))
-                .await
-                .is_ok(),
-            "failed to delete email verification"
-        );
-        let fetched_ev = EmailVerification::get(&cli, ev.pk.clone(), Some(ev.sk.clone())).await;
-        assert!(fetched_ev.is_ok(), "failed to fetch email verification");
-        let fetched_ev = fetched_ev.unwrap();
-        assert!(fetched_ev.is_none(), "email verification should be deleted");
-    }
-
-    #[tokio::test]
-    async fn test_email_verification_find_by_email_and_code() {
-        let conf = aws_sdk_dynamodb::Config::builder()
-            .credentials_provider(aws_sdk_dynamodb::config::Credentials::new(
-                "test", "test", None, None, "dynamo",
-            ))
-            .region(Some(aws_sdk_dynamodb::config::Region::new("us-east-1")))
-            .endpoint_url("http://localhost:4566")
-            .behavior_version_latest()
-            .build();
-
-        let cli = aws_sdk_dynamodb::Client::from_conf(conf);
-        let now = chrono::Utc::now().timestamp();
-        let expired_at = now + 3600; // 1 hour later
-        for i in 0..5 {
-            let email = format!("l+{now}-{i}@example.com");
-
-            let ev = EmailVerification::new(email.to_string(), "aaaa".to_string(), expired_at);
-            assert!(
-                ev.create(&cli).await.is_ok(),
-                "failed to create email verification"
-            );
-        }
-
-        let fetched_evs = EmailVerification::find_by_email_and_code(
-            &cli,
-            format!("EMAIL#l+{now}-0@example.com"),
-            EmailVerificationQueryOption::builder()
-                .limit(10)
-                .sk("a".to_string()),
-        )
-        .await;
-        assert!(fetched_evs.is_ok(), "failed to find email verification");
-        let (fetched_evs, last_evaluated_key) = fetched_evs.unwrap();
-        assert!(
-            last_evaluated_key.is_none(),
-            "last_evaluated_key should be empty"
-        );
-        assert_eq!(fetched_evs.len(), 1, "should find one email verification");
-        assert_eq!(fetched_evs[0].email, format!("l+{now}-0@example.com"));
-    }
-
-    #[tokio::test]
-    async fn test_email_verification_find_by_code() {
-        let conf = aws_sdk_dynamodb::Config::builder()
-            .credentials_provider(aws_sdk_dynamodb::config::Credentials::new(
-                "test", "test", None, None, "dynamo",
-            ))
-            .region(Some(aws_sdk_dynamodb::config::Region::new("us-east-1")))
-            .endpoint_url("http://localhost:4566")
-            .behavior_version_latest()
-            .build();
-
-        let cli = aws_sdk_dynamodb::Client::from_conf(conf);
-        let now = chrono::Utc::now().timestamp();
-        let expired_at = now + 3600; // 1 hour later
-        for i in 0..5 {
-            let email = format!("c+{now}-{i}@example.com");
-
-            let ev = EmailVerification::new(email.to_string(), "aaaa".to_string(), expired_at);
-            assert!(
-                ev.create(&cli).await.is_ok(),
-                "failed to create email verification"
-            );
-        }
-
-        sleep(Duration::from_millis(500));
-
-        let fetched_evs = EmailVerification::find_by_code(
-            &cli,
-            format!("aaaa"),
-            EmailVerificationQueryOption::builder()
-                .limit(4)
-                .sk("TS".to_string()),
-        )
-        .await;
-        assert!(fetched_evs.is_ok(), "failed to find email verification");
-        let (fetched_evs, last_evaluated_key) = fetched_evs.unwrap();
-
-        println!("fetched_evs: {:?}", fetched_evs.len());
-        assert!(
-            last_evaluated_key.is_some(),
-            "last_evaluated_key should not be empty"
-        );
-        assert_eq!(fetched_evs.len(), 4, "should find one email verification");
-        assert_eq!(fetched_evs[0].email, format!("c+{now}-4@example.com"));
-        assert_eq!(fetched_evs[0].email, format!("c+{now}-3@example.com"));
-        assert_eq!(fetched_evs[0].email, format!("c+{now}-2@example.com"));
-        assert_eq!(fetched_evs[0].email, format!("c+{now}-1@example.com"));
-    }
-}
 ```
 
-- Please make sure that your playwright code is alway success by executing `make test` yourself.
-- you should register i18n to i18n/config.tsx
-- you should add page route path to router.tsx
+## CI/CD Workflows
+
+### GitHub Actions
+
+- **dev-workflow.yml** - Automated development branch builds and tests
+- **pr-workflow.yml** - Pull request validation and checks
+- **prod-workflow.yml** - Production deployment automation
+
+### Deployment Infrastructure
+
+- **AWS CDK** - Infrastructure as Code (TypeScript)
+- **ECR** - Container registry for Docker images
+- **Lambda** - Serverless function deployments (main-api, fetcher, survey-worker, space-stream-worker)
+- **CloudFormation** - Stack management and orchestration

@@ -598,6 +598,9 @@
   .z-40 {
     z-index: 40;
   }
+  .z-50 {
+    z-index: 50;
+  }
   .z-100 {
     z-index: 100;
   }
@@ -931,6 +934,9 @@
   }
   .min-w-0 {
     min-width: calc(var(--spacing) * 0);
+  }
+  .min-w-\[140px\] {
+    min-width: 140px;
   }
   .min-w-\[300px\] {
     min-width: 300px;
@@ -1864,6 +1870,9 @@
   .text-font-primary {
     color: var(--color-font-primary);
   }
+  .text-foreground {
+    color: var(--color-foreground);
+  }
   .text-gray-400 {
     color: var(--color-gray-400);
   }
@@ -2726,6 +2735,11 @@
       fill: none;
     }
   }
+  .\[\&\>circle\]\:stroke-icon-primary {
+    &>circle {
+      stroke: var(--color-icon-primary);
+    }
+  }
   .\[\&\>circle\]\:stroke-neutral-500 {
     &>circle {
       stroke: var(--color-neutral-500);
@@ -2759,6 +2773,11 @@
   .\[\&\>path\]\:stroke-font-primary {
     &>path {
       stroke: var(--color-font-primary);
+    }
+  }
+  .\[\&\>path\]\:stroke-icon-primary {
+    &>path {
+      stroke: var(--color-icon-primary);
     }
   }
   .\[\&\>path\]\:stroke-label-color-text {
