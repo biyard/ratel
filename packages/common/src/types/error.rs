@@ -101,6 +101,10 @@ pub enum Error {
         ko = "인증 코드가 유효하지 않습니다."
     )]
     InvalidVerificationCode,
+
+    #[error("not found space")]
+    #[translate(en = "Not found space", ko = "스페이스를 찾을 수 없습니다.")]
+    SpaceNotFound,
 }
 
 impl From<String> for Error {

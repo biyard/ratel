@@ -1,4 +1,7 @@
-pub use axum::extract::{Extension, FromRef, FromRequest, Request, State};
+pub use axum::{
+    extract::{Extension, FromRef, FromRequest, FromRequestParts, Request, State},
+    http::request::Parts,
+};
 pub use schemars::JsonSchema;
 pub use uuid;
 

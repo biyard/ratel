@@ -101,3 +101,45 @@ impl SpaceCommon {
         self.publish_state == SpacePublishState::Published
     }
 }
+
+#[cfg(feature = "server")]
+impl<S> FromRequestParts<S> for SpaceCommon
+where
+    S: Send + Sync,
+{
+    type Rejection = Error;
+
+    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self> {
+        tracing::debug!("extracting space from request parts");
+        if let Some(space) = parts.extensions.get::<SpaceCommon>() {
+            return Ok(space.clone());
+        }
+
+        // Extract project_id from the URI path
+        let path = parts.uri.path();
+        let path_segments: Vec<&str> = path.split('/').collect();
+        let space_pk_encoded = path_segments[1].to_string();
+
+        // URL-decode the space_pk (it may be percent-encoded in the URI)
+        let space_id: SpacePartition = urlencoding::decode(&space_pk_encoded)
+            .map_err(|_| crate::Error::BadRequest("Invalid URL encoding".to_string()))?
+            .to_string()
+            .parse()?;
+        let space_pk: Partition = space_id.into();
+        debug!("Verifying project access for space_id: {}", space_pk,);
+
+        let conf = ServerConfig::default();
+        let cli = conf.dynamodb();
+
+        let space: SpaceCommon = SpaceCommon::get(cli, space_pk, Some(EntityType::SpaceCommon))
+            .await
+            .map_err(|e| {
+                error!("failed to get space common from db: {:?}", e);
+                crate::Error::SpaceNotFound
+            })?
+            .ok_or(crate::Error::SpaceNotFound)?;
+        parts.extensions.insert(space.clone());
+
+        Ok(space)
+    }
+}
