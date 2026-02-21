@@ -6,6 +6,7 @@ pub use models::*;
 pub mod types;
 pub use types::*;
 
+pub mod components;
 pub mod config;
 
 pub mod route;

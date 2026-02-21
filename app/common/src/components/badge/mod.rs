@@ -4,11 +4,12 @@ use crate::*;
 pub fn Badge(
     #[props(default)] color: BadgeColor,
     #[props(default)] size: BadgeSize,
+    #[props(default)] variant: BadgeVariant,
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
 ) -> Element {
     rsx! {
-        div { class: "px-[13px] py-[7px] {color} {size}", ..attributes, {children} }
+        div { class: "px-[13px] py-[7px] {color} {size} {variant}", ..attributes, {children} }
     }
 }
 
@@ -56,4 +57,22 @@ pub enum BadgeSize {
     #[default]
     #[strum(serialize = "text-[12px]/[16px] font-semibold")]
     Normal,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    DeserializeFromStr,
+    SerializeDisplay,
+    strum::Display,
+    strum::EnumString,
+    Default,
+)]
+pub enum BadgeVariant {
+    #[default]
+    Default,
+    #[strum(serialize = "rounded-full border")]
+    Rounded,
 }

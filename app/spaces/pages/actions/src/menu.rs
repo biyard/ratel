@@ -8,13 +8,17 @@ pub fn get_nav_item(
     Some((
         icon(),
         SpacePage::Actions,
-        Route::ListActionPage { space_id }.into(),
+        Route::MainPage { space_id }.into(),
     ))
 }
 
 #[component]
 pub fn icon() -> Element {
     rsx! {
-        Thunder {}
+        Thunder {
+            width: "20",
+            height: "20",
+            class: "[&>path]:fill-none [&>path]:stroke-[#737373]",
+        }
     }
 }

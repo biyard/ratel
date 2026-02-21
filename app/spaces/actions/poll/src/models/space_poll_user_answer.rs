@@ -6,7 +6,7 @@ use ratel_auth::User;
 
 use crate::*;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct SpacePollUserAnswer {
     pub pk: Partition, // User Partition
