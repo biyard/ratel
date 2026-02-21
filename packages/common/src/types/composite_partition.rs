@@ -2,17 +2,7 @@ use std::{fmt::Display, str::FromStr};
 
 use crate::*;
 
-use serde_with::{DeserializeFromStr, SerializeDisplay};
-
-#[derive(
-    Debug,
-    Clone,
-    SerializeDisplay,
-    DeserializeFromStr,
-    Default,
-    PartialEq,
-    Eq,
-)]
+#[derive(Debug, Clone, SerializeDisplay, DeserializeFromStr, Default, PartialEq, Eq)]
 #[cfg_attr(feature = "server", derive(JsonSchema, OperationIo))]
 pub struct CompositePartition<T = Partition, S = Partition>(pub T, pub S);
 

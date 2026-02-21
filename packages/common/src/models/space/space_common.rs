@@ -100,6 +100,10 @@ impl SpaceCommon {
     pub fn is_published(&self) -> bool {
         self.publish_state == SpacePublishState::Published
     }
+
+    pub fn is_public(&self) -> bool {
+        matches!(self.visibility, SpaceVisibility::Public) && self.is_published()
+    }
 }
 
 #[cfg(feature = "server")]
