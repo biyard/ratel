@@ -1,3 +1,5 @@
-mod action_type;
+mod space_action;
+pub use space_action::*;
 
-pub use action_type::*;
+mod space_action_type;
+pub use space_action_type::SpaceActionType;

@@ -24,11 +24,13 @@ pub mod macros;
 #[cfg(feature = "server")]
 pub mod middlewares;
 pub mod models;
+pub mod query;
 pub mod utils;
 pub use macros::dynamo_entity::DynamoEntity;
 
 pub use components::*;
 pub use dioxus;
+pub use query::*;
 
 use dioxus::prelude::*;
 use serde_repr::{Deserialize_repr, Serialize_repr};
@@ -43,6 +45,7 @@ pub use chrono;
 pub use serde;
 pub use serde_json;
 pub use serde_wasm_bindgen;
+pub use serde_with;
 pub use wasm_bindgen;
 pub use wasm_bindgen_futures;
 pub use web_sys;

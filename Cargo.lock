@@ -879,7 +879,8 @@ dependencies = [
  "dioxus",
  "ratel-auth",
  "ratel-post",
- "ratel-user-home",
+ "ratel-team-shell",
+ "ratel-user-shell",
  "serde-wasm-bindgen",
  "space-shell",
  "wasm-bindgen",
@@ -3831,6 +3832,7 @@ dependencies = [
  "hex",
  "hmac 0.12.1",
  "icons",
+ "names",
  "percent-encoding",
  "reqwest 0.12.28",
  "schemars 1.0.4",
@@ -3845,9 +3847,11 @@ dependencies = [
  "ssi",
  "strum 0.27.2",
  "thiserror 2.0.17",
+ "tokio",
  "tower-sessions 0.15.0",
  "tracing",
  "url",
+ "urlencoding",
  "uuid 1.18.1",
  "wasm-bindgen",
  "wasm-bindgen-futures",
@@ -13272,11 +13276,169 @@ dependencies = [
 ]
 
 [[package]]
-name = "ratel-user-home"
+name = "ratel-team-dao"
 version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "serde",
+]
+
+[[package]]
+name = "ratel-team-draft"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "serde",
+]
+
+[[package]]
+name = "ratel-team-group"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "serde",
+]
+
+[[package]]
+name = "ratel-team-home"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "serde",
+]
+
+[[package]]
+name = "ratel-team-member"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "serde",
+]
+
+[[package]]
+name = "ratel-team-reward"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "serde",
+]
+
+[[package]]
+name = "ratel-team-setting"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "serde",
+]
+
+[[package]]
+name = "ratel-team-shell"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "icons",
+ "ratel-team-dao",
+ "ratel-team-draft",
+ "ratel-team-group",
+ "ratel-team-home",
+ "ratel-team-member",
+ "ratel-team-reward",
+ "ratel-team-setting",
+ "serde",
+]
+
+[[package]]
+name = "ratel-user-credential"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "ratel-auth",
+ "serde",
+]
+
+[[package]]
+name = "ratel-user-draft"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "ratel-auth",
+ "serde",
+]
+
+[[package]]
+name = "ratel-user-membership"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "ratel-auth",
+ "serde",
+]
+
+[[package]]
+name = "ratel-user-post"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "ratel-auth",
+ "serde",
+]
+
+[[package]]
+name = "ratel-user-reward"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "ratel-auth",
+ "serde",
+]
+
+[[package]]
+name = "ratel-user-setting"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "ratel-auth",
+ "serde",
+]
+
+[[package]]
+name = "ratel-user-shell"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "icons",
+ "ratel-user-credential",
+ "ratel-user-draft",
+ "ratel-user-membership",
+ "ratel-user-post",
+ "ratel-user-reward",
+ "ratel-user-setting",
+ "ratel-user-space",
+ "serde",
+]
+
+[[package]]
+name = "ratel-user-space"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "ratel-auth",
  "serde",
 ]
 
@@ -17349,12 +17511,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "space-action-poll"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "ratel-auth",
+ "serde",
+]
+
+[[package]]
 name = "space-page-actions"
 version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "ratel-auth",
  "serde",
+ "space-action-poll",
 ]
 
 [[package]]
@@ -17395,11 +17569,16 @@ name = "space-page-report"
 version = "0.1.0"
 dependencies = [
  "aws-config",
+ "aws-sdk-bedrockagentruntime",
  "aws-sdk-bedrockruntime",
  "aws-sdk-s3",
+ "aws-smithy-types",
+ "base64 0.22.1",
  "common",
  "dioxus",
+ "percent-encoding",
  "serde",
+ "serde_dynamo",
 ]
 
 [[package]]
