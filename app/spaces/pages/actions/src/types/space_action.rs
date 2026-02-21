@@ -4,6 +4,7 @@ use crate::*;
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default, PartialEq)]
 // #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct SpaceAction {
+    pub action_id: String,
     pub action_type: SpaceActionType,
     pub title: String,
     pub description: String,
@@ -22,7 +23,9 @@ pub struct SpaceAction {
 
 impl From<(SpacePoll, bool)> for SpaceAction {
     fn from((poll, user_participated): (SpacePoll, bool)) -> Self {
+        let action_id = poll.sk.to_string();
         Self {
+            action_id,
             action_type: SpaceActionType::Poll,
             title: poll.topic,
             description: poll.description,
