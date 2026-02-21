@@ -28,8 +28,15 @@ pub struct SpaceParticipant {
 }
 
 impl SpaceParticipant {
-    pub fn new(space_pk: Partition, user_pk: Partition, display_name: String) -> Self {
+    #[cfg(feature = "server")]
+    pub fn new(space_pk: Partition, user_pk: Partition) -> Self {
+        use names::{Generator, Name};
+
         let created_at = get_now_timestamp_millis();
+        let display_name = Generator::with_naming(Name::Numbered)
+            .next()
+            .unwrap()
+            .replace('-', " ");
         let username = display_name.replace(' ', "-").to_lowercase();
 
         Self {

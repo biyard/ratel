@@ -5,7 +5,6 @@ pub mod space;
 pub mod space_invitation_member;
 pub mod space_panel_participant;
 pub mod space_panel_quota;
-pub mod space_participant;
 pub mod verified_attributes;
 
 pub use attribute::*;
@@ -15,5 +14,6 @@ pub use space::*;
 pub use space_invitation_member::*;
 pub use space_panel_participant::*;
 pub use space_panel_quota::*;
-pub use space_participant::*;
 pub use verified_attributes::*;
+
+pub use common::models::space::*;

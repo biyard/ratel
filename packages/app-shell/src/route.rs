@@ -30,9 +30,6 @@ pub enum Route {
 
     #[route("/spaces/:..rest")]
     Space { rest: Vec<String> },
-
-    
-
 }
 
 macro_rules! define_app_wrapper {

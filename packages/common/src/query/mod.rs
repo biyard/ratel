@@ -74,7 +74,7 @@ where
     T: 'static + Clone + PartialEq + Serialize + DeserializeOwned,
     E: Into<dioxus::CapturedError> + 'static,
 {
-    let mut query = use_query_store();
+    let query = use_query_store();
     let key: QueryKey = key.iter().map(|s| s.as_ref().to_string()).collect();
 
     use_effect(use_reactive((&key,), {
