@@ -3846,6 +3846,7 @@ dependencies = [
  "ssi",
  "strum 0.27.2",
  "thiserror 2.0.17",
+ "tokio",
  "tower-sessions 0.15.0",
  "tracing",
  "url",
@@ -17351,12 +17352,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "space-action-poll"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "ratel-auth",
+ "serde",
+]
+
+[[package]]
 name = "space-page-actions"
 version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "ratel-auth",
  "serde",
+ "space-action-poll",
 ]
 
 [[package]]

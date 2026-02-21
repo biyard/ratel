@@ -1,5 +1,10 @@
 [workspace]
-members = ["packages/*", "packages/space-page-overview", "packages/space-shell", "packages/ratel-auth"]
+members = [
+  "packages/*",
+  "packages/ratel-auth",
+  "packages/space-page-overview",
+  "packages/space-shell",
+]
 resolver = "2"
 exclude = ["benchmark/*", "deps", "packages/template"]
 

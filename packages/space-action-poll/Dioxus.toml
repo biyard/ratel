@@ -1,0 +1,12 @@
+[application]
+tailwind_input = "../common/tailwind.css"
+
+[web.app]
+title = "space-action-poll"
+
+[web.resource]
+style = []
+script = []
+
+[web.resource.dev]
+script = []

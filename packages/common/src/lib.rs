@@ -45,6 +45,7 @@ pub use chrono;
 pub use serde;
 pub use serde_json;
 pub use serde_wasm_bindgen;
+pub use serde_with;
 pub use wasm_bindgen;
 pub use wasm_bindgen_futures;
 pub use web_sys;
