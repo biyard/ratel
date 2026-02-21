@@ -2,8 +2,10 @@
 mod components;
 pub mod config;
 pub mod controllers;
+pub mod dto;
 pub mod hooks;
 pub mod layout;
+pub mod models;
 pub mod route;
 #[cfg(not(feature = "server"))]
 pub mod web;
@@ -19,6 +21,12 @@ pub use route::Route;
 use common::*;
 use components::*;
 use dioxus::prelude::*;
+use ratel_post;
+
+// Re-export common types/macros for model derives.
+pub use common::macros::dynamo_entity::DynamoEntity;
+pub use common::types::*;
+pub use common::{DeserializeFromStr, DynamoEnum, EnumProp, SerializeDisplay};
 
 type Result<T> = common::Result<T>;
 type DioxusResult<T> = dioxus::prelude::Result<T>;

@@ -1,0 +1,1 @@
+"undefined"!=typeof window&&(void 0===window.ratel&&(window.ratel={}),window.ratel.ratel_user_home={initialize:i=>{console.debug("Initializing ratel_user_home with config")}});
