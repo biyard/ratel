@@ -19,21 +19,25 @@ impl LayoverService {
         }
     }
 
-    pub fn is_open(&self) -> bool {
-        self.state.read().is_some()
-    }
-
-    pub fn open(&mut self, id: Option<String>, title: String, content: Element) -> &mut Self {
-        self.state.set(Some(Config {
-            id: id.unwrap_or("layover-zone".to_string()),
-            title,
-            content,
-        }));
+    pub fn open(&mut self, id: String, title: String, content: Element) -> &mut Self {
+        let mut need_update = true;
+        if let Some(config) = self.state.read().as_ref() {
+            if config.id == id {
+                need_update = false;
+            }
+        }
+        if need_update {
+            self.state.set(Some(Config { id, title, content }));
+        }
         self
     }
 
     pub fn close(&mut self) {
         self.state.set(None);
+    }
+
+    pub fn state(&self) -> Option<Config> {
+        self.state.read().clone()
     }
 }
 

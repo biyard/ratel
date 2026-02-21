@@ -1,7 +1,7 @@
 use crate::*;
 use common::attribute::{Age, Attribute, Gender};
 
-#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct RespondentAttr {
     pub gender: Option<Gender>,

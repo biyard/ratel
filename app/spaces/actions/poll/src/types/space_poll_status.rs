@@ -2,7 +2,7 @@ use crate::*;
 
 use crate::macros::DynamoEnum;
 
-#[derive(Debug, Clone, Default, DynamoEnum, PartialEq)]
+#[derive(Debug, Clone, Default, DynamoEnum, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub enum PollStatus {
     #[default]

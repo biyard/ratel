@@ -12,3 +12,6 @@ pub use question::*;
 
 mod respondent_attr;
 pub use respondent_attr::*;
+
+mod poll_response;
+pub use poll_response::*;

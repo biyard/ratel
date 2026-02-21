@@ -3,7 +3,7 @@ use crate::*;
 use ratel_auth::models::user::OptionalUser;
 
 // TODO: If bookmark-based pagination is needed, consider introducing a separate DynamoDB entity
-#[get("/api/actions", user: OptionalUser)]
+#[get("/api/actions?space_pk", user: OptionalUser)]
 pub async fn list_actions(
     space_pk: SpacePartition,
     // bookmark: Option<String>,

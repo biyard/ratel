@@ -31,5 +31,6 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
                 }
             }
         }
+        Layover {}
     }
 }
