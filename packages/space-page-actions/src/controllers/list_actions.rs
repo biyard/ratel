@@ -1,13 +1,15 @@
-use std::collections::HashSet;
-
 use crate::*;
+#[cfg(feature = "server")]
 use ratel_auth::models::user::OptionalUser;
+
 // TODO: If bookmark-based pagination is needed, consider introducing a separate DynamoDB entity
 #[get("/api/actions", user: OptionalUser)]
 pub async fn list_actions(
     space_pk: SpacePartition,
     // bookmark: Option<String>,
 ) -> Result<Vec<SpaceAction>> {
+    use std::collections::HashSet;
+
     let cli = crate::config::get().common.dynamodb();
     let space_pk: Partition = space_pk.into();
     let poll_future = SpacePoll::query(

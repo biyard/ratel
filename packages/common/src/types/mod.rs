@@ -1,4 +1,3 @@
-mod composite_partition;
 mod auth;
 mod composite_partition;
 mod entity_type;
@@ -9,7 +8,6 @@ mod space;
 mod space_page;
 mod space_user_role;
 
-pub use composite_partition::*;
 pub use auth::*;
 pub use composite_partition::*;
 pub use entity_type::*;
