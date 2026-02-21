@@ -21,13 +21,13 @@ base64 = { workspace = true, optional = true }
 async-trait = { workspace = true, optional = true }
 names = { version = "0.14.0", optional = true }
 
-ratel-auth = { path = "../ratel-auth/", optional = true }
-space-page-dashboard = { path = "../space-page-dashboard/", optional = true }
-space-page-overview = { path = "../space-page-overview/", optional = true }
-space-page-actions = { path = "../space-page-actions/", optional = true }
-space-page-apps = { path = "../space-page-apps/", optional = true }
-space-page-report = { path = "../space-page-report/", optional = true }
-ratel-post = { path = "../ratel-post/", optional = true }
+ratel-auth = { workspace = true, optional = true }
+space-page-dashboard = { workspace = true, optional = true }
+space-page-overview = { workspace = true, optional = true }
+space-page-actions = { workspace = true, optional = true }
+space-page-apps = { workspace = true, optional = true }
+space-page-report = { workspace = true, optional = true }
+ratel-post = { workspace = true, optional = true }
 
 [features]
 default = []

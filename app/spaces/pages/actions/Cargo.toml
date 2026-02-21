@@ -11,7 +11,7 @@ dioxus = { workspace = true }
 common = { workspace = true }
 serde = { workspace = true }
 ratel-auth = { workspace = true, optional = true }
-space-action-poll = { path = "../space-action-poll/", optional = true }
+space-action-poll = { workspace = true, optional = true }
 
 [features]
 default = []
