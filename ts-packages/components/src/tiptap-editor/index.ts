@@ -295,7 +295,7 @@ class TiptapEditor extends HTMLElement {
       !this._editor.isFocused &&
       newVal !== this._editor.getHTML()
     ) {
-      this._value = this._editor.getHTML();
+      this.setContent(newVal ?? "");
     }
 
     if (name === "editable") {

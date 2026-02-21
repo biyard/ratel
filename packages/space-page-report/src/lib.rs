@@ -1,16 +1,17 @@
 #![allow(unused_imports)]
-mod menu;
-mod route;
-mod views;
-#[cfg(feature = "server")]
 mod config;
-#[cfg(feature = "server")]
-#[path = "../apis/mod.rs"]
-pub mod apis;
-
-use dioxus::prelude::*;
+pub mod controllers;
+mod menu;
+pub mod models;
+mod route;
+pub mod utils;
+mod views;
 
 pub use menu::get_nav_item;
+pub use models::*;
 pub use route::Route;
 
-use common::types::*;
+use common::*;
+use dioxus::prelude::*;
+
+type Result<T> = common::Result<T>;
