@@ -2,17 +2,19 @@ use crate::*;
 
 mod candidate_page;
 mod creator_page;
+mod i18n;
 mod participant_page;
 mod viewer_page;
 
 use candidate_page::*;
 use creator_page::*;
+use i18n::*;
 use participant_page::*;
 use viewer_page::*;
 
 #[component]
 pub fn HomePage(space_id: SpacePartition) -> Element {
-    let role = use_server_future(move || async move { SpaceUserRole::Viewer })?.value();
+    let role = use_server_future(move || async move { SpaceUserRole::Creator })?.value();
 
     match role().unwrap_or_default() {
         SpaceUserRole::Creator => rsx! {
