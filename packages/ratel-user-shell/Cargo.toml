@@ -1,0 +1,63 @@
+[package]
+name = "ratel-user-shell"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+
+[dependencies]
+dioxus = { workspace = true }
+common = { workspace = true }
+serde = { workspace = true }
+icons = { workspace = true }
+ratel-user-post = { path = "../ratel-user-post/", optional = true }
+ratel-user-reward = { path = "../ratel-user-reward/", optional = true }
+ratel-user-setting = { path = "../ratel-user-setting/", optional = true }
+ratel-user-membership = { path = "../ratel-user-membership/", optional = true }
+ratel-user-draft = { path = "../ratel-user-draft/", optional = true }
+ratel-user-credential = { path = "../ratel-user-credential/", optional = true }
+ratel-user-space = { path = "../ratel-user-space/", optional = true }
+
+[features]
+default = []
+web = [
+    "common/web",
+    "dioxus/web",
+    "ratel-user-post/web",
+    "ratel-user-reward/web",
+    "ratel-user-setting/web",
+    "ratel-user-membership/web",
+    "ratel-user-draft/web",
+    "ratel-user-credential/web",
+    "ratel-user-space/web",
+]
+desktop = [
+    "dioxus/desktop",
+    "ratel-user-post/desktop",
+    "ratel-user-reward/desktop",
+    "ratel-user-setting/desktop",
+    "ratel-user-membership/desktop",
+    "ratel-user-draft/desktop",
+    "ratel-user-credential/desktop",
+    "ratel-user-space/desktop",
+]
+mobile = [
+    "dioxus/mobile",
+    "ratel-user-post/mobile",
+    "ratel-user-reward/mobile",
+    "ratel-user-setting/mobile",
+    "ratel-user-membership/mobile",
+    "ratel-user-draft/mobile",
+    "ratel-user-credential/mobile",
+    "ratel-user-space/mobile",
+]
+server = [
+    "common/server",
+    "dioxus/server",
+    "ratel-user-post/server",
+    "ratel-user-reward/server",
+    "ratel-user-setting/server",
+    "ratel-user-membership/server",
+    "ratel-user-draft/server",
+    "ratel-user-credential/server",
+    "ratel-user-space/server",
+]
