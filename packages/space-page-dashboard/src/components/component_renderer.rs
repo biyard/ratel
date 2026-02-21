@@ -27,14 +27,14 @@ pub fn ComponentRenderer(ext: DashboardExtension) -> Element {
 
 /// Renders a grid of DashboardExtension items, sorted by order.
 // col-span-1 col-span-2 col-span-3 col-span-4
-// row-span-1 row-span-2 row-span-3 row-span-4 row-span-5 row-span-6
+// row-span-1 row-span-2 row-span-3 row-span-4 row-span-5 row-span-6 row-span-7
 #[component]
 pub fn DashboardGrid(extensions: Vec<DashboardExtension>) -> Element {
     let mut sorted = extensions;
     sorted.sort_by_key(|e| e.order());
 
     rsx! {
-        div { class: "grid grid-cols-4 grid-rows-6 gap-2.5 w-full h-full min-h-0",
+        div { class: "grid grid-cols-4 grid-rows-7 gap-2.5 w-full h-full min-h-0",
             for ext in sorted.into_iter() {
                 {
                     let id = ext.id.clone();

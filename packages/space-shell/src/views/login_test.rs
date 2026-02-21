@@ -1,5 +1,5 @@
 use crate::{
-    controllers::user::{get_user, login, LoginRequest},
+    controllers::user::{login, LoginRequest},
     *,
 };
 use dioxus::fullstack::Form;
@@ -13,23 +13,30 @@ pub struct LoginForm {
 
 #[component]
 pub fn LoginTest() -> Element {
-    let mut user = use_loader(move || get_user())?;
+    let user = use_user()?;
+    let query = use_query_store();
 
     let mut login = use_action(login);
 
     let mut email = use_signal(|| String::default());
     let mut password = use_signal(|| String::default());
 
-    let submit_client = move |_evt: MouseEvent| async move {
-        // Write the client
-        login
-            .call(Form(LoginRequest {
-                email: email.read().clone(),
-                password: password.read().clone(),
-            }))
-            .await;
+    let submit_client = move |_evt: MouseEvent| {
+        let mut query = query.clone();
 
-        user.restart();
+        async move {
+            // Write the client
+            login
+                .call(Form(LoginRequest {
+                    email: email.read().clone(),
+                    password: password.read().clone(),
+                }))
+                .await;
+
+            // Example: invalidate by key from another component.
+            // Any component can call this, and all `use_user()` loaders restart together.
+            query.invalidate(USER_QUERY_KEY);
+        }
     };
 
     rsx! {
