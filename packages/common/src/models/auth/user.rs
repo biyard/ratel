@@ -1,12 +1,7 @@
 #[cfg(feature = "server")]
-use common::{
-    axum::{extract::FromRequestParts, http::request::Parts},
-    ServerConfig,
-};
-#[cfg(feature = "server")]
 use tower_sessions::Session;
 
-use crate::models::user::{Theme, UserType};
+use crate::types::UserType;
 use crate::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default, PartialEq, DynamoEntity)]
@@ -55,7 +50,6 @@ pub struct User {
     #[dynamo(index = "gsi1", sk)]
     pub password: Option<String>,
 
-    pub theme: Theme,
     pub points: i64,
 }
 
@@ -74,7 +68,7 @@ impl User {
         let uid = uuid::Uuid::new_v4().to_string();
         let pk = Partition::User(uid);
         let sk = EntityType::User;
-        let now = common::utils::time::now();
+        let now = utils::time::now();
 
         Self {
             pk,
@@ -98,7 +92,7 @@ impl User {
         let pk = Partition::User(uid);
         let sk = EntityType::User;
 
-        let now = common::utils::time::now();
+        let now = utils::time::now();
         let display_name = names::Generator::with_naming(names::Name::Numbered)
             .next()
             .unwrap()
@@ -141,7 +135,7 @@ where
         .await
         .map_err(|e| {
             tracing::error!("no session found from request: {:?}", e);
-            common::Error::NoSessionFound
+            Error::NoSessionFound
         })?;
 
     let user_pk: Partition = session
@@ -149,15 +143,15 @@ where
         .await
         .map_err(|e| {
             tracing::error!("no user id found from session: {:?}", e);
-            common::Error::NoSessionFound
+            Error::NoSessionFound
         })?
-        .ok_or(common::Error::NoSessionFound)?;
+        .ok_or(Error::NoSessionFound)?;
 
     let user = User::get(dynamo_client, user_pk, Some(EntityType::User))
         .await
         .map_err(|e| {
             tracing::error!("failed to get user from db: {:?}", e);
-            common::Error::NoSessionFound
+            Error::NoSessionFound
         });
 
     if user.is_err() {
@@ -165,7 +159,7 @@ where
         if let Err(e) = session.flush().await {
             tracing::error!("failed to flush session: {:?}", e);
         }
-        return Err(common::Error::NoSessionFound);
+        return Err(Error::NoSessionFound);
     }
 
     let user = user.unwrap();
@@ -174,7 +168,7 @@ where
         if let Err(e) = session.flush().await {
             tracing::error!("failed to flush session: {:?}", e);
         }
-        return Err(common::Error::NoSessionFound);
+        return Err(Error::NoSessionFound);
     }
 
     let user = user.unwrap();
@@ -188,7 +182,7 @@ where
     S: Send + Sync,
     Session: FromRequestParts<S, Rejection: std::fmt::Debug>,
 {
-    type Rejection = common::Error;
+    type Rejection = Error;
 
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self> {
         tracing::debug!("extracting user from request parts");
@@ -210,7 +204,7 @@ where
     S: Send + Sync,
     Session: FromRequestParts<S, Rejection: std::fmt::Debug>,
 {
-    type Rejection = common::Error;
+    type Rejection = Error;
 
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self> {
         Ok(OptionalUser(
@@ -218,4 +212,3 @@ where
         ))
     }
 }
-
