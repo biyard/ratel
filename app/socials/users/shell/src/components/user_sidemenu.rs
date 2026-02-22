@@ -37,6 +37,16 @@ translate! {
         en: "Settings",
         ko: "설정",
     },
+
+    followers: {
+        en: "Followers",
+        ko: "팔로워",
+    },
+
+    following: {
+        en: "Following",
+        ko: "팔로잉",
+    },
 }
 
 #[component]
@@ -48,24 +58,52 @@ pub fn UserSidemenu(username: String) -> Element {
 
     rsx! {
         div { class: "flex flex-col gap-2.5 w-62.5 max-mobile:hidden shrink-0",
-            // Profile section
-            div { class: "py-5 px-3 w-full border rounded-[10px] bg-card-bg border-card-border",
-                div { class: "flex flex-col items-center gap-2",
+            // Profile section with team selector
+            div { class: "flex flex-col gap-5 px-4 py-5 w-full border rounded-[10px] bg-card-bg border-card-border",
+                // Team selector dropdown
+                TeamSelector { username: username.clone() }
+
+                // Profile image
+                div { class: "relative",
                     if !user.profile_url.is_empty() {
                         img {
                             src: "{user.profile_url}",
                             alt: "{user.display_name}",
-                            class: "w-16 h-16 rounded-full object-cover object-top",
+                            class: "w-20 h-20 rounded-full border-2 object-cover object-top",
                         }
                     } else {
-                        div { class: "w-16 h-16 bg-neutral-500 rounded-full" }
+                        div { class: "w-20 h-20 rounded-full border border-neutral-500 bg-neutral-500" }
                     }
-                    div { class: "text-base font-medium text-c-primary text-center",
-                        "{user.display_name}"
+                }
+
+                // Display name
+                div { class: "font-medium text-c-secondary",
+                    "{user.display_name}"
+                }
+
+                // Description
+                if !user.description.is_empty() {
+                    div { class: "text-xs text-c-secondary",
+                        "{user.description}"
                     }
-                    if !user.description.is_empty() {
-                        div { class: "text-sm text-c-secondary text-center",
-                            "{user.description}"
+                }
+
+                // Followers/Following counts
+                div { class: "flex gap-4 text-sm",
+                    div { class: "flex gap-1",
+                        span { class: "font-semibold text-c-primary",
+                            "{user.followers_count}"
+                        }
+                        span { class: "text-c-secondary",
+                            "{tr.followers}"
+                        }
+                    }
+                    div { class: "flex gap-1",
+                        span { class: "font-semibold text-c-primary",
+                            "{user.followings_count}"
+                        }
+                        span { class: "text-c-secondary",
+                            "{tr.following}"
                         }
                     }
                 }

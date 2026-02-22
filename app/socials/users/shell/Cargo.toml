@@ -9,7 +9,9 @@ dioxus = { workspace = true }
 common = { workspace = true }
 serde = { workspace = true }
 icons = { workspace = true }
+tower-sessions = { version = "0.15.0", optional = true }
 ratel-auth = { workspace = true, optional = true }
+ratel-post = { workspace = true, optional = true }
 ratel-user-post = { workspace = true, optional = true }
 ratel-user-reward = { workspace = true, optional = true }
 ratel-user-setting = { workspace = true, optional = true }
@@ -24,6 +26,7 @@ web = [
     "common/web",
     "dioxus/web",
     "ratel-auth/web",
+    "ratel-post/web",
     "ratel-user-post/web",
     "ratel-user-reward/web",
     "ratel-user-setting/web",
@@ -35,6 +38,7 @@ web = [
 desktop = [
     "dioxus/desktop",
     "ratel-auth/desktop",
+    "ratel-post/desktop",
     "ratel-user-post/desktop",
     "ratel-user-reward/desktop",
     "ratel-user-setting/desktop",
@@ -46,6 +50,7 @@ desktop = [
 mobile = [
     "dioxus/mobile",
     "ratel-auth/mobile",
+    "ratel-post/mobile",
     "ratel-user-post/mobile",
     "ratel-user-reward/mobile",
     "ratel-user-setting/mobile",
@@ -57,7 +62,9 @@ mobile = [
 server = [
     "common/server",
     "dioxus/server",
+    "tower-sessions",
     "ratel-auth/server",
+    "ratel-post/server",
     "ratel-user-post/server",
     "ratel-user-reward/server",
     "ratel-user-setting/server",
