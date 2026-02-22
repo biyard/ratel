@@ -25,6 +25,7 @@ pub fn ProfileDropdown() -> Element {
     let user_ctx = ratel_auth::hooks::use_user_context();
     let team_ctx = use_team_context();
     let mut open = use_signal(|| false);
+    let mut popup = use_popup();
     let nav = use_navigator();
 
     let user = user_ctx().user.clone();
@@ -130,7 +131,9 @@ pub fn ProfileDropdown() -> Element {
                         class: "w-full px-2 py-1.5 hover:bg-hover rounded-md text-sm text-c-secondary cursor-pointer text-left",
                         onclick: move |_| {
                             open.set(false);
-                            // TODO: open team creation popup
+                            popup
+                                .open(rsx! { TeamCreationPopup {} })
+                                .with_title(tr.create_team);
                         },
                         "{tr.create_team}"
                     }
