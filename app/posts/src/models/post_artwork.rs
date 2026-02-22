@@ -21,7 +21,7 @@ impl PostArtwork {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub struct PostArtworkMetadata {
     pub trait_type: String,
