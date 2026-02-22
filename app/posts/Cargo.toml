@@ -15,6 +15,7 @@ web-sys = { workspace = true }
 wasm-bindgen = { workspace = true }
 wasm-bindgen-futures = { workspace = true }
 serde-wasm-bindgen = { workspace = true }
+gloo-timers = { version = "0.3", features = ["futures"], optional = true }
 
 serde = { workspace = true }
 serde_repr = "0.1.20"
@@ -34,7 +35,7 @@ regex = { version = "1", optional = true }
 
 [features]
 default = []
-web = ["common/web", "ratel-auth/web"]
+web = ["common/web", "ratel-auth/web", "gloo-timers"]
 desktop = ["common/desktop", "ratel-auth/desktop"]
 mobile = ["common/mobile", "ratel-auth/mobile"]
 server = [

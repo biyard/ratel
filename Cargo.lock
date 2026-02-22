@@ -13270,6 +13270,7 @@ dependencies = [
  "chrono",
  "common",
  "dioxus",
+ "gloo-timers 0.3.0",
  "percent-encoding",
  "ratel-auth",
  "regex",
@@ -13356,9 +13357,12 @@ dependencies = [
 name = "ratel-team-shell"
 version = "0.1.0"
 dependencies = [
+ "aide",
  "common",
  "dioxus",
  "icons",
+ "ratel-auth",
+ "ratel-post",
  "ratel-team-dao",
  "ratel-team-draft",
  "ratel-team-group",
@@ -13366,7 +13370,9 @@ dependencies = [
  "ratel-team-member",
  "ratel-team-reward",
  "ratel-team-setting",
+ "schemars 1.0.4",
  "serde",
+ "tracing",
 ]
 
 [[package]]
@@ -13440,6 +13446,7 @@ dependencies = [
  "dioxus",
  "icons",
  "ratel-auth",
+ "ratel-post",
  "ratel-user-credential",
  "ratel-user-draft",
  "ratel-user-membership",
@@ -13448,6 +13455,7 @@ dependencies = [
  "ratel-user-setting",
  "ratel-user-space",
  "serde",
+ "tower-sessions 0.15.0",
 ]
 
 [[package]]

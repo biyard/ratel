@@ -26,6 +26,7 @@ fn App() -> Element {
     use_context_provider(|| PopupService::new());
     ThemeService::init();
     ratel_auth::Context::init();
+    common::contexts::TeamContext::init();
 
     rsx! {
         document::Link { rel: "icon", href: FAVICON }
