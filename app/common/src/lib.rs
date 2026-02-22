@@ -21,6 +21,7 @@ pub use dioxus::logger::tracing::{debug, error, info, warn};
 pub type Result<T> = std::result::Result<T, Error>;
 
 pub use icons;
+pub use lucide_dioxus;
 
 pub mod macros;
 #[cfg(feature = "server")]

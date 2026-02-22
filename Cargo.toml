@@ -110,6 +110,7 @@ base64 = "0.22.1"
 hyper = "1.6.0"
 
 dioxus = { version = "0.7.1", features = ["fullstack", "router"] }
+lucide-dioxus = { version = "2.569.0", features = ["all-icons"] }
 
 web-sys = "0.3"
 wasm-bindgen = { version = "0.2", features = [] }

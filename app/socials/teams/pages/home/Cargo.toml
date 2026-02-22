@@ -8,10 +8,12 @@ edition.workspace = true
 dioxus = { workspace = true }
 common = { workspace = true }
 serde = { workspace = true }
+ratel-auth = { workspace = true, optional = true }
+ratel-post = { workspace = true, optional = true }
 
 [features]
 default = []
-web = ["common/web", "dioxus/web"]
-desktop = ["dioxus/desktop"]
-mobile = ["dioxus/mobile"]
-server = ["common/server", "dioxus/server"]
+web = ["common/web", "dioxus/web", "ratel-auth/web", "ratel-post/web"]
+desktop = ["dioxus/desktop", "ratel-auth/desktop", "ratel-post/desktop"]
+mobile = ["dioxus/mobile", "ratel-auth/mobile", "ratel-post/mobile"]
+server = ["common/server", "dioxus/server", "ratel-auth/server", "ratel-post/server"]

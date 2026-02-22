@@ -3,9 +3,14 @@ use ratel_post::components::{CreatePostButton, FeedList};
 
 #[component]
 pub fn Index() -> Element {
+    let user_ctx = ratel_auth::hooks::use_user_context();
+    let user = user_ctx().user.clone();
+
     rsx! {
         div { class: "flex overflow-x-hidden gap-5 justify-between py-3 mx-auto min-h-screen max-w-desktop max-tablet:px-2.5",
-            UserSidemenu {}
+            if let Some(user) = &user {
+                UserSidemenu { username: user.username.clone() }
+            }
             div { class: "flex grow",
                 FeedList {}
             }
