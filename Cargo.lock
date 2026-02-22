@@ -13373,6 +13373,7 @@ dependencies = [
 name = "ratel-user-credential"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "common",
  "dioxus",
  "ratel-auth",
@@ -13386,6 +13387,7 @@ dependencies = [
  "common",
  "dioxus",
  "ratel-auth",
+ "ratel-post",
  "serde",
 ]
 
@@ -13455,6 +13457,7 @@ dependencies = [
  "common",
  "dioxus",
  "ratel-auth",
+ "ratel-post",
  "serde",
 ]
 

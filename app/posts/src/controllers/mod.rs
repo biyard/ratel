@@ -5,6 +5,7 @@ pub mod dto;
 pub mod get_post;
 pub mod like_post;
 pub mod list_posts;
+pub mod list_user_drafts;
 pub mod list_user_posts;
 pub mod update_post;
 
@@ -15,5 +16,6 @@ pub use dto::*;
 pub use get_post::*;
 pub use like_post::*;
 pub use list_posts::*;
+pub use list_user_drafts::*;
 pub use list_user_posts::*;
 pub use update_post::*;

@@ -6,6 +6,7 @@ pub mod logout;
 pub mod reset_password;
 pub mod send_code;
 pub mod signup;
+pub mod update_user;
 pub mod verify_code;
 
 pub use change_account::*;
@@ -16,4 +17,5 @@ pub use logout::*;
 pub use reset_password::*;
 pub use send_code::*;
 pub use signup::*;
+pub use update_user::*;
 pub use verify_code::*;
