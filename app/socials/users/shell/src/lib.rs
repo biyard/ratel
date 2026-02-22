@@ -16,6 +16,7 @@ pub mod web;
 pub mod server;
 mod views;
 
+pub use components::*;
 pub use route::Route;
 
 use common::*;

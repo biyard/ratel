@@ -1,0 +1,47 @@
+use crate::components::post_detail::*;
+use crate::controllers::dto::*;
+use crate::controllers::get_post::get_post_handler;
+use crate::*;
+use dioxus::prelude::*;
+
+#[component]
+pub fn PostDetail(post_pk: String) -> Element {
+    let post_pk_clone = post_pk.clone();
+    let resource = use_server_future(move || {
+        let pk = post_pk_clone.clone();
+        async move { get_post_handler(pk.parse().unwrap()).await }
+    })?;
+
+    let resolved = resource.suspend()?;
+    let data = resolved.read();
+
+    match data.as_ref() {
+        Ok(detail) => {
+            rsx! {
+                div { class: "flex flex-col gap-6 w-full",
+                    PostDetailHeader {
+                        detail: detail.clone(),
+                        post_pk: post_pk.clone(),
+                    }
+                    PostContent {
+                        detail: detail.clone(),
+                    }
+                    CommentSection {
+                        detail: detail.clone(),
+                        post_pk: post_pk.clone(),
+                    }
+                }
+            }
+        }
+        Err(_) => {
+            rsx! {
+                div { class: "flex flex-col items-center justify-center py-20 text-text-primary",
+                    h2 { class: "text-xl font-bold", "Post not found" }
+                    p { class: "text-sm text-text-secondary mt-2",
+                        "The post you're looking for doesn't exist or has been removed."
+                    }
+                }
+            }
+        }
+    }
+}

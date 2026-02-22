@@ -5,7 +5,7 @@ use crate::models::*;
 use crate::types::*;
 use crate::*;
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub struct PostDetailResponse {
     pub post: Option<Post>,

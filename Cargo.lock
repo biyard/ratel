@@ -881,8 +881,10 @@ dependencies = [
  "ratel-post",
  "ratel-team-shell",
  "ratel-user-shell",
+ "serde",
  "serde-wasm-bindgen",
  "space-shell",
+ "tower-sessions 0.15.0",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -3832,6 +3834,7 @@ dependencies = [
  "hex",
  "hmac 0.12.1",
  "icons",
+ "lucide-dioxus",
  "names",
  "percent-encoding",
  "reqwest 0.12.28",
@@ -10383,6 +10386,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "112b39cec0b298b6c1999fee3e31427f74f676e4cb9879ed1a121b43661a4154"
 
 [[package]]
+name = "lucide-dioxus"
+version = "2.569.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "65d788f7939a61f3a35f05d53ccd5a61672981e85d89b2715f6fd28fe9b0c15e"
+dependencies = [
+ "dioxus",
+]
+
+[[package]]
 name = "lzw"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -13308,6 +13320,8 @@ version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "ratel-auth",
+ "ratel-post",
  "serde",
 ]
 
@@ -13359,6 +13373,7 @@ dependencies = [
 name = "ratel-user-credential"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "common",
  "dioxus",
  "ratel-auth",
@@ -13372,6 +13387,7 @@ dependencies = [
  "common",
  "dioxus",
  "ratel-auth",
+ "ratel-post",
  "serde",
 ]
 
@@ -13392,6 +13408,7 @@ dependencies = [
  "common",
  "dioxus",
  "ratel-auth",
+ "ratel-post",
  "serde",
 ]
 
@@ -13422,6 +13439,7 @@ dependencies = [
  "common",
  "dioxus",
  "icons",
+ "ratel-auth",
  "ratel-user-credential",
  "ratel-user-draft",
  "ratel-user-membership",
@@ -13439,6 +13457,7 @@ dependencies = [
  "common",
  "dioxus",
  "ratel-auth",
+ "ratel-post",
  "serde",
 ]
 

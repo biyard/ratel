@@ -1,5 +1,6 @@
 use crate::layout::UserLayout;
 use crate::*;
+use dioxus::router::components::child_router::ChildRouter;
 use views::Home;
 
 use ratel_user_credential::Route as CredentialRoute;
@@ -14,21 +15,60 @@ macro_rules! define_user_app_wrapper {
     ($wrapper_name:ident, $route_module:ident) => {
         #[component]
         pub fn $wrapper_name(username: String, rest: Vec<String>) -> Element {
-            let _ = (username, rest);
+            let router = use_context::<dioxus::router::RouterContext>();
+            let route: $route_module = router.current();
             rsx! {
-                Router::<$route_module> {}
+                ChildRouter::<$route_module> {
+                    route,
+                    format_route_as_root_route: |r: $route_module| r.to_string(),
+                    parse_route_from_root_route: |url: &str| {
+                        <$route_module as std::str::FromStr>::from_str(url).ok()
+                    },
+                }
+            }
+        }
+    };
+}
+
+macro_rules! define_owner_only_wrapper {
+    ($wrapper_name:ident, $route_module:ident) => {
+        #[component]
+        pub fn $wrapper_name(username: String, rest: Vec<String>) -> Element {
+            let user_ctx = ratel_auth::hooks::use_user_context();
+            let is_owner = user_ctx()
+                .user
+                .as_ref()
+                .map(|u| u.username == username)
+                .unwrap_or(false);
+
+            if !is_owner {
+                let nav = navigator();
+                nav.push(format!("/{username}/posts"));
+                return rsx! {};
+            }
+
+            let router = use_context::<dioxus::router::RouterContext>();
+            let route: $route_module = router.current();
+            rsx! {
+                ChildRouter::<$route_module> {
+                    route,
+                    format_route_as_root_route: |r: $route_module| r.to_string(),
+                    parse_route_from_root_route: |url: &str| {
+                        <$route_module as std::str::FromStr>::from_str(url).ok()
+                    },
+                }
             }
         }
     };
 }
 
 define_user_app_wrapper!(UserPosts, PostRoute);
-define_user_app_wrapper!(UserRewards, RewardRoute);
-define_user_app_wrapper!(UserSettings, SettingRoute);
-define_user_app_wrapper!(UserMemberships, MembershipRoute);
-define_user_app_wrapper!(UserDrafts, DraftRoute);
-define_user_app_wrapper!(UserCredentials, CredentialRoute);
-define_user_app_wrapper!(UserSpaces, SpaceRoute);
+define_owner_only_wrapper!(UserRewards, RewardRoute);
+define_owner_only_wrapper!(UserSettings, SettingRoute);
+define_owner_only_wrapper!(UserMemberships, MembershipRoute);
+define_owner_only_wrapper!(UserDrafts, DraftRoute);
+define_owner_only_wrapper!(UserCredentials, CredentialRoute);
+define_owner_only_wrapper!(UserSpaces, SpaceRoute);
 
 #[component]
 fn UserHomeRoot(username: String) -> Element {

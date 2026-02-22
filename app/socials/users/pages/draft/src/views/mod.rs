@@ -1,22 +1,17 @@
 use dioxus::prelude::*;
-use ratel_auth::UserType;
-
-mod admin_page;
-mod viewer_page;
-
-use admin_page::*;
-use viewer_page::*;
+use ratel_post::components::{CreatePostButton, MyDrafts};
 
 #[component]
 pub fn Home(username: String) -> Element {
-    let user_type = UserType::Admin;
-
-    match user_type {
-        UserType::Admin => rsx! {
-            AdminPage { username }
-        },
-        _ => rsx! {
-            ViewerPage { username }
-        },
+    rsx! {
+        div { class: "flex flex-col flex-1 gap-5",
+            CreatePostButton {}
+            SuspenseBoundary {
+                fallback: |_| rsx! {
+                    div { class: "text-center text-gray-400 py-4", "Loading drafts..." }
+                },
+                MyDrafts {}
+            }
+        }
     }
 }

@@ -6,6 +6,7 @@ pub mod post_like;
 pub mod post_repost;
 pub mod post_summary;
 pub mod team;
+pub mod team_group;
 pub mod team_owner;
 
 pub use post::*;
@@ -16,4 +17,5 @@ pub use post_like::*;
 pub use post_repost::*;
 pub use post_summary::*;
 pub use team::*;
+pub use team_group::*;
 pub use team_owner::*;
