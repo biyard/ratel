@@ -5,6 +5,13 @@ pub struct Config {
     pub common: CommonConfig,
 }
 
+#[cfg(feature = "server")]
+impl Config {
+    pub fn dynamodb(&self) -> &common::aws_sdk_dynamodb::Client {
+        self.common.dynamodb()
+    }
+}
+
 impl Default for Config {
     fn default() -> Self {
         Config {

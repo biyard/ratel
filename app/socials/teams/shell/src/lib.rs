@@ -18,10 +18,15 @@ mod views;
 
 pub use route::Route;
 
+// Re-export common types needed by models (available via `use crate::*;`)
+pub use common::macros::dynamo_entity::DynamoEntity;
+pub use common::models::*;
+pub use common::types::*;
+pub use common::{DeserializeFromStr, DynamoEnum, EnumProp, SerializeDisplay};
+pub use serde::{Deserialize, Serialize};
+
 use common::*;
 use dioxus::prelude::*;
 
 type Result<T> = common::Result<T>;
 type DioxusResult<T> = dioxus::prelude::Result<T>;
-
-use serde::{Deserialize, Serialize};
