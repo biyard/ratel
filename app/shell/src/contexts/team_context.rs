@@ -1,36 +1,19 @@
 use crate::*;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
-pub struct TeamItem {
-    pub pk: String,
-    pub nickname: String,
+// Re-export TeamItem, TeamContext, and use_team_context from common
+pub use common::contexts::{TeamContext, TeamItem, use_team_context};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreateTeamRequest {
     pub username: String,
+    pub nickname: String,
     pub profile_url: String,
-    pub user_type: common::types::UserType,
+    pub description: String,
 }
 
-#[derive(Clone, Copy)]
-pub struct TeamContext {
-    pub teams: Signal<Vec<TeamItem>>,
-    pub selected_index: Signal<usize>,
-}
-
-impl TeamContext {
-    pub fn init() {
-        let ctx = Self {
-            teams: use_signal(Vec::new),
-            selected_index: use_signal(|| 0),
-        };
-        use_context_provider(move || ctx);
-    }
-
-    pub fn set_teams(&mut self, teams: Vec<TeamItem>) {
-        self.teams.set(teams);
-    }
-}
-
-pub fn use_team_context() -> TeamContext {
-    use_context::<TeamContext>()
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreateTeamResponse {
+    pub team_pk: String,
 }
 
 #[post("/api/teams/list", session: Extension<tower_sessions::Session>)]
@@ -61,19 +44,6 @@ pub async fn get_user_teams_handler() -> crate::Result<Vec<TeamItem>> {
         .collect();
 
     Ok(items)
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CreateTeamRequest {
-    pub username: String,
-    pub nickname: String,
-    pub profile_url: String,
-    pub description: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CreateTeamResponse {
-    pub team_pk: String,
 }
 
 #[post("/api/teams/create", session: Extension<tower_sessions::Session>)]

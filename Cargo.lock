@@ -13357,9 +13357,12 @@ dependencies = [
 name = "ratel-team-shell"
 version = "0.1.0"
 dependencies = [
+ "aide",
  "common",
  "dioxus",
  "icons",
+ "ratel-auth",
+ "ratel-post",
  "ratel-team-dao",
  "ratel-team-draft",
  "ratel-team-group",
@@ -13367,7 +13370,9 @@ dependencies = [
  "ratel-team-member",
  "ratel-team-reward",
  "ratel-team-setting",
+ "schemars 1.0.4",
  "serde",
+ "tracing",
 ]
 
 [[package]]

@@ -1,6 +1,7 @@
 #![allow(unused_imports)]
 pub mod components;
 pub mod config;
+pub mod contexts;
 mod provider;
 pub mod types;
 
@@ -32,6 +33,7 @@ pub mod utils;
 pub use macros::dynamo_entity::DynamoEntity;
 
 pub use components::*;
+pub use contexts::*;
 pub use dioxus;
 pub use query::*;
 
