@@ -4,7 +4,7 @@ use crate::*;
 use ratel_auth::UserTeamGroup;
 
 #[cfg(feature = "server")]
-use super::TeamOwner;
+use super::{TeamGroup, TeamOwner};
 
 #[derive(Debug, Clone, Serialize, Deserialize, DynamoEntity, Default)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
@@ -47,6 +47,84 @@ pub struct Team {
 
 #[cfg(feature = "server")]
 impl Team {
+    pub fn new(
+        display_name: String,
+        profile_url: String,
+        username: String,
+        description: String,
+    ) -> Self {
+        let team_id = uuid::Uuid::new_v4().to_string();
+        let pk = Partition::Team(team_id);
+        let sk = EntityType::Team;
+        let now = common::utils::time::get_now_timestamp_millis();
+
+        Self {
+            pk,
+            sk,
+            created_at: now,
+            updated_at: now,
+            display_name,
+            profile_url,
+            username,
+            description,
+            followers: 0,
+            followings: 0,
+            dao_address: None,
+        }
+    }
+
+    pub async fn create_new_team(
+        user: &User,
+        cli: &aws_sdk_dynamodb::Client,
+        display_name: String,
+        profile_url: String,
+        username: String,
+        description: String,
+    ) -> Result<Partition> {
+        let team = Team::new(display_name, profile_url, username, description);
+
+        let team_owner = TeamOwner::new(team.pk.clone(), user.clone());
+
+        let team_group = TeamGroup::new(
+            team.pk.clone(),
+            "Admin".to_string(),
+            "Administrators group with all permissions".to_string(),
+            TeamGroupPermissions::all(),
+        );
+
+        let user_pk = user.pk.clone();
+        let team_pk = team.pk.clone();
+
+        let user_team_group = ratel_auth::UserTeamGroup::new(
+            user_pk.clone(),
+            team_group.sk.clone(),
+            team_group.permissions,
+            team_pk.clone(),
+        );
+        let user_team = ratel_auth::UserTeam::new(
+            user_pk,
+            team_pk.clone(),
+            team.display_name.clone(),
+            team.profile_url.clone(),
+            team.username.clone(),
+            team.dao_address.clone(),
+        );
+
+        cli.transact_write_items()
+            .set_transact_items(Some(vec![
+                team.create_transact_write_item(),
+                team_owner.create_transact_write_item(),
+                team_group.create_transact_write_item(),
+                user_team_group.create_transact_write_item(),
+                user_team.create_transact_write_item(),
+            ]))
+            .send()
+            .await
+            .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
+
+        Ok(team_pk)
+    }
+
     pub async fn get_permitted_team(
         cli: &aws_sdk_dynamodb::Client,
         team_pk: Partition,

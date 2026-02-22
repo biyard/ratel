@@ -218,7 +218,9 @@ pub fn MobileSideMenu(is_open: Signal<bool>) -> Element {
                         class: "w-full px-3 py-2.5 hover:bg-hover rounded-md text-left text-base text-c-secondary cursor-pointer",
                         onclick: move |_| {
                             is_open.set(false);
-                            // TODO: open team creation popup
+                            popup
+                                .open(rsx! { TeamCreationPopup {} })
+                                .with_title(tr.create_team);
                         },
                         "{tr.create_team}"
                     }
