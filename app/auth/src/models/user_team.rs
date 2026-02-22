@@ -17,6 +17,30 @@ pub struct UserTeam {
     pub dao_address: Option<String>,
 }
 
+#[cfg(feature = "server")]
+impl UserTeam {
+    pub fn new(
+        user_pk: Partition,
+        team_pk: Partition,
+        display_name: String,
+        profile_url: String,
+        username: String,
+        dao_address: Option<String>,
+    ) -> Self {
+        let now = common::utils::time::get_now_timestamp_millis();
+
+        Self {
+            pk: user_pk,
+            sk: EntityType::UserTeam(team_pk.to_string()),
+            last_used_at: now,
+            display_name,
+            profile_url,
+            username,
+            dao_address,
+        }
+    }
+}
+
 #[derive(Default, Serialize, PartialEq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub struct UserTeamResponse {

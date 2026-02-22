@@ -13,6 +13,13 @@ impl Default for Config {
     }
 }
 
+#[cfg(feature = "server")]
+impl Config {
+    pub fn dynamodb(&self) -> &common::aws_sdk_dynamodb::Client {
+        self.common.dynamodb()
+    }
+}
+
 static mut CONFIG: Option<Config> = None;
 
 #[allow(static_mut_refs)]

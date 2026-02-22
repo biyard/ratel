@@ -43,8 +43,8 @@ pub fn AppMenu() -> Element {
     let tr: AppMenuTranslate = use_translate();
     let mut popup = use_popup();
     let user_ctx = ratel_auth::hooks::use_user_context();
+    let mut mobile_menu_open = use_signal(|| false);
 
-    // TODO: Replace with actual auth state when available
     let logged_in = user_ctx().is_logged_in();
 
     rsx! {
@@ -106,8 +106,7 @@ pub fn AppMenu() -> Element {
 
                     // Sign In / Profile
                     if logged_in {
-                        // TODO: Show profile component when auth state is available
-                        div {}
+                        ProfileDropdown {}
                     } else {
                         button {
                             class: "flex flex-col justify-center items-center p-2.5 font-bold cursor-pointer group text-menu-text text-[15px]",
@@ -128,12 +127,22 @@ pub fn AppMenu() -> Element {
                 }
 
                 // Mobile hamburger / close toggle
-                div { class: "hidden cursor-pointer max-tablet:block",
-                    // TODO: Implement mobile menu toggle with signal state
-                    icons::layouts::ThreeRow { class: "transition-all [&>path]:stroke-menu-text" }
+                div {
+                    class: "hidden cursor-pointer max-tablet:block",
+                    onclick: move |_| {
+                        mobile_menu_open.set(!mobile_menu_open());
+                    },
+                    if mobile_menu_open() {
+                        icons::validations::Clear { class: "transition-all [&>path]:stroke-menu-text" }
+                    } else {
+                        icons::layouts::ThreeRow { class: "transition-all [&>path]:stroke-menu-text" }
+                    }
                 }
             }
         }
+
+        // Mobile side menu
+        MobileSideMenu { is_open: mobile_menu_open }
     }
 }
 

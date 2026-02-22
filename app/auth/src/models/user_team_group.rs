@@ -23,3 +23,20 @@ pub struct UserTeamGroup {
     )]
     pub team_pk: Partition,
 }
+
+#[cfg(feature = "server")]
+impl UserTeamGroup {
+    pub fn new(
+        user_pk: Partition,
+        team_group_sk: EntityType,
+        team_group_permissions: i64,
+        team_pk: Partition,
+    ) -> Self {
+        Self {
+            pk: user_pk,
+            sk: EntityType::UserTeamGroup(team_group_sk.to_string()),
+            team_group_permissions,
+            team_pk,
+        }
+    }
+}
