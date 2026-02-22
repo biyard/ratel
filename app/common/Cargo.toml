@@ -32,6 +32,7 @@ tokio = { workspace = true, optional = true }
 
 dioxus-components = { workspace = true }
 icons = { workspace = true }
+lucide-dioxus = { workspace = true }
 
 
 aws-sdk-dynamodb = { workspace = true, optional = true }

@@ -31,4 +31,4 @@ BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 RUST_FLAG ?=
 
 run:
-	$(BUILD_ENV) dx serve --port $(PORT) --web
+	$(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web

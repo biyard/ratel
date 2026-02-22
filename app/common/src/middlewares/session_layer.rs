@@ -23,11 +23,11 @@ pub fn get_session_layer(
     SessionManagerLayer::new(session_store)
         .with_secure(!is_local)
         .with_http_only(!is_local)
-        .with_same_site(if is_local {
-            tower_sessions::cookie::SameSite::Lax
-        } else {
-            tower_sessions::cookie::SameSite::None
-        })
+        // .with_same_site(if is_local {
+        //     tower_sessions::cookie::SameSite::Lax
+        // } else {
+        //     tower_sessions::cookie::SameSite::None
+        // })
         .with_name(format!("{}_sid", env))
         .with_path("/")
         .with_expiry(tower_sessions::Expiry::AtDateTime(

@@ -1,4 +1,5 @@
 pub mod change_account;
+pub mod get_me;
 pub mod list_accounts;
 pub mod login;
 pub mod logout;
@@ -8,6 +9,7 @@ pub mod signup;
 pub mod verify_code;
 
 pub use change_account::*;
+pub use get_me::*;
 pub use list_accounts::*;
 pub use login::*;
 pub use logout::*;
