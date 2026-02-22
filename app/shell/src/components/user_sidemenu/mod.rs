@@ -83,7 +83,7 @@ pub fn UserSidemenu() -> Element {
                     to: format!("/{username}/posts"),
                     label: tr.my_posts,
                     icon: rsx! {
-                        icons::edit::EditContent { class: "w-6 h-6" }
+                        icons::edit::EditContent { class: "w-6 h-6 [&>path]:stroke-icon-primary" }
                     },
                 }
 
@@ -91,7 +91,7 @@ pub fn UserSidemenu() -> Element {
                     to: format!("/{username}/drafts"),
                     label: tr.drafts,
                     icon: rsx! {
-                        icons::file::AddFile { class: "w-6 h-6" }
+                        icons::file::AddFile { class: "w-6 h-6 [&>path]:stroke-icon-primary" }
                     },
                 }
 
@@ -99,7 +99,7 @@ pub fn UserSidemenu() -> Element {
                     to: format!("/{username}/spaces"),
                     label: tr.my_spaces,
                     icon: rsx! {
-                        icons::user::UserGroup { class: "w-6 h-6" }
+                        icons::user::UserGroup { class: "w-6 h-6 [&>path]:stroke-icon-primary" }
                     },
                 }
 
@@ -107,7 +107,7 @@ pub fn UserSidemenu() -> Element {
                     to: format!("/{username}/credentials"),
                     label: tr.credentials,
                     icon: rsx! {
-                        icons::security::ShieldGood { class: "w-6 h-6" }
+                        icons::security::ShieldGood { class: "w-6 h-6 [&>path]:stroke-icon-primary" }
                     },
                 }
 
@@ -115,7 +115,7 @@ pub fn UserSidemenu() -> Element {
                     to: "/membership".to_string(),
                     label: tr.membership,
                     icon: rsx! {
-                        icons::shopping::Gift { class: "w-6 h-6" }
+                        icons::shopping::Gift { class: "w-6 h-6 [&>path]:stroke-icon-primary" }
                     },
                 }
 
@@ -123,7 +123,7 @@ pub fn UserSidemenu() -> Element {
                     to: format!("/{username}/rewards"),
                     label: tr.rewards,
                     icon: rsx! {
-                        icons::game::Trophy { class: "w-6 h-6" }
+                        icons::game::Trophy { class: "w-6 h-6 [&>path]:stroke-icon-primary" }
                     },
                 }
 
@@ -131,7 +131,7 @@ pub fn UserSidemenu() -> Element {
                     to: format!("/{username}/settings"),
                     label: tr.settings,
                     icon: rsx! {
-                        icons::settings::Settings { class: "w-6 h-6" }
+                        icons::settings::Settings { class: "w-6 h-6 [&>path]:stroke-icon-primary" }
                     },
                 }
             }

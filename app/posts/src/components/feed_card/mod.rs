@@ -197,24 +197,24 @@ fn FeedFooter(
                     if is_liked {
                         icons::emoji::ThumbsUp { class: "[&>path]:fill-primary [&>path]:stroke-primary" }
                     } else {
-                        icons::emoji::ThumbsUp {}
+                        icons::emoji::ThumbsUp { class: "[&>path]:stroke-icon-primary" }
                     }
                     "{convert_number_to_string(likes)}"
                 }
                 a { href: "{comment_href}",
                     IconText { class: "cursor-pointer",
-                        icons::chat::SquareChat {}
+                        icons::chat::SquareChat { class: "[&>path]:stroke-icon-primary" }
                         "{convert_number_to_string(comments)}"
                     }
                 }
                 if booster_type != BoosterType::NoBoost {
                     IconText {
-                        icons::money_payment::RewardCoin {}
+                        icons::money_payment::RewardCoin { class: "[&>path]:stroke-icon-primary" }
                         "{convert_number_to_string(rewards)}"
                     }
                 }
                 IconText {
-                    icons::links_share::Share1 {}
+                    icons::links_share::Share1 { class: "[&>path]:stroke-icon-primary" }
                     "{convert_number_to_string(shares)}"
                 }
             }
@@ -264,7 +264,7 @@ fn EditButton(onclick: EventHandler<MouseEvent>) -> Element {
                 e.prevent_default();
                 onclick.call(e);
             },
-            icons::edit::Edit1 { class: "w-4 h-4" }
+            icons::edit::Edit1 { class: "w-4 h-4 [&>path]:stroke-icon-primary" }
         }
     }
 }

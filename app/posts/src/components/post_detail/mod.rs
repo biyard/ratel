@@ -115,7 +115,7 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element 
                     onclick: move |_| {
                         nav.go_back();
                     },
-                    icons::arrows::ArrowLeft { class: "[&>path]:stroke-text-primary" }
+                    icons::arrows::ArrowLeft { class: "[&>path]:stroke-icon-primary" }
                 }
             }
             // Stats row
@@ -148,7 +148,7 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element 
                     if *optimistic_liked.read() {
                         icons::emoji::ThumbsUp { class: "w-5 h-5 [&>path]:fill-primary [&>path]:stroke-primary" }
                     } else {
-                        icons::emoji::ThumbsUp { class: "w-5 h-5 [&>path]:stroke-icon" }
+                        icons::emoji::ThumbsUp { class: "w-5 h-5 [&>path]:stroke-icon-primary" }
                     }
                     span { class: "text-[15px] text-text-primary",
                         "{convert_number_to_string(*optimistic_likes.read())}"
@@ -156,14 +156,14 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element 
                 }
                 // Comments count
                 div { class: "flex gap-1 items-center",
-                    icons::chat::SquareChat { class: "w-5 h-5 [&>path]:stroke-icon" }
+                    icons::chat::SquareChat { class: "w-5 h-5 [&>path]:stroke-icon-primary" }
                     span { class: "text-[15px] text-text-primary",
                         "{convert_number_to_string(post.comments)}"
                     }
                 }
                 // Shares count
                 div { class: "flex gap-1 items-center",
-                    icons::links_share::Share1 { class: "w-5 h-5 [&>path]:stroke-icon" }
+                    icons::links_share::Share1 { class: "w-5 h-5 [&>path]:stroke-icon-primary" }
                     span { class: "text-[15px] text-text-primary",
                         "{convert_number_to_string(post.shares)}"
                     }
@@ -330,7 +330,7 @@ pub fn CommentSection(detail: PostDetailResponse, post_pk: String) -> Element {
         div { id: "comments", class: "flex flex-col gap-4",
             // Comment count header
             div { class: "flex flex-row gap-2 items-center text-text-primary",
-                icons::chat::SquareChat { class: "w-6 h-6 [&>path]:stroke-text-primary" }
+                icons::chat::SquareChat { class: "w-6 h-6 [&>path]:stroke-icon-primary" }
                 span { class: "text-base font-medium",
                     "{comment_count} {count_label}"
                 }
@@ -500,7 +500,7 @@ fn CommentItem(
                     if *optimistic_liked.read() {
                         icons::emoji::ThumbsUp { class: "w-4 h-4 [&>path]:fill-primary [&>path]:stroke-primary" }
                     } else {
-                        icons::emoji::ThumbsUp { class: "w-4 h-4" }
+                        icons::emoji::ThumbsUp { class: "w-4 h-4 [&>path]:stroke-icon-primary" }
                     }
                     span { class: "text-text-primary",
                         "{convert_number_to_string(*optimistic_likes.read())}"
@@ -513,7 +513,7 @@ fn CommentItem(
                         let current = *show_reply.read();
                         show_reply.set(!current);
                     },
-                    icons::chat::SquareChat { class: "w-4 h-4" }
+                    icons::chat::SquareChat { class: "w-4 h-4 [&>path]:stroke-icon-primary" }
                     "{t.reply_button}"
                     if comment.replies > 0 {
                         span { class: "text-text-secondary",
@@ -649,7 +649,7 @@ fn ReplyItem(reply: PostCommentResponse, post_pk: String) -> Element {
                     if *optimistic_liked.read() {
                         icons::emoji::ThumbsUp { class: "w-3.5 h-3.5 [&>path]:fill-primary [&>path]:stroke-primary" }
                     } else {
-                        icons::emoji::ThumbsUp { class: "w-3.5 h-3.5" }
+                        icons::emoji::ThumbsUp { class: "w-3.5 h-3.5 [&>path]:stroke-icon-primary" }
                     }
                     span { class: "text-text-primary",
                         "{convert_number_to_string(*optimistic_likes.read())}"
