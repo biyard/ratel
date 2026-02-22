@@ -1,13 +1,14 @@
 use crate::controllers::create_post::create_post_handler;
 use crate::*;
+use common::components::{Button, ButtonStyle};
 use dioxus::prelude::*;
 
 translate! {
     CreatePostButtonTranslate;
 
     write: {
-        en: "Write",
-        ko: "글쓰기",
+        en: "Create Post",
+        ko: "게시물 작성",
     },
 }
 
@@ -17,8 +18,9 @@ pub fn CreatePostButton(#[props(default)] team_pk: Option<String>) -> Element {
     let nav = use_navigator();
 
     rsx! {
-        button {
-            class: "flex items-center gap-2 justify-start w-full px-4 py-3 rounded-full bg-btn-secondary text-btn-secondary-text font-bold text-base cursor-pointer hover:opacity-80 transition-opacity",
+        Button {
+            style: ButtonStyle::Secondary,
+            class: "flex items-center gap-2 justify-start w-full cursor-pointer",
             aria_label: "Create Post",
             onclick: move |_| {
                 let team_pk = team_pk.clone();
@@ -37,7 +39,7 @@ pub fn CreatePostButton(#[props(default)] team_pk: Option<String>) -> Element {
                 }
             },
             icons::edit::Edit1 { class: "w-4 h-4 [&>path]:stroke-btn-secondary-text" }
-            span { "{tr.write}" }
+            span { class: "font-bold text-base/[22px]", "{tr.write}" }
         }
     }
 }
