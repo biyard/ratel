@@ -13270,6 +13270,7 @@ dependencies = [
  "chrono",
  "common",
  "dioxus",
+ "gloo-timers 0.3.0",
  "percent-encoding",
  "ratel-auth",
  "regex",

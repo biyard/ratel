@@ -29,7 +29,7 @@ pub fn CreatePostButton(#[props(default)] team_pk: Option<String>) -> Element {
                     let team_id = team_pk.map(|pk| pk.parse().unwrap_or_default());
                     match create_post_handler(team_id).await {
                         Ok(resp) => {
-                            let post_pk = resp.post_pk.to_string();
+                            let post_pk: FeedPartition = resp.post_pk.into();
                             nav.push(format!("/posts/{post_pk}/edit"));
                         }
                         Err(e) => {
