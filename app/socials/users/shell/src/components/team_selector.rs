@@ -26,6 +26,7 @@ pub fn TeamSelector(username: String) -> Element {
     let team_ctx = common::contexts::use_team_context();
     let mut open = use_signal(|| false);
     let nav = use_navigator();
+    let mut popup = use_popup();
 
     let user = user_ctx().user.clone();
     let Some(user) = user else {
@@ -120,6 +121,17 @@ pub fn TeamSelector(username: String) -> Element {
 
                     // Separator
                     div { class: "my-1.5 bg-divider h-px" }
+
+                    // Create Team
+                    button {
+                        class: "w-full flex items-center gap-2 px-2 py-1.5 hover:bg-hover rounded-md text-sm text-c-primary cursor-pointer text-left",
+                        onclick: move |_| {
+                            open.set(false);
+                            popup.open(rsx! { TeamCreationPopup {} });
+                            popup.with_title(tr.create_team);
+                        },
+                        "{tr.create_team}"
+                    }
 
                     // Logout
                     button {

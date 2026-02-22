@@ -13446,6 +13446,7 @@ dependencies = [
  "dioxus",
  "icons",
  "ratel-auth",
+ "ratel-post",
  "ratel-user-credential",
  "ratel-user-draft",
  "ratel-user-membership",
@@ -13454,6 +13455,7 @@ dependencies = [
  "ratel-user-setting",
  "ratel-user-space",
  "serde",
+ "tower-sessions 0.15.0",
 ]
 
 [[package]]
