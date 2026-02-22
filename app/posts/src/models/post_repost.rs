@@ -4,7 +4,7 @@ use ratel_auth::User;
 
 use super::Post;
 
-#[derive(Debug, Clone, Serialize, Deserialize, DynamoEntity, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, DynamoEntity, Default, PartialEq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub struct PostRepost {
     pub pk: Partition,

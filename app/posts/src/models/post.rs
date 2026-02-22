@@ -4,7 +4,7 @@ use crate::*;
 #[cfg(feature = "server")]
 use super::{PostComment, PostCommentLike, PostLike, Team};
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize, DynamoEntity)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, DynamoEntity, PartialEq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct Post {
     pub pk: Partition,
