@@ -1,6 +1,6 @@
 use crate::components::FeedCard;
+use crate::controllers::dto::*;
 use crate::controllers::list_user_posts::{list_team_posts_handler, list_user_posts_handler};
-use crate::controllers::{dto::*, ListTeamPostsQueryParams};
 use crate::*;
 use dioxus::prelude::*;
 
@@ -53,13 +53,7 @@ pub fn MyPosts(username: String) -> Element {
 pub fn TeamPosts(teamname: String) -> Element {
     let resource = use_server_future(move || {
         let teamname = teamname.clone();
-        async move {
-            list_team_posts_handler(ListTeamPostsQueryParams {
-                teamname,
-                bookmark: None,
-            })
-            .await
-        }
+        async move { list_team_posts_handler(teamname, None).await }
     })?;
 
     let resolved = resource.suspend()?;

@@ -72,15 +72,10 @@ pub async fn list_user_posts_handler(
     Ok(ListItemsResponse { items, bookmark })
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct ListTeamPostsQueryParams {
-    pub teamname: String,
-    pub bookmark: Option<String>,
-}
-
-#[post("/api/posts/by-team", user: OptionalUser)]
+#[get("/api/posts/by-team/:teamname?bookmark", user: OptionalUser)]
 pub async fn list_team_posts_handler(
-    params: ListTeamPostsQueryParams,
+    teamname: String,
+    bookmark: Option<String>,
 ) -> Result<ListItemsResponse<PostResponse>> {
     let conf = crate::config::get();
     let cli = conf.dynamodb();
@@ -89,22 +84,21 @@ pub async fn list_team_posts_handler(
 
     tracing::debug!(
         "list_team_posts_handler: teamname = {:?} bookmark = {:?}",
-        params.teamname,
-        params.bookmark
+        teamname,
+        bookmark
     );
 
     let opt = Team::opt().limit(1);
-    let (teams, _): (Vec<Team>, _) =
-        Team::find_by_username_prefix(cli, &params.teamname, opt).await?;
-    let team = teams.into_iter().next().ok_or(Error::NotFound(format!(
-        "Team not found: {}",
-        params.teamname
-    )))?;
+    let (teams, _): (Vec<Team>, _) = Team::find_by_username_prefix(cli, &teamname, opt).await?;
+    let team = teams
+        .into_iter()
+        .next()
+        .ok_or(Error::NotFound(format!("Team not found: {}", teamname)))?;
     let team_pk = team.pk;
 
     let mut query_options = Post::opt().limit(10).sk(PostStatus::Published.to_string());
 
-    if let Some(bookmark) = params.bookmark {
+    if let Some(bookmark) = bookmark {
         query_options = query_options.bookmark(bookmark);
     }
 
