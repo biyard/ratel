@@ -1,20 +1,20 @@
 use crate::*;
+use common::FileUploader;
 use dioxus::prelude::*;
 
 #[component]
-pub fn ProfileImageSection(profile_url: String, on_pick: EventHandler<MouseEvent>) -> Element {
+pub fn ProfileImageSection(profile_url: String, on_upload: EventHandler<String>) -> Element {
     rsx! {
-        if profile_url.is_empty() {
-            button {
-                class: "flex justify-center items-center w-40 h-40 text-sm font-semibold rounded-full bg-c-wg-80 text-text-primary",
-                onclick: on_pick,
-                "Upload Logo"
-            }
-        } else {
-            img {
-                src: "{profile_url}",
-                class: "object-cover w-40 h-40 rounded-full cursor-pointer",
-                onclick: on_pick,
+        FileUploader { on_upload_success: on_upload,
+            if profile_url.is_empty() {
+                button { class: "flex justify-center items-center w-40 h-40 text-sm font-semibold rounded-full bg-c-wg-80 text-text-primary",
+                    "Upload Logo"
+                }
+            } else {
+                img {
+                    src: "{profile_url}",
+                    class: "object-cover w-40 h-40 rounded-full cursor-pointer",
+                }
             }
         }
     }
