@@ -64,7 +64,36 @@ macro_rules! define_owner_only_wrapper {
 
 define_user_app_wrapper!(UserPosts, PostRoute);
 define_owner_only_wrapper!(UserRewards, RewardRoute);
-define_owner_only_wrapper!(UserSettings, SettingRoute);
+// Custom wrapper for settings to inject its script provider.
+#[component]
+pub fn UserSettings(username: String, rest: Vec<String>) -> Element {
+    let user_ctx = ratel_auth::hooks::use_user_context();
+    let is_owner = user_ctx()
+        .user
+        .as_ref()
+        .map(|u| u.username == username)
+        .unwrap_or(false);
+
+    if !is_owner {
+        let nav = navigator();
+        nav.push(format!("/{username}/posts"));
+        return rsx! {};
+    }
+
+    let router = use_context::<dioxus::router::RouterContext>();
+    let route: SettingRoute = router.current();
+    rsx! {
+        ratel_user_setting::Provider {
+            ChildRouter::<SettingRoute> {
+                route,
+                format_route_as_root_route: |r: SettingRoute| r.to_string(),
+                parse_route_from_root_route: |url: &str| {
+                    <SettingRoute as std::str::FromStr>::from_str(url).ok()
+                },
+            }
+        }
+    }
+}
 define_owner_only_wrapper!(UserMemberships, MembershipRoute);
 define_owner_only_wrapper!(UserDrafts, DraftRoute);
 define_owner_only_wrapper!(UserCredentials, CredentialRoute);

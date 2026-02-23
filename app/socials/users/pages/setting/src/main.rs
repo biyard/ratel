@@ -15,12 +15,14 @@ fn main() {
 
 pub const FAVICON: Asset = asset!("/assets/favicon.ico");
 pub const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
+pub const SETTING_JS: Asset = asset!("/assets/ratel-user-setting.js", AssetOptions::js());
 
 #[component]
 fn App() -> Element {
     rsx! {
         document::Link { rel: "icon", href: FAVICON }
         document::Link { rel: "stylesheet", href: TAILWIND_CSS }
+        document::Script { src: SETTING_JS }
         Router::<Route> {}
     }
 }
