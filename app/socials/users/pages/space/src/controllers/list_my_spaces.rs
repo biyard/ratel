@@ -20,7 +20,8 @@ pub struct ListMySpacesResponse {
     pub bookmark: Option<String>,
 }
 
-#[get("/api/me/spaces", user: ratel_auth::User)]
+// FIXME: Use GET when dioxus server functions support query params without body.
+#[post("/api/me/spaces", user: ratel_auth::User)]
 pub async fn list_my_spaces_handler(
     bookmark: Option<String>,
 ) -> Result<ListMySpacesResponse> {

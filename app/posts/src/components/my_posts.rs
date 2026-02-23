@@ -1,14 +1,21 @@
 use crate::components::FeedCard;
-use crate::controllers::dto::*;
 use crate::controllers::list_user_posts::{list_team_posts_handler, list_user_posts_handler};
+use crate::controllers::{dto::*, ListTeamPostsQueryParams, ListUserPostsQueryParams};
 use crate::*;
 use dioxus::prelude::*;
 
+// FIXME: Use GET when dioxus server functions support query params without body.
 #[component]
 pub fn MyPosts(username: String) -> Element {
     let resource = use_server_future(move || {
         let username = username.clone();
-        async move { list_user_posts_handler(username, None).await }
+        async move {
+            list_user_posts_handler(ListUserPostsQueryParams {
+                username,
+                bookmark: None,
+            })
+            .await
+        }
     })?;
 
     let resolved = resource.suspend()?;
@@ -52,18 +59,32 @@ pub fn MyPosts(username: String) -> Element {
 pub fn TeamPosts(teamname: String) -> Element {
     let resource = use_server_future(move || {
         let teamname = teamname.clone();
-        async move { list_team_posts_handler(teamname, None).await }
+        async move {
+            list_team_posts_handler(ListTeamPostsQueryParams {
+                teamname,
+                bookmark: None,
+            })
+            .await
+        }
     })?;
 
     let resolved = resource.suspend()?;
     let data = resolved.read();
-    let (items, has_next): (Vec<PostResponse>, bool) = match data.as_ref() {
+    let (items, has_next, error): (Vec<PostResponse>, bool, Option<String>) = match data.as_ref() {
         Ok(data) => {
             let has_next = data.bookmark.is_some();
-            (data.items.clone(), has_next)
+            (data.items.clone(), has_next, None)
         }
-        Err(_) => (vec![], false),
+        Err(e) => (vec![], false, Some(e.to_string())),
     };
+
+    if let Some(error) = error {
+        return rsx! {
+            div { class: "flex flex-row justify-start items-center w-full text-base font-medium text-red-400 border border-red-400 h-fit px-[16px] py-[20px] rounded-[8px]",
+                "Failed to load posts: {error}"
+            }
+        };
+    }
 
     if items.is_empty() {
         return rsx! {
