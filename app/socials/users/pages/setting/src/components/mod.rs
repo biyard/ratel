@@ -2,10 +2,7 @@ use crate::*;
 use dioxus::prelude::*;
 
 #[component]
-pub fn ProfileImageSection(
-    profile_url: String,
-    on_pick: EventHandler<MouseEvent>,
-) -> Element {
+pub fn ProfileImageSection(profile_url: String, on_pick: EventHandler<MouseEvent>) -> Element {
     rsx! {
         if profile_url.is_empty() {
             button {
@@ -42,6 +39,7 @@ pub fn SettingsForm(
     on_description_input: EventHandler<FormEvent>,
     on_save: EventHandler<MouseEvent>,
 ) -> Element {
+    let metamask = asset!("/assets/meta-mask-icon.png");
     let wallet_label = if wallet_visible { "Hide" } else { "Change" };
     rsx! {
         div { class: "flex flex-col gap-2.5 w-full",
@@ -78,8 +76,10 @@ pub fn SettingsForm(
                         class: "flex items-center justify-between p-4 bg-card-bg rounded-lg hover:bg-component-bg/70 transition-colors cursor-pointer",
                         onclick: on_connect_wallet,
                         div { class: "flex items-center space-x-3",
-                            div { class: "w-10 h-10 rounded-full bg-[#D9D9D9] flex items-center justify-center text-xs text-black",
-                                "MM"
+                            img {
+                                src: "{metamask}",
+                                width: "40",
+                                height: "40",
                             }
                             div { class: "font-semibold text-text-primary",
                                 div { "MetaMask" }
@@ -127,14 +127,14 @@ pub fn SettingsForm(
 
             div { class: "flex justify-end py-5",
                 button {
-                    class: if save_blocked {
-                        "cursor-not-allowed bg-disable-button-bg text-disable-button-white-text px-6 py-2 rounded-md"
-                    } else {
-                        "cursor-pointer bg-enable-button-bg text-enable-button-white-text px-6 py-2 rounded-md"
-                    },
+                    class: if save_blocked { "cursor-not-allowed bg-disable-button-bg text-disable-button-white-text px-6 py-2 rounded-md" } else { "cursor-pointer bg-enable-button-bg text-enable-button-white-text px-6 py-2 rounded-md" },
                     disabled: saving,
                     onclick: on_save,
-                    if saving { "Saving..." } else { "Save" }
+                    if saving {
+                        "Saving..."
+                    } else {
+                        "Save"
+                    }
                 }
             }
 
