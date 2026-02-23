@@ -6,7 +6,7 @@ pub fn UserLayout(username: String) -> Element {
     let logged_in = user_ctx().user.is_some();
 
     rsx! {
-        div { class: "flex overflow-x-hidden gap-5 justify-between py-3 mx-auto min-h-screen text-white max-w-desktop max-tablet:px-2.5",
+        div { class: "flex overflow-x-hidden gap-5 justify-between py-3 mx-auto min-h-screen text-white bg-bg max-w-desktop max-tablet:px-2.5",
             if logged_in {
                 UserSidemenu { username }
             }
