@@ -7,4 +7,7 @@ use crate::*;
 extern "C" {
     #[wasm_bindgen(js_name = initialize)]
     pub fn initialize(config: &JsValue);
+
+    #[wasm_bindgen(js_name = connectWallet, catch)]
+    pub fn connect_wallet() -> std::result::Result<Promise, JsValue>;
 }
