@@ -10,6 +10,10 @@ AWS_ACCOUNT_ID ?= $(shell aws sts get-caller-identity --query "Account" --output
 DATABASE_TYPE = dynamo
 DYNAMO_ENDPOINT ?= http://localhost:4566
 DYNAMO_TABLE_PREFIX ?= ratel-$(ENV)
+BUCKET_NAME ?= metadata.ratel.foundation
+BUCKET_EXPIRE ?= 3600
+ASSET_DIR ?= metadata
+S3_REGION ?= ap-northeast-2
 
 RUST_LOG ?= debug
 
@@ -23,6 +27,10 @@ BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					TABLE_PREFIX=$(DYNAMO_TABLE_PREFIX) \
 					DYNAMODB_ENDPOINT=$(DYNAMO_ENDPOINT) \
 					DATABASE_TYPE=$(DATABASE_TYPE) \
+					BUCKET_NAME=$(BUCKET_NAME) \
+					BUCKET_EXPIRE=$(BUCKET_EXPIRE) \
+					ASSET_DIR=$(ASSET_DIR) \
+					S3_REGION=$(S3_REGION) \
 					RUST_LOG=$(RUST_LOG) \
 					ENV=$(ENV) \
 					COMMIT=$(COMMIT) \

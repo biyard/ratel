@@ -13434,6 +13434,8 @@ dependencies = [
 name = "ratel-user-setting"
 version = "0.1.0"
 dependencies = [
+ "aws-config",
+ "aws-sdk-s3",
  "common",
  "dioxus",
  "ratel-auth",

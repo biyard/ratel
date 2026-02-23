@@ -152,18 +152,16 @@ pub fn Home(username: String) -> Element {
     let wallet_connected = wallet_address().is_some();
     let save_blocked = is_blocked_text(&nickname()) || is_blocked_text(&description());
 
-    let on_profile_pick = {
+    let on_profile_upload = {
         let mut profile_url = profile_url.clone();
-        move |_evt: MouseEvent| {
-            // if let Some(url) = prompt_profile_url() {
-            //     profile_url.set(url);
-            // }
+        move |url: String| {
+            profile_url.set(url);
         }
     };
 
     rsx! {
         div { class: "flex flex-col gap-10 items-center w-full max-tablet:w-full",
-            ProfileImageSection { profile_url: profile_img, on_pick: on_profile_pick }
+            ProfileImageSection { profile_url: profile_img, on_upload: on_profile_upload }
 
             SettingsForm {
                 username: user.username.clone(),
