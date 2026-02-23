@@ -39,12 +39,13 @@ pub enum Error {
     NoSessionFound,
 
     #[cfg(feature = "server")]
+    #[serde(skip)]
     #[error("AWS error: {0}")]
     #[translate(
         en = "Internal server error",
         ko = "서버 내부 오류가 발생하였습니다. 잠시 후 다시 시도해주세요."
     )]
-    Aws(String),
+    Aws(#[from] crate::utils::aws::error::AwsError),
 
     #[cfg(feature = "server")]
     #[serde(skip)]
@@ -173,14 +174,14 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
 #[cfg(feature = "server")]
 impl From<aws_sdk_dynamodb::Error> for Error {
     fn from(e: aws_sdk_dynamodb::Error) -> Self {
-        Error::Aws(e.to_string())
+        Error::Aws(crate::utils::aws::error::AwsError::from(e))
     }
 }
 
 #[cfg(feature = "server")]
 impl From<serde_dynamo::Error> for Error {
     fn from(e: serde_dynamo::Error) -> Self {
-        Error::Aws(e.to_string())
+        Error::Aws(crate::utils::aws::error::AwsError::from(e))
     }
 }
 
