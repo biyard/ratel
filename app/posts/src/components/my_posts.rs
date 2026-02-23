@@ -58,21 +58,13 @@ pub fn TeamPosts(teamname: String) -> Element {
 
     let resolved = resource.suspend()?;
     let data = resolved.read();
-    let (items, has_next, error): (Vec<PostResponse>, bool, Option<String>) = match data.as_ref() {
+    let (items, has_next): (Vec<PostResponse>, bool) = match data.as_ref() {
         Ok(data) => {
             let has_next = data.bookmark.is_some();
-            (data.items.clone(), has_next, None)
+            (data.items.clone(), has_next)
         }
-        Err(e) => (vec![], false, Some(e.to_string())),
+        Err(_) => (vec![], false),
     };
-
-    if let Some(error) = error {
-        return rsx! {
-            div { class: "flex flex-row justify-start items-center w-full text-base font-medium text-red-400 border border-red-400 h-fit px-[16px] py-[20px] rounded-[8px]",
-                "Failed to load posts: {error}"
-            }
-        };
-    }
 
     if items.is_empty() {
         return rsx! {
