@@ -20,7 +20,7 @@ fn convert_number_to_string(n: i64) -> String {
     }
 }
 
-fn time_ago(timestamp_millis: i64) -> String {
+pub fn time_ago(timestamp_millis: i64) -> String {
     let now = chrono::Utc::now().timestamp_millis();
     let diff = now - timestamp_millis;
 
@@ -150,7 +150,7 @@ fn FeedBody(post: PostResponse, on_edit: Option<EventHandler<MouseEvent>>) -> El
 }
 
 #[component]
-fn FeedContents(contents: String, urls: Vec<String>) -> Element {
+pub fn FeedContents(contents: String, urls: Vec<String>) -> Element {
     rsx! {
         div { class: "break-all text-desc-text px-5 mt-2.5",
             div {
@@ -222,7 +222,7 @@ fn FeedFooter(
 }
 
 #[component]
-fn UserBadge(profile_url: String, name: String, author_type: ratel_auth::UserType) -> Element {
+pub fn UserBadge(profile_url: String, name: String, author_type: ratel_auth::UserType) -> Element {
     let img_class = if author_type == ratel_auth::UserType::Team {
         "w-6 h-6 rounded-sm object-cover"
     } else {
