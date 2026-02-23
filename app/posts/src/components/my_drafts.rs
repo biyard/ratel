@@ -28,7 +28,7 @@ pub fn MyDrafts() -> Element {
 
     rsx! {
         div { class: "flex flex-col flex-1 max-mobile:px-[10px]",
-            div { class: "flex flex-col flex-1",
+            div { class: "flex flex-col flex-1 gap-4",
                 for post in items {
                     FeedCard { key: "{post.pk}", post: post.clone() }
                 }
