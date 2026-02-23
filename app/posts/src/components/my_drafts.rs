@@ -1,14 +1,12 @@
 use crate::components::FeedCard;
 use crate::controllers::dto::*;
-use crate::controllers::list_user_drafts::{list_user_drafts_handler, ListUserDraftsQueryParams};
+use crate::controllers::list_user_drafts::list_user_drafts_handler;
 use crate::*;
 use dioxus::prelude::*;
 
 #[component]
 pub fn MyDrafts() -> Element {
-    let resource = use_server_future(move || async move {
-        list_user_drafts_handler(ListUserDraftsQueryParams { bookmark: None }).await
-    })?;
+    let resource = use_server_future(move || async move { list_user_drafts_handler(None).await })?;
 
     let resolved = resource.suspend()?;
     let data = resolved.read();
