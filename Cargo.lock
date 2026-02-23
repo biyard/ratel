@@ -13403,8 +13403,10 @@ version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "percent-encoding",
  "ratel-auth",
  "serde",
+ "serde_with 3.14.1",
 ]
 
 [[package]]
