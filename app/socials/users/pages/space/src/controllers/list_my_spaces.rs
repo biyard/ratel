@@ -20,11 +20,8 @@ pub struct ListMySpacesResponse {
     pub bookmark: Option<String>,
 }
 
-// FIXME: Use GET when dioxus server functions support query params without body.
-#[post("/api/me/spaces", user: ratel_auth::User)]
-pub async fn list_my_spaces_handler(
-    bookmark: Option<String>,
-) -> Result<ListMySpacesResponse> {
+#[get("/api/me/spaces?bookmark", user: ratel_auth::User)]
+pub async fn list_my_spaces_handler(bookmark: Option<String>) -> Result<ListMySpacesResponse> {
     let conf = common::config::ServerConfig::default();
     let cli = conf.dynamodb();
 
@@ -33,8 +30,7 @@ pub async fn list_my_spaces_handler(
         opt = opt.bookmark(bookmark);
     }
 
-    let (participants, bookmark) =
-        SpaceParticipant::find_by_user(cli, &user.pk, opt).await?;
+    let (participants, bookmark) = SpaceParticipant::find_by_user(cli, &user.pk, opt).await?;
 
     let space_keys: Vec<(Partition, EntityType)> = participants
         .iter()

@@ -4,15 +4,10 @@ use crate::types::*;
 use crate::*;
 use ratel_auth::OptionalUser;
 
-#[derive(Serialize, Deserialize)]
-pub struct ListUserPostsQueryParams {
-    pub username: String,
-    pub bookmark: Option<String>,
-}
-
-#[post("/api/posts/by-user", user: OptionalUser)]
+#[get("/api/posts/by-user/:username?bookmark", user: OptionalUser)]
 pub async fn list_user_posts_handler(
-    params: ListUserPostsQueryParams,
+    username: String,
+    bookmark: Option<String>,
 ) -> Result<ListItemsResponse<PostResponse>> {
     let conf = crate::config::get();
     let cli = conf.dynamodb();
@@ -21,21 +16,20 @@ pub async fn list_user_posts_handler(
 
     tracing::debug!(
         "list_user_posts_handler: username = {:?} bookmark = {:?}",
-        params.username,
-        params.bookmark
+        username,
+        bookmark
     );
 
-    let (users, _) =
-        ratel_auth::User::find_by_username(cli, &params.username, Default::default()).await?;
-    let target_user = users.into_iter().next().ok_or(Error::NotFound(format!(
-        "User not found: {}",
-        params.username
-    )))?;
+    let (users, _) = ratel_auth::User::find_by_username(cli, &username, Default::default()).await?;
+    let target_user = users
+        .into_iter()
+        .next()
+        .ok_or(Error::NotFound(format!("User not found: {}", username)))?;
     let user_pk = target_user.pk;
 
     let mut query_options = Post::opt().limit(10).sk(PostStatus::Published.to_string());
 
-    if let Some(bookmark) = params.bookmark {
+    if let Some(bookmark) = bookmark {
         query_options = query_options.bookmark(bookmark);
     }
 
