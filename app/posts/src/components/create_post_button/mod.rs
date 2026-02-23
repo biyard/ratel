@@ -20,7 +20,7 @@ pub fn CreatePostButton(#[props(default)] team_pk: Option<String>) -> Element {
     rsx! {
         Button {
             style: ButtonStyle::Secondary,
-            class: "flex items-center gap-2 justify-start w-full cursor-pointer",
+            class: "flex flex-row items-center gap-2 justify-start w-full cursor-pointer",
             aria_label: "Create Post",
             onclick: move |_| {
                 let team_pk = team_pk.clone();
@@ -38,8 +38,10 @@ pub fn CreatePostButton(#[props(default)] team_pk: Option<String>) -> Element {
                     }
                 }
             },
-            icons::edit::Edit1 { class: "w-4 h-4 [&>path]:stroke-btn-secondary-text" }
-            span { class: "font-bold text-base/[22px]", "{tr.write}" }
+            div { class: "flex flex-row w-full items-center justify-start gap-2.5",
+                icons::edit::Edit1 { class: "w-4 h-4 [&>path]:stroke-btn-secondary-text" }
+                span { class: "font-bold text-base/[22px]", "{tr.write}" }
+            }
         }
     }
 }
