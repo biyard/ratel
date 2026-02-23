@@ -1,5 +1,11 @@
 use crate::*;
 
+const BASE_APP_MENU_NAMES: [SpaceAppName; 2] = [SpaceAppName::AllApps, SpaceAppName::General];
+const APP_ICON_SIZE: &str = "20";
+const APPS_ICON_CLASS: &str = "text-icon-primary [&>path]:stroke-current";
+const GENERAL_ICON_CLASS: &str = "text-icon-primary [&>path]:fill-current [&>circle]:stroke-current";
+const INCENTIVE_POOL_ICON_CLASS: &str = "text-icon-primary [&>path]:fill-none [&>path]:stroke-current";
+
 pub fn get_nav_item(
     space_id: SpacePartition,
     role: SpaceUserRole,
@@ -7,46 +13,122 @@ pub fn get_nav_item(
     if role != SpaceUserRole::Creator {
         return None;
     }
-    Some((icon(), SpacePage::Apps, Route::HomePage { space_id }.into()))
+    Some((
+        all_apps_icon(),
+        SpacePage::Apps,
+        Route::from_app_name(&space_id, SpaceAppName::AllApps),
+    ))
+}
+
+pub fn get_app_menu_items(
+    space_id: SpacePartition,
+    installed_apps: impl IntoIterator<Item = SpaceAppName>,
+) -> Vec<(Element, SpaceAppName, NavigationTarget)> {
+    let mut app_names = BASE_APP_MENU_NAMES
+        .into_iter()
+        .chain(installed_apps)
+        .collect::<Vec<_>>();
+    app_names.sort_unstable_by_key(|app_name| app_name.as_str());
+
+    app_names
+        .into_iter()
+        .map(|app_name| app_menu_item(&space_id, app_name))
+        .collect()
+}
+
+fn app_menu_item(
+    space_id: &SpacePartition,
+    app_name: SpaceAppName,
+) -> (Element, SpaceAppName, NavigationTarget) {
+    let spec = app_spec(app_name);
+    (
+        (spec.icon)(),
+        app_name,
+        ((spec.route)(space_id)).into(),
+    )
+}
+
+#[derive(Clone, Copy)]
+struct AppSpec {
+    icon: fn() -> Element,
+    route: fn(&SpacePartition) -> Route,
+}
+
+fn app_spec(app_name: SpaceAppName) -> AppSpec {
+    match app_name {
+        SpaceAppName::AllApps => AppSpec {
+            icon: all_apps_icon,
+            route: route_all_apps,
+        },
+        SpaceAppName::General => AppSpec {
+            icon: general_icon,
+            route: route_general,
+        },
+        SpaceAppName::IncentivePool => AppSpec {
+            icon: incentive_pool_icon,
+            route: route_incentive_pool,
+        },
+    }
 }
 
 #[component]
-pub fn icon() -> Element {
+pub fn all_apps_icon() -> Element {
     rsx! {
-        svg {
-            fill: "none",
-            height: "20",
-            view_box: "0 0 20 20",
-            width: "20",
-            xmlns: "http://www.w3.org/2000/svg",
-            path {
-                d: "M3.33325 4.16666C3.33325 3.70642 3.70635 3.33333 4.16659 3.33333H7.49992C7.96016 3.33333 8.33325 3.70642 8.33325 4.16666V7.49999C8.33325 7.96023 7.96016 8.33333 7.49992 8.33333H4.16659C3.70635 8.33333 3.33325 7.96023 3.33325 7.49999V4.16666Z",
-                stroke: "#737373",
-                stroke_linecap: "round",
-                stroke_linejoin: "round",
-                stroke_width: "1.5",
-            }
-            path {
-                d: "M3.33325 12.5C3.33325 12.0398 3.70635 11.6667 4.16659 11.6667H7.49992C7.96016 11.6667 8.33325 12.0398 8.33325 12.5V15.8333C8.33325 16.2936 7.96016 16.6667 7.49992 16.6667H4.16659C3.70635 16.6667 3.33325 16.2936 3.33325 15.8333V12.5Z",
-                stroke: "#737373",
-                stroke_linecap: "round",
-                stroke_linejoin: "round",
-                stroke_width: "1.5",
-            }
-            path {
-                d: "M11.6666 4.16666C11.6666 3.70642 12.0397 3.33333 12.4999 3.33333H15.8333C16.2935 3.33333 16.6666 3.70642 16.6666 4.16666V7.49999C16.6666 7.96023 16.2935 8.33333 15.8333 8.33333H12.4999C12.0397 8.33333 11.6666 7.96023 11.6666 7.49999V4.16666Z",
-                stroke: "#737373",
-                stroke_linecap: "round",
-                stroke_linejoin: "round",
-                stroke_width: "1.5",
-            }
-            path {
-                d: "M11.6666 12.5C11.6666 12.0398 12.0397 11.6667 12.4999 11.6667H15.8333C16.2935 11.6667 16.6666 12.0398 16.6666 12.5V15.8333C16.6666 16.2936 16.2935 16.6667 15.8333 16.6667H12.4999C12.0397 16.6667 11.6666 16.2936 11.6666 15.8333V12.5Z",
-                stroke: "#737373",
-                stroke_linecap: "round",
-                stroke_linejoin: "round",
-                stroke_width: "1.5",
-            }
+        icons::layouts::Apps {
+            width: APP_ICON_SIZE,
+            height: APP_ICON_SIZE,
+            class: APPS_ICON_CLASS,
         }
+    }
+}
+
+fn general_icon() -> Element {
+    rsx! {
+        icons::settings::Settings2 {
+            width: APP_ICON_SIZE,
+            height: APP_ICON_SIZE,
+            class: GENERAL_ICON_CLASS,
+        }
+    }
+}
+
+fn incentive_pool_icon() -> Element {
+    rsx! {
+        icons::ratel::Chest {
+            width: APP_ICON_SIZE,
+            height: APP_ICON_SIZE,
+            class: INCENTIVE_POOL_ICON_CLASS,
+        }
+    }
+}
+
+fn route_all_apps(space_id: &SpacePartition) -> Route {
+    Route::AllApps {
+        space_id: space_id.clone(),
+        rest: vec![],
+    }
+}
+
+fn route_general(space_id: &SpacePartition) -> Route {
+    Route::General {
+        space_id: space_id.clone(),
+        rest: vec![],
+    }
+}
+
+fn route_incentive_pool(space_id: &SpacePartition) -> Route {
+    Route::IncentivePool {
+        space_id: space_id.clone(),
+        rest: vec![],
+    }
+}
+
+impl Route {
+    fn to_app_route(space_id: &SpacePartition, app_name: SpaceAppName) -> Self {
+        (app_spec(app_name).route)(space_id)
+    }
+
+    fn from_app_name(space_id: &SpacePartition, app_name: SpaceAppName) -> NavigationTarget {
+        Self::to_app_route(space_id, app_name).into()
     }
 }
