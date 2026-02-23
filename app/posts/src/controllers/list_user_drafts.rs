@@ -4,23 +4,30 @@ use crate::types::*;
 use crate::*;
 use ratel_auth::User;
 
-#[get("/api/posts/drafts", user: User)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct ListUserDraftsQueryParams {
+    pub bookmark: Option<String>,
+}
+
+// FIXME: Use GET when dioxus server functions support query params without body.
+#[post("/api/posts/drafts", user: User)]
 pub async fn list_user_drafts_handler(
-    bookmark: Option<String>,
+    params: ListUserDraftsQueryParams,
 ) -> Result<ListItemsResponse<PostResponse>> {
     let conf = crate::config::get();
     let cli = conf.dynamodb();
 
     tracing::debug!(
         "list_user_drafts_handler: bookmark = {:?}",
-        bookmark
+        params.bookmark
     );
 
     let mut query_options = Post::opt()
         .limit(10)
         .sk(PostStatus::Draft.to_string());
 
-    if let Some(bookmark) = bookmark {
+    if let Some(bookmark) = params.bookmark {
         query_options = query_options.bookmark(bookmark);
     }
 

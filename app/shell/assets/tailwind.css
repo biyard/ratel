@@ -1489,6 +1489,9 @@
   .border-neutral-800 {
     border-color: var(--color-neutral-800);
   }
+  .border-red-400 {
+    border-color: var(--color-red-400);
+  }
   .border-space-dashboard-accent {
     border-color: var(--color-space-dashboard-accent);
   }

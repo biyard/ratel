@@ -1,13 +1,13 @@
 use crate::components::FeedCard;
 use crate::controllers::dto::*;
-use crate::controllers::list_user_drafts::list_user_drafts_handler;
+use crate::controllers::list_user_drafts::{list_user_drafts_handler, ListUserDraftsQueryParams};
 use crate::*;
 use dioxus::prelude::*;
 
 #[component]
 pub fn MyDrafts() -> Element {
     let resource = use_server_future(move || async move {
-        list_user_drafts_handler(None).await
+        list_user_drafts_handler(ListUserDraftsQueryParams { bookmark: None }).await
     })?;
 
     let resolved = resource.suspend()?;
@@ -32,14 +32,12 @@ pub fn MyDrafts() -> Element {
         div { class: "flex flex-col flex-1 max-mobile:px-[10px]",
             div { class: "flex flex-col flex-1",
                 for post in items {
-                    FeedCard {
-                        key: "{post.pk}",
-                        post: post.clone(),
-                    }
+                    FeedCard { key: "{post.pk}", post: post.clone() }
                 }
 
                 if !has_next {
-                    div { class: "my-6 text-center text-gray-400",
+                    div {
+                        class: "my-6 text-center text-gray-400",
                         aria_label: "End of feed message",
                         "You have reached the end of your drafts."
                     }
