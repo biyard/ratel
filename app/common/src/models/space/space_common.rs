@@ -117,28 +117,28 @@ where
         use std::collections::HashMap;
 
         use dioxus::fullstack::{extract::Path, response::IntoResponse};
-        // NOTE:
-        // This "from_request_parts" function is also used in the web path.
-        // Therefore, the Path Params are extracted from the Backend Handler Router,
-        // but not from the FrontendPath (localhost:8080/spaces/{{uuid}}/dashboard).
-        // However, it seems possible to modify the Router to not use this "from_request_parts" function,
-        // but for now, I've configured it to force the path to start with /api to avoid it.
-        if !parts.uri.path().starts_with("/api") {
-            debug!("SKIPPED path: {:?}", parts.uri);
-            return Ok(SpaceCommon::default());
-        }
 
         if let Some(space) = parts.extensions.get::<SpaceCommon>() {
             return Ok(space.clone());
         }
-        let Path(params) = Path::<HashMap<String, String>>::from_request_parts(parts, _state)
-            .await
-            .map_err(|_| crate::Error::BadRequest("Failed to extract path params".to_string()))?;
-        let space_pk_str = params
-            .get("space_id")
-            .ok_or_else(|| crate::Error::BadRequest("Missing space_id in path".to_string()))?;
+        // URI path differs depending on how this handler is invoked:
+        //   - SSR (initial page load):       /spaces/{UUID}/..rest
+        //   - Client-side navigation (API):  /api/spaces/{UUID}/..rest
+        //
+        // Instead of matching a fixed path index, we scan for the "spaces" segment
+        // and take the next segment as the space ID, so both cases are handled.
+        let mut segments = parts.uri.path().trim_matches('/').split('/');
+        let mut space_id_str: Option<&str> = None;
+        while let Some(seg) = segments.next() {
+            if seg == "spaces" {
+                space_id_str = segments.next();
+                break;
+            }
+        }
+        let space_id_str = space_id_str
+            .ok_or_else(|| Error::BadRequest("Missing space_id in path".to_string()))?;
 
-        let space_id: SpacePartition = space_pk_str.parse()?;
+        let space_id: SpacePartition = space_id_str.parse()?;
         let space_pk: Partition = space_id.into();
         debug!("Verifying project access for space_id: {}", space_pk);
 
