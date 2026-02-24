@@ -39,10 +39,6 @@ where
         use crate::types::{CompositePartition, EntityType};
         tracing::debug!("extracting space from request parts. Path: {:?}", parts.uri);
 
-        if !parts.uri.path().starts_with("/api") {
-            return Ok(SpaceUserRole::default());
-        }
-
         if let Some(space_role) = parts.extensions.get::<SpaceUserRole>() {
             return Ok(space_role.clone());
         }

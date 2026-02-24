@@ -187,10 +187,6 @@ where
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self> {
         tracing::debug!("extracting user from request parts. Path: {:?}", parts.uri);
 
-        if !parts.uri.path().starts_with("/api") {
-            return Ok(User::default());
-        }
-
         extract_user_from_parts(parts, state).await
     }
 }
