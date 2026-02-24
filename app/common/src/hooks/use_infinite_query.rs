@@ -1,0 +1,144 @@
+#![allow(warnings)]
+use dioxus::fullstack::Loading;
+use serde::de::DeserializeOwned;
+
+use crate::{
+    traits::{Bookmarker, ItemIter},
+    *,
+};
+
+#[derive(Clone)]
+pub struct InfiniteQuery<Bookmark, I, T>
+where
+    Bookmark: 'static,
+    I: 'static,
+    T: 'static + Clone,
+{
+    bookmark: Signal<Option<Bookmark>>,
+    next_bookmark: Signal<Option<Bookmark>>,
+    accumulated: Signal<Vec<I>>,
+    has_more: Memo<bool>,
+    rsc: Resource<Result<T>>,
+    effect: Effect,
+    loading: Signal<bool>,
+}
+
+impl<Bookmark, I, T> InfiniteQuery<Bookmark, I, T>
+where
+    Bookmark: 'static + Clone + std::fmt::Debug,
+    I: 'static + Clone,
+    T: Clone,
+{
+    pub fn next(&mut self) {
+        debug!(
+            "Next called on InfiniteQuery with bookmark: {:?}",
+            (self.next_bookmark)()
+        );
+        let nb = self.next_bookmark.read().clone();
+        self.bookmark.set(nb);
+    }
+
+    pub fn items(&self) -> Vec<I> {
+        self.accumulated.read().clone()
+    }
+
+    pub fn restart(&mut self) {
+        self.bookmark.set(None);
+        self.next_bookmark.set(None);
+        self.rsc.restart();
+    }
+
+    pub fn has_more(&self) -> bool {
+        *self.has_more.read()
+    }
+
+    pub fn is_loading(&self) -> bool {
+        *self.loading.read()
+    }
+
+    pub fn more_element(&mut self) -> Element {
+        if self.has_more() {
+            if self.is_loading() {
+                // FIXME: refactoring loading indicator
+                return rsx! {
+                    div { class: "", "Loading more..." }
+                };
+            } else {
+                let mut ctrl = self.clone();
+
+                rsx! {
+                    div { class: "hidden", onvisible: move |_| {} }
+                }
+            }
+        } else {
+            rsx! {}
+        }
+    }
+}
+
+pub fn use_infinite_query<Bookmark, I, T, F>(
+    mut future: impl FnMut(Option<Bookmark>) -> F + 'static + Clone + Copy,
+) -> dioxus::prelude::Result<InfiniteQuery<Bookmark, I, T>, RenderError>
+where
+    Bookmark: 'static + Clone + PartialEq + std::fmt::Debug,
+    I: 'static + Clone + PartialEq,
+    F: std::future::Future<Output = Result<T>> + 'static,
+    T: 'static
+        + Clone
+        + PartialEq
+        + Serialize
+        + DeserializeOwned
+        + Bookmarker<Bookmark>
+        + ItemIter<I>
+        + Default,
+{
+    let bookmark: Signal<Option<Bookmark>> = use_signal(move || None);
+
+    let rsc = use_server_future(move || async move {
+        let res = future(None).await;
+
+        res
+    })?;
+    let val = rsc.read();
+    let res = val.as_ref().unwrap().as_ref().unwrap();
+    let mut next_bookmark: Signal<Option<Bookmark>> = use_signal(move || res.bookmark());
+    let mut accumulated: Signal<Vec<I>> = use_signal(move || res.items().clone());
+    let has_more = use_memo(move || next_bookmark().is_some());
+    let mut loading = use_signal(|| false);
+
+    let effect = use_effect(move || {
+        let nb = bookmark();
+
+        if nb.is_none() {
+            return;
+        }
+        loading.set(true);
+
+        spawn(async move {
+            let res = match future(nb.clone()).await {
+                Ok(ret) => {
+                    accumulated.extend(ret.items().clone());
+                    next_bookmark.set(ret.bookmark());
+                }
+                Err(e) => {
+                    debug!(
+                        "Effect fetch failed for bookmark: {:?} with error: {:?}",
+                        nb, e
+                    );
+                }
+            };
+            loading.set(false);
+            res
+        });
+    });
+
+    Ok(InfiniteQuery {
+        bookmark,
+        next_bookmark,
+        accumulated,
+        has_more,
+        rsc,
+        effect,
+        loading,
+    })
+}
