@@ -8,30 +8,46 @@ use space_app_incentive_pool::Route as IncentivePoolRoute;
 #[rustfmt::skip]
 pub enum Route {
     #[nest("/spaces/:space_id/apps")]
-        #[route("/all_apps/:..rest")]
-        AllApps { space_id: SpacePartition, rest: Vec<String> },
-        #[route("/general/:..rest")]
-        General { space_id: SpacePartition, rest: Vec<String> },
-        #[route("/incentive_pool/:..rest")]
-        IncentivePool { space_id: SpacePartition, rest: Vec<String> },
+        #[layout(AppsLayout)]
+            #[route("/all_apps/:..rest")]
+            AllApps { space_id: SpacePartition, rest: Vec<String> },
+            #[route("/general/:..rest")]
+            General { space_id: SpacePartition, rest: Vec<String> },
+            #[route("/incentive_pool/:..rest")]
+            IncentivePool { space_id: SpacePartition, rest: Vec<String> },
+            #[redirect("/", |space_id: SpacePartition| Route::AllApps { space_id, rest: vec![] })]
+        #[end_layout]
+        #[redirect("/:..rest", |rest: Vec<String>| Route::PageNotFound { route: rest })]
+    #[end_nest]
+    #[route("/")]
+    PageNotFound { route: Vec<String> },
+}
+
+#[component]
+fn AppsLayout(space_id: SpacePartition) -> Element {
+    let installed_apps = use_loader({
+        let space_id = space_id.clone();
+        move || get_space_apps(space_id.clone())
+    })?;
+    let app_names = installed_apps()
+        .apps
+        .into_iter()
+        .map(|app| app.name)
+        .collect::<Vec<_>>();
+    use_sync_apps_nav(app_names);
+
+    rsx! {
+        Outlet::<Route> {}
+    }
 }
 
 macro_rules! define_apps_route_wrapper {
     ($wrapper_name:ident, $route_ty:ty) => {
         #[component]
         fn $wrapper_name(space_id: SpacePartition, rest: Vec<String>) -> Element {
+            let _ = (&space_id, &rest);
             let router = use_context::<dioxus::router::RouterContext>();
             let route: $route_ty = router.current();
-            let installed_apps = use_loader({
-                let space_id = space_id.clone();
-                move || get_space_apps(space_id.clone())
-            })?;
-            let app_ids = installed_apps()
-                .apps
-                .into_iter()
-                .map(|app| app.name)
-                .collect::<Vec<_>>();
-            use_sync_apps_nav(app_ids);
             rsx! {
                 ChildRouter::<$route_ty> {
                     route,
@@ -65,4 +81,13 @@ fn use_sync_apps_nav(app_names: Vec<SpaceAppName>) {
             nav_override.set(None);
         }
     });
+}
+
+#[component]
+fn PageNotFound(route: Vec<String>) -> Element {
+    rsx! {
+        h1 { "Page not found" }
+        p { "We are terribly sorry, but the page you requested doesn't exist." }
+        pre { color: "red", "log:\nattempted to navigate to: {route:?}" }
+    }
 }
