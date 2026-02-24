@@ -35,7 +35,10 @@ pub struct PostResponse {
 impl PostResponse {
     pub fn url(&self) -> String {
         if let Some(space_pk) = &self.space_pk {
-            format!("/spaces/{}", Into::<SpacePartition>::into(space_pk.clone()))
+            format!(
+                "/spaces/{}/dashboard",
+                Into::<SpacePartition>::into(space_pk.clone())
+            )
         } else {
             format!("/posts/{}", Into::<FeedPartition>::into(self.pk.clone()))
         }
