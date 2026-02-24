@@ -11,9 +11,6 @@ pub struct MySpaceResponse {
     pub author_profile_url: String,
     pub created_at: i64,
     pub visibility: SpaceVisibility,
-
-    pub invitation_status: String,
-    pub block_participate: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -82,9 +79,6 @@ pub async fn list_my_spaces_handler(bookmark: Option<String>) -> Result<ListMySp
                 author_profile_url: space.author_profile_url,
                 created_at: space.created_at,
                 visibility: space.visibility,
-
-                invitation_status: "pending".to_string(), // FIXME: fix to real invitation status
-                block_participate: false, // FIXME: fix to real block participate logic
             }
         })
         .collect();

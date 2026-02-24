@@ -46,36 +46,11 @@ fn SpaceCard(space: MySpaceResponse) -> Element {
     let space_id: common::types::SpacePartition = space.space_pk.clone().into();
     let nav = use_navigator();
     let href = format!("/spaces/{}", space_id);
-    let is_blocked = space.invitation_status == "pending" && space.block_participate;
-
-    let status_label = if is_blocked {
-        "blocked"
-    } else {
-        space.invitation_status.as_str()
-    };
-
-    let status_class = if space.invitation_status == "pending" {
-        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-    } else {
-        "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-    };
-
-    let card_class = format!(
-        "flex flex-col w-full justify-start items-start px-4 py-5 rounded-[10px] bg-card-bg-secondary border border-card-border transition-colors {}",
-        if is_blocked {
-            "cursor-not-allowed opacity-60 bg-gray-50 dark:bg-gray-800"
-        } else {
-            "cursor-pointer hover:bg-card-bg"
-        }
-    );
 
     rsx! {
         div {
-            class: "{card_class}",
+            class: "flex flex-col w-full justify-start items-start px-4 py-5 rounded-[10px] bg-card-bg-secondary border border-card-border transition-colors cursor-pointer hover:bg-card-bg",
             onclick: move |_| {
-                if is_blocked {
-                    return;
-                }
                 nav.push(href.clone());
             },
             div { class: "flex flex-col gap-2 w-full",
@@ -84,15 +59,13 @@ fn SpaceCard(space: MySpaceResponse) -> Element {
                         h3 { class: "text-base font-semibold text-text-primary", "{space.title}" }
                         div { class: "flex flex-row items-center gap-2",
                             if !space.author_profile_url.is_empty() {
-                                img { class: "w-5 rounded-full", src: "{space.author_profile_url}" }
+                                img {
+                                    class: "w-5 rounded-full",
+                                    src: "{space.author_profile_url}",
+                                }
                             }
                             p { class: "text-sm text-text-secondary", "{space.author_display_name}" }
                         }
-                    }
-                }
-                div { class: "flex gap-2 items-center text-sm text-text-secondary",
-                    span { class: "px-2 py-1 rounded font-medium {status_class}",
-                        "{status_label}"
                     }
                 }
             }
