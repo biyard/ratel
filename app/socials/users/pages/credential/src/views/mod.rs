@@ -230,16 +230,16 @@ pub fn Home(username: String) -> Element {
 #[component]
 fn VerifiedItem(label: String, value: String) -> Element {
     rsx! {
-        div { class: "flex flex-row items-center gap-4 p-4 rounded-lg border border-[var(--border-primary)]",
+        div { class: "flex flex-row items-center gap-4 p-4 rounded-lg border border-border-primary",
             if label == "Age" || label == "나이" {
-                ProfileCardIcon {}
+                ProfileCardIcon { class: "[&>path]:fill-transparent [&_g>path]:fill-transparent" }
             } else {
-                BranchUserIcon {}
+                BranchUserIcon { class: "[&>path]:fill-transparent [&_g>path]:fill-transparent" }
             }
             div { class: "flex flex-col",
 
-                p { class: "text-sm text-[var(--text-secondary)]", "{label}" }
-                p { class: "text-base font-medium text-[var(--text-primary)]", "{value}" }
+                p { class: "text-sm text-text-primary", "{label}" }
+                p { class: "text-base font-medium text-text-primary", "{value}" }
             }
         }
     }

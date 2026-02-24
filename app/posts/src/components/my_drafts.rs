@@ -72,7 +72,7 @@ pub fn MyDrafts() -> Element {
                                     Delete2 {
                                         width: "24",
                                         height: "24",
-                                        class: "[&>path]:stroke-neutral-500",
+                                        class: "[&>path]:stroke-neutral-500 [&>path]:fill-transparent",
                                     }
                                 }
                             }
