@@ -7,15 +7,9 @@ pub use space_user_profile::*;
 use crate::*;
 
 #[derive(Clone, PartialEq)]
-pub enum SpaceNavLabel {
-    Static(SpacePage),
-    Dynamic(SpaceAppName),
-}
-
-#[derive(Clone, PartialEq)]
 pub struct SpaceNavItem {
     pub icon: Element,
-    pub label: SpaceNavLabel,
+    pub label: SpacePage,
     pub link: NavigationTarget,
 }
 
@@ -25,7 +19,7 @@ impl TryFrom<Option<(Element, SpacePage, NavigationTarget)>> for SpaceNavItem {
 
         Ok(Self {
             icon: value.0,
-            label: SpaceNavLabel::Static(value.1),
+            label: value.1,
             link: value.2,
         })
     }
@@ -64,10 +58,7 @@ pub fn SpaceNav(logo: String, menus: Vec<SpaceNavItem>) -> Element {
 #[component]
 fn NavItem(item: SpaceNavItem) -> Element {
     // TODO: Apply i18n service
-    let label = match item.label {
-        SpaceNavLabel::Static(page) => page.translate(&Language::En).to_string(),
-        SpaceNavLabel::Dynamic(app_id) => app_id.translate(&Language::En).to_string(),
-    };
+    let label = item.label.translate(&Language::En);
 
     rsx! {
         Link {
