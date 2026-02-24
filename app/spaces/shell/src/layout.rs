@@ -4,19 +4,31 @@ use crate::*;
 pub fn SpaceLayout(space_id: SpacePartition) -> Element {
     // FIXME: Temporarily set role to Viewer
     let role = SpaceUserRole::Creator;
+    let apps_nav_override = use_context_provider(|| Signal::new(None::<Vec<SpaceAppName>>));
 
-    let menus = vec![
-        dashboard::get_nav_item(space_id.clone(), role),
-        overview::get_nav_item(space_id.clone(), role),
-        actions::get_nav_item(space_id.clone(), role),
-        apps::get_nav_item(space_id.clone(), role),
-        report::get_nav_item(space_id.clone(), role),
-    ]
-    .into_iter()
-    .map(|s| s.try_into())
-    .filter(|s| s.is_ok())
-    .map(|s| s.unwrap())
-    .collect::<Vec<SpaceNavItem>>();
+    let menus = if let Some(installed_apps) = apps_nav_override.read().as_ref() {
+        apps::get_app_menu_items(space_id.clone(), installed_apps.iter().copied())
+            .into_iter()
+            .map(|(icon, label, link)| SpaceNavItem {
+                icon,
+                label: SpaceNavLabel::Dynamic(label),
+                link,
+            })
+            .collect::<Vec<SpaceNavItem>>()
+    } else {
+        vec![
+            dashboard::get_nav_item(space_id.clone(), role),
+            overview::get_nav_item(space_id.clone(), role),
+            actions::get_nav_item(space_id.clone(), role),
+            apps::get_nav_item(space_id.clone(), role),
+            report::get_nav_item(space_id.clone(), role),
+        ]
+        .into_iter()
+        .map(|s| s.try_into())
+        .filter(|s| s.is_ok())
+        .map(|s| s.unwrap())
+        .collect::<Vec<SpaceNavItem>>()
+    };
 
     rsx! {
         div { class: "grid overflow-hidden grid-cols-7 w-full h-screen bg-space-bg text-font-primary",
