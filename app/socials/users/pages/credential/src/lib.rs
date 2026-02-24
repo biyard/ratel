@@ -6,6 +6,8 @@ pub mod hooks;
 pub mod layout;
 pub mod models;
 pub mod route;
+#[cfg(feature = "server")]
+pub mod services;
 
 #[cfg(not(feature = "server"))]
 pub mod interop;
