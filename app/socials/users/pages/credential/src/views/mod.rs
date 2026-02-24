@@ -1,10 +1,30 @@
 use crate::components::{CodeInputModal, VerificationMethodModal};
 use crate::controllers::get_credentials::{CredentialResponse, get_credentials_handler};
-use crate::controllers::sign_attributes::{sign_attributes_handler, SignAttributesRequest};
+use crate::controllers::sign_attributes::{SignAttributesRequest, sign_attributes_handler};
 use crate::*;
 use common::icons::ratel::*;
 use dioxus::prelude::*;
 use ratel_auth::hooks::use_user_context;
+
+#[cfg(not(feature = "server"))]
+async fn start_identity_verification(
+    store_id: &str,
+    channel_key: &str,
+    prefix: &str,
+) -> common::Result<String> {
+    crate::interop::request_identity_verification_async(store_id, channel_key, prefix).await
+}
+
+#[cfg(feature = "server")]
+async fn start_identity_verification(
+    _store_id: &str,
+    _channel_key: &str,
+    _prefix: &str,
+) -> common::Result<String> {
+    Err(Error::NotSupported(
+        "Identity verification is web-only".to_string(),
+    ))
+}
 
 #[component]
 pub fn Home(username: String) -> Element {
@@ -61,6 +81,17 @@ pub fn Home(username: String) -> Element {
     let mut code_modal_open = use_signal(|| false);
     let mut code_value = use_signal(String::new);
     let mut code_error = use_signal(|| Option::<String>::None);
+    let mut verify_error = use_signal(|| Option::<String>::None);
+    let verification_error = tr.verification_error.to_string();
+
+    let portone_store_id = option_env!("PORTONE_STORE_ID").unwrap_or("your_default_store_id");
+    let portone_channel_key =
+        option_env!("PORTONE_KPN_CHANNEL_KEY").unwrap_or("your_default_kpn_channel_key");
+    let user_prefix = user_ctx()
+        .user
+        .as_ref()
+        .map(|u| u.pk.to_string())
+        .unwrap_or_else(|| "unknown".to_string());
 
     rsx! {
         div { class: "flex flex-col gap-4 w-full py-6",
@@ -94,14 +125,45 @@ pub fn Home(username: String) -> Element {
                         "{tr.verify}"
                     }
                 }
+                if let Some(err) = verify_error() {
+                    div { class: "text-sm text-red-500", "{err}" }
+                }
             }
         }
 
         if *method_modal_open.read() {
             VerificationMethodModal {
                 on_identity_verify: move |_| {
-                    info!("identity verification clicked");
-                    method_modal_open.set(false);
+                    let store_id = portone_store_id.to_string();
+                    let channel_key = portone_channel_key.to_string();
+                    let prefix = user_prefix.clone();
+                    let mut method_modal_open = method_modal_open.clone();
+                    let mut verify_error = verify_error.clone();
+                    let mut credential_override = credential_override.clone();
+                    let verification_error = verification_error.clone();
+                    spawn(async move {
+                        method_modal_open.set(false);
+                        match start_identity_verification(&store_id, &channel_key, &prefix).await {
+                            Ok(identity_id) => {
+                                match sign_attributes_handler(SignAttributesRequest::PortOne {
+                                        id: identity_id,
+                                    })
+                                    .await
+                                {
+                                    Ok(updated) => {
+                                        credential_override.set(Some(updated));
+                                        verify_error.set(None);
+                                    }
+                                    Err(_) => {
+                                        verify_error.set(Some(verification_error.clone()));
+                                    }
+                                }
+                            }
+                            Err(_) => {
+                                verify_error.set(Some(verification_error.clone()));
+                            }
+                        }
+                    });
                 },
                 on_code_verify: move |_| {
                     info!("code verification clicked");
@@ -135,8 +197,13 @@ pub fn Home(username: String) -> Element {
                     let mut code_error = code_error.clone();
                     let mut code_modal_open = code_modal_open.clone();
                     let mut credential_override = credential_override.clone();
+                    let verification_error = verification_error.clone();
                     spawn(async move {
-                        match sign_attributes_handler(SignAttributesRequest::Code { code }).await {
+                        match sign_attributes_handler(SignAttributesRequest::Code {
+                                code,
+                            })
+                            .await
+                        {
                             Ok(updated) => {
                                 credential_override.set(Some(updated));
                                 code_error.set(None);

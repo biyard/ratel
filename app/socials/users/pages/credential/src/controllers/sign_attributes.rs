@@ -43,7 +43,7 @@ pub async fn sign_attributes_handler(body: SignAttributesRequest) -> Result<Cred
 
 #[cfg(feature = "server")]
 async fn add_attributes_by_code(
-    cli: &aws_sdk_dynamodb::Client,
+    cli: &common::aws_sdk_dynamodb::Client,
     user: &ratel_auth::User,
     code: String,
 ) -> Result<VerifiedAttributesLocal> {
@@ -54,30 +54,38 @@ async fn add_attributes_by_code(
         ));
     }
 
-    let code_item = AttributeCodeLocal::get(cli, Partition::AttributeCode(code), None::<String>)
-        .await?
-        .ok_or_else(|| Error::NotFound("Attribute code not found".to_string()))?;
+    let code_item = AttributeCodeLocal::get(
+        cli,
+        Partition::AttributeCode(code),
+        Some(EntityType::AttributeCode),
+    )
+    .await?
+    .ok_or_else(|| Error::NotFound("Attribute code not found".to_string()))?;
 
     let (pk, sk) = VerifiedAttributesLocal::keys(&user.pk);
-    let mut updater = VerifiedAttributesLocal::updater(pk, sk);
+    let mut attrs = VerifiedAttributesLocal::get(cli, pk.clone(), Some(sk.clone()))
+        .await?
+        .unwrap_or_default();
+    attrs.pk = pk;
+    attrs.sk = sk;
 
     if let Some(birth_date) = code_item.birth_date {
-        updater = updater.with_birth_date(birth_date);
+        attrs.birth_date = Some(birth_date);
     }
     if let Some(gender) = code_item.gender {
-        updater = updater.with_gender(gender);
+        attrs.gender = Some(gender);
     }
     if let Some(university) = code_item.university {
-        updater = updater.with_university(university);
+        attrs.university = Some(university);
     }
 
-    let attrs = updater.execute(cli).await?;
+    attrs.upsert(cli).await?;
     Ok(attrs)
 }
 
 #[cfg(feature = "server")]
 async fn portone_sign_attributes(
-    cli: &aws_sdk_dynamodb::Client,
+    cli: &common::aws_sdk_dynamodb::Client,
     user: &ratel_auth::User,
     id: String,
 ) -> Result<VerifiedAttributesLocal> {
@@ -96,12 +104,16 @@ async fn portone_sign_attributes(
     let birth_date = verified.birth_date.replace('-', "");
 
     let (pk, sk) = VerifiedAttributesLocal::keys(&user.pk);
-    let mut updater = VerifiedAttributesLocal::updater(pk, sk).with_birth_date(birth_date);
-
+    let mut attrs = VerifiedAttributesLocal::get(cli, pk.clone(), Some(sk.clone()))
+        .await?
+        .unwrap_or_default();
+    attrs.pk = pk;
+    attrs.sk = sk;
+    attrs.birth_date = Some(birth_date);
     if let Some(gender) = gender {
-        updater = updater.with_gender(gender);
+        attrs.gender = Some(gender);
     }
 
-    let attrs = updater.execute(cli).await?;
+    attrs.upsert(cli).await?;
     Ok(attrs)
 }
