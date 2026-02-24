@@ -2,6 +2,7 @@
 pub mod components;
 pub mod config;
 pub mod contexts;
+pub mod dev_tools;
 mod provider;
 pub mod providers;
 pub mod types;
@@ -36,6 +37,7 @@ pub use macros::dynamo_entity::DynamoEntity;
 
 pub use components::*;
 pub use contexts::*;
+pub use dev_tools::*;
 pub use dioxus;
 pub use providers::*;
 pub use query::*;
