@@ -84,38 +84,33 @@ where
                                 let document = window.document().unwrap();
 
                                 if let Some(el) = document.get_element_by_id(&sentinel_id) {
-                                    let observer_rc: Rc<RefCell<Option<web_sys::IntersectionObserver>>> =
-                                        Rc::new(RefCell::new(None));
+
+                                    let observer_rc: Rc<RefCell<Option<web_sys::IntersectionObserver>>> = Rc::new(
+                                        RefCell::new(None),
+                                    );
                                     let observer_ref = observer_rc.clone();
-
-                                    let callback = Closure::<dyn FnMut(js_sys::Array)>::new(
-                                        move |entries: js_sys::Array| {
-                                            let entry: web_sys::IntersectionObserverEntry =
-                                                entries.get(0).unchecked_into();
-                                            if entry.is_intersecting() {
-                                                if let Some(obs) = observer_ref.borrow().as_ref() {
-                                                    obs.disconnect();
-                                                }
-                                                ctrl.next();
+                                    let callback = Closure::<
+                                        dyn FnMut(js_sys::Array),
+                                    >::new(move |entries: js_sys::Array| {
+                                        let entry: web_sys::IntersectionObserverEntry = entries
+                                            .get(0)
+                                            .unchecked_into();
+                                        if entry.is_intersecting() {
+                                            if let Some(obs) = observer_ref.borrow().as_ref() {
+                                                obs.disconnect();
                                             }
-                                        },
-                                    );
-
+                                            ctrl.next();
+                                        }
+                                    });
                                     let mut options = web_sys::IntersectionObserverInit::new();
-                                    options.threshold(
-                                        &wasm_bindgen::JsValue::from_f64(0.1),
-                                    );
-
-                                    if let Ok(observer) =
-                                        web_sys::IntersectionObserver::new_with_options(
-                                            callback.as_ref().unchecked_ref(),
-                                            &options,
-                                        )
-                                    {
+                                    options.threshold(&wasm_bindgen::JsValue::from_f64(0.1));
+                                    if let Ok(observer) = web_sys::IntersectionObserver::new_with_options(
+                                        callback.as_ref().unchecked_ref(),
+                                        &options,
+                                    ) {
                                         observer.observe(&el);
                                         *observer_rc.borrow_mut() = Some(observer);
                                     }
-
                                     callback.forget();
                                 }
                             }
