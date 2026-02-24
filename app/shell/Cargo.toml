@@ -12,6 +12,7 @@ dioxus = { workspace = true }
 serde = { workspace = true }
 ratel-auth = { workspace = true, optional = true }
 ratel-post = { workspace = true, optional = true }
+ratel-user-setting ={ workspace = true, optional = true }
 space-shell = { workspace = true, optional = true }
 ratel-user-shell = { workspace = true, optional = true }
 ratel-team-shell = { workspace = true, optional = true }
@@ -32,6 +33,7 @@ web = [
   "space-shell/web",
   "ratel-post/web",
   "ratel-user-shell/web",
+  "ratel-user-setting/web",
   "ratel-team-shell/web",
 ]
 desktop = [
@@ -40,6 +42,7 @@ desktop = [
   "space-shell/desktop",
   "ratel-post/desktop",
   "ratel-user-shell/desktop",
+  "ratel-user-setting/desktop",
   "ratel-team-shell/desktop",
 ]
 mobile = [
@@ -48,6 +51,7 @@ mobile = [
   "space-shell/mobile",
   "ratel-post/mobile",
   "ratel-user-shell/mobile",
+  "ratel-user-setting/mobile",
   "ratel-team-shell/mobile",
 ]
 server = [
@@ -56,6 +60,7 @@ server = [
   "space-shell/server",
   "ratel-post/server",
   "ratel-user-shell/server",
+  "ratel-user-setting/server",
   "ratel-team-shell/server",
   "tower-sessions",
 ]
