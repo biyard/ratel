@@ -4,7 +4,7 @@ use crate::types::*;
 use crate::*;
 use ratel_auth::OptionalUser;
 
-#[get("/api/posts", user: OptionalUser)]
+#[get("/api/posts?bookmark", user: OptionalUser)]
 pub async fn list_posts_handler(
     bookmark: Option<String>,
 ) -> Result<ListItemsResponse<PostResponse>> {

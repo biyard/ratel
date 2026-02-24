@@ -2,38 +2,31 @@ use crate::components::FeedCard;
 use crate::controllers::dto::*;
 use crate::controllers::list_posts::list_posts_handler;
 use crate::*;
+use common::hooks::use_infinite_query;
 use dioxus::prelude::*;
 
 #[component]
 pub fn FeedList() -> Element {
-    let resource = use_server_future(move || async move { list_posts_handler(None).await })?;
+    let mut v = use_infinite_query(move |bookmark| async move {
+        debug!("FeedList: fetching posts with bookmark = {:?}", bookmark);
+        let res = list_posts_handler(bookmark).await;
+        debug!("FeedList: received response: {:?}", res);
+        res
+    })?;
 
-    let resolved = resource.suspend()?;
-    let data = resolved.read();
-    let (items, has_next): (Vec<PostResponse>, bool) = match data.as_ref() {
-        Ok(data) => {
-            let has_next = data.bookmark.is_some();
-            (data.items.clone(), has_next)
-        }
-        Err(_) => (vec![], false),
-    };
-
-    if items.is_empty() {
-        return rsx! {
-            div { class: "flex flex-row justify-start items-center w-full text-base font-medium text-gray-500 border border-gray-500 h-fit px-[16px] py-[20px] rounded-[8px]",
-                "No posts available"
-            }
-        };
-    }
+    let items: Vec<PostResponse> = v.items();
+    let has_more = v.has_more();
 
     rsx! {
         div { class: "flex flex-col flex-1 max-mobile:px-[10px]",
             div { class: "flex flex-col flex-1 gap-2.5",
-                for post in items {
-                    FeedCard { key: "{post.pk}", post: post.clone() }
+                for (i , post) in items.into_iter().enumerate() {
+                    FeedCard { key: "post-{i}-{post.pk}", post: post.clone() }
                 }
 
-                if !has_next {
+                if has_more {
+                    {v.more_element()}
+                } else {
                     FeedEndMessage {}
                 }
             }
