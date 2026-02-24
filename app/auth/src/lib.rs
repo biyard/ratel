@@ -40,4 +40,4 @@ pub use common::transact_write_items;
 use common::*;
 use dioxus::prelude::*;
 
-type Result<T> = common::Result<T>;
+type Result<T, E = Error> = common::Result<T, E>;
