@@ -5640,6 +5640,7 @@ dependencies = [
 name = "dioxus-translate"
 version = "0.1.5"
 dependencies = [
+ "dioxus",
  "dioxus-translate-macro",
  "dioxus-translate-types",
  "schemars 1.0.4",

@@ -3,6 +3,7 @@ use crate::*;
 #[component]
 pub fn SpaceUserProfile(image: String, display_name: String, user_role: SpaceUserRole) -> Element {
     let lang = use_language();
+    let lang = lang();
 
     rsx! {
         div { id: "space-user-profile", class: "p-4 w-full",
