@@ -13,22 +13,25 @@ serde = { workspace = true }
 space-app-all_apps = { workspace = true }
 space-app-general = { workspace = true }
 space-app-incentive-pool = { workspace = true }
+space-common = { workspace = true }
 
 [features]
 default = []
 web = [
-    "dioxus/web",
     "common/web",
+    "dioxus/web",
     "space-app-all_apps/web",
     "space-app-general/web",
     "space-app-incentive-pool/web",
+    "space-common/web",
 ]
 desktop = ["dioxus/desktop"]
 mobile = ["dioxus/mobile"]
 server = [
-    "dioxus/server",
     "common/server",
+    "dioxus/server",
     "space-app-all_apps/server",
     "space-app-general/server",
     "space-app-incentive-pool/server",
+    "space-common/server",
 ]
