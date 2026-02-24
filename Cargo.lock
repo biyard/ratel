@@ -3830,9 +3830,11 @@ dependencies = [
  "by-macros",
  "chrono",
  "dioxus",
+ "dioxus-cli-config",
  "dioxus-components",
  "dioxus-translate",
  "ethers",
+ "gloo-timers 0.3.0",
  "hex",
  "hmac 0.12.1",
  "icons",
@@ -3855,6 +3857,8 @@ dependencies = [
  "tokio",
  "tower-sessions 0.15.0",
  "tracing",
+ "tracing-subscriber",
+ "tracing-wasm",
  "url",
  "urlencoding",
  "uuid 1.18.1",
@@ -5638,6 +5642,7 @@ dependencies = [
 name = "dioxus-translate"
 version = "0.1.5"
 dependencies = [
+ "dioxus",
  "dioxus-translate-macro",
  "dioxus-translate-types",
  "schemars 1.0.4",

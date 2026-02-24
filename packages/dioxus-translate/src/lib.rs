@@ -1,17 +1,11 @@
 pub use dioxus_translate_macro::*;
 pub use dioxus_translate_types::Translator;
 
+use dioxus::prelude::*;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[cfg(target_arch = "wasm32")]
-const STORAGE_KEY: &str = "language";
-
-pub fn use_translate<T: Translator>() -> T {
-    translate::<T>(&use_language())
-}
-
-pub fn use_language() -> Language {
+static LANGUAGE: GlobalSignal<Language> = Signal::global(|| {
     #[cfg(target_arch = "wasm32")]
     {
         if let Some(lang) = read_local_storage(STORAGE_KEY) {
@@ -28,6 +22,20 @@ pub fn use_language() -> Language {
     }
 
     Language::default()
+});
+
+#[cfg(target_arch = "wasm32")]
+pub const STORAGE_KEY: &str = "language";
+
+pub fn use_translate<T: Translator>() -> T {
+    let lang = use_language();
+    let l = lang();
+
+    translate::<T>(&l)
+}
+
+pub fn use_language() -> Signal<Language> {
+    LANGUAGE.signal()
 }
 
 #[cfg(target_arch = "wasm32")]
