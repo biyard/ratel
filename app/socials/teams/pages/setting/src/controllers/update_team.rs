@@ -4,22 +4,11 @@ use crate::*;
 use ratel_post::models::Team;
 use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
 
-#[post("/api/teams/:teamname/settings", user: ratel_auth::User)]
+#[patch("/api/teams/:teamname/settings", user: ratel_auth::User)]
 pub async fn update_team_handler(
     teamname: String,
     body: UpdateTeamRequest,
 ) -> Result<TeamResponse> {
-    #[cfg(not(feature = "server"))]
-    {
-        let _ = teamname;
-        let _ = body;
-        return Err(Error::NotSupported(
-            "Team update is only available on server.".to_string(),
-        ));
-    }
-
-    #[cfg(feature = "server")]
-    {
     let conf = crate::config::get();
     let cli = conf.common.dynamodb();
 
@@ -83,9 +72,10 @@ pub async fn update_team_handler(
             let (user_teams, next) =
                 ratel_auth::UserTeam::find_by_team(cli, &user_team_sk, option).await?;
             for user_team in user_teams {
-                let mut user_team_updater = ratel_auth::UserTeam::updater(&user_team.pk, &user_team.sk)
-                    .with_display_name(team.display_name.clone())
-                    .with_profile_url(team.profile_url.clone());
+                let mut user_team_updater =
+                    ratel_auth::UserTeam::updater(&user_team.pk, &user_team.sk)
+                        .with_display_name(team.display_name.clone())
+                        .with_profile_url(team.profile_url.clone());
                 if let Some(ref dao_address) = team.dao_address {
                     user_team_updater = user_team_updater.with_dao_address(dao_address.clone());
                 }
@@ -99,5 +89,4 @@ pub async fn update_team_handler(
     }
 
     Ok(TeamResponse::from((team, permissions.into())))
-    }
 }

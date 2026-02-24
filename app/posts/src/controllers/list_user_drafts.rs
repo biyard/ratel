@@ -35,7 +35,7 @@ pub async fn list_user_drafts_handler(
     Ok(ListItemsResponse { items, bookmark })
 }
 
-#[get("/api/posts/by-team/:teamname/drafts?bookmark", user: User)]
+#[get("/api/teams/:teamname/drafts?bookmark", user: User)]
 pub async fn list_team_drafts_handler(
     teamname: String,
     bookmark: Option<String>,
