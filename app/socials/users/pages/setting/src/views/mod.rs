@@ -1,5 +1,7 @@
 use crate::Result as AppResult;
-use crate::components::{MyInfoTab, MySettingsTab, SettingsTabs};
+use crate::components::{
+    LocaleModal, LocaleOption, MyInfoTab, MySettingsTab, SettingsTabs, ThemeModal, ThemeOption,
+};
 use crate::controllers::{UpdateUserRequest, get_user_detail_handler, update_user_handler};
 use crate::*;
 #[cfg(not(feature = "server"))]
@@ -38,6 +40,7 @@ pub fn Home(username: String) -> Element {
     let mut active_tab = use_signal(|| 0usize);
     let mut language_label = use_signal(|| "English".to_string());
     let mut theme_service = common::use_theme();
+    let mut popup = use_popup();
 
     {
         let detail_state = detail_state.clone();
@@ -163,27 +166,80 @@ pub fn Home(username: String) -> Element {
     };
 
     let on_language_click = {
+        let mut popup = popup;
         let mut language_label = language_label.clone();
         move |_evt: MouseEvent| {
-            let next = if language_label() == "English" {
-                "Korean".to_string()
+            let initial_locale = if language_label() == "Korean" {
+                LocaleOption::Ko
             } else {
-                "English".to_string()
+                LocaleOption::En
             };
-            language_label.set(next);
+            let on_save = {
+                let mut popup = popup;
+                let mut language_label = language_label.clone();
+                move |locale: LocaleOption| {
+                    language_label.set(locale.action_label().to_string());
+                    popup.close();
+                }
+            };
+            let on_cancel = {
+                let mut popup = popup;
+                move |_evt: MouseEvent| {
+                    popup.close();
+                }
+            };
+
+            popup
+                .open(rsx! {
+                    LocaleModal {
+                        initial_locale: initial_locale,
+                        on_save: on_save,
+                        on_cancel: on_cancel,
+                    }
+                })
+                .with_title("Select Language");
         }
     };
 
     let on_theme_click = {
+        let mut popup = popup;
         let mut theme_service = theme_service.clone();
         move |_evt: MouseEvent| {
-            use common::Theme;
-            let next = match theme_service.current() {
-                Theme::Light => Theme::Dark,
-                Theme::Dark => Theme::System,
-                Theme::System => Theme::Light,
+            let prev_theme = theme_service.current();
+            let initial_theme = ThemeOption::from_theme(prev_theme);
+            let on_preview = {
+                let mut theme_service = theme_service.clone();
+                move |theme: ThemeOption| {
+                    theme_service.set(theme.to_theme());
+                }
             };
-            theme_service.set(next);
+            let on_save = {
+                let mut popup = popup;
+                let mut theme_service = theme_service.clone();
+                move |theme: ThemeOption| {
+                    theme_service.set(theme.to_theme());
+                    popup.close();
+                }
+            };
+            let on_cancel = {
+                let mut popup = popup;
+                let mut theme_service = theme_service.clone();
+                move |_evt: MouseEvent| {
+                    theme_service.set(prev_theme);
+                    popup.close();
+                }
+            };
+
+            popup
+                .open(rsx! {
+                    ThemeModal {
+                        initial_theme: initial_theme,
+                        on_preview: on_preview,
+                        on_save: on_save,
+                        on_cancel: on_cancel,
+                    }
+                })
+                .with_title("Theme");
         }
     };
 

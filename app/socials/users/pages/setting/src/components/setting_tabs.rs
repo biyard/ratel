@@ -22,11 +22,12 @@ pub fn SettingsTabs(
                     aria_selected: "{active_index == idx}",
                     class: {
                         let base = "group flex-1 flex flex-col items-center justify-center py-3 transition-colors text-tab-label";
-                        if active_index == idx {
-                            format!("{base} text-tab-label/80")
+                        let suffix = if active_index == idx {
+                            "text-tab-label/80"
                         } else {
-                            format!("{base} hover:text-tab-label/80")
-                        }
+                            "hover:text-tab-label/80"
+                        };
+                        format!("{base}{suffix}")
                     },
                     onclick: move |_| on_select.call(idx),
                     span { "{label}" }
