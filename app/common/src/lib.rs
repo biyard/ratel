@@ -3,6 +3,7 @@ pub mod components;
 pub mod config;
 pub mod contexts;
 mod provider;
+pub mod providers;
 pub mod types;
 
 pub use config::*;
@@ -16,6 +17,7 @@ pub use serde::{Deserialize, Serialize};
 pub use serde_with::{DeserializeFromStr, SerializeDisplay};
 pub use strum::*;
 pub use types::*;
+pub mod logger;
 
 pub use dioxus::logger::tracing::{debug, error, info, warn};
 
@@ -35,6 +37,7 @@ pub use macros::dynamo_entity::DynamoEntity;
 pub use components::*;
 pub use contexts::*;
 pub use dioxus;
+pub use providers::*;
 pub use query::*;
 
 use dioxus::prelude::*;
