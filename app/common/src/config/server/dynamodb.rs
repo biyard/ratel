@@ -37,6 +37,5 @@ pub static DB: Lazy<Client> = Lazy::new(|| async move {
         builder = builder.endpoint_url(ep);
     }
 
-    let client = Client::from_conf(builder.build());
-    dioxus::Ok(client)
+    dioxus::Ok(Client::from_conf(builder.build()))
 });
