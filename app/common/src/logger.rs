@@ -1,24 +1,3 @@
-// let _ = tracing_subscriber::fmt()
-//         .with_env_filter(
-//             EnvFilter::from(option_env!("RUST_LOG").unwrap_or("debug"))
-//                 .add_directive("rustls=info".parse().unwrap())
-//                 .add_directive("aws_smithy_http_client=info".parse().unwrap())
-//                 .add_directive("aws_smithy_runtime_api=info".parse().unwrap())
-//                 .add_directive("aws_sdk_dynamodb=info".parse().unwrap())
-//                 .add_directive("hyper_util=info".parse().unwrap())
-//                 .add_directive("tower_http=info".parse().unwrap())
-//                 .add_directive("aws_smithy_runtime=info".parse().unwrap()),
-//         )
-//         .with_file(true)
-//         .with_line_number(true)
-//         .with_thread_ids(true)
-//         .with_target(false)
-//         .with_ansi(
-//             option_env!("DISABLE_ANSI")
-//                 .map(|e| e.to_lowercase() != "true")
-//                 .unwrap_or(true),
-//         )
-//         .try_init();
 use tracing::{
     Level,
     subscriber::{SetGlobalDefaultError, set_global_default},
@@ -26,13 +5,6 @@ use tracing::{
 
 #[allow(unused_variables)]
 pub fn init(level: Level) -> Result<(), SetGlobalDefaultError> {
-    /*
-    The default logger is currently set to log in fmt mode (meaning print directly to stdout)
-
-    Eventually we want to change the output mode to be `json` when running under `dx`. This would let
-    use re-format the tracing spans to be better integrated with `dx`
-    */
-
     #[cfg(target_arch = "wasm32")]
     {
         use tracing_subscriber::Registry;
@@ -55,12 +27,9 @@ pub fn init(level: Level) -> Result<(), SetGlobalDefaultError> {
             .with_env_filter(
                 EnvFilter::from(option_env!("RUST_LOG").unwrap_or("debug"))
                     .add_directive("rustls=info".parse().unwrap())
-                    .add_directive("aws_smithy_http_client=info".parse().unwrap())
-                    .add_directive("aws_smithy_runtime_api=info".parse().unwrap())
-                    .add_directive("aws_sdk_dynamodb=info".parse().unwrap())
+                    .add_directive("aws_api=info".parse().unwrap())
                     .add_directive("hyper_util=info".parse().unwrap())
-                    .add_directive("tower_http=info".parse().unwrap())
-                    .add_directive("aws_smithy_runtime=info".parse().unwrap()),
+                    .add_directive("tower_http=info".parse().unwrap()),
             )
             .with_file(true)
             .with_line_number(true)
