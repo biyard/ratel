@@ -1,5 +1,5 @@
 #![allow(warnings)]
-use dioxus::fullstack::Loading;
+use dioxus::fullstack::{Loading, Transportable};
 use serde::de::DeserializeOwned;
 
 use crate::{
@@ -21,6 +21,7 @@ where
     rsc: Resource<Result<T>>,
     effect: Effect,
     loading: Signal<bool>,
+    key: u64,
 }
 
 impl<Bookmark, I, T> InfiniteQuery<Bookmark, I, T>
@@ -65,9 +66,61 @@ where
                 };
             } else {
                 let mut ctrl = self.clone();
+                let sentinel_id = format!("infinite-scroll-sentinel-{}", ctrl.key);
 
                 rsx! {
-                    div { class: "hidden", onvisible: move |_| {} }
+                    div {
+                        id: "{sentinel_id}",
+                        class: "h-px",
+                        onmounted: move |_| {
+                            #[cfg(feature = "web")]
+                            {
+                                use std::cell::RefCell;
+                                use std::rc::Rc;
+                                use wasm_bindgen::prelude::*;
+
+                                let mut ctrl = ctrl.clone();
+                                let window = web_sys::window().unwrap();
+                                let document = window.document().unwrap();
+
+                                if let Some(el) = document.get_element_by_id(&sentinel_id) {
+                                    let observer_rc: Rc<RefCell<Option<web_sys::IntersectionObserver>>> =
+                                        Rc::new(RefCell::new(None));
+                                    let observer_ref = observer_rc.clone();
+
+                                    let callback = Closure::<dyn FnMut(js_sys::Array)>::new(
+                                        move |entries: js_sys::Array| {
+                                            let entry: web_sys::IntersectionObserverEntry =
+                                                entries.get(0).unchecked_into();
+                                            if entry.is_intersecting() {
+                                                if let Some(obs) = observer_ref.borrow().as_ref() {
+                                                    obs.disconnect();
+                                                }
+                                                ctrl.next();
+                                            }
+                                        },
+                                    );
+
+                                    let mut options = web_sys::IntersectionObserverInit::new();
+                                    options.threshold(
+                                        &wasm_bindgen::JsValue::from_f64(0.1),
+                                    );
+
+                                    if let Ok(observer) =
+                                        web_sys::IntersectionObserver::new_with_options(
+                                            callback.as_ref().unchecked_ref(),
+                                            &options,
+                                        )
+                                    {
+                                        observer.observe(&el);
+                                        *observer_rc.borrow_mut() = Some(observer);
+                                    }
+
+                                    callback.forget();
+                                }
+                            }
+                        },
+                    }
                 }
             }
         } else {
@@ -105,6 +158,7 @@ where
     let mut accumulated: Signal<Vec<I>> = use_signal(move || res.items().clone());
     let has_more = use_memo(move || next_bookmark().is_some());
     let mut loading = use_signal(|| false);
+    let key = use_server_cached(|| rand::random::<u64>());
 
     let effect = use_effect(move || {
         let nb = bookmark();
@@ -140,5 +194,6 @@ where
         rsc,
         effect,
         loading,
+        key,
     })
 }
