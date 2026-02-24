@@ -17554,7 +17554,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "space-app-all_apps"
+name = "space-app-all-apps"
 version = "0.1.0"
 dependencies = [
  "common",
@@ -17595,7 +17595,7 @@ dependencies = [
  "common",
  "dioxus",
  "serde",
- "space-app-all_apps",
+ "space-app-all-apps",
  "space-app-general",
  "space-app-incentive-pool",
 ]
