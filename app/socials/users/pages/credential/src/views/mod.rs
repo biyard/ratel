@@ -1,8 +1,7 @@
 use crate::components::{CodeInputModal, VerificationMethodModal};
 use crate::controllers::get_credentials::{CredentialResponse, get_credentials_handler};
 use crate::*;
-use common::BadgeCheckIcon;
-use common::ProfileCardIcon;
+use common::icons::ratel::*;
 use dioxus::prelude::*;
 use ratel_auth::hooks::use_user_context;
 
@@ -61,7 +60,7 @@ pub fn Home(username: String) -> Element {
             div {
                 class: "overflow-hidden relative py-6 gap-[17.5px] flex flex-col items-center rounded-lg px-4",
                 style: "background: radial-gradient(circle at center, rgba(77, 92, 255, 0.5) 0%, rgba(30, 30, 30, 1) 100%);",
-                BadgeCheckIcon {}
+                BadgeCheckIcon { width: "40", height: "40" }
                 div { class: "flex flex-col items-center gap-1",
                     h2 { class: "text-lg font-bold text-white", "{tr.vc}" }
                     p { class: "text-sm text-neutral-300", "{tr.id}: {did}" }
