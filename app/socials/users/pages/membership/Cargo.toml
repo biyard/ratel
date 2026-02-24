@@ -9,6 +9,8 @@ dioxus = { workspace = true }
 common = { workspace = true }
 serde = { workspace = true }
 ratel-auth = { workspace = true, optional = true }
+serde_with = { workspace = true }
+percent-encoding = { workspace = true }
 
 [features]
 default = []

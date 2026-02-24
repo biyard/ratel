@@ -33,6 +33,20 @@ fn main() {
     )
     .expect("failed to copy dist/main.js to assets/ratel-app-shell.js");
 
+    let setting_asset_src = manifest_path
+        .join("../socials/users/pages/setting/assets/ratel-user-setting.js");
+    let setting_asset_dst = assets_dir.join("ratel-user-setting.js");
+    if setting_asset_src.exists() {
+        std::fs::copy(&setting_asset_src, &setting_asset_dst)
+            .expect("failed to copy ratel-user-setting.js into app-shell assets");
+        println!("cargo:rerun-if-changed={}", setting_asset_src.display());
+    } else {
+        println!(
+            "cargo:warning=ratel-user-setting.js not found at {}",
+            setting_asset_src.display()
+        );
+    }
+
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed={}", js_dir.join("src").display());
 }
