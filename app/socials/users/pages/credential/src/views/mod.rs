@@ -86,7 +86,7 @@ pub fn Home(username: String) -> Element {
 
     let portone_store_id = option_env!("PORTONE_STORE_ID").unwrap_or("your_default_store_id");
     let portone_channel_key =
-        option_env!("PORTONE_KPN_CHANNEL_KEY").unwrap_or("your_default_kpn_channel_key");
+        option_env!("PORTONE_INICIS_CHANNEL_KEY").unwrap_or("your_default_channel_key");
     let user_prefix = user_ctx()
         .user
         .as_ref()
