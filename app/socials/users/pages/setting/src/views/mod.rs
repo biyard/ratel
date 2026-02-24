@@ -13,7 +13,7 @@ use web_sys::js_sys::{JSON, Reflect};
 
 #[component]
 pub fn Home(username: String) -> Element {
-    let user_ctx = use_user_context();
+    let mut user_ctx = use_user_context();
     let user = user_ctx.read().user.clone();
 
     let Some(user) = user else {
@@ -65,6 +65,7 @@ pub fn Home(username: String) -> Element {
         let mut description = description.clone();
         let mut saving = saving.clone();
         let mut message = message.clone();
+        let mut user_ctx = user_ctx.clone();
         move |_evt: MouseEvent| {
             let nick = nickname();
             let profile = profile_url();
@@ -84,7 +85,14 @@ pub fn Home(username: String) -> Element {
                 .await;
                 saving.set(false);
                 match result {
-                    Ok(_) => {
+                    Ok(resp) => {
+                        user_ctx.with_mut(|ctx| {
+                            if let Some(user) = ctx.user.as_mut() {
+                                user.display_name = resp.user.display_name.clone();
+                                user.profile_url = resp.user.profile_url.clone();
+                                user.description = resp.user.description.clone();
+                            }
+                        });
                         message.set(Some("Profile updated successfully.".to_string()));
                     }
                     Err(e) => {
@@ -186,8 +194,10 @@ pub fn Home(username: String) -> Element {
                     {
                         if let Some(window) = web_sys::window() {
                             if let Ok(Some(storage)) = window.local_storage() {
-                                let _ = storage
-                                    .set_item(dioxus_translate::STORAGE_KEY, next.to_string().as_str());
+                                let _ = storage.set_item(
+                                    dioxus_translate::STORAGE_KEY,
+                                    next.to_string().as_str(),
+                                );
                             }
                         }
                     }
@@ -203,11 +213,7 @@ pub fn Home(username: String) -> Element {
 
             popup
                 .open(rsx! {
-                    LocaleModal {
-                        initial_locale: initial_locale,
-                        on_save: on_save,
-                        on_cancel: on_cancel,
-                    }
+                    LocaleModal { initial_locale, on_save, on_cancel }
                 })
                 .with_title("Select Language");
         }
@@ -245,10 +251,10 @@ pub fn Home(username: String) -> Element {
             popup
                 .open(rsx! {
                     ThemeModal {
-                        initial_theme: initial_theme,
-                        on_preview: on_preview,
-                        on_save: on_save,
-                        on_cancel: on_cancel,
+                        initial_theme,
+                        on_preview,
+                        on_save,
+                        on_cancel,
                     }
                 })
                 .with_title("Theme");

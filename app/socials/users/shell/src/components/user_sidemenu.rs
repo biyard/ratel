@@ -107,53 +107,56 @@ pub fn UserSidemenu(username: String) -> Element {
                     },
                 }
 
-                SidemenuLink {
-                    to: format!("/{username}/drafts"),
-                    label: tr.drafts,
-                    icon: rsx! {
-                        icons::file::AddFile { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
-                    },
-                }
+                if user.username == username {
+                    SidemenuLink {
+                        to: format!("/{username}/drafts"),
+                        label: tr.drafts,
+                        icon: rsx! {
+                            icons::file::AddFile { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
+                        },
+                    }
 
-                SidemenuLink {
-                    to: format!("/{username}/spaces"),
-                    label: tr.my_spaces,
-                    icon: rsx! {
-                        icons::user::UserGroup { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
-                    },
-                }
+                    SidemenuLink {
+                        to: format!("/{username}/spaces"),
+                        label: tr.my_spaces,
+                        icon: rsx! {
+                            icons::user::UserGroup { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
+                        },
+                    }
 
-                SidemenuLink {
-                    to: format!("/{username}/credentials"),
-                    label: tr.credentials,
-                    icon: rsx! {
-                        icons::security::ShieldGood { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
-                    },
-                }
+                    SidemenuLink {
+                        to: format!("/{username}/credentials"),
+                        label: tr.credentials,
+                        icon: rsx! {
+                            icons::security::ShieldGood { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
+                        },
+                    }
 
-                SidemenuLink {
-                    to: format!("/{username}/memberships"),
-                    label: tr.membership,
-                    icon: rsx! {
-                        icons::shopping::Gift { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
-                    },
-                }
+                    SidemenuLink {
+                        to: format!("/{username}/memberships"),
+                        label: tr.membership,
+                        icon: rsx! {
+                            icons::shopping::Gift { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
+                        },
+                    }
 
-                SidemenuLink {
-                    to: format!("/{username}/rewards"),
-                    label: tr.rewards,
-                    icon: rsx! {
-                        icons::game::Trophy { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
-                    },
-                }
+                    SidemenuLink {
+                        to: format!("/{username}/rewards"),
+                        label: tr.rewards,
+                        icon: rsx! {
+                            icons::game::Trophy { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
+                        },
+                    }
 
-                SidemenuLink {
-                    to: format!("/{username}/settings"),
-                    label: tr.settings,
-                    icon: rsx! {
-                        icons::settings::Settings { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
-                    },
+                    SidemenuLink {
+                        to: format!("/{username}/settings"),
+                        label: tr.settings,
+                        icon: rsx! {
+                            icons::settings::Settings { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
+                        },
+                    }
                 }
+            
             }
         }
     }
