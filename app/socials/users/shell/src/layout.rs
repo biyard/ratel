@@ -10,7 +10,7 @@ pub fn UserLayout(username: String) -> Element {
             if logged_in {
                 UserSidemenu { username }
             }
-            div { class: "flex flex-col grow p-5", Outlet::<Route> {} }
+            div { class: "flex flex-col grow px-5", Outlet::<Route> {} }
         }
     }
 }
