@@ -3,15 +3,15 @@ use crate::*;
 use common::types::Partition;
 use common::types::SpacePartition;
 
-#[post("/api/spaces/{space_pk}/apps/{app_type}")]
+#[post("/api/spaces/{space_id}/apps")]
 pub async fn install_space_app(
-    space_pk: SpacePartition,
+    space_id: SpacePartition,
     app_type: SpaceAppType,
 ) -> Result<SpaceApp> {
     use super::ensure_space_exists;
 
     let dynamo = crate::config::get().common.dynamodb();
-    let space_pk_partition: Partition = space_pk.into();
+    let space_pk_partition: Partition = space_id.into();
     #[cfg(feature = "server")]
     ensure_space_exists(dynamo, &space_pk_partition).await?;
 

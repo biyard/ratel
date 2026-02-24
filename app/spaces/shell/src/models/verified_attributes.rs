@@ -1,12 +1,16 @@
 use crate::models::{Age, Gender, RespondentAttr};
 use crate::*;
+use common::models::User;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(DynamoEntity))]
 pub struct VerifiedAttributes {
     pub pk: CompositePartition,
-    #[cfg_attr(feature = "server", dynamo(prefix = "TS", name = "find_by_info_prefix", index = "gsi1", pk))]
+    #[cfg_attr(
+        feature = "server",
+        dynamo(prefix = "TS", name = "find_by_info_prefix", index = "gsi1", pk)
+    )]
     pub sk: EntityType,
     #[cfg_attr(feature = "server", dynamo(prefix = "INFO", index = "gsi1", sk))]
     pub birth_date: Option<String>, // YYYYMMDD
@@ -129,19 +133,13 @@ impl VerifiedAttributes {
 #[cfg(feature = "server")]
 #[async_trait::async_trait]
 pub trait UserAttributesExt {
-    async fn get_attributes(
-        &self,
-        cli: &aws_sdk_dynamodb::Client,
-    ) -> Result<VerifiedAttributes>;
+    async fn get_attributes(&self, cli: &aws_sdk_dynamodb::Client) -> Result<VerifiedAttributes>;
 }
 
 #[cfg(feature = "server")]
 #[async_trait::async_trait]
-impl UserAttributesExt for ratel_auth::User {
-    async fn get_attributes(
-        &self,
-        cli: &aws_sdk_dynamodb::Client,
-    ) -> Result<VerifiedAttributes> {
+impl UserAttributesExt for User {
+    async fn get_attributes(&self, cli: &aws_sdk_dynamodb::Client) -> Result<VerifiedAttributes> {
         let (pk, sk) = VerifiedAttributes::keys(&self.pk);
         Ok(VerifiedAttributes::get(cli, pk, Some(sk))
             .await?

@@ -11,12 +11,13 @@ use layout::SpaceAppsLayout;
 pub enum Route {
     #[nest("/spaces/:space_id/apps")]
         #[layout(SpaceAppsLayout)]
-            #[route("/all_apps/:..rest")]
-            AllApps { space_id: SpacePartition, rest: Vec<String> },
             #[route("/general/:..rest")]
             General { space_id: SpacePartition, rest: Vec<String> },
             #[route("/incentive_pool/:..rest")]
             IncentivePool { space_id: SpacePartition, rest: Vec<String> },
+            #[route("/:..rest")]
+            AllApps { space_id: SpacePartition, rest: Vec<String> },
+
 }
 
 macro_rules! define_apps_route_wrapper {
