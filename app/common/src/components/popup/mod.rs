@@ -47,7 +47,7 @@ pub fn PopupZone() -> Element {
                         onclick: move |_| {
                             popup.close();
                         },
-                        icons::validations::Clear { class: "[&>path]:stroke-neutral-80 group-hover:[&>path]:stroke-text-primary" }
+                        crate::icons::validations::Clear { class: "[&>path]:stroke-neutral-80 group-hover:[&>path]:stroke-text-primary" }
                     }
                 }
 
