@@ -7,24 +7,16 @@ use dioxus::prelude::*;
 
 #[component]
 pub fn FeedList() -> Element {
-    let mut v = use_infinite_query(move |bookmark| async move {
-        debug!("FeedList: fetching posts with bookmark = {:?}", bookmark);
-        let res = list_posts_handler(bookmark).await;
-        debug!("FeedList: received response: {:?}", res);
-        res
-    })?;
-
-    let items: Vec<PostResponse> = v.items();
-    let has_more = v.has_more();
+    let mut v = use_infinite_query(list_posts_handler)?;
 
     rsx! {
         div { class: "flex flex-col flex-1 max-mobile:px-[10px]",
             div { class: "flex flex-col flex-1 gap-2.5",
-                for (i , post) in items.into_iter().enumerate() {
-                    FeedCard { key: "post-{i}-{post.pk}", post: post.clone() }
+                for post in v.items() {
+                    FeedCard { key: "post-{post.pk}", post: post.clone() }
                 }
 
-                if has_more {
+                if v.has_more() {
                     {v.more_element()}
                 } else {
                     FeedEndMessage {}
