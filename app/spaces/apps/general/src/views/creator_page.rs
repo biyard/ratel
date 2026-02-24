@@ -1,4 +1,4 @@
-use super::*;
+use crate::*;
 
 #[component]
 pub fn CreatorPage(space_id: SpacePartition) -> Element {
