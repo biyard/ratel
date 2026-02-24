@@ -1,10 +1,62 @@
 use crate::*;
 
+use space_common::components::{SpaceNav, SpaceNavItem, SpaceTop, SpaceTopLabel};
+use space_common::hooks::use_space;
+
+use crate::menu::{get_app_menu_items, AppMenuItem};
+
+use crate::i18n::SpaceAppLayoutTranslate;
+
 #[component]
 pub fn SpaceAppsLayout(space_id: SpacePartition) -> Element {
-    let apps_menus = use_loader(move || get_space_apps(space_id.clone()))?;
+    let space = use_space();
+
+    let space_apps_loader = use_loader({
+        let space_id = space_id.clone();
+        move || get_space_apps(space_id.clone())
+    })?;
+    let space_apps = space_apps_loader.read().clone();
+    let tr: SpaceAppLayoutTranslate = use_translate();
+
+    let default_menu: Vec<AppMenuItem> = vec![AppMenuItem {
+        name: tr.all_app.to_string(),
+        icon: rsx! {
+            icons::layouts::Apps {
+                 class: "text-icon-primary [&>path]:stroke-current"
+            }
+        },
+        route: Route::AllApps {
+            space_id: space_id.clone(),
+            rest: vec![],
+        },
+    }];
+
+    let app_menus = get_app_menu_items(space_id.clone(), &space_apps);
+    let menus: Vec<SpaceNavItem> = default_menu
+        .into_iter()
+        .chain(app_menus.into_iter())
+        .map(|item| SpaceNavItem {
+            icon: item.icon,
+            label: item.name,
+            link: item.route.into(),
+        })
+        .collect();
+
+    let labels = vec![SpaceTopLabel {
+        label: space.title.clone(),
+        link: None,
+    }];
 
     rsx! {
-        div { "Ok" }
+        div { class: "grid overflow-hidden grid-cols-7 w-full h-screen bg-space-bg text-font-primary",
+            //     SpaceNav { logo: "https://metadata.ratel.foundation/logos/logo.png",
+            //  }
+            div { class: "flex flex-col col-span-6 col-start-2 min-h-0",
+                // SpaceTop { space_id }
+                div { class: "flex overflow-auto p-5 w-full top-[65px] grow bg-space-body-bg rounded-tl-[10px] h-[calc(100%-65px)]",
+                    Outlet::<Route> {}
+                }
+            }
+        }
     }
 }

@@ -1,6 +1,6 @@
 use crate::*;
-use ratel_auth::models::user::User;
 use serde::{Deserialize, Serialize};
+use space_common::ratel_auth::models::user::User;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(DynamoEntity))]
@@ -8,9 +8,15 @@ pub struct SpacePanelParticipant {
     pub pk: Partition,
     #[cfg_attr(feature = "server", dynamo(index = "gsi1", sk))]
     pub sk: EntityType,
-    #[cfg_attr(feature = "server", dynamo(index = "gsi2", name = "find_by_space_and_user", pk))]
+    #[cfg_attr(
+        feature = "server",
+        dynamo(index = "gsi2", name = "find_by_space_and_user", pk)
+    )]
     pub space_pk: Partition,
-    #[cfg_attr(feature = "server", dynamo(prefix = "USER_PK", name = "find_by_user_pk", index = "gsi1", pk))]
+    #[cfg_attr(
+        feature = "server",
+        dynamo(prefix = "USER_PK", name = "find_by_user_pk", index = "gsi1", pk)
+    )]
     #[cfg_attr(feature = "server", dynamo(index = "gsi2", sk))]
     pub user_pk: Partition,
     pub display_name: String,

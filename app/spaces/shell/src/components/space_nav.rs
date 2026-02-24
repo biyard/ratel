@@ -9,7 +9,7 @@ use crate::*;
 #[derive(Clone, PartialEq)]
 pub struct SpaceNavItem {
     pub icon: Element,
-    pub label: SpacePage,
+    pub label: String,
     pub link: NavigationTarget,
 }
 
@@ -19,7 +19,7 @@ impl TryFrom<Option<(Element, SpacePage, NavigationTarget)>> for SpaceNavItem {
 
         Ok(Self {
             icon: value.0,
-            label: value.1,
+            label: value.1.to_string(),
             link: value.2,
         })
     }
@@ -28,9 +28,8 @@ impl TryFrom<Option<(Element, SpacePage, NavigationTarget)>> for SpaceNavItem {
 }
 
 #[component]
-pub fn SpaceNav(logo: String, menus: Vec<SpaceNavItem>) -> Element {
+pub fn SpaceNav(logo: String) -> Element {
     let user = use_user()?;
-
     rsx! {
         div { class: "flex left-0 top-14 z-40 flex-col col-span-1 gap-2.5 justify-between pt-2.5 h-screen divide-y transition-transform duration-300 ease-in-out -translate-x-full shrink-0 divide-divider tablet:top-0 tablet:translate-x-0",
             div { class: "flex flex-col gap-2.5 w-full",
@@ -57,15 +56,12 @@ pub fn SpaceNav(logo: String, menus: Vec<SpaceNavItem>) -> Element {
 
 #[component]
 fn NavItem(item: SpaceNavItem) -> Element {
-    // TODO: Apply i18n service
-    let label = item.label.translate(&Language::En);
-
     rsx! {
         Link {
             class: "flex flex-row gap-2 items-center py-2 px-1 w-full text-sm font-medium rounded-sm text-text hover:bg-space-nav-item-hover",
             to: item.link,
             {item.icon}
-            "{label}"
+            {item.label}
         }
     }
 }
