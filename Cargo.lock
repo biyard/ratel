@@ -17584,6 +17584,7 @@ version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "ratel-auth",
  "ratel-post",
  "serde",
 ]
@@ -17625,6 +17626,7 @@ dependencies = [
  "serde",
  "serde_dynamo",
  "serde_json",
+ "space-common",
  "tracing",
  "uuid 1.18.1",
 ]

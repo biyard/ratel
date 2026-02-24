@@ -114,23 +114,33 @@ where
     type Rejection = Error;
 
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self> {
-        tracing::debug!("extracting space from request parts");
+        use std::collections::HashMap;
+
+        use dioxus::fullstack::{extract::Path, response::IntoResponse};
+        // NOTE:
+        // This "from_request_parts" function is also used in the web path.
+        // Therefore, the Path Params are extracted from the Backend Handler Router,
+        // but not from the FrontendPath (localhost:8080/spaces/{{uuid}}/dashboard).
+        // However, it seems possible to modify the Router to not use this "from_request_parts" function,
+        // but for now, I've configured it to force the path to start with /api to avoid it.
+        if !parts.uri.path().starts_with("/api") {
+            debug!("SKIPPED path: {:?}", parts.uri);
+            return Ok(SpaceCommon::default());
+        }
+
         if let Some(space) = parts.extensions.get::<SpaceCommon>() {
             return Ok(space.clone());
         }
+        let Path(params) = Path::<HashMap<String, String>>::from_request_parts(parts, _state)
+            .await
+            .map_err(|_| crate::Error::BadRequest("Failed to extract path params".to_string()))?;
+        let space_pk_str = params
+            .get("space_id")
+            .ok_or_else(|| crate::Error::BadRequest("Missing space_id in path".to_string()))?;
 
-        // Extract project_id from the URI path
-        let path = parts.uri.path();
-        let path_segments: Vec<&str> = path.split('/').collect();
-        let space_pk_encoded = path_segments[1].to_string();
-
-        // URL-decode the space_pk (it may be percent-encoded in the URI)
-        let space_id: SpacePartition = urlencoding::decode(&space_pk_encoded)
-            .map_err(|_| crate::Error::BadRequest("Invalid URL encoding".to_string()))?
-            .to_string()
-            .parse()?;
+        let space_id: SpacePartition = space_pk_str.parse()?;
         let space_pk: Partition = space_id.into();
-        debug!("Verifying project access for space_id: {}", space_pk,);
+        debug!("Verifying project access for space_id: {}", space_pk);
 
         let conf = ServerConfig::default();
         let cli = conf.dynamodb();

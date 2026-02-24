@@ -1,10 +1,19 @@
-use crate::macros::DynamoEnum;
+use crate::serde_with::{DeserializeFromStr, SerializeDisplay};
+use std::str::FromStr;
 
 use crate::*;
 #[derive(
-    Debug, Clone, Copy, Serialize, Deserialize, Default, Translate, PartialEq, Eq, DynamoEnum,
+    Debug,
+    Clone,
+    Copy,
+    SerializeDisplay,
+    DeserializeFromStr,
+    Default,
+    Translate,
+    PartialEq,
+    Eq,
+    DynamoEnum,
 )]
-#[serde(rename_all = "snake_case")]
 pub enum SpaceAppType {
     #[default]
     #[translate(ko = "스페이스 설정")]
