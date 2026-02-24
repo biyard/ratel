@@ -880,6 +880,7 @@ dependencies = [
  "ratel-auth",
  "ratel-post",
  "ratel-team-shell",
+ "ratel-user-setting",
  "ratel-user-shell",
  "serde",
  "serde-wasm-bindgen",
