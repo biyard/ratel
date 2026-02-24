@@ -5,7 +5,7 @@ use crate::*;
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct PostResponse {
-    pub pk: Partition,
+    pub pk: FeedPartition,
 
     pub created_at: i64,
     pub updated_at: i64,
@@ -62,7 +62,7 @@ impl From<Post> for PostResponse {
         };
 
         PostResponse {
-            pk: post.pk,
+            pk: post.pk.into(),
             created_at: post.created_at,
             updated_at: post.updated_at,
             title: post.title,
@@ -96,7 +96,7 @@ impl From<(Option<ratel_auth::User>, Post)> for PostResponse {
         };
 
         PostResponse {
-            pk: post.pk,
+            pk: post.pk.into(),
             created_at: post.created_at,
             updated_at: post.updated_at,
             title: post.title,
