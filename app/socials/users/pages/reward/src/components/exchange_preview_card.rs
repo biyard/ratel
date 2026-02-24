@@ -17,10 +17,10 @@ pub fn exchange_preview_card(
                             }
                         }
                         div { class: "flex items-start gap-1 flex-col",
-                            span { class: "text-sm font-semibold text-text-primary",
+                            span { class: "text-xs font-semibold text-text-primary",
                                 "{tr.exchange_from}"
                             }
-                            span { class: "text-sm font-semibold text-white",
+                            span { class: "text-xs font-semibold text-text-primary",
                                 "{rewards.project_name} {tr.point}"
                             }
                         }
@@ -41,11 +41,11 @@ pub fn exchange_preview_card(
                             }
                             div { class: "w-5 h-5 rounded-full bg-primary" }
                         }
-                        div { class: "flex items-end gap-2 flex-col",
-                            span { class: "text-sm font-semibold text-text-primary",
+                        div { class: "flex items-end gap-1 flex-col",
+                            span { class: "text-xs font-semibold text-text-primary",
                                 "{tr.exchange_to}"
                             }
-                            span { class: "text-sm font-semibold text-white",
+                            span { class: "text-xs font-semibold text-text-primary",
                                 "{rewards.project_name} {tr.token}"
                             }
                         }

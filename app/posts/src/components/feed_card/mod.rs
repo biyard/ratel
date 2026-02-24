@@ -196,24 +196,24 @@ fn FeedFooter(
                     if is_liked {
                         icons::emoji::ThumbsUp { class: "[&>path]:fill-primary [&>path]:stroke-primary" }
                     } else {
-                        icons::emoji::ThumbsUp { class: "[&>path]:stroke-icon-primary" }
+                        icons::emoji::ThumbsUp { class: "[&>path]:stroke-icon-primary [&>path]:fill-transparent" }
                     }
                     "{convert_number_to_string(likes)}"
                 }
                 a { href: "{comment_href}",
                     IconText { class: "cursor-pointer",
-                        icons::chat::SquareChat { class: "[&>path]:stroke-icon-primary" }
+                        icons::chat::SquareChat { class: "[&>path]:stroke-icon-primary [&>path]:fill-transparent" }
                         "{convert_number_to_string(comments)}"
                     }
                 }
                 if booster_type != BoosterType::NoBoost {
                     IconText {
-                        icons::money_payment::RewardCoin { class: "[&>path]:stroke-icon-primary" }
+                        icons::money_payment::RewardCoin { class: "[&>path]:stroke-icon-primary [&>path]:fill-transparent" }
                         "{convert_number_to_string(rewards)}"
                     }
                 }
                 IconText {
-                    icons::links_share::Share1 { class: "[&>path]:stroke-icon-primary" }
+                    icons::links_share::Share1 { class: "[&>path]:stroke-icon-primary [&>path]:fill-transparent" }
                     "{convert_number_to_string(shares)}"
                 }
             }
@@ -247,7 +247,7 @@ pub fn UserBadge(profile_url: String, name: String, author_type: ratel_auth::Use
 fn SpaceTag() -> Element {
     rsx! {
         span { class: "flex flex-row gap-1 justify-start items-center px-2 rounded-sm border border-label-color-border bg-label-color-bg",
-            icons::home::Palace { class: "w-3.5 h-3.5 [&>path]:stroke-label-color-text [&_g>path:nth-child(n+2)]:stroke-web-bg" }
+            icons::home::Palace { class: "w-3.5 h-3.5 [&>path]:stroke-label-color-text [&_g>path:nth-child(n+2)]:stroke-label-color-text" }
             div { class: "font-semibold text-xs/[25px] text-label-color-text", "SPACE" }
         }
     }
