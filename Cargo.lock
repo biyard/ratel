@@ -17554,6 +17554,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "space-app-all_apps"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+]
+
+[[package]]
+name = "space-app-general"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+]
+
+[[package]]
+name = "space-app-incentive-pool"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+]
+
+[[package]]
 name = "space-page-actions"
 version = "0.1.0"
 dependencies = [
@@ -17570,6 +17594,10 @@ version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "serde",
+ "space-app-all_apps",
+ "space-app-general",
+ "space-app-incentive-pool",
 ]
 
 [[package]]

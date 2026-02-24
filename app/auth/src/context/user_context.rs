@@ -1,6 +1,6 @@
 use crate::*;
 
-#[derive(Store, Default, Clone, Debug)]
+#[derive(Store, Default, Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct UserContext {
     pub user: Option<User>,
     pub refresh_token: Option<String>,
