@@ -14,12 +14,10 @@ pub struct CreateTeamResponse {
 }
 
 #[post("/api/user-shell/teams/create", session: Extension<tower_sessions::Session>)]
-pub async fn create_team_handler(
-    body: CreateTeamRequest,
-) -> crate::Result<CreateTeamResponse> {
+pub async fn create_team_handler(body: CreateTeamRequest) -> crate::Result<CreateTeamResponse> {
     let Extension(session) = session;
     let user_pk: String = session
-        .get::<String>("user_pk")
+        .get::<String>("user_id")
         .await
         .map_err(|e| crate::Error::Unauthorized(e.to_string()))?
         .ok_or(crate::Error::Unauthorized("no session".to_string()))?;
@@ -44,8 +42,7 @@ pub async fn create_team_handler(
     let opt = ratel_post::models::TeamQueryOption::builder()
         .sk(username.clone())
         .limit(1);
-    let (existing, _): (Vec<Team>, _) =
-        Team::find_by_username_prefix(cli, &username, opt).await?;
+    let (existing, _): (Vec<Team>, _) = Team::find_by_username_prefix(cli, &username, opt).await?;
 
     if !existing.is_empty() {
         return Err(crate::Error::BadRequest(
@@ -78,7 +75,7 @@ pub async fn create_team_handler(
 pub async fn get_user_teams_handler() -> crate::Result<Vec<common::contexts::TeamItem>> {
     let Extension(session) = session;
     let user_pk: String = session
-        .get::<String>("user_pk")
+        .get::<String>("user_id")
         .await
         .map_err(|e| crate::Error::Unauthorized(e.to_string()))?
         .ok_or(crate::Error::Unauthorized("no session".to_string()))?;

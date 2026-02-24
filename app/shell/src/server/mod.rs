@@ -11,7 +11,6 @@ pub fn serve(app: fn() -> Element) {
         );
         async move {
             let dioxus_router = dioxus::server::router(app);
-
             Ok(dioxus_router.layer(session_layer))
         }
     });
