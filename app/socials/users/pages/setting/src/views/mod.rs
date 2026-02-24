@@ -1,5 +1,5 @@
 use crate::Result as AppResult;
-use crate::components::{ProfileImageSection, SettingsForm};
+use crate::components::{MyInfoTab, MySettingsTab, SettingsTabs};
 use crate::controllers::{UpdateUserRequest, get_user_detail_handler, update_user_handler};
 use crate::*;
 #[cfg(not(feature = "server"))]
@@ -35,6 +35,9 @@ pub fn Home(username: String) -> Element {
     let mut saving = use_signal(|| false);
     let mut message = use_signal(|| Option::<String>::None);
     let mut detail_loaded = use_signal(|| false);
+    let mut active_tab = use_signal(|| 0usize);
+    let mut language_label = use_signal(|| "English".to_string());
+    let mut theme_service = common::use_theme();
 
     {
         let detail_state = detail_state.clone();
@@ -159,27 +162,83 @@ pub fn Home(username: String) -> Element {
         }
     };
 
-    rsx! {
-        div { class: "flex flex-col gap-10 items-center w-full max-tablet:w-full",
-            ProfileImageSection { profile_url: profile_img, on_upload: on_profile_upload }
+    let on_language_click = {
+        let mut language_label = language_label.clone();
+        move |_evt: MouseEvent| {
+            let next = if language_label() == "English" {
+                "Korean".to_string()
+            } else {
+                "English".to_string()
+            };
+            language_label.set(next);
+        }
+    };
 
-            SettingsForm {
-                username: user.username.clone(),
-                evm_value,
-                wallet_visible,
-                wallet_address: wallet_address(),
-                wallet_connected,
-                nickname: nickname(),
-                description: description(),
-                saving: saving(),
-                message: message(),
-                save_blocked,
-                on_toggle_wallet,
-                on_connect_wallet,
-                on_save_wallet,
-                on_nickname_input: move |e: FormEvent| nickname.set(e.value()),
-                on_description_input: move |e: FormEvent| description.set(e.value()),
-                on_save,
+    let on_theme_click = {
+        let mut theme_service = theme_service.clone();
+        move |_evt: MouseEvent| {
+            use common::Theme;
+            let next = match theme_service.current() {
+                Theme::Light => Theme::Dark,
+                Theme::Dark => Theme::System,
+                Theme::System => Theme::Light,
+            };
+            theme_service.set(next);
+        }
+    };
+
+    rsx! {
+        div { class: "w-full flex flex-col gap-6",
+            div { class: "w-full max-w-[800px] mx-auto px-4",
+                SettingsTabs {
+                    active_index: active_tab(),
+                    on_select: move |idx| active_tab.set(idx),
+                    tab_one_label: "My Info".to_string(),
+                    tab_two_label: "Settings".to_string(),
+                }
+            }
+            div { class: "w-full px-4 md:px-0 mr-[10px]",
+                section {
+                    id: "panel-0",
+                    role: "tabpanel",
+                    aria_labelledby: "tab-0",
+                    hidden: active_tab() != 0,
+                    class: "w-full max-w-[800px] mx-auto",
+                    MyInfoTab {
+                        username: user.username.clone(),
+                        profile_url: profile_img,
+                        on_profile_upload,
+                        evm_value,
+                        wallet_visible,
+                        wallet_address: wallet_address(),
+                        wallet_connected,
+                        nickname: nickname(),
+                        description: description(),
+                        saving: saving(),
+                        message: message(),
+                        save_blocked,
+                        on_toggle_wallet,
+                        on_connect_wallet,
+                        on_save_wallet,
+                        on_nickname_input: move |e: FormEvent| nickname.set(e.value()),
+                        on_description_input: move |e: FormEvent| description.set(e.value()),
+                        on_save,
+                    }
+                }
+
+                section {
+                    id: "panel-1",
+                    role: "tabpanel",
+                    aria_labelledby: "tab-1",
+                    hidden: active_tab() != 1,
+                    class: "w-full max-w-[800px] mx-auto",
+                    MySettingsTab {
+                        language_label: language_label(),
+                        theme_label: theme_service.current().label().to_string(),
+                        on_language_click,
+                        on_theme_click,
+                    }
+                }
             }
         }
     }
