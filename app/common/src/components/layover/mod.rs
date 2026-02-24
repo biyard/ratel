@@ -40,7 +40,7 @@ pub fn Layover() -> Element {
                             button {
                                 class: "flex justify-center items-center rounded-md size-6 bg-transparent hover:bg-neutral-800 light:hover:bg-neutral-300 transition-colors cursor-pointer",
                                 onclick: onclose,
-                                icons::validations::Clear {
+                                crate::icons::validations::Clear {
                                     width: "16",
                                     height: "16",
                                     class: "[&>path]:stroke-neutral-400 light:[&>path]:stroke-neutral-600",
