@@ -28,6 +28,8 @@ fn App() -> Element {
     ThemeService::init();
     let _ = ratel_auth::Context::init()?;
     common::contexts::TeamContext::init();
+    let conf = config::get();
+    let env = conf.common.env;
 
     rsx! {
         document::Link { rel: "icon", href: FAVICON }
@@ -39,7 +41,9 @@ fn App() -> Element {
         ratel_post::Provider {}
         Router::<Route> {}
         PopupZone {}
-        ToastZone {}
-        ToastTestButton {}
+        ToastProvider {}
+        if env == Environment::Dev || env == Environment::Local {
+            DevTools {}
+        }
     }
 }

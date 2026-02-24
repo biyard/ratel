@@ -2,7 +2,7 @@ use std::{fmt::Display, str::FromStr};
 
 use crate::*;
 
-#[derive(Clone, Debug, Copy)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq)]
 pub enum Environment {
     Local,
     Dev,
