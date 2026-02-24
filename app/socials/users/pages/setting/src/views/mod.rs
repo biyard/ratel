@@ -38,7 +38,7 @@ pub fn Home(username: String) -> Element {
     let mut message = use_signal(|| Option::<String>::None);
     let mut detail_loaded = use_signal(|| false);
     let mut active_tab = use_signal(|| 0usize);
-    let mut language_label = use_signal(|| "English".to_string());
+    let mut lang = use_language();
     let mut theme_service = common::use_theme();
     let mut popup = use_popup();
 
@@ -167,18 +167,30 @@ pub fn Home(username: String) -> Element {
 
     let on_language_click = {
         let mut popup = popup;
-        let mut language_label = language_label.clone();
+        let mut lang = lang.clone();
         move |_evt: MouseEvent| {
-            let initial_locale = if language_label() == "Korean" {
-                LocaleOption::Ko
-            } else {
-                LocaleOption::En
+            let initial_locale = match lang() {
+                Language::Ko => LocaleOption::Ko,
+                Language::En => LocaleOption::En,
             };
             let on_save = {
                 let mut popup = popup;
-                let mut language_label = language_label.clone();
+                let mut lang = lang.clone();
                 move |locale: LocaleOption| {
-                    language_label.set(locale.action_label().to_string());
+                    let next = match locale {
+                        LocaleOption::Ko => Language::Ko,
+                        LocaleOption::En => Language::En,
+                    };
+                    lang.set(next);
+                    #[cfg(target_arch = "wasm32")]
+                    {
+                        if let Some(window) = web_sys::window() {
+                            if let Ok(Some(storage)) = window.local_storage() {
+                                let _ = storage
+                                    .set_item(dioxus_translate::STORAGE_KEY, next.to_string().as_str());
+                            }
+                        }
+                    }
                     popup.close();
                 }
             };
@@ -289,7 +301,10 @@ pub fn Home(username: String) -> Element {
                     hidden: active_tab() != 1,
                     class: "w-full max-w-[800px] mx-auto",
                     MySettingsTab {
-                        language_label: language_label(),
+                        language_label: match lang() {
+                            Language::Ko => "Korean".to_string(),
+                            Language::En => "English".to_string(),
+                        },
                         theme_label: theme_service.current().label().to_string(),
                         on_language_click,
                         on_theme_click,
