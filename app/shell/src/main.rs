@@ -24,9 +24,12 @@ pub const MAIN_JS: Asset = asset!("/assets/ratel-app-shell.js");
 #[component]
 fn App() -> Element {
     use_context_provider(|| PopupService::new());
+    ToastService::init();
     ThemeService::init();
     let _ = ratel_auth::Context::init()?;
     common::contexts::TeamContext::init();
+    let conf = config::get();
+    let env = conf.common.env;
 
     rsx! {
         document::Link { rel: "icon", href: FAVICON }
@@ -38,6 +41,9 @@ fn App() -> Element {
         ratel_post::Provider {}
         Router::<Route> {}
         PopupZone {}
-
+        ToastProvider {}
+        if env == Environment::Dev || env == Environment::Local {
+            DevTools {}
+        }
     }
 }
