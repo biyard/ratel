@@ -1,5 +1,6 @@
 use crate::components::{CodeInputModal, VerificationMethodModal};
 use crate::controllers::get_credentials::{CredentialResponse, get_credentials_handler};
+use crate::controllers::sign_attributes::{sign_attributes_handler, SignAttributesRequest};
 use crate::*;
 use common::icons::ratel::*;
 use dioxus::prelude::*;
@@ -20,9 +21,15 @@ pub fn Home(username: String) -> Element {
     let resolved = resource.suspend()?;
     let data = resolved.read();
 
-    let credential = match data.as_ref() {
-        Ok(data) => data.clone(),
-        Err(_) => CredentialResponse::default(),
+    let mut credential_override = use_signal(|| Option::<CredentialResponse>::None);
+
+    let credential = if let Some(overridden) = credential_override() {
+        overridden
+    } else {
+        match data.as_ref() {
+            Ok(data) => data.clone(),
+            Err(_) => CredentialResponse::default(),
+        }
     };
 
     let mut attributes: Vec<VerifiedAttribute> = Vec::new();
@@ -124,9 +131,22 @@ pub fn Home(username: String) -> Element {
                         code_error.set(Some(tr.invalid_code.to_string()));
                         return;
                     }
-                    info!("code submitted: {}", code);
-                    code_error.set(None);
-                    code_modal_open.set(false);
+                    let verification_error = tr.verification_error.to_string();
+                    let mut code_error = code_error.clone();
+                    let mut code_modal_open = code_modal_open.clone();
+                    let mut credential_override = credential_override.clone();
+                    spawn(async move {
+                        match sign_attributes_handler(SignAttributesRequest::Code { code }).await {
+                            Ok(updated) => {
+                                credential_override.set(Some(updated));
+                                code_error.set(None);
+                                code_modal_open.set(false);
+                            }
+                            Err(_) => {
+                                code_error.set(Some(verification_error));
+                            }
+                        }
+                    });
                 },
                 on_close: move |_| {
                     code_modal_open.set(false);
@@ -222,6 +242,10 @@ translate! {
     invalid_code: {
         en: "Invalid code",
         ko: "유효하지 않은 코드입니다",
+    },
+    verification_error: {
+        en: "Verification failed",
+        ko: "인증에 실패했습니다",
     },
     submit: {
         en: "Submit",
