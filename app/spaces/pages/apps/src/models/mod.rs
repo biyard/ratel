@@ -1,5 +1,3 @@
-mod space_installed_app;
+mod space_app;
 
-pub use common::SpaceAppName;
-
-pub use space_installed_app::*;
+pub use space_app::*;

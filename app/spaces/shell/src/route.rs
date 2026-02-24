@@ -18,15 +18,14 @@ pub enum Route {
                 Overview { space_id: SpacePartition, rest: Vec<String> },
                 #[route("/actions/:..rest")]
                 Actions { space_id: SpacePartition, rest: Vec<String> },
-                #[route("/apps/:..rest")]
-                Apps { space_id: SpacePartition, rest: Vec<String> },
                 #[route("/report/:..rest")]
                 Report { space_id: SpacePartition, rest: Vec<String> },
-
                 #[redirect("/", |space_id: SpacePartition| Route::Dashboard { space_id, rest : vec![] })]
                 #[redirect("/:..rest", |space_id: SpacePartition, rest: Vec<String>| Route::Dashboard { space_id, rest })]
             #[end_layout]
-        #[redirect("/:..rest", |rest: Vec<String>| Route::PageNotFound{ route: rest })]
+            #[route("/apps/:..rest")]
+            Apps { space_id: SpacePartition, rest: Vec<String> },
+            #[redirect("/:..rest", |rest: Vec<String>| Route::PageNotFound{ route: rest })]
         #[end_nest]
     #[end_nest]
     #[route("/")]

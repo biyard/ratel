@@ -1,34 +1,22 @@
-#[cfg(feature = "server")]
-use super::{ensure_space_exists, parse_app_name};
-#[cfg(feature = "server")]
-use crate::models::SpaceInstalledApp;
 use crate::*;
-#[cfg(feature = "server")]
+
 use common::types::Partition;
 use common::types::SpacePartition;
 
-#[post("/api/spaces/{space_pk}/apps/{app_name}/uninstall")]
+#[delete("/api/spaces/{space_pk}/apps")]
 pub async fn uninstall_space_app(
     space_pk: SpacePartition,
-    app_name: String,
-) -> Result<SpaceAppMutationResponse> {
+    app_type: SpaceAppType,
+) -> Result<SpaceApp> {
+    use super::ensure_space_exists;
+
     let dynamo = crate::config::get().common.dynamodb();
     let space_pk_partition: Partition = space_pk.into();
-    #[cfg(feature = "server")]
+
     ensure_space_exists(dynamo, &space_pk_partition).await?;
-    let app_name = parse_app_name(&app_name)?;
 
-    let (pk, sk) = SpaceInstalledApp::keys(&space_pk_partition, app_name);
-    let app = SpaceInstalledApp::get(dynamo, &pk, Some(&sk)).await?;
+    let (pk, sk) = SpaceApp::keys(&space_pk_partition, app_type);
+    let app = SpaceApp::delete(dynamo, &pk, Some(sk)).await?;
 
-    if app.is_none() {
-        return Err(Error::NotFound("Installed app not found".to_string()));
-    }
-
-    SpaceInstalledApp::delete(dynamo, &pk, Some(sk)).await?;
-
-    Ok(SpaceAppMutationResponse {
-        name: app_name,
-        installed: false,
-    })
+    Ok(app)
 }
