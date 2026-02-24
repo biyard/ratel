@@ -6,8 +6,7 @@ use dioxus::prelude::*;
 
 #[component]
 pub fn FeedList() -> Element {
-    let resource =
-        use_server_future(move || async move { list_posts_handler(None).await })?;
+    let resource = use_server_future(move || async move { list_posts_handler(None).await })?;
 
     let resolved = resource.suspend()?;
     let data = resolved.read();
@@ -29,12 +28,9 @@ pub fn FeedList() -> Element {
 
     rsx! {
         div { class: "flex flex-col flex-1 max-mobile:px-[10px]",
-            div { class: "flex flex-col flex-1",
+            div { class: "flex flex-col flex-1 gap-2.5",
                 for post in items {
-                    FeedCard {
-                        key: "{post.pk}",
-                        post: post.clone(),
-                    }
+                    FeedCard { key: "{post.pk}", post: post.clone() }
                 }
 
                 if !has_next {
@@ -48,7 +44,8 @@ pub fn FeedList() -> Element {
 #[component]
 fn FeedEndMessage() -> Element {
     rsx! {
-        div { class: "my-6 text-center text-gray-400",
+        div {
+            class: "my-6 text-center text-gray-400",
             aria_label: "End of feed message",
             "You have reached the end of your feed."
         }
