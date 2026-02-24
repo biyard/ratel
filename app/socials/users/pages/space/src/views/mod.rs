@@ -1,11 +1,9 @@
-use crate::controllers::list_my_spaces::{list_my_spaces_handler, MySpaceResponse};
+use crate::controllers::list_my_spaces::{MySpaceResponse, list_my_spaces_handler};
 use dioxus::prelude::*;
 
 #[component]
 pub fn Home(username: String) -> Element {
-    let resource = use_server_future(move || async move {
-        list_my_spaces_handler(None).await
-    })?;
+    let resource = use_server_future(move || async move { list_my_spaces_handler(None).await })?;
 
     let resolved = resource.suspend()?;
     let data = resolved.read();
@@ -20,20 +18,23 @@ pub fn Home(username: String) -> Element {
     if items.is_empty() {
         return rsx! {
             div { class: "flex flex-row justify-start items-center w-full text-base font-medium text-gray-500 border border-gray-500 h-fit px-[16px] py-[20px] rounded-[8px]",
-                "No spaces found"
+                "No spaces available"
             }
         };
     }
 
     rsx! {
-        div { class: "flex flex-col gap-4 w-full",
-            for space in items {
-                SpaceCard { space: space.clone() }
-            }
-
-            if !has_next {
-                div { class: "my-6 text-center text-gray-400",
-                    "You have reached the end of your spaces."
+        div { class: "flex relative flex-1",
+            div { class: "flex flex-1 max-mobile:px-2.5",
+                div { class: "flex flex-col flex-1 gap-4",
+                    for space in items {
+                        SpaceCard { space: space.clone() }
+                    }
+                    if !has_next {
+                        div { class: "flex flex-row justify-center items-center w-full text-base font-medium text-gray-500 h-fit px-[16px] py-[20px]",
+                            "You have reached the end of your spaces."
+                        }
+                    }
                 }
             }
         }
@@ -43,27 +44,29 @@ pub fn Home(username: String) -> Element {
 #[component]
 fn SpaceCard(space: MySpaceResponse) -> Element {
     let space_id: common::types::SpacePartition = space.space_pk.clone().into();
+    let nav = use_navigator();
     let href = format!("/spaces/{}", space_id);
 
     rsx! {
-        a {
-            class: "flex flex-row gap-4 items-center p-4 rounded-lg border border-[var(--border-primary)] hover:bg-[var(--bg-secondary)] transition-colors",
-            href: "{href}",
-            if !space.author_profile_url.is_empty() {
-                img {
-                    class: "w-10 h-10 rounded-full object-cover",
-                    src: "{space.author_profile_url}",
-                    alt: "{space.author_display_name}",
-                }
-            } else {
-                div { class: "w-10 h-10 rounded-full bg-[var(--bg-tertiary)]" }
-            }
-            div { class: "flex flex-col flex-1 min-w-0",
-                p { class: "text-base font-medium text-[var(--text-primary)] truncate",
-                    "{space.title}"
-                }
-                p { class: "text-sm text-[var(--text-secondary)]",
-                    "by {space.author_display_name}"
+        div {
+            class: "flex flex-col w-full justify-start items-start px-4 py-5 rounded-[10px] bg-card-bg-secondary border border-card-border transition-colors cursor-pointer hover:bg-card-bg",
+            onclick: move |_| {
+                nav.push(href.clone());
+            },
+            div { class: "flex flex-col gap-2 w-full",
+                div { class: "flex gap-3 items-center",
+                    div { class: "flex flex-col",
+                        h3 { class: "text-base font-semibold text-text-primary", "{space.title}" }
+                        div { class: "flex flex-row items-center gap-2",
+                            if !space.author_profile_url.is_empty() {
+                                img {
+                                    class: "w-5 rounded-full",
+                                    src: "{space.author_profile_url}",
+                                }
+                            }
+                            p { class: "text-sm text-text-secondary", "{space.author_display_name}" }
+                        }
+                    }
                 }
             }
         }

@@ -20,7 +20,7 @@ fn convert_number_to_string(n: i64) -> String {
     }
 }
 
-fn time_ago(timestamp_millis: i64) -> String {
+pub fn time_ago(timestamp_millis: i64) -> String {
     let now = chrono::Utc::now().timestamp_millis();
     let diff = now - timestamp_millis;
 
@@ -60,7 +60,7 @@ pub fn FeedCard(
     let link_href = href.unwrap_or_default();
 
     rsx! {
-        div { class: "flex relative flex-col border rounded-[10px] bg-card-bg-secondary border-card-enable-border",
+        div { class: "relative flex flex-col border rounded-[10px] bg-card-bg-secondary border-card-enable-border",
             Link { class: "block", to: post.url(),
                 FeedBody { post: post.clone(), on_edit }
             }
@@ -113,7 +113,7 @@ fn FeedBody(post: PostResponse, on_edit: Option<EventHandler<MouseEvent>>) -> El
     } = post;
 
     rsx! {
-        div { class: "flex flex-col pt-5 pb-2.5",
+        div { class: "flex flex-col gap-2.5 pt-5 pb-2.5",
             div { class: "flex flex-row justify-between px-5",
                 div { class: "flex flex-row gap-2.5 justify-start items-center",
                     if space_pk.is_some() && space_type.is_some() {
@@ -150,14 +150,13 @@ fn FeedBody(post: PostResponse, on_edit: Option<EventHandler<MouseEvent>>) -> El
 }
 
 #[component]
-fn FeedContents(contents: String, urls: Vec<String>) -> Element {
+pub fn FeedContents(contents: String, urls: Vec<String>) -> Element {
     rsx! {
-        div { class: "break-all text-desc-text",
-            div { class: "px-5 border-none",
-                div {
-                    style: "min-height: 50px; max-height: 200px; overflow: hidden;",
-                    dangerous_inner_html: "{contents}",
-                }
+        div { class: "break-all text-desc-text px-5 mt-2.5",
+            div {
+                class: "border-none",
+                style: "min-height: 50px; max-height: 200px; overflow: hidden;",
+                dangerous_inner_html: "{contents}",
             }
         }
     }
@@ -223,7 +222,7 @@ fn FeedFooter(
 }
 
 #[component]
-fn UserBadge(profile_url: String, name: String, author_type: ratel_auth::UserType) -> Element {
+pub fn UserBadge(profile_url: String, name: String, author_type: ratel_auth::UserType) -> Element {
     let img_class = if author_type == ratel_auth::UserType::Team {
         "w-6 h-6 rounded-sm object-cover"
     } else {
@@ -231,7 +230,7 @@ fn UserBadge(profile_url: String, name: String, author_type: ratel_auth::UserTyp
     };
 
     rsx! {
-        div { class: "flex flex-row items-center w-fit med-16 text-text-primary",
+        div { class: "flex flex-row items-center w-fit med-16 text-text-primary gap-2.5",
             if !profile_url.is_empty() {
                 img {
                     src: "{profile_url}",
