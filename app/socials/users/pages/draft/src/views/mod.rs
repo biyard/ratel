@@ -13,7 +13,7 @@ pub fn Home(username: String) -> Element {
                     MyDrafts {}
                 }
             }
-            div { class: "h-fit max-tablet:fixed max-tablet:bottom-4 max-tablet:right-4 tablet:w-80 tablet:pl-4 tablet:static",
+            div { class: "h-fit max-tablet:fixed max-tablet:bottom-4 max-tablet:right-4 tablet:w-80 tablet:pl-4 tablet:static min-w-[280px] w-full",
                 CreatePostButton {}
             }
         }

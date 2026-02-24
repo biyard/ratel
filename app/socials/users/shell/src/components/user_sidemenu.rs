@@ -77,22 +77,22 @@ pub fn UserSidemenu(username: String) -> Element {
                 }
 
                 // Display name
-                div { class: "font-medium text-c-secondary", "{user.display_name}" }
+                div { class: "font-medium text-text-primary", "{user.display_name}" }
 
                 // Description
                 if !user.description.is_empty() {
-                    div { class: "text-xs text-c-secondary", "{user.description}" }
+                    div { class: "text-xs text-text-primary", "{user.description}" }
                 }
 
                 // Followers/Following counts
                 div { class: "flex gap-4 text-sm",
                     div { class: "flex gap-1",
-                        span { class: "font-semibold text-c-primary", "{user.followers_count}" }
-                        span { class: "text-c-secondary", "{tr.followers}" }
+                        span { class: "font-semibold text-text-primary", "{user.followers_count}" }
+                        span { class: "text-text-primary", "{tr.followers}" }
                     }
                     div { class: "flex gap-1",
-                        span { class: "font-semibold text-c-primary", "{user.followings_count}" }
-                        span { class: "text-c-secondary", "{tr.following}" }
+                        span { class: "font-semibold text-text-primary", "{user.followings_count}" }
+                        span { class: "text-text-primary", "{tr.following}" }
                     }
                 }
             }
