@@ -13355,9 +13355,17 @@ dependencies = [
 name = "ratel-team-setting"
 version = "0.1.0"
 dependencies = [
+ "aide",
+ "aws-config",
+ "aws-sdk-dynamodb",
+ "aws-sdk-s3",
  "common",
  "dioxus",
+ "ratel-auth",
+ "ratel-post",
+ "schemars 1.0.4",
  "serde",
+ "tracing",
 ]
 
 [[package]]
