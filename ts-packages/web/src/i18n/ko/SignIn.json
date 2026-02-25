@@ -12,7 +12,7 @@
   "forgot_password_title": "비밀번호를 잊으셨나요?",
   "forgot_password_description": "이메일 주소를 입력하시면 비밀번호 재설정을 위한 인증 코드를 보내드립니다.",
   "verification_code_sent_message": "인증 코드가 전송되었습니다! 이메일을 확인하시고 코드를 사용하여 비밀번호를 재설정하세요.",
-  "verification_code_sent_to": "<strong>{{email}}</strong>로 인증 코드가 전송되었습니다",
+  "verification_code_sent_to": "{{email}}로 인증 코드가 전송되었습니다",
   "back_to_login": "로그인으로 돌아가기",
   "reset_password": "비밀번호 재설정",
   "reset_password_title": "비밀번호 재설정",

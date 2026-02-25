@@ -6,6 +6,7 @@ import ResetPasswordForm from '../_components/reset-password-form';
 import { resetPassword } from '@/lib/api/ratel/auth.v3';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { route } from '@/route';
+import { sha3 } from '@/lib/utils';
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
@@ -18,12 +19,13 @@ export default function ResetPasswordPage() {
   ) => {
     try {
       setLoading(true);
-      await resetPassword({ email, code, password });
+      const hashed = sha3(password);
+      await resetPassword({ email, code, password: hashed });
       showSuccessToast(
         'Password reset successfully! Please login with your new password.',
       );
       setTimeout(() => {
-        navigate(route.login());
+        navigate(route.home());
       }, 1500);
     } catch (error) {
       console.error('Failed to reset password:', error);
