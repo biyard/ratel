@@ -46,4 +46,4 @@ build:
 	$(BUILD_ENV) dx build --web --release
 
 docker:
-	docker build -t ratel:$(COMMIT) -f Dockerfile .
+	docker build -t ratel:$(COMMIT) -f Dockerfile ../../target/dx/app-shell/release/web

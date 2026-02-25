@@ -589,6 +589,9 @@ jobs:
       run:
         working-directory: app/shell
 
+    outputs:
+      image: ${{ steps.build.outputs.image }}
+
     steps:
 
       - uses: actions/checkout@v4
@@ -635,6 +638,7 @@ jobs:
             target
 
       - name: Building test
+        id: build
         env:
           DYNAMO_TABLE_PREFIX: ratel-local
           ENV: local
@@ -644,5 +648,19 @@ jobs:
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
           AWS_REGION: us-east-1
+          COMMIT: pr-${{ github.sha }}
         run: |
           make build
+          make docker
+
+          # Save image for artifact upload
+          docker save ratel:$COMMIT | gzip > /tmp/app-shell-image.tar.gz
+          echo "image=ratel:$COMMIT" >> $GITHUB_OUTPUT
+
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-shell-docker-image
+          path: /tmp/app-shell-image.tar.gz
+          retention-days: 7
+
