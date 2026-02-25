@@ -142,28 +142,28 @@ pub fn InviteMemberModal(
     rsx! {
         div { class: "flex flex-col w-tablet min-h-[400px] max-w-tablet min-w-[400px] max-mobile:w-full! max-mobile:max-w-full! gap-5",
             div { class: "flex flex-col w-full gap-[10px]",
-                div { class: "font-bold text-[15px]/[28px] text-modal-label-text", "{tr.select_group}" }
+                div { class: "font-bold text-[15px]/[28px] text-modal-label-text", {tr.select_group} }
                 select {
                     class: "w-full px-4 py-3 rounded-[8px] border border-input-box-border bg-input-box-bg text-text-primary",
-                    value: "{group_index()}",
+                    value: group_index(),
                     onchange: move |e| {
                         if let Ok(next) = e.value().parse::<usize>() {
                             group_index.set(next);
                         }
                     },
                     for (idx , group) in groups.iter().enumerate() {
-                        option { value: "{idx}", "{group.name}" }
+                        option { value: idx, "{group.name}" }
                     }
                 }
             }
 
             div { class: "flex flex-col w-full",
-                div { class: "font-bold text-[15px]/[28px] text-modal-label-text", "{tr.email_label}" }
+                div { class: "font-bold text-[15px]/[28px] text-modal-label-text", {tr.email_label} }
                 div { class: "mt-2.5",
                     input {
                         class: "w-full px-4 py-2 rounded-[8px] border border-input-box-border bg-input-box-bg text-text-primary",
-                        value: "{search_value()}",
-                        placeholder: "{tr.email_hint}",
+                        value: search_value(),
+                        placeholder: tr.email_hint,
                         oninput: move |e| search_value.set(e.value()),
                         onkeydown: move |e| {
                             if e.key() == dioxus::prelude::Key::Enter {
@@ -173,7 +173,7 @@ pub fn InviteMemberModal(
                     }
                 }
                 if is_searching() {
-                    div { class: "text-sm text-gray-400 mt-2", "{tr.searching}" }
+                    div { class: "text-sm text-gray-400 mt-2", {tr.searching} }
                 }
             }
 
@@ -182,7 +182,7 @@ pub fn InviteMemberModal(
                     for user in selected_users() {
                         div { class: "flex flex-row w-fit gap-1 justify-start items-center bg-primary rounded-[100px] px-[12px] py-[2px]",
                             div { class: "font-medium text-neutral-900 text-[15px]/[24px]",
-                                "{user.nickname}"
+                                {user.nickname}
                             }
                             div {
                                 class: "w-fit h-fit",
@@ -207,14 +207,14 @@ pub fn InviteMemberModal(
             }
 
             if let Some(msg) = message() {
-                div { class: "text-sm text-post-required-marker", "{msg}" }
+                div { class: "text-sm text-post-required-marker", {msg} }
             }
 
             div { class: "flex flex-col w-full",
                 button {
                     class: if selected_users().is_empty() || is_submitting() { "cursor-not-allowed bg-neutral-500 flex flex-row w-full justify-center items-center my-[15px] py-[15px] rounded-lg font-bold text-[#000203] text-base" } else { "cursor-pointer bg-primary flex flex-row w-full justify-center items-center my-[15px] py-[15px] rounded-lg font-bold text-[#000203] text-base" },
                     onclick: on_invite,
-                    "{tr.send}"
+                    {tr.send}
                 }
             }
         }

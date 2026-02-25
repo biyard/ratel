@@ -53,11 +53,11 @@ pub fn ListGroups(
                         folder::Folder {
                             width: "48",
                             height: "48",
-                            class: "stroke-neutral-400 [path>]:stroke-neutral-400",
+                            class: "w-12 h-12 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
                         }
                         div { class: "flex flex-col justify-between items-start",
                             div { class: "font-bold text-text-primary text-base/[20px]",
-                                "{group.name}"
+                                {group.name}
                             }
                             div { class: "font-semibold text-desc-text text-sm/[20px]",
                                 "{group.members} {tr.member}"
@@ -70,7 +70,7 @@ pub fn ListGroups(
                             button {
                                 class: "p-1 hover:bg-hover rounded-full focus:outline-none transition-colors",
                                 onclick: on_toggle_menu,
-                                validations::Extra { class: "size-6 text-gray-400" }
+                                validations::Extra { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>circle]:stroke-icon-primary [&>circle]:fill-icon-primary [&>path]:fill-transparent" }
                             }
 
                             if menu_open {
@@ -78,7 +78,7 @@ pub fn ListGroups(
                                     button {
                                         class: "flex items-center w-full px-4 py-2 text-sm text-text-primary hover:bg-hover cursor-pointer",
                                         onclick: on_delete_group,
-                                        "{tr.delete_group}"
+                                        {tr.delete_group}
                                     }
                                 }
                             }
