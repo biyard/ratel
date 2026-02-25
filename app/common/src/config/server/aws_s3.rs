@@ -8,7 +8,6 @@ pub static S3_CLIENT: Lazy<S3Client> = Lazy::new(|| async move {
         bucket_name,
         asset_dir,
         expire,
-        region,
     } = S3Config::default();
 
     let aws_sdk_config = config.aws.get_sdk_config();
@@ -18,15 +17,13 @@ pub static S3_CLIENT: Lazy<S3Client> = Lazy::new(|| async move {
         bucket_name,
         asset_dir,
         expire,
-        region,
     ))
 });
 
 pub struct S3Config {
     pub bucket_name: String,
     pub asset_dir: Option<String>,
-    pub expire: Option<u64>,
-    pub region: String,
+    pub expire: u64,
 }
 
 impl Default for S3Config {
@@ -40,19 +37,14 @@ impl Default for S3Config {
             None => None,
         };
         let expire = match option_env!("BUCKET_EXPIRE") {
-            Some(value) => value.parse::<u64>().ok(),
-            None => None,
+            Some(value) => value.parse::<u64>().ok().unwrap_or_default(),
+            None => 3600,
         };
-        let region = std::env::var("S3_REGION")
-            .ok()
-            .or_else(|| option_env!("S3_REGION").map(|v| v.to_string()))
-            .unwrap_or_else(|| "ap-northeast-2".to_string());
 
         S3Config {
             bucket_name,
             asset_dir,
             expire,
-            region,
         }
     }
 }

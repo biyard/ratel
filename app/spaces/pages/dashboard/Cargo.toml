@@ -21,7 +21,7 @@ ratel-auth = { workspace = true, optional = true }
 space-common = { workspace = true, optional = true }
 [features]
 default = []
-web = ["common/web", "dioxus/web", "ratel-auth/web", "space-common/web"]
+web = ["common/web", "dioxus/web", "space-common/web"]
 desktop = ["dioxus/desktop"]
 mobile = ["dioxus/mobile"]
 server = [
