@@ -3,33 +3,23 @@ use crate::*;
 pub fn serve(app: fn() -> Element) {
     let config = config::get();
 
+    let cli = config.common.dynamodb();
+    let session_layer =
+        common::middlewares::session_layer::get_session_layer(cli, config.common.env.to_string());
+
+    let dioxus_router = dioxus::server::router(app);
+    let app = dioxus_router.layer(session_layer);
+
     #[cfg(not(feature = "lambda"))]
     dioxus::serve(move || {
-        let cli = config.common.dynamodb();
-        let session_layer = common::middlewares::session_layer::get_session_layer(
-            cli,
-            config.common.env.to_string(),
-        );
+        let app = app.clone();
 
-        async move {
-            let dioxus_router = dioxus::server::router(app);
-            let app = dioxus_router.layer(session_layer);
-
-            Ok(app)
-        }
+        async move { Ok(app) }
     });
 
     #[cfg(feature = "lambda")]
     {
         use lambda_http::run;
-        let cli = config.common.dynamodb();
-        let session_layer = common::middlewares::session_layer::get_session_layer(
-            cli,
-            config.common.env.to_string(),
-        );
-
-        let dioxus_router = dioxus::server::router(app);
-        let app = dioxus_router.layer(session_layer);
 
         let app_future = async move { run(app).await };
 
