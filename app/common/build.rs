@@ -37,7 +37,7 @@ fn main() {
         .args([
             "@tailwindcss/cli",
             "-i",
-            "../common/tailwind.css",
+            "tailwind.css",
             "-o",
             "assets/tailwind.css",
             "-m",
@@ -49,5 +49,5 @@ fn main() {
 
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed={}", js_dir.join("src").display());
-    println!("cargo:rerun-if-changed=../common/tailwind.css");
+    println!("cargo:rerun-if-changed=tailwind.css");
 }
