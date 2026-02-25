@@ -851,7 +851,7 @@ jobs:
   create-release-pr:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/dev'
-    needs: [android-apk, ios-testflight, deploy]
+    needs: [deploy]
     steps:
       - uses: actions/checkout@v3
         with:
