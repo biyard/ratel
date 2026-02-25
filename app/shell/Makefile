@@ -52,3 +52,8 @@ build-lambda:
 
 docker:
 	docker build -t $(REPOSITORY):$(COMMIT) -f Dockerfile ../../target/dx/app-shell/release/web
+
+docker.push:
+	docker tag $(REPOSITORY):$(COMMIT) $(REPOSITORY):latest
+	docker push $(REPOSITORY):$(COMMIT)
+	docker push $(REPOSITORY):latest

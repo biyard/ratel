@@ -134,8 +134,6 @@ jobs:
           ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-          COMMIT: dev-${{ github.sha }}
-
           ENV: dev
           RUST_LOG: info
           SERVICE: app-shell
@@ -202,7 +200,7 @@ jobs:
           rm -rf ../../target/dx
           make build-lambda
           make docker
-          docker push $REPOSITORY:$COMMIT
+          make docker.push
 
       - name: Deploy to S3
         env:
