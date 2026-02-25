@@ -619,13 +619,6 @@ jobs:
           cargo binstall dioxus-cli --force
 
 
-      - name: Setup test environment
-        env:
-          COMMIT: pr-${{ github.sha }}
-        run: |
-          mkdir -p .build
-          docker-compose --profile infra up -d
-
       - name: Setup pnpm
         run: |
           corepack enable
