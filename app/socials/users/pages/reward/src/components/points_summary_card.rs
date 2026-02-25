@@ -15,9 +15,11 @@ pub fn points_summary_card(
     let bar_width = share_percentage.max(0.5);
 
     rsx! {
-        div { class: "bg-[#1A1A1A] rounded-xl p-5",
+        div { class: "bg-card-bg border border-card-border rounded-xl p-5",
             div { class: "flex items-center justify-between mb-5",
-                h2 { class: "text-base font-semibold text-white tracking-wide", "{tr.title}" }
+                h2 { class: "text-base font-semibold text-text-primary tracking-wide",
+                    "{tr.title}"
+                }
                 icons::arrows::ArrowUp {
                     width: "20",
                     height: "20",
@@ -28,14 +30,16 @@ pub fn points_summary_card(
             div { class: "flex justify-between items-start mb-5",
                 div { class: "flex flex-col gap-2",
                     span { class: "text-sm font-semibold text-text-primary", "{tr.your_share}" }
-                    span { class: "text-xl font-bold text-white", "{format_points(rewards.points)} P" }
+                    span { class: "text-xl font-bold text-text-primary",
+                        "{format_points(rewards.points)} P"
+                    }
                     div { class: "flex items-center gap-1",
                         icons::arrows::CrossoverArrowsRight {
                             width: "20",
                             height: "20",
-                            class: "text-white [&>path]:stroke-white",
+                            class: "text-icon-primary [&>path]:stroke-icon-primary",
                         }
-                        span { class: "text-[15px] font-medium text-white",
+                        span { class: "text-[15px] font-medium text-text-primary",
                             "{format_tokens(estimated_tokens)} {rewards.token_symbol} ({share_label}%)"
                         }
                     }
@@ -49,7 +53,7 @@ pub fn points_summary_card(
                 }
             }
 
-            div { class: "relative h-9 bg-[#262626] rounded-lg overflow-hidden",
+            div { class: "relative h-9 bg-neutral-300 dark:bg-neutral-500 rounded-lg overflow-hidden",
                 div {
                     class: "absolute left-0 top-0 h-full bg-primary rounded-lg transition-all duration-300",
                     style: format!("width: {}%", bar_width),

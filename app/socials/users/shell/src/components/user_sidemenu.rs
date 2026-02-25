@@ -77,95 +77,86 @@ pub fn UserSidemenu(username: String) -> Element {
                 }
 
                 // Display name
-                div { class: "font-medium text-c-secondary",
-                    "{user.display_name}"
-                }
+                div { class: "font-medium text-text-primary", "{user.display_name}" }
 
                 // Description
                 if !user.description.is_empty() {
-                    div { class: "text-xs text-c-secondary",
-                        "{user.description}"
-                    }
+                    div { class: "text-xs text-text-primary", "{user.description}" }
                 }
 
                 // Followers/Following counts
                 div { class: "flex gap-4 text-sm",
                     div { class: "flex gap-1",
-                        span { class: "font-semibold text-c-primary",
-                            "{user.followers_count}"
-                        }
-                        span { class: "text-c-secondary",
-                            "{tr.followers}"
-                        }
+                        span { class: "font-semibold text-text-primary", "{user.followers_count}" }
+                        span { class: "text-text-primary", "{tr.followers}" }
                     }
                     div { class: "flex gap-1",
-                        span { class: "font-semibold text-c-primary",
-                            "{user.followings_count}"
-                        }
-                        span { class: "text-c-secondary",
-                            "{tr.following}"
-                        }
+                        span { class: "font-semibold text-text-primary", "{user.followings_count}" }
+                        span { class: "text-text-primary", "{tr.following}" }
                     }
                 }
             }
 
             // Navigation
-            nav { class: "py-5 px-3 w-full border rounded-[10px] bg-card-bg border-card-border text-c-primary",
+            nav { class: "py-5 px-3 w-full border rounded-[10px] bg-card-bg border-card-border text-text-primary",
                 SidemenuLink {
                     to: format!("/{username}/posts"),
                     label: tr.my_posts,
                     icon: rsx! {
-                        icons::edit::EditContent { class: "w-6 h-6 [&>path]:stroke-icon-primary" }
+                        icons::edit::EditContent { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
                     },
                 }
 
-                SidemenuLink {
-                    to: format!("/{username}/drafts"),
-                    label: tr.drafts,
-                    icon: rsx! {
-                        icons::file::AddFile { class: "w-6 h-6 [&>path]:stroke-icon-primary" }
-                    },
-                }
+                if user.username == username {
+                    SidemenuLink {
+                        to: format!("/{username}/drafts"),
+                        label: tr.drafts,
+                        icon: rsx! {
+                            icons::file::AddFile { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
+                        },
+                    }
 
-                SidemenuLink {
-                    to: format!("/{username}/spaces"),
-                    label: tr.my_spaces,
-                    icon: rsx! {
-                        icons::user::UserGroup { class: "w-6 h-6 [&>path]:stroke-icon-primary" }
-                    },
-                }
+                    SidemenuLink {
+                        to: format!("/{username}/spaces"),
+                        label: tr.my_spaces,
+                        icon: rsx! {
+                            icons::user::UserGroup { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
+                        },
+                    }
 
-                SidemenuLink {
-                    to: format!("/{username}/credentials"),
-                    label: tr.credentials,
-                    icon: rsx! {
-                        icons::security::ShieldGood { class: "w-6 h-6 [&>path]:stroke-icon-primary" }
-                    },
-                }
+                    SidemenuLink {
+                        to: format!("/{username}/credentials"),
+                        label: tr.credentials,
+                        icon: rsx! {
+                            icons::security::ShieldGood { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
+                        },
+                    }
 
-                SidemenuLink {
-                    to: format!("/{username}/memberships"),
-                    label: tr.membership,
-                    icon: rsx! {
-                        icons::shopping::Gift { class: "w-6 h-6 [&>path]:stroke-icon-primary" }
-                    },
-                }
+                    SidemenuLink {
+                        to: format!("/{username}/memberships"),
+                        label: tr.membership,
+                        icon: rsx! {
+                            icons::shopping::Gift { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
+                        },
+                    }
 
-                SidemenuLink {
-                    to: format!("/{username}/rewards"),
-                    label: tr.rewards,
-                    icon: rsx! {
-                        icons::game::Trophy { class: "w-6 h-6 [&>path]:stroke-icon-primary" }
-                    },
-                }
+                    SidemenuLink {
+                        to: format!("/{username}/rewards"),
+                        label: tr.rewards,
+                        icon: rsx! {
+                            icons::game::Trophy { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
+                        },
+                    }
 
-                SidemenuLink {
-                    to: format!("/{username}/settings"),
-                    label: tr.settings,
-                    icon: rsx! {
-                        icons::settings::Settings { class: "w-6 h-6 [&>path]:stroke-icon-primary" }
-                    },
+                    SidemenuLink {
+                        to: format!("/{username}/settings"),
+                        label: tr.settings,
+                        icon: rsx! {
+                            icons::settings::Settings { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
+                        },
+                    }
                 }
+            
             }
         }
     }
@@ -175,8 +166,8 @@ pub fn UserSidemenu(username: String) -> Element {
 fn SidemenuLink(to: String, label: &'static str, icon: Element) -> Element {
     rsx! {
         Link {
-            class: "flex items-center gap-3 px-2 py-2.5 hover:bg-hover rounded-md text-c-primary",
-            to: to,
+            class: "flex items-center gap-3 px-2 py-2.5 hover:bg-hover rounded-md text-text-primary",
+            to,
             {icon}
             span { "{label}" }
         }
