@@ -9,10 +9,18 @@ dioxus = { workspace = true }
 common = { workspace = true }
 serde = { workspace = true }
 ratel-auth = { workspace = true, optional = true }
+aws-config = { version = "1.5.10", optional = true }
+aws-sdk-s3 = { version = "1.74.0", optional = true }
 
 [features]
 default = []
 web = ["common/web", "dioxus/web", "ratel-auth/web"]
 desktop = ["dioxus/desktop", "ratel-auth/desktop"]
 mobile = ["dioxus/mobile", "ratel-auth/mobile"]
-server = ["common/server", "dioxus/server", "ratel-auth/server"]
+server = [
+    "common/server",
+    "dioxus/server",
+    "ratel-auth/server",
+    "aws-config",
+    "aws-sdk-s3",
+]
