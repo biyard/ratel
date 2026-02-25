@@ -33,6 +33,21 @@ fn main() {
     )
     .expect("failed to copy dist/main.js to assets/ratel-common.js");
 
+    let status = Command::new("npx")
+        .args([
+            "@tailwindcss/cli",
+            "-i",
+            "tailwind.css",
+            "-o",
+            "assets/tailwind.css",
+            "-m",
+        ])
+        .current_dir(&manifest_path)
+        .status()
+        .expect("failed to build tailwindcss");
+    assert!(status.success(), "npm build for assets/tailwind.css failed");
+
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed={}", js_dir.join("src").display());
+    println!("cargo:rerun-if-changed=tailwind.css");
 }
