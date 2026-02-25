@@ -86,16 +86,6 @@ jobs:
           components: clippy, rustfmt
           toolchain: stable
 
-      - name: Cache builder
-        id: survey-worker-build-cache
-        uses: actions/cache@v4
-        with:
-          key: survey-worker-build-${{ hashFiles('Cargo.lock') }}
-          restore-keys: |
-            survey-worker-build-
-          path: |
-            packages/survey-worker/target
-
       - name: Build survey-worker Lambda
         env:
           ENV: test
@@ -137,16 +127,6 @@ jobs:
         run: |
           cargo binstall toml-cli
 
-      - name: Cache builder
-        id: fetcher-build-cache
-        uses: actions/cache@v4
-        with:
-          key: fetcher-build-${{ hashFiles('Cargo.lock') }}
-          restore-keys: |
-            fetcher-build-
-          path: |
-            packages/fetcher/target
-
       - name: Build and cache Docker image
         id: build
         env:
@@ -174,8 +154,8 @@ jobs:
           docker save $ECR_NAME:$COMMIT | gzip > /tmp/fetcher-image.tar.gz
           echo "image=$ECR_NAME:$COMMIT" >> $GITHUB_OUTPUT
 
-      - name: Cache Docker image
-        uses: actions/cache@v4
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v4
         with:
           path: /tmp/fetcher-image.tar.gz
           key: fetcher-image-${{ github.sha }}
@@ -224,16 +204,6 @@ jobs:
         run: |
           corepack enable
           corepack prepare pnpm@10.15.0 --activate
-
-      - name: Cache builder
-        id: app-shell-build-cache
-        uses: actions/cache@v4
-        with:
-          key: app-shell-build-${{ hashFiles('Cargo.lock') }}
-          restore-keys: |
-            app-shell-build-
-          path: |
-            target
 
       - name: Building test
         id: build
