@@ -10,6 +10,12 @@ use crate::i18n::SpaceAppLayoutTranslate;
 
 #[component]
 pub fn SpaceAppsLayout(space_id: SpacePartition) -> Element {
+    let access = use_loader({
+        let sid = space_id.clone();
+        move || get_apps_access(sid.clone())
+    })?;
+    let is_admin = access.read().clone();
+
     let space = use_space();
     let user_ctx = use_user_context();
     let user = user_ctx().user.clone();
