@@ -82,25 +82,26 @@ pub fn MobileSideMenu(is_open: Signal<bool>) -> Element {
     if !logged_in {
         // Unauthenticated menu
         return rsx! {
-            div { class: "fixed top-[var(--header-height)] left-0 w-screen h-[calc(100vh-var(--header-height))] z-50 bg-bg max-tablet:block hidden",
-                div { class: "flex flex-col h-full w-full px-4 py-6 gap-6 overflow-y-auto",
+            div { class: "hidden fixed left-0 z-50 w-screen top-[var(--header-height)] h-[calc(100vh-var(--header-height))] bg-bg max-tablet:block",
+                div { class: "flex overflow-y-auto flex-col gap-6 py-6 px-4 w-full h-full",
                     Link {
-                        class: "w-full px-3 py-2.5 hover:bg-hover rounded-md text-base text-c-secondary",
+                        class: "py-2.5 px-3 w-full text-base rounded-md text-c-secondary hover:bg-hover",
                         to: "/",
-                        onclick: move |_| { is_open.set(false); },
+                        onclick: move |_| {
+                            is_open.set(false);
+                        },
                         "{tr.home}"
                     }
 
                     div { class: "h-px bg-divider" }
 
                     button {
-                        class: "w-full px-3 py-2.5 hover:bg-hover rounded-md text-left text-base text-c-secondary cursor-pointer",
+                        class: "py-2.5 px-3 w-full text-base text-left rounded-md cursor-pointer text-c-secondary hover:bg-hover",
                         onclick: move |_| {
                             is_open.set(false);
-                            popup
-                                .open(rsx! { LoginModal {} })
-                                .with_title(tr.join_the_movement)
-                                .without_backdrop_close();
+                            popup.open(rsx! {
+                                LoginModal {}
+                            }).with_title(tr.join_the_movement);
                         },
                         "{tr.sign_in}"
                     }
@@ -114,38 +115,48 @@ pub fn MobileSideMenu(is_open: Signal<bool>) -> Element {
     let teams = team_ctx.teams.read().clone();
 
     rsx! {
-        div { class: "fixed top-[var(--header-height)] left-0 w-screen h-[calc(100vh-var(--header-height))] z-50 bg-bg max-tablet:block hidden",
-            div { class: "flex flex-col h-full w-full px-4 py-6 gap-6 overflow-y-auto",
+        div { class: "hidden fixed left-0 z-50 w-screen top-[var(--header-height)] h-[calc(100vh-var(--header-height))] bg-bg max-tablet:block",
+            div { class: "flex overflow-y-auto flex-col gap-6 py-6 px-4 w-full h-full",
                 // User navigation links
                 div { class: "flex flex-col gap-2",
                     Link {
-                        class: "w-full px-3 py-2.5 hover:bg-hover rounded-md text-base text-c-secondary",
+                        class: "py-2.5 px-3 w-full text-base rounded-md text-c-secondary hover:bg-hover",
                         to: format!("/{}/posts", username),
-                        onclick: move |_| { is_open.set(false); },
+                        onclick: move |_| {
+                            is_open.set(false);
+                        },
                         "{tr.my_posts}"
                     }
                     Link {
-                        class: "w-full px-3 py-2.5 hover:bg-hover rounded-md text-base text-c-secondary",
+                        class: "py-2.5 px-3 w-full text-base rounded-md text-c-secondary hover:bg-hover",
                         to: format!("/{}/drafts", username),
-                        onclick: move |_| { is_open.set(false); },
+                        onclick: move |_| {
+                            is_open.set(false);
+                        },
                         "{tr.drafts}"
                     }
                     Link {
-                        class: "w-full px-3 py-2.5 hover:bg-hover rounded-md text-base text-c-secondary",
+                        class: "py-2.5 px-3 w-full text-base rounded-md text-c-secondary hover:bg-hover",
                         to: format!("/{}/spaces", username),
-                        onclick: move |_| { is_open.set(false); },
+                        onclick: move |_| {
+                            is_open.set(false);
+                        },
                         "{tr.my_spaces}"
                     }
                     Link {
-                        class: "w-full px-3 py-2.5 hover:bg-hover rounded-md text-base text-c-secondary",
+                        class: "py-2.5 px-3 w-full text-base rounded-md text-c-secondary hover:bg-hover",
                         to: format!("/{}/credentials", username),
-                        onclick: move |_| { is_open.set(false); },
+                        onclick: move |_| {
+                            is_open.set(false);
+                        },
                         "{tr.credentials}"
                     }
                     Link {
-                        class: "w-full px-3 py-2.5 hover:bg-hover rounded-md text-base text-c-secondary",
+                        class: "py-2.5 px-3 w-full text-base rounded-md text-c-secondary hover:bg-hover",
                         to: format!("/{}/settings", username),
-                        onclick: move |_| { is_open.set(false); },
+                        onclick: move |_| {
+                            is_open.set(false);
+                        },
                         "{tr.settings}"
                     }
                 }
@@ -155,25 +166,23 @@ pub fn MobileSideMenu(is_open: Signal<bool>) -> Element {
 
                 // User profile section
                 div { class: "flex flex-col gap-3",
-                    div { class: "text-xs text-c-secondary px-2",
-                        "{tr.user}"
-                    }
+                    div { class: "px-2 text-xs text-c-secondary", "{tr.user}" }
                     Link {
-                        class: "flex items-center gap-3 px-3 py-2.5 hover:bg-hover rounded-md",
+                        class: "flex gap-3 items-center py-2.5 px-3 rounded-md hover:bg-hover",
                         to: "/",
-                        onclick: move |_| { is_open.set(false); },
+                        onclick: move |_| {
+                            is_open.set(false);
+                        },
                         if !user.profile_url.is_empty() {
                             img {
                                 src: "{user.profile_url}",
                                 alt: "{user.display_name}",
-                                class: "w-8 h-8 rounded-full object-cover object-top",
+                                class: "object-cover object-top w-8 h-8 rounded-full",
                             }
                         } else {
-                            div { class: "w-8 h-8 bg-neutral-600 rounded-full" }
+                            div { class: "w-8 h-8 rounded-full bg-neutral-600" }
                         }
-                        span { class: "text-base text-c-secondary",
-                            "{user.display_name}"
-                        }
+                        span { class: "text-base text-c-secondary", "{user.display_name}" }
                     }
                 }
 
@@ -182,27 +191,25 @@ pub fn MobileSideMenu(is_open: Signal<bool>) -> Element {
                     div { class: "h-px bg-divider" }
 
                     div { class: "flex flex-col gap-3",
-                        div { class: "text-xs text-c-secondary px-2",
-                            "{tr.teams}"
-                        }
+                        div { class: "px-2 text-xs text-c-secondary", "{tr.teams}" }
                         div { class: "flex flex-col gap-2",
                             for team in teams.iter() {
                                 Link {
-                                    class: "flex items-center gap-3 px-3 py-2.5 hover:bg-hover rounded-md",
+                                    class: "flex gap-3 items-center py-2.5 px-3 rounded-md hover:bg-hover",
                                     to: format!("/teams/{}", team.username),
-                                    onclick: move |_| { is_open.set(false); },
+                                    onclick: move |_| {
+                                        is_open.set(false);
+                                    },
                                     if !team.profile_url.is_empty() {
                                         img {
                                             src: "{team.profile_url}",
                                             alt: "{team.nickname}",
-                                            class: "w-8 h-8 rounded-full object-cover object-top",
+                                            class: "object-cover object-top w-8 h-8 rounded-full",
                                         }
                                     } else {
-                                        div { class: "w-8 h-8 bg-neutral-600 rounded-full" }
+                                        div { class: "w-8 h-8 rounded-full bg-neutral-600" }
                                     }
-                                    span { class: "text-base text-c-secondary",
-                                        "{team.nickname}"
-                                    }
+                                    span { class: "text-base text-c-secondary", "{team.nickname}" }
                                 }
                             }
                         }
@@ -215,18 +222,18 @@ pub fn MobileSideMenu(is_open: Signal<bool>) -> Element {
                 // Actions
                 div { class: "flex flex-col gap-2",
                     button {
-                        class: "w-full px-3 py-2.5 hover:bg-hover rounded-md text-left text-base text-c-secondary cursor-pointer",
+                        class: "py-2.5 px-3 w-full text-base text-left rounded-md cursor-pointer text-c-secondary hover:bg-hover",
                         onclick: move |_| {
                             is_open.set(false);
-                            popup
-                                .open(rsx! { TeamCreationPopup {} })
-                                .with_title(tr.create_team);
+                            popup.open(rsx! {
+                                TeamCreationPopup {}
+                            }).with_title(tr.create_team);
                         },
                         "{tr.create_team}"
                     }
 
                     button {
-                        class: "w-full px-3 py-2.5 hover:bg-hover rounded-md text-left text-base text-c-secondary cursor-pointer",
+                        class: "py-2.5 px-3 w-full text-base text-left rounded-md cursor-pointer text-c-secondary hover:bg-hover",
                         onclick: move |_| {
                             is_open.set(false);
                             spawn(async move {

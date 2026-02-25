@@ -38,7 +38,7 @@ impl PopupService {
             description: None,
             content,
             closable: true,
-            backdrop_closable: true,
+            backdrop_closable: false,
             overflow: false,
         }));
         self
@@ -88,11 +88,11 @@ impl PopupService {
         self
     }
 
-    pub fn without_backdrop_close(&mut self) -> &mut Self {
+    pub fn with_backdrop_close(&mut self) -> &mut Self {
         {
             let mut current = self.state.write();
             if let Some(ref mut cfg) = *current {
-                cfg.backdrop_closable = false;
+                cfg.backdrop_closable = true;
             }
         }
         self

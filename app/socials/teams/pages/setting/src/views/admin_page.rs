@@ -150,11 +150,9 @@ pub fn AdminPage(teamname: String, team: TeamResponse) -> Element {
                     });
                 }
             };
-            popup
-                .open(rsx! {
-                    DeleteTeamPopup { on_confirm, on_cancel }
-                })
-                .without_backdrop_close();
+            popup.open(rsx! {
+                DeleteTeamPopup { on_confirm, on_cancel }
+            });
         }
     };
 
@@ -162,7 +160,7 @@ pub fn AdminPage(teamname: String, team: TeamResponse) -> Element {
     let delete_team_permission = permissions.contains(TeamGroupPermission::TeamAdmin);
 
     rsx! {
-        div { class: "w-full max-tablet:w-full flex flex-col gap-10 items-center",
+        div { class: "flex flex-col gap-10 items-center w-full max-tablet:w-full",
             ProfileSection {
                 profile_url: profile_url(),
                 upload_logo_text: tr.upload_logo.to_string(),
@@ -170,7 +168,7 @@ pub fn AdminPage(teamname: String, team: TeamResponse) -> Element {
                 on_profile_url_change: on_profile_upload,
             }
 
-            div { class: "w-full flex flex-col gap-2.5",
+            div { class: "flex flex-col gap-2.5 w-full",
                 BasicInfoSection {
                     username: team_state().username.clone(),
                     nickname: nickname(),
@@ -187,29 +185,29 @@ pub fn AdminPage(teamname: String, team: TeamResponse) -> Element {
                 }
 
                 if !is_editing() {
-                    div { class: "flex justify-end py-5 gap-2",
+                    div { class: "flex gap-2 justify-end py-5",
                         button {
-                            class: "inline-flex items-center justify-center gap-2.5 whitespace-nowrap font-bold text-sm transition-all rounded-full bg-btn-primary-bg text-btn-primary-text border-btn-primary-outline hover:bg-btn-primary-hover-bg hover:border-btn-primary-hover-outline hover:text-btn-primary-hover-text px-5 py-2.5",
+                            class: "inline-flex gap-2.5 justify-center items-center py-2.5 px-5 text-sm font-bold whitespace-nowrap rounded-full transition-all bg-btn-primary-bg text-btn-primary-text border-btn-primary-outline hover:bg-btn-primary-hover-bg hover:border-btn-primary-hover-outline hover:text-btn-primary-hover-text",
                             onclick: on_edit,
                             "{tr.edit}"
                         }
                         if delete_team_permission {
                             button {
-                                class: "inline-flex items-center justify-center gap-2.5 whitespace-nowrap font-bold text-sm transition-all rounded-full bg-red-600 text-white hover:bg-red-600/90 px-5 py-2.5",
+                                class: "inline-flex gap-2.5 justify-center items-center py-2.5 px-5 text-sm font-bold text-white whitespace-nowrap bg-red-600 rounded-full transition-all hover:bg-red-600/90",
                                 onclick: on_open_delete,
                                 "{tr.delete}"
                             }
                         }
                     }
                 } else {
-                    div { class: "flex justify-end py-5 gap-2",
+                    div { class: "flex gap-2 justify-end py-5",
                         button {
-                            class: "inline-flex items-center justify-center gap-2.5 whitespace-nowrap font-bold text-sm transition-all rounded-full bg-btn-outline-bg text-btn-outline-text border-btn-outline-outline hover:bg-btn-outline-hover-bg hover:border-btn-outline-hover-outline hover:text-btn-outline-hover-text px-5 py-2.5",
+                            class: "inline-flex gap-2.5 justify-center items-center py-2.5 px-5 text-sm font-bold whitespace-nowrap rounded-full transition-all bg-btn-outline-bg text-btn-outline-text border-btn-outline-outline hover:bg-btn-outline-hover-bg hover:border-btn-outline-hover-outline hover:text-btn-outline-hover-text",
                             onclick: on_cancel,
                             "{tr.cancel}"
                         }
                         button {
-                            class: "inline-flex items-center justify-center gap-2.5 whitespace-nowrap font-bold text-sm transition-all rounded-full bg-btn-primary-bg text-btn-primary-text border-btn-primary-outline hover:bg-btn-primary-hover-bg hover:border-btn-primary-hover-outline hover:text-btn-primary-hover-text px-5 py-2.5",
+                            class: "inline-flex gap-2.5 justify-center items-center py-2.5 px-5 text-sm font-bold whitespace-nowrap rounded-full transition-all bg-btn-primary-bg text-btn-primary-text border-btn-primary-outline hover:bg-btn-primary-hover-bg hover:border-btn-primary-hover-outline hover:text-btn-primary-hover-text",
                             onclick: on_save,
                             disabled: is_saving(),
                             {if is_saving() { "Saving..." } else { tr.save_changes }}
