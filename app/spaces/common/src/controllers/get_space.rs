@@ -11,7 +11,7 @@ pub async fn get_space(space_id: SpacePartition) -> Result<SpaceResponse> {
     let config = crate::config::get();
     let dynamo = config.common.dynamodb();
 
-    let space_pk_partition: Partition = space_id.clone().into();
+    let space_pk_partition: Partition = space_id.into();
     let space =
         SpaceCommon::get(dynamo, &space_pk_partition, Some(&EntityType::SpaceCommon)).await?;
     let space = space.ok_or_else(|| Error::NotFound("Space Not Found".to_string()))?;
