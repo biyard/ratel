@@ -14,6 +14,7 @@ use crate::{Error, Result};
 pub struct S3Client {
     pub client: Client,
     bucket_name: String,
+    asset_dir: String,
 }
 
 #[derive(Debug, Clone)]
@@ -46,12 +47,21 @@ pub struct PutObjectResult {
 }
 
 impl S3Client {
-    pub fn new(config: &SdkConfig, bucket_name: String) -> S3Client {
+    pub fn new(config: &SdkConfig, bucket_name: String, asset_dir: Option<String>) -> S3Client {
         let aws_config = Config::from(config);
         let client = Client::from_conf(aws_config);
+
+        let asset_dir = asset_dir.unwrap_or_default();
+        let asset_dir = if asset_dir.is_empty() || asset_dir.ends_with('/') {
+            asset_dir
+        } else {
+            format!("{}/", asset_dir)
+        };
+
         S3Client {
             client,
             bucket_name,
+            asset_dir,
         }
     }
 
@@ -62,7 +72,12 @@ impl S3Client {
         S3Client {
             client,
             bucket_name: "common".to_string(),
+            asset_dir: "/".to_string(),
         }
+    }
+
+    pub fn get_url(&self, key: &str) -> String {
+        format!("https://{}/{}", self.bucket_name, key)
     }
 }
 
@@ -120,9 +135,9 @@ impl S3Client {
         for _ in 0..total_count {
             let id = Uuid::new_v4();
             let key = if let Some(p) = prefix {
-                format!("{}/{}", p.trim_end_matches('/'), id)
+                format!("{}{}/{}", self.asset_dir, p.trim_end_matches('/'), id)
             } else {
-                id.to_string()
+                format!("{}{}", self.asset_dir, id)
             };
             let presigned = self
                 .client

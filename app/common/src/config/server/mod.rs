@@ -1,5 +1,6 @@
 #![allow(static_mut_refs)]
 pub mod aws_config;
+pub mod aws_s3;
 pub mod aws_ses;
 pub mod aws_sns;
 pub mod dynamodb;
@@ -17,6 +18,15 @@ pub struct ServerConfig {
 impl ServerConfig {
     pub fn dynamodb(&self) -> &aws_sdk_dynamodb::Client {
         &dynamodb::DB
+    }
+    pub fn s3(&self) -> &crate::utils::aws::S3Client {
+        &aws_s3::S3_CLIENT
+    }
+    pub fn ses(&self) -> &crate::utils::aws::SesClient {
+        &aws_ses::SES_CLIENT
+    }
+    pub fn sns(&self) -> &crate::utils::aws::SnsClient {
+        &aws_sns::SNS_CLIENT
     }
 }
 
