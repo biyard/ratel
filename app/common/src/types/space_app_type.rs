@@ -16,10 +16,10 @@ use crate::*;
 )]
 pub enum SpaceAppType {
     #[default]
-    #[translate(ko = "스페이스 설정")]
+    #[translate(en = "General", ko = "스페이스 설정")]
     General,
-    #[translate(ko = "인센티브 풀")]
+    #[translate(en = "Incentive Pool", ko = "인센티브 풀")]
     IncentivePool,
-    #[translate(ko = "파일")]
+    #[translate(en = "File", ko = "파일")]
     File,
 }

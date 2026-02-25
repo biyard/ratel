@@ -1,4 +1,6 @@
 use crate::*;
+mod i18n;
+use i18n::GeneralTranslate;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum RewardRole {
@@ -14,6 +16,7 @@ const DEFAULT_PROFILE_IMAGE: &str = "https://metadata.ratel.foundation/ratel/def
 pub fn GeneralPage(space_id: SpacePartition) -> Element {
     // FIXME: Use space_id when space-scoped data is added.
     let _ = space_id;
+    let tr: GeneralTranslate = use_translate();
     let mut selected_role = use_signal(|| RewardRole::Admin);
     let mut allow_connections = use_signal(|| true);
     let mut email_input = use_signal(String::new);
@@ -33,13 +36,13 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
     rsx! {
         div { class: "flex overflow-visible flex-col gap-5 self-start pb-6 w-full min-w-0 shrink-0 max-w-[1024px] max-tablet:gap-4 text-font-primary",
             h3 { class: "font-bold sp-dash-font-raleway text-[24px]/[28px] tracking-[-0.24px] text-font-primary",
-                "Space Setting"
+                "{tr.page_title}"
             }
 
             div { class: "overflow-visible w-full shrink-0 rounded-[12px] bg-card",
                 div { class: "flex justify-between items-center self-stretch px-5 py-4 border-b border-separator",
                     p { class: "font-bold sp-dash-font-raleway text-[24px]/[28px] tracking-[-0.24px] text-font-primary",
-                        "Invite New Admin"
+                        "{tr.section_invite_new_admin}"
                     }
                 }
 
@@ -47,11 +50,11 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
                     div { class: "flex items-start w-full gap-[10px] max-tablet:flex-col",
                         div { class: "flex flex-col flex-1 gap-2 justify-center items-start",
                             p { class: "font-semibold sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-font-primary",
-                                "Email Address"
+                                "{tr.label_email_address}"
                             }
                             input {
                                 class: "flex flex-col justify-center items-start px-3 py-2.5 w-full font-medium leading-6 border-gray-600 rounded-[8px] border-[0.5px] bg-web-input sp-dash-font-raleway text-[15px] tracking-[0.5px] text-font-primary placeholder:text-card-more-muted",
-                                placeholder: "admin@example.com",
+                                placeholder: "{tr.placeholder_admin_email}",
                                 value: email_input(),
                                 oninput: move |evt| {
                                     email_input.set(evt.value().to_string());
@@ -97,25 +100,25 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
 
                         div { class: "flex flex-col flex-1 gap-2 justify-center items-start w-full",
                             p { class: "font-semibold sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-font-primary",
-                                "Default Reward"
+                                "{tr.label_default_reward}"
                             }
                             div { class: "grid grid-cols-3 gap-2 w-full max-mobile:grid-cols-1",
                                 RewardRoleCard {
                                     selected: selected_role() == RewardRole::Admin,
-                                    title: "Admin".to_string(),
-                                    description: "Everything".to_string(),
+                                    title: tr.role_admin_title.to_string(),
+                                    description: tr.role_admin_description.to_string(),
                                     onclick: move |_| selected_role.set(RewardRole::Admin),
                                 }
                                 RewardRoleCard {
                                     selected: selected_role() == RewardRole::Editor,
-                                    title: "Editor".to_string(),
-                                    description: "Can edit overview and actions".to_string(),
+                                    title: tr.role_editor_title.to_string(),
+                                    description: tr.role_editor_description.to_string(),
                                     onclick: move |_| selected_role.set(RewardRole::Editor),
                                 }
                                 RewardRoleCard {
                                     selected: selected_role() == RewardRole::Viewer,
-                                    title: "Viewer".to_string(),
-                                    description: "Read-only".to_string(),
+                                    title: tr.role_viewer_title.to_string(),
+                                    description: tr.role_viewer_description.to_string(),
                                     onclick: move |_| selected_role.set(RewardRole::Viewer),
                                 }
                             }
@@ -139,11 +142,11 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
                                 }
                             }
                             p { class: "font-medium leading-6 sp-dash-font-raleway text-[15px] tracking-[0.5px] text-font-primary",
-                                "Allow administrators to invite their connections"
+                                "{tr.allow_connections_label}"
                             }
                         }
                         p { class: "w-full font-normal leading-6 pl-[34px] sp-dash-font-raleway text-[15px] tracking-[0.5px] text-card-meta",
-                            "Group members can invite 1st degree connections to the group. All requests to join will still require admin approval."
+                            "{tr.allow_connections_description}"
                         }
                     }
 
@@ -151,7 +154,7 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
                         Button {
                             style: ButtonStyle::Primary,
                             class: "font-normal leading-6 w-[211px] max-tablet:w-full rounded-[10px] sp-dash-font-raleway text-[15px] tracking-[0.5px] text-btn-primary-text",
-                            "Invite"
+                            "{tr.btn_invite}"
                         }
                     }
                 }
@@ -160,25 +163,25 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
             div { class: "overflow-visible w-full shrink-0 rounded-[12px] bg-card",
                 div { class: "flex justify-between items-center self-stretch px-5 py-4 border-b border-separator",
                     p { class: "font-bold sp-dash-font-raleway text-[24px]/[28px] tracking-[-0.24px] text-font-primary",
-                        "Administrator"
+                        "{tr.section_administrator}"
                     }
                 }
 
                 div { class: "flex flex-col items-start self-stretch p-5 gap-[10px] bg-card max-mobile:p-4",
                     AdministratorRow {
-                        name: "Profile".to_string(),
-                        caption: "Caption".to_string(),
-                        time_ago: "1w ago".to_string(),
+                        name: tr.profile_name.to_string(),
+                        caption: tr.profile_caption.to_string(),
+                        time_ago: tr.profile_time_ago.to_string(),
                     }
                     AdministratorRow {
-                        name: "Profile".to_string(),
-                        caption: "Caption".to_string(),
-                        time_ago: "1w ago".to_string(),
+                        name: tr.profile_name.to_string(),
+                        caption: tr.profile_caption.to_string(),
+                        time_ago: tr.profile_time_ago.to_string(),
                     }
                     AdministratorRow {
-                        name: "Profile".to_string(),
-                        caption: "Caption".to_string(),
-                        time_ago: "1w ago".to_string(),
+                        name: tr.profile_name.to_string(),
+                        caption: tr.profile_caption.to_string(),
+                        time_ago: tr.profile_time_ago.to_string(),
                     }
                 }
             }
@@ -187,7 +190,7 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
                 Button {
                     style: ButtonStyle::Outline,
                     class: "flex flex-col justify-center items-center px-5 py-3 font-normal leading-6 border w-fit max-tablet:w-full gap-[10px] rounded-[10px] border-web-error sp-dash-font-raleway text-[15px] tracking-[0.5px] text-web-error hover:bg-transparent hover:border-web-error hover:text-web-error disabled:border-web-error/50 disabled:text-web-error/50",
-                    "Delete Space"
+                    "{tr.btn_delete_space}"
                 }
             }
         }
@@ -277,6 +280,7 @@ fn AdministratorRow(name: String, caption: String, time_ago: String) -> Element 
 
 #[component]
 pub fn HomePage(space_id: SpacePartition) -> Element {
+    let tr: GeneralTranslate = use_translate();
     let role =
         use_loader(move || async move { Ok::<SpaceUserRole, Error>(SpaceUserRole::Creator) })?;
 
@@ -287,7 +291,7 @@ pub fn HomePage(space_id: SpacePartition) -> Element {
     } else {
         rsx! {
             div { class: "flex justify-center items-center w-full h-full text-font-primary",
-                "No permission"
+                "{tr.no_permission}"
             }
         }
     }
