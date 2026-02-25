@@ -19,7 +19,7 @@ pub async fn get_put_object_uri(
     let client = config.s3();
 
     let count = total_count.unwrap_or(1).max(1) as i32;
-    let prefix = file_type.as_deref().filter(|v| !v.is_empty());
+    let prefix = file_type.as_deref();
     let uploads = client.presign_upload(Some(count), prefix, None).await?;
 
     let presigned_uris = uploads

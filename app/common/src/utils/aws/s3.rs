@@ -141,6 +141,8 @@ impl S3Client {
         let expire_time = expire.unwrap_or(self.expire);
         let mut result: Vec<PutObjectResult> = vec![];
 
+        let prefix = prefix.filter(|v| !v.is_empty());
+
         for _ in 0..total_count {
             let id = Uuid::new_v4();
             let key = if let Some(p) = prefix {
