@@ -13,11 +13,8 @@ DYNAMO_ENDPOINT ?= none
 RUST_LOG ?= debug
 
 PORT ?= 8000
-UPSTREAM_URL ?= https://dev.ratel.foundation
 
-PORTONE_STORE_ID ?= dummy 
-PORTONE_INICIS_CHANNEL_KEY ?= dummy
-PORTONE_API_SECRET ?= dummy
+REPOSITORY ?= ratel
 
 BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) \
@@ -33,9 +30,25 @@ BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					PORTONE_STORE_ID=$(PORTONE_STORE_ID) \
 					PORTONE_INICIS_CHANNEL_KEY=$(PORTONE_INICIS_CHANNEL_KEY) \
 					PORTONE_API_SECRET=$(PORTONE_API_SECRET) \
+					FIREBASE_API_KEY=$(FIREBASE_API_KEY) \
+					FIREBASE_AUTH_DOMAIN=$(FIREBASE_AUTH_DOMAIN) \
+					FIREBASE_PROJECT_ID=$(FIREBASE_PROJECT_ID) \
+					FIREBASE_STORAGE_BUCKET=$(FIREBASE_STORAGE_BUCKET) \
+					FIREBASE_MESSAGING_SENDER_ID=$(FIREBASE_MESSAGING_SENDER_ID) \
+					FIREBASE_APP_ID=$(FIREBASE_APP_ID) \
+					FIREBASE_MEASUREMENT_ID=$(FIREBASE_MEASUREMENT_ID) \
 					UPSTREAM_URL=$(UPSTREAM_URL)
 
 RUST_FLAG ?=
 
 run:
 	$(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web
+
+build:
+	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web --platform web @server --features server --platform server
+
+build-lambda:
+	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web --platform web @server --features lambda --platform server
+
+docker:
+	docker build -t $(REPOSITORY):$(COMMIT) -f Dockerfile ../../target/dx/app-shell/release/web

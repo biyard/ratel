@@ -27,7 +27,7 @@ pub fn init(level: Level) -> Result<(), SetGlobalDefaultError> {
             .with_env_filter(
                 EnvFilter::from(option_env!("RUST_LOG").unwrap_or("debug"))
                     .add_directive("rustls=info".parse().unwrap())
-                    .add_directive("aws_api=info".parse().unwrap())
+                    .add_directive("aws=info".parse().unwrap())
                     .add_directive("hyper_util=info".parse().unwrap())
                     .add_directive("tower_http=info".parse().unwrap()),
             )

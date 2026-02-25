@@ -1,7 +1,7 @@
-use common::{models::space::SpaceCommon, SpacePartition};
+use common::SpacePartition;
 use dioxus::prelude::*;
 
-#[get("/api/spaces/:space_id/dashboard-extensions", space: SpaceCommon)]
+#[get("/api/spaces/:space_id/dashboard-extensions", _space: common::models::space::SpaceCommon)]
 pub async fn fetch_dashboard_extensions(
     space_id: SpacePartition,
 ) -> Result<Vec<crate::types::DashboardExtension>, ServerFnError> {
