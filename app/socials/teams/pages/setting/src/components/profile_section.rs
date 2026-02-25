@@ -14,7 +14,6 @@ pub fn ProfileSection(
                 on_upload_success: on_profile_url_change,
                 class: if !is_editing { "pointer-events-none opacity-60" },
                 accept: "image/*",
-                upload_endpoint: Some("/api/teams/settings/assets".to_string()),
                 if !profile_url.is_empty() {
                     img {
                         src: profile_url,
