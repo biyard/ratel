@@ -1,5 +1,5 @@
 [package]
-name = "space-app-all_apps"
+name = "space-app-all-apps"
 version = "0.1.0"
 authors = ["hackartists <hackartists@gmail.com>"]
 edition = "2021"
