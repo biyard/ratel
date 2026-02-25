@@ -3,15 +3,13 @@ use crate::models::{
     SpaceParticipant,
 };
 use crate::*;
+use common::attribute::Gender;
+use common::models::auth::{OptionalUser, User};
 use common::models::space::SpaceCommon;
 use common::utils::time::get_now_timestamp_millis;
 use common::SpaceVisibility;
-use ratel_auth::models::user::OptionalUser;
-use ratel_post::models::Post;
-use ratel_post::types::TeamGroupPermission;
-
-#[cfg(feature = "server")]
-use crate::models::UserAttributesExt;
+use space_common::ratel_post::models::Post;
+use space_common::ratel_post::types::TeamGroupPermission;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct ParticipateSpaceResponse {
@@ -20,13 +18,13 @@ pub struct ParticipateSpaceResponse {
     pub profile_url: String,
 }
 
-#[post("/api/spaces/{space_pk}/participate", user: OptionalUser)]
-pub async fn participate_space(space_pk: SpacePartition) -> Result<ParticipateSpaceResponse> {
+#[post("/api/spaces/{space_id}/participate", user: OptionalUser)]
+pub async fn participate_space(space_id: SpacePartition) -> Result<ParticipateSpaceResponse> {
     let config = crate::config::get();
     let dynamo = config.common.dynamodb();
     let now = get_now_timestamp_millis();
 
-    let space_pk_partition: Partition = space_pk.clone().into();
+    let space_pk_partition: Partition = space_id.into();
     let space =
         SpaceCommon::get(dynamo, &space_pk_partition, Some(&EntityType::SpaceCommon)).await?;
     let space = space.ok_or_else(|| Error::NotFound("Space Not Found".to_string()))?;
@@ -35,7 +33,7 @@ pub async fn participate_space(space_pk: SpacePartition) -> Result<ParticipateSp
     let post = Post::get(dynamo, &post_pk, Some(EntityType::Post)).await?;
     let post = post.ok_or_else(|| Error::NotFound("Post Not Found".to_string()))?;
 
-    let user: Option<ratel_auth::User> = user.into();
+    let user: Option<User> = user.into();
     let user = user.ok_or(Error::NoSessionFound)?;
 
     let permissions = post.get_permissions(dynamo, Some(user.clone())).await?;
@@ -124,8 +122,10 @@ pub async fn participate_space(space_pk: SpacePartition) -> Result<ParticipateSp
 async fn check_if_satisfying_panel_attribute(
     space: &SpaceCommon,
     cli: &aws_sdk_dynamodb::Client,
-    user: &ratel_auth::User,
+    user: &User,
 ) -> Result<()> {
+    use crate::models::UserAttributesExt;
+
     let panel_quota = SpacePanelQuota::query(
         cli,
         CompositePartition(space.pk.clone(), Partition::PanelAttribute),
@@ -141,10 +141,7 @@ async fn check_if_satisfying_panel_attribute(
 
     let user_attributes = user.get_attributes(cli).await?;
     let age: Option<u8> = user_attributes.age().and_then(|v| u8::try_from(v).ok());
-    let gender = user_attributes.gender.map(|value| match value {
-        ratel_auth::attribute::Gender::Male => models::attribute::Gender::Male,
-        ratel_auth::attribute::Gender::Female => models::attribute::Gender::Female,
-    });
+    let gender = user_attributes.gender;
 
     if space.remains <= 0 {
         return Err(Error::FullQuota);
@@ -195,16 +192,16 @@ async fn check_if_satisfying_panel_attribute(
     Err(Error::LackOfVerifiedAttributes)
 }
 
-#[cfg(not(feature = "server"))]
-async fn check_if_satisfying_panel_attribute(
-    _space: &SpaceCommon,
-    _cli: &(),
-    _user: &ratel_auth::User,
-) -> Result<()> {
-    Ok(())
-}
+// #[cfg(not(feature = "server"))]
+// async fn check_if_satisfying_panel_attribute(
+//     _space: &SpaceCommon,
+//     _cli: &(),
+//     _user: &ratel_auth::User,
+// ) -> Result<()> {
+//     Ok(())
+// }
 
-fn match_by_sk(age: Option<u8>, gender: Option<crate::models::Gender>, sk: &EntityType) -> bool {
+fn match_by_sk(age: Option<u8>, gender: Option<Gender>, sk: &EntityType) -> bool {
     if age.is_none() && gender.is_none() {
         return false;
     }
@@ -251,7 +248,7 @@ fn match_age_rule(age: Option<u8>, v: &str) -> bool {
     true
 }
 
-fn match_gender_rule(gender: Option<crate::models::Gender>, v: &str) -> bool {
+fn match_gender_rule(gender: Option<Gender>, v: &str) -> bool {
     if v == "gender" {
         return gender.is_some();
     }
@@ -259,8 +256,8 @@ fn match_gender_rule(gender: Option<crate::models::Gender>, v: &str) -> bool {
     if let Some(rest) = v.strip_prefix("gender:") {
         let want = rest.trim().to_ascii_lowercase();
         return match (want.as_str(), gender) {
-            ("male", Some(crate::models::Gender::Male)) => true,
-            ("female", Some(crate::models::Gender::Female)) => true,
+            ("male", Some(Gender::Male)) => true,
+            ("female", Some(Gender::Female)) => true,
             _ => false,
         };
     }
