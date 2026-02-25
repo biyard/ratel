@@ -34,11 +34,11 @@ jobs:
           name: space-stream-worker-${{ github.sha }}
           path: ./cdk/space-stream-worker
 
-      - name: Write Firebase service account (dev)
-        run: |
-          mkdir -p cdk/app-shell/.gcp
-          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 }}" \
-            | base64 -d > cdk/main-api/.gcp/firebase-service-account.json
+      # - name: Write Firebase service account (dev)
+      #   run: |
+      #     mkdir -p cdk/app-shell/.gcp
+      #     echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 }}" \
+      #       | base64 -d > cdk/main-api/.gcp/firebase-service-account.json
 
       - uses: aws-actions/configure-aws-credentials@v2
         with:
