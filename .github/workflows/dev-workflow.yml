@@ -202,7 +202,7 @@ jobs:
           rm -rf ../../target/dx
           make build-lambda
           mkdir -p ../../.build/app-shell
-          cp ../../target/dx/app-shell/release/app-shell ../../.build/app-shell/bootstrap
+          cp ../../target/dx/app-shell/release/web/app-shell ../../.build/app-shell/bootstrap
 
       - name: Deploy to S3
         env:
