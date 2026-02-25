@@ -1,9 +1,12 @@
 use crate::*;
+mod i18n;
+use i18n::AllAppsTranslate;
 
 #[component]
 pub fn AllAppsPage(space_id: SpacePartition) -> Element {
     // FIXME: Use space_id when space-scoped data is added.
     let _ = space_id;
+    let tr: AllAppsTranslate = use_translate();
     let mut installed = use_signal(|| false);
 
     rsx! {
@@ -18,10 +21,10 @@ pub fn AllAppsPage(space_id: SpacePartition) -> Element {
                 }
                 div { class: "flex flex-col items-start self-stretch gap-[6px]",
                     p { class: "font-bold leading-5 sp-dash-font-raleway text-[17px] tracking-[-0.18px] text-font-primary",
-                        "Incentive Pool"
+                        "{tr.app_incentive_pool_title}"
                     }
                     p { class: "font-medium leading-4 sp-dash-font-raleway text-[12px] tracking-[0] text-card-meta",
-                        "The official server for the here. Welcome to our channel, Traveler! This is the ..."
+                        "{tr.app_incentive_pool_description}"
                     }
                 }
                 if installed() {
@@ -30,7 +33,7 @@ pub fn AllAppsPage(space_id: SpacePartition) -> Element {
                         onclick: move |_| {
                             installed.set(false);
                         },
-                        "Uninstall"
+                        "{tr.btn_uninstall}"
                     }
                 } else {
                     button {
@@ -38,7 +41,7 @@ pub fn AllAppsPage(space_id: SpacePartition) -> Element {
                         onclick: move |_| {
                             installed.set(true);
                         },
-                        "Install"
+                        "{tr.btn_install}"
                     }
                 }
             }
@@ -48,6 +51,7 @@ pub fn AllAppsPage(space_id: SpacePartition) -> Element {
 
 #[component]
 pub fn HomePage(space_id: SpacePartition) -> Element {
+    let tr: AllAppsTranslate = use_translate();
     let role =
         use_loader(move || async move { Ok::<SpaceUserRole, Error>(SpaceUserRole::Creator) })?;
 
@@ -58,7 +62,7 @@ pub fn HomePage(space_id: SpacePartition) -> Element {
     } else {
         rsx! {
             div { class: "flex justify-center items-center w-full h-full text-font-primary",
-                "No permission"
+                "{tr.no_permission}"
             }
         }
     }
