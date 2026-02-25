@@ -6,6 +6,8 @@ use aws_sdk_dynamodb::{
 use crate::aws_config::AwsConfig;
 use dioxus::fullstack::Lazy;
 
+pub type DynamoClient = Client;
+
 pub static DB: Lazy<Client> = Lazy::new(|| async move {
     let dynamo_config = DynamoConfig::default();
     let endpoint = dynamo_config.endpoint;

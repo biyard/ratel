@@ -15,15 +15,15 @@ pub struct Config {
 #[cfg(feature = "server")]
 impl Config {
     pub fn dynamodb(&self) -> &aws_sdk_dynamodb::Client {
-        self.common.aws.dynamodb()
+        self.common.dynamodb()
     }
 
     pub fn sns(&self) -> &crate::utils::aws::SnsClient {
-        self.common.aws.sns()
+        self.common.sns()
     }
 
     pub fn ses(&self) -> &crate::utils::aws::SesClient {
-        self.common.aws.ses()
+        self.common.ses()
     }
 }
 

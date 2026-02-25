@@ -2,6 +2,7 @@
 pub mod components;
 pub mod config;
 pub mod contexts;
+pub mod controllers;
 pub mod dev_tools;
 pub mod hooks;
 mod provider;
