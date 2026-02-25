@@ -1,11 +1,11 @@
-use crate::controllers::dto::TeamResponse;
+use crate::controllers::dto::TeamDraftPermission;
 use crate::*;
 
 use ratel_post::models::Team;
 use ratel_post::types::TeamGroupPermissions;
 
-#[get("/api/teams/:teamname/settings", user: ratel_auth::OptionalUser)]
-pub async fn get_team_settings_handler(teamname: String) -> Result<TeamResponse> {
+#[get("/api/teams/:teamname/drafts/permission", user: ratel_auth::OptionalUser)]
+pub async fn get_team_drafts_permission_handler(teamname: String) -> Result<TeamDraftPermission> {
     let conf = crate::config::get();
     let cli = conf.common.dynamodb();
 
@@ -30,5 +30,8 @@ pub async fn get_team_settings_handler(teamname: String) -> Result<TeamResponse>
         0
     };
 
-    Ok(TeamResponse::from((team, permissions)))
+    Ok(TeamDraftPermission {
+        team_pk: team.pk.into(),
+        permissions,
+    })
 }

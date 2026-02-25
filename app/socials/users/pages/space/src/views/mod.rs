@@ -1,19 +1,12 @@
 use crate::controllers::list_my_spaces::{MySpaceResponse, list_my_spaces_handler};
+use common::hooks::use_infinite_query;
 use dioxus::prelude::*;
 
 #[component]
 pub fn Home(username: String) -> Element {
-    let resource = use_server_future(move || async move { list_my_spaces_handler(None).await })?;
-
-    let resolved = resource.suspend()?;
-    let data = resolved.read();
-    let (items, has_next): (Vec<MySpaceResponse>, bool) = match data.as_ref() {
-        Ok(data) => {
-            let has_next = data.bookmark.is_some();
-            (data.items.clone(), has_next)
-        }
-        Err(_) => (vec![], false),
-    };
+    let mut v =
+        use_infinite_query(move |bookmark| async move { list_my_spaces_handler(bookmark).await })?;
+    let items = v.items();
 
     if items.is_empty() {
         return rsx! {
@@ -30,7 +23,9 @@ pub fn Home(username: String) -> Element {
                     for space in items {
                         SpaceCard { space: space.clone() }
                     }
-                    if !has_next {
+                    if v.has_more() {
+                        {v.more_element()}
+                    } else {
                         div { class: "flex flex-row justify-center items-center w-full text-base font-medium text-gray-500 h-fit px-[16px] py-[20px]",
                             "You have reached the end of your spaces."
                         }
