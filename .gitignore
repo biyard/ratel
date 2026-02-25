@@ -53,3 +53,4 @@ user.json
 # Generated Css
 /packages/*/assets/tailwind.css
 /packages/ratel-auth/assets/ratel-auth.js
+/app/spaces/common/assets/space-common.js

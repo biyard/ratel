@@ -86,9 +86,12 @@ pub fn AdminPage(teamname: String, team_pk: Partition, permissions: i64) -> Elem
                 let mut refresh = refresh.clone();
                 let team_pk = team_pk.clone();
                 move |payload: crate::components::CreateGroupPayload| {
+                    let mut popup = popup;
+                    let mut refresh = refresh.clone();
+                    let team_pk = team_pk.clone();
                     spawn(async move {
                         let result = create_group_handler(
-                            team_pk.clone(),
+                            team_pk,
                             CreateGroupRequest {
                                 name: payload.name,
                                 description: payload.description,
@@ -113,13 +116,13 @@ pub fn AdminPage(teamname: String, team_pk: Partition, permissions: i64) -> Elem
     };
 
     let on_delete_group = {
-        let teamname = teamname.clone();
+        let team_pk = team_pk.clone();
         let mut refresh = refresh.clone();
         move |group_id: String| {
-            let teamname = teamname.clone();
+            let team_pk = team_pk.clone();
             let mut refresh = refresh.clone();
             spawn(async move {
-                let result = delete_group_handler(teamname, group_id).await;
+                let result = delete_group_handler(team_pk, group_id).await;
                 if result.is_ok() {
                     refresh.set(refresh() + 1);
                 }

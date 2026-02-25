@@ -1,7 +1,7 @@
 use crate::controllers::dto::{ListItemsResponse, TeamGroupResponse};
 use crate::*;
 
-use ratel_post::models::{TeamGroup, TeamGroupQueryOption};
+use ratel_post::models::TeamGroup;
 
 #[get("/api/teams/:team_pk/groups?bookmark", user: ratel_auth::OptionalUser)]
 pub async fn list_groups_handler(
@@ -11,7 +11,7 @@ pub async fn list_groups_handler(
     let conf = crate::config::get();
     let cli = conf.common.dynamodb();
 
-    let mut query_options = TeamGroupQueryOption::builder()
+    let mut query_options = TeamGroup::opt()
         .limit(50)
         .sk(EntityType::TeamGroup(String::default()).to_string());
 
