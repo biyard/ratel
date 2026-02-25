@@ -12,6 +12,7 @@ pub fn SpaceNav(
     menus: Vec<SpaceNavItem>,
     user: Option<User>,
     login_handler: EventHandler<()>,
+    role: SpaceUserRole,
 ) -> Element {
     rsx! {
         div { class: "flex left-0 top-14 z-40 flex-col col-span-1 gap-2.5 justify-between pt-2.5 h-screen divide-y transition-transform duration-300 ease-in-out -translate-x-full shrink-0 divide-divider tablet:top-0 tablet:translate-x-0",
@@ -28,7 +29,7 @@ pub fn SpaceNav(
                 SpaceUserProfile {
                     image: user.profile_url.clone(),
                     display_name: user.display_name.clone(),
-                    user_role: SpaceUserRole::Creator,
+                    user_role: role,
                 }
             } else {
                 SpaceUserLogin { onclick: login_handler }

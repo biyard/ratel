@@ -3,7 +3,10 @@ use crate::*;
 #[component]
 pub fn AllAppsPage(space_id: SpacePartition) -> Element {
     // FIXME: Use space_id when space-scoped data is added.
-    let _ = space_id;
+    // let space_loader = use_space_query(&space_id)?;
+    // let space = space_loader.read().clone();
+
+    // let installed = use_
     let mut installed = use_signal(|| false);
 
     rsx! {

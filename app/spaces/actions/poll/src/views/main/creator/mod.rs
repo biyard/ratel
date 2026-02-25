@@ -3,6 +3,7 @@ use crate::controllers::*;
 use crate::*;
 mod i18n;
 use i18n::PollEditorTranslate;
+use space_common::types::space_page_actions_poll_key;
 
 #[component]
 pub fn PollCreatorPage(space_id: SpacePartition, poll_id: SpacePollEntityType) -> Element {
@@ -19,7 +20,6 @@ pub fn PollCreatorPage(space_id: SpacePartition, poll_id: SpacePollEntityType) -
 
     let mut editing = use_signal(|| false);
     let mut questions = use_signal(|| poll.questions.clone());
-    let mut query_store = use_query_store();
 
     let can_edit = poll.user_response_count == 0;
 
@@ -33,7 +33,6 @@ pub fn PollCreatorPage(space_id: SpacePartition, poll_id: SpacePollEntityType) -
         move |(start, end): (i64, i64)| {
             let space_id = space_id.clone();
             let poll_id = poll_id.clone();
-            let mut query_store = query_store.clone();
             spawn(async move {
                 let req = UpdatePollRequest::Time {
                     started_at: start,
@@ -42,7 +41,8 @@ pub fn PollCreatorPage(space_id: SpacePartition, poll_id: SpacePollEntityType) -
                 if let Err(e) = update_poll(space_id.clone(), poll_id.clone(), req).await {
                     error!("Failed to update time range: {:?}", e);
                 } else {
-                    query_store.invalidate(&["polls", &space_id.to_string(), &poll_id.to_string()]);
+                    let keys = space_page_actions_poll_key(&space_id, &poll_id);
+                    invalidate_query(&keys);
                 }
             });
         }
@@ -55,7 +55,6 @@ pub fn PollCreatorPage(space_id: SpacePartition, poll_id: SpacePollEntityType) -
         move |_| {
             let space_id = space_id.clone();
             let poll_id = poll_id.clone();
-            let mut query_store = query_store.clone();
             spawn(async move {
                 let req = UpdatePollRequest::ResponseEditable {
                     response_editable: !current,
@@ -63,7 +62,8 @@ pub fn PollCreatorPage(space_id: SpacePartition, poll_id: SpacePollEntityType) -
                 if let Err(e) = update_poll(space_id.clone(), poll_id.clone(), req).await {
                     error!("Failed to update response editable: {:?}", e);
                 } else {
-                    query_store.invalidate(&["polls", &space_id.to_string(), &poll_id.to_string()]);
+                    let keys = space_page_actions_poll_key(&space_id, &poll_id);
+                    invalidate_query(&keys);
                 }
             });
         }
@@ -76,13 +76,13 @@ pub fn PollCreatorPage(space_id: SpacePartition, poll_id: SpacePollEntityType) -
             let qs = questions.read().clone();
             let space_id = space_id.clone();
             let poll_id = poll_id.clone();
-            let mut query_store = query_store.clone();
             spawn(async move {
                 let req = UpdatePollRequest::Question { questions: qs };
                 if let Err(e) = update_poll(space_id.clone(), poll_id.clone(), req).await {
                     error!("Failed to save questions: {:?}", e);
                 } else {
-                    query_store.invalidate(&["polls", &space_id.to_string(), &poll_id.to_string()]);
+                    let keys = space_page_actions_poll_key(&space_id, &poll_id);
+                    invalidate_query(&keys);
                     editing.set(false);
                 }
             });

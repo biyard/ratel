@@ -47,7 +47,7 @@ pub fn CreatorActionPage(space_id: SpacePartition) -> Element {
                     }
 
                     Button {
-                        class: "inline-flex gap-2 justify-center items-center bg-white light:bg-white text-neutral-900 hover:opacity-90 transition-opacity",
+                        //
                         style: ButtonStyle::Secondary,
                         onclick: open_layover,
                         div { class: "flex flex-row w-full justify-center items-center gap-2",

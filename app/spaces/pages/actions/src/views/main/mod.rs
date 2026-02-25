@@ -4,11 +4,12 @@ mod participant_page;
 
 use creator_page::*;
 use participant_page::*;
+use space_common::hooks::use_user_role;
 
 #[component]
 pub fn MainPage(space_id: SpacePartition) -> Element {
-    // FIXME: Replace it to real role
-    let role = SpaceUserRole::Creator;
+    let role_loader = use_user_role(&space_id)?;
+    let role = role_loader.read().clone();
 
     match role {
         SpaceUserRole::Creator => rsx! {

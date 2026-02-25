@@ -1,7 +1,7 @@
 use crate::*;
 
 use space_common::components::{SpaceNav, SpaceNavItem, SpaceTop, SpaceTopLabel};
-use space_common::hooks::use_space;
+use space_common::hooks::use_space_query;
 
 use crate::menu::{get_app_menu_items, AppMenuItem};
 
@@ -9,7 +9,8 @@ use crate::i18n::SpaceAppLayoutTranslate;
 
 #[component]
 pub fn SpaceAppsLayout(space_id: SpacePartition) -> Element {
-    let space = use_space();
+    let space_loader = use_space_query(&space_id)?;
+    let space = space_loader.read().clone();
 
     let space_apps_loader = use_loader({
         let space_id = space_id.clone();

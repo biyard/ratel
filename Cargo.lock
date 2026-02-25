@@ -17632,6 +17632,7 @@ dependencies = [
  "dioxus",
  "ratel-auth",
  "serde",
+ "space-common",
 ]
 
 [[package]]
@@ -17678,6 +17679,7 @@ dependencies = [
  "ratel-auth",
  "serde",
  "space-action-poll",
+ "space-common",
 ]
 
 [[package]]
