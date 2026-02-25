@@ -10,11 +10,13 @@ use uuid::Uuid;
 
 use crate::{Error, Result};
 
+#[allow(unused)]
 #[derive(Debug, Clone)]
 pub struct S3Client {
     pub client: Client,
     bucket_name: String,
     asset_dir: String,
+    expire: u64,
 }
 
 #[derive(Debug, Clone)]
@@ -47,7 +49,12 @@ pub struct PutObjectResult {
 }
 
 impl S3Client {
-    pub fn new(config: &SdkConfig, bucket_name: String, asset_dir: Option<String>) -> S3Client {
+    pub fn new(
+        config: &SdkConfig,
+        bucket_name: String,
+        asset_dir: Option<String>,
+        expire: u64,
+    ) -> S3Client {
         let aws_config = Config::from(config);
         let client = Client::from_conf(aws_config);
 
@@ -62,6 +69,7 @@ impl S3Client {
             client,
             bucket_name,
             asset_dir,
+            expire,
         }
     }
 
@@ -73,6 +81,7 @@ impl S3Client {
             client,
             bucket_name: "common".to_string(),
             asset_dir: "/".to_string(),
+            expire: 3600,
         }
     }
 
@@ -129,8 +138,10 @@ impl S3Client {
         expire: Option<u64>,
     ) -> Result<Vec<PutObjectResult>> {
         let total_count = total_count.unwrap_or(1);
-        let expire_time = expire.unwrap_or(3600);
+        let expire_time = expire.unwrap_or(self.expire);
         let mut result: Vec<PutObjectResult> = vec![];
+
+        let prefix = prefix.filter(|v| !v.is_empty());
 
         for _ in 0..total_count {
             let id = Uuid::new_v4();
