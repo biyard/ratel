@@ -3,6 +3,7 @@ pub mod components;
 pub mod config;
 pub mod controllers;
 pub mod hooks;
+pub mod i18n;
 pub mod layout;
 pub mod models;
 pub mod route;
@@ -17,6 +18,7 @@ pub mod server;
 mod views;
 
 pub use route::Route;
+pub use i18n::*;
 
 use common::*;
 use dioxus::prelude::*;

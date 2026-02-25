@@ -1,12 +1,14 @@
+use crate::*;
 use dioxus::prelude::*;
 
 #[component]
 pub fn ViewerPage(teamname: String) -> Element {
+    let tr: TeamGroupTranslate = use_translate();
     rsx! {
-        div { class: "flex flex-col items-center justify-center w-full h-full",
-            h1 { class: "text-2xl font-bold", "ratel-team-group" }
-            p { class: "mt-2 text-gray-500", "Coming soon..." }
-            p { class: "mt-2 text-gray-400", "team: {teamname}" }
+        div { class: "flex flex-col items-center justify-center w-full h-full gap-2",
+            h1 { class: "text-2xl font-bold text-text-primary", "{tr.no_permission_title}" }
+            p { class: "text-gray-500", "{tr.no_permission_description}" }
+            p { class: "text-gray-400", "team: {teamname}" }
         }
     }
 }
