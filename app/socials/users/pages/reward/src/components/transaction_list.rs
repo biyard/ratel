@@ -23,7 +23,7 @@ pub fn transaction_list(
     if transactions.is_empty() {
         return rsx! {
             div { class: "py-16 text-center",
-                h3 { class: "text-lg font-semibold text-white mb-2", "{tr.empty}" }
+                h3 { class: "text-lg font-semibold text-text-primary mb-2", "{tr.empty}" }
                 p { class: "text-sm text-text-primary", "{tr.empty_description}" }
             }
         };

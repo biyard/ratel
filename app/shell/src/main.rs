@@ -36,6 +36,8 @@ fn App() -> Element {
         document::Link { rel: "stylesheet", href: MAIN_CSS }
         document::Link { rel: "stylesheet", href: TAILWIND_CSS }
         document::Script { src: MAIN_JS }
+        ratel_user_setting::Provider {}
+        ratel_user_credential::Provider {}
         Provider {}
         AuthProvider {}
         ratel_post::Provider {}
