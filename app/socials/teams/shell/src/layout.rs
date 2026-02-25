@@ -77,7 +77,7 @@ fn TeamSidemenu(teamname: String) -> Element {
                                 home::Home1 {
                                     width: "24",
                                     height: "24",
-                                    class: "text-text-primary [&>path]:stroke-neutral-500",
+                                    class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
                                 }
                             },
                         }
@@ -94,7 +94,7 @@ fn TeamSidemenu(teamname: String) -> Element {
                                     edit::EditContent {
                                         width: "24",
                                         height: "24",
-                                        class: "text-text-primary [&>path]:stroke-neutral-500",
+                                        class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
                                     }
                                 },
                             }
@@ -112,7 +112,7 @@ fn TeamSidemenu(teamname: String) -> Element {
                                     folder::Folder {
                                         width: "24",
                                         height: "24",
-                                        class: "text-text-primary [&>path]:stroke-neutral-500",
+                                        class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
                                     }
                                 },
                             }
@@ -130,7 +130,7 @@ fn TeamSidemenu(teamname: String) -> Element {
                                     user::UserGroup {
                                         width: "24",
                                         height: "24",
-                                        class: "text-text-primary [&>path]:stroke-neutral-500",
+                                        class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
                                     }
                                 },
                             }
@@ -148,7 +148,7 @@ fn TeamSidemenu(teamname: String) -> Element {
                                     game::Controller {
                                         width: "24",
                                         height: "24",
-                                        class: "text-text-primary [&>path]:stroke-neutral-500 [&>circle]:stroke-neutral-500",
+                                        class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
                                     }
                                 },
                             }
@@ -166,7 +166,7 @@ fn TeamSidemenu(teamname: String) -> Element {
                                     game::Trophy {
                                         width: "24",
                                         height: "24",
-                                        class: "text-text-primary [&>path]:stroke-neutral-500",
+                                        class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
                                     }
                                 },
                             }
@@ -184,7 +184,7 @@ fn TeamSidemenu(teamname: String) -> Element {
                                     settings_icon::Settings {
                                         width: "24",
                                         height: "24",
-                                        class: "text-text-primary [&>path]:stroke-neutral-500",
+                                        class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
                                     }
                                 },
                             }

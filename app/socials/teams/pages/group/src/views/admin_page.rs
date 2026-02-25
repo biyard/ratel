@@ -156,9 +156,13 @@ fn InviteMemberButton(on_click: EventHandler<MouseEvent>) -> Element {
         div {
             class: "cursor-pointer flex flex-row w-fit justify-start items-center px-4 py-3 bg-white border border-foreground rounded-[100px] gap-1",
             onclick: on_click,
-            icons::user::User { width: "16", height: "16" }
+            icons::user::User {
+                class: "w-4 h-4 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
+                width: "16",
+                height: "16",
+            }
             div { class: "font-bold text-base/[22px] text-neutral-900 light:text-black",
-                "{tr.invite_member}"
+                {tr.invite_member}
             }
         }
     }
@@ -171,9 +175,13 @@ fn CreateGroupButton(on_click: EventHandler<MouseEvent>) -> Element {
         div {
             class: "cursor-pointer flex flex-row w-fit justify-start items-center px-4 py-3 bg-white border border-foreground rounded-[100px] gap-1",
             onclick: on_click,
-            icons::edit::Edit1 { width: "16", height: "16" }
+            icons::edit::Edit1 {
+                width: "16",
+                height: "16",
+                class: "w-4 h-4 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
+            }
             div { class: "font-bold text-base/[22px] text-neutral-900 light:text-black",
-                "{tr.create_group}"
+                {tr.create_group}
             }
         }
     }

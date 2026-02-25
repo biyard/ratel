@@ -129,14 +129,14 @@ fn GroupName(
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start gap-[5px]",
             div { class: "flex flex-row gap-1 items-center",
-                div { class: "font-bold text-[15px]/[28px] text-modal-label-text", "{tr.group_name}" }
+                div { class: "font-bold text-[15px]/[28px] text-modal-label-text", {tr.group_name} }
                 div { class: "font-normal text-base/[24px] text-[#eb5757]", "*" }
             }
             input {
                 r#type: "text",
-                value: "{value}",
+                value,
                 maxlength: 100,
-                placeholder: "{tr.group_name_hint}",
+                placeholder: tr.group_name_hint,
                 class: "w-full px-5 py-[10.5px] rounded-[8px] border border-input-box-border bg-input-box-bg text-text-primary placeholder:text-neutral-600 text-[15px]/[22.5px] outline-none",
                 oninput: on_change,
             }
@@ -156,11 +156,11 @@ fn GroupDescription(
 ) -> Element {
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start gap-[5px]",
-            div { class: "font-bold text-[15px]/[28px] text-modal-label-text", "{tr.description}" }
+            div { class: "font-bold text-[15px]/[28px] text-modal-label-text", {tr.description} }
             textarea {
-                value: "{value}",
+                value,
                 maxlength: 100,
-                placeholder: "{tr.description_hint}",
+                placeholder: {tr.description_hint},
                 class: "w-full px-5 py-[10px] rounded-[8px] border border-input-box-border bg-input-box-bg text-text-primary placeholder:text-neutral-600 text-sm outline-none resize-none",
                 oninput: on_change,
             }
@@ -252,17 +252,17 @@ fn GroupPermissionSelector(
 
     rsx! {
         div { class: "flex flex-col w-full gap-6",
-            div { class: "text-[15px]/[28px] font-bold text-modal-label-text", "{tr.permission}" }
+            div { class: "text-[15px]/[28px] font-bold text-modal-label-text", {tr.permission} }
             div { class: "px-[10px]",
                 for (group , group_perms , all_checked , group_class , select_all_pw) in group_views {
-                    div { class: "{group_class}",
+                    div { class: {group_class},
                         div { class: "flex justify-between items-center mb-1",
                             div { class: "text-sm/[20px] font-semibold text-modal-label-text",
-                                "{group.name}"
+                                {group.name}
                             }
                             div { class: "flex items-center gap-1",
                                 span { class: "text-sm/[20px] font-semibold text-modal-label-text",
-                                    "{tr.select_all}"
+                                    {tr.select_all}
                                 }
                                 button {
                                     class: if all_checked { "w-5 h-5 rounded border border-primary bg-primary" } else { "w-5 h-5 rounded border border-neutral-500 bg-transparent" },
@@ -276,7 +276,7 @@ fn GroupPermissionSelector(
                             for item in group.items {
                                 div { class: "flex justify-between items-center py-2 h-[55px]",
                                     span { class: "text-[15px]/[24px] font-normal text-text-primary",
-                                        "{item.label}"
+                                        {item.label}
                                     }
                                     PermissionSwitch {
                                         active: permissions.contains(&item.value),
@@ -306,8 +306,8 @@ fn PermissionSwitch(active: bool, data_pw: String, on_toggle: EventHandler<Mouse
         "absolute left-[2px] top-[2px] w-5 h-5 rounded-full bg-white transition-transform"
     };
     rsx! {
-        button { class: "{container_class}", onclick: on_toggle,
-            span { class: "{knob_class}" }
+        button { class: {container_class}, onclick: on_toggle,
+            span { class: {knob_class} }
         }
     }
 }
