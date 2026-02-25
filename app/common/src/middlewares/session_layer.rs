@@ -9,7 +9,6 @@ use tower_sessions::{
 use crate::{
     models::session::Session,
     types::{EntityType, Partition},
-    utils::aws::dynamo::DynamoClient,
 };
 
 pub fn get_session_layer(

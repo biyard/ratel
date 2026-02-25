@@ -1,5 +1,4 @@
 use crate::*;
-use common::utils::aws::dynamo::DynamoBuilder;
 
 pub fn serve(app: fn() -> Element) {
     let config = config::get();

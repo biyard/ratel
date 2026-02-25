@@ -6,20 +6,11 @@ use aws_sdk_dynamodb::{
 use crate::aws_config::AwsConfig;
 use dioxus::fullstack::Lazy;
 
-pub static DB: Lazy<Client> = Lazy::new(|| async move {
-    let endpoint = match option_env!("DYNAMODB_ENDPOINT") {
-        Some(ep) => {
-            let ep = ep.to_string();
-            tracing::info!("DYNAMODB_ENDPOINT: {}", ep);
+pub type DynamoClient = Client;
 
-            if ep.to_lowercase() == "none" || ep.is_empty() {
-                None
-            } else {
-                Some(ep)
-            }
-        }
-        None => None,
-    };
+pub static DB: Lazy<Client> = Lazy::new(|| async move {
+    let dynamo_config = DynamoConfig::default();
+    let endpoint = dynamo_config.endpoint;
 
     let aws_config = AwsConfig::default();
     let mut builder = Config::builder()
@@ -39,3 +30,18 @@ pub static DB: Lazy<Client> = Lazy::new(|| async move {
 
     dioxus::Ok(Client::from_conf(builder.build()))
 });
+
+pub struct DynamoConfig {
+    pub endpoint: Option<String>,
+}
+
+impl Default for DynamoConfig {
+    fn default() -> Self {
+        let endpoint = match option_env!("DYNAMODB_ENDPOINT") {
+            Some(ep) => Some(ep.to_string()),
+            None => None,
+        };
+
+        DynamoConfig { endpoint }
+    }
+}

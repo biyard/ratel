@@ -3,6 +3,7 @@ use crate::models::{
     SpaceParticipant,
 };
 use crate::*;
+use common::attribute::Gender;
 use common::models::auth::{OptionalUser, User};
 use common::models::space::SpaceCommon;
 use common::utils::time::get_now_timestamp_millis;
@@ -140,10 +141,7 @@ async fn check_if_satisfying_panel_attribute(
 
     let user_attributes = user.get_attributes(cli).await?;
     let age: Option<u8> = user_attributes.age().and_then(|v| u8::try_from(v).ok());
-    let gender = user_attributes.gender.map(|value| match value {
-        ratel_auth::attribute::Gender::Male => models::attribute::Gender::Male,
-        ratel_auth::attribute::Gender::Female => models::attribute::Gender::Female,
-    });
+    let gender = user_attributes.gender;
 
     if space.remains <= 0 {
         return Err(Error::FullQuota);
@@ -203,7 +201,7 @@ async fn check_if_satisfying_panel_attribute(
 //     Ok(())
 // }
 
-fn match_by_sk(age: Option<u8>, gender: Option<crate::models::Gender>, sk: &EntityType) -> bool {
+fn match_by_sk(age: Option<u8>, gender: Option<Gender>, sk: &EntityType) -> bool {
     if age.is_none() && gender.is_none() {
         return false;
     }
@@ -250,7 +248,7 @@ fn match_age_rule(age: Option<u8>, v: &str) -> bool {
     true
 }
 
-fn match_gender_rule(gender: Option<crate::models::Gender>, v: &str) -> bool {
+fn match_gender_rule(gender: Option<Gender>, v: &str) -> bool {
     if v == "gender" {
         return gender.is_some();
     }
@@ -258,8 +256,8 @@ fn match_gender_rule(gender: Option<crate::models::Gender>, v: &str) -> bool {
     if let Some(rest) = v.strip_prefix("gender:") {
         let want = rest.trim().to_ascii_lowercase();
         return match (want.as_str(), gender) {
-            ("male", Some(crate::models::Gender::Male)) => true,
-            ("female", Some(crate::models::Gender::Female)) => true,
+            ("male", Some(Gender::Male)) => true,
+            ("female", Some(Gender::Female)) => true,
             _ => false,
         };
     }
