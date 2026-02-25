@@ -197,12 +197,12 @@ jobs:
           PORTONE_API_SECRET: ${{ secrets.DEV_PORTONE_API_SECRET }}
           PORTONE_KPN_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_KPN_CHANNEL_KEY }}
 
-          REPOSITORY: ${{ steps.ratel-ecr.outputs.registry }}/ratel
+          REPOSITORY: ${{ steps.ratel-ecr.outputs.registry }}/ratel/app-shell
         run: |
           rm -rf ../../target/dx
           make build-lambda
-          mkdir -p ../../.build/app-shell
-          cp ../../target/dx/app-shell/release/web/app-shell ../../.build/app-shell/bootstrap
+          make docker
+          docker push $REPOSITORY:$COMMIT
 
       - name: Deploy to S3
         env:
