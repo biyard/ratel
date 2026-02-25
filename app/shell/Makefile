@@ -14,6 +14,8 @@ RUST_LOG ?= debug
 
 PORT ?= 8000
 
+REPOSITORY ?= ratel
+
 BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) \
 					AWS_REGION=$(AWS_REGION) \
@@ -45,5 +47,8 @@ run:
 build:
 	$(BUILD_ENV) dx build --web --release
 
+build-lambda:
+	$(BUILD_ENV) dx build --features lambda --web --release
+
 docker:
-	docker build -t ratel:$(COMMIT) -f Dockerfile ../../target/dx/app-shell/release/web
+	docker build -t $(REPOSITORY):$(COMMIT) -f Dockerfile ../../target/dx/app-shell/release/web
