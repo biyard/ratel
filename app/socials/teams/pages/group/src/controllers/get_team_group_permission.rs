@@ -1,4 +1,3 @@
-use crate::controllers::dto::TeamGroupPermissionContext;
 use crate::*;
 
 use ratel_post::models::Team;
@@ -7,7 +6,7 @@ use ratel_post::types::TeamGroupPermissions;
 #[get("/api/teams/:teamname/groups/permission", user: ratel_auth::OptionalUser)]
 pub async fn get_team_group_permission_handler(
     teamname: String,
-) -> Result<TeamGroupPermissionContext> {
+) -> Result<crate::dto::TeamGroupPermission> {
     let conf = crate::config::get();
     let cli = conf.common.dynamodb();
 
@@ -32,7 +31,7 @@ pub async fn get_team_group_permission_handler(
         0
     };
 
-    Ok(TeamGroupPermissionContext {
+    Ok(crate::dto::TeamGroupPermission {
         team_pk: team.pk.into(),
         permissions,
     })

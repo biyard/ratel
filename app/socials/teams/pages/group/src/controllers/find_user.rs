@@ -1,4 +1,4 @@
-use crate::controllers::dto::FoundUserResponse;
+use crate::dto::FoundUserResponse;
 use crate::*;
 
 use ratel_auth::{User, UserPhoneNumber};

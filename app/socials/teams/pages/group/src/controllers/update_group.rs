@@ -1,4 +1,4 @@
-use crate::controllers::dto::UpdateGroupRequest;
+use crate::dto::UpdateGroupRequest;
 use crate::*;
 
 use ratel_post::models::{Team, TeamGroup};

@@ -1,4 +1,4 @@
-use crate::controllers::dto::{ListItemsResponse, TeamGroupResponse};
+use crate::dto::{ListItemsResponse, TeamGroupResponse};
 use crate::*;
 
 use ratel_post::models::TeamGroup;

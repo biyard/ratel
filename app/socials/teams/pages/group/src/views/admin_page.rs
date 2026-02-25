@@ -2,9 +2,8 @@ use crate::*;
 use dioxus::prelude::*;
 
 use crate::components::{CreateGroupModal, InviteMemberModal, InviteResult, ListGroups};
-use crate::controllers::{
-    CreateGroupRequest, create_group_handler, delete_group_handler, list_groups_handler,
-};
+use crate::controllers::{create_group_handler, delete_group_handler, list_groups_handler};
+use crate::dto::*;
 use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
 
 #[component]

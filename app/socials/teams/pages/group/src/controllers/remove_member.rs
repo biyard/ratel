@@ -1,4 +1,4 @@
-use crate::controllers::dto::{RemoveMemberRequest, RemoveMemberResponse};
+use crate::dto::{RemoveMemberRequest, RemoveMemberResponse};
 use crate::*;
 
 use ratel_post::models::{Team, TeamGroup};
