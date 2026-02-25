@@ -111,12 +111,9 @@ pub fn AppMenu() -> Element {
                         button {
                             class: "flex flex-col justify-center items-center p-2.5 font-bold cursor-pointer group text-menu-text text-[15px]",
                             onclick: move |_| {
-                                popup
-                                    .open(rsx! {
-                                        LoginModal {}
-                                    })
-                                    .with_title(tr.join_the_movement)
-                                    .without_backdrop_close();
+                                popup.open(rsx! {
+                                    LoginModal {}
+                                }).with_title(tr.join_the_movement);
                             },
                             i::SignInIcon {}
                             span { class: "font-medium whitespace-nowrap transition-all text-menu-text text-[15px] group-hover:text-menu-text/80",
