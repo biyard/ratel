@@ -3,7 +3,6 @@ mod proxy_middleware;
 mod proxy_registry;
 
 use crate::*;
-use common::utils::aws::dynamo::DynamoClient;
 use proxy_registry::ProxyRegistry;
 
 pub fn serve(app: fn() -> Element) {

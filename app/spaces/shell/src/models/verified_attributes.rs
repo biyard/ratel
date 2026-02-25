@@ -5,7 +5,7 @@ pub use common::models::did::VerifiedAttributes;
 
 #[cfg(feature = "server")]
 pub async fn get_attributes(
-    dynamo: &common::utils::aws::dynamo::DynamoClient,
+    dynamo: &common::server_lib::DynamoClient,
     user_pk: Partition,
 ) -> Result<Option<RespondentAttr>> {
     let res = VerifiedAttributes::get(

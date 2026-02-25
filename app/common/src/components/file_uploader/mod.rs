@@ -1,8 +1,11 @@
-use dioxus::prelude::*;
 #[cfg(feature = "web")]
-use crate::{serde_wasm_bindgen, wasm_bindgen, wasm_bindgen_futures, web_sys};
+use crate::{
+    controllers::AssetPresignedUris, serde_wasm_bindgen, wasm_bindgen, wasm_bindgen_futures,
+    web_sys,
+};
 #[cfg(feature = "web")]
 use dioxus::html::FileData;
+use dioxus::prelude::*;
 
 type UploadResult<T> = std::result::Result<T, String>;
 
@@ -120,7 +123,10 @@ async fn upload_via_presigned(
 }
 
 #[cfg(feature = "web")]
-async fn request_presigned_url(endpoint: &str, file_type: &str) -> UploadResult<AssetPresignedUris> {
+async fn request_presigned_url(
+    endpoint: &str,
+    file_type: &str,
+) -> UploadResult<AssetPresignedUris> {
     use wasm_bindgen::JsCast;
 
     let encoded = urlencoding::encode(file_type);
@@ -183,13 +189,4 @@ fn js_error_to_string(err: wasm_bindgen::JsValue) -> String {
     } else {
         "Unknown error".to_string()
     }
-}
-
-#[cfg(feature = "web")]
-#[derive(Debug, Clone, serde::Deserialize)]
-struct AssetPresignedUris {
-    presigned_uris: Vec<String>,
-    uris: Vec<String>,
-    upload_id: Option<String>,
-    key: Option<String>,
 }
