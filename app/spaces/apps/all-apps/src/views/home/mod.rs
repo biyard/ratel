@@ -1,8 +1,7 @@
-use super::creator_page::*;
 use crate::*;
 
 #[component]
-pub fn AllAppsContent(space_id: SpacePartition) -> Element {
+pub fn AllAppsPage(space_id: SpacePartition) -> Element {
     // FIXME: Use space_id when space-scoped data is added.
     let _ = space_id;
     let mut installed = use_signal(|| false);
@@ -54,7 +53,7 @@ pub fn HomePage(space_id: SpacePartition) -> Element {
 
     if role() == SpaceUserRole::Creator {
         rsx! {
-            CreatorPage { space_id }
+            AllAppsPage { space_id }
         }
     } else {
         rsx! {

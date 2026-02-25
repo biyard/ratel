@@ -4,7 +4,7 @@ tailwind_input = "../common/tailwind.css"
 [web.app]
 
 # HTML title tag content
-title = "space-app-all-apps"
+title = "Incentive Pool"
 
 # include `assets` in web platform
 [web.resource]
