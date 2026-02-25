@@ -1,4 +1,3 @@
-use super::creator_page::*;
 use crate::*;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -12,7 +11,7 @@ enum RewardRole {
 const DEFAULT_PROFILE_IMAGE: &str = "https://metadata.ratel.foundation/ratel/default-profile.png";
 
 #[component]
-pub fn GeneralContent(space_id: SpacePartition) -> Element {
+pub fn GeneralPage(space_id: SpacePartition) -> Element {
     // FIXME: Use space_id when space-scoped data is added.
     let _ = space_id;
     let mut selected_role = use_signal(|| RewardRole::Admin);
@@ -283,7 +282,7 @@ pub fn HomePage(space_id: SpacePartition) -> Element {
 
     if role() == SpaceUserRole::Creator {
         rsx! {
-            CreatorPage { space_id }
+            GeneralPage { space_id }
         }
     } else {
         rsx! {

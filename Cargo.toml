@@ -41,9 +41,9 @@ ratel-post = { path = "app/posts" }
 space-shell = { path = "app/spaces/shell" }
 space-page-actions = { path = "app/spaces/pages/actions" }
 space-page-apps = { path = "app/spaces/pages/apps" }
-space-app-all-apps = { path = "app/spaces/apps/all_apps" }
+space-app-all-apps = { path = "app/spaces/apps/all-apps" }
 space-app-general = { path = "app/spaces/apps/general" }
-space-app-incentive-pool = { path = "app/spaces/apps/incentive_pool" }
+space-app-incentive-pool = { path = "app/spaces/apps/incentive-pool" }
 space-page-dashboard = { path = "app/spaces/pages/dashboard" }
 space-page-overview = { path = "app/spaces/pages/overview" }
 space-page-report = { path = "app/spaces/pages/report" }

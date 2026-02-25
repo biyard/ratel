@@ -1,4 +1,3 @@
-use super::creator_page::*;
 use crate::*;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -9,7 +8,7 @@ enum DistributionMode {
 }
 
 #[component]
-pub fn IncentivePoolContent(space_id: SpacePartition) -> Element {
+pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
     // FIXME: Use space_id when space-scoped data is added.
     let _ = space_id;
     let mut distribution_mode = use_signal(|| DistributionMode::Top10RankOnly);
@@ -294,7 +293,7 @@ pub fn HomePage(space_id: SpacePartition) -> Element {
 
     if role() == SpaceUserRole::Creator {
         rsx! {
-            CreatorPage { space_id }
+            IncentivePoolPage { space_id }
         }
     } else {
         rsx! {
