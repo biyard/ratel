@@ -212,13 +212,13 @@ jobs:
           aws s3 sync ../../target/dx/app-shell/release/web/public $BUCKET
           aws cloudfront create-invalidation --distribution-id $CDN --paths "/*"
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-shell-${{ github.sha }}
-          path: ${{ github.workspace }}/.build/app-shell/bootstrap
-          if-no-files-found: error
-          retention-days: 7
+      # - name: Upload Artifacts
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: app-shell-${{ github.sha }}
+      #     path: ${{ github.workspace }}/.build/app-shell/bootstrap
+      #     if-no-files-found: error
+      #     retention-days: 7
 
   # NOTE: migrate to DynamoDB
   # image-worker:
