@@ -1,13 +1,12 @@
 use common::SpacePartition;
 use dioxus::prelude::*;
 
-#[get("/api/spaces/:space_id/dashboard-extensions", space: ratel_auth::space::SpaceCommon)]
+#[get("/api/spaces/:space_id/dashboard-extensions", _space: common::models::space::SpaceCommon)]
 pub async fn fetch_dashboard_extensions(
     space_id: SpacePartition,
 ) -> Result<Vec<crate::types::DashboardExtension>, ServerFnError> {
     use common::Partition;
 
-    let _space = space;
     let sk_prefix = common::EntityType::SpaceDashboardExtension(String::new()).to_string();
 
     let cli = crate::config::get().dynamodb();
