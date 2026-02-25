@@ -49,7 +49,7 @@ pub async fn get_put_multi_object_uri(
     tracing::debug!("/aws/s3/put-uri: {:?}", req);
 
     let total_count = req.total_count.unwrap_or(1);
-    let id = Uuid::new_v4();
+    let id = Uuid::now_v7();
     let key = format!("{}/{}", asset_dir, id);
 
     // 1. Initiate multipart upload
