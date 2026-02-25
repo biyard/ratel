@@ -5,7 +5,10 @@ pub mod controllers;
 pub mod hooks;
 pub mod layout;
 pub mod models;
+pub mod provider;
 pub mod route;
+#[cfg(feature = "server")]
+pub mod services;
 
 #[cfg(not(feature = "server"))]
 pub mod interop;
@@ -17,6 +20,7 @@ pub mod server;
 mod views;
 
 pub use route::Route;
+pub use provider::Provider;
 
 use common::*;
 use dioxus::prelude::*;

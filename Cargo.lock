@@ -880,6 +880,8 @@ dependencies = [
  "ratel-auth",
  "ratel-post",
  "ratel-team-shell",
+ "ratel-user-credential",
+ "ratel-user-setting",
  "ratel-user-shell",
  "serde",
  "serde-wasm-bindgen",
@@ -13421,9 +13423,17 @@ dependencies = [
 name = "ratel-team-setting"
 version = "0.1.0"
 dependencies = [
+ "aide",
+ "aws-config",
+ "aws-sdk-dynamodb",
+ "aws-sdk-s3",
  "common",
  "dioxus",
+ "ratel-auth",
+ "ratel-post",
+ "schemars 1.0.4",
  "serde",
+ "tracing",
 ]
 
 [[package]]
@@ -13507,6 +13517,8 @@ dependencies = [
 name = "ratel-user-setting"
 version = "0.1.0"
 dependencies = [
+ "aws-config",
+ "aws-sdk-s3",
  "common",
  "dioxus",
  "ratel-auth",

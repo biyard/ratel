@@ -1,5 +1,7 @@
 use crate::Result as AppResult;
-use crate::components::{ProfileImageSection, SettingsForm};
+use crate::components::{
+    LocaleModal, LocaleOption, MyInfoTab, MySettingsTab, SettingsTabs, ThemeModal, ThemeOption,
+};
 use crate::controllers::{UpdateUserRequest, get_user_detail_handler, update_user_handler};
 use crate::*;
 #[cfg(not(feature = "server"))]
@@ -11,7 +13,7 @@ use web_sys::js_sys::{JSON, Reflect};
 
 #[component]
 pub fn Home(username: String) -> Element {
-    let user_ctx = use_user_context();
+    let mut user_ctx = use_user_context();
     let user = user_ctx.read().user.clone();
 
     let Some(user) = user else {
@@ -35,6 +37,10 @@ pub fn Home(username: String) -> Element {
     let mut saving = use_signal(|| false);
     let mut message = use_signal(|| Option::<String>::None);
     let mut detail_loaded = use_signal(|| false);
+    let mut active_tab = use_signal(|| 0usize);
+    let mut lang = use_language();
+    let mut theme_service = common::use_theme();
+    let mut popup = use_popup();
 
     {
         let detail_state = detail_state.clone();
@@ -59,6 +65,7 @@ pub fn Home(username: String) -> Element {
         let mut description = description.clone();
         let mut saving = saving.clone();
         let mut message = message.clone();
+        let mut user_ctx = user_ctx.clone();
         move |_evt: MouseEvent| {
             let nick = nickname();
             let profile = profile_url();
@@ -78,7 +85,14 @@ pub fn Home(username: String) -> Element {
                 .await;
                 saving.set(false);
                 match result {
-                    Ok(_) => {
+                    Ok(resp) => {
+                        user_ctx.with_mut(|ctx| {
+                            if let Some(user) = ctx.user.as_mut() {
+                                user.display_name = resp.user.display_name.clone();
+                                user.profile_url = resp.user.profile_url.clone();
+                                user.description = resp.user.description.clone();
+                            }
+                        });
                         message.set(Some("Profile updated successfully.".to_string()));
                     }
                     Err(e) => {
@@ -152,36 +166,156 @@ pub fn Home(username: String) -> Element {
     let wallet_connected = wallet_address().is_some();
     let save_blocked = is_blocked_text(&nickname()) || is_blocked_text(&description());
 
-    let on_profile_pick = {
+    let on_profile_upload = {
         let mut profile_url = profile_url.clone();
+        move |url: String| {
+            profile_url.set(url);
+        }
+    };
+
+    let on_language_click = {
+        let mut popup = popup;
+        let mut lang = lang.clone();
         move |_evt: MouseEvent| {
-            // if let Some(url) = prompt_profile_url() {
-            //     profile_url.set(url);
-            // }
+            let initial_locale = match lang() {
+                Language::Ko => LocaleOption::Ko,
+                Language::En => LocaleOption::En,
+            };
+            let on_save = {
+                let mut popup = popup;
+                let mut lang = lang.clone();
+                move |locale: LocaleOption| {
+                    let next = match locale {
+                        LocaleOption::Ko => Language::Ko,
+                        LocaleOption::En => Language::En,
+                    };
+                    lang.set(next);
+                    #[cfg(target_arch = "wasm32")]
+                    {
+                        if let Some(window) = web_sys::window() {
+                            if let Ok(Some(storage)) = window.local_storage() {
+                                let _ = storage.set_item(
+                                    dioxus_translate::STORAGE_KEY,
+                                    next.to_string().as_str(),
+                                );
+                            }
+                        }
+                    }
+                    popup.close();
+                }
+            };
+            let on_cancel = {
+                let mut popup = popup;
+                move |_evt: MouseEvent| {
+                    popup.close();
+                }
+            };
+
+            popup
+                .open(rsx! {
+                    LocaleModal { initial_locale, on_save, on_cancel }
+                })
+                .with_title("Select Language");
+        }
+    };
+
+    let on_theme_click = {
+        let mut popup = popup;
+        let mut theme_service = theme_service.clone();
+        move |_evt: MouseEvent| {
+            let prev_theme = theme_service.current();
+            let initial_theme = ThemeOption::from_theme(prev_theme);
+            let on_preview = {
+                let mut theme_service = theme_service.clone();
+                move |theme: ThemeOption| {
+                    theme_service.set(theme.to_theme());
+                }
+            };
+            let on_save = {
+                let mut popup = popup;
+                let mut theme_service = theme_service.clone();
+                move |theme: ThemeOption| {
+                    theme_service.set(theme.to_theme());
+                    popup.close();
+                }
+            };
+            let on_cancel = {
+                let mut popup = popup;
+                let mut theme_service = theme_service.clone();
+                move |_evt: MouseEvent| {
+                    theme_service.set(prev_theme);
+                    popup.close();
+                }
+            };
+
+            popup
+                .open(rsx! {
+                    ThemeModal {
+                        initial_theme,
+                        on_preview,
+                        on_save,
+                        on_cancel,
+                    }
+                })
+                .with_title("Theme");
         }
     };
 
     rsx! {
-        div { class: "flex flex-col gap-10 items-center w-full max-tablet:w-full",
-            ProfileImageSection { profile_url: profile_img, on_pick: on_profile_pick }
+        div { class: "w-full flex flex-col gap-6",
+            div { class: "w-full max-w-[800px] mx-auto px-4",
+                SettingsTabs {
+                    active_index: active_tab(),
+                    on_select: move |idx| active_tab.set(idx),
+                    tab_one_label: "My Info".to_string(),
+                    tab_two_label: "Settings".to_string(),
+                }
+            }
+            div { class: "w-full px-4 md:px-0 mr-[10px]",
+                section {
+                    id: "panel-0",
+                    role: "tabpanel",
+                    aria_labelledby: "tab-0",
+                    hidden: active_tab() != 0,
+                    class: "w-full max-w-[800px] mx-auto",
+                    MyInfoTab {
+                        username: user.username.clone(),
+                        profile_url: profile_img,
+                        on_profile_upload,
+                        evm_value,
+                        wallet_visible,
+                        wallet_address: wallet_address(),
+                        wallet_connected,
+                        nickname: nickname(),
+                        description: description(),
+                        saving: saving(),
+                        message: message(),
+                        save_blocked,
+                        on_toggle_wallet,
+                        on_connect_wallet,
+                        on_save_wallet,
+                        on_nickname_input: move |e: FormEvent| nickname.set(e.value()),
+                        on_description_input: move |e: FormEvent| description.set(e.value()),
+                        on_save,
+                    }
+                }
 
-            SettingsForm {
-                username: user.username.clone(),
-                evm_value,
-                wallet_visible,
-                wallet_address: wallet_address(),
-                wallet_connected,
-                nickname: nickname(),
-                description: description(),
-                saving: saving(),
-                message: message(),
-                save_blocked,
-                on_toggle_wallet,
-                on_connect_wallet,
-                on_save_wallet,
-                on_nickname_input: move |e: FormEvent| nickname.set(e.value()),
-                on_description_input: move |e: FormEvent| description.set(e.value()),
-                on_save,
+                section {
+                    id: "panel-1",
+                    role: "tabpanel",
+                    aria_labelledby: "tab-1",
+                    hidden: active_tab() != 1,
+                    class: "w-full max-w-[800px] mx-auto",
+                    MySettingsTab {
+                        language_label: match lang() {
+                            Language::Ko => "Korean".to_string(),
+                            Language::En => "English".to_string(),
+                        },
+                        theme_label: theme_service.current().label().to_string(),
+                        on_language_click,
+                        on_theme_click,
+                    }
+                }
             }
         }
     }

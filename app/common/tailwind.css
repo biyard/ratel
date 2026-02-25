@@ -154,6 +154,7 @@
   --color-card-enable-border: #404040;
   --color-card-border: #191919;
   --color-card-border-secondary: #191919;
+  --color-border-primary: #8d8d8d;
   --color-text-primary: #ffffff;
   --color-text-secondary: #f9fafb;
   --color-text-third: #171717;
@@ -326,6 +327,7 @@
   --color-card-enable-border: #e5e5e5;
   --color-card-border: #e5e5e5;
   --color-card-border-secondary: #e5e5e5;
+  --color-border-primary: #262626;
   --color-text-primary: #262626;
   --color-text-secondary: #262626;
   --color-text-third: #262626;
@@ -835,24 +837,23 @@ a {
    ========================================================== */
 
 @theme static {
-  --color-sp-act-card-bg: #1A1A1A;
+  --color-sp-act-card-bg: #1a1a1a;
   --color-sp-act-card-stroke: #404040;
   --color-sp-act-icon-neutral: #737373;
 }
 
-[data-theme='light'] {
-  --color-sp-act-card-bg: #FFFFFF;
-  --color-sp-act-card-stroke: #E5E5E5;
+[data-theme="light"] {
+  --color-sp-act-card-bg: #ffffff;
+  --color-sp-act-card-stroke: #e5e5e5;
   --color-sp-act-icon-neutral: #737373;
 }
-
 
 /* =============================================================
    Headings
    ========================================================== */
 
 h3 {
-  @apply font-bold text-[24px]/[28px] tracking-[-0.24px]
+  @apply font-bold text-[24px]/[28px] tracking-[-0.24px];
 }
 
 /* ==========================================================================
@@ -862,9 +863,9 @@ h3 {
 @theme static {
   --color-space-dashboard-card-bg: #171717;
   --color-space-dashboard-header-bg: #262626;
-  --color-space-dashboard-accent: #FCB300;
-  --color-space-dashboard-text-dark: #1A1A1A;
-  --color-space-dashboard-text-muted: #8C8C8C;
+  --color-space-dashboard-accent: #fcb300;
+  --color-space-dashboard-text-dark: #1a1a1a;
+  --color-space-dashboard-text-muted: #8c8c8c;
 }
 
 @layer utilities {
@@ -910,30 +911,28 @@ h3 {
   .sp-dash-font-raleway {
     font-family: var(--font-raleway);
   }
-
 }
-
 
 /* ==========================================================================
    Badge
    ========================================================================== */
 
 @theme static {
-  --color-badge-blue: #0EA5E9;
-  --color-badge-green: #22C55E;
-  --color-badge-grey: #99A1AF;
-  --color-badge-orange: #F97316;
-  --color-badge-pink: #EC4899;
-  --color-badge-purple: #C27AFF;
-  --color-badge-red: #EF4444;
+  --color-badge-blue: #0ea5e9;
+  --color-badge-green: #22c55e;
+  --color-badge-grey: #99a1af;
+  --color-badge-orange: #f97316;
+  --color-badge-pink: #ec4899;
+  --color-badge-purple: #c27aff;
+  --color-badge-red: #ef4444;
 }
 
-[data-theme='light'] {
-  --color-badge-blue: #0EA5E9;
-  --color-badge-green: #22C55E;
-  --color-badge-grey: #99A1AF;
-  --color-badge-orange: #F97316;
-  --color-badge-pink: #EC4899;
-  --color-badge-purple: #C27AFF;
-  --color-badge-red: #EF4444;
+[data-theme="light"] {
+  --color-badge-blue: #0ea5e9;
+  --color-badge-green: #22c55e;
+  --color-badge-grey: #99a1af;
+  --color-badge-orange: #f97316;
+  --color-badge-pink: #ec4899;
+  --color-badge-purple: #c27aff;
+  --color-badge-red: #ef4444;
 }
