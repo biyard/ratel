@@ -13,15 +13,10 @@ pub struct MySpaceResponse {
     pub visibility: SpaceVisibility,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-pub struct ListMySpacesResponse {
-    pub items: Vec<MySpaceResponse>,
-    pub bookmark: Option<String>,
-}
-
 #[get("/api/me/spaces?bookmark", user: ratel_auth::User)]
-pub async fn list_my_spaces_handler(bookmark: Option<String>) -> Result<ListMySpacesResponse> {
+pub async fn list_my_spaces_handler(
+    bookmark: Option<String>,
+) -> Result<ListResponse<MySpaceResponse>> {
     let conf = common::config::ServerConfig::default();
     let cli = conf.dynamodb();
 
@@ -83,5 +78,5 @@ pub async fn list_my_spaces_handler(bookmark: Option<String>) -> Result<ListMySp
         })
         .collect();
 
-    Ok(ListMySpacesResponse { items, bookmark })
+    Ok(ListResponse { items, bookmark })
 }

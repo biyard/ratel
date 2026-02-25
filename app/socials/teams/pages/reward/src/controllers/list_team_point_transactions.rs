@@ -1,0 +1,34 @@
+use crate::{dto::ListPointTransactionsResponse, models::BiyardClient, *};
+
+use ratel_post::models::Team;
+use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
+
+#[get("/api/teams/:team_pk/points/transactions?month&bookmark", user: ratel_auth::User)]
+pub async fn list_team_point_transactions_handler(
+    team_pk: TeamPartition,
+    month: Option<String>,
+    bookmark: Option<String>,
+) -> Result<ListPointTransactionsResponse> {
+    let conf = crate::config::get();
+    let cli = conf.common.dynamodb();
+    let team_pk: Partition = team_pk.into();
+
+    let permissions = Team::get_permissions_by_team_pk(cli, &team_pk, &user.pk)
+        .await
+        .unwrap_or_else(|_| TeamGroupPermissions::empty());
+    let can_view = permissions.contains(TeamGroupPermission::TeamAdmin);
+    if !can_view {
+        return Err(Error::Unauthorized(
+            "You don't have permission to view team rewards.".to_string(),
+        ));
+    }
+
+    let month = month.unwrap_or_else(|| utils::time::current_month());
+
+    let biyard = BiyardClient::new();
+    let res = biyard
+        .list_user_transactions(team_pk.clone(), month, bookmark, Some(10))
+        .await?;
+
+    Ok(res)
+}

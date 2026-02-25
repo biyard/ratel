@@ -12,33 +12,18 @@ pub enum SignAttributesRequest {
 
 #[post("/api/me/did", user: ratel_auth::User)]
 pub async fn sign_attributes_handler(body: SignAttributesRequest) -> Result<CredentialResponse> {
-    #[cfg(not(feature = "server"))]
-    {
-        let _ = body;
-        return Err(Error::NotSupported(
-            "DID attribute signing is server-only".to_string(),
-        ));
-    }
+    let conf = common::config::ServerConfig::default();
+    let cli = conf.dynamodb();
+    let attrs = match body {
+        SignAttributesRequest::PortOne { id } => portone_sign_attributes(cli, &user, id).await?,
+        SignAttributesRequest::Code { code } => add_attributes_by_code(cli, &user, code).await?,
+    };
 
-    #[cfg(feature = "server")]
-    {
-        let conf = common::config::ServerConfig::default();
-        let cli = conf.dynamodb();
-        let attrs = match body {
-            SignAttributesRequest::PortOne { id } => {
-                portone_sign_attributes(cli, &user, id).await?
-            }
-            SignAttributesRequest::Code { code } => {
-                add_attributes_by_code(cli, &user, code).await?
-            }
-        };
-
-        return Ok(CredentialResponse {
-            age: attrs.age(),
-            gender: attrs.gender.map(|value| value.to_string()),
-            university: attrs.university,
-        });
-    }
+    return Ok(CredentialResponse {
+        age: attrs.age(),
+        gender: attrs.gender.map(|value| value.to_string()),
+        university: attrs.university,
+    });
 }
 
 #[cfg(feature = "server")]
