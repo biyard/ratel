@@ -2,25 +2,18 @@ use crate::components::FeedCard;
 use crate::controllers::dto::*;
 use crate::controllers::list_user_posts::{list_team_posts_handler, list_user_posts_handler};
 use crate::*;
+use common::hooks::use_infinite_query;
 use dioxus::prelude::*;
 
-// FIXME: Use GET when dioxus server functions support query params without body.
 #[component]
 pub fn MyPosts(username: String) -> Element {
-    let resource = use_server_future(move || {
-        let username = username.clone();
-        async move { list_user_posts_handler(username, None).await }
+    let username_signal = use_signal(|| username);
+    let mut v = use_infinite_query(move |bookmark| {
+        let username = username_signal();
+        async move { list_user_posts_handler(username, bookmark).await }
     })?;
 
-    let resolved = resource.suspend()?;
-    let data = resolved.read();
-    let (items, has_next): (Vec<PostResponse>, bool) = match data.as_ref() {
-        Ok(data) => {
-            let has_next = data.bookmark.is_some();
-            (data.items.clone(), has_next)
-        }
-        Err(_) => (vec![], false),
-    };
+    let items = v.items();
 
     if items.is_empty() {
         return rsx! {
@@ -37,7 +30,9 @@ pub fn MyPosts(username: String) -> Element {
                     FeedCard { key: "{post.pk}", post: post.clone() }
                 }
 
-                if !has_next {
+                if v.has_more() {
+                    {v.more_element()}
+                } else {
                     div {
                         class: "my-6 text-center text-gray-400",
                         aria_label: "End of feed message",
@@ -51,20 +46,13 @@ pub fn MyPosts(username: String) -> Element {
 
 #[component]
 pub fn TeamPosts(teamname: String) -> Element {
-    let resource = use_server_future(move || {
-        let teamname = teamname.clone();
-        async move { list_team_posts_handler(teamname, None).await }
+    let teamname_signal = use_signal(|| teamname);
+    let mut v = use_infinite_query(move |bookmark| {
+        let teamname = teamname_signal();
+        async move { list_team_posts_handler(teamname, bookmark).await }
     })?;
 
-    let resolved = resource.suspend()?;
-    let data = resolved.read();
-    let (items, has_next): (Vec<PostResponse>, bool) = match data.as_ref() {
-        Ok(data) => {
-            let has_next = data.bookmark.is_some();
-            (data.items.clone(), has_next)
-        }
-        Err(_) => (vec![], false),
-    };
+    let items = v.items();
 
     if items.is_empty() {
         return rsx! {
@@ -81,7 +69,9 @@ pub fn TeamPosts(teamname: String) -> Element {
                     FeedCard { key: "{post.pk}", post: post.clone() }
                 }
 
-                if !has_next {
+                if v.has_more() {
+                    {v.more_element()}
+                } else {
                     div {
                         class: "my-6 text-center text-gray-400",
                         aria_label: "End of feed message",
