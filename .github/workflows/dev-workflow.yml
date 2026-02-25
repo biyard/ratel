@@ -11,7 +11,7 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    needs: [main-api, fetcher, ratel-web, survey-worker, space-stream-worker]
+    needs: [ratel-app, fetcher, survey-worker, space-stream-worker]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -20,8 +20,8 @@ jobs:
       - name: Download Main Api
         uses: actions/download-artifact@v4
         with:
-          name: ratel-main-api-${{ github.sha }}
-          path: ./cdk/main-api
+          name: app-shell-${{ github.sha }}
+          path: ./cdk/app-shell
 
       - name: Download Survey Fetcher Lambda
         uses: actions/download-artifact@v4
@@ -36,7 +36,7 @@ jobs:
 
       - name: Write Firebase service account (dev)
         run: |
-          mkdir -p cdk/main-api/.gcp
+          mkdir -p cdk/app-shell/.gcp
           echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 }}" \
             | base64 -d > cdk/main-api/.gcp/firebase-service-account.json
 
@@ -63,56 +63,70 @@ jobs:
           npm i -g aws-cdk
           make cdk-deploy-v2
 
-  main-api:
-    runs-on: ubuntu-22.04
-    needs: [ratel-web]
+  ratel-app:
+    runs-on: ubuntu-latest
+
     defaults:
       run:
-        working-directory: packages/main-api
+        working-directory: app/shell
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
-      - name: Write Firebase service account (dev)
-        run: |
-          mkdir -p .gcp
-          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 }}" | base64 -d > .gcp/firebase-service-account.json
-
       - name: Cache builder
-        id: main-api-build-cache
+        id: app-shell-build-cache
         uses: actions/cache@v4
         with:
-          key: main-api-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
+          key: app-shell-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            main-api-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
-            main-api-build-${{ runner.os }}-
-            main-api-build-
+            app-shell-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
+            app-shell-build-${{ runner.os }}-
+            app-shell-build-
           path: |
-            packages/main-api/target
-      - uses: aws-actions/configure-aws-credentials@v2
+            target
+
+      - uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
 
-      - name: Download Vite Web
-        uses: actions/download-artifact@v4
-        with:
-          name: ratel-web-${{ github.sha }}
-          path: ./packages/main-api
+      - name: Login to Amazon ECR
+        id: ratel-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
-          target: wasm32-unknown-unknown
           toolchain: stable
+          target: wasm32-unknown-unknown
+
       - uses: cargo-bins/cargo-binstall@main
-      - name: Install toml-cli
+      - name: Install system dependencies
         run: |
-          cargo binstall toml-cli --force
+          sudo apt update
+          sudo apt install -y libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            lld
+
+      - name: Install Dioxus-cli
+        run: |
+          cargo binstall dioxus-cli --force
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.15.0 --activate
 
       - name: Building APIs
         env:
@@ -120,9 +134,11 @@ jobs:
           ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
+          COMMIT: dev-${{ github.sha }}
+
           ENV: dev
           RUST_LOG: info
-          SERVICE: main-api
+          SERVICE: app-shell
           DOMAIN: dev.ratel.foundation
           BUCKET_NAME: metadata.ratel.foundation
           SLACK_HOOK: ${{ secrets.DEV_SLACK }}
@@ -153,12 +169,8 @@ jobs:
 
           DYNAMO_TABLE_PREFIX: ratel-dev
           DYNAMO_ENDPOINT: none
-          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          RUST_FLAG: "--features lambda --release"
+          # RUST_FLAG: "--features lambda --release"
           WEB_BUILD: false
-          PORTONE_API_SECRET: ${{ secrets.DEV_PORTONE_API_SECRET }}
-          PORTONE_KPN_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_KPN_CHANNEL_KEY }}
-          PORTONE_STORE_ID: ${{ secrets.DEV_PORTONE_STORE_ID }}
           ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
 
           FCM_ENABLED: true
@@ -172,22 +184,39 @@ jobs:
           BIYARD_API_KEY: ${{ secrets.DEV_BIYARD_API_KEY }}
           BIYARD_PROJECT_ID: ${{ secrets.DEV_BIYARD_PROJECT_ID }}
 
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
+
+          PORTONE_STORE_ID: ${{ secrets.DEV_PORTONE_STORE_ID}}
+          PORTONE_INICIS_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_INICIS_CHANNEL_KEY }}
+          PORTONE_API_SECRET: ${{ secrets.DEV_PORTONE_API_SECRET }}
+          PORTONE_KPN_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_KPN_CHANNEL_KEY }}
+
+          REPOSITORY: ${{ steps.ratel-ecr.outputs.registry }}/ratel
         run: |
-          tar xzvf dist.tar.gz
-          ls dist
+          rm -rf ../../target/dx
+          make build-lambda
+          mkdir -p ../../.build/app-shell
+          cp ../../target/dx/app-shell/release/web/app-shell ../../.build/app-shell/bootstrap
 
-          make build
-
-          mkdir -p ../../.gcp
-          cp .gcp/firebase-service-account.json ../../.gcp/firebase-service-account.json
-
-          mv target/release/main-api ../../bootstrap
+      - name: Deploy to S3
+        env:
+          BUCKET: ${{ secrets.DEV_RATEL_BUCKET }}
+          CDN: ${{ secrets.DEV_RATEL_CDN }}
+        run: |
+          aws s3 sync ../../target/dx/app-shell/release/web/public $BUCKET
+          aws cloudfront create-invalidation --distribution-id $CDN --paths "/*"
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ratel-main-api-${{ github.sha }}
-          path: ${{ github.workspace }}/bootstrap
+          name: app-shell-${{ github.sha }}
+          path: ${{ github.workspace }}/.build/app-shell/bootstrap
           if-no-files-found: error
           retention-days: 7
 
@@ -328,6 +357,18 @@ jobs:
         run: |
           cargo binstall toml-cli --force
 
+      - name: Cache builder
+        id: survey-worker-build-cache
+        uses: actions/cache@v4
+        with:
+          key: survey-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            survey-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
+            survey-worker-build-${{ runner.os }}-
+            survey-worker-build-
+          path: |
+            packages/survey-worker/target
+
       - name: Build survey-worker Lambda
         env:
           REGION: ap-northeast-2
@@ -383,6 +424,18 @@ jobs:
         run: |
           cargo binstall toml-cli --force
 
+      - name: Cache builder
+        id: space-stream-worker-build-cache
+        uses: actions/cache@v4
+        with:
+          key: space-stream-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            space-stream-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
+            space-stream-worker-build-${{ runner.os }}-
+            space-stream-worker-build-
+          path: |
+            packages/space-stream-worker/target
+
       - name: Build space-stream-worker Lambda
         env:
           REGION: ap-northeast-2
@@ -411,418 +464,418 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-  ratel-web:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ts-packages/web
-    steps:
-      - uses: actions/checkout@v4
-      - uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-2
+  # ratel-web:
+  #   runs-on: ubuntu-latest
+  #   defaults:
+  #     run:
+  #       working-directory: ts-packages/web
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: aws-actions/configure-aws-credentials@v2
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         aws-region: ap-northeast-2
 
-      - name: Setup pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@10.15.0 --activate
+  #     - name: Setup pnpm
+  #       run: |
+  #         corepack enable
+  #         corepack prepare pnpm@10.15.0 --activate
 
-      - name: Build
-        env:
-          REGION: ap-northeast-2
-          VITE_LOG_LEVEL: info
-          VITE_RPC_URL: https://public-en-kairos.node.kaia.io
-          VITE_BLOCK_EXPLORER_URL: https://kairos.kaiascan.io
-          VITE_OPERATOR_ADDRESS: ${{ secrets.OPERATOR_ADDRESS }}
-          VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
-          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
-          VITE_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
-          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
-          VITE_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
-          VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
+  #     - name: Build
+  #       env:
+  #         REGION: ap-northeast-2
+  #         VITE_LOG_LEVEL: info
+  #         VITE_RPC_URL: https://public-en-kairos.node.kaia.io
+  #         VITE_BLOCK_EXPLORER_URL: https://kairos.kaiascan.io
+  #         VITE_OPERATOR_ADDRESS: ${{ secrets.OPERATOR_ADDRESS }}
+  #         VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+  #         VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+  #         VITE_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+  #         VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+  #         VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+  #         VITE_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+  #         VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
 
-          VITE_PORTONE_STORE_ID: ${{ secrets.DEV_PORTONE_STORE_ID}}
-          VITE_PORTONE_INICIS_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_INICIS_CHANNEL_KEY }}
+  #         VITE_PORTONE_STORE_ID: ${{ secrets.DEV_PORTONE_STORE_ID}}
+  #         VITE_PORTONE_INICIS_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_INICIS_CHANNEL_KEY }}
 
-          VITE_ENV: dev
-          VITE_SIGN_DOMAIN: dev.ratel.foundation
-          VITE_API_URL: https://dev.ratel.foundation
-          VITE_EXPERIMENT: true
-          VITE_TELEGRAM_BOTNAME: crypto_ratel_dev_bot
-          VITE_STORYBOOK_URL: https://storybook.dev.ratel.foundation
-          VITE_USDT_ADDRESS: "0xd077a400968890eacc75cdc901f0356c943e4fdb"
-        run: |
-          make build
+  #         VITE_ENV: dev
+  #         VITE_SIGN_DOMAIN: dev.ratel.foundation
+  #         VITE_API_URL: https://dev.ratel.foundation
+  #         VITE_EXPERIMENT: true
+  #         VITE_TELEGRAM_BOTNAME: crypto_ratel_dev_bot
+  #         VITE_STORYBOOK_URL: https://storybook.dev.ratel.foundation
+  #         VITE_USDT_ADDRESS: "0xd077a400968890eacc75cdc901f0356c943e4fdb"
+  #       run: |
+  #         make build
 
-      - name: Deploy to S3
-        env:
-          BUCKET: ${{ secrets.DEV_RATEL_BUCKET }}
-          CDN: ${{ secrets.DEV_RATEL_CDN }}
-        run: |
-          aws s3 sync dist $BUCKET
-          aws cloudfront create-invalidation --distribution-id $CDN --paths "/*"
+  #     - name: Deploy to S3
+  #       env:
+  #         BUCKET: ${{ secrets.DEV_RATEL_BUCKET }}
+  #         CDN: ${{ secrets.DEV_RATEL_CDN }}
+  #       run: |
+  #         aws s3 sync dist $BUCKET
+  #         aws cloudfront create-invalidation --distribution-id $CDN --paths "/*"
 
-      - name: Prepare artifacts
-        run: |
-          tar czvf dist.tar.gz dist
+  #     - name: Prepare artifacts
+  #       run: |
+  #         tar czvf dist.tar.gz dist
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ratel-web-${{ github.sha }}
-          path: ${{ github.workspace }}/ts-packages/web/dist.tar.gz
-          if-no-files-found: error
-          retention-days: 7
+  #     - name: Upload Artifacts
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: ratel-web-${{ github.sha }}
+  #         path: ${{ github.workspace }}/ts-packages/web/dist.tar.gz
+  #         if-no-files-found: error
+  #         retention-days: 7
 
-  ratel-storybook:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ts-packages/web
-    steps:
-      - uses: actions/checkout@v4
-      - uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-2
+  # ratel-storybook:
+  #   runs-on: ubuntu-latest
+  #   defaults:
+  #     run:
+  #       working-directory: ts-packages/web
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: aws-actions/configure-aws-credentials@v2
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         aws-region: ap-northeast-2
 
-      - name: Setup pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@10.15.0 --activate
+  #     - name: Setup pnpm
+  #       run: |
+  #         corepack enable
+  #         corepack prepare pnpm@10.15.0 --activate
 
-      - name: Build
-        env:
-          REGION: ap-northeast-2
-          VITE_LOG_LEVEL: info
-          VITE_RPC_URL: https://public-en-kairos.node.kaia.io
-          VITE_BLOCK_EXPLORER_URL: https://kairos.kaiascan.io
-          VITE_USDT_ADDRESS: "0xd077a400968890eacc75cdc901f0356c943e4fdb"
-          VITE_OPERATOR_ADDRESS: ${{ secrets.OPERATOR_ADDRESS }}
-          VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
-          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
-          VITE_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
-          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
-          VITE_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
-          VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
+  #     - name: Build
+  #       env:
+  #         REGION: ap-northeast-2
+  #         VITE_LOG_LEVEL: info
+  #         VITE_RPC_URL: https://public-en-kairos.node.kaia.io
+  #         VITE_BLOCK_EXPLORER_URL: https://kairos.kaiascan.io
+  #         VITE_USDT_ADDRESS: "0xd077a400968890eacc75cdc901f0356c943e4fdb"
+  #         VITE_OPERATOR_ADDRESS: ${{ secrets.OPERATOR_ADDRESS }}
+  #         VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+  #         VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+  #         VITE_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+  #         VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+  #         VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+  #         VITE_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+  #         VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
 
-          VITE_ENV: dev
-          VITE_SIGN_DOMAIN: dev.ratel.foundation
-          VITE_API_URL: https://dev.ratel.foundation
-          VITE_EXPERIMENT: true
-          VITE_TELEGRAM_BOTNAME: crypto_ratel_dev_bot
-        run: |
-          pnpm i
-          npx storybook build
+  #         VITE_ENV: dev
+  #         VITE_SIGN_DOMAIN: dev.ratel.foundation
+  #         VITE_API_URL: https://dev.ratel.foundation
+  #         VITE_EXPERIMENT: true
+  #         VITE_TELEGRAM_BOTNAME: crypto_ratel_dev_bot
+  #       run: |
+  #         pnpm i
+  #         npx storybook build
 
-      - name: Deploy
-        env:
-          BUCKET_NAME: ${{ secrets.RATEL_STORYBOOK_BUCKET }}
-          CDN: ${{ secrets.RATEL_STORYBOOK_CDN }}
-        run: |
-          aws s3 sync storybook-static s3://$BUCKET_NAME
-          aws cloudfront create-invalidation --distribution-id $CDN --paths "/*"
+  #     - name: Deploy
+  #       env:
+  #         BUCKET_NAME: ${{ secrets.RATEL_STORYBOOK_BUCKET }}
+  #         CDN: ${{ secrets.RATEL_STORYBOOK_CDN }}
+  #       run: |
+  #         aws s3 sync storybook-static s3://$BUCKET_NAME
+  #         aws cloudfront create-invalidation --distribution-id $CDN --paths "/*"
 
-  android-apk:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: flutter-packages/mobile
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+  # android-apk:
+  #   runs-on: ubuntu-latest
+  #   defaults:
+  #     run:
+  #       working-directory: flutter-packages/mobile
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         submodules: recursive
+  #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
-      - name: Free disk space for Android build
-        run: |
-          echo "Before cleanup:"
-          df -h
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /opt/hostedtoolcache/CodeQL
-          sudo rm -rf /usr/local/lib/android/sdk/system-images
-          sudo rm -rf /usr/local/lib/android/sdk/emulator
-          docker system prune -af || true
-          echo "After cleanup:"
-          df -h
+  #     - name: Free disk space for Android build
+  #       run: |
+  #         echo "Before cleanup:"
+  #         df -h
+  #         sudo rm -rf /usr/share/dotnet
+  #         sudo rm -rf /opt/ghc
+  #         sudo rm -rf /opt/hostedtoolcache/CodeQL
+  #         sudo rm -rf /usr/local/lib/android/sdk/system-images
+  #         sudo rm -rf /usr/local/lib/android/sdk/emulator
+  #         docker system prune -af || true
+  #         echo "After cleanup:"
+  #         df -h
 
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
+  #     - uses: actions/setup-java@v4
+  #       with:
+  #         distribution: temurin
+  #         java-version: "17"
 
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: false
+  #     - uses: subosito/flutter-action@v2
+  #       with:
+  #         channel: stable
+  #         cache: false
 
-      - name: Flutter pub get
-        run: flutter pub get
+  #     - name: Flutter pub get
+  #       run: flutter pub get
 
-      - name: Prepare Android signing (real or placeholder)
-        working-directory: flutter-packages/mobile
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p android/app
-          if [[ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]]; then
-            echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/keystore.jks
-            printf "%s\n" \
-              "storeFile=app/keystore.jks" \
-              "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
-              "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" \
-              "keyPassword=${{ secrets.ANDROID_KEY_ALIAS_PASSWORD }}" \
-              > android/key.properties
-          else
-            keytool -genkey -v \
-              -keystore android/app/debug-placeholder.keystore \
-              -storepass android -keypass android \
-              -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
-              -dname "CN=Android,O=Android,C=US"
-            printf "%s\n" \
-              "storeFile=app/debug-placeholder.keystore" \
-              "storePassword=android" \
-              "keyAlias=androiddebugkey" \
-              "keyPassword=android" \
-              > android/key.properties
-          fi
+  #     - name: Prepare Android signing (real or placeholder)
+  #       working-directory: flutter-packages/mobile
+  #       shell: bash
+  #       run: |
+  #         set -euo pipefail
+  #         mkdir -p android/app
+  #         if [[ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]]; then
+  #           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/keystore.jks
+  #           printf "%s\n" \
+  #             "storeFile=app/keystore.jks" \
+  #             "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
+  #             "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" \
+  #             "keyPassword=${{ secrets.ANDROID_KEY_ALIAS_PASSWORD }}" \
+  #             > android/key.properties
+  #         else
+  #           keytool -genkey -v \
+  #             -keystore android/app/debug-placeholder.keystore \
+  #             -storepass android -keypass android \
+  #             -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
+  #             -dname "CN=Android,O=Android,C=US"
+  #           printf "%s\n" \
+  #             "storeFile=app/debug-placeholder.keystore" \
+  #             "storePassword=android" \
+  #             "keyAlias=androiddebugkey" \
+  #             "keyPassword=android" \
+  #             > android/key.properties
+  #         fi
 
-      - name: Build APK (debug)
-        run: |
-          make ENV=dev build-config
-          flutter build apk --debug --dart-define-from-file=.build/config.json
+  #     - name: Build APK (debug)
+  #       run: |
+  #         make ENV=dev build-config
+  #         flutter build apk --debug --dart-define-from-file=.build/config.json
 
-      - name: Find built APK
-        shell: bash
-        run: |
-          set -euo pipefail
-          APK=$(ls -t build/app/outputs/flutter-apk/*.apk | head -n 1)
-          echo "APK_PATH=$PWD/$APK" >> $GITHUB_ENV
-          ls -lh "$APK"
+  #     - name: Find built APK
+  #       shell: bash
+  #       run: |
+  #         set -euo pipefail
+  #         APK=$(ls -t build/app/outputs/flutter-apk/*.apk | head -n 1)
+  #         echo "APK_PATH=$PWD/$APK" >> $GITHUB_ENV
+  #         ls -lh "$APK"
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: mobile-apk-${{ github.sha }}
-          path: ${{ env.APK_PATH }}
-          if-no-files-found: error
-          retention-days: 30
+  #     - name: Upload APK artifact
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: mobile-apk-${{ github.sha }}
+  #         path: ${{ env.APK_PATH }}
+  #         if-no-files-found: error
+  #         retention-days: 30
 
-  ios-testflight:
-    runs-on: macos-latest
-    permissions:
-      contents: read
-    defaults:
-      run:
-        working-directory: flutter-packages/mobile
-    env:
-      MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
-      MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-      APP_IDENTIFIER: foundation.ratel.app
-      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+  # ios-testflight:
+  #   runs-on: macos-latest
+  #   permissions:
+  #     contents: read
+  #   defaults:
+  #     run:
+  #       working-directory: flutter-packages/mobile
+  #   env:
+  #     MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+  #     MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+  #     ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+  #     ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+  #     APP_IDENTIFIER: foundation.ratel.app
+  #     APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         submodules: recursive
+  #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
-      - name: Select Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: "26"
+  #     - name: Select Xcode
+  #       uses: maxim-lobanov/setup-xcode@v1
+  #       with:
+  #         xcode-version: "26"
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: false
+  #     - name: Setup Flutter
+  #       uses: subosito/flutter-action@v2
+  #       with:
+  #         channel: stable
+  #         cache: false
 
-      - name: Setup Ruby (bundler)
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.2"
-          bundler-cache: true
-          working-directory: flutter-packages/mobile/ios
+  #     - name: Setup Ruby (bundler)
+  #       uses: ruby/setup-ruby@v1
+  #       with:
+  #         ruby-version: "3.2"
+  #         bundler-cache: true
+  #         working-directory: flutter-packages/mobile/ios
 
-      - name: Flutter pub get
-        run: flutter pub get
+  #     - name: Flutter pub get
+  #       run: flutter pub get
 
-      - name: Generate iOS Release configs (Flutter)
-        run: |
-          rm -f ios/Flutter/Generated.xcconfig
-          ENV=dev make build.ios
+  #     - name: Generate iOS Release configs (Flutter)
+  #       run: |
+  #         rm -f ios/Flutter/Generated.xcconfig
+  #         ENV=dev make build.ios
 
-      - name: Patch CocoaPods base config include
-        run: |
-          grep -q 'Pods-Runner\.release' ios/Flutter/Release.xcconfig || echo '#include "../Pods/Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"' >> ios/Flutter/Release.xcconfig
-          grep -q 'Pods-Runner\.profile' ios/Flutter/Profile.xcconfig || echo '#include "../Pods/Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"' >> ios/Flutter/Profile.xcconfig
+  #     - name: Patch CocoaPods base config include
+  #       run: |
+  #         grep -q 'Pods-Runner\.release' ios/Flutter/Release.xcconfig || echo '#include "../Pods/Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"' >> ios/Flutter/Release.xcconfig
+  #         grep -q 'Pods-Runner\.profile' ios/Flutter/Profile.xcconfig || echo '#include "../Pods/Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"' >> ios/Flutter/Profile.xcconfig
 
-      - name: Pod install
-        working-directory: flutter-packages/mobile/ios
-        run: pod install --repo-update
+  #     - name: Pod install
+  #       working-directory: flutter-packages/mobile/ios
+  #       run: pod install --repo-update
 
-      - name: Write App Store Connect API key
-        working-directory: flutter-packages/mobile/ios
-        env:
-          ASC_KEY_BASE64: ${{ secrets.ASC_KEY_BASE64 }}
-          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-        run: |
-          mkdir -p fastlane
-          echo "$ASC_KEY_BASE64" | base64 -d > fastlane/AuthKey_${ASC_KEY_ID}.p8
-          chmod 600 fastlane/AuthKey_${ASC_KEY_ID}.p8
+  #     - name: Write App Store Connect API key
+  #       working-directory: flutter-packages/mobile/ios
+  #       env:
+  #         ASC_KEY_BASE64: ${{ secrets.ASC_KEY_BASE64 }}
+  #         ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+  #       run: |
+  #         mkdir -p fastlane
+  #         echo "$ASC_KEY_BASE64" | base64 -d > fastlane/AuthKey_${ASC_KEY_ID}.p8
+  #         chmod 600 fastlane/AuthKey_${ASC_KEY_ID}.p8
 
-      - name: Setup SSH for match repo
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.MATCH_SSH_KEY }}
+  #     - name: Setup SSH for match repo
+  #       uses: webfactory/ssh-agent@v0.9.0
+  #       with:
+  #         ssh-private-key: ${{ secrets.MATCH_SSH_KEY }}
 
-      - name: Trust github.com host keys
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
+  #     - name: Trust github.com host keys
+  #       run: |
+  #         mkdir -p ~/.ssh
+  #         ssh-keyscan github.com >> ~/.ssh/known_hosts
+  #         chmod 644 ~/.ssh/known_hosts
 
-      - name: Create and unlock temporary keychain
-        shell: bash
-        run: |
-          set -euo pipefail
-          KEYCHAIN_LABEL="ci-temp"
-          KEYCHAIN_PASSWORD="password"
-          KEYCHAIN_PATH="$HOME/Library/Keychains/${KEYCHAIN_LABEL}.keychain-db"
-          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security list-keychains -d user -s "$KEYCHAIN_PATH" "$HOME/Library/Keychains/login.keychain-db"
-          security default-keychain -s "$KEYCHAIN_PATH"
-          echo "MATCH_KEYCHAIN_NAME=$KEYCHAIN_LABEL" >> $GITHUB_ENV
-          echo "MATCH_KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD" >> $GITHUB_ENV
+  #     - name: Create and unlock temporary keychain
+  #       shell: bash
+  #       run: |
+  #         set -euo pipefail
+  #         KEYCHAIN_LABEL="ci-temp"
+  #         KEYCHAIN_PASSWORD="password"
+  #         KEYCHAIN_PATH="$HOME/Library/Keychains/${KEYCHAIN_LABEL}.keychain-db"
+  #         security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+  #         security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+  #         security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+  #         security list-keychains -d user -s "$KEYCHAIN_PATH" "$HOME/Library/Keychains/login.keychain-db"
+  #         security default-keychain -s "$KEYCHAIN_PATH"
+  #         echo "MATCH_KEYCHAIN_NAME=$KEYCHAIN_LABEL" >> $GITHUB_ENV
+  #         echo "MATCH_KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD" >> $GITHUB_ENV
 
-      - name: Install signing with match (readonly)
-        working-directory: flutter-packages/mobile/ios
-        env:
-          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
-          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: |
-          set -euo pipefail
-          bundle exec fastlane match appstore \
-            --readonly \
-            --git_url "$MATCH_GIT_URL" \
-            --app_identifier "foundation.ratel.app" \
-            --team_id "$APPLE_TEAM_ID" \
-            --keychain_name "$MATCH_KEYCHAIN_NAME" \
-            --keychain_password "$MATCH_KEYCHAIN_PASSWORD"
+  #     - name: Install signing with match (readonly)
+  #       working-directory: flutter-packages/mobile/ios
+  #       env:
+  #         MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+  #         MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+  #         APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+  #       run: |
+  #         set -euo pipefail
+  #         bundle exec fastlane match appstore \
+  #           --readonly \
+  #           --git_url "$MATCH_GIT_URL" \
+  #           --app_identifier "foundation.ratel.app" \
+  #           --team_id "$APPLE_TEAM_ID" \
+  #           --keychain_name "$MATCH_KEYCHAIN_NAME" \
+  #           --keychain_password "$MATCH_KEYCHAIN_PASSWORD"
 
-      - name: Validate provisioning profile matches bundle id + team and export PROFILE_NAME
-        shell: bash
-        run: |
-          set -euo pipefail
-          TARGET_BUNDLE_ID="foundation.ratel.app"
-          TARGET_TEAM_ID="${APPLE_TEAM_ID}"
-          HIT=0
-          HIT_FILE=""
+  #     - name: Validate provisioning profile matches bundle id + team and export PROFILE_NAME
+  #       shell: bash
+  #       run: |
+  #         set -euo pipefail
+  #         TARGET_BUNDLE_ID="foundation.ratel.app"
+  #         TARGET_TEAM_ID="${APPLE_TEAM_ID}"
+  #         HIT=0
+  #         HIT_FILE=""
 
-          check_file () {
-            local f="$1"
-            [[ -f "$f" ]] || return 1
-            local TMP
-            TMP="$(mktemp)"
-            security cms -D -i "$f" > "$TMP" 2>/dev/null || return 1
-            local APPID TEAM
-            APPID=$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' "$TMP" 2>/dev/null || true)
-            TEAM=$(/usr/libexec/PlistBuddy -c 'Print :TeamIdentifier:0' "$TMP" 2>/dev/null || true)
-            if [[ "${APPID#*.}" == "$TARGET_BUNDLE_ID" && "$TEAM" == "$TARGET_TEAM_ID" ]]; then
-              return 0
-            fi
-            return 1
-          }
+  #         check_file () {
+  #           local f="$1"
+  #           [[ -f "$f" ]] || return 1
+  #           local TMP
+  #           TMP="$(mktemp)"
+  #           security cms -D -i "$f" > "$TMP" 2>/dev/null || return 1
+  #           local APPID TEAM
+  #           APPID=$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' "$TMP" 2>/dev/null || true)
+  #           TEAM=$(/usr/libexec/PlistBuddy -c 'Print :TeamIdentifier:0' "$TMP" 2>/dev/null || true)
+  #           if [[ "${APPID#*.}" == "$TARGET_BUNDLE_ID" && "$TEAM" == "$TARGET_TEAM_ID" ]]; then
+  #             return 0
+  #           fi
+  #           return 1
+  #         }
 
-          for dir in \
-            "$HOME/Library/MobileDevice/Provisioning Profiles" \
-            "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"
-          do
-            [[ -d "$dir" ]] || continue
-            for f in "$dir"/*.mobileprovision; do
-              [[ -f "$f" ]] || continue
-              if check_file "$f"; then
-                HIT=1
-                HIT_FILE="$f"
-                break
-              fi
-            done
-            [[ "$HIT" -eq 1 ]] && break
-          done
+  #         for dir in \
+  #           "$HOME/Library/MobileDevice/Provisioning Profiles" \
+  #           "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"
+  #         do
+  #           [[ -d "$dir" ]] || continue
+  #           for f in "$dir"/*.mobileprovision; do
+  #             [[ -f "$f" ]] || continue
+  #             if check_file "$f"; then
+  #               HIT=1
+  #               HIT_FILE="$f"
+  #               break
+  #             fi
+  #           done
+  #           [[ "$HIT" -eq 1 ]] && break
+  #         done
 
-          echo "PROFILE_MATCH=$HIT" >> "$GITHUB_ENV"
-          echo "PROFILE_MATCH=$HIT"
+  #         echo "PROFILE_MATCH=$HIT" >> "$GITHUB_ENV"
+  #         echo "PROFILE_MATCH=$HIT"
 
-          if [[ "$HIT" -eq 1 ]]; then
-            TMP="$(mktemp)"
-            security cms -D -i "$HIT_FILE" > "$TMP" 2>/dev/null
-            NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$TMP" 2>/dev/null || true)
-            if [[ -n "$NAME" ]]; then
-              echo "PROFILE_NAME=$NAME" >> "$GITHUB_ENV"
-            fi
-            echo "PROFILE_PATH=$HIT_FILE" >> "$GITHUB_ENV"
-            echo "Matched profile file: $HIT_FILE"
-            echo "Matched profile name: $NAME"
-          fi
+  #         if [[ "$HIT" -eq 1 ]]; then
+  #           TMP="$(mktemp)"
+  #           security cms -D -i "$HIT_FILE" > "$TMP" 2>/dev/null
+  #           NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$TMP" 2>/dev/null || true)
+  #           if [[ -n "$NAME" ]]; then
+  #             echo "PROFILE_NAME=$NAME" >> "$GITHUB_ENV"
+  #           fi
+  #           echo "PROFILE_PATH=$HIT_FILE" >> "$GITHUB_ENV"
+  #           echo "Matched profile file: $HIT_FILE"
+  #           echo "Matched profile name: $NAME"
+  #         fi
 
-      - name: Fail if provisioning profile missing
-        if: env.PROFILE_MATCH != '1'
-        shell: bash
-        run: |
-          echo "No matching provisioning profile installed for bundle id 'foundation.ratel.app'."
-          exit 1
+  #     - name: Fail if provisioning profile missing
+  #       if: env.PROFILE_MATCH != '1'
+  #       shell: bash
+  #       run: |
+  #         echo "No matching provisioning profile installed for bundle id 'foundation.ratel.app'."
+  #         exit 1
 
-      - name: Compute iOS build number
-        env:
-          IOS_BUILD_BASE: 8
-        run: echo "FLUTTER_BUILD_NUMBER=$(( GITHUB_RUN_NUMBER + ${IOS_BUILD_BASE:-0} ))" >> $GITHUB_ENV
+  #     - name: Compute iOS build number
+  #       env:
+  #         IOS_BUILD_BASE: 8
+  #       run: echo "FLUTTER_BUILD_NUMBER=$(( GITHUB_RUN_NUMBER + ${IOS_BUILD_BASE:-0} ))" >> $GITHUB_ENV
 
-      - name: Build and Upload to TestFlight
-        working-directory: flutter-packages/mobile/ios
-        env:
-          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          APP_IDENTIFIER: foundation.ratel.app
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: |
-          set -euo pipefail
-          bundle exec fastlane deploy
+  #     - name: Build and Upload to TestFlight
+  #       working-directory: flutter-packages/mobile/ios
+  #       env:
+  #         ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+  #         ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+  #         APP_IDENTIFIER: foundation.ratel.app
+  #         APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+  #       run: |
+  #         set -euo pipefail
+  #         bundle exec fastlane deploy
 
-      - name: Dump xcodebuild log on failure
-        if: failure()
-        shell: bash
-        run: |
-          LOG_DIR="$HOME/Library/Logs/gym"
-          ls -la "$LOG_DIR" || true
-          tail -n +200 "$LOG_DIR"/Runner-Runner.log || true
+  #     - name: Dump xcodebuild log on failure
+  #       if: failure()
+  #       shell: bash
+  #       run: |
+  #         LOG_DIR="$HOME/Library/Logs/gym"
+  #         ls -la "$LOG_DIR" || true
+  #         tail -n +200 "$LOG_DIR"/Runner-Runner.log || true
 
-      - name: Upload .ipa artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-ipa-${{ github.sha }}
-          path: |
-            flutter-packages/mobile/build/ios/**/*.ipa
-            flutter-packages/mobile/ios/*.ipa
-          if-no-files-found: warn
-          retention-days: 14
+  #     - name: Upload .ipa artifact
+  #       if: always()
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: ios-ipa-${{ github.sha }}
+  #         path: |
+  #           flutter-packages/mobile/build/ios/**/*.ipa
+  #           flutter-packages/mobile/ios/*.ipa
+  #         if-no-files-found: warn
+  #         retention-days: 14
 
   create-release-pr:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/dev'
-    needs: [android-apk, ios-testflight, deploy]
+    needs: [deploy]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -835,291 +888,291 @@ jobs:
           head: dev
           token: ${{ secrets.GITHUB_TOKEN }}
 
-  main-api-testing:
-    runs-on: ubuntu-22.04
+  # main-api-testing:
+  #   runs-on: ubuntu-22.04
 
-    defaults:
-      run:
-        working-directory: packages/main-api
+  #   defaults:
+  #     run:
+  #       working-directory: packages/main-api
 
-    outputs:
-      image: ${{ steps.build.outputs.image }}
+  #   outputs:
+  #     image: ${{ steps.build.outputs.image }}
 
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: recursive
+  #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          components: clippy, rustfmt
-          target: wasm32-unknown-unknown
-          toolchain: stable
+  #     - uses: actions-rust-lang/setup-rust-toolchain@v1
+  #       with:
+  #         components: clippy, rustfmt
+  #         target: wasm32-unknown-unknown
+  #         toolchain: stable
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v3
 
-      - uses: cargo-bins/cargo-binstall@main
-      - name: Install toml-cli
-        run: |
-          cargo binstall toml-cli
+  #     - uses: cargo-bins/cargo-binstall@main
+  #     - name: Install toml-cli
+  #       run: |
+  #         cargo binstall toml-cli
 
-      - name: Cache builder
-        id: main-api-build-cache
-        uses: actions/cache@v4
-        with:
-          key: main-api-build-${{ hashFiles('Cargo.lock') }}
-          restore-keys: |
-            main-api-build-
-          path: |
-            packages/main-api/target
+  #     - name: Cache builder
+  #       id: main-api-build-cache
+  #       uses: actions/cache@v4
+  #       with:
+  #         key: main-api-build-${{ hashFiles('Cargo.lock') }}
+  #         restore-keys: |
+  #           main-api-build-
+  #         path: |
+  #           packages/main-api/target
 
-      - name: Setup pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@10.15.0 --activate
+  #     - name: Setup pnpm
+  #       run: |
+  #         corepack enable
+  #         corepack prepare pnpm@10.15.0 --activate
 
-      - name: Build and cache Docker image
-        id: build
-        env:
-          AWS_REGION: ap-northeast-2
-          AWS_ACCESS_KEY_ID: test
-          AWS_SECRET_ACCESS_KEY: test
-          ENV: dev
-          SERVICE: main-api
-          DOMAIN: api.dev.ratel.foundation
-          ECR_NAME: main-api
-          COMMIT: testing-${{ github.sha }}
-          RUST_LOG: info
-          DYNAMO_TABLE_PREFIX: ratel-local
-          RUST_FLAG: "--features bypass,no-secret"
-        run: |
-          # Build and tag image
-          make dist
-          make docker.build
+  #     - name: Build and cache Docker image
+  #       id: build
+  #       env:
+  #         AWS_REGION: ap-northeast-2
+  #         AWS_ACCESS_KEY_ID: test
+  #         AWS_SECRET_ACCESS_KEY: test
+  #         ENV: dev
+  #         SERVICE: main-api
+  #         DOMAIN: api.dev.ratel.foundation
+  #         ECR_NAME: main-api
+  #         COMMIT: testing-${{ github.sha }}
+  #         RUST_LOG: info
+  #         DYNAMO_TABLE_PREFIX: ratel-local
+  #         RUST_FLAG: "--features bypass,no-secret"
+  #       run: |
+  #         # Build and tag image
+  #         make dist
+  #         make docker.build
 
-          # Save image to cache
-          docker save $ECR_NAME:$COMMIT | gzip > /tmp/main-api-image.tar.gz
-          echo "image=$ECR_NAME:$COMMIT" >> $GITHUB_OUTPUT
+  #         # Save image to cache
+  #         docker save $ECR_NAME:$COMMIT | gzip > /tmp/main-api-image.tar.gz
+  #         echo "image=$ECR_NAME:$COMMIT" >> $GITHUB_OUTPUT
 
-      - name: Upload main-api image artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: main-api-image-${{ github.sha }}
-          path: /tmp/main-api-image.tar.gz
-          if-no-files-found: error
-          retention-days: 7
+  #     - name: Upload main-api image artifact
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: main-api-image-${{ github.sha }}
+  #         path: /tmp/main-api-image.tar.gz
+  #         if-no-files-found: error
+  #         retention-days: 7
 
-  playwright-tests:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    needs: [main-api-testing]
+  # playwright-tests:
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 30
+  #   needs: [main-api-testing]
 
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         submodules: recursive
+  #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
+  #     - name: Install system dependencies
+  #       run: |
+  #         sudo apt-get update
+  #         sudo apt-get install -y docker-compose
 
-      - name: Setup pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@10.15.0 --activate
+  #     - name: Setup pnpm
+  #       run: |
+  #         corepack enable
+  #         corepack prepare pnpm@10.15.0 --activate
 
-      - name: Install dependencies
-        run: pnpm i
+  #     - name: Install dependencies
+  #       run: pnpm i
 
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
+  #     - name: Install Playwright Browsers
+  #       run: npx playwright install --with-deps chromium
 
-      - name: Download main-api image artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: main-api-image-${{ github.sha }}
-          path: /tmp
+  #     - name: Download main-api image artifact
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: main-api-image-${{ github.sha }}
+  #         path: /tmp
 
-      - name: Load Docker images
-        run: |
-          docker load < /tmp/main-api-image.tar.gz
-          docker images
+  #     - name: Load Docker images
+  #       run: |
+  #         docker load < /tmp/main-api-image.tar.gz
+  #         docker images
 
-      - name: Setup test environment
-        env:
-          COMMIT: testing-${{ github.sha }}
-        run: |
-          docker-compose --profile testing up -d
+  #     - name: Setup test environment
+  #       env:
+  #         COMMIT: testing-${{ github.sha }}
+  #       run: |
+  #         docker-compose --profile testing up -d
 
-      - name: Wait for services to be ready
-        run: |
-          # Check service health with retry loop and timeout
-          echo "Waiting for services to be ready..."
+  #     - name: Wait for services to be ready
+  #       run: |
+  #         # Check service health with retry loop and timeout
+  #         echo "Waiting for services to be ready..."
 
-          # Wait for Main API (180 second timeout for container startup)
-          echo "🔄 Checking Main API..."
-          timeout=180
-          interval=10
-          elapsed=0
-          while [ $elapsed -lt $timeout ]; do
-            if curl -f -s http://localhost:3000/version > /dev/null 2>&1; then
-              echo "✅ Main API is responding (took ${elapsed}s)"
-              break
-            fi
-            echo "⏳ Main API not ready yet... (${elapsed}/${timeout}s)"
-            sleep $interval
-            elapsed=$((elapsed + interval))
-          done
+  #         # Wait for Main API (180 second timeout for container startup)
+  #         echo "🔄 Checking Main API..."
+  #         timeout=180
+  #         interval=10
+  #         elapsed=0
+  #         while [ $elapsed -lt $timeout ]; do
+  #           if curl -f -s http://localhost:3000/version > /dev/null 2>&1; then
+  #             echo "✅ Main API is responding (took ${elapsed}s)"
+  #             break
+  #           fi
+  #           echo "⏳ Main API not ready yet... (${elapsed}/${timeout}s)"
+  #           sleep $interval
+  #           elapsed=$((elapsed + interval))
+  #         done
 
-          if [ $elapsed -ge $timeout ]; then
-            echo "❌ Main API failed to respond with 200 status within ${timeout}s"
-            echo "🔍 Checking Docker services status:"
-            docker-compose -f docker-compose.yaml ps
-            echo "🔍 Main API logs:"
-            docker-compose -f docker-compose.yaml logs main-api-testing --tail=50
-            exit 1
-          fi
+  #         if [ $elapsed -ge $timeout ]; then
+  #           echo "❌ Main API failed to respond with 200 status within ${timeout}s"
+  #           echo "🔍 Checking Docker services status:"
+  #           docker-compose -f docker-compose.yaml ps
+  #           echo "🔍 Main API logs:"
+  #           docker-compose -f docker-compose.yaml logs main-api-testing --tail=50
+  #           exit 1
+  #         fi
 
-          echo "🎉 All services are ready!"
+  #         echo "🎉 All services are ready!"
 
-      - name: Run Playwright Tests
-        env:
-          CI: true
-          RATEL_TEST_PLAYWRIGHT_URL: http://localhost:3000
-        run: |
-          cd ts-packages/web
-          make test
+  #     - name: Run Playwright Tests
+  #       env:
+  #         CI: true
+  #         RATEL_TEST_PLAYWRIGHT_URL: http://localhost:3000
+  #       run: |
+  #         cd ts-packages/web
+  #         make test
 
-      - name: Move Playwright Tests
-        if: always()
-        run: |
-          mv ts-packages/web/playwright-report ./
+  #     - name: Move Playwright Tests
+  #       if: always()
+  #       run: |
+  #         mv ts-packages/web/playwright-report ./
 
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report
-          path: |
-            playwright-report/
-          retention-days: 30
+  #     - name: Upload test results
+  #       uses: actions/upload-artifact@v4
+  #       if: always()
+  #       with:
+  #         name: playwright-report
+  #         path: |
+  #           playwright-report/
+  #         retention-days: 30
 
-  deploy-report:
-    if: ${{ !cancelled() }}
-    needs: [playwright-tests]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  # deploy-report:
+  #   if: ${{ !cancelled() }}
+  #   needs: [playwright-tests]
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: read
+  #     pages: write
+  #     id-token: write
+  #   environment:
+  #     name: github-pages
+  #     url: ${{ steps.deployment.outputs.page_url }}
 
-    steps:
-      - name: Download test report artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: playwright-report
-          path: playwright-report/
-        continue-on-error: true
+  #   steps:
+  #     - name: Download test report artifact
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: playwright-report
+  #         path: playwright-report/
+  #       continue-on-error: true
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
+  #     - name: Setup Pages
+  #       uses: actions/configure-pages@v4
 
-      - name: Upload to GitHub Pages
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: playwright-report/
+  #     - name: Upload to GitHub Pages
+  #       uses: actions/upload-pages-artifact@v3
+  #       with:
+  #         path: playwright-report/
 
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+  #     - name: Deploy to GitHub Pages
+  #       id: deployment
+  #       uses: actions/deploy-pages@v4
 
-      - name: Comment PR with test report link
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const reportUrl = `${{ steps.deployment.outputs.page_url }}`;
-            const runUrl = `https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}`;
+  #     - name: Comment PR with test report link
+  #       if: github.event_name == 'pull_request'
+  #       uses: actions/github-script@v7
+  #       with:
+  #         script: |
+  #           const reportUrl = `${{ steps.deployment.outputs.page_url }}`;
+  #           const runUrl = `https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}`;
 
-            const comment = `## 🎭 Playwright Test Results
+  #           const comment = `## 🎭 Playwright Test Results
 
-            **📊 Test Report:** [View interactive test report](${reportUrl})
+  #           **📊 Test Report:** [View interactive test report](${reportUrl})
 
-            **📁 Test Artifacts:**
-            - Playwright report and screenshots are available in [GitHub Actions artifacts](${runUrl})
+  #           **📁 Test Artifacts:**
+  #           - Playwright report and screenshots are available in [GitHub Actions artifacts](${runUrl})
 
-            **📋 Test Summary:**
-            - Workflow: Playwright Tests  
-            - Trigger: ${{ github.event_name }}
-            - Commit: ${{ github.sha }}
-            - Status: ${{ needs.test.result }}
+  #           **📋 Test Summary:**
+  #           - Workflow: Playwright Tests  
+  #           - Trigger: ${{ github.event_name }}
+  #           - Commit: ${{ github.sha }}
+  #           - Status: ${{ needs.test.result }}
 
-            ---
-            *Test report automatically deployed to GitHub Pages*`;
+  #           ---
+  #           *Test report automatically deployed to GitHub Pages*`;
 
-            // Find existing comment to update or create new one
-            const { data: comments } = await github.rest.issues.listComments({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-            });
+  #           // Find existing comment to update or create new one
+  #           const { data: comments } = await github.rest.issues.listComments({
+  #             issue_number: context.issue.number,
+  #             owner: context.repo.owner,
+  #             repo: context.repo.repo,
+  #           });
 
-            const existingComment = comments.find(comment =>
-              comment.body.includes('🎭 Playwright Test Results') &&
-              comment.user.type === 'Bot'
-            );
+  #           const existingComment = comments.find(comment =>
+  #             comment.body.includes('🎭 Playwright Test Results') &&
+  #             comment.user.type === 'Bot'
+  #           );
 
-            if (existingComment) {
-              await github.rest.issues.updateComment({
-                comment_id: existingComment.id,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: comment
-              });
-            } else {
-              await github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: comment
-              });
-            }
-  deploy-pdf-ai-agent:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+  #           if (existingComment) {
+  #             await github.rest.issues.updateComment({
+  #               comment_id: existingComment.id,
+  #               owner: context.repo.owner,
+  #               repo: context.repo.repo,
+  #               body: comment
+  #             });
+  #           } else {
+  #             await github.rest.issues.createComment({
+  #               issue_number: context.issue.number,
+  #               owner: context.repo.owner,
+  #               repo: context.repo.repo,
+  #               body: comment
+  #             });
+  #           }
+  # deploy-pdf-ai-agent:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: recursive
+  #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
-      - uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-2
+  #     - uses: aws-actions/configure-aws-credentials@v2
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         aws-region: ap-northeast-2
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "20"
-          cache: "npm"
-          cache-dependency-path: cdk/package-lock.json
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v3
+  #       with:
+  #         node-version: "20"
+  #         cache: "npm"
+  #         cache-dependency-path: cdk/package-lock.json
 
-      - name: Deploy AI Agent Stack
-        env:
-          ENV: dev
-          AWS_REGION: ap-northeast-2
-          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AGENT_NAME: pdf
-          BUCKET_PREFIX: "dev/spaces/"
-        run: |
-          npm i -g aws-cdk
-          make cdk-deploy-ai-stack
+  #     - name: Deploy AI Agent Stack
+  #       env:
+  #         ENV: dev
+  #         AWS_REGION: ap-northeast-2
+  #         ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AGENT_NAME: pdf
+  #         BUCKET_PREFIX: "dev/spaces/"
+  #       run: |
+  #         npm i -g aws-cdk
+  #         make cdk-deploy-ai-stack
