@@ -1,26 +1,41 @@
-use crate::*;
+use crate::{attribute::Gender, *};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(DynamoEntity))]
-pub struct VerifiedAttributesLocal {
+pub struct VerifiedAttributes {
     pub pk: CompositePartition,
+    #[cfg_attr(
+        feature = "server",
+        dynamo(prefix = "TS", name = "find_by_info_prefix", index = "gsi1", pk)
+    )]
     pub sk: EntityType,
-    pub birth_date: Option<String>,
-    pub gender: Option<String>,
+    #[cfg_attr(feature = "server", dynamo(prefix = "INFO", index = "gsi1", sk))]
+    pub birth_date: Option<String>, // YYYYMMDD
+    pub gender: Option<Gender>,
     pub university: Option<String>,
 }
 
-impl VerifiedAttributesLocal {
+impl VerifiedAttributes {
+    pub fn new(user_pk: Partition) -> Self {
+        if !matches!(user_pk, Partition::User(_)) {
+            panic!("pk for VerifiedAttributes must be Partition::User");
+        }
+
+        Self {
+            pk: CompositePartition(user_pk, Partition::Attributes),
+            sk: EntityType::VerifiedAttributes,
+            ..Default::default()
+        }
+    }
+
     pub fn keys(user_pk: &Partition) -> (CompositePartition, EntityType) {
         (
             CompositePartition(user_pk.clone(), Partition::Attributes),
             EntityType::VerifiedAttributes,
         )
     }
-}
 
-#[cfg(feature = "server")]
-impl VerifiedAttributesLocal {
+    #[cfg(feature = "server")]
     pub fn age(&self) -> Option<u32> {
         use chrono::{Datelike, Utc};
 
@@ -44,5 +59,10 @@ impl VerifiedAttributesLocal {
         }
 
         Some(age)
+    }
+
+    #[cfg(not(feature = "server"))]
+    pub fn age(&self) -> Option<u32> {
+        None
     }
 }

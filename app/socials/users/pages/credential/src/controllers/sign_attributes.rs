@@ -1,5 +1,5 @@
 use crate::controllers::get_credentials::CredentialResponse;
-use crate::models::{AttributeCodeLocal, VerifiedAttributesLocal};
+use crate::models::{AttributeCode, VerifiedAttributes};
 use crate::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -35,7 +35,7 @@ pub async fn sign_attributes_handler(body: SignAttributesRequest) -> Result<Cred
 
         return Ok(CredentialResponse {
             age: attrs.age(),
-            gender: attrs.gender,
+            gender: attrs.gender.map(|value| value.to_string()),
             university: attrs.university,
         });
     }
@@ -46,7 +46,7 @@ async fn add_attributes_by_code(
     cli: &common::aws_sdk_dynamodb::Client,
     user: &ratel_auth::User,
     code: String,
-) -> Result<VerifiedAttributesLocal> {
+) -> Result<VerifiedAttributes> {
     let code = code.trim().to_string();
     if code.is_empty() {
         return Err(Error::BadRequest(
@@ -54,7 +54,7 @@ async fn add_attributes_by_code(
         ));
     }
 
-    let code_item = AttributeCodeLocal::get(
+    let code_item = AttributeCode::get(
         cli,
         Partition::AttributeCode(code),
         Some(EntityType::AttributeCode),
@@ -62,8 +62,8 @@ async fn add_attributes_by_code(
     .await?
     .ok_or_else(|| Error::NotFound("Attribute code not found".to_string()))?;
 
-    let (pk, sk) = VerifiedAttributesLocal::keys(&user.pk);
-    let mut attrs = VerifiedAttributesLocal::get(cli, pk.clone(), Some(sk.clone()))
+    let (pk, sk) = VerifiedAttributes::keys(&user.pk);
+    let mut attrs = VerifiedAttributes::get(cli, pk.clone(), Some(sk.clone()))
         .await?
         .unwrap_or_default();
     attrs.pk = pk;
@@ -72,9 +72,7 @@ async fn add_attributes_by_code(
     if let Some(birth_date) = code_item.birth_date {
         attrs.birth_date = Some(birth_date);
     }
-    if let Some(gender) = code_item.gender {
-        attrs.gender = Some(gender);
-    }
+    attrs.gender = code_item.gender.or(attrs.gender);
     if let Some(university) = code_item.university {
         attrs.university = Some(university);
     }
@@ -88,7 +86,7 @@ async fn portone_sign_attributes(
     cli: &common::aws_sdk_dynamodb::Client,
     user: &ratel_auth::User,
     id: String,
-) -> Result<VerifiedAttributesLocal> {
+) -> Result<VerifiedAttributes> {
     use crate::services::PortOneClient;
 
     let portone = PortOneClient::new();
@@ -96,23 +94,21 @@ async fn portone_sign_attributes(
     let verified = response.verified_customer;
 
     let gender = match verified.gender.to_lowercase().as_str() {
-        "male" => Some("male".to_string()),
-        "female" => Some("female".to_string()),
+        "male" => Some(common::attribute::Gender::Male),
+        "female" => Some(common::attribute::Gender::Female),
         _ => return Err(Error::BadRequest("Invalid gender".to_string())),
     };
 
     let birth_date = verified.birth_date.replace('-', "");
 
-    let (pk, sk) = VerifiedAttributesLocal::keys(&user.pk);
-    let mut attrs = VerifiedAttributesLocal::get(cli, pk.clone(), Some(sk.clone()))
+    let (pk, sk) = VerifiedAttributes::keys(&user.pk);
+    let mut attrs = VerifiedAttributes::get(cli, pk.clone(), Some(sk.clone()))
         .await?
         .unwrap_or_default();
     attrs.pk = pk;
     attrs.sk = sk;
     attrs.birth_date = Some(birth_date);
-    if let Some(gender) = gender {
-        attrs.gender = Some(gender);
-    }
+    attrs.gender = gender.or(attrs.gender);
 
     attrs.upsert(cli).await?;
     Ok(attrs)

@@ -1,4 +1,4 @@
-use crate::models::VerifiedAttributesLocal;
+use crate::models::VerifiedAttributes;
 use crate::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -15,13 +15,13 @@ pub async fn get_credentials_handler() -> Result<CredentialResponse> {
     let cli = conf.dynamodb();
 
     let pk = CompositePartition(user.pk.clone(), Partition::Attributes);
-    let res = VerifiedAttributesLocal::get(cli, pk, None::<String>)
+    let res = VerifiedAttributes::get(cli, pk, None::<String>)
         .await?
         .unwrap_or_default();
 
     Ok(CredentialResponse {
         age: res.age(),
-        gender: res.gender,
+        gender: res.gender.map(|value| value.to_string()),
         university: res.university,
     })
 }
