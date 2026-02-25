@@ -581,3 +581,86 @@ jobs:
           path: |
             playwright-report/
           retention-days: 30
+
+  ratel-app-shell:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: app/shell
+
+    outputs:
+      image: ${{ steps.build.outputs.image }}
+
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+          toolchain: stable
+          target: wasm32-unknown-unknown
+
+      - uses: cargo-bins/cargo-binstall@main
+      - name: Install system dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            lld
+
+      - name: Install Dioxus-cli
+        run: |
+          cargo binstall dioxus-cli --force
+
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.15.0 --activate
+
+      - name: Cache builder
+        id: app-shell-build-cache
+        uses: actions/cache@v4
+        with:
+          key: app-shell-build-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            app-shell-build-
+          path: |
+            target
+
+      - name: Building test
+        id: build
+        env:
+          DYNAMO_TABLE_PREFIX: ratel-local
+          ENV: local
+          RUSTFLAGS: "-D warnings"
+          RUST_LOG: info
+          DYNAMO_ENDPOINT: http://localhost:4566
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_REGION: us-east-1
+          COMMIT: pr-${{ github.sha }}
+        run: |
+          make build
+          make docker
+
+          # Save image for artifact upload
+          docker save ratel:$COMMIT | gzip > /tmp/app-shell-image.tar.gz
+          echo "image=ratel:$COMMIT" >> $GITHUB_OUTPUT
+
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-shell-docker-image
+          path: /tmp/app-shell-image.tar.gz
+          retention-days: 7
+
