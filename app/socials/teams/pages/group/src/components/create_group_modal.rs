@@ -1,4 +1,5 @@
 use crate::*;
+use common::Switch;
 
 use ratel_post::types::TeamGroupPermission;
 
@@ -278,9 +279,8 @@ fn GroupPermissionSelector(
                                     span { class: "text-[15px]/[24px] font-normal text-text-primary",
                                         {item.label}
                                     }
-                                    PermissionSwitch {
+                                    Switch {
                                         active: permissions.contains(&item.value),
-                                        data_pw: format!("permission-toggle-{}", item.value as u8),
                                         on_toggle: move |_| on_toggle.call(item.value),
                                     }
                                 }
@@ -289,25 +289,6 @@ fn GroupPermissionSelector(
                     }
                 }
             }
-        }
-    }
-}
-
-#[component]
-fn PermissionSwitch(active: bool, data_pw: String, on_toggle: EventHandler<MouseEvent>) -> Element {
-    let container_class = if active {
-        "relative inline-flex items-center w-11 h-6 rounded-full transition-colors bg-primary"
-    } else {
-        "relative inline-flex items-center w-11 h-6 rounded-full transition-colors bg-neutral-700"
-    };
-    let knob_class = if active {
-        "absolute left-[2px] top-[2px] w-5 h-5 rounded-full bg-white transition-transform translate-x-5"
-    } else {
-        "absolute left-[2px] top-[2px] w-5 h-5 rounded-full bg-white transition-transform"
-    };
-    rsx! {
-        button { class: {container_class}, onclick: on_toggle,
-            span { class: {knob_class} }
         }
     }
 }
