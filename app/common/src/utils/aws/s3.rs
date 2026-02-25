@@ -51,10 +51,17 @@ impl S3Client {
         let aws_config = Config::from(config);
         let client = Client::from_conf(aws_config);
 
+        let asset_dir = asset_dir.unwrap_or_default();
+        let asset_dir = if asset_dir.is_empty() || asset_dir.ends_with('/') {
+            asset_dir
+        } else {
+            format!("{}/", asset_dir)
+        };
+
         S3Client {
             client,
             bucket_name,
-            asset_dir: asset_dir.unwrap_or("/".to_string()),
+            asset_dir,
         }
     }
 
