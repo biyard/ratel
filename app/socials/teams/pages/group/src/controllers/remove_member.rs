@@ -6,12 +6,13 @@ use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
 
 #[delete("/api/teams/:team_pk/groups/:group_sk/member", user: ratel_auth::User)]
 pub async fn remove_member_handler(
-    team_pk: Partition,
+    team_pk: TeamPartition,
     group_sk: String,
     body: RemoveMemberRequest,
 ) -> Result<RemoveMemberResponse> {
     let conf = crate::config::get();
     let cli = conf.common.dynamodb();
+    let team_pk: Partition = team_pk.into();
 
     let permissions = Team::get_permissions_by_team_pk(cli, &team_pk, &user.pk)
         .await

@@ -6,12 +6,13 @@ use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
 
 #[patch("/api/teams/:team_pk/groups/:group_sk", user: ratel_auth::User)]
 pub async fn update_group_handler(
-    team_pk: Partition,
+    team_pk: TeamPartition,
     group_sk: String,
     body: UpdateGroupRequest,
 ) -> Result<()> {
     let conf = crate::config::get();
     let cli = conf.common.dynamodb();
+    let team_pk: Partition = team_pk.into();
 
     let permissions = Team::get_permissions_by_team_pk(cli, &team_pk, &user.pk)
         .await

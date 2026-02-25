@@ -90,7 +90,7 @@ pub struct DeleteGroupResponse {
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct TeamGroupPermissionContext {
-    pub team_pk: Partition,
+    pub team_pk: TeamPartition,
     pub permissions: i64,
 }
 
