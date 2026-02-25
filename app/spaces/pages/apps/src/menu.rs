@@ -3,8 +3,9 @@ use crate::*;
 pub fn get_nav_item(
     space_id: SpacePartition,
     role: SpaceUserRole,
+    has_admin_access: bool,
 ) -> Option<(Element, SpacePage, NavigationTarget)> {
-    if role != SpaceUserRole::Creator {
+    if role != SpaceUserRole::Creator && !has_admin_access {
         return None;
     }
     Some((
@@ -56,16 +57,6 @@ pub fn get_app_menu_items(space_id: SpacePartition, installed: &Vec<SpaceApp>) -
                 name: SpaceAppType::IncentivePool.to_string(),
                 icon: rsx! {
                     icons::ratel::Chest { class: "text-icon-primary [&>path]:fill-current [&>circle]:stroke-current" }
-                },
-                route: Route::IncentivePool {
-                    space_id: space_id.clone(),
-                    rest: vec![],
-                },
-            },
-            SpaceAppType::File => AppMenuItem {
-                name: SpaceAppType::File.to_string(),
-                icon: rsx! {
-                    icons::file::File { class: "" }
                 },
                 route: Route::IncentivePool {
                     space_id: space_id.clone(),
