@@ -45,10 +45,10 @@ run:
 	$(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web
 
 build:
-	$(BUILD_ENV) dx build --web --release
+	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web --platform web @server --features server --platform server
 
 build-lambda:
-	$(BUILD_ENV) dx build --features lambda --web --release
+	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web --platform web @server --features lambda --platform server
 
 docker:
 	docker build -t $(REPOSITORY):$(COMMIT) -f Dockerfile ../../target/dx/app-shell/release/web

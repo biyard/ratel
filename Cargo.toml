@@ -123,23 +123,3 @@ web-sys = "0.3"
 wasm-bindgen = { version = "0.2", features = [] }
 wasm-bindgen-futures = "0.4"
 serde-wasm-bindgen = "0.6"
-
-[profile.wasm-dev]
-inherits = "dev"
-opt-level = 1
-
-[profile.server-dev]
-inherits = "dev"
-
-[profile.android-dev]
-inherits = "dev"
-
-
-[profile.bevy-wasm-release]
-# Default to release profile values.
-inherits = "release"
-# Optimize with size in mind (also try "z", sometimes it is better).
-# Slightly slows compile times, great improvements to file size and runtime performance.
-opt-level = "z"
-# Strip all debugging information from the binary to slightly reduce file size.
-strip = "debuginfo"
