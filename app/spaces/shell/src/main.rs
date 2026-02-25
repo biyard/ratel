@@ -1,9 +1,7 @@
-use common::{
-    components::{LayoverService, PopupService},
-    use_query_store, PopupZone,
-};
+use common::{components::PopupService, query_provider, Environment, PopupZone, Provider};
+use common::{DevTools, ThemeService, ToastService};
 use dioxus::prelude::*;
-use ratel_auth::AuthProvider;
+use space_common::ratel_auth;
 use space_shell::*;
 fn main() {
     let config = config::get();
@@ -26,13 +24,23 @@ pub const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
 #[component]
 fn App() -> Element {
     use_context_provider(|| PopupService::new());
-    use_query_store();
+
+    ToastService::init();
+    ThemeService::init();
+    let _ = ratel_auth::Context::init()?;
+    common::contexts::TeamContext::init();
+    query_provider();
+    let env = config::get().common.env;
+
     rsx! {
         document::Link { rel: "icon", href: FAVICON }
         document::Link { rel: "stylesheet", href: TAILWIND_CSS }
-        AuthProvider {}
+        Provider {}
+        ratel_auth::AuthProvider {}
         Router::<Route> {}
         PopupZone {}
-
+        if env == Environment::Dev || env == Environment::Local {
+            DevTools {}
+        }
     }
 }

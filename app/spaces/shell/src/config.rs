@@ -11,9 +11,8 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
-        Config {
-            common: CommonConfig::default(),
-        }
+        let common = CommonConfig::default();
+        Config { common }
     }
 }
 

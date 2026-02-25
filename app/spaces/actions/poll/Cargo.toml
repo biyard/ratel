@@ -11,11 +11,16 @@ common = { workspace = true }
 serde = { workspace = true }
 
 ratel-auth = { workspace = true }
-
+space-common = { workspace = true }
 
 [features]
 default = []
-web = ["common/web", "dioxus/web", "ratel-auth/web"]
+web = ["common/web", "dioxus/web", "ratel-auth/web", "space-common/web"]
 desktop = ["dioxus/desktop"]
 mobile = ["dioxus/mobile"]
-server = ["common/server", "dioxus/server", "ratel-auth/server"]
+server = [
+    "common/server",
+    "dioxus/server",
+    "ratel-auth/server",
+    "space-common/server",
+]
