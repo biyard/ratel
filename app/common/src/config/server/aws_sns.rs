@@ -1,18 +1,19 @@
-pub static SNS_CLIENT: dioxus::fullstack::Lazy<crate::utils::aws::SnsClient> =
-    dioxus::fullstack::Lazy::new(|| async move {
-        let aws_conf = crate::config::aws_config::AwsConfig::default();
-        let sns_region =
-            std::env::var("SNS_REGION").unwrap_or_else(|_| aws_conf.region.to_string());
-        let config = aws_sdk_sns::Config::builder()
-            .region(aws_sdk_sns::config::Region::new(sns_region))
-            .behavior_version_latest()
-            .credentials_provider(aws_sdk_dynamodb::config::Credentials::new(
-                aws_conf.access_key_id,
-                aws_conf.secret_access_key,
-                None,
-                None,
-                "loaded-from-config",
-            ))
-            .build();
-        dioxus::Ok(crate::utils::aws::SnsClient::new(config))
-    });
+use super::ServerConfig;
+use crate::utils::aws::SnsClient;
+use aws_config::Region;
+use dioxus::fullstack::Lazy;
+
+pub static SNS_CLIENT: Lazy<SnsClient> = Lazy::new(|| async move {
+    let config = ServerConfig::default();
+    let aws_sdk_config = config.aws.get_sdk_config();
+
+    let aws_sdk_config = if let Ok(sns_region) = std::env::var("SNS_REGION") {
+        let region = Region::new(sns_region);
+        aws_sdk_config.into_builder().region(region).build()
+    } else {
+        aws_sdk_config
+    };
+
+    let config = aws_sdk_sns::Config::from(&aws_sdk_config);
+    dioxus::Ok(SnsClient::new(config))
+});

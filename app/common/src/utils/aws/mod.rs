@@ -1,4 +1,3 @@
-pub mod dynamo;
 pub mod error;
 pub mod s3;
 pub mod ses;

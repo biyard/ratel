@@ -10,10 +10,13 @@ use uuid::Uuid;
 
 use crate::{Error, Result};
 
+#[allow(unused)]
 #[derive(Debug, Clone)]
 pub struct S3Client {
     pub client: Client,
     bucket_name: String,
+    asset_dir: String,
+    expire: u64,
 }
 
 #[derive(Debug, Clone)]
@@ -46,12 +49,27 @@ pub struct PutObjectResult {
 }
 
 impl S3Client {
-    pub fn new(config: &SdkConfig, bucket_name: String) -> S3Client {
+    pub fn new(
+        config: &SdkConfig,
+        bucket_name: String,
+        asset_dir: Option<String>,
+        expire: u64,
+    ) -> S3Client {
         let aws_config = Config::from(config);
         let client = Client::from_conf(aws_config);
+
+        let asset_dir = asset_dir.unwrap_or_default();
+        let asset_dir = if asset_dir.is_empty() || asset_dir.ends_with('/') {
+            asset_dir
+        } else {
+            format!("{}/", asset_dir)
+        };
+
         S3Client {
             client,
             bucket_name,
+            asset_dir,
+            expire,
         }
     }
 
@@ -62,7 +80,13 @@ impl S3Client {
         S3Client {
             client,
             bucket_name: "common".to_string(),
+            asset_dir: "/".to_string(),
+            expire: 3600,
         }
+    }
+
+    pub fn get_url(&self, key: &str) -> String {
+        format!("https://{}/{}", self.bucket_name, key)
     }
 }
 
@@ -114,15 +138,17 @@ impl S3Client {
         expire: Option<u64>,
     ) -> Result<Vec<PutObjectResult>> {
         let total_count = total_count.unwrap_or(1);
-        let expire_time = expire.unwrap_or(3600);
+        let expire_time = expire.unwrap_or(self.expire);
         let mut result: Vec<PutObjectResult> = vec![];
+
+        let prefix = prefix.filter(|v| !v.is_empty());
 
         for _ in 0..total_count {
             let id = Uuid::new_v4();
             let key = if let Some(p) = prefix {
-                format!("{}/{}", p.trim_end_matches('/'), id)
+                format!("{}{}/{}", self.asset_dir, p.trim_end_matches('/'), id)
             } else {
-                id.to_string()
+                format!("{}{}", self.asset_dir, id)
             };
             let presigned = self
                 .client

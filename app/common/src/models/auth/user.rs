@@ -185,7 +185,8 @@ where
     type Rejection = Error;
 
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self> {
-        tracing::debug!("extracting user from request parts");
+        tracing::debug!("extracting user from request parts. Path: {:?}", parts.uri);
+
         extract_user_from_parts(parts, state).await
     }
 }

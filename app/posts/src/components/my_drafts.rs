@@ -24,7 +24,7 @@ pub fn MyDrafts() -> Element {
         use_infinite_query(
             move |bookmark| async move { list_user_drafts_handler(bookmark).await },
         )?;
-    let mut deleted = use_signal(HashSet::<String>::new);
+    let deleted = use_signal(HashSet::<String>::new);
     let nav = use_navigator();
 
     let deleted_keys = deleted.read().clone();
