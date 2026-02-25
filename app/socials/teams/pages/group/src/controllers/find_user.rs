@@ -1,7 +1,7 @@
 use crate::controllers::dto::FoundUserResponse;
 use crate::*;
 
-use ratel_auth::{User, UserPhoneNumber, UserQueryOption};
+use ratel_auth::{User, UserPhoneNumber};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
@@ -21,13 +21,11 @@ pub async fn find_user_handler(
 
     let user = match user_type {
         FindUserQueryType::Email => {
-            let (users, _) =
-                User::find_by_email(cli, &value, UserQueryOption::builder().limit(1)).await?;
+            let (users, _) = User::find_by_email(cli, &value, User::opt().limit(1)).await?;
             users.into_iter().next()
         }
         FindUserQueryType::Username => {
-            let (users, _) =
-                User::find_by_username(cli, &value, UserQueryOption::builder().limit(1)).await?;
+            let (users, _) = User::find_by_username(cli, &value, User::opt().limit(1)).await?;
             users.into_iter().next()
         }
         FindUserQueryType::PhoneNumber => {
