@@ -7,77 +7,85 @@ translate! {
         en: "Space Setting",
         ko: "스페이스 설정",
     },
-    section_invite_new_admin: {
-        en: "Invite New Admin",
-        ko: "새 관리자 초대",
+    section_invite_participant: {
+        en: "Invite Participant",
+        ko: "참여자 초대",
     },
     label_email_address: {
         en: "Email Address",
         ko: "이메일 주소",
     },
-    placeholder_admin_email: {
-        en: "admin@example.com",
-        ko: "admin@example.com",
+    placeholder_participant_email: {
+        en: "participant@example.com",
+        ko: "participant@example.com",
     },
     label_default_reward: {
         en: "Default Reward",
         ko: "기본 권한",
     },
-    role_admin_title: {
-        en: "Admin",
-        ko: "관리자",
+    role_participant_title: {
+        en: "Participant",
+        ko: "참여자",
     },
-    role_admin_description: {
-        en: "Everything",
-        ko: "모든 권한",
-    },
-    role_editor_title: {
-        en: "Editor",
-        ko: "편집자",
-    },
-    role_editor_description: {
-        en: "Can edit overview and actions",
-        ko: "개요와 액션 편집 가능",
-    },
-    role_viewer_title: {
-        en: "Viewer",
-        ko: "뷰어",
-    },
-    role_viewer_description: {
-        en: "Read-only",
-        ko: "읽기 전용",
-    },
-    allow_connections_label: {
-        en: "Allow administrators to invite their connections",
-        ko: "관리자가 자신의 연결을 초대하도록 허용",
-    },
-    allow_connections_description: {
-        en: "Group members can invite 1st degree connections to the group. All requests to join will still require admin approval.",
-        ko: "그룹 멤버는 1촌 연결을 그룹에 초대할 수 있습니다. 모든 가입 요청은 여전히 관리자 승인이 필요합니다.",
+    role_participant_description: {
+        en: "Can participate in this space",
+        ko: "이 스페이스에 참여할 수 있음",
     },
     btn_invite: {
         en: "Invite",
         ko: "초대",
     },
+    invite_success: {
+        en: "Participants invited successfully.",
+        ko: "참여자를 성공적으로 초대했습니다.",
+    },
+    invite_partial: {
+        en: "Some invitations failed.",
+        ko: "일부 초대가 실패했습니다.",
+    },
+    invite_failed: {
+        en: "Failed to invite participants",
+        ko: "참여자 초대에 실패했습니다",
+    },
     section_administrator: {
         en: "Administrator",
         ko: "관리자",
     },
-    profile_name: {
-        en: "Profile",
-        ko: "프로필",
-    },
-    profile_caption: {
-        en: "Caption",
-        ko: "설명",
-    },
-    profile_time_ago: {
-        en: "1w ago",
-        ko: "1주 전",
+    administrator_empty: {
+        en: "Administrator not found",
+        ko: "관리자를 찾을 수 없습니다",
     },
     btn_delete_space: {
         en: "Delete Space",
         ko: "스페이스 삭제",
+    },
+    delete_success: {
+        en: "Space deleted successfully.",
+        ko: "스페이스를 성공적으로 삭제했습니다.",
+    },
+    delete_failed: {
+        en: "Failed to delete space",
+        ko: "스페이스 삭제에 실패했습니다",
+    },
+    failure_invalid_email: {
+        en: "Invalid email",
+        ko: "유효하지 않은 이메일",
+    },
+    failure_duplicate_email: {
+        en: "Duplicate email in request",
+        ko: "요청 내 중복 이메일",
+    },
+    failure_user_not_found: {
+        en: "User not found",
+        ko: "사용자를 찾을 수 없음",
+    },
+    failure_already_participant: {
+        en: "Already a participant",
+        ko: "이미 참여자입니다",
+    },
+    failure_already_invited: {
+        en: "Already invited",
+        ko: "이미 초대되었습니다",
     },
     no_permission: {
         en: "No permission",
