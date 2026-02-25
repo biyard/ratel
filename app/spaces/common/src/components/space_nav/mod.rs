@@ -1,42 +1,18 @@
+use crate::*;
 mod space_user_login;
 mod space_user_profile;
 
+use common::models::User;
 pub use space_user_login::*;
 pub use space_user_profile::*;
 
-use crate::*;
-
-#[derive(Clone, PartialEq)]
-pub enum SpaceNavLabel {
-    Static(SpacePage),
-    Dynamic(SpaceAppName),
-}
-
-#[derive(Clone, PartialEq)]
-pub struct SpaceNavItem {
-    pub icon: Element,
-    pub label: SpaceNavLabel,
-    pub link: NavigationTarget,
-}
-
-impl TryFrom<Option<(Element, SpacePage, NavigationTarget)>> for SpaceNavItem {
-    fn try_from(value: Option<(Element, SpacePage, NavigationTarget)>) -> Result<Self> {
-        let value = value.ok_or_else(|| crate::Error::UnauthorizedAccess)?;
-
-        Ok(Self {
-            icon: value.0,
-            label: SpaceNavLabel::Static(value.1),
-            link: value.2,
-        })
-    }
-
-    type Error = crate::Error;
-}
-
 #[component]
-pub fn SpaceNav(logo: String, menus: Vec<SpaceNavItem>) -> Element {
-    let user = use_user()?;
-
+pub fn SpaceNav(
+    logo: String,
+    menus: Vec<SpaceNavItem>,
+    user: Option<User>,
+    login_handler: EventHandler<()>,
+) -> Element {
     rsx! {
         div { class: "flex left-0 top-14 z-40 flex-col col-span-1 gap-2.5 justify-between pt-2.5 h-screen divide-y transition-transform duration-300 ease-in-out -translate-x-full shrink-0 divide-divider tablet:top-0 tablet:translate-x-0",
             div { class: "flex flex-col gap-2.5 w-full",
@@ -48,14 +24,14 @@ pub fn SpaceNav(logo: String, menus: Vec<SpaceNavItem>) -> Element {
                     }
                 }
             }
-            if let Some(user) = user.read().as_ref() {
+            if let Some(user) = user {
                 SpaceUserProfile {
                     image: user.profile_url.clone(),
                     display_name: user.display_name.clone(),
                     user_role: SpaceUserRole::Creator,
                 }
             } else {
-                SpaceUserLogin {}
+                SpaceUserLogin { onclick: login_handler }
             }
         }
     }
@@ -63,18 +39,19 @@ pub fn SpaceNav(logo: String, menus: Vec<SpaceNavItem>) -> Element {
 
 #[component]
 fn NavItem(item: SpaceNavItem) -> Element {
-    // TODO: Apply i18n service
-    let label = match item.label {
-        SpaceNavLabel::Static(page) => page.translate(&Language::En).to_string(),
-        SpaceNavLabel::Dynamic(app_id) => app_id.translate(&Language::En).to_string(),
-    };
-
     rsx! {
         Link {
             class: "flex flex-row gap-2 items-center py-2 px-1 w-full text-sm font-medium rounded-sm text-text hover:bg-space-nav-item-hover",
             to: item.link,
             {item.icon}
-            "{label}"
+            {item.label}
         }
     }
+}
+
+#[derive(Clone, PartialEq)]
+pub struct SpaceNavItem {
+    pub icon: Element,
+    pub label: String,
+    pub link: NavigationTarget,
 }

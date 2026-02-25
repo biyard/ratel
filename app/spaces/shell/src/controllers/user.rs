@@ -1,8 +1,8 @@
 use crate::*;
 use common::models::*;
-use ratel_auth::models::user::{OptionalUser, User, SESSION_KEY_USER_ID};
 use dioxus::fullstack::Form;
 use serde::de::DeserializeOwned;
+use space_common::ratel_auth::models::user::{OptionalUser, User, SESSION_KEY_USER_ID};
 
 #[cfg(feature = "server")]
 use crate::AppState;
@@ -60,9 +60,7 @@ struct GoogleUserInfo {
 }
 
 #[post("/api/oauth-login", session: Extension<TowerSession>)]
-pub async fn oauth_login(
-    form: Form<OAuthLoginRequest>,
-) -> std::result::Result<(), ServerFnError> {
+pub async fn oauth_login(form: Form<OAuthLoginRequest>) -> std::result::Result<(), ServerFnError> {
     // SESSION_KEY_USER_ID is now imported at the top from ratel_auth
 
     let c = crate::config::get();

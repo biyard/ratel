@@ -17659,6 +17659,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "space-common"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "ratel-auth",
+ "ratel-post",
+ "serde",
+]
+
+[[package]]
 name = "space-page-actions"
 version = "0.1.0"
 dependencies = [
@@ -17679,6 +17690,7 @@ dependencies = [
  "space-app-all-apps",
  "space-app-general",
  "space-app-incentive-pool",
+ "space-common",
 ]
 
 [[package]]
@@ -17694,6 +17706,7 @@ dependencies = [
  "serde",
  "serde_dynamo",
  "serde_json",
+ "space-common",
  "tracing",
  "uuid 1.18.1",
 ]
@@ -17735,12 +17748,11 @@ dependencies = [
  "dioxus",
  "names",
  "percent-encoding",
- "ratel-auth",
- "ratel-post",
  "reqwest 0.12.28",
  "serde",
  "serde_dynamo",
  "serde_repr",
+ "space-common",
  "space-page-actions",
  "space-page-apps",
  "space-page-dashboard",
