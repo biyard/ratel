@@ -226,9 +226,8 @@ pub fn Home(username: String) -> Element {
             let prev_theme = theme_service.current();
             let initial_theme = ThemeOption::from_theme(prev_theme);
             let on_preview = {
-                let mut theme_service = theme_service.clone();
                 move |theme: ThemeOption| {
-                    theme_service.set(theme.to_theme());
+                    apply_theme(theme.to_theme().to_string().as_str());
                 }
             };
             let on_save = {
@@ -241,9 +240,8 @@ pub fn Home(username: String) -> Element {
             };
             let on_cancel = {
                 let mut popup = popup;
-                let mut theme_service = theme_service.clone();
                 move |_evt: MouseEvent| {
-                    theme_service.set(prev_theme);
+                    apply_theme(prev_theme.to_string().as_str());
                     popup.close();
                 }
             };
