@@ -13430,9 +13430,15 @@ dependencies = [
 name = "ratel-team-reward"
 version = "0.1.0"
 dependencies = [
+ "aide",
+ "aws-sdk-dynamodb",
  "common",
  "dioxus",
+ "ratel-auth",
+ "ratel-post",
+ "schemars 1.0.4",
  "serde",
+ "tracing",
 ]
 
 [[package]]
