@@ -21,3 +21,5 @@ pub use serde_dynamo;
 pub use percent_encoding;
 
 pub use tokio;
+
+pub type DynamoClient = aws_sdk_dynamodb::Client;

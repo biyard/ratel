@@ -4,8 +4,7 @@
 pub mod password {
     pub use common::utils::password::*;
 }
-#[cfg(feature = "server")]
-pub mod aws;
+
 #[cfg(feature = "server")]
 pub mod rand_utils;
 #[cfg(feature = "server")]

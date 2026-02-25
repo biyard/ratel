@@ -1,5 +1,5 @@
 use crate::models::did::{VerifiableAttribute, VerifiableAttributeWithQuota};
-use crate::models::Age;
+use common::attribute::Age;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -90,7 +90,11 @@ impl PanelAttribute {
                 VerifiableAttribute::Gender(g) => Some(g.to_string()),
                 VerifiableAttribute::Generation(g) => Some(format!("{g:?}").to_lowercase()),
                 VerifiableAttribute::IsAdult(is_adult) => {
-                    if *is_adult { Some("ADULT".to_string()) } else { Some("MINOR".to_string()) }
+                    if *is_adult {
+                        Some("ADULT".to_string())
+                    } else {
+                        Some("MINOR".to_string())
+                    }
                 }
                 VerifiableAttribute::None => None,
             },

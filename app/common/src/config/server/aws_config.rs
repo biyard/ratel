@@ -1,5 +1,8 @@
 use std::env;
 
+use aws_config::BehaviorVersion;
+use aws_credential_types::Credentials;
+
 #[derive(Debug, Clone, Copy)]
 pub struct AwsConfig {
     pub region: &'static str,
@@ -25,15 +28,28 @@ impl Default for AwsConfig {
 }
 
 impl AwsConfig {
-    pub fn dynamodb(&self) -> &aws_sdk_dynamodb::Client {
-        &super::dynamodb::DB
-    }
+    pub fn get_sdk_config(&self) -> aws_config::SdkConfig {
+        let timeout_config = aws_config::timeout::TimeoutConfig::builder()
+            .operation_attempt_timeout(std::time::Duration::from_secs(5))
+            .build();
 
-    pub fn sns(&self) -> &crate::utils::aws::SnsClient {
-        &super::aws_sns::SNS_CLIENT
-    }
+        let retry_config = aws_config::retry::RetryConfig::standard().with_max_attempts(3);
+        let aws_config = aws_config::SdkConfig::builder()
+            .credentials_provider(
+                aws_credential_types::provider::SharedCredentialsProvider::new(
+                    Credentials::builder()
+                        .access_key_id(self.access_key_id)
+                        .secret_access_key(self.secret_access_key)
+                        .provider_name("ratel")
+                        .build(),
+                ),
+            )
+            .region(aws_config::Region::new(self.region))
+            .timeout_config(timeout_config)
+            .retry_config(retry_config)
+            .behavior_version(BehaviorVersion::latest())
+            .build();
 
-    pub fn ses(&self) -> &crate::utils::aws::SesClient {
-        &super::aws_ses::SES_CLIENT
+        aws_config
     }
 }

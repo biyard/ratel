@@ -95,6 +95,7 @@ server = [
     "hex",
     "hmac",
     "middleware",
+    "names",
     "reqwest",
     "schemars",
     "serde_dynamo",
@@ -103,9 +104,6 @@ server = [
     "ssi",
     "tokio",
     "url",
-    "reqwest",
-    "ethers",
-    "names",
 ]
 aws = [
     "aws-config",

@@ -11,22 +11,21 @@ use report::Route as ReportRoute;
 pub enum Route {
     #[nest("/spaces")]
         #[nest("/:space_id")]
-            #[layout(SpaceLayout)]
-                #[route("/dashboard/:..rest")]
-                Dashboard { space_id: SpacePartition, rest: Vec<String> },
-                #[route("/overview/:..rest")]
-                Overview { space_id: SpacePartition, rest: Vec<String> },
-                #[route("/actions/:..rest")]
-                Actions { space_id: SpacePartition, rest: Vec<String> },
+            #[layout(SpaceProvider)]
+                #[layout(SpaceLayout)]
+                    #[route("/dashboard/:..rest")]
+                    Dashboard { space_id: SpacePartition, rest: Vec<String> },
+                    #[route("/overview/:..rest")]
+                    Overview { space_id: SpacePartition, rest: Vec<String> },
+                    #[route("/actions/:..rest")]
+                    Actions { space_id: SpacePartition, rest: Vec<String> },
+                    #[route("/report/:..rest")]
+                    Report { space_id: SpacePartition, rest: Vec<String> },
+                    #[redirect("/", |space_id: SpacePartition| Route::Dashboard { space_id, rest : vec![] })]
+                #[end_layout]
                 #[route("/apps/:..rest")]
                 Apps { space_id: SpacePartition, rest: Vec<String> },
-                #[route("/report/:..rest")]
-                Report { space_id: SpacePartition, rest: Vec<String> },
-
-                #[redirect("/", |space_id: SpacePartition| Route::Dashboard { space_id, rest : vec![] })]
-                #[redirect("/:..rest", |space_id: SpacePartition, rest: Vec<String>| Route::Dashboard { space_id, rest })]
             #[end_layout]
-        #[redirect("/:..rest", |rest: Vec<String>| Route::PageNotFound{ route: rest })]
         #[end_nest]
     #[end_nest]
     #[route("/")]

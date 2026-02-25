@@ -1,6 +1,4 @@
-#[cfg(feature = "server")]
 use crate::*;
-#[cfg(feature = "server")]
 use common::models::space::SpaceCommon;
 
 mod get_space_apps;
@@ -11,16 +9,7 @@ pub use get_space_apps::*;
 pub use install_space_app::*;
 pub use uninstall_space_app::*;
 
-#[cfg(feature = "server")]
-fn parse_app_name(raw: &str) -> Result<SpaceAppName> {
-    let raw = raw.trim();
-    if raw.is_empty() {
-        return Err(Error::BadRequest("app_name is empty".to_string()));
-    }
-    SpaceAppName::try_from(raw)
-        .map_err(|_| Error::BadRequest(format!("invalid app_name: {raw}")))
-}
-
+//FIXME : Use Extension Instead. (Future)
 #[cfg(feature = "server")]
 async fn ensure_space_exists(
     dynamo: &aws_sdk_dynamodb::Client,
