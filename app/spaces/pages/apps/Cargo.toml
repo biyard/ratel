@@ -10,7 +10,7 @@ edition = "2021"
 dioxus = { workspace = true }
 common = { workspace = true }
 serde = { workspace = true }
-space-app-all_apps = { workspace = true }
+space-app-all-apps = { workspace = true }
 space-app-general = { workspace = true }
 space-app-incentive-pool = { workspace = true }
 space-common = { workspace = true }
@@ -20,7 +20,7 @@ default = []
 web = [
     "common/web",
     "dioxus/web",
-    "space-app-all_apps/web",
+    "space-app-all-apps/web",
     "space-app-general/web",
     "space-app-incentive-pool/web",
     "space-common/web",
@@ -30,7 +30,7 @@ mobile = ["dioxus/mobile"]
 server = [
     "common/server",
     "dioxus/server",
-    "space-app-all_apps/server",
+    "space-app-all-apps/server",
     "space-app-general/server",
     "space-app-incentive-pool/server",
     "space-common/server",

@@ -70,7 +70,9 @@ pub fn Home(username: String) -> Element {
             return rsx! {
                 div { class: "w-full max-w-desktop mx-auto px-4 py-8",
                     div { class: "bg-card-bg border border-card-border rounded-lg p-8",
-                        div { class: "text-center text-destructive", "{tr.error}: {err}" }
+                        div { class: "text-center text-destructive text-text-primary",
+                            "{tr.error}: {err}"
+                        }
                     }
                 }
             };
