@@ -14,14 +14,13 @@ pub mod web;
 pub mod server;
 mod views;
 
-pub use layout::SpaceLayout;
+pub use layout::{SpaceLayout, SpaceProvider};
 
 pub use route::Route;
 
 use common::*;
 use components::*;
 use dioxus::prelude::*;
-use ratel_post;
 
 // Re-export common types/macros for model derives.
 pub use common::macros::dynamo_entity::DynamoEntity;
@@ -46,7 +45,7 @@ pub struct AppState {
 }
 
 #[cfg(feature = "server")]
-use dioxus::fullstack::{FullstackContext, axum::extract::FromRef};
+use dioxus::fullstack::{axum::extract::FromRef, FullstackContext};
 
 #[cfg(feature = "server")]
 impl FromRef<FullstackContext> for AppState {

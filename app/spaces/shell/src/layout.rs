@@ -1,33 +1,75 @@
-use crate::*;
-
+use crate::{controllers::participate_space::participate_space, *};
+use space_common::ratel_auth::LoginModal;
+use space_common::{
+    components::{SpaceNav, SpaceNavItem, SpaceTop, SpaceTopLabel},
+    hooks::{
+        reload_space, reload_user_role, space_provider, use_space, use_user_role,
+        user_role_provider,
+    },
+};
+use space_page_actions::menu;
+#[component]
+pub fn SpaceProvider(space_id: SpacePartition) -> Element {
+    user_role_provider(space_id.clone())?;
+    space_provider(space_id.clone())?;
+    use_context_provider(|| LayoverService::new());
+    rsx! {
+        Outlet::<Route> {
+        }
+    }
+}
 #[component]
 pub fn SpaceLayout(space_id: SpacePartition) -> Element {
-    // FIXME: Temporarily set role to Viewer
-    let role = SpaceUserRole::Creator;
-    let apps_nav_override = use_context_provider(|| Signal::new(None::<Vec<SpaceAppName>>));
+    let role = use_user_role();
+    let space = use_space();
+    let lang = use_language();
 
-    let menus = if let Some(installed_apps) = apps_nav_override.read().as_ref() {
-        apps::get_app_menu_items(space_id.clone(), installed_apps.iter().copied())
-            .into_iter()
-            .map(|(icon, label, link)| SpaceNavItem {
-                icon,
-                label: SpaceNavLabel::Dynamic(label),
-                link,
+    let user = use_user()?;
+    let user = user.read().clone();
+    let mut popup = use_popup();
+    let tr: SpaceLayoutTranslate = use_translate();
+    // FIXME
+
+    let mut participate = use_action(participate_space);
+
+    let show_participate = matches!(space.status, Some(common::SpaceStatus::InProgress))
+        && !space.participated
+        && space.can_participate;
+
+    let menus = vec![
+        dashboard::get_nav_item(space_id.clone(), role.clone()),
+        overview::get_nav_item(space_id.clone(), role.clone()),
+        actions::get_nav_item(space_id.clone(), role.clone()),
+        apps::get_nav_item(space_id.clone(), role.clone()),
+        report::get_nav_item(space_id.clone(), role.clone()),
+    ]
+    .into_iter()
+    .map(|item| {
+        if let Some(item) = item {
+            Some(SpaceNavItem {
+                icon: item.0,
+                label: item.1.translate(&lang()).to_string(),
+                link: item.2,
             })
-            .collect::<Vec<SpaceNavItem>>()
-    } else {
-        vec![
-            dashboard::get_nav_item(space_id.clone(), role),
-            overview::get_nav_item(space_id.clone(), role),
-            actions::get_nav_item(space_id.clone(), role),
-            apps::get_nav_item(space_id.clone(), role),
-            report::get_nav_item(space_id.clone(), role),
-        ]
-        .into_iter()
-        .map(|s| s.try_into())
-        .filter(|s| s.is_ok())
-        .map(|s| s.unwrap())
-        .collect::<Vec<SpaceNavItem>>()
+        } else {
+            None
+        }
+    })
+    .flatten()
+    .collect::<Vec<SpaceNavItem>>();
+    let labels = vec![SpaceTopLabel {
+        label: space.title.clone(),
+        link: None,
+    }];
+    let space_status = space.status.clone();
+
+    let on_participant = move |_| {
+        let space_id = space_id.clone();
+        let mut space = space.clone();
+        async move {
+            participate.call(space_id).await;
+            reload_space();
+        }
     };
 
     rsx! {
@@ -35,9 +77,20 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
             SpaceNav {
                 logo: "https://metadata.ratel.foundation/logos/logo.png",
                 menus,
+                user,
+                login_handler: move |_| {
+                    popup.open(rsx! {
+                        LoginModal {}
+                    }).with_title(tr.title);
+                },
             }
             div { class: "flex flex-col col-span-6 col-start-2 min-h-0",
-                SpaceTop { space_id }
+                SpaceTop {
+                    labels,
+                    space_status,
+                    show_participate_button: show_participate,
+                    on_participant,
+                }
                 div { class: "flex overflow-auto p-5 w-full top-[65px] grow bg-space-body-bg rounded-tl-[10px] h-[calc(100%-65px)]",
                     Outlet::<Route> {}
                 }
@@ -45,4 +98,13 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
         }
         Layover {}
     }
+}
+
+translate! {
+    SpaceLayoutTranslate;
+
+    title: {
+        en: "Join the Movement",
+        ko: "로그인 및 회원가입",
+    },
 }

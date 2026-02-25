@@ -1,10 +1,10 @@
-use crate::models::{Age, Gender, RespondentAttr};
+use crate::models::RespondentAttr;
 use crate::*;
-
 pub use common::models::did::VerifiedAttributes;
+use common::models::User;
 
 #[cfg(feature = "server")]
-pub async fn get_attributes(
+pub async fn get_attributesss(
     dynamo: &common::server_lib::DynamoClient,
     user_pk: Partition,
 ) -> Result<Option<RespondentAttr>> {
@@ -20,6 +20,8 @@ pub async fn get_attributes(
     let age = if res.age().is_none() {
         None
     } else {
+        use common::attribute::Age;
+
         match res.age().unwrap_or_default() {
             0..=17 => Some(Age::Range {
                 inclusive_max: 17,
@@ -51,11 +53,8 @@ pub async fn get_attributes(
             }),
         }
     };
+    let gender = res.gender;
 
-    let gender = res.gender.map(|value| match value {
-        common::attribute::Gender::Male => Gender::Male,
-        common::attribute::Gender::Female => Gender::Female,
-    });
     let school = res.university;
 
     Ok(Some(RespondentAttr {
@@ -73,7 +72,7 @@ pub trait UserAttributesExt {
 
 #[cfg(feature = "server")]
 #[async_trait::async_trait]
-impl UserAttributesExt for ratel_auth::User {
+impl UserAttributesExt for User {
     async fn get_attributes(&self, cli: &aws_sdk_dynamodb::Client) -> Result<VerifiedAttributes> {
         let (pk, sk) = VerifiedAttributes::keys(&self.pk);
         Ok(VerifiedAttributes::get(cli, pk, Some(sk))

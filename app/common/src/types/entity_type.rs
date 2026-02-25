@@ -150,7 +150,7 @@ pub enum EntityType {
 
     SpaceInvitationMember(String),
     SpaceSurveyResponse(String), //Space pk
-    SpaceInstalledApp(String),
+    SpaceApp(String),
 
     // Membership
     Membership,

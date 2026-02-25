@@ -1,8 +1,7 @@
 use crate::*;
-use ratel_auth::LoginModal;
 
 #[component]
-pub fn SpaceUserLogin() -> Element {
+pub fn SpaceUserLogin(onclick: EventHandler<()>) -> Element {
     let mut popup = use_popup();
     let lang = use_language();
     let tr: SpaceUserLoginTranslate = use_translate();
@@ -11,9 +10,7 @@ pub fn SpaceUserLogin() -> Element {
         button {
             class: "flex justify-end items-center p-4 w-full cursor-pointer hover:opacity-80",
             onclick: move |_| {
-                popup.open(rsx! {
-                    LoginModal {}
-                }).with_title(tr.title);
+                onclick.call(());
             },
             "Sign In"
         }

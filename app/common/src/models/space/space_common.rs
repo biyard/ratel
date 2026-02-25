@@ -114,23 +114,33 @@ where
     type Rejection = Error;
 
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self> {
-        tracing::debug!("extracting space from request parts");
+        use std::collections::HashMap;
+
+        use dioxus::fullstack::{extract::Path, response::IntoResponse};
+
         if let Some(space) = parts.extensions.get::<SpaceCommon>() {
             return Ok(space.clone());
         }
+        // URI path differs depending on how this handler is invoked:
+        //   - SSR (initial page load):       /spaces/{UUID}/..rest
+        //   - Client-side navigation (API):  /api/spaces/{UUID}/..rest
+        //
+        // Instead of matching a fixed path index, we scan for the "spaces" segment
+        // and take the next segment as the space ID, so both cases are handled.
+        let mut segments = parts.uri.path().trim_matches('/').split('/');
+        let mut space_id_str: Option<&str> = None;
+        while let Some(seg) = segments.next() {
+            if seg == "spaces" {
+                space_id_str = segments.next();
+                break;
+            }
+        }
+        let space_id_str = space_id_str
+            .ok_or_else(|| Error::BadRequest("Missing space_id in path".to_string()))?;
 
-        // Extract project_id from the URI path
-        let path = parts.uri.path();
-        let path_segments: Vec<&str> = path.split('/').collect();
-        let space_pk_encoded = path_segments[1].to_string();
-
-        // URL-decode the space_pk (it may be percent-encoded in the URI)
-        let space_id: SpacePartition = urlencoding::decode(&space_pk_encoded)
-            .map_err(|_| crate::Error::BadRequest("Invalid URL encoding".to_string()))?
-            .to_string()
-            .parse()?;
+        let space_id: SpacePartition = space_id_str.parse()?;
         let space_pk: Partition = space_id.into();
-        debug!("Verifying project access for space_id: {}", space_pk,);
+        debug!("Verifying project access for space_id: {}", space_pk);
 
         let conf = ServerConfig::default();
         let cli = conf.dynamodb();

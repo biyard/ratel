@@ -30,7 +30,9 @@ btracing = { path = "packages/btracing", version = "0.1.*" }
 by-axum = { path = "packages/by-axum", version = "0.2.*" }
 by-types = { path = "packages/by-types", version = "0.3.*" }
 rest-api = { path = "packages/rest-api", version = "0.1.*" }
-dioxus-translate = { path = "packages/dioxus-translate", version = "0.1.*", features = ["ko"] }
+dioxus-translate = { path = "packages/dioxus-translate", version = "0.1.*", features = [
+  "ko",
+] }
 dioxus-translate-types = { path = "packages/dioxus-translate-types", version = "0.1.*" }
 dioxus-translate-macro = { path = "packages/dioxus-translate-macro", version = "0.1.*" }
 by-macros = { path = "packages/by-macros", version = "0.6.*" }
@@ -39,6 +41,7 @@ ratel-auth = { path = "app/auth" }
 ratel-post = { path = "app/posts" }
 
 space-shell = { path = "app/spaces/shell" }
+space-common = { path = "app/spaces/common" }
 space-page-actions = { path = "app/spaces/pages/actions" }
 space-page-apps = { path = "app/spaces/pages/apps" }
 space-app-all-apps = { path = "app/spaces/apps/all-apps" }

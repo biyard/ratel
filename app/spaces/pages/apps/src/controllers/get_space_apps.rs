@@ -1,32 +1,23 @@
-#[cfg(feature = "server")]
-use super::ensure_space_exists;
-#[cfg(feature = "server")]
-use crate::models::SpaceInstalledApp;
+use crate::models::SpaceApp;
 use crate::*;
-#[cfg(feature = "server")]
 use common::types::Partition;
 use common::types::SpacePartition;
 
-#[get("/api/spaces/{space_pk}/apps")]
-pub async fn get_space_apps(space_pk: SpacePartition) -> Result<GetSpaceAppsResponse> {
+#[get("/api/spaces/{space_id}/apps")]
+pub async fn get_space_apps(space_id: SpacePartition) -> Result<Vec<SpaceApp>> {
+    use super::ensure_space_exists;
     let dynamo = crate::config::get().common.dynamodb();
-    let space_pk_partition: Partition = space_pk.into();
-    #[cfg(feature = "server")]
-    ensure_space_exists(dynamo, &space_pk_partition).await?;
+    let space_pk: Partition = space_id.into();
+    ensure_space_exists(dynamo, &space_pk).await?;
 
-    let (apps, _) = SpaceInstalledApp::query(
+    let (apps, _) = SpaceApp::query(
         dynamo,
-        &space_pk_partition,
-        SpaceInstalledApp::opt_all()
-            .sk(SpaceInstalledApp::sk_prefix())
+        &space_pk,
+        SpaceApp::opt_all()
+            .sk(SpaceApp::sk_prefix())
             .scan_index_forward(true),
     )
     .await?;
 
-    let apps = apps
-        .into_iter()
-        .map(|app| InstalledAppResponse { name: app.name })
-        .collect::<Vec<_>>();
-
-    Ok(GetSpaceAppsResponse { apps })
+    Ok(apps)
 }

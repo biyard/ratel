@@ -1,6 +1,6 @@
 use crate::dto::GetSpaceResponse;
 use crate::*;
-use ratel_post::types::{BoosterType, SpaceType};
+use space_common::ratel_post::types::{BoosterType, SpaceType};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Space {
