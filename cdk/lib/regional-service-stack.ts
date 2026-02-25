@@ -18,6 +18,7 @@ import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
+import { Repository } from "aws-cdk-lib/aws-ecr";
 
 export interface RegionalServiceStackProps extends StackProps {
   // Domain parts, e.g. "dev2.ratel.foundation"
@@ -47,10 +48,17 @@ export class RegionalServiceStack extends Stack {
       domainName: baseDomain,
     });
 
-    const apiLambda = new lambda.Function(this, "Function", {
-      runtime: lambda.Runtime.PROVIDED_AL2023,
-      code: lambda.Code.fromAsset("app-shell"),
-      handler: "bootstrap",
+    const appShellRepoName = "ratel/app-shell";
+    const appShellRepository = Repository.fromRepositoryName(
+      this,
+      "AppShellRepository",
+      appShellRepoName,
+    );
+
+    const apiLambda = new lambda.DockerImageFunction(this, "Function", {
+      code: lambda.DockerImageCode.fromEcr(appShellRepository, {
+        tagOrDigest: props.commit,
+      }),
       environment: {
         REGION: this.region,
         DISABLE_ANSI: "true",
