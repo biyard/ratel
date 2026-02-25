@@ -1,9 +1,9 @@
 use crate::components::*;
 use crate::controllers::list_members_handler;
-use crate::dto::*;
 use crate::*;
 use dioxus::prelude::*;
-use ratel_team_group::controllers::{RemoveMemberRequest, remove_member_handler};
+use ratel_team_group::controllers::remove_member_handler;
+use ratel_team_group::dto::RemoveMemberRequest;
 
 #[component]
 pub fn AdminPage(teamname: String, team_pk: TeamPartition) -> Element {

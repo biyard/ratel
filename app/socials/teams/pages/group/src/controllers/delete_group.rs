@@ -1,4 +1,4 @@
-use crate::controllers::dto::DeleteGroupResponse;
+use crate::dto::DeleteGroupResponse;
 use crate::*;
 
 #[cfg(feature = "server")]

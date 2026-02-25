@@ -1,4 +1,4 @@
-use crate::controllers::dto::{AddMemberRequest, AddMemberResponse};
+use crate::dto::{AddMemberRequest, AddMemberResponse};
 use crate::*;
 
 use ratel_post::models::{Team, TeamGroup};
