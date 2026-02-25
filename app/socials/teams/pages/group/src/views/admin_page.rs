@@ -8,7 +8,7 @@ use crate::controllers::{
 use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
 
 #[component]
-pub fn AdminPage(teamname: String, team_pk: Partition, permissions: i64) -> Element {
+pub fn AdminPage(teamname: String, team_pk: TeamPartition, permissions: i64) -> Element {
     let tr: TeamGroupTranslate = use_translate();
     use_context_provider(|| PopupService::new());
     let mut popup = use_popup();

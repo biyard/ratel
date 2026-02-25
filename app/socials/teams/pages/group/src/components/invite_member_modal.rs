@@ -13,7 +13,7 @@ pub struct InviteResult {
 
 #[component]
 pub fn InviteMemberModal(
-    team_pk: Partition,
+    team_pk: TeamPartition,
     teamname: String,
     groups: Vec<TeamGroupResponse>,
     on_close: EventHandler<()>,

@@ -1,16 +1,19 @@
 use crate::controllers::dto::DeleteGroupResponse;
 use crate::*;
 
+#[cfg(feature = "server")]
+use aws_sdk_dynamodb::types::TransactWriteItem;
 use ratel_post::models::{Team, TeamGroup};
 use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
 
 #[delete("/api/teams/:team_pk/groups/:group_sk", user: ratel_auth::User)]
 pub async fn delete_group_handler(
-    team_pk: Partition,
+    team_pk: TeamPartition,
     group_sk: String,
 ) -> Result<DeleteGroupResponse> {
     let conf = crate::config::get();
     let cli = conf.common.dynamodb();
+    let team_pk: Partition = team_pk.into();
 
     let permissions = Team::get_permissions_by_team_pk(cli, &team_pk, &user.pk)
         .await
@@ -52,10 +55,11 @@ pub async fn delete_group_handler(
     let target_group = target_group.ok_or(Error::NotFound("Group not found".into()))?;
 
     let mut removed_members = 0usize;
-    let mut utg_bookmark: Option<String> = None;
+    let mut bookmark: Option<String> = None;
+    let mut transact_items: Vec<TransactWriteItem> = Vec::new();
     loop {
         let mut option = ratel_auth::UserTeamGroupQueryOption::builder().limit(50);
-        if let Some(b) = &utg_bookmark {
+        if let Some(b) = &bookmark {
             option = option.bookmark(b.clone());
         }
         let (user_team_groups, next) =
@@ -64,7 +68,9 @@ pub async fn delete_group_handler(
         for utg in user_team_groups {
             if let EntityType::UserTeamGroup(utg_group_sk) = &utg.sk {
                 if *utg_group_sk == target_group.sk.to_string() {
-                    ratel_auth::UserTeamGroup::delete(cli, utg.pk, Some(utg.sk)).await?;
+                    transact_items.push(ratel_auth::UserTeamGroup::delete_transact_write_item(
+                        utg.pk, utg.sk,
+                    ));
                     removed_members += 1;
                 }
             }
@@ -73,10 +79,24 @@ pub async fn delete_group_handler(
         if next.is_none() {
             break;
         }
-        utg_bookmark = next;
+        bookmark = next;
     }
 
-    TeamGroup::delete(cli, target_group.pk, Some(target_group.sk)).await?;
+    transact_items.push(TeamGroup::delete_transact_write_item(
+        target_group.pk,
+        target_group.sk,
+    ));
+
+    for chunk in transact_items.chunks(25) {
+        cli.transact_write_items()
+            .set_transact_items(Some(chunk.to_vec()))
+            .send()
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to delete group entities: {}", e);
+                Error::InternalServerError("Failed to delete group".into())
+            })?;
+    }
 
     Ok(DeleteGroupResponse {
         message: "Group has been successfully deleted.".to_string(),

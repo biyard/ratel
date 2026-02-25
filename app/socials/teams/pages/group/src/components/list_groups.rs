@@ -53,7 +53,7 @@ pub fn ListGroups(
                         folder::Folder {
                             width: "48",
                             height: "48",
-                            class: "stroke-neutral-400",
+                            class: "stroke-neutral-400 [path>]:stroke-neutral-400",
                         }
                         div { class: "flex flex-col justify-between items-start",
                             div { class: "font-bold text-text-primary text-base/[20px]",

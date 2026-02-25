@@ -5,11 +5,12 @@ use ratel_post::models::TeamGroup;
 
 #[get("/api/teams/:team_pk/groups?bookmark", user: ratel_auth::OptionalUser)]
 pub async fn list_groups_handler(
-    team_pk: Partition,
+    team_pk: TeamPartition,
     bookmark: Option<String>,
 ) -> Result<ListItemsResponse<TeamGroupResponse>> {
     let conf = crate::config::get();
     let cli = conf.common.dynamodb();
+    let team_pk: Partition = team_pk.into();
 
     let mut query_options = TeamGroup::opt()
         .limit(50)
