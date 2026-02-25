@@ -1,4 +1,5 @@
 use crate::*;
+#[cfg(feature = "server")]
 use ratel_auth::User;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
