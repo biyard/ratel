@@ -18,9 +18,8 @@ pub fn CreatePostButton(#[props(default)] team_pk: Option<String>) -> Element {
     let nav = use_navigator();
 
     rsx! {
-        Button {
-            style: ButtonStyle::Secondary,
-            class: "flex flex-row items-center gap-2 justify-start w-full cursor-pointer",
+        button {
+            class: "flex flex-row items-center gap-2 justify-start w-full cursor-pointer min-w-[280px] bg-btn-secondary-bg border-btn-secondary-outline text-btn-secondary-text hover:bg-btn-secondary-hover-bg hover:border-btn-secondary-hover-outline hover:text-btn-secondary-hover-text disabled:bg-btn-secondary-disable-bg disabled:border-btn-secondary-disable-outline disabled:text-btn-secondary-disable-text py-3 px-5 text-[14px]/[16px] font-bold rounded-full min-w-[280px]",
             aria_label: "Create Post",
             onclick: move |_| {
                 let team_pk = team_pk.clone();

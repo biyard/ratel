@@ -140,7 +140,10 @@ async fn check_if_satisfying_panel_attribute(
 
     let user_attributes = user.get_attributes(cli).await?;
     let age: Option<u8> = user_attributes.age().and_then(|v| u8::try_from(v).ok());
-    let gender = user_attributes.gender;
+    let gender = user_attributes.gender.map(|value| match value {
+        ratel_auth::attribute::Gender::Male => models::attribute::Gender::Male,
+        ratel_auth::attribute::Gender::Female => models::attribute::Gender::Female,
+    });
 
     if space.remains <= 0 {
         return Err(Error::FullQuota);
