@@ -10,11 +10,14 @@ use uuid::Uuid;
 
 use crate::{Error, Result};
 
+#[allow(unused)]
 #[derive(Debug, Clone)]
 pub struct S3Client {
     pub client: Client,
     bucket_name: String,
     asset_dir: String,
+    expire: Option<u64>,
+    region: String,
 }
 
 #[derive(Debug, Clone)]
@@ -47,7 +50,13 @@ pub struct PutObjectResult {
 }
 
 impl S3Client {
-    pub fn new(config: &SdkConfig, bucket_name: String, asset_dir: Option<String>) -> S3Client {
+    pub fn new(
+        config: &SdkConfig,
+        bucket_name: String,
+        asset_dir: Option<String>,
+        expire: Option<u64>,
+        region: String,
+    ) -> S3Client {
         let aws_config = Config::from(config);
         let client = Client::from_conf(aws_config);
 
@@ -62,6 +71,8 @@ impl S3Client {
             client,
             bucket_name,
             asset_dir,
+            expire,
+            region,
         }
     }
 
@@ -73,6 +84,8 @@ impl S3Client {
             client,
             bucket_name: "common".to_string(),
             asset_dir: "/".to_string(),
+            expire: Some(0),
+            region: "ap-northeast-2".to_string(),
         }
     }
 
