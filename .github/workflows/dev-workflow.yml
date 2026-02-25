@@ -357,6 +357,18 @@ jobs:
         run: |
           cargo binstall toml-cli --force
 
+      - name: Cache builder
+        id: survey-worker-build-cache
+        uses: actions/cache@v4
+        with:
+          key: survey-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            survey-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
+            survey-worker-build-${{ runner.os }}-
+            survey-worker-build-
+          path: |
+            packages/survey-worker/target
+
       - name: Build survey-worker Lambda
         env:
           REGION: ap-northeast-2
@@ -411,6 +423,18 @@ jobs:
       - name: Install toml-cli
         run: |
           cargo binstall toml-cli --force
+
+      - name: Cache builder
+        id: space-stream-worker-build-cache
+        uses: actions/cache@v4
+        with:
+          key: space-stream-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            space-stream-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
+            space-stream-worker-build-${{ runner.os }}-
+            space-stream-worker-build-
+          path: |
+            packages/space-stream-worker/target
 
       - name: Build space-stream-worker Lambda
         env:
