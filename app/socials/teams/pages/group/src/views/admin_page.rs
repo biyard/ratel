@@ -57,17 +57,15 @@ pub fn AdminPage(teamname: String, team_pk: TeamPartition, permissions: i64) -> 
                     }
                 }
             };
-            popup
-                .open(rsx! {
-                    InviteMemberModal {
-                        team_pk: team_pk.clone(),
-                        teamname: teamname.clone(),
-                        groups: groups.clone(),
-                        on_close,
-                        on_invited,
-                    }
-                })
-                .without_backdrop_close();
+            popup.open(rsx! {
+                InviteMemberModal {
+                    team_pk: team_pk.clone(),
+                    teamname: teamname.clone(),
+                    groups: groups.clone(),
+                    on_close,
+                    on_invited,
+                }
+            });
         }
     };
 
@@ -130,8 +128,8 @@ pub fn AdminPage(teamname: String, team_pk: TeamPartition, permissions: i64) -> 
     };
 
     rsx! {
-        div { class: "flex flex-col w-full gap-2.5",
-            div { class: "flex flex-row w-full justify-end items-end gap-2.5",
+        div { class: "flex flex-col gap-2.5 w-full",
+            div { class: "flex flex-row gap-2.5 justify-end items-end w-full",
                 InviteMemberButton { on_click: on_invite_click }
                 if can_edit_team {
                     CreateGroupButton { on_click: on_create_click }
@@ -153,7 +151,7 @@ fn InviteMemberButton(on_click: EventHandler<MouseEvent>) -> Element {
     let tr: TeamGroupTranslate = use_translate();
     rsx! {
         div {
-            class: "cursor-pointer flex flex-row w-fit justify-start items-center px-4 py-3 bg-white border border-foreground rounded-[100px] gap-1",
+            class: "flex flex-row gap-1 justify-start items-center py-3 px-4 bg-white border cursor-pointer w-fit border-foreground rounded-[100px]",
             onclick: on_click,
             icons::user::User {
                 class: "w-4 h-4 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
@@ -172,7 +170,7 @@ fn CreateGroupButton(on_click: EventHandler<MouseEvent>) -> Element {
     let tr: TeamGroupTranslate = use_translate();
     rsx! {
         div {
-            class: "cursor-pointer flex flex-row w-fit justify-start items-center px-4 py-3 bg-white border border-foreground rounded-[100px] gap-1",
+            class: "flex flex-row gap-1 justify-start items-center py-3 px-4 bg-white border cursor-pointer w-fit border-foreground rounded-[100px]",
             onclick: on_click,
             icons::edit::Edit1 {
                 width: "16",
