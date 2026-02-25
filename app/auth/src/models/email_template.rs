@@ -1,3 +1,6 @@
+#[cfg(feature = "server")]
+use common::utils::aws::SesClient;
+
 // Migrated from packages/main-api/src/models/email_template/email_template.rs
 use crate::types::email_operation::EmailOperation;
 use crate::*;
@@ -11,7 +14,7 @@ pub struct EmailTemplate {
 #[cfg(feature = "server")]
 impl EmailTemplate {
     #[allow(unused_variables)]
-    pub async fn send_email(&self, ses: &crate::utils::aws::SesClient) -> Result<()> {
+    pub async fn send_email(&self, ses: &SesClient) -> Result<()> {
         if self.targets.is_empty() {
             return Ok(());
         }
