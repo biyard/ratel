@@ -20,8 +20,8 @@ jobs:
       - name: Download Main Api
         uses: actions/download-artifact@v4
         with:
-          name: ratel-main-api-${{ github.sha }}
-          path: ./cdk/main-api
+          name: app-shell-${{ github.sha }}
+          path: ./cdk/app-shell
 
       - name: Download Survey Fetcher Lambda
         uses: actions/download-artifact@v4
@@ -36,7 +36,7 @@ jobs:
 
       - name: Write Firebase service account (dev)
         run: |
-          mkdir -p cdk/main-api/.gcp
+          mkdir -p cdk/app-shell/.gcp
           echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 }}" \
             | base64 -d > cdk/main-api/.gcp/firebase-service-account.json
 
@@ -75,11 +75,6 @@ jobs:
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
-
-      - name: Write Firebase service account (dev)
-        run: |
-          mkdir -p .gcp
-          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 }}" | base64 -d > .gcp/firebase-service-account.json
 
       - name: Cache builder
         id: app-shell-build-cache
@@ -204,10 +199,10 @@ jobs:
 
           REPOSITORY: ${{ steps.ratel-ecr.outputs.registry }}/ratel
         run: |
-          make build
-          make docker
-
-          docker push $REPOSITORY:$COMMIT
+          rm -rf ../../target/dx
+          make build-lambda
+          mkdir -p ../../.build/app-shell
+          cp ../../target/dx/app-shell/release/app-shell ../../.build/app-shell/bootstrap
 
       - name: Deploy to S3
         env:
@@ -216,6 +211,14 @@ jobs:
         run: |
           aws s3 sync ../../target/dx/app-shell/release/web/public $BUCKET
           aws cloudfront create-invalidation --distribution-id $CDN --paths "/*"
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-shell-${{ github.sha }}
+          path: ${{ github.workspace }}/.build/app-shell/bootstrap
+          if-no-files-found: error
+          retention-days: 7
 
   # NOTE: migrate to DynamoDB
   # image-worker:
