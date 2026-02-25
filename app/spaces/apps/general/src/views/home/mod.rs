@@ -4,9 +4,6 @@ use crate::controllers::{
 };
 use crate::*;
 
-mod i18n;
-use i18n::GeneralTranslate;
-
 const DEFAULT_PROFILE_IMAGE: &str = "https://metadata.ratel.foundation/ratel/default-profile.png";
 
 fn normalize_email_input(raw: &str) -> Option<String> {
@@ -19,7 +16,6 @@ fn normalize_email_input(raw: &str) -> Option<String> {
 
 #[component]
 pub fn GeneralPage(space_id: SpacePartition) -> Element {
-    let tr: GeneralTranslate = use_translate();
     let navigator = use_navigator();
     let space_id_for_admin = space_id.clone();
     let space_id_for_invite = space_id.clone();
@@ -42,7 +38,7 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
         let space_id = space_id_for_admin.clone();
         let mut administrator = administrator.clone();
         let mut notice = notice.clone();
-        let failed_prefix = tr.administrator_empty.to_string();
+        let failed_prefix = "Administrator not found".to_string();
 
         spawn(async move {
             match get_space_administrator(space_id).await {
@@ -55,13 +51,13 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
     rsx! {
         div { class: "flex overflow-visible flex-col gap-5 self-start pb-6 w-full min-w-0 shrink-0 max-w-[1024px] max-tablet:gap-4 text-font-primary",
             h3 { class: "font-bold sp-dash-font-raleway text-[24px]/[28px] tracking-[-0.24px] text-font-primary",
-                "{tr.page_title}"
+                "Space Setting"
             }
 
             div { class: "overflow-visible w-full shrink-0 rounded-[12px] bg-card",
                 div { class: "flex justify-between items-center self-stretch px-5 py-4 border-b border-separator",
                     p { class: "font-semibold text-center sp-dash-font-raleway text-[17px]/[20px] tracking-[-0.18px] text-font-primary",
-                        "{tr.section_invite_participant}"
+                        "Invite Participant"
                     }
                 }
 
@@ -69,11 +65,11 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
                     div { class: "flex items-start w-full gap-[10px] max-tablet:flex-col",
                         div { class: "flex flex-col flex-1 gap-2 justify-center items-start",
                             p { class: "font-semibold sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-font-primary",
-                                "{tr.label_email_address}"
+                                "Email Address"
                             }
                             input {
                                 class: "flex flex-col justify-center items-start px-3 py-2.5 w-full font-medium leading-6 border-gray-600 rounded-[8px] border-[0.5px] bg-web-input sp-dash-font-raleway text-[15px] tracking-[0.5px] text-font-primary placeholder:text-card-more-muted",
-                                placeholder: "{tr.placeholder_participant_email}",
+                                placeholder: "participant@example.com",
                                 value: email_input(),
                                 oninput: move |evt| {
                                     email_input.set(evt.value().to_string());
@@ -120,19 +116,19 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
 
                         div { class: "flex flex-col flex-1 gap-2 justify-center items-start w-full",
                             p { class: "font-semibold sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-font-primary",
-                                "{tr.label_default_reward}"
+                                "Default Reward"
                             }
                             RewardRoleCard {
-                                title: tr.role_participant_title.to_string(),
-                                description: tr.role_participant_description.to_string(),
+                                title: "Participant".to_string(),
+                                description: "Can participate in this space".to_string(),
                             }
                         }
                     }
 
                     div { class: "flex justify-end w-full max-tablet:justify-stretch",
-                        Button {
-                            style: ButtonStyle::Primary,
-                            class: "flex flex-col justify-center items-center self-stretch font-normal leading-6 w-fit max-tablet:w-full gap-[10px] rounded-[10px] sp-dash-font-raleway text-[15px] tracking-[0.5px] text-btn-primary-text",
+                        button {
+                            class: "flex flex-col justify-center items-center self-stretch w-fit max-tablet:w-full gap-[10px] rounded-full px-5 py-3 border bg-btn-primary-bg border-btn-primary-outline text-web-font-ab-bk hover:bg-btn-primary-hover-bg hover:border-btn-primary-hover-outline hover:text-btn-primary-hover-text disabled:bg-btn-primary-disable-bg disabled:border-btn-primary-disable-outline disabled:text-btn-primary-disable-text sp-dash-font-raleway text-[14px]/[16px] font-bold",
+                            disabled: invite_loading(),
                             onclick: move |_| {
                                 if invite_loading() {
                                     return;
@@ -150,8 +146,9 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
                                 let mut invited_emails = invited_emails.clone();
                                 let mut notice = notice.clone();
                                 let space_id = space_id_for_invite.clone();
-                                let success_text = tr.invite_success.to_string();
-                                let failed_prefix = tr.invite_failed.to_string();
+                                let success_text =
+                                    "Participants invited successfully.".to_string();
+                                let failed_prefix = "Failed to invite participants".to_string();
 
                                 spawn(async move {
                                     let result = invite_space_participants(
@@ -177,7 +174,7 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
                             if invite_loading() {
                                 "Inviting..."
                             } else {
-                                "{tr.btn_invite}"
+                                "Invite"
                             }
                         }
                     }
@@ -191,7 +188,7 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
             div { class: "overflow-visible w-full shrink-0 rounded-[12px] bg-card",
                 div { class: "flex justify-between items-center self-stretch px-5 py-4 border-b border-separator",
                     p { class: "font-bold sp-dash-font-raleway text-[24px]/[28px] tracking-[-0.24px] text-font-primary",
-                        "{tr.section_administrator}"
+                        "Administrator"
                     }
                 }
 
@@ -204,16 +201,16 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
                         }
                     } else {
                         p { class: "font-medium leading-6 sp-dash-font-raleway text-[15px] tracking-[0.5px] text-card-meta",
-                            "{tr.administrator_empty}"
+                            "Administrator not found"
                         }
                     }
                 }
             }
 
             div { class: "flex justify-end pt-5 w-full max-tablet:justify-stretch",
-                Button {
-                    style: ButtonStyle::Outline,
-                    class: "flex flex-col justify-center items-center font-bold border w-fit max-tablet:w-full gap-[10px] rounded-[10px] border-web-error text-web-error sp-dash-font-raleway text-[14px]/[16px]",
+                button {
+                    class: "flex flex-col justify-center items-center px-5 py-3 font-bold bg-transparent rounded-full border w-fit max-tablet:w-full gap-[10px] border-web-error text-web-error hover:bg-transparent hover:border-web-error hover:text-web-error disabled:border-web-error/40 disabled:text-web-error/40 sp-dash-font-raleway text-[14px]/[16px]",
+                    disabled: delete_loading(),
                     onclick: move |_| {
                         if delete_loading() {
                             return;
@@ -226,8 +223,8 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
                         let mut notice = notice.clone();
                         let space_id = space_id_for_delete.clone();
                         let navigator = navigator.clone();
-                        let success_text = tr.delete_success.to_string();
-                        let failed_prefix = tr.delete_failed.to_string();
+                        let success_text = "Space deleted successfully.".to_string();
+                        let failed_prefix = "Failed to delete space".to_string();
 
                         spawn(async move {
                             let result = delete_space(space_id).await;
@@ -247,7 +244,7 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
                     if delete_loading() {
                         "Deleting..."
                     } else {
-                        "{tr.btn_delete_space}"
+                        "Delete Space"
                     }
                 }
             }
@@ -320,7 +317,6 @@ fn AdministratorRow(name: String, username: String, profile_url: String) -> Elem
 
 #[component]
 pub fn HomePage(space_id: SpacePartition) -> Element {
-    let tr: GeneralTranslate = use_translate();
     let role =
         use_loader(move || async move { Ok::<SpaceUserRole, Error>(SpaceUserRole::Creator) })?;
 
@@ -331,7 +327,7 @@ pub fn HomePage(space_id: SpacePartition) -> Element {
     } else {
         rsx! {
             div { class: "flex justify-center items-center w-full h-full text-font-primary",
-                "{tr.no_permission}"
+                "No permission"
             }
         }
     }

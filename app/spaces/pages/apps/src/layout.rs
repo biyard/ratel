@@ -33,7 +33,9 @@ pub fn SpaceAppsLayout(space_id: SpacePartition) -> Element {
             name: tr.all_app.to_string(),
             icon: rsx! {
                 icons::layouts::Apps {
-                     class: "text-icon-primary [&>path]:stroke-current"
+                    width: "20",
+                    height: "20",
+                    class: "text-icon-primary [&>path]:stroke-current"
                 }
             },
             route: Route::AllApps {
@@ -45,6 +47,8 @@ pub fn SpaceAppsLayout(space_id: SpacePartition) -> Element {
             name: tr.general.to_string(),
             icon: rsx! {
                 icons::settings::Settings2 {
+                    width: "20",
+                    height: "20",
                     class: "text-icon-primary [&>path]:fill-current [&>circle]:stroke-current"
                 }
             },
@@ -55,7 +59,7 @@ pub fn SpaceAppsLayout(space_id: SpacePartition) -> Element {
         },
     ];
 
-    let app_menus = get_app_menu_items(space_id.clone(), &space_apps);
+    let app_menus = get_app_menu_items(space_id.clone(), &space_apps, &tr);
     let menus: Vec<SpaceNavItem> = default_menu
         .into_iter()
         .chain(app_menus.into_iter())
