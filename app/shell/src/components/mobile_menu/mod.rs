@@ -73,6 +73,22 @@ pub fn MobileSideMenu(is_open: Signal<bool>) -> Element {
     let mut popup = use_popup();
     let nav = use_navigator();
 
+    // Lock body scroll when mobile menu is open
+    #[cfg(target_arch = "wasm32")]
+    use_effect(move || {
+        if let Some(body) = web_sys::window()
+            .and_then(|w| w.document())
+            .and_then(|d| d.body())
+        {
+            let style = body.style();
+            if is_open() {
+                let _ = style.set_property("overflow", "hidden");
+            } else {
+                let _ = style.remove_property("overflow");
+            }
+        }
+    });
+
     if !is_open() {
         return rsx! {};
     }
