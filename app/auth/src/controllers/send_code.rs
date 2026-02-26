@@ -93,6 +93,11 @@ pub async fn send_email_code_handler(
     let cli = crate::config::get().dynamodb();
     let ses = crate::config::get().ses();
 
+    let (users, _) = User::find_by_email(cli, &email, User::opt_one()).await?;
+    if users.is_empty() {
+        return Err(Error::UserNotRegistered);
+    }
+
     let (verification_list, _) = EmailVerification::find_by_email(
         cli,
         &email,

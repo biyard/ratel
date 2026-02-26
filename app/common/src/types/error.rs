@@ -122,6 +122,13 @@ pub enum Error {
     )]
     InvalidVerificationCode,
 
+    #[error("No account found with this email address")]
+    #[translate(
+        en = "No account found with this email address",
+        ko = "해당 이메일로 등록된 계정이 없습니다."
+    )]
+    UserNotRegistered,
+
     #[error("not found space")]
     #[translate(en = "Not found space", ko = "스페이스를 찾을 수 없습니다.")]
     SpaceNotFound,
@@ -162,7 +169,8 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             | Error::ParticipationBlocked
             | Error::LackOfVerifiedAttributes
             | Error::FullQuota
-            | Error::AlreadyParticipating => StatusCode::BAD_REQUEST,
+            | Error::AlreadyParticipating
+            | Error::UserNotRegistered => StatusCode::BAD_REQUEST,
             Error::NotFound(_) => StatusCode::NOT_FOUND,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
@@ -214,7 +222,8 @@ impl dioxus::fullstack::AsStatusCode for Error {
             | Error::SendSmsFailed(_)
             | Error::NotFoundVerificationCode
             | Error::ExpiredVerification
-            | Error::InvalidVerificationCode => StatusCode::BAD_REQUEST,
+            | Error::InvalidVerificationCode
+            | Error::UserNotRegistered => StatusCode::BAD_REQUEST,
             Error::NotFound(_) => StatusCode::NOT_FOUND,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
