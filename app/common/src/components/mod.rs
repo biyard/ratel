@@ -4,6 +4,7 @@ mod file_uploader;
 mod layover;
 mod popup;
 mod switch;
+mod team_creation_form;
 mod team_selector;
 mod theme_switcher;
 
@@ -13,6 +14,7 @@ pub use file_uploader::*;
 pub use layover::*;
 pub use popup::*;
 pub use switch::*;
+pub use team_creation_form::*;
 pub use team_selector::*;
 pub use theme_switcher::*;
 

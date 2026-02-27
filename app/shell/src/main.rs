@@ -42,7 +42,6 @@ fn App() -> Element {
         ratel_post::Provider {}
         ratel_team_dao::Provider {}
         Router::<Route> {}
-        PopupZone {}
         ToastProvider {}
         if env == Environment::Dev || env == Environment::Local {
             DevTools {}
