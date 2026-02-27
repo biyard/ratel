@@ -1,3 +1,4 @@
+use crate::i18n::IncentivePoolTranslate;
 use crate::*;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -11,12 +12,13 @@ enum DistributionMode {
 pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
     // FIXME: Use space_id when space-scoped data is added.
     let _ = space_id;
+    let tr: IncentivePoolTranslate = use_translate();
     let mut distribution_mode = use_signal(|| DistributionMode::Top10RankOnly);
 
     rsx! {
         div { class: "flex overflow-visible flex-col gap-5 self-start pb-6 w-full min-w-0 shrink-0 max-w-[1024px] max-tablet:gap-4 text-font-primary",
             h3 { class: "font-bold sp-dash-font-raleway text-[24px]/[28px] tracking-[-0.24px] text-font-primary",
-                "Incentive Pool"
+                {tr.page_title}
             }
 
             div { class: "p-4 w-full rounded-[12px] bg-card max-mobile:p-3",
@@ -30,10 +32,10 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
                             }
                         }
                         p { class: "font-bold leading-5 sp-dash-font-raleway text-[17px] tracking-[-0.18px] text-font-primary",
-                            "Incentive Pool"
+                            {tr.header_title}
                         }
                         p { class: "w-full font-medium leading-4 sp-dash-font-raleway text-[12px] tracking-[0] text-card-meta",
-                            "This reward pool runs on the Kaia mainnet and is funded by depositing USDT into the deployed reward contract. Rewards are distributed to eligible participants based on verified engagement and accumulated score. Higher scores increase reward probability, but distribution follows the predefined allocation rules."
+                            {tr.header_description}
                         }
                     }
 
@@ -48,13 +50,13 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
             }
 
             SectionCard {
-                title: "Incentive Pool",
+                title: tr.section_incentive_pool.to_string(),
                 title_class: "font-bold sp-dash-font-raleway text-[24px]/[28px] tracking-[-0.24px] text-font-primary",
                 body_class: "flex flex-col gap-4 p-5 bg-card max-mobile:p-4",
 
                 div { class: "flex flex-col gap-2 items-start",
                     p { class: "font-bold leading-5 sp-dash-font-raleway text-[17px] tracking-[-0.18px] text-font-primary",
-                        "Incentive Pool Address"
+                        {tr.incentive_pool_address}
                     }
                     div { class: "flex gap-2 items-center w-full max-tablet:flex-wrap",
                         div { class: "flex flex-1 items-center w-full min-w-0 h-11 border-gray-600 rounded-[8px] border-[0.5px] bg-web-input",
@@ -94,10 +96,10 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
                     div { class: "flex flex-col gap-2 border rounded-[12px] border-separator bg-card p-[17px]",
                         div { class: "flex gap-2 justify-between items-center",
                             p { class: "font-bold sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-web-font-neutral",
-                                "Total Winners"
+                                {tr.total_winners}
                             }
                             p { class: "flex justify-center items-center px-2 font-medium leading-4 border h-[25px] rounded-[100px] border-btn-primary-outline sp-dash-font-raleway text-[12px] text-btn-primary-bg",
-                                "Rank Rate"
+                                {tr.rank_rate}
                             }
                         }
 
@@ -106,14 +108,14 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
                                 "10"
                             }
                             p { class: "font-semibold sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-web-font-neutral",
-                                "Peoples"
+                                {tr.people}
                             }
                         }
                     }
 
                     div { class: "flex flex-col gap-2 border rounded-[12px] border-separator bg-card p-[17px]",
                         p { class: "font-bold sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-web-font-neutral",
-                            "Total Deposit Amount"
+                            {tr.total_deposit_amount}
                         }
                         div { class: "flex flex-col gap-1 items-end ml-auto",
                             p { class: "font-bold sp-dash-font-raleway text-[36px] leading-[40px] tracking-[-0.72px] text-font-primary",
@@ -128,17 +130,17 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
             }
 
             SectionCard {
-                title: "Deposit in Incentive Pool",
+                title: tr.deposit_in_incentive_pool.to_string(),
                 title_class: "font-bold sp-dash-font-raleway text-[24px]/[28px] tracking-[-0.24px] text-font-primary",
                 body_class: "flex flex-col items-start p-5 gap-[10px] bg-card max-mobile:p-4",
 
                 div { class: "flex flex-col gap-2 justify-center items-start w-full",
                     p { class: "font-bold leading-5 sp-dash-font-raleway text-[17px] tracking-[-0.18px] text-font-primary",
-                        "Incentive Token"
+                        {tr.incentive_token}
                     }
                     button { class: "flex justify-between items-center px-3 w-full h-11 border-gray-600 rounded-[8px] border-[0.5px] bg-web-input",
                         span { class: "font-medium sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-web-font-neutral",
-                            "Select"
+                            {tr.select}
                         }
                         icons::arrows::ChevronDown {
                             width: "24",
@@ -147,13 +149,13 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
                         }
                     }
                     p { class: "font-normal text-gray-500 sp-dash-font-inter text-[12px] leading-[16px]",
-                        "Token used for incentives distribution"
+                        {tr.token_distribution_hint}
                     }
                 }
 
                 div { class: "flex flex-col gap-2 justify-center items-start w-full",
                     p { class: "font-bold leading-5 sp-dash-font-raleway text-[17px] tracking-[-0.18px] text-font-primary",
-                        "Deposit Amount"
+                        {tr.deposit_amount}
                     }
                     div { class: "relative w-full",
                         input {
@@ -166,38 +168,38 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
                         }
                     }
                     p { class: "font-normal text-gray-500 sp-dash-font-inter text-[12px] leading-[16px]",
-                        "It sends tokens to the generated incentive pool address."
+                        {tr.deposit_amount_hint}
                     }
                 }
             }
 
             SectionCard {
-                title: "Distribution",
+                title: tr.distribution.to_string(),
                 title_class: "font-semibold leading-5 text-center sp-dash-font-raleway text-[17px] tracking-[-0.18px] text-font-primary",
                 body_class: "flex flex-col items-start p-5 gap-[10px] bg-card max-mobile:p-4",
 
                 div { class: "flex flex-col gap-2 items-start w-full",
                     p { class: "font-semibold sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-font-primary",
-                        "Weight Sampling"
+                        {tr.weight_sampling}
                     }
 
                     div { class: "grid grid-cols-3 gap-2 w-full max-tablet:grid-cols-1",
                         DistributionModeCard {
                             selected: distribution_mode() == DistributionMode::Top10RankOnly,
-                            title: "Top 10 Rank Only".to_string(),
-                            description: "Rank 100%".to_string(),
+                            title: tr.top_10_rank_only.to_string(),
+                            description: tr.rank_100.to_string(),
                             onclick: move |_| distribution_mode.set(DistributionMode::Top10RankOnly),
                         }
                         DistributionModeCard {
                             selected: distribution_mode() == DistributionMode::HighScoreRandom,
-                            title: "High Score Random".to_string(),
-                            description: "Ranking Lottery".to_string(),
+                            title: tr.high_score_random.to_string(),
+                            description: tr.ranking_lottery.to_string(),
                             onclick: move |_| distribution_mode.set(DistributionMode::HighScoreRandom),
                         }
                         DistributionModeCard {
                             selected: distribution_mode() == DistributionMode::Mix,
-                            title: "Mix".to_string(),
-                            description: "Rank 70% : Random 30%".to_string(),
+                            title: tr.mix.to_string(),
+                            description: tr.rank_70_random_30.to_string(),
                             onclick: move |_| distribution_mode.set(DistributionMode::Mix),
                         }
                     }
@@ -212,13 +214,13 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
 
                     div { class: "flex flex-col flex-1 gap-0.5 items-start min-w-0",
                         p { class: "w-full font-semibold leading-5 sp-dash-font-raleway text-[17px] tracking-[-0.18px] text-font-primary",
-                            "Mainnet & funding"
+                            {tr.mainnet_and_funding}
                         }
                         p { class: "w-full font-medium leading-5 sp-dash-font-raleway text-[13px] tracking-[0] text-card-meta",
-                            "· Kaia / ICP networks supported. Funding is external token send only."
+                            {tr.network_support_note}
                         }
                         p { class: "w-full font-medium leading-5 sp-dash-font-raleway text-[13px] tracking-[0] text-card-meta",
-                            "· Ratel does not pull funds automatically, you send tokens to the generated treasury address."
+                            {tr.external_funding_note}
                         }
                     }
                 }
@@ -227,7 +229,7 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
                     Button {
                         style: ButtonStyle::Secondary,
                         class: "w-[146px] max-tablet:w-full",
-                        "Confirm Setup"
+                        {tr.confirm_setup}
                     }
                 }
             }
@@ -288,6 +290,7 @@ fn DistributionModeCard(
 
 #[component]
 pub fn HomePage(space_id: SpacePartition) -> Element {
+    let tr: IncentivePoolTranslate = use_translate();
     let role =
         use_loader(move || async move { Ok::<SpaceUserRole, Error>(SpaceUserRole::Creator) })?;
 
@@ -298,7 +301,7 @@ pub fn HomePage(space_id: SpacePartition) -> Element {
     } else {
         rsx! {
             div { class: "flex justify-center items-center w-full h-full text-font-primary",
-                "No permission"
+                {tr.no_permission}
             }
         }
     }
