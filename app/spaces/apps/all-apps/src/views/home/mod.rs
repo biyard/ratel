@@ -1,16 +1,16 @@
+use crate::i18n::AllAppsTranslate;
 use crate::*;
 
-fn app_description(app_type: SpaceAppType) -> &'static str {
+fn app_description(app_type: SpaceAppType, tr: &AllAppsTranslate) -> String {
     match app_type {
-        SpaceAppType::IncentivePool => {
-            "Reward your top participants with transparent, rule-based incentives."
-        }
-        _ => "Install and manage this app in your space.",
+        SpaceAppType::IncentivePool => tr.app_description_incentive_pool.to_string(),
+        _ => tr.app_description_default.to_string(),
     }
 }
 
 #[component]
 pub fn AllAppsPage(space_id: SpacePartition) -> Element {
+    let tr: AllAppsTranslate = use_translate();
     let space_apps_loader = common::use_query(&["space_apps", &space_id.to_string()], {
         let space_id = space_id.clone();
         move || get_space_apps(space_id.clone())
@@ -51,7 +51,7 @@ pub fn AllAppsPage(space_id: SpacePartition) -> Element {
                                     {app_type.translate(&lang()).to_string()}
                                 }
                                 p { class: "font-medium leading-4 sp-dash-font-raleway text-[12px] tracking-[0] text-card-meta",
-                                    {app_description(app_type)}
+                                    {app_description(app_type, &tr)}
                                 }
                             }
                             button {
@@ -105,14 +105,14 @@ pub fn AllAppsPage(space_id: SpacePartition) -> Element {
                                 },
                                 if is_progress {
                                     if is_installed {
-                                        "Uninstalling..."
+                                        {tr.uninstalling}
                                     } else {
-                                        "Installing..."
+                                        {tr.installing}
                                     }
                                 } else if is_installed {
-                                    "Uninstall"
+                                    {tr.uninstall}
                                 } else {
-                                    "Install"
+                                    {tr.install}
                                 }
                             }
                         }
@@ -125,6 +125,7 @@ pub fn AllAppsPage(space_id: SpacePartition) -> Element {
 
 #[component]
 pub fn HomePage(space_id: SpacePartition) -> Element {
+    let tr: AllAppsTranslate = use_translate();
     let access = use_loader({
         let sid = space_id.clone();
         move || get_apps_access(sid.clone())
@@ -137,7 +138,7 @@ pub fn HomePage(space_id: SpacePartition) -> Element {
     } else {
         rsx! {
             div { class: "flex justify-center items-center w-full h-full text-font-primary",
-                "No permission"
+                {tr.no_permission}
             }
         }
     }

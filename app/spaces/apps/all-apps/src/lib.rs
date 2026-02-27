@@ -1,5 +1,6 @@
 #![allow(unused)]
 mod controllers;
+mod i18n;
 mod models;
 mod route;
 mod views;

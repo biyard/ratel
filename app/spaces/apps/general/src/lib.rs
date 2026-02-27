@@ -1,4 +1,5 @@
 mod controllers;
+mod i18n;
 mod route;
 mod views;
 
