@@ -1,19 +1,15 @@
 use crate::models::SpaceApp;
 use crate::*;
+use common::SpaceUserRole;
 use common::types::Partition;
 use common::types::SpacePartition;
-use ratel_auth::models::user::OptionalUser;
 
-#[get("/api/spaces/{space_id}/apps", user: OptionalUser)]
+#[get("/api/spaces/{space_id}/apps", role: SpaceUserRole)]
 pub async fn get_space_apps(space_id: SpacePartition) -> Result<Vec<SpaceApp>> {
     let dynamo = crate::config::get().common.dynamodb();
     let space_pk: Partition = space_id.clone().into();
 
-    #[cfg(feature = "server")]
-    {
-        let user: Option<ratel_auth::User> = user.into();
-        super::get_apps_access::ensure_space_admin(space_id, user).await?;
-    }
+    super::get_apps_access::ensure_space_admin(role)?;
 
     let (apps, _) = SpaceApp::query(
         dynamo,

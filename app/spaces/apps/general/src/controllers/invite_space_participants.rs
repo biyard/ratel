@@ -1,5 +1,7 @@
 use crate::*;
 #[cfg(feature = "server")]
+use common::SpaceUserRole;
+#[cfg(feature = "server")]
 use ratel_auth::User;
 #[cfg(feature = "server")]
 use serde_repr::{Deserialize_repr, Serialize_repr};
@@ -14,9 +16,10 @@ pub struct InviteSpaceParticipantsResponse {
     pub invited_emails: Vec<String>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize_repr, Deserialize_repr, Default)]
-#[cfg_attr(feature = "server", derive(DynamoEnum))]
 #[cfg(feature = "server")]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Serialize_repr, Deserialize_repr, Default, DynamoEnum,
+)]
 #[repr(u8)]
 enum InvitationStatus {
     #[default]
@@ -27,8 +30,7 @@ enum InvitationStatus {
 }
 
 #[cfg(feature = "server")]
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(DynamoEntity))]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, DynamoEntity)]
 struct SpaceInvitationMember {
     #[cfg_attr(
         feature = "server",
@@ -118,20 +120,27 @@ fn normalize_email(raw: &str) -> Option<String> {
 
 #[post(
     "/api/spaces/{space_id}/participants/invitations",
-    user: User
+    role: SpaceUserRole
 )]
 pub async fn invite_space_participants(
     space_id: SpacePartition,
     req: InviteSpaceParticipantsRequest,
 ) -> common::Result<InviteSpaceParticipantsResponse> {
-    use common::models::space::SpaceParticipant;
+    use common::models::space::{SpaceCommon, SpaceParticipant};
     use common::types::SpacePublishState;
     use ratel_auth::models::user::UserQueryOption;
     use std::collections::HashSet;
 
-    let dynamo = crate::config::get().common.dynamodb();
-    let space = super::get_space_and_ensure_admin(&space_id, &user).await?;
+    if role != SpaceUserRole::Creator {
+        return Err(Error::NoPermission);
+    }
+
+    let common_config = common::CommonConfig::default();
+    let dynamo = common_config.dynamodb();
     let space_pk: Partition = space_id.into();
+    let space = SpaceCommon::get(dynamo, &space_pk, Some(&EntityType::SpaceCommon))
+        .await?
+        .ok_or(Error::SpaceNotFound)?;
 
     let mut invite_targets = vec![];
     let mut invited_emails = vec![];

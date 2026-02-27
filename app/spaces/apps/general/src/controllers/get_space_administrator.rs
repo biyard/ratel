@@ -1,5 +1,7 @@
 use crate::*;
 #[cfg(feature = "server")]
+use common::SpaceUserRole;
+#[cfg(feature = "server")]
 use ratel_auth::User;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
@@ -10,14 +12,23 @@ pub struct SpaceAdministratorResponse {
     pub profile_url: String,
 }
 
-#[get("/api/spaces/{space_id}/administrator", user: User)]
+#[get("/api/spaces/{space_id}/administrator", role: SpaceUserRole)]
 pub async fn get_space_administrator(
     space_id: SpacePartition,
 ) -> common::Result<SpaceAdministratorResponse> {
+    use common::models::space::SpaceCommon;
     use common::types::Partition;
 
-    let dynamo = crate::config::get().common.dynamodb();
-    let space = super::get_space_and_ensure_admin(&space_id, &user).await?;
+    if role != SpaceUserRole::Creator {
+        return Err(Error::NoPermission);
+    }
+
+    let common_config = common::CommonConfig::default();
+    let dynamo = common_config.dynamodb();
+    let space_pk: Partition = space_id.into();
+    let space = SpaceCommon::get(dynamo, &space_pk, Some(&EntityType::SpaceCommon))
+        .await?
+        .ok_or(Error::SpaceNotFound)?;
 
     // TODO: Replace this with an actual team admin lookup.
     let admin_pk = match &space.user_pk {
