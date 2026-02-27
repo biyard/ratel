@@ -88,16 +88,46 @@ pub async fn get_user_teams_handler() -> crate::Result<Vec<common::contexts::Tea
     let (user_teams, _): (Vec<ratel_auth::UserTeam>, _) =
         ratel_auth::UserTeam::query(cli, &user_pk, opt).await?;
 
-    let items: Vec<common::contexts::TeamItem> = user_teams
-        .into_iter()
-        .map(|ut| common::contexts::TeamItem {
-            pk: ut.pk.to_string(),
+    let mut items: Vec<common::contexts::TeamItem> = Vec::new();
+    for ut in user_teams {
+        let team_pk = match ut.sk.clone() {
+            common::types::EntityType::UserTeam(team_pk) => team_pk,
+            _ => String::new(),
+        };
+        let (permissions, description) = if team_pk.is_empty() {
+            (Vec::new(), String::new())
+        } else {
+            let team_pk: common::types::Partition = team_pk.parse().unwrap_or_default();
+            let perms = ratel_post::models::Team::get_permissions_by_team_pk(
+                cli,
+                &team_pk,
+                &user_pk,
+            )
+            .await
+            .unwrap_or_else(|_| ratel_post::types::TeamGroupPermissions::empty());
+            let description = ratel_post::models::Team::get(
+                cli,
+                &team_pk,
+                Some(common::types::EntityType::Team),
+            )
+            .await
+            .ok()
+            .flatten()
+            .map(|team| team.description)
+            .unwrap_or_default();
+            (perms.0.into_iter().map(|p| p as u8).collect(), description)
+        };
+
+        items.push(common::contexts::TeamItem {
+            pk: team_pk,
             nickname: ut.display_name,
             username: ut.username,
             profile_url: ut.profile_url,
             user_type: common::types::UserType::Team,
-        })
-        .collect();
+            permissions,
+            description,
+        });
+    }
 
     Ok(items)
 }
