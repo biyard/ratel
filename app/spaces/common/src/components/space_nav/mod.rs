@@ -41,7 +41,7 @@ pub fn SpaceNav(
 fn NavItem(item: SpaceNavItem) -> Element {
     rsx! {
         Link {
-            class: "flex gap-2 items-center self-stretch px-1 py-2 w-full h-9 font-bold leading-normal sp-dash-font-raleway text-[14px] text-font-primary hover:bg-space-nav-item-hover",
+            class: "flex flex-row gap-2 items-center py-2 px-1 w-full text-sm font-medium rounded-sm text-text hover:bg-space-nav-item-hover",
             to: item.link,
             {item.icon}
             {item.label}

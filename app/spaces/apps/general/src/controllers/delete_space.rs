@@ -1,19 +1,29 @@
 use crate::*;
+#[cfg(feature = "server")]
+use common::SpaceUserRole;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct DeleteSpaceResponse {
     pub message: String,
 }
 
-#[delete("/api/spaces/{space_id}/settings", user: ratel_auth::User)]
+#[delete("/api/spaces/{space_id}/settings", role: SpaceUserRole)]
 pub async fn delete_space(space_id: SpacePartition) -> common::Result<DeleteSpaceResponse> {
     use common::models::space::SpaceCommon;
     use common::types::{EntityType, Partition};
     use ratel_post::models::Post;
     use space_action_poll::SpacePoll;
 
-    let dynamo = crate::config::get().common.dynamodb();
-    let space = super::get_space_and_ensure_admin(&space_id, &user).await?;
+    if role != SpaceUserRole::Creator {
+        return Err(Error::NoPermission);
+    }
+
+    let common_config = common::CommonConfig::default();
+    let dynamo = common_config.dynamodb();
+    let space_pk: Partition = space_id.clone().into();
+    let space = SpaceCommon::get(dynamo, &space_pk, Some(&EntityType::SpaceCommon))
+        .await?
+        .ok_or(Error::SpaceNotFound)?;
 
     let space_pk: Partition = space.pk.clone();
     let post_pk = space_pk.clone().to_post_key()?;

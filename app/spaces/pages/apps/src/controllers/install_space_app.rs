@@ -1,10 +1,10 @@
 use crate::models::SpaceApp;
 use crate::*;
+use common::SpaceUserRole;
 use common::types::Partition;
 use common::types::SpacePartition;
-use ratel_auth::models::user::OptionalUser;
 
-#[post("/api/spaces/{space_id}/apps", user: OptionalUser)]
+#[post("/api/spaces/{space_id}/apps", role: SpaceUserRole)]
 pub async fn install_space_app(
     space_id: SpacePartition,
     app_type: SpaceAppType,
@@ -12,11 +12,7 @@ pub async fn install_space_app(
     let dynamo = crate::config::get().common.dynamodb();
     let space_pk_partition: Partition = space_id.clone().into();
 
-    #[cfg(feature = "server")]
-    {
-        let user: Option<ratel_auth::User> = user.into();
-        super::get_apps_access::ensure_space_admin(space_id, user).await?;
-    }
+    super::get_apps_access::ensure_space_admin(role)?;
 
     let (pk, sk) = SpaceApp::keys(&space_pk_partition, app_type);
     let existing = SpaceApp::get(dynamo, &pk, Some(&sk)).await?;

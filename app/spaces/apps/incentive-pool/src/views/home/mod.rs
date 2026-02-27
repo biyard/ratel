@@ -48,7 +48,7 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
             }
 
             SectionCard {
-                title: "Incentive Pool".to_string(),
+                title: "Incentive Pool",
                 title_class: "font-bold sp-dash-font-raleway text-[24px]/[28px] tracking-[-0.24px] text-font-primary",
                 body_class: "flex flex-col gap-4 p-5 bg-card max-mobile:p-4",
 
@@ -128,7 +128,7 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
             }
 
             SectionCard {
-                title: "Deposit in Incentive Pool".to_string(),
+                title: "Deposit in Incentive Pool",
                 title_class: "font-bold sp-dash-font-raleway text-[24px]/[28px] tracking-[-0.24px] text-font-primary",
                 body_class: "flex flex-col items-start p-5 gap-[10px] bg-card max-mobile:p-4",
 
@@ -172,7 +172,7 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
             }
 
             SectionCard {
-                title: "Distribution".to_string(),
+                title: "Distribution",
                 title_class: "font-semibold leading-5 text-center sp-dash-font-raleway text-[17px] tracking-[-0.18px] text-font-primary",
                 body_class: "flex flex-col items-start p-5 gap-[10px] bg-card max-mobile:p-4",
 
@@ -224,8 +224,9 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
                 }
 
                 div { class: "flex justify-end pt-3 w-full max-tablet:justify-stretch",
-                    button {
-                        class: "flex flex-col justify-center items-center w-[146px] max-tablet:w-full gap-[10px] rounded-[10px] px-5 py-3 border bg-btn-secondary-bg border-btn-secondary-outline text-btn-secondary-text hover:bg-btn-secondary-hover-bg hover:border-btn-secondary-hover-outline hover:text-btn-secondary-hover-text disabled:bg-btn-secondary-disable-bg disabled:border-btn-secondary-disable-outline disabled:text-btn-secondary-disable-text sp-dash-font-raleway text-[15px] leading-6 tracking-[0.5px] font-semibold",
+                    Button {
+                        style: ButtonStyle::Secondary,
+                        class: "w-[146px] max-tablet:w-full",
                         "Confirm Setup"
                     }
                 }

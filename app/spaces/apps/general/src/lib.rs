@@ -1,5 +1,3 @@
-#[cfg(feature = "server")]
-mod config;
 mod controllers;
 mod route;
 mod views;
