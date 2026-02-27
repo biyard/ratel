@@ -148,6 +148,7 @@ jobs:
 
           KAIA_ENDPOINT: https://public-en-kairos.node.kaia.io
           KAIA_ARCHIVE_ENDPOINT: https://archive-en-kairos.node.kaia.io
+          BLOCK_EXPLORER_URL: https://kairos.kaiascan.io
           KAIA_FEEPAYER_KEY: ${{ secrets.DEV_KAIA_KEY }}
           KAIA_FEEPAYER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
           KAIA_OWNER_KEY: ${{ secrets.DEV_KAIA_KEY }}
@@ -1107,7 +1108,7 @@ jobs:
   #           - Playwright report and screenshots are available in [GitHub Actions artifacts](${runUrl})
 
   #           **📋 Test Summary:**
-  #           - Workflow: Playwright Tests  
+  #           - Workflow: Playwright Tests
   #           - Trigger: ${{ github.event_name }}
   #           - Commit: ${{ github.sha }}
   #           - Status: ${{ needs.test.result }}

@@ -40,6 +40,7 @@ fn App() -> Element {
         common::Provider {}
         AuthProvider {}
         ratel_post::Provider {}
+        ratel_team_dao::Provider {}
         Router::<Route> {}
         PopupZone {}
         ToastProvider {}
