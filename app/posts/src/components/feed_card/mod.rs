@@ -107,7 +107,6 @@ fn FeedBody(post: PostResponse, on_edit: Option<EventHandler<MouseEvent>>) -> El
         author_type,
         created_at,
         space_pk,
-        space_type,
         urls,
         ..
     } = post;
@@ -116,7 +115,7 @@ fn FeedBody(post: PostResponse, on_edit: Option<EventHandler<MouseEvent>>) -> El
         div { class: "flex flex-col gap-2.5 pt-5 pb-2.5",
             div { class: "flex flex-row justify-between px-5",
                 div { class: "flex flex-row gap-2.5 justify-start items-center",
-                    if space_pk.is_some() && space_type.is_some() {
+                    if space_pk.is_some() {
                         SpaceTag {}
                     }
                 }
