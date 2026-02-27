@@ -196,11 +196,11 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element 
                         if can_edit {
                             button {
                                 aria_label: "{t.edit}",
-                                class: "rounded-md max-tablet:hidden text-sm px-3 py-1.5 text-button-text bg-button-bg hover:bg-button-bg/80 inline-flex items-center gap-2",
+                                class: "rounded-md max-tablet:hidden text-sm px-3 py-1.5 text-text-primary bg-button-bg hover:bg-button-bg/80 inline-flex items-center gap-2",
                                 onclick: move |_| {
                                     nav.push(format!("/posts/{post_pk}/edit"));
                                 },
-                                icons::edit::Edit1 { class: "!size-5 [&>path]:stroke-button-text" }
+                                icons::edit::Edit1 { class: "!size-5 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
                                 "{t.edit}"
                             }
                             button {
@@ -212,7 +212,7 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element 
                                     let existing_space_id = existing_space_id.clone();
                                     spawn(async move {
                                         if let Some(space_id) = existing_space_id {
-                                            nav.push(format!("/spaces/{space_id}"));
+                                            nav.push(format!("/spaces/{space_id}/dashboard"));
                                             return;
                                         }
                                         match create_space_handler(CreateSpaceRequest {
@@ -221,7 +221,7 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element 
                                             .await
                                         {
                                             Ok(resp) => {
-                                                nav.push(format!("/spaces/{}", resp.space_id));
+                                                nav.push(format!("/spaces/{}/dashboard", resp.space_id));
                                             }
                                             Err(e) => {
                                                 dioxus::logger::tracing::error!("Failed to create space: {:?}", e);
@@ -229,7 +229,7 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element 
                                         }
                                     });
                                 },
-                                icons::home::Palace { class: "!size-5 [&>path]:stroke-black" }
+                                icons::home::Palace { class: "!size-5 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
                                 "{t.create_space}"
                             }
                         }
@@ -239,7 +239,7 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element 
                                 onclick: move |_| {
                                     menu_open.set(!menu_open());
                                 },
-                                icons::validations::Extra { class: "size-6 text-gray-400" }
+                                icons::validations::Extra { class: "size-6 [&>path]:stroke-icon-primary [&>circle]:stroke-icons-primary [&>path]:fill-transparent" }
                             }
                             if menu_open() {
                                 div { class: "absolute right-0 top-full mt-2 w-40 border border-divider bg-background rounded-md z-50",
@@ -293,9 +293,9 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element 
                             }
                         },
                         if *optimistic_liked.read() {
-                            icons::emoji::ThumbsUp { class: "size-5 [&>path]:fill-primary [&>path]:stroke-primary" }
+                            icons::emoji::ThumbsUp { class: "size-5 [&>path]:fill-primary [&>path]:stroke-icon-primary" }
                         } else {
-                            icons::emoji::ThumbsUp { class: "size-5 [&>path]:stroke-icon" }
+                            icons::emoji::ThumbsUp { class: "size-5 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
                         }
                         span { class: "text-[15px] text-text-primary",
                             "{convert_number_to_string(*optimistic_likes.read())}"
@@ -303,14 +303,14 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element 
                     }
                     // Comments count
                     div { class: "flex gap-1 items-center",
-                        icons::chat::SquareChat { class: "size-5 [&>path]:stroke-icon" }
+                        icons::chat::SquareChat { class: "size-5 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
                         span { class: "text-[15px] text-text-primary",
                             "{convert_number_to_string(post.comments)}"
                         }
                     }
                     // Shares count
                     div { class: "flex gap-1 items-center",
-                        icons::links_share::Share1 { class: "size-5 [&>path]:stroke-icon" }
+                        icons::links_share::Share1 { class: "size-5 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
                         span { class: "text-[15px] text-text-primary",
                             "{convert_number_to_string(post.shares)}"
                         }
@@ -495,7 +495,7 @@ pub fn CommentSection(detail: PostDetailResponse, post_pk: String) -> Element {
         div { id: "comments", class: "flex flex-col gap-2.5",
             // Comment count header
             div { class: "flex flex-row text-text-primary gap-2",
-                icons::chat::SquareChat { class: "w-6 h-6 [&>path]:stroke-text-primary [&>line]:stroke-text-primary" }
+                icons::chat::SquareChat { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
                 span { class: "text-base/6 font-medium", "{comment_count} {count_label}" }
             }
             // Write a comment area
@@ -505,7 +505,7 @@ pub fn CommentSection(detail: PostDetailResponse, post_pk: String) -> Element {
                     onclick: move |_| {
                         expand_comment.set(true);
                     },
-                    icons::chat::SquareChat { class: "w-6 h-6 [&>path]:stroke-write-comment-box-icon group-hover:[&>path]:stroke-primary" }
+                    icons::chat::SquareChat { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
                     span { class: "text-write-comment-box-text text-[15px]/[24px] font-medium group-hover:text-primary transition-colors",
                         "{t.share_your_thoughts}"
                     }
@@ -629,10 +629,10 @@ fn CommentItem(
                         div { class: "w-10 h-10 rounded-full bg-profile-bg" }
                     }
                     div { class: "flex flex-col gap-[2px]",
-                        div { class: "font-semibold text-title-text text-[15px] leading-[15px]",
+                        div { class: "font-semibold text-text-primary text-[15px] leading-[15px]",
                             "{comment.author_display_name}"
                         }
-                        div { class: "font-semibold text-xs leading-[20px] text-time-text",
+                        div { class: "font-semibold text-xs leading-[20px] text-text-primary",
                             "{time_ago(updated_secs)}"
                         }
                     }
@@ -660,7 +660,7 @@ fn CommentItem(
                         },
                         "{comment.replies} {reply_label}"
                         if comment.replies > 0 {
-                            icons::arrows::ChevronDown { class: "w-6 h-6 [&>path]:stroke-primary" }
+                            icons::arrows::ChevronDown { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
                         }
                     }
                     button {
@@ -670,7 +670,7 @@ fn CommentItem(
                             let current = *show_reply.read();
                             show_reply.set(!current);
                         },
-                        icons::arrows::BendArrowRight { class: "w-6 h-6 [&>path]:stroke-text-primary" }
+                        icons::arrows::BendArrowRight { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
                         "{t.reply}"
                     }
                 }
@@ -702,9 +702,9 @@ fn CommentItem(
                         }
                     },
                     if *optimistic_liked.read() {
-                        icons::emoji::ThumbsUp { class: "w-6 h-6 [&>path]:fill-primary [&>path]:stroke-primary" }
+                        icons::emoji::ThumbsUp { class: "w-6 h-6 [&>path]:fill-primary [&>path]:stroke-icon-primary" }
                     } else {
-                        icons::emoji::ThumbsUp { class: "w-6 h-6 [&>path]:stroke-comment-icon" }
+                        icons::emoji::ThumbsUp { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
                     }
                     div { class: "font-medium text-base/[24px] text-comment-icon-text",
                         "{*optimistic_likes.read()}"
@@ -764,7 +764,7 @@ fn CommentItem(
                                     });
                                 }
                             },
-                            icons::chat::SquareChat { class: "w-5 h-5 [&>path]:stroke-black [&>line]:stroke-black" }
+                            icons::chat::SquareChat { class: "w-5 h-5 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
                             if *is_reply_submitting.read() {
                                 "{t.publishing}"
                             } else {
