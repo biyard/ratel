@@ -1,15 +1,16 @@
 use crate::models::SpaceApp;
 use crate::*;
-use common::SpaceUserRole;
 use common::types::Partition;
 use common::types::SpacePartition;
+use common::SpaceUserRole;
 
 #[post("/api/spaces/{space_id}/apps", role: SpaceUserRole)]
 pub async fn install_space_app(
     space_id: SpacePartition,
     app_type: SpaceAppType,
 ) -> Result<SpaceApp> {
-    let dynamo = crate::config::get().common.dynamodb();
+    let common_config = common::CommonConfig::default();
+    let dynamo = common_config.dynamodb();
     let space_pk_partition: Partition = space_id.clone().into();
 
     super::get_apps_access::ensure_space_admin(role)?;
