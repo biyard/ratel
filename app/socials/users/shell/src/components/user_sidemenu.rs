@@ -54,14 +54,63 @@ pub fn UserSidemenu(username: String) -> Element {
     let tr: UserSidemenuTranslate = use_translate();
 
     let user_ctx = ratel_auth::hooks::use_user_context();
+    let mut team_ctx = common::contexts::use_team_context();
+    let mut popup = use_popup();
+    let nav = use_navigator();
     let user = user_ctx().user.clone().unwrap_or_default();
+    let teams = team_ctx.teams.read().clone();
+    let is_self = user.username == username;
+    let selected_label = if is_self {
+        user.display_name.clone()
+    } else {
+        teams
+            .iter()
+            .find(|team| team.username == username)
+            .map(|team| {
+                if team.nickname.is_empty() {
+                    team.username.clone()
+                } else {
+                    team.nickname.clone()
+                }
+            })
+            .unwrap_or_else(|| user.display_name.clone())
+    };
 
     rsx! {
         div { class: "flex flex-col gap-2.5 w-62.5 max-mobile:hidden shrink-0",
             // Profile section with team selector
             div { class: "flex flex-col gap-5 px-4 py-5 w-full border rounded-[10px] bg-card-bg border-card-border",
                 // Team selector dropdown
-                TeamSelector { username: username.clone() }
+                common::TeamSelector {
+                    selected_label: selected_label.clone(),
+                    user_display_name: user.display_name.clone(),
+                    user_profile_url: user.profile_url.clone(),
+                    user_href: format!("/{}", user.username),
+                    teams: teams.clone(),
+                    team_href_prefix: "/teams".to_string(),
+                    team_href_suffix: "/home".to_string(),
+                    on_select_team: move |idx| {
+                        team_ctx.set_selected_index(idx);
+                    },
+                    on_create_team: move |title| {
+                        popup.open(rsx! {
+                            TeamCreationPopup {}
+                        });
+                        popup.with_title(title);
+                    },
+                    on_logout: move |_| {
+                        spawn(async move {
+                            let _ = ratel_auth::controllers::logout_handler().await;
+                            nav.push("/");
+                            #[cfg(target_arch = "wasm32")]
+                            {
+                                if let Some(window) = web_sys::window() {
+                                    let _ = window.location().reload();
+                                }
+                            }
+                        });
+                    }
+                }
 
                 // Profile image
                 div { class: "relative",

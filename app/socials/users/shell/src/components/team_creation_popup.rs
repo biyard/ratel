@@ -206,7 +206,7 @@ pub fn TeamCreationPopup() -> Element {
                                         team_ctx.set_teams(teams);
                                     }
                                     popup.close();
-                                    nav.push(format!("/teams/{}", username_val));
+                                    nav.push(format!("/teams/{}/home", username_val));
                                 }
                                 Err(e) => {
                                     error_msg.set(Some(format!("{}", e)));

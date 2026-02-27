@@ -17,7 +17,7 @@ pub async fn find_team_handler(username: String) -> Result<TeamResponse> {
 
     let team = teams
         .into_iter()
-        .next()
+        .find(|team| team.username == username)
         .ok_or(Error::NotFound("Team not found".to_string()))?;
 
     let user: Option<User> = user.into();
