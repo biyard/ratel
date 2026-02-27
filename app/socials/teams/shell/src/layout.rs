@@ -38,6 +38,200 @@ fn TeamSidemenu(teamname: String) -> Element {
         teams.iter().find(|team| team.username == teamname).cloned()
     };
 
+    let render_menu = |profile_url: String,
+                       display_name: String,
+                       description: String,
+                       permissions_vec: Vec<u8>,
+                       teams: Vec<common::contexts::TeamItem>| {
+        let mut mask = 0i64;
+        for value in &permissions_vec {
+            mask |= 1i64 << (*value as i32);
+        }
+        let permissions: TeamGroupPermissions = mask.into();
+        let is_admin = permissions.contains(TeamGroupPermission::TeamAdmin);
+        let can_post_write = is_admin || permissions.contains(TeamGroupPermission::PostWrite);
+        let can_team_edit = is_admin || permissions.contains(TeamGroupPermission::TeamEdit);
+        let can_group_edit = is_admin || permissions.contains(TeamGroupPermission::GroupEdit);
+        debug!(
+            "TeamSidemenu perms={:?} is_admin={} can_post_write={} can_team_edit={} can_group_edit={} teamname={}",
+            permissions_vec, is_admin, can_post_write, can_team_edit, can_group_edit, teamname
+        );
+
+        rsx! {
+            div { class: "flex flex-col gap-2.5 w-62.5 max-mobile:hidden shrink-0",
+                // Profile card
+                div { class: "flex flex-col gap-5 px-4 py-5 w-full border rounded-[10px] bg-card-bg border-card-border",
+                    common::TeamSelector {
+                        selected_label: display_name.clone(),
+                        user_display_name: user.display_name.clone(),
+                        user_profile_url: user.profile_url.clone(),
+                        user_href: format!("/"),
+                        teams: teams.clone(),
+                        team_href_prefix: "/teams".to_string(),
+                        team_href_suffix: "/home".to_string(),
+                        on_select_team: move |idx| {
+                            team_ctx.set_selected_index(idx);
+                        },
+                        on_logout: move |_| {
+                            spawn(async move {
+                                let _ = ratel_auth::controllers::logout_handler().await;
+                                nav.push("/");
+                                #[cfg(target_arch = "wasm32")]
+                                {
+                                    if let Some(window) = web_sys::window() {
+                                        let _ = window.location().reload();
+                                    }
+                                }
+                            });
+                        },
+                    }
+                    div { class: "relative",
+                        if !profile_url.is_empty() {
+                            img {
+                                src: "{profile_url}",
+                                alt: "{display_name}",
+                                class: "w-20 h-20 rounded-full border-2 object-cover object-top",
+                            }
+                        } else {
+                            div { class: "w-20 h-20 rounded-full border border-neutral-500 bg-neutral-500" }
+                        }
+                    }
+                    div { class: "font-medium text-text-primary", "{display_name}" }
+                    if !description.is_empty() {
+                        div { class: "text-xs text-text-primary", "{description}" }
+                    }
+                }
+
+                // Navigation
+                nav { class: "py-5 px-3 w-full border rounded-[10px] bg-card-bg border-card-border text-text-primary",
+                    // Home - always visible
+                    TeamSidemenuLink {
+                        to: Route::TeamHome {
+                            teamname: teamname.clone(),
+                            rest: vec![],
+                        },
+                        label: tr.home,
+                        icon: rsx! {
+                            home::Home1 {
+                                width: "24",
+                                height: "24",
+                                class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
+                            }
+                        },
+                    }
+
+                    // Drafts - PostWrite or Admin
+                    if can_post_write {
+                        TeamSidemenuLink {
+                            to: Route::TeamDraft {
+                                teamname: teamname.clone(),
+                                rest: vec![],
+                            },
+                            label: tr.drafts,
+                            icon: rsx! {
+                                edit::EditContent {
+                                    width: "24",
+                                    height: "24",
+                                    class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
+                                }
+                            },
+                        }
+                    }
+
+                    // Manage Group - TeamEdit or Admin
+                    if can_team_edit {
+                        TeamSidemenuLink {
+                            to: Route::TeamGroup {
+                                teamname: teamname.clone(),
+                                rest: vec![],
+                            },
+                            label: tr.manage_group,
+                            icon: rsx! {
+                                folder::Folder {
+                                    width: "24",
+                                    height: "24",
+                                    class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
+                                }
+                            },
+                        }
+                    }
+
+                    // Members - GroupEdit or Admin
+                    if can_group_edit {
+                        TeamSidemenuLink {
+                            to: Route::TeamMember {
+                                teamname: teamname.clone(),
+                                rest: vec![],
+                            },
+                            label: tr.members,
+                            icon: rsx! {
+                                user::UserGroup {
+                                    width: "24",
+                                    height: "24",
+                                    class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
+                                }
+                            },
+                        }
+                    }
+
+                    // DAO - Admin only
+                    if is_admin {
+                        TeamSidemenuLink {
+                            to: Route::TeamDao {
+                                teamname: teamname.clone(),
+                                rest: vec![],
+                            },
+                            label: tr.dao,
+                            icon: rsx! {
+                                game::Controller {
+                                    width: "24",
+                                    height: "24",
+                                    class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
+                                }
+                            },
+                        }
+                    }
+
+                    // Rewards - Admin only
+                    if is_admin {
+                        TeamSidemenuLink {
+                            to: Route::TeamReward {
+                                teamname: teamname.clone(),
+                                rest: vec![],
+                            },
+                            label: tr.rewards,
+                            icon: rsx! {
+                                game::Trophy {
+                                    width: "24",
+                                    height: "24",
+                                    class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
+                                }
+                            },
+                        }
+                    }
+
+                    // Settings - TeamEdit or Admin
+                    if can_team_edit {
+                        TeamSidemenuLink {
+                            to: Route::TeamSetting {
+                                teamname: teamname.clone(),
+                                rest: vec![],
+                            },
+                            label: tr.settings,
+                            icon: rsx! {
+                                settings_icon::Settings {
+                                    width: "24",
+                                    height: "24",
+                                    class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
+                                }
+                            },
+                        }
+                    }
+                }
+            }
+        }
+    };
+
     match data.as_ref() {
         Ok(team) => {
             let permissions_vec = {
@@ -60,19 +254,6 @@ fn TeamSidemenu(teamname: String) -> Element {
                         .collect()
                 }
             };
-            let mut mask = 0i64;
-            for value in &permissions_vec {
-                mask |= 1i64 << (*value as i32);
-            }
-            let permissions: TeamGroupPermissions = mask.into();
-            let is_admin = permissions.contains(TeamGroupPermission::TeamAdmin);
-            let can_post_write = is_admin || permissions.contains(TeamGroupPermission::PostWrite);
-            let can_team_edit = is_admin || permissions.contains(TeamGroupPermission::TeamEdit);
-            let can_group_edit = is_admin || permissions.contains(TeamGroupPermission::GroupEdit);
-            debug!(
-                "TeamSidemenu perms={:?} is_admin={} can_post_write={} can_team_edit={} can_group_edit={} teamname={}",
-                permissions_vec, is_admin, can_post_write, can_team_edit, can_group_edit, teamname
-            );
 
             let profile_url = team.profile_url.clone().unwrap_or_default();
             let mut teams = team_ctx.teams.read().clone();
@@ -92,7 +273,6 @@ fn TeamSidemenu(teamname: String) -> Element {
             } else {
                 team.nickname.clone()
             };
-            let display_name = selected_label.clone();
             let description = if team.html_contents.is_empty() {
                 fallback_team
                     .as_ref()
@@ -102,369 +282,33 @@ fn TeamSidemenu(teamname: String) -> Element {
                 team.html_contents.clone()
             };
 
-            rsx! {
-                div { class: "flex flex-col gap-2.5 w-62.5 max-mobile:hidden shrink-0",
-                    // Profile card
-                    div { class: "flex flex-col gap-5 px-4 py-5 w-full border rounded-[10px] bg-card-bg border-card-border",
-                        common::TeamSelector {
-                            selected_label: selected_label.clone(),
-                            user_display_name: user.display_name.clone(),
-                            user_profile_url: user.profile_url.clone(),
-                            user_href: format!("/"),
-                            teams: teams.clone(),
-                            team_href_prefix: "/teams".to_string(),
-                            team_href_suffix: "/home".to_string(),
-                            on_select_team: move |idx| {
-                                team_ctx.set_selected_index(idx);
-                            },
-                            on_logout: move |_| {
-                                spawn(async move {
-                                    let _ = ratel_auth::controllers::logout_handler().await;
-                                    nav.push("/");
-                                    #[cfg(target_arch = "wasm32")]
-                                    {
-                                        if let Some(window) = web_sys::window() {
-                                            let _ = window.location().reload();
-                                        }
-                                    }
-                                });
-                            },
-                        }
-                        div { class: "relative",
-                            if !profile_url.is_empty() {
-                                img {
-                                    src: "{profile_url}",
-                                    alt: "{display_name}",
-                                    class: "w-20 h-20 rounded-full border-2 object-cover object-top",
-                                }
-                            } else {
-                                div { class: "w-20 h-20 rounded-full border border-neutral-500 bg-neutral-500" }
-                            }
-                        }
-                        div { class: "font-medium text-text-primary", "{display_name}" }
-                        if !description.is_empty() {
-                            div { class: "text-xs text-text-primary", "{description}" }
-                        }
-                    }
-
-                    // Navigation
-                    nav { class: "py-5 px-3 w-full border rounded-[10px] bg-card-bg border-card-border text-text-primary",
-                        // Home - always visible
-                        TeamSidemenuLink {
-                            to: Route::TeamHome {
-                                teamname: teamname.clone(),
-                                rest: vec![],
-                            },
-                            label: tr.home,
-                            icon: rsx! {
-                                home::Home1 {
-                                    width: "24",
-                                    height: "24",
-                                    class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
-                                }
-                            },
-                        }
-
-                        // Drafts - PostWrite or Admin
-                        if can_post_write {
-                            TeamSidemenuLink {
-                                to: Route::TeamDraft {
-                                    teamname: teamname.clone(),
-                                    rest: vec![],
-                                },
-                                label: tr.drafts,
-                                icon: rsx! {
-                                    edit::EditContent {
-                                        width: "24",
-                                        height: "24",
-                                        class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
-                                    }
-                                },
-                            }
-                        }
-
-                        // Manage Group - TeamEdit or Admin
-                        if can_team_edit {
-                            TeamSidemenuLink {
-                                to: Route::TeamGroup {
-                                    teamname: teamname.clone(),
-                                    rest: vec![],
-                                },
-                                label: tr.manage_group,
-                                icon: rsx! {
-                                    folder::Folder {
-                                        width: "24",
-                                        height: "24",
-                                        class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
-                                    }
-                                },
-                            }
-                        }
-
-                        // Members - GroupEdit or Admin
-                        if can_group_edit {
-                            TeamSidemenuLink {
-                                to: Route::TeamMember {
-                                    teamname: teamname.clone(),
-                                    rest: vec![],
-                                },
-                                label: tr.members,
-                                icon: rsx! {
-                                    user::UserGroup {
-                                        width: "24",
-                                        height: "24",
-                                        class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
-                                    }
-                                },
-                            }
-                        }
-
-                        // DAO - Admin only
-                        if is_admin {
-                            TeamSidemenuLink {
-                                to: Route::TeamDao {
-                                    teamname: teamname.clone(),
-                                    rest: vec![],
-                                },
-                                label: tr.dao,
-                                icon: rsx! {
-                                    game::Controller {
-                                        width: "24",
-                                        height: "24",
-                                        class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
-                                    }
-                                },
-                            }
-                        }
-
-                        // Rewards - Admin only
-                        if is_admin {
-                            TeamSidemenuLink {
-                                to: Route::TeamReward {
-                                    teamname: teamname.clone(),
-                                    rest: vec![],
-                                },
-                                label: tr.rewards,
-                                icon: rsx! {
-                                    game::Trophy {
-                                        width: "24",
-                                        height: "24",
-                                        class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
-                                    }
-                                },
-                            }
-                        }
-
-                        // Settings - TeamEdit or Admin
-                        if can_team_edit {
-                            TeamSidemenuLink {
-                                to: Route::TeamSetting {
-                                    teamname: teamname.clone(),
-                                    rest: vec![],
-                                },
-                                label: tr.settings,
-                                icon: rsx! {
-                                    settings_icon::Settings {
-                                        width: "24",
-                                        height: "24",
-                                        class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
-                                    }
-                                },
-                            }
-                        }
-                    }
-                }
-            }
+            render_menu(
+                profile_url,
+                selected_label,
+                description,
+                permissions_vec,
+                teams,
+            )
         }
-        Err(_) => {
+        Err(err) => {
             if let Some(team) = fallback_team {
-                let profile_url = team.profile_url.clone();
+                debug!(
+                    "TeamSidemenu failed to load team from server: {}. Falling back to context.",
+                    err
+                );
                 let selected_label = if team.nickname.is_empty() {
                     team.username.clone()
                 } else {
                     team.nickname.clone()
                 };
-                let display_name = selected_label.clone();
-                let permissions_vec = team.permissions.clone();
-                let mut mask = 0i64;
-                for value in &permissions_vec {
-                    mask |= 1i64 << (*value as i32);
-                }
-                let permissions: TeamGroupPermissions = mask.into();
-                let is_admin = permissions.contains(TeamGroupPermission::TeamAdmin);
-                let can_post_write =
-                    is_admin || permissions.contains(TeamGroupPermission::PostWrite);
-                let can_team_edit = is_admin || permissions.contains(TeamGroupPermission::TeamEdit);
-                let can_group_edit =
-                    is_admin || permissions.contains(TeamGroupPermission::GroupEdit);
-
-                rsx! {
-                    div { class: "flex flex-col gap-2.5 w-62.5 max-mobile:hidden shrink-0",
-                        // Profile card
-                        div { class: "flex flex-col gap-5 px-4 py-5 w-full border rounded-[10px] bg-card-bg border-card-border",
-                            common::TeamSelector {
-                                selected_label: selected_label.clone(),
-                                user_display_name: user.display_name.clone(),
-                                user_profile_url: user.profile_url.clone(),
-                                user_href: format!("/"),
-                                teams: team_ctx.teams.read().clone(),
-                                team_href_prefix: "/teams".to_string(),
-                                team_href_suffix: "/home".to_string(),
-                                on_select_team: move |idx| {
-                                    team_ctx.set_selected_index(idx);
-                                },
-                                on_logout: move |_| {
-                                    spawn(async move {
-                                        let _ = ratel_auth::controllers::logout_handler().await;
-                                        nav.push("/");
-                                        #[cfg(target_arch = "wasm32")]
-                                        {
-                                            if let Some(window) = web_sys::window() {
-                                                let _ = window.location().reload();
-                                            }
-                                        }
-                                    });
-                                },
-                            }
-                            div { class: "relative",
-                                if !profile_url.is_empty() {
-                                    img {
-                                        src: "{profile_url}",
-                                        alt: "{display_name}",
-                                        class: "w-20 h-20 rounded-full border-2 object-cover object-top",
-                                    }
-                                } else {
-                                    div { class: "w-20 h-20 rounded-full border border-neutral-500 bg-neutral-500" }
-                                }
-                            }
-                            div { class: "font-medium text-text-primary", "{display_name}" }
-                            if !team.description.is_empty() {
-                                div { class: "text-xs text-text-primary", "{team.description}" }
-                            }
-                        }
-
-                        // Navigation
-                        nav { class: "py-5 px-3 w-full border rounded-[10px] bg-card-bg border-card-border text-text-primary",
-                            // Home - always visible
-                            TeamSidemenuLink {
-                                to: Route::TeamHome {
-                                    teamname: teamname.clone(),
-                                    rest: vec![],
-                                },
-                                label: tr.home,
-                                icon: rsx! {
-                                    home::Home1 {
-                                        width: "24",
-                                        height: "24",
-                                        class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
-                                    }
-                                },
-                            }
-
-                            if can_post_write {
-                                TeamSidemenuLink {
-                                    to: Route::TeamDraft {
-                                        teamname: teamname.clone(),
-                                        rest: vec![],
-                                    },
-                                    label: tr.drafts,
-                                    icon: rsx! {
-                                        edit::EditContent {
-                                            width: "24",
-                                            height: "24",
-                                            class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
-                                        }
-                                    },
-                                }
-                            }
-
-                            if can_team_edit {
-                                TeamSidemenuLink {
-                                    to: Route::TeamGroup {
-                                        teamname: teamname.clone(),
-                                        rest: vec![],
-                                    },
-                                    label: tr.manage_group,
-                                    icon: rsx! {
-                                        folder::Folder {
-                                            width: "24",
-                                            height: "24",
-                                            class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
-                                        }
-                                    },
-                                }
-                            }
-
-                            if can_group_edit {
-                                TeamSidemenuLink {
-                                    to: Route::TeamMember {
-                                        teamname: teamname.clone(),
-                                        rest: vec![],
-                                    },
-                                    label: tr.members,
-                                    icon: rsx! {
-                                        user::UserGroup {
-                                            width: "24",
-                                            height: "24",
-                                            class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
-                                        }
-                                    },
-                                }
-                            }
-
-                            if is_admin {
-                                TeamSidemenuLink {
-                                    to: Route::TeamDao {
-                                        teamname: teamname.clone(),
-                                        rest: vec![],
-                                    },
-                                    label: tr.dao,
-                                    icon: rsx! {
-                                        game::Controller {
-                                            width: "24",
-                                            height: "24",
-                                            class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
-                                        }
-                                    },
-                                }
-                            }
-
-                            if is_admin {
-                                TeamSidemenuLink {
-                                    to: Route::TeamReward {
-                                        teamname: teamname.clone(),
-                                        rest: vec![],
-                                    },
-                                    label: tr.rewards,
-                                    icon: rsx! {
-                                        game::Trophy {
-                                            width: "24",
-                                            height: "24",
-                                            class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
-                                        }
-                                    },
-                                }
-                            }
-
-                            if can_team_edit {
-                                TeamSidemenuLink {
-                                    to: Route::TeamSetting {
-                                        teamname: teamname.clone(),
-                                        rest: vec![],
-                                    },
-                                    label: tr.settings,
-                                    icon: rsx! {
-                                        settings_icon::Settings {
-                                            width: "24",
-                                            height: "24",
-                                            class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
-                                        }
-                                    },
-                                }
-                            }
-                        }
-                    }
-                }
+                let teams = team_ctx.teams.read().clone();
+                render_menu(
+                    team.profile_url.clone(),
+                    selected_label,
+                    team.description.clone(),
+                    team.permissions.clone(),
+                    teams,
+                )
             } else {
                 rsx! {
                     div { class: "flex flex-col gap-2.5 w-62.5 max-mobile:hidden shrink-0",
