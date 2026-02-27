@@ -1,5 +1,17 @@
+use crate::components::{DistributionModeCard, IconActionButton, SectionCard, SummaryStatCard};
 use crate::i18n::IncentivePoolTranslate;
+use crate::interop::{copy_text as copy_to_clipboard, open_url};
+use crate::models::{SpaceIncentive, SpaceIncentiveToken};
+use crate::utils::format::{
+    default_usdt_token_address, format_token_balance, incentive_explorer_url, is_valid_usdt_input,
+    usdt_tokens,
+};
+use crate::utils::service::{load_incentive_and_tokens, refresh_tokens, register_incentive_pool};
 use crate::*;
+use common::components::{Button, ButtonStyle};
+
+const DEFAULT_RECIPIENT_COUNT: i64 = 10;
+const MIX_RANKING_BPS: i64 = 7000;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum DistributionMode {
@@ -8,17 +20,108 @@ enum DistributionMode {
     Mix,
 }
 
+impl DistributionMode {
+    fn to_contract_mode(self) -> i64 {
+        match self {
+            DistributionMode::HighScoreRandom => 0,
+            DistributionMode::Top10RankOnly => 1,
+            DistributionMode::Mix => 2,
+        }
+    }
+
+    fn to_ranking_bps(self) -> i64 {
+        match self {
+            DistributionMode::Mix => MIX_RANKING_BPS,
+            _ => 0,
+        }
+    }
+}
+
 #[component]
 pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
-    // FIXME: Use space_id when space-scoped data is added.
-    let _ = space_id;
     let tr: IncentivePoolTranslate = use_translate();
+
     let mut distribution_mode = use_signal(|| DistributionMode::Top10RankOnly);
+    let incentive = use_signal(|| Option::<SpaceIncentive>::None);
+    let tokens = use_signal(Vec::<SpaceIncentiveToken>::new);
+    let mut selected_token = use_signal(|| Option::<String>::None);
+    let mut deposit_amount = use_signal(String::new);
+
+    let notice = use_signal(|| Option::<String>::None);
+    let mut deposit_validation = use_signal(|| Option::<String>::None);
+
+    let load_incentive_failed_notice = tr.load_incentive_failed.to_string();
+
+    let mut did_load = use_signal(|| false);
+    let is_loading = use_signal(|| false);
+    let is_registering = use_signal(|| false);
+    let is_refreshing = use_signal(|| false);
+
+    let space_id_for_load = space_id.clone();
+    use_effect(move || {
+        if did_load() {
+            return;
+        }
+        did_load.set(true);
+
+        let mut incentive = incentive.clone();
+        let mut tokens = tokens.clone();
+        let mut selected_token = selected_token.clone();
+        let mut notice = notice.clone();
+        let mut is_loading = is_loading.clone();
+        let load_incentive_failed_notice = load_incentive_failed_notice.clone();
+        let space_id = space_id_for_load.clone();
+
+        spawn(async move {
+            is_loading.set(true);
+            match load_incentive_and_tokens(space_id).await {
+                Ok((loaded_incentive, loaded_tokens)) => {
+                    incentive.set(loaded_incentive);
+                    selected_token.set(default_usdt_token_address(&loaded_tokens));
+                    tokens.set(loaded_tokens);
+                }
+                Err(err) => {
+                    error!("Failed to load incentive pool data: {:?}", err);
+                    notice.set(Some(load_incentive_failed_notice));
+                }
+            }
+            is_loading.set(false);
+        });
+    });
+
+    let token_items = usdt_tokens(&tokens());
+    let total_deposit_amount = token_items
+        .first()
+        .map(|item| format_token_balance(&item.balance, item.decimals))
+        .unwrap_or_else(|| "0".to_string());
+
+    let incentive_address = incentive()
+        .as_ref()
+        .map(|item| item.contract_address.clone())
+        .unwrap_or_default();
+    let show_incentive_address = if is_loading() && incentive_address.is_empty() {
+        tr.loading.to_string()
+    } else {
+        incentive_address.clone()
+    };
+
+    let confirm_label = if is_registering() {
+        tr.registering.to_string()
+    } else {
+        tr.confirm_setup.to_string()
+    };
+    let invalid_usdt_amount_notice = tr.invalid_usdt_amount.to_string();
 
     rsx! {
         div { class: "flex overflow-visible flex-col gap-5 self-start pb-6 w-full min-w-0 shrink-0 max-w-[1024px] max-tablet:gap-4 text-font-primary",
             h3 { class: "font-bold sp-dash-font-raleway text-[24px]/[28px] tracking-[-0.24px] text-font-primary",
                 {tr.page_title}
+            }
+
+            if let Some(message) = notice() {
+                p { class: "px-4 py-3 text-sm border rounded-[8px] border-separator bg-card text-card-meta",
+                    "{message}"
+                }
             }
 
             div { class: "p-4 w-full rounded-[12px] bg-card max-mobile:p-3",
@@ -62,69 +165,121 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
                         div { class: "flex flex-1 items-center w-full min-w-0 h-11 border-gray-600 rounded-[8px] border-[0.5px] bg-web-input",
                             input {
                                 class: "flex-1 px-3 min-w-0 h-full font-medium bg-transparent outline-none sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-font-primary",
-                                value: "0xFdB7eDe7B3d5F9538315e163368Cd15a731A7A15",
+                                value: "{show_incentive_address}",
                                 readonly: true,
                             }
 
-                            button { class: "flex justify-center items-center w-11 h-full shrink-0 rounded-r-[8px] text-web-font-neutral",
-                                icons::arrows::ExpandPage {
-                                    width: "20",
-                                    height: "20",
-                                    class: "[&>path]:stroke-current",
+                            {
+                                let address = incentive_address.clone();
+                                rsx! {
+                                    button {
+                                        class: "flex justify-center items-center w-11 h-full shrink-0 rounded-r-[8px] text-web-font-neutral disabled:opacity-50",
+                                        disabled: address.trim().is_empty(),
+                                        onclick: move |_| {
+                                            if let Some(url) = incentive_explorer_url(&address) {
+                                                open_url(&url);
+                                            }
+                                        },
+                                        icons::arrows::ExpandPage { width: "20", height: "20", class: "[&>path]:stroke-current" }
+                                    }
                                 }
                             }
                         }
 
-                        IconActionButton {
-                            icons::notes_clipboard::Clipboard {
-                                width: "24",
-                                height: "24",
-                                class: "[&>path]:stroke-current",
+                        {
+                            let address = incentive_address.clone();
+                            let notice = notice.clone();
+                            let copied_address_notice = tr.address_copied.to_string();
+                            let copy_address_failed_notice = tr.copy_address_failed.to_string();
+                            rsx! {
+                                IconActionButton {
+                                    disabled: address.trim().is_empty(),
+                                    onclick: move |_| {
+                                        if address.trim().is_empty() {
+                                            return;
+                                        }
+
+
+                                        let mut notice = notice.clone();
+                                        let address = address.clone();
+                                        let copied_address_notice = copied_address_notice.clone();
+                                        let copy_address_failed_notice = copy_address_failed_notice.clone();
+                                        spawn(async move {
+                                            match copy_to_clipboard(address).await {
+                                                Ok(_) => notice.set(Some(copied_address_notice)),
+                                                Err(err) => {
+                                                    error!("Failed to copy address: {:?}", err);
+                                                    notice.set(Some(copy_address_failed_notice));
+                                                }
+                                            }
+                                        });
+                                    },
+                                    icons::notes_clipboard::Clipboard { width: "24", height: "24", class: "[&>path]:stroke-current" }
+                                }
                             }
                         }
-                        IconActionButton {
-                            icons::arrows::Repost {
-                                width: "24",
-                                height: "24",
-                                class: "[&>path]:stroke-current",
+
+                        {
+                            let mut notice = notice.clone();
+                            let mut is_refreshing = is_refreshing.clone();
+                            let tokens = tokens.clone();
+                            let selected_token = selected_token.clone();
+                            let space_id = space_id.clone();
+                            let has_incentive = incentive().is_some();
+                            let refresh_tokens_failed_notice = tr.refresh_tokens_failed.to_string();
+                            rsx! {
+                                IconActionButton {
+                                    disabled: is_refreshing() || !has_incentive,
+                                    onclick: move |_| {
+                                        if is_refreshing() || !has_incentive {
+                                            return;
+                                        }
+
+
+
+                                        is_refreshing.set(true);
+                                        notice.set(None);
+
+                                        let mut notice = notice.clone();
+                                        let mut is_refreshing = is_refreshing.clone();
+                                        let mut tokens = tokens.clone();
+                                        let mut selected_token = selected_token.clone();
+                                        let space_id = space_id.clone();
+
+                                        let refresh_tokens_failed_notice = refresh_tokens_failed_notice.clone();
+                                        spawn(async move {
+                                            match refresh_tokens(space_id).await {
+                                                Ok(loaded_tokens) => {
+                                                    selected_token.set(default_usdt_token_address(&loaded_tokens));
+                                                    tokens.set(loaded_tokens);
+                                                }
+                                                Err(err) => {
+                                                    error!("Failed to refresh incentive tokens: {:?}", err);
+                                                    notice.set(Some(refresh_tokens_failed_notice));
+                                                }
+                                            }
+                                            is_refreshing.set(false);
+                                        });
+                                    },
+                                    icons::arrows::Repost { width: "24", height: "24", class: "[&>path]:stroke-current" }
+                                }
                             }
                         }
                     }
                 }
 
                 div { class: "grid grid-cols-2 w-full gap-[10px] max-tablet:grid-cols-1",
-                    div { class: "flex flex-col gap-2 border rounded-[12px] border-separator bg-card p-[17px]",
-                        div { class: "flex gap-2 justify-between items-center",
-                            p { class: "font-bold sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-web-font-neutral",
-                                {tr.total_winners}
-                            }
-                            p { class: "flex justify-center items-center px-2 font-medium leading-4 border h-[25px] rounded-[100px] border-btn-primary-outline sp-dash-font-raleway text-[12px] text-btn-primary-bg",
-                                {tr.rank_rate}
-                            }
-                        }
-
-                        div { class: "flex flex-col gap-1 items-end ml-auto",
-                            p { class: "font-bold sp-dash-font-raleway text-[36px] leading-[40px] tracking-[-0.72px] text-font-primary",
-                                "10"
-                            }
-                            p { class: "font-semibold sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-web-font-neutral",
-                                {tr.people}
-                            }
-                        }
+                    SummaryStatCard {
+                        title: tr.total_winners.to_string(),
+                        badge: Some(tr.rank_rate.to_string()),
+                        value: DEFAULT_RECIPIENT_COUNT.to_string(),
+                        unit: tr.people.to_string(),
                     }
-
-                    div { class: "flex flex-col gap-2 border rounded-[12px] border-separator bg-card p-[17px]",
-                        p { class: "font-bold sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-web-font-neutral",
-                            {tr.total_deposit_amount}
-                        }
-                        div { class: "flex flex-col gap-1 items-end ml-auto",
-                            p { class: "font-bold sp-dash-font-raleway text-[36px] leading-[40px] tracking-[-0.72px] text-font-primary",
-                                "1,245"
-                            }
-                            p { class: "font-semibold sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-web-font-neutral",
-                                "USDT"
-                            }
-                        }
+                    SummaryStatCard {
+                        title: tr.total_deposit_amount.to_string(),
+                        badge: None,
+                        value: total_deposit_amount,
+                        unit: "USDT".to_string(),
                     }
                 }
             }
@@ -138,14 +293,28 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
                     p { class: "font-bold leading-5 sp-dash-font-raleway text-[17px] tracking-[-0.18px] text-font-primary",
                         {tr.incentive_token}
                     }
-                    button { class: "flex justify-between items-center px-3 w-full h-11 border-gray-600 rounded-[8px] border-[0.5px] bg-web-input",
-                        span { class: "font-medium sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-web-font-neutral",
-                            {tr.select}
-                        }
-                        icons::arrows::ChevronDown {
-                            width: "24",
-                            height: "24",
-                            class: "text-web-font-neutral [&>path]:stroke-current",
+                    select {
+                        class: "flex justify-between items-center px-3 w-full h-11 font-medium border-gray-600 rounded-[8px] border-[0.5px] bg-web-input sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-font-primary disabled:text-web-font-neutral",
+                        disabled: token_items.is_empty(),
+                        value: selected_token().unwrap_or_default(),
+                        onchange: move |evt| {
+                            let value = evt.value().to_string();
+                            if value.is_empty() {
+                                selected_token.set(None);
+                            } else {
+                                selected_token.set(Some(value));
+                            }
+                        },
+                        if token_items.is_empty() {
+                            option { value: "", {tr.select} }
+                        } else {
+                            for token in token_items.iter() {
+                                option {
+                                    key: "{token.token_address}",
+                                    value: "{token.token_address}",
+                                    "{token.symbol}"
+                                }
+                            }
                         }
                     }
                     p { class: "font-normal text-gray-500 sp-dash-font-inter text-[12px] leading-[16px]",
@@ -158,17 +327,36 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
                         {tr.deposit_amount}
                     }
                     div { class: "relative w-full",
-                        input {
-                            class: "px-3 w-full h-12 font-medium text-right border-gray-600 rounded-[8px] border-[0.5px] bg-web-input pr-[68px] sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-font-primary",
-                            value: "",
-                            placeholder: "",
+                        {
+                            let invalid_usdt_amount = invalid_usdt_amount_notice.clone();
+                            rsx! {
+                                input {
+                                    class: "px-3 w-full h-12 font-medium text-right border-gray-600 rounded-[8px] border-[0.5px] bg-web-input pr-[68px] sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-font-primary",
+                                    value: "{deposit_amount}",
+                                    oninput: move |evt| {
+                                        let value = evt.value().to_string();
+                                        if is_valid_usdt_input(&value) {
+                                            deposit_validation.set(None);
+                                            deposit_amount.set(value);
+                                        } else {
+                                            deposit_validation.set(Some(invalid_usdt_amount.clone()));
+                                        }
+                                    },
+                                }
+                            }
                         }
                         span { class: "absolute right-3 top-1/2 font-normal text-gray-500 -translate-y-1/2 pointer-events-none sp-dash-font-inter text-[12px] leading-[16px]",
-                            "00.00"
+                            "USDT"
                         }
                     }
-                    p { class: "font-normal text-gray-500 sp-dash-font-inter text-[12px] leading-[16px]",
-                        {tr.deposit_amount_hint}
+                    if let Some(msg) = deposit_validation() {
+                        p { class: "font-normal text-red-400 sp-dash-font-inter text-[12px] leading-[16px]",
+                            "{msg}"
+                        }
+                    } else {
+                        p { class: "font-normal text-gray-500 sp-dash-font-inter text-[12px] leading-[16px]",
+                            {tr.deposit_amount_hint}
+                        }
                     }
                 }
             }
@@ -226,63 +414,73 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
                 }
 
                 div { class: "flex justify-end pt-3 w-full max-tablet:justify-stretch",
-                    Button {
-                        style: ButtonStyle::Secondary,
-                        class: "w-[146px] max-tablet:w-full",
-                        {tr.confirm_setup}
+                    {
+                        let mut is_registering = is_registering.clone();
+                        let mut notice = notice.clone();
+                        let incentive = incentive.clone();
+                        let tokens = tokens.clone();
+                        let selected_token = selected_token.clone();
+                        let mut deposit_validation = deposit_validation.clone();
+                        let space_id = space_id.clone();
+                        let mode = distribution_mode();
+                        let deposit_amount_value = deposit_amount();
+                        let invalid_usdt_amount = tr.invalid_usdt_amount.to_string();
+                        let incentive_pool_registered = tr.incentive_pool_registered.to_string();
+
+                        let register_incentive_failed_notice = tr.register_incentive_failed.to_string();
+                        rsx! {
+                            Button {
+                                class: "inline-flex justify-center items-center self-stretch border w-[146px] max-tablet:w-full",
+                                style: ButtonStyle::Secondary,
+                                onclick: move |_| {
+                                    if is_registering() || is_loading() {
+                                        return;
+                                    }
+                                    if !is_valid_usdt_input(&deposit_amount_value) {
+                                        deposit_validation.set(Some(invalid_usdt_amount.clone()));
+                                        return;
+                                    }
+
+                                    is_registering.set(true);
+                                    notice.set(None);
+
+                                    let mut is_registering = is_registering.clone();
+                                    let mut notice = notice.clone();
+                                    let mut incentive = incentive.clone();
+                                    let mut tokens = tokens.clone();
+                                    let mut selected_token = selected_token.clone();
+                                    let space_id = space_id.clone();
+                                    let incentive_pool_registered = incentive_pool_registered.clone();
+
+                                    let register_incentive_failed_notice = register_incentive_failed_notice.clone();
+                                    spawn(async move {
+                                        match register_incentive_pool(
+                                                space_id,
+                                                mode.to_contract_mode(),
+                                                mode.to_ranking_bps(),
+                                                DEFAULT_RECIPIENT_COUNT,
+                                            )
+                                            .await
+                                        {
+                                            Ok((created, loaded_tokens)) => {
+                                                selected_token.set(default_usdt_token_address(&loaded_tokens));
+                                                incentive.set(Some(created));
+                                                tokens.set(loaded_tokens);
+                                                notice.set(Some(incentive_pool_registered));
+                                            }
+                                            Err(err) => {
+                                                error!("Failed to register incentive pool: {:?}", err);
+                                                notice.set(Some(register_incentive_failed_notice));
+                                            }
+                                        }
+                                        is_registering.set(false);
+                                    });
+                                },
+                                "{confirm_label}"
+                            }
+                        }
                     }
                 }
-            }
-        }
-    }
-}
-
-#[component]
-fn SectionCard(
-    title: String,
-    title_class: &'static str,
-    body_class: &'static str,
-    children: Element,
-) -> Element {
-    rsx! {
-        div { class: "w-full rounded-[12px] bg-card",
-            div { class: "flex justify-between items-center self-stretch px-5 py-4 border-b rounded-t-[12px] border-separator bg-card",
-                p { class: "{title_class}", "{title}" }
-            }
-            div { class: "{body_class}", {children} }
-        }
-    }
-}
-
-#[component]
-fn IconActionButton(children: Element) -> Element {
-    rsx! {
-        button { class: "flex justify-center items-center w-11 h-11 border shrink-0 rounded-[8px] border-btn-outline-outline bg-btn-outline-bg text-btn-outline-text",
-            {children}
-        }
-    }
-}
-
-#[component]
-fn DistributionModeCard(
-    selected: bool,
-    title: String,
-    description: String,
-    onclick: EventHandler<MouseEvent>,
-) -> Element {
-    let card_class = if selected {
-        "flex w-full shrink-0 flex-col items-start gap-1 self-stretch rounded-[12px] border border-btn-primary-outline bg-btn-primary-bg/5 p-[17px] text-left"
-    } else {
-        "flex w-full shrink-0 flex-col items-start gap-1 self-stretch rounded-[12px] border border-separator bg-transparent p-[17px] text-left"
-    };
-
-    rsx! {
-        button { class: "{card_class}", onclick: move |evt| onclick.call(evt),
-            p { class: "font-bold sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-font-primary",
-                "{title}"
-            }
-            p { class: "w-full font-medium leading-5 sp-dash-font-raleway text-[13px] tracking-[0] text-card-meta",
-                "{description}"
             }
         }
     }

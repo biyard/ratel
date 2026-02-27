@@ -15,7 +15,7 @@ abigen!(
     ]"#,
 );
 
-pub fn parse_address(value: &str) -> Result<Address> {
+pub fn parse_address(value: &str) -> Result<Address, Error> {
     value
         .parse::<Address>()
         .map_err(|_| Error::BadRequest("Invalid EVM address".to_string()))
@@ -30,7 +30,7 @@ pub async fn fetch_transfer_logs(
     contract_addr: Address,
     from: U64,
     to: U64,
-) -> Result<Vec<Log>> {
+) -> Result<Vec<Log>, Error> {
     let transfer_sig =
         H256::from_slice(ethers::utils::keccak256("Transfer(address,address,uint256)").as_slice());
 

@@ -111,6 +111,42 @@ translate! {
         en: "Confirm Setup",
         ko: "설정 확정",
     },
+    registering: {
+        en: "Registering...",
+        ko: "등록 중...",
+    },
+    address_copied: {
+        en: "Address copied.",
+        ko: "주소를 복사했습니다.",
+    },
+    invalid_usdt_amount: {
+        en: "Please enter a numeric USDT amount.",
+        ko: "USDT 수량은 숫자 형식으로 입력해주세요.",
+    },
+    incentive_pool_registered: {
+        en: "Incentive pool registered.",
+        ko: "인센티브 풀이 등록되었습니다.",
+    },
+    load_incentive_failed: {
+        en: "Failed to load incentive pool data.",
+        ko: "인센티브 풀 데이터를 불러오지 못했습니다.",
+    },
+    copy_address_failed: {
+        en: "Failed to copy address.",
+        ko: "주소 복사에 실패했습니다.",
+    },
+    refresh_tokens_failed: {
+        en: "Failed to refresh token balances.",
+        ko: "토큰 잔액 새로고침에 실패했습니다.",
+    },
+    register_incentive_failed: {
+        en: "Failed to register incentive pool.",
+        ko: "인센티브 풀 등록에 실패했습니다.",
+    },
+    loading: {
+        en: "Loading...",
+        ko: "로딩 중...",
+    },
     no_permission: {
         en: "No permission",
         ko: "권한이 없습니다",
