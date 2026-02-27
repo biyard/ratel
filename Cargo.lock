@@ -880,6 +880,7 @@ dependencies = [
  "lambda_http 1.0.2",
  "ratel-auth",
  "ratel-post",
+ "ratel-team-dao",
  "ratel-team-shell",
  "ratel-user-credential",
  "ratel-user-setting",
@@ -13409,9 +13410,17 @@ dependencies = [
 name = "ratel-team-dao"
 version = "0.1.0"
 dependencies = [
+ "aide",
+ "aws-sdk-dynamodb",
  "common",
  "dioxus",
+ "gloo-timers 0.3.0",
+ "ratel-auth",
+ "ratel-post",
+ "ratel-team-setting",
+ "schemars 1.0.4",
  "serde",
+ "tracing",
 ]
 
 [[package]]
