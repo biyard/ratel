@@ -1,12 +1,13 @@
 use crate::models::SpaceApp;
 use crate::*;
-use common::SpaceUserRole;
 use common::types::Partition;
 use common::types::SpacePartition;
+use common::SpaceUserRole;
 
 #[get("/api/spaces/{space_id}/apps", role: SpaceUserRole)]
 pub async fn get_space_apps(space_id: SpacePartition) -> Result<Vec<SpaceApp>> {
-    let dynamo = crate::config::get().common.dynamodb();
+    let common_config = common::CommonConfig::default();
+    let dynamo = common_config.dynamodb();
     let space_pk: Partition = space_id.clone().into();
 
     super::get_apps_access::ensure_space_admin(role)?;

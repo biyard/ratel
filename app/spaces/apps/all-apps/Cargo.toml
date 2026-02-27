@@ -9,6 +9,7 @@ edition = "2021"
 [dependencies]
 dioxus = { workspace = true }
 common = { workspace = true }
+serde = { workspace = true }
 
 [features]
 default = []

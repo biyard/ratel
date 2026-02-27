@@ -20,7 +20,7 @@ pub fn SpaceAppsLayout(space_id: SpacePartition) -> Element {
     let user_ctx = use_user_context();
     let user = user_ctx().user.clone();
 
-    let space_apps_loader = use_loader({
+    let space_apps_loader = common::use_query(&["space_apps", &space_id.to_string()], {
         let space_id = space_id.clone();
         move || get_space_apps(space_id.clone())
     })?;
