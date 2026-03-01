@@ -11,12 +11,13 @@ pub struct TeamResponse {
     pub profile_url: Option<String>,
     pub dao_address: Option<String>,
     pub html_contents: String,
-    pub permissions: Option<i64>,
+    pub permissions: Option<Vec<ratel_post::types::TeamGroupPermission>>,
 }
 
 #[cfg(feature = "server")]
 impl From<(ratel_post::models::Team, i64)> for TeamResponse {
     fn from((team, permissions): (ratel_post::models::Team, i64)) -> Self {
+        let perms: ratel_post::types::TeamGroupPermissions = permissions.into();
         Self {
             pk: team.pk.to_string(),
             created_at: team.created_at,
@@ -26,7 +27,7 @@ impl From<(ratel_post::models::Team, i64)> for TeamResponse {
             profile_url: Some(team.profile_url),
             dao_address: team.dao_address,
             html_contents: team.description,
-            permissions: Some(permissions),
+            permissions: Some(perms.0),
         }
     }
 }

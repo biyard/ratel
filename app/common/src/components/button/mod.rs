@@ -5,6 +5,7 @@ pub fn Button(
     #[props(default)] size: ButtonSize,
     #[props(default)] style: ButtonStyle,
     #[props(default)] shape: ButtonShape,
+    #[props(default)] disabled: bool,
 
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
     onclick: Option<EventHandler<MouseEvent>>,
@@ -13,7 +14,11 @@ pub fn Button(
     rsx! {
         button {
             class: "{size} {style} {shape}",
+            disabled,
             onclick: move |e| {
+                if disabled {
+                    return;
+                }
                 if let Some(handler) = &onclick {
                     handler.call(e);
                 }
