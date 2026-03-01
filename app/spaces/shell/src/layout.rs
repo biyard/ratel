@@ -21,6 +21,12 @@ pub fn SpaceProvider(space_id: SpacePartition) -> Element {
 #[component]
 pub fn SpaceLayout(space_id: SpacePartition) -> Element {
     let role = use_user_role();
+    let apps_access = use_loader({
+        let sid = space_id.clone();
+        move || apps::get_apps_access(sid.clone())
+    })?;
+    let can_access_apps = apps_access.read().clone();
+
     let space = use_space();
     let lang = use_language();
 
@@ -40,7 +46,7 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
         dashboard::get_nav_item(space_id.clone(), role.clone()),
         overview::get_nav_item(space_id.clone(), role.clone()),
         actions::get_nav_item(space_id.clone(), role.clone()),
-        apps::get_nav_item(space_id.clone(), role.clone()),
+        apps::get_nav_item(space_id.clone(), role.clone(), can_access_apps),
         report::get_nav_item(space_id.clone(), role.clone()),
     ]
     .into_iter()

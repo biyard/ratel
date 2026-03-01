@@ -63,6 +63,10 @@ pub enum EntityType {
     // Space common entity types
     // SPACE_PK index is aligned by gsi2-index
     SpaceCommon,
+    SpaceIncentive,
+    SpaceIncentiveUser(String),
+    SpaceIncentiveScore(String),
+    SpaceIncentiveToken(String),
     SpaceDao,
     SpaceDaoSample(String),
     SpaceParticipant,
@@ -102,8 +106,6 @@ pub enum EntityType {
     // Artwork space entity types,
     SpaceArtwork,
     SpaceArtworkTrade(String), // Transaction hash
-
-    SpaceIncentive,
 
     Space,
     SpaceMember,
