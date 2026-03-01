@@ -10,6 +10,10 @@ pub struct TeamItem {
     pub username: String,
     pub profile_url: String,
     pub user_type: UserType,
+    #[serde(default)]
+    pub permissions: Vec<u8>,
+    #[serde(default)]
+    pub description: String,
 }
 
 #[derive(Clone, Copy)]
