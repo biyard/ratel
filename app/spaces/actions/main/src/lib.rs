@@ -13,9 +13,6 @@ pub mod route;
 pub mod views;
 use dioxus::prelude::*;
 
-pub mod menu;
-pub use menu::get_nav_item;
-
 pub use route::Route;
 
 pub use common::*;
