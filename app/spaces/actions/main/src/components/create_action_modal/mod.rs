@@ -1,7 +1,7 @@
 use crate::*;
 use i18n::CreateActionModalTranslate;
 use space_action_poll::controllers::create_poll;
-
+use space_common::types::route::space_action_poll;
 mod i18n;
 
 #[component]
@@ -47,10 +47,7 @@ pub fn CreateActionModal(space_id: SpacePartition) -> Element {
                         EntityType::SpacePoll(poll_id) => {
                             is_creating.set(false);
 
-                            nav.push(Route::PollApp {
-                                space_id: space_id.clone(),
-                                rest: vec![poll_id.clone()],
-                            });
+                            nav.push(space_action_poll(&space_id, &poll_id.into()));
                             layover.close();
                         }
                         _ => {
@@ -88,20 +85,20 @@ pub fn CreateActionModal(space_id: SpacePartition) -> Element {
                             }
                         },
                     }
-                    ActionTypeOption {
-                        selected: selected_type() == Some(SpaceActionType::StudyAndQuiz),
-                        disabled: true,
-                        onclick: move |_| {},
-                        title: tr.quiz_title.to_string(),
-                        caption: tr.quiz_caption.to_string(),
-                        icon: rsx! {
-                            icons::help_support::Help {
-                                width: "22",
-                                height: "22",
-                                class: "[&>path]:fill-none [&>path]:stroke-neutral-900 [&>circle]:fill-neutral-900",
-                            }
-                        },
-                    }
+                    // ActionTypeOption {
+                    //     selected: selected_type() == Some(SpaceActionType::StudyAndQuiz),
+                    //     disabled: true,
+                    //     onclick: move |_| {},
+                    //     title: tr.quiz_title.to_string(),
+                    //     caption: tr.quiz_caption.to_string(),
+                    //     icon: rsx! {
+                    //         icons::help_support::Help {
+                    //             width: "22",
+                    //             height: "22",
+                    //             class: "[&>path]:fill-none [&>path]:stroke-neutral-900 [&>circle]:fill-neutral-900",
+                    //         }
+                    //     },
+                    // }
                     ActionTypeOption {
                         selected: selected_type() == Some(SpaceActionType::TopicDiscussion),
                         disabled: true,

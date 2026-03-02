@@ -17698,6 +17698,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "space-action-main"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "ratel-auth",
+ "serde",
+ "space-action-poll",
+ "space-common",
+]
+
+[[package]]
 name = "space-action-poll"
 version = "0.1.0"
 dependencies = [
@@ -17705,6 +17717,19 @@ dependencies = [
  "dioxus",
  "ratel-auth",
  "serde",
+ "space-common",
+]
+
+[[package]]
+name = "space-action-shell"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "ratel-auth",
+ "serde",
+ "space-action-main",
+ "space-action-poll",
  "space-common",
 ]
 
@@ -17770,18 +17795,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "space-page-actions"
-version = "0.1.0"
-dependencies = [
- "common",
- "dioxus",
- "ratel-auth",
- "serde",
- "space-action-poll",
- "space-common",
-]
-
-[[package]]
 name = "space-page-dashboard"
 version = "0.1.0"
 dependencies = [
@@ -17840,9 +17853,9 @@ dependencies = [
  "serde",
  "serde_dynamo",
  "serde_repr",
+ "space-action-shell",
  "space-app-shell",
  "space-common",
- "space-page-actions",
  "space-page-dashboard",
  "space-page-overview",
  "space-page-report",

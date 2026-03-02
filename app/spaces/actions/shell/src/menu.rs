@@ -8,7 +8,11 @@ pub fn get_nav_item(
     Some((
         icon(),
         SpacePage::Actions,
-        Route::MainPage { space_id }.into(),
+        Route::Main {
+            space_id,
+            rest: vec![],
+        }
+        .into(),
     ))
 }
 
