@@ -1,9 +1,11 @@
 use crate::*;
 
+use ratel_auth::hooks::use_user_context;
+use space_app_main::use_space_apps;
 use space_common::components::{SpaceNav, SpaceNavItem, SpaceTop, SpaceTopLabel};
-use space_common::hooks::use_space_query;
+use space_common::hooks::{use_space_query, use_user_role};
 
-use crate::menu::{get_app_menu_items, AppMenuItem};
+use crate::menu::{AppMenuItem, get_app_menu_items};
 
 use crate::i18n::SpaceAppLayoutTranslate;
 
@@ -12,11 +14,14 @@ pub fn SpaceAppsLayout(space_id: SpacePartition) -> Element {
     let space_loader = use_space_query(&space_id)?;
     let space = space_loader.read().clone();
 
-    let space_apps_loader = common::use_query(&["space_apps", &space_id.to_string()], {
-        let space_id = space_id.clone();
-        move || get_space_apps(space_id.clone())
-    })?;
+    let space_apps_loader = use_space_apps(&space_id)?;
     let space_apps = space_apps_loader.read().clone();
+    let role_loader = use_user_role(&space_id)?;
+    let role = role_loader.read().clone();
+
+    let user_ctx = use_user_context();
+    let user = user_ctx.read().user.clone();
+
     let tr: SpaceAppLayoutTranslate = use_translate();
     let lang = use_language();
 
@@ -30,7 +35,7 @@ pub fn SpaceAppsLayout(space_id: SpacePartition) -> Element {
                     class: "text-icon-primary [&>path]:stroke-current"
                 }
             },
-            route: Route::AllApps {
+            route: Route::Main {
                 space_id: space_id.clone(),
                 rest: vec![],
             },
@@ -73,6 +78,8 @@ pub fn SpaceAppsLayout(space_id: SpacePartition) -> Element {
                 logo: "https://metadata.ratel.foundation/logos/logo.png",
                 menus,
                 user,
+                role,
+                // FIXME:
                 login_handler: move |_| {},
             }
             div { class: "flex flex-col col-span-6 col-start-2 min-h-0",
