@@ -1,15 +1,15 @@
 use crate::*;
 
-#[delete("/api/spaces/{space_pk}/discussions/{discussion_sk}/comments/{comment_sk}", role: SpaceUserRole, user : ratel_auth::User)]
+#[delete("/api/spaces/{space_id}/discussions/{discussion_sk}/comments/{comment_sk}", role: SpaceUserRole, user : ratel_auth::User)]
 pub async fn delete_comment(
-    space_pk: SpacePartition,
+    space_id: SpacePartition,
     discussion_sk: SpacePostEntityType,
     comment_sk: SpacePostCommentEntityType,
-) -> Result<String> {
+) -> Result<()> {
     SpacePost::can_view(&role)?;
 
     let common_config = common::CommonConfig::default();
-    let dynamo = common_config.dynamodb();
+    let cli = common_config.dynamodb();
     let space_post_id = SpacePostPartition(discussion_sk.0.clone());
     let space_post_pk: Partition = space_post_id.clone().into();
     let comment_sk_entity: EntityType = comment_sk.into();
@@ -25,7 +25,7 @@ pub async fn delete_comment(
     let delete_comment_tx =
         SpacePostComment::delete_transact_write_item(&space_post_pk, &comment_sk_entity);
 
-    let (pk, sk) = SpacePost::keys(&space_pk, &space_post_id);
+    let (pk, sk) = SpacePost::keys(&space_id, &space_post_id);
     let post_tx = SpacePost::updater(&pk, sk)
         .decrease_comments(1)
         .transact_write_item();
@@ -48,5 +48,5 @@ pub async fn delete_comment(
             crate::Error::Unknown(format!("Failed to delete comment: {}", e))
         })?;
 
-    Ok("success".to_string())
+    Ok(())
 }

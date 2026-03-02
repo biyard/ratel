@@ -11,8 +11,9 @@ use space_common::types::space_page_actions_poll_key;
 pub fn PollParticipantPage(space_id: SpacePartition, poll_id: SpacePollEntityType) -> Element {
     let tr: PollParticipantTranslate = use_translate();
     let nav = navigator();
+    let key = space_page_actions_poll_key(&space_id, &poll_id);
 
-    let poll_loader = use_query(&["polls", &space_id.to_string(), &poll_id.to_string()], {
+    let poll_loader = use_query(&key, {
         let space_id = space_id.clone();
         let poll_id = poll_id.clone();
         move || get_poll(space_id.clone(), poll_id.clone())

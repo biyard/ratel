@@ -1,9 +1,11 @@
+use ratel_auth::OptionalUser;
+
 use crate::*;
 use std::collections::HashSet;
 
-#[get("/api/spaces/{space_pk}/discussions/{discussion_sk}/comments?bookmark", role: SpaceUserRole)]
+#[get("/api/spaces/{space_id}/discussions/{discussion_sk}/comments?bookmark", role: SpaceUserRole, user: OptionalUser)]
 pub async fn list_comments(
-    space_pk: SpacePartition,
+    space_id: SpacePartition,
     discussion_sk: SpacePostEntityType,
     bookmark: Option<String>,
 ) -> Result<Vec<DiscussionCommentResponse>> {
@@ -21,7 +23,7 @@ pub async fn list_comments(
 
     let opt = SpacePostComment::opt_all()
         .sk(EntityType::SpacePostComment(String::default()).to_string())
-        .scan_forward(false)
+        .scan_index_forward(false)
         .limit(50);
     let opt = if let Some(b) = bookmark {
         opt.bookmark(b)

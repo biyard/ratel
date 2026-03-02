@@ -3,7 +3,7 @@ use crate::*;
 use ratel_auth::models::user::OptionalUser;
 
 // TODO: If bookmark-based pagination is needed, consider introducing a separate DynamoDB entity
-#[get("/api/actions?space_pk", user: OptionalUser)]
+#[get("/api/spaces/{space_pk}/actions", role: SpaceUserRole, user: OptionalUser)]
 pub async fn list_actions(
     space_pk: SpacePartition,
     // bookmark: Option<String>,
@@ -17,8 +17,15 @@ pub async fn list_actions(
         space_pk.clone(),
         SpacePoll::opt_all().sk(EntityType::SpacePoll(String::default()).to_string()),
     );
-    let ((polls, _),) = tokio::try_join!(poll_future)?;
-    let actions = if let Some(user) = user.0 {
+    let discussion_future = space_action_discussion::SpacePost::query(
+        cli,
+        space_pk.clone(),
+        space_action_discussion::SpacePost::opt_all()
+            .sk(EntityType::SpacePost(String::default()).to_string()),
+    );
+    let ((polls, _), (discussions, _)) = tokio::try_join!(poll_future, discussion_future)?;
+
+    let mut actions: Vec<SpaceAction> = if let Some(user) = user.0 {
         let keys: Vec<_> = polls
             .iter()
             .map(|poll| SpacePollUserAnswer::keys(&user.pk, &poll.sk, &space_pk))
@@ -44,6 +51,17 @@ pub async fn list_actions(
     } else {
         polls.into_iter().map(|poll| (poll, false).into()).collect()
     };
+
+    // Add discussions to the actions list
+    let discussion_actions: Vec<SpaceAction> = discussions
+        .into_iter()
+        .map(|post| (post, role).into())
+        .collect();
+    actions.extend(discussion_actions);
+
+    // Sort by updated_at descending
+    actions.sort_by(|a, b| b.updated_at.cmp(&a.updated_at));
+
     debug!("actions: {:?}", actions);
     Ok(actions)
 }

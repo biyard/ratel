@@ -3,7 +3,7 @@ use crate::*;
 use crate::macros::DynamoEntity;
 use crate::models::{SpacePostComment, SpacePostCommentLike};
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize, DynamoEntity)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, DynamoEntity, PartialEq, Eq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct SpacePost {
     #[dynamo(index = "gsi3", name = "find_by_space_ordered", pk)]
@@ -77,19 +77,6 @@ impl SpacePost {
             space_pk.clone().into(),
             EntityType::SpacePost(space_post_id),
         )
-    }
-
-    pub fn status(&self) -> DiscussionStatus {
-        let now = common::utils::time::get_now_timestamp_millis();
-        let started_at = self.started_at / 1000; // micros to millis
-        let ended_at = self.ended_at / 1000;
-        if now < started_at {
-            DiscussionStatus::NotStarted
-        } else if now <= ended_at {
-            DiscussionStatus::InProgress
-        } else {
-            DiscussionStatus::Finish
-        }
     }
 
     pub async fn comment(
@@ -188,6 +175,19 @@ impl SpacePost {
 }
 
 impl SpacePost {
+    pub fn status(&self) -> DiscussionStatus {
+        let now = common::utils::time::get_now_timestamp_millis();
+        let started_at = self.started_at;
+        let ended_at = self.ended_at;
+        if now < started_at {
+            DiscussionStatus::NotStarted
+        } else if now <= ended_at {
+            DiscussionStatus::InProgress
+        } else {
+            DiscussionStatus::Finish
+        }
+    }
+
     pub fn can_view(_user_role: &SpaceUserRole) -> crate::Result<()> {
         Ok(())
     }
@@ -195,6 +195,20 @@ impl SpacePost {
     pub fn can_edit(user_role: &SpaceUserRole) -> crate::Result<()> {
         match user_role {
             SpaceUserRole::Creator => Ok(()),
+            _ => Err(crate::Error::NoPermission),
+        }
+    }
+
+    pub fn can_participate(&self, user_role: &SpaceUserRole) -> crate::Result<()> {
+        match user_role {
+            SpaceUserRole::Creator => Ok(()),
+            SpaceUserRole::Participant => {
+                if self.status() == DiscussionStatus::InProgress {
+                    Ok(())
+                } else {
+                    Err(crate::Error::SpacePostNotStarted)
+                }
+            }
             _ => Err(crate::Error::NoPermission),
         }
     }

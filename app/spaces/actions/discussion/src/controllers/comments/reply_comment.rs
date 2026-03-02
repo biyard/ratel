@@ -5,9 +5,9 @@ pub struct ReplyCommentRequest {
     pub content: String,
 }
 
-#[post("/api/spaces/{space_pk}/discussions/{discussion_sk}/comments/{comment_sk}/reply", role: SpaceUserRole, user: ratel_auth::User)]
+#[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments/{comment_sk}/reply", role: SpaceUserRole, user: ratel_auth::User)]
 pub async fn reply_comment(
-    space_pk: SpacePartition,
+    space_id: SpacePartition,
     discussion_sk: SpacePostEntityType,
     comment_sk: SpacePostCommentEntityType,
     req: ReplyCommentRequest,
@@ -26,7 +26,7 @@ pub async fn reply_comment(
 
     let comment = SpacePostComment::reply(
         cli,
-        space_pk,
+        space_id,
         space_post_pk,
         comment_sk_entity,
         req.content,
