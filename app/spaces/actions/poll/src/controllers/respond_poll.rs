@@ -5,14 +5,14 @@ pub struct RespondPollRequest {
     pub answers: Vec<Answer>,
 }
 
-#[post("/api/spaces/{space_pk}/polls/{poll_sk}/respond", role: SpaceUserRole)]
+#[post("/api/spaces/{space_pk}/polls/{poll_sk}/respond", role: SpaceUserRole, user: ratel_auth::User)]
 pub async fn respond_poll(
     space_pk: SpacePartition,
     poll_sk: SpacePollEntityType,
     req: RespondPollRequest,
 ) -> Result<String> {
-    SpacePoll::can_edit(&role)?;
-    let cli = common::CommonConfig::default().dynamodb();
+    let common_config = common::CommonConfig::default();
+    let cli = common_config.dynamodb();
     let space_pk: Partition = space_pk.into();
     let poll_sk_entity: EntityType = poll_sk.into();
 

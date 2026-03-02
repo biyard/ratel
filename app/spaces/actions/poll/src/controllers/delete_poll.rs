@@ -4,8 +4,8 @@ use ratel_auth::User;
 #[delete("/api/spaces/{space_pk}/polls/{poll_sk}", role: SpaceUserRole)]
 pub async fn delete_poll(space_pk: SpacePartition, poll_sk: SpacePollEntityType) -> Result<String> {
     SpacePoll::can_edit(&role)?;
-    let cli = common::CommonConfig::default().dynamodb();
-
+    let common_config = common::CommonConfig::default();
+    let cli = common_config.dynamodb();
     let space_pk: Partition = space_pk.into();
     let poll_sk_entity: EntityType = poll_sk.into();
 
