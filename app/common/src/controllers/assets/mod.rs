@@ -13,12 +13,14 @@ pub struct AssetPresignedUris {
 #[get("/api/assets?total_count&file_type", _user: User)]
 pub async fn get_put_object_uri(
     total_count: Option<usize>,
-    #[allow(unused_variables)] file_type: Option<String>,
+    file_type: Option<String>,
 ) -> Result<AssetPresignedUris> {
     let config = crate::config::CommonConfig::default();
     let client = config.s3();
+
     let count = total_count.unwrap_or(1).max(1) as i32;
-    let uploads = client.presign_upload(Some(count), None, None).await?;
+    let prefix = file_type.as_deref();
+    let uploads = client.presign_upload(Some(count), prefix, None).await?;
 
     let presigned_uris = uploads
         .iter()
@@ -29,10 +31,10 @@ pub async fn get_put_object_uri(
         .map(|item| client.get_url(&item.key))
         .collect::<Vec<_>>();
 
-    return Ok(AssetPresignedUris {
+    Ok(AssetPresignedUris {
         presigned_uris,
         uris,
         upload_id: None,
         key: None,
-    });
+    })
 }

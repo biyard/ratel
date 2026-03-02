@@ -6,13 +6,41 @@ mod viewer_page;
 use admin_page::*;
 use viewer_page::*;
 
+use crate::controllers::get_team_group_permission_handler;
+use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
+
 #[component]
 pub fn Home(teamname: String) -> Element {
-    let is_owner = true;
+    let teamname_clone = teamname.clone();
+    let resource = use_server_future(move || {
+        let name = teamname_clone.clone();
+        async move { get_team_group_permission_handler(name).await }
+    })?;
 
-    if is_owner {
-        rsx! { AdminPage { teamname } }
-    } else {
-        rsx! { ViewerPage { teamname } }
+    let resolved = resource.suspend()?;
+    let data = resolved.read();
+
+    match data.as_ref() {
+        Ok(ctx) => {
+            let permissions: TeamGroupPermissions = ctx.permissions.into();
+            let can_edit = permissions.contains(TeamGroupPermission::TeamEdit)
+                || permissions.contains(TeamGroupPermission::TeamAdmin)
+                || permissions.contains(TeamGroupPermission::GroupEdit);
+
+            if can_edit {
+                rsx! {
+                    AdminPage {
+                        teamname,
+                        team_pk: ctx.team_pk.clone(),
+                        permissions: ctx.permissions,
+                    }
+                }
+            } else {
+                rsx! { ViewerPage { teamname } }
+            }
+        }
+        Err(_) => {
+            rsx! { ViewerPage { teamname } }
+        }
     }
 }

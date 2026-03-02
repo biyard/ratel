@@ -37,8 +37,5 @@ pub fn HomePage(space_id: SpacePartition) -> Element {
                 ViewerPage { space_id: space_id.clone(), extensions: exts }
             },
         },
-        _ => rsx! {
-            div { class: "p-4", "Loading..." }
-        },
     }
 }

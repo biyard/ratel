@@ -38,6 +38,7 @@ pub struct DynamoConfig {
 impl Default for DynamoConfig {
     fn default() -> Self {
         let endpoint = match option_env!("DYNAMODB_ENDPOINT") {
+            Some(ep) if ep.to_lowercase() == "none" || ep.is_empty() => None,
             Some(ep) => Some(ep.to_string()),
             None => None,
         };

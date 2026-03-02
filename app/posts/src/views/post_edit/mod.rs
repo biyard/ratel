@@ -1,5 +1,6 @@
 use crate::controllers::get_post::get_post_handler;
 use crate::controllers::update_post::{update_post_handler, UpdatePostRequest};
+use crate::controllers::{create_space_handler, CreateSpaceRequest};
 use crate::*;
 use common::components::{ButtonShape, ButtonSize, ButtonStyle, TiptapEditor};
 use dioxus::prelude::*;
@@ -23,6 +24,10 @@ translate! {
         en: "Publish",
         ko: "게시",
     },
+    publishing: {
+        en: "Publishing...",
+        ko: "게시 중...",
+    },
     saving: {
         en: "Saving...",
         ko: "저장 중...",
@@ -34,6 +39,10 @@ translate! {
     unsaved_changes: {
         en: "Unsaved changes",
         ko: "저장되지 않은 변경사항",
+    },
+    skip_creating_space: {
+        en: "Skip creating space",
+        ko: "스페이스 만들기 건너뛰기",
     },
 }
 
@@ -59,6 +68,7 @@ pub fn PostEdit(post_pk: String) -> Element {
     let mut status = use_signal(|| EditorStatus::Idle);
     let mut last_saved = use_signal(|| (String::new(), String::new()));
     let mut initialized = use_signal(|| false);
+    let mut skip_creating_space = use_signal(|| true);
 
     let post_pk_load = post_pk.clone();
     use_effect(move || {
@@ -136,7 +146,7 @@ pub fn PostEdit(post_pk: String) -> Element {
     });
 
     let post_pk_publish = post_pk.clone();
-    let handle_publish = move |_| {
+    let handle_publish = move || {
         let pk = post_pk_publish.clone();
         let nav = nav.clone();
         async move {
@@ -165,19 +175,61 @@ pub fn PostEdit(post_pk: String) -> Element {
         }
     };
 
+    let post_pk_create_space = post_pk.clone();
+    let handle_create_space = move || {
+        let pk = post_pk_create_space.clone();
+        let nav = nav.clone();
+        async move {
+            status.set(EditorStatus::Publishing);
+
+            let post_id: FeedPartition = pk.parse().unwrap();
+            let current_title = title();
+            let current_content = content();
+
+            let publish_result = update_post_handler(
+                post_id.clone(),
+                UpdatePostRequest::Publish {
+                    title: current_title,
+                    content: current_content,
+                    image_urls: None,
+                    publish: true,
+                    visibility: None,
+                },
+            )
+            .await;
+
+            if let Err(e) = publish_result {
+                dioxus::logger::tracing::error!("Publish failed before space create: {:?}", e);
+                status.set(EditorStatus::Unsaved);
+                return;
+            }
+
+            match create_space_handler(CreateSpaceRequest { post_pk: post_id }).await {
+                Ok(resp) => {
+                    nav.push(format!("/spaces/{}/dashboard", resp.space_id));
+                }
+                Err(e) => {
+                    dioxus::logger::tracing::error!("Create space failed: {:?}", e);
+                    status.set(EditorStatus::Unsaved);
+                }
+            }
+        }
+    };
+
     let title_len = title().len();
     let content_text_len = strip_html_tags(&content()).trim().len();
-    let can_publish = !title().is_empty()
+    let can_submit = !title().is_empty()
         && content_text_len >= CONTENT_MIN_LENGTH
         && status() != EditorStatus::Saving
         && status() != EditorStatus::Publishing;
+    let action_label = tr.publish;
 
     rsx! {
-        div { class: "flex flex-col gap-6 w-full max-w-[906px] mx-auto py-6 px-4",
+        div { class: "flex flex-col gap-5 py-5 px-4 mx-auto w-full max-w-[906px]",
             h1 { class: "text-2xl font-bold text-text-primary", "{tr.page_title}" }
 
             // Title input
-            div { class: "flex flex-col gap-1",
+            div { class: "relative",
                 input {
                     class: "w-full bg-transparent text-xl font-bold text-text-primary placeholder-text-tertiary outline-none border-b border-divider pb-2",
                     r#type: "text",
@@ -193,41 +245,67 @@ pub fn PostEdit(post_pk: String) -> Element {
                         }
                     },
                 }
-                div { class: "text-xs text-text-tertiary text-right",
+                div { class: "absolute right-3 top-1/2 -translate-y-1/2 text-sm text-text-tertiary",
                     "{title_len}/{TITLE_MAX_LENGTH}"
                 }
             }
 
             // TiptapEditor
-            TiptapEditor {
-                class: "w-full min-h-[400px]",
-                content: content(),
-                editable: true,
-                placeholder: "{tr.content_placeholder}",
-                on_content_change: move |html: String| {
-                    content.set(html);
-                    status.set(EditorStatus::Unsaved);
-                    save_version += 1;
-                },
+            div { class: "relative",
+                TiptapEditor {
+                    class: "w-full min-h-[400px] bg-post-input-bg border border-post-input-border rounded-md focus-within:border-ring focus-within:ring-1 focus-within:ring-ring/50",
+                    content: content(),
+                    editable: true,
+                    placeholder: "{tr.content_placeholder}",
+                    on_content_change: move |html: String| {
+                        content.set(html);
+                        status.set(EditorStatus::Unsaved);
+                        save_version += 1;
+                    },
+                }
+                if status() != EditorStatus::Idle {
+                    div { class: "flex absolute left-3 bottom-3 gap-2 items-center py-1 px-2 text-xs rounded text-text-tertiary bg-card",
+                        match status() {
+                            EditorStatus::Saving => rsx! { "{tr.saving}" },
+                            EditorStatus::Saved => rsx! { "{tr.all_changes_saved}" },
+                            EditorStatus::Unsaved => rsx! { "{tr.unsaved_changes}" },
+                            EditorStatus::Publishing => rsx! { "{tr.publishing}" },
+                            EditorStatus::Idle => rsx! { "" },
+                        }
+                    }
+                }
             }
 
             // Status + actions row
-            div { class: "flex items-center justify-between",
-                // Status indicator
-                span { class: "text-sm text-text-tertiary",
-                    match status() {
-                        EditorStatus::Saving => rsx! { "{tr.saving}" },
-                        EditorStatus::Saved => rsx! { "{tr.all_changes_saved}" },
-                        EditorStatus::Unsaved => rsx! { "{tr.unsaved_changes}" },
-                        EditorStatus::Publishing => rsx! { "{tr.saving}" },
-                        EditorStatus::Idle => rsx! { "" },
+            div { class: "flex gap-4 justify-end items-center",
+                label { class: "flex items-center gap-2 text-sm text-text-primary cursor-pointer",
+                    input {
+                        r#type: "checkbox",
+                        checked: skip_creating_space(),
+                        onchange: move |e| {
+                            skip_creating_space.set(e.checked());
+                        },
                     }
+                    span { "{tr.skip_creating_space}" }
                 }
                 button {
-                    class: "{ButtonStyle::Primary} {ButtonSize::default()} {ButtonShape::default()}",
-                    disabled: !can_publish,
-                    onclick: handle_publish,
-                    "{tr.publish}"
+                    class: "{ButtonStyle::Primary} {ButtonSize::default()} {ButtonShape::default()} min-w-[150px] text-base",
+                    disabled: !can_submit,
+                    onclick: move |_| {
+                        if skip_creating_space() {
+                            spawn(handle_publish());
+                        } else {
+                            spawn(handle_create_space());
+                        }
+                    },
+                    {if status() == EditorStatus::Publishing { tr.publishing } else { action_label }}
+                }
+            }
+
+            if status() == EditorStatus::Saving {
+                div { class: "flex gap-2 justify-center items-center mt-4 text-sm text-text-tertiary",
+                    div { class: "w-4 h-4 border-2 border-text-tertiary border-t-transparent rounded-full animate-spin" }
+                    span { "{tr.saving}" }
                 }
             }
         }

@@ -2,6 +2,7 @@
 pub mod components;
 pub mod config;
 pub mod controllers;
+pub mod dto;
 pub mod hooks;
 pub mod layout;
 pub mod models;

@@ -877,8 +877,10 @@ version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "lambda_http 1.0.2",
  "ratel-auth",
  "ratel-post",
+ "ratel-team-dao",
  "ratel-team-shell",
  "ratel-user-credential",
  "ratel-user-setting",
@@ -2298,6 +2300,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "aws_lambda_events"
+version = "1.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ca106ceeb46420f22b33b863f8a667214afbf6b0457bc209f8c97de2282bedae"
+dependencies = [
+ "base64 0.22.1",
+ "bytes",
+ "http 1.3.1",
+ "http-body 1.0.1",
+ "http-serde",
+ "query_map",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "axum"
 version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3122,7 +3140,7 @@ dependencies = [
  "http 1.3.1",
  "hyper 1.7.0",
  "jsonwebtoken 9.3.1",
- "lambda_http",
+ "lambda_http 0.17.0",
  "lambda_runtime 0.14.4",
  "schemars 1.0.4",
  "serde",
@@ -9706,6 +9724,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "lambda_http"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a0b02fac5bd704497e93f0acacfa3c7942866b58b370d3aefaefb75a0f0eb7b2"
+dependencies = [
+ "aws_lambda_events 1.0.3",
+ "bytes",
+ "encoding_rs",
+ "futures-util",
+ "http 1.3.1",
+ "http-body 1.0.1",
+ "http-body-util",
+ "hyper 1.7.0",
+ "lambda_runtime 1.0.1",
+ "mime",
+ "percent-encoding",
+ "pin-project-lite",
+ "serde",
+ "serde_json",
+ "serde_urlencoded",
+ "tokio-stream",
+ "url",
+]
+
+[[package]]
 name = "lambda_runtime"
 version = "0.14.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -13367,9 +13410,17 @@ dependencies = [
 name = "ratel-team-dao"
 version = "0.1.0"
 dependencies = [
+ "aide",
+ "aws-sdk-dynamodb",
  "common",
  "dioxus",
+ "gloo-timers 0.3.0",
+ "ratel-auth",
+ "ratel-post",
+ "ratel-team-setting",
+ "schemars 1.0.4",
  "serde",
+ "tracing",
 ]
 
 [[package]]
@@ -13378,6 +13429,8 @@ version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "ratel-auth",
+ "ratel-post",
  "serde",
 ]
 
@@ -13385,9 +13438,16 @@ dependencies = [
 name = "ratel-team-group"
 version = "0.1.0"
 dependencies = [
+ "aide",
+ "aws-sdk-dynamodb",
  "common",
  "dioxus",
+ "icons",
+ "ratel-auth",
+ "ratel-post",
+ "schemars 1.0.4",
  "serde",
+ "tracing",
 ]
 
 [[package]]
@@ -13405,18 +13465,31 @@ dependencies = [
 name = "ratel-team-member"
 version = "0.1.0"
 dependencies = [
+ "aide",
+ "aws-sdk-dynamodb",
  "common",
  "dioxus",
+ "ratel-auth",
+ "ratel-post",
+ "ratel-team-group",
+ "schemars 1.0.4",
  "serde",
+ "tracing",
 ]
 
 [[package]]
 name = "ratel-team-reward"
 version = "0.1.0"
 dependencies = [
+ "aide",
+ "aws-sdk-dynamodb",
  "common",
  "dioxus",
+ "ratel-auth",
+ "ratel-post",
+ "schemars 1.0.4",
  "serde",
+ "tracing",
 ]
 
 [[package]]

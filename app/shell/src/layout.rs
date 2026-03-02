@@ -25,6 +25,7 @@ pub fn AppLayout() -> Element {
         div { class: "antialiased bg-bg",
             AppMenu {}
             Outlet::<Route> {}
+            PopupZone {}
         }
     }
 }
