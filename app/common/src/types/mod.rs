@@ -5,7 +5,6 @@ mod error;
 mod oauth_provider;
 mod partition;
 mod space;
-mod space_app_type;
 mod space_page;
 mod space_user_role;
 
@@ -16,7 +15,6 @@ pub use error::*;
 pub use oauth_provider::*;
 pub use partition::*;
 pub use space::*;
-pub use space_app_type::*;
 pub use space_page::*;
 pub use space_user_role::*;
 
@@ -24,3 +22,6 @@ mod list_response;
 pub use list_response::ListResponse;
 
 pub mod attribute;
+
+mod file;
+pub use file::*;

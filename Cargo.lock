@@ -17709,27 +17709,53 @@ dependencies = [
 ]
 
 [[package]]
-name = "space-app-all-apps"
-version = "0.1.0"
-dependencies = [
- "common",
- "dioxus",
-]
-
-[[package]]
 name = "space-app-general"
 version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "ratel-auth",
+ "ratel-post",
+ "serde",
+ "serde_repr",
+ "space-action-poll",
 ]
 
 [[package]]
 name = "space-app-incentive-pool"
 version = "0.1.0"
 dependencies = [
+ "aws-sdk-dynamodb",
+ "chrono",
  "common",
  "dioxus",
+ "ethers",
+ "serde",
+]
+
+[[package]]
+name = "space-app-main"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "serde",
+ "serde_with 3.14.1",
+ "space-common",
+]
+
+[[package]]
+name = "space-app-shell"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "ratel-auth",
+ "serde",
+ "space-app-general",
+ "space-app-incentive-pool",
+ "space-app-main",
+ "space-common",
 ]
 
 [[package]]
@@ -17752,19 +17778,6 @@ dependencies = [
  "ratel-auth",
  "serde",
  "space-action-poll",
- "space-common",
-]
-
-[[package]]
-name = "space-page-apps"
-version = "0.1.0"
-dependencies = [
- "common",
- "dioxus",
- "serde",
- "space-app-all-apps",
- "space-app-general",
- "space-app-incentive-pool",
  "space-common",
 ]
 
@@ -17827,9 +17840,9 @@ dependencies = [
  "serde",
  "serde_dynamo",
  "serde_repr",
+ "space-app-shell",
  "space-common",
  "space-page-actions",
- "space-page-apps",
  "space-page-dashboard",
  "space-page-overview",
  "space-page-report",
