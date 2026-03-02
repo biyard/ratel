@@ -50,8 +50,9 @@ space-app-main = { path = "app/spaces/apps/main" }
 space-app-general = { path = "app/spaces/apps/general" }
 space-app-incentive-pool = { path = "app/spaces/apps/incentive-pool" }
 
-# Space Actions 
-space-page-actions = { path = "app/spaces/pages/actions" }
+# Space Actions
+space-action-shell = { path = "app/spaces/actions/shell" }
+space-action-main = { path = "app/spaces/actions/main" }
 space-action-poll = { path = "app/spaces/actions/poll" }
 
 # Space Etc

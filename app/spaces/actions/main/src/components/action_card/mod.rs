@@ -19,7 +19,7 @@ pub fn ActionCard(action: SpaceAction, space_id: SpacePartition) -> Element {
     };
     let status_color = status_badge_color(status);
     let type_label = match action.action_type {
-        SpaceActionType::StudyAndQuiz => tr.action_type_quiz,
+        // SpaceActionType::StudyAndQuiz => tr.action_type_quiz,
         SpaceActionType::Poll => tr.action_type_poll,
         SpaceActionType::TopicDiscussion => tr.action_type_discussion,
     };
@@ -33,16 +33,13 @@ pub fn ActionCard(action: SpaceAction, space_id: SpacePartition) -> Element {
         score_value.to_string()
     };
     let has_stats = point_value != 0 || score_value != 0;
-    let action_id = action.action_id.clone();
-
+    let url = action.get_url(&space_id);
     rsx! {
         button {
             class: "flex flex-col gap-[0.625rem] p-[0.9375rem] rounded-[1rem] border border-neutral-800 light:border-neutral-300 bg-neutral-900 light:bg-white hover:bg-neutral-800 light:hover:bg-neutral-50 transition-colors text-left w-full",
             onclick: move |_| {
-                nav.push(Route::PollApp {
-                    space_id: space_id.clone(),
-                    rest: vec![action_id.clone()],
-                });
+                let url = url.clone();
+                nav.push(url);
             },
 
             // Top: badges + date
@@ -133,7 +130,7 @@ fn status_badge_color(status: ActionStatus) -> BadgeColor {
 
 fn action_type_badge_color(action_type: &SpaceActionType) -> BadgeColor {
     match action_type {
-        SpaceActionType::StudyAndQuiz => BadgeColor::Purple,
+        // SpaceActionType::StudyAndQuiz => BadgeColor::Purple,
         SpaceActionType::Poll => BadgeColor::Orange,
         SpaceActionType::TopicDiscussion => BadgeColor::Blue,
     }
