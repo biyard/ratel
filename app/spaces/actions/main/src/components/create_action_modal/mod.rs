@@ -1,7 +1,8 @@
 use crate::*;
 use i18n::CreateActionModalTranslate;
+use space_action_discussion::controllers::create_discussion;
 use space_action_poll::controllers::create_poll;
-use space_common::types::route::space_action_poll;
+use space_common::types::route::{space_action_discussion, space_action_poll};
 mod i18n;
 
 #[component]
@@ -34,6 +35,11 @@ pub fn CreateActionModal(space_id: SpacePartition) -> Element {
                 return;
             }
 
+            let selected = selected_type();
+            if selected.is_none() {
+                return;
+            }
+
             is_creating.set(true);
             let mut layover = layover;
 
@@ -41,26 +47,46 @@ pub fn CreateActionModal(space_id: SpacePartition) -> Element {
             let space_id = space_id.clone();
             let mut is_creating = is_creating;
 
-            spawn(async move {
-                match create_poll(space_id.clone()).await {
-                    Ok(response) => match response.sk {
-                        EntityType::SpacePoll(poll_id) => {
-                            is_creating.set(false);
-
-                            nav.push(space_action_poll(&space_id, &poll_id.into()));
-                            layover.close();
+            match selected.unwrap() {
+                SpaceActionType::Poll => {
+                    spawn(async move {
+                        match create_poll(space_id.clone()).await {
+                            Ok(response) => match response.sk {
+                                EntityType::SpacePoll(poll_id) => {
+                                    is_creating.set(false);
+                                    nav.push(space_action_poll(&space_id, &poll_id.into()));
+                                    layover.close();
+                                }
+                                _ => {
+                                    error!("Unexpected entity type from create_poll");
+                                    is_creating.set(false);
+                                }
+                            },
+                            Err(err) => {
+                                error!("Failed to create poll: {:?}", err);
+                                is_creating.set(false);
+                            }
                         }
-                        _ => {
-                            error!("Unexpected poll entity type returned from create_poll");
-                            is_creating.set(false);
-                        }
-                    },
-                    Err(err) => {
-                        error!("Failed to create poll action: {:?}", err);
-                        is_creating.set(false);
-                    }
+                    });
                 }
-            });
+                SpaceActionType::TopicDiscussion => {
+                    spawn(async move {
+                        match create_discussion(space_id.clone()).await {
+                            Ok(response) => {
+                                let discussion_pk: SpacePostEntityType =
+                                    response.sk.try_into().unwrap_or_default();
+                                is_creating.set(false);
+                                nav.push(space_action_discussion(&space_id, &discussion_pk));
+                                layover.close();
+                            }
+                            Err(err) => {
+                                error!("Failed to create discussion: {:?}", err);
+                                is_creating.set(false);
+                            }
+                        }
+                    });
+                }
+            }
         }
     };
 
@@ -85,24 +111,10 @@ pub fn CreateActionModal(space_id: SpacePartition) -> Element {
                             }
                         },
                     }
-                    // ActionTypeOption {
-                    //     selected: selected_type() == Some(SpaceActionType::StudyAndQuiz),
-                    //     disabled: true,
-                    //     onclick: move |_| {},
-                    //     title: tr.quiz_title.to_string(),
-                    //     caption: tr.quiz_caption.to_string(),
-                    //     icon: rsx! {
-                    //         icons::help_support::Help {
-                    //             width: "22",
-                    //             height: "22",
-                    //             class: "[&>path]:fill-none [&>path]:stroke-neutral-900 [&>circle]:fill-neutral-900",
-                    //         }
-                    //     },
-                    // }
                     ActionTypeOption {
                         selected: selected_type() == Some(SpaceActionType::TopicDiscussion),
-                        disabled: true,
-                        onclick: move |_| {},
+                        disabled: false,
+                        onclick: move |_| selected_type.set(Some(SpaceActionType::TopicDiscussion)),
                         title: tr.discussion_title.to_string(),
                         caption: tr.discussion_caption.to_string(),
                         icon: rsx! {
@@ -113,20 +125,6 @@ pub fn CreateActionModal(space_id: SpacePartition) -> Element {
                             }
                         },
                     }
-                                // ActionTypeOption {
-                //     selected: selected_type() == Some(SpaceActionType::Follow),
-                //     disabled: true,
-                //     onclick: move |_| {},
-                //     title: tr.follow_title.to_string(),
-                //     caption: tr.follow_caption.to_string(),
-                //     icon: rsx! {
-                //         icons::user::User {
-                //             width: "22",
-                //             height: "22",
-                //             class: "[&>path]:fill-none [&>path]:stroke-neutral-900",
-                //         }
-                //     },
-                // }
                 }
 
                 // Sample preview section
@@ -148,7 +146,7 @@ pub fn CreateActionModal(space_id: SpacePartition) -> Element {
                 }
                 button {
                     class: "px-5 py-3 rounded-[0.625rem] text-[0.875rem]/[1rem] font-bold bg-yellow-400 light:bg-yellow-500 text-neutral-900 hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed",
-                    disabled: is_creating(),
+                    disabled: is_creating() || selected_type().is_none(),
                     onclick: create_action,
                     if is_creating() {
                         {tr.creating}

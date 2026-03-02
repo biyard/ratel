@@ -1,12 +1,12 @@
 use crate::*;
 
-#[post("/api/spaces/{space_pk}/discussions", role: SpaceUserRole, user : User)]
-pub async fn create_discussion(space_pk: SpacePartition) -> Result<DiscussionResponse> {
+#[post("/api/spaces/{space_id}/discussions", role: SpaceUserRole, user: ratel_auth::User)]
+pub async fn create_discussion(space_id: SpacePartition) -> Result<SpacePost> {
     SpacePost::can_edit(&role)?;
     let common_config = common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let post = SpacePost::new(
-        space_pk,
+        space_id,
         String::new(),
         String::new(),
         String::new(),
@@ -16,5 +16,5 @@ pub async fn create_discussion(space_pk: SpacePartition) -> Result<DiscussionRes
     );
     post.create(cli).await?;
 
-    Ok(post.into())
+    Ok(post)
 }

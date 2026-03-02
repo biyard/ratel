@@ -29,7 +29,7 @@ impl SpacePostCommentLike {
         Self {
             pk,
             sk,
-            created_at,
+            created_at: now,
             user_pk: user_pk.into(),
         }
     }

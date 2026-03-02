@@ -5,9 +5,9 @@ pub struct AddCommentRequest {
     pub content: String,
 }
 
-#[post("/api/spaces/{space_pk}/discussions/{discussion_sk}/comments", role: SpaceUserRole, user: ratel_auth::User)]
+#[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments", role: SpaceUserRole, user: ratel_auth::User)]
 pub async fn add_comment(
-    space_pk: SpacePartition,
+    space_id: SpacePartition,
     discussion_sk: SpacePostEntityType,
     req: AddCommentRequest,
 ) -> Result<DiscussionCommentResponse> {
@@ -16,7 +16,7 @@ pub async fn add_comment(
     let cli = common_config.dynamodb();
     let space_post_id: SpacePostPartition = SpacePostPartition(discussion_sk.0.clone());
 
-    let comment = SpacePost::comment(cli, space_pk, space_post_id, req.content, &user).await?;
+    let comment = SpacePost::comment(cli, space_id, space_post_id, req.content, &user).await?;
 
     Ok(comment.into())
 }

@@ -5,13 +5,13 @@ pub struct UpdateCommentRequest {
     pub content: String,
 }
 
-#[post("/api/spaces/{space_pk}/discussions/{discussion_sk}/comments/{comment_sk}/update", role: SpaceUserRole, user: ratel_auth::User)]
+#[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments/{comment_sk}", role: SpaceUserRole, user: ratel_auth::User)]
 pub async fn update_comment(
-    space_pk: SpacePartition,
+    space_id: SpacePartition,
     discussion_sk: SpacePostEntityType,
     comment_sk: SpacePostCommentEntityType,
     req: UpdateCommentRequest,
-) -> Result<String> {
+) -> Result<SpacePostComment> {
     SpacePost::can_view(&role)?;
     let common_config = common::CommonConfig::default();
     let cli = common_config.dynamodb();
@@ -34,12 +34,12 @@ pub async fn update_comment(
     }
 
     let now = chrono::Utc::now().timestamp();
-    SpacePostComment::updater(&space_post_pk, &comment_sk_entity)
+    let comment = SpacePostComment::updater(&space_post_pk, &comment_sk_entity)
         .with_content(req.content)
         .with_updated_at(now)
         .with_updated_at_align(format!("{:020}", now))
         .execute(cli)
         .await?;
 
-    Ok("success".to_string())
+    Ok(comment)
 }

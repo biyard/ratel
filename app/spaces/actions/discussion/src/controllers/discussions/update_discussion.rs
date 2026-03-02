@@ -19,11 +19,11 @@ pub async fn update_discussion(
     space_id: SpacePartition,
     discussion_sk: SpacePostEntityType,
     req: UpdateDiscussionRequest,
-) -> Result<String> {
+) -> Result<SpacePost> {
     SpacePost::can_edit(&role)?;
     let common_config = common::CommonConfig::default();
     let cli = common_config.dynamodb();
-    let space_pk: Partition = space_id.into();
+    let space_pk: Partition = space_id.clone().into();
     let discussion_sk_entity: EntityType = discussion_sk.into();
 
     let now = common::utils::time::get_now_timestamp_millis();
@@ -45,14 +45,14 @@ pub async fn update_discussion(
         updater = updater.with_ended_at(ended_at);
     }
 
-    updater.execute(cli).await?;
+    let post = updater.execute(cli).await?;
 
     if let Some(category_name) = req.category_name {
         if !category_name.is_empty() {
-            let cat = SpaceCategory::new(space_id.clone(), category_name.clone());
+            let cat = SpaceCategory::new(space_id, category_name.clone());
             let _ = cat.upsert(cli).await;
         }
     }
 
-    Ok("success".to_string())
+    Ok(post)
 }

@@ -1,8 +1,8 @@
 use crate::*;
 
-#[get("/api/spaces/{space_pk}/discussions/{discussion_sk}/comments/{comment_sk}/replies?bookmark", role: SpaceUserRole)]
+#[get("/api/spaces/{space_id}/discussions/{discussion_sk}/comments/{comment_sk}/replies?bookmark", role: SpaceUserRole)]
 pub async fn list_replies(
-    space_pk: SpacePartition,
+    space_id: SpacePartition,
     discussion_sk: SpacePostEntityType,
     comment_sk: SpacePostCommentEntityType,
     bookmark: Option<String>,
@@ -12,7 +12,9 @@ pub async fn list_replies(
     let cli = common_config.dynamodb();
     let comment_sk_entity: EntityType = comment_sk.into();
 
-    let opt = SpacePostComment::opt_all().scan_forward(false).limit(50);
+    let opt = SpacePostComment::opt_all()
+        .scan_index_forward(false)
+        .limit(50);
     let opt = if let Some(b) = bookmark {
         opt.bookmark(b)
     } else {

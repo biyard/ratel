@@ -5,13 +5,13 @@ pub struct LikeCommentRequest {
     pub like: bool,
 }
 
-#[post("/api/spaces/{space_pk}/discussions/{discussion_sk}/comments/{comment_sk}/likes", role: SpaceUserRole, user: ratel_auth::User)]
+#[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments/{comment_sk}/likes", role: SpaceUserRole, user: ratel_auth::User)]
 pub async fn like_comment(
-    space_pk: SpacePartition,
+    space_id: SpacePartition,
     discussion_sk: SpacePostEntityType,
     comment_sk: SpacePostCommentEntityType,
     req: LikeCommentRequest,
-) -> Result<String> {
+) -> Result<()> {
     SpacePost::can_view(&role)?;
     let common_config = common::CommonConfig::default();
     let cli = common_config.dynamodb();
@@ -30,5 +30,5 @@ pub async fn like_comment(
         SpacePost::unlike_comment(cli, space_post_pk, comment_sk_entity, user_pk).await?;
     }
 
-    Ok("success".to_string())
+    Ok(())
 }

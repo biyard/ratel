@@ -14,6 +14,7 @@ space-common = { workspace = true }
 
 space-action-main = { workspace = true }
 space-action-poll = { workspace = true }
+space-action-discussion = { workspace = true }
 
 [features]
 default = []
@@ -23,6 +24,7 @@ web = [
     "ratel-auth/web",
     "space-action-main/web",
     "space-action-poll/web",
+    "space-action-discussion/web",
     "space-common/web",
 ]
 desktop = ["dioxus/desktop"]
@@ -33,5 +35,6 @@ server = [
     "ratel-auth/server",
     "space-action-main/server",
     "space-action-poll/server",
+    "space-action-discussion/server",
     "space-common/server",
 ]
