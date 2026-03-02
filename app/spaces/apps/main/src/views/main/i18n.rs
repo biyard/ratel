@@ -1,7 +1,7 @@
 use crate::*;
 
 translate! {
-    AllAppsTranslate;
+    AppMainTranslate;
 
     app_description_default: {
         en: "Install and manage this app in your space.",

@@ -1,15 +1,18 @@
 #![allow(unused)]
 mod controllers;
-mod i18n;
+mod hooks;
 mod models;
 mod route;
+mod types;
 mod views;
 
 use dioxus::prelude::*;
 
 pub use controllers::*;
+pub use hooks::*;
 pub use models::*;
 pub use route::Route;
+pub use types::*;
 
 use common::*;
 

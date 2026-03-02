@@ -1,7 +1,10 @@
-use crate::i18n::AllAppsTranslate;
 use crate::*;
 
-fn app_description(app_type: SpaceAppType, tr: &AllAppsTranslate) -> String {
+mod i18n;
+use i18n::AppMainTranslate;
+use space_common::hooks::use_user_role;
+
+fn app_description(app_type: SpaceAppType, tr: &AppMainTranslate) -> String {
     match app_type {
         SpaceAppType::IncentivePool => tr.app_description_incentive_pool.to_string(),
         _ => tr.app_description_default.to_string(),
@@ -9,14 +12,12 @@ fn app_description(app_type: SpaceAppType, tr: &AllAppsTranslate) -> String {
 }
 
 #[component]
-pub fn AllAppsPage(space_id: SpacePartition) -> Element {
-    let tr: AllAppsTranslate = use_translate();
-    let space_apps_loader = common::use_query(&["space_apps", &space_id.to_string()], {
-        let space_id = space_id.clone();
-        move || get_space_apps(space_id.clone())
-    })?;
+pub fn AppMainPage(space_id: SpacePartition) -> Element {
+    let tr: AppMainTranslate = use_translate();
+    let space_apps_loader = use_space_apps(&space_id)?;
     let space_apps = space_apps_loader.read().clone();
     let installed_types: Vec<SpaceAppType> = space_apps.iter().map(|app| app.app_type).collect();
+
     let app_types: Vec<SpaceAppType> = SpaceAppType::VARIANTS
         .into_iter()
         .copied()
@@ -25,7 +26,41 @@ pub fn AllAppsPage(space_id: SpacePartition) -> Element {
     let lang = use_language();
 
     let mut in_progress = use_signal(|| Option::<SpaceAppType>::None);
-    let mut query_store = common::use_query_store();
+
+    let handle_toggle_app = move |app_type: SpaceAppType, is_installed: bool| {
+        let space_id = space_id.clone();
+
+        move |_| {
+            if in_progress().is_some() {
+                return;
+            }
+
+            in_progress.set(Some(app_type));
+
+            let space_id = space_id.clone();
+
+            spawn(async move {
+                let action = if is_installed { "uninstall" } else { "install" };
+
+                let result = if is_installed {
+                    uninstall_space_app(space_id.clone(), app_type)
+                        .await
+                        .map(|_| ())
+                } else {
+                    install_space_app(space_id.clone(), app_type)
+                        .await
+                        .map(|_| ())
+                };
+
+                in_progress.set(None);
+
+                match result {
+                    Ok(_) => invalidate_query(&["space_apps", &space_id.to_string()]),
+                    Err(err) => error!("Failed to {} app ({:?}): {:?}", action, app_type, err),
+                }
+            });
+        }
+    };
 
     rsx! {
         div { class: "grid grid-cols-3 gap-5 content-start items-start w-full max-tablet:grid-cols-2 max-mobile:grid-cols-1",
@@ -57,55 +92,14 @@ pub fn AllAppsPage(space_id: SpacePartition) -> Element {
                             button {
                                 class: if is_installed { "flex flex-col justify-center items-center self-stretch px-5 py-3 w-full font-bold leading-5 border gap-[10px] rounded-[10px] border-btn-outline-outline bg-btn-outline-bg text-btn-outline-text sp-dash-font-raleway text-[17px] tracking-[-0.18px]" } else { "flex flex-col justify-center items-center self-stretch px-5 py-3 w-full font-bold leading-5 gap-[10px] rounded-[10px] bg-btn-primary-bg text-btn-primary-text sp-dash-font-raleway text-[17px] tracking-[-0.18px]" },
                                 disabled: in_progress().is_some(),
-                                onclick: {
-                                    let space_id = space_id.clone();
-                                    move |_| {
-                                        if in_progress().is_some() {
-                                            return;
-                                        }
-
-                                        in_progress.set(Some(app_type));
-
-                                        let mut in_progress = in_progress.clone();
-                                        let mut query_store = query_store.clone();
-                                        let space_id = space_id.clone();
-                                        let action = if is_installed { "uninstall" } else { "install" };
-
-                                        spawn(async move {
-                                            let result = if is_installed {
-                                                uninstall_space_app(space_id.clone(), app_type)
-                                                    .await
-                                                    .map(|_| ())
-                                            } else {
-                                                install_space_app(space_id.clone(), app_type)
-                                                    .await
-                                                    .map(|_| ())
-                                            };
-
-                                            in_progress.set(None);
-
-                                            match result {
-                                                Ok(_) => {
-                                                    query_store.invalidate(&[
-                                                        "space_apps",
-                                                        &space_id.to_string(),
-                                                    ]);
-                                                }
-                                                Err(err) => {
-                                                    error!("Failed to {} app ({:?}): {:?}", action, app_type, err)
-                                                }
-                                            }
-                                        }
-                                        }
-                                    }
-                                },
+                                onclick: handle_toggle_app(app_type, is_installed),
                                 if is_progress {
                                     if is_installed {
                                         {tr.uninstalling}
                                     } else {
                                         {tr.installing}
                                     }
-                                }
+                                } else if is_installed {
                                     {tr.uninstall}
                                 } else {
                                     {tr.install}
@@ -121,21 +115,17 @@ pub fn AllAppsPage(space_id: SpacePartition) -> Element {
 
 #[component]
 pub fn HomePage(space_id: SpacePartition) -> Element {
-    let tr: AllAppsTranslate = use_translate();
-    let access = use_loader({
-        let sid = space_id.clone();
-        move || get_apps_access(sid.clone())
-    })?;
-
-    if access.read().clone() {
-        rsx! {
-            AllAppsPage { space_id }
-        }
-    } else {
-        rsx! {
+    let tr: AppMainTranslate = use_translate();
+    let role_loader = use_user_role(&space_id)?;
+    let role = role_loader.read().clone();
+    match SpaceApp::can_view(role) {
+        Ok(_) => rsx! {
+            AppMainPage { space_id }
+        },
+        _ => rsx! {
             div { class: "flex justify-center items-center w-full h-full text-font-primary",
                 {tr.no_permission}
             }
-        }
+        },
     }
 }
