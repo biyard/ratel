@@ -9,10 +9,20 @@ edition = "2021"
 [dependencies]
 dioxus = { workspace = true }
 common = { workspace = true }
+serde = { workspace = true }
+chrono = { workspace = true, optional = true }
+ethers = { version = "=2.0.14", optional = true }
+aws-sdk-dynamodb = { workspace = true, optional = true }
 
 [features]
 default = []
 web = ["dioxus/web", "common/web"]
 desktop = ["dioxus/desktop"]
 mobile = ["dioxus/mobile"]
-server = ["dioxus/server", "common/server"]
+server = [
+    "dioxus/server",
+    "common/server",
+    "chrono",
+    "ethers",
+    "aws-sdk-dynamodb",
+]

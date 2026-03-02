@@ -1,4 +1,5 @@
 pub mod comments;
+pub mod create_space;
 pub mod create_post;
 pub mod delete_post;
 pub mod dto;
@@ -10,6 +11,7 @@ pub mod list_user_posts;
 pub mod update_post;
 
 pub use comments::*;
+pub use create_space::*;
 pub use create_post::*;
 pub use delete_post::*;
 pub use dto::*;

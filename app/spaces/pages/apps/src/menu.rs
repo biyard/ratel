@@ -1,15 +1,21 @@
+use crate::i18n::SpaceAppLayoutTranslate;
 use crate::*;
 
 pub fn get_nav_item(
     space_id: SpacePartition,
     role: SpaceUserRole,
+    has_admin_access: bool,
 ) -> Option<(Element, SpacePage, NavigationTarget)> {
-    if role != SpaceUserRole::Creator {
+    if role != SpaceUserRole::Creator && !has_admin_access {
         return None;
     }
     Some((
         rsx! {
-            icons::layouts::Apps { class: "text-icon-primary [&>path]:stroke-current" }
+            icons::layouts::Apps {
+                width: "20",
+                height: "20",
+                class: "text-icon-primary [&>path]:stroke-current"
+            }
         },
         SpacePage::Apps,
         Route::AllApps {
@@ -38,14 +44,22 @@ pub struct AppMenuItem {
     pub route: Route,
 }
 
-pub fn get_app_menu_items(space_id: SpacePartition, installed: &Vec<SpaceApp>) -> Vec<AppMenuItem> {
+pub fn get_app_menu_items(
+    space_id: SpacePartition,
+    installed: &Vec<SpaceApp>,
+    tr: &SpaceAppLayoutTranslate,
+) -> Vec<AppMenuItem> {
     installed
         .iter()
         .map(|app| match app.app_type {
             SpaceAppType::General => AppMenuItem {
-                name: SpaceAppType::General.to_string(),
+                name: tr.general.to_string(),
                 icon: rsx! {
-                    icons::settings::Settings2 { class: "text-icon-primary [&>path]:fill-current [&>circle]:stroke-current" }
+                    icons::settings::Settings2 {
+                        width: "20",
+                        height: "20",
+                        class: "text-icon-primary [&>path]:fill-current [&>circle]:stroke-current"
+                    }
                 },
                 route: Route::General {
                     space_id: space_id.clone(),
@@ -53,19 +67,13 @@ pub fn get_app_menu_items(space_id: SpacePartition, installed: &Vec<SpaceApp>) -
                 },
             },
             SpaceAppType::IncentivePool => AppMenuItem {
-                name: SpaceAppType::IncentivePool.to_string(),
+                name: tr.incentive_pool.to_string(),
                 icon: rsx! {
-                    icons::ratel::Chest { class: "text-icon-primary [&>path]:fill-current [&>circle]:stroke-current" }
-                },
-                route: Route::IncentivePool {
-                    space_id: space_id.clone(),
-                    rest: vec![],
-                },
-            },
-            SpaceAppType::File => AppMenuItem {
-                name: SpaceAppType::File.to_string(),
-                icon: rsx! {
-                    icons::file::File { class: "" }
+                    icons::ratel::Chest {
+                        width: "20",
+                        height: "20",
+                        class: "text-icon-primary [&>path]:fill-current [&>circle]:stroke-current"
+                    }
                 },
                 route: Route::IncentivePool {
                     space_id: space_id.clone(),

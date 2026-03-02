@@ -6,7 +6,9 @@
     "build": "npx webpack --mode production -d false",
     "build-dev": "npx webpack --mode development"
   },
-  "dependencies": {},
+  "dependencies": {
+    "ethers": "^6.15.0"
+  },
   "devDependencies": {
     "webpack": "^5.105.2",
     "webpack-cli": "^6.0.1"
