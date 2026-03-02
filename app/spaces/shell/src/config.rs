@@ -1,5 +1,4 @@
 use common::CommonConfig;
-use dioxus::logger::tracing::Level;
 
 #[cfg(feature = "server")]
 use common::by_types::config::{AwsConfig, DatabaseConfig};

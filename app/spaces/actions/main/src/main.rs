@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use space_page_actions::*;
+use space_action_main::*;
 
 fn main() {
     dioxus::launch(App);

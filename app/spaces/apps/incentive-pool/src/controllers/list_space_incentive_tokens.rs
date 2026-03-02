@@ -1,7 +1,6 @@
-use crate::models::SpaceIncentive;
-use crate::models::SpaceIncentiveToken;
 use crate::*;
-use common::SpaceUserRole;
+
+use crate::models::SpaceIncentiveToken;
 
 #[get(
     "/api/spaces/{space_pk}/incentives/tokens?bookmark&limit",
@@ -12,6 +11,7 @@ pub async fn list_space_incentive_tokens(
     bookmark: Option<String>,
     limit: Option<i32>,
 ) -> Result<ListResponse<SpaceIncentiveToken>> {
+    use crate::models::SpaceIncentive;
     SpaceIncentive::can_view(role)?;
     let common_config = common::CommonConfig::default();
     let dynamo = common_config.dynamodb();
