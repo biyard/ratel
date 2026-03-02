@@ -1,30 +1,25 @@
 use crate::*;
 
-mod candidate_page;
 mod creator_page;
-mod participant_page;
+mod i18n;
 mod viewer_page;
 
-use candidate_page::*;
 use creator_page::*;
-use participant_page::*;
+use i18n::*;
 use viewer_page::*;
+
+use space_common::hooks::use_user_role;
 
 #[component]
 pub fn HomePage(space_id: SpacePartition) -> Element {
-    let role = use_server_future(move || async move { SpaceUserRole::Viewer })?.value();
+    let role_loader = use_user_role(&space_id)?;
+    let role = role_loader.read().clone();
 
-    match role().unwrap_or_default() {
+    match role {
         SpaceUserRole::Creator => rsx! {
             CreatorPage { space_id }
         },
-        SpaceUserRole::Participant => rsx! {
-            ParticipantPage { space_id }
-        },
-        SpaceUserRole::Candidate => rsx! {
-            CandidatePage { space_id }
-        },
-        SpaceUserRole::Viewer => rsx! {
+        _ => rsx! {
             ViewerPage { space_id }
         },
     }

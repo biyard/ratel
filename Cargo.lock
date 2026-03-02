@@ -17829,6 +17829,9 @@ version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "serde",
+ "space-app-file",
+ "space-common",
 ]
 
 [[package]]
