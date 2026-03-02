@@ -23,7 +23,8 @@ names = { version = "0.14.0", optional = true }
 space-page-dashboard = { workspace = true, optional = true }
 space-page-overview = { workspace = true, optional = true }
 space-page-actions = { workspace = true, optional = true }
-space-page-apps = { workspace = true, optional = true }
+space-app-shell = { workspace = true, optional = true }
+
 space-page-report = { workspace = true, optional = true }
 
 space-common = { workspace = true }
@@ -34,9 +35,9 @@ default = []
 web = [
     "common/web",
     "dioxus/web",
+    "space-app-shell/web",
     "space-common/web",
     "space-page-actions/web",
-    "space-page-apps/web",
     "space-page-dashboard/web",
     "space-page-overview/web",
     "space-page-report/web",
@@ -44,8 +45,8 @@ web = [
 # The feature that are only required for the desktop = ["dioxus/desktop"] build target should be optional and only enabled in the desktop = ["dioxus/desktop"] feature
 desktop = [
     "dioxus/desktop",
+    "space-app-shell/desktop",
     "space-page-actions/desktop",
-    "space-page-apps/desktop",
     "space-page-dashboard/desktop",
     "space-page-overview/desktop",
     "space-page-report/desktop",
@@ -53,8 +54,8 @@ desktop = [
 # The feature that are only required for the mobile = ["dioxus/mobile"] build target should be optional and only enabled in the mobile = ["dioxus/mobile"] feature
 mobile = [
     "dioxus/mobile",
+    "space-app-shell/mobile",
     "space-page-actions/mobile",
-    "space-page-apps/mobile",
     "space-page-dashboard/mobile",
     "space-page-overview/mobile",
     "space-page-report/mobile",
@@ -70,9 +71,9 @@ server = [
     "names",
     "reqwest",
     "serde_dynamo",
+    "space-app-shell/server",
     "space-common/server",
     "space-page-actions/server",
-    "space-page-apps/server",
     "space-page-dashboard/server",
     "space-page-overview/server",
     "space-page-report/server",

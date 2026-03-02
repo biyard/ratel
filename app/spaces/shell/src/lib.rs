@@ -1,5 +1,3 @@
-#![allow(unused)]
-mod components;
 pub mod config;
 pub mod controllers;
 pub mod dto;
@@ -18,7 +16,6 @@ pub use layout::{SpaceLayout, SpaceProvider};
 pub use route::Route;
 
 use common::*;
-use components::*;
 use dioxus::prelude::*;
 
 // Re-export common types/macros for model derives.
@@ -31,8 +28,8 @@ type DioxusResult<T> = dioxus::prelude::Result<T>;
 
 pub use hooks::*;
 use serde::{Deserialize, Serialize};
+use space_app_shell as apps;
 use space_page_actions as actions;
-use space_page_apps as apps;
 use space_page_dashboard as dashboard;
 use space_page_overview as overview;
 use space_page_report as report;

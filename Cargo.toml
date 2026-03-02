@@ -40,17 +40,25 @@ common = { path = "app/common" }
 ratel-auth = { path = "app/auth" }
 ratel-post = { path = "app/posts" }
 
+# Space Root
 space-shell = { path = "app/spaces/shell" }
 space-common = { path = "app/spaces/common" }
-space-page-actions = { path = "app/spaces/pages/actions" }
-space-page-apps = { path = "app/spaces/pages/apps" }
-space-app-all-apps = { path = "app/spaces/apps/all-apps" }
+
+# Space Apps
+space-app-shell = { path = "app/spaces/apps/shell" }
+space-app-main = { path = "app/spaces/apps/main" }
 space-app-general = { path = "app/spaces/apps/general" }
 space-app-incentive-pool = { path = "app/spaces/apps/incentive-pool" }
+
+# Space Actions 
+space-page-actions = { path = "app/spaces/pages/actions" }
+space-action-poll = { path = "app/spaces/actions/poll" }
+
+# Space Etc
 space-page-dashboard = { path = "app/spaces/pages/dashboard" }
 space-page-overview = { path = "app/spaces/pages/overview" }
 space-page-report = { path = "app/spaces/pages/report" }
-space-action-poll = { path = "app/spaces/actions/poll" }
+
 
 ratel-user-shell = { path = "app/socials/users/shell" }
 ratel-user-credential = { path = "app/socials/users/pages/credential" }
