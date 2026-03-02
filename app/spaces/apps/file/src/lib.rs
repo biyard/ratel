@@ -1,8 +1,8 @@
-mod components;
+pub mod components;
 #[cfg(feature = "server")]
 mod config;
 mod controllers;
-mod i18n;
+pub mod i18n;
 mod interop;
 mod models;
 mod route;
