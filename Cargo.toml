@@ -54,6 +54,7 @@ space-app-incentive-pool = { path = "app/spaces/apps/incentive-pool" }
 space-action-shell = { path = "app/spaces/actions/shell" }
 space-action-main = { path = "app/spaces/actions/main" }
 space-action-poll = { path = "app/spaces/actions/poll" }
+space-action-discussion = { path = "app/spaces/actions/discussion" }
 
 # Space Etc
 space-page-dashboard = { path = "app/spaces/pages/dashboard" }

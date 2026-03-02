@@ -1,0 +1,22 @@
+use crate::*;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AddCommentRequest {
+    pub content: String,
+}
+
+#[post("/api/spaces/{space_pk}/discussions/{discussion_sk}/comments", role: SpaceUserRole, user: ratel_auth::User)]
+pub async fn add_comment(
+    space_pk: SpacePartition,
+    discussion_sk: SpacePostEntityType,
+    req: AddCommentRequest,
+) -> Result<DiscussionCommentResponse> {
+    SpacePost::can_view(&role)?;
+    let common_config = common::CommonConfig::default();
+    let cli = common_config.dynamodb();
+    let space_post_id: SpacePostPartition = SpacePostPartition(discussion_sk.0.clone());
+
+    let comment = SpacePost::comment(cli, space_pk, space_post_id, req.content, &user).await?;
+
+    Ok(comment.into())
+}
