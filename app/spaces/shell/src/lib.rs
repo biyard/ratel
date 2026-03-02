@@ -1,3 +1,4 @@
+#![allow(unused)]
 pub mod config;
 pub mod controllers;
 pub mod dto;
