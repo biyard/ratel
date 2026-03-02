@@ -11,5 +11,3 @@ pub use space_app_main::SpaceApp;
 pub use types::*;
 
 use common::*;
-
-type Result<T> = common::Result<T>;
