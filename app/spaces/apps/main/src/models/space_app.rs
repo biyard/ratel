@@ -1,3 +1,4 @@
+use crate::macros::DynamoEntity;
 use crate::*;
 use common::utils::time::get_now_timestamp_millis;
 
@@ -31,5 +32,28 @@ impl SpaceApp {
 
     pub fn sk_prefix() -> String {
         EntityType::SpaceApp(String::new()).to_string()
+    }
+}
+
+impl SpaceApp {
+    pub fn can_view(role: SpaceUserRole) -> Result<()> {
+        match role {
+            SpaceUserRole::Creator => Ok(()),
+            _ => Err(Error::NoPermission),
+        }
+    }
+
+    pub fn can_edit(role: SpaceUserRole) -> Result<()> {
+        match role {
+            SpaceUserRole::Creator => Ok(()),
+            _ => Err(Error::NoPermission),
+        }
+    }
+
+    pub fn can_delete(role: SpaceUserRole) -> Result<()> {
+        match role {
+            SpaceUserRole::Creator => Ok(()),
+            _ => Err(Error::NoPermission),
+        }
     }
 }

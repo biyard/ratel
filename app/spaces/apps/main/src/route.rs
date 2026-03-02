@@ -1,12 +1,11 @@
 use crate::*;
 
-use crate::views::HomePage;
+use crate::views::AppMainPage;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
 pub enum Route {
     #[nest("/spaces/:space_id/apps")]
         #[route("/")]
-        HomePage { space_id: SpacePartition },
-
+        AppMainPage { space_id: SpacePartition },
 }
