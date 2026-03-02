@@ -23,7 +23,7 @@ pub fn SpaceAppsLayout(space_id: SpacePartition) -> Element {
     let user = user_ctx.read().user.clone();
 
     let tr: SpaceAppLayoutTranslate = use_translate();
-    let lang = use_language();
+    let _lang = use_language();
 
     let default_menu: Vec<AppMenuItem> = vec![
         AppMenuItem {

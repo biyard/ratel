@@ -7,7 +7,6 @@ use space_common::{
     components::{SpaceNav, SpaceNavItem, SpaceTop, SpaceTopLabel},
     hooks::use_user_role,
 };
-use space_page_actions::menu;
 #[component]
 pub fn SpaceProvider(space_id: SpacePartition) -> Element {
     // user_role_provider(space_id.clone())?;

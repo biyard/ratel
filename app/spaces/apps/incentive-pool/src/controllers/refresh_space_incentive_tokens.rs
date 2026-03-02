@@ -1,9 +1,7 @@
-use std::collections::HashSet;
-
-use crate::models::{SpaceIncentive, SpaceIncentiveToken};
 use crate::*;
-use common::utils::time::get_now_timestamp_millis;
-use common::SpaceUserRole;
+
+#[cfg(feature = "server")]
+use std::collections::HashSet;
 
 #[cfg(feature = "server")]
 use ethers::types::Address;
@@ -20,6 +18,9 @@ pub struct RefreshSpaceIncentiveTokensResponse {
 pub async fn refresh_space_incentive_tokens(
     space_pk: SpacePartition,
 ) -> Result<RefreshSpaceIncentiveTokensResponse> {
+    use crate::models::{SpaceIncentive, SpaceIncentiveToken};
+    use common::utils::time::get_now_timestamp_millis;
+
     use crate::utils::{fetch_token_state, fetch_transfer_logs, format_addr, parse_address};
     use ethers::providers::{Http, Middleware, Provider};
     use ethers::types::U64;
@@ -113,6 +114,7 @@ async fn load_existing_tokens(
     cli: &aws_sdk_dynamodb::Client,
     incentive_addr: Address,
 ) -> Result<HashSet<Address>> {
+    use crate::models::SpaceIncentiveToken;
     use crate::utils::format_addr;
 
     let mut token_set = HashSet::new();
