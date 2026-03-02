@@ -17747,6 +17747,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "space-app-file"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "serde",
+ "serde_with 3.14.1",
+]
+
+[[package]]
 name = "space-app-general"
 version = "0.1.0"
 dependencies = [
@@ -17790,6 +17800,7 @@ dependencies = [
  "dioxus",
  "ratel-auth",
  "serde",
+ "space-app-file",
  "space-app-general",
  "space-app-incentive-pool",
  "space-app-main",
@@ -17831,6 +17842,9 @@ version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "serde",
+ "space-app-file",
+ "space-common",
 ]
 
 [[package]]

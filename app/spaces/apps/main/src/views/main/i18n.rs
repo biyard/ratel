@@ -11,6 +11,10 @@ translate! {
         en: "Reward your top participants with transparent, rule-based incentives.",
         ko: "투명하고 규칙 기반의 인센티브로 상위 참가자에게 보상하세요.",
     },
+    app_description_file: {
+        en: "Manage and organize files shared in your space.",
+        ko: "스페이스에서 공유되는 파일을 관리하고 정리하세요.",
+    },
     install: {
         en: "Install",
         ko: "설치",

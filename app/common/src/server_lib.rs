@@ -17,9 +17,6 @@ pub use ethers;
 pub use base64;
 pub use serde_dynamo;
 
-// Re-export for DynamoEnum
-pub use percent_encoding;
-
 pub use tokio;
 
 pub type DynamoClient = aws_sdk_dynamodb::Client;
