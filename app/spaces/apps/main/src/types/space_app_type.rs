@@ -9,4 +9,6 @@ pub enum SpaceAppType {
     General,
     #[translate(en = "Incentive Pool", ko = "인센티브 풀")]
     IncentivePool,
+    #[translate(en = "Files", ko = "파일")]
+    File,
 }

@@ -48,6 +48,7 @@ space-common = { path = "app/spaces/common" }
 space-app-shell = { path = "app/spaces/apps/shell" }
 space-app-main = { path = "app/spaces/apps/main" }
 space-app-general = { path = "app/spaces/apps/general" }
+space-app-file = { path = "app/spaces/apps/file" }
 space-app-incentive-pool = { path = "app/spaces/apps/incentive-pool" }
 
 # Space Actions

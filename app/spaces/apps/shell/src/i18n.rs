@@ -33,5 +33,9 @@ translate! {
         ko: "홈으로 이동",
     },
 
+    files: {
+        en: "Files",
+        ko: "파일",
+    },
 
 }

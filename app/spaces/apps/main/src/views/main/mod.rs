@@ -7,6 +7,7 @@ use space_common::hooks::use_user_role;
 fn app_description(app_type: SpaceAppType, tr: &AppMainTranslate) -> String {
     match app_type {
         SpaceAppType::IncentivePool => tr.app_description_incentive_pool.to_string(),
+        SpaceAppType::File => tr.app_description_file.to_string(),
         _ => tr.app_description_default.to_string(),
     }
 }
