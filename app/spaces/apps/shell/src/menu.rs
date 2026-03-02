@@ -1,43 +1,35 @@
+use space_app_main::{SpaceApp, SpaceAppType};
+
 use crate::i18n::SpaceAppLayoutTranslate;
 use crate::*;
 
+// Space Layout Menu
 pub fn get_nav_item(
     space_id: SpacePartition,
     role: SpaceUserRole,
-    has_admin_access: bool,
 ) -> Option<(Element, SpacePage, NavigationTarget)> {
-    if role != SpaceUserRole::Creator && !has_admin_access {
-        return None;
-    }
-    Some((
-        rsx! {
-            icons::layouts::Apps {
-                width: "20",
-                height: "20",
-                class: "text-icon-primary [&>path]:stroke-current"
+    let is_admin = SpaceApp::can_view(role).is_ok();
+    match is_admin {
+        true => Some((
+            rsx! {
+                icons::layouts::Apps {
+                    width: "20",
+                    height: "20",
+                    class: "text-icon-primary [&>path]:stroke-current",
+                }
+            },
+            SpacePage::Apps,
+            Route::Main {
+                space_id,
+                rest: vec![],
             }
-        },
-        SpacePage::Apps,
-        Route::AllApps {
-            space_id,
-            rest: vec![],
-        }
-        .into(),
-    ))
+            .into(),
+        )),
+        false => None,
+    }
 }
 
-pub fn get_not_installed_menus(installed: Vec<SpaceApp>) -> Vec<SpaceAppType> {
-    let installed_types: Vec<SpaceAppType> =
-        installed.into_iter().map(|app| app.app_type).collect();
-
-    let variants = SpaceAppType::VARIANTS;
-    variants
-        .into_iter()
-        .copied()
-        .filter(|variant| !installed_types.contains(variant))
-        .collect()
-}
-
+// Space App Layout Menu
 pub struct AppMenuItem {
     pub name: String,
     pub icon: Element,
@@ -58,7 +50,7 @@ pub fn get_app_menu_items(
                     icons::settings::Settings2 {
                         width: "20",
                         height: "20",
-                        class: "text-icon-primary [&>path]:fill-current [&>circle]:stroke-current"
+                        class: "text-icon-primary [&>path]:fill-current [&>circle]:stroke-current",
                     }
                 },
                 route: Route::General {
@@ -72,7 +64,7 @@ pub fn get_app_menu_items(
                     icons::ratel::Chest {
                         width: "20",
                         height: "20",
-                        class: "text-icon-primary [&>path]:fill-current [&>circle]:stroke-current"
+                        class: "text-icon-primary [&>path]:fill-current [&>circle]:stroke-current",
                     }
                 },
                 route: Route::IncentivePool {

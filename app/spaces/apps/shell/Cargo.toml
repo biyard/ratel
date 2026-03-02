@@ -1,20 +1,22 @@
 [package]
-name = "space-page-apps"
+name = "space-app-shell"
 version = "0.1.0"
-authors = ["hackartists <hackartists@gmail.com>"]
-edition = "2021"
+authors.workspace = true
+edition.workspace = true
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 dioxus = { workspace = true }
 common = { workspace = true }
 serde = { workspace = true }
 ratel-auth = { workspace = true, optional = true }
-space-app-all-apps = { workspace = true }
+
+space-common = { workspace = true }
+
+space-app-main = { workspace = true }
 space-app-general = { workspace = true }
 space-app-incentive-pool = { workspace = true }
-space-common = { workspace = true }
+
 
 [features]
 default = []
@@ -22,9 +24,9 @@ web = [
     "common/web",
     "dioxus/web",
     "ratel-auth/web",
-    "space-app-all-apps/web",
     "space-app-general/web",
     "space-app-incentive-pool/web",
+    "space-app-main/web",
     "space-common/web",
 ]
 desktop = ["dioxus/desktop"]
@@ -33,8 +35,9 @@ server = [
     "common/server",
     "dioxus/server",
     "ratel-auth/server",
-    "space-app-all-apps/server",
     "space-app-general/server",
     "space-app-incentive-pool/server",
+    "space-app-main/server",
     "space-common/server",
+
 ]
