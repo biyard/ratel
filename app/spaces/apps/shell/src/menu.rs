@@ -72,6 +72,20 @@ pub fn get_app_menu_items(
                     rest: vec![],
                 },
             },
+            SpaceAppType::File => AppMenuItem {
+                name: tr.files.to_string(),
+                icon: rsx! {
+                    icons::file::File {
+                        width: "20",
+                        height: "20",
+                        class: "text-icon-primary [&>path]:stroke-current",
+                    }
+                },
+                route: Route::File {
+                    space_id: space_id.clone(),
+                    rest: vec![],
+                },
+            },
         })
         .collect()
 }
