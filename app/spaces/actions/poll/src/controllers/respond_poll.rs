@@ -1,18 +1,18 @@
 use crate::*;
-use ratel_auth::User;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RespondPollRequest {
     pub answers: Vec<Answer>,
 }
 
-#[post("/api/polls/{space_pk}/{poll_sk}/respond", user: User)]
+#[post("/api/spaces/{space_pk}/polls/{poll_sk}/respond", role: SpaceUserRole)]
 pub async fn respond_poll(
     space_pk: SpacePartition,
     poll_sk: SpacePollEntityType,
     req: RespondPollRequest,
 ) -> Result<String> {
-    let cli = crate::config::get().common.dynamodb();
+    SpacePoll::can_edit(&role)?;
+    let cli = common::CommonConfig::default().dynamodb();
     let space_pk: Partition = space_pk.into();
     let poll_sk_entity: EntityType = poll_sk.into();
 
@@ -20,9 +20,7 @@ pub async fn respond_poll(
         .await?
         .ok_or(Error::NotFound("Poll not found".into()))?;
 
-    if poll.status() != PollStatus::InProgress {
-        return Err(Error::BadRequest("Poll is not in progress".into()));
-    }
+    poll.can_respond(&role)?;
 
     if !validate_answers(poll.questions.clone(), req.answers.clone()) {
         return Err(Error::BadRequest("Answers do not match questions".into()));

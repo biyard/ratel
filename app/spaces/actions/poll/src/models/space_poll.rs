@@ -107,28 +107,36 @@ impl SpacePoll {
             _ => return Ok(()),
         };
 
-        let poll = SpacePoll::get(
-            cli,
-            space_pk,
-            Some(EntityType::SpacePoll(space_id.clone())),
-        )
-        .await?;
+        let poll =
+            SpacePoll::get(cli, space_pk, Some(EntityType::SpacePoll(space_id.clone()))).await?;
 
         if poll.is_none() {
             return Ok(());
         }
 
-        SpacePoll::delete(
-            cli,
-            space_pk,
-            Some(EntityType::SpacePoll(space_id.clone())),
-        )
-        .await?;
+        SpacePoll::delete(cli, space_pk, Some(EntityType::SpacePoll(space_id.clone()))).await?;
 
         Ok(())
     }
 }
 
+impl SpacePoll {
+    pub fn can_view(_user_role: &SpaceUserRole) -> crate::Result<()> {
+        Ok(())
+    }
+
+    pub fn can_respond(&self, user_role: &SpaceUserRole) -> crate::Result<()> {
+        match user_role {
+            SpaceUserRole::Creator | SpaceUserRole::Participant => {
+                if self.status() == PollStatus::InProgress {
+                    return Ok(());
+                }
+                return Err(Error::BadRequest("Poll is not in progress".into()));
+            }
+            _ => Err(crate::Error::NoPermission),
+        }
+    }
+}
 #[cfg(feature = "server")]
 impl TryFrom<Partition> for SpacePoll {
     type Error = crate::Error;

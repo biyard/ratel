@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use crate::*;
-use ratel_auth::User;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct PollResultResponse {
@@ -14,12 +13,14 @@ pub struct PollResultResponse {
     pub final_answers: Vec<SpacePollUserAnswer>,
 }
 
-#[get("/api/polls/{space_pk}/{poll_sk}/results", user: User)]
+#[get("/api/spaces/{space_pk}/polls/{poll_sk}/results", role: SpaceUserRole)]
 pub async fn get_poll_result(
     space_pk: SpacePartition,
     poll_sk: SpacePollEntityType,
 ) -> Result<PollResultResponse> {
-    let cli = crate::config::get().common.dynamodb();
+    SpacePoll::can_view(&role)?;
+    let cli = common::CommonConfig::default().dynamodb();
+
     let space_pk: Partition = space_pk.into();
     let poll_sk_entity: EntityType = poll_sk.into();
 
