@@ -1,12 +1,12 @@
 use crate::*;
-use ratel_auth::models::user::OptionalUser;
 
-#[get("/api/polls/{space_pk}/{poll_sk}", user: OptionalUser)]
+#[get("/api/spaces/{space_pk}/polls/{poll_sk}", role: SpaceUserRole)]
 pub async fn get_poll(
     space_pk: SpacePartition,
     poll_sk: SpacePollEntityType,
 ) -> Result<PollResponse> {
-    let cli = crate::config::get().common.dynamodb();
+    SpacePoll::can_view(&role)?;
+    let cli = common::CommonConfig::default().dynamodb();
     let space_pk: Partition = space_pk.into();
     let poll_sk_entity: EntityType = poll_sk.into();
 
