@@ -6,12 +6,12 @@ use crate::{
     controllers::{CredentialResponse, SignAttributesRequest, sign_attributes_handler},
     *,
 };
-#[wasm_bindgen(js_namespace = ["window", "ratel", "ratel_user_credential"])]
+#[wasm_bindgen(js_namespace = ["window", "ratel", "user_credential"])]
 extern "C" {
     #[wasm_bindgen(js_name = initialize)]
     pub fn initialize(config: &JsValue);
 
-    #[wasm_bindgen(js_name = requestIdentityVerification)]
+    #[wasm_bindgen(js_name = request_identity_verification)]
     pub fn request_identity_verification(
         store_id: &str,
         channel_key: &str,
@@ -19,12 +19,17 @@ extern "C" {
     ) -> Promise;
 }
 
-pub async fn request_identity_verification_async(
+pub async fn verify_identity(
     store_id: &str,
     channel_key: &str,
     prefix: &str,
 ) -> Result<CredentialResponse> {
+    debug!(
+        "Requesting identity verification with store_id: {}, channel_key: {}, prefix: {}",
+        store_id, channel_key, prefix
+    );
     let promise = request_identity_verification(store_id, channel_key, prefix);
+    debug!("Received promise from request_identity_verification");
     let value = JsFuture::from(promise).await.map_err(|e| {
         error!("Failed to request identity verification: {:?}", e);
         Error::PortOneRequestFailure
