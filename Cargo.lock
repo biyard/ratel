@@ -17713,6 +17713,7 @@ version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "serde",
 ]
 
 [[package]]
@@ -17721,14 +17722,23 @@ version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "ratel-auth",
+ "ratel-post",
+ "serde",
+ "serde_repr",
+ "space-action-poll",
 ]
 
 [[package]]
 name = "space-app-incentive-pool"
 version = "0.1.0"
 dependencies = [
+ "aws-sdk-dynamodb",
+ "chrono",
  "common",
  "dioxus",
+ "ethers",
+ "serde",
 ]
 
 [[package]]
@@ -17759,6 +17769,7 @@ version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "ratel-auth",
  "serde",
  "space-app-all-apps",
  "space-app-general",

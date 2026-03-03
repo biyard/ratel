@@ -6,5 +6,8 @@
     "overrides": {
       "@playwright/test": "^1.56.0"
     }
+  },
+  "devDependencies": {
+    "webpack-cli": "^6.0.1"
   }
 }
