@@ -43,8 +43,6 @@ impl From<(SpacePoll, bool)> for SpaceAction {
 #[cfg(feature = "server")]
 impl From<(space_action_discussion::SpacePost, SpaceUserRole)> for SpaceAction {
     fn from((post, role): (space_action_discussion::SpacePost, SpaceUserRole)) -> Self {
-        use space_action_discussion::DiscussionStatus;
-
         let action_id = post.sk.to_string();
         Self {
             user_participated: post.can_participate(&role).is_ok(),
