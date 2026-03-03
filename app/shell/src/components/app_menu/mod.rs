@@ -159,7 +159,7 @@ fn NavItem(href: &'static str, label: &'static str, icon: Element) -> Element {
 
 #[component]
 fn LanguageToggle() -> Element {
-    let mut lang = use_language();
+    let lang = use_language();
 
     let is_ko = lang().to_string() == "ko";
     let (flag, label) = if is_ko {
@@ -191,21 +191,7 @@ fn LanguageToggle() -> Element {
             class: "flex flex-col justify-center items-center p-2.5 font-bold cursor-pointer group text-menu-text text-[15px]",
             onclick: move |_| {
                 let next = lang().switch();
-                lang.set(next);
                 debug!("Language switched to: {}", next);
-
-                #[cfg(target_arch = "wasm32")]
-                {
-                    if let Some(window) = web_sys::window() {
-                        if let Ok(Some(storage)) = window.local_storage() {
-                            let _ = storage
-                                .set_item(
-                                    dioxus_translate::STORAGE_KEY,
-                                    next.to_string().as_str(),
-                                );
-                        }
-                    }
-                }
             },
             div { class: "flex flex-col justify-center items-center h-6 w-fit", {flag} }
             span { class: "font-medium whitespace-nowrap transition-all text-menu-text text-[15px] group-hover:text-menu-text/80",
