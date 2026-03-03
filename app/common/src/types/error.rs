@@ -142,6 +142,15 @@ pub enum Error {
     #[error("space post ended")]
     #[translate(en = "Space post ended", ko = "스페이스 게시글이 종료되었습니다.")]
     SpacePostEnded,
+
+    // PortOne related errors
+    #[error("PortOne Inicis returned invalid identity")]
+    #[translate(en = "Failed network request", ko = "요청에 실패했습니다.")]
+    PortOneRequestFailure,
+
+    #[error("PortOne Inicis returned invalid identity")]
+    #[translate(en = "Failed to verify KYC", ko = "본인 인증에 실패했습니다.")]
+    PortOneInicisInvalidIdentity,
 }
 
 impl From<String> for Error {
