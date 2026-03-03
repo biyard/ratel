@@ -30,7 +30,7 @@ fn App() -> Element {
     common::contexts::TeamContext::init();
     let conf = config::get();
     let env = conf.common.env;
-
+    common::query::query_provider();
     rsx! {
         document::Link { rel: "icon", href: FAVICON }
         document::Link { rel: "stylesheet", href: MAIN_CSS }
@@ -41,6 +41,7 @@ fn App() -> Element {
         AuthProvider {}
         ratel_post::Provider {}
         ratel_team_dao::Provider {}
+
         Router::<Route> {}
         ToastProvider {}
         if env == Environment::Dev || env == Environment::Local {

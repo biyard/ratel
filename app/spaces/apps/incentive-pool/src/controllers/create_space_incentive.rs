@@ -9,17 +9,14 @@ pub struct CreateSpaceIncentiveRequest {
     pub deploy_block: i64,
 }
 
-#[post("/v3/spaces/{space_pk}/incentives", role: SpaceUserRole)]
+#[post("/api/spaces/{space_pk}/incentives", role: SpaceUserRole)]
 pub async fn create_space_incentive(
     space_pk: SpacePartition,
     req: CreateSpaceIncentiveRequest,
 ) -> Result<SpaceIncentive> {
-    if role != SpaceUserRole::Creator {
-        return Err(Error::NoPermission);
-    }
+    SpaceIncentive::can_edit(role)?;
 
-    let contract_address = req.contract_address.to_string();
-    if contract_address.is_empty() {
+    if req.contract_address.is_empty() {
         return Err(Error::BadRequest(
             "contract_address is required".to_string(),
         ));
@@ -34,7 +31,7 @@ pub async fn create_space_incentive(
     let common_config = common::CommonConfig::default();
     let dynamo = common_config.dynamodb();
 
-    let incentive = SpaceIncentive::new(space_pk, contract_address, req.deploy_block);
+    let incentive = SpaceIncentive::new(space_pk, req.contract_address, req.deploy_block);
     incentive.upsert(dynamo).await?;
 
     Ok(incentive)

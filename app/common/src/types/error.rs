@@ -131,6 +131,17 @@ pub enum Error {
         ko = "스페이스 작성자를 찾을 수 없습니다."
     )]
     InvalidSpaceAuthor,
+
+    #[error("space post not started")]
+    #[translate(
+        en = "Space post not started",
+        ko = "스페이스 게시글이 시작되지 않았습니다."
+    )]
+    SpacePostNotStarted,
+
+    #[error("space post ended")]
+    #[translate(en = "Space post ended", ko = "스페이스 게시글이 종료되었습니다.")]
+    SpacePostEnded,
 }
 
 impl From<String> for Error {
