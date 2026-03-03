@@ -45,10 +45,8 @@ fn format_date_time(timestamp_millis: i64) -> String {
 }
 
 #[component]
-pub fn MembershipReceiptModal(
-    receipt: MembershipReceiptData,
-    on_close: EventHandler<()>,
-) -> Element {
+pub fn MembershipReceiptModal(receipt: MembershipReceiptData) -> Element {
+    let mut popup = use_popup();
     let tr: MembershipPlanTranslate = use_translate();
 
     let tx_id = if receipt.tx_id.len() > 16 {
@@ -131,7 +129,7 @@ pub fn MembershipReceiptModal(
                 button {
                     class: "px-10 w-full text-base font-bold transition-colors py-[14.5px] text-submit-button-text rounded-[10px] bg-submit-button-bg hover:bg-submit-button-bg/80",
                     onclick: move |_| {
-                        on_close.call(());
+                        popup.close();
                     },
                     {tr.receipt_close}
                 }
