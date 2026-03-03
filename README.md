@@ -51,6 +51,7 @@
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
+    <li><a href="#troubleshooting">Troubleshooting</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
@@ -119,6 +120,15 @@ make run
 ## Usage
 
 Coming soon
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+
+<!-- TROUBLESHOOTING -->
+## Troubleshooting
+
+For common issues and solutions, see the [Troubleshooting Guide](docs/troubleshooting.md).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
