@@ -66,7 +66,7 @@ impl PortOne {
 
         let body = BillingKeyRequest {
             store_id: portone_conf.store_id.to_string(),
-            channel_key: portone_conf.kpn_channel_key.to_string(),
+            channel_key: portone_conf.channel_key().to_string(),
             customer: CustomerRequest {
                 id: customer_id,
                 name: CustomerName {
@@ -124,7 +124,7 @@ impl PortOne {
 
         let body = BillingKeyPaymentRequest {
             store_id: portone_conf.store_id.to_string(),
-            channel_key: portone_conf.kpn_channel_key.to_string(),
+            channel_key: portone_conf.channel_key().to_string(),
             billing_key,
             order_name,
             amount: PaymentAmountInput {
@@ -182,7 +182,7 @@ impl PortOne {
 
         let payment = BillingKeyPaymentRequest {
             store_id: portone_conf.store_id.to_string(),
-            channel_key: portone_conf.kpn_channel_key.to_string(),
+            channel_key: portone_conf.channel_key().to_string(),
             billing_key,
             order_name,
             customer: CustomerRequest {
