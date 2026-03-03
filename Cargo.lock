@@ -879,6 +879,7 @@ dependencies = [
  "dioxus",
  "lambda_http 1.0.2",
  "ratel-auth",
+ "ratel-membership",
  "ratel-post",
  "ratel-team-dao",
  "ratel-team-shell",
@@ -13376,6 +13377,15 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
+]
+
+[[package]]
+name = "ratel-membership"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "serde",
 ]
 
 [[package]]
