@@ -10,4 +10,15 @@ impl UserContext {
     pub fn is_logged_in(&self) -> bool {
         self.user.is_some()
     }
+
+    pub fn user_id(&self) -> Option<String> {
+        self.user.as_ref().map(|u| u.id())
+    }
+
+    pub fn did(&self) -> String {
+        self.user
+            .as_ref()
+            .map(|u| u.did())
+            .unwrap_or("-".to_string())
+    }
 }
