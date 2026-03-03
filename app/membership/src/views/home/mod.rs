@@ -4,6 +4,9 @@ use dioxus::prelude::*;
 #[component]
 pub fn Home() -> Element {
     rsx! {
-        MembershipPlan {}
+        Fragment {
+            document::Script { src: "https://cdn.portone.io/v2/browser-sdk.js" }
+            MembershipPlan {}
+        }
     }
 }

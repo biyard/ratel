@@ -129,7 +129,6 @@ pub fn MembershipReceiptModal(
                 }
 
                 button {
-                    "data-pw": "receipt-close-button",
                     class: "px-10 w-full text-base font-bold transition-colors py-[14.5px] text-submit-button-text rounded-[10px] bg-submit-button-bg hover:bg-submit-button-bg/80",
                     onclick: move |_| {
                         on_close.call(());
