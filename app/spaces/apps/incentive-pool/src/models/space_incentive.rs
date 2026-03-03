@@ -1,5 +1,4 @@
 use crate::*;
-use common::utils::time::get_now_timestamp_millis;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DynamoEntity, Default, PartialEq)]
 pub struct SpaceIncentive {
@@ -21,8 +20,11 @@ pub struct SpaceIncentive {
     pub total_count: i64,
 }
 
+#[cfg(feature = "server")]
 impl SpaceIncentive {
     pub fn new(space_pk: SpacePartition, contract_address: String, deploy_block: i64) -> Self {
+        use common::utils::time::get_now_timestamp_millis;
+
         let now = get_now_timestamp_millis();
 
         Self {
@@ -36,5 +38,16 @@ impl SpaceIncentive {
             remaining_count: 0,
             total_count: 0,
         }
+    }
+
+    pub fn can_view(_role: SpaceUserRole) -> Result<()> {
+        Ok(())
+    }
+
+    pub fn can_edit(role: SpaceUserRole) -> Result<()> {
+        if role != SpaceUserRole::Creator {
+            return Err(Error::NoPermission);
+        }
+        Ok(())
     }
 }

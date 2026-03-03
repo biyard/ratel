@@ -19,7 +19,8 @@ pub fn HomePage(space_id: SpacePartition) -> Element {
     })?;
 
     let extensions = extension_loader.read().clone();
-    let user_role = use_user_role();
+    let user_role_loader = use_user_role(&space_id)?;
+    let user_role = user_role_loader.read().clone();
 
     match (user_role, extensions) {
         (role, exts) => match role {

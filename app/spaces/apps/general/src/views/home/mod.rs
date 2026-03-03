@@ -323,7 +323,7 @@ fn AdministratorRow(name: String, username: String, profile_url: String) -> Elem
 }
 
 #[component]
-pub fn HomePage(space_id: SpacePartition) -> Element {
+pub fn AppGeneralPage(space_id: SpacePartition) -> Element {
     let tr: GeneralTranslate = use_translate();
     let role =
         use_loader(move || async move { Ok::<SpaceUserRole, Error>(SpaceUserRole::Creator) })?;

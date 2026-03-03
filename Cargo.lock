@@ -17698,6 +17698,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "space-action-discussion"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "ratel-auth",
+ "serde",
+ "space-common",
+]
+
+[[package]]
+name = "space-action-main"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "ratel-auth",
+ "serde",
+ "space-action-discussion",
+ "space-action-poll",
+ "space-common",
+]
+
+[[package]]
 name = "space-action-poll"
 version = "0.1.0"
 dependencies = [
@@ -17705,15 +17729,31 @@ dependencies = [
  "dioxus",
  "ratel-auth",
  "serde",
+ "space-common",
 ]
 
 [[package]]
-name = "space-app-all-apps"
+name = "space-action-shell"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "ratel-auth",
+ "serde",
+ "space-action-discussion",
+ "space-action-main",
+ "space-action-poll",
+ "space-common",
+]
+
+[[package]]
+name = "space-app-file"
 version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
  "serde",
+ "serde_with 3.14.1",
 ]
 
 [[package]]
@@ -17742,6 +17782,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "space-app-main"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "serde",
+ "serde_with 3.14.1",
+ "space-common",
+]
+
+[[package]]
+name = "space-app-shell"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "ratel-auth",
+ "serde",
+ "space-app-file",
+ "space-app-general",
+ "space-app-incentive-pool",
+ "space-app-main",
+ "space-common",
+]
+
+[[package]]
 name = "space-common"
 version = "0.1.0"
 dependencies = [
@@ -17750,31 +17816,6 @@ dependencies = [
  "ratel-auth",
  "ratel-post",
  "serde",
-]
-
-[[package]]
-name = "space-page-actions"
-version = "0.1.0"
-dependencies = [
- "common",
- "dioxus",
- "ratel-auth",
- "serde",
- "space-action-poll",
-]
-
-[[package]]
-name = "space-page-apps"
-version = "0.1.0"
-dependencies = [
- "common",
- "dioxus",
- "ratel-auth",
- "serde",
- "space-app-all-apps",
- "space-app-general",
- "space-app-incentive-pool",
- "space-common",
 ]
 
 [[package]]
@@ -17801,6 +17842,9 @@ version = "0.1.0"
 dependencies = [
  "common",
  "dioxus",
+ "serde",
+ "space-app-file",
+ "space-common",
 ]
 
 [[package]]
@@ -17836,9 +17880,9 @@ dependencies = [
  "serde",
  "serde_dynamo",
  "serde_repr",
+ "space-action-shell",
+ "space-app-shell",
  "space-common",
- "space-page-actions",
- "space-page-apps",
  "space-page-dashboard",
  "space-page-overview",
  "space-page-report",
