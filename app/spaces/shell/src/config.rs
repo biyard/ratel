@@ -1,5 +1,4 @@
 use common::CommonConfig;
-use dioxus::logger::tracing::Level;
 
 #[cfg(feature = "server")]
 use common::by_types::config::{AwsConfig, DatabaseConfig};
@@ -11,9 +10,8 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
-        Config {
-            common: CommonConfig::default(),
-        }
+        let common = CommonConfig::default();
+        Config { common }
     }
 }
 
