@@ -168,9 +168,6 @@ pub fn MembershipPlan() -> Element {
                                                     membership: tier,
                                                     display_amount,
                                                     customer,
-                                                    on_cancel: move |_| {
-                                                        popup_modal.close();
-                                                    },
                                                     on_confirm: move |info: CustomerInfo| {
                                                         let mut popup_receipt = popup_receipt.clone();
                                                         let mut popup_receipt_close = popup_receipt.clone();
@@ -223,14 +220,8 @@ pub fn MembershipPlan() -> Element {
                                                                         };
                                                                         popup_receipt
                                                                             .open(rsx! {
-                                                                            MembershipReceiptModal {
-                                                                                receipt,
-                                                                                on_close: move |_| {
-                                                                                    popup_receipt_close.close();
-                                                                                },
-                                                                            }
-                                                                        })
-                                                                        .with_title("Receipt");
+                                                                            MembershipReceiptModal { receipt }
+                                                                        });
                                                                     } else {
                                                                         toast.info("Membership downgrade successed");
                                                                         popup_modal.close();

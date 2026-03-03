@@ -27,9 +27,9 @@ pub fn MembershipPurchaseModal(
     membership: MembershipTier,
     display_amount: i64,
     customer: VerifiedCustomer,
-    on_cancel: EventHandler<()>,
     on_confirm: EventHandler<CustomerInfo>,
 ) -> Element {
+    let mut popup = use_popup();
     let tr: MembershipPlanTranslate = use_translate();
     let lang = use_language();
     let currency = match lang() {
@@ -188,7 +188,7 @@ pub fn MembershipPurchaseModal(
                     button {
                         class: "px-10 text-base font-bold transition-colors py-[14.5px] bg-cancel-button-bg text-cancel-button-text rounded-[10px] hover:text-cancel-button-text/80",
                         onclick: move |_| {
-                            on_cancel.call(());
+                            popup.close();
                         },
                         {tr.cancel_button}
                     }
