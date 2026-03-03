@@ -163,6 +163,13 @@ pub fn LoginModal() -> Element {
 
                                         popup.close();
                                     }
+                                    Err(Error::Unauthorized(_)) => {
+                                        popup.close();
+                                        popup.open(rsx! {
+                                            SignupModal {}
+                                        })
+                                        .with_scroll_lock(true);
+                                    }
                                     Err(e) => {
                                         error_message.set(Some(format!("{e}")));
                                     }
