@@ -16,7 +16,8 @@ RUST_LOG ?= debug
 
 PORT ?= 8000
 
-REPOSITORY ?= ratel
+REPOSITORY ?= ratel/app-shell
+ECR ?= $(shell aws ecr describe-repositories --repository-names $(REPOSITORY)  --query "repositories[0].repositoryUri" --output text)
 
 BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) \
@@ -55,12 +56,12 @@ build-lambda:
 	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web --platform web @server --features lambda --platform server
 
 docker:
-	docker build -t $(REPOSITORY):$(COMMIT) -f Dockerfile ../../target/dx/app-shell/release/web
+	docker build -t $(ECR):$(COMMIT) -f Dockerfile ../../target/dx/app-shell/release/web
 
 docker.push:
-	docker tag $(REPOSITORY):$(COMMIT) $(REPOSITORY):latest
-	docker push $(REPOSITORY):$(COMMIT)
-	docker push $(REPOSITORY):latest
+	docker tag $(ECR):$(COMMIT) $(ECR):$(ENV)
+	docker push $(ECR):$(COMMIT)
+	docker push $(ECR):$(ENV)
 
 docker.login:
 	aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com
