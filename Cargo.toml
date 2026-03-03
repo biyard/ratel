@@ -2,6 +2,7 @@
 members = [
   "app/auth",
   "app/common",
+  "app/membership",
   "app/posts",
   "app/shell",
   "app/socials/teams/pages/*",
@@ -39,6 +40,7 @@ by-macros = { path = "packages/by-macros", version = "0.6.*" }
 common = { path = "app/common" }
 ratel-auth = { path = "app/auth" }
 ratel-post = { path = "app/posts" }
+ratel-membership = { path = "app/membership" }
 
 # Space Root
 space-shell = { path = "app/spaces/shell" }

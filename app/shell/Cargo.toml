@@ -10,6 +10,7 @@ edition = "2021"
 common = { workspace = true }
 dioxus = { workspace = true }
 serde = { workspace = true }
+ratel-membership = { workspace = true, optional = true }
 ratel-auth = { workspace = true, optional = true }
 ratel-post = { workspace = true, optional = true }
 ratel-user-setting ={ workspace = true, optional = true }
@@ -33,6 +34,7 @@ bypass = ["ratel-auth?/bypass"]
 web = [
   "common/web",
   "ratel-auth/web",
+  "ratel-membership/web",
   "space-shell/web",
   "ratel-post/web",
   "ratel-user-shell/web",
@@ -44,6 +46,7 @@ web = [
 desktop = [
   "common/desktop",
   "ratel-auth/desktop",
+  "ratel-membership/desktop",
   "space-shell/desktop",
   "ratel-post/desktop",
   "ratel-user-shell/desktop",
@@ -55,6 +58,7 @@ desktop = [
 mobile = [
   "common/mobile",
   "ratel-auth/mobile",
+  "ratel-membership/mobile",
   "space-shell/mobile",
   "ratel-post/mobile",
   "ratel-user-shell/mobile",
@@ -66,6 +70,7 @@ mobile = [
 server = [
   "common/server",
   "ratel-auth/server",
+  "ratel-membership/server",
   "space-shell/server",
   "ratel-post/server",
   "ratel-user-shell/server",

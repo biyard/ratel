@@ -4,6 +4,7 @@ use crate::views::Index;
 use dioxus::router::components::child_router::ChildRouter;
 use layout::AppLayout;
 use ratel_auth::Route as AuthRoute;
+use ratel_membership::Route as MembershipRoute;
 use ratel_post::Route as PostRoute;
 use ratel_team_shell::Route as TeamRoute;
 use ratel_user_shell::Route as UserRoute;
@@ -18,6 +19,9 @@ pub enum Route {
 
         #[route("/auth/:..rest")]
         Auth { rest: Vec<String> },
+
+        #[route("/membership/:..rest")]
+        Membership { rest: Vec<String> },
 
         #[route("/posts/:..rest")]
         Post { rest: Vec<String> },
@@ -53,6 +57,7 @@ macro_rules! define_app_wrapper {
 }
 
 define_app_wrapper!(Auth, AuthRoute);
+define_app_wrapper!(Membership, MembershipRoute);
 define_app_wrapper!(Space, SpaceRoute);
 define_app_wrapper!(Post, PostRoute);
 
@@ -66,7 +71,7 @@ pub fn UserHome(username: String, rest: Vec<String>) -> Element {
             route,
             format_route_as_root_route: |r: UserRoute| r.to_string(),
             parse_route_from_root_route: |url: &str| { <UserRoute as std::str::FromStr>::from_str(url).ok() },
-
+        
         }
     }
 }
@@ -81,7 +86,7 @@ pub fn TeamHome(teamname: String, rest: Vec<String>) -> Element {
             route,
             format_route_as_root_route: |r: TeamRoute| r.to_string(),
             parse_route_from_root_route: |url: &str| { <TeamRoute as std::str::FromStr>::from_str(url).ok() },
-
+        
         }
     }
 }
