@@ -1,12 +1,9 @@
-#[cfg(feature = "server")]
-use crate::models::SpaceIncentive;
-use crate::models::SpaceIncentiveToken;
 use crate::*;
-#[cfg(feature = "server")]
-use common::SpaceUserRole;
+
+use crate::models::SpaceIncentiveToken;
 
 #[get(
-    "/v3/spaces/{space_pk}/incentives/tokens?bookmark&limit",
+    "/api/spaces/{space_pk}/incentives/tokens?bookmark&limit",
     role: SpaceUserRole
 )]
 pub async fn list_space_incentive_tokens(
@@ -14,18 +11,15 @@ pub async fn list_space_incentive_tokens(
     bookmark: Option<String>,
     limit: Option<i32>,
 ) -> Result<ListResponse<SpaceIncentiveToken>> {
-    let _ = role;
-
+    use crate::models::SpaceIncentive;
+    SpaceIncentive::can_view(role)?;
     let common_config = common::CommonConfig::default();
     let dynamo = common_config.dynamodb();
 
     let space_pk: Partition = space_pk.into();
-    let incentive =
-        SpaceIncentive::get(dynamo, &space_pk, Some(&EntityType::SpaceIncentive)).await?;
-
-    let Some(incentive) = incentive else {
-        return Ok((Vec::<SpaceIncentiveToken>::new(), None).into());
-    };
+    let incentive = SpaceIncentive::get(dynamo, &space_pk, Some(&EntityType::SpaceIncentive))
+        .await?
+        .ok_or(Error::NotFound("Space incentive not found".to_string()))?;
 
     let mut opt = SpaceIncentiveToken::opt_with_bookmark(bookmark);
     if let Some(limit) = limit {

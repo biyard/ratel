@@ -5,13 +5,15 @@ use crate::components::*;
 use crate::controllers::*;
 use crate::*;
 use i18n::PollParticipantTranslate;
+use space_common::types::space_page_actions_poll_key;
 
 #[component]
 pub fn PollParticipantPage(space_id: SpacePartition, poll_id: SpacePollEntityType) -> Element {
     let tr: PollParticipantTranslate = use_translate();
     let nav = navigator();
+    let key = space_page_actions_poll_key(&space_id, &poll_id);
 
-    let poll_loader = use_query(&["polls", &space_id.to_string(), &poll_id.to_string()], {
+    let poll_loader = use_query(&key, {
         let space_id = space_id.clone();
         let poll_id = poll_id.clone();
         move || get_poll(space_id.clone(), poll_id.clone())
@@ -29,8 +31,6 @@ pub fn PollParticipantPage(space_id: SpacePartition, poll_id: SpacePollEntityTyp
         map
     });
 
-    let mut query_store = use_query_store();
-
     let is_in_progress = poll.status == PollStatus::InProgress;
     let has_response = poll.my_response.is_some();
     let can_submit = is_in_progress && !has_response;
@@ -46,7 +46,6 @@ pub fn PollParticipantPage(space_id: SpacePartition, poll_id: SpacePollEntityTyp
             let space_id = space_id.clone();
             let poll_id = poll_id.clone();
             let questions = questions.clone();
-            let mut query_store = query_store.clone();
 
             async move {
                 let answers_map = answers.read().clone();
@@ -58,11 +57,8 @@ pub fn PollParticipantPage(space_id: SpacePartition, poll_id: SpacePollEntityTyp
 
                 match respond_poll(space_id.clone(), poll_id.clone(), req).await {
                     Ok(_) => {
-                        query_store.invalidate(&[
-                            "polls",
-                            &space_id.to_string(),
-                            &poll_id.to_string(),
-                        ]);
+                        let keys = space_page_actions_poll_key(&space_id, &poll_id);
+                        invalidate_query(&keys);
                     }
                     _ => {}
                 }

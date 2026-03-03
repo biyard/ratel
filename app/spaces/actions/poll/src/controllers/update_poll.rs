@@ -1,5 +1,4 @@
 use crate::*;
-use ratel_auth::User;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -9,13 +8,15 @@ pub enum UpdatePollRequest {
     ResponseEditable { response_editable: bool },
 }
 
-#[post("/api/polls/{space_pk}/{poll_sk}/update", user: User)]
+#[post("/api/spaces/{space_pk}/polls/{poll_sk}", role: SpaceUserRole)]
 pub async fn update_poll(
     space_pk: SpacePartition,
     poll_sk: SpacePollEntityType,
     req: UpdatePollRequest,
 ) -> Result<String> {
-    let cli = crate::config::get().common.dynamodb();
+    SpacePoll::can_edit(&role)?;
+    let common_config = common::CommonConfig::default();
+    let cli = common_config.dynamodb();
     let space_pk: Partition = space_pk.into();
     let poll_sk_entity: EntityType = poll_sk.into();
 

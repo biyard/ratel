@@ -1,17 +1,16 @@
 use crate::{controllers::participate_space::participate_space, *};
-use space_common::ratel_auth::LoginModal;
+use space_common::hooks::use_space_query;
+use space_common::ratel_auth::hooks::use_user_context;
+use space_common::ratel_auth::{LoginModal, UserContextStoreExt};
+use space_common::types::space_key;
 use space_common::{
     components::{SpaceNav, SpaceNavItem, SpaceTop, SpaceTopLabel},
-    hooks::{
-        reload_space, reload_user_role, space_provider, use_space, use_user_role,
-        user_role_provider,
-    },
+    hooks::use_user_role,
 };
-use space_page_actions::menu;
 #[component]
 pub fn SpaceProvider(space_id: SpacePartition) -> Element {
-    user_role_provider(space_id.clone())?;
-    space_provider(space_id.clone())?;
+    // user_role_provider(space_id.clone())?;
+    // space_provider(space_id.clone())?;
     use_context_provider(|| LayoverService::new());
     rsx! {
         Outlet::<Route> {
@@ -20,18 +19,14 @@ pub fn SpaceProvider(space_id: SpacePartition) -> Element {
 }
 #[component]
 pub fn SpaceLayout(space_id: SpacePartition) -> Element {
-    let role = use_user_role();
-    let apps_access = use_loader({
-        let sid = space_id.clone();
-        move || apps::get_apps_access(sid.clone())
-    })?;
-    let can_access_apps = apps_access.read().clone();
-
-    let space = use_space();
+    let role_loader = use_user_role(&space_id)?;
+    let role = role_loader.read().clone();
+    let space_loader = use_space_query(&space_id)?;
+    let space = space_loader.read().clone();
     let lang = use_language();
 
-    let user = use_user()?;
-    let user = user.read().clone();
+    let user_ctx = use_user_context();
+    let user = user_ctx.read().user.clone();
     let mut popup = use_popup();
     let tr: SpaceLayoutTranslate = use_translate();
     // FIXME
@@ -46,7 +41,7 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
         dashboard::get_nav_item(space_id.clone(), role.clone()),
         overview::get_nav_item(space_id.clone(), role.clone()),
         actions::get_nav_item(space_id.clone(), role.clone()),
-        apps::get_nav_item(space_id.clone(), role.clone(), can_access_apps),
+        apps::get_nav_item(space_id.clone(), role.clone()),
         report::get_nav_item(space_id.clone(), role.clone()),
     ]
     .into_iter()
@@ -73,8 +68,9 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
         let space_id = space_id.clone();
         let mut space = space.clone();
         async move {
+            let space_detail = space_key(&space_id);
             participate.call(space_id).await;
-            reload_space();
+            invalidate_query(&space_detail);
         }
     };
 
@@ -84,6 +80,7 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
                 logo: "https://metadata.ratel.foundation/logos/logo.png",
                 menus,
                 user,
+                role,
                 login_handler: move |_| {
                     popup.open(rsx! {
                         LoginModal {}
