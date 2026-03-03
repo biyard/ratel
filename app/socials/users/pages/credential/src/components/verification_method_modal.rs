@@ -11,68 +11,64 @@ pub fn VerificationMethodModal(on_identity_verify: EventHandler<CredentialRespon
     let lang = use_language()();
 
     rsx! {
-        div { class: "flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-50",
-            div { class: "p-6 w-full max-w-md bg-white rounded-lg shadow-lg dark:bg-gray-800",
-                h2 { class: "mb-6 text-xl font-bold text-modal-label-text", {tr.title} }
+        div { class: "p-6 w-full max-w-md",
+            h2 { class: "mb-6 text-xl font-bold text-modal-label-text", {tr.title} }
 
-                div { class: "flex flex-col gap-4",
-                    button {
-                        onclick: move |_| async move {
+            div { class: "flex flex-col gap-4",
+                button {
+                    onclick: move |_| async move {
+                        #[cfg(not(feature = "server"))]
+                        {
+                            let conf = crate::config::get();
+                            let prefix = user().user_id().unwrap();
 
-                            popup.close();
-
-                            #[cfg(not(feature = "server"))]
+                            match crate::interop::verify_identity(
+                                    conf.portone.store_id,
+                                    conf.portone.inicis_channel_key,
+                                    &prefix,
+                                )
+                                .await
                             {
-                                let conf = crate::config::get();
-                                let prefix = user().user_id().unwrap();
-
-                                match crate::interop::request_identity_verification_async(
-                                        conf.portone.store_id,
-                                        conf.portone.inicis_channel_key,
-                                        &prefix,
-                                    )
-                                    .await
-                                {
-                                    Ok(updated) => {
-                                        on_identity_verify(updated);
-                                    }
-                                    Err(err) => {
-                                        toast.error(err.translate(&lang));
-                                    }
+                                Ok(updated) => {
+                                    popup.close();
+                                    on_identity_verify(updated);
                                 }
-
+                                Err(err) => {
+                                    toast.error(err.translate(&lang));
+                                }
                             }
 
-                        },
-                        class: "p-4 text-left rounded-lg border border-gray-300 transition-all dark:border-gray-600 hover:bg-blue-50 hover:border-blue-500 dark:hover:border-blue-500 dark:hover:bg-gray-700",
-                        div { class: "mb-1 text-lg font-semibold text-gray-700 dark:text-gray-500",
-                            {tr.id_title}
                         }
-                        p { class: "text-sm text-gray-600 dark:text-gray-400", {tr.id_description} }
-                    }
 
-                    button {
-                        onclick: move |_| {
-                            popup.open(rsx! {
-                                CodeInputModal { on_submit: on_identity_verify }
-                            });
-                        },
-                        class: "p-4 text-left rounded-lg border border-gray-300 transition-all dark:border-gray-600 hover:bg-blue-50 hover:border-blue-500 dark:hover:border-blue-500 dark:hover:bg-gray-700",
-                        div { class: "mb-1 text-lg font-semibold text-gray-700 dark:text-gray-500",
-                            {tr.code_title}
-                        }
-                        p { class: "text-sm text-gray-600 dark:text-gray-400", {tr.code_desc} }
+                    },
+                    class: "p-4 text-left rounded-lg border border-gray-300 transition-all dark:border-gray-600 hover:bg-blue-50 hover:border-blue-500 dark:hover:border-blue-500 dark:hover:bg-gray-700",
+                    div { class: "mb-1 text-lg font-semibold text-gray-700 dark:text-gray-500",
+                        {tr.id_title}
                     }
+                    p { class: "text-sm text-gray-600 dark:text-gray-400", {tr.id_description} }
                 }
 
-                div { class: "flex justify-end mt-6",
-                    button {
-                        class: "hover:text-white text-neutral-500",
-                        onclick: move |_| {
-                            popup.close();
-                        },
-                        {tr.cancel}
+                button {
+                    onclick: move |_| {
+                        popup.open(rsx! {
+                            CodeInputModal { on_submit: on_identity_verify }
+                        });
+                    },
+                    class: "p-4 text-left rounded-lg border border-gray-300 transition-all dark:border-gray-600 hover:bg-blue-50 hover:border-blue-500 dark:hover:border-blue-500 dark:hover:bg-gray-700",
+                    div { class: "mb-1 text-lg font-semibold text-gray-700 dark:text-gray-500",
+                        {tr.code_title}
                     }
+                    p { class: "text-sm text-gray-600 dark:text-gray-400", {tr.code_desc} }
+                }
+            }
+
+            div { class: "flex justify-end mt-6",
+                button {
+                    class: "hover:text-white text-neutral-500",
+                    onclick: move |_| {
+                        popup.close();
+                    },
+                    {tr.cancel}
                 }
             }
         }

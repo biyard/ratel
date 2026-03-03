@@ -14,54 +14,52 @@ pub fn CodeInputModal(on_submit: EventHandler<CredentialResponse>) -> Element {
     let lang = lang();
 
     rsx! {
-        div { class: "flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-50",
-            div { class: "p-6 w-full max-w-md bg-white rounded-lg shadow-lg dark:bg-gray-800",
-                h2 { class: "mb-4 text-xl font-bold text-modal-label-text", {tr.title} }
+        div { class: "p-6 w-full max-w-md",
+            h2 { class: "mb-4 text-xl font-bold text-modal-label-text", {tr.title} }
 
-                div { class: "mb-4",
-                    input {
-                        r#type: "text",
-                        value: {code_value()},
-                        oninput: move |e| code_value.set(e.value()),
-                        placeholder: {tr.placeholder},
-                        class: "py-2 px-3 w-full rounded border border-gray-300 dark:bg-gray-700 dark:border-gray-600 text-neutral-500",
-                    }
+            div { class: "mb-4",
+                input {
+                    r#type: "text",
+                    value: {code_value()},
+                    oninput: move |e| code_value.set(e.value()),
+                    placeholder: {tr.placeholder},
+                    class: "py-2 px-3 w-full rounded border border-gray-300 dark:bg-gray-700 dark:border-gray-600 text-neutral-500",
                 }
+            }
 
-                div { class: "flex gap-2 justify-end",
-                    button {
-                        class: "hover:text-white text-neutral-500",
-                        onclick: move |_| {
-                            popup.close();
-                        },
-                        {tr.cancel}
-                    }
-                    button {
-                        class: "py-2 px-4 rounded-md bg-enable-button-bg text-enable-button-white-text",
-                        onclick: move |evt| async move {
-                            let code = code_value();
-                            if code.is_empty() {
-                                toast.error(tr.invalid_code.to_string());
-                                return;
+            div { class: "flex gap-2 justify-end",
+                button {
+                    class: "hover:text-white text-neutral-500",
+                    onclick: move |_| {
+                        popup.close();
+                    },
+                    {tr.cancel}
+                }
+                button {
+                    class: "py-2 px-4 rounded-md bg-enable-button-bg text-enable-button-white-text",
+                    onclick: move |evt| async move {
+                        let code = code_value();
+                        if code.is_empty() {
+                            toast.error(tr.invalid_code.to_string());
+                            return;
+                        }
+
+                        match sign_attributes_handler(SignAttributesRequest::Code {
+                                code,
+                            })
+                            .await
+                        {
+                            Ok(updated) => {
+                                popup.close();
+                                on_submit(updated);
                             }
-
-                            match sign_attributes_handler(SignAttributesRequest::Code {
-                                    code,
-                                })
-                                .await
-                            {
-                                Ok(updated) => {
-                                    popup.close();
-                                    on_submit(updated);
-                                }
-                                Err(e) => {
-                                    toast.error(e.translate(&lang));
-                                }
+                            Err(e) => {
+                                toast.error(e.translate(&lang));
                             }
+                        }
 
-                        },
-                        {tr.submit}
-                    }
+                    },
+                    {tr.submit}
                 }
             }
         }
