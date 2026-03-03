@@ -39,7 +39,7 @@ fn main() {
             "-i",
             "tailwind.css",
             "-o",
-            "assets/tailwind.css",
+            "assets/common-tailwind.css",
             "-m",
         ])
         .current_dir(&manifest_path)
