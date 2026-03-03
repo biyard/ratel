@@ -1,4 +1,5 @@
 use crate::components::{MembershipPlanTranslate, MembershipTier};
+use crate::services::portone::VerifiedCustomer;
 use crate::*;
 
 #[derive(Clone, Debug)]
@@ -25,7 +26,7 @@ fn tier_label(tier: MembershipTier) -> &'static str {
 pub fn MembershipPurchaseModal(
     membership: MembershipTier,
     display_amount: i64,
-    customer_name: String,
+    customer: VerifiedCustomer,
     on_cancel: EventHandler<()>,
     on_confirm: EventHandler<CustomerInfo>,
 ) -> Element {
@@ -35,11 +36,25 @@ pub fn MembershipPurchaseModal(
         Language::Ko => "₩",
         _ => "$",
     };
-    let mut card_number = use_signal(String::new);
-    let mut expiry_month = use_signal(String::new);
-    let mut expiry_year = use_signal(String::new);
-    let mut birth_or_biz = use_signal(String::new);
-    let mut card_password = use_signal(String::new);
+    let customer_name = customer.name.clone();
+    let birth_value = customer.birth_date.replace('-', "");
+    let is_business = customer
+        .birth_date
+        .split('-')
+        .next()
+        .map(|value| value.len() == 3)
+        .unwrap_or(false);
+    let birth_or_biz_value = if is_business {
+        birth_value.chars().take(10).collect::<String>()
+    } else {
+        birth_value.chars().skip(2).take(6).collect::<String>()
+    };
+
+    let mut card_number = use_signal(|| "".to_string());
+    let mut expiry_month = use_signal(|| "".to_string());
+    let mut expiry_year = use_signal(|| "".to_string());
+    let mut birth_or_biz = use_signal(|| birth_or_biz_value.clone());
+    let mut card_password = use_signal(|| "".to_string());
 
     let is_valid = !customer_name.trim().is_empty()
         && !card_number.read().trim().is_empty()
@@ -58,7 +73,9 @@ pub fn MembershipPurchaseModal(
                     div { class: "flex justify-between items-center",
                         div { class: "flex flex-col gap-1",
                             h4 { class: "text-lg font-semibold text-text-primary",
-                                "{tier_label(membership)} {tr.membership_label}"
+                                {tier_label(membership)}
+                                " "
+                                {tr.membership_label}
                             }
                             p { class: "text-sm text-text-secondary", {tr.monthly_subscription} }
                         }
