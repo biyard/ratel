@@ -70,15 +70,15 @@ pub fn AppMenu() -> Element {
                     }
 
                     // My Network (authorized only)
-                    if logged_in {
-                        NavItem {
-                            href: "/my-network",
-                            label: tr.my_network,
-                            icon: rsx! {
-                                icons::user::UserGroup {}
-                            },
-                        }
-                    }
+                    // if logged_in {
+                    //     NavItem {
+                    //         href: "/my-network",
+                    //         label: tr.my_network,
+                    //         icon: rsx! {
+                    //             icons::user::UserGroup {}
+                    //         },
+                    //     }
+                    // }
 
                     // Notification (authorized only)
                     if logged_in {

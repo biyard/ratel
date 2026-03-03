@@ -2,7 +2,10 @@ use common::wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::js_sys::Promise;
 
-use crate::*;
+use crate::{
+    controllers::{CredentialResponse, SignAttributesRequest, sign_attributes_handler},
+    *,
+};
 #[wasm_bindgen(js_namespace = ["window", "ratel", "ratel_user_credential"])]
 extern "C" {
     #[wasm_bindgen(js_name = initialize)]
@@ -20,21 +23,18 @@ pub async fn request_identity_verification_async(
     store_id: &str,
     channel_key: &str,
     prefix: &str,
-) -> Result<String> {
+) -> Result<CredentialResponse> {
     let promise = request_identity_verification(store_id, channel_key, prefix);
-    let value = JsFuture::from(promise)
-        .await
-        .map_err(|e| Error::Unknown(format_js_error(e)))?;
+    let value = JsFuture::from(promise).await.map_err(|e| {
+        error!("Failed to request identity verification: {:?}", e);
+        Error::PortOneRequestFailure
+    })?;
 
-    value
+    debug!("PortOne response: {:?}", value);
+
+    let id = value
         .as_string()
-        .ok_or_else(|| Error::Unknown("Invalid PortOne response".to_string()))
-}
+        .ok_or_else(|| Error::PortOneInicisInvalidIdentity)?;
 
-fn format_js_error(err: JsValue) -> String {
-    if let Some(msg) = err.as_string() {
-        msg
-    } else {
-        format!("{:?}", err)
-    }
+    sign_attributes_handler(SignAttributesRequest::PortOne { id }).await
 }
