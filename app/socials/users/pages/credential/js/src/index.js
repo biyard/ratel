@@ -3,11 +3,11 @@ if (typeof window !== "undefined") {
     window.ratel = {};
   }
 
-  window.ratel.ratel_user_credential = {
+  window.ratel.user_credential = {
     initialize: (_conf) => {
       console.debug("Initializing ratel_user_credential with config");
     },
-    requestIdentityVerification: (storeId, channelKey, prefix) => {
+    request_identity_verification: async (storeId, channelKey, prefix) => {
       if (!window.PortOne || !window.PortOne.requestIdentityVerification) {
         return Promise.reject(new Error("PortOne SDK not loaded"));
       }
@@ -16,11 +16,13 @@ if (typeof window !== "undefined") {
           ? crypto.randomUUID()
           : `${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
       const identityVerificationId = `iv-${prefix}-${randomId}`;
-      return window.PortOne.requestIdentityVerification({
+      const res = await window.PortOne.requestIdentityVerification({
         storeId,
         identityVerificationId,
         channelKey,
-      }).then(() => identityVerificationId);
+      });
+
+      return res.identityVerificationId;
     },
   };
 }
