@@ -12,7 +12,7 @@ pub mod web;
 #[cfg(feature = "server")]
 pub mod server;
 
-pub use layout::{SpaceLayout, SpaceProvider};
+pub use layout::SpaceLayout;
 
 pub use route::Route;
 

@@ -1,4 +1,4 @@
-use common::{DevTools, ThemeService, ToastProvider, ToastService};
+use common::{DevTools, LayoverService, ThemeService, ToastProvider, ToastService};
 use common::{Environment, PopupZone, components::PopupService, query_provider};
 use dioxus::prelude::*;
 
@@ -36,7 +36,7 @@ pub const FAVICON: Asset = asset!("/assets/favicon.ico");
 #[component]
 pub fn App(children: Element, tailwind: Asset) -> Element {
     use_context_provider(|| PopupService::new());
-
+    use_context_provider(|| LayoverService::new());
     ToastService::init();
     ThemeService::init();
     let _ = ratel_auth::Context::init()?;
@@ -50,6 +50,7 @@ pub fn App(children: Element, tailwind: Asset) -> Element {
         common::Provider {}
         ratel_auth::AuthProvider {}
         ToastProvider {}
+
         PopupZone {}
         if env == Environment::Dev || env == Environment::Local {
             DevTools {}

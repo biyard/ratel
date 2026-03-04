@@ -1,5 +1,5 @@
-mod viewer;
-pub use viewer::ViewerPage;
+mod main;
+pub use main::DiscussionMainPage;
 
 mod editor;
 pub use editor::EditorPage;
