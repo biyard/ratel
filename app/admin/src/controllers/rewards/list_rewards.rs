@@ -1,6 +1,5 @@
 use crate::*;
 use common::models::auth::AdminUser;
-use common::models::reward::Reward;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RewardResponse {
