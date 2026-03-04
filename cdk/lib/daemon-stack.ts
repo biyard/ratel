@@ -14,11 +14,14 @@ export interface DaemonStackProps extends StackProps {
 }
 
 export class DaemonStack extends Stack {
+  public readonly cluster: ecs.Cluster;
+  public readonly vpc: ec2.IVpc;
+
   constructor(scope: Construct, id: string, props: DaemonStackProps) {
     super(scope, id, { ...props, crossRegionReferences: true });
 
-    const vpc = ec2.Vpc.fromLookup(this, "Vpc", { isDefault: true });
-    const cluster = new ecs.Cluster(this, "Cluster", { vpc });
+    this.vpc = ec2.Vpc.fromLookup(this, "Vpc", { isDefault: true });
+    this.cluster = new ecs.Cluster(this, "Cluster", { vpc: this.vpc });
 
     // 4) Task execution role
     const taskExecutionRole = new iam.Role(this, "TaskExecutionRole", {
@@ -66,12 +69,13 @@ export class DaemonStack extends Stack {
     });
 
     new ecs.FargateService(this, "DaemonServiceV3", {
-      cluster,
+      cluster: this.cluster,
       taskDefinition,
       desiredCount: 1,
       maxHealthyPercent: 100,
       minHealthyPercent: 0,
       assignPublicIp: true,
+      vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
     });
   }
 }

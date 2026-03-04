@@ -19,15 +19,16 @@ fn main() {
         _ => "build",
     };
 
-    let is_local = match std::env::var("ENV").as_deref() {
-        Ok("local") => true,
+    let is_ci = match std::env::var("CI").as_deref() {
+        Ok("true") => true,
         _ => false,
     };
 
     std::fs::create_dir_all(&assets_dir).expect("failed to create assets directory");
 
     let js_output = assets_dir.join("ratel-common.js");
-    if !js_output.exists() && !is_local {
+
+    if (is_ci && !js_output.exists()) || !is_ci {
         let status = Command::new("npm")
             .args(["run", build_cmd])
             .current_dir(&js_dir)
@@ -40,7 +41,7 @@ fn main() {
     }
 
     let css_output = assets_dir.join("common-tailwind.css");
-    if !css_output.exists() && !is_local {
+    if (is_ci && !css_output.exists()) || !is_ci {
         let status = Command::new("npx")
             .args([
                 "@tailwindcss/cli",

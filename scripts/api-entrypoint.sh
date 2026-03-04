@@ -10,9 +10,10 @@ nvm install --lts
 nvm use --lts
 npm i -g npm@latest
 npm i -g pnpm
+npm i -g @tailwindcss/cli
 
-cd packages/main-api
+cd app/shell
 cargo install cargo-binstall
-cargo binstall --no-confirm cargo-watch
+cargo binstall --no-confirm dioxus-cli
 
 make run
