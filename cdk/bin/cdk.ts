@@ -9,6 +9,8 @@ import { QdrantStack } from "../lib/qdrant-stack";
 const app = new App();
 
 const stackName = process.env.STACK;
+const awsAccount =
+  process.env.CDK_DEFAULT_ACCOUNT || process.env.AWS_ACCOUNT_ID;
 
 const env = process.env.ENV || "dev";
 // Common host
@@ -19,24 +21,15 @@ const baseDomain = "ratel.foundation";
 
 // new ImageWorkerStack(app, `ratel-${env}-image-worker`, {
 //   env: {
-//     account: process.env.CDK_DEFAULT_ACCOUNT,
+//     account: awsAccount,
 //     region: "ap-northeast-2",
 //   },
 // });
 
 if (env === "dev") {
-  new StaticStack(app, `ratel-${env}-storybook`, {
-    env: {
-      account: process.env.CDK_DEFAULT_ACCOUNT,
-      region: "us-east-1",
-    },
-    webDomain: `storybook.${host}`,
-    baseDomain,
-  });
-
   new StaticStack(app, `ratel-${env}-report`, {
     env: {
-      account: process.env.CDK_DEFAULT_ACCOUNT,
+      account: awsAccount,
       region: "us-east-1",
     },
     webDomain: `report.${host}`,
@@ -46,7 +39,7 @@ if (env === "dev") {
 
 const daemonStack = new DaemonStack(app, `ratel-${env}-daemon-ap-northeast-2`, {
   env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
+    account: awsAccount,
     region: "ap-northeast-2",
   },
   commit: process.env.COMMIT!,
@@ -54,7 +47,7 @@ const daemonStack = new DaemonStack(app, `ratel-${env}-daemon-ap-northeast-2`, {
 
 const qdrantStack = new QdrantStack(app, `ratel-${env}-qdrant-ap-northeast-2`, {
   env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
+    account: awsAccount,
     region: "ap-northeast-2",
   },
   stage: env,
@@ -65,7 +58,7 @@ const qdrantStack = new QdrantStack(app, `ratel-${env}-qdrant-ap-northeast-2`, {
 
 new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {
   env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
+    account: awsAccount,
     region: "ap-northeast-2",
   },
   stage: env,
@@ -83,7 +76,7 @@ new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {
 
 new RegionalServiceStack(app, `ratel-${env}-svc-eu-central-1`, {
   env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
+    account: awsAccount,
     region: "eu-central-1",
   },
   stage: env,
@@ -97,7 +90,7 @@ new RegionalServiceStack(app, `ratel-${env}-svc-eu-central-1`, {
 
 new RegionalServiceStack(app, `ratel-${env}-svc-us-east-1`, {
   env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
+    account: awsAccount,
     region: "us-east-1",
   },
   stage: env,
@@ -112,7 +105,7 @@ new RegionalServiceStack(app, `ratel-${env}-svc-us-east-1`, {
 new GlobalAccelStack(app, "GlobalAccel", {
   stackName,
   env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
+    account: awsAccount,
     region: "us-east-1",
   },
   stage: env,
@@ -125,7 +118,7 @@ new GlobalAccelStack(app, "GlobalAccel", {
 
 new GlobalTableStack(app, `ratel-${env}-dynamodb`, {
   env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
+    account: awsAccount,
     region: "ap-northeast-2",
   },
 });

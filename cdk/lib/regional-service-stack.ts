@@ -246,6 +246,7 @@ export class RegionalServiceStack extends Stack {
     if (props.vpc && props.qdrantCloudMapService && props.qdrantSecurityGroup) {
       const vpcLink = new apigw.VpcLink(this, "QdrantVpcLink", {
         vpc: props.vpc,
+        subnets: { subnetType: ec2.SubnetType.PUBLIC },
         securityGroups: [props.qdrantSecurityGroup],
       });
 

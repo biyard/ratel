@@ -47,9 +47,10 @@ export class QdrantStack extends Stack {
 
     this.securityGroup = sg;
 
-    // EFS for persistent storage
+    // EFS for persistent storage (use public subnets since default VPC has no private subnets)
     const fileSystem = new efs.FileSystem(this, "QdrantEfs", {
       vpc,
+      vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
       performanceMode: efs.PerformanceMode.GENERAL_PURPOSE,
       throughputMode: efs.ThroughputMode.BURSTING,
       removalPolicy: RemovalPolicy.RETAIN,
@@ -139,6 +140,7 @@ export class QdrantStack extends Stack {
       maxHealthyPercent: 100,
       minHealthyPercent: 0,
       assignPublicIp: true,
+      vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
       securityGroups: [sg],
       cloudMapOptions: {
         name: "qdrant",
