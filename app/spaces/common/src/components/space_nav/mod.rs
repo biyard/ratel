@@ -40,16 +40,26 @@ pub fn SpaceNav(
 
 #[component]
 fn NavItem(item: SpaceNavItem) -> Element {
+    let current_path = use_context::<dioxus::router::RouterContext>().current_route_string();
+    let is_active = match &item.link {
+        NavigationTarget::Internal(route) => current_path.starts_with(&route.to_string()),
+        _ => false,
+    };
+    let selected = if is_active {
+        "bg-space-nav-item-hover"
+    } else {
+        ""
+    };
+    // NOTE: Link component does not support class attribute merging.
     rsx! {
         Link {
-            class: "flex flex-row gap-2 items-center py-2 px-1 w-full text-sm font-medium rounded-sm text-text hover:bg-space-nav-item-hover",
+            class: "flex flex-row gap-2 items-center py-2 px-1 w-full text-sm font-medium rounded-sm text-text hover:bg-space-nav-item-hover {selected}",
             to: item.link,
             {item.icon}
             {item.label}
         }
     }
 }
-
 #[derive(Clone, PartialEq)]
 pub struct SpaceNavItem {
     pub icon: Element,
