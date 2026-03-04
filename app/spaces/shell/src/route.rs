@@ -11,7 +11,6 @@ use report::Route as ReportRoute;
 pub enum Route {
     #[nest("/spaces")]
         #[nest("/:space_id")]
-            #[layout(SpaceProvider)]
                 #[layout(SpaceLayout)]
                     #[route("/dashboard/:..rest")]
                     Dashboard { space_id: SpacePartition, rest: Vec<String> },
