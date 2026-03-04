@@ -35,4 +35,12 @@ translate! {
         en: "No questions added yet.",
         ko: "아직 질문이 없습니다.",
     },
+    title_label: {
+        en: "Title",
+        ko: "제목",
+    },
+    title_placeholder: {
+        en: "Enter poll title...",
+        ko: "투표 제목을 입력하세요...",
+    },
 }
