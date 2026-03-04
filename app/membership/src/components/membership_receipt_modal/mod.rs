@@ -18,13 +18,13 @@ pub struct MembershipReceiptData {
     pub paid_at: i64,
 }
 
-fn tier_label(tier: MembershipTier) -> &'static str {
+fn tier_label(tier: MembershipTier, tr: &MembershipReceiptTranslate) -> &str {
     match tier {
-        MembershipTier::Free => "Free",
-        MembershipTier::Pro => "Pro",
-        MembershipTier::Max => "Max",
-        MembershipTier::Vip => "VIP",
-        MembershipTier::Enterprise => "Enterprise",
+        MembershipTier::Free => tr.tier_free,
+        MembershipTier::Pro => tr.tier_pro,
+        MembershipTier::Max => tr.tier_max,
+        MembershipTier::Vip => tr.tier_vip,
+        MembershipTier::Enterprise => tr.tier_enterprise,
     }
 }
 
@@ -95,7 +95,7 @@ pub fn MembershipReceiptModal(receipt: MembershipReceiptData) -> Element {
                                 {tr.membership_label}
                             }
                             p { class: "text-sm font-semibold text-text-primary",
-                                {tier_label(receipt.membership)}
+                                {tier_label(receipt.membership, &tr)}
                             }
                         }
 

@@ -17,6 +17,26 @@ translate! {
         en: "Membership",
         ko: "멤버십",
     },
+    tier_free: {
+        en: "Free",
+        ko: "무료",
+    },
+    tier_pro: {
+        en: "Pro",
+        ko: "Pro",
+    },
+    tier_max: {
+        en: "Max",
+        ko: "Max",
+    },
+    tier_vip: {
+        en: "VIP",
+        ko: "VIP",
+    },
+    tier_enterprise: {
+        en: "Enterprise",
+        ko: "엔터프라이즈",
+    },
 
     monthly_subscription: {
         en: "Monthly subscription",
