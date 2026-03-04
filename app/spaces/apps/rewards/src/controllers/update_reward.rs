@@ -1,7 +1,5 @@
 use crate::*;
-use common::models::auth::User;
 use space_common::models::{SpaceReward, SpaceRewardResponse};
-use common::utils::time::get_now_timestamp_millis;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct UpdateSpaceRewardRequest {
@@ -16,6 +14,13 @@ pub async fn update_space_reward(
     space_id: SpacePartition,
     req: UpdateSpaceRewardRequest,
 ) -> Result<SpaceRewardResponse> {
+    use common::utils::time::get_now_timestamp_millis;
+    use space_common::models::SpaceReward;
+
+    if req.credits < 1 {
+        return Err(Error::BadRequest("Credits must be at least 1".into()));
+    }
+
     SpaceReward::can_edit(&role)?;
 
     let common_config = common::CommonConfig::default();

@@ -118,31 +118,36 @@ impl SpaceReward {
             UserReward::get(cli, user_reward_pk.clone(), Some(user_reward_sk.clone())).await?;
 
         let mut txs = vec![];
+        let (current_user_claims, current_user_points) = user_reward
+            .as_ref()
+            .map(|reward| (reward.total_claims, reward.total_points))
+            .unwrap_or((0, 0));
 
-        let user_reward = if let Some(mut user_reward) = user_reward {
-            match &space_reward.condition {
-                RewardCondition::None => {}
-                RewardCondition::MaxClaims(max) => {
-                    if space_reward.total_claims >= *max {
-                        return Err(SpaceRewardError::MaxClaimsReached.into());
-                    }
-                }
-                RewardCondition::MaxPoints(max) => {
-                    if space_reward.total_points >= *max {
-                        return Err(SpaceRewardError::MaxPointsReached.into());
-                    }
-                }
-                RewardCondition::MaxUserClaims(max) => {
-                    if user_reward.total_claims >= *max {
-                        return Err(SpaceRewardError::MaxUserClaimsReached.into());
-                    }
-                }
-                RewardCondition::MaxUserPoints(max) => {
-                    if user_reward.total_points >= *max {
-                        return Err(SpaceRewardError::MaxUserPointsReached.into());
-                    }
+        match &space_reward.condition {
+            RewardCondition::None => {}
+            RewardCondition::MaxClaims(max) => {
+                if space_reward.total_claims >= *max {
+                    return Err(SpaceRewardError::MaxClaimsReached.into());
                 }
             }
+            RewardCondition::MaxPoints(max) => {
+                if space_reward.total_points >= *max {
+                    return Err(SpaceRewardError::MaxPointsReached.into());
+                }
+            }
+            RewardCondition::MaxUserClaims(max) => {
+                if current_user_claims >= *max {
+                    return Err(SpaceRewardError::MaxUserClaimsReached.into());
+                }
+            }
+            RewardCondition::MaxUserPoints(max) => {
+                if current_user_points >= *max {
+                    return Err(SpaceRewardError::MaxUserPointsReached.into());
+                }
+            }
+        }
+
+        let user_reward = if let Some(mut user_reward) = user_reward {
             txs.push(
                 UserReward::updater(&user_reward.pk, &user_reward.sk)
                     .increase_total_points(space_reward.get_amount())
@@ -181,8 +186,21 @@ impl SpaceReward {
         txs.push(history.create_transact_write_item());
 
         // Execute DB transaction
-        if let Err(_) = transact_write_items!(cli, txs) {
-            return Err(SpaceRewardError::AlreadyClaimedInPeriod.into());
+        if let Err(err) = transact_write_items!(cli, txs) {
+            if let aws_sdk_dynamodb::Error::TransactionCanceledException(tx_err) = &err {
+                let is_conditional_failure = tx_err
+                    .cancellation_reasons()
+                    .iter()
+                    .any(|reason| reason.code() == Some("ConditionalCheckFailed"));
+
+                if is_conditional_failure {
+                    return Err(SpaceRewardError::AlreadyClaimedInPeriod.into());
+                }
+            }
+
+            return Err(Error::Unknown(format!(
+                "failed to write reward transaction: {err}"
+            )));
         }
 
         Ok(user_reward)

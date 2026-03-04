@@ -1,6 +1,10 @@
 use crate::*;
+#[cfg(feature = "server")]
 use common::models::reward::Reward;
+#[cfg(feature = "server")]
 use space_common::models::{SpaceReward, SpaceRewardResponse};
+#[cfg(not(feature = "server"))]
+use space_common::models::SpaceRewardResponse;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CreateSpaceRewardRequest {
@@ -16,17 +20,16 @@ pub async fn create_space_reward(
     space_id: SpacePartition,
     req: CreateSpaceRewardRequest,
 ) -> Result<SpaceRewardResponse> {
+    if req.credits < 1 {
+        return Err(Error::BadRequest("Credits must be at least 1".into()));
+    }
+
     let action = RewardAction::try_from(&req.action_key)?;
     if action != req.behavior.action() {
         return Err(Error::BadRequest("Behavior does not match action".into()));
     }
 
-    SpaceReward::can_edit(&role);
-    // Only space creators can create rewards
-    match role {
-        SpaceUserRole::Creator => {}
-        _ => return Err(Error::NoPermission),
-    }
+    SpaceReward::can_edit(&role)?;
 
     let common_config = common::CommonConfig::default();
     let cli = common_config.dynamodb();
