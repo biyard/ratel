@@ -236,10 +236,6 @@ jobs:
   ratel-app-shell-testing:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: app/shell
-
     steps:
       - uses: actions/checkout@v4
 
@@ -278,6 +274,7 @@ jobs:
           make infra
 
       - name: Run tests
+        working-directory: app/shell
         env:
           DYNAMO_TABLE_PREFIX: ratel-local
           DYNAMO_ENDPOINT: http://localhost:4566
