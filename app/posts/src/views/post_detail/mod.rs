@@ -7,7 +7,7 @@ use dioxus::prelude::*;
 #[component]
 pub fn PostDetail(post_pk: String) -> Element {
     let post_pk_clone = post_pk.clone();
-    let resource = use_server_future(move || {
+    let mut resource = use_server_future(move || {
         let pk = post_pk_clone.clone();
         async move { get_post_handler(pk.parse().unwrap()).await }
     })?;
@@ -17,11 +17,18 @@ pub fn PostDetail(post_pk: String) -> Element {
 
     match data.as_ref() {
         Ok(detail) => {
+            let on_refresh = move || {
+                resource.restart();
+            };
             rsx! {
                 div { class: "flex flex-col gap-6 w-full max-w-[906px] mx-auto py-6 px-6 max-tablet:mr-[20px]",
                     PostDetailHeader { detail: detail.clone(), post_pk: post_pk.clone() }
                     PostContent { detail: detail.clone() }
-                    CommentSection { detail: detail.clone(), post_pk: post_pk.clone() }
+                    CommentSection {
+                        detail: detail.clone(),
+                        post_pk: post_pk.clone(),
+                        on_refresh,
+                    }
                 }
             }
         }
