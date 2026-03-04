@@ -25,7 +25,7 @@ pub fn init(level: Level) -> Result<(), SetGlobalDefaultError> {
 
         let sub = tracing_subscriber::fmt()
             .with_env_filter(
-                EnvFilter::from(option_env!("RUST_LOG").unwrap_or("debug"))
+                EnvFilter::from(level.to_string().to_ascii_uppercase().as_str())
                     .add_directive("rustls=info".parse().unwrap())
                     .add_directive("aws=info".parse().unwrap())
                     .add_directive("hyper_util=info".parse().unwrap())
