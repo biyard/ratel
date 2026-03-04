@@ -123,14 +123,10 @@ impl SpacePost {
         let comment = SpacePostComment::new(space_pk, space_post_pk, content, user);
         let comment_tx = comment.create_transact_write_item();
 
-        cli.transact_write_items()
-            .set_transact_items(Some(vec![comment_tx, post]))
-            .send()
-            .await
-            .map_err(|e| {
-                tracing::error!("Failed to add comment: {}", e);
-                crate::Error::Unknown(format!("Failed to add comment: {}", e))
-            })?;
+        transact_write_items!(cli, vec![comment_tx, post]).map_err(|e| {
+            tracing::error!("Failed to add comment: {}", e);
+            crate::Error::Unknown(format!("Failed to add comment: {}", e))
+        })?;
 
         Ok(comment)
     }
@@ -157,14 +153,10 @@ impl SpacePost {
         let pl_tx = SpacePostCommentLike::new(space_post_pk, comment_pk, user_pk)
             .create_transact_write_item();
 
-        cli.transact_write_items()
-            .set_transact_items(Some(vec![comment_tx, pl_tx]))
-            .send()
-            .await
-            .map_err(|e| {
-                tracing::error!("Failed to like comment: {}", e);
-                crate::Error::Unknown(format!("Failed to like comment: {}", e))
-            })?;
+        transact_write_items!(cli, vec![comment_tx, pl_tx]).map_err(|e| {
+            tracing::error!("Failed to like comment: {}", e);
+            crate::Error::Unknown(format!("Failed to like comment: {}", e))
+        })?;
 
         Ok(())
     }
@@ -191,14 +183,10 @@ impl SpacePost {
         let pcl = SpacePostCommentLike::new(space_post_pk, comment_pk, user_pk);
         let pl_tx = SpacePostCommentLike::delete_transact_write_item(&pcl.pk, &pcl.sk);
 
-        cli.transact_write_items()
-            .set_transact_items(Some(vec![comment_tx, pl_tx]))
-            .send()
-            .await
-            .map_err(|e| {
-                tracing::error!("Failed to unlike comment: {}", e);
-                crate::Error::Unknown(format!("Failed to unlike comment: {}", e))
-            })?;
+        transact_write_items!(cli, vec![comment_tx, pl_tx]).map_err(|e| {
+            tracing::error!("Failed to unlike comment: {}", e);
+            crate::Error::Unknown(format!("Failed to unlike comment: {}", e))
+        })?;
 
         Ok(())
     }

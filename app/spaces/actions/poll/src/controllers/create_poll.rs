@@ -9,10 +9,7 @@ pub async fn create_poll(space_pk: SpacePartition) -> Result<PollResponse> {
 
     let mut items = vec![poll.create_transact_write_item()];
     items.extend(poll.dashboard_write_items());
-    cli.transact_write_items()
-        .set_transact_items(Some(items))
-        .send()
-        .await
+    transact_write_items!(cli, items)
         .map_err(|e| crate::Error::Unknown(format!("Failed to create poll: {e}")))?;
 
     Ok(poll.into())
