@@ -5,6 +5,28 @@ body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* Membership plan grid (used in embedded membership routes) */
+.membership-plan-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.membership-plan-span-full {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 900px) {
+  .membership-plan-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 500px) {
+  .membership-plan-grid {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
 #hero {
   margin: 0;
   display: flex;
