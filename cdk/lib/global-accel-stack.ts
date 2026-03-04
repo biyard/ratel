@@ -65,6 +65,15 @@ export class GlobalAccelStack extends Stack {
       compress: true,
     };
 
+    // Qdrant origin via ap-northeast-2 regional API Gateway
+    const qdrantOrigin = new origins.HttpOrigin(
+      `ap-northeast-2.${apiDomain.replace(`.${baseDomain}`, "")}.${baseDomain}`,
+      {
+        protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
+        originSslProtocols: [cloudfront.OriginSslPolicy.TLS_V1_2],
+      },
+    );
+
     const distribution = new cloudfront.Distribution(this, "Distribution", {
       defaultBehavior: {
         origin,
@@ -77,6 +86,15 @@ export class GlobalAccelStack extends Stack {
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
       additionalBehaviors: {
+        "/qdrant/*": {
+          origin: qdrantOrigin,
+          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+          originRequestPolicy:
+            cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+          viewerProtocolPolicy:
+            cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        },
         "/metadata/*": cachedS3Prop,
         "/assets/*": cachedS3Prop,
         "/icons/*": cachedS3Prop,
