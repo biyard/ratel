@@ -102,8 +102,7 @@ pub fn MobileSideMenu(is_open: Signal<bool>) -> Element {
                             popup.open(rsx! {
                                 LoginModal {}
                             })
-                            .with_title(tr.join_the_movement)
-                            .with_scroll_lock(true);
+                            .with_title(tr.join_the_movement);
                         },
                         "{tr.sign_in}"
                     }

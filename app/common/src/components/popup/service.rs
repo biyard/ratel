@@ -9,7 +9,6 @@ pub struct PopupConfig {
     pub closable: bool,
     pub backdrop_closable: bool,
     pub overflow: bool,
-    pub scroll_lock: bool,
 }
 
 #[derive(Clone, Copy)]
@@ -41,7 +40,6 @@ impl PopupService {
             closable: true,
             backdrop_closable: false,
             overflow: false,
-            scroll_lock: false,
         }));
         self
     }
@@ -110,15 +108,6 @@ impl PopupService {
         self
     }
 
-    pub fn with_scroll_lock(&mut self, scroll_lock: bool) -> &mut Self {
-        {
-            let mut current = self.state.write();
-            if let Some(ref mut cfg) = *current {
-                cfg.scroll_lock = scroll_lock;
-            }
-        }
-        self
-    }
 }
 
 pub fn use_popup() -> PopupService {

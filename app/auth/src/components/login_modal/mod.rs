@@ -29,8 +29,7 @@ pub fn LoginModal() -> Element {
                             popup.close();
                             popup.open(rsx! {
                                 SignupModal {}
-                            })
-                            .with_scroll_lock(true);
+                            });
                         },
                         {tr.create_account}
                     }
@@ -85,8 +84,7 @@ pub fn LoginModal() -> Element {
                             popup.close();
                             popup.open(rsx! {
                                 ForgotPassword {}
-                            })
-                            .with_scroll_lock(true);
+                            });
                         },
                         {tr.forgot_password}
                     }
@@ -167,8 +165,7 @@ pub fn LoginModal() -> Element {
                                         popup.close();
                                         popup.open(rsx! {
                                             SignupModal {}
-                                        })
-                                        .with_scroll_lock(true);
+                                        });
                                     }
                                     Err(e) => {
                                         error_message.set(Some(format!("{e}")));

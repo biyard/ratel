@@ -45,7 +45,7 @@ pub fn AppMenu() -> Element {
     let mut popup = use_popup();
     let user_ctx = ratel_auth::hooks::use_user_context();
     let mut mobile_menu_open = use_signal(|| false);
-    let popup_scroll_lock = popup.config().map(|c| c.scroll_lock).unwrap_or(false);
+    let popup_scroll_lock = popup.is_open();
     use_scroll_lock(mobile_menu_open() || popup_scroll_lock);
 
     let logged_in = user_ctx().is_logged_in();
@@ -117,8 +117,7 @@ pub fn AppMenu() -> Element {
                                 popup.open(rsx! {
                                     LoginModal {}
                                 })
-                                .with_title(tr.join_the_movement)
-                                .with_scroll_lock(true);
+                                .with_title(tr.join_the_movement);
                             },
                             i::SignInIcon {}
                             span { class: "font-medium whitespace-nowrap transition-all text-menu-text text-[15px] group-hover:text-menu-text/80",
