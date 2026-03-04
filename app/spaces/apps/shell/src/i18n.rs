@@ -38,4 +38,9 @@ translate! {
         ko: "파일",
     },
 
+    rewards: {
+        en: "Rewards",
+        ko: "리워드",
+    },
+
 }

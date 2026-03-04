@@ -21,10 +21,10 @@ pub enum Route {
                     Actions { space_id: SpacePartition, rest: Vec<String> },
                     #[route("/report/:..rest")]
                     Report { space_id: SpacePartition, rest: Vec<String> },
+                    #[route("/apps/:..rest")]
+                    Apps { space_id: SpacePartition, rest: Vec<String> },
                     #[redirect("/", |space_id: SpacePartition| Route::Dashboard { space_id, rest : vec![] })]
                 #[end_layout]
-                #[route("/apps/:..rest")]
-                Apps { space_id: SpacePartition, rest: Vec<String> },
             #[end_layout]
         #[end_nest]
     #[end_nest]
