@@ -878,6 +878,7 @@ dependencies = [
  "common",
  "dioxus",
  "lambda_http 1.0.2",
+ "ratel-admin",
  "ratel-auth",
  "ratel-post",
  "ratel-team-dao",
@@ -13341,6 +13342,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d20581732dd76fa913c7dff1a2412b714afe3573e94d41c34719de73337cc8ab"
 
 [[package]]
+name = "ratel-admin"
+version = "0.1.0"
+dependencies = [
+ "aws-sdk-dynamodb",
+ "chrono",
+ "common",
+ "dioxus",
+ "serde",
+ "serde_dynamo",
+ "tokio",
+]
+
+[[package]]
 name = "ratel-auth"
 version = "0.1.0"
 dependencies = [
@@ -17793,6 +17807,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "space-app-rewards"
+version = "0.1.0"
+dependencies = [
+ "aws-sdk-dynamodb",
+ "chrono",
+ "common",
+ "dioxus",
+ "serde",
+ "serde_dynamo",
+]
+
+[[package]]
 name = "space-app-shell"
 version = "0.1.0"
 dependencies = [
@@ -17881,6 +17907,7 @@ dependencies = [
  "serde_dynamo",
  "serde_repr",
  "space-action-shell",
+ "space-app-rewards",
  "space-app-shell",
  "space-common",
  "space-page-dashboard",
