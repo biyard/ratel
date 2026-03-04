@@ -1,6 +1,6 @@
 use crate::*;
 use common::models::auth::User;
-use common::models::space::{SpaceReward, SpaceRewardResponse};
+use space_common::models::{SpaceReward, SpaceRewardResponse};
 use common::utils::time::get_now_timestamp_millis;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
