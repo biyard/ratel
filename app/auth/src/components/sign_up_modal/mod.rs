@@ -6,10 +6,10 @@ use crate::hooks::use_user_context;
 use crate::*;
 
 #[component]
-pub fn SignupModal() -> Element {
+pub fn SignupModal(#[props(optional)] initial_email: Option<String>) -> Element {
     let tr: SignupModalTranslate = use_translate();
     let nav = use_navigator();
-    let mut email = use_signal(|| String::new());
+    let mut email = use_signal(|| initial_email.clone().unwrap_or_default());
     let mut password = use_signal(|| String::new());
     let mut display_name = use_signal(|| String::new());
     let mut username = use_signal(|| String::new());

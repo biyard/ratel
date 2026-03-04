@@ -144,6 +144,10 @@ pub fn LoginModal() -> Element {
 
                         match sign_in().await {
                             Ok(user_info) => {
+                                let oauth_email = user_info
+                                    .email
+                                    .clone()
+                                    .filter(|email| !email.trim().is_empty());
                                 let result = login_handler(LoginRequest::OAuth {
                                         provider: OauthProvider::Google,
                                         access_token: user_info.access_token,
@@ -164,7 +168,9 @@ pub fn LoginModal() -> Element {
                                     Err(Error::Unauthorized(_)) => {
                                         popup.close();
                                         popup.open(rsx! {
-                                            SignupModal {}
+                                            SignupModal {
+                                                initial_email: oauth_email,
+                                            }
                                         });
                                     }
                                     Err(e) => {

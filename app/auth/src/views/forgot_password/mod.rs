@@ -7,7 +7,6 @@ use crate::*;
 #[component]
 pub fn ForgotPassword() -> Element {
     let tr: ForgotPasswordTranslate = use_translate();
-    let nav = use_navigator();
     let mut step = use_signal(|| 1u8);
     let mut email = use_signal(|| String::new());
     let mut code = use_signal(|| String::new());
@@ -195,7 +194,6 @@ pub fn ForgotPassword() -> Element {
                                 match result {
                                     Ok(_) => {
                                         success_message.set(Some(tr.password_reset_success.to_string()));
-                                        nav.push("/");
                                     }
                                     Err(e) => {
                                         error_message.set(Some(format!("{e}")));
