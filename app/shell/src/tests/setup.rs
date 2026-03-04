@@ -99,8 +99,10 @@ pub async fn create_user_session(
         app: app,
         path: "/api/auth/login",
         body: {
-            "email": email,
-            "password": uid
+            "req": {
+                "email": email,
+                "password": uid
+            }
         }
     };
     let session_cookie = header
