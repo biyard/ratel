@@ -35,6 +35,36 @@ pub struct SpacePost {
 
 #[cfg(feature = "server")]
 impl SpacePost {
+    pub fn dashboard_write_items(&self) -> Vec<aws_sdk_dynamodb::types::TransactWriteItem> {
+        use space_common::models::dashboard_extension::DashboardExtensionEntity;
+        use space_common::types::dashboard::*;
+
+        let data = DashboardComponentData::ProgressList(ProgressListData {
+            icon: DashboardIcon::Action,
+            main_value: "0".to_string(),
+            items: vec![],
+        });
+        DashboardExtensionEntity::from_data(self.pk.clone(), EXT_ID_PROGRESS_LIST, &data)
+            .map(|e| vec![e.upsert_transact_write_item()])
+            .unwrap_or_default()
+    }
+
+    pub async fn remove_dashboard(cli: &aws_sdk_dynamodb::Client, space_pk: &Partition) {
+        use space_common::models::dashboard_extension::DashboardExtensionEntity;
+        use space_common::types::dashboard::EXT_ID_PROGRESS_LIST;
+
+        let post_prefix = EntityType::SpacePost(String::new()).to_string();
+        let (posts, _) =
+            SpacePost::query(cli, space_pk.clone(), SpacePost::opt_all().sk(post_prefix))
+                .await
+                .unwrap_or_default();
+
+        if posts.is_empty() {
+            let _ =
+                DashboardExtensionEntity::delete_extension(space_pk, EXT_ID_PROGRESS_LIST).await;
+        }
+    }
+
     pub fn new(
         space_pk: SpacePartition,
         title: String,

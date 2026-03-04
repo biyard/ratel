@@ -1,3 +1,4 @@
+use crate::models::SpaceApp;
 use crate::*;
 use common::SpaceUserRole;
 use common::types::Partition;
@@ -15,7 +16,16 @@ pub async fn uninstall_space_app(
     let space_pk_partition: Partition = space_id.clone().into();
 
     let (pk, sk) = SpaceApp::keys(&space_pk_partition, app_type);
-    let app = SpaceApp::delete(dynamo, &pk, Some(sk)).await?;
+    let app = SpaceApp::new(space_pk_partition, app_type);
+
+    let mut items = vec![SpaceApp::delete_transact_write_item(&pk, sk)];
+    items.extend(app.dashboard_delete_items());
+    dynamo
+        .transact_write_items()
+        .set_transact_items(Some(items))
+        .send()
+        .await
+        .map_err(|e| crate::Error::Unknown(format!("Failed to uninstall app: {e}")))?;
 
     Ok(app)
 }

@@ -12,6 +12,8 @@ pub async fn delete_discussion(
     let discussion_sk_entity: EntityType = discussion_sk.into();
 
     SpacePost::delete(cli, &space_pk, Some(discussion_sk_entity)).await?;
-    // FIXME: If Category has no posts, delete the category
+
+    SpacePost::remove_dashboard(cli, &space_pk).await;
+
     Ok(())
 }
