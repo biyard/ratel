@@ -1,21 +1,15 @@
-use crate::*;
 use crate::models::Post;
+use crate::*;
 use common::utils::aws::{BedrockEmbeddingsClient, QdrantClient};
 
-pub fn index_post_async(
+pub async fn index_post_async(
     qdrant: &QdrantClient,
     bedrock: &BedrockEmbeddingsClient,
     post: &Post,
 ) {
-    let qdrant = qdrant.clone();
-    let bedrock = bedrock.clone();
-    let post = post.clone();
-
-    dioxus::prelude::spawn(async move {
-        if let Err(e) = index_post(&qdrant, &bedrock, &post).await {
-            tracing::error!("Failed to index post {:?}: {}", post.pk, e);
-        }
-    });
+    if let Err(e) = index_post(qdrant, bedrock, post).await {
+        tracing::error!("Failed to index post {:?}: {}", post.pk, e);
+    }
 }
 
 pub fn delete_post_vector_async(qdrant: &QdrantClient, post_pk: &Partition) {
