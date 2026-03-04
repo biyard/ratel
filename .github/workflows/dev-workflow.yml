@@ -59,6 +59,8 @@ jobs:
           STACK: ratel-dev-stack
           DEPLOY_STORYBOOK: false
           DEPLOY_STATIC: false
+
+          QDRANT_API_KEY: ${{secrets.DEV_QDRANT_API_KEY }}
         run: |
           npm i -g aws-cdk
           make cdk-deploy-v2
@@ -195,6 +197,8 @@ jobs:
           PORTONE_INICIS_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_INICIS_CHANNEL_KEY }}
           PORTONE_API_SECRET: ${{ secrets.DEV_PORTONE_API_SECRET }}
           PORTONE_KPN_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_KPN_CHANNEL_KEY }}
+
+          QDRANT_API_KEY: ${{secrets.DEV_QDRANT_API_KEY }}
 
           ECR: ${{ steps.ratel-ecr.outputs.registry }}/ratel/app-shell
         run: |

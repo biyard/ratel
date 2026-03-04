@@ -33,5 +33,7 @@ pub async fn create_post_handler(team_id: Option<TeamPartition>) -> Result<Creat
     let post = Post::draft(author);
     post.create(cli).await?;
 
+    crate::services::index_post_async(conf.qdrant(), conf.bedrock_embeddings(), &post);
+
     Ok(CreatePostResponse { post_pk: post.pk })
 }

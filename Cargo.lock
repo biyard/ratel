@@ -3850,6 +3850,7 @@ dependencies = [
  "async-trait",
  "aws-config",
  "aws-credential-types",
+ "aws-sdk-bedrockruntime",
  "aws-sdk-dynamodb",
  "aws-sdk-s3",
  "aws-sdk-sesv2",
@@ -13384,6 +13385,7 @@ name = "ratel-post"
 version = "0.1.0"
 dependencies = [
  "aide",
+ "aws-sdk-bedrockruntime",
  "aws-sdk-dynamodb",
  "base64 0.22.1",
  "chrono",

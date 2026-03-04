@@ -11,6 +11,9 @@ pub mod types;
 pub mod utils;
 pub mod views;
 
+#[cfg(feature = "server")]
+pub mod services;
+
 pub use provider::Provider;
 pub use route::Route;
 
