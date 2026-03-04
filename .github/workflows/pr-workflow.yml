@@ -232,3 +232,35 @@ jobs:
           path: /tmp/app-shell-image.tar.gz
           retention-days: 7
 
+  ratel-app-shell-testing:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: app/shell
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+          toolchain: stable
+
+      - name: Start infrastructure
+        working-directory: .
+        run: |
+          docker compose --profile infra up -d --wait
+
+      - name: Run tests
+        env:
+          DYNAMO_TABLE_PREFIX: ratel-local
+          DYNAMO_ENDPOINT: http://localhost:4566
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_REGION: us-east-1
+          RUST_LOG: info
+          ENV: local
+        run: |
+          make test
+
