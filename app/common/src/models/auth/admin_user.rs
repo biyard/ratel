@@ -1,3 +1,4 @@
+use super::user::User;
 use crate::types::UserType;
 use crate::*;
 
