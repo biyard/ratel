@@ -74,6 +74,7 @@ pub fn MembershipPlan() -> Element {
                 style: "grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));",
                 for (idx , membership) in memberships.read().iter().cloned().enumerate() {
                     MembershipCard {
+                        key: "{membership.name}",
                         membership: membership.clone(),
                         variant: {if idx + 1 == memberships_len { "horizontal" } else { "vertical" }},
                         on_click: {

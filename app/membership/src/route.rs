@@ -5,8 +5,10 @@ use views::Home;
 #[rustfmt::skip]
 pub enum Route {
     #[layout(layout::AppLayout)]
-        #[route("/membership")]
-        Home {},
+        #[nest("/membership")]
+            #[route("/")]
+            Home {},
+        #[end_nest]
     #[end_layout]
 
     #[route("/:..route")]
