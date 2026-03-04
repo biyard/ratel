@@ -77,8 +77,8 @@ export class QdrantStack extends Stack {
     // Task definition - minimal Fargate spec
     const taskDefinition = new ecs.TaskDefinition(this, "QdrantTaskDef", {
       compatibility: ecs.Compatibility.FARGATE,
-      cpu: "2048",
-      memoryMiB: "8196",
+      cpu: "256",
+      memoryMiB: "512",
       executionRole: taskExecutionRole,
     });
 

@@ -74,33 +74,33 @@ new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {
   qdrantSecurityGroup: qdrantStack.securityGroup,
 });
 
-new RegionalServiceStack(app, `ratel-${env}-svc-eu-central-1`, {
-  env: {
-    account: awsAccount,
-    region: "eu-central-1",
-  },
-  stage: env,
-  fullDomainName: host,
-  healthCheckPath: "/version",
-  commit: process.env.COMMIT!,
-  pghost: process.env.PGHOST_EU!,
-  baseDomain,
-  apiDomain,
-});
+// new RegionalServiceStack(app, `ratel-${env}-svc-eu-central-1`, {
+//   env: {
+//     account: awsAccount,
+//     region: "eu-central-1",
+//   },
+//   stage: env,
+//   fullDomainName: host,
+//   healthCheckPath: "/version",
+//   commit: process.env.COMMIT!,
+//   pghost: process.env.PGHOST_EU!,
+//   baseDomain,
+//   apiDomain,
+// });
 
-new RegionalServiceStack(app, `ratel-${env}-svc-us-east-1`, {
-  env: {
-    account: awsAccount,
-    region: "us-east-1",
-  },
-  stage: env,
-  fullDomainName: host,
-  healthCheckPath: "/version",
-  commit: process.env.COMMIT!,
-  pghost: process.env.PGHOST_US!,
-  baseDomain,
-  apiDomain,
-});
+// new RegionalServiceStack(app, `ratel-${env}-svc-us-east-1`, {
+//   env: {
+//     account: awsAccount,
+//     region: "us-east-1",
+//   },
+//   stage: env,
+//   fullDomainName: host,
+//   healthCheckPath: "/version",
+//   commit: process.env.COMMIT!,
+//   pghost: process.env.PGHOST_US!,
+//   baseDomain,
+//   apiDomain,
+// });
 
 new GlobalAccelStack(app, "GlobalAccel", {
   stackName,
