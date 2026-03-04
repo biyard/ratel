@@ -42,7 +42,7 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
         overview::get_nav_item(space_id.clone(), role.clone()),
         actions::get_nav_item(space_id.clone(), role.clone()),
         apps::get_nav_item(space_id.clone(), role.clone()),
-        report::get_nav_item(space_id.clone(), role.clone()),
+        // report::get_nav_item(space_id.clone(), role.clone()),
     ]
     .into_iter()
     .map(|item| {
