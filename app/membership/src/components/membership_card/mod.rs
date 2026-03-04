@@ -1,5 +1,6 @@
-use crate::components::MembershipPlanItem;
+use crate::components::*;
 use crate::*;
+use common::components::{Button, ButtonStyle};
 
 #[component]
 pub fn MembershipCard(
@@ -21,7 +22,7 @@ pub fn MembershipCard(
 #[component]
 fn MembershipVerticalCard(membership: MembershipPlanItem, on_click: EventHandler<()>) -> Element {
     rsx! {
-        div { class: "min-h-140 rounded-[10px] bg-card-bg border border-card-border px-4 py-5 flex flex-col w-full justify-start items-start",
+        Card { class: "flex flex-col w-full justify-start items-start min-h-140",
             div { class: "flex flex-col gap-5 h-full",
                 h3 { class: "text-base md:text-lg lg:text-xl font-semibold text-text-primary",
                     {membership.name}
@@ -44,8 +45,8 @@ fn MembershipVerticalCard(membership: MembershipPlanItem, on_click: EventHandler
                 }
                 if let Some(btn) = membership.btn {
                     div { class: "flex justify-end w-full",
-                        button {
-                            class: "inline-flex gap-2.5 justify-center items-center py-1.5 px-4 h-auto text-xs font-bold whitespace-nowrap rounded-full transition-all outline-none bg-btn-secondary-bg text-btn-secondary-text border-btn-secondary-outline hover:bg-btn-secondary-hover-bg hover:text-btn-secondary-hover-text",
+                        Button {
+                            style: ButtonStyle::Secondary,
                             onclick: move |_| {
                                 on_click.call(());
                             },
@@ -61,8 +62,8 @@ fn MembershipVerticalCard(membership: MembershipPlanItem, on_click: EventHandler
 #[component]
 fn MembershipHorizontalCard(membership: MembershipPlanItem, on_click: EventHandler<()>) -> Element {
     rsx! {
-        div {
-            class: "min-h-70 rounded-[10px] bg-card-bg border border-card-border px-4 py-5 flex flex-col w-full justify-start items-start",
+        Card {
+            class: "min-h-70 flex flex-col w-full justify-start items-start",
             style: "grid-column: 1 / -1;",
             div { class: "flex flex-col gap-5 h-full w-full",
                 h3 { class: "text-base md:text-lg lg:text-xl font-semibold text-text-primary",
@@ -85,8 +86,8 @@ fn MembershipHorizontalCard(membership: MembershipPlanItem, on_click: EventHandl
                             {price}
                         }
                         if let Some(btn) = membership.btn {
-                            button {
-                                class: "inline-flex gap-2.5 justify-center items-center py-1.5 px-4 h-auto text-xs font-bold whitespace-nowrap rounded-full transition-all outline-none bg-btn-secondary-bg text-btn-secondary-text border-btn-secondary-outline hover:bg-btn-secondary-hover-bg hover:text-btn-secondary-hover-text",
+                            Button {
+                                style: ButtonStyle::Secondary,
                                 onclick: move |_| {
                                     on_click.call(());
                                 },
