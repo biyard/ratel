@@ -3,6 +3,7 @@ pub mod aws_config;
 pub mod aws_s3;
 pub mod aws_ses;
 pub mod aws_sns;
+pub mod biyard;
 pub mod dynamodb;
 
 use super::*;
@@ -27,6 +28,9 @@ impl ServerConfig {
     }
     pub fn sns(&self) -> &crate::utils::aws::SnsClient {
         &aws_sns::SNS_CLIENT
+    }
+    pub fn biyard(&self) -> &crate::services::BiyardService {
+        &biyard::BIYARD_SERVICE
     }
 }
 

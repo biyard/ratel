@@ -1,4 +1,5 @@
-use crate::{dto::TeamRewardsResponse, models::BiyardClient, *};
+use crate::{dto::TeamRewardsResponse, *};
+use common::services::BiyardService;
 
 use ratel_post::models::Team;
 use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
@@ -8,8 +9,8 @@ pub async fn get_team_rewards_handler(
     team_pk: TeamPartition,
     month: Option<String>,
 ) -> Result<TeamRewardsResponse> {
-    let conf = crate::config::get();
-    let cli = conf.common.dynamodb();
+    let cfg = common::CommonConfig::default();
+    let cli = cfg.dynamodb();
     let team_pk: Partition = team_pk.into();
 
     let permissions = Team::get_permissions_by_team_pk(cli, &team_pk, &user.pk)
@@ -24,9 +25,11 @@ pub async fn get_team_rewards_handler(
 
     let month = month.unwrap_or_else(|| utils::time::current_month());
 
-    let biyard = BiyardClient::new();
-    let balance = biyard.get_user_balance(team_pk.clone(), month.clone()).await?;
-    let token = biyard.get_project_info().await?;
+    let biyard_service = cfg.biyard();
+    let balance = biyard_service
+        .get_user_balance(team_pk.clone(), month.clone())
+        .await?;
+    let token = biyard_service.get_project_info().await?;
 
     Ok(TeamRewardsResponse {
         month,
