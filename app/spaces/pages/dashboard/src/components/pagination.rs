@@ -28,7 +28,7 @@ pub fn Pagination(current_page: Signal<usize>, total_pages: usize) -> Element {
             // Page Numbers
             for page_num in 0..total_pages {
                 button {
-                    class: if current_page() == page_num { "flex h-8 w-8 flex-col items-center justify-center gap-2.5 rounded-lg border border-space-dashboard-accent px-4 py-2 text-[14px] font-bold text-space-dashboard-accent transition-colors" } else { "flex h-8 w-8 flex-col items-center justify-center gap-2.5 rounded-lg border border-space-dashboard-accent px-4 py-2 text-[14px] font-bold text-text-primary transition-colors hover:bg-white/5" },
+                    class: if current_page() == page_num { "flex h-8 w-8 flex-col items-center justify-center gap-2.5 rounded-lg border border-web-primary px-4 py-2 text-[14px] font-bold text-web-primary transition-colors" } else { "flex h-8 w-8 flex-col items-center justify-center gap-2.5 rounded-lg border border-web-primary px-4 py-2 text-[14px] font-bold text-text-primary transition-colors hover:bg-white/5" },
                     onclick: move |_| current_page.set(page_num),
                     "{page_num + 1}"
                 }
