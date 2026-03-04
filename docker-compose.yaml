@@ -239,8 +239,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-    volumes:
-      - qdrant-data:/qdrant/storage
     cpus: 2
     mem_limit: 8192m
     profiles:
@@ -250,19 +248,21 @@ services:
       - ratel-network
 
   qdrant-init:
-    image: curlimages/curl:latest
+    image: amazonlinux:2023
+    environment:
+      ENDPOINT: http://qdrant:6333
+      COLLECTION: ratel-local-posts
     depends_on:
       qdrant:
         condition: service_healthy
-    entrypoint: ["sh", "-c", "curl -sf http://qdrant:6333/collections/ratel-local-posts | grep -q ok && echo 'Collection already exists' || { curl -sf -X PUT http://qdrant:6333/collections/ratel-local-posts -H 'Content-Type: application/json' -d '{\"vectors\":{\"size\":1024,\"distance\":\"Cosine\"}}' && echo 'Collection ratel-local-posts created'; }"]
+    volumes:
+      - ./scripts:/scripts
+    command: ["bash", "/scripts/qdrant-init-entrypoint.sh"]
     profiles:
       - development
       - infra
     networks:
       - ratel-network
-
-volumes:
-  qdrant-data:
 
 networks:
   ratel-network:

@@ -274,9 +274,8 @@ jobs:
           corepack prepare pnpm@10.15.0 --activate
 
       - name: Start infrastructure
-        working-directory: .
         run: |
-          docker compose --profile infra up -d --wait
+          make infra
 
       - name: Run tests
         env:
