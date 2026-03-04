@@ -70,7 +70,9 @@ pub fn MembershipReceiptModal(receipt: MembershipReceiptData) -> Element {
         div { class: "w-full max-w-[420px]",
             div { class: "flex flex-col gap-5",
                 div { class: "text-center",
-                    div { class: "mb-4 text-6xl", "✓" }
+                    div { class: "mb-4 flex justify-center",
+                        icons::validations::Check { class: "w-12 h-12 [&>path]:stroke-primary" }
+                    }
                     h4 { class: "text-lg md:text-xl lg:text-2xl font-semibold text-primary mb-2",
                         {tr.receipt_title}
                     }
