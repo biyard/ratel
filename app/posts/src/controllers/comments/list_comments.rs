@@ -12,7 +12,7 @@ pub async fn list_comments_handler(
     let conf = crate::config::get();
     let cli = conf.dynamodb();
 
-    let _user: Option<ratel_auth::User> = user.into();
+    let user: Option<ratel_auth::User> = user.into();
     let post_pk: Partition = post_pk.into();
     let comment_sk: EntityType = comment_sk
         .parse()
@@ -20,7 +20,24 @@ pub async fn list_comments_handler(
 
     let (comments, next_bookmark) =
         PostComment::list_by_comment(cli, post_pk, comment_sk, bookmark).await?;
-    let items = comments.into_iter().map(PostCommentResponse::from).collect();
+
+    let mut comment_likes = Vec::new();
+    if let Some(user) = &user {
+        let keys: Vec<(Partition, EntityType)> =
+            comments.iter().map(|c| c.like_keys(&user.pk)).collect();
+        for chunk in keys.chunks(100) {
+            let chunk_likes = PostCommentLike::batch_get(cli, chunk.to_vec()).await?;
+            comment_likes.extend(chunk_likes);
+        }
+    }
+
+    let items = comments
+        .into_iter()
+        .map(|comment| {
+            let liked = comment_likes.iter().any(|like| like == &comment);
+            PostCommentResponse::from((comment, liked, false))
+        })
+        .collect();
 
     Ok(ListItemsResponse {
         items,

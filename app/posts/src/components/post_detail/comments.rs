@@ -363,7 +363,12 @@ fn CommentItem(
             if show_replies() && comment_replies() > 0 {
                 div { class: "flex flex-col gap-2.5",
                     for reply in replies.clone().items() {
-                        ReplyItem { key: "{reply.sk}", reply: reply.clone() }
+                        ReplyItem {
+                            key: "{reply.sk}",
+                            reply: reply.clone(),
+                            post_pk: post_pk.clone(),
+                            on_refresh: on_refresh.clone(),
+                        }
                     }
                     if replies.has_more() {
                         {
@@ -389,7 +394,10 @@ fn CommentItem(
 }
 
 #[component]
-fn ReplyItem(reply: PostCommentResponse) -> Element {
+fn ReplyItem(reply: PostCommentResponse, post_pk: String, on_refresh: EventHandler<()>) -> Element {
+    let mut optimistic_liked = use_signal(|| reply.liked);
+    let mut optimistic_likes = use_signal(|| reply.likes as i64);
+    let mut is_processing = use_signal(|| false);
     rsx! {
         div { class: "flex flex-col gap-2 p-5 rounded-lg bg-reply-box border border-transparent",
             div { class: "flex flex-row gap-2 items-center",
@@ -412,6 +420,57 @@ fn ReplyItem(reply: PostCommentResponse) -> Element {
                 class: "w-full bg-transparent",
                 content: reply.content.clone(),
                 editable: false,
+            }
+            div { class: "flex justify-end mt-2",
+                Button {
+                    aria_label: "Like Reply",
+                    style: ButtonStyle::Outline,
+                    disabled: *is_processing.read(),
+                    onclick: {
+                        let pk = post_pk.clone();
+                        let sk = reply.sk.clone();
+                        move |_| {
+                            if is_processing() {
+                                return;
+                            }
+                            let new_like = !optimistic_liked();
+                            let prev = optimistic_likes();
+                            let delta: i64 = if new_like { 1 } else { -1 };
+
+                            optimistic_liked.set(new_like);
+                            optimistic_likes.set((prev + delta).max(0));
+                            is_processing.set(true);
+
+                            let pk = pk.clone();
+                            let sk = sk.clone();
+                            let sk_encoded = common::percent_encoding::utf8_percent_encode(
+                                    &sk.to_string(),
+                                    common::percent_encoding::NON_ALPHANUMERIC,
+                                )
+                                .to_string();
+                            let on_refresh = on_refresh.clone();
+                            spawn(async move {
+                                if like_comment_handler(pk.parse().unwrap(), sk_encoded, new_like)
+                                    .await
+                                    .is_ok()
+                                {
+                                    on_refresh.call(());
+                                }
+                                is_processing.set(false);
+                            });
+                        }
+                    },
+                    span { class: "inline-flex items-center gap-2",
+                        if optimistic_liked() {
+                            icons::emoji::ThumbsUp { class: "size-5 [&>path]:fill-primary [&>path]:stroke-primary" }
+                        } else {
+                            icons::emoji::ThumbsUp { class: "size-5 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
+                        }
+                        div { class: "font-medium text-base/[24px] text-comment-icon-text",
+                            {optimistic_likes().to_string()}
+                        }
+                    }
+                }
             }
         }
     }
