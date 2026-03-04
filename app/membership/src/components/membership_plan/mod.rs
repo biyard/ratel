@@ -1,7 +1,8 @@
-use crate::components::{
-    CustomerInfo, MembershipCard, MembershipPlanTranslate, MembershipPurchaseModal,
-    MembershipReceiptData, MembershipReceiptModal, MembershipTier, membership_plan_items,
-};
+mod i18n;
+
+pub use i18n::*;
+
+use crate::components::*;
 use crate::controllers::{
     ChangeMembershipRequest, IdentificationRequest, change_membership_handler, identify_handler,
 };
@@ -47,23 +48,14 @@ fn display_amount_for_tier(tier: MembershipTier, is_ko: bool) -> i64 {
     }
 }
 
-fn duration_days_for_tier(tier: MembershipTier) -> i64 {
-    match tier {
-        MembershipTier::Free => 0,
-        MembershipTier::Pro => 30,
-        MembershipTier::Max => 30,
-        MembershipTier::Vip => 30,
-        MembershipTier::Enterprise => 30,
-    }
-}
-
 #[component]
 pub fn MembershipPlan() -> Element {
     let lang = use_language();
-    let is_ko = matches!(lang(), Language::Ko);
     let user_ctx = ratel_auth::hooks::use_user_context();
     let mut popup = use_popup();
     let mut toast = use_toast();
+
+    let is_ko = matches!(lang(), Language::Ko);
     let portone_store_id = option_env!("PORTONE_STORE_ID")
         .unwrap_or_default()
         .to_string();
@@ -71,8 +63,8 @@ pub fn MembershipPlan() -> Element {
         .unwrap_or_default()
         .to_string();
 
-    let memberships = membership_plan_items(is_ko);
-    let memberships_len = memberships.len();
+    let memberships = use_memo(move || membership_plan_items(matches!(lang(), Language::Ko)));
+    let memberships_len = memberships.read().len();
 
     rsx! {
         div { class: "w-full max-w-desktop mx-auto px-4 py-8",
@@ -80,7 +72,7 @@ pub fn MembershipPlan() -> Element {
             div {
                 class: "grid gap-2.5 mt-8",
                 style: "grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));",
-                for (idx , membership) in memberships.iter().cloned().enumerate() {
+                for (idx , membership) in memberships.read().iter().cloned().enumerate() {
                     MembershipCard {
                         membership: membership.clone(),
                         variant: {if idx + 1 == memberships_len { "horizontal" } else { "vertical" }},
@@ -110,7 +102,6 @@ pub fn MembershipPlan() -> Element {
                                             .map(|u| u.pk.to_string())
                                             .unwrap_or_default();
                                         let tier = membership_for_action.tier;
-                                        let credits = membership_for_action.credits.unwrap_or_default();
                                         let mut popup_modal = popup.clone();
                                         let popup_receipt = popup.clone();
                                         let store_id = portone_store_id.clone();
@@ -170,7 +161,6 @@ pub fn MembershipPlan() -> Element {
                                                     customer,
                                                     on_confirm: move |info: CustomerInfo| {
                                                         let mut popup_receipt = popup_receipt.clone();
-                                                        let mut popup_receipt_close = popup_receipt.clone();
                                                         let mut popup_modal = popup_modal.clone();
                                                         let mut toast = toast;
                                                         spawn(async move {
@@ -223,7 +213,7 @@ pub fn MembershipPlan() -> Element {
                                                                             MembershipReceiptModal { receipt }
                                                                         });
                                                                     } else {
-                                                                        toast.info("Membership downgrade successed");
+                                                                        toast.info("Membership downgrade scheduled");
                                                                         popup_modal.close();
                                                                     }
                                                                 }

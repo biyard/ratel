@@ -1,4 +1,10 @@
-use crate::components::{MembershipPlanTranslate, MembershipTier};
+mod i18n;
+
+pub use i18n::*;
+
+use crate::components::MembershipTier;
+use common::components::{Button, ButtonStyle};
+use common::components::Card;
 use crate::*;
 use common::chrono::TimeZone;
 
@@ -47,13 +53,18 @@ fn format_date_time(timestamp_millis: i64) -> String {
 #[component]
 pub fn MembershipReceiptModal(receipt: MembershipReceiptData) -> Element {
     let mut popup = use_popup();
-    let tr: MembershipPlanTranslate = use_translate();
-
-    let tx_id = if receipt.tx_id.len() > 16 {
-        format!("{}...", &receipt.tx_id[..16])
-    } else {
-        receipt.tx_id.clone()
-    };
+    let tr: MembershipReceiptTranslate = use_translate();
+    let receipt_days = tr.receipt_days;
+    let amount_text = use_memo(move || format!("₩{}", format_with_commas(receipt.amount)));
+    let duration_text = use_memo(move || format!("{} {}", receipt.duration_days, receipt_days));
+    let paid_at_text = use_memo(move || format_date_time(receipt.paid_at));
+    let tx_id = use_memo(move || {
+        if receipt.tx_id.len() > 16 {
+            format!("{}...", &receipt.tx_id[..16])
+        } else {
+            receipt.tx_id.clone()
+        }
+    });
 
     rsx! {
         div { class: "w-[420px]",
@@ -66,13 +77,13 @@ pub fn MembershipReceiptModal(receipt: MembershipReceiptData) -> Element {
                     p { class: "text-sm text-text-secondary", {tr.receipt_thank_you} }
                 }
 
-                div { class: "rounded-[10px] bg-card-bg-secondary border border-card-border px-4 py-5",
+                Card {
                     div { class: "flex flex-col gap-4",
                         div { class: "flex items-center justify-between",
                             p { class: "text-sm font-medium text-text-secondary",
                                 {tr.receipt_transaction_id}
                             }
-                            p { class: "text-sm text-text-primary font-mono", {tx_id} }
+                            p { class: "text-sm text-text-primary font-mono", {tx_id()} }
                         }
 
                         div { class: "h-px bg-border" }
@@ -91,7 +102,7 @@ pub fn MembershipReceiptModal(receipt: MembershipReceiptData) -> Element {
                                 {tr.receipt_amount}
                             }
                             h5 { class: "text-base md:text-lg lg:text-xl font-semibold text-primary",
-                                "₩{format_with_commas(receipt.amount)}"
+                                {amount_text()}
                             }
                         }
 
@@ -99,9 +110,7 @@ pub fn MembershipReceiptModal(receipt: MembershipReceiptData) -> Element {
                             p { class: "text-sm font-medium text-text-secondary",
                                 {tr.receipt_duration}
                             }
-                            p { class: "text-sm text-text-primary",
-                                "{receipt.duration_days} {tr.receipt_days}"
-                            }
+                            p { class: "text-sm text-text-primary", {duration_text()} }
                         }
 
                         div { class: "flex items-center justify-between",
@@ -119,15 +128,13 @@ pub fn MembershipReceiptModal(receipt: MembershipReceiptData) -> Element {
                             p { class: "text-sm font-medium text-text-secondary",
                                 {tr.receipt_paid_at}
                             }
-                            p { class: "text-sm text-text-primary",
-                                {format_date_time(receipt.paid_at)}
-                            }
+                            p { class: "text-sm text-text-primary", {paid_at_text()} }
                         }
                     }
                 }
 
-                button {
-                    class: "px-10 w-full text-base font-bold transition-colors py-[14.5px] text-submit-button-text rounded-[10px] bg-submit-button-bg hover:bg-submit-button-bg/80",
+                Button {
+                    style: ButtonStyle::Primary,
                     onclick: move |_| {
                         popup.close();
                     },
