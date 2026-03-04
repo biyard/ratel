@@ -46,6 +46,7 @@ where
     pub fn restart(&mut self) {
         self.bookmark.set(None);
         self.next_bookmark.set(None);
+        self.accumulated.set(Vec::new());
         self.rsc.restart();
     }
 
@@ -154,6 +155,16 @@ where
     let has_more = use_memo(move || next_bookmark().is_some());
     let mut loading = use_signal(|| false);
     let key = use_server_cached(|| rand::random::<u64>());
+
+    let rsc_sync = rsc.clone();
+    let mut accumulated_sync = accumulated.clone();
+    let mut next_bookmark_sync = next_bookmark.clone();
+    let _sync_effect = use_effect(move || {
+        if let Some(Ok(res)) = rsc_sync.read().as_ref() {
+            accumulated_sync.set(res.items().clone());
+            next_bookmark_sync.set(res.bookmark());
+        }
+    });
 
     let effect = use_effect(move || {
         let nb = bookmark();

@@ -92,4 +92,9 @@ translate! {
         en: "Failed to Delete Post. Please try again.",
         ko: "게시물 삭제에 실패했습니다. 잠시 후 다시 시도해주세요.",
     },
+
+    load_more: {
+        en: "Load more",
+        ko: "더보기",
+    },
 }

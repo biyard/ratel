@@ -2,11 +2,13 @@ use super::utils::time_ago;
 use super::PostDetailTranslate;
 use crate::controllers::comments::add_comment::add_comment_handler;
 use crate::controllers::comments::like_comment::like_comment_handler;
+use crate::controllers::comments::list_comments::list_comments_handler;
 use crate::controllers::comments::reply_to_comment::reply_to_comment_handler;
 use crate::controllers::dto::*;
 use crate::*;
 use common::components::TiptapEditor;
 use common::components::{Button, ButtonStyle};
+use common::hooks::use_infinite_query;
 use dioxus::prelude::*;
 
 #[component]
@@ -25,13 +27,6 @@ pub fn CommentSection(
         .comments
         .iter()
         .filter(|c| c.parent_comment_sk.is_none())
-        .cloned()
-        .collect();
-
-    let reply_comments: Vec<PostCommentResponse> = detail
-        .comments
-        .iter()
-        .filter(|c| c.parent_comment_sk.is_some())
         .cloned()
         .collect();
 
@@ -54,7 +49,7 @@ pub fn CommentSection(
             }
             if !expand_comment() {
                 button {
-                    class: "flex flex-row w-full px-3.5 py-3 gap-2 bg-write-comment-box-b border border-write-comment-box-border items-center rounded-lg hover-bg-write-comment-box-bg/80 hover:border-primary/50 transition-all duration-200 cursor-pointer group",
+                    class: "flex flex-row w-full px-3.5 py-3 gap-2 bg-write-comment-box-bg border border-write-comment-box-border items-center rounded-lg hover:bg-write-comment-box-bg/80 hover:border-primary/50 transition-all duration-200 cursor-pointer group",
                     onclick: move |_| {
                         expand_comment.set(true);
                     },
@@ -117,27 +112,11 @@ pub fn CommentSection(
                 }
             }
             for comment in comments {
-                {
-                    let replies: Vec<PostCommentResponse> = reply_comments
-                        .iter()
-                        .filter(|r| {
-                            if let Some(parent) = &r.parent_comment_sk {
-                                *parent == comment.sk
-                            } else {
-                                false
-                            }
-                        })
-                        .cloned()
-                        .collect();
-                    rsx! {
-                        CommentItem {
-                            key: "{comment.sk}",
-                            comment: comment.clone(),
-                            post_pk: post_pk.clone(),
-                            replies,
-                            on_refresh: on_refresh.clone(),
-                        }
-                    }
+                CommentItem {
+                    key: "{comment.sk}",
+                    comment: comment.clone(),
+                    post_pk: post_pk.clone(),
+                    on_refresh: on_refresh.clone(),
                 }
             }
         }
@@ -148,7 +127,6 @@ pub fn CommentSection(
 fn CommentItem(
     comment: PostCommentResponse,
     post_pk: String,
-    replies: Vec<PostCommentResponse>,
     on_refresh: EventHandler<()>,
 ) -> Element {
     let t: PostDetailTranslate = use_translate();
@@ -162,20 +140,38 @@ fn CommentItem(
 
     let comment_sk_for_like = comment.sk.clone();
     let comment_sk_for_reply = comment.sk.clone();
+    let post_pk_signal = use_signal(|| post_pk.clone());
+    let comment_sk_signal = use_signal(|| comment_sk_for_reply.clone());
 
     let img_class = "object-cover object-top w-10 h-10 rounded-full";
 
-    let updated_secs = comment.updated_at * 1000;
+    let updated_secs = use_memo(move || comment.updated_at * 1000);
+    let mut comment_replies = use_signal(|| comment.replies);
+    if comment_replies() != comment.replies {
+        comment_replies.set(comment.replies);
+    }
     let reply_label = t.reply;
     let replies_label = t.replies;
     let reply_text_label = use_memo(move || {
-        let label = if comment.replies <= 1 {
+        let count = comment_replies();
+        let label = if count <= 1 {
             reply_label
         } else {
             replies_label
         };
-        format!("{} {}", comment.replies, label)
+        format!("{} {}", count, label)
     });
+
+    let replies = use_infinite_query(move |bookmark| {
+        let post_pk = post_pk_signal();
+        let comment_sk = comment_sk_signal();
+        let sk_encoded = common::percent_encoding::utf8_percent_encode(
+            &comment_sk.to_string(),
+            common::percent_encoding::NON_ALPHANUMERIC,
+        )
+        .to_string();
+        async move { list_comments_handler(post_pk.parse().unwrap(), sk_encoded, bookmark).await }
+    })?;
 
     rsx! {
         div { class: "flex flex-col gap-3 pb-4",
@@ -195,7 +191,7 @@ fn CommentItem(
                             {comment.author_display_name}
                         }
                         div { class: "font-semibold text-xs leading-[20px] text-text-primary",
-                            {time_ago(updated_secs)}
+                            {time_ago(updated_secs())}
                         }
                     }
                 }
@@ -213,14 +209,14 @@ fn CommentItem(
                     button {
                         aria_label: "Expand Replies",
                         class: "flex flex-row gap-2 justify-center items-center disabled:cursor-not-allowed text-primary",
-                        disabled: comment.replies == 0,
+                        disabled: comment_replies() == 0,
                         onclick: move |_| {
                             let next = !*show_replies.read();
                             show_replies.set(next);
                         },
                         span { class: "inline-flex items-center gap-2 text-primary",
                             {reply_text_label()}
-                            if comment.replies > 0 {
+                            if comment_replies() > 0 {
                                 icons::arrows::ChevronDown { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
                             }
                         }
@@ -320,6 +316,7 @@ fn CommentItem(
                             onclick: {
                                 let pk = post_pk.clone();
                                 let sk = comment_sk_for_reply.clone();
+                                let replies = replies.clone();
                                 move |_| {
                                     let content = reply_text.read().clone();
                                     if content.trim().is_empty() || *is_reply_submitting.read() {
@@ -328,13 +325,22 @@ fn CommentItem(
                                     is_reply_submitting.set(true);
                                     let pk = pk.clone();
                                     let sk = sk.clone();
+                                    let sk_encoded = common::percent_encoding::utf8_percent_encode(
+                                            &sk.to_string(),
+                                            common::percent_encoding::NON_ALPHANUMERIC,
+                                        )
+                                        .to_string();
                                     let on_refresh = on_refresh.clone();
+                                    let mut show_replies = show_replies.clone();
+                                    let mut replies = replies.clone();
                                     spawn(async move {
-                                        if reply_to_comment_handler(pk.parse().unwrap(), sk, content)
+                                        if reply_to_comment_handler(pk.parse().unwrap(), sk_encoded, content)
                                             .await
                                             .is_ok()
                                         {
                                             on_refresh.call(());
+                                            replies.restart();
+                                            show_replies.set(true);
                                         }
                                         reply_text.set(String::new());
                                         show_reply.set(false);
@@ -354,10 +360,27 @@ fn CommentItem(
                     }
                 }
             }
-            if show_replies() && !replies.is_empty() {
+            if show_replies() && comment_replies() > 0 {
                 div { class: "flex flex-col gap-2.5",
-                    for reply in &replies {
+                    for reply in replies.clone().items() {
                         ReplyItem { key: "{reply.sk}", reply: reply.clone() }
+                    }
+                    if replies.has_more() {
+                        {
+                            let mut v_next = replies.clone();
+                            rsx! {
+                                div { class: "flex justify-center",
+                                    Button {
+                                        style: ButtonStyle::Outline,
+                                        disabled: replies.is_loading(),
+                                        onclick: move |_| {
+                                            v_next.next();
+                                        },
+                                        {t.load_more}
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

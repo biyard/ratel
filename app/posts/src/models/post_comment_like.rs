@@ -35,8 +35,10 @@ impl PostCommentLike {
         user_pk: &Partition,
     ) -> (Partition, EntityType) {
         let pk = match post_pk {
-            Partition::Feed(s) if !s.is_empty() => Partition::PostLike(s),
-            _ => panic!("post_pk must be Partition::Post with non-empty inner value"),
+            Partition::Feed(s) | Partition::PostReply(s) if !s.is_empty() => {
+                Partition::PostLike(s)
+            }
+            _ => panic!("post_pk must be Partition::Feed or Partition::PostReply with non-empty inner value"),
         };
 
         let comment_id = match &comment_sk {
