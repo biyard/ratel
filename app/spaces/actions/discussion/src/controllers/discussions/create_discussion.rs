@@ -17,10 +17,7 @@ pub async fn create_discussion(space_id: SpacePartition) -> Result<SpacePost> {
 
     let mut items = vec![post.create_transact_write_item()];
     items.extend(post.dashboard_write_items());
-    cli.transact_write_items()
-        .set_transact_items(Some(items))
-        .send()
-        .await
+    transact_write_items!(cli, items)
         .map_err(|e| crate::Error::Unknown(format!("Failed to create discussion: {e}")))?;
 
     Ok(post)

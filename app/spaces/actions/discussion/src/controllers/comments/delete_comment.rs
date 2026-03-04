@@ -39,14 +39,10 @@ pub async fn delete_comment(
         txs.push(parent_tx);
     }
 
-    cli.transact_write_items()
-        .set_transact_items(Some(txs))
-        .send()
-        .await
-        .map_err(|e| {
-            tracing::error!("Failed to delete comment: {}", e);
-            crate::Error::Unknown(format!("Failed to delete comment: {}", e))
-        })?;
+    transact_write_items!(cli, txs).map_err(|e| {
+        tracing::error!("Failed to delete comment: {}", e);
+        crate::Error::Unknown(format!("Failed to delete comment: {}", e))
+    })?;
 
     Ok(())
 }

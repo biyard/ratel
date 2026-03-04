@@ -20,11 +20,7 @@ pub async fn uninstall_space_app(
 
     let mut items = vec![SpaceApp::delete_transact_write_item(&pk, sk)];
     items.extend(app.dashboard_delete_items());
-    dynamo
-        .transact_write_items()
-        .set_transact_items(Some(items))
-        .send()
-        .await
+    transact_write_items!(dynamo, items)
         .map_err(|e| crate::Error::Unknown(format!("Failed to uninstall app: {e}")))?;
 
     Ok(app)
