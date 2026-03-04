@@ -1,10 +1,10 @@
 [application]
-tailwind_input = "../common/tailwind.css"
+tailwind_input = "../../../common/tailwind.css"
 
 [web.app]
 
 # HTML title tag content
-title = "space-page-overview"
+title = "space-app-shell"
 
 # include `assets` in web platform
 [web.resource]
