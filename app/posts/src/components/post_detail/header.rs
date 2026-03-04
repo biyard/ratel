@@ -61,7 +61,7 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element 
 
     rsx! {
         div { class: "flex flex-col gap-2.5 w-full",
-            div { class: "flex flex-row justify-between items-center",
+            div { class: "flex flex-row items-center w-full",
                 div {
                     class: "cursor-pointer rounded-md max-tablet:hidden text-sm px-3 py-1.5 text-text-primary inline-flex items-center gap-2",
                     aria_label: t.back,
@@ -71,7 +71,7 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element 
                     icons::arrows::ArrowLeft { class: "[&>path]:stroke-back-icon" }
                 }
                 if show_admin {
-                    div { class: "relative flex items-center space-x-2.5",
+                    div { class: "relative flex items-center space-x-2.5 ml-auto",
                         if can_edit {
                             Button {
                                 aria_label: t.edit,
@@ -131,7 +131,8 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element 
                                     Button {
                                         size: ButtonSize::Inline,
                                         style: ButtonStyle::Ghost,
-                                        class: "flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-hover cursor-pointer".to_string(),
+                                        class: "flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-hover cursor-pointer"
+                                            .to_string(),
                                         onclick: move |_| {
                                             let nav = nav.clone();
                                             let pk = post_pk_for_delete.clone();
@@ -158,7 +159,8 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element 
                     Button {
                         size: ButtonSize::Inline,
                         style: ButtonStyle::Ghost,
-                        class: "flex items-center gap-1 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50".to_string(),
+                        class: "flex items-center gap-1 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                            .to_string(),
                         disabled: *is_processing.read(),
                         onclick: {
                             let post_pk_val = post_pk_for_like.clone();

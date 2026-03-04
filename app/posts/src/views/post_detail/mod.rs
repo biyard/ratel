@@ -21,7 +21,7 @@ pub fn PostDetail(post_pk: String) -> Element {
                 resource.restart();
             };
             rsx! {
-                div { class: "flex flex-col gap-6 w-full max-w-[906px] mx-auto py-6 px-6 max-tablet:mr-[20px]",
+                div { class: "flex flex-col gap-6 w-full max-w-desktop mx-auto py-6 px-6 max-tablet:px-2.5",
                     PostDetailHeader { detail: detail.clone(), post_pk: post_pk.clone() }
                     PostContent { detail: detail.clone() }
                     CommentSection {
@@ -34,7 +34,7 @@ pub fn PostDetail(post_pk: String) -> Element {
         }
         Err(_) => {
             rsx! {
-                div { class: "flex flex-col items-center justify-center text-text-primary py-6 px-6 mx-auto w-full max-w-[906px]",
+                div { class: "flex flex-col items-center justify-center text-text-primary py-6 px-6 mx-auto w-full max-w-desktop max-tablet:px-2.5",
                     h2 { class: "text-xl font-bold", "Post not found" }
                     p { class: "text-sm text-text-secondary mt-2",
                         "The post you're looking for doesn't exist or has been removed."
