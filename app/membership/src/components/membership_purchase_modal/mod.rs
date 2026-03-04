@@ -78,7 +78,7 @@ pub fn MembershipPurchaseModal(
     });
 
     rsx! {
-        div { class: "w-[420px]",
+        div { class: "w-full max-w-[420px]",
             div { class: "flex flex-col gap-5",
                 // Membership Summary
                 Card {

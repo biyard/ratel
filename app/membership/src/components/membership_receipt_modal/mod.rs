@@ -67,7 +67,7 @@ pub fn MembershipReceiptModal(receipt: MembershipReceiptData) -> Element {
     });
 
     rsx! {
-        div { class: "w-[420px]",
+        div { class: "w-full max-w-[420px]",
             div { class: "flex flex-col gap-5",
                 div { class: "text-center",
                     div { class: "mb-4 text-6xl", "✓" }
