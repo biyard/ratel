@@ -10,11 +10,7 @@ pub fn PopupZone() -> Element {
     let mut popup = use_popup();
 
     let config = popup.config();
-    let lock_scroll = config
-        .as_ref()
-        .map(|config| config.scroll_lock)
-        .unwrap_or(false);
-    use_scroll_lock(lock_scroll);
+    use_scroll_lock(config.is_some());
 
     let config = match config {
         Some(c) => c,
