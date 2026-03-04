@@ -64,9 +64,7 @@ fn MembershipVerticalCard(membership: MembershipPlanItem, on_click: EventHandler
 #[component]
 fn MembershipHorizontalCard(membership: MembershipPlanItem, on_click: EventHandler<()>) -> Element {
     rsx! {
-        Card {
-            class: "min-h-70 flex flex-col w-full justify-start items-start",
-            style: "grid-column: 1 / -1;",
+        Card { class: "min-h-70 flex flex-col w-full justify-start items-start membership-plan-span-full",
             div { class: "flex flex-col gap-5 h-full w-full",
                 h3 { class: "text-base md:text-lg lg:text-xl font-semibold text-text-primary",
                     {membership.name}

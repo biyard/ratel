@@ -69,9 +69,7 @@ pub fn MembershipPlan() -> Element {
     rsx! {
         div { class: "w-full max-w-desktop mx-auto px-4 py-8",
             MembershipPlanHeader {}
-            div {
-                class: "grid gap-2.5 mt-8",
-                style: "grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));",
+            div { class: "membership-plan-grid gap-2.5 mt-8",
                 for (idx , membership) in memberships.read().iter().cloned().enumerate() {
                     MembershipCard {
                         key: "{membership.name}",
