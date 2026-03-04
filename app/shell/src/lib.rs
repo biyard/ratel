@@ -24,3 +24,6 @@ pub mod web;
 
 #[cfg(feature = "server")]
 pub mod server;
+
+#[cfg(test)]
+pub mod tests;

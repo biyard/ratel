@@ -46,6 +46,9 @@ BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 
 RUST_FLAG ?=
 
+test:
+	$(BUILD_ENV) cargo test -p app-shell --features server -- --nocapture
+
 run:
 	$(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web
 

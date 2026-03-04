@@ -3,7 +3,7 @@ use crate::types::*;
 use crate::*;
 use ratel_auth::User;
 
-#[post("/api/posts/:post_pk/delete", user: User)]
+#[delete("/api/posts/:post_pk", user: User)]
 pub async fn delete_post_handler(post_pk: FeedPartition, force: Option<bool>) -> Result<Post> {
     let conf = crate::config::get();
     let cli = conf.dynamodb();

@@ -1,5 +1,5 @@
-use app_shell::config;
-use app_shell::*;
+use crate::config;
+use crate::*;
 use common::*;
 use ratel_auth::AuthProvider;
 
