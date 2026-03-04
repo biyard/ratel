@@ -142,6 +142,10 @@ pub enum Error {
     #[error("space post ended")]
     #[translate(en = "Space post ended", ko = "스페이스 게시글이 종료되었습니다.")]
     SpacePostEnded,
+
+    #[error("{0}")]
+    #[translate(en = "Reward error", ko = "리워드 오류가 발생했습니다.")]
+    SpaceReward(#[from] SpaceRewardError),
 }
 
 impl From<String> for Error {
@@ -175,6 +179,7 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             | Error::FullQuota
             | Error::AlreadyParticipating => StatusCode::BAD_REQUEST,
             Error::NotFound(_) => StatusCode::NOT_FOUND,
+            Error::SpaceReward(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
@@ -227,6 +232,7 @@ impl dioxus::fullstack::AsStatusCode for Error {
             | Error::ExpiredVerification
             | Error::InvalidVerificationCode => StatusCode::BAD_REQUEST,
             Error::NotFound(_) => StatusCode::NOT_FOUND,
+            Error::SpaceReward(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

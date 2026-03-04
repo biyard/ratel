@@ -20,7 +20,7 @@ pub async fn update_reward(req: UpdateGlobalRewardRequest) -> Result<Reward> {
         .await?
         .is_none()
     {
-        return Err(Error::RewardNotFound);
+        return Err(SpaceRewardError::RewardNotFound.into());
     }
 
     let reward = Reward::updater(&Partition::Reward, &req.behavior)

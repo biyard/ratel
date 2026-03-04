@@ -13345,13 +13345,9 @@ checksum = "d20581732dd76fa913c7dff1a2412b714afe3573e94d41c34719de73337cc8ab"
 name = "ratel-admin"
 version = "0.1.0"
 dependencies = [
- "aws-sdk-dynamodb",
- "chrono",
  "common",
  "dioxus",
  "serde",
- "serde_dynamo",
- "tokio",
 ]
 
 [[package]]
@@ -17810,12 +17806,9 @@ dependencies = [
 name = "space-app-rewards"
 version = "0.1.0"
 dependencies = [
- "aws-sdk-dynamodb",
- "chrono",
  "common",
  "dioxus",
  "serde",
- "serde_dynamo",
 ]
 
 [[package]]
@@ -17830,6 +17823,7 @@ dependencies = [
  "space-app-general",
  "space-app-incentive-pool",
  "space-app-main",
+ "space-app-rewards",
  "space-common",
 ]
 
@@ -17907,7 +17901,6 @@ dependencies = [
  "serde_dynamo",
  "serde_repr",
  "space-action-shell",
- "space-app-rewards",
  "space-app-shell",
  "space-common",
  "space-page-dashboard",
