@@ -875,6 +875,7 @@ checksum = "a23eb6b1614318a8071c9b2521f36b424b2c83db5eb3a0fead4a6c0809af6e61"
 name = "app-shell"
 version = "0.1.0"
 dependencies = [
+ "axum",
  "common",
  "dioxus",
  "lambda_http 1.0.2",
@@ -888,8 +889,14 @@ dependencies = [
  "ratel-user-shell",
  "serde",
  "serde-wasm-bindgen",
+ "serde_json",
  "space-shell",
+ "tokio",
+ "tower",
  "tower-sessions 0.15.0",
+ "tracing",
+ "tracing-subscriber",
+ "uuid 1.18.1",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -3851,6 +3858,7 @@ dependencies = [
  "async-trait",
  "aws-config",
  "aws-credential-types",
+ "aws-sdk-bedrockruntime",
  "aws-sdk-dynamodb",
  "aws-sdk-s3",
  "aws-sdk-sesv2",
@@ -13410,6 +13418,7 @@ name = "ratel-post"
 version = "0.1.0"
 dependencies = [
  "aide",
+ "aws-sdk-bedrockruntime",
  "aws-sdk-dynamodb",
  "base64 0.22.1",
  "chrono",
