@@ -23,7 +23,7 @@ pub fn SpaceTop(
     let title = labels.first().unwrap().label.clone();
 
     rsx! {
-        div { class: "flex flex-row justify-between items-center px-[12px] py-[17.5px] min-h-[65px]",
+        div { class: "flex flex-row justify-between items-center px-3 py-4 min-h-16 shrink-0",
             div { class: "flex flex-row w-full justify-start items-center gap-2.5",
                 if let Some(space_status) = space_status {
                     SpaceStatusBadge { status: space_status }
@@ -50,7 +50,7 @@ pub fn SpaceTop(
 #[component]
 pub fn SpaceTitle(title: String) -> Element {
     rsx! {
-        div { class: "text-[15px] font-bold text-white", {title} }
+        div { class: "text-[15px] font-bold text-web-font-primary", {title} }
     }
 }
 

@@ -73,7 +73,7 @@ pub fn SpaceAppsLayout(space_id: SpacePartition) -> Element {
     }];
 
     rsx! {
-        div { class: "grid overflow-hidden grid-cols-7 w-full h-screen bg-space-bg text-font-primary",
+        div { class: "grid overflow-hidden grid-cols-7 w-full h-screen bg-component-bg text-web-font-primary",
             SpaceNav {
                 logo: "https://metadata.ratel.foundation/logos/logo.png",
                 menus,
@@ -89,7 +89,7 @@ pub fn SpaceAppsLayout(space_id: SpacePartition) -> Element {
                     show_participate_button: false,
                     on_participant: None,
                 }
-                div { class: "flex overflow-auto p-5 w-full top-[65px] grow bg-space-body-bg rounded-tl-[10px] h-[calc(100%-65px)]",
+                div { class: "flex overflow-auto p-5 w-full top-[65px] grow bg-web-bg rounded-tl-[10px] h-[calc(100%-65px)]",
                     Outlet::<Route> {}
                 }
             }

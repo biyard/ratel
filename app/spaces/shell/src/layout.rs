@@ -75,7 +75,7 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
     };
 
     rsx! {
-        div { class: "grid overflow-hidden grid-cols-7 w-full h-screen bg-space-bg text-font-primary",
+        div { class: "grid overflow-hidden grid-cols-[250px_1fr] w-full h-screen bg-component-bg text-web-font-primary",
             SpaceNav {
                 logo: "https://metadata.ratel.foundation/logos/logo.png",
                 menus,
@@ -87,14 +87,14 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
                     }).with_title(tr.title);
                 },
             }
-            div { class: "flex flex-col col-span-6 col-start-2 min-h-0",
+            div { class: "flex flex-col min-h-0 min-w-0",
                 SpaceTop {
                     labels,
                     space_status,
                     show_participate_button: show_participate,
                     on_participant,
                 }
-                div { class: "flex overflow-auto p-5 w-full top-[65px] grow bg-space-body-bg rounded-tl-[10px] h-[calc(100%-65px)]",
+                div { class: "flex overflow-auto p-5 w-full flex-1 min-h-0 bg-web-bg rounded-tl-[10px]",
                     Outlet::<Route> {}
                 }
             }

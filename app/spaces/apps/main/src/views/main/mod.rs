@@ -79,19 +79,19 @@ pub fn AppMainPage(space_id: SpacePartition) -> Element {
                                 icons::ratel::Chest {
                                     width: "24",
                                     height: "24",
-                                    class: "text-font-primary [&>path]:fill-none [&>path]:stroke-current",
+                                    class: "text-web-font-primary [&>path]:fill-none [&>path]:stroke-current",
                                 }
                             }
                             div { class: "flex flex-col items-start self-stretch gap-[6px]",
-                                p { class: "font-bold leading-5 sp-dash-font-raleway text-[17px] tracking-[-0.18px] text-font-primary",
+                                p { class: "font-bold leading-5 font-raleway text-[17px] tracking-[-0.18px] text-web-font-primary",
                                     {app_type.translate(&lang()).to_string()}
                                 }
-                                p { class: "font-medium leading-4 sp-dash-font-raleway text-[12px] tracking-[0] text-card-meta",
+                                p { class: "font-medium leading-4 font-raleway text-[12px] tracking-[0] text-card-meta",
                                     {app_description(app_type, &tr)}
                                 }
                             }
                             button {
-                                class: if is_installed { "flex flex-col justify-center items-center self-stretch px-5 py-3 w-full font-bold leading-5 border gap-[10px] rounded-[10px] border-btn-outline-outline bg-btn-outline-bg text-btn-outline-text sp-dash-font-raleway text-[17px] tracking-[-0.18px]" } else { "flex flex-col justify-center items-center self-stretch px-5 py-3 w-full font-bold leading-5 gap-[10px] rounded-[10px] bg-btn-primary-bg text-btn-primary-text sp-dash-font-raleway text-[17px] tracking-[-0.18px]" },
+                                class: if is_installed { "flex flex-col justify-center items-center self-stretch px-5 py-3 w-full font-bold leading-5 border gap-[10px] rounded-[10px] border-btn-outline-outline bg-btn-outline-bg text-btn-outline-text font-raleway text-[17px] tracking-[-0.18px]" } else { "flex flex-col justify-center items-center self-stretch px-5 py-3 w-full font-bold leading-5 gap-[10px] rounded-[10px] bg-btn-primary-bg text-btn-primary-text font-raleway text-[17px] tracking-[-0.18px]" },
                                 disabled: in_progress().is_some(),
                                 onclick: handle_toggle_app(app_type, is_installed),
                                 if is_progress {
@@ -124,7 +124,7 @@ pub fn HomePage(space_id: SpacePartition) -> Element {
             AppMainPage { space_id }
         },
         _ => rsx! {
-            div { class: "flex justify-center items-center w-full h-full text-font-primary",
+            div { class: "flex justify-center items-center w-full h-full text-web-font-primary",
                 {tr.no_permission}
             }
         },
