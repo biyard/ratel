@@ -56,3 +56,4 @@ user.json
 /app/spaces/common/assets/space-common.js
 /app/common/assets/tailwind.css
 /app/common/assets/common-tailwind.css
+/app/shell/test-build-target/

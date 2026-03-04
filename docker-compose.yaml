@@ -1,80 +1,13 @@
 services:
-  # Production main-api (pre-built image)
-  main-api-testing:
-    image: main-api:${COMMIT}
-    restart: always
-    ports:
-      - "3000:3000"
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "apt update && apt install curl -y && curl -f http://localhost:3000/version || exit 1",
-        ]
-      interval: 10s
-      timeout: 10s
-      retries: 100
-    depends_on:
-      localstack:
-        condition: service_healthy
-      localstack-init:
-        condition: service_completed_successfully
-    networks:
-      - ratel-network
-    profiles:
-      - testing
-
-  # Development main-api (source code mounting)
-  space-shell:
+  app-shell:
     image: rust
+    user: "1000:1000"
     restart: always
     ports:
-      - "8000:8000"
+      - "8080:8080"
     environment:
       ENV: local
-      RUST_LOG: ${RUST_LOG:-debug}
-      RUST_FLAG: ${RUST_FLAG:---features bypass}
-      DYNAMO_ENDPOINT: http://localstack:4566
-      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-test}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-test}
-      AWS_REGION: ${AWS_REGION:-us-east-1}
-      DYNAMO_TABLE_PREFIX: ${DYNAMO_TABLE_PREFIX:-ratel-local}
-      SLACK_HOOK: ${SLACK_HOOK}
-    volumes:
-      - .:/app
-      - ./.build/target:/app/target
-      - ./.build/main-api/target:/app/packages/main-api/target
-      - ./.build/main-api/web-dist:/app/ts-packages/web/dist
-      - ./.build/main-api/dist:/app/packages/main-api/dist
-      - ./.build/main-api/node_modules:/app/node_modules
-      - ./.build/main-api/web_node_modules:/app/ts-packages/web/node_modules
-      - ./.build/main-api/pnpm-store:/app/.pnpm-store
-
-    working_dir: /app
-    command: ["bash", "scripts/space-shell-entrypoint.sh"]
-    # healthcheck:
-    #   test: ["CMD-SHELL", "curl -f http://localhost:8000/version || exit 1"]
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 100
-    # depends_on:
-    #   localstack:
-    #     condition: service_healthy
-    #   localstack-init:
-    #     condition: service_completed_successfully
-    networks:
-      - ratel-network
-    profiles:
-      - development
-
-  main-api:
-    image: rust
-    restart: always
-    ports:
-      - "3000:3000"
-    environment:
-      ENV: local
-      PORT: 3000
+      PORT: 8080
       WEB_BUILD: "ignore"
       RUST_LOG: ${RUST_LOG:-debug}
       RUST_FLAG: ${RUST_FLAG:---features bypass}
@@ -97,41 +30,33 @@ services:
       PORTONE_WEBHOOK_SECRET: ${PORTONE_WEBHOOK_SECRET}
 
       # Environments for frontend
-      VITE_API_URL: "http://localhost:3000"
-      VITE_LOG_LEVEL: ${VITE_LOG_LEVEL:-debug}
-      VITE_RPC_URL: "https://public-en-kairos.node.kaia.io"
-      VITE_BLOCK_EXPLORER_URL: "https://kairos.kaiascan.io"
-      VITE_USDT_ADDRESS: "0xd077a400968890eacc75cdc901f0356c943e4fdb"
-      VITE_OPERATOR_ADDRESS: ${VITE_OPERATOR_ADDRESS:-dummy}
-      VITE_FIREBASE_API_KEY: ${VITE_FIREBASE_API_KEY:-dummy}
-      VITE_FIREBASE_AUTH_DOMAIN: ${VITE_FIREBASE_AUTH_DOMAIN:-dummy}
-      VITE_FIREBASE_PROJECT_ID: ${VITE_FIREBASE_PROJECT_ID:-dummy}
-      VITE_FIREBASE_STORAGE_BUCKET: ${VITE_FIREBASE_STORAGE_BUCKET:-dummy}
-      VITE_FIREBASE_MESSAGING_SENDER_ID: ${VITE_FIREBASE_MESSAGING_SENDER_ID:-dummy}
-      VITE_FIREBASE_APP_ID: ${VITE_FIREBASE_APP_ID:-dummy}
-      VITE_FIREBASE_MEASUREMENT_ID: ${VITE_FIREBASE_MEASUREMENT_ID:-dummy}
-
-      VITE_PORTONE_STORE_ID: ${PORTONE_STORE_ID}
-      VITE_PORTONE_INICIS_CHANNEL_KEY: ${PORTONE_INICIS_CHANNEL_KEY}
-
-      NODE_ENV: production
+      RPC_URL: "https://public-en-kairos.node.kaia.io"
+      BLOCK_EXPLORER_URL: "https://kairos.kaiascan.io"
+      USDT_ADDRESS: "0xd077a400968890eacc75cdc901f0356c943e4fdb"
+      OPERATOR_ADDRESS: ${OPERATOR_ADDRESS:-dummy}
+      FIREBASE_API_KEY: ${FIREBASE_API_KEY:-dummy}
+      FIREBASE_AUTH_DOMAIN: ${FIREBASE_AUTH_DOMAIN:-dummy}
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-dummy}
+      FIREBASE_STORAGE_BUCKET: ${FIREBASE_STORAGE_BUCKET:-dummy}
+      FIREBASE_MESSAGING_SENDER_ID: ${FIREBASE_MESSAGING_SENDER_ID:-dummy}
+      FIREBASE_APP_ID: ${FIREBASE_APP_ID:-dummy}
+      FIREBASE_MEASUREMENT_ID: ${FIREBASE_MEASUREMENT_ID:-dummy}
 
       BEDROCK_AGENT_ID: ${BEDROCK_AGENT_ID}
       BEDROCK_AGENT_ALIAS_ID: ${BEDROCK_AGENT_ALIAS_ID}
+      QDRANT_URL: http://qdrant:6333
+      QDRANT_API_KEY: ${QDRANT_API_KEY:-}
+
+      CARGO_TARGET_DIR: /app-target
+      CI: true
     volumes:
       - .:/app
-      - ./.build/target:/app/target
-      - ./.build/main-api/target:/app/packages/main-api/target
-      - ./.build/main-api/web-dist:/app/ts-packages/web/dist
-      - ./.build/main-api/dist:/app/packages/main-api/dist
-      - ./.build/main-api/node_modules:/app/node_modules
-      - ./.build/main-api/web_node_modules:/app/ts-packages/web/node_modules
-      - ./.build/main-api/pnpm-store:/app/.pnpm-store
+      - ./.build/target:/app-target
 
     working_dir: /app
     command: ["bash", "scripts/api-entrypoint.sh"]
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000/version || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 100
@@ -237,96 +162,6 @@ services:
     profiles:
       - development
 
-  web:
-    image: node:22.14
-    restart: always
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./.build/web/node_modules:/app/node_modules
-      - ./.build/web/web_node_modules:/app/ts-packages/web/node_modules
-      - ./.build/web/pnpm-store:/app/.pnpm-store
-      - .:/app
-    working_dir: /app
-    environment:
-      PORT: 8080
-      VITE_API_URL: "http://localhost:3000"
-      VITE_LOG_LEVEL: ${VITE_LOG_LEVEL:-debug}
-      VITE_RPC_URL: "https://public-en-kairos.node.kaia.io"
-      VITE_BLOCK_EXPLORER_URL: "https://kairos.kaiascan.io"
-      VITE_USDT_ADDRESS: "0xd077a400968890eacc75cdc901f0356c943e4fdb"
-      VITE_OPERATOR_ADDRESS: ${VITE_OPERATOR_ADDRESS:-dummy}
-      VITE_FIREBASE_API_KEY: ${VITE_FIREBASE_API_KEY:-dummy}
-      VITE_FIREBASE_AUTH_DOMAIN: ${VITE_FIREBASE_AUTH_DOMAIN:-dummy}
-      VITE_FIREBASE_PROJECT_ID: ${VITE_FIREBASE_PROJECT_ID:-dummy}
-      VITE_FIREBASE_STORAGE_BUCKET: ${VITE_FIREBASE_STORAGE_BUCKET:-dummy}
-      VITE_FIREBASE_MESSAGING_SENDER_ID: ${VITE_FIREBASE_MESSAGING_SENDER_ID:-dummy}
-      VITE_FIREBASE_APP_ID: ${VITE_FIREBASE_APP_ID:-dummy}
-      VITE_FIREBASE_MEASUREMENT_ID: ${VITE_FIREBASE_MEASUREMENT_ID:-dummy}
-
-      VITE_PORTONE_STORE_ID: ${PORTONE_STORE_ID}
-      VITE_PORTONE_INICIS_CHANNEL_KEY: ${PORTONE_INICIS_CHANNEL_KEY}
-      VITE_PORTONE_KPN_CHANNEL_KEY: ${PORTONE_KPN_CHANNEL_KEY}
-
-      NODE_ENV: development
-    command: ["bash", "scripts/web-entrypoint.sh"]
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/version || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 100
-    # depends_on:
-    #   main-api:
-    #     condition: service_healthy
-    networks:
-      - ratel-network
-    profiles:
-      - development
-
-  storybook:
-    image: node:22.14
-    restart: always
-    ports:
-      - "6006:6006"
-    volumes:
-      - ./.build/web/node_modules:/app/node_modules
-      - ./.build/web/web_node_modules:/app/ts-packages/web/node_modules
-      - ./.build/web/pnpm-store:/app/.pnpm-store
-      - .:/app
-    working_dir: /app
-    environment:
-      PORT: 8080
-      VITE_API_URL: "http://localhost:3000"
-      VITE_LOG_LEVEL: ${VITE_LOG_LEVEL:-debug}
-      VITE_RPC_URL: "https://public-en-kairos.node.kaia.io"
-      VITE_BLOCK_EXPLORER_URL: "https://kairos.kaiascan.io"
-      VITE_USDT_ADDRESS: "0xd077a400968890eacc75cdc901f0356c943e4fdb"
-      VITE_OPERATOR_ADDRESS: ${VITE_OPERATOR_ADDRESS:-dummy}
-      VITE_FIREBASE_API_KEY: ${VITE_FIREBASE_API_KEY:-dummy}
-      VITE_FIREBASE_AUTH_DOMAIN: ${VITE_FIREBASE_AUTH_DOMAIN:-dummy}
-      VITE_FIREBASE_PROJECT_ID: ${VITE_FIREBASE_PROJECT_ID:-dummy}
-      VITE_FIREBASE_STORAGE_BUCKET: ${VITE_FIREBASE_STORAGE_BUCKET:-dummy}
-      VITE_FIREBASE_MESSAGING_SENDER_ID: ${VITE_FIREBASE_MESSAGING_SENDER_ID:-dummy}
-      VITE_FIREBASE_APP_ID: ${VITE_FIREBASE_APP_ID:-dummy}
-      VITE_FIREBASE_MEASUREMENT_ID: ${VITE_FIREBASE_MEASUREMENT_ID:-dummy}
-
-      API_URL: "http://main-api:3000"
-
-      NODE_ENV: development
-    command: ["bash", "scripts/storybook-entrypoint.sh"]
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/version || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 100
-    # depends_on:
-    #   main-api:
-    #     condition: service_healthy
-    networks:
-      - ratel-network
-    profiles:
-      - development
-
   localstack:
     hostname: localstack
     image: localstack/localstack
@@ -388,6 +223,41 @@ services:
       AWS_DEFAULT_REGION: ${AWS_REGION:-us-east-1}
     depends_on:
       - localstack-init
+    profiles:
+      - development
+      - infra
+    networks:
+      - ratel-network
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/6333'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    cpus: 2
+    mem_limit: 8192m
+    profiles:
+      - development
+      - infra
+    networks:
+      - ratel-network
+
+  qdrant-init:
+    image: amazonlinux:2023
+    environment:
+      ENDPOINT: http://qdrant:6333
+      COLLECTION: ratel-local-posts
+    depends_on:
+      qdrant:
+        condition: service_healthy
+    volumes:
+      - ./scripts:/scripts
+    command: ["bash", "/scripts/qdrant-init-entrypoint.sh"]
     profiles:
       - development
       - infra

@@ -10,11 +10,16 @@ import {
   aws_iam as iam,
   aws_events as events,
   aws_events_targets as eventsTargets,
+  aws_ec2 as ec2,
+  aws_servicediscovery as sd,
 } from "aws-cdk-lib";
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as r53Targets from "aws-cdk-lib/aws-route53-targets";
-import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
+import {
+  HttpLambdaIntegration,
+  HttpServiceDiscoveryIntegration,
+} from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
@@ -37,6 +42,11 @@ export interface RegionalServiceStackProps extends StackProps {
 
   apiDomain: string;
   baseDomain: string;
+
+  // Optional: VPC Link to Qdrant (only for ap-northeast-2)
+  vpc?: ec2.IVpc;
+  qdrantCloudMapService?: sd.IService;
+  qdrantSecurityGroup?: ec2.ISecurityGroup;
 }
 
 export class RegionalServiceStack extends Stack {
@@ -231,6 +241,31 @@ export class RegionalServiceStack extends Stack {
       methods: [apigw.HttpMethod.ANY],
       integration: lambdaIntegration,
     });
+
+    // VPC Link + Qdrant route (only for ap-northeast-2)
+    if (props.vpc && props.qdrantCloudMapService && props.qdrantSecurityGroup) {
+      const vpcLink = new apigw.VpcLink(this, "QdrantVpcLink", {
+        vpc: props.vpc,
+        securityGroups: [props.qdrantSecurityGroup],
+      });
+
+      const qdrantIntegration = new HttpServiceDiscoveryIntegration(
+        "QdrantIntegration",
+        props.qdrantCloudMapService,
+        {
+          vpcLink,
+          parameterMapping: new apigw.ParameterMapping().overwritePath(
+            apigw.MappingValue.custom("/${request.path.proxy}"),
+          ),
+        },
+      );
+
+      httpApi.addRoutes({
+        path: "/qdrant/{proxy+}",
+        methods: [apigw.HttpMethod.ANY],
+        integration: qdrantIntegration,
+      });
+    }
 
     // Certificate for custom domain
     const cert = new acm.Certificate(this, "Cert", {
