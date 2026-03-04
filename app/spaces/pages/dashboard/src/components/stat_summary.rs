@@ -3,7 +3,7 @@ use crate::*;
 #[component]
 pub fn StatSummary(data: StatSummaryData) -> Element {
     rsx! {
-        div { class: "flex h-full w-full min-h-0 flex-col p-[30px] max-tablet:p-5 max-mobile:p-4 rounded-2xl max-mobile:rounded-xl bg-space-dashboard-card",
+        div { class: "flex h-full w-full min-h-0 flex-col p-[30px] max-tablet:p-5 max-mobile:p-4 rounded-2xl max-mobile:rounded-xl bg-web-card-bg",
 
             // Header Section
             div { class: "mb-5 max-mobile:mb-4 flex items-center justify-between gap-3 max-mobile:gap-2",
@@ -19,10 +19,10 @@ pub fn StatSummary(data: StatSummaryData) -> Element {
 
                 // Right: Main Stats
                 div { class: "flex-1 min-w-0 text-right",
-                    div { class: "self-stretch text-[24px] leading-[24px] max-mobile:text-[20px] max-mobile:leading-[22px] font-bold text-text-primary sp-dash-font-inter",
+                    div { class: "self-stretch text-[24px] leading-[24px] max-mobile:text-[20px] max-mobile:leading-[22px] font-bold text-text-primary font-inter",
                         "{data.main_value}"
                     }
-                    div { class: "mt-1 self-stretch text-[15px] leading-[18px] max-mobile:text-[13px] max-mobile:leading-[16px] tracking-[-0.16px] font-semibold text-space-dashboard-muted sp-dash-font-raleway",
+                    div { class: "mt-1 self-stretch text-[15px] leading-[18px] max-mobile:text-[13px] max-mobile:leading-[16px] tracking-[-0.16px] font-semibold text-web-font-neutral font-raleway",
                         "{data.main_label}"
                     }
                 }
@@ -38,12 +38,12 @@ pub fn StatSummary(data: StatSummaryData) -> Element {
                         div { class: "flex min-w-0 flex-col gap-0.5",
 
                             // Label
-                            div { class: "truncate text-text-primary text-xs leading-4 font-medium sp-dash-font-raleway",
+                            div { class: "truncate text-text-primary text-xs leading-4 font-medium font-raleway",
                                 "{item.label}"
                             }
 
                             // Trend
-                            div { class: "flex items-center gap-1 text-xs leading-4 font-medium sp-dash-font-inter",
+                            div { class: "flex items-center gap-1 text-xs leading-4 font-medium font-inter",
 
                                 // Arrow and percentage
                                 if item.trend > 0.0 {
@@ -54,7 +54,7 @@ pub fn StatSummary(data: StatSummaryData) -> Element {
                                             class: "h-[18px] w-[18px] text-icon-primary [&>path]:fill-current",
                                         }
                                     }
-                                    span { class: "text-space-dashboard-muted", "+{item.trend:.0}%" }
+                                    span { class: "text-web-font-neutral", "+{item.trend:.0}%" }
                                 } else if item.trend < 0.0 {
                                     span { class: "text-red-600", "↓ {item.trend:.0}%" }
                                 } else {
@@ -63,7 +63,7 @@ pub fn StatSummary(data: StatSummaryData) -> Element {
 
                                 // Trend Label (e.g., "7d")
                                 if !item.trend_label.is_empty() {
-                                    span { class: "text-space-dashboard-muted", "{item.trend_label}" }
+                                    span { class: "text-web-font-neutral", "{item.trend_label}" }
                                 }
                             }
                         }
@@ -105,7 +105,7 @@ pub fn StatSummary(data: StatSummaryData) -> Element {
                             }
 
                             // Value
-                            span { class: "text-text-primary text-xs leading-4 font-medium sp-dash-font-raleway",
+                            span { class: "text-text-primary text-xs leading-4 font-medium font-raleway",
                                 "{item.value}"
                             }
                         }
