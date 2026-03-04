@@ -1,5 +1,5 @@
 use crate::*;
-use common::models::auth::User;
+use common::models::auth::AdminUser;
 use common::models::reward::Reward;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -10,7 +10,7 @@ pub struct CreateGlobalRewardRequest {
     pub condition: RewardCondition,
 }
 
-#[post("/api/admin/rewards", _user: User)]
+#[post("/api/admin/rewards", _user: AdminUser)]
 pub async fn createl_reward(req: CreateGlobalRewardRequest) -> Result<Reward> {
     let common_config = common::CommonConfig::default();
     let cli = common_config.dynamodb();

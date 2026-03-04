@@ -1,4 +1,5 @@
 use crate::*;
+use common::models::auth::AdminUser;
 use common::models::reward::Reward;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -20,7 +21,7 @@ impl From<Reward> for RewardResponse {
     }
 }
 
-#[get("/api/admin/rewards?action")]
+#[get("/api/admin/rewards?action", _user: AdminUser)]
 pub async fn list_rewards(action: Option<String>) -> Result<ListResponse<RewardResponse>> {
     let common_config = common::CommonConfig::default();
     let cli = common_config.dynamodb();
