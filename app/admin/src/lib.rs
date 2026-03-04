@@ -11,6 +11,7 @@ pub mod interop;
 
 mod views;
 
+pub use models::*;
 pub use route::Route;
 
 use common::*;

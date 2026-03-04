@@ -1,6 +1,5 @@
 use crate::*;
 use common::models::auth::AdminUser;
-use common::models::reward::Reward;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CreateGlobalRewardRequest {
@@ -11,16 +10,15 @@ pub struct CreateGlobalRewardRequest {
 }
 
 #[post("/api/admin/rewards", _user: AdminUser)]
-pub async fn createl_reward(req: CreateGlobalRewardRequest) -> Result<Reward> {
+pub async fn create_reward(req: CreateGlobalRewardRequest) -> Result<Reward> {
     let common_config = common::CommonConfig::default();
     let cli = common_config.dynamodb();
 
-    // Check if reward already exists
     if Reward::get(cli, Partition::Reward, Some(req.behavior.clone()))
         .await?
         .is_some()
     {
-        return Err(Error::RewardAlreadyExists);
+        return Err(Error::Duplicate("Reward already exists".into()));
     }
 
     let reward = Reward::new(req.behavior, req.point, req.period, req.condition);
