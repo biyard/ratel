@@ -29,5 +29,7 @@ pub async fn delete_post_handler(post_pk: FeedPartition, force: Option<bool>) ->
 
     let post = Post::delete(cli, post_pk, Some(EntityType::Post)).await?;
 
+    crate::services::delete_post_vector_async(conf.qdrant(), &post.pk);
+
     Ok(post)
 }

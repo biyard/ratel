@@ -151,5 +151,7 @@ pub async fn update_post_handler(post_pk: FeedPartition, req: UpdatePostRequest)
 
     transact_write_items!(cli, transacts)?;
 
+    crate::services::index_post_async(conf.qdrant(), conf.bedrock_embeddings(), &post);
+
     Ok(post)
 }

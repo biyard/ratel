@@ -4,6 +4,7 @@ import { GlobalAccelStack } from "../lib/global-accel-stack";
 import { GlobalTableStack } from "../lib/dynamodb-stack";
 import { StaticStack } from "../lib/static-stack";
 import { DaemonStack } from "../lib/daemon-stack";
+import { QdrantStack } from "../lib/qdrant-stack";
 
 const app = new App();
 
@@ -43,12 +44,23 @@ if (env === "dev") {
   });
 }
 
-new DaemonStack(app, `ratel-${env}-daemon-ap-northeast-2`, {
+const daemonStack = new DaemonStack(app, `ratel-${env}-daemon-ap-northeast-2`, {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: "ap-northeast-2",
   },
   commit: process.env.COMMIT!,
+});
+
+const qdrantStack = new QdrantStack(app, `ratel-${env}-qdrant-ap-northeast-2`, {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: "ap-northeast-2",
+  },
+  stage: env,
+  cluster: daemonStack.cluster,
+  vpc: daemonStack.vpc,
+  qdrantApiKey: process.env.QDRANT_API_KEY,
 });
 
 new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {
@@ -64,6 +76,9 @@ new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {
   enableDaemon: true,
   baseDomain,
   apiDomain,
+  vpc: daemonStack.vpc,
+  qdrantCloudMapService: qdrantStack.cloudMapService,
+  qdrantSecurityGroup: qdrantStack.securityGroup,
 });
 
 new RegionalServiceStack(app, `ratel-${env}-svc-eu-central-1`, {
