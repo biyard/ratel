@@ -1,84 +1,7 @@
-use crate::*;
+use common::{RewardCondition, RewardPeriod, RewardUserBehavior};
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, DynamoEnum, SerializeDisplay, DeserializeFromStr, Eq, PartialEq, Default)]
-pub enum RewardUserBehavior {
-    #[default]
-    RespondPoll,
-}
-
-impl RewardUserBehavior {
-    pub fn action(&self) -> RewardAction {
-        match self {
-            Self::RespondPoll => RewardAction::Poll,
-        }
-    }
-
-    pub fn all() -> Vec<Self> {
-        vec![Self::RespondPoll]
-    }
-
-    pub fn label(&self) -> &'static str {
-        match self {
-            Self::RespondPoll => "Poll Response",
-        }
-    }
-}
-
-#[derive(Debug, Clone, DynamoEnum, SerializeDisplay, DeserializeFromStr, Eq, PartialEq, Default)]
-pub enum RewardAction {
-    #[default]
-    Poll,
-}
-
-#[derive(Debug, Default, Clone, Serialize, Deserialize, DynamoEnum, Eq, PartialEq)]
-pub enum RewardPeriod {
-    #[default]
-    Once,
-    Hourly,
-    Daily,
-    Weekly,
-    Monthly,
-    Yearly,
-    Unlimited,
-}
-
-impl RewardPeriod {
-    pub fn all() -> Vec<Self> {
-        vec![
-            Self::Once,
-            Self::Hourly,
-            Self::Daily,
-            Self::Weekly,
-            Self::Monthly,
-            Self::Yearly,
-            Self::Unlimited,
-        ]
-    }
-
-    pub fn label(&self) -> &'static str {
-        match self {
-            Self::Once => "Once",
-            Self::Hourly => "Hourly",
-            Self::Daily => "Daily",
-            Self::Weekly => "Weekly",
-            Self::Monthly => "Monthly",
-            Self::Yearly => "Yearly",
-            Self::Unlimited => "Unlimited",
-        }
-    }
-}
-
-#[derive(Debug, Default, Clone, Serialize, Deserialize, DynamoEnum, Eq, PartialEq)]
-pub enum RewardCondition {
-    #[default]
-    None,
-    MaxClaims(i64),
-    MaxPoints(i64),
-    MaxUserClaims(i64),
-    MaxUserPoints(i64),
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, Eq, PartialEq)]
 pub enum ConditionType {
     #[default]
     None,
@@ -88,72 +11,99 @@ pub enum ConditionType {
     MaxUserPoints,
 }
 
-impl ConditionType {
-    pub fn all() -> Vec<Self> {
+pub trait RewardConditionExt {
+    fn from_type_and_value(ct: &ConditionType, value: i64) -> RewardCondition;
+    fn condition_type(&self) -> ConditionType;
+    fn value(&self) -> Option<i64>;
+    fn label(&self) -> String;
+}
+
+impl RewardConditionExt for RewardCondition {
+    fn from_type_and_value(ct: &ConditionType, value: i64) -> RewardCondition {
+        match ct {
+            ConditionType::None => RewardCondition::None,
+            ConditionType::MaxClaims => RewardCondition::MaxClaims(value),
+            ConditionType::MaxPoints => RewardCondition::MaxPoints(value),
+            ConditionType::MaxUserClaims => RewardCondition::MaxUserClaims(value),
+            ConditionType::MaxUserPoints => RewardCondition::MaxUserPoints(value),
+        }
+    }
+
+    fn condition_type(&self) -> ConditionType {
+        match self {
+            RewardCondition::None => ConditionType::None,
+            RewardCondition::MaxClaims(_) => ConditionType::MaxClaims,
+            RewardCondition::MaxPoints(_) => ConditionType::MaxPoints,
+            RewardCondition::MaxUserClaims(_) => ConditionType::MaxUserClaims,
+            RewardCondition::MaxUserPoints(_) => ConditionType::MaxUserPoints,
+        }
+    }
+
+    fn value(&self) -> Option<i64> {
+        match self {
+            RewardCondition::None => None,
+            RewardCondition::MaxClaims(v)
+            | RewardCondition::MaxPoints(v)
+            | RewardCondition::MaxUserClaims(v)
+            | RewardCondition::MaxUserPoints(v) => Some(*v),
+        }
+    }
+
+    fn label(&self) -> String {
+        match self {
+            RewardCondition::None => "None".to_string(),
+            RewardCondition::MaxClaims(v) => format!("Max Claims: {}", v),
+            RewardCondition::MaxPoints(v) => format!("Max Points: {}", v),
+            RewardCondition::MaxUserClaims(v) => format!("Max User Claims: {}", v),
+            RewardCondition::MaxUserPoints(v) => format!("Max User Points: {}", v),
+        }
+    }
+}
+
+pub trait RewardPeriodExt {
+    fn all() -> Vec<RewardPeriod>;
+    fn label(&self) -> &'static str;
+}
+
+impl RewardPeriodExt for RewardPeriod {
+    fn all() -> Vec<RewardPeriod> {
         vec![
-            Self::None,
-            Self::MaxClaims,
-            Self::MaxPoints,
-            Self::MaxUserClaims,
-            Self::MaxUserPoints,
+            RewardPeriod::Once,
+            RewardPeriod::Hourly,
+            RewardPeriod::Daily,
+            RewardPeriod::Weekly,
+            RewardPeriod::Monthly,
+            RewardPeriod::Yearly,
+            RewardPeriod::Unlimited,
         ]
     }
 
-    pub fn label(&self) -> &'static str {
+    fn label(&self) -> &'static str {
         match self {
-            Self::None => "None",
-            Self::MaxClaims => "Max Claims",
-            Self::MaxPoints => "Max Points",
-            Self::MaxUserClaims => "Max User Claims",
-            Self::MaxUserPoints => "Max User Points",
+            RewardPeriod::Once => "Once",
+            RewardPeriod::Hourly => "Hourly",
+            RewardPeriod::Daily => "Daily",
+            RewardPeriod::Weekly => "Weekly",
+            RewardPeriod::Monthly => "Monthly",
+            RewardPeriod::Yearly => "Yearly",
+            RewardPeriod::Unlimited => "Unlimited",
         }
     }
 }
 
-impl std::fmt::Display for ConditionType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.label())
-    }
+pub trait RewardUserBehaviorExt {
+    fn all() -> Vec<RewardUserBehavior>;
+    fn label(&self) -> &'static str;
 }
 
-impl RewardCondition {
-    pub fn condition_type(&self) -> ConditionType {
-        match self {
-            Self::None => ConditionType::None,
-            Self::MaxClaims(_) => ConditionType::MaxClaims,
-            Self::MaxPoints(_) => ConditionType::MaxPoints,
-            Self::MaxUserClaims(_) => ConditionType::MaxUserClaims,
-            Self::MaxUserPoints(_) => ConditionType::MaxUserPoints,
-        }
+impl RewardUserBehaviorExt for RewardUserBehavior {
+    fn all() -> Vec<RewardUserBehavior> {
+        vec![RewardUserBehavior::RespondPoll]
     }
 
-    pub fn value(&self) -> Option<i64> {
+    fn label(&self) -> &'static str {
         match self {
-            Self::None => Option::None,
-            Self::MaxClaims(v)
-            | Self::MaxPoints(v)
-            | Self::MaxUserClaims(v)
-            | Self::MaxUserPoints(v) => Some(*v),
-        }
-    }
-
-    pub fn from_type_and_value(ct: &ConditionType, value: i64) -> Self {
-        match ct {
-            ConditionType::None => Self::None,
-            ConditionType::MaxClaims => Self::MaxClaims(value),
-            ConditionType::MaxPoints => Self::MaxPoints(value),
-            ConditionType::MaxUserClaims => Self::MaxUserClaims(value),
-            ConditionType::MaxUserPoints => Self::MaxUserPoints(value),
-        }
-    }
-
-    pub fn label(&self) -> String {
-        match self {
-            Self::None => "None".to_string(),
-            Self::MaxClaims(v) => format!("Max Claims: {v}"),
-            Self::MaxPoints(v) => format!("Max Points: {v}"),
-            Self::MaxUserClaims(v) => format!("Max User Claims: {v}"),
-            Self::MaxUserPoints(v) => format!("Max User Points: {v}"),
+            RewardUserBehavior::RespondPoll => "Poll Response",
         }
     }
 }

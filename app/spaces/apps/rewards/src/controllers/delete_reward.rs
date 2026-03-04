@@ -1,6 +1,5 @@
 use crate::*;
 
-
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct DeleteSpaceRewardRequest {
     pub sk: RewardKey,
@@ -12,7 +11,7 @@ pub async fn delete_space_reward(
     req: DeleteSpaceRewardRequest,
 ) -> Result<()> {
     use space_common::models::SpaceReward;
-    SpaceReward::can_edit(&role)?;SpaceReward
+    SpaceReward::can_edit(&role)?;
 
     let common_config = common::CommonConfig::default();
     let cli = common_config.dynamodb();

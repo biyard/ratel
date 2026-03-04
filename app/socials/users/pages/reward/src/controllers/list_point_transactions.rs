@@ -1,5 +1,5 @@
 use crate::*;
-use common::services::{BiyardService, PointTransactionResponse};
+use common::services::PointTransactionResponse;
 
 pub type ListPointTransactionsResponse = ListResponse<PointTransactionResponse>;
 

@@ -1,2 +1,2 @@
-mod rewards;
+pub mod rewards;
 pub use rewards::*;

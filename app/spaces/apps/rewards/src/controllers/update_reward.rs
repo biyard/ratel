@@ -1,5 +1,5 @@
 use crate::*;
-use space_common::models::{SpaceReward, SpaceRewardResponse};
+use space_common::models::SpaceRewardResponse;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct UpdateSpaceRewardRequest {

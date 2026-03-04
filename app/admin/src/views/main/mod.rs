@@ -1,17 +1,23 @@
 mod i18n;
 
-use crate::controllers::rewards::{
-    create_reward, list_rewards, update_reward, CreateGlobalRewardRequest, RewardResponse,
-    UpdateGlobalRewardRequest,
+use crate::controllers::{
+    CreateGlobalRewardRequest, RewardResponse, UpdateGlobalRewardRequest, create_reward,
+    list_rewards, update_reward,
+};
+use crate::models::reward_types::{
+    ConditionType, RewardConditionExt, RewardPeriodExt, RewardUserBehaviorExt,
 };
 use crate::*;
+use common::RewardCondition;
+use common::RewardPeriod;
+use common::RewardUserBehavior;
 use i18n::AdminRewardsTranslate;
 
 #[component]
 pub fn AdminMainPage() -> Element {
     let tr: AdminRewardsTranslate = use_translate();
 
-    let rewards_resource = use_server_future(move || async move { list_rewards(None).await })?;
+    let mut rewards_resource = use_server_future(move || async move { list_rewards(None).await })?;
     let rewards_state = rewards_resource.value();
 
     let mut show_form = use_signal(|| false);
@@ -34,7 +40,7 @@ pub fn AdminMainPage() -> Element {
         show_form.set(true);
     };
 
-    let open_edit_form = move |reward: RewardResponse| {
+    let mut open_edit_form = move |reward: RewardResponse| {
         let ct = reward.condition.condition_type();
         let cv = reward.condition.value().unwrap_or(0);
         form_behavior.set(reward.reward_behavior.clone());
@@ -59,9 +65,10 @@ pub fn AdminMainPage() -> Element {
         let condition_type = form_condition_type.read().clone();
         let condition_value = *form_condition_value.read();
         let condition = RewardCondition::from_type_and_value(&condition_type, condition_value);
-
+        let reward_resource = rewards_resource.clone();
         is_submitting.set(true);
         spawn(async move {
+            let mut reward_resource = reward_resource.clone();
             let result = if is_edit {
                 update_reward(UpdateGlobalRewardRequest {
                     behavior,
@@ -142,7 +149,11 @@ pub fn AdminMainPage() -> Element {
                         onclick: move |e| e.stop_propagation(),
 
                         h2 { class: "text-lg font-semibold text-text-primary mb-4",
-                            if is_editing { "{tr.edit_reward}" } else { "{tr.add_reward}" }
+                            if is_editing {
+                                "{tr.edit_reward}"
+                            } else {
+                                "{tr.add_reward}"
+                            }
                         }
 
                         // Behavior select
@@ -297,9 +308,7 @@ pub fn AdminMainPage() -> Element {
                 }
 
                 if rewards.is_empty() {
-                    div { class: "px-4 py-8 text-center text-text-secondary",
-                        "{tr.no_rewards}"
-                    }
+                    div { class: "px-4 py-8 text-center text-text-secondary", "{tr.no_rewards}" }
                 } else {
                     div { class: "overflow-x-auto",
                         table { class: "w-full text-sm",
@@ -328,18 +337,10 @@ pub fn AdminMainPage() -> Element {
                                         let reward_clone = reward.clone();
                                         rsx! {
                                             tr { class: "border-b border-card-border hover:bg-card-border/10 transition-colors",
-                                                td { class: "px-4 py-3 text-text-primary",
-                                                    "{reward.reward_behavior.label()}"
-                                                }
-                                                td { class: "px-4 py-3 text-text-primary",
-                                                    "{reward.point}"
-                                                }
-                                                td { class: "px-4 py-3 text-text-primary",
-                                                    "{reward.period.label()}"
-                                                }
-                                                td { class: "px-4 py-3 text-text-primary",
-                                                    "{reward.condition.label()}"
-                                                }
+                                                td { class: "px-4 py-3 text-text-primary", "{reward.reward_behavior.label()}" }
+                                                td { class: "px-4 py-3 text-text-primary", "{reward.point}" }
+                                                td { class: "px-4 py-3 text-text-primary", "{reward.period.label()}" }
+                                                td { class: "px-4 py-3 text-text-primary", "{reward.condition.label()}" }
                                                 td { class: "px-4 py-3",
                                                     button {
                                                         class: "text-blue-500 hover:text-blue-400 text-sm font-medium",
