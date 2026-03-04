@@ -64,12 +64,10 @@ pub async fn update_post_handler(post_pk: FeedPartition, req: UpdatePostRequest)
             post.title = title.clone();
             post.html_contents = content.clone();
 
-            vec![
-                updater
-                    .with_title(title)
-                    .with_html_contents(content)
-                    .transact_write_item(),
-            ]
+            vec![updater
+                .with_title(title)
+                .with_html_contents(content)
+                .transact_write_item()]
         }
         UpdatePostRequest::Image { images } => {
             post.urls = images.clone();
@@ -151,7 +149,9 @@ pub async fn update_post_handler(post_pk: FeedPartition, req: UpdatePostRequest)
 
     transact_write_items!(cli, transacts)?;
 
-    crate::services::index_post_async(conf.qdrant(), conf.bedrock_embeddings(), &post);
+    if post.status == PostStatus::Published {
+        crate::services::index_post_async(conf.qdrant(), conf.bedrock_embeddings(), &post);
+    }
 
     Ok(post)
 }
