@@ -10,21 +10,21 @@ pub(crate) fn SummaryStatCard(
     rsx! {
         div { class: "flex flex-col gap-2 border rounded-[12px] border-separator bg-card p-[17px]",
             div { class: "flex gap-2 justify-between items-center",
-                p { class: "font-bold sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-web-font-neutral",
+                p { class: "font-bold font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-web-font-neutral",
                     "{title}"
                 }
                 if let Some(badge_text) = badge {
-                    p { class: "flex justify-center items-center px-2 font-medium leading-4 border h-[25px] rounded-[100px] border-btn-primary-outline sp-dash-font-raleway text-[12px] text-btn-primary-bg",
+                    p { class: "flex justify-center items-center px-2 font-medium leading-4 border h-[25px] rounded-[100px] border-btn-primary-outline font-raleway text-[12px] text-btn-primary-bg",
                         "{badge_text}"
                     }
                 }
             }
 
             div { class: "flex flex-col gap-1 items-end ml-auto",
-                p { class: "font-bold sp-dash-font-raleway text-[36px] leading-[40px] tracking-[-0.72px] text-font-primary",
+                p { class: "font-bold font-raleway text-[36px] leading-[40px] tracking-[-0.72px] text-web-font-primary",
                     "{value}"
                 }
-                p { class: "font-semibold sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-web-font-neutral",
+                p { class: "font-semibold font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-web-font-neutral",
                     "{unit}"
                 }
             }
@@ -80,10 +80,10 @@ pub(crate) fn DistributionModeCard(
 
     rsx! {
         button { class: "{card_class}", onclick: move |evt| onclick.call(evt),
-            p { class: "font-bold sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-font-primary",
+            p { class: "font-bold font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-web-font-primary",
                 "{title}"
             }
-            p { class: "w-full font-medium leading-5 sp-dash-font-raleway text-[13px] tracking-[0] text-card-meta",
+            p { class: "w-full font-medium leading-5 font-raleway text-[13px] tracking-[0] text-card-meta",
                 "{description}"
             }
         }

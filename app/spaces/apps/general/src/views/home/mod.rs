@@ -56,14 +56,14 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
     });
 
     rsx! {
-        div { class: "flex overflow-visible flex-col gap-5 self-start pb-6 w-full min-w-0 shrink-0 max-w-[1024px] max-tablet:gap-4 text-font-primary",
-            h3 { class: "font-bold sp-dash-font-raleway text-[24px]/[28px] tracking-[-0.24px] text-font-primary",
+        div { class: "flex overflow-visible flex-col gap-5 self-start pb-6 w-full min-w-0 shrink-0 max-w-[1024px] max-tablet:gap-4 text-web-font-primary",
+            h3 { class: "font-bold font-raleway text-[24px]/[28px] tracking-[-0.24px] text-web-font-primary",
                 {tr.space_setting}
             }
 
             div { class: "overflow-visible w-full shrink-0 rounded-[12px] bg-card",
                 div { class: "flex justify-between items-center self-stretch px-5 py-4 border-b border-separator",
-                    p { class: "font-semibold text-center sp-dash-font-raleway text-[17px]/[20px] tracking-[-0.18px] text-font-primary",
+                    p { class: "font-semibold text-center font-raleway text-[17px]/[20px] tracking-[-0.18px] text-web-font-primary",
                         {tr.invite_participant}
                     }
                 }
@@ -71,11 +71,11 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
                 div { class: "flex flex-col gap-5 items-start self-stretch p-5 bg-card max-mobile:p-4",
                     div { class: "flex items-start w-full gap-[10px] max-tablet:flex-col",
                         div { class: "flex flex-col flex-1 gap-2 justify-center items-start",
-                            p { class: "font-semibold sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-font-primary",
+                            p { class: "font-semibold font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-web-font-primary",
                                 {tr.email_address}
                             }
                             input {
-                                class: "flex flex-col justify-center items-start px-3 py-2.5 w-full font-medium leading-6 border-gray-600 rounded-[8px] border-[0.5px] bg-web-input sp-dash-font-raleway text-[15px] tracking-[0.5px] text-font-primary placeholder:text-card-more-muted",
+                                class: "flex flex-col justify-center items-start px-3 py-2.5 w-full font-medium leading-6 border-gray-600 rounded-[8px] border-[0.5px] bg-web-input font-raleway text-[15px] tracking-[0.5px] text-web-font-primary placeholder:text-card-more-muted",
                                 placeholder: tr.email_placeholder.to_string(),
                                 value: email_input(),
                                 oninput: move |evt| {
@@ -122,7 +122,7 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
                         }
 
                         div { class: "flex flex-col flex-1 gap-2 justify-center items-start w-full",
-                            p { class: "font-semibold sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-font-primary",
+                            p { class: "font-semibold font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-web-font-primary",
                                 {tr.default_reward}
                             }
                             RewardRoleCard {
@@ -134,7 +134,7 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
 
                     div { class: "flex justify-end w-full max-tablet:justify-stretch",
                         button {
-                            class: "flex flex-col justify-center items-center self-stretch w-fit max-tablet:w-full gap-[10px] rounded-full px-5 py-3 border bg-btn-primary-bg border-btn-primary-outline text-web-font-ab-bk hover:bg-btn-primary-hover-bg hover:border-btn-primary-hover-outline hover:text-btn-primary-hover-text disabled:bg-btn-primary-disable-bg disabled:border-btn-primary-disable-outline disabled:text-btn-primary-disable-text sp-dash-font-raleway text-[14px]/[16px] font-bold",
+                            class: "flex flex-col justify-center items-center self-stretch w-fit max-tablet:w-full gap-[10px] rounded-full px-5 py-3 border bg-btn-primary-bg border-btn-primary-outline text-web-font-ab-bk hover:bg-btn-primary-hover-bg hover:border-btn-primary-hover-outline hover:text-btn-primary-hover-text disabled:bg-btn-primary-disable-bg disabled:border-btn-primary-disable-outline disabled:text-btn-primary-disable-text font-raleway text-[14px]/[16px] font-bold",
                             disabled: invite_loading(),
                             onclick: move |_| {
                                 if invite_loading() {
@@ -194,7 +194,7 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
 
             div { class: "overflow-visible w-full shrink-0 rounded-[12px] bg-card",
                 div { class: "flex justify-between items-center self-stretch px-5 py-4 border-b border-separator",
-                    p { class: "font-bold sp-dash-font-raleway text-[24px]/[28px] tracking-[-0.24px] text-font-primary",
+                    p { class: "font-bold font-raleway text-[24px]/[28px] tracking-[-0.24px] text-web-font-primary",
                         {tr.administrator}
                     }
                 }
@@ -207,7 +207,7 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
                             profile_url: admin.profile_url,
                         }
                     } else {
-                        p { class: "font-medium leading-6 sp-dash-font-raleway text-[15px] tracking-[0.5px] text-card-meta",
+                        p { class: "font-medium leading-6 font-raleway text-[15px] tracking-[0.5px] text-card-meta",
                             {tr.administrator_not_found}
                         }
                     }
@@ -216,7 +216,7 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
 
             div { class: "flex justify-end pt-5 w-full max-tablet:justify-stretch",
                 button {
-                    class: "flex flex-col justify-center items-center px-5 py-3 font-bold bg-transparent rounded-full border w-fit max-tablet:w-full gap-[10px] border-web-error text-web-error hover:bg-transparent hover:border-web-error hover:text-web-error disabled:border-web-error/40 disabled:text-web-error/40 sp-dash-font-raleway text-[14px]/[16px]",
+                    class: "flex flex-col justify-center items-center px-5 py-3 font-bold bg-transparent rounded-full border w-fit max-tablet:w-full gap-[10px] border-web-error text-web-error hover:bg-transparent hover:border-web-error hover:text-web-error disabled:border-web-error/40 disabled:text-web-error/40 font-raleway text-[14px]/[16px]",
                     disabled: delete_loading(),
                     onclick: move |_| {
                         if delete_loading() {
@@ -263,7 +263,7 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
 fn InviteEmailChip(value: String, on_remove: EventHandler<MouseEvent>) -> Element {
     rsx! {
         div { class: "flex gap-1 items-center pr-1 pl-3 h-7 rounded-[100px] bg-btn-primary-bg",
-            span { class: "font-medium leading-6 sp-dash-font-raleway text-[15px] tracking-[0.5px] text-btn-primary-text",
+            span { class: "font-medium leading-6 font-raleway text-[15px] tracking-[0.5px] text-btn-primary-text",
                 "{value}"
             }
             button {
@@ -279,10 +279,10 @@ fn InviteEmailChip(value: String, on_remove: EventHandler<MouseEvent>) -> Elemen
 fn RewardRoleCard(title: String, description: String) -> Element {
     rsx! {
         div { class: "flex flex-col gap-1 items-start px-4 w-full text-left border h-[108px] shrink-0 rounded-[12px] border-btn-primary-outline bg-btn-primary-bg/5 py-[17px]",
-            p { class: "font-semibold sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-font-primary",
+            p { class: "font-semibold font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-web-font-primary",
                 "{title}"
             }
-            p { class: "font-normal leading-6 sp-dash-font-raleway text-[15px] tracking-[0.5px] text-card-meta",
+            p { class: "font-normal leading-6 font-raleway text-[15px] tracking-[0.5px] text-card-meta",
                 "{description}"
             }
         }
@@ -308,12 +308,12 @@ fn AdministratorRow(name: String, username: String, profile_url: String) -> Elem
 
                 div { class: "flex flex-col gap-1 items-start",
                     div { class: "flex gap-1 items-center",
-                        p { class: "font-bold leading-5 sp-dash-font-raleway text-[17px] tracking-[-0.18px] text-font-primary",
+                        p { class: "font-bold leading-5 font-raleway text-[17px] tracking-[-0.18px] text-web-font-primary",
                             "{name}"
                         }
                         icons::shapes::Badge2 { width: "18", height: "18", class: "" }
                     }
-                    p { class: "font-semibold leading-4 sp-dash-font-raleway text-[13px] tracking-[-0.14px] text-web-font-neutral",
+                    p { class: "font-semibold leading-4 font-raleway text-[13px] tracking-[-0.14px] text-web-font-neutral",
                         "@{username}"
                     }
                 }
@@ -334,7 +334,7 @@ pub fn AppGeneralPage(space_id: SpacePartition) -> Element {
         }
     } else {
         rsx! {
-            div { class: "flex justify-center items-center w-full h-full text-font-primary",
+            div { class: "flex justify-center items-center w-full h-full text-web-font-primary",
                 {tr.no_permission}
             }
         }

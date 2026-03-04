@@ -105,8 +105,8 @@ pub fn FileManagerPage(space_id: SpacePartition) -> Element {
     };
 
     rsx! {
-        div { class: "flex flex-col gap-5 w-full max-w-[1024px] text-font-primary pb-6",
-            h3 { class: "font-bold sp-dash-font-raleway text-[24px]/[28px] tracking-[-0.24px] text-font-primary",
+        div { class: "flex flex-col gap-5 w-full max-w-[1024px] text-web-font-primary pb-6",
+            h3 { class: "font-bold font-raleway text-[24px]/[28px] tracking-[-0.24px] text-web-font-primary",
                 {tr.page_title}
             }
 
@@ -265,7 +265,7 @@ pub fn HomePage(space_id: SpacePartition) -> Element {
         }
     } else {
         rsx! {
-            div { class: "flex justify-center items-center w-full h-full text-font-primary",
+            div { class: "flex justify-center items-center w-full h-full text-web-font-primary",
                 {tr.no_permission}
             }
         }
