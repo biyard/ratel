@@ -24,7 +24,7 @@ impl TestContext {
 
         let session_layer = common::middlewares::session_layer::get_session_layer(
             cli,
-            "test".to_string(),
+            config.common.env.to_string(),
         );
 
         let dioxus_router = dioxus::server::router(App);
@@ -101,7 +101,8 @@ pub async fn create_user_session(
         body: {
             "req": {
                 "email": email,
-                "password": uid
+                "password": uid,
+                "code": "000000"
             }
         }
     };
