@@ -122,7 +122,7 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element 
                                 onclick: move |_| {
                                     menu_open.set(!menu_open());
                                 },
-                                icons::validations::Extra { class: "size-6 [&>path]:stroke-icon-primary [&>circle]:stroke-icons-primary [&>path]:fill-transparent" }
+                                icons::validations::Extra { class: "size-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent [&>circle]:fill-icon-primary" }
                             }
                             if menu_open() {
                                 div { class: "absolute right-0 top-full mt-2 w-40 border border-divider bg-background rounded-md z-50",
