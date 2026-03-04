@@ -10,7 +10,11 @@ use common::components::{Button, ButtonStyle};
 use dioxus::prelude::*;
 
 #[component]
-pub fn CommentSection(detail: PostDetailResponse, post_pk: String) -> Element {
+pub fn CommentSection(
+    detail: PostDetailResponse,
+    post_pk: String,
+    on_refresh: EventHandler<()>,
+) -> Element {
     let t: PostDetailTranslate = use_translate();
     let comment_count = detail.post.as_ref().map(|p| p.comments).unwrap_or(0);
     let mut expand_comment = use_signal(|| false);
@@ -93,15 +97,17 @@ pub fn CommentSection(detail: PostDetailResponse, post_pk: String) -> Element {
                                     }
                                     is_submitting.set(true);
                                     let pk = pk.clone();
+                                    let on_refresh = on_refresh.clone();
                                     spawn(async move {
-                                        let _ = add_comment_handler(pk.parse().unwrap(), content).await;
+                                        if add_comment_handler(pk.parse().unwrap(), content)
+                                            .await
+                                            .is_ok()
+                                        {
+                                            on_refresh.call(());
+                                        }
                                         comment_text.set(String::new());
                                         expand_comment.set(false);
                                         is_submitting.set(false);
-                                        use_navigator()
-                                            .push(crate::Route::PostDetail {
-                                                post_pk: pk,
-                                            });
                                     });
                                 }
                             },
@@ -129,6 +135,7 @@ pub fn CommentSection(detail: PostDetailResponse, post_pk: String) -> Element {
                             comment: comment.clone(),
                             post_pk: post_pk.clone(),
                             replies,
+                            on_refresh: on_refresh.clone(),
                         }
                     }
                 }
@@ -142,6 +149,7 @@ fn CommentItem(
     comment: PostCommentResponse,
     post_pk: String,
     replies: Vec<PostCommentResponse>,
+    on_refresh: EventHandler<()>,
 ) -> Element {
     let t: PostDetailTranslate = use_translate();
     let mut optimistic_liked = use_signal(|| comment.liked);
@@ -309,15 +317,17 @@ fn CommentItem(
                                     is_reply_submitting.set(true);
                                     let pk = pk.clone();
                                     let sk = sk.clone();
+                                    let on_refresh = on_refresh.clone();
                                     spawn(async move {
-                                        let _ = reply_to_comment_handler(pk.parse().unwrap(), sk, content).await;
+                                        if reply_to_comment_handler(pk.parse().unwrap(), sk, content)
+                                            .await
+                                            .is_ok()
+                                        {
+                                            on_refresh.call(());
+                                        }
                                         reply_text.set(String::new());
                                         show_reply.set(false);
                                         is_reply_submitting.set(false);
-                                        use_navigator()
-                                            .push(crate::Route::PostDetail {
-                                                post_pk: pk,
-                                            });
                                     });
                                 }
                             },
