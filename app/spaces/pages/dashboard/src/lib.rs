@@ -2,6 +2,7 @@ pub mod api;
 pub mod components;
 #[cfg(feature = "server")]
 mod config;
+pub mod i18n;
 mod menu;
 pub mod route;
 pub mod types;

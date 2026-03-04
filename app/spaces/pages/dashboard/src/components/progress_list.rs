@@ -1,15 +1,17 @@
 use crate::*;
+use crate::i18n::DashboardTranslate;
 
 #[component]
 pub fn ProgressList(data: ProgressListData) -> Element {
+    let tr: DashboardTranslate = use_translate();
     rsx! {
-        div { class: "flex h-full w-full min-h-0 flex-col p-[30px] max-tablet:p-5 max-mobile:p-4 rounded-2xl max-mobile:rounded-xl bg-space-dashboard-card",
+        div { class: "flex h-full w-full min-h-0 flex-col p-[30px] max-tablet:p-5 max-mobile:p-4 rounded-2xl max-mobile:rounded-xl bg-web-card-bg",
 
             // Header Section
             div { class: "mb-5 max-mobile:mb-4 flex items-center justify-between gap-3 max-mobile:gap-2",
 
                 // Left: Icon
-                div { class: "flex h-11 w-11 shrink-0 flex-col items-center justify-center gap-2.5 px-6 py-3 max-mobile:h-9 max-mobile:w-9 rounded-[10px] bg-yellow-500",
+                div { class: "flex h-11 w-11 shrink-0 flex-col items-center justify-center gap-2.5 px-6 py-3 max-mobile:h-9 max-mobile:w-9 rounded-[10px] {data.icon.bg_class()}",
                     icons::ratel::Thunder {
                         width: "24",
                         height: "24",
@@ -19,11 +21,11 @@ pub fn ProgressList(data: ProgressListData) -> Element {
 
                 // Right: Main Stats
                 div { class: "flex-1 min-w-0 text-right",
-                    div { class: "self-stretch text-right text-[24px] leading-[24px] max-mobile:text-[20px] max-mobile:leading-[22px] font-bold text-text-primary sp-dash-font-inter",
+                    div { class: "self-stretch text-right text-[24px] leading-[24px] max-mobile:text-[20px] max-mobile:leading-[22px] font-bold text-text-primary font-inter",
                         "{data.main_value}"
                     }
-                    div { class: "mt-1 self-stretch text-[15px] leading-[18px] max-mobile:text-[13px] max-mobile:leading-[16px] tracking-[-0.16px] font-semibold text-space-dashboard-muted sp-dash-font-raleway",
-                        "{data.main_label}"
+                    div { class: "mt-1 self-stretch text-[15px] leading-[18px] max-mobile:text-[13px] max-mobile:leading-[16px] tracking-[-0.16px] font-semibold text-web-font-neutral font-raleway",
+                        "{tr.participation_action}"
                     }
                 }
             }
@@ -38,12 +40,12 @@ pub fn ProgressList(data: ProgressListData) -> Element {
                         div { class: "flex items-center justify-between gap-2 max-mobile:gap-1",
 
                             // Label
-                            span { class: "min-w-0 truncate text-text-primary text-xs leading-4 font-medium sp-dash-font-raleway max-mobile:text-[11px]",
+                            span { class: "min-w-0 truncate text-text-primary text-xs leading-4 font-medium font-raleway max-mobile:text-[11px]",
                                 "{item.label}"
                             }
 
                             // Current Value
-                            span { class: "shrink-0 text-text-primary text-xs leading-4 font-medium sp-dash-font-raleway max-mobile:text-[11px]",
+                            span { class: "shrink-0 text-text-primary text-xs leading-4 font-medium font-raleway max-mobile:text-[11px]",
                                 "{item.current:.0}"
                             }
                         }
@@ -58,12 +60,12 @@ pub fn ProgressList(data: ProgressListData) -> Element {
                         }
 
                         // Completed Text
-                        div { class: "flex items-center gap-1 text-xs max-mobile:text-[11px] text-space-dashboard-muted",
-                            span { class: "text-space-dashboard-muted text-xs leading-4 font-medium sp-dash-font-inter max-mobile:text-[11px]",
+                        div { class: "flex items-center gap-1 text-xs max-mobile:text-[11px] text-web-font-neutral",
+                            span { class: "text-web-font-neutral text-xs leading-4 font-medium font-inter max-mobile:text-[11px]",
                                 "{item.current:.0} / {item.total:.0}"
                             }
-                            span { class: "text-space-dashboard-muted text-xs leading-4 font-medium sp-dash-font-raleway max-mobile:text-[11px]",
-                                "Completed"
+                            span { class: "text-web-font-neutral text-xs leading-4 font-medium font-raleway max-mobile:text-[11px]",
+                                "{tr.completed}"
                             }
                         }
                     }

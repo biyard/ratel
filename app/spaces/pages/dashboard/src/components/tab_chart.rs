@@ -1,17 +1,19 @@
 use crate::*;
+use crate::i18n::DashboardTranslate;
 
 #[component]
 pub fn TabChart(data: TabChartData) -> Element {
+    let tr: DashboardTranslate = use_translate();
     let mut selected_tab = use_signal(|| 0usize);
 
     rsx! {
-        div { class: "grid h-full w-full min-h-0 grid-rows-[auto_auto_minmax(0,_1fr)] gap-4 max-mobile:gap-3 p-[30px] max-tablet:p-5 max-mobile:p-4 rounded-2xl max-mobile:rounded-xl bg-space-dashboard-card",
+        div { class: "grid h-full w-full min-h-0 grid-rows-[auto_auto_minmax(0,_1fr)] gap-4 max-mobile:gap-3 p-[30px] max-tablet:p-5 max-mobile:p-4 rounded-2xl max-mobile:rounded-xl bg-web-card-bg",
 
             // Header Section
             div { class: "flex items-start justify-between gap-3 max-mobile:gap-2",
 
                 // Left: Icon
-                div { class: "flex h-11 w-11 shrink-0 flex-col items-center justify-center gap-2.5 px-6 py-3 max-mobile:h-9 max-mobile:w-9 rounded-[10px] bg-cyan-500",
+                div { class: "flex h-11 w-11 shrink-0 flex-col items-center justify-center gap-2.5 px-6 py-3 max-mobile:h-9 max-mobile:w-9 rounded-[10px] {data.icon.bg_class()}",
                     icons::user::UserGroup {
                         width: "24",
                         height: "24",
@@ -21,11 +23,11 @@ pub fn TabChart(data: TabChartData) -> Element {
 
                 // Right: Main Stats
                 div { class: "flex-1 min-w-0 text-right",
-                    div { class: "self-stretch text-right text-[24px] leading-[24px] max-mobile:text-[20px] max-mobile:leading-[22px] font-bold text-text-primary sp-dash-font-inter",
+                    div { class: "self-stretch text-right text-[24px] leading-[24px] max-mobile:text-[20px] max-mobile:leading-[22px] font-bold text-text-primary font-inter",
                         "{data.main_value}"
                     }
-                    div { class: "mt-1 self-stretch text-right text-[15px] leading-[18px] max-mobile:text-[13px] max-mobile:leading-[16px] tracking-[-0.16px] font-semibold text-space-dashboard-muted sp-dash-font-raleway",
-                        "{data.main_label}"
+                    div { class: "mt-1 self-stretch text-right text-[15px] leading-[18px] max-mobile:text-[13px] max-mobile:leading-[16px] tracking-[-0.16px] font-semibold text-web-font-neutral font-raleway",
+                        "{tr.total_participants}"
                     }
                 }
             }
