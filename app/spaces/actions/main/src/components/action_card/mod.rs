@@ -34,6 +34,18 @@ pub fn ActionCard(action: SpaceAction, space_id: SpacePartition) -> Element {
     };
     let has_stats = point_value != 0 || score_value != 0;
     let url = action.get_url(&space_id);
+
+    let title = if action.title.is_empty() {
+        tr.untitled.to_string()
+    } else {
+        action.title.clone()
+    };
+
+    let description = if action.description.is_empty() {
+        tr.no_description.to_string()
+    } else {
+        action.description.clone()
+    };
     rsx! {
         button {
             class: "flex flex-col gap-[0.625rem] p-[0.9375rem] rounded-[1rem] border border-neutral-800 light:border-neutral-300 bg-neutral-900 light:bg-white hover:bg-neutral-800 light:hover:bg-neutral-50 transition-colors text-left w-full",
@@ -60,16 +72,18 @@ pub fn ActionCard(action: SpaceAction, space_id: SpacePartition) -> Element {
                 }
             }
 
-            // Title (single line, clipped)
-            div { class: "h-[1.75rem] overflow-hidden w-full",
-                p { class: "text-[1.125rem]/[1.75rem] font-semibold text-white light:text-neutral-900",
-                    {action.title}
-                }
+            // Title
+            p {
+                class: "text-[1.125rem]/[1.75rem] font-semibold truncate w-full",
+                class: if action.title.is_empty() { "text-neutral-500 italic" } else { "text-white light:text-neutral-900" },
+                {title}
             }
 
             // Description
-            p { class: "text-[0.75rem]/[1rem] font-medium text-neutral-300 light:text-neutral-600 break-words flex-1 min-h-0 w-full",
-                {action.description}
+            p {
+                class: "text-[0.75rem]/[1rem] font-medium text-neutral-300 light:text-neutral-600 break-words flex-1 min-h-0 w-full",
+                class: if action.description.is_empty() { " text-white light:text-neutral-900" },
+                {description}
             }
 
             if has_stats {

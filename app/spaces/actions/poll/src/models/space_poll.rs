@@ -13,8 +13,8 @@ pub struct SpacePoll {
     pub created_at: i64,
     pub updated_at: i64,
 
-    pub topic: String,       // Poll Title
-    pub description: String, // Poll Description
+    pub title: String,
+    pub description: String,
 
     pub user_response_count: i64, // Participants count
 
@@ -49,7 +49,7 @@ impl SpacePoll {
             response_editable: false,
             started_at: now,
             ended_at: now + 7 * 24 * 60 * 60 * 1000, // Default to 7 days later
-            topic: String::new(),
+            title: String::new(),
             description: String::new(),
             questions: Vec::new(),
             total_point: 0,
@@ -171,7 +171,7 @@ impl TryFrom<Partition> for SpacePoll {
             response_editable: false,
             started_at: now,
             ended_at: now + 7 * 24 * 60 * 60 * 1000,
-            topic: String::new(),
+            title: String::new(),
             description: String::new(),
             questions: Vec::new(),
             total_point: 0,
