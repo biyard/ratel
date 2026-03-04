@@ -287,7 +287,7 @@ pub fn SignupModal(#[props(optional)] initial_email: Option<String>) -> Element 
 
                 // Submit Button
                 button {
-                    class: "flex justify-center items-center py-3 px-5 w-full font-bold text-white rounded-lg transition-all bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:pointer-events-none",
+                    class: "flex justify-center items-center py-3 px-5 w-full font-bold text-submit-button-text rounded-lg transition-all bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:pointer-events-none",
                     disabled: submit_disabled || loading(),
                     onclick: move |_| async move {
                         terms_error.set(String::new());
