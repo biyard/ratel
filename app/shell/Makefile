@@ -43,9 +43,12 @@ BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					FIREBASE_MESSAGING_SENDER_ID=$(FIREBASE_MESSAGING_SENDER_ID) \
 					FIREBASE_APP_ID=$(FIREBASE_APP_ID) \
 					FIREBASE_MEASUREMENT_ID=$(FIREBASE_MEASUREMENT_ID) \
-					UPSTREAM_URL=$(UPSTREAM_URL)
 
 RUST_FLAG ?=
+
+test:
+	mkdir -p ./test-build-target/debug/deps/public
+	$(BUILD_ENV) CARGO_TARGET_DIR=./test-build-target cargo test --features server,bypass
 
 run:
 	$(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web
