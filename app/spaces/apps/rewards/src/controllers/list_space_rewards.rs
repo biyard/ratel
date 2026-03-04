@@ -1,7 +1,7 @@
 use crate::*;
 use common::models::auth::OptionalUser;
 use common::models::reward::UserReward;
-use common::models::space::{SpaceReward, SpaceRewardResponse};
+use space_common::models::{SpaceReward, SpaceRewardResponse};
 
 #[get("/api/spaces/{space_id}/rewards?action_key", user: OptionalUser)]
 pub async fn list_space_rewards(

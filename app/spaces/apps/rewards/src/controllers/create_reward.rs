@@ -1,6 +1,6 @@
 use crate::*;
 use common::models::reward::Reward;
-use common::models::space::{SpaceReward, SpaceRewardResponse};
+use space_common::models::{SpaceReward, SpaceRewardResponse};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CreateSpaceRewardRequest {

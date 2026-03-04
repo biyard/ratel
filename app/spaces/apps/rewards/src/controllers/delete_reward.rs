@@ -1,6 +1,6 @@
 use crate::*;
 use common::models::auth::User;
-use common::models::space::SpaceReward;
+use space_common::models::SpaceReward;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct DeleteSpaceRewardRequest {

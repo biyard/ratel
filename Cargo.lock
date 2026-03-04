@@ -17809,6 +17809,7 @@ dependencies = [
  "common",
  "dioxus",
  "serde",
+ "space-common",
 ]
 
 [[package]]
