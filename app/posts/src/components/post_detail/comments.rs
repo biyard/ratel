@@ -246,11 +246,11 @@ fn CommentItem(
                         let pk = post_pk.clone();
                         let sk = comment_sk_for_like.clone();
                         move |_| {
-                            if *is_processing.read() {
+                            if is_processing() {
                                 return;
                             }
-                            let new_like = !*optimistic_liked.read();
-                            let prev = *optimistic_likes.read();
+                            let new_like = !optimistic_liked();
+                            let prev = optimistic_likes();
                             let delta: i64 = if new_like { 1 } else { -1 };
 
                             optimistic_liked.set(new_like);
@@ -259,17 +259,28 @@ fn CommentItem(
 
                             let pk = pk.clone();
                             let sk = sk.clone();
+                            let sk_encoded = common::percent_encoding::utf8_percent_encode(
+                                    &sk.to_string(),
+                                    common::percent_encoding::NON_ALPHANUMERIC,
+                                )
+                                .to_string();
+                            let on_refresh = on_refresh.clone();
                             spawn(async move {
-                                let _ = like_comment_handler(pk.parse().unwrap(), sk, new_like).await;
+                                if like_comment_handler(pk.parse().unwrap(), sk_encoded, new_like)
+                                    .await
+                                    .is_ok()
+                                {
+                                    on_refresh.call(());
+                                }
                                 is_processing.set(false);
                             });
                         }
                     },
                     span { class: "inline-flex items-center gap-2",
                         if optimistic_liked() {
-                            icons::emoji::ThumbsUp { class: "w-6 h-6 [&>path]:fill-primary [&>path]:stroke-icon-primary" }
+                            icons::emoji::ThumbsUp { class: "size-5 [&>path]:fill-primary [&>path]:stroke-primary" }
                         } else {
-                            icons::emoji::ThumbsUp { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
+                            icons::emoji::ThumbsUp { class: "size-5 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
                         }
                         div { class: "font-medium text-base/[24px] text-comment-icon-text",
                             {optimistic_likes().to_string()}
