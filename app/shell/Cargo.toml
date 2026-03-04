@@ -77,3 +77,12 @@ server = [
 ]
 
 lambda = [ "server", "lambda_http" ]
+
+[dev-dependencies]
+axum = { workspace = true }
+tower = { version = "0.5" }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
