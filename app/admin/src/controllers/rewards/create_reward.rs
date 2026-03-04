@@ -20,7 +20,7 @@ pub async fn createl_reward(req: CreateGlobalRewardRequest) -> Result<Reward> {
         .await?
         .is_some()
     {
-        return Err(Error::RewardAlreadyExists);
+        return Err(SpaceRewardError::RewardAlreadyExists.into());
     }
 
     let reward = Reward::new(req.behavior, req.point, req.period, req.condition);
