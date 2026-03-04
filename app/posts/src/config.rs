@@ -25,6 +25,14 @@ impl Config {
     pub fn ses(&self) -> &common::utils::aws::SesClient {
         self.common.ses()
     }
+
+    pub fn qdrant(&self) -> &common::utils::aws::QdrantClient {
+        self.common.qdrant()
+    }
+
+    pub fn bedrock_embeddings(&self) -> &common::utils::aws::BedrockEmbeddingsClient {
+        self.common.bedrock_embeddings()
+    }
 }
 
 static mut CONFIG: Option<Config> = None;
