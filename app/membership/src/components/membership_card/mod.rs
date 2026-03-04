@@ -32,7 +32,9 @@ fn MembershipVerticalCard(membership: MembershipPlanItem, on_click: EventHandler
                 }
                 div { class: "flex flex-col flex-1 gap-3 text-[15px]/[20px] text-text-primary",
                     for feature in membership.features.iter() {
-                        div { class: "flex items-center gap-3",
+                        div {
+                            key: "{feature}",
+                            class: "flex items-center gap-3",
                             icons::validations::Check { class: "w-[13px] h-[13px] min-w-[13px] [&>path]:stroke-primary" }
                             "{feature}"
                         }
@@ -74,7 +76,9 @@ fn MembershipHorizontalCard(membership: MembershipPlanItem, on_click: EventHandl
                 }
                 div { class: "flex flex-col flex-1 gap-3 text-[15px]/[20px] text-text-primary",
                     for feature in membership.features.iter() {
-                        div { class: "flex items-center gap-3",
+                        div {
+                            key: "{feature}",
+                            class: "flex items-center gap-3",
                             icons::validations::Check { class: "w-[13px] h-[13px] min-w-[13px] [&>path]:stroke-primary" }
                             "{feature}"
                         }
