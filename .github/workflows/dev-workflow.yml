@@ -196,7 +196,7 @@ jobs:
           PORTONE_API_SECRET: ${{ secrets.DEV_PORTONE_API_SECRET }}
           PORTONE_KPN_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_KPN_CHANNEL_KEY }}
 
-          REPOSITORY: ${{ steps.ratel-ecr.outputs.registry }}/ratel/app-shell
+          ECR: ${{ steps.ratel-ecr.outputs.registry }}/ratel/app-shell
         run: |
           rm -rf ../../target/dx
           make build-lambda
@@ -210,14 +210,16 @@ jobs:
         run: |
           aws s3 sync ../../target/dx/app-shell/release/web/public $BUCKET
           aws cloudfront create-invalidation --distribution-id $CDN --paths "/*"
+          cd ../..
+          tar czvf app-shell.tar.gz target/dx/app-shell/release/web
 
-      # - name: Upload Artifacts
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: app-shell-${{ github.sha }}
-      #     path: ${{ github.workspace }}/.build/app-shell/bootstrap
-      #     if-no-files-found: error
-      #     retention-days: 7
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-shell-${{ github.sha }}
+          path: ${{ github.workspace }}/app-shell.tar.gz
+          if-no-files-found: error
+          retention-days: 7
 
   # NOTE: migrate to DynamoDB
   # image-worker:

@@ -19,33 +19,42 @@ fn main() {
         _ => "build",
     };
 
-    let status = Command::new("npm")
-        .args(["run", build_cmd])
-        .current_dir(&js_dir)
-        .status()
-        .expect("failed to run npm build");
-    assert!(status.success(), "npm build for ratel/common failed");
+    let is_local = match std::env::var("ENV").as_deref() {
+        Ok("local") => true,
+        _ => false,
+    };
 
     std::fs::create_dir_all(&assets_dir).expect("failed to create assets directory");
-    std::fs::copy(
-        js_dir.join("dist/main.js"),
-        assets_dir.join("ratel-common.js"),
-    )
-    .expect("failed to copy dist/main.js to assets/ratel-common.js");
 
-    let status = Command::new("npx")
-        .args([
-            "@tailwindcss/cli",
-            "-i",
-            "tailwind.css",
-            "-o",
-            "assets/tailwind.css",
-            "-m",
-        ])
-        .current_dir(&manifest_path)
-        .status()
-        .expect("failed to build tailwindcss");
-    assert!(status.success(), "npm build for assets/tailwind.css failed");
+    let js_output = assets_dir.join("ratel-common.js");
+    if !js_output.exists() && !is_local {
+        let status = Command::new("npm")
+            .args(["run", build_cmd])
+            .current_dir(&js_dir)
+            .status()
+            .expect("failed to run npm build");
+        assert!(status.success(), "npm build for ratel/common failed");
+
+        std::fs::copy(js_dir.join("dist/main.js"), &js_output)
+            .expect("failed to copy dist/main.js to assets/ratel-common.js");
+    }
+
+    let css_output = assets_dir.join("common-tailwind.css");
+    if !css_output.exists() && !is_local {
+        let status = Command::new("npx")
+            .args([
+                "@tailwindcss/cli",
+                "-i",
+                "tailwind.css",
+                "-o",
+                "assets/common-tailwind.css",
+                "-m",
+            ])
+            .current_dir(&manifest_path)
+            .status()
+            .expect("failed to build tailwindcss");
+        assert!(status.success(), "npm build for assets/tailwind.css failed");
+    }
 
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed={}", js_dir.join("src").display());
