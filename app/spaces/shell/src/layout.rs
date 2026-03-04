@@ -75,17 +75,19 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
     };
 
     rsx! {
-        div { class: "grid overflow-hidden grid-cols-[250px_1fr] w-full h-screen bg-component-bg text-web-font-primary",
-            SpaceNav {
-                logo: "https://metadata.ratel.foundation/logos/logo.png",
-                menus,
-                user,
-                role,
-                login_handler: move |_| {
-                    popup.open(rsx! {
-                        LoginModal {}
-                    }).with_title(tr.title);
-                },
+        div { class: "grid overflow-hidden grid-cols-1 tablet:grid-cols-[250px_1fr] w-full h-screen bg-component-bg text-web-font-primary",
+            div { class: "hidden tablet:flex",
+                SpaceNav {
+                    logo: "https://metadata.ratel.foundation/logos/logo.png",
+                    menus,
+                    user,
+                    role,
+                    login_handler: move |_| {
+                        popup.open(rsx! {
+                            LoginModal {}
+                        }).with_title(tr.title);
+                    },
+                }
             }
             div { class: "flex flex-col min-h-0 min-w-0",
                 SpaceTop {

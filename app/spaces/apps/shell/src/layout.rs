@@ -73,16 +73,18 @@ pub fn SpaceAppsLayout(space_id: SpacePartition) -> Element {
     }];
 
     rsx! {
-        div { class: "grid overflow-hidden grid-cols-7 w-full h-screen bg-component-bg text-web-font-primary",
-            SpaceNav {
-                logo: "https://metadata.ratel.foundation/logos/logo.png",
-                menus,
-                user,
-                role,
-                // FIXME:
-                login_handler: move |_| {},
+        div { class: "grid overflow-hidden grid-cols-1 tablet:grid-cols-[250px_1fr] w-full h-screen bg-component-bg text-web-font-primary",
+            div { class: "hidden tablet:flex",
+                SpaceNav {
+                    logo: "https://metadata.ratel.foundation/logos/logo.png",
+                    menus,
+                    user,
+                    role,
+                    // FIXME:
+                    login_handler: move |_| {},
+                }
             }
-            div { class: "flex flex-col col-span-6 col-start-2 min-h-0",
+            div { class: "flex flex-col min-h-0 min-w-0",
                 SpaceTop {
                     labels,
                     space_status: None,
