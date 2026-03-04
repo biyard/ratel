@@ -1,5 +1,2 @@
-mod reward;
-mod reward_types;
-
-pub use reward::*;
+pub mod reward_types;
 pub use reward_types::*;

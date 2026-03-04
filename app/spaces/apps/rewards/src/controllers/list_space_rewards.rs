@@ -1,4 +1,6 @@
 use crate::*;
+#[cfg(feature = "server")]
+use common::models::auth::OptionalUser;
 use space_common::models::SpaceRewardResponse;
 
 #[get("/api/spaces/{space_id}/rewards?action_key", user: OptionalUser)]
@@ -6,7 +8,7 @@ pub async fn list_space_rewards(
     space_id: SpacePartition,
     action_key: Option<EntityType>,
 ) -> Result<ListResponse<SpaceRewardResponse>> {
-    use common::models::{auth::OptionalUser, reward::UserReward};
+    use common::models::reward::UserReward;
     use space_common::models::SpaceReward;
     let common_config = common::CommonConfig::default();
     let cli = common_config.dynamodb();

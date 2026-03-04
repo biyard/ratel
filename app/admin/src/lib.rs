@@ -15,6 +15,7 @@ pub use models::*;
 pub use route::Route;
 
 use common::*;
+use common::models::Reward;
 use dioxus::prelude::*;
 
 type Result<T> = common::Result<T>;
