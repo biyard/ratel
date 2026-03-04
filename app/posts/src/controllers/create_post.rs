@@ -10,7 +10,7 @@ pub struct CreatePostResponse {
     pub post_pk: Partition,
 }
 
-#[post("/api/posts/create", user: User)]
+#[post("/api/posts", user: User)]
 pub async fn create_post_handler(team_id: Option<TeamPartition>) -> Result<CreatePostResponse> {
     let conf = crate::config::get();
     let cli = conf.dynamodb();

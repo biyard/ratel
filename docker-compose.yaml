@@ -1,6 +1,7 @@
 services:
   app-shell:
     image: rust
+    user: "1000:1000"
     restart: always
     ports:
       - "8080:8080"

@@ -35,7 +35,7 @@ pub enum UpdatePostRequest {
     },
 }
 
-#[post("/api/posts/:post_pk/update", user: User)]
+#[put("/api/posts/:post_pk", user: User)]
 pub async fn update_post_handler(post_pk: FeedPartition, req: UpdatePostRequest) -> Result<Post> {
     let conf = crate::config::get();
     let cli = conf.dynamodb();
