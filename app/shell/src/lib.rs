@@ -1,4 +1,5 @@
 #![allow(unused_imports, dead_code)]
+mod app;
 pub mod components;
 pub mod config;
 mod constants;
@@ -8,6 +9,7 @@ pub mod layout;
 mod route;
 pub mod views;
 
+pub use app::App;
 pub use route::Route;
 
 use common::*;
@@ -22,3 +24,6 @@ pub mod web;
 
 #[cfg(feature = "server")]
 pub mod server;
+
+#[cfg(test)]
+pub mod tests;
