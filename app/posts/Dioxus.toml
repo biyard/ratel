@@ -1,5 +1,5 @@
 [application]
-tailwind_input = "../common/tailwind.css"
+tailwind_input = "../assets/css/tailwind.css"
 
 [web.app]
 

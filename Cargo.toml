@@ -15,7 +15,7 @@ members = [
   "packages/*",
 ]
 resolver = "2"
-exclude = ["benchmark/*", "deps", "packages/template"]
+exclude = ["app/assets", "benchmark/*", "deps", "packages/template"]
 
 [workspace.package]
 authors = ["Biyard"]
