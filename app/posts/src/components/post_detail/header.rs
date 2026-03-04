@@ -4,7 +4,7 @@ use crate::controllers::like_post::like_post_handler;
 use crate::controllers::{create_space_handler, delete_post_handler, CreateSpaceRequest};
 use crate::types::*;
 use crate::*;
-use common::components::{Button, ButtonStyle};
+use common::components::{Button, ButtonSize, ButtonStyle};
 use dioxus::prelude::*;
 
 #[component]
@@ -117,8 +117,10 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element 
                             }
                         }
                         if can_delete {
-                            button {
-                                class: "p-1 hover:bg-hover rounded-full focus:outline-none transition-colors",
+                            Button {
+                                size: ButtonSize::Icon,
+                                style: ButtonStyle::Ghost,
+                                class: "p-1 hover:bg-hover rounded-full focus:outline-none transition-colors".to_string(),
                                 onclick: move |_| {
                                     menu_open.set(!menu_open());
                                 },
@@ -126,8 +128,10 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element 
                             }
                             if menu_open() {
                                 div { class: "absolute right-0 top-full mt-2 w-40 border border-divider bg-background rounded-md z-50",
-                                    button {
-                                        class: "flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-hover cursor-pointer",
+                                    Button {
+                                        size: ButtonSize::Inline,
+                                        style: ButtonStyle::Ghost,
+                                        class: "flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-hover cursor-pointer".to_string(),
                                         onclick: move |_| {
                                             let nav = nav.clone();
                                             let pk = post_pk_for_delete.clone();
@@ -151,8 +155,10 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element 
 
             div { class: "flex flex-row justify-between",
                 div { class: "flex gap-4 justify-end items-center w-full",
-                    button {
-                        class: "flex items-center gap-1 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50",
+                    Button {
+                        size: ButtonSize::Inline,
+                        style: ButtonStyle::Ghost,
+                        class: "flex items-center gap-1 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50".to_string(),
                         disabled: *is_processing.read(),
                         onclick: {
                             let post_pk_val = post_pk_for_like.clone();

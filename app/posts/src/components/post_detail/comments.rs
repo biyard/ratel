@@ -7,7 +7,7 @@ use crate::controllers::comments::reply_to_comment::reply_to_comment_handler;
 use crate::controllers::dto::*;
 use crate::*;
 use common::components::TiptapEditor;
-use common::components::{Button, ButtonStyle};
+use common::components::{Button, ButtonSize, ButtonStyle, TextArea};
 use common::hooks::use_infinite_query;
 use dioxus::prelude::*;
 
@@ -18,7 +18,7 @@ pub fn CommentSection(
     on_refresh: EventHandler<()>,
 ) -> Element {
     let t: PostDetailTranslate = use_translate();
-    let comment_count = detail.post.as_ref().map(|p| p.comments).unwrap_or(0);
+    let mut comment_count = use_signal(|| detail.post.as_ref().map(|p| p.comments).unwrap_or(0));
     let mut expand_comment = use_signal(|| false);
     let mut comment_text = use_signal(|| String::new());
     let mut is_submitting = use_signal(|| false);
@@ -33,12 +33,13 @@ pub fn CommentSection(
     let reply_label = t.reply;
     let replies_label = t.replies;
     let count_text = use_memo(move || {
-        let label = if comment_count == 1 {
+        let count = comment_count();
+        let label = if count == 1 {
             reply_label
         } else {
             replies_label
         };
-        format!("{} {}", comment_count, label)
+        format!("{} {}", count, label)
     });
 
     rsx! {
@@ -48,8 +49,11 @@ pub fn CommentSection(
                 span { class: "text-base/6 font-medium", {count_text()} }
             }
             if !expand_comment() {
-                button {
-                    class: "flex flex-row w-full px-3.5 py-3 gap-2 bg-write-comment-box-bg border border-write-comment-box-border items-center rounded-lg hover:bg-write-comment-box-bg/80 hover:border-primary/50 transition-all duration-200 cursor-pointer group",
+                Button {
+                    size: ButtonSize::Inline,
+                    style: ButtonStyle::Ghost,
+                    class: "flex flex-row w-full px-3.5 py-3 gap-2 bg-write-comment-box-bg border border-write-comment-box-border items-center rounded-lg hover:bg-write-comment-box-bg/80 hover:border-primary/50 transition-all duration-200 cursor-pointer group"
+                        .to_string(),
                     onclick: move |_| {
                         expand_comment.set(true);
                     },
@@ -63,11 +67,12 @@ pub fn CommentSection(
             }
             if expand_comment() {
                 div { class: "flex flex-col gap-2 p-4 border border-card-enable-border rounded-lg bg-card-bg-secondary",
-                    textarea {
-                        class: "w-full min-h-[80px] p-2 bg-transparent text-text-primary border border-divider rounded resize-none focus:outline-none focus:border-primary",
-                        placeholder: t.share_your_thoughts,
+                    TextArea {
+                        class: "w-full min-h-[80px] p-2 bg-transparent text-text-primary border border-divider rounded resize-none focus:outline-none focus:border-primary"
+                            .to_string(),
+                        placeholder: t.share_your_thoughts.to_string(),
                         value: comment_text(),
-                        oninput: move |e| {
+                        oninput: move |e: FormEvent| {
                             comment_text.set(e.value());
                         },
                     }
@@ -98,6 +103,7 @@ pub fn CommentSection(
                                             .await
                                             .is_ok()
                                         {
+                                            comment_count.set(comment_count() + 1);
                                             on_refresh.call(());
                                         }
                                         comment_text.set(String::new());
@@ -117,6 +123,12 @@ pub fn CommentSection(
                     comment: comment.clone(),
                     post_pk: post_pk.clone(),
                     on_refresh: on_refresh.clone(),
+                    on_comment_count_inc: {
+                        let mut comment_count = comment_count.clone();
+                        move || {
+                            comment_count.set(comment_count() + 1);
+                        }
+                    },
                 }
             }
         }
@@ -128,6 +140,7 @@ fn CommentItem(
     comment: PostCommentResponse,
     post_pk: String,
     on_refresh: EventHandler<()>,
+    on_comment_count_inc: EventHandler<()>,
 ) -> Element {
     let t: PostDetailTranslate = use_translate();
     let mut optimistic_liked = use_signal(|| comment.liked);
@@ -146,10 +159,7 @@ fn CommentItem(
     let img_class = "object-cover object-top w-10 h-10 rounded-full";
 
     let updated_secs = use_memo(move || comment.updated_at * 1000);
-    let mut comment_replies = use_signal(|| comment.replies);
-    if comment_replies() != comment.replies {
-        comment_replies.set(comment.replies);
-    }
+    let comment_replies = use_signal(|| comment.replies);
     let reply_label = t.reply;
     let replies_label = t.replies;
     let reply_text_label = use_memo(move || {
@@ -206,9 +216,12 @@ fn CommentItem(
             }
             div { class: "flex flex-row gap-2 justify-between items-center w-full",
                 div { class: "flex flex-row gap-5",
-                    button {
+                    Button {
+                        size: ButtonSize::Inline,
+                        style: ButtonStyle::Ghost,
                         aria_label: "Expand Replies",
-                        class: "flex flex-row gap-2 justify-center items-center disabled:cursor-not-allowed text-primary",
+                        class: "flex flex-row gap-2 justify-center items-center disabled:cursor-not-allowed text-primary"
+                            .to_string(),
                         disabled: comment_replies() == 0,
                         onclick: move |_| {
                             let next = !*show_replies.read();
@@ -221,9 +234,12 @@ fn CommentItem(
                             }
                         }
                     }
-                    button {
+                    Button {
+                        size: ButtonSize::Inline,
+                        style: ButtonStyle::Ghost,
                         aria_label: t.reply_button,
-                        class: "flex gap-2 justify-center items-center cursor-pointer text-text-primary",
+                        class: "flex gap-2 justify-center items-center cursor-pointer text-text-primary"
+                            .to_string(),
                         onclick: move |_| {
                             let current = *show_reply.read();
                             show_reply.set(!current);
@@ -298,14 +314,14 @@ fn CommentItem(
                             icons::arrows::DoubleArrowDown { class: "w-5 h-5 [&>path]:stroke-text-primary" }
                         }
                     }
-                    div { class: "flex-1 w-full rounded-md transition-colors cursor-text hover:bg-foreground/5",
-                        TiptapEditor {
-                            class: "border-none",
-                            content: reply_text.read().clone(),
-                            editable: true,
-                            placeholder: t.contents_hint,
-                            on_content_change: move |val| {
-                                reply_text.set(val);
+                    div { class: "flex-1 w-full rounded-md transition-colors",
+                        TextArea {
+                            class: "w-full min-h-[80px] p-2 bg-transparent text-text-primary border border-divider rounded resize-none focus:outline-none focus:border-primary m-1"
+                                .to_string(),
+                            placeholder: t.contents_hint.to_string(),
+                            value: reply_text(),
+                            oninput: move |e: FormEvent| {
+                                reply_text.set(e.value());
                             },
                         }
                     }
@@ -331,13 +347,17 @@ fn CommentItem(
                                         )
                                         .to_string();
                                     let on_refresh = on_refresh.clone();
+                                    let on_comment_count_inc = on_comment_count_inc.clone();
                                     let mut show_replies = show_replies.clone();
+                                    let mut comment_replies = comment_replies.clone();
                                     let mut replies = replies.clone();
                                     spawn(async move {
                                         if reply_to_comment_handler(pk.parse().unwrap(), sk_encoded, content)
                                             .await
                                             .is_ok()
                                         {
+                                            comment_replies.set(comment_replies() + 1);
+                                            on_comment_count_inc.call(());
                                             on_refresh.call(());
                                             replies.restart();
                                             show_replies.set(true);
