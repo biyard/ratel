@@ -40,7 +40,7 @@ pub fn SpaceNav(
 
 #[component]
 fn NavItem(item: SpaceNavItem) -> Element {
-    let current_path = use_context::<dioxus::router::RouterContext>().current_route_string();
+    let current_path = use_context::<dioxus::router::RouterContext>().full_route_string();
     let is_active = match &item.link {
         NavigationTarget::Internal(route) => current_path.starts_with(&route.to_string()),
         _ => false,
