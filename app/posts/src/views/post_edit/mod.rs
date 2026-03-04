@@ -2,7 +2,7 @@ use crate::controllers::get_post::get_post_handler;
 use crate::controllers::update_post::{update_post_handler, UpdatePostRequest};
 use crate::controllers::{create_space_handler, CreateSpaceRequest};
 use crate::*;
-use common::components::{ButtonShape, ButtonSize, ButtonStyle, TiptapEditor};
+use common::components::{ButtonShape, ButtonSize, ButtonStyle, InputVariant, TiptapEditor};
 use dioxus::prelude::*;
 
 translate! {
@@ -216,7 +216,7 @@ pub fn PostEdit(post_pk: String) -> Element {
         }
     };
 
-    let title_len = title().len();
+    let title_len = title().chars().count();
     let content_text_len = strip_html_tags(&content()).trim().len();
     let can_submit = !title().is_empty()
         && content_text_len >= CONTENT_MIN_LENGTH
@@ -226,26 +226,26 @@ pub fn PostEdit(post_pk: String) -> Element {
 
     rsx! {
         div { class: "flex flex-col gap-5 py-5 px-4 mx-auto w-full max-w-[906px]",
-            h1 { class: "text-2xl font-bold text-text-primary", "{tr.page_title}" }
+            h1 { class: "text-2xl font-bold text-text-primary", {tr.page_title} }
 
             // Title input
             div { class: "relative",
-                input {
-                    class: "w-full bg-transparent text-xl font-bold text-text-primary placeholder-text-tertiary outline-none border-b border-divider pb-2",
+                Input {
+                    class: "w-full pr-14 ",
                     r#type: "text",
-                    placeholder: "{tr.title_placeholder}",
-                    maxlength: "{TITLE_MAX_LENGTH}",
-                    value: "{title}",
-                    oninput: move |e| {
+                    placeholder: tr.title_placeholder,
+                    maxlength: TITLE_MAX_LENGTH,
+                    value: title,
+                    oninput: move |e: Event<FormData>| {
                         let val = e.value();
-                        if val.len() <= TITLE_MAX_LENGTH {
+                        if val.chars().count() <= TITLE_MAX_LENGTH {
                             title.set(val);
                             status.set(EditorStatus::Unsaved);
                             save_version += 1;
                         }
                     },
                 }
-                div { class: "absolute right-3 top-1/2 -translate-y-1/2 text-sm text-text-tertiary",
+                div { class: "absolute right-3 top-1/2 -translate-y-1/2 text-sm text-text-tertiary pointer-events-none",
                     "{title_len}/{TITLE_MAX_LENGTH}"
                 }
             }
@@ -256,7 +256,7 @@ pub fn PostEdit(post_pk: String) -> Element {
                     class: "w-full min-h-[400px] bg-post-input-bg border border-post-input-border rounded-md focus-within:border-ring focus-within:ring-1 focus-within:ring-ring/50",
                     content: content(),
                     editable: true,
-                    placeholder: "{tr.content_placeholder}",
+                    placeholder: tr.content_placeholder,
                     on_content_change: move |html: String| {
                         content.set(html);
                         status.set(EditorStatus::Unsaved);
@@ -266,10 +266,18 @@ pub fn PostEdit(post_pk: String) -> Element {
                 if status() != EditorStatus::Idle {
                     div { class: "flex absolute left-3 bottom-3 gap-2 items-center py-1 px-2 text-xs rounded text-text-tertiary bg-card",
                         match status() {
-                            EditorStatus::Saving => rsx! { "{tr.saving}" },
-                            EditorStatus::Saved => rsx! { "{tr.all_changes_saved}" },
-                            EditorStatus::Unsaved => rsx! { "{tr.unsaved_changes}" },
-                            EditorStatus::Publishing => rsx! { "{tr.publishing}" },
+                            EditorStatus::Saving => rsx! {
+                                {tr.saving}
+                            },
+                            EditorStatus::Saved => rsx! {
+                                {tr.all_changes_saved}
+                            },
+                            EditorStatus::Unsaved => rsx! {
+                                {tr.unsaved_changes}
+                            },
+                            EditorStatus::Publishing => rsx! {
+                                {tr.publishing}
+                            },
                             EditorStatus::Idle => rsx! { "" },
                         }
                     }
@@ -305,7 +313,7 @@ pub fn PostEdit(post_pk: String) -> Element {
             if status() == EditorStatus::Saving {
                 div { class: "flex gap-2 justify-center items-center mt-4 text-sm text-text-tertiary",
                     div { class: "w-4 h-4 border-2 border-text-tertiary border-t-transparent rounded-full animate-spin" }
-                    span { "{tr.saving}" }
+                    span { {tr.saving} }
                 }
             }
         }
