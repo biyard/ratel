@@ -2,6 +2,7 @@
 pub mod components;
 pub mod controllers;
 pub mod hooks;
+pub mod layout;
 pub mod models;
 pub mod route;
 
@@ -10,6 +11,7 @@ pub mod interop;
 
 mod views;
 
+pub use models::*;
 pub use route::Route;
 
 use common::*;
