@@ -17,13 +17,13 @@ pub struct CustomerInfo {
     pub card_password: String,
 }
 
-fn tier_label(tier: MembershipTier) -> &'static str {
+fn tier_label(tier: MembershipTier, tr: &MembershipPurchaseTranslate) -> &str {
     match tier {
-        MembershipTier::Free => "Free",
-        MembershipTier::Pro => "Pro",
-        MembershipTier::Max => "Max",
-        MembershipTier::Vip => "VIP",
-        MembershipTier::Enterprise => "Enterprise",
+        MembershipTier::Free => tr.tier_free,
+        MembershipTier::Pro => tr.tier_pro,
+        MembershipTier::Max => tr.tier_max,
+        MembershipTier::Vip => tr.tier_vip,
+        MembershipTier::Enterprise => tr.tier_enterprise,
     }
 }
 
@@ -85,7 +85,7 @@ pub fn MembershipPurchaseModal(
                     div { class: "flex justify-between items-center",
                         div { class: "flex flex-col gap-1",
                             h4 { class: "text-lg font-semibold text-text-primary",
-                                {tier_label(membership)}
+                                {tier_label(membership, &tr)}
                                 " "
                                 {tr.membership_label}
                             }
