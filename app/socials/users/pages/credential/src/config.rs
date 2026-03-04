@@ -1,7 +1,5 @@
-mod portone_config;
-
 use common::CommonConfig;
-pub use portone_config::PortoneConfig;
+pub use common::PortoneConfig;
 
 #[derive(Debug, Default)]
 pub struct Config {

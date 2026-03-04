@@ -140,7 +140,7 @@ impl PortOne {
             },
             currency: currency.to_string(),
             locale: None,
-            notice_urls: portone_conf.notice_urls(),
+            notice_urls: portone_conf.notice_urls(conf.common.env),
         };
 
         let res = self
@@ -198,7 +198,7 @@ impl PortOne {
             },
             currency: currency.to_string(),
             locale: None,
-            notice_urls: portone_conf.notice_urls(),
+            notice_urls: portone_conf.notice_urls(conf.common.env),
         };
 
         let body = ScheduleBillingKeyRequest {
