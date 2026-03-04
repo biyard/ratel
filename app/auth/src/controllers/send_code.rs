@@ -45,9 +45,8 @@ async fn send_password_reset_email_code_handler(email: String) -> Result<SendCod
     let (users, _) = User::find_by_email(cli, &email, UserQueryOption::builder().limit(1)).await?;
 
     if users.is_empty() {
-        tracing::info!(
-            "Skipping password reset verification email for non-registered email: {}",
-            email
+        tracing::debug!(
+            "Skipping password reset verification email for non-registered email"
         );
         return Ok(SendCodeResponse {
             expired_at: common::utils::time::get_now_timestamp() + EXPIRATION_TIME as i64,

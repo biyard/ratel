@@ -45,8 +45,7 @@ pub fn AppMenu() -> Element {
     let mut popup = use_popup();
     let user_ctx = ratel_auth::hooks::use_user_context();
     let mut mobile_menu_open = use_signal(|| false);
-    let popup_scroll_lock = popup.is_open();
-    use_scroll_lock(mobile_menu_open() || popup_scroll_lock);
+    use_scroll_lock(mobile_menu_open());
 
     let logged_in = user_ctx().is_logged_in();
 
