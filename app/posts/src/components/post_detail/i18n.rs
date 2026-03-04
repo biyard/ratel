@@ -69,8 +69,8 @@ translate! {
     },
 
     contents_hint: {
-        en: "Type here, Use Markdown, BB code, or HTML to format.",
-        ko: "여기에 마크다운 형태를 활용하여 설명을 입력해주세요.",
+        en: "Type The Contents.",
+        ko: "여기에 설명을 입력해주세요.",
     },
 
     success_create_comment: {
