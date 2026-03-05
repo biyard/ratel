@@ -1,6 +1,7 @@
 use crate::components::{exchange_preview_card, points_summary_card, transaction_list};
 use crate::controllers::{get_rewards_handler, list_point_transactions_handler};
-use crate::dto::{PointTransactionResponse, RewardsResponse};
+use crate::dto::RewardsResponse;
+use common::services::PointTransactionResponse;
 use crate::*;
 use dioxus::prelude::*;
 
