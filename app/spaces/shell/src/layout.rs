@@ -10,6 +10,7 @@ use space_common::{
 
 #[component]
 pub fn SpaceLayout(space_id: SpacePartition) -> Element {
+    use_context_provider(|| LayoverService::new());
     let role_loader = use_user_role(&space_id)?;
     let role = role_loader.read().clone();
     let space_loader = use_space_query(&space_id)?;
