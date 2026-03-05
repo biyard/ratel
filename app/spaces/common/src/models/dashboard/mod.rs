@@ -1,2 +1,4 @@
+pub mod aggregate;
 pub mod dashboard_data;
-pub mod dashboard_extension;
+#[cfg(feature = "server")]
+pub mod recalculate;

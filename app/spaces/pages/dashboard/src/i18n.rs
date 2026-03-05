@@ -62,4 +62,39 @@ translate! {
         en: "Completed",
         ko: "완료",
     },
+
+    setup_now: {
+        en: "Setup Now",
+        ko: "지금 설정",
+    },
+
+    space_views: {
+        en: "Space Views",
+        ko: "스페이스 뷰",
+    },
+
+    total_likes: {
+        en: "Total Likes",
+        ko: "총 좋아요",
+    },
+
+    total_comments: {
+        en: "Total Comments",
+        ko: "총 댓글",
+    },
+
+    total_actions: {
+        en: "Total Actions",
+        ko: "총 액션",
+    },
+
+    poll_completion: {
+        en: "Poll Completion",
+        ko: "투표 완료",
+    },
+
+    discussion_completion: {
+        en: "Discussion Completion",
+        ko: "토론 완료",
+    },
 }

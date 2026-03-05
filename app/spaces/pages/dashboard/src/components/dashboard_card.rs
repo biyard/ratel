@@ -1,5 +1,5 @@
-use crate::*;
 use crate::i18n::DashboardTranslate;
+use crate::*;
 
 // ─── Card Header (shared across all card types) ─────────────
 
@@ -9,7 +9,7 @@ fn CardHeader(icon: DashboardIcon, main_value: String, main_label: String) -> El
         div { class: "flex items-center justify-between gap-3 max-mobile:gap-2",
 
             // Left: Icon box
-            div { class: "flex h-11 w-11 shrink-0 items-center justify-center max-mobile:h-9 max-mobile:w-9 rounded-[10px] {icon.bg_class()}",
+            div { class: "flex h-11 w-11 shrink-0 items-center justify-center max-mobile:h-9 max-mobile:w-9 rounded-[10px] {icon.class()}",
                 {render_icon(&icon)}
             }
 
@@ -30,31 +30,36 @@ fn render_icon(icon: &DashboardIcon) -> Element {
     match icon {
         DashboardIcon::BarChart => rsx! {
             icons::graph::BarChart {
-                width: "24", height: "24",
+                width: "24",
+                height: "24",
                 class: "h-6 w-6 max-mobile:h-5 max-mobile:w-5 [&>path]:fill-none",
             }
         },
         DashboardIcon::Action => rsx! {
             icons::ratel::Thunder {
-                width: "24", height: "24",
-                class: "h-6 w-6 max-mobile:h-5 max-mobile:w-5",
+                width: "24",
+                height: "24",
+                class: "h-6 w-6 max-mobile:h-5 max-mobile:w-5 [&>path]:fill-none",
             }
         },
         DashboardIcon::Participants => rsx! {
             icons::user::UserGroup {
-                width: "24", height: "24",
+                width: "24",
+                height: "24",
                 class: "h-6 w-6 max-mobile:h-5 max-mobile:w-5 [&>path]:fill-none",
             }
         },
         DashboardIcon::IncentivePool => rsx! {
             icons::ratel::Chest {
-                width: "24", height: "24",
+                width: "24",
+                height: "24",
                 class: "h-6 w-6 max-mobile:h-5 max-mobile:w-5 [&>path]:fill-none",
             }
         },
         DashboardIcon::Rewards => rsx! {
             icons::ratel::Clock {
-                width: "24", height: "24",
+                width: "24",
+                height: "24",
                 class: "h-6 w-6 max-mobile:h-5 max-mobile:w-5 [&>circle]:fill-none",
             }
         },
@@ -64,8 +69,14 @@ fn render_icon(icon: &DashboardIcon) -> Element {
 // ─── DashboardCard (unified entry point) ─────────────────
 
 #[component]
-pub fn DashboardCard(ext: DashboardExtension) -> Element {
-    match ext.data {
+pub fn DashboardCard(
+    data: DashboardComponentData,
+    #[props(default = false)] is_creator: bool,
+    space_id: SpacePartition,
+) -> Element {
+    let tr: DashboardTranslate = use_translate();
+
+    match data {
         DashboardComponentData::RankingTable(data) => rsx! {
             RankingTable { data }
         },
@@ -74,33 +85,36 @@ pub fn DashboardCard(ext: DashboardExtension) -> Element {
                 div { class: "flex h-full w-full min-h-0 flex-col gap-5 p-[30px] max-tablet:p-5 max-mobile:p-4 rounded-2xl max-mobile:rounded-xl bg-web-card-bg",
                     CardHeader {
                         icon: data.icon.clone(),
-                        main_value: data.main_value.clone(),
-                        main_label: data.main_label.clone(),
+                        main_value: format!("{}", data.participants),
+                        main_label: tr.space_views.to_string(),
                     }
-                    StatSummaryContent { data }
+                    StatSummaryContent { data, tr }
                 }
             }
         }
         DashboardComponentData::StatCard(data) => {
-            let tr: DashboardTranslate = use_translate();
             rsx! {
                 div { class: "flex h-full w-full min-h-0 flex-col gap-2.5 p-[30px] max-tablet:p-5 max-mobile:p-4 rounded-2xl max-mobile:rounded-xl bg-web-card-bg",
                     CardHeader {
                         icon: data.icon.clone(),
                         main_value: data.value.clone(),
-                        main_label: data.trend_label.clone(),
+                        main_label: tr.incentive_pool.to_string(),
                     }
-                    StatCardContent { data, tr }
+                    StatCardContent {
+                        data,
+                        tr,
+                        is_creator,
+                        space_id,
+                    }
                 }
             }
         }
         DashboardComponentData::ProgressList(data) => {
-            let tr: DashboardTranslate = use_translate();
             rsx! {
                 div { class: "flex h-full w-full min-h-0 flex-col gap-5 p-[30px] max-tablet:p-5 max-mobile:p-4 rounded-2xl max-mobile:rounded-xl bg-web-card-bg",
                     CardHeader {
                         icon: data.icon.clone(),
-                        main_value: data.main_value.clone(),
+                        main_value: format!("{}", data.poll_count + data.post_count),
                         main_label: tr.participation_action.to_string(),
                     }
                     ProgressListContent { data, tr }
@@ -108,12 +122,11 @@ pub fn DashboardCard(ext: DashboardExtension) -> Element {
             }
         }
         DashboardComponentData::TabChart(data) => {
-            let tr: DashboardTranslate = use_translate();
             rsx! {
                 div { class: "grid h-full w-full min-h-0 grid-rows-[auto_auto_minmax(0,_1fr)] gap-4 max-mobile:gap-3 p-[30px] max-tablet:p-5 max-mobile:p-4 rounded-2xl max-mobile:rounded-xl bg-web-card-bg",
                     CardHeader {
                         icon: data.icon.clone(),
-                        main_value: data.main_value.clone(),
+                        main_value: format!("{}", data.participants),
                         main_label: tr.total_participants.to_string(),
                     }
                     TabChartContent { data }
@@ -121,12 +134,11 @@ pub fn DashboardCard(ext: DashboardExtension) -> Element {
             }
         }
         DashboardComponentData::InfoCard(data) => {
-            let tr: DashboardTranslate = use_translate();
             rsx! {
                 div { class: "flex h-full w-full min-h-0 flex-col gap-2.5 p-[30px] max-tablet:p-5 max-mobile:p-4 rounded-2xl max-mobile:rounded-xl bg-web-card-bg",
                     CardHeader {
                         icon: data.icon.clone(),
-                        main_value: data.main_value.clone(),
+                        main_value: format!("{}", data.total_points),
                         main_label: tr.points_available.to_string(),
                     }
                     InfoCardContent { data }
@@ -139,47 +151,70 @@ pub fn DashboardCard(ext: DashboardExtension) -> Element {
 // ─── DashboardGrid ─────────────────────────────────
 
 #[component]
-pub fn DashboardGrid(extensions: Vec<DashboardExtension>) -> Element {
-    let mut sorted = extensions;
-    sorted.sort_by_key(|e| e.order());
+pub fn DashboardGrid(
+    components: Vec<DashboardComponentData>,
+    #[props(default = false)] is_creator: bool,
+    space_id: SpacePartition,
+) -> Element {
+    let mut sorted = components;
+    sorted.sort_by_key(|c| c.order());
 
-    // Separate into: stacked (col 1), tall cards (cols 2-4), full-width (table)
-    let mut stacked: Vec<DashboardExtension> = Vec::new();
-    let mut tall_cards: Vec<DashboardExtension> = Vec::new();
-    let mut full_width: Vec<DashboardExtension> = Vec::new();
+    let mut stacked: Vec<DashboardComponentData> = Vec::new();
+    let mut tall_cards: Vec<DashboardComponentData> = Vec::new();
+    let mut full_width: Vec<DashboardComponentData> = Vec::new();
 
-    for ext in sorted {
-        match &ext.data {
+    for c in sorted {
+        match &c {
             DashboardComponentData::InfoCard(_) | DashboardComponentData::StatCard(_) => {
-                stacked.push(ext);
+                stacked.push(c);
             }
             DashboardComponentData::RankingTable(_) => {
-                full_width.push(ext);
+                full_width.push(c);
             }
             _ => {
-                tall_cards.push(ext);
+                tall_cards.push(c);
             }
         }
     }
 
     rsx! {
         div { class: "flex flex-col gap-2.5 w-full h-full min-h-0 overflow-y-auto",
-            // Top cards row: 4 columns
             div { class: "grid grid-cols-4 max-tablet:grid-cols-2 max-mobile:grid-cols-1 gap-2.5 shrink-0",
-                // Column 1: stacked InfoCard + StatCard
                 div { class: "flex flex-col gap-2.5",
-                    for ext in stacked.into_iter() {
-                        { let id = ext.id.clone(); rsx! { div { key: "{id}", DashboardCard { ext } } } }
+                    for data in stacked.into_iter() {
+                        {
+                            let key = data.key();
+                            let sid = space_id.clone();
+                            rsx! {
+                                div { key: "{key}",
+                                    DashboardCard { data, is_creator, space_id: sid }
+                                }
+                            }
+                        }
                     }
                 }
-                // Columns 2-4: tall cards
-                for ext in tall_cards.into_iter() {
-                    { let id = ext.id.clone(); rsx! { div { key: "{id}", DashboardCard { ext } } } }
+                for data in tall_cards.into_iter() {
+                    {
+                        let key = data.key();
+                        let sid = space_id.clone();
+                        rsx! {
+                            div { key: "{key}",
+                                DashboardCard { data, is_creator, space_id: sid }
+                            }
+                        }
+                    }
                 }
             }
-            // Bottom: full-width ranking table
-            for ext in full_width.into_iter() {
-                { let id = ext.id.clone(); rsx! { div { key: "{id}", class: "min-h-0", DashboardCard { ext } } } }
+            for data in full_width.into_iter() {
+                {
+                    let key = data.key();
+                    let sid = space_id.clone();
+                    rsx! {
+                        div { key: "{key}", class: "min-h-0",
+                            DashboardCard { data, is_creator, space_id: sid }
+                        }
+                    }
+                }
             }
         }
     }
@@ -188,49 +223,63 @@ pub fn DashboardGrid(extensions: Vec<DashboardExtension>) -> Element {
 // ─── StatSummary Content ─────────────────────────────
 
 #[component]
-fn StatSummaryContent(data: StatSummaryData) -> Element {
+fn StatSummaryContent(data: StatSummaryData, tr: DashboardTranslate) -> Element {
+    let items: Vec<(&str, i64, Element)> = vec![
+        (
+            &tr.total_participants,
+            data.participants,
+            rsx! {
+                icons::user::UserCheck {
+                    width: "18", height: "18",
+                    class: "size-4.5 [&>path]:fill-none text-icon-primary [&>path]:stroke-current",
+                }
+            },
+        ),
+        (
+            &tr.total_likes,
+            data.likes,
+            rsx! {
+                icons::emoji::ThumbsUp {
+                    width: "18", height: "18",
+                    class: "size-4.5 [&>path]:fill-none text-icon-primary [&>path]:stroke-current",
+                }
+            },
+        ),
+        (
+            &tr.total_comments,
+            data.comments,
+            rsx! {
+                icons::chat::RoundBubble {
+                    width: "18", height: "18",
+                    class: "size-4.5 [&>path]:fill-none text-icon-primary [&>path]:stroke-current [&>line]:stroke-current",
+                }
+            },
+        ),
+        (
+            &tr.total_actions,
+            data.total_actions,
+            rsx! {
+                icons::ratel::Thunder {
+                    width: "18", height: "18",
+                    class: "size-4.5 text-icon-primary [&>path]:stroke-icon-primary [&>path]:fill-none",
+                }
+            },
+        ),
+    ];
+
     rsx! {
         div { class: "flex-1 min-h-0 pr-1 space-y-5 max-mobile:space-y-3 overflow-y-auto",
-
-            for item in data.items.iter() {
+            for (label , value , icon) in items.into_iter() {
                 div { class: "flex flex-col gap-0.5",
-
-                    // Label + Icon + Value row
                     div { class: "flex items-center justify-between gap-2",
                         span { class: "truncate text-text-primary text-xs leading-4 font-medium font-raleway",
-                            "{item.label}"
+                            {label}
                         }
                         div { class: "flex items-center gap-1",
-                            div { class: "h-[18px] w-[18px] shrink-0",
-                                {render_summary_item_icon(&item.label, &item.icon)}
-                            }
+                            div { class: "size-4.5 shrink-0", {icon} }
                             span { class: "text-text-primary text-xs leading-4 font-semibold font-inter",
-                                "{item.value}"
+                                "{value}"
                             }
-                        }
-                    }
-
-                    // Trend row
-                    div { class: "flex items-center gap-1 text-xs leading-4 font-medium font-inter",
-                        if item.trend > 0.0 {
-                            div { class: "h-[18px] w-[18px] shrink-0",
-                                icons::arrows::ShapeArrowUp {
-                                    width: "18", height: "18",
-                                    class: "h-[18px] w-[18px] text-icon-primary [&>path]:fill-current",
-                                }
-                            }
-                            if !item.trend_label.is_empty() {
-                                span { class: "text-web-font-neutral", "{item.trend_label}" }
-                            } else {
-                                span { class: "text-web-font-neutral", "+{item.trend:.0}%" }
-                            }
-                        } else if item.trend < 0.0 {
-                            span { class: "text-red-600", "↓ {item.trend:.0}%" }
-                            if !item.trend_label.is_empty() {
-                                span { class: "text-web-font-neutral", "{item.trend_label}" }
-                            }
-                        } else {
-                            span { class: "text-text-primary", "→ 0%" }
                         }
                     }
                 }
@@ -239,53 +288,24 @@ fn StatSummaryContent(data: StatSummaryData) -> Element {
     }
 }
 
-fn render_summary_item_icon(label: &str, fallback_icon: &str) -> Element {
-    match label {
-        "Total Participants" => rsx! {
-            icons::user::UserCheck {
-                width: "18", height: "18",
-                class: "h-[18px] w-[18px] [&>path]:fill-none text-icon-primary [&>path]:stroke-current",
-            }
-        },
-        "Total Likes" => rsx! {
-            icons::emoji::ThumbsUp {
-                width: "18", height: "18",
-                class: "h-[18px] w-[18px] [&>path]:fill-none text-icon-primary [&>path]:stroke-current",
-            }
-        },
-        "Total Comments" => rsx! {
-            icons::chat::RoundBubble {
-                width: "18", height: "18",
-                class: "h-[18px] w-[18px] [&>path]:fill-none text-icon-primary [&>path]:stroke-current [&>line]:stroke-current",
-            }
-        },
-        "Total Actions" => rsx! {
-            icons::ratel::Thunder {
-                width: "18", height: "18",
-                class: "h-[18px] w-[18px] text-icon-primary",
-            }
-        },
-        _ if !fallback_icon.is_empty() => rsx! {
-            span { class: "text-sm text-text-primary leading-[18px]", "{fallback_icon}" }
-        },
-        _ => rsx! {},
-    }
-}
-
 // ─── StatCard Content ─────────────────────────────────
 
 #[component]
-fn StatCardContent(data: StatCardData, tr: DashboardTranslate) -> Element {
+fn StatCardContent(
+    data: StatCardData,
+    tr: DashboardTranslate,
+    #[props(default = false)] is_creator: bool,
+    space_id: SpacePartition,
+) -> Element {
+    let incentive_not_setup = data.incentive_pool.is_empty();
+    let apps_url = format!("/spaces/{}/apps/", space_id);
+
     rsx! {
         div { class: "flex-1 min-h-0 pr-1 space-y-0.5 overflow-y-auto",
             if !data.total_winners.is_empty() {
                 div { class: "flex items-center justify-between text-text-primary",
-                    span { class: "text-xs leading-4 font-medium font-raleway",
-                        "{tr.total_winners}"
-                    }
-                    span { class: "text-xs leading-4 font-semibold font-inter",
-                        "{data.total_winners}"
-                    }
+                    span { class: "text-xs leading-4 font-medium font-raleway", "{tr.total_winners}" }
+                    span { class: "text-xs leading-4 font-semibold font-inter", "{data.total_winners}" }
                 }
             }
 
@@ -308,6 +328,14 @@ fn StatCardContent(data: StatCardData, tr: DashboardTranslate) -> Element {
                 }
             }
         }
+
+        if is_creator && incentive_not_setup {
+            Link {
+                to: NavigationTarget::Internal(apps_url),
+                class: "flex w-full items-center justify-center rounded-[10px] bg-violet-500 px-5 py-3 text-sm font-bold font-raleway text-web-font-ab-bk transition-colors hover:bg-violet-600",
+                "{tr.setup_now}"
+            }
+        }
     }
 }
 
@@ -315,41 +343,58 @@ fn StatCardContent(data: StatCardData, tr: DashboardTranslate) -> Element {
 
 #[component]
 fn ProgressListContent(data: ProgressListData, tr: DashboardTranslate) -> Element {
+    let total = (data.poll_count + data.post_count).max(1) as f64;
+
     rsx! {
-        div { class: "flex-1 min-h-0 pr-1 space-y-5 max-mobile:space-y-3 overflow-y-auto",
-
-            for item in data.items.iter() {
-                div { class: "space-y-2 max-mobile:space-y-1.5",
-
-                    // Label and Value Row
-                    div { class: "flex items-center justify-between gap-2",
-                        span { class: "min-w-0 truncate text-text-primary text-xs leading-4 font-medium font-raleway",
-                            "{item.label}"
-                        }
-                        span { class: "shrink-0 text-text-primary text-xs leading-4 font-semibold font-inter",
-                            "{item.current:.0}"
-                        }
+        div {
+            class: "flex-1 min-h-0 pr-1 space-y-5 max-mobile:space-y-3 overflow-y-auto",
+            // Poll progress
+            div { class: "space-y-2 max-mobile:space-y-1.5",
+                div { class: "flex items-center justify-between gap-2",
+                    span { class: "min-w-0 truncate text-text-primary text-xs leading-4 font-medium font-raleway",
+                        "{tr.poll_completion}"
                     }
-
-                    // Progress Bar
-                    div { class: "h-2 w-full overflow-hidden rounded-full bg-popover",
-                        div {
-                            class: "h-full rounded-full transition-all duration-300",
-                            style: "width: {(item.current / item.total * 100.0).min(100.0):.1}%; background-color: {item.color};",
-                        }
-                    }
-
-                    // Completed Text
-                    div { class: "flex items-center gap-1 text-xs text-web-font-neutral",
-                        span { class: "text-xs leading-4 font-medium font-inter",
-                            "{item.current:.0} / {item.total:.0}"
-                        }
-                        span { class: "text-xs leading-4 font-medium font-raleway",
-                            "{tr.completed}"
-                        }
+                    span { class: "shrink-0 text-text-primary text-xs leading-4 font-semibold font-inter",
+                        "{data.poll_count}"
                     }
                 }
+                div { class: "h-2 w-full overflow-hidden rounded-full bg-popover",
+                    div {
+                        class: "h-full rounded-full transition-all duration-300 bg-primary",
+                        style: "width: {(data.poll_count as f64 / total * 100.0).min(100.0):.1}%;",
+                    }
+                }
+                div { class: "flex items-center gap-1 text-xs text-web-font-neutral",
+                    span { class: "text-xs leading-4 font-medium font-inter",
+                        "{data.poll_count} / {data.poll_count + data.post_count}"
+                    }
+                    span { class: "text-xs leading-4 font-medium font-raleway", "{tr.completed}" }
+                }
             }
+
+        // Discussion progress
+        // div { class: "space-y-2 max-mobile:space-y-1.5",
+        //     div { class: "flex items-center justify-between gap-2",
+        //         span { class: "min-w-0 truncate text-text-primary text-xs leading-4 font-medium font-raleway",
+        //             "{tr.discussion_completion}"
+        //         }
+        //         span { class: "shrink-0 text-text-primary text-xs leading-4 font-semibold font-inter",
+        //             "{data.post_count}"
+        //         }
+        //     }
+        //     div { class: "h-2 w-full overflow-hidden rounded-full bg-popover",
+        //         div {
+        //             class: "h-full rounded-full transition-all duration-300 bg-primary",
+        //             style: "width: {(data.post_count as f64 / total * 100.0).min(100.0):.1}%;",
+        //         }
+        //     }
+        //     div { class: "flex items-center gap-1 text-xs text-web-font-neutral",
+        //         span { class: "text-xs leading-4 font-medium font-inter",
+        //             "{data.post_count} / {data.poll_count + data.post_count}"
+        //         }
+        //         span { class: "text-xs leading-4 font-medium font-raleway", "{tr.completed}" }
+        //     }
+        // }
         }
     }
 }
@@ -361,10 +406,8 @@ fn TabChartContent(data: TabChartData) -> Element {
     let mut selected_tab = use_signal(|| 0usize);
 
     rsx! {
-        // Tab Buttons
         div { class: "flex items-start justify-end overflow-hidden rounded-lg",
-
-            for (idx, tab) in data.tabs.iter().enumerate() {
+            for (idx , tab) in data.tabs.iter().enumerate() {
                 {
                     let is_active = selected_tab() == idx;
                     let is_first = idx == 0;
@@ -387,24 +430,17 @@ fn TabChartContent(data: TabChartData) -> Element {
                     let class = format!("{base}{active_class}{round}");
 
                     rsx! {
-                        button {
-                            class: "{class}",
-                            onclick: move |_| selected_tab.set(idx),
-                            "{tab.label}"
-                        }
+                        button { class: "{class}", onclick: move |_| selected_tab.set(idx), "{tab.label}" }
                     }
                 }
             }
         }
 
-        // Chart Content
         div { class: "min-h-0",
             if let Some(tab) = data.tabs.get(selected_tab()) {
                 div { class: "h-full min-h-0 pr-1 space-y-3 max-mobile:space-y-2 overflow-y-auto",
-
                     for cat in tab.categories.iter() {
                         div { class: "flex flex-col gap-0.5",
-                            // Label + Percentage row
                             div { class: "flex items-center justify-between text-xs leading-4 text-text-primary",
                                 span { class: "font-medium font-inter", "{cat.name}" }
                                 span { class: "font-semibold font-inter",
@@ -415,8 +451,6 @@ fn TabChartContent(data: TabChartData) -> Element {
                                     }
                                 }
                             }
-
-                            // Progress Bar
                             div { class: "h-2 w-full bg-popover rounded-full overflow-hidden",
                                 div {
                                     class: "h-full rounded-full transition-all duration-300",
@@ -437,33 +471,13 @@ fn TabChartContent(data: TabChartData) -> Element {
 fn InfoCardContent(data: InfoCardData) -> Element {
     rsx! {
         div { class: "flex flex-1 min-h-0 flex-col justify-end gap-2 mt-4 max-mobile:mt-2 pr-1 overflow-y-auto",
-
             for item in data.items.iter() {
-                {
-                    let raw_label = item.label.trim();
-                    let boost_label = raw_label.strip_prefix("✕ ").map(str::trim);
-
-                    rsx! {
-                        div { class: "flex items-center justify-between gap-2 text-text-primary",
-                            if let Some(text) = boost_label {
-                                div { class: "flex min-w-0 items-center gap-1",
-                                    div { class: "h-[18px] w-[18px] shrink-0 [transform:rotate(-90deg)]",
-                                        icons::validations::Clear {
-                                            width: "18", height: "18",
-                                            class: "h-full w-full text-icon-primary [&>path]:stroke-current",
-                                        }
-                                    }
-                                    span { class: "truncate text-xs leading-4 font-medium font-inter",
-                                        "{text}"
-                                    }
-                                }
-                            } else {
-                                span { class: "min-w-0 truncate text-xs leading-4 font-medium font-raleway", "{item.label}" }
-                            }
-                            span { class: "shrink-0 text-xs leading-4 font-semibold font-inter",
-                                "{item.value}"
-                            }
-                        }
+                div { class: "flex items-center justify-between gap-2 text-text-primary",
+                    span { class: "min-w-0 truncate text-xs leading-4 font-medium font-raleway",
+                        "{item.label}"
+                    }
+                    span { class: "shrink-0 text-xs leading-4 font-semibold font-inter",
+                        "{item.value}"
                     }
                 }
             }
