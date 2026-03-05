@@ -1,4 +1,5 @@
 use crate::controllers::dto::*;
+use crate::controllers::like_post::like_post_handler;
 use crate::types::*;
 use crate::*;
 use dioxus::prelude::*;
@@ -52,6 +53,8 @@ pub fn FeedCard(
     let nav = use_navigator();
 
     let post_clone = post.clone();
+    let post_pk = post.pk.clone();
+    let on_like_callback = on_like.clone();
 
     use_effect(move || {
         optimistic_liked.set(post_clone.liked);
@@ -92,12 +95,21 @@ pub fn FeedCard(
                     optimistic_likes.set((previous_likes + delta).max(0));
                     is_processing.set(true);
 
-                    if let Some(handler) = &on_like {
-                        handler.call(value);
-                    }
-
-                    is_processing.set(false);
-                    let _ = (previous_liked, previous_likes);
+                    let post_pk = post_pk.clone();
+                    let mut optimistic_liked = optimistic_liked.clone();
+                    let mut optimistic_likes = optimistic_likes.clone();
+                    let mut is_processing = is_processing.clone();
+                    let on_like_callback = on_like_callback.clone();
+                    spawn(async move {
+                        let result = like_post_handler(post_pk, value).await;
+                        if result.is_err() {
+                            optimistic_liked.set(previous_liked);
+                            optimistic_likes.set(previous_likes);
+                        } else if let Some(handler) = on_like_callback {
+                            handler.call(value);
+                        }
+                        is_processing.set(false);
+                    });
                 },
             }
         }

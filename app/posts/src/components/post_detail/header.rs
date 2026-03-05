@@ -40,7 +40,7 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element 
         (
             can_edit,
             can_delete,
-            is_post_owner && (can_edit || can_delete),
+            is_post_owner || (can_edit && can_delete),
         )
     });
     let (can_edit, can_delete, show_admin) = admin_state();

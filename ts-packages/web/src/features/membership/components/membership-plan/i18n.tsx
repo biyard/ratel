@@ -193,7 +193,7 @@ export const MembershipPlan = {
       },
       {
         name: '엔터프라이즈',
-        description: '기업 및 기관 맞춤형 파트너 멤버쉽',
+        description: '기업 및 기관 맞춤형 파트너 멤버십',
         features: ['모든 무료 플랜 포함', '완전 맞춤형 서비스 제공'],
         price: '월 1,000,000원 이상',
         btn: 'Contact Us',

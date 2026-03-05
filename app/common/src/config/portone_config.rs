@@ -1,7 +1,4 @@
-use common::Environment;
-
-use super::*;
-use crate::*;
+use crate::{info, warn, Environment};
 
 #[derive(Debug, Clone, Copy)]
 pub struct PortoneConfig {
@@ -13,10 +10,17 @@ pub struct PortoneConfig {
 }
 
 impl PortoneConfig {
-    pub fn notice_urls(&self) -> Vec<String> {
-        let conf = get();
+    pub fn channel_key(&self) -> &'static str {
+        if !self.kpn_channel_key.is_empty() {
+            self.kpn_channel_key
+        } else {
+            self.inicis_channel_key
+        }
+    }
 
-        let hook = match conf.common.env {
+    #[cfg(feature = "server")]
+    pub fn notice_urls(&self, env: Environment) -> Vec<String> {
+        let hook = match env {
             Environment::Local => {
                 let output = std::process::Command::new("curl")
                     .args(["-s", "--max-time", "5", "https://ifconfig.me"])
@@ -32,11 +36,8 @@ impl PortoneConfig {
                 };
 
                 let port = option_env!("PORT").unwrap_or("8000");
-
                 let url = format!("http://{}:{}/hooks/portone", ip_address, port);
-
                 info!("Using local IP address for Portone notice URL: {}", url);
-
                 Box::leak(url.into_boxed_str())
             }
             Environment::Dev => "https://dev.ratel.foundation/hooks/portone",
@@ -56,28 +57,24 @@ impl Default for PortoneConfig {
                 warn!(
                     "PORTONE_API_SECRET not set, using default value. Some features may not work properly."
                 );
-
                 "your_default_api_secret"
             }),
             kpn_channel_key: option_env!("PORTONE_KPN_CHANNEL_KEY").unwrap_or_else(|| {
                 warn!(
                     "PORTONE_KPN_CHANNEL_KEY not set, using default value. Some features may not work properly."
                 );
-
                 "your_default_kpn_channel_key"
             }),
             inicis_channel_key: option_env!("PORTONE_INICIS_CHANNEL_KEY").unwrap_or_else(|| {
                 warn!(
                     "PORTONE_INICIS_CHANNEL_KEY not set, using default value. Some features may not work properly."
                 );
-
                 "your_default_inicis_channel_key"
             }),
             store_id: option_env!("PORTONE_STORE_ID").unwrap_or_else(|| {
                 warn!(
                     "PORTONE_STORE_ID not set, using default value. Some features may not work properly."
                 );
-
                 "your_default_store_id"
             }),
         }
