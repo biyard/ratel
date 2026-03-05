@@ -6,11 +6,16 @@ use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
 
 #[component]
 pub fn TeamLayout(teamname: String) -> Element {
+    let user_ctx = ratel_auth::hooks::use_user_context();
+    let logged_in = user_ctx().user.is_some();
+
     rsx! {
-        div { class: "flex overflow-x-hidden gap-5 justify-between py-3 mx-auto min-h-screen text-white max-w-desktop max-tablet:px-2.5",
-            TeamSidemenu { key: "{teamname}", teamname: teamname.clone() }
+        div { class: "flex overflow-x-hidden gap-5 justify-between py-3 mx-auto min-h-screen text-white bg-bg max-w-desktop max-tablet:px-2.5",
+            if logged_in {
+                TeamSidemenu { key: "{teamname}", teamname: teamname.clone() }
+            }
             div {
-                class: "flex flex-col grow p-5",
+                class: "flex flex-col grow px-5",
                 key: "team-content-{teamname}",
                 Outlet::<Route> {}
             }
@@ -56,9 +61,9 @@ fn TeamSidemenu(teamname: String) -> Element {
         );
 
         rsx! {
-            div { class: "flex flex-col gap-2.5 w-62.5 max-mobile:hidden shrink-0",
+            common::SideMenuContainer {
                 // Profile card
-                div { class: "flex flex-col gap-5 px-4 py-5 w-full border rounded-[10px] bg-card-bg border-card-border",
+                common::SideMenuProfileCard {
                     common::TeamSelector {
                         selected_label: display_name.clone(),
                         user_display_name: user.display_name.clone(),
@@ -101,13 +106,14 @@ fn TeamSidemenu(teamname: String) -> Element {
                 }
 
                 // Navigation
-                nav { class: "py-5 px-3 w-full border rounded-[10px] bg-card-bg border-card-border text-text-primary",
+                common::SideMenuNav {
                     // Home - always visible
-                    TeamSidemenuLink {
+                    common::SideMenuLink {
                         to: Route::TeamHome {
                             teamname: teamname.clone(),
                             rest: vec![],
-                        },
+                        }
+                            .to_string(),
                         label: tr.home,
                         icon: rsx! {
                             home::Home1 {
@@ -120,11 +126,12 @@ fn TeamSidemenu(teamname: String) -> Element {
 
                     // Drafts - PostWrite or Admin
                     if can_post_write {
-                        TeamSidemenuLink {
+                        common::SideMenuLink {
                             to: Route::TeamDraft {
                                 teamname: teamname.clone(),
                                 rest: vec![],
-                            },
+                            }
+                                .to_string(),
                             label: tr.drafts,
                             icon: rsx! {
                                 edit::EditContent {
@@ -138,11 +145,12 @@ fn TeamSidemenu(teamname: String) -> Element {
 
                     // Manage Group - TeamEdit or Admin
                     if can_team_edit {
-                        TeamSidemenuLink {
+                        common::SideMenuLink {
                             to: Route::TeamGroup {
                                 teamname: teamname.clone(),
                                 rest: vec![],
-                            },
+                            }
+                                .to_string(),
                             label: tr.manage_group,
                             icon: rsx! {
                                 folder::Folder {
@@ -156,11 +164,12 @@ fn TeamSidemenu(teamname: String) -> Element {
 
                     // Members - GroupEdit or Admin
                     if can_group_edit {
-                        TeamSidemenuLink {
+                        common::SideMenuLink {
                             to: Route::TeamMember {
                                 teamname: teamname.clone(),
                                 rest: vec![],
-                            },
+                            }
+                                .to_string(),
                             label: tr.members,
                             icon: rsx! {
                                 user::UserGroup {
@@ -174,11 +183,12 @@ fn TeamSidemenu(teamname: String) -> Element {
 
                     // DAO - Admin only
                     if is_admin {
-                        TeamSidemenuLink {
+                        common::SideMenuLink {
                             to: Route::TeamDao {
                                 teamname: teamname.clone(),
                                 rest: vec![],
-                            },
+                            }
+                                .to_string(),
                             label: tr.dao,
                             icon: rsx! {
                                 game::Controller {
@@ -192,11 +202,12 @@ fn TeamSidemenu(teamname: String) -> Element {
 
                     // Rewards - Admin only
                     if is_admin {
-                        TeamSidemenuLink {
+                        common::SideMenuLink {
                             to: Route::TeamReward {
                                 teamname: teamname.clone(),
                                 rest: vec![],
-                            },
+                            }
+                                .to_string(),
                             label: tr.rewards,
                             icon: rsx! {
                                 game::Trophy {
@@ -210,11 +221,12 @@ fn TeamSidemenu(teamname: String) -> Element {
 
                     // Settings - TeamEdit or Admin
                     if can_team_edit {
-                        TeamSidemenuLink {
+                        common::SideMenuLink {
                             to: Route::TeamSetting {
                                 teamname: teamname.clone(),
                                 rest: vec![],
-                            },
+                            }
+                                .to_string(),
                             label: tr.settings,
                             icon: rsx! {
                                 settings_icon::Settings {
@@ -309,23 +321,13 @@ fn TeamSidemenu(teamname: String) -> Element {
                 )
             } else {
                 rsx! {
-                    div { class: "flex flex-col gap-2.5 w-62.5 max-mobile:hidden shrink-0",
+                    common::SideMenuContainer {
                         div { class: "py-5 px-3 w-full border rounded-[10px] bg-card-bg border-card-border text-text-primary text-center",
                             "Loading team..."
                         }
                     }
                 }
             }
-        }
-    }
-}
-
-#[component]
-fn TeamSidemenuLink(to: Route, label: &'static str, icon: Element) -> Element {
-    rsx! {
-        Link { class: "sidemenu-link text-text-primary", to,
-            span { class: "w-6 h-6 inline-flex items-center justify-center", {icon} }
-            span { "{label}" }
         }
     }
 }
