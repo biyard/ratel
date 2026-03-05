@@ -22,6 +22,8 @@ pub fn ActionCard(action: SpaceAction, space_id: SpacePartition) -> Element {
         // SpaceActionType::StudyAndQuiz => tr.action_type_quiz,
         SpaceActionType::Poll => tr.action_type_poll,
         SpaceActionType::TopicDiscussion => tr.action_type_discussion,
+        SpaceActionType::Subscription => tr.action_type_subscription,
+        SpaceActionType::Quiz => tr.action_type_quiz,
     };
     let type_badge_color = action_type_badge_color(&action.action_type);
     let point_value = action.total_point.unwrap_or_default();
@@ -147,6 +149,8 @@ fn action_type_badge_color(action_type: &SpaceActionType) -> BadgeColor {
         // SpaceActionType::StudyAndQuiz => BadgeColor::Purple,
         SpaceActionType::Poll => BadgeColor::Orange,
         SpaceActionType::TopicDiscussion => BadgeColor::Blue,
+        SpaceActionType::Subscription => BadgeColor::Pink,
+        SpaceActionType::Quiz => BadgeColor::Purple,
     }
 }
 

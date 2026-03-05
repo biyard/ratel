@@ -12,6 +12,7 @@ pub const MAIN_JS: Asset = asset!("/assets/ratel-app-shell.js");
 #[component]
 pub fn App() -> Element {
     use_context_provider(|| PopupService::new());
+    use_context_provider(|| LayoverService::new());
     ToastService::init();
     ThemeService::init();
     let _ = ratel_auth::Context::init()?;

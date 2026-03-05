@@ -13,7 +13,9 @@ pub struct SpacePoll {
     pub created_at: i64,
     pub updated_at: i64,
 
+    #[serde(default)]
     pub title: String,
+    #[serde(default)]
     pub description: String,
 
     pub user_response_count: i64, // Participants count
