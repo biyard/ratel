@@ -307,11 +307,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y docker-compose
 
-      - name: Upload Docker image artifact
+      - name: Download Docker image artifact
         uses: actions/download-artifact@v4
         with:
           name: app-shell-image-${{ github.sha }}
-          path: /tmp/app-shell-image.tar.gz
+          path: /tmp
 
       - name: Load Docker images
         run: |
