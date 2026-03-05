@@ -89,7 +89,15 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
                     on_participant,
                 }
                 div { class: "flex overflow-auto p-5 w-full flex-1 min-h-0 bg-web-bg rounded-tl-[10px]",
-                    Outlet::<Route> {}
+                    SuspenseBoundary {
+                        fallback: |_| rsx! {
+                            div { class: "flex justify-center items-center w-full h-full text-gray-400",
+                                //FIXME Replace Loading UI
+                                "Loading..."
+                            }
+                        },
+                        Outlet::<Route> {}
+                    }
                 }
             }
         }
