@@ -1,7 +1,10 @@
-use crate::{dto::ListPointTransactionsResponse, models::BiyardClient, *};
+use crate::*;
+use common::services::biyard::PointTransactionResponse;
 
 use ratel_post::models::Team;
 use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
+
+pub type ListPointTransactionsResponse = ListResponse<PointTransactionResponse>;
 
 #[get("/api/teams/:team_pk/points/transactions?month&bookmark", user: ratel_auth::User)]
 pub async fn list_team_point_transactions_handler(
@@ -9,8 +12,8 @@ pub async fn list_team_point_transactions_handler(
     month: Option<String>,
     bookmark: Option<String>,
 ) -> Result<ListPointTransactionsResponse> {
-    let conf = crate::config::get();
-    let cli = conf.common.dynamodb();
+    let cfg = common::CommonConfig::default();
+    let cli = cfg.dynamodb();
     let team_pk: Partition = team_pk.into();
 
     let permissions = Team::get_permissions_by_team_pk(cli, &team_pk, &user.pk)
@@ -25,8 +28,8 @@ pub async fn list_team_point_transactions_handler(
 
     let month = month.unwrap_or_else(|| utils::time::current_month());
 
-    let biyard = BiyardClient::new();
-    let res = biyard
+    let biyard_service = cfg.biyard();
+    let res = biyard_service
         .list_user_transactions(team_pk.clone(), month, bookmark, Some(10))
         .await?;
 

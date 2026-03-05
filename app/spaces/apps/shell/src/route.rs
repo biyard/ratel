@@ -5,6 +5,7 @@ use space_app_file::Route as FileRoute;
 use space_app_general::Route as GeneralRoute;
 use space_app_incentive_pool::Route as IncentivePoolRoute;
 use space_app_main::Route as MainRoute;
+use space_app_rewards::Route as RewardsRoute;
 
 use layout::SpaceAppsLayout;
 
@@ -19,6 +20,8 @@ pub enum Route {
             IncentivePool { space_id: SpacePartition, rest: Vec<String> },
             #[route("/file/:..rest")]
             File { space_id: SpacePartition, rest: Vec<String> },
+            #[route("/rewards/:..rest")]
+            Rewards { space_id: SpacePartition, rest: Vec<String> },
             #[route("/:..rest")]
             Main { space_id: SpacePartition, rest: Vec<String> },
 
@@ -47,3 +50,4 @@ define_apps_route_wrapper!(Main, MainRoute);
 define_apps_route_wrapper!(General, GeneralRoute);
 define_apps_route_wrapper!(IncentivePool, IncentivePoolRoute);
 define_apps_route_wrapper!(File, FileRoute);
+define_apps_route_wrapper!(Rewards, RewardsRoute);

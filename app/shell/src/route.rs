@@ -3,6 +3,7 @@ use crate::*;
 use crate::views::Index;
 use dioxus::router::components::child_router::ChildRouter;
 use layout::AppLayout;
+use ratel_admin::Route as AdminRoute;
 use ratel_auth::Route as AuthRoute;
 use ratel_post::Route as PostRoute;
 use ratel_team_shell::Route as TeamRoute;
@@ -21,6 +22,9 @@ pub enum Route {
 
         #[route("/posts/:..rest")]
         Post { rest: Vec<String> },
+
+        #[route("/admin/:..rest")]
+        Admin { rest: Vec<String> },
 
         #[route("/:username/:..rest")]
         UserHome { username: String, rest: Vec<String> },
@@ -52,6 +56,7 @@ macro_rules! define_app_wrapper {
     };
 }
 
+define_app_wrapper!(Admin, AdminRoute);
 define_app_wrapper!(Auth, AuthRoute);
 define_app_wrapper!(Space, SpaceRoute);
 define_app_wrapper!(Post, PostRoute);

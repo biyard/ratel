@@ -7,6 +7,9 @@ pub struct PollResponse {
     pub updated_at: i64,
     pub started_at: i64,
     pub ended_at: i64,
+    #[serde(alias = "topic")]
+    pub title: String,
+    pub description: String,
     pub response_editable: bool,
     pub user_response_count: i64,
     pub questions: Vec<Question>,
@@ -22,6 +25,8 @@ impl From<SpacePoll> for PollResponse {
             sk: poll.sk.clone(),
             started_at: poll.started_at,
             ended_at: poll.ended_at,
+            title: poll.title.clone(),
+            description: poll.description.clone(),
             response_editable: poll.response_editable,
             user_response_count: poll.user_response_count,
             created_at: poll.created_at,
