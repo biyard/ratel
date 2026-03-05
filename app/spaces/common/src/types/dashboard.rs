@@ -14,17 +14,7 @@ pub enum DashboardIcon {
 }
 
 impl DashboardIcon {
-    pub fn emoji(&self) -> &str {
-        match self {
-            DashboardIcon::Action => "\u{1F4A1}",       // 💡
-            DashboardIcon::Participants => "\u{1F465}",  // 👥
-            DashboardIcon::IncentivePool => "\u{1F4B0}", // 💰
-            DashboardIcon::Rewards => "\u{1F3C6}",       // 🏆
-            DashboardIcon::BarChart => "\u{1F4CA}",      // 📊
-        }
-    }
-
-    pub fn bg_class(&self) -> &str {
+    pub fn class(&self) -> &str {
         match self {
             DashboardIcon::Action => "bg-yellow-500",
             DashboardIcon::Participants => "bg-cyan-500",
@@ -32,52 +22,6 @@ impl DashboardIcon {
             DashboardIcon::Rewards => "bg-green-500",
             DashboardIcon::BarChart => "bg-blue-500",
         }
-    }
-
-    pub fn bg_hex(&self) -> &str {
-        match self {
-            DashboardIcon::Action => "#FCB300",
-            DashboardIcon::Participants => "#06B6D4",
-            DashboardIcon::IncentivePool => "#A855F7",
-            DashboardIcon::Rewards => "#22C55E",
-            DashboardIcon::BarChart => "#3B82F6",
-        }
-    }
-}
-
-// ─── Dashboard Extension (display type) ─────────────────
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct DashboardExtension {
-    pub id: String,
-    pub data: DashboardComponentData,
-}
-
-impl DashboardExtension {
-    pub fn grid_size(&self) -> (u8, u8) {
-        match &self.data {
-            DashboardComponentData::StatSummary(_) => (1, 2),
-            DashboardComponentData::StatCard(_) => (1, 3),
-            DashboardComponentData::ProgressList(_) => (1, 4),
-            DashboardComponentData::TabChart(_) => (1, 4),
-            DashboardComponentData::InfoCard(_) => (1, 2),
-            DashboardComponentData::RankingTable(_) => (4, 3),
-        }
-    }
-
-    pub fn order(&self) -> i32 {
-        match &self.data {
-            DashboardComponentData::StatSummary(_) => 1,
-            DashboardComponentData::ProgressList(_) => 2,
-            DashboardComponentData::TabChart(_) => 3,
-            DashboardComponentData::InfoCard(_) => 4,
-            DashboardComponentData::StatCard(_) => 5,
-            DashboardComponentData::RankingTable(_) => 6,
-        }
-    }
-
-    pub fn is_card(&self) -> bool {
-        !matches!(&self.data, DashboardComponentData::RankingTable(_))
     }
 }
 
@@ -94,26 +38,39 @@ pub enum DashboardComponentData {
     RankingTable(RankingTableData),
 }
 
+impl DashboardComponentData {
+    pub fn order(&self) -> i32 {
+        match self {
+            Self::StatSummary(_) => 1,
+            Self::ProgressList(_) => 2,
+            Self::TabChart(_) => 3,
+            Self::InfoCard(_) => 4,
+            Self::StatCard(_) => 5,
+            Self::RankingTable(_) => 6,
+        }
+    }
+
+    pub fn key(&self) -> &'static str {
+        match self {
+            Self::StatSummary(_) => "stat-summary",
+            Self::ProgressList(_) => "progress-list",
+            Self::TabChart(_) => "tab-chart",
+            Self::InfoCard(_) => "info-card",
+            Self::StatCard(_) => "stat-card",
+            Self::RankingTable(_) => "ranking-table",
+        }
+    }
+}
+
 // ─── Stat Summary ─────────────────────────────────
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct StatSummaryData {
     pub icon: DashboardIcon,
-    pub main_value: String,
-    pub main_label: String,
-    pub items: Vec<StatSummaryItem>,
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct StatSummaryItem {
-    pub label: String,
-    pub value: String,
-    #[serde(default)]
-    pub icon: String,
-    #[serde(default)]
-    pub trend: f64,
-    #[serde(default)]
-    pub trend_label: String,
+    pub participants: i64,
+    pub likes: i64,
+    pub comments: i64,
+    pub total_actions: i64,
 }
 
 // ─── Stat Card ────────────────────────────────────
@@ -138,17 +95,8 @@ pub struct StatCardData {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ProgressListData {
     pub icon: DashboardIcon,
-    pub main_value: String,
-    pub items: Vec<ProgressListItem>,
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct ProgressListItem {
-    pub label: String,
-    pub current: f64,
-    pub total: f64,
-    #[serde(default = "default_color")]
-    pub color: String,
+    pub poll_count: i64,
+    pub post_count: i64,
 }
 
 fn default_color() -> String {
@@ -160,7 +108,7 @@ fn default_color() -> String {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TabChartData {
     pub icon: DashboardIcon,
-    pub main_value: String,
+    pub participants: i64,
     pub tabs: Vec<TabChartTab>,
 }
 
@@ -185,9 +133,7 @@ pub struct TabChartCategory {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct InfoCardData {
     pub icon: DashboardIcon,
-    pub main_value: String,
-    #[serde(default)]
-    pub unit: String,
+    pub total_points: i64,
     pub items: Vec<InfoCardItem>,
 }
 
@@ -221,11 +167,3 @@ pub struct RankingEntry {
     pub change: i32,
 }
 
-// ─── Fixed Extension IDs ──────────────────────────────────
-
-pub const EXT_ID_TAB_CHART: &str = "tab-chart-participants";
-pub const EXT_ID_PROGRESS_LIST: &str = "progress-list-actions";
-pub const EXT_ID_INFO_CARD: &str = "info-card-rewards";
-pub const EXT_ID_STAT_CARD: &str = "stat-card-incentive";
-pub const EXT_ID_STAT_SUMMARY: &str = "stat-summary-space-views";
-pub const EXT_ID_RANKING_TABLE: &str = "ranking-table-incentive";
