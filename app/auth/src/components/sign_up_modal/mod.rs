@@ -1,12 +1,15 @@
-use crate::controllers::send_code::{SendCodeRequest, send_code_handler};
-use crate::controllers::signup::{SignupRequest, SignupType, signup_handler};
-use crate::controllers::verify_code::{VerifyCodeRequest, verify_code_handler};
+use crate::context::UserContext;
+use crate::controllers::send_code::{send_code_handler, SendCodeRequest};
+use crate::controllers::signup::{signup_handler, SignupRequest, SignupType};
+use crate::controllers::verify_code::{verify_code_handler, VerifyCodeRequest};
+use crate::hooks::use_user_context;
 use crate::*;
 
 #[component]
-pub fn SignupModal() -> Element {
+pub fn SignupModal(#[props(optional)] initial_email: Option<String>) -> Element {
     let tr: SignupModalTranslate = use_translate();
-    let mut email = use_signal(|| String::new());
+    let nav = use_navigator();
+    let mut email = use_signal(|| initial_email.clone().unwrap_or_default());
     let mut password = use_signal(|| String::new());
     let mut display_name = use_signal(|| String::new());
     let mut username = use_signal(|| String::new());
@@ -24,6 +27,7 @@ pub fn SignupModal() -> Element {
     let mut terms_error = use_signal(|| String::new());
     let mut error_message: Signal<Option<String>> = use_signal(|| None);
     let mut popup = use_popup();
+    let mut user_ctx = use_user_context();
 
     let is_valid_email_format = |email: &str| -> bool {
         let parts: Vec<&str> = email.split('@').collect();
@@ -63,7 +67,7 @@ pub fn SignupModal() -> Element {
 
     rsx! {
         div {
-            class: "overflow-y-scroll w-full max-h-screen scrollbar-hide",
+            class: "overflow-y-scroll w-full max-h-[80vh] momentum scrollbar-hide",
             id: "signup_popup",
             div {
                 class: "flex flex-col gap-4 w-full max-w-100 mx-auto",
@@ -283,7 +287,7 @@ pub fn SignupModal() -> Element {
 
                 // Submit Button
                 button {
-                    class: "flex justify-center items-center py-3 px-5 w-full font-bold text-white rounded-lg transition-all bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:pointer-events-none",
+                    class: "flex justify-center items-center py-3 px-5 w-full font-bold text-submit-button-text rounded-lg transition-all bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:pointer-events-none",
                     disabled: submit_disabled || loading(),
                     onclick: move |_| async move {
                         terms_error.set(String::new());
@@ -324,8 +328,13 @@ pub fn SignupModal() -> Element {
                         loading.set(false);
 
                         match result {
-                            Ok(_) => {
+                            Ok(user) => {
+                                user_ctx.set(UserContext {
+                                    user: Some(user.user),
+                                    refresh_token: user.refresh_token,
+                                });
                                 popup.close();
+                                nav.push("/");
                             }
                             Err(e) => {
                                 error_message.set(Some(format!("{e}")));
