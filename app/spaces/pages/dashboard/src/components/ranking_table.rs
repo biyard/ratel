@@ -95,14 +95,14 @@ pub fn RankingTable(data: RankingTableData) -> Element {
 
                             // Point
                             div { class: "flex w-[170px] max-tablet:w-[120px] max-mobile:w-[96px] items-center border-b border-separator px-4 max-tablet:px-3 py-4 max-mobile:py-3",
-                                span { class: "flex-1 basis-0 text-center text-text-primary text-sm leading-[22px] max-mobile:text-[13px] max-mobile:leading-5 font-normal font-raleway",
+                                span { class: "flex-1 basis-0 text-right text-text-primary text-sm leading-[22px] max-mobile:text-[13px] max-mobile:leading-5 font-normal font-roboto",
                                     "{entry.score:.0} P"
                                 }
                             }
 
                             // Score
                             div { class: "flex w-[170px] max-tablet:w-[120px] max-mobile:w-[96px] items-center border-b border-separator px-4 max-tablet:px-3 py-4 max-mobile:py-3",
-                                span { class: "flex-1 basis-0 text-center text-text-primary text-sm leading-[22px] max-mobile:text-[13px] max-mobile:leading-5 font-normal font-raleway",
+                                span { class: "flex-1 basis-0 text-right text-text-primary text-sm leading-[22px] max-mobile:text-[13px] max-mobile:leading-5 font-normal font-roboto",
                                     "{entry.change}"
                                 }
                             }
