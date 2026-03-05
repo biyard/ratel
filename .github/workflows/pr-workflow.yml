@@ -320,13 +320,6 @@ jobs:
 
           docker images
 
-      # - name: Setup SSH session with tmate
-      #   uses: mxschmitt/action-tmate@v3
-      #   env:
-      #     COMMIT: pr-${{ github.sha }}
-      #   with:
-      #     limit-access-to-actor: true
-
       - name: Setup test environment
         env:
           COMMIT: pr-${{ github.sha }}
@@ -345,20 +338,20 @@ jobs:
           elapsed=0
           while [ $elapsed -lt $timeout ]; do
             if curl -f -s http://localhost:8000/ > /dev/null 2>&1; then
-              echo "✅ Main API is responding (took ${elapsed}s)"
+              echo "✅ App Shell is responding (took ${elapsed}s)"
               break
             fi
-            echo "⏳ Main API not ready yet... (${elapsed}/${timeout}s)"
+            echo "⏳ App Shell not ready yet... (${elapsed}/${timeout}s)"
             sleep $interval
             elapsed=$((elapsed + interval))
           done
 
           if [ $elapsed -ge $timeout ]; then
-            echo "❌ Main API failed to respond with 200 status within ${timeout}s"
+            echo "❌ App Shell failed to respond with 200 status within ${timeout}s"
             echo "🔍 Checking Docker services status:"
             docker-compose -f docker-compose.yaml ps
-            echo "🔍 Main API logs:"
-            docker-compose -f docker-compose.yaml logs app-shell-testing --tail=50
+            echo "🔍 App Shell logs:"
+            docker-compose -f docker-compose.yaml logs app-shell-testing
             exit 1
           fi
 
@@ -380,6 +373,14 @@ jobs:
         working-directory: playwright
         run: |
           make test
+
+      - name: Setup SSH session with tmate
+        uses: mxschmitt/action-tmate@v3
+        if: failure()
+        env:
+          COMMIT: pr-${{ github.sha }}
+        with:
+          limit-access-to-actor: true
 
       - name: Move Playwright Tests
         if: always()
