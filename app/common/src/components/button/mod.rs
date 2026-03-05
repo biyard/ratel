@@ -2,20 +2,19 @@ use crate::*;
 
 #[component]
 pub fn Button(
+    #[props(default)] class: String,
     #[props(default)] size: ButtonSize,
     #[props(default)] style: ButtonStyle,
     #[props(default)] shape: ButtonShape,
     #[props(default)] disabled: bool,
-    #[props(default)] class: Option<String>,
 
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
     onclick: Option<EventHandler<MouseEvent>>,
     children: Element,
 ) -> Element {
-    let extra_class = class.unwrap_or_default();
     rsx! {
         button {
-            class: "{size} {style} {shape} {extra_class}",
+            class: "{size} {style} {shape} {class}",
             disabled,
             onclick: move |e| {
                 if disabled {
@@ -46,6 +45,8 @@ pub enum ButtonShape {
     #[default]
     #[strum(serialize = "rounded-full")]
     Rounded,
+    #[strum(serialize = "rounded-lg")]
+    Square,
 }
 
 #[derive(

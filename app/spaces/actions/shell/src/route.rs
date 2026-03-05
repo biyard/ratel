@@ -1,9 +1,9 @@
 use crate::*;
 use dioxus::router::components::child_router::ChildRouter;
 
+use space_action_discussion::Route as DiscussionRoute;
 use space_action_main::Route as MainRoute;
 use space_action_poll::Route as PollRoute;
-use space_action_discussion::Route as DiscussionRoute;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]

@@ -7,16 +7,7 @@ use space_common::{
     components::{SpaceNav, SpaceNavItem, SpaceTop, SpaceTopLabel},
     hooks::use_user_role,
 };
-#[component]
-pub fn SpaceProvider(space_id: SpacePartition) -> Element {
-    // user_role_provider(space_id.clone())?;
-    // space_provider(space_id.clone())?;
-    use_context_provider(|| LayoverService::new());
-    rsx! {
-        Outlet::<Route> {
-        }
-    }
-}
+
 #[component]
 pub fn SpaceLayout(space_id: SpacePartition) -> Element {
     let role_loader = use_user_role(&space_id)?;
@@ -42,7 +33,7 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
         overview::get_nav_item(space_id.clone(), role.clone()),
         actions::get_nav_item(space_id.clone(), role.clone()),
         apps::get_nav_item(space_id.clone(), role.clone()),
-        report::get_nav_item(space_id.clone(), role.clone()),
+        // report::get_nav_item(space_id.clone(), role.clone()),
     ]
     .into_iter()
     .map(|item| {
