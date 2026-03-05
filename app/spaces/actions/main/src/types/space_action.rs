@@ -60,7 +60,28 @@ impl From<(space_action_discussion::SpacePost, SpaceUserRole)> for SpaceAction {
     }
 }
 
-use space_common::types::route::{space_action_discussion, space_action_poll};
+impl From<space_action_subscription::SpaceSubscription> for SpaceAction {
+    fn from(subscription: space_action_subscription::SpaceSubscription) -> Self {
+        let action_id = subscription.sk.to_string();
+        Self {
+            action_id,
+            action_type: SpaceActionType::Subscription,
+            title: String::new(),
+            description: String::new(),
+            created_at: subscription.created_at,
+            updated_at: subscription.updated_at,
+            total_score: None,
+            total_point: None,
+            started_at: None,
+            ended_at: None,
+            user_participated: false,
+        }
+    }
+}
+
+use space_common::types::route::{
+    space_action_discussion, space_action_poll, space_action_quiz, space_action_subscription,
+};
 impl SpaceAction {
     pub fn get_url(&self, space_id: &SpacePartition) -> String {
         match self.action_type {
@@ -68,6 +89,8 @@ impl SpaceAction {
             SpaceActionType::TopicDiscussion => {
                 space_action_discussion(space_id, &self.action_id.clone().into())
             }
+            SpaceActionType::Subscription => space_action_subscription(space_id),
+            SpaceActionType::Quiz => space_action_quiz(space_id),
         }
     }
 }
