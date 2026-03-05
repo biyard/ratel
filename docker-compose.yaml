@@ -269,6 +269,7 @@ services:
     profiles:
       - development
       - infra
+      - testing
     networks:
       - ratel-network
 
