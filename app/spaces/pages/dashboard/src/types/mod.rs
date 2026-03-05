@@ -1,3 +1,1 @@
-mod extension;
-
-pub use extension::*;
+pub use space_common::types::dashboard::*;
