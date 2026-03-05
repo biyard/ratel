@@ -377,6 +377,7 @@ jobs:
       - name: Setup SSH session with tmate
         uses: mxschmitt/action-tmate@v3
         if: failure()
+        timeout-minutes: 15
         env:
           COMMIT: pr-${{ github.sha }}
         with:
