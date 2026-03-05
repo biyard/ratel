@@ -77,6 +77,7 @@ pub enum EntityType {
 
     // Poll Feature entity types
     SpacePoll(String), // SpacePoll#{uuid or space_id}
+    SpaceSubscription, // SpaceSubscription#{uuid or space_id}
 
     SpacePollQuestion,
 

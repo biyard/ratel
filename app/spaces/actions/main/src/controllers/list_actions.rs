@@ -23,8 +23,14 @@ pub async fn list_actions(
         space_action_discussion::SpacePost::opt_all()
             .sk(EntityType::SpacePost(String::default()).to_string()),
     );
-    let ((polls, _), (discussions, _)) = tokio::try_join!(poll_future, discussion_future)
-        .map_err(|e| Error::InternalServerError(format!("failed to load actions: {e:?}")))?;
+    let subscription_future = space_action_subscription::SpaceSubscription::get(
+        cli,
+        &space_pk,
+        Some(EntityType::SpaceSubscription),
+    );
+    let ((polls, _), (discussions, _), subscription) =
+        tokio::try_join!(poll_future, discussion_future, subscription_future)
+            .map_err(|e| Error::InternalServerError(format!("failed to load actions: {e:?}")))?;
 
     let mut actions: Vec<SpaceAction> = if let Some(user) = user.0 {
         let keys: Vec<_> = polls
@@ -62,6 +68,9 @@ pub async fn list_actions(
         .map(|post| (post, role).into())
         .collect();
     actions.extend(discussion_actions);
+    if let Some(subscription) = subscription {
+        actions.push(subscription.into());
+    }
 
     // Sort by updated_at descending
     actions.sort_by(|a, b| b.updated_at.cmp(&a.updated_at));

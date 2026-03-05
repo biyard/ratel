@@ -17765,6 +17765,7 @@ dependencies = [
  "serde",
  "space-action-discussion",
  "space-action-poll",
+ "space-action-subscription",
  "space-common",
 ]
 

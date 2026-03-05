@@ -64,7 +64,15 @@ pub fn ActionCard(action: SpaceAction, space_id: SpacePartition) -> Element {
                         variant: BadgeVariant::Rounded,
                         {type_label}
                     }
-                    Badge { color: status_color, variant: BadgeVariant::Rounded, {status_label} }
+
+                    if action.action_type != SpaceActionType::Subscription {
+                        Badge {
+                            color: status_color,
+                            variant: BadgeVariant::Rounded,
+                            {status_label}
+                        }
+                    }
+                
                 }
 
                 if let Some(period) = period {
