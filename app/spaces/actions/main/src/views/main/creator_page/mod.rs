@@ -49,7 +49,6 @@ pub fn CreatorActionPage(space_id: SpacePartition) -> Element {
                 div { class: "flex flex-col gap-5 justify-center items-center px-4 pb-5 w-full border border-dashed py-[0.625rem] rounded-[0.75rem] bg-neutral-900 light:bg-neutral-100 border-neutral-800 light:border-neutral-300",
                     icons::game::Thunder { class: "size-6 [&>path]:fill-none [&>path]:stroke-neutral-400 light:[&>path]:stroke-neutral-500" }
                     p { class: "font-medium text-[1.0625rem]/[1.25rem] text-font-primary",
-                    p { class: "text-[1.0625rem]/[1.25rem] font-medium text-web-font-primary",
                         {tr.no_actions_title}
                     }
 
@@ -65,7 +64,7 @@ pub fn CreatorActionPage(space_id: SpacePartition) -> Element {
                             }
                             span { {tr.button_add_action_label} }
                         }
-                    
+
                     }
 
                     p { class: "font-semibold text-center text-[0.75rem]/[1rem] text-neutral-400 light:text-neutral-600",
@@ -86,7 +85,7 @@ pub fn CreatorActionPage(space_id: SpacePartition) -> Element {
                     }
                 }
             }
-        
+
         }
     }
 }
