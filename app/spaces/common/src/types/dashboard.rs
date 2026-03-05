@@ -10,6 +10,7 @@ pub enum DashboardIcon {
     Participants,
     IncentivePool,
     Rewards,
+    BarChart,
 }
 
 impl DashboardIcon {
@@ -19,6 +20,7 @@ impl DashboardIcon {
             DashboardIcon::Participants => "\u{1F465}",  // 👥
             DashboardIcon::IncentivePool => "\u{1F4B0}", // 💰
             DashboardIcon::Rewards => "\u{1F3C6}",       // 🏆
+            DashboardIcon::BarChart => "\u{1F4CA}",      // 📊
         }
     }
 
@@ -28,6 +30,7 @@ impl DashboardIcon {
             DashboardIcon::Participants => "bg-cyan-500",
             DashboardIcon::IncentivePool => "bg-violet-500",
             DashboardIcon::Rewards => "bg-green-500",
+            DashboardIcon::BarChart => "bg-blue-500",
         }
     }
 
@@ -37,11 +40,12 @@ impl DashboardIcon {
             DashboardIcon::Participants => "#06B6D4",
             DashboardIcon::IncentivePool => "#A855F7",
             DashboardIcon::Rewards => "#22C55E",
+            DashboardIcon::BarChart => "#3B82F6",
         }
     }
 }
 
-// ─── Dashboard Extension ──────────────────────────────
+// ─── Dashboard Extension (display type) ─────────────────
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct DashboardExtension {
@@ -52,16 +56,18 @@ pub struct DashboardExtension {
 impl DashboardExtension {
     pub fn grid_size(&self) -> (u8, u8) {
         match &self.data {
+            DashboardComponentData::StatSummary(_) => (1, 2),
+            DashboardComponentData::StatCard(_) => (1, 3),
             DashboardComponentData::ProgressList(_) => (1, 4),
             DashboardComponentData::TabChart(_) => (1, 4),
             DashboardComponentData::InfoCard(_) => (1, 2),
-            DashboardComponentData::StatCard(_) => (1, 2),
             DashboardComponentData::RankingTable(_) => (4, 3),
         }
     }
 
     pub fn order(&self) -> i32 {
         match &self.data {
+            DashboardComponentData::StatSummary(_) => 1,
             DashboardComponentData::ProgressList(_) => 2,
             DashboardComponentData::TabChart(_) => 3,
             DashboardComponentData::InfoCard(_) => 4,
@@ -81,10 +87,33 @@ impl DashboardExtension {
 #[serde(tag = "type", content = "value", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum DashboardComponentData {
     StatCard(StatCardData),
+    StatSummary(StatSummaryData),
     ProgressList(ProgressListData),
     TabChart(TabChartData),
     InfoCard(InfoCardData),
     RankingTable(RankingTableData),
+}
+
+// ─── Stat Summary ─────────────────────────────────
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct StatSummaryData {
+    pub icon: DashboardIcon,
+    pub main_value: String,
+    pub main_label: String,
+    pub items: Vec<StatSummaryItem>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct StatSummaryItem {
+    pub label: String,
+    pub value: String,
+    #[serde(default)]
+    pub icon: String,
+    #[serde(default)]
+    pub trend: f64,
+    #[serde(default)]
+    pub trend_label: String,
 }
 
 // ─── Stat Card ────────────────────────────────────
@@ -198,4 +227,5 @@ pub const EXT_ID_TAB_CHART: &str = "tab-chart-participants";
 pub const EXT_ID_PROGRESS_LIST: &str = "progress-list-actions";
 pub const EXT_ID_INFO_CARD: &str = "info-card-rewards";
 pub const EXT_ID_STAT_CARD: &str = "stat-card-incentive";
+pub const EXT_ID_STAT_SUMMARY: &str = "stat-summary-space-views";
 pub const EXT_ID_RANKING_TABLE: &str = "ranking-table-incentive";
