@@ -94,3 +94,10 @@ export async function goto(page, url) {
   await page.goto(`${CONFIGS.BASE_URL}${url}`);
   await page.waitForLoadState("networkidle");
 }
+
+export async function getEditor(page) {
+  const editor = page.locator("[contenteditable]");
+  await expect(editor).toBeVisible();
+
+  return editor;
+}
