@@ -2,13 +2,9 @@ use crate::*;
 mod creator;
 use creator::SubscriptionCreatorPage;
 
-mod participant;
-use participant::SubscriptionParticipantPage;
-
 mod viewer;
 use viewer::SubscriptionViewerPage;
 
-use participant::*;
 use space_common::hooks::use_user_role;
 use viewer::*;
 
@@ -21,10 +17,7 @@ pub fn MainPage(space_id: SpacePartition) -> Element {
         SpaceUserRole::Creator => rsx! {
             SubscriptionCreatorPage { space_id }
         },
-        SpaceUserRole::Participant | SpaceUserRole::Candidate => rsx! {
-            SubscriptionParticipantPage { space_id }
-        },
-        SpaceUserRole::Viewer => rsx! {
+        _ => rsx! {
             SubscriptionViewerPage { space_id }
         },
     }

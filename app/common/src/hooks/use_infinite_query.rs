@@ -143,11 +143,7 @@ where
 {
     let bookmark: Signal<Option<Bookmark>> = use_signal(move || None);
 
-    let rsc = use_server_future(move || async move {
-        let res = future(None).await;
-
-        res
-    })?;
+    let rsc = use_server_future(move || async move { future(None).await })?;
     let val = rsc.read();
     let res = val.as_ref().unwrap().as_ref().unwrap();
     let mut next_bookmark: Signal<Option<Bookmark>> = use_signal(move || res.bookmark());
