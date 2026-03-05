@@ -143,6 +143,13 @@ pub enum Error {
     #[translate(en = "Space post ended", ko = "스페이스 게시글이 종료되었습니다.")]
     SpacePostEnded,
 
+    #[error("space post contents is too short")]
+    #[translate(
+        ko = "스페이스 게시글의 내용은 10자 이상이어야 합니다.",
+        en = "Space post contents must be at least 10 characters long."
+    )]
+    ValidationTooShortContents,
+
     // PortOne related errors
     #[error("PortOne Inicis returned invalid identity")]
     #[translate(en = "Failed network request", ko = "요청에 실패했습니다.")]
