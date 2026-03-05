@@ -16,16 +16,24 @@ pub fn CreatorActionPage(space_id: SpacePartition) -> Element {
         move || list_actions(space_id.clone())
     })?;
 
+    let actions_for_subscription = actions.clone();
+    let has_subscription = use_memo(move || {
+        actions_for_subscription
+            .iter()
+            .any(|action| action.action_type == SpaceActionType::Subscription)
+    });
+
     let open_layover = {
         let mut layover = layover;
         let title = tr.layover_title.to_string();
         let space_id = space_id.clone();
+        let has_subscription = has_subscription();
         move |_| {
             layover.open(
                 "space-actions-layover".to_string(),
                 title.clone(),
                 rsx! {
-                    CreateActionModal { space_id: space_id.clone() }
+                    CreateActionModal { space_id: space_id.clone(), has_subscription }
                 },
             );
         }
@@ -58,7 +66,7 @@ pub fn CreatorActionPage(space_id: SpacePartition) -> Element {
                             }
                             span { {tr.button_add_action_label} }
                         }
-
+                    
                     }
 
                     p { class: "text-[0.75rem]/[1rem] font-semibold text-neutral-400 light:text-neutral-600 text-center",
@@ -79,7 +87,7 @@ pub fn CreatorActionPage(space_id: SpacePartition) -> Element {
                     }
                 }
             }
-
+        
         }
     }
 }
