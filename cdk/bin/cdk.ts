@@ -34,7 +34,6 @@ const daemonStack = new DaemonStack(app, `ratel-${env}-daemon-ap-northeast-2`, {
   commit: process.env.COMMIT!,
 });
 
-// Shared stacks
 new QdrantStack(app, `ratel-${env}-qdrant-ap-northeast-2`, {
   env: {
     account: awsAccount,
