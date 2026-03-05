@@ -23,6 +23,13 @@ pub fn space_action_discussion(
     format!("/spaces/{space_id}/actions/discussions/{discussion_id}")
 }
 
+pub fn space_action_discussion_edit(
+    space_id: &SpacePartition,
+    discussion_id: &SpacePostEntityType,
+) -> String {
+    format!("/spaces/{space_id}/actions/discussions/{discussion_id}/edit")
+}
+
 pub fn space_apps(space_id: &SpacePartition) -> String {
     format!("/spaces/{space_id}/apps")
 }

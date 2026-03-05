@@ -35,6 +35,7 @@ pub mod macros;
 pub mod middlewares;
 pub mod models;
 pub mod query;
+pub mod services;
 pub mod utils;
 pub use macros::dynamo_entity::DynamoEntity;
 
