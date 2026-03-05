@@ -8,4 +8,8 @@ pub enum SpaceActionType {
     Poll,
     #[translate(ko = "토론", en = "Discussion")]
     TopicDiscussion,
+    #[translate(ko = "구독", en = "Subscription")]
+    Subscription,
+    #[translate(ko = "퀴즈", en = "Quiz")]
+    Quiz,
 }

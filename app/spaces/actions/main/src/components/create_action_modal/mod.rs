@@ -86,6 +86,8 @@ pub fn CreateActionModal(space_id: SpacePartition) -> Element {
                         }
                     });
                 }
+                SpaceActionType::Subscription => {}
+                SpaceActionType::Quiz => {}
             }
         }
     };
@@ -125,6 +127,20 @@ pub fn CreateActionModal(space_id: SpacePartition) -> Element {
                             }
                         },
                     }
+                    ActionTypeOption {
+                        selected: selected_type() == Some(SpaceActionType::Subscription),
+                        disabled: false,
+                        onclick: move |_| selected_type.set(Some(SpaceActionType::Subscription)),
+                        title: tr.follow_title.to_string(),
+                        caption: tr.follow_caption.to_string(),
+                        icon: rsx! {
+                            icons::user::UserGroup {
+                                width: "22",
+                                height: "22",
+                                class: "[&>path]:fill-none [&>path]:stroke-neutral-900",
+                            }
+                        },
+                    }
                 }
 
                 // Sample preview section
@@ -134,7 +150,7 @@ pub fn CreateActionModal(space_id: SpacePartition) -> Element {
                     }
                     div { class: "w-full h-[14.875rem] rounded-[0.75rem] border border-neutral-700 light:border-neutral-300 bg-neutral-950/40 light:bg-neutral-100" }
                 }
-
+            
             }
 
             // Bottom bar
@@ -178,7 +194,7 @@ fn ActionTypeOption(
 
             div { class: "flex justify-center items-center rounded-[0.625rem] size-11 bg-white light:bg-white shrink-0",
                 {icon}
-
+            
             }
 
             div { class: "flex flex-col items-start gap-1",

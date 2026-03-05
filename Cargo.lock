@@ -17790,6 +17790,18 @@ dependencies = [
  "space-action-discussion",
  "space-action-main",
  "space-action-poll",
+ "space-action-subscription",
+ "space-common",
+]
+
+[[package]]
+name = "space-action-subscription"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "ratel-auth",
+ "serde",
  "space-common",
 ]
 
