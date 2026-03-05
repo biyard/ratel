@@ -41,5 +41,6 @@ test.describe.serial("Post with Space", () => {
     await page.waitForURL(/\/spaces\/[a-z0-9-]+\/dashboard/, {
       waitUntil: "networkidle",
     });
+    await getLocator(page, { text: "Dashboard" });
   });
 });
