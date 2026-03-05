@@ -13,6 +13,7 @@ pub struct SpacePoll {
     pub created_at: i64,
     pub updated_at: i64,
 
+    #[serde(default)]
     pub title: String,
     pub description: String,
 
