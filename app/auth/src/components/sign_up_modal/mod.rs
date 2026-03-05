@@ -67,7 +67,7 @@ pub fn SignupModal(#[props(optional)] initial_email: Option<String>) -> Element 
 
     rsx! {
         div {
-            class: "overflow-y-scroll w-full max-h-screen scrollbar-hide",
+            class: "overflow-y-scroll w-full max-h-[80vh] momentum scrollbar-hide",
             id: "signup_popup",
             div {
                 class: "flex flex-col gap-4 w-full max-w-100 mx-auto",
