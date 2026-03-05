@@ -5,27 +5,30 @@ import {
   aws_iam as iam,
   aws_logs as logs,
   aws_servicediscovery as sd,
+  aws_apigatewayv2 as apigw,
+  aws_route53 as route53,
+  aws_certificatemanager as acm,
   RemovalPolicy,
   Stack,
   StackProps,
 } from "aws-cdk-lib";
 import { Construct } from "constructs";
+import { HttpServiceDiscoveryIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
 
 export interface QdrantStackProps extends StackProps {
   stage: string;
   cluster: ecs.ICluster;
   vpc: ec2.IVpc;
   qdrantApiKey?: string;
+  baseDomain: string;
+  vectorDomain: string;
 }
 
 export class QdrantStack extends Stack {
-  public readonly cloudMapService: sd.IService;
-  public readonly securityGroup: ec2.ISecurityGroup;
-
   constructor(scope: Construct, id: string, props: QdrantStackProps) {
     super(scope, id, { ...props, crossRegionReferences: true });
 
-    const { cluster, vpc, qdrantApiKey } = props;
+    const { cluster, vpc, qdrantApiKey, baseDomain, vectorDomain } = props;
 
     // Security group for Qdrant
     const sg = new ec2.SecurityGroup(this, "QdrantSG", {
@@ -44,8 +47,6 @@ export class QdrantStack extends Stack {
       ec2.Port.tcp(6334),
       "Qdrant gRPC",
     );
-
-    this.securityGroup = sg;
 
     // EFS for persistent storage (use public subnets since default VPC has no private subnets)
     const fileSystem = new efs.FileSystem(this, "QdrantEfs", {
@@ -151,6 +152,71 @@ export class QdrantStack extends Stack {
       },
     });
 
-    this.cloudMapService = fargateService.cloudMapService!;
+    // --- API Gateway with custom domain vector.ratel.foundation ---
+
+    // Filter subnets to exclude AZs where API Gateway VPC Link is not available (apne2-az4)
+    const supportedSubnets = vpc.publicSubnets.filter(
+      (s) => s.availabilityZone !== "ap-northeast-2d",
+    );
+
+    const vpcLink = new apigw.VpcLink(this, "QdrantVpcLink", {
+      vpc,
+      subnets: { subnets: supportedSubnets },
+      securityGroups: [sg],
+    });
+
+    const httpApi = new apigw.HttpApi(this, "QdrantHttpApi", {
+      apiName: `ratel-${props.stage}-qdrant-api`,
+      description: "Qdrant Vector DB API Gateway",
+    });
+
+    const qdrantIntegration = new HttpServiceDiscoveryIntegration(
+      "QdrantIntegration",
+      fargateService.cloudMapService!,
+      { vpcLink },
+    );
+
+    httpApi.addRoutes({
+      path: "/{proxy+}",
+      methods: [apigw.HttpMethod.ANY],
+      integration: qdrantIntegration,
+    });
+
+    httpApi.addRoutes({
+      path: "/",
+      methods: [apigw.HttpMethod.ANY],
+      integration: qdrantIntegration,
+    });
+
+    // DNS + Certificate
+    const zone = route53.HostedZone.fromLookup(this, "RootZone", {
+      domainName: baseDomain,
+    });
+
+    const cert = new acm.Certificate(this, "QdrantCert", {
+      domainName: vectorDomain,
+      validation: acm.CertificateValidation.fromDns(zone),
+    });
+
+    const domainName = new apigw.DomainName(this, "QdrantDomain", {
+      domainName: vectorDomain,
+      certificate: cert,
+    });
+
+    new apigw.ApiMapping(this, "QdrantApiMapping", {
+      api: httpApi,
+      domainName,
+    });
+
+    new route53.ARecord(this, "QdrantAliasA", {
+      zone,
+      recordName: vectorDomain,
+      target: route53.RecordTarget.fromAlias({
+        bind: () => ({
+          dnsName: domainName.regionalDomainName,
+          hostedZoneId: domainName.regionalHostedZoneId,
+        }),
+      }),
+    });
   }
 }
