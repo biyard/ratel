@@ -1,4 +1,4 @@
-pub use dioxus::prelude::*;
+use dioxus::prelude::*;
 pub use dioxus_translate_macro::*;
 pub use dioxus_translate_types::Translator;
 
