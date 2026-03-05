@@ -64,6 +64,15 @@ pub enum ButtonSize {
     #[default]
     #[strum(serialize = "py-3 px-5 text-[14px]/[16px] font-bold")]
     Medium,
+
+    #[strum(serialize = "py-0 px-0 text-[15px]/[24px] font-medium")]
+    Inline,
+
+    #[strum(serialize = "p-1 text-[14px]/[14px] font-medium")]
+    Icon,
+
+    #[strum(serialize = "py-1.5 px-3 text-[13px]/[16px] font-semibold")]
+    Small,
 }
 
 #[derive(
@@ -93,4 +102,9 @@ pub enum ButtonStyle {
         serialize = "bg-btn-outline-bg border-btn-outline-outline text-btn-outline-text hover:bg-btn-outline-hover-bg hover:border-btn-outline-hover-outline hover:text-btn-outline-hover-text disabled:bg-btn-outline-disable-bg disabled:border-btn-outline-disable-outline disabled:text-btn-outline-disable-text"
     )]
     Outline,
+
+    #[strum(
+        serialize = "bg-transparent border-transparent text-text-primary hover:bg-hover disabled:bg-transparent disabled:border-transparent disabled:text-text-secondary"
+    )]
+    Ghost,
 }

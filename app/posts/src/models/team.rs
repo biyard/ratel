@@ -1,6 +1,8 @@
 use crate::types::*;
 use crate::*;
 #[cfg(feature = "server")]
+use ratel_auth::OptionalUser;
+#[cfg(feature = "server")]
 use ratel_auth::UserTeamGroup;
 
 #[cfg(feature = "server")]
@@ -185,8 +187,7 @@ impl Team {
 
         let opt = UserTeamGroup::opt().sk(user_pk.to_string()).limit(50);
 
-        let (groups, _bookmark) =
-            UserTeamGroup::find_by_team_pk(cli, team_pk.clone(), opt).await?;
+        let (groups, _bookmark) = UserTeamGroup::find_by_team_pk(cli, team_pk.clone(), opt).await?;
 
         let mut perms = 0i64;
 
@@ -199,5 +200,95 @@ impl Team {
         }
 
         Ok(perms.into())
+    }
+}
+
+#[cfg(feature = "server")]
+fn extract_team_identifier(parts: &Parts) -> Result<String> {
+    let mut segments = parts.uri.path().trim_matches('/').split('/');
+    while let Some(seg) = segments.next() {
+        if seg == "teams" {
+            if let Some(value) = segments.next() {
+                return Ok(value.to_string());
+            }
+            break;
+        }
+    }
+
+    Err(Error::BadRequest(
+        "Missing team identifier in path".to_string(),
+    ))
+}
+
+#[cfg(feature = "server")]
+async fn resolve_team_from_identifier(
+    cli: &aws_sdk_dynamodb::Client,
+    team_id: &str,
+) -> Result<Team> {
+    if let Ok(team_pk) = team_id.parse::<TeamPartition>() {
+        let team_pk: Partition = team_pk.into();
+        if let Some(team) = Team::get(cli, &team_pk, Some(EntityType::Team)).await? {
+            return Ok(team);
+        }
+    }
+
+    let gsi2_sk_prefix = Team::compose_gsi2_sk(String::default());
+    let team_query_option = Team::opt().sk(gsi2_sk_prefix).limit(1);
+    let (teams, _) =
+        Team::find_by_username_prefix(cli, team_id.to_string(), team_query_option).await?;
+
+    teams
+        .into_iter()
+        .find(|t| t.username == team_id)
+        .ok_or(Error::NotFound("Team not found".to_string()))
+}
+
+#[cfg(feature = "server")]
+impl<S> FromRequestParts<S> for Team
+where
+    S: Send + Sync,
+{
+    type Rejection = Error;
+
+    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self> {
+        if let Some(team) = parts.extensions.get::<Team>() {
+            return Ok(team.clone());
+        }
+
+        let team_id = extract_team_identifier(parts)?;
+        let cli = crate::config::get().dynamodb();
+        let team = resolve_team_from_identifier(cli, &team_id).await?;
+        parts.extensions.insert(team.clone());
+
+        Ok(team)
+    }
+}
+
+#[cfg(feature = "server")]
+impl<S> FromRequestParts<S> for TeamGroupPermissions
+where
+    S: Send + Sync,
+{
+    type Rejection = Error;
+
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self> {
+        if let Some(permissions) = parts.extensions.get::<TeamGroupPermissions>() {
+            return Ok(permissions.clone());
+        }
+
+        let team = Team::from_request_parts(parts, state).await?;
+        let user: Option<ratel_auth::User> =
+            OptionalUser::from_request_parts(parts, state).await?.into();
+        let cli = crate::config::get().dynamodb();
+        let permissions = if let Some(user) = user {
+            Team::get_permissions_by_team_pk(cli, &team.pk, &user.pk)
+                .await
+                .unwrap_or_else(|_| TeamGroupPermissions::empty())
+        } else {
+            TeamGroupPermissions::empty()
+        };
+
+        parts.extensions.insert(permissions.clone());
+        Ok(permissions)
     }
 }

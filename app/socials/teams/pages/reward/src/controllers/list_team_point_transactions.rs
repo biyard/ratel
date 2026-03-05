@@ -1,24 +1,18 @@
 use crate::*;
 use common::services::biyard::PointTransactionResponse;
 
-use ratel_post::models::Team;
 use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
 
 pub type ListPointTransactionsResponse = ListResponse<PointTransactionResponse>;
 
-#[get("/api/teams/:team_pk/points/transactions?month&bookmark", user: ratel_auth::User)]
+#[get("/api/teams/:team_pk/points/transactions?month&bookmark", user: ratel_auth::User, permissions: TeamGroupPermissions)]
 pub async fn list_team_point_transactions_handler(
     team_pk: TeamPartition,
     month: Option<String>,
     bookmark: Option<String>,
 ) -> Result<ListPointTransactionsResponse> {
     let cfg = common::CommonConfig::default();
-    let cli = cfg.dynamodb();
     let team_pk: Partition = team_pk.into();
-
-    let permissions = Team::get_permissions_by_team_pk(cli, &team_pk, &user.pk)
-        .await
-        .unwrap_or_else(|_| TeamGroupPermissions::empty());
     let can_view = permissions.contains(TeamGroupPermission::TeamAdmin);
     if !can_view {
         return Err(Error::Unauthorized(

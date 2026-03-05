@@ -11,21 +11,24 @@ pub struct LikeCommentResponse {
 #[post("/api/posts/:post_pk/comments/:comment_sk/like", user: User)]
 pub async fn like_comment_handler(
     post_pk: FeedPartition,
-    comment_sk: EntityType,
-    like: bool,
+    comment_sk: String,
+    liked: bool,
 ) -> Result<LikeCommentResponse> {
     let conf = crate::config::get();
     let cli = conf.dynamodb();
 
     let post_pk: Partition = post_pk.into();
+    let comment_sk: EntityType = comment_sk
+        .parse()
+        .map_err(|_| Error::BadRequest("Invalid comment_sk".to_string()))?;
 
-    tracing::debug!("Handling like comment request: like = {}", like);
+    tracing::debug!("Handling like comment request: like = {}", liked);
 
-    if like {
+    if liked {
         Post::like_comment(cli, post_pk, comment_sk, user.pk).await?;
     } else {
         Post::unlike_comment(cli, post_pk, comment_sk, user.pk).await?;
     }
 
-    Ok(LikeCommentResponse { liked: like })
+    Ok(LikeCommentResponse { liked })
 }
