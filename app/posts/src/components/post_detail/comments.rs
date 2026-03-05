@@ -14,7 +14,7 @@ use dioxus::prelude::*;
 #[component]
 pub fn CommentSection(
     detail: PostDetailResponse,
-    post_pk: String,
+    post_pk: FeedPartition,
     on_refresh: EventHandler<()>,
 ) -> Element {
     let t: PostDetailTranslate = use_translate();
@@ -44,31 +44,31 @@ pub fn CommentSection(
 
     rsx! {
         div { id: "comments", class: "flex flex-col gap-2.5",
-            div { class: "flex flex-row text-text-primary gap-2",
+            div { class: "flex flex-row gap-2 text-text-primary",
                 icons::chat::SquareChat { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
-                span { class: "text-base/6 font-medium", {count_text()} }
+                span { class: "font-medium text-base/6", {count_text()} }
             }
             if !expand_comment() {
                 Button {
                     size: ButtonSize::Inline,
                     style: ButtonStyle::Ghost,
-                    class: "flex flex-row w-full px-3.5 py-3 gap-2 bg-write-comment-box-bg border border-write-comment-box-border items-center rounded-lg hover:bg-write-comment-box-bg/80 hover:border-primary/50 transition-all duration-200 cursor-pointer group"
+                    class: "flex flex-row gap-2 items-center py-3 px-3.5 w-full rounded-lg border transition-all duration-200 cursor-pointer bg-write-comment-box-bg border-write-comment-box-border group hover:bg-write-comment-box-bg/80 hover:border-primary/50"
                         .to_string(),
                     onclick: move |_| {
                         expand_comment.set(true);
                     },
-                    span { class: "inline-flex items-center gap-2",
+                    span { class: "inline-flex gap-2 items-center",
                         icons::chat::SquareChat { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
-                        span { class: "text-write-comment-box-text text-[15px]/[24px] font-medium",
+                        span { class: "font-medium text-write-comment-box-text text-[15px]/[24px]",
                             {t.share_your_thoughts}
                         }
                     }
                 }
             }
             if expand_comment() {
-                div { class: "flex flex-col gap-2 p-4 border border-card-enable-border rounded-lg bg-card-bg-secondary",
+                div { class: "flex flex-col gap-2 p-4 rounded-lg border border-card-enable-border bg-card-bg-secondary",
                     TextArea {
-                        class: "w-full min-h-[80px] p-2 bg-transparent text-text-primary border border-divider rounded resize-none focus:outline-none focus:border-primary"
+                        class: "p-2 w-full bg-transparent rounded border resize-none focus:outline-none min-h-[80px] text-text-primary border-divider focus:border-primary"
                             .to_string(),
                         placeholder: t.share_your_thoughts.to_string(),
                         value: comment_text(),
@@ -76,7 +76,7 @@ pub fn CommentSection(
                             comment_text.set(e.value());
                         },
                     }
-                    div { class: "flex flex-row justify-end gap-2",
+                    div { class: "flex flex-row gap-2 justify-end",
                         Button {
                             style: ButtonStyle::Outline,
                             onclick: move |_| {
@@ -99,10 +99,7 @@ pub fn CommentSection(
                                     let pk = pk.clone();
                                     let on_refresh = on_refresh.clone();
                                     spawn(async move {
-                                        if add_comment_handler(pk.parse().unwrap(), content)
-                                            .await
-                                            .is_ok()
-                                        {
+                                        if add_comment_handler(pk, content).await.is_ok() {
                                             comment_count.set(comment_count() + 1);
                                             on_refresh.call(());
                                         }
@@ -138,7 +135,7 @@ pub fn CommentSection(
 #[component]
 fn CommentItem(
     comment: PostCommentResponse,
-    post_pk: String,
+    post_pk: FeedPartition,
     on_refresh: EventHandler<()>,
     on_comment_count_inc: EventHandler<()>,
 ) -> Element {
@@ -174,13 +171,8 @@ fn CommentItem(
 
     let replies = use_infinite_query(move |bookmark| {
         let post_pk = post_pk_signal();
-        let comment_sk = comment_sk_signal();
-        let sk_encoded = common::percent_encoding::utf8_percent_encode(
-            &comment_sk.to_string(),
-            common::percent_encoding::NON_ALPHANUMERIC,
-        )
-        .to_string();
-        async move { list_comments_handler(post_pk.parse().unwrap(), sk_encoded, bookmark).await }
+        let comment_id = comment_sk_signal();
+        async move { list_comments_handler(post_pk, comment_id, bookmark).await }
     })?;
 
     rsx! {
@@ -200,7 +192,7 @@ fn CommentItem(
                         div { class: "font-semibold text-text-primary text-[15px] leading-[15px]",
                             {comment.author_display_name}
                         }
-                        div { class: "font-semibold text-xs leading-[20px] text-text-primary",
+                        div { class: "text-xs font-semibold leading-[20px] text-text-primary",
                             {time_ago(updated_secs())}
                         }
                     }
@@ -227,7 +219,7 @@ fn CommentItem(
                             let next = !*show_replies.read();
                             show_replies.set(next);
                         },
-                        span { class: "inline-flex items-center gap-2 text-primary",
+                        span { class: "inline-flex gap-2 items-center text-primary",
                             {reply_text_label()}
                             if comment_replies() > 0 {
                                 icons::arrows::ChevronDown { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
@@ -244,7 +236,7 @@ fn CommentItem(
                             let current = *show_reply.read();
                             show_reply.set(!current);
                         },
-                        span { class: "inline-flex items-center gap-2 text-text-primary",
+                        span { class: "inline-flex gap-2 items-center text-text-primary",
                             icons::arrows::BendArrowRight { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
                             {t.reply}
                         }
@@ -271,14 +263,9 @@ fn CommentItem(
 
                             let pk = pk.clone();
                             let sk = sk.clone();
-                            let sk_encoded = common::percent_encoding::utf8_percent_encode(
-                                    &sk.to_string(),
-                                    common::percent_encoding::NON_ALPHANUMERIC,
-                                )
-                                .to_string();
                             let on_refresh = on_refresh.clone();
                             spawn(async move {
-                                if like_comment_handler(pk.parse().unwrap(), sk_encoded, new_like)
+                                if like_comment_handler(pk, sk, new_like)
                                     .await
                                     .is_ok()
                                 {
@@ -288,7 +275,7 @@ fn CommentItem(
                             });
                         }
                     },
-                    span { class: "inline-flex items-center gap-2",
+                    span { class: "inline-flex gap-2 items-center",
                         if optimistic_liked() {
                             icons::emoji::ThumbsUp { class: "size-5 [&>path]:fill-primary [&>path]:stroke-primary" }
                         } else {
@@ -301,7 +288,7 @@ fn CommentItem(
                 }
             }
             if *show_reply.read() {
-                div { class: "flex flex-col w-full bg-comment-box-bg border rounded-lg border-primary max-w-desktop mt-2",
+                div { class: "flex flex-col mt-2 w-full rounded-lg border bg-comment-box-bg border-primary max-w-desktop",
                     div { class: "flex flex-row justify-between items-center px-3 pt-3",
                         span { class: "text-sm font-medium text-text-primary", {t.write_comment} }
                         Button {
@@ -316,7 +303,7 @@ fn CommentItem(
                     }
                     div { class: "flex-1 w-full rounded-md transition-colors",
                         TextArea {
-                            class: "w-full min-h-[80px] p-2 bg-transparent text-text-primary border border-divider rounded resize-none focus:outline-none focus:border-primary m-1"
+                            class: "p-2 m-1 w-full bg-transparent rounded border resize-none focus:outline-none min-h-[80px] text-text-primary border-divider focus:border-primary"
                                 .to_string(),
                             placeholder: t.contents_hint.to_string(),
                             value: reply_text(),
@@ -341,18 +328,13 @@ fn CommentItem(
                                     is_reply_submitting.set(true);
                                     let pk = pk.clone();
                                     let sk = sk.clone();
-                                    let sk_encoded = common::percent_encoding::utf8_percent_encode(
-                                            &sk.to_string(),
-                                            common::percent_encoding::NON_ALPHANUMERIC,
-                                        )
-                                        .to_string();
                                     let on_refresh = on_refresh.clone();
                                     let on_comment_count_inc = on_comment_count_inc.clone();
                                     let mut show_replies = show_replies.clone();
                                     let mut comment_replies = comment_replies.clone();
                                     let mut replies = replies.clone();
                                     spawn(async move {
-                                        if reply_to_comment_handler(pk.parse().unwrap(), sk_encoded, content)
+                                        if reply_to_comment_handler(pk, sk, content)
                                             .await
                                             .is_ok()
                                         {
@@ -368,7 +350,7 @@ fn CommentItem(
                                     });
                                 }
                             },
-                            span { class: "inline-flex items-center gap-2",
+                            span { class: "inline-flex gap-2 items-center",
                                 icons::chat::SquareChat { class: "w-5 h-5 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
                                 if is_reply_submitting() {
                                     {t.publishing}
@@ -414,21 +396,21 @@ fn CommentItem(
 }
 
 #[component]
-fn ReplyItem(reply: PostCommentResponse, post_pk: String, on_refresh: EventHandler<()>) -> Element {
+fn ReplyItem(reply: PostCommentResponse, post_pk: FeedPartition, on_refresh: EventHandler<()>) -> Element {
     let mut optimistic_liked = use_signal(|| reply.liked);
     let mut optimistic_likes = use_signal(|| reply.likes as i64);
     let mut is_processing = use_signal(|| false);
     rsx! {
-        div { class: "flex flex-col gap-2 p-5 rounded-lg bg-reply-box border border-transparent",
+        div { class: "flex flex-col gap-2 p-5 rounded-lg border border-transparent bg-reply-box",
             div { class: "flex flex-row gap-2 items-center",
                 if !reply.author_profile_url.is_empty() {
                     img {
                         src: reply.author_profile_url.clone(),
                         alt: reply.author_display_name.clone(),
-                        class: "rounded-full object-cover object-top w-10 h-10",
+                        class: "object-cover object-top w-10 h-10 rounded-full",
                     }
                 } else {
-                    div { class: "rounded-full w-10 h-10 bg-profile-bg" }
+                    div { class: "w-10 h-10 rounded-full bg-profile-bg" }
                 }
                 div { class: "flex flex-col gap-[2px]",
                     div { class: "font-semibold text-title-text text-[15px] leading-[15px]",
@@ -463,14 +445,9 @@ fn ReplyItem(reply: PostCommentResponse, post_pk: String, on_refresh: EventHandl
 
                             let pk = pk.clone();
                             let sk = sk.clone();
-                            let sk_encoded = common::percent_encoding::utf8_percent_encode(
-                                    &sk.to_string(),
-                                    common::percent_encoding::NON_ALPHANUMERIC,
-                                )
-                                .to_string();
                             let on_refresh = on_refresh.clone();
                             spawn(async move {
-                                if like_comment_handler(pk.parse().unwrap(), sk_encoded, new_like)
+                                if like_comment_handler(pk, sk, new_like)
                                     .await
                                     .is_ok()
                                 {
@@ -480,7 +457,7 @@ fn ReplyItem(reply: PostCommentResponse, post_pk: String, on_refresh: EventHandl
                             });
                         }
                     },
-                    span { class: "inline-flex items-center gap-2",
+                    span { class: "inline-flex gap-2 items-center",
                         if optimistic_liked() {
                             icons::emoji::ThumbsUp { class: "size-5 [&>path]:fill-primary [&>path]:stroke-primary" }
                         } else {

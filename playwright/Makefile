@@ -1,4 +1,4 @@
-PLAYWRIGHT_BASE_URL ?= http://localhost:8000
+PLAYWRIGHT_BASE_URL ?= http://localhost:8080
 PLAYWRIGHT_TIMEOUT ?= 10000
 
 run:

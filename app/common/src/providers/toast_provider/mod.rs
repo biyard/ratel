@@ -1,5 +1,6 @@
 mod toast_card;
 use dioxus::prelude::*;
+use dioxus_translate::{Language, Translate, use_language};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ToastLevel {
@@ -21,6 +22,7 @@ pub struct ToastItem {
 pub struct ToastService {
     toasts: Signal<Vec<ToastItem>>,
     next_id: Signal<u64>,
+    lang: Signal<Language>,
 }
 
 impl ToastService {
@@ -28,6 +30,7 @@ impl ToastService {
         let svc = Self {
             toasts: Signal::new(Vec::new()),
             next_id: Signal::new(0),
+            lang: use_language(),
         };
 
         use_context_provider(move || svc);
@@ -54,8 +57,9 @@ impl ToastService {
         self.push(ToastLevel::Warn, msg)
     }
 
-    pub fn error(&mut self, msg: impl Into<String>) -> &mut Self {
-        self.push(ToastLevel::Error, msg)
+    pub fn error(&mut self, err: crate::Error) -> &mut Self {
+        let l = (self.lang)();
+        self.push(ToastLevel::Error, err.translate(&l))
     }
 
     pub fn with_link(&mut self, url: impl Into<String>) -> &mut Self {

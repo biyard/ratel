@@ -6,12 +6,12 @@ use crate::types::*;
 use crate::*;
 use ratel_auth::OptionalUser;
 
-#[get("/api/posts/:post_pk", user: OptionalUser)]
-pub async fn get_post_handler(post_pk: FeedPartition) -> Result<PostDetailResponse> {
+#[get("/api/posts/:post_id", user: OptionalUser)]
+pub async fn get_post_handler(post_id: FeedPartition) -> Result<PostDetailResponse> {
     let conf = crate::config::get();
     let cli = conf.dynamodb();
 
-    let post_pk: Partition = post_pk.into();
+    let post_pk: Partition = post_id.into();
     let user: Option<ratel_auth::User> = user.into();
     tracing::debug!("Get post for post_pk: {}", post_pk);
 
