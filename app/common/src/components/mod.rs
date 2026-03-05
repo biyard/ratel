@@ -1,5 +1,7 @@
 mod badge;
 mod button;
+mod card;
+mod input;
 mod file_uploader;
 mod layover;
 mod popup;
@@ -10,6 +12,8 @@ mod theme_switcher;
 
 pub use badge::*;
 pub use button::*;
+pub use card::*;
+pub use input::*;
 pub use file_uploader::*;
 pub use layover::*;
 pub use popup::*;

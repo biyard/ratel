@@ -25,6 +25,7 @@ pub fn App() -> Element {
         document::Script { src: MAIN_JS }
         ratel_user_setting::Provider {}
         ratel_user_credential::Provider {}
+        ratel_membership::Provider {}
         common::Provider {}
         AuthProvider {}
         ratel_post::Provider {}

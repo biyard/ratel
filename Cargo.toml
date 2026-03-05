@@ -3,6 +3,7 @@ members = [
   "app/admin",
   "app/auth",
   "app/common",
+  "app/membership",
   "app/posts",
   "app/shell",
   "app/socials/teams/pages/*",
@@ -41,6 +42,7 @@ common = { path = "app/common" }
 ratel-admin = { path = "app/admin" }
 ratel-auth = { path = "app/auth" }
 ratel-post = { path = "app/posts" }
+ratel-membership = { path = "app/membership" }
 
 # Space Root
 space-shell = { path = "app/spaces/shell" }
