@@ -20,11 +20,31 @@ pub fn PollCreatorPage(space_id: SpacePartition, poll_id: SpacePollEntityType) -
 
     let mut editing = use_signal(|| false);
     let mut questions = use_signal(|| poll.questions.clone());
+    let mut title = use_signal(|| poll.title.clone());
 
     let can_edit = poll.user_response_count == 0;
 
     let on_back = move |_| {
         nav.go_back();
+    };
+
+    let on_title_save = {
+        let space_id = space_id.clone();
+        let poll_id = poll_id.clone();
+        move |_| {
+            let t = title();
+            let space_id = space_id.clone();
+            let poll_id = poll_id.clone();
+            spawn(async move {
+                let req = UpdatePollRequest::Title { title: t };
+                if let Err(e) = update_poll(space_id.clone(), poll_id.clone(), req).await {
+                    error!("Failed to update title: {:?}", e);
+                } else {
+                    let keys = space_page_actions_poll_key(&space_id, &poll_id);
+                    invalidate_query(&keys);
+                }
+            });
+        }
     };
 
     let on_time_change = {
@@ -108,6 +128,20 @@ pub fn PollCreatorPage(space_id: SpacePartition, poll_id: SpacePollEntityType) -
                 class: "flex items-center gap-1 text-sm text-neutral-400 hover:text-white transition-colors w-fit",
                 onclick: on_back,
                 "← {tr.btn_back}"
+            }
+
+            // Title
+            div { class: "flex flex-col gap-1",
+                label { class: "text-sm font-medium text-neutral-400 light:text-neutral-600",
+                    "{tr.title_label}"
+                }
+                input {
+                    class: "w-full px-4 py-3 rounded-lg bg-neutral-800 light:bg-neutral-100 border border-neutral-700 light:border-neutral-300 text-white light:text-neutral-900 text-base placeholder-neutral-500",
+                    placeholder: "{tr.title_placeholder}",
+                    value: "{title}",
+                    oninput: move |e| title.set(e.value()),
+                    onblur: on_title_save,
+                }
             }
 
             // Time range setting

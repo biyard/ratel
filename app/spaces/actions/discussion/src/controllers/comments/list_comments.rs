@@ -19,20 +19,20 @@ pub async fn list_comments(
         _ => return Err(Error::BadRequest("Invalid discussion id".into())),
     };
 
-    let space_post_pk_p: Partition = space_post_pk.clone().into();
-
-    let opt = SpacePostComment::opt_all()
-        .sk(EntityType::SpacePostComment(String::default()).to_string())
+    // Use GSI3 (find_replies_by_likes) with ROOT_PARENT
+    // This queries only top-level comments, already sorted by likes descending.
+    let root_parent = ROOT_PARENT.to_string();
+    let mut opt = SpacePostComment::opt()
         .scan_index_forward(false)
         .limit(50);
-    let opt = if let Some(b) = bookmark {
-        opt.bookmark(b)
-    } else {
-        opt
-    };
+    if let Some(b) = bookmark {
+        opt = opt.bookmark(b);
+    }
 
     let (comments, _next_bookmark) =
-        SpacePostComment::find_by_post_order_by_likes(cli, space_post_pk_p.clone(), opt).await?;
+        SpacePostComment::find_replies_by_likes(cli, root_parent, opt).await?;
+
+    let space_post_pk_p: Partition = space_post_pk.clone().into();
 
     // Check which comments the current user has liked
     let liked_set: HashSet<String> = if let Some(ref u) = user.0 {

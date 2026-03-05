@@ -31,4 +31,12 @@ translate! {
         en: "Closed",
         ko: "종료"
     },
+    untitled: {
+        en: "Untitled",
+        ko: "제목 없음"
+    },
+    no_description: {
+        en: "No description",
+        ko: "설명 없음"
+    },
 }

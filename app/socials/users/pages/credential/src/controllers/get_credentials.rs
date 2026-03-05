@@ -1,7 +1,7 @@
 use crate::models::VerifiedAttributes;
 use crate::*;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct CredentialResponse {
     pub age: Option<u32>,

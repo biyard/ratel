@@ -44,7 +44,7 @@ impl PostComment {
             ..
         }: User,
     ) -> Self {
-        let uuid = uuid::Uuid::new_v4().to_string();
+        let uuid = ratel_auth::utils::uuid::sorted_uuid();
         let now = chrono::Utc::now().timestamp();
 
         Self {
@@ -67,24 +67,25 @@ impl PostComment {
         cli: &aws_sdk_dynamodb::Client,
         post_pk: Partition,
         comment_sk: EntityType,
+        bookmark: Option<String>,
     ) -> Result<(Vec<Self>, Option<String>)> {
         let parent_comment_id = match comment_sk {
             EntityType::PostComment(id) => id,
             _ => {
-                return Err(Error::BadRequest(
-                    "comment_sk must be a PostComment".into(),
-                ));
+                return Err(Error::BadRequest("comment_sk must be a PostComment".into()));
             }
         };
 
-        PostComment::query(
-            cli,
-            Partition::PostReply(post_pk.to_string()),
-            PostComment::opt()
-                .limit(10)
-                .sk(EntityType::PostCommentReply(parent_comment_id, "".to_string()).to_string()),
-        )
-        .await
+        let mut opt = PostComment::opt()
+            .limit(10)
+            .scan_index_forward(false)
+            .sk(EntityType::PostCommentReply(parent_comment_id, "".to_string()).to_string());
+
+        if let Some(bookmark) = bookmark {
+            opt = opt.bookmark(bookmark);
+        }
+
+        PostComment::query(cli, Partition::PostReply(post_pk.to_string()), opt).await
     }
 
     pub async fn reply(
@@ -113,7 +114,7 @@ impl PostComment {
         let mut comment = Self::new(Partition::PostReply(post_pk.to_string()), content, user)
             .with_parent_comment_sk(parent_comment_sk.clone());
 
-        let uuid = uuid::Uuid::new_v4().to_string();
+        let uuid = ratel_auth::utils::uuid::sorted_uuid();
         comment.sk = EntityType::PostCommentReply(parent_comment_id, uuid);
 
         let comment_tx = comment.create_transact_write_item();

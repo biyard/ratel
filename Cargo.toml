@@ -1,7 +1,9 @@
 [workspace]
 members = [
+  "app/admin",
   "app/auth",
   "app/common",
+  "app/membership",
   "app/posts",
   "app/shell",
   "app/socials/teams/pages/*",
@@ -37,8 +39,10 @@ dioxus-translate-types = { path = "packages/dioxus-translate-types", version = "
 dioxus-translate-macro = { path = "packages/dioxus-translate-macro", version = "0.1.*" }
 by-macros = { path = "packages/by-macros", version = "0.6.*" }
 common = { path = "app/common" }
+ratel-admin = { path = "app/admin" }
 ratel-auth = { path = "app/auth" }
 ratel-post = { path = "app/posts" }
+ratel-membership = { path = "app/membership" }
 
 # Space Root
 space-shell = { path = "app/spaces/shell" }
@@ -50,6 +54,7 @@ space-app-main = { path = "app/spaces/apps/main" }
 space-app-general = { path = "app/spaces/apps/general" }
 space-app-file = { path = "app/spaces/apps/file" }
 space-app-incentive-pool = { path = "app/spaces/apps/incentive-pool" }
+space-app-rewards = { path = "app/spaces/apps/rewards" }
 
 # Space Actions
 space-action-shell = { path = "app/spaces/actions/shell" }
@@ -117,6 +122,7 @@ aide = { version = "0.15", git = "https://github.com/tamasfe/aide.git", features
 axum = { version = "0.8.1", features = ["macros"] }
 async-trait = "0.1.81"
 
+aws-sdk-bedrockruntime = "1"
 aws-sdk-dynamodb = "1.92.0"
 serde_dynamo = { version = "4.2.14", features = ["aws-sdk-dynamodb+1"] }
 thiserror = "2.0.16"

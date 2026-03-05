@@ -875,10 +875,13 @@ checksum = "a23eb6b1614318a8071c9b2521f36b424b2c83db5eb3a0fead4a6c0809af6e61"
 name = "app-shell"
 version = "0.1.0"
 dependencies = [
+ "axum",
  "common",
  "dioxus",
  "lambda_http 1.0.2",
+ "ratel-admin",
  "ratel-auth",
+ "ratel-membership",
  "ratel-post",
  "ratel-team-dao",
  "ratel-team-shell",
@@ -887,8 +890,14 @@ dependencies = [
  "ratel-user-shell",
  "serde",
  "serde-wasm-bindgen",
+ "serde_json",
  "space-shell",
+ "tokio",
+ "tower",
  "tower-sessions 0.15.0",
+ "tracing",
+ "tracing-subscriber",
+ "uuid 1.18.1",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -3850,6 +3859,7 @@ dependencies = [
  "async-trait",
  "aws-config",
  "aws-credential-types",
+ "aws-sdk-bedrockruntime",
  "aws-sdk-dynamodb",
  "aws-sdk-s3",
  "aws-sdk-sesv2",
@@ -5688,6 +5698,7 @@ dependencies = [
  "dioxus-translate-types",
  "schemars 1.0.4",
  "serde",
+ "tokio",
  "web-sys",
 ]
 
@@ -13341,6 +13352,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d20581732dd76fa913c7dff1a2412b714afe3573e94d41c34719de73337cc8ab"
 
 [[package]]
+name = "ratel-admin"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "ratel-auth",
+ "serde",
+]
+
+[[package]]
 name = "ratel-auth"
 version = "0.1.0"
 dependencies = [
@@ -13379,10 +13400,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "ratel-membership"
+version = "0.1.0"
+dependencies = [
+ "aide",
+ "async-trait",
+ "aws-sdk-dynamodb",
+ "common",
+ "dioxus",
+ "percent-encoding",
+ "random-string",
+ "ratel-auth",
+ "reqwest 0.12.28",
+ "schemars 1.0.4",
+ "serde",
+ "serde_dynamo",
+ "serde_json",
+ "serde_repr",
+ "serde_with 3.14.1",
+ "tokio",
+ "tracing",
+ "uuid 1.18.1",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "ratel-post"
 version = "0.1.0"
 dependencies = [
  "aide",
+ "aws-sdk-bedrockruntime",
  "aws-sdk-dynamodb",
  "base64 0.22.1",
  "chrono",
@@ -17793,6 +17840,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "space-app-rewards"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "serde",
+ "space-common",
+]
+
+[[package]]
 name = "space-app-shell"
 version = "0.1.0"
 dependencies = [
@@ -17804,6 +17861,7 @@ dependencies = [
  "space-app-general",
  "space-app-incentive-pool",
  "space-app-main",
+ "space-app-rewards",
  "space-common",
 ]
 

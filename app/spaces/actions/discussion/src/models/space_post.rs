@@ -108,16 +108,16 @@ impl SpacePost {
         user_pk: UserPartition,
     ) -> crate::Result<()> {
         let space_post_pk_p: Partition = space_post_pk.clone().into();
+
+        // Use atomic increase for likes; likes_align is best-effort for GSI sorting.
         let comment = SpacePostComment::get(cli, &space_post_pk_p, Some(comment_pk.clone()))
             .await?
             .ok_or(crate::Error::NotFound("Comment not found".into()))?;
-
-        let new_likes = comment.likes.saturating_add(1);
-        let new_likes_align = format!("{:020}", new_likes);
+        let approx_likes_align = format!("{:020}", comment.likes.saturating_add(1));
 
         let comment_tx = SpacePostComment::updater(&space_post_pk_p, &comment_pk)
-            .with_likes(new_likes)
-            .with_likes_align(new_likes_align)
+            .increase_likes(1)
+            .with_likes_align(approx_likes_align)
             .transact_write_item();
 
         let pl_tx = SpacePostCommentLike::new(space_post_pk, comment_pk, user_pk)
@@ -138,16 +138,15 @@ impl SpacePost {
         user_pk: UserPartition,
     ) -> crate::Result<()> {
         let space_post_pk_p: Partition = space_post_pk.clone().into();
+
         let comment = SpacePostComment::get(cli, &space_post_pk_p, Some(comment_pk.clone()))
             .await?
             .ok_or(crate::Error::NotFound("Comment not found".into()))?;
-
-        let new_likes = comment.likes.saturating_sub(1);
-        let new_likes_align = format!("{:020}", new_likes);
+        let approx_likes_align = format!("{:020}", comment.likes.saturating_sub(1));
 
         let comment_tx = SpacePostComment::updater(&space_post_pk_p, &comment_pk)
-            .with_likes(new_likes)
-            .with_likes_align(new_likes_align)
+            .decrease_likes(1)
+            .with_likes_align(approx_likes_align)
             .transact_write_item();
 
         let pcl = SpacePostCommentLike::new(space_post_pk, comment_pk, user_pk);

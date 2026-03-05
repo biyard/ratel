@@ -16,6 +16,12 @@ pub struct SendCodeResponse {
     pub expired_at: i64,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct SendPasswordResetCodeRequest {
+    pub email: String,
+}
+
 #[post("/api/auth/verification/send-verification-code")]
 pub async fn send_code_handler(req: SendCodeRequest) -> Result<SendCodeResponse> {
     match req {
@@ -24,10 +30,34 @@ pub async fn send_code_handler(req: SendCodeRequest) -> Result<SendCodeResponse>
     }
 }
 
-#[cfg(feature = "server")]
-pub async fn send_phone_code_handler(
-    phone: String,
+#[post("/api/auth/verification/send-password-reset-code")]
+pub async fn send_password_reset_code_handler(
+    req: SendPasswordResetCodeRequest,
 ) -> Result<SendCodeResponse> {
+    send_password_reset_email_code_handler(req.email).await
+}
+
+#[cfg(feature = "server")]
+async fn send_password_reset_email_code_handler(email: String) -> Result<SendCodeResponse> {
+    use crate::constants::EXPIRATION_TIME;
+
+    let cli = crate::config::get().dynamodb();
+    let (users, _) = User::find_by_email(cli, &email, UserQueryOption::builder().limit(1)).await?;
+
+    if users.is_empty() {
+        tracing::debug!(
+            "Skipping password reset verification email for non-registered email"
+        );
+        return Ok(SendCodeResponse {
+            expired_at: common::utils::time::get_now_timestamp() + EXPIRATION_TIME as i64,
+        });
+    }
+
+    send_email_code_handler(email).await
+}
+
+#[cfg(feature = "server")]
+pub async fn send_phone_code_handler(phone: String) -> Result<SendCodeResponse> {
     use crate::constants::{ATTEMPT_BLOCK_TIME, EXPIRATION_TIME, MAX_ATTEMPT_COUNT};
     use crate::utils::generate_random_numeric_code;
 

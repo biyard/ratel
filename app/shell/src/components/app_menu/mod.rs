@@ -1,6 +1,7 @@
 mod menus;
 
 use crate::*;
+use common::hooks::use_scroll_lock;
 use menus as i;
 use ratel_auth::LoginModal;
 
@@ -44,6 +45,7 @@ pub fn AppMenu() -> Element {
     let mut popup = use_popup();
     let user_ctx = ratel_auth::hooks::use_user_context();
     let mut mobile_menu_open = use_signal(|| false);
+    use_scroll_lock(mobile_menu_open());
 
     let logged_in = user_ctx().is_logged_in();
 
@@ -70,26 +72,26 @@ pub fn AppMenu() -> Element {
                     }
 
                     // My Network (authorized only)
-                    if logged_in {
-                        NavItem {
-                            href: "/my-network",
-                            label: tr.my_network,
-                            icon: rsx! {
-                                icons::user::UserGroup {}
-                            },
-                        }
-                    }
+                    // if logged_in {
+                    //     NavItem {
+                    //         href: "/my-network",
+                    //         label: tr.my_network,
+                    //         icon: rsx! {
+                    //             icons::user::UserGroup {}
+                    //         },
+                    //     }
+                    // }
 
                     // Notification (authorized only)
-                    if logged_in {
-                        NavItem {
-                            href: "/notifications",
-                            label: tr.notification,
-                            icon: rsx! {
-                                icons::notification::Bell { class: "transition-all [&>path]:stroke-menu-text group-hover:[&>path]:stroke-menu-text/80" }
-                            },
-                        }
-                    }
+                    // if logged_in {
+                    //     NavItem {
+                    //         href: "/notifications",
+                    //         label: tr.notification,
+                    //         icon: rsx! {
+                    //             icons::notification::Bell { class: "transition-all [&>path]:stroke-menu-text group-hover:[&>path]:stroke-menu-text/80" }
+                    //         },
+                    //     }
+                    // }
 
                     // Membership
                     NavItem {
@@ -130,9 +132,17 @@ pub fn AppMenu() -> Element {
                         mobile_menu_open.set(!mobile_menu_open());
                     },
                     if mobile_menu_open() {
-                        icons::validations::Clear { class: "transition-all [&>path]:stroke-menu-text" }
+                        icons::validations::Clear {
+                            width: "32",
+                            height: "32",
+                            class: "transition-all [&>path]:stroke-menu-text",
+                        }
                     } else {
-                        icons::layouts::ThreeRow { class: "transition-all [&>path]:stroke-menu-text" }
+                        icons::layouts::ThreeRow {
+                            width: "32",
+                            height: "32",
+                            class: "transition-all [&>path]:stroke-menu-text",
+                        }
                     }
                 }
             }
@@ -159,7 +169,7 @@ fn NavItem(href: &'static str, label: &'static str, icon: Element) -> Element {
 
 #[component]
 fn LanguageToggle() -> Element {
-    let mut lang = use_language();
+    let lang = use_language();
 
     let is_ko = lang().to_string() == "ko";
     let (flag, label) = if is_ko {
@@ -191,21 +201,7 @@ fn LanguageToggle() -> Element {
             class: "flex flex-col justify-center items-center p-2.5 font-bold cursor-pointer group text-menu-text text-[15px]",
             onclick: move |_| {
                 let next = lang().switch();
-                lang.set(next);
                 debug!("Language switched to: {}", next);
-
-                #[cfg(target_arch = "wasm32")]
-                {
-                    if let Some(window) = web_sys::window() {
-                        if let Ok(Some(storage)) = window.local_storage() {
-                            let _ = storage
-                                .set_item(
-                                    dioxus_translate::STORAGE_KEY,
-                                    next.to_string().as_str(),
-                                );
-                        }
-                    }
-                }
             },
             div { class: "flex flex-col justify-center items-center h-6 w-fit", {flag} }
             span { class: "font-medium whitespace-nowrap transition-all text-menu-text text-[15px] group-hover:text-menu-text/80",
