@@ -17802,6 +17802,7 @@ dependencies = [
  "common",
  "dioxus",
  "ratel-auth",
+ "ratel-post",
  "serde",
  "space-common",
 ]

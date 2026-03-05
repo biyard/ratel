@@ -2,14 +2,8 @@ use crate::models::SpaceSubscriptionUser;
 use crate::*;
 use common::models::space::SpaceCommon;
 
-#[delete(
-    "/api/spaces/{space_id}/subscriptions/users/{user_pk}",
-    role: SpaceUserRole
-)]
-pub async fn delete_subscription_user(
-    space_id: SpacePartition,
-    user_pk: UserPartition,
-) -> Result<()> {
+#[delete("/api/spaces/{space_id}/subscriptions/users", role: SpaceUserRole)]
+pub async fn delete_subscription_user(space_id: SpacePartition, user_pk: Partition) -> Result<()> {
     SpaceSubscription::can_edit(&role)?;
     let common_config = common::CommonConfig::default();
     let cli = common_config.dynamodb();
@@ -19,12 +13,11 @@ pub async fn delete_subscription_user(
         .await?
         .ok_or(Error::SpaceNotFound)?;
 
-    let target_pk: Partition = user_pk.clone().into();
-    if target_pk == space.user_pk {
+    if user_pk == space.user_pk {
         return Err(Error::BadRequest("Creator cannot be removed".into()));
     }
 
-    let (pk, sk) = SpaceSubscriptionUser::keys(&space_id, &target_pk);
+    let (pk, sk) = SpaceSubscriptionUser::keys(&space_id, &user_pk);
     if SpaceSubscriptionUser::get(cli, &pk, Some(sk.clone()))
         .await?
         .is_none()

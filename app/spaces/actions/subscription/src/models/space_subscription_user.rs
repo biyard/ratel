@@ -26,21 +26,28 @@ pub struct SpaceSubscriptionUser {
 
 #[cfg(feature = "server")]
 impl SpaceSubscriptionUser {
-    pub fn new(space_pk: SpacePartition, user: &ratel_auth::User) -> Self {
+    pub fn new(
+        space_pk: SpacePartition,
+        user_pk: Partition,
+        display_name: String,
+        profile_url: String,
+        username: String,
+        user_type: UserType,
+    ) -> Self {
         let now = get_now_timestamp_millis();
         let pk: Partition = space_pk.into();
-        let sk = EntityType::SpaceSubscriptionUser(user.pk.to_string());
+        let sk = EntityType::SpaceSubscriptionUser(user_pk.to_string());
 
         Self {
             pk,
             sk,
             created_at: now,
             updated_at: now,
-            user_pk: user.pk.clone(),
-            display_name: user.display_name.clone(),
-            profile_url: user.profile_url.clone(),
-            username: user.username.clone(),
-            user_type: user.user_type.clone(),
+            user_pk,
+            display_name,
+            profile_url,
+            username,
+            user_type,
         }
     }
 
