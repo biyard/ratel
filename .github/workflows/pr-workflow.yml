@@ -233,7 +233,7 @@ jobs:
       - name: Upload Docker image artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-shell-docker-image
+          key: app-shell-image-${{ github.sha }}
           path: /tmp/app-shell-image.tar.gz
           retention-days: 7
 
@@ -291,3 +291,110 @@ jobs:
         run: |
           make test
 
+  playwright-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [ratel-app-shell]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.15.0 --activate
+
+      - name: Install dependencies
+        run: pnpm i
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Restore app-shell image cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/main-api-image.tar.gz
+          key: app-shell-image-${{ github.sha }}
+          fail-on-cache-miss: true
+
+      - name: Load Docker images
+        run: |
+          # Load images from cache
+          docker load < /tmp/app-shell-image.tar.gz
+
+          docker images
+
+      # - name: Setup SSH session with tmate
+      #   uses: mxschmitt/action-tmate@v3
+      #   env:
+      #     COMMIT: pr-${{ github.sha }}
+      #   with:
+      #     limit-access-to-actor: true
+
+      - name: Setup test environment
+        env:
+          COMMIT: pr-${{ github.sha }}
+        run: |
+          docker-compose --profile testing up -d
+
+      - name: Wait for services to be ready
+        run: |
+          # Check service health with retry loop and timeout
+          echo "Waiting for services to be ready..."
+
+          # Wait for Main API (180 second timeout for container startup)
+          echo "🔄 Checking Main API..."
+          timeout=180
+          interval=10
+          elapsed=0
+          while [ $elapsed -lt $timeout ]; do
+            if curl -f -s http://localhost:8000/ > /dev/null 2>&1; then
+              echo "✅ Main API is responding (took ${elapsed}s)"
+              break
+            fi
+            echo "⏳ Main API not ready yet... (${elapsed}/${timeout}s)"
+            sleep $interval
+            elapsed=$((elapsed + interval))
+          done
+
+          if [ $elapsed -ge $timeout ]; then
+            echo "❌ Main API failed to respond with 200 status within ${timeout}s"
+            echo "🔍 Checking Docker services status:"
+            docker-compose -f docker-compose.yaml ps
+            echo "🔍 Main API logs:"
+            docker-compose -f docker-compose.yaml logs main-api-testing --tail=50
+            exit 1
+          fi
+
+          echo "🎉 All services are ready!"
+
+      - name: Run Playwright Tests
+        env:
+          CI: true
+          PLAYWRIGHT_URL: http://localhost:8000
+          PLAYWRIGHT_TIMEOUT: 5000
+        run: |
+          cd playwright
+          make test
+
+      - name: Move Playwright Tests
+        if: always()
+        run: |
+          mv playwright/playwright-report ./
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-test-results
+          path: |
+            playwright-report/
+          retention-days: 30

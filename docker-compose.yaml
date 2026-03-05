@@ -1,7 +1,30 @@
 services:
+  app-shell-testing:
+    image: ratel/app-shell:${COMMIT}
+    restart: always
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "apt update && apt install curl -y && curl -f http://localhost:3000/version || exit 1",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 100
+    depends_on:
+      localstack:
+        condition: service_healthy
+      localstack-init:
+        condition: service_completed_successfully
+    networks:
+      - ratel-network
+    profiles:
+      - testing
+
   app-shell:
     image: rust
-    user: "1000:1000"
     restart: always
     ports:
       - "8080:8080"
@@ -47,15 +70,12 @@ services:
       QDRANT_URL: http://qdrant:6333
       QDRANT_API_KEY: ${QDRANT_API_KEY:-}
 
-      CARGO_TARGET_DIR: /app-target
-      CI: true
     volumes:
+      - cargo-target:/app-target
+      - node_modules:/app/node_modules
+      - comp-node_modules:/app/ts-packages/components/node_modules
+      - web-node_modules:/app/ts-packages/web/node_modules
       - .:/app
-      - ./.build/target:/app-target
-      - ./.build/node_modules:/app/node_modules
-      - ./.build/comp-node_modules:/app/ts-packages/components/node_modules
-      - ./.build/web-node_modules:/app/ts-packages/web/node_modules
-      - ./.build/web-component:/app/
 
     working_dir: /app
     command: ["bash", "scripts/api-entrypoint.sh"]
@@ -230,6 +250,7 @@ services:
     profiles:
       - development
       - infra
+      - testing
     networks:
       - ratel-network
 
@@ -265,8 +286,15 @@ services:
     profiles:
       - development
       - infra
+      - testing
     networks:
       - ratel-network
+
+volumes:
+  node_modules:
+  comp-node_modules:
+  web-node_modules:
+  cargo-target:
 
 networks:
   ratel-network:
