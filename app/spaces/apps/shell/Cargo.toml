@@ -17,7 +17,7 @@ space-app-main = { workspace = true }
 space-app-general = { workspace = true }
 space-app-file = { workspace = true }
 space-app-incentive-pool = { workspace = true }
-
+space-app-rewards = { workspace = true }
 
 [features]
 default = []
@@ -29,6 +29,7 @@ web = [
     "space-app-general/web",
     "space-app-incentive-pool/web",
     "space-app-main/web",
+    "space-app-rewards/web",
     "space-common/web",
 ]
 desktop = ["dioxus/desktop"]
@@ -41,5 +42,6 @@ server = [
     "space-app-general/server",
     "space-app-incentive-pool/server",
     "space-app-main/server",
+    "space-app-rewards/server",
     "space-common/server",
 ]

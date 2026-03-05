@@ -1,5 +1,6 @@
 [workspace]
 members = [
+  "app/admin",
   "app/auth",
   "app/common",
   "app/posts",
@@ -37,6 +38,7 @@ dioxus-translate-types = { path = "packages/dioxus-translate-types", version = "
 dioxus-translate-macro = { path = "packages/dioxus-translate-macro", version = "0.1.*" }
 by-macros = { path = "packages/by-macros", version = "0.6.*" }
 common = { path = "app/common" }
+ratel-admin = { path = "app/admin" }
 ratel-auth = { path = "app/auth" }
 ratel-post = { path = "app/posts" }
 
@@ -50,6 +52,7 @@ space-app-main = { path = "app/spaces/apps/main" }
 space-app-general = { path = "app/spaces/apps/general" }
 space-app-file = { path = "app/spaces/apps/file" }
 space-app-incentive-pool = { path = "app/spaces/apps/incentive-pool" }
+space-app-rewards = { path = "app/spaces/apps/rewards" }
 
 # Space Actions
 space-action-shell = { path = "app/spaces/actions/shell" }

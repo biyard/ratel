@@ -2,6 +2,7 @@ use crate::*;
 
 #[component]
 pub fn Button(
+    #[props(default)] class: String,
     #[props(default)] size: ButtonSize,
     #[props(default)] style: ButtonStyle,
     #[props(default)] shape: ButtonShape,
@@ -13,7 +14,7 @@ pub fn Button(
 ) -> Element {
     rsx! {
         button {
-            class: "{size} {style} {shape}",
+            class: "{size} {style} {shape} {class}",
             disabled,
             onclick: move |e| {
                 if disabled {
@@ -44,6 +45,8 @@ pub enum ButtonShape {
     #[default]
     #[strum(serialize = "rounded-full")]
     Rounded,
+    #[strum(serialize = "rounded-lg")]
+    Square,
 }
 
 #[derive(

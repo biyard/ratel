@@ -1,9 +1,9 @@
 use crate::*;
 
 #[cfg(feature = "server")]
-use common::reqwest;
+use reqwest;
 #[cfg(feature = "server")]
-use common::serde::de::DeserializeOwned;
+use serde::de::DeserializeOwned;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct TokenResponse {
@@ -24,57 +24,54 @@ pub struct UserPointBalanceResponse {
     pub monthly_token_supply: i64,
 }
 
-#[cfg(feature = "server")]
-#[derive(Debug, Clone, Copy)]
-struct BiyardConfig {
-    api_secret: &'static str,
-    project_id: &'static str,
-    base_url: &'static str,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TransactPointRequest {
+    pub tx_type: String,
+    pub to: Option<String>,
+    pub from: Option<String>,
+    pub amount: i64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub month: Option<String>,
 }
 
-#[cfg(feature = "server")]
-impl Default for BiyardConfig {
-    fn default() -> Self {
-        Self {
-            api_secret: option_env!("BIYARD_API_KEY").unwrap_or_else(|| {
-                tracing::warn!(
-                    "BIYARD_API_KEY not set, using default value. Some features may not work properly."
-                );
-                "biyard_default_api_key"
-            }),
-            project_id: option_env!("BIYARD_PROJECT_ID").unwrap_or_else(|| {
-                tracing::warn!(
-                    "BIYARD_PROJECT_ID not set, using default value. Some features may not work properly."
-                );
-                "ratel_project_id"
-            }),
-            base_url: option_env!("BIYARD_API_URL").unwrap_or_else(|| {
-                tracing::warn!(
-                    "BIYARD_API_URL not set, using default value. Some features may not work properly."
-                );
-                "https://dev.biyard.co"
-            }),
-        }
-    }
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TransactPointResponse {
+    pub transaction_id: String,
+    pub month: String,
+    pub meta_user_id: String,
+    pub transaction_type: String,
+    pub amount: i64,
+}
+
+pub type AwardPointResponse = TransactPointResponse;
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct PointTransactionResponse {
+    pub month: String,
+    pub transaction_type: String,
+    pub amount: i64,
+    pub target_user_id: Option<String>,
+    pub description: Option<String>,
+    pub created_at: i64,
 }
 
 #[cfg(feature = "server")]
 #[derive(Debug, Clone)]
-pub struct BiyardClient {
+pub struct BiyardService {
     project_id: String,
     base_url: String,
     cli: reqwest::Client,
 }
 
 #[cfg(feature = "server")]
-impl BiyardClient {
-    pub fn new() -> Self {
-        let config = BiyardConfig::default();
+impl BiyardService {
+    pub fn new(api_secret: String, project_id: String, base_url: String) -> Self {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
             "Authorization",
-            reqwest::header::HeaderValue::from_str(&format!("Bearer {}", config.api_secret))
-                .unwrap(),
+            reqwest::header::HeaderValue::from_str(&format!("Bearer {}", api_secret)).unwrap(),
         );
 
         let cli = reqwest::Client::builder()
@@ -84,8 +81,8 @@ impl BiyardClient {
 
         Self {
             cli,
-            base_url: config.base_url.to_string(),
-            project_id: config.project_id.to_string(),
+            base_url,
+            project_id,
         }
     }
 
@@ -113,7 +110,7 @@ impl BiyardClient {
         month: String,
         bookmark: Option<String>,
         limit: Option<i32>,
-    ) -> Result<ListResponse<crate::dto::PointTransactionResponse>> {
+    ) -> Result<ListResponse<PointTransactionResponse>> {
         let user_id = Self::convert_user_id(&user_pk)?;
         let mut path = format!(
             "{}/v1/projects/{}/points/{}/transactions?date={}",
@@ -127,6 +124,50 @@ impl BiyardClient {
         }
 
         self.get_json(path).await
+    }
+
+    pub async fn award_points(
+        &self,
+        target_pk: Partition,
+        points: i64,
+        description: String,
+        month: Option<String>,
+    ) -> Result<AwardPointResponse> {
+        let path = format!("{}/v1/projects/{}/points", self.base_url, self.project_id);
+        let body = vec![TransactPointRequest {
+            tx_type: "Award".to_string(),
+            to: Some(Self::convert_user_id(&target_pk)?),
+            from: None,
+            amount: points,
+            description: Some(description),
+            month,
+        }];
+
+        let res = self
+            .cli
+            .post(&path)
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| Error::Unknown(e.to_string()))?;
+
+        if !res.status().is_success() {
+            let status = res.status();
+            let text = res.text().await.unwrap_or_default();
+            return Err(Error::BadRequest(format!(
+                "Biyard API error ({}): {}",
+                status, text
+            )));
+        }
+
+        let responses: Vec<TransactPointResponse> = res
+            .json()
+            .await
+            .map_err(|e| Error::Unknown(e.to_string()))?;
+        responses
+            .into_iter()
+            .next()
+            .ok_or_else(|| Error::Unknown("Biyard API returned empty response".to_string()))
     }
 
     fn convert_user_id(user_pk: &Partition) -> Result<String> {
@@ -157,44 +198,5 @@ impl BiyardClient {
         }
 
         res.json().await.map_err(|e| Error::Unknown(e.to_string()))
-    }
-}
-
-#[cfg(not(feature = "server"))]
-#[derive(Debug, Clone)]
-pub struct BiyardClient;
-
-#[cfg(not(feature = "server"))]
-impl BiyardClient {
-    pub fn new() -> Self {
-        Self
-    }
-
-    pub async fn get_project_info(&self) -> Result<TokenResponse> {
-        Err(Error::NotSupported(
-            "Biyard client is server-only".to_string(),
-        ))
-    }
-
-    pub async fn get_user_balance(
-        &self,
-        _user_pk: Partition,
-        _month: String,
-    ) -> Result<UserPointBalanceResponse> {
-        Err(Error::NotSupported(
-            "Biyard client is server-only".to_string(),
-        ))
-    }
-
-    pub async fn list_user_transactions(
-        &self,
-        _user_pk: Partition,
-        _month: String,
-        _bookmark: Option<String>,
-        _limit: Option<i32>,
-    ) -> Result<ListResponse<crate::dto::PointTransactionResponse>> {
-        Err(Error::NotSupported(
-            "Biyard client is server-only".to_string(),
-        ))
     }
 }
