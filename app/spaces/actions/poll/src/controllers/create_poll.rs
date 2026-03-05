@@ -9,7 +9,7 @@ pub async fn create_poll(space_pk: SpacePartition) -> Result<PollResponse> {
 
     let space_pk_p: common::Partition = space_pk.into();
     let mut items = vec![poll.create_transact_write_item()];
-    items.push(space_common::models::dashboard::aggregate::DashboardAggregate::inc_polls(&space_pk_p, 1));
+    items.push(space_common::models::aggregate::DashboardAggregate::inc_polls(&space_pk_p, 1));
     transact_write_items!(cli, items)
         .map_err(|e| crate::Error::Unknown(format!("Failed to create poll: {e}")))?;
 

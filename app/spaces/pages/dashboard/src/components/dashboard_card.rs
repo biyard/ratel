@@ -156,14 +156,11 @@ pub fn DashboardGrid(
     #[props(default = false)] is_creator: bool,
     space_id: SpacePartition,
 ) -> Element {
-    let mut sorted = components;
-    sorted.sort_by_key(|c| c.order());
-
     let mut stacked: Vec<DashboardComponentData> = Vec::new();
     let mut tall_cards: Vec<DashboardComponentData> = Vec::new();
     let mut full_width: Vec<DashboardComponentData> = Vec::new();
 
-    for c in sorted {
+    for c in components {
         match &c {
             DashboardComponentData::InfoCard(_) | DashboardComponentData::StatCard(_) => {
                 stacked.push(c);
@@ -181,36 +178,33 @@ pub fn DashboardGrid(
         div { class: "flex flex-col gap-2.5 w-full h-full min-h-0 overflow-y-auto",
             div { class: "grid grid-cols-4 max-tablet:grid-cols-2 max-mobile:grid-cols-1 gap-2.5 shrink-0",
                 div { class: "flex flex-col gap-2.5",
-                    for data in stacked.into_iter() {
+                    for (idx , data) in stacked.into_iter().enumerate() {
                         {
-                            let key = data.key();
                             let sid = space_id.clone();
                             rsx! {
-                                div { key: "{key}",
+                                div { key: "{idx}",
                                     DashboardCard { data, is_creator, space_id: sid }
                                 }
                             }
                         }
                     }
                 }
-                for data in tall_cards.into_iter() {
+                for (idx , data) in tall_cards.into_iter().enumerate() {
                     {
-                        let key = data.key();
                         let sid = space_id.clone();
                         rsx! {
-                            div { key: "{key}",
+                            div { key: "{idx}",
                                 DashboardCard { data, is_creator, space_id: sid }
                             }
                         }
                     }
                 }
             }
-            for data in full_width.into_iter() {
+            for (idx , data) in full_width.into_iter().enumerate() {
                 {
-                    let key = data.key();
                     let sid = space_id.clone();
                     rsx! {
-                        div { key: "{key}", class: "min-h-0",
+                        div { key: "{idx}", class: "min-h-0",
                             DashboardCard { data, is_creator, space_id: sid }
                         }
                     }

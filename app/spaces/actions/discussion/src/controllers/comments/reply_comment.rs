@@ -36,7 +36,7 @@ pub async fn reply_comment(
 
     let space_pk: Partition = space_id.into();
     let agg_item =
-        space_common::models::dashboard::aggregate::DashboardAggregate::inc_comments(&space_pk, 1);
+        space_common::models::aggregate::DashboardAggregate::inc_comments(&space_pk, 1);
     transact_write_items!(cli, vec![agg_item]).ok();
 
     Ok(comment.into())

@@ -38,30 +38,6 @@ pub enum DashboardComponentData {
     RankingTable(RankingTableData),
 }
 
-impl DashboardComponentData {
-    pub fn order(&self) -> i32 {
-        match self {
-            Self::StatSummary(_) => 1,
-            Self::ProgressList(_) => 2,
-            Self::TabChart(_) => 3,
-            Self::InfoCard(_) => 4,
-            Self::StatCard(_) => 5,
-            Self::RankingTable(_) => 6,
-        }
-    }
-
-    pub fn key(&self) -> &'static str {
-        match self {
-            Self::StatSummary(_) => "stat-summary",
-            Self::ProgressList(_) => "progress-list",
-            Self::TabChart(_) => "tab-chart",
-            Self::InfoCard(_) => "info-card",
-            Self::StatCard(_) => "stat-card",
-            Self::RankingTable(_) => "ranking-table",
-        }
-    }
-}
-
 // ─── Stat Summary ─────────────────────────────────
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

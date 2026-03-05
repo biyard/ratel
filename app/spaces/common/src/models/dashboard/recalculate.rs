@@ -1,8 +1,8 @@
 use super::aggregate::DashboardAggregate;
 use crate::types::dashboard::*;
 
-/// Pure function: aggregate row → Vec<DashboardComponentData>.
-/// Used by the read endpoint to build dashboard cards on-the-fly.
+/// Pure function: aggregate → base dashboard components.
+/// InfoCard (with reward items), StatCard, and RankingTable are added by the caller.
 pub fn build_dashboard_components(
     agg: &DashboardAggregate,
     participants: i64,
@@ -23,27 +23,7 @@ pub fn build_dashboard_components(
         DashboardComponentData::TabChart(TabChartData {
             icon: DashboardIcon::Participants,
             participants,
-            //FIXME: Add Panel Info
             tabs: vec![],
-        }),
-        DashboardComponentData::InfoCard(InfoCardData {
-            icon: DashboardIcon::Rewards,
-            total_points: agg.total_points,
-            //FIXME: Parse SpaceRewards
-            items: vec![],
-        }),
-        DashboardComponentData::StatCard(StatCardData {
-            icon: DashboardIcon::IncentivePool,
-            value: "0".to_string(),
-            trend: 0.0,
-            trend_label: String::new(),
-            total_winners: "0".to_string(),
-            rank_rate: String::new(),
-            incentive_pool: String::new(),
-        }),
-        DashboardComponentData::RankingTable(RankingTableData {
-            page_size: 10,
-            entries: vec![],
         }),
     ]
 }

@@ -32,8 +32,7 @@ pub async fn like_comment(
 
     let space_pk: Partition = space_id.into();
     let delta = if req.like { 1 } else { -1 };
-    let agg_item =
-        space_common::models::dashboard::aggregate::DashboardAggregate::inc_likes(&space_pk, delta);
+    let agg_item = space_common::models::aggregate::DashboardAggregate::inc_likes(&space_pk, delta);
     transact_write_items!(cli, vec![agg_item]).ok();
 
     Ok(())

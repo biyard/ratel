@@ -1,10 +1,12 @@
+use crate::controllers::list_dashboard_data_handler;
+
 use super::*;
 
 #[component]
 pub fn ViewerPage(space_id: SpacePartition) -> Element {
     let extension_loader = use_loader({
         let sid = space_id.clone();
-        move || fetch_dashboard_extensions(sid.clone())
+        move || list_dashboard_data_handler(sid.clone())
     })?;
 
     let components = extension_loader.read().clone();

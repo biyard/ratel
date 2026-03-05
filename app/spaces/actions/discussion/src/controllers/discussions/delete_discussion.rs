@@ -1,5 +1,5 @@
 use crate::*;
-use space_common::models::dashboard::aggregate::DashboardAggregate;
+use space_common::models::aggregate::DashboardAggregate;
 
 #[delete("/api/spaces/{space_id}/discussions/{discussion_sk}", role: SpaceUserRole)]
 pub async fn delete_discussion(
