@@ -64,14 +64,12 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
             div { class: "grid grid-cols-3 gap-[10px] content-start items-start w-full max-tablet:grid-cols-2 max-mobile:grid-cols-1",
                 for app_type in default_apps {
                     AppCard { app_type,
-                        div { class: "flex flex-col items-start w-full px-4 py-3 border-t border-web-card-divider",
-                            Button {
-                                class: "w-full",
-                                style: ButtonStyle::Secondary,
-                                shape: ButtonShape::Square,
-                                disabled: true,
-                                {tr.default_apps}
-                            }
+                        Button {
+                            class: "w-full",
+                            style: ButtonStyle::Secondary,
+                            shape: ButtonShape::Square,
+                            disabled: true,
+                            {tr.default_apps}
                         }
                     }
                 }
@@ -85,32 +83,30 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
 
                         rsx! {
                             AppCard { app_type,
-                                div { class: "flex flex-col items-start w-full px-[15px] py-[12px] bg-card border-t border-web-card-divider rounded-b-[16px]",
-                                    if is_installed {
-                                        Button {
-                                            class: "w-full",
-                                            style: ButtonStyle::Outline,
-                                            shape: ButtonShape::Square,
-                                            disabled: in_progress().is_some(),
-                                            onclick: handle_toggle_app(app_type, is_installed),
-                                            if is_progress {
-                                                {tr.uninstalling}
-                                            } else {
-                                                {tr.uninstall}
-                                            }
+                                if is_installed {
+                                    Button {
+                                        class: "w-full",
+                                        style: ButtonStyle::Outline,
+                                        shape: ButtonShape::Square,
+                                        disabled: in_progress().is_some(),
+                                        onclick: handle_toggle_app(app_type, is_installed),
+                                        if is_progress {
+                                            {tr.uninstalling}
+                                        } else {
+                                            {tr.uninstall}
                                         }
-                                    } else {
-                                        Button {
-                                            class: "w-full",
-                                            style: ButtonStyle::Primary,
-                                            shape: ButtonShape::Square,
-                                            disabled: in_progress().is_some(),
-                                            onclick: handle_toggle_app(app_type, is_installed),
-                                            if is_progress {
-                                                {tr.installing}
-                                            } else {
-                                                {tr.install}
-                                            }
+                                    }
+                                } else {
+                                    Button {
+                                        class: "w-full",
+                                        style: ButtonStyle::Primary,
+                                        shape: ButtonShape::Square,
+                                        disabled: in_progress().is_some(),
+                                        onclick: handle_toggle_app(app_type, is_installed),
+                                        if is_progress {
+                                            {tr.installing}
+                                        } else {
+                                            {tr.install}
                                         }
                                     }
                                 }
