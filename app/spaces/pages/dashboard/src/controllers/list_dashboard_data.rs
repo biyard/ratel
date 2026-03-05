@@ -43,10 +43,10 @@ pub async fn list_dashboard_data_handler(
     let (app_pk, app_sk) =
         space_app_main::SpaceApp::keys(&space_pk, space_app_main::SpaceAppType::IncentivePool);
     // FIXME: We Need to chekc SpaceIncentive It self, not Space App,
-    let has_incentive = space_app_main::SpaceApp::get(cli, &app_pk, Some(&app_sk))
-        .await
-        .map(|opt| opt.is_some())
-        .unwrap_or(false);
+    // let has_incentive = space_app_main::SpaceApp::get(cli, &app_pk, Some(&app_sk))
+    //     .await
+    //     .map(|opt| opt.is_some())
+    //     .unwrap_or(false);
     // Read Incentive Pool Data
     // let incentive_pool = space_incentive::SpaceIncentive::get_or_default(cli, &space_pk).await?;
 
