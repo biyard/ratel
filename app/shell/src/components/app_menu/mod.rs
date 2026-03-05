@@ -1,6 +1,7 @@
 mod menus;
 
 use crate::*;
+use common::hooks::use_scroll_lock;
 use menus as i;
 use ratel_auth::LoginModal;
 
@@ -44,6 +45,7 @@ pub fn AppMenu() -> Element {
     let mut popup = use_popup();
     let user_ctx = ratel_auth::hooks::use_user_context();
     let mut mobile_menu_open = use_signal(|| false);
+    use_scroll_lock(mobile_menu_open());
 
     let logged_in = user_ctx().is_logged_in();
 
@@ -130,9 +132,17 @@ pub fn AppMenu() -> Element {
                         mobile_menu_open.set(!mobile_menu_open());
                     },
                     if mobile_menu_open() {
-                        icons::validations::Clear { class: "transition-all [&>path]:stroke-menu-text" }
+                        icons::validations::Clear {
+                            width: "32",
+                            height: "32",
+                            class: "transition-all [&>path]:stroke-menu-text",
+                        }
                     } else {
-                        icons::layouts::ThreeRow { class: "transition-all [&>path]:stroke-menu-text" }
+                        icons::layouts::ThreeRow {
+                            width: "32",
+                            height: "32",
+                            class: "transition-all [&>path]:stroke-menu-text",
+                        }
                     }
                 }
             }
