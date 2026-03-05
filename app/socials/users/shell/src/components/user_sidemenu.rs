@@ -77,9 +77,9 @@ pub fn UserSidemenu(username: String) -> Element {
     };
 
     rsx! {
-        div { class: "flex flex-col gap-2.5 w-62.5 max-mobile:hidden shrink-0",
+        common::SideMenuContainer {
             // Profile section with team selector
-            div { class: "flex flex-col gap-5 px-4 py-5 w-full border rounded-[10px] bg-card-bg border-card-border",
+            common::SideMenuProfileCard {
                 // Team selector dropdown
                 common::TeamSelector {
                     selected_label: selected_label.clone(),
@@ -147,8 +147,8 @@ pub fn UserSidemenu(username: String) -> Element {
             }
 
             // Navigation
-            nav { class: "py-5 px-3 w-full border rounded-[10px] bg-card-bg border-card-border text-text-primary",
-                SidemenuLink {
+            common::SideMenuNav {
+                common::SideMenuLink {
                     to: format!("/{username}/posts"),
                     label: tr.my_posts,
                     icon: rsx! {
@@ -157,7 +157,7 @@ pub fn UserSidemenu(username: String) -> Element {
                 }
 
                 if user.username == username {
-                    SidemenuLink {
+                    common::SideMenuLink {
                         to: format!("/{username}/drafts"),
                         label: tr.drafts,
                         icon: rsx! {
@@ -165,7 +165,7 @@ pub fn UserSidemenu(username: String) -> Element {
                         },
                     }
 
-                    SidemenuLink {
+                    common::SideMenuLink {
                         to: format!("/{username}/spaces"),
                         label: tr.my_spaces,
                         icon: rsx! {
@@ -173,7 +173,7 @@ pub fn UserSidemenu(username: String) -> Element {
                         },
                     }
 
-                    SidemenuLink {
+                    common::SideMenuLink {
                         to: format!("/{username}/credentials"),
                         label: tr.credentials,
                         icon: rsx! {
@@ -181,7 +181,7 @@ pub fn UserSidemenu(username: String) -> Element {
                         },
                     }
 
-                    SidemenuLink {
+                    common::SideMenuLink {
                         to: format!("/{username}/memberships"),
                         label: tr.membership,
                         icon: rsx! {
@@ -189,7 +189,7 @@ pub fn UserSidemenu(username: String) -> Element {
                         },
                     }
 
-                    SidemenuLink {
+                    common::SideMenuLink {
                         to: format!("/{username}/rewards"),
                         label: tr.rewards,
                         icon: rsx! {
@@ -197,7 +197,7 @@ pub fn UserSidemenu(username: String) -> Element {
                         },
                     }
 
-                    SidemenuLink {
+                    common::SideMenuLink {
                         to: format!("/{username}/settings"),
                         label: tr.settings,
                         icon: rsx! {
@@ -205,20 +205,7 @@ pub fn UserSidemenu(username: String) -> Element {
                         },
                     }
                 }
-            
             }
-        }
-    }
-}
-
-#[component]
-fn SidemenuLink(to: String, label: &'static str, icon: Element) -> Element {
-    rsx! {
-        Link {
-            class: "flex items-center gap-3 px-2 py-2.5 hover:bg-hover rounded-md text-text-primary",
-            to,
-            {icon}
-            span { "{label}" }
         }
     }
 }
