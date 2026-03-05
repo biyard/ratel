@@ -233,7 +233,7 @@ jobs:
       - name: Upload Docker image artifact
         uses: actions/upload-artifact@v4
         with:
-          key: app-shell-image-${{ github.sha }}
+          name: app-shell-image-${{ github.sha }}
           path: /tmp/app-shell-image.tar.gz
           retention-days: 7
 
@@ -318,12 +318,11 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Restore app-shell image cache
-        uses: actions/cache@v4
+      - name: Upload Docker image artifact
+        uses: actions/download-artifact@v4
         with:
-          path: /tmp/main-api-image.tar.gz
-          key: app-shell-image-${{ github.sha }}
-          fail-on-cache-miss: true
+          name: app-shell-image-${{ github.sha }}
+          path: /tmp/app-shell-image.tar.gz
 
       - name: Load Docker images
         run: |
