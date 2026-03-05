@@ -4,28 +4,14 @@ use crate::*;
 use ratel_post::models::Team;
 use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
 
-#[patch("/api/teams/:teamname/settings", user: ratel_auth::User)]
+#[patch("/api/teams/:teamname/settings", user: ratel_auth::User, team: Team, permissions: TeamGroupPermissions)]
 pub async fn update_team_handler(
     teamname: String,
     body: UpdateTeamRequest,
 ) -> Result<TeamResponse> {
     let conf = crate::config::get();
     let cli = conf.common.dynamodb();
-
-    let gsi2_sk_prefix = Team::compose_gsi2_sk(String::default());
-    let team_query_option = Team::opt().sk(gsi2_sk_prefix).limit(1);
-
-    let (teams, _) =
-        Team::find_by_username_prefix(cli, teamname.clone(), team_query_option).await?;
-
-    let mut team = teams
-        .into_iter()
-        .find(|t| t.username == teamname)
-        .ok_or(Error::NotFound("Team not found".to_string()))?;
-
-    let permissions = Team::get_permissions_by_team_pk(cli, &team.pk, &user.pk)
-        .await
-        .unwrap_or_else(|_| TeamGroupPermissions::empty());
+    let mut team = team;
     let can_edit = permissions.contains(TeamGroupPermission::TeamEdit)
         || permissions.contains(TeamGroupPermission::TeamAdmin);
     if !can_edit {

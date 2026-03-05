@@ -3,10 +3,10 @@ use crate::*;
 
 #[cfg(feature = "server")]
 use aws_sdk_dynamodb::types::TransactWriteItem;
-use ratel_post::models::{Team, TeamGroup};
+use ratel_post::models::TeamGroup;
 use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
 
-#[delete("/api/teams/:team_pk/groups/:group_sk", user: ratel_auth::User)]
+#[delete("/api/teams/:team_pk/groups/:group_sk", user: ratel_auth::User, permissions: TeamGroupPermissions)]
 pub async fn delete_group_handler(
     team_pk: TeamPartition,
     group_sk: String,
@@ -14,10 +14,6 @@ pub async fn delete_group_handler(
     let conf = crate::config::get();
     let cli = conf.common.dynamodb();
     let team_pk: Partition = team_pk.into();
-
-    let permissions = Team::get_permissions_by_team_pk(cli, &team_pk, &user.pk)
-        .await
-        .unwrap_or_else(|_| TeamGroupPermissions::empty());
 
     let can_edit = permissions.contains(TeamGroupPermission::TeamAdmin)
         || permissions.contains(TeamGroupPermission::TeamEdit)
