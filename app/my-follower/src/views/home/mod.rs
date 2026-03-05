@@ -41,7 +41,7 @@ pub fn Home() -> Element {
                         followings_query.restart();
                     }
                     Err(err) => {
-                        toast.error(err.into());
+                        toast.error(err);
                     }
                 }
             });
@@ -64,7 +64,7 @@ pub fn Home() -> Element {
                         followings_query.restart();
                     }
                     Err(err) => {
-                        toast.error(err.into());
+                        toast.error(err);
                     }
                 }
             });

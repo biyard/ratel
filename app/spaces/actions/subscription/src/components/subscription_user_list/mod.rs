@@ -57,7 +57,7 @@ pub fn SubscriptionUserList(
                                                     on_refresh.call(());
                                                 }
                                                 Err(err) => {
-                                                    toast.error(err.into());
+                                                    toast.error(err);
                                                 }
                                             }
                                         });
@@ -69,7 +69,7 @@ pub fn SubscriptionUserList(
                                                     on_refresh.call(());
                                                 }
                                                 Err(err) => {
-                                                    toast.error(err.into());
+                                                    toast.error(err);
                                                 }
                                             }
                                         });
