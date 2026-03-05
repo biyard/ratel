@@ -42,6 +42,12 @@ pub async fn respond_poll(
             .increase_user_response_count(1)
             .execute(cli)
             .await?;
+
+        let agg_item =
+            space_common::models::dashboard::aggregate::DashboardAggregate::inc_poll_responses(
+                &space_pk, 1,
+            );
+        transact_write_items!(cli, vec![agg_item]).ok();
     } else if poll.response_editable {
         let (pk, sk) = SpacePollUserAnswer::keys(&user.pk, &poll_sk_entity, &space_pk);
         let now = common::utils::time::get_now_timestamp_millis();

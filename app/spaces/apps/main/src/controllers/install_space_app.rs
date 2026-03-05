@@ -17,8 +17,7 @@ pub async fn install_space_app(
 
     let app = SpaceApp::new(space_pk_partition, app_type);
 
-    let mut items = vec![app.create_transact_write_item()];
-    items.extend(app.dashboard_write_items());
+    let items = vec![app.create_transact_write_item()];
     transact_write_items!(dynamo, items)
         .map_err(|e| crate::Error::Unknown(format!("Failed to install app: {e}")))?;
 
