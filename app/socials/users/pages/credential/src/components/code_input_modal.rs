@@ -40,7 +40,7 @@ pub fn CodeInputModal(on_submit: EventHandler<CredentialResponse>) -> Element {
                     onclick: move |evt| async move {
                         let code = code_value();
                         if code.is_empty() {
-                            toast.error(tr.invalid_code.to_string());
+                            toast.error(common::Error::InvalidCodeInput);
                             return;
                         }
 
@@ -54,7 +54,7 @@ pub fn CodeInputModal(on_submit: EventHandler<CredentialResponse>) -> Element {
                                 on_submit(updated);
                             }
                             Err(e) => {
-                                toast.error(e.translate(&lang));
+                                toast.error(e);
                             }
                         }
 

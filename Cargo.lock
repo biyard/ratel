@@ -882,6 +882,7 @@ dependencies = [
  "ratel-admin",
  "ratel-auth",
  "ratel-membership",
+ "ratel-my-follower",
  "ratel-post",
  "ratel-team-dao",
  "ratel-team-shell",
@@ -13425,6 +13426,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "ratel-my-follower"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "ratel-auth",
+ "ratel-post",
+ "serde",
+]
+
+[[package]]
 name = "ratel-post"
 version = "0.1.0"
 dependencies = [
@@ -17765,6 +17777,7 @@ dependencies = [
  "serde",
  "space-action-discussion",
  "space-action-poll",
+ "space-action-subscription",
  "space-common",
 ]
 
@@ -17790,6 +17803,20 @@ dependencies = [
  "space-action-discussion",
  "space-action-main",
  "space-action-poll",
+ "space-action-subscription",
+ "space-common",
+]
+
+[[package]]
+name = "space-action-subscription"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "ratel-auth",
+ "ratel-my-follower",
+ "ratel-post",
+ "serde",
  "space-common",
 ]
 

@@ -21,9 +21,12 @@ pub struct SpacePost {
     #[serde(default)]
     pub ended_at: i64,
 
+    #[serde(default)]
     pub title: String,
+    #[serde(default)]
     pub html_contents: String,
     #[dynamo(index = "gsi6", name = "find_by_category", order = 2, pk)]
+    #[serde(default)]
     pub category_name: String,
     pub comments: i64,
 

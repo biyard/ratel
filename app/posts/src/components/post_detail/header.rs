@@ -8,7 +8,7 @@ use common::components::{Button, ButtonSize, ButtonStyle};
 use dioxus::prelude::*;
 
 #[component]
-pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element {
+pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: FeedPartition) -> Element {
     let t: PostDetailTranslate = use_translate();
     let nav = use_navigator();
     let user_ctx = ratel_auth::hooks::use_user_context();
@@ -63,7 +63,7 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element 
         div { class: "flex flex-col gap-2.5 w-full",
             div { class: "flex flex-row items-center w-full",
                 div {
-                    class: "cursor-pointer rounded-md max-tablet:hidden text-sm px-3 py-1.5 text-text-primary inline-flex items-center gap-2",
+                    class: "inline-flex gap-2 items-center py-1.5 px-3 text-sm rounded-md cursor-pointer max-tablet:hidden text-text-primary",
                     aria_label: t.back,
                     onclick: move |_| {
                         nav.go_back();
@@ -71,7 +71,7 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element 
                     icons::arrows::ArrowLeft { class: "[&>path]:stroke-back-icon" }
                 }
                 if show_admin {
-                    div { class: "relative flex items-center space-x-2.5 ml-auto",
+                    div { class: "flex relative items-center ml-auto space-x-2.5",
                         if can_edit {
                             Button {
                                 aria_label: t.edit,
@@ -79,7 +79,7 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element 
                                 onclick: move |_| {
                                     nav.push(format!("/posts/{post_pk}/edit"));
                                 },
-                                span { class: "inline-flex items-center gap-2",
+                                span { class: "inline-flex gap-2 items-center",
                                     icons::edit::Edit1 { class: "!size-5 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
                                     {t.edit}
                                 }
@@ -97,7 +97,7 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element 
                                             return;
                                         }
                                         match create_space_handler(CreateSpaceRequest {
-                                                post_pk: post_pk_val.parse().unwrap(),
+                                                post_id: post_pk_val,
                                             })
                                             .await
                                         {
@@ -110,7 +110,7 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element 
                                         }
                                     });
                                 },
-                                span { class: "inline-flex items-center gap-2",
+                                span { class: "inline-flex gap-2 items-center",
                                     icons::home::Palace { class: "!size-5 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
                                     {t.create_space}
                                 }
@@ -120,24 +120,24 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element 
                             Button {
                                 size: ButtonSize::Icon,
                                 style: ButtonStyle::Ghost,
-                                class: "p-1 hover:bg-hover rounded-full focus:outline-none transition-colors".to_string(),
+                                class: "p-1 rounded-full transition-colors focus:outline-none hover:bg-hover".to_string(),
                                 onclick: move |_| {
                                     menu_open.set(!menu_open());
                                 },
                                 icons::validations::Extra { class: "size-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent [&>circle]:fill-icon-primary" }
                             }
                             if menu_open() {
-                                div { class: "absolute right-0 top-full mt-2 w-40 border border-divider bg-background rounded-md z-50",
+                                div { class: "absolute right-0 top-full z-50 mt-2 w-40 rounded-md border border-divider bg-background",
                                     Button {
                                         size: ButtonSize::Inline,
                                         style: ButtonStyle::Ghost,
-                                        class: "flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-hover cursor-pointer"
+                                        class: "flex items-center py-2 px-4 w-full text-sm text-red-400 cursor-pointer hover:bg-hover"
                                             .to_string(),
                                         onclick: move |_| {
                                             let nav = nav.clone();
                                             let pk = post_pk_for_delete.clone();
                                             spawn(async move {
-                                                let _ = delete_post_handler(pk.parse().unwrap(), Some(false)).await;
+                                                let _ = delete_post_handler(pk, Some(false)).await;
                                                 nav.go_back();
                                             });
                                         },
@@ -159,7 +159,7 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element 
                     Button {
                         size: ButtonSize::Inline,
                         style: ButtonStyle::Ghost,
-                        class: "flex items-center gap-1 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                        class: "flex gap-1 items-center transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             .to_string(),
                         disabled: *is_processing.read(),
                         onclick: {
@@ -178,12 +178,12 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element 
 
                                 let pk = post_pk_val.clone();
                                 spawn(async move {
-                                    let _ = like_post_handler(pk.parse().unwrap(), new_like).await;
+                                    let _ = like_post_handler(pk, new_like).await;
                                     is_processing.set(false);
                                 });
                             }
                         },
-                        span { class: "inline-flex items-center gap-1",
+                        span { class: "inline-flex gap-1 items-center",
                             if optimistic_liked() {
                                 icons::emoji::ThumbsUp { class: "size-5 [&>path]:fill-primary [&>path]:stroke-primary" }
                             } else {
@@ -220,7 +220,7 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: String) -> Element 
                             class: img_class,
                         }
                     } else {
-                        div { class: "rounded-full w-6 h-6 bg-profile-bg" }
+                        div { class: "w-6 h-6 rounded-full bg-profile-bg" }
                     }
                     div { class: "font-semibold text-text-primary text-sm/[20px]",
                         {post.author_display_name}
