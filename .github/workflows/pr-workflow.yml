@@ -369,7 +369,7 @@ jobs:
             echo "🔍 Checking Docker services status:"
             docker-compose -f docker-compose.yaml ps
             echo "🔍 Main API logs:"
-            docker-compose -f docker-compose.yaml logs main-api-testing --tail=50
+            docker-compose -f docker-compose.yaml logs app-shell-testing --tail=50
             exit 1
           fi
 
@@ -378,7 +378,7 @@ jobs:
       - name: Run Playwright Tests
         env:
           CI: true
-          PLAYWRIGHT_URL: http://localhost:8000
+          PLAYWRIGHT_BASE_URL: http://localhost:8000
           PLAYWRIGHT_TIMEOUT: 5000
         run: |
           cd playwright
