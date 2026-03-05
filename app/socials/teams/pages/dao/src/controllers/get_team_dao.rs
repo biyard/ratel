@@ -5,30 +5,10 @@ use ratel_post::models::{Team, TeamOwner};
 use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
 use std::collections::{HashMap, HashSet};
 
-#[get("/api/teams/:teamname/dao/context", user: ratel_auth::OptionalUser)]
+#[get("/api/teams/:teamname/dao/context", user: ratel_auth::OptionalUser, team: Team, permissions: TeamGroupPermissions)]
 pub async fn get_team_dao_handler(teamname: String) -> Result<TeamDao> {
     let conf = crate::config::get();
     let cli = conf.common.dynamodb();
-
-    let gsi2_sk_prefix = Team::compose_gsi2_sk(String::default());
-    let team_query_option = Team::opt().sk(gsi2_sk_prefix).limit(1);
-
-    let (teams, _) =
-        Team::find_by_username_prefix(cli, teamname.clone(), team_query_option).await?;
-
-    let team = teams
-        .into_iter()
-        .find(|t| t.username == teamname)
-        .ok_or(Error::NotFound("Team not found".to_string()))?;
-
-    let user: Option<ratel_auth::User> = user.into();
-    let permissions = if let Some(user) = user {
-        Team::get_permissions_by_team_pk(cli, &team.pk, &user.pk)
-            .await
-            .unwrap_or_else(|_| TeamGroupPermissions::empty())
-    } else {
-        TeamGroupPermissions::empty()
-    };
 
     let is_admin = permissions.contains(TeamGroupPermission::TeamAdmin);
     #[cfg(feature = "server")]

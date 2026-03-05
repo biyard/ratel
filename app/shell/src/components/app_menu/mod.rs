@@ -83,15 +83,15 @@ pub fn AppMenu() -> Element {
                     // }
 
                     // Notification (authorized only)
-                    if logged_in {
-                        NavItem {
-                            href: "/notifications",
-                            label: tr.notification,
-                            icon: rsx! {
-                                icons::notification::Bell { class: "transition-all [&>path]:stroke-menu-text group-hover:[&>path]:stroke-menu-text/80" }
-                            },
-                        }
-                    }
+                    // if logged_in {
+                    //     NavItem {
+                    //         href: "/notifications",
+                    //         label: tr.notification,
+                    //         icon: rsx! {
+                    //             icons::notification::Bell { class: "transition-all [&>path]:stroke-menu-text group-hover:[&>path]:stroke-menu-text/80" }
+                    //         },
+                    //     }
+                    // }
 
                     // Membership
                     NavItem {

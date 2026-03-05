@@ -276,7 +276,13 @@ impl Post {
         comment_pk: EntityType,
         user_pk: Partition,
     ) -> Result<()> {
-        let comment_tx = PostComment::updater(&post_pk, &comment_pk)
+        let comment_partition = match (&post_pk, &comment_pk) {
+            (Partition::Feed(_), EntityType::PostCommentReply(_, _)) => {
+                Partition::PostReply(post_pk.to_string())
+            }
+            _ => post_pk.clone(),
+        };
+        let comment_tx = PostComment::updater(&comment_partition, &comment_pk)
             .increase_likes(1)
             .transact_write_item();
         let pl_tx = PostCommentLike::new(post_pk, comment_pk, user_pk).create_transact_write_item();
@@ -298,7 +304,13 @@ impl Post {
         comment_pk: EntityType,
         user_pk: Partition,
     ) -> Result<()> {
-        let comment_tx = PostComment::updater(&post_pk, &comment_pk)
+        let comment_partition = match (&post_pk, &comment_pk) {
+            (Partition::Feed(_), EntityType::PostCommentReply(_, _)) => {
+                Partition::PostReply(post_pk.to_string())
+            }
+            _ => post_pk.clone(),
+        };
+        let comment_tx = PostComment::updater(&comment_partition, &comment_pk)
             .decrease_likes(1)
             .transact_write_item();
         let pcl = PostCommentLike::new(post_pk, comment_pk, user_pk);

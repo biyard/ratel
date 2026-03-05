@@ -19,6 +19,20 @@ impl Default for Question {
     }
 }
 
+impl Question {
+    pub fn title(&self) -> &str {
+        match self {
+            Question::SingleChoice(q) => &q.title,
+            Question::MultipleChoice(q) => &q.title,
+            Question::ShortAnswer(q) => &q.title,
+            Question::Subjective(q) => &q.title,
+            Question::Checkbox(q) => &q.title,
+            Question::Dropdown(q) => &q.title,
+            Question::LinearScale(q) => &q.title,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct LinearScaleQuestion {

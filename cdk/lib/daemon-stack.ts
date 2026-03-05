@@ -75,6 +75,7 @@ export class DaemonStack extends Stack {
       maxHealthyPercent: 100,
       minHealthyPercent: 0,
       assignPublicIp: true,
+      vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
     });
   }
 }
