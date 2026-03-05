@@ -11,11 +11,9 @@ use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
 
 #[component]
 pub fn Home(teamname: String) -> Element {
-    let teamname_clone = teamname.clone();
-    let resource = use_server_future(move || {
-        let name = teamname_clone.clone();
-        async move { get_team_member_permission_handler(name).await }
-    })?;
+    let resource = use_server_future(use_reactive((&teamname,), |(name,)| async move {
+        get_team_member_permission_handler(name).await
+    }))?;
 
     let resolved = resource.suspend()?;
     let data = resolved.read();

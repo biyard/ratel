@@ -25,11 +25,9 @@ fn TeamSidemenu(teamname: String) -> Element {
     let mut team_ctx = common::contexts::use_team_context();
     let nav = use_navigator();
     let user = user_ctx().user.clone().unwrap_or_default();
-    let teamname_clone = teamname.clone();
-    let mut resource = use_server_future(move || {
-        let name = teamname_clone.clone();
-        async move { find_team_handler(name).await }
-    })?;
+    let mut resource = use_server_future(use_reactive((&teamname,), |(name,)| async move {
+        find_team_handler(name).await
+    }))?;
 
     let resolved = resource.suspend()?;
     let data = resolved.read();

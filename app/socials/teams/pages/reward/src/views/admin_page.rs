@@ -10,16 +10,15 @@ use dioxus::prelude::*;
 pub fn AdminPage(team_pk: TeamPartition, team_name: String) -> Element {
     let tr: TeamRewardsTranslate = use_translate();
 
-    let team_pk_rewards = team_pk.clone();
-    let rewards_resource = use_server_future(move || {
-        let team_pk_rewards = team_pk_rewards.clone();
-        async move { get_team_rewards_handler(team_pk_rewards, None).await }
-    })?;
-    let team_pk_transactions = team_pk.clone();
-    let transactions_resource = use_server_future(move || {
-        let team_pk_transactions = team_pk_transactions.clone();
-        async move { list_team_point_transactions_handler(team_pk_transactions, None, None).await }
-    })?;
+    let rewards_resource = use_server_future(use_reactive((&team_pk,), |(team_pk,)| async move {
+        get_team_rewards_handler(team_pk, None).await
+    }))?;
+    let transactions_resource = use_server_future(use_reactive(
+        (&team_pk,),
+        |(team_pk,)| async move {
+            list_team_point_transactions_handler(team_pk, None, None).await
+        },
+    ))?;
 
     let rewards_state = rewards_resource.value();
     let transactions_state = transactions_resource.value();
