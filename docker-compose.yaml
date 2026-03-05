@@ -3,12 +3,12 @@ services:
     image: ratel/app-shell:${COMMIT}
     restart: always
     ports:
-      - "8000:8000"
+      - "8080:8080"
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "apt update && apt install curl -y && curl -f http://localhost:8000 || exit 1",
+          "apt update && apt install curl -y && curl -f http://localhost:8080 || exit 1",
         ]
       interval: 10s
       timeout: 10s
