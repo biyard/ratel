@@ -337,7 +337,7 @@ jobs:
           interval=10
           elapsed=0
           while [ $elapsed -lt $timeout ]; do
-            if curl -f -s http://localhost:8000/ > /dev/null 2>&1; then
+            if curl -f -s http://localhost:8080/ > /dev/null 2>&1; then
               echo "✅ App Shell is responding (took ${elapsed}s)"
               break
             fi
@@ -368,7 +368,7 @@ jobs:
       - name: Run Playwright Tests
         env:
           CI: true
-          PLAYWRIGHT_BASE_URL: http://localhost:8000
+          PLAYWRIGHT_BASE_URL: http://localhost:8080
           PLAYWRIGHT_TIMEOUT: 5000
         working-directory: playwright
         run: |
