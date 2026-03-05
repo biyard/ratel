@@ -27,7 +27,7 @@ impl From<(SpacePoll, bool)> for SpaceAction {
         Self {
             action_id,
             action_type: SpaceActionType::Poll,
-            title: poll.topic,
+            title: poll.title,
             description: poll.description,
             created_at: poll.created_at,
             updated_at: poll.updated_at,
