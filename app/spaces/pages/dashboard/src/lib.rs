@@ -1,7 +1,6 @@
 pub mod components;
 #[cfg(feature = "server")]
 mod config;
-pub mod api;
 pub mod controllers;
 pub mod i18n;
 mod menu;

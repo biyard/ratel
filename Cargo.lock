@@ -17894,6 +17894,7 @@ dependencies = [
  "serde",
  "serde_dynamo",
  "serde_json",
+ "space-app-main",
  "space-common",
  "tracing",
 ]

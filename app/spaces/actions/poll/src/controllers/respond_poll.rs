@@ -44,7 +44,7 @@ pub async fn respond_poll(
             .await?;
 
         let agg_item =
-            space_common::models::dashboard::aggregate::DashboardAggregate::inc_poll_responses(
+            space_common::models::aggregate::DashboardAggregate::inc_poll_responses(
                 &space_pk, 1,
             );
         transact_write_items!(cli, vec![agg_item]).ok();

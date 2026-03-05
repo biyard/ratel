@@ -32,7 +32,7 @@ pub async fn delete_comment(
 
     let space_pk: Partition = space_id.into();
     let agg_item =
-        space_common::models::dashboard::aggregate::DashboardAggregate::inc_comments(&space_pk, -1);
+        space_common::models::aggregate::DashboardAggregate::inc_comments(&space_pk, -1);
 
     let mut txs = vec![delete_comment_tx, post_tx, agg_item];
 

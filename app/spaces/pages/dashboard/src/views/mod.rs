@@ -1,7 +1,7 @@
 mod creator_page;
 mod viewer_page;
 
-use crate::{api::fetch_dashboard_extensions, *};
+use crate::*;
 use creator_page::*;
 use space_common::hooks::use_user_role;
 use viewer_page::*;
