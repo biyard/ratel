@@ -227,8 +227,8 @@ jobs:
           make docker
 
           # Save image for artifact upload
-          docker save ratel:$COMMIT | gzip > /tmp/app-shell-image.tar.gz
-          echo "image=ratel:$COMMIT" >> $GITHUB_OUTPUT
+          docker save $ECR:$COMMIT | gzip > /tmp/app-shell-image.tar.gz
+          echo "image=$ECR:$COMMIT" >> $GITHUB_OUTPUT
 
       - name: Upload Docker image artifact
         uses: actions/upload-artifact@v4
