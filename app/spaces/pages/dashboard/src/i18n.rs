@@ -4,7 +4,7 @@ translate! {
     DashboardTranslate;
 
     participation_action: {
-        en: "Participation Action",
+        en: "Participation's Action",
         ko: "참여 액션",
     },
 
@@ -19,7 +19,7 @@ translate! {
     },
 
     points_available: {
-        en: "Points Available",
+        en: "Total Points Available",
         ko: "사용 가능 포인트",
     },
 
