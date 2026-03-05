@@ -2,6 +2,9 @@ services:
   app-shell-testing:
     image: ratel/app-shell:${COMMIT}
     restart: always
+    environment:
+      IP: "0.0.0.0"
+      PORT: "8080"
     ports:
       - "8080:8080"
     healthcheck:
