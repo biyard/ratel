@@ -17,13 +17,10 @@ pub fn AdminPage(teamname: String, team_pk: TeamPartition, permissions: i64) -> 
     let can_edit_team = perms.contains(TeamGroupPermission::TeamEdit);
 
     let mut refresh = use_signal(|| 0u64);
-    let team_pk_clone = team_pk.clone();
-    let refresh_clone = refresh.clone();
-    let group_resource = use_server_future(move || {
-        let _ = refresh_clone();
-        let team_pk = team_pk_clone.clone();
+    let group_resource = use_server_future(use_reactive((&team_pk,), move |(team_pk,)| {
+        let _ = refresh();
         async move { list_groups_handler(team_pk, None).await }
-    })?;
+    }))?;
 
     let resolved = group_resource.suspend()?;
     let data = resolved.read();

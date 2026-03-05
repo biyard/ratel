@@ -9,13 +9,10 @@ use ratel_team_group::dto::RemoveMemberRequest;
 pub fn AdminPage(teamname: String, team_pk: TeamPartition) -> Element {
     let _ = teamname;
     let mut refresh = use_signal(|| 0u64);
-    let team_pk_clone = team_pk.clone();
-    let refresh_clone = refresh.clone();
-    let member_resource = use_server_future(move || {
-        let _ = refresh_clone();
-        let team_pk = team_pk_clone.clone();
+    let member_resource = use_server_future(use_reactive((&team_pk,), move |(team_pk,)| {
+        let _ = refresh();
         async move { list_members_handler(team_pk, None, None).await }
-    })?;
+    }))?;
 
     let resolved = member_resource.suspend()?;
     let data = resolved.read();
