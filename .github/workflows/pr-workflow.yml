@@ -326,36 +326,36 @@ jobs:
         run: |
           docker-compose --profile testing up -d
 
-      # - name: Wait for services to be ready
-      #   run: |
-      #     # Check service health with retry loop and timeout
-      #     echo "Waiting for services to be ready..."
+      - name: Wait for services to be ready
+        run: |
+          # Check service health with retry loop and timeout
+          echo "Waiting for services to be ready..."
 
-      #     # Wait for Main API (180 second timeout for container startup)
-      #     echo "🔄 Checking Main API..."
-      #     timeout=180
-      #     interval=10
-      #     elapsed=0
-      #     while [ $elapsed -lt $timeout ]; do
-      #       if curl -f -s http://localhost:8080/ > /dev/null 2>&1; then
-      #         echo "✅ App Shell is responding (took ${elapsed}s)"
-      #         break
-      #       fi
-      #       echo "⏳ App Shell not ready yet... (${elapsed}/${timeout}s)"
-      #       sleep $interval
-      #       elapsed=$((elapsed + interval))
-      #     done
+          # Wait for Main API (180 second timeout for container startup)
+          echo "🔄 Checking Main API..."
+          timeout=180
+          interval=10
+          elapsed=0
+          while [ $elapsed -lt $timeout ]; do
+            if curl -f -s http://localhost:8080/ > /dev/null 2>&1; then
+              echo "✅ App Shell is responding (took ${elapsed}s)"
+              break
+            fi
+            echo "⏳ App Shell not ready yet... (${elapsed}/${timeout}s)"
+            sleep $interval
+            elapsed=$((elapsed + interval))
+          done
 
-      #     if [ $elapsed -ge $timeout ]; then
-      #       echo "❌ App Shell failed to respond with 200 status within ${timeout}s"
-      #       echo "🔍 Checking Docker services status:"
-      #       docker-compose -f docker-compose.yaml ps
-      #       echo "🔍 App Shell logs:"
-      #       docker-compose -f docker-compose.yaml logs app-shell-testing
-      #       exit 1
-      #     fi
+          if [ $elapsed -ge $timeout ]; then
+            echo "❌ App Shell failed to respond with 200 status within ${timeout}s"
+            echo "🔍 Checking Docker services status:"
+            docker-compose -f docker-compose.yaml ps
+            echo "🔍 App Shell logs:"
+            docker-compose -f docker-compose.yaml logs app-shell-testing
+            exit 1
+          fi
 
-      #     echo "🎉 All services are ready!"
+          echo "🎉 All services are ready!"
 
       - name: Install dependencies
         working-directory: playwright
