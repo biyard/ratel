@@ -1,5 +1,6 @@
 mod service;
 
+use crate::hooks::use_scroll_lock;
 use crate::*;
 
 pub use service::*;
@@ -8,7 +9,10 @@ pub use service::*;
 pub fn PopupZone() -> Element {
     let mut popup = use_popup();
 
-    let config = match popup.config() {
+    let config = popup.config();
+    use_scroll_lock(config.is_some());
+
+    let config = match config {
         Some(c) => c,
         None => return rsx! {},
     };

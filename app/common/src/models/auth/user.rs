@@ -53,6 +53,19 @@ pub struct User {
     pub points: i64,
 }
 
+impl User {
+    pub fn did(&self) -> String {
+        format!("did:web:ratel.foundation:{}", self.username)
+    }
+
+    pub fn id(&self) -> String {
+        match &self.pk {
+            Partition::User(uid) => uid.clone(),
+            _ => "".to_string(),
+        }
+    }
+}
+
 #[cfg(feature = "server")]
 impl User {
     pub fn new(

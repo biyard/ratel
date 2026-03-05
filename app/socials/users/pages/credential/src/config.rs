@@ -1,16 +1,10 @@
 use common::CommonConfig;
+pub use common::PortoneConfig;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Config {
     pub common: CommonConfig,
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Config {
-            common: CommonConfig::default(),
-        }
-    }
+    pub portone: PortoneConfig,
 }
 
 static mut CONFIG: Option<Config> = None;

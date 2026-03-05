@@ -3,6 +3,9 @@ use crate::*;
 use crate::macros::DynamoEntity;
 use crate::models::SpacePostCommentLike;
 
+/// Value for `parent_id_for_likes` indicating a top-level comment (not a reply).
+pub const ROOT_PARENT: &str = "ROOT";
+
 #[derive(Debug, Default, Clone, Serialize, Deserialize, DynamoEntity)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct SpacePostComment {
@@ -80,7 +83,7 @@ impl SpacePostComment {
             likes: 0,
             likes_align: format!("{:020}", 0),
             updated_at_align: format!("{:020}", now),
-            parent_id_for_likes: "ROOT".to_string(),
+            parent_id_for_likes: ROOT_PARENT.to_string(),
             replies: 0,
             parent_comment_sk: None,
         }

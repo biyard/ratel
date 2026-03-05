@@ -1,6 +1,5 @@
-use crate::{
-    components::transaction_item, dto::PointTransactionResponse, views::RewardsPageTranslate, *,
-};
+use crate::{components::transaction_item, views::RewardsPageTranslate, *};
+use common::services::PointTransactionResponse;
 
 pub fn transaction_list(
     tr: &RewardsPageTranslate,

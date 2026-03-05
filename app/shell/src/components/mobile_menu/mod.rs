@@ -101,7 +101,8 @@ pub fn MobileSideMenu(is_open: Signal<bool>) -> Element {
                             is_open.set(false);
                             popup.open(rsx! {
                                 LoginModal {}
-                            }).with_title(tr.join_the_movement);
+                            })
+                            .with_title(tr.join_the_movement);
                         },
                         "{tr.sign_in}"
                     }

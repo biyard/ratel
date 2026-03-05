@@ -16,7 +16,8 @@ RUST_LOG ?= debug
 
 PORT ?= 8000
 
-REPOSITORY ?= ratel
+REPOSITORY ?= ratel/app-shell
+ECR ?= $(shell aws ecr describe-repositories --repository-names $(REPOSITORY)  --query "repositories[0].repositoryUri" --output text)
 
 BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) \
@@ -30,6 +31,7 @@ BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					RUST_LOG=$(RUST_LOG) \
 					PORT=$(PORT) \
 					PORTONE_STORE_ID=$(PORTONE_STORE_ID) \
+					PORTONE_KPN_CHANNEL_KEY=$(PORTONE_KPN_CHANNEL_KEY) \
 					PORTONE_INICIS_CHANNEL_KEY=$(PORTONE_INICIS_CHANNEL_KEY) \
 					PORTONE_API_SECRET=$(PORTONE_API_SECRET) \
 					KAIA_ENDPOINT=$(KAIA_ENDPOINT) \
@@ -41,9 +43,12 @@ BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					FIREBASE_MESSAGING_SENDER_ID=$(FIREBASE_MESSAGING_SENDER_ID) \
 					FIREBASE_APP_ID=$(FIREBASE_APP_ID) \
 					FIREBASE_MEASUREMENT_ID=$(FIREBASE_MEASUREMENT_ID) \
-					UPSTREAM_URL=$(UPSTREAM_URL)
 
 RUST_FLAG ?=
+
+test:
+	mkdir -p ./test-build-target/debug/deps/public
+	$(BUILD_ENV) CARGO_TARGET_DIR=./test-build-target cargo test --features server,bypass
 
 run:
 	$(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web
@@ -55,9 +60,12 @@ build-lambda:
 	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web --platform web @server --features lambda --platform server
 
 docker:
-	docker build -t $(REPOSITORY):$(COMMIT) -f Dockerfile ../../target/dx/app-shell/release/web
+	docker build -t $(ECR):$(COMMIT) -f Dockerfile ../../target/dx/app-shell/release/web
 
 docker.push:
-	docker tag $(REPOSITORY):$(COMMIT) $(REPOSITORY):latest
-	docker push $(REPOSITORY):$(COMMIT)
-	docker push $(REPOSITORY):latest
+	docker tag $(ECR):$(COMMIT) $(ECR):$(ENV)
+	docker push $(ECR):$(COMMIT)
+	docker push $(ECR):$(ENV)
+
+docker.login:
+	aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com

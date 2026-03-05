@@ -12,6 +12,7 @@ pub enum SignAttributesRequest {
 
 #[post("/api/me/did", user: ratel_auth::User)]
 pub async fn sign_attributes_handler(body: SignAttributesRequest) -> Result<CredentialResponse> {
+    debug!("Handling sign attributes request: {:?}", body);
     let conf = common::config::ServerConfig::default();
     let cli = conf.dynamodb();
     let attrs = match body {

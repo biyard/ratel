@@ -1,4 +1,5 @@
 use crate::controllers::dto::*;
+use crate::controllers::like_post::like_post_handler;
 use crate::types::*;
 use crate::*;
 use dioxus::prelude::*;
@@ -49,8 +50,11 @@ pub fn FeedCard(
     let mut optimistic_liked = use_signal(|| post.liked);
     let mut optimistic_likes = use_signal(|| post.likes);
     let mut is_processing = use_signal(|| false);
+    let nav = use_navigator();
 
     let post_clone = post.clone();
+    let post_pk = post.pk.clone();
+    let on_like_callback = on_like.clone();
 
     use_effect(move || {
         optimistic_liked.set(post_clone.liked);
@@ -73,6 +77,12 @@ pub fn FeedCard(
                 shares: post.shares,
                 is_liked: *optimistic_liked.read(),
                 is_processing: *is_processing.read(),
+                on_comment_click: {
+                    let nav = nav.clone();
+                    move || {
+                        nav.push(post.url());
+                    }
+                },
                 on_like_click: move |value: bool| {
                     if *is_processing.read() {
                         return;
@@ -85,12 +95,21 @@ pub fn FeedCard(
                     optimistic_likes.set((previous_likes + delta).max(0));
                     is_processing.set(true);
 
-                    if let Some(handler) = &on_like {
-                        handler.call(value);
-                    }
-
-                    is_processing.set(false);
-                    let _ = (previous_liked, previous_likes);
+                    let post_pk = post_pk.clone();
+                    let mut optimistic_liked = optimistic_liked.clone();
+                    let mut optimistic_likes = optimistic_likes.clone();
+                    let mut is_processing = is_processing.clone();
+                    let on_like_callback = on_like_callback.clone();
+                    spawn(async move {
+                        let result = like_post_handler(post_pk, value).await;
+                        if result.is_err() {
+                            optimistic_liked.set(previous_liked);
+                            optimistic_likes.set(previous_likes);
+                        } else if let Some(handler) = on_like_callback {
+                            handler.call(value);
+                        }
+                        is_processing.set(false);
+                    });
                 },
             }
         }
@@ -130,7 +149,7 @@ fn FeedBody(post: PostResponse, on_edit: Option<EventHandler<MouseEvent>>) -> El
                 }
             }
             h2 { class: "px-5 w-full font-bold align-middle line-clamp-2 text-xl/[25px] tracking-[0.5px] text-text-primary",
-                "{title}"
+                {title}
             }
             div { class: "flex flex-row justify-between items-center px-5",
                 UserBadge {
@@ -139,7 +158,7 @@ fn FeedBody(post: PostResponse, on_edit: Option<EventHandler<MouseEvent>>) -> El
                     author_type,
                 }
                 p { class: "text-sm font-light align-middle text-text-primary",
-                    "{time_ago(created_at)}"
+                    {time_ago(created_at)}
                 }
             }
             div { class: "flex flex-row justify-between px-5" }
@@ -155,7 +174,7 @@ pub fn FeedContents(contents: String, urls: Vec<String>) -> Element {
             div {
                 class: "border-none",
                 style: "min-height: 50px; max-height: 200px; overflow: hidden;",
-                dangerous_inner_html: "{contents}",
+                dangerous_inner_html: contents,
             }
         }
     }
@@ -171,6 +190,7 @@ fn FeedFooter(
     shares: i64,
     is_liked: bool,
     is_processing: bool,
+    on_comment_click: EventHandler<()>,
     on_like_click: EventHandler<bool>,
 ) -> Element {
     let like_class = if is_processing {
@@ -180,7 +200,6 @@ fn FeedFooter(
     };
 
     let liked = is_liked;
-    let comment_href = format!("{}#comments", href);
 
     rsx! {
         div { class: "flex flex-row justify-between items-center px-5 w-full border-t border-divider",
@@ -197,23 +216,25 @@ fn FeedFooter(
                     } else {
                         icons::emoji::ThumbsUp { class: "[&>path]:stroke-icon-primary [&>path]:fill-transparent" }
                     }
-                    "{convert_number_to_string(likes)}"
+                    {convert_number_to_string(likes)}
                 }
-                a { href: "{comment_href}",
-                    IconText { class: "cursor-pointer",
-                        icons::chat::SquareChat { class: "[&>path]:stroke-icon-primary [&>path]:fill-transparent" }
-                        "{convert_number_to_string(comments)}"
-                    }
+                IconText {
+                    class: "cursor-pointer",
+                    onclick: move |_e: MouseEvent| {
+                        on_comment_click.call(());
+                    },
+                    icons::chat::SquareChat { class: "[&>path]:stroke-icon-primary [&>path]:fill-transparent" }
+                    {convert_number_to_string(comments)}
                 }
                 if booster_type != BoosterType::NoBoost {
                     IconText {
                         icons::money_payment::RewardCoin { class: "[&>path]:stroke-icon-primary [&>path]:fill-transparent" }
-                        "{convert_number_to_string(rewards)}"
+                        {convert_number_to_string(rewards)}
                     }
                 }
                 IconText {
                     icons::links_share::Share1 { class: "[&>path]:stroke-icon-primary [&>path]:fill-transparent" }
-                    "{convert_number_to_string(shares)}"
+                    {convert_number_to_string(shares)}
                 }
             }
         }
@@ -231,13 +252,9 @@ pub fn UserBadge(profile_url: String, name: String, author_type: ratel_auth::Use
     rsx! {
         div { class: "flex flex-row items-center w-fit med-16 text-text-primary gap-2.5",
             if !profile_url.is_empty() {
-                img {
-                    src: "{profile_url}",
-                    alt: "User Profile",
-                    class: "{img_class}",
-                }
+                img { src: profile_url, alt: "User Profile", class: img_class }
             }
-            span { "{name}" }
+            span { {name} }
         }
     }
 }

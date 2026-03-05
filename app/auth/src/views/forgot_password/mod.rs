@@ -1,5 +1,7 @@
-use crate::controllers::reset_password::{ResetPasswordRequest, reset_password_handler};
-use crate::controllers::send_code::{SendCodeRequest, send_code_handler};
+use crate::controllers::reset_password::{reset_password_handler, ResetPasswordRequest};
+use crate::controllers::send_code::{
+    send_password_reset_code_handler, SendPasswordResetCodeRequest,
+};
 use crate::*;
 
 #[component]
@@ -51,7 +53,7 @@ pub fn ForgotPassword() -> Element {
                     div { class: "flex flex-row gap-2.5 justify-between items-center w-full text-sm",
                         a {
                             class: "text-sm text-primary/70 hover:text-primary",
-                            href: "/auth/",
+                            href: "/",
                             {tr.back_to_login}
                         }
                         button {
@@ -69,9 +71,9 @@ pub fn ForgotPassword() -> Element {
                                 }
 
                                 loading.set(true);
-                                let result = send_code_handler(SendCodeRequest::Email {
-                                    email: email_val,
-                                })
+                                let result = send_password_reset_code_handler(
+                                    SendPasswordResetCodeRequest { email: email_val },
+                                )
                                 .await;
                                 loading.set(false);
 
@@ -93,7 +95,7 @@ pub fn ForgotPassword() -> Element {
                     div { class: "flex flex-col gap-4 items-center w-full",
                         a {
                             class: "inline-flex gap-2.5 justify-center items-center py-1.5 px-4 h-auto text-xs font-bold whitespace-nowrap rounded-full transition-all outline-none focus-visible:ring-2 focus-visible:ring-offset-2 bg-btn-secondary-bg text-btn-secondary-text border-btn-secondary-outline hover:bg-btn-secondary-hover-bg hover:border-btn-secondary-hover-outline hover:text-btn-secondary-hover-text",
-                            href: "/auth/",
+                            href: "/",
                             {tr.back_to_login}
                         }
                     }
@@ -150,7 +152,7 @@ pub fn ForgotPassword() -> Element {
                     div { class: "flex flex-row gap-2.5 justify-between items-center w-full text-sm",
                         a {
                             class: "text-sm text-primary/70 hover:text-primary",
-                            href: "/auth/",
+                            href: "/",
                             {tr.back_to_login}
                         }
                         button {
