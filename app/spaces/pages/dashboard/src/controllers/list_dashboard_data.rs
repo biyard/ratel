@@ -40,8 +40,8 @@ pub async fn list_dashboard_data_handler(
     }));
 
     // StatCard: only include when IncentivePool app is installed
-    let (app_pk, app_sk) =
-        space_app_main::SpaceApp::keys(&space_pk, space_app_main::SpaceAppType::IncentivePool);
+    // let (app_pk, app_sk) =
+    //     space_app_main::SpaceApp::keys(&space_pk, space_app_main::SpaceAppType::IncentivePool);
     // FIXME: We Need to chekc SpaceIncentive It self, not Space App,
     // let has_incentive = space_app_main::SpaceApp::get(cli, &app_pk, Some(&app_sk))
     //     .await
