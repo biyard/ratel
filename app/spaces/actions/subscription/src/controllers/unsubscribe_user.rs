@@ -1,17 +1,18 @@
-use crate::models::SpaceSubscriptionUser;
 use crate::*;
 use common::models::auth::UserFollow;
+use ratel_post::models::Team;
 
 #[delete(
-    "/api/spaces/{space_id}/subscriptions/users/{user_pk}/subscribe",
+    "/api/spaces/{space_id}/subscriptions/users/subscribe",
     role: SpaceUserRole,
     user: ratel_auth::User
 )]
-pub async fn unsubscribe_user(space_id: SpacePartition, user_pk: UserPartition) -> Result<()> {
+pub async fn unsubscribe_user(space_id: SpacePartition, user_pk: Partition) -> Result<()> {
+    let _space_id = space_id;
     let common_config = common::CommonConfig::default();
     let cli = common_config.dynamodb();
 
-    let target_pk: Partition = user_pk.clone().into();
+    let target_pk = user_pk.clone();
     if target_pk == user.pk {
         return Err(Error::BadRequest("Cannot unsubscribe yourself".into()));
     }
@@ -28,9 +29,17 @@ pub async fn unsubscribe_user(space_id: SpacePartition, user_pk: UserPartition) 
 
     let follower_delete = UserFollow::delete_transact_write_item(&follower_pk, &follower_sk);
     let following_delete = UserFollow::delete_transact_write_item(&following_pk, &following_sk);
-    let target_update = common::models::auth::User::updater(target_pk.clone(), EntityType::User)
-        .decrease_followers_count(1)
-        .transact_write_item();
+    let target_update = match &target_pk {
+        Partition::User(_) => {
+            common::models::auth::User::updater(target_pk.clone(), EntityType::User)
+                .decrease_followers_count(1)
+                .transact_write_item()
+        }
+        Partition::Team(_) => Team::updater(target_pk.clone(), EntityType::Team)
+            .decrease_followers(1)
+            .transact_write_item(),
+        _ => return Err(Error::BadRequest("Invalid target".into())),
+    };
     let follower_update = common::models::auth::User::updater(user.pk.clone(), EntityType::User)
         .decrease_followings_count(1)
         .transact_write_item();

@@ -2,12 +2,13 @@ use crate::models::SpaceSubscriptionUser;
 use crate::*;
 use common::models::auth::UserFollow;
 use common::models::space::SpaceCommon;
+use ratel_post::models::Team;
 use std::collections::HashSet;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct SubscriptionUserItem {
-    pub user_pk: UserPartition,
+    pub user_pk: Partition,
     pub display_name: String,
     pub profile_url: String,
     pub username: String,
@@ -44,14 +45,60 @@ pub async fn list_subscription_users(
     let space = SpaceCommon::get(cli, &space_pk, Some(EntityType::SpaceCommon))
         .await?
         .ok_or(Error::SpaceNotFound)?;
-    let creator_pk = space.user_pk.clone();
+    let (creator_pk, creator_profile) = {
+        let mut creator_profile = (
+            space.author_display_name.clone(),
+            space.author_profile_url.clone(),
+            space.author_username.clone(),
+        );
+        let mut creator_pk = space.user_pk.clone();
+
+        let mut resolved = false;
+        if let Ok((teams, _)) =
+            Team::find_by_username_prefix(cli, &space.author_username, Team::opt().limit(5)).await
+        {
+            if let Some(team) = teams
+                .into_iter()
+                .find(|team| team.username == space.author_username)
+            {
+                creator_pk = team.pk.clone();
+                creator_profile = (team.display_name, team.profile_url, team.username);
+                resolved = true;
+            }
+        }
+
+        if !resolved {
+            let users = match ratel_auth::User::find_by_username(
+                cli,
+                &space.author_username,
+                ratel_auth::UserQueryOption::builder().limit(1),
+            )
+            .await
+            {
+                Ok((users, _)) => users,
+                Err(err) => {
+                    error!("Failed to query user by username: {:?}", err);
+                    vec![]
+                }
+            };
+            if let Some(user) = users.into_iter().next() {
+                creator_pk = user.pk.clone();
+                creator_profile = (user.display_name, user.profile_url, user.username);
+            }
+        }
+
+        (creator_pk, creator_profile)
+    };
 
     let viewer_pk = user.0.as_ref().map(|u| u.pk.clone());
     let subscribed_targets = if let Some(viewer_pk) = viewer_pk.as_ref() {
-        let keys: Vec<(Partition, EntityType)> = users
+        let mut keys: Vec<(Partition, EntityType)> = users
             .iter()
             .map(|target| UserFollow::follower_keys(&target.user_pk, viewer_pk))
             .collect();
+        if !users.iter().any(|u| u.user_pk == creator_pk) {
+            keys.push(UserFollow::follower_keys(&creator_pk, viewer_pk));
+        }
 
         let subs: Vec<UserFollow> = if keys.is_empty() {
             vec![]
@@ -69,7 +116,7 @@ pub async fn list_subscription_users(
     let mut items: Vec<SubscriptionUserItem> = users
         .into_iter()
         .map(|u| SubscriptionUserItem {
-            user_pk: u.user_pk.clone().into(),
+            user_pk: u.user_pk.clone(),
             display_name: u.display_name,
             profile_url: u.profile_url,
             username: u.username,
@@ -78,10 +125,7 @@ pub async fn list_subscription_users(
         })
         .collect();
 
-    let creator_item = if let Some(idx) = items.iter().position(|u| {
-        let pk: Partition = u.user_pk.clone().into();
-        pk == creator_pk
-    }) {
+    let creator_item = if let Some(idx) = items.iter().position(|u| u.user_pk == creator_pk) {
         let item = items.remove(idx);
         if is_first_page { Some(item) } else { None }
     } else {
@@ -90,7 +134,7 @@ pub async fn list_subscription_users(
             let creator = SpaceSubscriptionUser::get(cli, &space_pk, Some(creator_sk))
                 .await?
                 .map(|u| SubscriptionUserItem {
-                    user_pk: u.user_pk.clone().into(),
+                    user_pk: u.user_pk.clone(),
                     display_name: u.display_name,
                     profile_url: u.profile_url,
                     username: u.username,
@@ -103,7 +147,7 @@ pub async fn list_subscription_users(
                 ratel_auth::User::get(cli, creator_pk.clone(), Some(EntityType::User)).await?
             {
                 Some(SubscriptionUserItem {
-                    user_pk: creator_pk.clone().into(),
+                    user_pk: creator_pk.clone(),
                     display_name: user.display_name,
                     profile_url: user.profile_url,
                     username: user.username,
@@ -111,7 +155,17 @@ pub async fn list_subscription_users(
                     subscribed: subscribed_targets.contains(&creator_pk.to_string()),
                 })
             } else {
-                None
+                Some(SubscriptionUserItem {
+                    user_pk: creator_pk.clone(),
+                    display_name: creator_profile.0,
+                    profile_url: creator_profile.1,
+                    username: creator_profile.2,
+                    user_type: match creator_pk {
+                        Partition::Team(_) => UserType::Team,
+                        _ => UserType::Individual,
+                    },
+                    subscribed: subscribed_targets.contains(&creator_pk.to_string()),
+                })
             }
         } else {
             None

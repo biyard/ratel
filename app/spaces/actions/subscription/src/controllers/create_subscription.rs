@@ -1,6 +1,7 @@
 use crate::models::*;
 use crate::*;
 use common::models::space::SpaceCommon;
+use ratel_post::models::Team;
 
 #[post(
     "/api/spaces/{space_pk}/subscriptions",
@@ -8,7 +9,7 @@ use common::models::space::SpaceCommon;
     user: ratel_auth::User
 )]
 pub async fn create_subscription(space_pk: SpacePartition) -> Result<SpaceSubscription> {
-    use ratel_auth::User;
+    use ratel_auth::{User, UserQueryOption};
 
     SpaceSubscription::can_edit(&role)?;
     let common_config = common::CommonConfig::default();
@@ -23,16 +24,6 @@ pub async fn create_subscription(space_pk: SpacePartition) -> Result<SpaceSubscr
 
     let subscription = SpaceSubscription::new(space_pk.clone());
     subscription.create(cli).await?;
-
-    let space = SpaceCommon::get(cli, &space_pk, Some(EntityType::SpaceCommon))
-        .await?
-        .ok_or(Error::SpaceNotFound)?;
-
-    let user = User::get(cli, &space.user_pk, Some(EntityType::User))
-        .await?
-        .unwrap_or_default();
-    let creator = SpaceSubscriptionUser::new(space_pk, &user);
-    creator.upsert(cli).await?;
 
     Ok(subscription)
 }

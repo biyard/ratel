@@ -39,6 +39,7 @@ pub fn SubscriptionUserList(
                             let space_id = space_id.clone();
                             let is_creator = idx == 0;
                             let subscribed = user.subscribed;
+                            let is_team = matches!(user.user_type, UserType::Team);
                             let on_refresh = on_refresh.clone();
                             let on_toggle_subscribe = {
                                 let space_id = space_id.clone();
@@ -102,10 +103,20 @@ pub fn SubscriptionUserList(
                                             img {
                                                 src: "{user.profile_url}",
                                                 alt: "{user.display_name}",
-                                                class: "object-cover object-top w-8 h-8 rounded-full",
+                                                class: if is_team {
+                                                    "object-cover object-top w-8 h-8 rounded-[8px]"
+                                                } else {
+                                                    "object-cover object-top w-8 h-8 rounded-full"
+                                                },
                                             }
                                         } else {
-                                            div { class: "w-8 h-8 rounded-full bg-neutral-600" }
+                                            div {
+                                                class: if is_team {
+                                                    "w-8 h-8 rounded-[8px] bg-neutral-600"
+                                                } else {
+                                                    "w-8 h-8 rounded-full bg-neutral-600"
+                                                }
+                                            }
                                         }
                                         div { class: "flex flex-col gap-1 items-start",
                                             div { class: "flex gap-2 items-center",

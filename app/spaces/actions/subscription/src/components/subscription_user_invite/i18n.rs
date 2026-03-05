@@ -7,13 +7,13 @@ translate! {
         en: "Users to subscribe",
         ko: "구독할 유저"
     }
-    email_label: {
-        en: "Email Address",
-        ko: "Email Address"
+    identifier_label: {
+        en: "Email or Username",
+        ko: "이메일 또는 유저네임"
     }
-    email_placeholder: {
-        en: "user@example.com",
-        ko: "user@example.com"
+    identifier_placeholder: {
+        en: "user@example.com or username",
+        ko: "user@example.com 또는 username"
     }
     add: {
         en: "Add",
