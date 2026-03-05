@@ -29,7 +29,7 @@ onclick: move |_| async move {
         }
         Err(err) => {
             popup.close();
-            toast.error(err.to_string());
+            toast.error(err);
         }
     }
 }

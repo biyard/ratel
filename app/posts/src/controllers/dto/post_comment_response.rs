@@ -5,8 +5,8 @@ use crate::*;
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct PostCommentResponse {
-    pub pk: Partition,
-    pub sk: EntityType,
+    pub pk: FeedPartition,
+    pub sk: PostCommentEntityType,
 
     pub updated_at: i64,
 
@@ -16,7 +16,7 @@ pub struct PostCommentResponse {
     pub reports: i64,
     pub replies: u64,
 
-    pub parent_comment_sk: Option<EntityType>,
+    pub parent_comment_sk: Option<PostCommentEntityType>,
 
     pub author_pk: Partition,
     pub author_display_name: String,
@@ -30,14 +30,14 @@ pub struct PostCommentResponse {
 impl From<(PostComment, bool, bool)> for PostCommentResponse {
     fn from((comment, liked, is_report): (PostComment, bool, bool)) -> Self {
         Self {
-            pk: comment.pk,
-            sk: comment.sk,
+            pk: comment.pk.into(),
+            sk: comment.sk.into(),
             updated_at: comment.updated_at,
             content: comment.content,
             likes: comment.likes,
             reports: comment.reports,
             replies: comment.replies,
-            parent_comment_sk: comment.parent_comment_sk,
+            parent_comment_sk: comment.parent_comment_sk.map(|sk| sk.into()),
             author_pk: comment.author_pk,
             author_display_name: comment.author_display_name,
             author_username: comment.author_username,
@@ -51,14 +51,14 @@ impl From<(PostComment, bool, bool)> for PostCommentResponse {
 impl From<PostComment> for PostCommentResponse {
     fn from(comment: PostComment) -> Self {
         Self {
-            pk: comment.pk,
-            sk: comment.sk,
+            pk: comment.pk.into(),
+            sk: comment.sk.into(),
             updated_at: comment.updated_at,
             content: comment.content,
             likes: comment.likes,
             reports: comment.reports,
             replies: comment.replies,
-            parent_comment_sk: comment.parent_comment_sk,
+            parent_comment_sk: comment.parent_comment_sk.map(|sk| sk.into()),
             author_pk: comment.author_pk,
             author_display_name: comment.author_display_name,
             author_username: comment.author_username,
