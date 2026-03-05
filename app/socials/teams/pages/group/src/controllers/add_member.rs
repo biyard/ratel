@@ -5,7 +5,7 @@ use ratel_post::models::{Team, TeamGroup};
 use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
 use std::collections::HashSet;
 
-#[post("/api/teams/:team_pk/groups/:group_sk/member", user: ratel_auth::User)]
+#[post("/api/teams/:team_pk/groups/:group_sk/member", user: ratel_auth::User, team: Team, permissions: TeamGroupPermissions)]
 pub async fn add_member_handler(
     team_pk: TeamPartition,
     group_sk: String,
@@ -14,10 +14,6 @@ pub async fn add_member_handler(
     let conf = crate::config::get();
     let cli = conf.common.dynamodb();
     let team_pk: Partition = team_pk.into();
-
-    let permissions = Team::get_permissions_by_team_pk(cli, &team_pk, &user.pk)
-        .await
-        .unwrap_or_else(|_| TeamGroupPermissions::empty());
     let can_edit = permissions.contains(TeamGroupPermission::TeamAdmin)
         || permissions.contains(TeamGroupPermission::TeamEdit)
         || permissions.contains(TeamGroupPermission::GroupEdit);
@@ -26,10 +22,6 @@ pub async fn add_member_handler(
             "You don't have permission to invite members.".to_string(),
         ));
     }
-
-    let team = Team::get(cli, &team_pk, Some(EntityType::Team))
-        .await?
-        .ok_or(Error::NotFound("Team not found".into()))?;
 
     let team_group = TeamGroup::get(
         cli,

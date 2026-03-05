@@ -1,11 +1,11 @@
 use crate::dto::*;
 use crate::*;
 
-use ratel_post::models::{Team, TeamGroup, TeamOwner};
+use ratel_post::models::{TeamGroup, TeamOwner};
 use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
 use std::collections::{HashMap, HashSet};
 
-#[get("/api/teams/:team_pk/members?bookmark&limit", user: ratel_auth::OptionalUser)]
+#[get("/api/teams/:team_pk/members?bookmark&limit", user: ratel_auth::OptionalUser, permissions: TeamGroupPermissions)]
 pub async fn list_members_handler(
     team_pk: TeamPartition,
     bookmark: Option<String>,
@@ -22,9 +22,6 @@ pub async fn list_members_handler(
         ));
     };
 
-    let permissions = Team::get_permissions_by_team_pk(cli, &team_pk, &user.pk)
-        .await
-        .unwrap_or_else(|_| TeamGroupPermissions::empty());
     let can_view = permissions.contains(TeamGroupPermission::TeamAdmin)
         || permissions.contains(TeamGroupPermission::TeamEdit)
         || permissions.contains(TeamGroupPermission::GroupEdit);

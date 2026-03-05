@@ -5,20 +5,10 @@ use crate::*;
 use aws_sdk_dynamodb::types::TransactWriteItem;
 use ratel_post::models::{Team, TeamGroup, TeamOwner};
 
-#[delete("/api/teams/:teamname/settings", user: ratel_auth::User)]
+#[delete("/api/teams/:teamname/settings", user: ratel_auth::User, team: Team)]
 pub async fn delete_team_handler(teamname: String) -> Result<DeleteTeamResponse> {
     let conf = crate::config::get();
     let cli = conf.common.dynamodb();
-
-    let gsi2_sk_prefix = Team::compose_gsi2_sk(String::default());
-    let team_query_option = Team::opt().sk(gsi2_sk_prefix).limit(1);
-    let (teams, _) =
-        Team::find_by_username_prefix(cli, teamname.clone(), team_query_option).await?;
-
-    let team = teams
-        .into_iter()
-        .find(|t| t.username == teamname)
-        .ok_or(Error::NotFound("Team not found".to_string()))?;
 
     let team_pk = team.pk.clone();
 

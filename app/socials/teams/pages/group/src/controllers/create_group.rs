@@ -4,18 +4,13 @@ use crate::*;
 use ratel_post::models::{Team, TeamGroup};
 use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
 
-#[post("/api/teams/:team_pk/groups", user: ratel_auth::User)]
+#[post("/api/teams/:team_pk/groups", user: ratel_auth::User, team: Team, permissions: TeamGroupPermissions)]
 pub async fn create_group_handler(
     team_pk: TeamPartition,
     body: CreateGroupRequest,
 ) -> Result<CreateGroupResponse> {
     let conf = crate::config::get();
     let cli = conf.common.dynamodb();
-    let team_pk: Partition = team_pk.into();
-
-    let permissions = Team::get_permissions_by_team_pk(cli, &team_pk, &user.pk)
-        .await
-        .unwrap_or_else(|_| TeamGroupPermissions::empty());
 
     let need_admin = body
         .permissions
@@ -34,10 +29,6 @@ pub async fn create_group_handler(
             "You don't have permission to create groups.".to_string(),
         ));
     }
-
-    let team = Team::get(cli, &team_pk, Some(EntityType::Team))
-        .await?
-        .ok_or(Error::NotFound("Team not found".into()))?;
 
     let group = TeamGroup::new(
         team.pk.clone(),
