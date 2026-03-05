@@ -881,6 +881,7 @@ dependencies = [
  "lambda_http 1.0.2",
  "ratel-admin",
  "ratel-auth",
+ "ratel-membership",
  "ratel-post",
  "ratel-team-dao",
  "ratel-team-shell",
@@ -13396,6 +13397,31 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
+]
+
+[[package]]
+name = "ratel-membership"
+version = "0.1.0"
+dependencies = [
+ "aide",
+ "async-trait",
+ "aws-sdk-dynamodb",
+ "common",
+ "dioxus",
+ "percent-encoding",
+ "random-string",
+ "ratel-auth",
+ "reqwest 0.12.28",
+ "schemars 1.0.4",
+ "serde",
+ "serde_dynamo",
+ "serde_json",
+ "serde_repr",
+ "serde_with 3.14.1",
+ "tokio",
+ "tracing",
+ "uuid 1.18.1",
+ "wasm-bindgen",
 ]
 
 [[package]]

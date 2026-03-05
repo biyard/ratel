@@ -10,6 +10,7 @@ edition = "2021"
 common = { workspace = true }
 dioxus = { workspace = true }
 serde = { workspace = true }
+ratel-membership = { workspace = true, optional = true }
 ratel-admin = { workspace = true, optional = true }
 ratel-auth = { workspace = true, optional = true }
 ratel-post = { workspace = true, optional = true }
@@ -35,6 +36,7 @@ web = [
   "common/web",
   "ratel-admin/web",
   "ratel-auth/web",
+  "ratel-membership/web",
   "space-shell/web",
   "ratel-post/web",
   "ratel-user-shell/web",
@@ -47,6 +49,7 @@ desktop = [
   "common/desktop",
   "ratel-admin/desktop",
   "ratel-auth/desktop",
+  "ratel-membership/desktop",
   "space-shell/desktop",
   "ratel-post/desktop",
   "ratel-user-shell/desktop",
@@ -59,6 +62,7 @@ mobile = [
   "common/mobile",
   "ratel-admin/mobile",
   "ratel-auth/mobile",
+  "ratel-membership/mobile",
   "space-shell/mobile",
   "ratel-post/mobile",
   "ratel-user-shell/mobile",
@@ -71,6 +75,7 @@ server = [
   "common/server",
   "ratel-admin/server",
   "ratel-auth/server",
+  "ratel-membership/server",
   "space-shell/server",
   "ratel-post/server",
   "ratel-user-shell/server",
