@@ -7,8 +7,9 @@ pub async fn create_poll(space_pk: SpacePartition) -> Result<PollResponse> {
     let cli = common_config.dynamodb();
     let poll = SpacePoll::new(space_pk.clone())?;
 
+    let space_pk_p: common::Partition = space_pk.into();
     let mut items = vec![poll.create_transact_write_item()];
-    items.extend(poll.dashboard_write_items());
+    items.push(space_common::models::dashboard::aggregate::DashboardAggregate::inc_polls(&space_pk_p, 1));
     transact_write_items!(cli, items)
         .map_err(|e| crate::Error::Unknown(format!("Failed to create poll: {e}")))?;
 

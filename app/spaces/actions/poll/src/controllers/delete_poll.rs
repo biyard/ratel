@@ -1,4 +1,5 @@
 use crate::*;
+use space_common::models::dashboard::aggregate::DashboardAggregate;
 
 #[delete("/api/spaces/{space_pk}/polls/{poll_sk}", role: SpaceUserRole)]
 pub async fn delete_poll(space_pk: SpacePartition, poll_sk: SpacePollEntityType) -> Result<String> {
@@ -14,7 +15,9 @@ pub async fn delete_poll(space_pk: SpacePartition, poll_sk: SpacePollEntityType)
 
     SpacePoll::delete(cli, &space_pk, Some(poll_sk_entity)).await?;
 
-    SpacePoll::remove_dashboard(cli, &space_pk).await;
+    // Decrement poll count in aggregate
+    let agg_item = DashboardAggregate::inc_polls(&space_pk, -1);
+    transact_write_items!(cli, vec![agg_item]).ok();
 
     Ok("success".to_string())
 }

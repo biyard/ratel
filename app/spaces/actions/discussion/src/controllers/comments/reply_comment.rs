@@ -26,13 +26,18 @@ pub async fn reply_comment(
 
     let comment = SpacePostComment::reply(
         cli,
-        space_id,
+        space_id.clone(),
         space_post_pk,
         comment_sk_entity,
         req.content,
         &user,
     )
     .await?;
+
+    let space_pk: Partition = space_id.into();
+    let agg_item =
+        space_common::models::dashboard::aggregate::DashboardAggregate::inc_comments(&space_pk, 1);
+    transact_write_items!(cli, vec![agg_item]).ok();
 
     Ok(comment.into())
 }
