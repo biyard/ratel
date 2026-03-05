@@ -115,8 +115,7 @@ pub fn AppMenu() -> Element {
                             onclick: move |_| {
                                 popup.open(rsx! {
                                     LoginModal {}
-                                })
-                                .with_title(tr.join_the_movement);
+                                }).with_title(tr.join_the_movement);
                             },
                             i::SignInIcon {}
                             span { class: "font-medium whitespace-nowrap transition-all text-menu-text text-[15px] group-hover:text-menu-text/80",
@@ -133,9 +132,17 @@ pub fn AppMenu() -> Element {
                         mobile_menu_open.set(!mobile_menu_open());
                     },
                     if mobile_menu_open() {
-                        icons::validations::Clear { class: "transition-all [&>path]:stroke-menu-text" }
+                        icons::validations::Clear {
+                            width: "32",
+                            height: "32",
+                            class: "transition-all [&>path]:stroke-menu-text",
+                        }
                     } else {
-                        icons::layouts::ThreeRow { class: "transition-all [&>path]:stroke-menu-text" }
+                        icons::layouts::ThreeRow {
+                            width: "32",
+                            height: "32",
+                            class: "transition-all [&>path]:stroke-menu-text",
+                        }
                     }
                 }
             }
