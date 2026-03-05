@@ -9,12 +9,13 @@ mod viewer;
 use viewer::PollViewerPage;
 
 use participant::*;
+use space_common::hooks::use_user_role;
 use viewer::*;
 
 #[component]
 pub fn MainPage(space_id: SpacePartition, poll_id: SpacePollEntityType) -> Element {
-    // FIXME: Replace it to real role
-    let role = SpaceUserRole::Creator;
+    let role_loader = use_user_role(&space_id)?;
+    let role = role_loader.read().clone();
 
     match role {
         SpaceUserRole::Creator => rsx! {

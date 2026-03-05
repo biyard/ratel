@@ -1,4 +1,7 @@
-use crate::{dto::PointTransactionResponse, views::TeamRewardsTranslate, *};
+use common::services::PointTransactionResponse;
+
+use crate::views::TeamRewardsTranslate;
+use crate::*;
 
 pub fn transaction_item(
     tr: &TeamRewardsTranslate,

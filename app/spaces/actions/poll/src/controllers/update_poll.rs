@@ -3,6 +3,7 @@ use crate::*;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum UpdatePollRequest {
+    Title { title: String },
     Time { started_at: i64, ended_at: i64 },
     Question { questions: Vec<Question> },
     ResponseEditable { response_editable: bool },
@@ -24,6 +25,9 @@ pub async fn update_poll(
     let mut poll_updater = SpacePoll::updater(&space_pk, &poll_sk_entity).with_updated_at(now);
 
     match req {
+        UpdatePollRequest::Title { title } => {
+            poll_updater = poll_updater.with_title(title);
+        }
         UpdatePollRequest::Time {
             started_at,
             ended_at,
@@ -39,7 +43,13 @@ pub async fn update_poll(
             if questions.is_empty() {
                 return Err(Error::BadRequest("Questions cannot be empty".into()));
             }
-            poll_updater = poll_updater.with_questions(questions);
+            let description = questions
+                .first()
+                .map(|q| q.title().to_string())
+                .unwrap_or_default();
+            poll_updater = poll_updater
+                .with_questions(questions)
+                .with_description(description);
         }
         UpdatePollRequest::ResponseEditable { response_editable } => {
             poll_updater = poll_updater.with_response_editable(response_editable);

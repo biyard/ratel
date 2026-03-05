@@ -36,11 +36,8 @@ impl SpaceApp {
 }
 
 impl SpaceApp {
-    pub fn can_view(role: SpaceUserRole) -> Result<()> {
-        match role {
-            SpaceUserRole::Creator => Ok(()),
-            _ => Err(Error::NoPermission),
-        }
+    pub fn can_view(_role: SpaceUserRole) -> Result<()> {
+        Ok(())
     }
 
     pub fn can_edit(role: SpaceUserRole) -> Result<()> {

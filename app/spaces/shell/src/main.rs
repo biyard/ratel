@@ -1,46 +1,26 @@
-use common::{components::PopupService, query_provider, Environment, PopupZone, Provider};
-use common::{DevTools, ThemeService, ToastService};
+use common::{components::PopupService, query_provider, Environment, PopupZone};
+use common::{DevTools, ThemeService, ToastProvider, ToastService};
 use dioxus::prelude::*;
 use space_common::ratel_auth;
-use space_shell::*;
-fn main() {
-    let config = config::get();
-    dioxus::logger::init(config.common.log_level.into()).expect("logger failed to init");
+use space_shell::Route;
 
-    #[cfg(not(feature = "server"))]
-    space_shell::web::launch(App);
-
-    #[cfg(feature = "server")]
-    server::serve(App);
-}
-
-pub const FAVICON: Asset = asset!("/assets/favicon.ico");
 pub const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
 
-/// App is the main component of our app. Components are the building blocks of dioxus apps. Each component is a function
-/// that takes some props and returns an Element. In this case, App takes no props because it is the root of our app.
-///
-/// Components should be annotated with `#[component]` to support props, better error messages, and autocomplete
+fn main() {
+    let cfg = common::CommonConfig::default();
+    let log_level = cfg.log_level;
+    dioxus::logger::init(log_level.into()).expect("logger failed to init");
+
+    #[cfg(not(feature = "server"))]
+    space_common::components::launch(App);
+
+    #[cfg(feature = "server")]
+    space_common::components::serve(App);
+}
+
 #[component]
 fn App() -> Element {
-    use_context_provider(|| PopupService::new());
-
-    ToastService::init();
-    ThemeService::init();
-    let _ = ratel_auth::Context::init()?;
-    common::contexts::TeamContext::init();
-    query_provider();
-    let env = config::get().common.env;
-
     rsx! {
-        document::Link { rel: "icon", href: FAVICON }
-        document::Link { rel: "stylesheet", href: TAILWIND_CSS }
-        Provider {}
-        ratel_auth::AuthProvider {}
-        Router::<Route> {}
-        PopupZone {}
-        if env == Environment::Dev || env == Environment::Local {
-            DevTools {}
-        }
+        space_common::components::App { tailwind: TAILWIND_CSS, Router::<Route> {} }
     }
 }

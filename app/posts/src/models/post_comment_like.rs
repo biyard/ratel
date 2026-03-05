@@ -16,6 +16,9 @@ pub struct PostCommentLike {
 
 #[cfg(feature = "server")]
 impl PostCommentLike {
+    pub fn normalize_feed_id(raw: &str) -> String {
+        raw.strip_prefix("FEED#").unwrap_or(raw).to_string()
+    }
     pub fn new(post_pk: Partition, comment_sk: EntityType, user_pk: Partition) -> Self {
         let created_at = chrono::Utc::now().timestamp();
 
@@ -36,12 +39,18 @@ impl PostCommentLike {
     ) -> (Partition, EntityType) {
         let pk = match post_pk {
             Partition::Feed(s) if !s.is_empty() => Partition::PostLike(s),
-            _ => panic!("post_pk must be Partition::Post with non-empty inner value"),
+            Partition::PostReply(s) if !s.is_empty() => {
+                Partition::PostLike(Self::normalize_feed_id(&s))
+            }
+            _ => panic!(
+                "post_pk must be Partition::Feed or Partition::PostReply with non-empty inner value"
+            ),
         };
 
         let comment_id = match &comment_sk {
             EntityType::PostComment(id) => id.to_string(),
-            _ => panic!("comment_sk must be EntityType::PostComment"),
+            EntityType::PostCommentReply(_, id) => id.to_string(),
+            _ => panic!("comment_sk must be EntityType::PostComment or PostCommentReply"),
         };
 
         let user_id = match user_pk {
@@ -59,6 +68,7 @@ impl PartialEq<PostComment> for PostCommentLike {
     fn eq(&self, post: &PostComment) -> bool {
         let cid = match &post.sk {
             EntityType::PostComment(id) => id,
+            EntityType::PostCommentReply(_, id) => id,
             _ => return false,
         };
 
@@ -67,12 +77,13 @@ impl PartialEq<PostComment> for PostCommentLike {
             _ => return false,
         }
         let feed_id = match &self.pk {
-            Partition::PostLike(id) => id,
+            Partition::PostLike(id) => id.clone(),
             _ => return false,
         };
 
         let op_feed_id = match &post.pk {
-            Partition::Feed(id) => id,
+            Partition::Feed(id) => id.clone(),
+            Partition::PostReply(id) => id.strip_prefix("FEED#").unwrap_or(id).to_string(),
             _ => return false,
         };
 
