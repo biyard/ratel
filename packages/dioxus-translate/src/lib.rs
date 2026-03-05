@@ -1,7 +1,7 @@
+pub use dioxus::prelude::*;
 pub use dioxus_translate_macro::*;
 pub use dioxus_translate_types::Translator;
 
-use dioxus::prelude::*;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -193,4 +193,8 @@ impl Language {
             vec![Language::En]
         }
     }
+}
+
+pub trait Translate {
+    fn translate(&self, lang: &Language) -> &'static str;
 }

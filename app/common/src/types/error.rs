@@ -150,6 +150,55 @@ pub enum Error {
     )]
     ValidationTooShortContents,
 
+    // DAO-related
+    #[error("At least 3 admins must be selected")]
+    #[translate(
+        en = "At least 3 admins must be selected",
+        ko = "최소 3명의 관리자를 선택해야 합니다."
+    )]
+    InsufficientAdmins,
+
+    #[error("Transaction cancelled: You rejected the transaction")]
+    #[translate(
+        en = "Transaction cancelled: You rejected the transaction",
+        ko = "트랜잭션 취소: 트랜잭션을 거부했습니다."
+    )]
+    TransactionRejected,
+
+    #[error("MetaMask not installed")]
+    #[translate(
+        en = "MetaMask not installed. Please install MetaMask to continue",
+        ko = "MetaMask가 설치되어 있지 않습니다. 계속하려면 MetaMask를 설치하세요."
+    )]
+    MetamaskNotInstalled,
+
+    #[error("Wallet error: {0}")]
+    #[translate(en = "Wallet error", ko = "지갑 오류가 발생했습니다.")]
+    WalletError(String),
+
+    // Membership-related
+    #[error("Membership response missing")]
+    #[translate(
+        en = "Membership response missing",
+        ko = "멤버십 응답이 누락되었습니다."
+    )]
+    MembershipResponseMissing,
+
+    #[error("Failed to change membership")]
+    #[translate(
+        en = "Failed to change membership",
+        ko = "멤버십 변경에 실패했습니다."
+    )]
+    MembershipChangeFailed,
+
+    // Credential-related
+    #[error("Invalid verification code input")]
+    #[translate(
+        en = "Invalid verification code",
+        ko = "인증 코드가 유효하지 않습니다."
+    )]
+    InvalidCodeInput,
+
     // PortOne related errors
     #[error("PortOne Inicis returned invalid identity")]
     #[translate(en = "Failed network request", ko = "요청에 실패했습니다.")]

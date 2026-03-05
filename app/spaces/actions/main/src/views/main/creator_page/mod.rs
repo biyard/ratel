@@ -36,13 +36,11 @@ pub fn CreatorActionPage(space_id: SpacePartition) -> Element {
             id: "creator-action-page",
             class: "flex flex-col gap-5 items-start w-full text-font-primary",
 
-            div { class: "flex flex-col gap-2.5 w-full max-w-[1024px] mx-auto",
-                h3 { {tr.title} }
-
+            div { class: "flex flex-col gap-2.5 mx-auto w-full max-w-[1024px]",
                 // Empty state card
-                div { class: "flex flex-col gap-5 justify-center items-center py-[0.625rem] pb-5 px-4 w-full border border-dashed rounded-[0.75rem] bg-neutral-900 light:bg-neutral-100 border-neutral-800 light:border-neutral-300",
+                div { class: "flex flex-col gap-5 justify-center items-center px-4 pb-5 w-full border border-dashed py-[0.625rem] rounded-[0.75rem] bg-neutral-900 light:bg-neutral-100 border-neutral-800 light:border-neutral-300",
                     icons::game::Thunder { class: "size-6 [&>path]:fill-none [&>path]:stroke-neutral-400 light:[&>path]:stroke-neutral-500" }
-                    p { class: "text-[1.0625rem]/[1.25rem] font-medium text-font-primary",
+                    p { class: "font-medium text-[1.0625rem]/[1.25rem] text-font-primary",
                         {tr.no_actions_title}
                     }
 
@@ -50,7 +48,7 @@ pub fn CreatorActionPage(space_id: SpacePartition) -> Element {
                         //
                         style: ButtonStyle::Secondary,
                         onclick: open_layover,
-                        div { class: "flex flex-row w-full justify-center items-center gap-2",
+                        div { class: "flex flex-row gap-2 justify-center items-center w-full",
                             icons::validations::AddCircle {
                                 width: "24",
                                 height: "24",
@@ -61,7 +59,7 @@ pub fn CreatorActionPage(space_id: SpacePartition) -> Element {
 
                     }
 
-                    p { class: "text-[0.75rem]/[1rem] font-semibold text-neutral-400 light:text-neutral-600 text-center",
+                    p { class: "font-semibold text-center text-[0.75rem]/[1rem] text-neutral-400 light:text-neutral-600",
                         {tr.no_actions_description}
                     }
                 }

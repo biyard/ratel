@@ -8,7 +8,7 @@ use ratel_auth::User;
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct CreateSpaceRequest {
-    pub post_pk: FeedPartition,
+    pub post_id: FeedPartition,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -22,7 +22,7 @@ pub async fn create_space_handler(req: CreateSpaceRequest) -> Result<CreateSpace
     let conf = crate::config::get();
     let cli = conf.dynamodb();
 
-    let post_pk: Partition = req.post_pk.clone().into();
+    let post_pk: Partition = req.post_id.clone().into();
     let (post, has_perm) =
         Post::has_permission(cli, &post_pk, Some(&user.pk), TeamGroupPermission::PostEdit).await?;
     if !has_perm {
@@ -30,7 +30,7 @@ pub async fn create_space_handler(req: CreateSpaceRequest) -> Result<CreateSpace
     }
 
     let space = SpaceCommon::new(
-        req.post_pk.clone(),
+        req.post_id.clone(),
         user.pk.clone().into(),
         post.author_display_name.clone(),
         post.author_profile_url.clone(),

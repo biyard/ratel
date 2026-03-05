@@ -821,7 +821,7 @@ rsx! {
 
 ---
 
-## 12. Error Handling
+## 12. Error Handling and Toast Notifications
 
 ### Error Enum
 
@@ -845,15 +845,18 @@ pub enum Error {
 }
 ```
 
-### Usage
+### Server-Side Usage
 
 ```rust
 // Early return with context
 let user = User::get(cli, &pk, Some(EntityType::User))
     .await?
     .ok_or(Error::NotFound("User not found".into()))?;
+```
 
-// Component error display
+### Client-Side Error Display (Inline)
+
+```rust
 let mut error_message: Signal<Option<String>> = use_signal(|| None);
 
 match login_handler(req).await {
@@ -866,10 +869,69 @@ if let Some(err) = error_message() {
 }
 ```
 
+### Toast Notifications
+
+`ToastService` provides three methods for displaying toast notifications:
+
+| Method | Parameter | Description |
+|--------|-----------|-------------|
+| `toast.info(msg)` | `impl Into<String>` | Informational message (plain string) |
+| `toast.warn(msg)` | `impl Into<String>` | Warning message (plain string) |
+| `toast.error(err)` | `common::Error` | Error toast (**must be a typed Error variant**) |
+
+`toast.error()` accepts `common::Error` (not a string). It automatically translates the error message based on the user's current language via the `Translate` derive.
+
+#### Correct Usage
+
+```rust
+let mut toast = use_toast();
+
+// Info and warn accept strings
+toast.info("Operation completed successfully");
+toast.warn("This action cannot be undone");
+
+// Error MUST use a typed Error variant — never pass a raw string
+toast.error(common::Error::InsufficientAdmins);
+toast.error(common::Error::WalletError(format!("Connection failed: {}", details)));
+
+// When a controller/server function returns common::Error, pass it directly
+match some_handler(req).await {
+    Ok(resp) => { /* success */ }
+    Err(e) => { toast.error(e); }
+}
+```
+
+#### Anti-Patterns (Do NOT Do)
+
+```rust
+// BAD — toast.error() does not accept strings
+toast.error("Something went wrong");
+toast.error(format!("Failed: {}", err));
+toast.error(err.to_string());
+
+// BAD — manual translation is redundant; toast.error() translates automatically
+toast.error(err.translate(&lang));
+```
+
+#### Adding New Error Variants for Toast
+
+When you need a new user-facing error message for `toast.error()`, add a variant to `common::Error` in `app/common/src/types/error.rs`:
+
+```rust
+#[error("Descriptive error message")]
+#[translate(en = "User-facing English message", ko = "사용자용 한국어 메시지")]
+MyNewError,
+```
+
+Then use it: `toast.error(common::Error::MyNewError);`
+
 **Rules:**
 - Server-only error variants must be gated with `#[cfg(feature = "server")]` and `#[serde(skip)]`.
 - Use `?` for propagation; use `.ok_or(Error::Variant(...))` for `Option` → `Result` conversion.
 - Always provide `#[translate(...)]` on new error variants.
+- **Always use typed `common::Error` variants with `toast.error()`** — never pass raw strings.
+- **Never manually call `.translate()` before passing to `toast.error()`** — translation is automatic.
+- For generic/unexpected errors, use `common::Error::Unknown(message)`.
 
 ---
 
@@ -1095,6 +1157,7 @@ refresh.set(refresh() + 1);
 | Hook | `use_*` prefix, return `Result<Loader<T>, Loading>` for data |
 | Translation | `translate! { Struct; key: { en: "...", ko: "..." } }` |
 | Error | `common::Error` enum with `#[translate(...)]` |
+| Toast error | `toast.error(common::Error::Variant)` — typed Error, never raw string |
 | Config | `crate::config::get().dynamodb()` singleton |
 | Server-only | `#[cfg(feature = "server")]` |
 | Client-only | `#[cfg(not(feature = "server"))]` |
