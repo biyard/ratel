@@ -34,7 +34,7 @@ pub fn VerificationMethodModal(on_identity_verify: EventHandler<CredentialRespon
                                     on_identity_verify(updated);
                                 }
                                 Err(err) => {
-                                    toast.error(err.translate(&lang));
+                                    toast.error(err);
                                 }
                             }
 

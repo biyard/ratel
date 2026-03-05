@@ -308,8 +308,8 @@ pub fn translate_derive(input: TokenStream) -> TokenStream {
 
     // Generate the implementation block for `translate`
     let r#gen = quote! {
-        impl #enum_name {
-            pub fn translate(&self, lang: &dioxus_translate::Language) -> &'static str {
+        impl dioxus_translate::Translate for #enum_name {
+            fn translate(&self, lang: &dioxus_translate::Language) -> &'static str {
                 match lang {
                     dioxus_translate::Language::En => match self {
                         #(#en_arms)*
@@ -317,7 +317,9 @@ pub fn translate_derive(input: TokenStream) -> TokenStream {
                     #ko_arm
                 }
             }
+        }
 
+        impl #enum_name {
             pub const VARIANTS: &'static [Self] = &[ #(#enum_name::#unit_variants,)* ];
             pub fn variants(lang: &dioxus_translate::Language) -> Vec<String> {
                 Self::VARIANTS.iter().map(|v| v.translate(&lang).to_string()).collect::<Vec<_>>()

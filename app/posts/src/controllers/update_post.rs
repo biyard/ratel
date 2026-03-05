@@ -35,12 +35,12 @@ pub enum UpdatePostRequest {
     },
 }
 
-#[put("/api/posts/:post_pk", user: User)]
-pub async fn update_post_handler(post_pk: FeedPartition, req: UpdatePostRequest) -> Result<Post> {
+#[put("/api/posts/:post_id", user: User)]
+pub async fn update_post_handler(post_id: FeedPartition, req: UpdatePostRequest) -> Result<Post> {
     let conf = crate::config::get();
     let cli = conf.dynamodb();
 
-    let post_pk: Partition = post_pk.into();
+    let post_pk: Partition = post_id.into();
 
     tracing::debug!(
         "update_post_handler: user = {:?}, post_pk = {:?}, req = {:?}",
@@ -97,18 +97,17 @@ pub async fn update_post_handler(post_pk: FeedPartition, req: UpdatePostRequest)
 
             post.visibility = Some(visibility.clone());
 
-            if !publish {
-                return Err(Error::NotSupported(
-                    "it does not support unpublished now".into(),
-                ));
-            }
-
-            post.status = PostStatus::Published;
+            let status = if publish {
+                PostStatus::Published
+            } else {
+                PostStatus::Draft
+            };
+            post.status = status;
             post.title = title.clone();
             post.html_contents = content.clone();
             post.visibility = Some(visibility.clone());
             let updater = updater
-                .with_status(PostStatus::Published)
+                .with_status(status)
                 .with_title(title)
                 .with_html_contents(content)
                 .with_visibility(visibility);

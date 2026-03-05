@@ -85,10 +85,13 @@
 - [ ] 구조체명이 `Translate` 접미사를 사용하는가? (예: `LoginModalTranslate`)
 - [ ] `use_translate()`로 소비하는가? (수동 생성 금지)
 
-## 12. 에러 처리
+## 12. 에러 처리 및 Toast
 
 - [ ] 서버 전용 에러 variant에 `#[cfg(feature = "server")]`와 `#[serde(skip)]`이 있는가?
 - [ ] 새 에러 variant에 `#[translate(...)]`가 있는가?
+- [ ] `toast.error()`에 타입화된 `common::Error` variant를 전달하는가? (raw 문자열 금지: `toast.error("...")` 금지)
+- [ ] `toast.error()` 호출 전에 수동으로 `.translate()`를 호출하지 않는가? (자동 번역됨)
+- [ ] 새 사용자 대면 에러 메시지가 필요하면 `common::Error`에 variant를 추가했는가?
 
 ## 13. JS Interop
 
