@@ -1,6 +1,7 @@
 use crate::controllers::get_post::get_post_handler;
 use crate::controllers::update_post::{update_post_handler, UpdatePostRequest};
 use crate::controllers::{create_space_handler, CreateSpaceRequest};
+use crate::models::Post;
 use crate::*;
 use common::components::{ButtonShape, ButtonSize, ButtonStyle, InputVariant, TiptapEditor};
 use dioxus::prelude::*;
@@ -23,6 +24,11 @@ translate! {
     publish: {
         en: "Publish",
         ko: "게시",
+    },
+
+    go_to_space: {
+        en: "Go to Space",
+        ko: "스페이스로 이동",
     },
     publishing: {
         en: "Publishing...",
@@ -59,51 +65,40 @@ enum EditorStatus {
 }
 
 #[component]
-pub fn PostEdit(post_pk: String) -> Element {
+pub fn PostEdit(post_id: FeedPartition) -> Element {
     let tr: PostEditTranslate = use_translate();
+    let mut toast = use_toast();
     let nav = use_navigator();
+    let p1 = post_id.clone();
+    let res = use_loader(move || {
+        let post_id = p1.clone();
+        async move { get_post_handler(post_id).await }
+    })?();
 
-    let mut title = use_signal(String::new);
-    let mut content = use_signal(String::new);
+    let Post {
+        title,
+        html_contents,
+        ..
+    } = res.post.unwrap_or_default();
+
+    let mut title = use_signal(move || title.clone());
+    let mut content = use_signal(move || html_contents.clone());
     let mut status = use_signal(|| EditorStatus::Idle);
-    let mut last_saved = use_signal(|| (String::new(), String::new()));
-    let mut initialized = use_signal(|| false);
-    let mut skip_creating_space = use_signal(|| true);
 
-    let post_pk_load = post_pk.clone();
-    use_effect(move || {
-        if initialized() {
-            return;
-        }
-        initialized.set(true);
-        let pk = post_pk_load.clone();
-        spawn(async move {
-            match get_post_handler(pk.parse().unwrap()).await {
-                Ok(resp) => {
-                    if let Some(post) = resp.post {
-                        title.set(post.title.clone());
-                        content.set(post.html_contents.clone());
-                        last_saved.set((post.title, post.html_contents));
-                    }
-                }
-                Err(e) => {
-                    dioxus::logger::tracing::error!("Failed to load post: {:?}", e);
-                }
-            }
-        });
-    });
+    let mut last_saved = use_signal(move || (title(), content()));
+    let mut skip_creating_space = use_signal(|| true);
 
     // Auto-save: debounce by tracking an edit version counter.
     // Each edit increments save_version. use_effect fires on change,
     // waits 3 seconds, and only saves if no newer edits occurred.
     let mut save_version = use_signal(|| 0u64);
-    let post_pk_save = post_pk.clone();
+    let v = post_id.clone();
     use_effect(move || {
         let ver = save_version();
         if ver == 0 {
             return;
         }
-        let pk = post_pk_save.clone();
+        let post_id = v.clone();
         spawn(async move {
             #[cfg(feature = "web")]
             gloo_timers::future::sleep(std::time::Duration::from_secs(3)).await;
@@ -125,7 +120,7 @@ pub fn PostEdit(post_pk: String) -> Element {
 
             status.set(EditorStatus::Saving);
             match update_post_handler(
-                pk.parse().unwrap(),
+                post_id,
                 UpdatePostRequest::Writing {
                     title: current_title.clone(),
                     content: current_content.clone(),
@@ -133,8 +128,12 @@ pub fn PostEdit(post_pk: String) -> Element {
             )
             .await
             {
-                Ok(_) => {
-                    last_saved.set((current_title, current_content));
+                Ok(Post {
+                    title,
+                    html_contents,
+                    ..
+                }) => {
+                    last_saved.set((title, html_contents));
                     status.set(EditorStatus::Saved);
                 }
                 Err(e) => {
@@ -145,14 +144,13 @@ pub fn PostEdit(post_pk: String) -> Element {
         });
     });
 
-    let post_pk_publish = post_pk.clone();
+    let p1 = post_id.clone();
     let handle_publish = move || {
-        let pk = post_pk_publish.clone();
-        let nav = nav.clone();
+        let post_id = p1.clone();
         async move {
             status.set(EditorStatus::Publishing);
             match update_post_handler(
-                pk.parse().unwrap(),
+                post_id.clone(),
                 UpdatePostRequest::Publish {
                     title: title(),
                     content: content(),
@@ -164,8 +162,7 @@ pub fn PostEdit(post_pk: String) -> Element {
             .await
             {
                 Ok(_) => {
-                    let feed_pk: FeedPartition = pk.parse().unwrap();
-                    nav.push(format!("/posts/{feed_pk}"));
+                    nav.push(format!("/posts/{post_id}"));
                 }
                 Err(e) => {
                     dioxus::logger::tracing::error!("Publish failed: {:?}", e);
@@ -175,14 +172,13 @@ pub fn PostEdit(post_pk: String) -> Element {
         }
     };
 
-    let post_pk_create_space = post_pk.clone();
+    let p1 = post_id.clone();
     let handle_create_space = move || {
-        let pk = post_pk_create_space.clone();
-        let nav = nav.clone();
+        let post_id = p1.clone();
+
         async move {
             status.set(EditorStatus::Publishing);
 
-            let post_id: FeedPartition = pk.parse().unwrap();
             let current_title = title();
             let current_content = content();
 
@@ -192,19 +188,19 @@ pub fn PostEdit(post_pk: String) -> Element {
                     title: current_title,
                     content: current_content,
                     image_urls: None,
-                    publish: true,
+                    publish: false,
                     visibility: None,
                 },
             )
             .await;
 
             if let Err(e) = publish_result {
-                dioxus::logger::tracing::error!("Publish failed before space create: {:?}", e);
+                toast.error(e);
                 status.set(EditorStatus::Unsaved);
                 return;
             }
 
-            match create_space_handler(CreateSpaceRequest { post_pk: post_id }).await {
+            match create_space_handler(CreateSpaceRequest { post_id }).await {
                 Ok(resp) => {
                     nav.push(format!("/spaces/{}/dashboard", resp.space_id));
                 }
@@ -222,7 +218,22 @@ pub fn PostEdit(post_pk: String) -> Element {
         && content_text_len >= CONTENT_MIN_LENGTH
         && status() != EditorStatus::Saving
         && status() != EditorStatus::Publishing;
-    let action_label = tr.publish;
+
+    let action_label = use_memo(move || {
+        let status = status();
+        let skip_space = skip_creating_space();
+
+        match status {
+            EditorStatus::Publishing => tr.publishing,
+            _ => {
+                if skip_space {
+                    tr.publish
+                } else {
+                    tr.go_to_space
+                }
+            }
+        }
+    });
 
     rsx! {
         div { class: "flex flex-col gap-5 py-5 px-4 mx-auto w-full max-w-[906px]",
@@ -231,7 +242,7 @@ pub fn PostEdit(post_pk: String) -> Element {
             // Title input
             div { class: "relative",
                 Input {
-                    class: "w-full pr-14 ",
+                    class: "pr-14 w-full",
                     r#type: "text",
                     placeholder: tr.title_placeholder,
                     maxlength: TITLE_MAX_LENGTH,
@@ -245,7 +256,7 @@ pub fn PostEdit(post_pk: String) -> Element {
                         }
                     },
                 }
-                div { class: "absolute right-3 top-1/2 -translate-y-1/2 text-sm text-text-tertiary pointer-events-none",
+                div { class: "absolute right-3 top-1/2 text-sm -translate-y-1/2 pointer-events-none text-text-tertiary",
                     "{title_len}/{TITLE_MAX_LENGTH}"
                 }
             }
@@ -253,7 +264,7 @@ pub fn PostEdit(post_pk: String) -> Element {
             // TiptapEditor
             div { class: "relative",
                 TiptapEditor {
-                    class: "w-full min-h-[400px] bg-post-input-bg border border-post-input-border rounded-md focus-within:border-ring focus-within:ring-1 focus-within:ring-ring/50",
+                    class: "w-full rounded-md border focus-within:ring-1 min-h-[400px] bg-post-input-bg border-post-input-border focus-within:border-ring focus-within:ring-ring/50",
                     content: content(),
                     editable: true,
                     placeholder: tr.content_placeholder,
@@ -264,7 +275,7 @@ pub fn PostEdit(post_pk: String) -> Element {
                     },
                 }
                 if status() != EditorStatus::Idle {
-                    div { class: "flex absolute left-3 bottom-3 gap-2 items-center py-1 px-2 text-xs rounded text-text-tertiary bg-card",
+                    div { class: "flex absolute bottom-3 left-3 gap-2 items-center py-1 px-2 text-xs rounded text-text-tertiary bg-card",
                         match status() {
                             EditorStatus::Saving => rsx! {
                                 {tr.saving}
@@ -286,8 +297,9 @@ pub fn PostEdit(post_pk: String) -> Element {
 
             // Status + actions row
             div { class: "flex gap-4 justify-end items-center",
-                label { class: "flex items-center gap-2 text-sm text-text-primary cursor-pointer",
+                label { class: "flex gap-2 items-center text-sm cursor-pointer text-text-primary",
                     input {
+                        "data-testid": "skip-space-checkbox",
                         r#type: "checkbox",
                         checked: skip_creating_space(),
                         onchange: move |e| {
@@ -296,8 +308,8 @@ pub fn PostEdit(post_pk: String) -> Element {
                     }
                     span { "{tr.skip_creating_space}" }
                 }
-                button {
-                    class: "{ButtonStyle::Primary} {ButtonSize::default()} {ButtonShape::default()} min-w-[150px] text-base",
+                Button {
+                    class: "text-base min-w-[150px]",
                     disabled: !can_submit,
                     onclick: move |_| {
                         if skip_creating_space() {
@@ -306,13 +318,13 @@ pub fn PostEdit(post_pk: String) -> Element {
                             spawn(handle_create_space());
                         }
                     },
-                    {if status() == EditorStatus::Publishing { tr.publishing } else { action_label }}
+                    {action_label()}
                 }
             }
 
             if status() == EditorStatus::Saving {
                 div { class: "flex gap-2 justify-center items-center mt-4 text-sm text-text-tertiary",
-                    div { class: "w-4 h-4 border-2 border-text-tertiary border-t-transparent rounded-full animate-spin" }
+                    div { class: "w-4 h-4 rounded-full border-2 animate-spin border-text-tertiary border-t-transparent" }
                     span { {tr.saving} }
                 }
             }

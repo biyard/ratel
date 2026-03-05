@@ -1,0 +1,12 @@
+[application]
+tailwind_input = "../common/tailwind.css"
+
+[web.app]
+title = "ratel-my-follower"
+
+[web.resource]
+style = []
+script = []
+
+[web.resource.dev]
+script = []

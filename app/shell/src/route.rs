@@ -6,6 +6,7 @@ use layout::AppLayout;
 use ratel_admin::Route as AdminRoute;
 use ratel_auth::Route as AuthRoute;
 use ratel_membership::Route as MembershipRoute;
+use ratel_my_follower::Route as MyFollowerRoute;
 use ratel_post::Route as PostRoute;
 use ratel_team_shell::Route as TeamRoute;
 use ratel_user_shell::Route as UserRoute;
@@ -26,6 +27,9 @@ pub enum Route {
 
         #[route("/posts/:..rest")]
         Post { rest: Vec<String> },
+
+        #[route("/my-follower/:..rest")]
+        MyFollower { rest: Vec<String> },
 
         #[route("/admin/:..rest")]
         Admin { rest: Vec<String> },
@@ -65,6 +69,7 @@ define_app_wrapper!(Auth, AuthRoute);
 define_app_wrapper!(Membership, MembershipRoute);
 define_app_wrapper!(Space, SpaceRoute);
 define_app_wrapper!(Post, PostRoute);
+define_app_wrapper!(MyFollower, MyFollowerRoute);
 
 #[component]
 pub fn UserHome(username: String, rest: Vec<String>) -> Element {

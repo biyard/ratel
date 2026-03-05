@@ -58,4 +58,7 @@ user.json
 /app/common/assets/common-tailwind.css
 /app/shell/test-build-target/
 
+# Playwright
+/playwright/.auth/
+
 .playwright-mcp

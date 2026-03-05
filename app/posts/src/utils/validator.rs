@@ -13,11 +13,10 @@ pub fn validate_title(title: &str) -> Result<()> {
 pub fn validate_content(content: &str) -> Result<()> {
     let plain_text = extract_plain_text(content);
     let len = plain_text.chars().count();
-    if len < 10 || len > 5000 {
-        return Err(Error::BadRequest(
-            "Content must be between 10 and 5000 characters".into(),
-        ));
+    if len < 10 {
+        return Err(Error::ValidationTooShortContents);
     }
+
     Ok(())
 }
 

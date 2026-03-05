@@ -3,15 +3,12 @@ use crate::types::*;
 use crate::*;
 use ratel_auth::User;
 
-#[post("/api/posts/:post_pk/comments", user: User)]
-pub async fn add_comment_handler(
-    post_pk: FeedPartition,
-    content: String,
-) -> Result<PostComment> {
+#[post("/api/posts/:post_id/comments", user: User)]
+pub async fn add_comment_handler(post_id: FeedPartition, content: String) -> Result<PostComment> {
     let conf = crate::config::get();
     let cli = conf.dynamodb();
 
-    let post_pk: Partition = post_pk.into();
+    let post_pk: Partition = post_id.into();
 
     let post = Post::get(cli, &post_pk, Some(EntityType::Post))
         .await?

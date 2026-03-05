@@ -47,10 +47,9 @@ pub fn AdminPage(teamname: String, context: TeamDao) -> Element {
     let on_open_registration_popup = {
         let mut is_popup_open = is_popup_open.clone();
         let mut toast = toast;
-        let insufficient_admins = tr.insufficient_admins.to_string();
         move |_| {
             if !can_register {
-                toast.error(insufficient_admins.clone());
+                toast.error(common::Error::InsufficientAdmins);
                 return;
             }
             is_popup_open.set(true);
@@ -78,7 +77,7 @@ pub fn AdminPage(teamname: String, context: TeamDao) -> Element {
         let mut toast = toast;
         move |selected_addresses: Vec<String>| {
             if selected_addresses.len() < 3 {
-                toast.error("At least 3 admins must be selected");
+                toast.error(common::Error::InsufficientAdmins);
                 return;
             }
 
@@ -141,7 +140,7 @@ pub fn AdminPage(teamname: String, context: TeamDao) -> Element {
                         is_popup_open.set(false);
                     }
                     Err(err) => {
-                        toast.error(format!("Failed to register DAO: {}", err));
+                        toast.error(common::Error::Unknown(format!("Failed to register DAO: {}", err)));
                     }
                 }
 
@@ -187,16 +186,16 @@ pub fn AdminPage(teamname: String, context: TeamDao) -> Element {
 fn handle_wallet_error(toast: &mut ToastService, err: DaoWalletError) {
     match err.code.as_deref() {
         Some("USER_REJECTED") => {
-            toast.error("Transaction cancelled: You rejected the transaction");
+            toast.error(common::Error::TransactionRejected);
         }
         Some("METAMASK_NOT_INSTALLED") => {
-            toast.error("MetaMask not installed. Please install MetaMask to continue");
+            toast.error(common::Error::MetamaskNotInstalled);
         }
         Some(code) => {
-            toast.error(format!("Wallet error: {} ({})", err.message, code));
+            toast.error(common::Error::WalletError(format!("{} ({})", err.message, code)));
         }
         None => {
-            toast.error(format!("Failed to register DAO: {}", err.message));
+            toast.error(common::Error::WalletError(err.message));
         }
     }
 }
