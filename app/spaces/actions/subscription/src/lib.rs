@@ -17,6 +17,7 @@ pub mod server;
 mod views;
 
 pub use route::Route;
+pub use models::*;
 
 use common::*;
 use dioxus::prelude::*;

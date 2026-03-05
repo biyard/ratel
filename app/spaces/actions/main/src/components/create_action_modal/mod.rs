@@ -2,7 +2,10 @@ use crate::*;
 use i18n::CreateActionModalTranslate;
 use space_action_discussion::controllers::create_discussion;
 use space_action_poll::controllers::create_poll;
-use space_common::types::route::{space_action_discussion, space_action_poll};
+use space_action_subscription::controllers::create_subscription;
+use space_common::types::route::{
+    space_action_discussion, space_action_poll, space_action_subscription,
+};
 mod i18n;
 
 #[component]
@@ -86,7 +89,21 @@ pub fn CreateActionModal(space_id: SpacePartition) -> Element {
                         }
                     });
                 }
-                SpaceActionType::Subscription => {}
+                SpaceActionType::Subscription => {
+                    spawn(async move {
+                        match create_subscription(space_id.clone()).await {
+                            Ok(_) => {
+                                is_creating.set(false);
+                                nav.push(space_action_subscription(&space_id));
+                                layover.close();
+                            }
+                            Err(err) => {
+                                error!("Failed to create subscription: {:?}", err);
+                                is_creating.set(false);
+                            }
+                        }
+                    });
+                }
                 SpaceActionType::Quiz => {}
             }
         }
