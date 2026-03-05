@@ -43,6 +43,7 @@ ratel-admin = { path = "app/admin" }
 ratel-auth = { path = "app/auth" }
 ratel-post = { path = "app/posts" }
 ratel-membership = { path = "app/membership" }
+ratel-my-follower = { path = "app/my-follower" }
 
 # Space Root
 space-shell = { path = "app/spaces/shell" }

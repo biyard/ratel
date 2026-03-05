@@ -135,11 +135,15 @@ pub fn UserSidemenu(username: String) -> Element {
 
                 // Followers/Following counts
                 div { class: "flex gap-4 text-sm",
-                    div { class: "flex gap-1",
+                    Link {
+                        class: "flex gap-1 hover:text-text-primary transition-colors",
+                        to: "/my-follower",
                         span { class: "font-semibold text-text-primary", "{user.followers_count}" }
                         span { class: "text-text-primary", "{tr.followers}" }
                     }
-                    div { class: "flex gap-1",
+                    Link {
+                        class: "flex gap-1 hover:text-text-primary transition-colors",
+                        to: "/my-follower",
                         span { class: "font-semibold text-text-primary", "{user.followings_count}" }
                         span { class: "text-text-primary", "{tr.following}" }
                     }

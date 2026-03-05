@@ -1,7 +1,8 @@
+use crate::controllers::delete_subscription_user;
 use crate::controllers::list_subscription_users::SubscriptionUserItem;
-use crate::controllers::{delete_subscription_user, subscribe_user, unsubscribe_user};
 use crate::*;
 use common::use_toast;
+use ratel_my_follower::controllers::{follow_user, unfollow_user};
 mod i18n;
 use i18n::SubscriptionUserListTranslate;
 
@@ -36,24 +37,21 @@ pub fn SubscriptionUserList(
                     for (idx , user) in users.iter().enumerate() {
                         {
                             let user_pk = user.user_pk.clone();
-                            let space_id = space_id.clone();
                             let is_creator = idx == 0;
                             let subscribed = user.subscribed;
                             let is_team = matches!(user.user_type, UserType::Team);
                             let on_refresh = on_refresh.clone();
                             let on_toggle_subscribe = {
-                                let space_id = space_id.clone();
                                 let user_pk = user_pk.clone();
                                 let on_refresh = on_refresh.clone();
                                 let mut toast = toast;
                                 move |_| {
-                                    let space_id = space_id.clone();
                                     let user_pk = user_pk.clone();
                                     let on_refresh = on_refresh.clone();
                                     let mut toast = toast;
                                     if subscribed {
                                         spawn(async move {
-                                            match unsubscribe_user(space_id, user_pk).await {
+                                            match unfollow_user(user_pk).await {
                                                 Ok(_) => {
                                                     toast.info(tr.unsubscribed_toast.to_string());
                                                     on_refresh.call(());
@@ -65,7 +63,7 @@ pub fn SubscriptionUserList(
                                         });
                                     } else {
                                         spawn(async move {
-                                            match subscribe_user(space_id, user_pk).await {
+                                            match follow_user(user_pk).await {
                                                 Ok(_) => {
                                                     toast.info(tr.subscribed_toast.to_string());
                                                     on_refresh.call(());
@@ -103,20 +101,10 @@ pub fn SubscriptionUserList(
                                             img {
                                                 src: "{user.profile_url}",
                                                 alt: "{user.display_name}",
-                                                class: if is_team {
-                                                    "object-cover object-top w-8 h-8 rounded-[8px]"
-                                                } else {
-                                                    "object-cover object-top w-8 h-8 rounded-full"
-                                                },
+                                                class: if is_team { "object-cover object-top w-8 h-8 rounded-[8px]" } else { "object-cover object-top w-8 h-8 rounded-full" },
                                             }
                                         } else {
-                                            div {
-                                                class: if is_team {
-                                                    "w-8 h-8 rounded-[8px] bg-neutral-600"
-                                                } else {
-                                                    "w-8 h-8 rounded-full bg-neutral-600"
-                                                }
-                                            }
+                                            div { class: if is_team { "w-8 h-8 rounded-[8px] bg-neutral-600" } else { "w-8 h-8 rounded-full bg-neutral-600" } }
                                         }
                                         div { class: "flex flex-col gap-1 items-start",
                                             div { class: "flex gap-2 items-center",
