@@ -9,7 +9,7 @@ use space_common::types::route::{
 mod i18n;
 
 #[component]
-pub fn CreateActionModal(space_id: SpacePartition) -> Element {
+pub fn CreateActionModal(space_id: SpacePartition, has_subscription: bool) -> Element {
     let tr: CreateActionModalTranslate = use_translate();
     let nav = navigator();
     let layover = use_layover();
@@ -90,6 +90,10 @@ pub fn CreateActionModal(space_id: SpacePartition) -> Element {
                     });
                 }
                 SpaceActionType::Subscription => {
+                    if has_subscription {
+                        is_creating.set(false);
+                        return;
+                    }
                     spawn(async move {
                         match create_subscription(space_id.clone()).await {
                             Ok(_) => {
@@ -144,19 +148,21 @@ pub fn CreateActionModal(space_id: SpacePartition) -> Element {
                             }
                         },
                     }
-                    ActionTypeOption {
-                        selected: selected_type() == Some(SpaceActionType::Subscription),
-                        disabled: false,
-                        onclick: move |_| selected_type.set(Some(SpaceActionType::Subscription)),
-                        title: tr.follow_title.to_string(),
-                        caption: tr.follow_caption.to_string(),
-                        icon: rsx! {
-                            icons::user::UserGroup {
-                                width: "22",
-                                height: "22",
-                                class: "[&>path]:fill-none [&>path]:stroke-neutral-900",
-                            }
-                        },
+                    if !has_subscription {
+                        ActionTypeOption {
+                            selected: selected_type() == Some(SpaceActionType::Subscription),
+                            disabled: false,
+                            onclick: move |_| selected_type.set(Some(SpaceActionType::Subscription)),
+                            title: tr.follow_title.to_string(),
+                            caption: tr.follow_caption.to_string(),
+                            icon: rsx! {
+                                icons::user::UserGroup {
+                                    width: "22",
+                                    height: "22",
+                                    class: "[&>path]:fill-none [&>path]:stroke-neutral-900",
+                                }
+                            },
+                        }
                     }
                 }
 
