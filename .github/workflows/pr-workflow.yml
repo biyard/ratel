@@ -374,13 +374,13 @@ jobs:
         run: |
           make test
 
-      - name: Setup SSH session with tmate
-        uses: mxschmitt/action-tmate@v3
-        if: failure()
-        env:
-          COMMIT: pr-${{ github.sha }}
-        with:
-          limit-access-to-actor: true
+      # - name: Setup SSH session with tmate
+      #   uses: mxschmitt/action-tmate@v3
+      #   if: failure()
+      #   env:
+      #     COMMIT: pr-${{ github.sha }}
+      #   with:
+      #     limit-access-to-actor: true
 
       - name: Move Playwright Tests
         if: always()
