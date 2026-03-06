@@ -232,24 +232,24 @@ jobs:
           docker save $ECR:$COMMIT | gzip > /tmp/app-shell-image.tar.gz
           echo "image=$ECR:$COMMIT" >> $GITHUB_OUTPUT
 
-      - name: Setup SSH session with tmate
-        uses: mxschmitt/action-tmate@v3
-        if: failure()
-        timeout-minutes: 15
-        env:
-          DYNAMO_TABLE_PREFIX: ratel-local
-          ENV: local
-          RUSTFLAGS: "-D warnings"
-          RUST_LOG: info
-          DYNAMO_ENDPOINT: http://localstack:4566
-          AWS_ACCESS_KEY_ID: test
-          AWS_SECRET_ACCESS_KEY: test
-          AWS_REGION: us-east-1
-          AWS_ACCOUNT_ID: test
-          COMMIT: pr-${{ github.sha }}
-          ECR: ratel/app-shell
-        with:
-          limit-access-to-actor: true
+      # - name: Setup SSH session with tmate
+      #   uses: mxschmitt/action-tmate@v3
+      #   if: failure()
+      #   timeout-minutes: 15
+      #   env:
+      #     DYNAMO_TABLE_PREFIX: ratel-local
+      #     ENV: local
+      #     RUSTFLAGS: "-D warnings"
+      #     RUST_LOG: info
+      #     DYNAMO_ENDPOINT: http://localstack:4566
+      #     AWS_ACCESS_KEY_ID: test
+      #     AWS_SECRET_ACCESS_KEY: test
+      #     AWS_REGION: us-east-1
+      #     AWS_ACCOUNT_ID: test
+      #     COMMIT: pr-${{ github.sha }}
+      #     ECR: ratel/app-shell
+      #   with:
+      #     limit-access-to-actor: true
 
       - name: Upload Docker image artifact
         uses: actions/upload-artifact@v4
@@ -314,21 +314,21 @@ jobs:
           npm i -D tailwindcss
           make test
 
-      - name: Setup SSH session with tmate
-        uses: mxschmitt/action-tmate@v3
-        if: failure()
-        timeout-minutes: 15
-        env:
-          DYNAMO_TABLE_PREFIX: ratel-local
-          DYNAMO_ENDPOINT: http://localhost:4566
-          AWS_ACCESS_KEY_ID: test
-          AWS_SECRET_ACCESS_KEY: test
-          AWS_REGION: us-east-1
-          AWS_ACCOUNT_ID: test
-          RUST_LOG: info
-          ENV: local
-        with:
-          limit-access-to-actor: true
+      # - name: Setup SSH session with tmate
+      #   uses: mxschmitt/action-tmate@v3
+      #   if: failure()
+      #   timeout-minutes: 15
+      #   env:
+      #     DYNAMO_TABLE_PREFIX: ratel-local
+      #     DYNAMO_ENDPOINT: http://localhost:4566
+      #     AWS_ACCESS_KEY_ID: test
+      #     AWS_SECRET_ACCESS_KEY: test
+      #     AWS_REGION: us-east-1
+      #     AWS_ACCOUNT_ID: test
+      #     RUST_LOG: info
+      #     ENV: local
+      #   with:
+      #     limit-access-to-actor: true
 
 
   playwright-tests:
@@ -414,14 +414,14 @@ jobs:
         run: |
           make test
 
-      - name: Setup SSH session with tmate
-        uses: mxschmitt/action-tmate@v3
-        if: failure()
-        timeout-minutes: 15
-        env:
-          COMMIT: pr-${{ github.sha }}
-        with:
-          limit-access-to-actor: true
+      # - name: Setup SSH session with tmate
+      #   uses: mxschmitt/action-tmate@v3
+      #   if: failure()
+      #   timeout-minutes: 15
+      #   env:
+      #     COMMIT: pr-${{ github.sha }}
+      #   with:
+      #     limit-access-to-actor: true
 
       - name: Move Playwright Tests
         if: always()
