@@ -45,7 +45,7 @@ pub fn ViewerPage(space_id: SpacePartition) -> Element {
             // Content (read-only)
             div { class: "w-full rounded-lg bg-card p-6",
                 TiptapEditor {
-                    class: "w-full h-fit",
+                    class: "w-full h-fit [&>div]:bg-transparent [&_[data-tiptap-toolbar]]:bg-transparent",
                     content: content,
                     editable: false,
                     placeholder: tr.placeholder,
