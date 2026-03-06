@@ -150,7 +150,7 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
                 // TiptapEditor
                 div { class: "flex flex-col w-full min-h-0 flex-1 overflow-hidden",
                     TiptapEditor {
-                        class: "w-full h-fit",
+                        class: "w-full h-fit [&>div]:bg-transparent [&_[data-tiptap-toolbar]]:bg-transparent",
                         content: content(),
                         editable: editable(),
                         placeholder: tr.placeholder,
