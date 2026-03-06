@@ -12,6 +12,7 @@ use space_common::types::space_page_actions_quiz_key;
 pub fn QuizParticipantPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) -> Element {
     let tr: QuizParticipantTranslate = use_translate();
     let nav = navigator();
+    let mut toast = use_toast();
     let key = space_page_actions_quiz_key(&space_id, &quiz_id);
 
     let quiz_loader = use_query(&key, {
@@ -51,10 +52,12 @@ pub fn QuizParticipantPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityTyp
         let questions = quiz.questions.clone();
         let space_id = space_id.clone();
         let quiz_id = quiz_id.clone();
+        let mut toast = toast;
         move |_: MouseEvent| {
             let space_id = space_id.clone();
             let quiz_id = quiz_id.clone();
             let questions = questions.clone();
+            let mut toast = toast;
             spawn(async move {
                 let answers_map = answers.read().clone();
                 let payload: Vec<Answer> = (0..questions.len())
@@ -73,7 +76,10 @@ pub fn QuizParticipantPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityTyp
                         let keys = space_page_actions_quiz_key(&space_id, &quiz_id);
                         invalidate_query(&keys);
                     }
-                    _ => {}
+                    Err(err) => {
+                        error!("Failed to submit quiz response: {:?}", err);
+                        toast.error(crate::Error::QuizResponseFailed);
+                    }
                 }
             });
         }

@@ -26,7 +26,7 @@ pub async fn get_quiz(
         if let Some(latest) = attempts.first() {
             response.my_response = Some(latest.answers.clone());
             response.my_score = Some(latest.score);
-            response.passed = Some(latest.score as usize == response.questions.len());
+            response.passed = Some(latest.score >= response.pass_score);
         }
     }
 

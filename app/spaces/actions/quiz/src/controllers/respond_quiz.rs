@@ -24,20 +24,12 @@ pub async fn respond_quiz(
         .await?
         .ok_or(Error::NotFound("Quiz not found".into()))?;
 
-    SpaceQuiz::can_view(&role)?;
+    quiz.can_respond(&role)?;
 
     let answer_sk = EntityType::SpaceQuizAnswer(quiz_id.to_string());
     let correct = SpaceQuizAnswer::get(cli, &space_pk, Some(answer_sk))
         .await?
         .ok_or(Error::NotFound("Quiz answer not found".into()))?;
-
-    let now = common::utils::time::get_now_timestamp_millis();
-    if now < quiz.started_at {
-        return Err(Error::BadRequest("Quiz not started".into()));
-    }
-    if now > quiz.ended_at {
-        return Err(Error::BadRequest("Quiz ended".into()));
-    }
 
     if !space_action_poll::types::validate_answers(quiz.questions.clone(), req.answers.clone()) {
         return Err(Error::BadRequest("Answers do not match questions".into()));

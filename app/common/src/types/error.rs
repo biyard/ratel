@@ -185,10 +185,7 @@ pub enum Error {
     MembershipResponseMissing,
 
     #[error("Failed to change membership")]
-    #[translate(
-        en = "Failed to change membership",
-        ko = "멤버십 변경에 실패했습니다."
-    )]
+    #[translate(en = "Failed to change membership", ko = "멤버십 변경에 실패했습니다.")]
     MembershipChangeFailed,
 
     // Credential-related
@@ -198,6 +195,10 @@ pub enum Error {
         ko = "인증 코드가 유효하지 않습니다."
     )]
     InvalidCodeInput,
+
+    #[error("Failed to response quiz")]
+    #[translate(en = "Failed to submit response.", ko = "응답 제출에 실패했습니다.")]
+    QuizResponseFailed,
 
     // PortOne related errors
     #[error("PortOne Inicis returned invalid identity")]

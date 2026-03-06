@@ -25,6 +25,9 @@ pub struct SpaceQuiz {
     pub retry_count: i64,
 
     #[serde(default)]
+    pub pass_score: i64,
+
+    #[serde(default)]
     pub questions: Vec<Question>,
 }
 
@@ -46,8 +49,20 @@ impl SpaceQuiz {
             started_at: now,
             ended_at: now + 7 * 24 * 60 * 60 * 1000,
             retry_count: 0,
+            pass_score: 0,
             questions: vec![],
         })
+    }
+
+    pub fn status(&self) -> QuizStatus {
+        let now = get_now_timestamp_millis();
+        if now < self.started_at {
+            QuizStatus::NotStarted
+        } else if now >= self.started_at && now <= self.ended_at {
+            QuizStatus::InProgress
+        } else {
+            QuizStatus::Finish
+        }
     }
 
     pub fn can_edit(user_role: &SpaceUserRole) -> crate::Result<()> {
@@ -66,5 +81,17 @@ impl SpaceQuiz {
 
     pub fn can_view(_user_role: &SpaceUserRole) -> crate::Result<()> {
         Ok(())
+    }
+
+    pub fn can_respond(&self, user_role: &SpaceUserRole) -> crate::Result<()> {
+        match user_role {
+            SpaceUserRole::Creator | SpaceUserRole::Participant => {
+                if self.status() == QuizStatus::InProgress {
+                    return Ok(());
+                }
+                return Err(Error::BadRequest("Poll is not in progress".into()));
+            }
+            _ => Err(crate::Error::NoPermission),
+        }
     }
 }
