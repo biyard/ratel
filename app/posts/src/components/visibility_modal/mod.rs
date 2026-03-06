@@ -140,6 +140,7 @@ pub fn VisibilityModal(
                     "{tr.cancel}"
                 }
                 Button {
+                    "aria-label": "Confirm visibility selection",
                     class: "min-w-[100px]",
                     onclick: move |_| {
                         on_confirm.call(selected());
