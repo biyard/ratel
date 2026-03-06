@@ -12,6 +12,7 @@ ratel-auth = { workspace = true, optional = true }
 space-action-poll = { workspace = true, optional = true }
 space-action-discussion = { workspace = true, optional = true }
 space-action-subscription = { workspace = true, optional = true }
+space-action-quiz = { workspace = true, optional = true }
 space-common = { workspace = true, optional = true }
 
 [features]
@@ -23,6 +24,7 @@ web = [
     "space-action-poll/web",
     "space-action-discussion/web",
     "space-action-subscription/web",
+    "space-action-quiz/web",
     "space-common/web",
 ]
 desktop = ["dioxus/desktop"]
@@ -34,5 +36,6 @@ server = [
     "space-action-poll/server",
     "space-action-discussion/server",
     "space-action-subscription/server",
+    "space-action-quiz/server",
     "space-common/server",
 ]
