@@ -82,6 +82,7 @@ gloo-timers = { version = "0.3", features = ["futures"], optional = true }
 tracing-subscriber.workspace = true
 rand = { version = "0.10" }
 getrandom = { version = "0.4", features = ["wasm_js"], optional = true }
+lambda_http = { version = "1.0.2", optional = true }
 
 [features]
 default = []
@@ -119,3 +120,5 @@ web = ["dioxus/web", "getrandom", "gloo-timers"]
 mobile = ["dioxus/mobile"]
 desktop = ["dioxus/desktop"]
 getrandom = ["dep:getrandom"]
+
+lambda = [ "server", "lambda_http" ]

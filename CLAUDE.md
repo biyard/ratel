@@ -49,7 +49,7 @@ Foundational shared library used by all other app modules.
   - `EntityType` enum - DynamoDB sort key variants (~130 entity types)
   - `User` model - DynamoEntity with 6 GSIs (email, username, phone, user_type, etc.)
 - **Config:** `src/config/server/` (DynamoDB, S3, SES, SNS), `src/config/web/` (Firebase)
-- **Components:** Badge, Button, Layover, Popup, ThemeSwitcher
+- **Components:** Badge, Button, Layover, Popup, SeoMeta, ThemeSwitcher
 - **Tailwind:** `tailwind.css` is the shared TailwindCSS v4 entrypoint for all Dioxus apps
 - **Utils:** `src/utils/aws/` (DynamoDB, S3, SES, SNS helpers), password, sha256, time
 
@@ -322,6 +322,66 @@ impl ThemeService {
 - **Namespace must match exactly** between `index.js` registration and `js_namespace` array in Rust
 - **Function names must match** between JS exports and `extern "C"` declarations (use `#[wasm_bindgen(js_name = ...)]` if renaming)
 - **JS files go in `assets/`** for Dioxus `asset!()` macro access, or in `js/dist/` if webpack-bundled
+
+### SeoMeta Component
+
+The `SeoMeta` component (`app/common/src/components/seo_meta/`) renders SEO meta tags into the document head. Every page-level view should include it for proper Google SEO, Open Graph, and Twitter Card support.
+
+#### Props
+
+| Prop | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `title` | `String` | Yes | — | Page title (`<title>` + og/twitter title) |
+| `description` | `String` | No | `""` | Meta description for search result snippets |
+| `image` | `String` | No | `""` | Preview image URL for social sharing |
+| `url` | `String` | No | `""` | Page URL for Open Graph |
+| `og_type` | `String` | No | `"website"` | Open Graph type (`website`, `article`, etc.) |
+| `keywords` | `Vec<String>` | No | `[]` | SEO keywords (joined with `", "`) |
+| `canonical` | `String` | No | `""` | Canonical URL (`<link rel="canonical">`) |
+| `robots` | `Robots` | No | `IndexFollow` | Robots directive enum |
+
+#### Robots Enum
+
+| Variant | Output |
+|---------|--------|
+| `Robots::IndexFollow` (default) | `index, follow` |
+| `Robots::NoindexFollow` | `noindex, follow` |
+| `Robots::IndexNofollow` | `index, nofollow` |
+| `Robots::NoindexNofollow` | `noindex, nofollow` |
+
+#### Usage
+
+```rust
+use common::components::SeoMeta;
+use common::components::Robots;
+
+// Minimal - only title required
+rsx! {
+    SeoMeta { title: "Home - Ratel" }
+}
+
+// Full usage
+rsx! {
+    SeoMeta {
+        title: "Space Overview - Ratel",
+        description: "Explore governance spaces on Ratel.",
+        image: "https://ratel.foundation/og-image.png",
+        url: "https://ratel.foundation/spaces",
+        og_type: "article",
+        keywords: vec!["governance".into(), "crypto".into(), "policy".into()],
+        canonical: "https://ratel.foundation/spaces",
+        robots: Robots::IndexFollow,
+    }
+}
+
+// Draft/private page - prevent indexing
+rsx! {
+    SeoMeta {
+        title: "Draft Post",
+        robots: Robots::NoindexNofollow,
+    }
+}
+```
 
 ### Support Packages (`packages/`)
 
