@@ -12,20 +12,20 @@ pub struct ChoiceOptionRowProps {
 #[component]
 pub fn ChoiceOptionRow(props: ChoiceOptionRowProps) -> Element {
     rsx! {
-        div { class: "flex items-center gap-2",
+        div { class: "flex items-center gap-2.5 w-full",
             {props.leading}
             Input {
                 variant: InputVariant::Plain,
-                class: "flex-1 p-2 bg-transparent border-b border-neutral-700 text-white placeholder-neutral-500 focus:border-blue-500 outline-none text-sm",
+                class: "flex-1 w-full h-11 px-3 bg-[#262626] border border-[#737373] rounded-lg text-sm text-neutral-300 placeholder:text-neutral-500 focus:border-[#FCB300] focus-visible:border-[#FCB300] focus-visible:ring-0",
                 value: props.value.clone(),
                 oninput: move |evt: Event<FormData>| props.on_change.call(evt.value()),
             }
             Button {
                 size: ButtonSize::Icon,
                 style: ButtonStyle::Ghost,
-                class: "text-red-400 text-xs hover:text-red-300",
+                class: "text-neutral-500 hover:text-neutral-300",
                 onclick: move |_| props.on_remove.call(()),
-                icons::validations::Clear { class: "w-4 h-4 [&>path]:stroke-current" }
+                icons::validations::Clear { class: "w-5 h-5 [&>path]:stroke-current" }
             }
         }
     }
@@ -41,8 +41,8 @@ pub fn ChoiceQuestionEditor(
     rsx! {
         Input {
             variant: InputVariant::Plain,
-            class: "w-full p-2 bg-transparent border-b border-neutral-600 text-white placeholder-neutral-500 focus:border-blue-500 outline-none",
-            placeholder: "Question title",
+            class: "w-full h-11 px-3 bg-[#262626] border border-[#737373] rounded-lg text-sm text-neutral-300 placeholder:text-neutral-500 focus:border-[#FCB300] focus-visible:border-[#FCB300] focus-visible:ring-0",
+            placeholder: "Input",
             value: q.title.clone(),
             oninput: move |evt: Event<FormData>| {
                 let mut next = q.clone();
@@ -64,6 +64,9 @@ pub fn ChoiceQuestionEditor(
                     rsx! {
                         ChoiceOptionRow {
                             value: option.clone(),
+                            leading: rsx! {
+                                icons::security::DialPad { class: "w-6 h-6 [&>path]:stroke-[#737373]" }
+                            },
                             on_change: move |value: String| {
                                 let mut next = question_for_input.clone();
                                 next.options[opt_idx] = value;
@@ -92,7 +95,7 @@ pub fn ChoiceQuestionEditor(
                     Button {
                         size: ButtonSize::Small,
                         style: ButtonStyle::Ghost,
-                        class: "text-sm text-blue-400 hover:text-blue-300 mt-1",
+                        class: "text-sm text-neutral-500 justify-start px-0 flex items-center gap-2 w-full text-left",
                         onclick: move |_| {
                             let mut next = question.clone();
                             next.options.push(format!("Option {}", next.options.len() + 1));
@@ -102,7 +105,8 @@ pub fn ChoiceQuestionEditor(
                                 on_change.call(Question::MultipleChoice(next));
                             }
                         },
-                        "+ Add Option"
+                        icons::validations::Add { class: "w-4 h-4 [&>path]:stroke-current" }
+                        "Add Option"
                     }
                 }
             }
