@@ -30,12 +30,11 @@ fn TeamSidemenu(teamname: String) -> Element {
     let mut team_ctx = common::contexts::use_team_context();
     let nav = use_navigator();
     let user = user_ctx().user.clone().unwrap_or_default();
-    let mut resource = use_server_future(use_reactive((&teamname,), |(name,)| async move {
-        find_team_handler(name).await
+    let resource = use_loader(use_reactive((&teamname,), |(name,)| async move {
+        Ok::<_, crate::Error>(find_team_handler(name).await.map_err(|e| e.to_string()))
     }))?;
 
-    let resolved = resource.suspend()?;
-    let data = resolved.read();
+    let data = resource.read();
     let fallback_team = {
         let teams = team_ctx.teams.read();
         teams.iter().find(|team| team.username == teamname).cloned()
@@ -242,63 +241,89 @@ fn TeamSidemenu(teamname: String) -> Element {
         }
     };
 
+    let fallback_for_ok = fallback_team.clone();
     match data.as_ref() {
         Ok(team) => {
-            let permissions_vec = {
-                let from_ctx = team_ctx
-                    .teams
-                    .read()
-                    .iter()
-                    .find(|item| item.username == teamname)
-                    .map(|item| item.permissions.clone())
-                    .unwrap_or_default();
+            if !team.pk.is_empty() && !team.username.is_empty() {
+                let permissions_vec = {
+                    let from_ctx = team_ctx
+                        .teams
+                        .read()
+                        .iter()
+                        .find(|item| item.username == teamname)
+                        .map(|item| item.permissions.clone())
+                        .unwrap_or_default();
 
-                if !from_ctx.is_empty() {
-                    from_ctx
-                } else {
-                    team.permissions
-                        .clone()
-                        .unwrap_or_default()
-                        .into_iter()
-                        .map(|p| p as u8)
-                        .collect()
+                    if !from_ctx.is_empty() {
+                        from_ctx
+                    } else {
+                        team.permissions
+                            .clone()
+                            .unwrap_or_default()
+                            .into_iter()
+                            .map(|p| p as u8)
+                            .collect()
+                    }
+                };
+
+                let profile_url = team.profile_url.clone().unwrap_or_default();
+                let mut teams = team_ctx.teams.read().clone();
+                if !teams.iter().any(|item| item.username == team.username) {
+                    teams.push(common::contexts::TeamItem {
+                        pk: team.pk.clone(),
+                        nickname: team.nickname.clone(),
+                        username: team.username.clone(),
+                        profile_url: profile_url.clone(),
+                        user_type: UserType::Team,
+                        permissions: permissions_vec.clone(),
+                        description: team.html_contents.clone(),
+                    });
                 }
-            };
+                let selected_label = if team.nickname.is_empty() {
+                    team.username.clone()
+                } else {
+                    team.nickname.clone()
+                };
+                let description = if team.html_contents.is_empty() {
+                    fallback_for_ok
+                        .as_ref()
+                        .map(|item| item.description.clone())
+                        .unwrap_or_default()
+                } else {
+                    team.html_contents.clone()
+                };
 
-            let profile_url = team.profile_url.clone().unwrap_or_default();
-            let mut teams = team_ctx.teams.read().clone();
-            if !teams.iter().any(|item| item.username == team.username) {
-                teams.push(common::contexts::TeamItem {
-                    pk: team.pk.clone(),
-                    nickname: team.nickname.clone(),
-                    username: team.username.clone(),
-                    profile_url: profile_url.clone(),
-                    user_type: UserType::Team,
-                    permissions: permissions_vec.clone(),
-                    description: team.html_contents.clone(),
-                });
+                render_menu(
+                    profile_url,
+                    selected_label,
+                    description,
+                    permissions_vec,
+                    teams,
+                )
+            } else if let Some(team) = fallback_for_ok {
+                debug!("TeamSidemenu failed to load team from server. Falling back to context.");
+                let selected_label = if team.nickname.is_empty() {
+                    team.username.clone()
+                } else {
+                    team.nickname.clone()
+                };
+                let teams = team_ctx.teams.read().clone();
+                render_menu(
+                    team.profile_url.clone(),
+                    selected_label,
+                    team.description.clone(),
+                    team.permissions.clone(),
+                    teams,
+                )
+            } else {
+                rsx! {
+                    common::SideMenuContainer {
+                        div { class: "py-5 px-3 w-full border rounded-[10px] bg-card-bg border-card-border text-text-primary text-center",
+                            "Loading team..."
+                        }
+                    }
+                }
             }
-            let selected_label = if team.nickname.is_empty() {
-                team.username.clone()
-            } else {
-                team.nickname.clone()
-            };
-            let description = if team.html_contents.is_empty() {
-                fallback_team
-                    .as_ref()
-                    .map(|item| item.description.clone())
-                    .unwrap_or_default()
-            } else {
-                team.html_contents.clone()
-            };
-
-            render_menu(
-                profile_url,
-                selected_label,
-                description,
-                permissions_vec,
-                teams,
-            )
         }
         Err(err) => {
             if let Some(team) = fallback_team {
