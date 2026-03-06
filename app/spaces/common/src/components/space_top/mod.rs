@@ -4,7 +4,8 @@ use common::{
 };
 
 use crate::{
-    components::SpaceStatusBadge,
+    components::{SpaceStatusBadge, SpaceVisibilityModal},
+    controllers::update_space,
     hooks::use_space_role,
     providers::{SpaceContextProvider, use_space_context},
     *,
@@ -30,6 +31,7 @@ pub fn SpaceTop(
     //FIXME: Rotate Labels
     let title = labels.first().unwrap().label.clone();
     let nav = use_navigator();
+    let mut popup = use_popup();
     let role = use_space_role();
     let is_creator = use_memo(move || role() == SpaceUserRole::Creator);
     let mut ctx = use_space_context();
@@ -60,16 +62,40 @@ pub fn SpaceTop(
                 Button {
                     style: ButtonStyle::Outline,
                     shape: ButtonShape::Square,
-                    class: "flex flex-row gap-1 justify-center items-center [&>path]:stroke-icon-secondary [&>circle]:stroke-icon-secondary",
+                    class: "flex flex-row gap-1 justify-center items-center",
                     onclick: move |_| {
                         ctx.toggle_role();
                     },
-                    Eye { class: "w-4 h-4" }
+                    Eye { class: "w-4 h-4 [&>path]:stroke-icon-secondary [&>circle]:stroke-icon-secondary" }
                     p { {tr.preview} }
                 }
 
                 if is_creator() {
-                    Button { shape: ButtonShape::Square, onclick: move |_| {}, {tr.publish} }
+                    Button {
+                        shape: ButtonShape::Square,
+                        onclick: move |_| {
+                            popup.open(rsx! {
+                                SpaceVisibilityModal {
+                                    on_confirm: move |visibility| async move {
+                                        let space_id = ctx.space().id;
+                                        update_space(
+                                                space_id,
+                                                controllers::UpdateSpaceRequest::Publish {
+                                                    publish: true,
+                                                    // FIXME: Pass actual content and visibility
+                                                    visibility: SpaceVisibility::Public,
+                                                },
+                                            )
+                                            .await;
+
+
+                                    },
+
+                                }
+                            });
+                        },
+                        {tr.publish}
+                    }
                 }
 
                 if show_participate_button {
