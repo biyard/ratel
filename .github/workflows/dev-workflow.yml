@@ -202,6 +202,7 @@ jobs:
 
           ECR: ${{ steps.ratel-ecr.outputs.registry }}/ratel/app-shell
         run: |
+          npm i -D tailwindcss
           rm -rf ../../target/dx
           make build-lambda
           make docker
