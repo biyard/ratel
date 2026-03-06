@@ -8,6 +8,7 @@ edition.workspace = true
 dioxus = { workspace = true }
 common = { workspace = true }
 serde = { workspace = true }
+chrono = { workspace = true }
 
 ratel-auth = { workspace = true }
 space-action-poll = { workspace = true }

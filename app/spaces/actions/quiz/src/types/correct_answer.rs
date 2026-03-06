@@ -18,3 +18,12 @@ impl Default for QuizCorrectAnswer {
         Self::Single { answer: None }
     }
 }
+
+impl QuizCorrectAnswer {
+    pub fn for_question(question: &Question) -> Self {
+        match question {
+            Question::MultipleChoice(_) => QuizCorrectAnswer::Multiple { answers: vec![] },
+            _ => QuizCorrectAnswer::Single { answer: None },
+        }
+    }
+}

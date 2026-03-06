@@ -11,6 +11,7 @@ pub fn Input(
     #[props(default)] disabled: bool,
     #[props(default)] oninput: EventHandler<FormEvent>,
     #[props(default)] onkeydown: EventHandler<KeyboardEvent>,
+    #[props(default)] onblur: EventHandler<FocusEvent>,
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
 ) -> Element {
     let base_class = match variant {
@@ -49,6 +50,7 @@ pub fn Input(
             disabled,
             oninput,
             onkeydown,
+            onblur,
             ..attributes,
         }
     }

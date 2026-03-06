@@ -56,4 +56,8 @@ impl SpaceQuiz {
             _ => Err(crate::Error::NoPermission),
         }
     }
+
+    pub fn can_view(_user_role: &SpaceUserRole) -> crate::Result<()> {
+        Ok(())
+    }
 }
