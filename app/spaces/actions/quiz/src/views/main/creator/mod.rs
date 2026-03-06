@@ -10,6 +10,7 @@ use space_common::types::space_page_actions_quiz_key;
 pub fn QuizCreatorPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) -> Element {
     let tr: QuizCreatorTranslate = use_translate();
     let nav = navigator();
+    let mut toast = use_toast();
     let key = space_page_actions_quiz_key(&space_id, &quiz_id);
     let quiz_loader = use_query(&key, {
         let space_id = space_id.clone();
@@ -37,6 +38,7 @@ pub fn QuizCreatorPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) -
     let mut started_at = use_signal(|| quiz.started_at);
     let mut ended_at = use_signal(|| quiz.ended_at);
     let mut retry_count = use_signal(|| quiz.retry_count);
+    let mut pass_score = use_signal(|| quiz.pass_score);
 
     let can_edit = quiz.user_response_count == 0;
     let show_editor = can_edit && editing();
@@ -48,17 +50,20 @@ pub fn QuizCreatorPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) -
     let on_title_save = {
         let space_id = space_id.clone();
         let quiz_id = quiz_id.clone();
+        let mut toast = toast;
         move |_| {
             let t = title();
             let space_id = space_id.clone();
             let quiz_id = quiz_id.clone();
+            let mut toast = toast;
             spawn(async move {
                 let req = UpdateQuizRequest {
                     title: Some(t),
                     ..Default::default()
                 };
-                if let Err(e) = update_quiz(space_id.clone(), quiz_id.clone(), req).await {
-                    error!("Failed to update title: {:?}", e);
+                if let Err(err) = update_quiz(space_id.clone(), quiz_id.clone(), req).await {
+                    error!("Failed to update title: {:?}", err);
+                    toast.error(err);
                 } else {
                     let keys = space_page_actions_quiz_key(&space_id, &quiz_id);
                     invalidate_query(&keys);
@@ -70,17 +75,20 @@ pub fn QuizCreatorPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) -
     let on_time_save = {
         let space_id = space_id.clone();
         let quiz_id = quiz_id.clone();
+        let mut toast = toast;
         move |(start, end): (i64, i64)| {
             let space_id = space_id.clone();
             let quiz_id = quiz_id.clone();
+            let mut toast = toast;
             spawn(async move {
                 let req = UpdateQuizRequest {
                     started_at: Some(start),
                     ended_at: Some(end),
                     ..Default::default()
                 };
-                if let Err(e) = update_quiz(space_id.clone(), quiz_id.clone(), req).await {
-                    error!("Failed to update time range: {:?}", e);
+                if let Err(err) = update_quiz(space_id.clone(), quiz_id.clone(), req).await {
+                    error!("Failed to update time range: {:?}", err);
+                    toast.error(err);
                 } else {
                     let keys = space_page_actions_quiz_key(&space_id, &quiz_id);
                     invalidate_query(&keys);
@@ -92,17 +100,45 @@ pub fn QuizCreatorPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) -
     let on_retry_save = {
         let space_id = space_id.clone();
         let quiz_id = quiz_id.clone();
+        let mut toast = toast;
         move |_| {
             let retry = retry_count();
             let space_id = space_id.clone();
             let quiz_id = quiz_id.clone();
+            let mut toast = toast;
             spawn(async move {
                 let req = UpdateQuizRequest {
                     retry_count: Some(retry),
                     ..Default::default()
                 };
-                if let Err(e) = update_quiz(space_id.clone(), quiz_id.clone(), req).await {
-                    error!("Failed to update retry count: {:?}", e);
+                if let Err(err) = update_quiz(space_id.clone(), quiz_id.clone(), req).await {
+                    error!("Failed to update retry count: {:?}", err);
+                    toast.error(err);
+                } else {
+                    let keys = space_page_actions_quiz_key(&space_id, &quiz_id);
+                    invalidate_query(&keys);
+                }
+            });
+        }
+    };
+
+    let on_pass_score_save = {
+        let space_id = space_id.clone();
+        let quiz_id = quiz_id.clone();
+        let mut toast = toast;
+        move |_| {
+            let score = pass_score();
+            let space_id = space_id.clone();
+            let quiz_id = quiz_id.clone();
+            let mut toast = toast;
+            spawn(async move {
+                let req = UpdateQuizRequest {
+                    pass_score: Some(score),
+                    ..Default::default()
+                };
+                if let Err(err) = update_quiz(space_id.clone(), quiz_id.clone(), req).await {
+                    error!("Failed to update pass score: {:?}", err);
+                    toast.error(err);
                 } else {
                     let keys = space_page_actions_quiz_key(&space_id, &quiz_id);
                     invalidate_query(&keys);
@@ -114,6 +150,7 @@ pub fn QuizCreatorPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) -
     let on_save = {
         let space_id = space_id.clone();
         let quiz_id = quiz_id.clone();
+        let mut toast = toast;
         move |_| {
             let qs = questions.read().clone();
             let ans = answers.read().clone();
@@ -124,14 +161,16 @@ pub fn QuizCreatorPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) -
                 k.push("answers".into());
                 k
             };
+            let mut toast = toast;
             spawn(async move {
                 let req = UpdateQuizRequest {
                     questions: Some(qs),
                     answers: Some(ans),
                     ..Default::default()
                 };
-                if let Err(e) = update_quiz(space_id.clone(), quiz_id.clone(), req).await {
-                    error!("Failed to save quiz: {:?}", e);
+                if let Err(err) = update_quiz(space_id.clone(), quiz_id.clone(), req).await {
+                    error!("Failed to save quiz: {:?}", err);
+                    toast.error(err);
                     return;
                 }
                 let keys = space_page_actions_quiz_key(&space_id, &quiz_id);
@@ -191,6 +230,26 @@ pub fn QuizCreatorPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) -
                 }
             } else {
                 TimeRangeDisplay { started_at: started_at(), ended_at: ended_at() }
+            }
+
+            div { class: "flex flex-col gap-1",
+                label { class: "text-sm font-medium text-neutral-400 light:text-neutral-600",
+                    "{tr.pass_score_label}"
+                }
+                Input {
+                    r#type: "number".to_string(),
+                    class: "text-base",
+                    placeholder: tr.pass_score_placeholder,
+                    value: pass_score().to_string(),
+                    disabled: !can_edit,
+                    attributes: vec![Attribute::new("min", "0", None, false)],
+                    oninput: move |e: Event<FormData>| {
+                        if let Ok(v) = e.value().parse::<i64>() {
+                            pass_score.set(v);
+                        }
+                    },
+                    onblur: on_pass_score_save,
+                }
             }
 
             div { class: "flex flex-col gap-1",

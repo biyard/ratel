@@ -39,4 +39,12 @@ translate! {
         en: "Enter retry count...",
         ko: "재시도 횟수를 입력하세요...",
     },
+    pass_score_label: {
+        en: "Pass Score",
+        ko: "통과 기준 점수",
+    },
+    pass_score_placeholder: {
+        en: "Enter pass score...",
+        ko: "통과 기준 점수를 입력하세요...",
+    },
 }

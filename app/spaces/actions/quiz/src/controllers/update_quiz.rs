@@ -11,6 +11,8 @@ pub struct UpdateQuizRequest {
     #[serde(default)]
     pub retry_count: Option<i64>,
     #[serde(default)]
+    pub pass_score: Option<i64>,
+    #[serde(default)]
     pub questions: Option<Vec<Question>>,
     #[serde(default)]
     pub answers: Option<Vec<QuizCorrectAnswer>>,
@@ -85,6 +87,17 @@ pub async fn update_quiz(
             .with_questions(questions.clone())
             .with_description(description);
         questions_for_answers = Some(questions);
+    }
+
+    let questions_for_validation = questions_for_answers
+        .as_ref()
+        .unwrap_or(&existing.questions);
+
+    if let Some(pass_score) = req.pass_score {
+        if pass_score < 0 {
+            return Err(Error::BadRequest("Pass score must be >= 0".into()));
+        }
+        updater = updater.with_pass_score(pass_score);
     }
 
     updater.execute(cli).await?;
