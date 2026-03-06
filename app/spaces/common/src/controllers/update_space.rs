@@ -1,3 +1,5 @@
+#[cfg(feature = "server")]
+use crate::models::SpaceInvitationMember;
 use crate::*;
 #[cfg(feature = "server")]
 use common::SpaceUserRole;
@@ -86,12 +88,15 @@ pub async fn update_space(
 
     let conf = ServerConfig::default();
     let dynamo = conf.dynamodb();
+    let ses = conf.ses();
 
     let space_pk: Partition = space_id.into();
 
     let now = chrono::Utc::now().timestamp_millis();
     let mut su = SpaceCommon::updater(&space.pk, &space.sk).with_updated_at(now);
     let mut pu: Option<_> = None;
+    let mut should_send_invitation = false;
+    let mut updated_space = space.clone();
 
     match req {
         UpdateSpaceRequest::Publish {
@@ -119,12 +124,20 @@ pub async fn update_space(
                 .with_status(PostStatus::Published);
 
             pu = Some(post_updater);
+            should_send_invitation = true;
+
+            updated_space.publish_state = SpacePublishState::Published;
+            updated_space.visibility = visibility;
         }
         UpdateSpaceRequest::Visibility { visibility } => {
-            su = su.with_visibility(visibility);
+            su = su.with_visibility(visibility.clone());
+
+            updated_space.visibility = visibility;
         }
         UpdateSpaceRequest::Content { content } => {
-            su = su.with_content(content);
+            su = su.with_content(content.clone());
+
+            updated_space.content = content;
         }
         UpdateSpaceRequest::Title { title } => {
             let post_pk = space_pk.clone().to_post_key()?;
@@ -134,7 +147,9 @@ pub async fn update_space(
             pu = Some(post_updater);
         }
         UpdateSpaceRequest::Start { start } => {
-            if space.status != Some(SpaceStatus::InProgress) {
+            use crate::models::SpaceEmailVerification;
+
+            if updated_space.status != Some(SpaceStatus::InProgress) {
                 return Err(Error::BadRequest(
                     "Start is not available for the current status.".into(),
                 ));
@@ -145,9 +160,13 @@ pub async fn update_space(
             }
 
             su = su.with_status(SpaceStatus::Started);
+
+            updated_space.status = Some(SpaceStatus::Started);
+
+            let _ = SpaceEmailVerification::expire_verifications(dynamo, space_pk.clone()).await?;
         }
         UpdateSpaceRequest::Finish { finished } => {
-            if space.status != Some(SpaceStatus::Started) {
+            if updated_space.status != Some(SpaceStatus::Started) {
                 return Err(Error::BadRequest(
                     "Finish is not available for the current status.".into(),
                 ));
@@ -158,11 +177,15 @@ pub async fn update_space(
             }
 
             su = su.with_status(SpaceStatus::Finished);
+
+            updated_space.status = Some(SpaceStatus::Finished);
         }
         UpdateSpaceRequest::Anonymous {
             anonymous_participation,
         } => {
             su = su.with_anonymous_participation(anonymous_participation);
+
+            updated_space.anonymous_participation = anonymous_participation;
         }
         UpdateSpaceRequest::ChangeVisibility { .. } => {
             tracing::error!("ChangeVisibility is deprecated");
@@ -171,13 +194,16 @@ pub async fn update_space(
             ));
         }
         UpdateSpaceRequest::Quota { quotas } => {
-            let remains = space.remains + (quotas - space.quota);
+            let remains = updated_space.remains + (quotas - updated_space.quota);
 
             if remains < 0 {
                 return Err(Error::BadRequest("Invalid panel quota".into()));
             }
 
             su = su.with_quota(quotas).with_remains(remains);
+
+            updated_space.quota = quotas;
+            updated_space.remains = remains;
         }
     }
 
@@ -187,9 +213,15 @@ pub async fn update_space(
         su.execute(dynamo).await?;
     }
 
-    let updated_space = SpaceCommon::get(dynamo, &space_pk, Some(&EntityType::SpaceCommon))
-        .await?
-        .ok_or_else(|| Error::InternalServerError("Failed to get updated space".to_string()))?;
+    if should_send_invitation {
+        let post_pk = space_pk.clone().to_post_key()?;
+        let post = Post::get(dynamo, &post_pk, Some(&EntityType::Post))
+            .await?
+            .ok_or_else(|| Error::InternalServerError("Failed to get post".to_string()))?;
+
+        let ses = conf.ses();
+        SpaceInvitationMember::send_email(dynamo, ses, &updated_space, post.title).await?;
+    }
 
     Ok(UpdateSpaceResponse::from(updated_space))
 }
