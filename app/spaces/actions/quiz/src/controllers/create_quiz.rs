@@ -13,7 +13,12 @@ pub async fn create_quiz(space_pk: SpacePartition) -> Result<QuizResponse> {
         EntityType::SpaceQuiz(id) => id.clone().into(),
         _ => SpaceQuizEntityType::default(),
     };
-    let answer = SpaceQuizAnswer::new(space_pk, quiz_id, vec![]);
+    let answers = quiz
+        .questions
+        .iter()
+        .map(QuizCorrectAnswer::for_question)
+        .collect::<Vec<_>>();
+    let answer = SpaceQuizAnswer::new(space_pk, quiz_id, answers);
     answer.create(cli).await?;
 
     Ok(quiz.into())
