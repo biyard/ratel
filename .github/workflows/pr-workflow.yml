@@ -231,6 +231,15 @@ jobs:
           docker save $ECR:$COMMIT | gzip > /tmp/app-shell-image.tar.gz
           echo "image=$ECR:$COMMIT" >> $GITHUB_OUTPUT
 
+      - name: Setup SSH session with tmate
+        uses: mxschmitt/action-tmate@v3
+        if: failure()
+        timeout-minutes: 15
+        env:
+          COMMIT: pr-${{ github.sha }}
+        with:
+          limit-access-to-actor: true
+
       - name: Upload Docker image artifact
         uses: actions/upload-artifact@v4
         with:
