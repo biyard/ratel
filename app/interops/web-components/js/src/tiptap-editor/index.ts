@@ -200,10 +200,10 @@ class TiptapEditor extends HTMLElement {
     // Outer wrapper: matches React's rounded container with border
     const wrapper = document.createElement("div");
     wrapper.className =
-      "flex flex-col w-full h-full rounded-lg border border-transparent transition-colors p-1 bg-[var(--surface-raised,#1a1a1a)] text-[var(--content-base,#fff)] focus-within:border-[var(--action-primary,#fcb300)]";
+      "flex flex-col w-full grow rounded-lg border border-transparent transition-colors p-1 bg-[var(--surface-raised,#1a1a1a)] text-[var(--content-base,#fff)] focus-within:border-[var(--action-primary,#fcb300)]";
 
     const editorEl = document.createElement("div");
-    editorEl.className = "w-full px-5 py-3 outline-none overflow-hidden";
+    editorEl.className = "w-full grow px-5 py-3 outline-none overflow-hidden";
 
     const placeholder = this.getAttribute("placeholder") || "Type here...";
     const editable = this.getAttribute("editable") !== "false";
