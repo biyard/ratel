@@ -1,5 +1,5 @@
 [package]
-name = "space-action-shell"
+name = "space-action-quiz"
 version = "0.1.0"
 authors.workspace = true
 edition.workspace = true
@@ -8,15 +8,10 @@ edition.workspace = true
 dioxus = { workspace = true }
 common = { workspace = true }
 serde = { workspace = true }
-ratel-auth = { workspace = true, optional = true }
 
-space-common = { workspace = true }
-
-space-action-main = { workspace = true }
+ratel-auth = { workspace = true }
 space-action-poll = { workspace = true }
-space-action-discussion = { workspace = true }
-space-action-subscription = { workspace = true }
-space-action-quiz = { workspace = true }
+space-common = { workspace = true }
 
 [features]
 default = []
@@ -24,11 +19,7 @@ web = [
     "common/web",
     "dioxus/web",
     "ratel-auth/web",
-    "space-action-main/web",
     "space-action-poll/web",
-    "space-action-discussion/web",
-    "space-action-subscription/web",
-    "space-action-quiz/web",
     "space-common/web",
 ]
 desktop = ["dioxus/desktop"]
@@ -37,10 +28,6 @@ server = [
     "common/server",
     "dioxus/server",
     "ratel-auth/server",
-    "space-action-main/server",
     "space-action-poll/server",
-    "space-action-discussion/server",
-    "space-action-subscription/server",
-    "space-action-quiz/server",
     "space-common/server",
 ]

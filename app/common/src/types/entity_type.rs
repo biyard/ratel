@@ -85,6 +85,9 @@ pub enum EntityType {
     SpacePollResult,
     SpacePollUserAnswer(String, String), // space_pk, poll_pk
 
+    SpaceQuiz(String), // SpaceQuiz#{uuid}
+    SpaceQuizAnswer(String), // SpaceQuizAnswer#{quiz_id}
+
     // Survery space entity types
     SurveySpace,
 
@@ -143,7 +146,7 @@ pub enum EntityType {
     SpaceDiscussion(String),
     SpaceDiscussionMember(String, String),
     SpaceDiscussionParticipant(String, String),
-    SpaceQuiz(String),
+
     SpaceRecommendation,
     SpaceReport,
     SpacePanels,

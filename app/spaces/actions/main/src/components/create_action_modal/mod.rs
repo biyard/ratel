@@ -2,9 +2,10 @@ use crate::*;
 use i18n::CreateActionModalTranslate;
 use space_action_discussion::controllers::create_discussion;
 use space_action_poll::controllers::create_poll;
+use space_action_quiz::controllers::create_quiz;
 use space_action_subscription::controllers::create_subscription;
 use space_common::types::route::{
-    space_action_discussion, space_action_poll, space_action_subscription,
+    space_action_discussion, space_action_poll, space_action_quiz, space_action_subscription,
 };
 mod i18n;
 
@@ -108,7 +109,21 @@ pub fn CreateActionModal(space_id: SpacePartition, has_subscription: bool) -> El
                         }
                     });
                 }
-                SpaceActionType::Quiz => {}
+                SpaceActionType::Quiz => {
+                    spawn(async move {
+                        match create_quiz(space_id.clone()).await {
+                            Ok(response) => {
+                                is_creating.set(false);
+                                nav.push(space_action_quiz(&space_id, &response.quiz_id));
+                                layover.close();
+                            }
+                            Err(err) => {
+                                error!("Failed to create quiz: {:?}", err);
+                                is_creating.set(false);
+                            }
+                        }
+                    });
+                }
             }
         }
     };
@@ -120,6 +135,20 @@ pub fn CreateActionModal(space_id: SpacePartition, has_subscription: bool) -> El
             div { class: "flex flex-col gap-5 p-[1.875rem] overflow-y-auto grow",
                 // 2x2 grid of action type options
                 div { class: "grid grid-cols-2 gap-2.5",
+                    ActionTypeOption {
+                        selected: selected_type() == Some(SpaceActionType::Quiz),
+                        disabled: false,
+                        onclick: move |_| selected_type.set(Some(SpaceActionType::Quiz)),
+                        title: tr.quiz_title.to_string(),
+                        caption: tr.quiz_caption.to_string(),
+                        icon: rsx! {
+                            icons::file::File {
+                                width: "22",
+                                height: "22",
+                                class: "[&>path]:fill-none [&>path]:stroke-neutral-900",
+                            }
+                        },
+                    }
                     ActionTypeOption {
                         selected: selected_type() == Some(SpaceActionType::Poll),
                         disabled: false,
