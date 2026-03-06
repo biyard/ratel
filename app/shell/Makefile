@@ -14,7 +14,7 @@ BLOCK_EXPLORER_URL ?= https://kairos.kaiascan.io
 
 RUST_LOG ?= debug
 
-PORT ?= 8000
+PORT ?= 8080
 
 REPOSITORY ?= ratel/app-shell
 ECR ?= $(shell aws ecr describe-repositories --repository-names $(REPOSITORY)  --query "repositories[0].repositoryUri" --output text)

@@ -185,7 +185,7 @@ pub fn MembershipPlan() -> Element {
                                                             match change_membership_handler(req).await {
                                                                 Ok(resp) => {
                                                                     let Some(membership_resp) = resp.membership else {
-                                                                        toast.error("Membership response missing");
+                                                                        toast.error(crate::Error::MembershipResponseMissing);
                                                                         popup_modal.close();
                                                                         return;
                                                                     };
@@ -218,7 +218,7 @@ pub fn MembershipPlan() -> Element {
                                                                 }
                                                                 Err(err) => {
                                                                     error!("Failed to change membership: {:?}", err);
-                                                                    toast.error("Failed to change membership");
+                                                                    toast.error(crate::Error::MembershipChangeFailed);
                                                                     popup_modal.close();
                                                                 }
                                                             }
