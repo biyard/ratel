@@ -2,11 +2,14 @@ use crate::*;
 use i18n::CreateActionModalTranslate;
 use space_action_discussion::controllers::create_discussion;
 use space_action_poll::controllers::create_poll;
-use space_common::types::route::{space_action_discussion, space_action_poll};
+use space_action_subscription::controllers::create_subscription;
+use space_common::types::route::{
+    space_action_discussion, space_action_poll, space_action_subscription,
+};
 mod i18n;
 
 #[component]
-pub fn CreateActionModal(space_id: SpacePartition) -> Element {
+pub fn CreateActionModal(space_id: SpacePartition, has_subscription: bool) -> Element {
     let tr: CreateActionModalTranslate = use_translate();
     let nav = navigator();
     let layover = use_layover();
@@ -86,6 +89,26 @@ pub fn CreateActionModal(space_id: SpacePartition) -> Element {
                         }
                     });
                 }
+                SpaceActionType::Subscription => {
+                    if has_subscription {
+                        is_creating.set(false);
+                        return;
+                    }
+                    spawn(async move {
+                        match create_subscription(space_id.clone()).await {
+                            Ok(_) => {
+                                is_creating.set(false);
+                                nav.push(space_action_subscription(&space_id));
+                                layover.close();
+                            }
+                            Err(err) => {
+                                error!("Failed to create subscription: {:?}", err);
+                                is_creating.set(false);
+                            }
+                        }
+                    });
+                }
+                SpaceActionType::Quiz => {}
             }
         }
     };
@@ -125,6 +148,22 @@ pub fn CreateActionModal(space_id: SpacePartition) -> Element {
                             }
                         },
                     }
+                    if !has_subscription {
+                        ActionTypeOption {
+                            selected: selected_type() == Some(SpaceActionType::Subscription),
+                            disabled: false,
+                            onclick: move |_| selected_type.set(Some(SpaceActionType::Subscription)),
+                            title: tr.follow_title.to_string(),
+                            caption: tr.follow_caption.to_string(),
+                            icon: rsx! {
+                                icons::user::UserGroup {
+                                    width: "22",
+                                    height: "22",
+                                    class: "[&>path]:fill-none [&>path]:stroke-neutral-900",
+                                }
+                            },
+                        }
+                    }
                 }
 
                 // Sample preview section
@@ -134,7 +173,7 @@ pub fn CreateActionModal(space_id: SpacePartition) -> Element {
                     }
                     div { class: "w-full h-[14.875rem] rounded-[0.75rem] border border-neutral-700 light:border-neutral-300 bg-neutral-950/40 light:bg-neutral-100" }
                 }
-
+            
             }
 
             // Bottom bar
@@ -178,7 +217,7 @@ fn ActionTypeOption(
 
             div { class: "flex justify-center items-center rounded-[0.625rem] size-11 bg-white light:bg-white shrink-0",
                 {icon}
-
+            
             }
 
             div { class: "flex flex-col items-start gap-1",

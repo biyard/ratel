@@ -34,7 +34,7 @@ pub fn ToastTools() -> Element {
                 onclick: move |_| {
                     let n = *count.read();
                     count.set(n + 1);
-                    toast.error(format!("Error toast #{n}"));
+                    toast.error(crate::Error::Unknown(format!("Error toast #{n}")));
                 },
             }
             ToolButton {

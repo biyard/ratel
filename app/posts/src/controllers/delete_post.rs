@@ -3,12 +3,12 @@ use crate::types::*;
 use crate::*;
 use ratel_auth::User;
 
-#[delete("/api/posts/:post_pk", user: User)]
-pub async fn delete_post_handler(post_pk: FeedPartition, force: Option<bool>) -> Result<Post> {
+#[delete("/api/posts/:post_id", user: User)]
+pub async fn delete_post_handler(post_id: FeedPartition, force: Option<bool>) -> Result<Post> {
     let conf = crate::config::get();
     let cli = conf.dynamodb();
 
-    let post_pk: Partition = post_pk.into();
+    let post_pk: Partition = post_id.into();
 
     if !Post::has_permission(
         cli,
