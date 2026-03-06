@@ -21,13 +21,19 @@ pub async fn list_user_posts_handler(
     );
 
     let (users, _) = ratel_auth::User::find_by_username(cli, &username, Default::default()).await?;
-    let target_user = users
-        .into_iter()
-        .next()
-        .ok_or(Error::NotFound(format!("User not found: {}", username)))?;
+    let target_user = users.into_iter().next().ok_or(Error::PostInvalidUsername)?;
     let user_pk = target_user.pk;
+    let is_onwer = match &user {
+        Some(user) => user.pk == user_pk,
+        None => false,
+    };
 
-    let mut query_options = Post::opt().limit(10).sk(PostStatus::Published.to_string());
+    let mut query_options = Post::opt().limit(10).sk(if is_owner {
+        // FIXME: When user is owner, it doesn't support time-sorted result.
+        PostStatus::Published.to_string()
+    } else {
+        format!("{}#{}", PostStatus::Published, Visibility::Public)
+    });
 
     if let Some(bookmark) = bookmark {
         query_options = query_options.bookmark(bookmark);

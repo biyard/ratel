@@ -185,10 +185,7 @@ pub enum Error {
     MembershipResponseMissing,
 
     #[error("Failed to change membership")]
-    #[translate(
-        en = "Failed to change membership",
-        ko = "멤버십 변경에 실패했습니다."
-    )]
+    #[translate(en = "Failed to change membership", ko = "멤버십 변경에 실패했습니다.")]
     MembershipChangeFailed,
 
     // Credential-related
@@ -211,6 +208,14 @@ pub enum Error {
     #[error("{0}")]
     #[translate(en = "Reward error", ko = "리워드 오류가 발생했습니다.")]
     SpaceReward(#[from] SpaceRewardError),
+
+    // Post related errors
+    #[error("Invalid username")]
+    #[translate(
+        en = "Invalid username. Check URL.",
+        ko = "유효하지 않은 사용자 이름입니다. URL을 확인해주세요."
+    )]
+    PostInvalidUsername,
 }
 
 impl From<String> for Error {
