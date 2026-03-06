@@ -1,18 +1,20 @@
 use crate::{controllers::participate_space::participate_space, *};
 use space_common::hooks::use_space_query;
+use space_common::providers::SpaceContextProvider;
 use space_common::ratel_auth::hooks::use_user_context;
 use space_common::ratel_auth::{LoginModal, UserContextStoreExt};
 use space_common::types::space_key;
 use space_common::{
     components::{SpaceNav, SpaceNavItem, SpaceTop, SpaceTopLabel},
-    hooks::use_user_role,
+    hooks::use_space_role,
 };
 
 #[component]
 pub fn SpaceLayout(space_id: SpacePartition) -> Element {
+    SpaceContextProvider::init(&space_id)?;
+
     use_context_provider(|| LayoverService::new());
-    let role_loader = use_user_role(&space_id)?;
-    let role = role_loader.read().clone();
+    let role = use_space_role()();
     let space_loader = use_space_query(&space_id)?;
     let space = space_loader.read().clone();
     let lang = use_language();

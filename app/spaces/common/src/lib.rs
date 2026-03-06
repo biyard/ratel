@@ -8,6 +8,7 @@ pub mod types;
 
 #[cfg(not(feature = "server"))]
 pub mod interop;
+pub mod providers;
 
 use common::*;
 

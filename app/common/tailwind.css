@@ -795,10 +795,12 @@ a {
 
 @theme static {
   --color-icon-primary: #737373;
+  --color-icon-secondary: #FFFFFF;
 }
 
 [data-theme="light"] {
   --color-icon-primary: #737373;
+  --color-icon-secondary: #262626;
 }
 
 /* ==========================================================================
