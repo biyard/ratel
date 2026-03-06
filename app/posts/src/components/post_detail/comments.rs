@@ -51,7 +51,7 @@ pub fn CommentSection(
             if !expand_comment() {
                 Button {
                     size: ButtonSize::Inline,
-                    style: ButtonStyle::Ghost,
+                    style: ButtonStyle::Text,
                     class: "flex flex-row gap-2 items-center py-3 px-3.5 w-full rounded-lg border transition-all duration-200 cursor-pointer bg-write-comment-box-bg border-write-comment-box-border group hover:bg-write-comment-box-bg/80 hover:border-primary/50"
                         .to_string(),
                     onclick: move |_| {
@@ -210,7 +210,7 @@ fn CommentItem(
                 div { class: "flex flex-row gap-5",
                     Button {
                         size: ButtonSize::Inline,
-                        style: ButtonStyle::Ghost,
+                        style: ButtonStyle::Text,
                         aria_label: "Expand Replies",
                         class: "flex flex-row gap-2 justify-center items-center disabled:cursor-not-allowed text-primary"
                             .to_string(),
@@ -228,7 +228,7 @@ fn CommentItem(
                     }
                     Button {
                         size: ButtonSize::Inline,
-                        style: ButtonStyle::Ghost,
+                        style: ButtonStyle::Text,
                         aria_label: t.reply_button,
                         class: "flex gap-2 justify-center items-center cursor-pointer text-text-primary"
                             .to_string(),
@@ -265,10 +265,7 @@ fn CommentItem(
                             let sk = sk.clone();
                             let on_refresh = on_refresh.clone();
                             spawn(async move {
-                                if like_comment_handler(pk, sk, new_like)
-                                    .await
-                                    .is_ok()
-                                {
+                                if like_comment_handler(pk, sk, new_like).await.is_ok() {
                                     on_refresh.call(());
                                 }
                                 is_processing.set(false);
@@ -334,10 +331,7 @@ fn CommentItem(
                                     let mut comment_replies = comment_replies.clone();
                                     let mut replies = replies.clone();
                                     spawn(async move {
-                                        if reply_to_comment_handler(pk, sk, content)
-                                            .await
-                                            .is_ok()
-                                        {
+                                        if reply_to_comment_handler(pk, sk, content).await.is_ok() {
                                             comment_replies.set(comment_replies() + 1);
                                             on_comment_count_inc.call(());
                                             on_refresh.call(());
@@ -396,7 +390,11 @@ fn CommentItem(
 }
 
 #[component]
-fn ReplyItem(reply: PostCommentResponse, post_pk: FeedPartition, on_refresh: EventHandler<()>) -> Element {
+fn ReplyItem(
+    reply: PostCommentResponse,
+    post_pk: FeedPartition,
+    on_refresh: EventHandler<()>,
+) -> Element {
     let mut optimistic_liked = use_signal(|| reply.liked);
     let mut optimistic_likes = use_signal(|| reply.likes as i64);
     let mut is_processing = use_signal(|| false);
@@ -447,10 +445,7 @@ fn ReplyItem(reply: PostCommentResponse, post_pk: FeedPartition, on_refresh: Eve
                             let sk = sk.clone();
                             let on_refresh = on_refresh.clone();
                             spawn(async move {
-                                if like_comment_handler(pk, sk, new_like)
-                                    .await
-                                    .is_ok()
-                                {
+                                if like_comment_handler(pk, sk, new_like).await.is_ok() {
                                     on_refresh.call(());
                                 }
                                 is_processing.set(false);

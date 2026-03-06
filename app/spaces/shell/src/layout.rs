@@ -91,9 +91,7 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
                 div { class: "flex overflow-auto flex-1 p-5 w-full bg-web-bg rounded-tl-[10px]",
                     SuspenseBoundary {
                         fallback: |_| rsx! {
-                            div { class: "justify-center items-center w-full grow",
-                                LoadingIndicator { class: "max-w-[200px] max-h-[200px]" }
-                            }
+                            LoadingIndicator { max_width: "300px" }
                         },
 
                         Outlet::<Route> {}
