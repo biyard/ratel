@@ -1,31 +1,26 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct DashboardExtension {
-    pub id: String,
-    pub data: DashboardComponentData,
+// ─── Dashboard Icon ──────────────────────────────────
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum DashboardIcon {
+    #[default]
+    Action,
+    Participants,
+    IncentivePool,
+    Rewards,
+    BarChart,
 }
 
-impl DashboardExtension {
-    pub fn grid_size(&self) -> (u8, u8) {
-        match &self.data {
-            DashboardComponentData::StatSummary(_) => (1, 4),
-            DashboardComponentData::ProgressList(_) => (1, 4),
-            DashboardComponentData::TabChart(_) => (1, 4),
-            DashboardComponentData::InfoCard(_) => (1, 2),
-            DashboardComponentData::StatCard(_) => (1, 2),
-            DashboardComponentData::RankingTable(_) => (4, 3),
-        }
-    }
-
-    pub fn order(&self) -> i32 {
-        match &self.data {
-            DashboardComponentData::StatSummary(_) => 1,
-            DashboardComponentData::ProgressList(_) => 2,
-            DashboardComponentData::TabChart(_) => 3,
-            DashboardComponentData::InfoCard(_) => 4,
-            DashboardComponentData::StatCard(_) => 5,
-            DashboardComponentData::RankingTable(_) => 6,
+impl DashboardIcon {
+    pub fn class(&self) -> &str {
+        match self {
+            DashboardIcon::Action => "bg-yellow-500",
+            DashboardIcon::Participants => "bg-cyan-500",
+            DashboardIcon::IncentivePool => "bg-violet-500",
+            DashboardIcon::Rewards => "bg-green-500",
+            DashboardIcon::BarChart => "bg-blue-500",
         }
     }
 }
@@ -43,13 +38,22 @@ pub enum DashboardComponentData {
     RankingTable(RankingTableData),
 }
 
+// ─── Stat Summary ─────────────────────────────────
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct StatSummaryData {
+    pub icon: DashboardIcon,
+    pub participants: i64,
+    pub likes: i64,
+    pub comments: i64,
+    pub total_actions: i64,
+}
+
 // ─── Stat Card ────────────────────────────────────
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct StatCardData {
-    pub icon: String,
-    pub icon_bg: String,
-    pub label: String,
+    pub icon: DashboardIcon,
     pub value: String,
     pub trend: f64,
     #[serde(default)]
@@ -62,46 +66,13 @@ pub struct StatCardData {
     pub incentive_pool: String,
 }
 
-// ─── Stat Summary ────────
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct StatSummaryData {
-    pub icon: String,
-    pub icon_bg: String,
-    pub main_value: String,
-    pub main_label: String,
-    pub items: Vec<StatSummaryItem>,
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct StatSummaryItem {
-    pub label: String,
-    pub value: String,
-    pub trend: f64,
-    #[serde(default)]
-    pub trend_label: String,
-    #[serde(default)]
-    pub icon: String,
-}
-
 // ─── Progress List ──────────────────────────────────────────
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ProgressListData {
-    pub icon: String,
-    pub icon_bg: String,
-    pub main_value: String,
-    pub main_label: String,
-    pub items: Vec<ProgressListItem>,
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct ProgressListItem {
-    pub label: String,
-    pub current: f64,
-    pub total: f64,
-    #[serde(default = "default_color")]
-    pub color: String,
+    pub icon: DashboardIcon,
+    pub poll_count: i64,
+    pub post_count: i64,
 }
 
 fn default_color() -> String {
@@ -112,10 +83,8 @@ fn default_color() -> String {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TabChartData {
-    pub icon: String,
-    pub icon_bg: String,
-    pub main_value: String,
-    pub main_label: String,
+    pub icon: DashboardIcon,
+    pub participants: i64,
     pub tabs: Vec<TabChartTab>,
 }
 
@@ -139,12 +108,8 @@ pub struct TabChartCategory {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct InfoCardData {
-    pub icon: String,
-    pub icon_bg: String,
-    pub main_value: String,
-    pub main_label: String,
-    #[serde(default)]
-    pub unit: String,
+    pub icon: DashboardIcon,
+    pub total_points: i64,
     pub items: Vec<InfoCardItem>,
 }
 
@@ -158,7 +123,6 @@ pub struct InfoCardItem {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct RankingTableData {
-    pub columns: Vec<String>,
     pub entries: Vec<RankingEntry>,
     #[serde(default = "default_page_size")]
     pub page_size: usize,
@@ -178,3 +142,4 @@ pub struct RankingEntry {
     #[serde(default)]
     pub change: i32,
 }
+

@@ -17,7 +17,7 @@ pub fn ParticipantActionPage(space_id: SpacePartition) -> Element {
     rsx! {
         div {
             id: "participant-action-page",
-            class: "flex flex-col gap-5 items-start w-full text-font-primary",
+            class: "flex flex-col gap-5 items-start w-full text-web-font-primary",
 
             div { class: "flex flex-col gap-2.5 w-full max-w-[1024px] mx-auto",
                 h3 { {tr.title} }

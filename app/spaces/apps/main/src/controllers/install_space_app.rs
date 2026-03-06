@@ -16,7 +16,10 @@ pub async fn install_space_app(
     let space_pk_partition: Partition = space_id.clone().into();
 
     let app = SpaceApp::new(space_pk_partition, app_type);
-    app.create(dynamo).await?;
+
+    let items = vec![app.create_transact_write_item()];
+    transact_write_items!(dynamo, items)
+        .map_err(|e| crate::Error::Unknown(format!("Failed to install app: {e}")))?;
 
     Ok(app)
 }
