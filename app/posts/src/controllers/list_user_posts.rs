@@ -23,7 +23,7 @@ pub async fn list_user_posts_handler(
     let (users, _) = ratel_auth::User::find_by_username(cli, &username, Default::default()).await?;
     let target_user = users.into_iter().next().ok_or(Error::PostInvalidUsername)?;
     let user_pk = target_user.pk;
-    let is_onwer = match &user {
+    let is_owner = match &user {
         Some(user) => user.pk == user_pk,
         None => false,
     };
