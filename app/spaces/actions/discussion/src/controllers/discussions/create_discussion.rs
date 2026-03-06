@@ -6,7 +6,7 @@ pub async fn create_discussion(space_id: SpacePartition) -> Result<SpacePost> {
     let common_config = common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let post = SpacePost::new(
-        space_id,
+        space_id.clone(),
         String::new(),
         String::new(),
         String::new(),
@@ -14,7 +14,12 @@ pub async fn create_discussion(space_id: SpacePartition) -> Result<SpacePost> {
         None,
         None,
     );
-    post.create(cli).await?;
+
+    let space_pk_p: common::Partition = space_id.into();
+    let mut items = vec![post.create_transact_write_item()];
+    items.push(space_common::models::aggregate::DashboardAggregate::inc_posts(&space_pk_p, 1));
+    transact_write_items!(cli, items)
+        .map_err(|e| crate::Error::Unknown(format!("Failed to create discussion: {e}")))?;
 
     Ok(post)
 }

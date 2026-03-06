@@ -20,7 +20,7 @@ pub fn FileCard(file: File, editable: bool, on_delete: Option<EventHandler<Strin
             },
             div { class: "[&>svg]:size-9 shrink-0", {icon} }
             div { class: "flex flex-col w-full justify-start items-start gap-1 min-w-0",
-                p { class: "font-semibold text-xs text-font-primary truncate w-full",
+                p { class: "font-semibold text-xs text-web-font-primary truncate w-full",
                     "{file.name}"
                 }
                 if !file.size.is_empty() {

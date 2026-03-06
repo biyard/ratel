@@ -1,4 +1,5 @@
 use crate::*;
+use dioxus::fullstack::Loading;
 pub use thiserror::Error;
 
 #[derive(Debug, Error, Serialize, Deserialize, Translate)]
@@ -212,6 +213,14 @@ pub enum Error {
     #[error("{0}")]
     #[translate(en = "Reward error", ko = "리워드 오류가 발생했습니다.")]
     SpaceReward(#[from] SpaceRewardError),
+
+    // Post related errors
+    #[error("Invalid username")]
+    #[translate(
+        en = "Invalid username. Check URL.",
+        ko = "유효하지 않은 사용자 이름입니다. URL을 확인해주세요."
+    )]
+    PostInvalidUsername,
 }
 
 impl From<String> for Error {

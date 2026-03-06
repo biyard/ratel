@@ -60,3 +60,5 @@ user.json
 
 # Playwright
 /playwright/.auth/
+
+.playwright-mcp

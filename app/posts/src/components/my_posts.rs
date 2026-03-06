@@ -46,11 +46,19 @@ pub fn MyPosts(username: String) -> Element {
 
 #[component]
 pub fn TeamPosts(teamname: String) -> Element {
-    let teamname_signal = use_signal(|| teamname);
+    let mut teamname_signal = use_signal(|| teamname.clone());
     let mut v = use_infinite_query(move |bookmark| {
         let teamname = teamname_signal();
         async move { list_team_posts_handler(teamname, bookmark).await }
     })?;
+
+    let mut v_clone = v.clone();
+    use_effect(use_reactive((&teamname,), move |(name,)| {
+        if *teamname_signal.peek() != name {
+            teamname_signal.set(name);
+            v_clone.restart();
+        }
+    }));
 
     let items = v.items();
 

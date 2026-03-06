@@ -1,21 +1,10 @@
-use common::{components::PopupService, query_provider, Environment, PopupZone};
-use common::{DevTools, ThemeService, ToastProvider, ToastService};
 use dioxus::prelude::*;
-use space_common::ratel_auth;
 use space_shell::Route;
 
 pub const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
 
 fn main() {
-    let cfg = common::CommonConfig::default();
-    let log_level = cfg.log_level;
-    dioxus::logger::init(log_level.into()).expect("logger failed to init");
-
-    #[cfg(not(feature = "server"))]
-    space_common::components::launch(App);
-
-    #[cfg(feature = "server")]
-    space_common::components::serve(App);
+    common::run(App);
 }
 
 #[component]

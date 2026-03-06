@@ -99,12 +99,12 @@ pub enum ButtonStyle {
     Secondary,
 
     #[strum(
-        serialize = "bg-btn-outline-bg border-btn-outline-outline text-btn-outline-text hover:bg-btn-outline-hover-bg hover:border-btn-outline-hover-outline hover:text-btn-outline-hover-text disabled:bg-btn-outline-disable-bg disabled:border-btn-outline-disable-outline disabled:text-btn-outline-disable-text"
+        serialize = "bg-btn-outline-bg border-btn-outline-outline text-btn-outline-text hover:bg-btn-outline-hover-bg hover:border-btn-outline-hover-outline hover:text-btn-outline-hover-text disabled:bg-btn-outline-disable-bg disabled:border-btn-outline-disable-outline disabled:text-btn-outline-disable-text border"
     )]
     Outline,
 
     #[strum(
         serialize = "bg-transparent border-transparent text-text-primary hover:bg-hover disabled:bg-transparent disabled:border-transparent disabled:text-text-secondary"
     )]
-    Ghost,
+    Text,
 }

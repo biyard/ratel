@@ -42,7 +42,7 @@ pub fn CreatorActionPage(space_id: SpacePartition) -> Element {
     rsx! {
         div {
             id: "creator-action-page",
-            class: "flex flex-col gap-5 items-start w-full text-font-primary",
+            class: "flex flex-col gap-5 items-start w-full text-web-font-primary",
 
             div { class: "flex flex-col gap-2.5 mx-auto w-full max-w-[1024px]",
                 // Empty state card
@@ -64,7 +64,7 @@ pub fn CreatorActionPage(space_id: SpacePartition) -> Element {
                             }
                             span { {tr.button_add_action_label} }
                         }
-                    
+
                     }
 
                     p { class: "font-semibold text-center text-[0.75rem]/[1rem] text-neutral-400 light:text-neutral-600",
@@ -85,7 +85,7 @@ pub fn CreatorActionPage(space_id: SpacePartition) -> Element {
                     }
                 }
             }
-        
+
         }
     }
 }

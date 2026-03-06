@@ -1,6 +1,14 @@
-use common::models::space::SpaceCommon;
+use common::{
+    icons::{edit::Eye, home::Home1},
+    models::space::SpaceCommon,
+};
 
-use crate::{components::SpaceStatusBadge, *};
+use crate::{
+    components::SpaceStatusBadge,
+    hooks::use_space_role,
+    providers::{SpaceContextProvider, use_space_context},
+    *,
+};
 
 #[derive(Clone, PartialEq)]
 pub struct SpaceTopLabel {
@@ -21,10 +29,15 @@ pub fn SpaceTop(
 
     //FIXME: Rotate Labels
     let title = labels.first().unwrap().label.clone();
+    let nav = use_navigator();
+    let role = use_space_role();
+    let is_creator = use_memo(move || role() == SpaceUserRole::Creator);
+    let mut ctx = use_space_context();
+    let mut toast = use_toast();
 
     rsx! {
-        div { class: "flex flex-row justify-between items-center px-[12px] py-[17.5px] min-h-[65px]",
-            div { class: "flex flex-row w-full justify-start items-center gap-2.5",
+        div { class: "flex flex-row justify-between items-center py-4 px-3 min-h-16 shrink-0",
+            div { class: "flex flex-row gap-2.5 justify-start items-center w-full",
                 if let Some(space_status) = space_status {
                     SpaceStatusBadge { status: space_status }
                 }
@@ -32,15 +45,43 @@ pub fn SpaceTop(
                 SpaceTitle { title }
             }
 
-            if show_participate_button {
+            div { class: "flex flex-row gap-2.5 justify-end items-center shrink-0",
                 Button {
-                    style: ButtonStyle::Primary,
+                    style: ButtonStyle::Text,
+                    shape: ButtonShape::Square,
+                    class: "flex flex-row gap-1 justify-center items-center",
                     onclick: move |_| {
-                        if let Some(func) = &on_participant {
-                            func.call(());
-                        }
+                        nav.push("/");
                     },
-                    {tr.participant_button_label}
+                    Home1 { class: "w-4 h-4 [&>path]:stroke-icon-primary" }
+                    p { {tr.go_home} }
+                }
+
+                Button {
+                    style: ButtonStyle::Outline,
+                    shape: ButtonShape::Square,
+                    class: "flex flex-row gap-1 justify-center items-center [&>path]:stroke-icon-secondary [&>circle]:stroke-icon-secondary",
+                    onclick: move |_| {
+                        ctx.toggle_role();
+                    },
+                    Eye { class: "w-4 h-4" }
+                    p { {tr.preview} }
+                }
+
+                if is_creator() {
+                    Button { shape: ButtonShape::Square, onclick: move |_| {}, {tr.publish} }
+                }
+
+                if show_participate_button {
+                    Button {
+                        style: ButtonStyle::Primary,
+                        onclick: move |_| {
+                            if let Some(func) = &on_participant {
+                                func.call(());
+                            }
+                        },
+                        {tr.participant_button_label}
+                    }
                 }
             }
         }
@@ -50,12 +91,27 @@ pub fn SpaceTop(
 #[component]
 pub fn SpaceTitle(title: String) -> Element {
     rsx! {
-        div { class: "text-[15px] font-bold text-white", {title} }
+        div { class: "font-bold text-[15px] text-web-font-primary", {title} }
     }
 }
 
 translate! {
     SpaceTopTranslates;
+
+    publish: {
+        en: "Publish",
+        ko: "게시하기",
+    }
+
+    preview: {
+        en: "Preview",
+        ko: "미리보기",
+    }
+
+    go_home: {
+        en: "Go Home",
+        ko: "홈으로 이동",
+    }
 
     participant_button_label: {
         en: "Participate",

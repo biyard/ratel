@@ -1,4 +1,5 @@
 use crate::*;
+use space_common::models::aggregate::DashboardAggregate;
 
 #[delete("/api/spaces/{space_id}/discussions/{discussion_sk}", role: SpaceUserRole)]
 pub async fn delete_discussion(
@@ -12,6 +13,10 @@ pub async fn delete_discussion(
     let discussion_sk_entity: EntityType = discussion_sk.into();
 
     SpacePost::delete(cli, &space_pk, Some(discussion_sk_entity)).await?;
-    // FIXME: If Category has no posts, delete the category
+
+    // Decrement post count in aggregate
+    let agg_item = DashboardAggregate::inc_posts(&space_pk, -1);
+    transact_write_items!(cli, vec![agg_item]).ok();
+
     Ok(())
 }

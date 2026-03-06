@@ -47,7 +47,7 @@ pub struct TransactPointResponse {
 
 pub type AwardPointResponse = TransactPointResponse;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct PointTransactionResponse {
     pub month: String,
     pub transaction_type: String,

@@ -2,12 +2,11 @@ mod creator;
 mod viewer;
 
 use crate::*;
-use space_common::hooks::use_user_role;
+use space_common::hooks::use_space_role;
 
 #[component]
 pub fn HomePage(space_id: SpacePartition) -> Element {
-    let role_loader = use_user_role(&space_id)?;
-    let role = role_loader.read().clone();
+    let role = use_space_role()();
 
     if role == SpaceUserRole::Creator {
         rsx! {

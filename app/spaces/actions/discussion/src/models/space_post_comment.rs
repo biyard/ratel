@@ -146,14 +146,10 @@ impl SpacePostComment {
 
         let comment_tx = comment.create_transact_write_item();
 
-        cli.transact_write_items()
-            .set_transact_items(Some(vec![parent_comment, comment_tx, post]))
-            .send()
-            .await
-            .map_err(|e| {
-                tracing::error!("Failed to reply comment: {}", e);
-                crate::Error::Unknown(format!("Failed to reply comment: {}", e))
-            })?;
+        transact_write_items!(cli, vec![parent_comment, comment_tx, post]).map_err(|e| {
+            tracing::error!("Failed to reply comment: {}", e);
+            crate::Error::Unknown(format!("Failed to reply comment: {}", e))
+        })?;
 
         Ok(comment)
     }
