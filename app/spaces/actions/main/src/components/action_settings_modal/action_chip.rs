@@ -17,7 +17,7 @@ pub fn ActionSettingsActionChip(label: String, on_remove: EventHandler<MouseEven
 
             Button {
                 size: ButtonSize::Icon,
-                style: ButtonStyle::Ghost,
+                style: ButtonStyle::Text,
                 shape: ButtonShape::Square,
                 class: "flex size-[18px] shrink-0 items-center justify-center rounded-none p-0 text-web-font-neutral hover:bg-transparent",
                 onclick: move |e| on_remove.call(e),

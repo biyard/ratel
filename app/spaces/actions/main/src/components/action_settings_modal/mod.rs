@@ -136,7 +136,7 @@ pub fn ActionSettingsModal(
                 div { class: "flex items-center gap-3 max-mobile:gap-2.5",
                     Button {
                         size: ButtonSize::Icon,
-                        style: ButtonStyle::Ghost,
+                        style: ButtonStyle::Text,
                         shape: ButtonShape::Square,
                         class: "flex size-5 items-center justify-center rounded-none p-0 text-web-font-primary hover:bg-transparent",
                         onclick: close_modal,
@@ -198,7 +198,7 @@ pub fn ActionSettingsModal(
                                 Button {
                                     key: "{action.action_id}",
                                     size: ButtonSize::Medium,
-                                    style: ButtonStyle::Ghost,
+                                    style: ButtonStyle::Text,
                                     shape: ButtonShape::Square,
                                     class: "flex min-h-11 w-full items-start justify-start rounded-none px-3 py-2.5 text-left font-medium font-raleway text-[15px]/[18px] whitespace-normal break-words text-web-font-primary hover:bg-neutral-900",
                                     onclick: {
