@@ -39,6 +39,7 @@ pub fn QuizCreatorPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) -
     let mut retry_count = use_signal(|| quiz.retry_count);
 
     let can_edit = quiz.user_response_count == 0;
+    let show_editor = can_edit && editing();
 
     let on_back = move |_| {
         nav.go_back();
@@ -173,19 +174,23 @@ pub fn QuizCreatorPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) -
                     class: "text-base",
                     placeholder: tr.title_placeholder,
                     value: title(),
+                    disabled: !can_edit,
                     oninput: move |e: Event<FormData>| title.set(e.value()),
                     onblur: on_title_save,
                 }
             }
-
-            TimeRangeSetting {
-                started_at: started_at(),
-                ended_at: ended_at(),
-                on_change: move |(start, end)| {
-                    started_at.set(start);
-                    ended_at.set(end);
-                    on_time_save((start, end));
-                },
+            if can_edit {
+                TimeRangeSetting {
+                    started_at: started_at(),
+                    ended_at: ended_at(),
+                    on_change: move |(start, end)| {
+                        started_at.set(start);
+                        ended_at.set(end);
+                        on_time_save((start, end));
+                    },
+                }
+            } else {
+                TimeRangeDisplay { started_at: started_at(), ended_at: ended_at() }
             }
 
             div { class: "flex flex-col gap-1",
@@ -197,6 +202,7 @@ pub fn QuizCreatorPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) -
                     class: "text-base",
                     placeholder: tr.retry_placeholder,
                     value: retry_count().to_string(),
+                    disabled: !can_edit,
                     attributes: vec![Attribute::new("min", "0", None, false)],
                     oninput: move |e: Event<FormData>| {
                         if let Ok(v) = e.value().parse::<i64>() {
@@ -209,7 +215,7 @@ pub fn QuizCreatorPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) -
 
             if can_edit {
                 div { class: "flex justify-end gap-2",
-                    if editing() {
+                    if show_editor {
                         Button {
                             style: ButtonStyle::Primary,
                             class: "text-sm",
@@ -233,7 +239,7 @@ pub fn QuizCreatorPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) -
                 }
             }
 
-            if editing() {
+            if show_editor {
                 QuizEditor { questions, answers }
             } else {
                 if quiz.questions.is_empty() {

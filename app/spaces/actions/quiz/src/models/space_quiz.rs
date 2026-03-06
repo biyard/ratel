@@ -57,6 +57,13 @@ impl SpaceQuiz {
         }
     }
 
+    pub fn can_participate(user_role: &SpaceUserRole) -> crate::Result<()> {
+        match user_role {
+            SpaceUserRole::Participant => Ok(()),
+            _ => Err(crate::Error::NoPermission),
+        }
+    }
+
     pub fn can_view(_user_role: &SpaceUserRole) -> crate::Result<()> {
         Ok(())
     }
