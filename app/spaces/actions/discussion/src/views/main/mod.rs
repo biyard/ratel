@@ -4,7 +4,7 @@ pub(crate) mod viewer;
 use crate::controllers::{get_discussion, list_comments};
 use crate::*;
 use creator::CreatorMain;
-use space_common::hooks::use_user_role;
+use space_common::hooks::use_space_role;
 use space_common::types::space_page_actions_discussion_key;
 use viewer::ViewerMain;
 
@@ -22,8 +22,7 @@ pub fn DiscussionMainPage(
 
     let discussion = discussion_loader.read().clone();
 
-    let role_loader = use_user_role(&space_id)?;
-    let role = role_loader.read().clone();
+    let role = use_space_role()();
 
     //FIXME: use InfiniteQuery
     let comments_loader = use_query(&key, {
