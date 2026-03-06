@@ -1,6 +1,8 @@
 use dioxus::fullstack::{Loader, Loading};
 
-use crate::{controllers::get_user_role, types::space_user_role_key, *};
+use crate::{
+    controllers::get_user_role, providers::use_space_context, types::space_user_role_key, *,
+};
 
 // pub fn use_user_role() -> SpaceUserRole {
 //     let role = use_context::<Loader<SpaceUserRole>>();
@@ -19,12 +21,8 @@ use crate::{controllers::get_user_role, types::space_user_role_key, *};
 //     ctx.restart();
 // }
 
-pub fn use_user_role(
-    space_id: &SpacePartition,
-) -> std::result::Result<Loader<SpaceUserRole>, Loading> {
-    let key = space_user_role_key(space_id);
-    use_query(&key, {
-        let space_id = space_id.clone();
-        move || get_user_role(space_id.clone())
-    })
+pub fn use_space_role() -> ReadSignal<SpaceUserRole> {
+    let ctx = use_space_context();
+
+    ctx.current_role.into()
 }

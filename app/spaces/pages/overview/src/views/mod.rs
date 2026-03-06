@@ -8,12 +8,11 @@ use creator_page::*;
 use i18n::*;
 use viewer_page::*;
 
-use space_common::hooks::use_user_role;
+use space_common::hooks::use_space_role;
 
 #[component]
 pub fn HomePage(space_id: SpacePartition) -> Element {
-    let role_loader = use_user_role(&space_id)?;
-    let role = role_loader.read().clone();
+    let role = use_space_role()();
 
     match role {
         SpaceUserRole::Creator => rsx! {
