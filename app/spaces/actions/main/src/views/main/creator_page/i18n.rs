@@ -8,6 +8,11 @@ translate! {
         ko: "Actions",
     },
 
+    button_settings_label: {
+        en: "Action Settings",
+        ko: "액션 설정",
+    },
+
     button_add_action_label: {
         en: "Select Action Type",
         ko: "액션 생성"
