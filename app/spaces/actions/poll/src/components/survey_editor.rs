@@ -34,7 +34,7 @@ pub fn SurveyEditor(props: SurveyEditorProps) -> Element {
                             div { class: "flex justify-end",
                                 Button {
                                     size: ButtonSize::Small,
-                                    style: ButtonStyle::Ghost,
+                                    style: ButtonStyle::Text,
                                     class: "flex items-center gap-1 text-[#8C8C8C] text-[15px] leading-[24px] tracking-[0.5px] font-medium",
                                     onclick: move |_| {
                                         let mut qs = questions.read().clone();
