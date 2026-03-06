@@ -17,6 +17,12 @@ pub async fn list_actions(
         space_pk.clone(),
         SpacePoll::opt_all().sk(EntityType::SpacePoll(String::default()).to_string()),
     );
+    let quiz_future = space_action_quiz::SpaceQuiz::query(
+        cli,
+        space_pk.clone(),
+        space_action_quiz::SpaceQuiz::opt_all()
+            .sk(EntityType::SpaceQuiz(String::default()).to_string()),
+    );
     let discussion_future = space_action_discussion::SpacePost::query(
         cli,
         space_pk.clone(),
@@ -28,9 +34,13 @@ pub async fn list_actions(
         &space_pk,
         Some(EntityType::SpaceSubscription),
     );
-    let ((polls, _), (discussions, _), subscription) =
-        tokio::try_join!(poll_future, discussion_future, subscription_future)
-            .map_err(|e| Error::InternalServerError(format!("failed to load actions: {e:?}")))?;
+    let ((polls, _), (quizzes, _), (discussions, _), subscription) = tokio::try_join!(
+        poll_future,
+        quiz_future,
+        discussion_future,
+        subscription_future
+    )
+    .map_err(|e| Error::InternalServerError(format!("failed to load actions: {e:?}")))?;
 
     let mut actions: Vec<SpaceAction> = if let Some(user) = user.0 {
         let keys: Vec<_> = polls
@@ -61,6 +71,9 @@ pub async fn list_actions(
     } else {
         polls.into_iter().map(|poll| (poll, false).into()).collect()
     };
+
+    let quiz_actions: Vec<SpaceAction> = quizzes.into_iter().map(Into::into).collect();
+    actions.extend(quiz_actions);
 
     // Add discussions to the actions list
     let discussion_actions: Vec<SpaceAction> = discussions

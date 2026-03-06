@@ -1,4 +1,4 @@
-use common::{SpacePartition, SpacePollEntityType, SpacePostEntityType};
+use common::{SpacePartition, SpacePollEntityType, SpacePostEntityType, SpaceQuizEntityType};
 
 pub fn space_root(space_id: &SpacePartition) -> String {
     format!("/spaces/{space_id}/dashboard")
@@ -27,8 +27,8 @@ pub fn space_action_subscription(space_id: &SpacePartition) -> String {
     format!("/spaces/{space_id}/actions/subscriptions")
 }
 
-pub fn space_action_quiz(space_id: &SpacePartition) -> String {
-    format!("/spaces/{space_id}/actions/quizes")
+pub fn space_action_quiz(space_id: &SpacePartition, quiz_id: &SpaceQuizEntityType) -> String {
+    format!("/spaces/{space_id}/actions/quizzes/{quiz_id}")
 }
 
 pub fn space_action_discussion_edit(

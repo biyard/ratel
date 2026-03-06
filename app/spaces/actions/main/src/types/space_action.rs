@@ -79,6 +79,25 @@ impl From<space_action_subscription::SpaceSubscription> for SpaceAction {
     }
 }
 
+impl From<space_action_quiz::SpaceQuiz> for SpaceAction {
+    fn from(quiz: space_action_quiz::SpaceQuiz) -> Self {
+        let action_id = quiz.sk.to_string();
+        Self {
+            action_id,
+            action_type: SpaceActionType::Quiz,
+            title: quiz.title,
+            description: quiz.description,
+            created_at: quiz.created_at,
+            updated_at: quiz.updated_at,
+            total_score: None,
+            total_point: None,
+            started_at: Some(quiz.started_at),
+            ended_at: Some(quiz.ended_at),
+            user_participated: false,
+        }
+    }
+}
+
 use space_common::types::route::{
     space_action_discussion, space_action_poll, space_action_quiz, space_action_subscription,
 };
@@ -90,7 +109,7 @@ impl SpaceAction {
                 space_action_discussion(space_id, &self.action_id.clone().into())
             }
             SpaceActionType::Subscription => space_action_subscription(space_id),
-            SpaceActionType::Quiz => space_action_quiz(space_id),
+            SpaceActionType::Quiz => space_action_quiz(space_id, &self.action_id.clone().into()),
         }
     }
 }

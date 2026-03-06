@@ -1,3 +1,4 @@
+use crate::components::*;
 use crate::*;
 
 #[derive(Props, Clone, PartialEq)]
@@ -11,23 +12,16 @@ pub fn SurveyEditor(props: SurveyEditorProps) -> Element {
     let mut questions = props.questions;
 
     rsx! {
-        div { class: "flex flex-col gap-4 w-full",
-            for (idx, question) in questions.read().iter().enumerate() {
+        div { class: "flex flex-col gap-2 w-full bg-[#1A1A1A] rounded-[12px] px-4 pt-1 pb-5",
+            for (idx , question) in questions.read().iter().enumerate() {
                 {
+                    let total = questions.read().len();
+                    let is_last = idx + 1 == total;
                     let question = question.clone();
                     rsx! {
-                        div { class: "flex flex-col gap-2 p-4 border border-neutral-700 rounded-lg",
+                        div { class: if is_last { "flex flex-col gap-3 pb-2" } else { "flex flex-col gap-3 pb-4 border-b border-[#262626]" },
                             div { class: "flex justify-between items-center",
                                 span { class: "text-sm text-neutral-400", "Question {idx + 1}" }
-                                button {
-                                    class: "text-red-400 text-sm hover:text-red-300",
-                                    onclick: move |_| {
-                                        let mut qs = questions.read().clone();
-                                        qs.remove(idx);
-                                        questions.set(qs);
-                                    },
-                                    "Remove"
-                                }
                             }
                             QuestionEditor {
                                 question: question.clone(),
@@ -36,6 +30,20 @@ pub fn SurveyEditor(props: SurveyEditorProps) -> Element {
                                     qs[idx] = q;
                                     questions.set(qs);
                                 },
+                            }
+                            div { class: "flex justify-end",
+                                Button {
+                                    size: ButtonSize::Small,
+                                    style: ButtonStyle::Text,
+                                    class: "flex items-center gap-1 text-[#8C8C8C] text-[15px] leading-[24px] tracking-[0.5px] font-medium",
+                                    onclick: move |_| {
+                                        let mut qs = questions.read().clone();
+                                        qs.remove(idx);
+                                        questions.set(qs);
+                                    },
+                                    "Delete"
+                                    icons::edit::Delete2 { class: "w-6 h-6 [&>path]:stroke-[#737373]" }
+                                }
                             }
                         }
                     }
@@ -55,62 +63,91 @@ pub fn SurveyEditor(props: SurveyEditorProps) -> Element {
 
 #[component]
 fn QuestionTypeSelector(on_add: EventHandler<Question>) -> Element {
+    let button_class = "px-3 py-2 text-sm border border-neutral-600 rounded-lg hover:bg-neutral-800 text-neutral-300 flex items-center gap-1";
     rsx! {
         div { class: "flex flex-wrap gap-2",
-            button {
-                class: "px-3 py-2 text-sm border border-neutral-600 rounded-lg hover:bg-neutral-800 text-neutral-300",
+            Button {
+                size: ButtonSize::Small,
+                style: ButtonStyle::Outline,
+                shape: ButtonShape::Square,
+                class: button_class,
                 onclick: move |_| {
-                    on_add.call(Question::SingleChoice(ChoiceQuestion {
-                        title: String::new(),
-                        description: None,
-                        image_url: None,
-                        options: vec!["Option 1".to_string(), "Option 2".to_string()],
-                        is_required: Some(false),
-                        allow_other: None,
-                    }));
+                    on_add
+                        .call(
+                            Question::SingleChoice(ChoiceQuestion {
+                                title: String::new(),
+                                description: None,
+                                image_url: None,
+                                options: vec!["Option 1".to_string(), "Option 2".to_string()],
+                                is_required: Some(false),
+                                allow_other: None,
+                            }),
+                        );
                 },
-                "+ Single Choice"
+                icons::validations::Add { class: "w-4 h-4 [&>path]:stroke-current" }
+                "Single Choice"
             }
-            button {
-                class: "px-3 py-2 text-sm border border-neutral-600 rounded-lg hover:bg-neutral-800 text-neutral-300",
+            Button {
+                size: ButtonSize::Small,
+                style: ButtonStyle::Outline,
+                shape: ButtonShape::Square,
+                class: button_class,
                 onclick: move |_| {
-                    on_add.call(Question::MultipleChoice(ChoiceQuestion {
-                        title: String::new(),
-                        description: None,
-                        image_url: None,
-                        options: vec!["Option 1".to_string(), "Option 2".to_string()],
-                        is_required: Some(false),
-                        allow_other: None,
-                    }));
+                    on_add
+                        .call(
+                            Question::MultipleChoice(ChoiceQuestion {
+                                title: String::new(),
+                                description: None,
+                                image_url: None,
+                                options: vec!["Option 1".to_string(), "Option 2".to_string()],
+                                is_required: Some(false),
+                                allow_other: None,
+                            }),
+                        );
                 },
-                "+ Multiple Choice"
+                icons::validations::Add { class: "w-4 h-4 [&>path]:stroke-current" }
+                "Multiple Choice"
             }
-            button {
-                class: "px-3 py-2 text-sm border border-neutral-600 rounded-lg hover:bg-neutral-800 text-neutral-300",
+            Button {
+                size: ButtonSize::Small,
+                style: ButtonStyle::Outline,
+                shape: ButtonShape::Square,
+                class: button_class,
                 onclick: move |_| {
-                    on_add.call(Question::Subjective(SubjectiveQuestion {
-                        title: String::new(),
-                        description: String::new(),
-                        is_required: Some(false),
-                    }));
+                    on_add
+                        .call(
+                            Question::Subjective(SubjectiveQuestion {
+                                title: String::new(),
+                                description: String::new(),
+                                is_required: Some(false),
+                            }),
+                        );
                 },
-                "+ Subjective"
+                icons::validations::Add { class: "w-4 h-4 [&>path]:stroke-current" }
+                "Subjective"
             }
-            button {
-                class: "px-3 py-2 text-sm border border-neutral-600 rounded-lg hover:bg-neutral-800 text-neutral-300",
+            Button {
+                size: ButtonSize::Small,
+                style: ButtonStyle::Outline,
+                shape: ButtonShape::Square,
+                class: button_class,
                 onclick: move |_| {
-                    on_add.call(Question::LinearScale(LinearScaleQuestion {
-                        title: String::new(),
-                        description: None,
-                        image_url: None,
-                        min_value: 1,
-                        max_value: 5,
-                        min_label: "Low".to_string(),
-                        max_label: "High".to_string(),
-                        is_required: Some(false),
-                    }));
+                    on_add
+                        .call(
+                            Question::LinearScale(LinearScaleQuestion {
+                                title: String::new(),
+                                description: None,
+                                image_url: None,
+                                min_value: 1,
+                                max_value: 5,
+                                min_label: "Low".to_string(),
+                                max_label: "High".to_string(),
+                                is_required: Some(false),
+                            }),
+                        );
                 },
-                "+ Linear Scale"
+                icons::validations::Add { class: "w-4 h-4 [&>path]:stroke-current" }
+                "Linear Scale"
             }
         }
     }
@@ -137,91 +174,6 @@ fn QuestionEditor(question: Question, on_change: EventHandler<Question>) -> Elem
         Question::LinearScale(q) => rsx! {
             LinearScaleQuestionEditor { question: q, on_change }
         },
-    }
-}
-
-#[component]
-fn ChoiceQuestionEditor(
-    question: ChoiceQuestion,
-    is_single: bool,
-    on_change: EventHandler<Question>,
-) -> Element {
-    let q = question.clone();
-    rsx! {
-        input {
-            class: "w-full p-2 bg-transparent border-b border-neutral-600 text-white placeholder-neutral-500 focus:border-blue-500 outline-none",
-            r#type: "text",
-            placeholder: "Question title",
-            value: "{q.title}",
-            oninput: move |evt| {
-                let mut next = q.clone();
-                next.title = evt.value().to_string();
-                if is_single {
-                    on_change.call(Question::SingleChoice(next));
-                } else {
-                    on_change.call(Question::MultipleChoice(next));
-                }
-            },
-        }
-        div { class: "flex flex-col gap-1",
-            for (opt_idx, option) in question.options.iter().enumerate() {
-                {
-                    let question_for_input = question.clone();
-                    let question_for_remove = question.clone();
-                    let on_change_input = on_change.clone();
-                    let on_change_remove = on_change.clone();
-                    rsx! {
-                        div { class: "flex items-center gap-2",
-                            input {
-                                class: "flex-1 p-2 bg-transparent border-b border-neutral-700 text-white placeholder-neutral-500 focus:border-blue-500 outline-none text-sm",
-                                r#type: "text",
-                                value: "{option}",
-                                oninput: move |evt| {
-                                    let mut next = question_for_input.clone();
-                                    next.options[opt_idx] = evt.value().to_string();
-                                    if is_single {
-                                        on_change_input.call(Question::SingleChoice(next));
-                                    } else {
-                                        on_change_input.call(Question::MultipleChoice(next));
-                                    }
-                                },
-                            }
-                            button {
-                                class: "text-red-400 text-xs hover:text-red-300",
-                                onclick: move |_| {
-                                    let mut next = question_for_remove.clone();
-                                    next.options.remove(opt_idx);
-                                    if is_single {
-                                        on_change_remove.call(Question::SingleChoice(next));
-                                    } else {
-                                        on_change_remove.call(Question::MultipleChoice(next));
-                                    }
-                                },
-                                "x"
-                            }
-                        }
-                    }
-                }
-            }
-            {
-                let question = question.clone();
-                rsx! {
-                    button {
-                        class: "text-sm text-blue-400 hover:text-blue-300 mt-1",
-                        onclick: move |_| {
-                            let mut next = question.clone();
-                            next.options.push(format!("Option {}", next.options.len() + 1));
-                            if is_single {
-                                on_change.call(Question::SingleChoice(next));
-                            } else {
-                                on_change.call(Question::MultipleChoice(next));
-                            }
-                        },
-                        "+ Add Option"
-                    }
-                }
-            }
-        }
     }
 }
 
@@ -266,7 +218,7 @@ fn CheckboxQuestionEditor(
             },
         }
         div { class: "flex flex-col gap-1",
-            for (opt_idx, option) in question.options.iter().enumerate() {
+            for (opt_idx , option) in question.options.iter().enumerate() {
                 {
                     let question = question.clone();
                     let on_change = on_change.clone();
@@ -309,7 +261,7 @@ fn DropdownQuestionEditor(
             },
         }
         div { class: "flex flex-col gap-1",
-            for (opt_idx, option) in question.options.iter().enumerate() {
+            for (opt_idx , option) in question.options.iter().enumerate() {
                 {
                     let question = question.clone();
                     let on_change = on_change.clone();
