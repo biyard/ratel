@@ -878,7 +878,6 @@ dependencies = [
  "axum",
  "common",
  "dioxus",
- "lambda_http 1.0.2",
  "ratel-admin",
  "ratel-auth",
  "ratel-membership",
@@ -3880,6 +3879,7 @@ dependencies = [
  "hmac 0.12.1",
  "icons",
  "js-sys",
+ "lambda_http 1.0.2",
  "lucide-dioxus",
  "names",
  "percent-encoding",
@@ -13880,9 +13880,9 @@ dependencies = [
 
 [[package]]
 name = "regex"
-version = "1.12.2"
+version = "1.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "843bc0191f75f3e22651ae5f1e72939ab2f72a4bc30fa80a066bd66edefc24d4"
+checksum = "e10754a14b9137dd7b1e3e5b0493cc9171fdd105e0ab477f51b72e7f3ac0e276"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -17911,11 +17911,17 @@ dependencies = [
 name = "space-common"
 version = "0.1.0"
 dependencies = [
+ "aws-sdk-dynamodb",
+ "base64 0.22.1",
  "common",
  "dioxus",
  "ratel-auth",
  "ratel-post",
+ "regex",
  "serde",
+ "serde_dynamo",
+ "serde_json",
+ "tracing",
 ]
 
 [[package]]
@@ -17931,9 +17937,9 @@ dependencies = [
  "serde",
  "serde_dynamo",
  "serde_json",
+ "space-app-main",
  "space-common",
  "tracing",
- "uuid 1.18.1",
 ]
 
 [[package]]

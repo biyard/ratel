@@ -14,6 +14,8 @@ test("Create a post", async ({ page }) => {
   await editor.fill(contents);
 
   await click(page, { text: "Publish" });
+  await click(page, { testId: "public-option" });
+  await click(page, { label: "Confirm visibility selection" });
   await getLocator(page, { label: "Create a Space" });
 });
 

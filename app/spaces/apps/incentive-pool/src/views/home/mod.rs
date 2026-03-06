@@ -113,8 +113,8 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
     let invalid_usdt_amount_notice = tr.invalid_usdt_amount.to_string();
 
     rsx! {
-        div { class: "flex overflow-visible flex-col gap-5 self-start pb-6 w-full min-w-0 shrink-0 max-w-[1024px] max-tablet:gap-4 text-font-primary",
-            h3 { class: "font-bold sp-dash-font-raleway text-[24px]/[28px] tracking-[-0.24px] text-font-primary",
+        div { class: "flex overflow-visible flex-col gap-5 self-start pb-6 w-full min-w-0 shrink-0 max-w-[1024px] max-tablet:gap-4 text-web-font-primary",
+            h3 { class: "font-bold font-raleway text-[24px]/[28px] tracking-[-0.24px] text-web-font-primary",
                 {tr.page_title}
             }
 
@@ -131,13 +131,13 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
                             icons::ratel::Chest {
                                 width: "24",
                                 height: "24",
-                                class: "text-font-primary [&>path]:fill-none [&>path]:stroke-current",
+                                class: "text-web-font-primary [&>path]:fill-none [&>path]:stroke-current",
                             }
                         }
-                        p { class: "font-bold leading-5 sp-dash-font-raleway text-[17px] tracking-[-0.18px] text-font-primary",
+                        p { class: "font-bold leading-5 font-raleway text-[17px] tracking-[-0.18px] text-web-font-primary",
                             {tr.header_title}
                         }
-                        p { class: "w-full font-medium leading-4 sp-dash-font-raleway text-[12px] tracking-[0] text-card-meta",
+                        p { class: "w-full font-medium leading-4 font-raleway text-[12px] tracking-[0] text-card-meta",
                             {tr.header_description}
                         }
                     }
@@ -154,17 +154,17 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
 
             SectionCard {
                 title: tr.section_incentive_pool.to_string(),
-                title_class: "font-bold sp-dash-font-raleway text-[24px]/[28px] tracking-[-0.24px] text-font-primary",
+                title_class: "font-bold font-raleway text-[24px]/[28px] tracking-[-0.24px] text-web-font-primary",
                 body_class: "flex flex-col gap-4 p-5 bg-card max-mobile:p-4",
 
                 div { class: "flex flex-col gap-2 items-start",
-                    p { class: "font-bold leading-5 sp-dash-font-raleway text-[17px] tracking-[-0.18px] text-font-primary",
+                    p { class: "font-bold leading-5 font-raleway text-[17px] tracking-[-0.18px] text-web-font-primary",
                         {tr.incentive_pool_address}
                     }
                     div { class: "flex gap-2 items-center w-full max-tablet:flex-wrap",
                         div { class: "flex flex-1 items-center w-full min-w-0 h-11 border-gray-600 rounded-[8px] border-[0.5px] bg-web-input",
                             input {
-                                class: "flex-1 px-3 min-w-0 h-full font-medium bg-transparent outline-none sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-font-primary",
+                                class: "flex-1 px-3 min-w-0 h-full font-medium bg-transparent outline-none font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-web-font-primary",
                                 value: "{show_incentive_address}",
                                 readonly: true,
                             }
@@ -286,15 +286,15 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
 
             SectionCard {
                 title: tr.deposit_in_incentive_pool.to_string(),
-                title_class: "font-bold sp-dash-font-raleway text-[24px]/[28px] tracking-[-0.24px] text-font-primary",
+                title_class: "font-bold font-raleway text-[24px]/[28px] tracking-[-0.24px] text-web-font-primary",
                 body_class: "flex flex-col items-start p-5 gap-[10px] bg-card max-mobile:p-4",
 
                 div { class: "flex flex-col gap-2 justify-center items-start w-full",
-                    p { class: "font-bold leading-5 sp-dash-font-raleway text-[17px] tracking-[-0.18px] text-font-primary",
+                    p { class: "font-bold leading-5 font-raleway text-[17px] tracking-[-0.18px] text-web-font-primary",
                         {tr.incentive_token}
                     }
                     select {
-                        class: "flex justify-between items-center px-3 w-full h-11 font-medium border-gray-600 rounded-[8px] border-[0.5px] bg-web-input sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-font-primary disabled:text-web-font-neutral",
+                        class: "flex justify-between items-center px-3 w-full h-11 font-medium border-gray-600 rounded-[8px] border-[0.5px] bg-web-input font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-web-font-primary disabled:text-web-font-neutral",
                         disabled: token_items.is_empty(),
                         value: selected_token().unwrap_or_default(),
                         onchange: move |evt| {
@@ -317,13 +317,13 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
                             }
                         }
                     }
-                    p { class: "font-normal text-gray-500 sp-dash-font-inter text-[12px] leading-[16px]",
+                    p { class: "font-normal text-gray-500 font-inter text-[12px] leading-[16px]",
                         {tr.token_distribution_hint}
                     }
                 }
 
                 div { class: "flex flex-col gap-2 justify-center items-start w-full",
-                    p { class: "font-bold leading-5 sp-dash-font-raleway text-[17px] tracking-[-0.18px] text-font-primary",
+                    p { class: "font-bold leading-5 font-raleway text-[17px] tracking-[-0.18px] text-web-font-primary",
                         {tr.deposit_amount}
                     }
                     div { class: "relative w-full",
@@ -331,7 +331,7 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
                             let invalid_usdt_amount = invalid_usdt_amount_notice.clone();
                             rsx! {
                                 input {
-                                    class: "px-3 w-full h-12 font-medium text-right border-gray-600 rounded-[8px] border-[0.5px] bg-web-input pr-[68px] sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-font-primary",
+                                    class: "px-3 w-full h-12 font-medium text-right border-gray-600 rounded-[8px] border-[0.5px] bg-web-input pr-[68px] font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-web-font-primary",
                                     value: "{deposit_amount}",
                                     oninput: move |evt| {
                                         let value = evt.value().to_string();
@@ -345,16 +345,16 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
                                 }
                             }
                         }
-                        span { class: "absolute right-3 top-1/2 font-normal text-gray-500 -translate-y-1/2 pointer-events-none sp-dash-font-inter text-[12px] leading-[16px]",
+                        span { class: "absolute right-3 top-1/2 font-normal text-gray-500 -translate-y-1/2 pointer-events-none font-inter text-[12px] leading-[16px]",
                             "USDT"
                         }
                     }
                     if let Some(msg) = deposit_validation() {
-                        p { class: "font-normal text-red-400 sp-dash-font-inter text-[12px] leading-[16px]",
+                        p { class: "font-normal text-red-400 font-inter text-[12px] leading-[16px]",
                             "{msg}"
                         }
                     } else {
-                        p { class: "font-normal text-gray-500 sp-dash-font-inter text-[12px] leading-[16px]",
+                        p { class: "font-normal text-gray-500 font-inter text-[12px] leading-[16px]",
                             {tr.deposit_amount_hint}
                         }
                     }
@@ -363,11 +363,11 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
 
             SectionCard {
                 title: tr.distribution.to_string(),
-                title_class: "font-semibold leading-5 text-center sp-dash-font-raleway text-[17px] tracking-[-0.18px] text-font-primary",
+                title_class: "font-semibold leading-5 text-center font-raleway text-[17px] tracking-[-0.18px] text-web-font-primary",
                 body_class: "flex flex-col items-start p-5 gap-[10px] bg-card max-mobile:p-4",
 
                 div { class: "flex flex-col gap-2 items-start w-full",
-                    p { class: "font-semibold sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-font-primary",
+                    p { class: "font-semibold font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-web-font-primary",
                         {tr.weight_sampling}
                     }
 
@@ -401,13 +401,13 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
                     }
 
                     div { class: "flex flex-col flex-1 gap-0.5 items-start min-w-0",
-                        p { class: "w-full font-semibold leading-5 sp-dash-font-raleway text-[17px] tracking-[-0.18px] text-font-primary",
+                        p { class: "w-full font-semibold leading-5 font-raleway text-[17px] tracking-[-0.18px] text-web-font-primary",
                             {tr.mainnet_and_funding}
                         }
-                        p { class: "w-full font-medium leading-5 sp-dash-font-raleway text-[13px] tracking-[0] text-card-meta",
+                        p { class: "w-full font-medium leading-5 font-raleway text-[13px] tracking-[0] text-card-meta",
                             {tr.network_support_note}
                         }
-                        p { class: "w-full font-medium leading-5 sp-dash-font-raleway text-[13px] tracking-[0] text-card-meta",
+                        p { class: "w-full font-medium leading-5 font-raleway text-[13px] tracking-[0] text-card-meta",
                             {tr.external_funding_note}
                         }
                     }
@@ -498,7 +498,7 @@ pub fn HomePage(space_id: SpacePartition) -> Element {
         }
     } else {
         rsx! {
-            div { class: "flex justify-center items-center w-full h-full text-font-primary",
+            div { class: "flex justify-center items-center w-full h-full text-web-font-primary",
                 {tr.no_permission}
             }
         }

@@ -1,5 +1,5 @@
 use crate::*;
-use ratel_auth::User;
+use space_common::models::aggregate::DashboardAggregate;
 
 #[delete("/api/spaces/{space_pk}/polls/{poll_sk}", role: SpaceUserRole)]
 pub async fn delete_poll(space_pk: SpacePartition, poll_sk: SpacePollEntityType) -> Result<String> {
@@ -14,6 +14,10 @@ pub async fn delete_poll(space_pk: SpacePartition, poll_sk: SpacePollEntityType)
         .ok_or(Error::NotFound("Poll not found".into()))?;
 
     SpacePoll::delete(cli, &space_pk, Some(poll_sk_entity)).await?;
+
+    // Decrement poll count in aggregate
+    let agg_item = DashboardAggregate::inc_polls(&space_pk, -1);
+    transact_write_items!(cli, vec![agg_item]).ok();
 
     Ok("success".to_string())
 }

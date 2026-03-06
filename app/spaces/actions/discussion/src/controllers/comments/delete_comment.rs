@@ -30,7 +30,11 @@ pub async fn delete_comment(
         .decrease_comments(1)
         .transact_write_item();
 
-    let mut txs = vec![delete_comment_tx, post_tx];
+    let space_pk: Partition = space_id.into();
+    let agg_item =
+        space_common::models::aggregate::DashboardAggregate::inc_comments(&space_pk, -1);
+
+    let mut txs = vec![delete_comment_tx, post_tx, agg_item];
 
     if let Some(parent_sk) = &comment.parent_comment_sk {
         let parent_tx = SpacePostComment::updater(&space_post_pk, parent_sk)
@@ -39,14 +43,10 @@ pub async fn delete_comment(
         txs.push(parent_tx);
     }
 
-    cli.transact_write_items()
-        .set_transact_items(Some(txs))
-        .send()
-        .await
-        .map_err(|e| {
-            tracing::error!("Failed to delete comment: {}", e);
-            crate::Error::Unknown(format!("Failed to delete comment: {}", e))
-        })?;
+    transact_write_items!(cli, txs).map_err(|e| {
+        tracing::error!("Failed to delete comment: {}", e);
+        crate::Error::Unknown(format!("Failed to delete comment: {}", e))
+    })?;
 
     Ok(())
 }

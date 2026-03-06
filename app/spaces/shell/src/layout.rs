@@ -1,20 +1,21 @@
 use crate::{controllers::participate_space::participate_space, *};
 use space_common::hooks::use_space_query;
+use space_common::providers::SpaceContextProvider;
 use space_common::ratel_auth::hooks::use_user_context;
 use space_common::ratel_auth::{LoginModal, UserContextStoreExt};
 use space_common::types::space_key;
 use space_common::{
     components::{SpaceNav, SpaceNavItem, SpaceTop, SpaceTopLabel},
-    hooks::use_user_role,
+    hooks::use_space_role,
 };
 
 #[component]
 pub fn SpaceLayout(space_id: SpacePartition) -> Element {
+    let ctx = SpaceContextProvider::init(&space_id)?;
+
     use_context_provider(|| LayoverService::new());
-    let role_loader = use_user_role(&space_id)?;
-    let role = role_loader.read().clone();
-    let space_loader = use_space_query(&space_id)?;
-    let space = space_loader.read().clone();
+    let role = ctx.current_role();
+    let space = ctx.space();
     let lang = use_language();
 
     let user_ctx = use_user_context();
@@ -58,7 +59,6 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
 
     let on_participant = move |_| {
         let space_id = space_id.clone();
-        let mut space = space.clone();
         async move {
             let space_detail = space_key(&space_id);
             participate.call(space_id).await;
@@ -67,27 +67,36 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
     };
 
     rsx! {
-        div { class: "grid overflow-hidden grid-cols-7 w-full h-screen bg-space-bg text-font-primary",
-            SpaceNav {
-                logo: "https://metadata.ratel.foundation/logos/logo.png",
-                menus,
-                user,
-                role,
-                login_handler: move |_| {
-                    popup.open(rsx! {
-                        LoginModal {}
-                    }).with_title(tr.title);
-                },
+        SeoMeta { title: space.title.clone(), description: space.description() }
+        div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-component-bg text-web-font-primary",
+            div { class: "hidden tablet:flex",
+                SpaceNav {
+                    logo: "https://metadata.ratel.foundation/logos/logo.png",
+                    menus,
+                    user,
+                    role,
+                    login_handler: move |_| {
+                        popup.open(rsx! {
+                            LoginModal {}
+                        }).with_title(tr.title);
+                    },
+                }
             }
-            div { class: "flex flex-col col-span-6 col-start-2 min-h-0",
+            div { class: "flex flex-col min-w-0 min-h-0",
                 SpaceTop {
                     labels,
                     space_status,
                     show_participate_button: show_participate,
                     on_participant,
                 }
-                div { class: "flex overflow-auto p-5 w-full top-[65px] grow bg-space-body-bg rounded-tl-[10px] h-[calc(100%-65px)]",
-                    Outlet::<Route> {}
+                div { class: "flex overflow-auto flex-1 p-5 w-full bg-web-bg rounded-tl-[10px]",
+                    SuspenseBoundary {
+                        fallback: |_| rsx! {
+                            LoadingIndicator { max_width: "300px" }
+                        },
+
+                        Outlet::<Route> {}
+                    }
                 }
             }
         }
