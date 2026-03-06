@@ -236,7 +236,17 @@ jobs:
         if: failure()
         timeout-minutes: 15
         env:
+          DYNAMO_TABLE_PREFIX: ratel-local
+          ENV: local
+          RUSTFLAGS: "-D warnings"
+          RUST_LOG: info
+          DYNAMO_ENDPOINT: http://localstack:4566
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_REGION: us-east-1
+          AWS_ACCOUNT_ID: test
           COMMIT: pr-${{ github.sha }}
+          ECR: ratel/app-shell
         with:
           limit-access-to-actor: true
 
