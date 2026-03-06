@@ -11,14 +11,15 @@ use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
 
 #[component]
 pub fn Home(teamname: String) -> Element {
-    let teamname_clone = teamname.clone();
-    let resource = use_server_future(move || {
-        let name = teamname_clone.clone();
-        async move { get_team_settings_handler(name).await }
-    })?;
+    let resource = use_loader(use_reactive((&teamname,), |(name,)| async move {
+        Ok::<_, crate::Error>(
+            get_team_settings_handler(name)
+                .await
+                .map_err(|e| e.to_string()),
+        )
+    }))?;
 
-    let resolved = resource.suspend()?;
-    let data = resolved.read();
+    let data = resource.read();
 
     match data.as_ref() {
         Ok(team) => {
@@ -36,10 +37,8 @@ pub fn Home(teamname: String) -> Element {
                 }
             }
         }
-        Err(_) => {
-            rsx! {
-                ViewerPage { teamname }
-            }
-        }
+        Err(_) => rsx! {
+            ViewerPage { teamname }
+        },
     }
 }
