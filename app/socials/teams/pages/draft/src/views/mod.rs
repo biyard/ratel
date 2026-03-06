@@ -11,12 +11,15 @@ use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
 
 #[component]
 pub fn Home(teamname: String) -> Element {
-    let resource = use_server_future(use_reactive((&teamname,), |(name,)| async move {
-        get_team_drafts_permission_handler(name).await
+    let resource = use_loader(use_reactive((&teamname,), |(name,)| async move {
+        Ok::<_, crate::Error>(
+            get_team_drafts_permission_handler(name)
+                .await
+                .map_err(|e| e.to_string()),
+        )
     }))?;
 
-    let resolved = resource.suspend()?;
-    let data = resolved.read();
+    let data = resource.read();
 
     match data.as_ref() {
         Ok(ctx) => {

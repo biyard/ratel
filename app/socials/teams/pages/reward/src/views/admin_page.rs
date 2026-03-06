@@ -10,18 +10,23 @@ use dioxus::prelude::*;
 pub fn AdminPage(team_pk: TeamPartition, team_name: String) -> Element {
     let tr: TeamRewardsTranslate = use_translate();
 
-    let rewards_resource = use_server_future(use_reactive((&team_pk,), |(team_pk,)| async move {
-        get_team_rewards_handler(team_pk, None).await
+    let rewards_resource = use_loader(use_reactive((&team_pk,), |(team_pk,)| async move {
+        Ok::<_, crate::Error>(
+            get_team_rewards_handler(team_pk, None)
+                .await
+                .map_err(|e| e.to_string()),
+        )
     }))?;
-    let transactions_resource = use_server_future(use_reactive(
-        (&team_pk,),
-        |(team_pk,)| async move {
-            list_team_point_transactions_handler(team_pk, None, None).await
-        },
-    ))?;
+    let transactions_resource = use_loader(use_reactive((&team_pk,), |(team_pk,)| async move {
+        Ok::<_, crate::Error>(
+            list_team_point_transactions_handler(team_pk, None, None)
+                .await
+                .map_err(|e| e.to_string()),
+        )
+    }))?;
 
-    let rewards_state = rewards_resource.value();
-    let transactions_state = transactions_resource.value();
+    let rewards_state = rewards_resource.read().clone();
+    let transactions_state = transactions_resource.read().clone();
 
     let mut transactions = use_signal(Vec::<PointTransactionResponse>::new);
     let mut next_bookmark = use_signal(|| Option::<String>::None);
@@ -41,37 +46,23 @@ pub fn AdminPage(team_pk: TeamPartition, team_name: String) -> Element {
                 return;
             }
 
-            let transaction_state = transactions_state.read();
-
-            let Some(state) = transaction_state.as_ref() else {
-                return;
-            };
-
-            match state {
+            match transactions_state.as_ref() {
                 Ok(data) => {
                     transactions.set(data.items.clone());
                     next_bookmark.set(data.bookmark.clone());
+                    transactions_error.set(false);
                 }
                 Err(_) => {
                     transactions_error.set(true);
                 }
             }
-
             transactions_loaded.set(true);
         });
     }
 
-    if rewards_state.read().is_none() {
-        return rsx! {
-            div { class: "w-full max-w-desktop mx-auto px-4 py-8",
-                div { class: "text-center text-text-primary", {tr.loading} }
-            }
-        };
-    }
-
-    let rewards = match rewards_state.read().as_ref() {
-        Some(Ok(data)) => data.clone(),
-        Some(Err(err)) => {
+    let rewards: TeamRewardsResponse = match rewards_state.as_ref() {
+        Ok(data) => data.clone(),
+        Err(err) => {
             return rsx! {
                 div { class: "w-full max-w-desktop mx-auto px-4 py-8",
                     div { class: "bg-card-bg border border-card-border rounded-lg p-8",
@@ -82,7 +73,6 @@ pub fn AdminPage(team_pk: TeamPartition, team_name: String) -> Element {
                 }
             };
         }
-        None => TeamRewardsResponse::default(),
     };
 
     let estimated_tokens = if rewards.total_points > 0 {
