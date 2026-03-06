@@ -67,27 +67,37 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
     };
 
     rsx! {
-        div { class: "grid overflow-hidden grid-cols-7 w-full h-screen bg-space-bg text-font-primary",
-            SpaceNav {
-                logo: "https://metadata.ratel.foundation/logos/logo.png",
-                menus,
-                user,
-                role,
-                login_handler: move |_| {
-                    popup.open(rsx! {
-                        LoginModal {}
-                    }).with_title(tr.title);
-                },
+        div { class: "grid overflow-hidden grid-cols-1 tablet:grid-cols-[250px_1fr] w-full h-screen bg-component-bg text-web-font-primary",
+            div { class: "hidden tablet:flex",
+                SpaceNav {
+                    logo: "https://metadata.ratel.foundation/logos/logo.png",
+                    menus,
+                    user,
+                    role,
+                    login_handler: move |_| {
+                        popup.open(rsx! {
+                            LoginModal {}
+                        }).with_title(tr.title);
+                    },
+                }
             }
-            div { class: "flex flex-col col-span-6 col-start-2 min-h-0",
+            div { class: "flex flex-col min-h-0 min-w-0",
                 SpaceTop {
                     labels,
                     space_status,
                     show_participate_button: show_participate,
                     on_participant,
                 }
-                div { class: "flex overflow-auto p-5 w-full top-[65px] grow bg-space-body-bg rounded-tl-[10px] h-[calc(100%-65px)]",
-                    Outlet::<Route> {}
+                div { class: "flex overflow-auto p-5 w-full flex-1 min-h-0 bg-web-bg rounded-tl-[10px]",
+                    SuspenseBoundary {
+                        fallback: |_| rsx! {
+                            div { class: "flex justify-center items-center w-full h-full text-gray-400",
+                                //FIXME Replace Loading UI
+                                "Loading..."
+                            }
+                        },
+                        Outlet::<Route> {}
+                    }
                 }
             }
         }

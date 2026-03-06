@@ -33,6 +33,7 @@ impl SpaceApp {
     pub fn sk_prefix() -> String {
         EntityType::SpaceApp(String::new()).to_string()
     }
+
 }
 
 impl SpaceApp {

@@ -6,6 +6,19 @@ pub use service::*;
 #[component]
 pub fn Layover() -> Element {
     let mut layover = use_layover();
+
+    let router = use_context::<dioxus::router::RouterContext>();
+    let current_path = router.full_route_string();
+    let mut prev_path = use_signal(move || current_path.clone());
+
+    use_effect(move || {
+        let current = router.full_route_string();
+        if current != *prev_path.read() {
+            prev_path.set(current);
+            layover.close();
+        }
+    });
+
     let config = layover.state();
     let (is_open, title, content) = match config {
         Some(c) => (true, c.title, c.content),

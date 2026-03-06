@@ -17896,11 +17896,16 @@ dependencies = [
 name = "space-common"
 version = "0.1.0"
 dependencies = [
+ "aws-sdk-dynamodb",
+ "base64 0.22.1",
  "common",
  "dioxus",
  "ratel-auth",
  "ratel-post",
  "serde",
+ "serde_dynamo",
+ "serde_json",
+ "tracing",
 ]
 
 [[package]]
@@ -17916,9 +17921,9 @@ dependencies = [
  "serde",
  "serde_dynamo",
  "serde_json",
+ "space-app-main",
  "space-common",
  "tracing",
- "uuid 1.18.1",
 ]
 
 [[package]]

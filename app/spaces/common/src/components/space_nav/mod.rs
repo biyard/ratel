@@ -15,7 +15,7 @@ pub fn SpaceNav(
     role: SpaceUserRole,
 ) -> Element {
     rsx! {
-        div { class: "flex left-0 top-14 z-40 flex-col col-span-1 gap-2.5 justify-between pt-2.5 h-screen divide-y transition-transform duration-300 ease-in-out -translate-x-full shrink-0 divide-divider tablet:top-0 tablet:translate-x-0",
+        div { class: "flex z-40 flex-col gap-2.5 justify-between pt-2.5 h-full divide-y shrink-0 divide-divider w-full",
             div { class: "flex flex-col gap-2.5 w-full",
                 img { src: "{logo}", class: "mx-4 mt-5 mb-2.5 w-25" }
 
