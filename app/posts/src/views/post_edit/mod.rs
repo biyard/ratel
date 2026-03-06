@@ -100,10 +100,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
         }
         let post_id = v.clone();
         spawn(async move {
-            #[cfg(feature = "web")]
-            gloo_timers::future::sleep(std::time::Duration::from_secs(3)).await;
-            #[cfg(feature = "server")]
-            tokio::time::sleep(std::time::Duration::from_secs(3)).await;
+            common::utils::time::sleep(std::time::Duration::from_secs(3)).await;
 
             // Only save if version hasn't changed (no newer edits during wait)
             if save_version() != ver {
