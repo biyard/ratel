@@ -1143,6 +1143,75 @@ refresh.set(refresh() + 1);
 
 ---
 
+## 17. SeoMeta Component
+
+The `SeoMeta` component (`app/common/src/components/seo_meta/`) renders SEO meta tags into the document head. Every page-level view should include it for proper Google SEO, Open Graph, and Twitter Card support.
+
+### Props
+
+| Prop | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `title` | `String` | Yes | — | Page title (`<title>` + og/twitter title) |
+| `description` | `String` | No | `""` | Meta description for search result snippets |
+| `image` | `String` | No | `""` | Preview image URL for social sharing |
+| `url` | `String` | No | `""` | Page URL for Open Graph |
+| `og_type` | `String` | No | `"website"` | Open Graph type (`website`, `article`, etc.) |
+| `keywords` | `Vec<String>` | No | `[]` | SEO keywords (joined with `", "`) |
+| `canonical` | `String` | No | `""` | Canonical URL (`<link rel="canonical">`) |
+| `robots` | `Robots` | No | `IndexFollow` | Robots directive enum |
+
+### Robots Enum
+
+| Variant | Output |
+|---------|--------|
+| `Robots::IndexFollow` (default) | `index, follow` |
+| `Robots::NoindexFollow` | `noindex, follow` |
+| `Robots::IndexNofollow` | `index, nofollow` |
+| `Robots::NoindexNofollow` | `noindex, nofollow` |
+
+### Usage
+
+```rust
+use common::components::SeoMeta;
+use common::components::Robots;
+
+// Minimal — only title required
+rsx! {
+    SeoMeta { title: "Home - Ratel" }
+}
+
+// Full usage
+rsx! {
+    SeoMeta {
+        title: "Space Overview - Ratel",
+        description: "Explore governance spaces on Ratel.",
+        image: "https://ratel.foundation/og-image.png",
+        url: "https://ratel.foundation/spaces",
+        og_type: "article",
+        keywords: vec!["governance".into(), "crypto".into(), "policy".into()],
+        canonical: "https://ratel.foundation/spaces",
+        robots: Robots::IndexFollow,
+    }
+}
+
+// Draft/private page — prevent indexing
+rsx! {
+    SeoMeta {
+        title: "Draft Post",
+        robots: Robots::NoindexNofollow,
+    }
+}
+```
+
+**Rules:**
+- Every page-level view must include `SeoMeta` with at least a `title`.
+- Use `Robots::NoindexNofollow` for draft, private, or admin-only pages.
+- Provide `description` for all public-facing pages (Google uses it for search snippets).
+- Set `canonical` when the same content is accessible via multiple URLs.
+- Set `og_type` to `"article"` for post/article pages; default `"website"` is fine for other pages.
+
+---
+
 ## Quick Reference
 
 | Concern | Convention |
@@ -1163,3 +1232,4 @@ refresh.set(refresh() + 1);
 | Client-only | `#[cfg(not(feature = "server"))]` |
 | Imports | `use crate::*;` at file top |
 | JS interop | `#[wasm_bindgen(js_namespace = [...])]` + guard with `cfg` |
+| SEO | `SeoMeta { title, description, ... }` in every page view |

@@ -4,9 +4,11 @@ mod feed_list;
 mod my_drafts;
 mod my_posts;
 pub mod post_detail;
+mod visibility_modal;
 
 pub use create_post_button::*;
 pub use feed_card::*;
 pub use feed_list::*;
 pub use my_drafts::*;
 pub use my_posts::*;
+pub use visibility_modal::*;
