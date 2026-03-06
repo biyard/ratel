@@ -11,12 +11,11 @@ use space_common::{
 
 #[component]
 pub fn SpaceLayout(space_id: SpacePartition) -> Element {
-    SpaceContextProvider::init(&space_id)?;
+    let ctx = SpaceContextProvider::init(&space_id)?;
 
     use_context_provider(|| LayoverService::new());
-    let role = use_space_role()();
-    let space_loader = use_space_query(&space_id)?;
-    let space = space_loader.read().clone();
+    let role = ctx.current_role();
+    let space = ctx.space();
     let lang = use_language();
 
     let user_ctx = use_user_context();
@@ -60,7 +59,6 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
 
     let on_participant = move |_| {
         let space_id = space_id.clone();
-        let mut space = space.clone();
         async move {
             let space_detail = space_key(&space_id);
             participate.call(space_id).await;
@@ -69,6 +67,7 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
     };
 
     rsx! {
+        SeoMeta { title: space.title.clone(), description: space.description() }
         div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-component-bg text-web-font-primary",
             div { class: "hidden tablet:flex",
                 SpaceNav {

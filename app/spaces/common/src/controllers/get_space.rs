@@ -124,3 +124,12 @@ pub struct SpaceResponse {
     pub quota: i64,
     pub is_report: bool,
 }
+
+impl SpaceResponse {
+    pub fn description(&self) -> String {
+        let re = regex::Regex::new(r"<[^>]*>").unwrap();
+        let content = re.replace_all(&self.content, "");
+
+        content.to_string()
+    }
+}
