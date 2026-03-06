@@ -60,11 +60,11 @@ pub fn SpaceTop(
                 Button {
                     style: ButtonStyle::Outline,
                     shape: ButtonShape::Square,
-                    class: "flex flex-row gap-1 justify-center items-center [&>path]:stroke-icon-secondary [&>circle]:stroke-icon-secondary",
+                    class: "flex flex-row gap-1 justify-center items-center",
                     onclick: move |_| {
                         ctx.toggle_role();
                     },
-                    Eye { class: "w-4 h-4" }
+                    Eye { class: "w-4 h-4 [&>path]:stroke-icon-secondary [&>circle]:stroke-icon-secondary" }
                     p { {tr.preview} }
                 }
 

@@ -40,6 +40,7 @@ pub mod query;
 pub mod services;
 pub mod utils;
 pub use macros::dynamo_entity::DynamoEntity;
+pub use regex;
 
 pub use components::*;
 pub use contexts::*;
