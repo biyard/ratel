@@ -119,7 +119,7 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: FeedPartition) -> E
                         if can_delete {
                             Button {
                                 size: ButtonSize::Icon,
-                                style: ButtonStyle::Ghost,
+                                style: ButtonStyle::Text,
                                 class: "p-1 rounded-full transition-colors focus:outline-none hover:bg-hover".to_string(),
                                 onclick: move |_| {
                                     menu_open.set(!menu_open());
@@ -130,7 +130,7 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: FeedPartition) -> E
                                 div { class: "absolute right-0 top-full z-50 mt-2 w-40 rounded-md border border-divider bg-background",
                                     Button {
                                         size: ButtonSize::Inline,
-                                        style: ButtonStyle::Ghost,
+                                        style: ButtonStyle::Text,
                                         class: "flex items-center py-2 px-4 w-full text-sm text-red-400 cursor-pointer hover:bg-hover"
                                             .to_string(),
                                         onclick: move |_| {
@@ -158,7 +158,7 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: FeedPartition) -> E
                 div { class: "flex gap-4 justify-end items-center w-full",
                     Button {
                         size: ButtonSize::Inline,
-                        style: ButtonStyle::Ghost,
+                        style: ButtonStyle::Text,
                         class: "flex gap-1 items-center transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             .to_string(),
                         disabled: *is_processing.read(),
