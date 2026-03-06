@@ -1,7 +1,9 @@
+use crate::components::VisibilityModal;
 use crate::controllers::get_post::get_post_handler;
 use crate::controllers::update_post::{update_post_handler, UpdatePostRequest};
 use crate::controllers::{create_space_handler, CreateSpaceRequest};
 use crate::models::Post;
+use crate::types::Visibility;
 use crate::*;
 use common::components::{ButtonShape, ButtonSize, ButtonStyle, InputVariant, TiptapEditor};
 use dioxus::prelude::*;
@@ -69,6 +71,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
     let tr: PostEditTranslate = use_translate();
     let mut toast = use_toast();
     let nav = use_navigator();
+    let mut popup = use_popup();
     let p1 = post_id.clone();
     let res = use_loader(move || {
         let post_id = p1.clone();
@@ -141,10 +144,10 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
         });
     });
 
-    let p1 = post_id.clone();
-    let handle_publish = move || {
-        let post_id = p1.clone();
-        async move {
+    let publish_post_id = post_id.clone();
+    let publish = move |visibility: Visibility| {
+        let post_id = publish_post_id.clone();
+        spawn(async move {
             status.set(EditorStatus::Publishing);
             match update_post_handler(
                 post_id.clone(),
@@ -153,7 +156,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                     content: content(),
                     image_urls: None,
                     publish: true,
-                    visibility: None,
+                    visibility: Some(visibility),
                 },
             )
             .await
@@ -166,7 +169,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                     status.set(EditorStatus::Unsaved);
                 }
             }
-        }
+        });
     };
 
     let p1 = post_id.clone();
@@ -259,35 +262,33 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
             }
 
             // TiptapEditor
-            div { class: "relative",
-                TiptapEditor {
-                    class: "w-full rounded-md border focus-within:ring-1 min-h-[400px] bg-post-input-bg border-post-input-border focus-within:border-ring focus-within:ring-ring/50",
-                    content: content(),
-                    editable: true,
-                    placeholder: tr.content_placeholder,
-                    on_content_change: move |html: String| {
-                        content.set(html);
-                        status.set(EditorStatus::Unsaved);
-                        save_version += 1;
-                    },
-                }
-                if status() != EditorStatus::Idle {
-                    div { class: "flex absolute bottom-3 left-3 gap-2 items-center py-1 px-2 text-xs rounded text-text-tertiary bg-card",
-                        match status() {
-                            EditorStatus::Saving => rsx! {
-                                {tr.saving}
-                            },
-                            EditorStatus::Saved => rsx! {
-                                {tr.all_changes_saved}
-                            },
-                            EditorStatus::Unsaved => rsx! {
-                                {tr.unsaved_changes}
-                            },
-                            EditorStatus::Publishing => rsx! {
-                                {tr.publishing}
-                            },
-                            EditorStatus::Idle => rsx! { "" },
-                        }
+            TiptapEditor {
+                class: "w-full rounded-md border focus-within:ring-1 min-h-[400px] bg-post-input-bg border-post-input-border focus-within:border-ring focus-within:ring-ring/50",
+                content: content(),
+                editable: true,
+                placeholder: tr.content_placeholder,
+                on_content_change: move |html: String| {
+                    content.set(html);
+                    status.set(EditorStatus::Unsaved);
+                    save_version += 1;
+                },
+            }
+            if status() != EditorStatus::Idle {
+                div { class: "flex absolute bottom-3 left-3 gap-2 items-center py-1 px-2 text-xs rounded text-text-tertiary bg-card",
+                    match status() {
+                        EditorStatus::Saving => rsx! {
+                            {tr.saving}
+                        },
+                        EditorStatus::Saved => rsx! {
+                            {tr.all_changes_saved}
+                        },
+                        EditorStatus::Unsaved => rsx! {
+                            {tr.unsaved_changes}
+                        },
+                        EditorStatus::Publishing => rsx! {
+                            {tr.publishing}
+                        },
+                        EditorStatus::Idle => rsx! { "" },
                     }
                 }
             }
@@ -310,7 +311,18 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                     disabled: !can_submit,
                     onclick: move |_| {
                         if skip_creating_space() {
-                            spawn(handle_publish());
+                            let publish = publish.clone();
+                            popup.open(rsx! {
+                                VisibilityModal {
+                                    on_confirm: move |visibility: Visibility| {
+                                        popup.close();
+                                        publish(visibility);
+                                    },
+                                    on_cancel: move |_| {
+                                        popup.close();
+                                    },
+                                }
+                            });
                         } else {
                             spawn(handle_create_space());
                         }
