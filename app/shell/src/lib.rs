@@ -19,11 +19,5 @@ use dioxus::prelude::*;
 
 type Result<T> = common::Result<T>;
 
-#[cfg(not(feature = "server"))]
-pub mod web;
-
-#[cfg(feature = "server")]
-pub mod server;
-
 #[cfg(test)]
 pub mod tests;
