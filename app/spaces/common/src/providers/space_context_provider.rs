@@ -6,7 +6,7 @@ use crate::{
     *,
 };
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, DioxusController)]
 pub struct SpaceContextProvider {
     pub role: Loader<SpaceUserRole>,
     pub space: Loader<SpaceResponse>,
