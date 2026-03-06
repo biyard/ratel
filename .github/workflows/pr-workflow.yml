@@ -312,6 +312,23 @@ jobs:
         run: |
           make test
 
+      - name: Setup SSH session with tmate
+        uses: mxschmitt/action-tmate@v3
+        if: failure()
+        timeout-minutes: 15
+        env:
+          DYNAMO_TABLE_PREFIX: ratel-local
+          DYNAMO_ENDPOINT: http://localhost:4566
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_REGION: us-east-1
+          AWS_ACCOUNT_ID: test
+          RUST_LOG: info
+          ENV: local
+        with:
+          limit-access-to-actor: true
+
+
   playwright-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 30
