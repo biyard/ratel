@@ -173,7 +173,7 @@ pub fn ActionSettingsModal(
                 div { class: "relative w-full",
                     Button {
                         size: ButtonSize::Medium,
-                        style: ButtonStyle::Ghost,
+                        style: ButtonStyle::Text,
                         shape: ButtonShape::Square,
                         class: if available_actions.is_empty() { "flex h-11 w-full items-center gap-2.5 rounded-[10px] bg-neutral-800 py-2.5 pr-5 pl-2.5 text-left hover:bg-neutral-800 cursor-not-allowed opacity-50" } else { "flex h-11 w-full items-center gap-2.5 rounded-[10px] bg-neutral-800 py-2.5 pr-5 pl-2.5 text-left hover:bg-neutral-800" },
                         disabled: available_actions.is_empty(),
