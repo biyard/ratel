@@ -1,19 +1,36 @@
-use futures::future::try_join_all;
-use serde_json::json;
-use urlencoding::encode;
-
-use super::*;
-use crate::features::spaces::members::{
-    InvitationStatus, SpaceEmailVerification, SpaceInvitationMemberResponse,
-};
-use crate::models::{SpaceCommon, UserNotification};
-use crate::services::fcm_notification::FCMService;
-use crate::types::*;
-use crate::utils::aws::{DynamoClient, SesClient};
 use crate::*;
-use aws_sdk_dynamodb::types::AttributeValue;
+#[cfg(feature = "server")]
+use common::models::space::SpaceCommon;
+#[cfg(feature = "server")]
+use common::models::User;
+#[cfg(feature = "server")]
+use common::utils::aws::SesClient;
+#[cfg(feature = "server")]
+use common::utils::time::get_now_timestamp_millis;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, JsonSchema, Default)]
+use super::SpaceEmailVerification;
+
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    serde_repr::Serialize_repr,
+    serde_repr::Deserialize_repr,
+    Default,
+    DynamoEnum,
+)]
+#[repr(u8)]
+pub enum InvitationStatus {
+    #[default]
+    Pending = 1,
+    Invited = 2,
+    Accepted = 3,
+    Declined = 4,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, DynamoEntity, Default)]
 pub struct SpaceInvitationMember {
     #[dynamo(
         index = "gsi3",
@@ -51,29 +68,42 @@ pub struct SpaceInvitationMember {
     pub created_at: i64,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct SpaceInvitationMemberResponse {
+    pub user_pk: Partition,
+    pub display_name: String,
+    pub profile_url: String,
+    pub username: String,
+    pub email: String,
+    pub authorized: bool,
+}
+
+impl From<SpaceInvitationMember> for SpaceInvitationMemberResponse {
+    fn from(member: SpaceInvitationMember) -> Self {
+        Self {
+            user_pk: member.user_pk,
+            display_name: member.display_name,
+            profile_url: member.profile_url,
+            username: member.username,
+            email: member.email,
+            authorized: false,
+        }
+    }
+}
+
 impl SpaceInvitationMember {
-    pub fn new(
-        space_pk: Partition,
-        User {
-            pk,
-            display_name,
-            profile_url,
-            username,
-            email,
-            ..
-        }: User,
-    ) -> Self {
+    #[cfg(feature = "server")]
+    pub fn new(space_pk: Partition, user: User) -> Self {
         Self {
             pk: space_pk,
-            sk: EntityType::SpaceInvitationMember(pk.to_string()),
-
-            user_pk: pk,
-            display_name,
-            profile_url,
-            username,
-            email,
+            sk: EntityType::SpaceInvitationMember(user.pk.to_string()),
+            user_pk: user.pk,
+            display_name: user.display_name,
+            profile_url: user.profile_url,
+            username: user.username,
+            email: user.email,
             status: InvitationStatus::Pending,
-            created_at: now(),
+            created_at: get_now_timestamp_millis(),
         }
     }
 
@@ -83,7 +113,10 @@ impl SpaceInvitationMember {
             EntityType::SpaceInvitationMember(user_pk.to_string()),
         )
     }
+}
 
+#[cfg(feature = "server")]
+impl SpaceInvitationMember {
     pub async fn find_user_invitations_by_status_latest(
         cli: &aws_sdk_dynamodb::Client,
         user_pk: &Partition,
@@ -94,13 +127,13 @@ impl SpaceInvitationMember {
     }
 
     pub async fn send_email(
-        dynamo: &DynamoClient,
+        ddb: &aws_sdk_dynamodb::Client,
         ses: &SesClient,
         space: &SpaceCommon,
         title: String,
     ) -> Result<()> {
         let (responses, _) = SpaceInvitationMember::find_space_invitations_by_status(
-            &dynamo.client,
+            ddb,
             space.pk.clone(),
             SpaceInvitationMember::opt_all().sk(InvitationStatus::Pending.to_string()),
         )
@@ -110,7 +143,7 @@ impl SpaceInvitationMember {
             let (pk, sk) = SpaceInvitationMember::keys(&space.pk, &member.user_pk);
             SpaceInvitationMember::updater(pk, sk)
                 .with_status(InvitationStatus::Invited)
-                .execute(&dynamo.client)
+                .execute(ddb)
         });
 
         let emails: Vec<String> = responses
@@ -118,68 +151,17 @@ impl SpaceInvitationMember {
             .map(|member| member.email.clone())
             .collect();
 
-        try_join_all(updates).await?;
+        futures::future::try_join_all(updates).await?;
 
         if !emails.is_empty() {
-            let _ = SpaceEmailVerification::send_email(
-                dynamo,
-                ses,
-                emails,
-                space.clone(),
-                title.clone(),
-            )
-            .await?;
+            SpaceEmailVerification::send_invitation_emails(ddb, ses, emails, space, title).await?;
         }
 
-        Ok(())
-    }
-
-    pub async fn send_notification(
-        dynamo: &DynamoClient,
-        fcm: &mut FCMService,
-        space: &SpaceCommon,
-        space_title: String,
-    ) -> Result<()> {
-        tracing::info!(
-            "SpaceInvitationMember::send_notification: start for space_pk={}",
-            space.pk
-        );
-
-        let (invites, _) = SpaceInvitationMember::find_space_invitations_by_status(
-            &dynamo.client,
-            space.pk.clone(),
-            SpaceInvitationMember::opt_all().sk(InvitationStatus::Invited.to_string()),
-        )
-        .await?;
-
-        if invites.is_empty() {
-            tracing::info!(
-                "SpaceInvitationMember::send_notification: no invited members for space_pk={}",
-                space.pk
-            );
-            return Ok(());
-        }
-
-        let title = "You are invited in space.".to_string();
-        let body = format!("Participate new space: {space_title}");
-
-        let user_pks: Vec<Partition> = invites.into_iter().map(|m| m.user_pk).collect();
-        let pk_str = space.pk.to_string();
-        let space_pk_encoded = encode(&pk_str);
-        let deeplink = format!("ratelapp://space/{space_pk_encoded}");
-
-        UserNotification::send_to_users(dynamo, fcm, &user_pks, title, body, Some(deeplink))
-            .await?;
-
-        tracing::info!(
-            "SpaceInvitationMember::send_notification: done for space_pk={}",
-            space.pk
-        );
         Ok(())
     }
 
     pub async fn list_invitation_members(
-        dynamo: &DynamoClient,
+        ddb: &aws_sdk_dynamodb::Client,
         space_pk: &Partition,
     ) -> Result<Vec<SpaceInvitationMemberResponse>> {
         let mut members: Vec<SpaceInvitationMemberResponse> = vec![];
@@ -187,7 +169,7 @@ impl SpaceInvitationMember {
 
         loop {
             let (responses, new_bookmark) = SpaceInvitationMember::query(
-                &dynamo.client,
+                ddb,
                 space_pk.clone(),
                 if let Some(b) = &bookmark {
                     SpaceInvitationMemberQueryOption::builder()
@@ -204,17 +186,15 @@ impl SpaceInvitationMember {
                 let mut member: SpaceInvitationMemberResponse = response.into();
 
                 let verification = SpaceEmailVerification::get(
-                    &dynamo.client,
-                    &space_pk,
+                    ddb,
+                    space_pk,
                     Some(EntityType::SpaceEmailVerification(member.email.clone())),
                 )
                 .await?;
 
-                if verification.is_some() && verification.unwrap_or_default().authorized {
-                    member.authorized = true;
-                } else {
-                    member.authorized = false;
-                }
+                member.authorized = verification
+                    .map(|v| v.authorized)
+                    .unwrap_or(false);
 
                 members.push(member);
             }

@@ -80,6 +80,16 @@ pub fn dummy_dynamo_entity_derive(_input: TokenStream) -> TokenStream {
     TokenStream::new()
 }
 
+#[proc_macro_derive(DummyJsonSchema)]
+pub fn dummy_json_schema_derive(_input: TokenStream) -> TokenStream {
+    TokenStream::new()
+}
+
+#[proc_macro_derive(DummyOperationIo)]
+pub fn dummy_operation_io_derive(_input: TokenStream) -> TokenStream {
+    TokenStream::new()
+}
+
 #[proc_macro_derive(SubPartition)]
 pub fn sub_partition_derive(input: TokenStream) -> TokenStream {
     let _ = tracing_subscriber::fmt()

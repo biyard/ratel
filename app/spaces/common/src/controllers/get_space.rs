@@ -46,7 +46,7 @@ pub async fn get_space(space_id: SpacePartition) -> Result<SpaceResponse> {
         };
 
     Ok(SpaceResponse {
-        pk: space.pk.clone(),
+        id: space.pk.clone().into(),
         sk: space.sk,
         title: post.title,
         content: if space.content.is_empty() {
@@ -89,7 +89,7 @@ pub async fn get_space(space_id: SpacePartition) -> Result<SpaceResponse> {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct SpaceResponse {
-    pub pk: Partition,
+    pub id: SpacePartition,
     pub sk: EntityType,
     pub title: String,
     pub content: String,

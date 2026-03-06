@@ -28,6 +28,7 @@ fn main() {
 
     let js_output = assets_dir.join("ratel-common.js");
 
+    println!("cargo:rerun-if-changed={}", js_dir.join("src").display());
     if (is_ci && !js_output.exists()) || !is_ci {
         let status = Command::new("npm")
             .args(["run", build_cmd])
@@ -40,6 +41,7 @@ fn main() {
             .expect("failed to copy dist/main.js to assets/ratel-common.js");
     }
 
+    println!("cargo:rerun-if-changed=tailwind.css");
     let css_output = assets_dir.join("common-tailwind.css");
     if (is_ci && !css_output.exists()) || !is_ci {
         let status = Command::new("npx")
@@ -58,6 +60,4 @@ fn main() {
     }
 
     println!("cargo:rerun-if-changed=build.rs");
-    println!("cargo:rerun-if-changed={}", js_dir.join("src").display());
-    println!("cargo:rerun-if-changed=tailwind.css");
 }
