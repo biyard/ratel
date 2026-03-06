@@ -72,6 +72,9 @@
 
 - [ ] 서비스는 `init()` 메서드 → `use_context_provider`를 사용하는가?
 - [ ] Provider 컴포넌트는 에셋(스크립트, 스타일) 로딩만 하는가? (UI 없음)
+- [ ] reactive 필드(`Signal`, `Loader`, `Memo`, `ReadOnlySignal`, `Resource`)를 가진 context provider 구조체에 `DioxusController` derive가 있는가?
+- [ ] mutation API(`open`, `close`, `push` 등)가 있는 서비스 구조체(`PopupService`, `ToastService` 등)에는 `DioxusController`를 적용하지 않았는가?
+- [ ] `DioxusController`가 적용된 구조체에 `(self.field)()` 패턴의 수동 getter가 중복되지 않았는가?
 
 ## 10. Feature Flag
 
