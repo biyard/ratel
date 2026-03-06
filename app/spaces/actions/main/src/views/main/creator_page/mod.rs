@@ -1,4 +1,4 @@
-use crate::components::{ActionCard, CreateActionModal};
+use crate::components::{ActionCard, ActionSettingsModal, CreateActionModal};
 use crate::controllers::list_actions;
 use crate::*;
 use i18n::CreatorActionPageTranslate;
@@ -23,6 +23,13 @@ pub fn CreatorActionPage(space_id: SpacePartition) -> Element {
             .any(|action| action.action_type == SpaceActionType::Subscription)
     });
 
+    let on_settings_applied: EventHandler<()> = Callback::new({
+        let mut actions = actions.clone();
+        move |_| {
+            actions.restart();
+        }
+    });
+
     let open_layover = {
         let mut layover = layover;
         let title = tr.layover_title.to_string();
@@ -39,14 +46,54 @@ pub fn CreatorActionPage(space_id: SpacePartition) -> Element {
         }
     };
 
+    let open_settings_layover = {
+        let mut layover = layover;
+        let actions = actions.clone();
+        let space_id = space_id.clone();
+        let on_applied = on_settings_applied.clone();
+        move |_| {
+            layover.open(
+                "space-action-settings-layover".to_string(),
+                String::new(),
+                rsx! {
+                    ActionSettingsModal {
+                        space_id: space_id.clone(),
+                        actions: actions().clone(),
+                        on_applied: on_applied.clone(),
+                    }
+                },
+            );
+        }
+    };
+
     rsx! {
         div {
             id: "creator-action-page",
-            class: "flex flex-col gap-5 items-start w-full text-web-font-primary",
+            class: "flex w-full flex-col items-start gap-5 text-web-font-primary",
 
             div { class: "flex flex-col gap-2.5 mx-auto w-full max-w-[1024px]",
+                div { class: "flex justify-between items-center w-full max-mobile:flex-col max-mobile:items-stretch max-mobile:gap-3",
+                    h3 { {tr.title} }
+
+                    Button {
+                        size: ButtonSize::Medium,
+                        style: ButtonStyle::Secondary,
+                        shape: ButtonShape::Square,
+                        class: "inline-flex border-transparent font-raleway hover:bg-web-btn-bg hover:border-transparent max-mobile:w-full",
+                        onclick: open_settings_layover,
+                        div { class: "flex flex-row gap-2.5 justify-center items-center",
+                            icons::settings::Settings2 {
+                                width: "16",
+                                height: "16",
+                                class: "[&>path]:fill-web-font-ab-bk [&>circle]:stroke-web-font-ab-bk",
+                            }
+                            span { {tr.button_settings_label} }
+                        }
+                    }
+                }
+
                 // Empty state card
-                div { class: "flex flex-col gap-5 justify-center items-center px-4 pb-5 w-full border border-dashed py-[0.625rem] rounded-[0.75rem] bg-neutral-900 light:bg-neutral-100 border-neutral-800 light:border-neutral-300",
+                div { class: "flex w-full flex-col items-center justify-center gap-5 rounded-[0.75rem] border border-dashed border-neutral-800 bg-neutral-900 px-4 pt-[0.625rem] pb-5 light:border-neutral-300 light:bg-neutral-100",
                     icons::game::Thunder { class: "size-6 [&>path]:fill-none [&>path]:stroke-neutral-400 light:[&>path]:stroke-neutral-500" }
                     p { class: "font-medium text-[1.0625rem]/[1.25rem] text-font-primary",
                         {tr.no_actions_title}
