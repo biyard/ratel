@@ -12,23 +12,16 @@ pub fn SurveyEditor(props: SurveyEditorProps) -> Element {
     let mut questions = props.questions;
 
     rsx! {
-        div { class: "flex flex-col gap-4 w-full",
+        div { class: "flex flex-col gap-2 w-full bg-[#1A1A1A] rounded-[12px] px-4 pt-1 pb-5",
             for (idx , question) in questions.read().iter().enumerate() {
                 {
+                    let total = questions.read().len();
+                    let is_last = idx + 1 == total;
                     let question = question.clone();
                     rsx! {
-                        div { class: "flex flex-col gap-2 p-4 border border-neutral-700 rounded-lg",
+                        div { class: if is_last { "flex flex-col gap-3 pb-2" } else { "flex flex-col gap-3 pb-4 border-b border-[#262626]" },
                             div { class: "flex justify-between items-center",
                                 span { class: "text-sm text-neutral-400", "Question {idx + 1}" }
-                                button {
-                                    class: "text-red-400 text-sm hover:text-red-300",
-                                    onclick: move |_| {
-                                        let mut qs = questions.read().clone();
-                                        qs.remove(idx);
-                                        questions.set(qs);
-                                    },
-                                    "Remove"
-                                }
                             }
                             QuestionEditor {
                                 question: question.clone(),
@@ -37,6 +30,20 @@ pub fn SurveyEditor(props: SurveyEditorProps) -> Element {
                                     qs[idx] = q;
                                     questions.set(qs);
                                 },
+                            }
+                            div { class: "flex justify-end",
+                                Button {
+                                    size: ButtonSize::Small,
+                                    style: ButtonStyle::Ghost,
+                                    class: "flex items-center gap-1 text-[#8C8C8C] text-[15px] leading-[24px] tracking-[0.5px] font-medium",
+                                    onclick: move |_| {
+                                        let mut qs = questions.read().clone();
+                                        qs.remove(idx);
+                                        questions.set(qs);
+                                    },
+                                    "Delete"
+                                    icons::edit::Delete2 { class: "w-6 h-6 [&>path]:stroke-[#737373]" }
+                                }
                             }
                         }
                     }
@@ -56,10 +63,14 @@ pub fn SurveyEditor(props: SurveyEditorProps) -> Element {
 
 #[component]
 fn QuestionTypeSelector(on_add: EventHandler<Question>) -> Element {
+    let button_class = "px-3 py-2 text-sm border border-neutral-600 rounded-lg hover:bg-neutral-800 text-neutral-300 flex items-center gap-1";
     rsx! {
         div { class: "flex flex-wrap gap-2",
-            button {
-                class: "px-3 py-2 text-sm border border-neutral-600 rounded-lg hover:bg-neutral-800 text-neutral-300",
+            Button {
+                size: ButtonSize::Small,
+                style: ButtonStyle::Outline,
+                shape: ButtonShape::Square,
+                class: button_class,
                 onclick: move |_| {
                     on_add
                         .call(
@@ -73,10 +84,14 @@ fn QuestionTypeSelector(on_add: EventHandler<Question>) -> Element {
                             }),
                         );
                 },
-                "+ Single Choice"
+                icons::validations::Add { class: "w-4 h-4 [&>path]:stroke-current" }
+                "Single Choice"
             }
-            button {
-                class: "px-3 py-2 text-sm border border-neutral-600 rounded-lg hover:bg-neutral-800 text-neutral-300",
+            Button {
+                size: ButtonSize::Small,
+                style: ButtonStyle::Outline,
+                shape: ButtonShape::Square,
+                class: button_class,
                 onclick: move |_| {
                     on_add
                         .call(
@@ -90,10 +105,14 @@ fn QuestionTypeSelector(on_add: EventHandler<Question>) -> Element {
                             }),
                         );
                 },
-                "+ Multiple Choice"
+                icons::validations::Add { class: "w-4 h-4 [&>path]:stroke-current" }
+                "Multiple Choice"
             }
-            button {
-                class: "px-3 py-2 text-sm border border-neutral-600 rounded-lg hover:bg-neutral-800 text-neutral-300",
+            Button {
+                size: ButtonSize::Small,
+                style: ButtonStyle::Outline,
+                shape: ButtonShape::Square,
+                class: button_class,
                 onclick: move |_| {
                     on_add
                         .call(
@@ -104,10 +123,14 @@ fn QuestionTypeSelector(on_add: EventHandler<Question>) -> Element {
                             }),
                         );
                 },
-                "+ Subjective"
+                icons::validations::Add { class: "w-4 h-4 [&>path]:stroke-current" }
+                "Subjective"
             }
-            button {
-                class: "px-3 py-2 text-sm border border-neutral-600 rounded-lg hover:bg-neutral-800 text-neutral-300",
+            Button {
+                size: ButtonSize::Small,
+                style: ButtonStyle::Outline,
+                shape: ButtonShape::Square,
+                class: button_class,
                 onclick: move |_| {
                     on_add
                         .call(
@@ -123,7 +146,8 @@ fn QuestionTypeSelector(on_add: EventHandler<Question>) -> Element {
                             }),
                         );
                 },
-                "+ Linear Scale"
+                icons::validations::Add { class: "w-4 h-4 [&>path]:stroke-current" }
+                "Linear Scale"
             }
         }
     }

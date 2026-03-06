@@ -13,9 +13,11 @@ pub fn QuizEditor(props: QuizEditorProps) -> Element {
     let mut answers = props.answers;
 
     rsx! {
-        div { class: "flex flex-col gap-4 w-full",
+        div { class: "flex flex-col gap-2 w-full bg-[#1A1A1A] rounded-[12px] px-4 pt-1 pb-5",
             for (idx , question) in questions.read().iter().enumerate() {
                 {
+                    let total = questions.read().len();
+                    let is_last = idx + 1 == total;
                     let question = question.clone();
                     let answer = answers
                         .read()
@@ -25,27 +27,9 @@ pub fn QuizEditor(props: QuizEditorProps) -> Element {
                     let mut questions = questions;
                     let mut answers = answers;
                     rsx! {
-                        div { class: "flex flex-col gap-2 p-4 border border-neutral-700 rounded-lg",
+                        div { class: if is_last { "flex flex-col gap-3 pb-2" } else { "flex flex-col gap-3 pb-4 border-b border-[#262626]" },
                             div { class: "flex justify-between items-center",
                                 span { class: "text-sm text-neutral-400", "Question {idx + 1}" }
-                                Button {
-                                    size: ButtonSize::Small,
-                                    style: ButtonStyle::Ghost,
-                                    class: "text-red-400 text-sm hover:text-red-300",
-                                    onclick: move |_| {
-                                        let mut qs = questions.read().clone();
-                                        let mut ans = answers.read().clone();
-                                        if idx < qs.len() {
-                                            qs.remove(idx);
-                                        }
-                                        if idx < ans.len() {
-                                            ans.remove(idx);
-                                        }
-                                        questions.set(qs);
-                                        answers.set(ans);
-                                    },
-                                    "Remove"
-                                }
                             }
                             QuizQuestionEditor {
                                 question,
@@ -62,6 +46,27 @@ pub fn QuizEditor(props: QuizEditorProps) -> Element {
                                     questions.set(qs);
                                     answers.set(ans);
                                 },
+                            }
+                            div { class: "flex justify-end",
+                                Button {
+                                    size: ButtonSize::Small,
+                                    style: ButtonStyle::Ghost,
+                                    class: "flex items-center gap-1 text-[#8C8C8C] text-[15px] leading-[24px] tracking-[0.5px] font-medium",
+                                    onclick: move |_| {
+                                        let mut qs = questions.read().clone();
+                                        let mut ans = answers.read().clone();
+                                        if idx < qs.len() {
+                                            qs.remove(idx);
+                                        }
+                                        if idx < ans.len() {
+                                            ans.remove(idx);
+                                        }
+                                        questions.set(qs);
+                                        answers.set(ans);
+                                    },
+                                    "Delete"
+                                    icons::edit::Delete2 { class: "w-6 h-6 [&>path]:stroke-[#737373]" }
+                                }
                             }
                         }
                     }
@@ -85,41 +90,53 @@ pub fn QuizEditor(props: QuizEditorProps) -> Element {
 
 #[component]
 fn QuizQuestionTypeSelector(on_add: EventHandler<Question>) -> Element {
+    let button_class = "px-3 py-2 text-sm border border-neutral-600 rounded-lg hover:bg-neutral-800 text-neutral-300 flex items-center gap-1";
     rsx! {
         div { class: "flex flex-wrap gap-2",
-            button {
-                class: "px-3 py-2 text-sm border border-neutral-600 rounded-lg hover:bg-neutral-800 text-neutral-300",
-                onclick: move |_| {
-                    on_add
-                        .call(
-                            Question::SingleChoice(ChoiceQuestion {
-                                title: String::new(),
-                                description: None,
-                                image_url: None,
-                                options: vec!["Option 1".to_string(), "Option 2".to_string()],
-                                is_required: Some(false),
-                                allow_other: None,
-                            }),
-                        );
-                },
-                "+ Single Choice"
-            }
-            button {
-                class: "px-3 py-2 text-sm border border-neutral-600 rounded-lg hover:bg-neutral-800 text-neutral-300",
-                onclick: move |_| {
-                    on_add
-                        .call(
-                            Question::MultipleChoice(ChoiceQuestion {
-                                title: String::new(),
-                                description: None,
-                                image_url: None,
-                                options: vec!["Option 1".to_string(), "Option 2".to_string()],
-                                is_required: Some(false),
-                                allow_other: None,
-                            }),
-                        );
-                },
-                "+ Multiple Choice"
+            div { class: "flex flex-row justify-start items-center gap-2",
+                Button {
+                    size: ButtonSize::Small,
+                    style: ButtonStyle::Outline,
+                    shape: ButtonShape::Square,
+                    class: button_class,
+                    onclick: move |_| {
+                        on_add
+                            .call(
+                                Question::SingleChoice(ChoiceQuestion {
+                                    title: String::new(),
+                                    description: None,
+                                    image_url: None,
+                                    options: vec!["Option 1".to_string(), "Option 2".to_string()],
+                                    is_required: Some(false),
+                                    allow_other: None,
+                                }),
+                            );
+                    },
+                    icons::validations::Add { class: "w-4 h-4 [&>path]:stroke-current" }
+                    "Single Choice"
+                }
+
+                Button {
+                    size: ButtonSize::Small,
+                    style: ButtonStyle::Outline,
+                    shape: ButtonShape::Square,
+                    class: button_class,
+                    onclick: move |_| {
+                        on_add
+                            .call(
+                                Question::MultipleChoice(ChoiceQuestion {
+                                    title: String::new(),
+                                    description: None,
+                                    image_url: None,
+                                    options: vec!["Option 1".to_string(), "Option 2".to_string()],
+                                    is_required: Some(false),
+                                    allow_other: None,
+                                }),
+                            );
+                    },
+                    icons::validations::Add { class: "w-4 h-4 [&>path]:stroke-current" }
+                    "Multiple Choice"
+                }
             }
         }
     }
@@ -169,8 +186,8 @@ fn QuizChoiceEditor(
     rsx! {
         Input {
             variant: InputVariant::Plain,
-            class: "w-full p-2 bg-transparent border-b border-neutral-600 text-white placeholder-neutral-500 focus:border-blue-500 outline-none",
-            placeholder: "Question title",
+            class: "w-full h-11 px-3 bg-[#262626] border border-[#737373] rounded-lg text-sm text-neutral-300 placeholder:text-neutral-500 focus:border-[#FCB300] focus-visible:border-[#FCB300] focus-visible:ring-0",
+            placeholder: "Input",
             value: q.title.clone(),
             oninput: move |evt: Event<FormData>| {
                 let mut next = q_for_title.clone();
@@ -183,7 +200,7 @@ fn QuizChoiceEditor(
                 on_change.call((q_enum, answer_for_title.clone()));
             },
         }
-        div { class: "flex flex-col gap-1",
+        div { class: "flex flex-col gap-2",
             for (opt_idx , option) in q.options.iter().enumerate() {
                 {
                     let question_for_input = q.clone();
@@ -202,24 +219,33 @@ fn QuizChoiceEditor(
                             key: "{option}-{checked}",
                             value: option.clone(),
                             leading: rsx! {
-                                input {
-                                    r#type: "checkbox",
-                                    checked,
-                                    onchange: move |e| {
-                                        let next_checked = e.checked();
-                                        let next_answer = toggle_answer(
-                                            &answer_for_toggle,
-                                            opt_idx,
-                                            is_single,
-                                            next_checked,
-                                        );
-                                        let q_enum = if is_single {
-                                            Question::SingleChoice(question_for_toggle.clone())
-                                        } else {
-                                            Question::MultipleChoice(question_for_toggle.clone())
-                                        };
-                                        on_change_toggle.call((q_enum, next_answer));
-                                    },
+                                div { class: "flex items-center gap-2.5",
+                                    icons::security::DialPad { class: "w-6 h-6 [&>path]:stroke-[#737373]" }
+                                    label { class: "flex items-center cursor-pointer",
+                                        input {
+                                            r#type: "checkbox",
+                                            checked,
+                                            class: "sr-only peer",
+                                            onchange: move |e| {
+                                                let next_checked = e.checked();
+                                                let next_answer = toggle_answer(
+                                                    &answer_for_toggle,
+                                                    opt_idx,
+                                                    is_single,
+                                                    next_checked,
+                                                );
+                                                let q_enum = if is_single {
+                                                    Question::SingleChoice(question_for_toggle.clone())
+                                                } else {
+                                                    Question::MultipleChoice(question_for_toggle.clone())
+                                                };
+                                                on_change_toggle.call((q_enum, next_answer));
+                                            },
+                                        }
+                                        div { class: "w-6 h-6 rounded-[4px] border-2 border-[#737373] bg-[#101010] flex items-center justify-center peer-checked:bg-[#FCB300] peer-checked:border-[#FCB300] [&>svg]:opacity-0 peer-checked:[&>svg]:opacity-100",
+                                            icons::validations::Check { class: "w-5 h-5 [&>path]:stroke-[#0A0A0A]" }
+                                        }
+                                    }
                                 }
                             },
                             on_change: move |value: String| {
@@ -258,7 +284,7 @@ fn QuizChoiceEditor(
                     Button {
                         size: ButtonSize::Small,
                         style: ButtonStyle::Ghost,
-                        class: "text-sm text-blue-400 hover:text-blue-300 mt-1",
+                        class: "text-sm text-neutral-500 justify-start px-0 flex items-center gap-2 w-full text-left",
                         onclick: move |_| {
                             let mut next = question.clone();
                             next.options.push(format!("Option {}", next.options.len() + 1));
@@ -269,7 +295,8 @@ fn QuizChoiceEditor(
                             };
                             on_change.call((q_enum, current_answer.clone()));
                         },
-                        "+ Add Option"
+                        icons::validations::Add { class: "w-4 h-4 [&>path]:stroke-current" }
+                        "Add Option"
                     }
                 }
             }
