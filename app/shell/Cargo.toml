@@ -27,7 +27,6 @@ web-sys = { workspace = true }
 wasm-bindgen = { workspace = true }
 wasm-bindgen-futures = { workspace = true }
 serde-wasm-bindgen = { workspace = true }
-lambda_http = { version = "1.0.2", optional = true }
 
 
 [features]
@@ -91,7 +90,7 @@ server = [
   "tower-sessions",
 ]
 
-lambda = [ "server", "lambda_http" ]
+lambda = [ "server", "common/lambda" ]
 
 [dev-dependencies]
 axum = { workspace = true }
