@@ -67,7 +67,7 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
     };
 
     rsx! {
-        div { class: "grid overflow-hidden grid-cols-1 tablet:grid-cols-[250px_1fr] w-full h-screen bg-component-bg text-web-font-primary",
+        div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-component-bg text-web-font-primary",
             div { class: "hidden tablet:flex",
                 SpaceNav {
                     logo: "https://metadata.ratel.foundation/logos/logo.png",
@@ -81,21 +81,21 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
                     },
                 }
             }
-            div { class: "flex flex-col min-h-0 min-w-0",
+            div { class: "flex flex-col min-w-0 min-h-0",
                 SpaceTop {
                     labels,
                     space_status,
                     show_participate_button: show_participate,
                     on_participant,
                 }
-                div { class: "flex overflow-auto p-5 w-full flex-1 min-h-0 bg-web-bg rounded-tl-[10px]",
+                div { class: "flex overflow-auto flex-1 p-5 w-full bg-web-bg rounded-tl-[10px]",
                     SuspenseBoundary {
                         fallback: |_| rsx! {
-                            div { class: "flex justify-center items-center w-full h-full text-gray-400",
-                                //FIXME Replace Loading UI
-                                "Loading..."
+                            div { class: "justify-center items-center w-full grow",
+                                LoadingIndicator { class: "max-w-[200px] max-h-[200px]" }
                             }
                         },
+
                         Outlet::<Route> {}
                     }
                 }
