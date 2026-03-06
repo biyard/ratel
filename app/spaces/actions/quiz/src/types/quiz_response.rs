@@ -12,6 +12,14 @@ pub struct QuizResponse {
     pub description: String,
     pub user_response_count: i64,
     pub questions: Vec<Question>,
+    #[serde(default)]
+    pub my_response: Option<Vec<Answer>>,
+    #[serde(default)]
+    pub my_score: Option<i64>,
+    #[serde(default)]
+    pub passed: Option<bool>,
+    #[serde(default)]
+    pub attempt_count: i64,
 }
 
 #[cfg(feature = "server")]
@@ -32,6 +40,10 @@ impl From<SpaceQuiz> for QuizResponse {
             description: quiz.description,
             user_response_count: quiz.user_response_count,
             questions: quiz.questions,
+            my_response: None,
+            my_score: None,
+            passed: None,
+            attempt_count: 0,
         }
     }
 }

@@ -28,6 +28,15 @@ pub async fn update_quiz(
     let space_pk: Partition = space_pk.into();
     let quiz_sk: EntityType = quiz_id.clone().into();
 
+    let existing = SpaceQuiz::get(cli, &space_pk, Some(quiz_sk.clone()))
+        .await?
+        .ok_or(Error::NotFound("Quiz not found".into()))?;
+    if existing.user_response_count > 0 {
+        return Err(Error::BadRequest(
+            "Quiz cannot be edited after responses exist".into(),
+        ));
+    }
+
     let now = common::utils::time::get_now_timestamp_millis();
     let mut updater = SpaceQuiz::updater(&space_pk, &quiz_sk).with_updated_at(now);
 
@@ -81,14 +90,7 @@ pub async fn update_quiz(
     updater.execute(cli).await?;
 
     if let Some(answers) = req.answers {
-        let questions = if let Some(qs) = questions_for_answers {
-            qs
-        } else {
-            SpaceQuiz::get(cli, &space_pk, Some(quiz_sk.clone()))
-                .await?
-                .ok_or(Error::NotFound("Quiz not found".into()))?
-                .questions
-        };
+        let questions = questions_for_answers.unwrap_or_else(|| existing.questions.clone());
 
         if questions.len() != answers.len() {
             return Err(Error::BadRequest("Answers length mismatch".into()));
