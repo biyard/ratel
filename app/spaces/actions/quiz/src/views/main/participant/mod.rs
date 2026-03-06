@@ -89,7 +89,7 @@ pub fn QuizParticipantPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityTyp
         div { class: "flex flex-col gap-4 w-full",
             Button {
                 size: ButtonSize::Inline,
-                style: ButtonStyle::Ghost,
+                style: ButtonStyle::Text,
                 class: "flex items-center gap-1 text-sm text-neutral-400 hover:text-white transition-colors w-fit",
                 onclick: move |_| nav.go_back(),
                 "← {tr.btn_back}"

@@ -22,7 +22,7 @@ pub fn ChoiceOptionRow(props: ChoiceOptionRowProps) -> Element {
             }
             Button {
                 size: ButtonSize::Icon,
-                style: ButtonStyle::Ghost,
+                style: ButtonStyle::Text,
                 class: "text-neutral-500 hover:text-neutral-300",
                 onclick: move |_| props.on_remove.call(()),
                 icons::validations::Clear { class: "w-5 h-5 [&>path]:stroke-current" }
@@ -94,7 +94,7 @@ pub fn ChoiceQuestionEditor(
                 rsx! {
                     Button {
                         size: ButtonSize::Small,
-                        style: ButtonStyle::Ghost,
+                        style: ButtonStyle::Text,
                         class: "text-sm text-neutral-500 justify-start px-0 flex items-center gap-2 w-full text-left",
                         onclick: move |_| {
                             let mut next = question.clone();
