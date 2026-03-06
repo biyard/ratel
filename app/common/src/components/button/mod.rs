@@ -106,5 +106,5 @@ pub enum ButtonStyle {
     #[strum(
         serialize = "bg-transparent border-transparent text-text-primary hover:bg-hover disabled:bg-transparent disabled:border-transparent disabled:text-text-secondary"
     )]
-    Ghost,
+    Text,
 }
