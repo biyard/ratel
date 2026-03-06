@@ -17777,6 +17777,7 @@ dependencies = [
  "serde",
  "space-action-discussion",
  "space-action-poll",
+ "space-action-quiz",
  "space-action-subscription",
  "space-common",
 ]
@@ -17793,6 +17794,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "space-action-quiz"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "common",
+ "dioxus",
+ "ratel-auth",
+ "serde",
+ "space-action-poll",
+ "space-common",
+]
+
+[[package]]
 name = "space-action-shell"
 version = "0.1.0"
 dependencies = [
@@ -17803,6 +17817,7 @@ dependencies = [
  "space-action-discussion",
  "space-action-main",
  "space-action-poll",
+ "space-action-quiz",
  "space-action-subscription",
  "space-common",
 ]

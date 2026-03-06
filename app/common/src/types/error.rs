@@ -197,6 +197,10 @@ pub enum Error {
     )]
     InvalidCodeInput,
 
+    #[error("Failed to response quiz")]
+    #[translate(en = "Failed to submit response.", ko = "응답 제출에 실패했습니다.")]
+    QuizResponseFailed,
+
     // PortOne related errors
     #[error("PortOne Inicis returned invalid identity")]
     #[translate(en = "Failed network request", ko = "요청에 실패했습니다.")]
