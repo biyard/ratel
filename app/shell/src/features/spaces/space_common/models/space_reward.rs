@@ -1,4 +1,4 @@
-use common::{
+use crate::common::{
     models::reward::{UserReward, UserRewardHistory},
     types::*, utils::time::get_now_timestamp_millis, *,
 };
@@ -67,7 +67,7 @@ impl SpaceReward {
         space_pk: SpacePartition,
         action: EntityType,
         behavior: RewardUserBehavior,
-    ) -> common::Result<Self> {
+    ) -> crate::common::Result<Self> {
         let pk: Partition = space_pk.clone().into();
         let sk = RewardKey::from((space_pk, action, behavior));
 
@@ -81,7 +81,7 @@ impl SpaceReward {
         cli: &aws_sdk_dynamodb::Client,
         space_pk: SpacePartition,
         action: Option<EntityType>,
-    ) -> common::Result<Vec<Self>> {
+    ) -> crate::common::Result<Vec<Self>> {
         let pk: Partition = space_pk.clone().into();
         let sk = RewardKey::get_space_reward_sk_prefix(space_pk, action);
 
@@ -94,7 +94,7 @@ impl SpaceReward {
 }
 
 impl SpaceReward {
-    pub fn can_edit(role: &SpaceUserRole) -> common::Result<()> {
+    pub fn can_edit(role: &SpaceUserRole) -> crate::common::Result<()> {
         match role {
             SpaceUserRole::Creator => Ok(()),
             _ => Err(Error::NoPermission),
@@ -108,7 +108,7 @@ impl SpaceReward {
         cli: &aws_sdk_dynamodb::Client,
         space_reward: &SpaceReward,
         target_pk: Partition,
-    ) -> common::Result<UserReward> {
+    ) -> crate::common::Result<UserReward> {
         let now = get_now_timestamp_millis();
         let space_pk = space_reward.pk.clone();
 
@@ -186,7 +186,7 @@ impl SpaceReward {
         txs.push(history.create_transact_write_item());
 
         // Execute DB transaction
-        if let Err(err) = transact_write_items!(cli, txs) {
+        if let Err(err) = crate::transact_write_items!(cli, txs) {
             if let aws_sdk_dynamodb::Error::TransactionCanceledException(tx_err) = &err {
                 let is_conditional_failure = tx_err
                     .cancellation_reasons()

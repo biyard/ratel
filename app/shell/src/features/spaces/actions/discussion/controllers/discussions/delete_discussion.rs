@@ -7,7 +7,7 @@ pub async fn delete_discussion(
     discussion_sk: SpacePostEntityType,
 ) -> Result<()> {
     SpacePost::can_edit(&role)?;
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let space_pk: Partition = space_id.into();
     let discussion_sk_entity: EntityType = discussion_sk.into();
@@ -16,7 +16,7 @@ pub async fn delete_discussion(
 
     // Decrement post count in aggregate
     let agg_item = DashboardAggregate::inc_posts(&space_pk, -1);
-    transact_write_items!(cli, vec![agg_item]).ok();
+    crate::transact_write_items!(cli, vec![agg_item]).ok();
 
     Ok(())
 }

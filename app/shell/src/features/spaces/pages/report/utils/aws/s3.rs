@@ -1,6 +1,6 @@
 use aws_config::BehaviorVersion;
 use aws_sdk_s3::{error::SdkError, Client as S3Client};
-use common::serde_json::Value;
+use crate::common::serde_json::Value;
 use dioxus::prelude::ServerFnError;
 
 pub async fn build_s3_client() -> Result<S3Client, ServerFnError> {
@@ -46,7 +46,7 @@ pub async fn load_json_optional(
                 .await
                 .map_err(|e| ServerFnError::new(format!("s3 read body failed: {e:?}")))?;
             let bytes = body.into_bytes();
-            let value = common::serde_json::from_slice::<Value>(&bytes)
+            let value = crate::common::serde_json::from_slice::<Value>(&bytes)
                 .map_err(|e| ServerFnError::new(format!("json decode failed: {e}")))?;
             Ok(Some(value))
         }

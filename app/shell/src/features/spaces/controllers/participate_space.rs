@@ -3,11 +3,11 @@ use crate::features::spaces::models::{
     SpaceParticipant,
 };
 use crate::features::spaces::*;
-use common::attribute::Gender;
-use common::models::auth::{OptionalUser, User};
-use common::models::space::SpaceCommon;
-use common::utils::time::get_now_timestamp_millis;
-use common::SpaceVisibility;
+use crate::common::attribute::Gender;
+use crate::common::models::auth::{OptionalUser, User};
+use crate::common::models::space::SpaceCommon;
+use crate::common::utils::time::get_now_timestamp_millis;
+use crate::common::SpaceVisibility;
 use crate::features::posts::models::Post;
 use crate::features::posts::types::TeamGroupPermission;
 
@@ -74,7 +74,7 @@ pub async fn participate_space(space_id: SpacePartition) -> Result<ParticipateSp
                         .increase_participants(1)
                         .with_updated_at(now);
 
-                    transact_write!(
+                    crate::transact_write!(
                         dynamo,
                         sp.create_transact_write_item(),
                         new_space.transact_write_item(),
@@ -104,7 +104,7 @@ pub async fn participate_space(space_id: SpacePartition) -> Result<ParticipateSp
     let invitation = SpaceInvitationMember::new(space.pk.clone(), user.clone())
         .with_status(InvitationStatus::Accepted);
 
-    transact_write!(
+    crate::transact_write!(
         dynamo,
         sp.create_transact_write_item(),
         space_update.transact_write_item(),
@@ -177,7 +177,7 @@ async fn check_if_satisfying_panel_attribute(
                 let quota_updater =
                     SpacePanelQuota::updater(pk.clone(), sk.clone()).decrease_remains(1);
 
-                transact_write!(
+                crate::transact_write!(
                     cli,
                     participants.create_transact_write_item(),
                     space_updater.transact_write_item(),
@@ -196,7 +196,7 @@ async fn check_if_satisfying_panel_attribute(
 // async fn check_if_satisfying_panel_attribute(
 //     _space: &SpaceCommon,
 //     _cli: &(),
-//     _user: &ratel_auth::User,
+//     _user: &crate::features::auth::User,
 // ) -> Result<()> {
 //     Ok(())
 // }

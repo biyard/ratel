@@ -1,6 +1,6 @@
 use crate::features::spaces::actions::discussion::*;
 
-#[delete("/api/spaces/{space_id}/discussions/{discussion_sk}/comments/{comment_sk}", role: SpaceUserRole, user : ratel_auth::User)]
+#[delete("/api/spaces/{space_id}/discussions/{discussion_sk}/comments/{comment_sk}", role: SpaceUserRole, user : crate::features::auth::User)]
 pub async fn delete_comment(
     space_id: SpacePartition,
     discussion_sk: SpacePostEntityType,
@@ -8,7 +8,7 @@ pub async fn delete_comment(
 ) -> Result<()> {
     SpacePost::can_view(&role)?;
 
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let space_post_id = SpacePostPartition(discussion_sk.0.clone());
     let space_post_pk: Partition = space_post_id.clone().into();
@@ -43,7 +43,7 @@ pub async fn delete_comment(
         txs.push(parent_tx);
     }
 
-    transact_write_items!(cli, txs).map_err(|e| {
+    crate::transact_write_items!(cli, txs).map_err(|e| {
         tracing::error!("Failed to delete comment: {}", e);
         crate::features::spaces::actions::discussion::Error::Unknown(format!("Failed to delete comment: {}", e))
     })?;

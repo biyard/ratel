@@ -1,4 +1,5 @@
 [application]
+tailwind_input = "tailwind.css"
 
 [web.app]
 

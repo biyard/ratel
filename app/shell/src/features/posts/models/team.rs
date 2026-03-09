@@ -1,9 +1,9 @@
 use crate::features::posts::types::*;
 use crate::features::posts::*;
 #[cfg(feature = "server")]
-use ratel_auth::OptionalUser;
+use crate::features::auth::OptionalUser;
 #[cfg(feature = "server")]
-use ratel_auth::UserTeamGroup;
+use crate::features::auth::UserTeamGroup;
 
 #[cfg(feature = "server")]
 use super::{TeamGroup, TeamOwner};
@@ -58,7 +58,7 @@ impl Team {
         let team_id = uuid::Uuid::new_v4().to_string();
         let pk = Partition::Team(team_id);
         let sk = EntityType::Team;
-        let now = common::utils::time::get_now_timestamp_millis();
+        let now = crate::common::utils::time::get_now_timestamp_millis();
 
         Self {
             pk,
@@ -97,13 +97,13 @@ impl Team {
         let user_pk = user.pk.clone();
         let team_pk = team.pk.clone();
 
-        let user_team_group = ratel_auth::UserTeamGroup::new(
+        let user_team_group = crate::features::auth::UserTeamGroup::new(
             user_pk.clone(),
             team_group.sk.clone(),
             team_group.permissions,
             team_pk.clone(),
         );
-        let user_team = ratel_auth::UserTeam::new(
+        let user_team = crate::features::auth::UserTeam::new(
             user_pk,
             team_pk.clone(),
             team.display_name.clone(),
@@ -277,7 +277,7 @@ where
         }
 
         let team = Team::from_request_parts(parts, state).await?;
-        let user: Option<ratel_auth::User> =
+        let user: Option<crate::features::auth::User> =
             OptionalUser::from_request_parts(parts, state).await?.into();
         let cli = crate::features::posts::config::get().dynamodb();
         let permissions = if let Some(user) = user {

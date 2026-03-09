@@ -9,7 +9,7 @@ use dioxus::router::components::child_router::ChildRouter;
 use layout::AppLayout;
 use membership::Home as MembershipHome;
 use crate::features::admin::Route as AdminRoute;
-use ratel_auth::Route as AuthRoute;
+use crate::features::auth::Route as AuthRoute;
 use crate::features::my_follower::Route as MyFollowerRoute;
 use crate::features::posts::Route as PostRoute;
 use crate::features::spaces::Route as SpaceRoute;

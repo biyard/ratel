@@ -5,7 +5,7 @@ mod identify;
 
 use super::*;
 pub use change_membership::*;
-use common::Error;
+use crate::common::Error;
 pub use get_membership::*;
 pub use history::*;
 pub use identify::*;

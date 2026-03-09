@@ -1,6 +1,6 @@
 use crate::features::spaces::actions::poll::*;
-use common::macros::DynamoEntity;
-use common::utils::time::get_now_timestamp_millis;
+use crate::common::macros::DynamoEntity;
+use crate::common::utils::time::get_now_timestamp_millis;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]

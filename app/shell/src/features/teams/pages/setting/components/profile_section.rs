@@ -1,5 +1,5 @@
 use super::super::*;
-use common::components::FileUploader;
+use crate::common::components::FileUploader;
 
 #[component]
 pub fn ProfileSection(

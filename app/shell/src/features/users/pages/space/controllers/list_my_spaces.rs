@@ -1,5 +1,5 @@
 use super::super::*;
-use common::models::space::{SpaceCommon, SpaceParticipant};
+use crate::common::models::space::{SpaceCommon, SpaceParticipant};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
@@ -13,11 +13,11 @@ pub struct MySpaceResponse {
     pub visibility: SpaceVisibility,
 }
 
-#[get("/api/me/spaces?bookmark", user: ratel_auth::User)]
+#[get("/api/me/spaces?bookmark", user: crate::features::auth::User)]
 pub async fn list_my_spaces_handler(
     bookmark: Option<String>,
 ) -> Result<ListResponse<MySpaceResponse>> {
-    let conf = common::config::ServerConfig::default();
+    let conf = crate::common::config::ServerConfig::default();
     let cli = conf.dynamodb();
 
     let mut opt = SpaceParticipant::opt().limit(10);

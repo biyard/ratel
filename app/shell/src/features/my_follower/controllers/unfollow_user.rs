@@ -1,10 +1,10 @@
 use crate::features::my_follower::*;
-use common::models::auth::UserFollow;
+use crate::common::models::auth::UserFollow;
 use crate::features::posts::models::Team;
 
-#[delete("/api/my-follower/follow", user: ratel_auth::User)]
+#[delete("/api/my-follower/follow", user: crate::features::auth::User)]
 pub async fn unfollow_user(target_pk: Partition) -> Result<()> {
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
 
     if target_pk == user.pk {
@@ -25,7 +25,7 @@ pub async fn unfollow_user(target_pk: Partition) -> Result<()> {
     let following_delete = UserFollow::delete_transact_write_item(&following_pk, &following_sk);
     let target_update = match &target_pk {
         Partition::User(_) => {
-            common::models::auth::User::updater(target_pk.clone(), EntityType::User)
+            crate::common::models::auth::User::updater(target_pk.clone(), EntityType::User)
                 .decrease_followers_count(1)
                 .transact_write_item()
         }
@@ -34,7 +34,7 @@ pub async fn unfollow_user(target_pk: Partition) -> Result<()> {
             .transact_write_item(),
         _ => return Err(Error::BadRequest("Invalid target".into())),
     };
-    let follower_update = common::models::auth::User::updater(user.pk.clone(), EntityType::User)
+    let follower_update = crate::common::models::auth::User::updater(user.pk.clone(), EntityType::User)
         .decrease_followings_count(1)
         .transact_write_item();
 

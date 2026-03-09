@@ -5,7 +5,7 @@ use crate::features::posts::components::{CreatePostButton, FeedList};
 
 #[component]
 pub fn Index() -> Element {
-    let user_ctx = ratel_auth::hooks::use_user_context();
+    let user_ctx = crate::features::auth::hooks::use_user_context();
     let user = user_ctx().user.clone();
 
     rsx! {

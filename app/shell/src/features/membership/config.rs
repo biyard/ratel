@@ -1,5 +1,5 @@
-use common::{CommonConfig, Environment};
-pub use common::PortoneConfig;
+use crate::common::{CommonConfig, Environment};
+pub use crate::common::PortoneConfig;
 
 use super::*;
 

@@ -23,7 +23,7 @@ pub struct SpaceIncentive {
 #[cfg(feature = "server")]
 impl SpaceIncentive {
     pub fn new(space_pk: SpacePartition, contract_address: String, deploy_block: i64) -> Self {
-        use common::utils::time::get_now_timestamp_millis;
+        use crate::common::utils::time::get_now_timestamp_millis;
 
         let now = get_now_timestamp_millis();
 

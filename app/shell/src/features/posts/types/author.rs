@@ -1,5 +1,5 @@
 use crate::features::posts::models::Team;
-use ratel_auth::{User, UserType};
+use crate::features::auth::{User, UserType};
 
 use crate::features::posts::*;
 

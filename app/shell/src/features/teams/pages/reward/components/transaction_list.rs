@@ -1,6 +1,6 @@
 use super::transaction_item;
 use super::super::{views::TeamRewardsTranslate, *};
-use common::services::PointTransactionResponse;
+use crate::common::services::PointTransactionResponse;
 
 pub fn transaction_list(
     tr: &TeamRewardsTranslate,

@@ -3,7 +3,7 @@ use crate::features::spaces::actions::quiz::*;
 #[post("/api/spaces/{space_pk}/quizzes", role: SpaceUserRole)]
 pub async fn create_quiz(space_pk: SpacePartition) -> Result<QuizResponse> {
     SpaceQuiz::can_edit(&role)?;
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let quiz = SpaceQuiz::new(space_pk.clone())?;
 

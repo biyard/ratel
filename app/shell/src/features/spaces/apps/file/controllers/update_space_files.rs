@@ -2,7 +2,7 @@ use crate::features::spaces::apps::file::*;
 #[cfg(feature = "server")]
 use crate::features::spaces::apps::file::models::SpaceFile;
 #[cfg(feature = "server")]
-use common::SpaceUserRole;
+use crate::common::SpaceUserRole;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct UpdateSpaceFilesRequest {
@@ -27,7 +27,7 @@ pub async fn update_space_files(
     let mut files_with_ids = req.files;
     for file in &mut files_with_ids {
         if file.id.is_empty() {
-            file.id = common::uuid::Uuid::now_v7().to_string();
+            file.id = crate::common::uuid::Uuid::now_v7().to_string();
         }
     }
 

@@ -1,5 +1,5 @@
 use super::super::*;
-use common::Switch;
+use crate::common::Switch;
 
 use crate::features::posts::types::TeamGroupPermission;
 

@@ -2,12 +2,12 @@ use super::super::{dto::TeamRewardsResponse, *};
 
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 
-#[get("/api/teams/:team_pk/points?month", user: ratel_auth::User, permissions: TeamGroupPermissions)]
+#[get("/api/teams/:team_pk/points?month", user: crate::features::auth::User, permissions: TeamGroupPermissions)]
 pub async fn get_team_rewards_handler(
     team_pk: TeamPartition,
     month: Option<String>,
 ) -> Result<TeamRewardsResponse> {
-    let cfg = common::CommonConfig::default();
+    let cfg = crate::common::CommonConfig::default();
     let team_pk: Partition = team_pk.into();
     let can_view = permissions.contains(TeamGroupPermission::TeamAdmin);
     if !can_view {

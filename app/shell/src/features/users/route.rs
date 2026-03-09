@@ -25,7 +25,7 @@ macro_rules! define_owner_only_page {
     ($wrapper_name:ident, $page_component:ident) => {
         #[component]
         pub fn $wrapper_name(username: String) -> Element {
-            let user_ctx = ratel_auth::hooks::use_user_context();
+            let user_ctx = crate::features::auth::hooks::use_user_context();
             let is_owner = user_ctx()
                 .user
                 .as_ref()

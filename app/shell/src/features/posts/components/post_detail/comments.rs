@@ -6,9 +6,9 @@ use crate::features::posts::controllers::comments::list_comments::list_comments_
 use crate::features::posts::controllers::comments::reply_to_comment::reply_to_comment_handler;
 use crate::features::posts::controllers::dto::*;
 use crate::features::posts::*;
-use common::components::TiptapEditor;
-use common::components::{Button, ButtonSize, ButtonStyle, TextArea};
-use common::hooks::use_infinite_query;
+use crate::common::components::TiptapEditor;
+use crate::common::components::{Button, ButtonSize, ButtonStyle, TextArea};
+use crate::common::hooks::use_infinite_query;
 use dioxus::prelude::*;
 
 #[component]

@@ -1,5 +1,5 @@
-use common::CommonConfig;
-pub use common::PortoneConfig;
+use crate::common::CommonConfig;
+pub use crate::common::PortoneConfig;
 
 #[derive(Debug, Default)]
 pub struct Config {

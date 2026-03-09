@@ -1,4 +1,4 @@
-use common::attribute::{Age, Attribute, Gender};
+use crate::common::attribute::{Age, Attribute, Gender};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 

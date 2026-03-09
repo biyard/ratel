@@ -1,8 +1,8 @@
 use axum::Router;
-use common::aws_sdk_dynamodb;
-use common::models::auth::User;
-use common::types::UserType;
-use common::utils::password::hash_password;
+use crate::common::aws_sdk_dynamodb;
+use crate::common::models::auth::User;
+use crate::common::types::UserType;
+use crate::common::utils::password::hash_password;
 
 use crate::App;
 
@@ -22,7 +22,7 @@ impl TestContext {
         let config = crate::config::get();
         let cli = config.common.dynamodb();
 
-        let session_layer = common::middlewares::session_layer::get_session_layer(
+        let session_layer = crate::common::middlewares::session_layer::get_session_layer(
             cli,
             config.common.env.to_string(),
         );

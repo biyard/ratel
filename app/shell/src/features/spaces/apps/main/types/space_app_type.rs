@@ -1,5 +1,5 @@
 use crate::features::spaces::apps::main::*;
-use common::macros::DynamoEnum;
+use crate::common::macros::DynamoEnum;
 #[derive(
     Debug, Clone, Copy, Serialize, Deserialize, Default, DynamoEnum, Eq, PartialEq, Translate,
 )]

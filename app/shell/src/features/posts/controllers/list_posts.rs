@@ -2,7 +2,7 @@ use crate::features::posts::controllers::dto::*;
 use crate::features::posts::models::*;
 use crate::features::posts::types::*;
 use crate::features::posts::*;
-use ratel_auth::OptionalUser;
+use crate::features::auth::OptionalUser;
 
 #[get("/api/posts?bookmark", user: OptionalUser)]
 pub async fn list_posts_handler(
@@ -11,7 +11,7 @@ pub async fn list_posts_handler(
     let conf = crate::features::posts::config::get();
     let cli = conf.dynamodb();
 
-    let user: Option<ratel_auth::User> = user.into();
+    let user: Option<crate::features::auth::User> = user.into();
 
     tracing::debug!(
         "list_posts_handler: user = {:?} bookmark = {:?}",

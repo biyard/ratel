@@ -1,6 +1,6 @@
 use crate::features::spaces::apps::main::macros::DynamoEntity;
 use crate::features::spaces::apps::main::*;
-use common::utils::time::get_now_timestamp_millis;
+use crate::common::utils::time::get_now_timestamp_millis;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, DynamoEntity, PartialEq)]
 pub struct SpaceApp {

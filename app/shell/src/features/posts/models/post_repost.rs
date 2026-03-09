@@ -1,6 +1,6 @@
 use crate::features::posts::types::*;
 use crate::features::posts::*;
-use ratel_auth::User;
+use crate::features::auth::User;
 
 use super::Post;
 

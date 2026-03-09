@@ -1,6 +1,6 @@
 use super::super::*;
 
-pub type ListItemsResponse<T> = common::ListResponse<T>;
+pub type ListItemsResponse<T> = crate::common::ListResponse<T>;
 
 mod team_group_response;
 mod create_group_request;

@@ -1,4 +1,4 @@
-use common::{RewardCondition, RewardPeriod, RewardUserBehavior};
+use crate::common::{RewardCondition, RewardPeriod, RewardUserBehavior};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, Eq, PartialEq)]

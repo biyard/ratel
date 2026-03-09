@@ -1,4 +1,4 @@
-use common::{models::reward::UserReward, types::*, *};
+use crate::common::{models::reward::UserReward, types::*, *};
 use super::SpaceReward;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]

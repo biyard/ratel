@@ -1,5 +1,5 @@
 use crate::features::spaces::actions::poll::*;
-use common::attribute::{Age, Attribute, Gender};
+use crate::common::attribute::{Age, Attribute, Gender};
 
 #[derive(Debug, Clone, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]

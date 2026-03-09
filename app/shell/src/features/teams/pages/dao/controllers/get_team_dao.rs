@@ -5,7 +5,7 @@ use crate::features::posts::models::{Team, TeamOwner};
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use std::collections::{HashMap, HashSet};
 
-#[get("/api/teams/:teamname/dao/context", user: ratel_auth::OptionalUser, team: Team, permissions: TeamGroupPermissions)]
+#[get("/api/teams/:teamname/dao/context", user: crate::features::auth::OptionalUser, team: Team, permissions: TeamGroupPermissions)]
 pub async fn get_team_dao_handler(teamname: String) -> Result<TeamDao> {
     let conf = super::super::config::get();
     let cli = conf.common.dynamodb();
@@ -43,12 +43,12 @@ async fn list_eligible_admins(
     let mut all_user_team_groups = Vec::new();
     let mut bookmark: Option<String> = None;
     loop {
-        let mut query_options = ratel_auth::UserTeamGroupQueryOption::builder().limit(200);
+        let mut query_options = crate::features::auth::UserTeamGroupQueryOption::builder().limit(200);
         if let Some(b) = &bookmark {
             query_options = query_options.bookmark(b.clone());
         }
         let (items, next) =
-            ratel_auth::UserTeamGroup::find_by_team_pk(cli, team_pk.clone(), query_options).await?;
+            crate::features::auth::UserTeamGroup::find_by_team_pk(cli, team_pk.clone(), query_options).await?;
         all_user_team_groups.extend(items);
         if next.is_none() {
             break;
@@ -77,7 +77,7 @@ async fn list_eligible_admins(
     }
 
     let users = if !user_keys.is_empty() {
-        ratel_auth::User::batch_get(cli, user_keys.clone()).await?
+        crate::features::auth::User::batch_get(cli, user_keys.clone()).await?
     } else {
         Vec::new()
     };
@@ -87,7 +87,7 @@ async fn list_eligible_admins(
         .map(|(pk, _)| (pk.clone(), EntityType::UserEvmAddress))
         .collect();
     let evm_items = if !evm_keys.is_empty() {
-        ratel_auth::UserEvmAddress::batch_get(cli, evm_keys).await?
+        crate::features::auth::UserEvmAddress::batch_get(cli, evm_keys).await?
     } else {
         Vec::new()
     };

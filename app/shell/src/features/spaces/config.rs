@@ -1,7 +1,7 @@
-use common::CommonConfig;
+use crate::common::CommonConfig;
 
 #[cfg(feature = "server")]
-use common::by_types::config::{AwsConfig, DatabaseConfig};
+use crate::common::by_types::config::{AwsConfig, DatabaseConfig};
 
 #[derive(Debug)]
 pub struct Config {

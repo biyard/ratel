@@ -2,7 +2,7 @@
 use crate::features::posts::models::*;
 use crate::features::posts::types::*;
 use crate::features::posts::*;
-use ratel_auth::User;
+use crate::features::auth::User;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]

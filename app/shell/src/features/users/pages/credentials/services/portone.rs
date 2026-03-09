@@ -2,7 +2,7 @@ use crate::features::users::*;
 
 #[derive(Debug, Clone)]
 pub struct PortOneClient {
-    cli: common::reqwest::Client,
+    cli: crate::common::reqwest::Client,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -27,12 +27,12 @@ impl PortOneClient {
             "your_default_api_secret"
         });
 
-        let cli = common::reqwest::Client::builder()
+        let cli = crate::common::reqwest::Client::builder()
             .default_headers({
-                let mut headers = common::reqwest::header::HeaderMap::new();
+                let mut headers = crate::common::reqwest::header::HeaderMap::new();
                 headers.insert(
                     "Authorization",
-                    common::reqwest::header::HeaderValue::from_str(&format!(
+                    crate::common::reqwest::header::HeaderValue::from_str(&format!(
                         "PortOne {}",
                         api_secret
                     ))

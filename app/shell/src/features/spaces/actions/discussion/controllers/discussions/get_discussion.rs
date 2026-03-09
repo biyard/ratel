@@ -6,7 +6,7 @@ pub async fn get_discussion(
     discussion_sk: SpacePostEntityType,
 ) -> Result<SpacePost> {
     SpacePost::can_view(&role)?;
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let space_pk: Partition = space_id.into();
     let discussion_sk_entity: EntityType = discussion_sk.into();

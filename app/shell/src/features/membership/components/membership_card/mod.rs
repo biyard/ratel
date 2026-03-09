@@ -1,6 +1,6 @@
 use super::*;
 use crate::features::membership::*;
-use common::components::{Button, ButtonStyle};
+use crate::common::components::{Button, ButtonStyle};
 use crate::features::membership::components::*;
 
 #[component]

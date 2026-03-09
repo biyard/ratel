@@ -14,11 +14,11 @@ mod views;
 pub use models::*;
 pub use route::Route;
 
-use common::*;
-use common::models::Reward;
+use crate::common::*;
+use crate::common::models::Reward;
 use dioxus::prelude::*;
 
-type Result<T> = common::Result<T>;
+type Result<T> = crate::common::Result<T>;
 type DioxusResult<T> = dioxus::prelude::Result<T>;
 
 use serde::{Deserialize, Serialize};

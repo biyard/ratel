@@ -7,7 +7,7 @@ use crate::features::membership::models::{
     CardInfo, Currency, Membership, MembershipResponse, MembershipTier, PaymentReceipt,
     UserMembership, UserPayment,
 };
-use ratel_auth::User;
+use crate::features::auth::User;
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "server")]
 use crate::features::membership::services::portone::PortOne;
@@ -77,7 +77,7 @@ pub async fn change_membership_handler(
         }
 
         let mut ret = ChangeMembershipResponse {
-            renewal_date: common::utils::time::now(),
+            renewal_date: crate::common::utils::time::now(),
             receipt: None,
             membership: None,
         };

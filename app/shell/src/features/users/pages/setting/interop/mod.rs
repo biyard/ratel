@@ -1,4 +1,4 @@
-use common::wasm_bindgen::prelude::*;
+use crate::common::wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::js_sys::Promise;
 

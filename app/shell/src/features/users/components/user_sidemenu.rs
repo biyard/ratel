@@ -53,8 +53,8 @@ translate! {
 pub fn UserSidemenu(username: String) -> Element {
     let tr: UserSidemenuTranslate = use_translate();
 
-    let user_ctx = ratel_auth::hooks::use_user_context();
-    let mut team_ctx = common::contexts::use_team_context();
+    let user_ctx = crate::features::auth::hooks::use_user_context();
+    let mut team_ctx = crate::common::contexts::use_team_context();
     let mut popup = use_popup();
     let nav = use_navigator();
     let user = user_ctx().user.clone().unwrap_or_default();
@@ -77,11 +77,11 @@ pub fn UserSidemenu(username: String) -> Element {
     };
 
     rsx! {
-        common::SideMenuContainer {
+        crate::common::SideMenuContainer {
             // Profile section with team selector
-            common::SideMenuProfileCard {
+            crate::common::SideMenuProfileCard {
                 // Team selector dropdown
-                common::TeamSelector {
+                crate::common::TeamSelector {
                     selected_label: selected_label.clone(),
                     user_display_name: user.display_name.clone(),
                     user_profile_url: user.profile_url.clone(),
@@ -100,7 +100,7 @@ pub fn UserSidemenu(username: String) -> Element {
                     },
                     on_logout: move |_| {
                         spawn(async move {
-                            let _ = ratel_auth::controllers::logout_handler().await;
+                            let _ = crate::features::auth::controllers::logout_handler().await;
                             nav.push("/");
                             #[cfg(target_arch = "wasm32")]
                             {
@@ -151,8 +151,8 @@ pub fn UserSidemenu(username: String) -> Element {
             }
 
             // Navigation
-            common::SideMenuNav {
-                common::SideMenuLink {
+            crate::common::SideMenuNav {
+                crate::common::SideMenuLink {
                     to: format!("/{username}/posts"),
                     label: tr.my_posts,
                     icon: rsx! {
@@ -161,7 +161,7 @@ pub fn UserSidemenu(username: String) -> Element {
                 }
 
                 if user.username == username {
-                    common::SideMenuLink {
+                    crate::common::SideMenuLink {
                         to: format!("/{username}/drafts"),
                         label: tr.drafts,
                         icon: rsx! {
@@ -169,7 +169,7 @@ pub fn UserSidemenu(username: String) -> Element {
                         },
                     }
 
-                    common::SideMenuLink {
+                    crate::common::SideMenuLink {
                         to: format!("/{username}/spaces"),
                         label: tr.my_spaces,
                         icon: rsx! {
@@ -177,7 +177,7 @@ pub fn UserSidemenu(username: String) -> Element {
                         },
                     }
 
-                    common::SideMenuLink {
+                    crate::common::SideMenuLink {
                         to: format!("/{username}/credentials"),
                         label: tr.credentials,
                         icon: rsx! {
@@ -185,7 +185,7 @@ pub fn UserSidemenu(username: String) -> Element {
                         },
                     }
 
-                    common::SideMenuLink {
+                    crate::common::SideMenuLink {
                         to: format!("/{username}/memberships"),
                         label: tr.membership,
                         icon: rsx! {
@@ -193,7 +193,7 @@ pub fn UserSidemenu(username: String) -> Element {
                         },
                     }
 
-                    common::SideMenuLink {
+                    crate::common::SideMenuLink {
                         to: format!("/{username}/rewards"),
                         label: tr.rewards,
                         icon: rsx! {
@@ -201,7 +201,7 @@ pub fn UserSidemenu(username: String) -> Element {
                         },
                     }
 
-                    common::SideMenuLink {
+                    crate::common::SideMenuLink {
                         to: format!("/{username}/settings"),
                         label: tr.settings,
                         icon: rsx! {

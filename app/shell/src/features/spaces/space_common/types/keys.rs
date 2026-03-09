@@ -1,4 +1,4 @@
-use common::{SpacePartition, SpacePollEntityType, SpacePostEntityType, SpaceQuizEntityType};
+use crate::common::{SpacePartition, SpacePollEntityType, SpacePostEntityType, SpaceQuizEntityType};
 
 pub type QueryKey = Vec<String>;
 

@@ -1,5 +1,5 @@
 use super::*;
-use common::{
+use crate::common::{
     components::{FileUploader, SpaceCard, TiptapEditor},
     icons::{edit::Edit1, other_devices::Save},
 };

@@ -1,8 +1,8 @@
 use super::super::{dto::RewardsResponse, *};
 
-#[get("/api/me/points?month", user: ratel_auth::User)]
+#[get("/api/me/points?month", user: crate::features::auth::User)]
 pub async fn get_rewards_handler(month: Option<String>) -> Result<RewardsResponse> {
-    let cfg = common::CommonConfig::default();
+    let cfg = crate::common::CommonConfig::default();
     let biyard = cfg.biyard();
 
     let month = month.unwrap_or_else(|| utils::time::current_month());
