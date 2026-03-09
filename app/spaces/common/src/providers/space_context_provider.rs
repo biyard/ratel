@@ -49,6 +49,21 @@ impl SpaceContextProvider {
             _ => Err(Error::UnauthorizedAccess),
         }
     }
+
+    pub fn can_preview(&self) -> bool {
+        let role = self.role();
+        matches!(role, SpaceUserRole::Creator)
+    }
+
+    pub fn is_preview_mode(&self) -> bool {
+        let current_role = self.current_role();
+        let role = self.role();
+
+        matches!(
+            (current_role, role),
+            (SpaceUserRole::Viewer, SpaceUserRole::Creator)
+        )
+    }
 }
 
 pub fn use_space_context() -> SpaceContextProvider {

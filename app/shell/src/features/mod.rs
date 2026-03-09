@@ -1,5 +1,8 @@
 #[cfg(feature = "membership")]
 pub mod membership;
 
-#[cfg(any(feature = "social", feature = "users", feature = "teams"))]
-pub mod social;
+#[cfg(feature = "users")]
+pub mod users;
+
+#[cfg(feature = "teams")]
+pub mod teams;

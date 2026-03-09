@@ -1,5 +1,5 @@
 #[cfg(feature = "users")]
-use crate::features::social::users::UserSidemenu;
+use crate::features::users::UserSidemenu;
 use crate::*;
 use ratel_post::components::{CreatePostButton, FeedList};
 

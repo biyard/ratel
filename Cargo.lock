@@ -875,12 +875,15 @@ checksum = "a23eb6b1614318a8071c9b2521f36b424b2c83db5eb3a0fead4a6c0809af6e61"
 name = "app-shell"
 version = "0.1.0"
 dependencies = [
+ "aide",
  "async-trait",
  "aws-config",
+ "aws-sdk-dynamodb",
  "aws-sdk-s3",
  "axum",
  "common",
  "dioxus",
+ "gloo-timers 0.3.0",
  "icons",
  "percent-encoding",
  "random-string",
@@ -889,8 +892,8 @@ dependencies = [
  "ratel-membership",
  "ratel-my-follower",
  "ratel-post",
- "ratel-team-shell",
  "reqwest 0.12.28",
+ "schemars 1.0.4",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",

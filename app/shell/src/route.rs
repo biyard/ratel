@@ -1,7 +1,9 @@
 use crate::*;
 
-#[cfg(any(feature = "social", feature = "users", feature = "teams"))]
-use crate::features::social::users::Route as UserRoute;
+#[cfg(feature = "teams")]
+use crate::features::teams::Route as TeamRoute;
+#[cfg(feature = "users")]
+use crate::features::users::Route as UserRoute;
 use crate::views::Index;
 use dioxus::router::components::child_router::ChildRouter;
 use layout::AppLayout;
@@ -11,7 +13,6 @@ use ratel_auth::Route as AuthRoute;
 use ratel_membership::Route as MembershipRoute;
 use ratel_my_follower::Route as MyFollowerRoute;
 use ratel_post::Route as PostRoute;
-use ratel_team_shell::Route as TeamRoute;
 use space_shell::Route as SpaceRoute;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
@@ -37,12 +38,14 @@ pub enum Route {
         #[route("/admin/:..rest")]
         Admin { rest: Vec<String> },
 
-        #[cfg(any(feature = "social", feature = "users", feature = "teams"))]
+        #[cfg(feature = "users")]
         #[route("/:username/:..rest")]
-        #[cfg(any(feature = "social", feature = "users", feature = "teams"))]
+        #[cfg(feature = "users")]
         UserHome { username: String, rest: Vec<String> },
 
+        #[cfg(feature = "teams")]
         #[route("/teams/:teamname/:..rest")]
+        #[cfg(feature = "teams")]
         TeamHome { teamname: String, rest: Vec<String> },
     #[end_layout]
 
@@ -76,7 +79,7 @@ define_app_wrapper!(Space, SpaceRoute);
 define_app_wrapper!(Post, PostRoute);
 define_app_wrapper!(MyFollower, MyFollowerRoute);
 
-#[cfg(any(feature = "social", feature = "users", feature = "teams"))]
+#[cfg(feature = "users")]
 #[component]
 pub fn UserHome(username: String, rest: Vec<String>) -> Element {
     let router = use_context::<dioxus::router::RouterContext>();
@@ -92,6 +95,7 @@ pub fn UserHome(username: String, rest: Vec<String>) -> Element {
     }
 }
 
+#[cfg(feature = "teams")]
 #[component]
 pub fn TeamHome(teamname: String, rest: Vec<String>) -> Element {
     let router = use_context::<dioxus::router::RouterContext>();
