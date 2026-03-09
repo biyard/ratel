@@ -60,9 +60,7 @@ pub fn PopupZone() -> Element {
                     class: "flex flex-col justify-center items-center gap-[25px]",
 
                     if let Some(title) = title {
-                        div { class: "font-bold text-[20px] text-text-primary max-tablet:mt-6",
-                            "{title}"
-                        }
+                        div { class: "font-bold text-[20px] text-text-primary", "{title}" }
                     }
 
                     if let Some(description) = description {
