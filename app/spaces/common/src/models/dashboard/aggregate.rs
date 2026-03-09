@@ -27,6 +27,26 @@ impl DashboardAggregate {
 
 #[cfg(feature = "server")]
 impl DashboardAggregate {
+    pub async fn get_or_create(
+        cli: &aws_sdk_dynamodb::Client,
+        space_pk: &Partition,
+    ) -> common::Result<Self> {
+        let aggregate = Self::get_or_default(cli, space_pk).await?;
+        let (agg_pk, agg_sk) = Self::keys(space_pk);
+
+        if Self::get(cli, &agg_pk, Some(agg_sk)).await?.is_none() {
+            cli.transact_write_items()
+                .set_transact_items(Some(vec![aggregate.create_transact_write_item()]))
+                .send()
+                .await
+                .map_err(|e| {
+                    crate::Error::Unknown(format!("Failed to create dashboard aggregate: {e}"))
+                })?;
+        }
+
+        Ok(aggregate)
+    }
+
     pub async fn get_or_default(
         cli: &aws_sdk_dynamodb::Client,
         space_pk: &Partition,
