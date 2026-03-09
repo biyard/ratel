@@ -1,7 +1,6 @@
 use crate::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct CustomWallet {
     pub id: String,
     pub name: String,

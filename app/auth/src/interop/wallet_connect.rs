@@ -6,14 +6,11 @@ use crate::*;
 
 #[cfg(feature = "web")]
 pub fn wallet_connect_initialize(config: &common::WalletConnectConfig) {
-    let custom_wallets = serde_wasm_bindgen::to_value(&config.custom_wallets())
-        .unwrap_or(wasm_bindgen::JsValue::NULL);
     wallet_initialize(
         &config.project_id,
         &config.app_name,
         &config.app_description,
         &config.app_url,
-        &custom_wallets,
     );
 }
 
@@ -27,7 +24,6 @@ extern "C" {
         app_name: &str,
         app_description: &str,
         app_url: &str,
-        custom_wallets: &JsValue,
     );
 
     #[wasm_bindgen(js_name = connect)]
