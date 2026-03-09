@@ -19,9 +19,9 @@ pub fn current_month() -> String {
 }
 
 pub async fn sleep(duration: std::time::Duration) {
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(feature = "web")]
     gloo_timers::future::sleep(duration).await;
 
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(feature = "server")]
     tokio::time::sleep(duration).await;
 }

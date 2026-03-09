@@ -1,15 +1,9 @@
 [workspace]
 members = [
-  "app/admin",
   "app/auth",
   "app/common",
-  "app/membership",
   "app/posts",
   "app/shell",
-  "app/socials/teams/pages/*",
-  "app/socials/teams/shell",
-  "app/socials/users/pages/*",
-  "app/socials/users/shell",
   "app/spaces/actions/*",
   "app/spaces/apps/*",
   "app/spaces/pages/*",
@@ -39,10 +33,8 @@ dioxus-translate-types = { path = "packages/dioxus-translate-types", version = "
 dioxus-translate-macro = { path = "packages/dioxus-translate-macro", version = "0.1.*" }
 by-macros = { path = "packages/by-macros", version = "0.6.*" }
 common = { path = "app/common" }
-ratel-admin = { path = "app/admin" }
 ratel-auth = { path = "app/auth" }
 ratel-post = { path = "app/posts" }
-ratel-membership = { path = "app/membership" }
 ratel-my-follower = { path = "app/my-follower" }
 
 # Space Root
@@ -70,24 +62,6 @@ space-page-dashboard = { path = "app/spaces/pages/dashboard" }
 space-page-overview = { path = "app/spaces/pages/overview" }
 space-page-report = { path = "app/spaces/pages/report" }
 
-
-ratel-user-shell = { path = "app/socials/users/shell" }
-ratel-user-credential = { path = "app/socials/users/pages/credential" }
-ratel-user-draft = { path = "app/socials/users/pages/draft" }
-ratel-user-membership = { path = "app/socials/users/pages/membership" }
-ratel-user-post = { path = "app/socials/users/pages/post" }
-ratel-user-reward = { path = "app/socials/users/pages/reward" }
-ratel-user-setting = { path = "app/socials/users/pages/setting" }
-ratel-user-space = { path = "app/socials/users/pages/space" }
-
-ratel-team-shell = { path = "app/socials/teams/shell" }
-ratel-team-dao = { path = "app/socials/teams/pages/dao" }
-ratel-team-draft = { path = "app/socials/teams/pages/draft" }
-ratel-team-group = { path = "app/socials/teams/pages/group" }
-ratel-team-home = { path = "app/socials/teams/pages/home" }
-ratel-team-member = { path = "app/socials/teams/pages/member" }
-ratel-team-reward = { path = "app/socials/teams/pages/reward" }
-ratel-team-setting = { path = "app/socials/teams/pages/setting" }
 
 dioxus-components = { path = "app/interops/web-components" }
 icons = { path = "packages/icons" }
