@@ -1,5 +1,5 @@
 use super::*;
-use common::components::TiptapEditor;
+use common::components::{SpaceCard, TiptapEditor};
 use space_app_file::components::FileCard;
 use space_common::hooks::use_space_query;
 
@@ -43,7 +43,7 @@ pub fn ViewerPage(space_id: SpacePartition) -> Element {
             }
 
             // Content (read-only)
-            div { class: "w-full rounded-lg bg-card p-6",
+            SpaceCard { class: "!p-6 rounded-lg".to_string(),
                 TiptapEditor {
                     class: "w-full h-fit [&>div]:bg-transparent [&_[data-tiptap-toolbar]]:bg-transparent",
                     content: content,

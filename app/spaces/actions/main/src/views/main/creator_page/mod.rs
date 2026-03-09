@@ -93,7 +93,7 @@ pub fn CreatorActionPage(space_id: SpacePartition) -> Element {
                 }
 
                 // Empty state card
-                div { class: "flex w-full flex-col items-center justify-center gap-5 rounded-[0.75rem] border border-dashed border-neutral-800 bg-neutral-900 px-4 pt-[0.625rem] pb-5 light:border-neutral-300 light:bg-neutral-100",
+                SpaceCard { class: "flex w-full flex-col items-center justify-center gap-5 border border-dashed border-neutral-800 light:border-neutral-300 !bg-neutral-900 light:!bg-neutral-100 !rounded-[0.75rem] !px-4 !pt-[0.625rem] !pb-5".to_string(),
                     icons::game::Thunder { class: "size-6 [&>path]:fill-none [&>path]:stroke-neutral-400 light:[&>path]:stroke-neutral-500" }
                     p { class: "font-medium text-[1.0625rem]/[1.25rem] text-font-primary",
                         {tr.no_actions_title}
