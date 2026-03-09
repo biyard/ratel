@@ -8,14 +8,14 @@ pub struct RespondQuizRequest {
 #[post(
     "/api/spaces/{space_pk}/quizzes/{quiz_id}/respond",
     role: SpaceUserRole,
-    user: ratel_auth::User
+    user: crate::features::auth::User
 )]
 pub async fn respond_quiz(
     space_pk: SpacePartition,
     quiz_id: SpaceQuizEntityType,
     req: RespondQuizRequest,
 ) -> Result<String> {
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let space_pk: Partition = space_pk.into();
     let quiz_sk: EntityType = quiz_id.clone().into();

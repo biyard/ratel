@@ -5,7 +5,7 @@ use crate::features::posts::models::{TeamGroup, TeamOwner};
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use std::collections::{HashMap, HashSet};
 
-#[get("/api/teams/:team_pk/members?bookmark&limit", user: ratel_auth::OptionalUser, permissions: TeamGroupPermissions)]
+#[get("/api/teams/:team_pk/members?bookmark&limit", user: crate::features::auth::OptionalUser, permissions: TeamGroupPermissions)]
 pub async fn list_members_handler(
     team_pk: TeamPartition,
     bookmark: Option<String>,
@@ -15,7 +15,7 @@ pub async fn list_members_handler(
     let cli = conf.common.dynamodb();
     let team_pk: Partition = team_pk.into();
 
-    let user: Option<ratel_auth::User> = user.into();
+    let user: Option<crate::features::auth::User> = user.into();
     let Some(user) = user else {
         return Err(Error::Unauthorized(
             "You don't have permission to view members.".to_string(),
@@ -34,13 +34,13 @@ pub async fn list_members_handler(
     let team_owner = TeamOwner::get(cli, &team_pk, Some(&EntityType::TeamOwner)).await?;
 
     let page_limit = limit.unwrap_or(50).min(100);
-    let mut query_options = ratel_auth::UserTeamGroupQueryOption::builder().limit(page_limit);
+    let mut query_options = crate::features::auth::UserTeamGroupQueryOption::builder().limit(page_limit);
     if let Some(bookmark) = bookmark {
         query_options = query_options.bookmark(bookmark);
     }
 
     let (all_user_team_groups, next_bookmark) =
-        ratel_auth::UserTeamGroup::find_by_team_pk(cli, team_pk.clone(), query_options).await?;
+        crate::features::auth::UserTeamGroup::find_by_team_pk(cli, team_pk.clone(), query_options).await?;
 
     let (team_groups, _) = TeamGroup::query(
         cli,
@@ -78,12 +78,12 @@ pub async fn list_members_handler(
     };
 
     let users = if !user_keys.is_empty() {
-        ratel_auth::User::batch_get(cli, user_keys).await?
+        crate::features::auth::User::batch_get(cli, user_keys).await?
     } else {
         Vec::new()
     };
 
-    let user_map: HashMap<String, ratel_auth::User> =
+    let user_map: HashMap<String, crate::features::auth::User> =
         users.into_iter().map(|u| (u.pk.to_string(), u)).collect();
 
     let mut members_map: HashMap<String, TeamMemberResponse> = HashMap::new();

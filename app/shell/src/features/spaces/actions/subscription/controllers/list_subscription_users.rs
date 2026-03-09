@@ -1,7 +1,7 @@
 use crate::features::spaces::actions::subscription::models::SpaceSubscriptionUser;
 use crate::features::spaces::actions::subscription::*;
-use common::models::auth::UserFollow;
-use common::models::space::SpaceCommon;
+use crate::common::models::auth::UserFollow;
+use crate::common::models::space::SpaceCommon;
 use crate::features::posts::models::Team;
 use std::collections::HashSet;
 
@@ -19,13 +19,13 @@ pub struct SubscriptionUserItem {
 #[get(
     "/api/spaces/{space_id}/subscriptions/users?bookmark",
     role: SpaceUserRole,
-    user: ratel_auth::OptionalUser
+    user: crate::features::auth::OptionalUser
 )]
 pub async fn list_subscription_users(
     space_id: SpacePartition,
     bookmark: Option<String>,
 ) -> Result<ListResponse<SubscriptionUserItem>> {
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let space_pk: Partition = space_id.clone().into();
     let is_first_page = bookmark.is_none();
@@ -68,10 +68,10 @@ pub async fn list_subscription_users(
         }
 
         if !resolved {
-            let users = match ratel_auth::User::find_by_username(
+            let users = match crate::features::auth::User::find_by_username(
                 cli,
                 &space.author_username,
-                ratel_auth::UserQueryOption::builder().limit(1),
+                crate::features::auth::UserQueryOption::builder().limit(1),
             )
             .await
             {
@@ -144,7 +144,7 @@ pub async fn list_subscription_users(
             if creator.is_some() {
                 creator
             } else if let Some(user) =
-                ratel_auth::User::get(cli, creator_pk.clone(), Some(EntityType::User)).await?
+                crate::features::auth::User::get(cli, creator_pk.clone(), Some(EntityType::User)).await?
             {
                 Some(SubscriptionUserItem {
                     user_pk: creator_pk.clone(),

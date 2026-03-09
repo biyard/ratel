@@ -1,3 +1,3 @@
 use crate::features::posts::*;
 
-pub type ListItemsResponse<T> = common::ListResponse<T>;
+pub type ListItemsResponse<T> = crate::common::ListResponse<T>;

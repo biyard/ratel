@@ -16,12 +16,12 @@ pub async fn update_poll(
     req: UpdatePollRequest,
 ) -> Result<String> {
     SpacePoll::can_edit(&role)?;
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let space_pk: Partition = space_pk.into();
     let poll_sk_entity: EntityType = poll_sk.into();
 
-    let now = common::utils::time::get_now_timestamp_millis();
+    let now = crate::common::utils::time::get_now_timestamp_millis();
     let mut poll_updater = SpacePoll::updater(&space_pk, &poll_sk_entity).with_updated_at(now);
 
     match req {

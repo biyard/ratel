@@ -2,7 +2,7 @@ use crate::features::users::*;
 
 #[component]
 pub fn UserLayout(username: String) -> Element {
-    let user_ctx = ratel_auth::hooks::use_user_context();
+    let user_ctx = crate::features::auth::hooks::use_user_context();
     let logged_in = user_ctx().user.is_some();
 
     rsx! {

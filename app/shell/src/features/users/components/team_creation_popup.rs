@@ -11,7 +11,7 @@ pub fn TeamCreationPopup() -> Element {
     let mut submitting = use_signal(|| false);
 
     rsx! {
-        common::TeamCreationForm {
+        crate::common::TeamCreationForm {
             submitting: submitting(),
             error_message: error_msg.read().clone(),
             on_cancel: move |_| {
@@ -28,7 +28,7 @@ pub fn TeamCreationPopup() -> Element {
                     submitting.set(true);
                     error_msg.set(None);
 
-                    let common::TeamCreationPayload {
+                    let crate::common::TeamCreationPayload {
                         profile_url,
                         username,
                         nickname,
@@ -64,7 +64,7 @@ pub fn TeamCreationPopup() -> Element {
                                 }
                             } else {
                                 teams
-                                    .push(common::contexts::TeamItem {
+                                    .push(crate::common::contexts::TeamItem {
                                         pk: response.team_pk.clone(),
                                         nickname: nickname.clone(),
                                         username: username.clone(),

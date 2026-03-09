@@ -1,6 +1,6 @@
 use crate::features::spaces::apps::general::*;
 #[cfg(feature = "server")]
-use common::SpaceUserRole;
+use crate::common::SpaceUserRole;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct DeleteSpaceResponse {
@@ -8,9 +8,9 @@ pub struct DeleteSpaceResponse {
 }
 
 #[delete("/api/spaces/{space_id}/settings", role: SpaceUserRole)]
-pub async fn delete_space(space_id: SpacePartition) -> common::Result<DeleteSpaceResponse> {
-    use common::models::space::SpaceCommon;
-    use common::types::{EntityType, Partition};
+pub async fn delete_space(space_id: SpacePartition) -> crate::common::Result<DeleteSpaceResponse> {
+    use crate::common::models::space::SpaceCommon;
+    use crate::common::types::{EntityType, Partition};
     use crate::features::posts::models::Post;
     use crate::features::spaces::actions::poll::SpacePoll;
 
@@ -18,7 +18,7 @@ pub async fn delete_space(space_id: SpacePartition) -> common::Result<DeleteSpac
         return Err(Error::NoPermission);
     }
 
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let dynamo = common_config.dynamodb();
     let space_pk: Partition = space_id.clone().into();
     let space = SpaceCommon::get(dynamo, &space_pk, Some(&EntityType::SpaceCommon))

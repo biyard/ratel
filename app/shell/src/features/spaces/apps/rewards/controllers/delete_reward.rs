@@ -13,7 +13,7 @@ pub async fn delete_space_reward(
     use crate::features::spaces::space_common::models::SpaceReward;
     SpaceReward::can_edit(&role)?;
 
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
 
     let space_pk: Partition = space_id.into();

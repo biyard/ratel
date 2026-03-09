@@ -14,7 +14,7 @@ pub async fn update_space_reward(
     space_id: SpacePartition,
     req: UpdateSpaceRewardRequest,
 ) -> Result<SpaceRewardResponse> {
-    use common::utils::time::get_now_timestamp_millis;
+    use crate::common::utils::time::get_now_timestamp_millis;
     use crate::features::spaces::space_common::models::SpaceReward;
 
     if req.credits < 1 {
@@ -23,7 +23,7 @@ pub async fn update_space_reward(
 
     SpaceReward::can_edit(&role)?;
 
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
 
     let space_pk: Partition = space_id.into();

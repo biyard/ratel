@@ -1,5 +1,5 @@
 use super::super::{components::transaction_item, views::RewardsPageTranslate, *};
-use common::services::PointTransactionResponse;
+use crate::common::services::PointTransactionResponse;
 
 pub fn transaction_list(
     tr: &RewardsPageTranslate,

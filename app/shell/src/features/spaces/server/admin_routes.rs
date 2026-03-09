@@ -1,5 +1,5 @@
 use super::proxy_registry::ProxyRegistry;
-use common::axum::{
+use crate::common::axum::{
     extract::Path,
     http::StatusCode,
     response::IntoResponse,

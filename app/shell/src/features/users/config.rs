@@ -1,6 +1,6 @@
-use common::CommonConfig;
+use crate::common::CommonConfig;
 #[cfg(feature = "server")]
-use common::aws_sdk_dynamodb;
+use crate::common::aws_sdk_dynamodb;
 
 #[derive(Debug)]
 pub struct Config {

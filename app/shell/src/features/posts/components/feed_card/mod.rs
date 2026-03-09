@@ -242,8 +242,8 @@ fn FeedFooter(
 }
 
 #[component]
-pub fn UserBadge(profile_url: String, name: String, author_type: ratel_auth::UserType) -> Element {
-    let img_class = if author_type == ratel_auth::UserType::Team {
+pub fn UserBadge(profile_url: String, name: String, author_type: crate::features::auth::UserType) -> Element {
+    let img_class = if author_type == crate::features::auth::UserType::Team {
         "w-6 h-6 rounded-sm object-cover"
     } else {
         "w-6 h-6 rounded-full object-cover"

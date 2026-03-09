@@ -4,7 +4,7 @@ use crate::features::posts::controllers::dto::*;
 use crate::features::posts::models::*;
 use crate::features::posts::types::*;
 use crate::features::posts::*;
-use ratel_auth::OptionalUser;
+use crate::features::auth::OptionalUser;
 
 #[get("/api/posts/:post_id", user: OptionalUser)]
 pub async fn get_post_handler(post_id: FeedPartition) -> Result<PostDetailResponse> {
@@ -12,7 +12,7 @@ pub async fn get_post_handler(post_id: FeedPartition) -> Result<PostDetailRespon
     let cli = conf.dynamodb();
 
     let post_pk: Partition = post_id.into();
-    let user: Option<ratel_auth::User> = user.into();
+    let user: Option<crate::features::auth::User> = user.into();
     tracing::debug!("Get post for post_pk: {}", post_pk);
 
     let post_metadata = PostMetadata::query(cli, &post_pk).await?;

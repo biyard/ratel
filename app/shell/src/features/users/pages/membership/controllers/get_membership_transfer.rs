@@ -29,13 +29,13 @@ pub struct PurchaseHistoryResponse {
     pub bookmark: Option<String>,
 }
 
-#[get("/api/me/membership/history?bookmark", user: ratel_auth::User)]
+#[get("/api/me/membership/history?bookmark", user: crate::features::auth::User)]
 pub async fn get_purchase_history_handler(
     bookmark: Option<String>,
 ) -> Result<PurchaseHistoryResponse> {
     use super::super::models::UserPurchaseLocalQueryOption;
 
-    let conf = common::config::ServerConfig::default();
+    let conf = crate::common::config::ServerConfig::default();
     let cli = conf.dynamodb();
 
     let mut opt = UserPurchaseLocalQueryOption::builder()

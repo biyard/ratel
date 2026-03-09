@@ -1,7 +1,7 @@
 use crate::features::spaces::actions::subscription::components::SubscriptionUserList;
 use crate::features::spaces::actions::subscription::controllers::list_subscription_users;
 use crate::features::spaces::actions::subscription::*;
-use common::hooks::use_infinite_query;
+use crate::common::hooks::use_infinite_query;
 mod i18n;
 use i18n::SubscriptionViewerTranslate;
 

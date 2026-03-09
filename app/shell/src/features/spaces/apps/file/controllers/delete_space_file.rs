@@ -2,7 +2,7 @@ use crate::features::spaces::apps::file::*;
 #[cfg(feature = "server")]
 use crate::features::spaces::apps::file::models::SpaceFile;
 #[cfg(feature = "server")]
-use common::SpaceUserRole;
+use crate::common::SpaceUserRole;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct DeleteSpaceFileRequest {

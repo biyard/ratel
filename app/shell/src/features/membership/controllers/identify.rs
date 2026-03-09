@@ -2,7 +2,7 @@ use super::*;
 use crate::features::membership::*;
 use crate::features::membership::controllers::normalize_error;
 use crate::features::membership::models::UserPayment;
-use ratel_auth::User;
+use crate::features::auth::User;
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "server")]
 use crate::features::membership::services::portone::PortOne;

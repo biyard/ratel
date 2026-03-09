@@ -19,14 +19,14 @@ mod views;
 pub use route::Route;
 
 // Re-export common types needed by controllers/components (available via `use crate::*;`)
-pub use common::macros::dynamo_entity::DynamoEntity;
-pub use common::models::*;
-pub use common::types::*;
-pub use common::{DeserializeFromStr, DynamoEnum, EnumProp, SerializeDisplay};
+pub use crate::common::macros::dynamo_entity::DynamoEntity;
+pub use crate::common::models::*;
+pub use crate::common::types::*;
+pub use crate::common::{DeserializeFromStr, DynamoEnum, EnumProp, SerializeDisplay};
 pub use serde::{Deserialize, Serialize};
 
-use common::*;
+use crate::common::*;
 use dioxus::prelude::*;
 
-type Result<T> = common::Result<T>;
+type Result<T> = crate::common::Result<T>;
 type DioxusResult<T> = dioxus::prelude::Result<T>;

@@ -60,9 +60,9 @@ impl SpacePostComment {
         space_pk: SpacePartition,
         space_post_sk: SpacePostPartition,
         content: String,
-        user: &ratel_auth::User,
+        user: &crate::features::auth::User,
     ) -> Self {
-        use common::utils::time::get_now_timestamp;
+        use crate::common::utils::time::get_now_timestamp;
 
         let uuid = uuid::Uuid::now_v7().to_string();
         let now = get_now_timestamp();
@@ -113,7 +113,7 @@ impl SpacePostComment {
         space_post_pk: SpacePostPartition,
         parent_comment_sk: EntityType,
         content: String,
-        user: &ratel_auth::User,
+        user: &crate::features::auth::User,
     ) -> crate::features::spaces::actions::discussion::Result<Self> {
         let space_post_pk_p: Partition = space_post_pk.clone().into();
 
@@ -146,7 +146,7 @@ impl SpacePostComment {
 
         let comment_tx = comment.create_transact_write_item();
 
-        transact_write_items!(cli, vec![parent_comment, comment_tx, post]).map_err(|e| {
+        crate::transact_write_items!(cli, vec![parent_comment, comment_tx, post]).map_err(|e| {
             tracing::error!("Failed to reply comment: {}", e);
             crate::features::spaces::actions::discussion::Error::Unknown(format!("Failed to reply comment: {}", e))
         })?;

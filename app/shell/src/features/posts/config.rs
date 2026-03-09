@@ -18,19 +18,19 @@ impl Config {
         self.common.dynamodb()
     }
 
-    pub fn sns(&self) -> &common::utils::aws::SnsClient {
+    pub fn sns(&self) -> &crate::common::utils::aws::SnsClient {
         self.common.sns()
     }
 
-    pub fn ses(&self) -> &common::utils::aws::SesClient {
+    pub fn ses(&self) -> &crate::common::utils::aws::SesClient {
         self.common.ses()
     }
 
-    pub fn qdrant(&self) -> &common::utils::aws::QdrantClient {
+    pub fn qdrant(&self) -> &crate::common::utils::aws::QdrantClient {
         self.common.qdrant()
     }
 
-    pub fn bedrock_embeddings(&self) -> &common::utils::aws::BedrockEmbeddingsClient {
+    pub fn bedrock_embeddings(&self) -> &crate::common::utils::aws::BedrockEmbeddingsClient {
         self.common.bedrock_embeddings()
     }
 }

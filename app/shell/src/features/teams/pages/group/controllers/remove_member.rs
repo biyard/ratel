@@ -4,7 +4,7 @@ use super::super::*;
 use crate::features::posts::models::{Team, TeamGroup};
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 
-#[delete("/api/teams/:team_pk/groups/:group_sk/member", user: ratel_auth::User, team: Team, permissions: TeamGroupPermissions)]
+#[delete("/api/teams/:team_pk/groups/:group_sk/member", user: crate::features::auth::User, team: Team, permissions: TeamGroupPermissions)]
 pub async fn remove_member_handler(
     team_pk: TeamPartition,
     group_sk: String,
@@ -34,26 +34,26 @@ pub async fn remove_member_handler(
     let mut failed_pks = vec![];
 
     for member in &body.user_pks {
-        let user = ratel_auth::User::get(cli, member, Some(EntityType::User)).await?;
+        let user = crate::features::auth::User::get(cli, member, Some(EntityType::User)).await?;
         let Some(user) = user else {
             failed_pks.push(member.to_string());
             continue;
         };
 
-        ratel_auth::UserTeamGroup::delete(
+        crate::features::auth::UserTeamGroup::delete(
             cli,
             &user.pk,
             Some(EntityType::UserTeamGroup(team_group.sk.to_string())),
         )
         .await?;
 
-        let opt = ratel_auth::UserTeamGroup::opt()
+        let opt = crate::features::auth::UserTeamGroup::opt()
             .sk(user.pk.to_string())
             .limit(1);
         let (user_team_groups, _) =
-            ratel_auth::UserTeamGroup::find_by_team_pk(cli, team.pk.clone(), opt).await?;
+            crate::features::auth::UserTeamGroup::find_by_team_pk(cli, team.pk.clone(), opt).await?;
         if user_team_groups.is_empty() {
-            ratel_auth::UserTeam::delete(
+            crate::features::auth::UserTeam::delete(
                 cli,
                 &user.pk,
                 Some(EntityType::UserTeam(team.pk.to_string())),

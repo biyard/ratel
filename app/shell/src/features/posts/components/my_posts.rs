@@ -2,7 +2,7 @@ use crate::features::posts::components::FeedCard;
 use crate::features::posts::controllers::dto::*;
 use crate::features::posts::controllers::list_user_posts::{list_team_posts_handler, list_user_posts_handler};
 use crate::features::posts::*;
-use common::hooks::use_infinite_query;
+use crate::common::hooks::use_infinite_query;
 use dioxus::prelude::*;
 
 #[component]

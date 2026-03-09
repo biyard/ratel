@@ -98,7 +98,7 @@ fn FollowButton(on_click: EventHandler<MouseEvent>) -> Element {
                 .to_string(),
             onclick: on_click,
             span { class: "inline-flex items-center gap-1 font-bold text-xs",
-                common::lucide_dioxus::Plus {
+                crate::common::lucide_dioxus::Plus {
                     size: 14,
                     class: "[&>path]:stroke-[#000203] light:[&>path]:stroke-[#000203]",
                 }

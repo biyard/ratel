@@ -1,9 +1,9 @@
 use crate::features::posts::models::Post;
 use crate::features::posts::types::TeamGroupPermission;
 use crate::features::posts::*;
-use common::models::space::{SpaceCommon, SpaceParticipant};
-use common::types::SpacePartition;
-use ratel_auth::User;
+use crate::common::models::space::{SpaceCommon, SpaceParticipant};
+use crate::common::types::SpacePartition;
+use crate::features::auth::User;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
@@ -40,7 +40,7 @@ pub async fn create_space_handler(req: CreateSpaceRequest) -> Result<CreateSpace
 
     let post_updater = Post::updater(&post.pk, &post.sk).with_space_pk(space.pk.clone());
 
-    transact_write_items!(
+    crate::transact_write_items!(
         cli,
         vec![
             space.create_transact_write_item(),

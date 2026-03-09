@@ -112,14 +112,14 @@ where
 
     let mut updated_membership = entity_membership.clone();
     updated_membership.set_next_membership(Some(new_membership.pk.clone().into()));
-    updated_membership.set_updated_at(common::utils::time::now());
+    updated_membership.set_updated_at(crate::common::utils::time::now());
 
     if let Some(payment) = payment {
         let _ = payment.cancel_scheduled_payments(cli, portone).await;
     }
 
     let txs = vec![updated_membership.upsert_transact_write_item()];
-    common::transact_write_all_items_with_failover!(cli, txs);
+    crate::transact_write_all_items_with_failover!(cli, txs);
 
     Ok(new_membership)
 }
@@ -165,7 +165,7 @@ where
         txs.push(payment.upsert_transact_write_item());
     }
 
-    common::transact_write_all_items_with_failover!(cli, txs);
+    crate::transact_write_all_items_with_failover!(cli, txs);
 
     Ok((purchase, new_membership))
 }

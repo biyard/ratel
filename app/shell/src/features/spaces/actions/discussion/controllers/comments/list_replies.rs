@@ -8,7 +8,7 @@ pub async fn list_replies(
     bookmark: Option<String>,
 ) -> Result<Vec<DiscussionCommentResponse>> {
     SpacePost::can_view(&role)?;
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let comment_sk_entity: EntityType = comment_sk.into();
 

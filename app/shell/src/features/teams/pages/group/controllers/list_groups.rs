@@ -3,7 +3,7 @@ use super::super::*;
 
 use crate::features::posts::models::TeamGroup;
 
-#[get("/api/teams/:team_pk/groups?bookmark", user: ratel_auth::OptionalUser)]
+#[get("/api/teams/:team_pk/groups?bookmark", user: crate::features::auth::OptionalUser)]
 pub async fn list_groups_handler(
     team_pk: TeamPartition,
     bookmark: Option<String>,

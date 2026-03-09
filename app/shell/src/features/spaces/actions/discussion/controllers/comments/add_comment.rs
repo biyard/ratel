@@ -5,14 +5,14 @@ pub struct AddCommentRequest {
     pub content: String,
 }
 
-#[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments", role: SpaceUserRole, user: ratel_auth::User)]
+#[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments", role: SpaceUserRole, user: crate::features::auth::User)]
 pub async fn add_comment(
     space_id: SpacePartition,
     discussion_sk: SpacePostEntityType,
     req: AddCommentRequest,
 ) -> Result<DiscussionCommentResponse> {
     SpacePost::can_view(&role)?;
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let space_post_id: SpacePostPartition = SpacePostPartition(discussion_sk.0.clone());
 
@@ -21,7 +21,7 @@ pub async fn add_comment(
 
     let space_pk: Partition = space_id.into();
     let agg_item = crate::features::spaces::space_common::models::aggregate::DashboardAggregate::inc_comments(&space_pk, 1);
-    transact_write_items!(cli, vec![agg_item]).ok();
+    crate::transact_write_items!(cli, vec![agg_item]).ok();
 
     Ok(comment.into())
 }

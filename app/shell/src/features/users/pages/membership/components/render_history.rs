@@ -1,4 +1,4 @@
-use common::chrono::TimeZone;
+use crate::common::chrono::TimeZone;
 
 use super::super::{controllers::PurchaseHistoryResponse, views::MembershipPageTranslate, *};
 
@@ -75,7 +75,7 @@ pub fn format_date(timestamp: i64, unlimited_label: &str) -> String {
         return unlimited_label.to_string();
     }
 
-    let dt = common::chrono::Utc.timestamp_millis_opt(timestamp).single();
+    let dt = crate::common::chrono::Utc.timestamp_millis_opt(timestamp).single();
 
     dt.map(|v| v.format("%Y-%m-%d").to_string())
         .unwrap_or_else(|| timestamp.to_string())

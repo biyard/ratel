@@ -1,5 +1,5 @@
-use common::wasm_bindgen::prelude::*;
-use common::web_sys::js_sys::Promise;
+use crate::common::wasm_bindgen::prelude::*;
+use crate::common::web_sys::js_sys::Promise;
 
 #[wasm_bindgen(
     js_namespace = ["window", "ratel", "membership"],

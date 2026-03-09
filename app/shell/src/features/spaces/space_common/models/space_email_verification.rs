@@ -1,10 +1,10 @@
 use crate::features::spaces::space_common::*;
 #[cfg(feature = "server")]
-use common::models::space::SpaceCommon;
+use crate::common::models::space::SpaceCommon;
 #[cfg(feature = "server")]
-use common::utils::aws::SesClient;
+use crate::common::utils::aws::SesClient;
 #[cfg(feature = "server")]
-use common::utils::time::get_now_timestamp;
+use crate::common::utils::time::get_now_timestamp;
 
 const EXPIRATION_TIME: u64 = 1800; // 30 minutes
 const MAX_ATTEMPT_COUNT: i32 = 5;
@@ -218,7 +218,7 @@ impl SpaceEmailVerification {
     }
 
     fn generate_random_code() -> String {
-        use rand::Rng;
+        use rand::{Rng, RngExt};
         let charset = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         let mut rng = rand::rng();
         (0..6)

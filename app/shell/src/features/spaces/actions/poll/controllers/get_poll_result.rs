@@ -19,7 +19,7 @@ pub async fn get_poll_result(
     poll_sk: SpacePollEntityType,
 ) -> Result<PollResultResponse> {
     SpacePoll::can_view(&role)?;
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
 
     let space_pk: Partition = space_pk.into();
@@ -36,7 +36,7 @@ pub async fn get_poll_result(
         .await?;
 
     Ok(PollResultResponse {
-        created_at: common::utils::time::get_now_timestamp_millis(),
+        created_at: crate::common::utils::time::get_now_timestamp_millis(),
         summaries,
         summaries_by_age,
         summaries_by_gender,

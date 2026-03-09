@@ -1,4 +1,4 @@
-use common::CommonConfig;
+use crate::common::CommonConfig;
 
 #[derive(Debug)]
 pub struct Config {

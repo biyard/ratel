@@ -119,7 +119,7 @@ impl PortOne {
         let payment_id = format!(
             "{}-{}",
             random_string::generate(10, CHARSET),
-            common::utils::time::get_now_timestamp_micros()
+            crate::common::utils::time::get_now_timestamp_micros()
         );
 
         let body = BillingKeyPaymentRequest {
@@ -177,7 +177,7 @@ impl PortOne {
         let payment_id = format!(
             "{}-{}",
             random_string::generate(10, CHARSET),
-            common::utils::time::get_now_timestamp_micros()
+            crate::common::utils::time::get_now_timestamp_micros()
         );
 
         let payment = BillingKeyPaymentRequest {

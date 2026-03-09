@@ -1,7 +1,7 @@
+use crate::common::*;
 use crate::config;
+use crate::features::auth::AuthProvider;
 use crate::*;
-use common::*;
-use ratel_auth::AuthProvider;
 
 use dioxus::prelude::*;
 
@@ -13,11 +13,11 @@ pub fn App() -> Element {
     use_context_provider(|| PopupService::new());
     ToastService::init();
     ThemeService::init();
-    let _ = ratel_auth::Context::init()?;
-    common::contexts::TeamContext::init();
+    let _ = crate::features::auth::Context::init()?;
+    crate::common::contexts::TeamContext::init();
     let conf = config::get();
     let env = conf.common.env;
-    common::query::query_provider();
+    crate::common::query::query_provider();
     let keywords = vec![
         "ratel".to_string(),
         "knowledge platform".to_string(),
@@ -35,9 +35,9 @@ pub fn App() -> Element {
     ];
 
     rsx! {
-        document::Link { rel: "icon", href: common::assets::FAVICON }
+        document::Link { rel: "icon", href: crate::common::assets::FAVICON }
         document::Link { rel: "stylesheet", href: MAIN_CSS }
-        common::SeoMeta {
+        crate::common::SeoMeta {
             title: "Ratel – AI Knowledge Platform Powered by Human Essences",
             description: "Ratel is a participatory knowledge platform where users share expertise, opinions, and insights as structured “Essences”. AI agents learn from the knowledge base while users earn rewards through surveys, polls, and discussions.",
             image: "https://metadata.ratel.foundation/logos/logo-symbol.png",
@@ -47,8 +47,9 @@ pub fn App() -> Element {
         }
         document::Script { src: MAIN_JS }
         document::Script { src: "https://cdn.portone.io/v2/browser-sdk.js" }
+        document::Link { rel: "stylesheet", href: asset!("/assets/tailwind.css") }
 
-        common::Provider {}
+        crate::common::Provider {}
         AuthProvider {}
         crate::features::posts::Provider {}
 

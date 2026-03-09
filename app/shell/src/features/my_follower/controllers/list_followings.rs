@@ -1,11 +1,11 @@
 use crate::features::my_follower::controllers::dto::FollowUserItem;
 use crate::features::my_follower::controllers::profile::build_profiles;
 use crate::features::my_follower::*;
-use common::models::auth::UserFollow;
+use crate::common::models::auth::UserFollow;
 
-#[get("/api/my-follower/followings?bookmark", user: ratel_auth::User)]
+#[get("/api/my-follower/followings?bookmark", user: crate::features::auth::User)]
 pub async fn list_followings(bookmark: Option<String>) -> Result<ListResponse<FollowUserItem>> {
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
 
     let mut opt = UserFollow::opt()

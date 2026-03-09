@@ -1,0 +1,39 @@
+// Migrated from packages/main-api/src/types/email_operation.rs
+use crate::features::auth::*;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+#[serde(untagged)]
+pub enum EmailOperation {
+    SignupSecurityCode {
+        display_name: String,
+        code_1: String,
+        code_2: String,
+        code_3: String,
+        code_4: String,
+        code_5: String,
+        code_6: String,
+    },
+}
+
+impl Default for EmailOperation {
+    fn default() -> Self {
+        EmailOperation::SignupSecurityCode {
+            display_name: String::new(),
+            code_1: String::new(),
+            code_2: String::new(),
+            code_3: String::new(),
+            code_4: String::new(),
+            code_5: String::new(),
+            code_6: String::new(),
+        }
+    }
+}
+
+impl EmailOperation {
+    pub fn template_name(&self) -> &'static str {
+        match self {
+            EmailOperation::SignupSecurityCode { .. } => "signup_code",
+        }
+    }
+}

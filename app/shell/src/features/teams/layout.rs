@@ -6,7 +6,7 @@ use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 
 #[component]
 pub fn TeamLayout(teamname: String) -> Element {
-    let user_ctx = ratel_auth::hooks::use_user_context();
+    let user_ctx = crate::features::auth::hooks::use_user_context();
     let logged_in = user_ctx().user.is_some();
 
     rsx! {
@@ -26,8 +26,8 @@ pub fn TeamLayout(teamname: String) -> Element {
 #[component]
 fn TeamSidemenu(teamname: String) -> Element {
     let tr: TeamMenuTranslate = use_translate();
-    let user_ctx = ratel_auth::hooks::use_user_context();
-    let mut team_ctx = common::contexts::use_team_context();
+    let user_ctx = crate::features::auth::hooks::use_user_context();
+    let mut team_ctx = crate::common::contexts::use_team_context();
     let nav = use_navigator();
     let user = user_ctx().user.clone().unwrap_or_default();
     let resource = use_loader(use_reactive((&teamname,), |(name,)| async move {
@@ -44,7 +44,7 @@ fn TeamSidemenu(teamname: String) -> Element {
                        display_name: String,
                        description: String,
                        permissions_vec: Vec<u8>,
-                       teams: Vec<common::contexts::TeamItem>| {
+                       teams: Vec<crate::common::contexts::TeamItem>| {
         let mut mask = 0i64;
         for value in &permissions_vec {
             mask |= 1i64 << (*value as i32);
@@ -60,10 +60,10 @@ fn TeamSidemenu(teamname: String) -> Element {
         );
 
         rsx! {
-            common::SideMenuContainer {
+            crate::common::SideMenuContainer {
                 // Profile card
-                common::SideMenuProfileCard {
-                    common::TeamSelector {
+                crate::common::SideMenuProfileCard {
+                    crate::common::TeamSelector {
                         selected_label: display_name.clone(),
                         user_display_name: user.display_name.clone(),
                         user_profile_url: user.profile_url.clone(),
@@ -76,7 +76,7 @@ fn TeamSidemenu(teamname: String) -> Element {
                         },
                         on_logout: move |_| {
                             spawn(async move {
-                                let _ = ratel_auth::controllers::logout_handler().await;
+                                let _ = crate::features::auth::controllers::logout_handler().await;
                                 nav.push("/");
                                 #[cfg(target_arch = "wasm32")]
                                 {
@@ -105,9 +105,9 @@ fn TeamSidemenu(teamname: String) -> Element {
                 }
 
                 // Navigation
-                common::SideMenuNav {
+                crate::common::SideMenuNav {
                     // Home - always visible
-                    common::SideMenuLink {
+                    crate::common::SideMenuLink {
                         to: Route::TeamHome {
                             teamname: teamname.clone(),
                         }
@@ -124,7 +124,7 @@ fn TeamSidemenu(teamname: String) -> Element {
 
                     // Drafts - PostWrite or Admin
                     if can_post_write {
-                        common::SideMenuLink {
+                        crate::common::SideMenuLink {
                             to: Route::TeamDraft {
                                 teamname: teamname.clone(),
                             }
@@ -142,7 +142,7 @@ fn TeamSidemenu(teamname: String) -> Element {
 
                     // Manage Group - TeamEdit or Admin
                     if can_team_edit {
-                        common::SideMenuLink {
+                        crate::common::SideMenuLink {
                             to: Route::TeamGroup {
                                 teamname: teamname.clone(),
                             }
@@ -160,7 +160,7 @@ fn TeamSidemenu(teamname: String) -> Element {
 
                     // Members - GroupEdit or Admin
                     if can_group_edit {
-                        common::SideMenuLink {
+                        crate::common::SideMenuLink {
                             to: Route::TeamMember {
                                 teamname: teamname.clone(),
                             }
@@ -178,7 +178,7 @@ fn TeamSidemenu(teamname: String) -> Element {
 
                     // DAO - Admin only
                     if is_admin {
-                        common::SideMenuLink {
+                        crate::common::SideMenuLink {
                             to: Route::TeamDao {
                                 teamname: teamname.clone(),
                             }
@@ -196,7 +196,7 @@ fn TeamSidemenu(teamname: String) -> Element {
 
                     // Rewards - Admin only
                     if is_admin {
-                        common::SideMenuLink {
+                        crate::common::SideMenuLink {
                             to: Route::TeamReward {
                                 teamname: teamname.clone(),
                             }
@@ -214,7 +214,7 @@ fn TeamSidemenu(teamname: String) -> Element {
 
                     // Settings - TeamEdit or Admin
                     if can_team_edit {
-                        common::SideMenuLink {
+                        crate::common::SideMenuLink {
                             to: Route::TeamSetting {
                                 teamname: teamname.clone(),
                             }
@@ -262,7 +262,7 @@ fn TeamSidemenu(teamname: String) -> Element {
                 let profile_url = team.profile_url.clone().unwrap_or_default();
                 let mut teams = team_ctx.teams.read().clone();
                 if !teams.iter().any(|item| item.username == team.username) {
-                    teams.push(common::contexts::TeamItem {
+                    teams.push(crate::common::contexts::TeamItem {
                         pk: team.pk.clone(),
                         nickname: team.nickname.clone(),
                         username: team.username.clone(),
@@ -310,7 +310,7 @@ fn TeamSidemenu(teamname: String) -> Element {
                 )
             } else {
                 rsx! {
-                    common::SideMenuContainer {
+                    crate::common::SideMenuContainer {
                         div { class: "py-5 px-3 w-full border rounded-[10px] bg-card-bg border-card-border text-text-primary text-center",
                             "Loading team..."
                         }
@@ -339,7 +339,7 @@ fn TeamSidemenu(teamname: String) -> Element {
                 )
             } else {
                 rsx! {
-                    common::SideMenuContainer {
+                    crate::common::SideMenuContainer {
                         div { class: "py-5 px-3 w-full border rounded-[10px] bg-card-bg border-card-border text-text-primary text-center",
                             "Loading team..."
                         }

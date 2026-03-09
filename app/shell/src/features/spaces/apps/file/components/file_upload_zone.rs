@@ -1,6 +1,6 @@
 use crate::features::spaces::apps::file::i18n::SpaceFileTranslate;
 use crate::features::spaces::apps::file::*;
-use common::components::FileUploader;
+use crate::common::components::FileUploader;
 
 fn guess_extension_from_url(url: &str) -> FileExtension {
     let path = url.split('?').next().unwrap_or(url);

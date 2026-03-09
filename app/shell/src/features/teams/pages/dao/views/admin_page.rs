@@ -49,7 +49,7 @@ pub fn AdminPage(teamname: String, context: TeamDao) -> Element {
         let mut toast = toast;
         move |_| {
             if !can_register {
-                toast.error(common::Error::InsufficientAdmins);
+                toast.error(crate::common::Error::InsufficientAdmins);
                 return;
             }
             is_popup_open.set(true);
@@ -77,7 +77,7 @@ pub fn AdminPage(teamname: String, context: TeamDao) -> Element {
         let mut toast = toast;
         move |selected_addresses: Vec<String>| {
             if selected_addresses.len() < 3 {
-                toast.error(common::Error::InsufficientAdmins);
+                toast.error(crate::common::Error::InsufficientAdmins);
                 return;
             }
 
@@ -140,7 +140,7 @@ pub fn AdminPage(teamname: String, context: TeamDao) -> Element {
                         is_popup_open.set(false);
                     }
                     Err(err) => {
-                        toast.error(common::Error::Unknown(format!("Failed to register DAO: {}", err)));
+                        toast.error(crate::common::Error::Unknown(format!("Failed to register DAO: {}", err)));
                     }
                 }
 
@@ -186,16 +186,16 @@ pub fn AdminPage(teamname: String, context: TeamDao) -> Element {
 fn handle_wallet_error(toast: &mut ToastService, err: DaoWalletError) {
     match err.code.as_deref() {
         Some("USER_REJECTED") => {
-            toast.error(common::Error::TransactionRejected);
+            toast.error(crate::common::Error::TransactionRejected);
         }
         Some("METAMASK_NOT_INSTALLED") => {
-            toast.error(common::Error::MetamaskNotInstalled);
+            toast.error(crate::common::Error::MetamaskNotInstalled);
         }
         Some(code) => {
-            toast.error(common::Error::WalletError(format!("{} ({})", err.message, code)));
+            toast.error(crate::common::Error::WalletError(format!("{} ({})", err.message, code)));
         }
         None => {
-            toast.error(common::Error::WalletError(err.message));
+            toast.error(crate::common::Error::WalletError(err.message));
         }
     }
 }

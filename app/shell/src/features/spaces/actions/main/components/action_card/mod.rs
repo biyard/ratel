@@ -1,5 +1,5 @@
 use crate::features::spaces::actions::main::*;
-use common::chrono::{DateTime, Utc};
+use crate::common::chrono::{DateTime, Utc};
 use i18n::ActionCardTranslate;
 
 mod i18n;
@@ -8,7 +8,7 @@ mod i18n;
 pub fn ActionCard(action: SpaceAction, space_id: SpacePartition) -> Element {
     let tr: ActionCardTranslate = use_translate();
     let nav = navigator();
-    let now = common::utils::time::get_now_timestamp_millis();
+    let now = crate::common::utils::time::get_now_timestamp_millis();
 
     let period = format_action_period(action.started_at, action.ended_at);
     let status = resolve_action_status(&action, now);

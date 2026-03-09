@@ -9,9 +9,9 @@ pub struct CredentialResponse {
     pub university: Option<String>,
 }
 
-#[get("/api/me/credentials", user: ratel_auth::User)]
+#[get("/api/me/credentials", user: crate::features::auth::User)]
 pub async fn get_credentials_handler() -> Result<CredentialResponse> {
-    let conf = common::config::ServerConfig::default();
+    let conf = crate::common::config::ServerConfig::default();
     let cli = conf.dynamodb();
 
     let pk = CompositePartition(user.pk.clone(), Partition::Attributes);

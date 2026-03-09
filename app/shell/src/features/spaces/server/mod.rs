@@ -11,13 +11,13 @@ pub fn serve(app: fn() -> Element) {
 
     dioxus::serve(move || {
         let cli = config.common.dynamodb();
-        let session_layer = common::middlewares::session_layer::get_session_layer(
+        let session_layer = crate::common::middlewares::session_layer::get_session_layer(
             cli,
             config.common.env.to_string(),
         );
         let registry = registry.clone();
         async move {
-            use common::axum::{middleware, Extension};
+            use crate::common::axum::{middleware, Extension};
 
             let dioxus_router = dioxus::server::router(app);
             let admin = admin_routes::admin_router(registry.clone());

@@ -1,7 +1,7 @@
 use super::*;
 use crate::features::membership::models::{TransactionType, UserPurchase};
 use crate::features::membership::*;
-use ratel_auth::User;
+use crate::features::auth::User;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

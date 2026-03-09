@@ -18,10 +18,10 @@ pub async fn build_profiles(
         }
     }
 
-    let users: Vec<ratel_auth::User> = if user_keys.is_empty() {
+    let users: Vec<crate::features::auth::User> = if user_keys.is_empty() {
         vec![]
     } else {
-        ratel_auth::User::batch_get(cli, user_keys).await?
+        crate::features::auth::User::batch_get(cli, user_keys).await?
     };
     let teams: Vec<Team> = if team_keys.is_empty() {
         vec![]

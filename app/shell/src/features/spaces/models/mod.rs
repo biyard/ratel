@@ -16,4 +16,4 @@ pub use space_panel_participant::*;
 pub use space_panel_quota::*;
 pub use verified_attributes::*;
 
-pub use common::models::space::*;
+pub use crate::common::models::space::*;

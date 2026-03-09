@@ -1,5 +1,5 @@
 use crate::features::admin::*;
-use common::models::auth::AdminUser;
+use crate::common::models::auth::AdminUser;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CreateGlobalRewardRequest {
@@ -11,7 +11,7 @@ pub struct CreateGlobalRewardRequest {
 
 #[post("/api/admin/rewards", _user: AdminUser)]
 pub async fn create_reward(req: CreateGlobalRewardRequest) -> Result<Reward> {
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
 
     if Reward::get(cli, Partition::Reward, Some(req.behavior.clone()))

@@ -23,7 +23,7 @@ pub async fn create_team_handler(body: CreateTeamRequest) -> crate::features::us
         .ok_or(crate::features::users::Error::Unauthorized("no session".to_string()))?;
 
     let cli = crate::features::users::config::get().dynamodb();
-    let user_pk: common::types::Partition = user_pk.parse().unwrap_or_default();
+    let user_pk: crate::common::types::Partition = user_pk.parse().unwrap_or_default();
 
     // Validate username format: lowercase alphanumeric + underscores, min 3 chars
     let username = body.username.to_lowercase();
@@ -51,12 +51,12 @@ pub async fn create_team_handler(body: CreateTeamRequest) -> crate::features::us
     }
 
     // Get the user
-    use common::models::User;
-    let user: User = User::get(cli, user_pk.clone(), Some(common::types::EntityType::User))
+    use crate::common::models::User;
+    let user: User = User::get(cli, user_pk.clone(), Some(crate::common::types::EntityType::User))
         .await?
         .ok_or(crate::features::users::Error::Unauthorized("User not found".to_string()))?;
 
-    let team_pk: common::types::Partition = Team::create_new_team(
+    let team_pk: crate::common::types::Partition = Team::create_new_team(
         &user,
         cli,
         body.nickname,
@@ -72,7 +72,7 @@ pub async fn create_team_handler(body: CreateTeamRequest) -> crate::features::us
 }
 
 #[post("/api/user-shell/teams/list", session: Extension<tower_sessions::Session>)]
-pub async fn get_user_teams_handler() -> crate::features::users::Result<Vec<common::contexts::TeamItem>> {
+pub async fn get_user_teams_handler() -> crate::features::users::Result<Vec<crate::common::contexts::TeamItem>> {
     let Extension(session) = session;
     let user_pk: String = session
         .get::<String>("user_id")
@@ -81,23 +81,23 @@ pub async fn get_user_teams_handler() -> crate::features::users::Result<Vec<comm
         .ok_or(crate::features::users::Error::Unauthorized("no session".to_string()))?;
 
     let cli = crate::features::users::config::get().dynamodb();
-    let user_pk: common::types::Partition = user_pk.parse().unwrap_or_default();
+    let user_pk: crate::common::types::Partition = user_pk.parse().unwrap_or_default();
 
     let sk_prefix = "UserTeam".to_string();
-    let opt = ratel_auth::UserTeamQueryOption::builder().sk(sk_prefix);
-    let (user_teams, _): (Vec<ratel_auth::UserTeam>, _) =
-        ratel_auth::UserTeam::query(cli, &user_pk, opt).await?;
+    let opt = crate::features::auth::UserTeamQueryOption::builder().sk(sk_prefix);
+    let (user_teams, _): (Vec<crate::features::auth::UserTeam>, _) =
+        crate::features::auth::UserTeam::query(cli, &user_pk, opt).await?;
 
-    let mut items: Vec<common::contexts::TeamItem> = Vec::new();
+    let mut items: Vec<crate::common::contexts::TeamItem> = Vec::new();
     for ut in user_teams {
         let team_pk = match ut.sk.clone() {
-            common::types::EntityType::UserTeam(team_pk) => team_pk,
+            crate::common::types::EntityType::UserTeam(team_pk) => team_pk,
             _ => String::new(),
         };
         let (permissions, description) = if team_pk.is_empty() {
             (Vec::new(), String::new())
         } else {
-            let team_pk: common::types::Partition = team_pk.parse().unwrap_or_default();
+            let team_pk: crate::common::types::Partition = team_pk.parse().unwrap_or_default();
             let perms = crate::features::posts::models::Team::get_permissions_by_team_pk(
                 cli,
                 &team_pk,
@@ -108,7 +108,7 @@ pub async fn get_user_teams_handler() -> crate::features::users::Result<Vec<comm
             let description = crate::features::posts::models::Team::get(
                 cli,
                 &team_pk,
-                Some(common::types::EntityType::Team),
+                Some(crate::common::types::EntityType::Team),
             )
             .await
             .ok()
@@ -118,12 +118,12 @@ pub async fn get_user_teams_handler() -> crate::features::users::Result<Vec<comm
             (perms.0.into_iter().map(|p| p as u8).collect(), description)
         };
 
-        items.push(common::contexts::TeamItem {
+        items.push(crate::common::contexts::TeamItem {
             pk: team_pk,
             nickname: ut.display_name,
             username: ut.username,
             profile_url: ut.profile_url,
-            user_type: common::types::UserType::Team,
+            user_type: crate::common::types::UserType::Team,
             permissions,
             description,
         });
