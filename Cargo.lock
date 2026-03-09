@@ -889,7 +889,6 @@ dependencies = [
  "random-string",
  "ratel-admin",
  "ratel-auth",
- "ratel-membership",
  "ratel-my-follower",
  "ratel-post",
  "reqwest 0.12.28",
@@ -13409,31 +13408,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ratel-membership"
-version = "0.1.0"
-dependencies = [
- "aide",
- "async-trait",
- "aws-sdk-dynamodb",
- "common",
- "dioxus",
- "percent-encoding",
- "random-string",
- "ratel-auth",
- "reqwest 0.12.28",
- "schemars 1.0.4",
- "serde",
- "serde_dynamo",
- "serde_json",
- "serde_repr",
- "serde_with 3.14.1",
- "tokio",
- "tracing",
- "uuid 1.18.1",
- "wasm-bindgen",
-]
-
-[[package]]
 name = "ratel-my-follower"
 version = "0.1.0"
 dependencies = [
@@ -13471,42 +13445,6 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
-]
-
-[[package]]
-name = "ratel-team-shell"
-version = "0.1.0"
-dependencies = [
- "aide",
- "aws-config",
- "aws-sdk-dynamodb",
- "aws-sdk-s3",
- "common",
- "dioxus",
- "gloo-timers 0.3.0",
- "icons",
- "ratel-auth",
- "ratel-post",
- "schemars 1.0.4",
- "serde",
- "tracing",
-]
-
-[[package]]
-name = "ratel-user-shell"
-version = "0.1.0"
-dependencies = [
- "aws-config",
- "aws-sdk-s3",
- "common",
- "dioxus",
- "icons",
- "percent-encoding",
- "ratel-auth",
- "ratel-post",
- "serde",
- "serde_with 3.14.1",
- "tower-sessions 0.15.0",
 ]
 
 [[package]]

@@ -3,11 +3,8 @@ members = [
   "app/admin",
   "app/auth",
   "app/common",
-  "app/membership",
   "app/posts",
   "app/shell",
-  "app/socials/teams/shell",
-  "app/socials/users/shell",
   "app/spaces/actions/*",
   "app/spaces/apps/*",
   "app/spaces/pages/*",
@@ -67,10 +64,6 @@ space-page-dashboard = { path = "app/spaces/pages/dashboard" }
 space-page-overview = { path = "app/spaces/pages/overview" }
 space-page-report = { path = "app/spaces/pages/report" }
 
-
-ratel-user-shell = { path = "app/socials/users/shell" }
-
-ratel-team-shell = { path = "app/socials/teams/shell" }
 
 dioxus-components = { path = "app/interops/web-components" }
 icons = { path = "packages/icons" }
