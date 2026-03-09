@@ -44,10 +44,10 @@ pub async fn list_my_spaces_handler(
         .map(|pk| (pk, EntityType::Post))
         .collect();
 
-    let posts: Vec<ratel_post::models::Post> = if post_keys.is_empty() {
+    let posts: Vec<crate::features::posts::models::Post> = if post_keys.is_empty() {
         vec![]
     } else {
-        ratel_post::models::Post::batch_get(cli, post_keys).await?
+        crate::features::posts::models::Post::batch_get(cli, post_keys).await?
     };
 
     let items: Vec<MySpaceResponse> = spaces

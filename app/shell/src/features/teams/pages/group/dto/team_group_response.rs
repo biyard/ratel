@@ -11,8 +11,8 @@ pub struct TeamGroupResponse {
 }
 
 #[cfg(feature = "server")]
-impl From<ratel_post::models::TeamGroup> for TeamGroupResponse {
-    fn from(group: ratel_post::models::TeamGroup) -> Self {
+impl From<crate::features::posts::models::TeamGroup> for TeamGroupResponse {
+    fn from(group: crate::features::posts::models::TeamGroup) -> Self {
         let group_id = match group.sk {
             EntityType::TeamGroup(uuid) => uuid,
             _ => group.sk.to_string(),

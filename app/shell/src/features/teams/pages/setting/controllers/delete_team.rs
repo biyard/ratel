@@ -3,7 +3,7 @@ use super::super::*;
 
 #[cfg(feature = "server")]
 use aws_sdk_dynamodb::types::TransactWriteItem;
-use ratel_post::models::{Team, TeamGroup, TeamOwner};
+use crate::features::posts::models::{Team, TeamGroup, TeamOwner};
 
 #[delete("/api/teams/:teamname/settings", user: ratel_auth::User, team: Team)]
 pub async fn delete_team_handler(teamname: String) -> Result<DeleteTeamResponse> {
@@ -26,7 +26,7 @@ pub async fn delete_team_handler(teamname: String) -> Result<DeleteTeamResponse>
 
     let mut team_group_bookmark: Option<String> = None;
     loop {
-        let mut option = ratel_post::models::TeamGroupQueryOption::builder()
+        let mut option = crate::features::posts::models::TeamGroupQueryOption::builder()
             .limit(50)
             .sk(EntityType::TeamGroup(String::default()).to_string());
         if let Some(b) = &team_group_bookmark {

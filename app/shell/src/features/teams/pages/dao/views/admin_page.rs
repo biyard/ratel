@@ -4,7 +4,7 @@ use super::super::models::{DaoWalletError, create_dao};
 use super::TeamDaoTranslate;
 use super::super::*;
 use dioxus::prelude::*;
-use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
+use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use crate::features::teams::pages::setting::controllers::{UpdateTeamRequest, update_team_handler};
 
 #[component]

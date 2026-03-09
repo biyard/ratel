@@ -2,12 +2,7 @@
 members = [
   "app/auth",
   "app/common",
-  "app/posts",
   "app/shell",
-  "app/spaces/actions/*",
-  "app/spaces/apps/*",
-  "app/spaces/pages/*",
-  "app/spaces/shell",
   "packages/*",
 ]
 resolver = "2"
@@ -34,34 +29,6 @@ dioxus-translate-macro = { path = "packages/dioxus-translate-macro", version = "
 by-macros = { path = "packages/by-macros", version = "0.6.*" }
 common = { path = "app/common" }
 ratel-auth = { path = "app/auth" }
-ratel-post = { path = "app/posts" }
-ratel-my-follower = { path = "app/my-follower" }
-
-# Space Root
-space-shell = { path = "app/spaces/shell" }
-space-common = { path = "app/spaces/common" }
-
-# Space Apps
-space-app-shell = { path = "app/spaces/apps/shell" }
-space-app-main = { path = "app/spaces/apps/main" }
-space-app-general = { path = "app/spaces/apps/general" }
-space-app-file = { path = "app/spaces/apps/file" }
-space-app-incentive-pool = { path = "app/spaces/apps/incentive-pool" }
-space-app-rewards = { path = "app/spaces/apps/rewards" }
-
-# Space Actions
-space-action-shell = { path = "app/spaces/actions/shell" }
-space-action-main = { path = "app/spaces/actions/main" }
-space-action-poll = { path = "app/spaces/actions/poll" }
-space-action-discussion = { path = "app/spaces/actions/discussion" }
-space-action-subscription = { path = "app/spaces/actions/subscription" }
-space-action-quiz = { path = "app/spaces/actions/quiz" }
-
-# Space Etc
-space-page-dashboard = { path = "app/spaces/pages/dashboard" }
-space-page-overview = { path = "app/spaces/pages/overview" }
-space-page-report = { path = "app/spaces/pages/report" }
-
 
 dioxus-components = { path = "app/interops/web-components" }
 icons = { path = "packages/icons" }

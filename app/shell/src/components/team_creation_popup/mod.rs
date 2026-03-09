@@ -1,5 +1,5 @@
 use crate::*;
-use ratel_post::types::TeamGroupPermissions;
+use crate::features::posts::types::TeamGroupPermissions;
 
 #[component]
 pub fn TeamCreationPopup() -> Element {

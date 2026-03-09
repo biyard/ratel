@@ -1,6 +1,6 @@
 use crate::features::my_follower::*;
 use common::models::auth::UserFollow;
-use ratel_post::models::Team;
+use crate::features::posts::models::Team;
 
 #[post("/api/my-follower/follow", user: ratel_auth::User)]
 pub async fn follow_user(target_pk: Partition) -> Result<()> {

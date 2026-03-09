@@ -26,6 +26,16 @@ pub enum SpaceUserRole {
     Creator,
 }
 
+impl SpaceUserRole {
+    pub fn can_edit(&self) -> bool {
+        matches!(self, SpaceUserRole::Creator)
+    }
+
+    pub fn can_act(&self) -> bool {
+        matches!(self, SpaceUserRole::Participant | SpaceUserRole::Creator)
+    }
+}
+
 #[cfg(feature = "server")]
 impl<S> FromRequestParts<S> for SpaceUserRole
 where
