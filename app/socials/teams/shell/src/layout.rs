@@ -110,7 +110,6 @@ fn TeamSidemenu(teamname: String) -> Element {
                     common::SideMenuLink {
                         to: Route::TeamHome {
                             teamname: teamname.clone(),
-                            rest: vec![],
                         }
                             .to_string(),
                         label: tr.home,
@@ -128,7 +127,6 @@ fn TeamSidemenu(teamname: String) -> Element {
                         common::SideMenuLink {
                             to: Route::TeamDraft {
                                 teamname: teamname.clone(),
-                                rest: vec![],
                             }
                                 .to_string(),
                             label: tr.drafts,
@@ -147,7 +145,6 @@ fn TeamSidemenu(teamname: String) -> Element {
                         common::SideMenuLink {
                             to: Route::TeamGroup {
                                 teamname: teamname.clone(),
-                                rest: vec![],
                             }
                                 .to_string(),
                             label: tr.manage_group,
@@ -166,7 +163,6 @@ fn TeamSidemenu(teamname: String) -> Element {
                         common::SideMenuLink {
                             to: Route::TeamMember {
                                 teamname: teamname.clone(),
-                                rest: vec![],
                             }
                                 .to_string(),
                             label: tr.members,
@@ -185,7 +181,6 @@ fn TeamSidemenu(teamname: String) -> Element {
                         common::SideMenuLink {
                             to: Route::TeamDao {
                                 teamname: teamname.clone(),
-                                rest: vec![],
                             }
                                 .to_string(),
                             label: tr.dao,
@@ -204,7 +199,6 @@ fn TeamSidemenu(teamname: String) -> Element {
                         common::SideMenuLink {
                             to: Route::TeamReward {
                                 teamname: teamname.clone(),
-                                rest: vec![],
                             }
                                 .to_string(),
                             label: tr.rewards,
@@ -223,7 +217,6 @@ fn TeamSidemenu(teamname: String) -> Element {
                         common::SideMenuLink {
                             to: Route::TeamSetting {
                                 teamname: teamname.clone(),
-                                rest: vec![],
                             }
                                 .to_string(),
                             label: tr.settings,

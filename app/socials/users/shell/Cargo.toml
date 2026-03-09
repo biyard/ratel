@@ -12,13 +12,10 @@ icons = { workspace = true }
 tower-sessions = { version = "0.15.0", optional = true }
 ratel-auth = { workspace = true, optional = true }
 ratel-post = { workspace = true, optional = true }
-ratel-user-post = { workspace = true, optional = true }
-ratel-user-reward = { workspace = true, optional = true }
-ratel-user-setting = { workspace = true, optional = true }
-ratel-user-membership = { workspace = true, optional = true }
-ratel-user-draft = { workspace = true, optional = true }
-ratel-user-credential = { workspace = true, optional = true }
-ratel-user-space = { workspace = true, optional = true }
+aws-config = { version = "1.5.10", optional = true }
+aws-sdk-s3 = { version = "1.74.0", optional = true }
+serde_with = { workspace = true }
+percent-encoding = { workspace = true }
 
 [features]
 default = []
@@ -27,37 +24,16 @@ web = [
     "dioxus/web",
     "ratel-auth/web",
     "ratel-post/web",
-    "ratel-user-post/web",
-    "ratel-user-reward/web",
-    "ratel-user-setting/web",
-    "ratel-user-membership/web",
-    "ratel-user-draft/web",
-    "ratel-user-credential/web",
-    "ratel-user-space/web",
 ]
 desktop = [
     "dioxus/desktop",
     "ratel-auth/desktop",
     "ratel-post/desktop",
-    "ratel-user-post/desktop",
-    "ratel-user-reward/desktop",
-    "ratel-user-setting/desktop",
-    "ratel-user-membership/desktop",
-    "ratel-user-draft/desktop",
-    "ratel-user-credential/desktop",
-    "ratel-user-space/desktop",
 ]
 mobile = [
     "dioxus/mobile",
     "ratel-auth/mobile",
     "ratel-post/mobile",
-    "ratel-user-post/mobile",
-    "ratel-user-reward/mobile",
-    "ratel-user-setting/mobile",
-    "ratel-user-membership/mobile",
-    "ratel-user-draft/mobile",
-    "ratel-user-credential/mobile",
-    "ratel-user-space/mobile",
 ]
 server = [
     "common/server",
@@ -65,11 +41,6 @@ server = [
     "tower-sessions",
     "ratel-auth/server",
     "ratel-post/server",
-    "ratel-user-post/server",
-    "ratel-user-reward/server",
-    "ratel-user-setting/server",
-    "ratel-user-membership/server",
-    "ratel-user-draft/server",
-    "ratel-user-credential/server",
-    "ratel-user-space/server",
+    "aws-config",
+    "aws-sdk-s3",
 ]

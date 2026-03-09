@@ -15,12 +15,9 @@ ratel-admin = { workspace = true, optional = true }
 ratel-auth = { workspace = true, optional = true }
 ratel-post = { workspace = true, optional = true }
 ratel-my-follower = { workspace = true, optional = true }
-ratel-user-setting ={ workspace = true, optional = true }
-ratel-user-credential ={ workspace = true, optional = true }
 space-shell = { workspace = true, optional = true }
 ratel-user-shell = { workspace = true, optional = true }
 ratel-team-shell = { workspace = true, optional = true }
-ratel-team-dao = { workspace = true, optional = true }
 tower-sessions = { version = "0.15.0", optional = true }
 
 web-sys = { workspace = true }
@@ -41,10 +38,7 @@ web = [
   "ratel-post/web",
   "ratel-my-follower/web",
   "ratel-user-shell/web",
-  "ratel-user-setting/web",
-  "ratel-user-credential/web",
   "ratel-team-shell/web",
-  "ratel-team-dao/web",
 ]
 desktop = [
   "common/desktop",
@@ -55,10 +49,7 @@ desktop = [
   "ratel-post/desktop",
   "ratel-my-follower/desktop",
   "ratel-user-shell/desktop",
-  "ratel-user-setting/desktop",
-  "ratel-user-credential/desktop",
   "ratel-team-shell/desktop",
-  "ratel-team-dao/desktop",
 ]
 mobile = [
   "common/mobile",
@@ -69,10 +60,7 @@ mobile = [
   "ratel-post/mobile",
   "ratel-my-follower/mobile",
   "ratel-user-shell/mobile",
-  "ratel-user-setting/mobile",
-  "ratel-user-credential/mobile",
   "ratel-team-shell/mobile",
-  "ratel-team-dao/mobile",
 ]
 server = [
   "common/server",
@@ -83,10 +71,7 @@ server = [
   "ratel-post/server",
   "ratel-my-follower/server",
   "ratel-user-shell/server",
-  "ratel-user-setting/server",
-  "ratel-user-credential/server",
   "ratel-team-shell/server",
-  "ratel-team-dao/server",
   "tower-sessions",
 ]
 

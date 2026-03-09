@@ -12,8 +12,10 @@ pub mod interop;
 #[cfg(not(feature = "server"))]
 pub mod web;
 
+pub mod pages;
 #[cfg(feature = "server")]
 pub mod server;
+use pages::*;
 mod views;
 
 pub use components::*;

@@ -3,61 +3,52 @@ use crate::*;
 use views::Home;
 
 use crate::layout::TeamLayout;
-use dioxus::router::components::child_router::ChildRouter;
-use ratel_team_dao::Route as TeamDaoRoute;
-use ratel_team_draft::Route as TeamDraftRoute;
-use ratel_team_group::Route as TeamGroupRoute;
-use ratel_team_home::Route as TeamHomeRoute;
-use ratel_team_member::Route as TeamMemberRoute;
-use ratel_team_reward::Route as TeamRewardRoute;
-use ratel_team_setting::Route as TeamSettingRoute;
+use dao::Home as DaoPage;
+use draft::Home as DraftPage;
+use group::Home as GroupPage;
+use home::Home as HomePage;
+use member::Home as MemberPage;
+use crate::pages::reward::Home as RewardPage;
+use setting::Home as SettingPage;
 
-macro_rules! define_team_app_wrapper {
-    ($wrapper_name:ident, $route_module:ident) => {
+macro_rules! define_team_app_page {
+    ($wrapper_name:ident, $page_component:ident) => {
         #[component]
-        pub fn $wrapper_name(teamname: String, rest: Vec<String>) -> Element {
-            let router = use_context::<dioxus::router::RouterContext>();
-            let route: $route_module = router.current();
+        pub fn $wrapper_name(teamname: String) -> Element {
             rsx! {
-                ChildRouter::<$route_module> {
-                    route,
-                    format_route_as_root_route: |r: $route_module| r.to_string(),
-                    parse_route_from_root_route: |url: &str| {
-                        <$route_module as std::str::FromStr>::from_str(url).ok()
-                    },
-                }
+                $page_component { teamname }
             }
         }
     };
 }
 
-define_team_app_wrapper!(TeamDao, TeamDaoRoute);
-define_team_app_wrapper!(TeamDraft, TeamDraftRoute);
-define_team_app_wrapper!(TeamGroup, TeamGroupRoute);
-define_team_app_wrapper!(TeamHome, TeamHomeRoute);
-define_team_app_wrapper!(TeamMember, TeamMemberRoute);
-define_team_app_wrapper!(TeamReward, TeamRewardRoute);
-define_team_app_wrapper!(TeamSetting, TeamSettingRoute);
+define_team_app_page!(TeamDao, DaoPage);
+define_team_app_page!(TeamDraft, DraftPage);
+define_team_app_page!(TeamGroup, GroupPage);
+define_team_app_page!(TeamHome, HomePage);
+define_team_app_page!(TeamMember, MemberPage);
+define_team_app_page!(TeamReward, RewardPage);
+define_team_app_page!(TeamSetting, SettingPage);
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
 pub enum Route {
     #[nest("/teams/:teamname")]
         #[layout(TeamLayout)]
-            #[route("/home/:..rest")]
-            TeamHome { teamname: String, rest: Vec<String> },
-            #[route("/drafts/:..rest")]
-            TeamDraft { teamname: String, rest: Vec<String> },
-            #[route("/groups/:..rest")]
-            TeamGroup { teamname: String, rest: Vec<String> },
-            #[route("/dao/:..rest")]
-            TeamDao { teamname: String, rest: Vec<String> },
-            #[route("/members/:..rest")]
-            TeamMember { teamname: String, rest: Vec<String> },
-            #[route("/rewards/:..rest")]
-            TeamReward { teamname: String, rest: Vec<String> },
-            #[route("/settings/:..rest")]
-            TeamSetting { teamname: String, rest: Vec<String> },
+            #[route("/home")]
+            TeamHome { teamname: String },
+            #[route("/drafts")]
+            TeamDraft { teamname: String },
+            #[route("/groups")]
+            TeamGroup { teamname: String },
+            #[route("/dao")]
+            TeamDao { teamname: String },
+            #[route("/members")]
+            TeamMember { teamname: String },
+            #[route("/rewards")]
+            TeamReward { teamname: String },
+            #[route("/settings")]
+            TeamSetting { teamname: String },
         #[end_layout]
     #[end_nest]
 
