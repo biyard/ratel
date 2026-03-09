@@ -16,18 +16,25 @@ ratel-auth = { workspace = true, optional = true }
 ratel-post = { workspace = true, optional = true }
 ratel-my-follower = { workspace = true, optional = true }
 space-shell = { workspace = true, optional = true }
-ratel-user-shell = { workspace = true, optional = true }
 ratel-team-shell = { workspace = true, optional = true }
 tower-sessions = { version = "0.15.0", optional = true }
+icons = { workspace = true }
+serde_with = { workspace = true }
+percent-encoding = { workspace = true }
+aws-config = { version = "1.5.10", optional = true }
+aws-sdk-s3 = { version = "1.74.0", optional = true }
 
 web-sys = { workspace = true }
 wasm-bindgen = { workspace = true }
 wasm-bindgen-futures = { workspace = true }
 serde-wasm-bindgen = { workspace = true }
+random-string = { version = "1.1.0", optional = true }
+reqwest = { workspace = true, optional = true }
+async-trait = { workspace = true, optional = true }
 
 
 [features]
-default = []
+default = ["membership","social"]
 bypass = ["ratel-auth?/bypass"]
 web = [
   "common/web",
@@ -37,7 +44,6 @@ web = [
   "space-shell/web",
   "ratel-post/web",
   "ratel-my-follower/web",
-  "ratel-user-shell/web",
   "ratel-team-shell/web",
 ]
 desktop = [
@@ -48,7 +54,6 @@ desktop = [
   "space-shell/desktop",
   "ratel-post/desktop",
   "ratel-my-follower/desktop",
-  "ratel-user-shell/desktop",
   "ratel-team-shell/desktop",
 ]
 mobile = [
@@ -59,7 +64,6 @@ mobile = [
   "space-shell/mobile",
   "ratel-post/mobile",
   "ratel-my-follower/mobile",
-  "ratel-user-shell/mobile",
   "ratel-team-shell/mobile",
 ]
 server = [
@@ -70,12 +74,20 @@ server = [
   "space-shell/server",
   "ratel-post/server",
   "ratel-my-follower/server",
-  "ratel-user-shell/server",
   "ratel-team-shell/server",
   "tower-sessions",
+  "aws-config",
+  "aws-sdk-s3",
+  "random-string",
+  "reqwest",
+  "async-trait",
 ]
 
 lambda = [ "server", "common/lambda" ]
+membership = []
+social = ["users", "teams"]
+users = []
+teams = []
 
 [dev-dependencies]
 axum = { workspace = true }
