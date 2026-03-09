@@ -1,6 +1,8 @@
 // Migrated from packages/main-api/src/controllers/v3/auth/signup.rs
 use crate::models::*;
 #[cfg(feature = "server")]
+use crate::utils::evm::recover_address;
+#[cfg(feature = "server")]
 use crate::utils::{
     password::hash_password,
     referral_code::generate_referral_code,
@@ -27,7 +29,6 @@ pub struct SignupRequest {
     pub term_agreed: bool,
     pub informed_agreed: bool,
 
-    pub evm_address: Option<String>,
     pub phone_number: Option<String>,
     pub device_id: Option<String>,
 }
@@ -51,6 +52,11 @@ pub enum SignupType {
     },
     Telegram {
         telegram_raw: String,
+    },
+    Wallet {
+        evm_address: String,
+        signature: String,
+        message: String,
     },
 }
 
@@ -76,7 +82,6 @@ pub async fn signup_handler(req: SignupRequest) -> Result<SignupResponse> {
     req.validate()
         .map_err(|e| Error::BadRequest(format!("Invalid input: {}", e)))?;
 
-    let evm_address = req.evm_address.clone();
     let user = match req.signup_type.clone() {
         SignupType::Email {
             email,
@@ -91,12 +96,14 @@ pub async fn signup_handler(req: SignupRequest) -> Result<SignupResponse> {
         SignupType::Telegram { .. } => {
             unimplemented!()
         }
+        SignupType::Wallet {
+            evm_address,
+            signature,
+            message,
+        } => {
+            signup_with_wallet(cli, req.clone(), evm_address, signature, message, &session).await?
+        }
     };
-    if let Some(evm_address) = evm_address {
-        UserEvmAddress::new(user.pk.clone(), evm_address)
-            .create(cli)
-            .await?;
-    }
 
     UserReferralCode::new(user.pk.clone(), generate_referral_code())
         .create(cli)
@@ -261,6 +268,81 @@ async fn signup_with_phone(
     let user = User::new_phone(phone);
 
     user.create(cli).await?;
+
+    Ok(user)
+}
+
+#[cfg(feature = "server")]
+async fn signup_with_wallet(
+    cli: &aws_sdk_dynamodb::Client,
+    SignupRequest {
+        display_name,
+        username,
+        profile_url,
+        term_agreed,
+        informed_agreed,
+        ..
+    }: SignupRequest,
+    evm_address: String,
+    signature: String,
+    message: String,
+    session: &tower_sessions::Session,
+) -> Result<User> {
+    tracing::debug!("Signing up with wallet: {}", evm_address);
+
+    // Verify nonce from session
+    let stored_nonce: String = session
+        .get("wallet_nonce")
+        .await
+        .map_err(|e| Error::Unknown(format!("Session error: {}", e)))?
+        .ok_or_else(|| Error::Unauthorized("No nonce found in session".into()))?;
+
+    if !message.contains(&stored_nonce) {
+        return Err(Error::Unauthorized("Nonce mismatch".into()));
+    }
+
+    // Verify the signature
+    let recovered = recover_address(&message, &signature)?;
+    if recovered.to_lowercase() != evm_address.to_lowercase() {
+        return Err(Error::Unauthorized("Invalid wallet signature".into()));
+    }
+
+    // Clear nonce (one-time use)
+    session.remove::<String>("wallet_nonce").await.ok();
+
+    // Check if EVM address already registered
+    let (existing, _) = UserEvmAddress::find_by_evm(
+        cli,
+        &evm_address.to_lowercase(),
+        UserEvmAddressQueryOption::builder().limit(1),
+    )
+    .await?;
+    if !existing.is_empty() {
+        return Err(Error::Duplicate(format!(
+            "Wallet address already registered: {}",
+            evm_address
+        )));
+    }
+
+    let email = format!("{}@wallet.placeholder", &evm_address[2..10].to_lowercase());
+    let user = User::new(
+        display_name,
+        email,
+        profile_url,
+        term_agreed,
+        informed_agreed,
+        UserType::Individual,
+        username,
+        None,
+    );
+
+    let user_evm = UserEvmAddress::new(user.pk.clone(), evm_address.to_lowercase());
+
+    transact_write!(
+        cli,
+        user.create_transact_write_item(),
+        user_evm.create_transact_write_item()
+    )?;
 
     Ok(user)
 }

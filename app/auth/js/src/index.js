@@ -1,4 +1,5 @@
 import * as firebase from "./firebase";
+import * as wallet from "./wallet";
 
 if (typeof window !== "undefined") {
   if (typeof window.ratel === "undefined") {
@@ -7,5 +8,6 @@ if (typeof window !== "undefined") {
 
   window.ratel.auth = {
     firebase,
+    wallet,
   };
 }

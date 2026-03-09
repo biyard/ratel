@@ -1,5 +1,7 @@
 // Migrated from packages/main-api/src/controllers/v3/auth/login.rs
 use crate::models::*;
+#[cfg(feature = "server")]
+use crate::utils::evm::{build_siwe_message, generate_nonce, recover_address};
 use crate::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -24,6 +26,11 @@ pub enum LoginRequest {
     },
     Telegram {
         telegram_raw: String,
+    },
+    Wallet {
+        signature: String,
+        evm_address: String,
+        message: String,
     },
 }
 
@@ -57,6 +64,11 @@ pub async fn login_handler(req: LoginRequest) -> Result<LoginResponse> {
             access_token,
         } => login_with_oauth(cli, provider, access_token).await?,
         LoginRequest::Telegram { telegram_raw } => login_with_telegram(cli, telegram_raw).await?,
+        LoginRequest::Wallet {
+            signature,
+            evm_address,
+            message,
+        } => wallet_login_handler(cli, evm_address, signature, message, &session).await?,
     };
 
     session
@@ -295,4 +307,111 @@ pub async fn login_with_telegram(
     };
 
     Ok(user)
+}
+
+/// Returns `is_new_user: true` if the address is not registered.
+
+#[cfg(feature = "server")]
+pub async fn wallet_login_handler(
+    cli: &aws_sdk_dynamodb::Client,
+    address: String,
+    signature: String,
+    message: String,
+    session: &tower_sessions::Session,
+) -> Result<User> {
+    // Verify nonce from session
+    let stored_nonce: Option<String> = session
+        .get("wallet_nonce")
+        .await
+        .map_err(|e| Error::Unknown(format!("Session error: {}", e)))?;
+
+    let stored_nonce =
+        stored_nonce.ok_or_else(|| Error::Unauthorized("No nonce found in session".into()))?;
+
+    if !message.contains(&stored_nonce) {
+        return Err(Error::Unauthorized("Nonce mismatch".into()));
+    }
+
+    // Verify signature
+    let recovered_address = recover_address(&message, &signature)?;
+    if recovered_address.to_lowercase() != address.to_lowercase() {
+        return Err(Error::Unauthorized("Invalid signature".into()));
+    }
+
+    // Clear nonce (one-time use)
+    session.remove::<String>("wallet_nonce").await.ok();
+
+    let (evm_records, _) = UserEvmAddress::find_by_evm(
+        cli,
+        &address.to_lowercase(),
+        UserEvmAddressQueryOption::builder().limit(1),
+    )
+    .await?;
+
+    if let Some(evm_record) = evm_records.first() {
+        let user = User::get(cli, &evm_record.pk, Some(EntityType::User))
+            .await?
+            .ok_or(Error::Unauthorized(
+                "User not found for this wallet address".into(),
+            ))?;
+
+        return Ok(user);
+    }
+    Err(Error::Unauthorized(
+        "User not found for this wallet address".into(),
+    ))
+}
+
+// ── Wallet address check ────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct WalletCheckRequest {
+    pub evm_address: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct WalletCheckResponse {
+    pub exists: bool,
+}
+
+#[post("/api/auth/wallet/check")]
+pub async fn wallet_check_handler(req: WalletCheckRequest) -> Result<WalletCheckResponse> {
+    let cli = crate::config::get().dynamodb();
+    let (records, _) = UserEvmAddress::find_by_evm(
+        cli,
+        &req.evm_address.to_lowercase(),
+        UserEvmAddressQueryOption::builder().limit(1),
+    )
+    .await?;
+
+    Ok(WalletCheckResponse {
+        exists: !records.is_empty(),
+    })
+}
+
+// ── Nonce generation ────────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct WalletNonceResponse {
+    pub nonce: String,
+    pub message: String,
+}
+
+/// Generate a nonce for SIWE verification (used by both login and signup).
+#[post("/api/auth/wallet/nonce", session: Extension<tower_sessions::Session>)]
+pub async fn wallet_nonce_handler() -> common::Result<WalletNonceResponse> {
+    tracing::info!("[wallet-server] nonce_handler called");
+    let Extension(session) = session;
+    let nonce = generate_nonce();
+    let message = build_siwe_message(&nonce);
+
+    session
+        .insert("wallet_nonce", nonce.clone())
+        .await
+        .map_err(|e| Error::Unknown(format!("Session error: {}", e)))?;
+
+    Ok(WalletNonceResponse { nonce, message })
 }
