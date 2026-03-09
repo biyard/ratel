@@ -1,17 +1,21 @@
 #![allow(unused)]
 pub mod components;
-pub mod config;
 pub mod controllers;
-pub mod dto;
-#[cfg(not(feature = "server"))]
-pub mod interop;
+pub mod hooks;
 pub mod layout;
 pub mod models;
+pub mod route;
+
+#[cfg(not(feature = "server"))]
+pub mod interop;
 
 mod views;
-pub use views::*;
+
+pub use models::*;
+pub use route::Route;
 
 use common::*;
+use common::models::Reward;
 use dioxus::prelude::*;
 
 type Result<T> = common::Result<T>;

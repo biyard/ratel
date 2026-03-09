@@ -887,9 +887,7 @@ dependencies = [
  "icons",
  "percent-encoding",
  "random-string",
- "ratel-admin",
  "ratel-auth",
- "ratel-my-follower",
  "ratel-post",
  "reqwest 0.12.28",
  "schemars 1.0.4",
@@ -13358,16 +13356,6 @@ name = "range-traits"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d20581732dd76fa913c7dff1a2412b714afe3573e94d41c34719de73337cc8ab"
-
-[[package]]
-name = "ratel-admin"
-version = "0.1.0"
-dependencies = [
- "common",
- "dioxus",
- "ratel-auth",
- "serde",
-]
 
 [[package]]
 name = "ratel-auth"
