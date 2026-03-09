@@ -11,9 +11,7 @@ pub fn selected_actions(actions: &[SpaceAction], selected_ids: &[String]) -> Vec
         .filter_map(|selected_id| {
             actions
                 .iter()
-                .find(|action| {
-                    supports_action_settings(action) && &action.action_id == selected_id
-                })
+                .find(|action| supports_action_settings(action) && &action.action_id == selected_id)
                 .cloned()
         })
         .collect()
@@ -23,7 +21,11 @@ pub fn available_actions(actions: &[SpaceAction], selected_ids: &[String]) -> Ve
     actions
         .iter()
         .filter(|action| supports_action_settings(action))
-        .filter(|action| !selected_ids.iter().any(|selected_id| selected_id == &action.action_id))
+        .filter(|action| {
+            !selected_ids
+                .iter()
+                .any(|selected_id| selected_id == &action.action_id)
+        })
         .cloned()
         .collect()
 }
@@ -94,9 +96,9 @@ pub async fn apply_selected_action_dates(
                     .action_id
                     .parse()
                     .map_err(|_| Error::BadRequest("Invalid discussion action id".to_string()))?;
-                let discussion_id: SpacePostEntityType = entity_type.try_into().map_err(|_| {
-                    Error::BadRequest("Invalid discussion action id".to_string())
-                })?;
+                let discussion_id: SpacePostEntityType = entity_type
+                    .try_into()
+                    .map_err(|_| Error::BadRequest("Invalid discussion action id".to_string()))?;
 
                 update_discussion(
                     space_id.clone(),
