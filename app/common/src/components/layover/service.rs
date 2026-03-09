@@ -5,6 +5,7 @@ pub struct Config {
     pub id: String,
     pub title: String,
     pub content: Element,
+    pub container_class: Option<String>,
 }
 
 #[derive(Clone, Copy)]
@@ -19,7 +20,13 @@ impl LayoverService {
         }
     }
 
-    pub fn open(&mut self, id: String, title: String, content: Element) -> &mut Self {
+    pub fn open(
+        &mut self,
+        id: String,
+        title: String,
+        content: Element,
+        container_class: Option<String>,
+    ) -> &mut Self {
         let mut need_update = true;
         if let Some(config) = self.state.read().as_ref() {
             if config.id == id {
@@ -27,7 +34,12 @@ impl LayoverService {
             }
         }
         if need_update {
-            self.state.set(Some(Config { id, title, content }));
+            self.state.set(Some(Config {
+                id,
+                title,
+                content,
+                container_class,
+            }));
         }
         self
     }

@@ -22,7 +22,7 @@ pub fn SubscriptionUserList(
     });
 
     rsx! {
-        div { class: "overflow-visible w-full shrink-0 rounded-[12px] bg-card",
+        SpaceCard { class: "overflow-visible w-full shrink-0 rounded-[12px] !p-0".to_string(),
             div { class: "flex justify-between items-center self-stretch px-5 py-4 border-b border-separator",
                 p { class: "font-semibold text-center sp-dash-font-raleway text-[17px]/[20px] tracking-[-0.18px] text-font-primary",
                     {tr.title}
@@ -95,7 +95,9 @@ pub fn SubscriptionUserList(
                             };
 
                             rsx! {
-                                Card { class: "flex justify-between items-center w-full px-4 py-3 max-tablet:flex-col max-tablet:items-start max-tablet:gap-3 rounded-[12px]",
+                                SpaceCard {
+                                    class: "flex justify-between items-center w-full max-tablet:flex-col max-tablet:items-start max-tablet:gap-3 !rounded-[12px] !bg-card !px-4 !py-3"
+                                        .to_string(),
                                     div { class: "flex items-center gap-[10px]",
                                         if !user.profile_url.is_empty() {
                                             img {

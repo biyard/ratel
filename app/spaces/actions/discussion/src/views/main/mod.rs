@@ -5,14 +5,13 @@ use crate::controllers::{get_discussion, list_comments};
 use crate::*;
 use creator::CreatorMain;
 use space_common::hooks::use_space_role;
-use space_common::types::space_page_actions_discussion_key;
+use space_common::types::{
+    space_page_actions_discussion_comments_key, space_page_actions_discussion_key,
+};
 use viewer::ViewerMain;
 
 #[component]
-pub fn DiscussionMainPage(
-    space_id: SpacePartition,
-    discussion_id: SpacePostEntityType,
-) -> Element {
+pub fn DiscussionMainPage(space_id: SpacePartition, discussion_id: SpacePostEntityType) -> Element {
     let key = space_page_actions_discussion_key(&space_id, &discussion_id);
     let discussion_loader = use_query(&key, {
         let space_id = space_id.clone();
@@ -25,7 +24,8 @@ pub fn DiscussionMainPage(
     let role = use_space_role()();
 
     //FIXME: use InfiniteQuery
-    let comments_loader = use_query(&key, {
+    let comments_key = space_page_actions_discussion_comments_key(&space_id, &discussion_id);
+    let comments_loader = use_query(&comments_key, {
         let space_id = space_id.clone();
         let discussion_id = discussion_id.clone();
         move || list_comments(space_id.clone(), discussion_id.clone(), None)

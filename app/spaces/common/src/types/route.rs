@@ -51,5 +51,5 @@ pub fn space_app_general(space_id: &SpacePartition) -> String {
 }
 
 pub fn space_app_incentive_pool(space_id: &SpacePartition) -> String {
-    format!("/spaces/{space_id}/apps/incentive_pool")
+    format!("/spaces/{space_id}/apps/incentive-pool")
 }

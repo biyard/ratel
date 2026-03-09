@@ -9,6 +9,7 @@ edition = "2021"
 [dependencies]
 dioxus = { workspace = true }
 common = { workspace = true }
+space-common = { workspace = true }
 serde = { workspace = true }
 serde_repr = { workspace = true }
 ratel-auth = { workspace = true, optional = true }
@@ -20,6 +21,7 @@ default = []
 web = [
     "dioxus/web",
     "common/web",
+    "space-common/web",
     "ratel-auth/web",
     "ratel-post/web",
     "space-action-poll/web",
@@ -29,6 +31,7 @@ mobile = ["dioxus/mobile"]
 server = [
     "dioxus/server",
     "common/server",
+    "space-common/server",
     "ratel-auth/server",
     "ratel-post/server",
     "space-action-poll/server",

@@ -61,7 +61,7 @@ pub fn SubscriptionUserInvite(space_id: SpacePartition, on_refresh: EventHandler
     };
 
     rsx! {
-        div { class: "overflow-visible w-full shrink-0 rounded-[12px] bg-card",
+        SpaceCard { class: "overflow-visible w-full shrink-0 rounded-[12px] !p-0".to_string(),
             div { class: "flex justify-between items-center self-stretch px-5 py-4 border-b border-separator",
                 p { class: "font-semibold text-center sp-dash-font-raleway text-[17px]/[20px] tracking-[-0.18px] text-font-primary",
                     {tr.title}
@@ -163,13 +163,15 @@ fn InviteEmailChip(value: String, on_remove: EventHandler<MouseEvent>) -> Elemen
             span { class: "font-medium leading-6 sp-dash-font-raleway text-[15px] tracking-[0.5px] text-btn-primary-text",
                 "{value}"
             }
-            button {
-                class: "flex justify-center items-center rounded-full size-5 text-btn-primary-text/90",
+            Button {
+                class: "size-5 rounded-full !p-0 hover:!bg-transparent disabled:opacity-50".to_string(),
+                size: ButtonSize::Icon,
+                style: ButtonStyle::Text,
                 onclick: move |evt| on_remove.call(evt),
                 icons::ratel::XMarkIcon {
                     width: "12",
                     height: "12",
-                    class: "w-3 h-3 text-btn-primary-text/90",
+                    class: "w-3 h-3 [&>path]:stroke-btn-primary-text/90",
                 }
             }
         }

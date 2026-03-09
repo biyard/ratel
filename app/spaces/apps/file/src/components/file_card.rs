@@ -6,8 +6,9 @@ pub fn FileCard(file: File, editable: bool, on_delete: Option<EventHandler<Strin
     let file_url: String = file.url.clone().unwrap_or_default();
 
     rsx! {
-        div {
-            class: "flex flex-row justify-start items-center w-full gap-2 p-4 bg-card border border-separator rounded-[8px] cursor-pointer hover:bg-card-hover transition-colors",
+        SpaceCard {
+            class: "flex flex-row justify-start items-center w-full gap-2 cursor-pointer !rounded-[8px] !bg-card !p-4 hover:!bg-card-hover transition-colors"
+                .to_string(),
             onclick: {
                 let _url = file_url.clone();
                 move |_: Event<MouseData>| {
@@ -31,8 +32,11 @@ pub fn FileCard(file: File, editable: bool, on_delete: Option<EventHandler<Strin
                 {
                     let file_id = file.id.clone();
                     rsx! {
-                        button {
-                            class: "flex items-center justify-center size-6 shrink-0 text-red-400 hover:text-red-300",
+                        Button {
+                            class: "size-6 shrink-0 !p-0 !text-red-400 hover:!bg-transparent hover:!text-red-300"
+                                .to_string(),
+                            size: ButtonSize::Icon,
+                            style: ButtonStyle::Text,
                             onclick: move |evt: Event<MouseData>| {
                                 evt.stop_propagation();
                                 if let Some(ref handler) = on_delete {

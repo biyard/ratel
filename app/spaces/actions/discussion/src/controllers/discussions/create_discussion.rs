@@ -15,9 +15,12 @@ pub async fn create_discussion(space_id: SpacePartition) -> Result<SpacePost> {
         None,
     );
 
-    let space_pk_p: common::Partition = space_id.into();
+    let space_pk = space_id.into();
+    let _ =
+        space_common::models::aggregate::DashboardAggregate::get_or_create(cli, &space_pk).await?;
+
     let mut items = vec![post.create_transact_write_item()];
-    items.push(space_common::models::aggregate::DashboardAggregate::inc_posts(&space_pk_p, 1));
+    items.push(space_common::models::aggregate::DashboardAggregate::inc_posts(&space_pk, 1));
     transact_write_items!(cli, items)
         .map_err(|e| crate::Error::Unknown(format!("Failed to create discussion: {e}")))?;
 
