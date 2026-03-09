@@ -1,1 +1,1 @@
-pub use ratel_user_shell::UserSidemenu;
+pub use crate::features::users::UserSidemenu;

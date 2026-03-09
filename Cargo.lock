@@ -875,22 +875,26 @@ checksum = "a23eb6b1614318a8071c9b2521f36b424b2c83db5eb3a0fead4a6c0809af6e61"
 name = "app-shell"
 version = "0.1.0"
 dependencies = [
+ "aide",
+ "async-trait",
+ "aws-config",
+ "aws-sdk-dynamodb",
+ "aws-sdk-s3",
  "axum",
  "common",
  "dioxus",
- "ratel-admin",
+ "gloo-timers 0.3.0",
+ "icons",
+ "percent-encoding",
+ "random-string",
  "ratel-auth",
- "ratel-membership",
- "ratel-my-follower",
  "ratel-post",
- "ratel-team-dao",
- "ratel-team-shell",
- "ratel-user-credential",
- "ratel-user-setting",
- "ratel-user-shell",
+ "reqwest 0.12.28",
+ "schemars 1.0.4",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
+ "serde_with 3.14.1",
  "space-shell",
  "tokio",
  "tower",
@@ -13354,16 +13358,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d20581732dd76fa913c7dff1a2412b714afe3573e94d41c34719de73337cc8ab"
 
 [[package]]
-name = "ratel-admin"
-version = "0.1.0"
-dependencies = [
- "common",
- "dioxus",
- "ratel-auth",
- "serde",
-]
-
-[[package]]
 name = "ratel-auth"
 version = "0.1.0"
 dependencies = [
@@ -13399,31 +13393,6 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
-]
-
-[[package]]
-name = "ratel-membership"
-version = "0.1.0"
-dependencies = [
- "aide",
- "async-trait",
- "aws-sdk-dynamodb",
- "common",
- "dioxus",
- "percent-encoding",
- "random-string",
- "ratel-auth",
- "reqwest 0.12.28",
- "schemars 1.0.4",
- "serde",
- "serde_dynamo",
- "serde_json",
- "serde_repr",
- "serde_with 3.14.1",
- "tokio",
- "tracing",
- "uuid 1.18.1",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -13464,229 +13433,6 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
-]
-
-[[package]]
-name = "ratel-team-dao"
-version = "0.1.0"
-dependencies = [
- "aide",
- "aws-sdk-dynamodb",
- "common",
- "dioxus",
- "gloo-timers 0.3.0",
- "ratel-auth",
- "ratel-post",
- "ratel-team-setting",
- "schemars 1.0.4",
- "serde",
- "tracing",
-]
-
-[[package]]
-name = "ratel-team-draft"
-version = "0.1.0"
-dependencies = [
- "common",
- "dioxus",
- "ratel-auth",
- "ratel-post",
- "serde",
-]
-
-[[package]]
-name = "ratel-team-group"
-version = "0.1.0"
-dependencies = [
- "aide",
- "aws-sdk-dynamodb",
- "common",
- "dioxus",
- "icons",
- "ratel-auth",
- "ratel-post",
- "schemars 1.0.4",
- "serde",
- "tracing",
-]
-
-[[package]]
-name = "ratel-team-home"
-version = "0.1.0"
-dependencies = [
- "common",
- "dioxus",
- "ratel-auth",
- "ratel-post",
- "serde",
-]
-
-[[package]]
-name = "ratel-team-member"
-version = "0.1.0"
-dependencies = [
- "aide",
- "aws-sdk-dynamodb",
- "common",
- "dioxus",
- "ratel-auth",
- "ratel-post",
- "ratel-team-group",
- "schemars 1.0.4",
- "serde",
- "tracing",
-]
-
-[[package]]
-name = "ratel-team-reward"
-version = "0.1.0"
-dependencies = [
- "aide",
- "aws-sdk-dynamodb",
- "common",
- "dioxus",
- "ratel-auth",
- "ratel-post",
- "schemars 1.0.4",
- "serde",
- "tracing",
-]
-
-[[package]]
-name = "ratel-team-setting"
-version = "0.1.0"
-dependencies = [
- "aide",
- "aws-config",
- "aws-sdk-dynamodb",
- "aws-sdk-s3",
- "common",
- "dioxus",
- "ratel-auth",
- "ratel-post",
- "schemars 1.0.4",
- "serde",
- "tracing",
-]
-
-[[package]]
-name = "ratel-team-shell"
-version = "0.1.0"
-dependencies = [
- "aide",
- "common",
- "dioxus",
- "icons",
- "ratel-auth",
- "ratel-post",
- "ratel-team-dao",
- "ratel-team-draft",
- "ratel-team-group",
- "ratel-team-home",
- "ratel-team-member",
- "ratel-team-reward",
- "ratel-team-setting",
- "schemars 1.0.4",
- "serde",
- "tracing",
-]
-
-[[package]]
-name = "ratel-user-credential"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "common",
- "dioxus",
- "ratel-auth",
- "serde",
-]
-
-[[package]]
-name = "ratel-user-draft"
-version = "0.1.0"
-dependencies = [
- "common",
- "dioxus",
- "ratel-auth",
- "ratel-post",
- "serde",
-]
-
-[[package]]
-name = "ratel-user-membership"
-version = "0.1.0"
-dependencies = [
- "common",
- "dioxus",
- "percent-encoding",
- "ratel-auth",
- "serde",
- "serde_with 3.14.1",
-]
-
-[[package]]
-name = "ratel-user-post"
-version = "0.1.0"
-dependencies = [
- "common",
- "dioxus",
- "ratel-auth",
- "ratel-post",
- "serde",
-]
-
-[[package]]
-name = "ratel-user-reward"
-version = "0.1.0"
-dependencies = [
- "common",
- "dioxus",
- "ratel-auth",
- "serde",
-]
-
-[[package]]
-name = "ratel-user-setting"
-version = "0.1.0"
-dependencies = [
- "aws-config",
- "aws-sdk-s3",
- "common",
- "dioxus",
- "ratel-auth",
- "serde",
-]
-
-[[package]]
-name = "ratel-user-shell"
-version = "0.1.0"
-dependencies = [
- "common",
- "dioxus",
- "icons",
- "ratel-auth",
- "ratel-post",
- "ratel-user-credential",
- "ratel-user-draft",
- "ratel-user-membership",
- "ratel-user-post",
- "ratel-user-reward",
- "ratel-user-setting",
- "ratel-user-space",
- "serde",
- "tower-sessions 0.15.0",
-]
-
-[[package]]
-name = "ratel-user-space"
-version = "0.1.0"
-dependencies = [
- "common",
- "dioxus",
- "ratel-auth",
- "ratel-post",
- "serde",
 ]
 
 [[package]]
