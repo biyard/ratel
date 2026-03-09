@@ -6,6 +6,8 @@ pub mod password {
 }
 
 #[cfg(feature = "server")]
+pub mod evm;
+#[cfg(feature = "server")]
 pub mod rand_utils;
 #[cfg(feature = "server")]
 pub mod referral_code;

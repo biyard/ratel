@@ -13381,6 +13381,7 @@ dependencies = [
  "common",
  "hex",
  "hmac 0.12.1",
+ "k256",
  "names",
  "percent-encoding",
  "rand 0.9.2",

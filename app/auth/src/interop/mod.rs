@@ -3,6 +3,9 @@ use wasm_bindgen_futures::JsFuture;
 use web_sys::js_sys::Promise;
 
 use crate::*;
+mod wallet_connect;
+pub use wallet_connect::*;
+// ── Firebase interop ──────────────────────────────────────────────────
 
 #[wasm_bindgen(js_namespace = ["window", "ratel", "auth", "firebase"])]
 extern "C" {
