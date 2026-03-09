@@ -5,7 +5,7 @@ import spaces from "./spaces";
 import auth from "./auth";
 import common from "./common";
 
-if (typeof window === "undefined") {
+if (typeof window !== "undefined") {
   if (typeof window.ratel === "undefined") {
     window.ratel = {};
   }
