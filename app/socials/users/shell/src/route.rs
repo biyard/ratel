@@ -1,39 +1,30 @@
 use crate::layout::UserLayout;
 use crate::*;
-use dioxus::router::components::child_router::ChildRouter;
 use views::Home;
 
-use ratel_user_credential::Route as CredentialRoute;
-use ratel_user_draft::Route as DraftRoute;
-use ratel_user_membership::Route as MembershipRoute;
-use ratel_user_post::Route as PostRoute;
-use ratel_user_reward::Route as RewardRoute;
-use ratel_user_setting::Route as SettingRoute;
-use ratel_user_space::Route as SpaceRoute;
+use credentials::Home as CredentialPage;
+use draft::Home as DraftPage;
+use membership::Home as MembershipPage;
+use post::Home as PostPage;
+use reward::Home as RewardPage;
+use setting::Home as SettingPage;
+use space::Home as SpacePage;
 
-macro_rules! define_user_app_wrapper {
-    ($wrapper_name:ident, $route_module:ident) => {
+macro_rules! define_user_app_page {
+    ($wrapper_name:ident, $page_component:ident) => {
         #[component]
-        pub fn $wrapper_name(username: String, rest: Vec<String>) -> Element {
-            let router = use_context::<dioxus::router::RouterContext>();
-            let route: $route_module = router.current();
+        pub fn $wrapper_name(username: String) -> Element {
             rsx! {
-                ChildRouter::<$route_module> {
-                    route,
-                    format_route_as_root_route: |r: $route_module| r.to_string(),
-                    parse_route_from_root_route: |url: &str| {
-                        <$route_module as std::str::FromStr>::from_str(url).ok()
-                    },
-                }
+                $page_component { username }
             }
         }
     };
 }
 
-macro_rules! define_owner_only_wrapper {
-    ($wrapper_name:ident, $route_module:ident) => {
+macro_rules! define_owner_only_page {
+    ($wrapper_name:ident, $page_component:ident) => {
         #[component]
-        pub fn $wrapper_name(username: String, rest: Vec<String>) -> Element {
+        pub fn $wrapper_name(username: String) -> Element {
             let user_ctx = ratel_auth::hooks::use_user_context();
             let is_owner = user_ctx()
                 .user
@@ -47,29 +38,19 @@ macro_rules! define_owner_only_wrapper {
                 return rsx! {};
             }
 
-            let router = use_context::<dioxus::router::RouterContext>();
-            let route: $route_module = router.current();
             rsx! {
-                ChildRouter::<$route_module> {
-                    route,
-                    format_route_as_root_route: |r: $route_module| r.to_string(),
-                    parse_route_from_root_route: |url: &str| {
-                        <$route_module as std::str::FromStr>::from_str(url).ok()
-                    },
-                }
+                $page_component { username }
             }
         }
     };
 }
 
-define_user_app_wrapper!(UserPosts, PostRoute);
-define_owner_only_wrapper!(UserRewards, RewardRoute);
-// Custom wrapper for settings to inject its script provider.
-define_owner_only_wrapper!(UserSettings, SettingRoute);
-define_owner_only_wrapper!(UserMemberships, MembershipRoute);
-define_owner_only_wrapper!(UserDrafts, DraftRoute);
-define_owner_only_wrapper!(UserCredentials, CredentialRoute);
-define_owner_only_wrapper!(UserSpaces, SpaceRoute);
+define_user_app_page!(UserPosts, PostPage);
+define_owner_only_page!(UserRewards, RewardPage);
+define_owner_only_page!(UserSettings, SettingPage);
+define_owner_only_page!(UserMemberships, MembershipPage);
+define_owner_only_page!(UserDrafts, DraftPage);
+define_owner_only_page!(UserSpaces, SpacePage);
 
 #[component]
 fn UserHomeRoot(username: String) -> Element {
@@ -86,20 +67,20 @@ pub enum Route {
         #[layout(UserLayout)]
             #[route("/")]
             UserHomeRoot { username: String },
-            #[route("/posts/:..rest")]
-            UserPosts { username: String, rest: Vec<String> },
-            #[route("/rewards/:..rest")]
-            UserRewards { username: String, rest: Vec<String> },
-            #[route("/settings/:..rest")]
-            UserSettings { username: String, rest: Vec<String> },
-            #[route("/memberships/:..rest")]
-            UserMemberships { username: String, rest: Vec<String> },
-            #[route("/drafts/:..rest")]
-            UserDrafts { username: String, rest: Vec<String> },
-            #[route("/credentials/:..rest")]
-            UserCredentials { username: String, rest: Vec<String> },
-            #[route("/spaces/:..rest")]
-            UserSpaces { username: String, rest: Vec<String> },
+            #[route("/posts")]
+            UserPosts { username: String },
+            #[route("/rewards")]
+            UserRewards { username: String },
+            #[route("/settings")]
+            UserSettings { username: String },
+            #[route("/memberships")]
+            UserMemberships { username: String },
+            #[route("/drafts")]
+            UserDrafts { username: String },
+            #[route("/credentials")]
+            CredentialPage { username: String },
+            #[route("/spaces")]
+            UserSpaces { username: String },
         #[end_layout]
     #[end_nest]
 

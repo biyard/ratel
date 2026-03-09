@@ -21,7 +21,7 @@ fn App() -> Element {
     rsx! {
         document::Link { rel: "icon", href: FAVICON }
         document::Link { rel: "stylesheet", href: TAILWIND_CSS }
-        ratel_user_credential::Provider {}
+        ratel_user_shell::pages::credentials::Provider {}
         Router::<Route> {}
     }
 }
