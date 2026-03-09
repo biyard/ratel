@@ -50,36 +50,29 @@ pub fn AppCard(
     };
 
     rsx! {
-        div { class: "flex flex-col items-center w-full",
-
-            div { class: "flex flex-col items-start w-full bg-card rounded-lg",
-                div { class: "flex flex-col p-4 gap-2.5",
-                    div { class: "flex items-start justify-between w-full gap-3",
-                        div { class: "flex justify-center items-center shrink-0 size-11 rounded-[10px] {icon_bg}",
-                            {icon}
-                        }
-                        if let Some(header_action) = header_action {
-                            div { class: "flex shrink-0 items-center justify-center",
-                                {header_action}
-                            }
-                        }
+        SpaceCard { class: "flex flex-col items-start overflow-hidden rounded-lg !p-0".to_string(),
+            div { class: "flex flex-col p-4 gap-2.5 w-full",
+                div { class: "flex items-start justify-between w-full gap-3",
+                    div { class: "flex justify-center items-center shrink-0 size-11 rounded-[10px] {icon_bg}",
+                        {icon}
                     }
-                    p { class: "font-bold sp-dash-font-raleway text-sm text-font-primary",
-                        {app_type.translate(&lang()).to_string()}
-                    }
-                    p { class: "font-medium h-8 leading-4 sp-dash-font-raleway text-xs text-font-body line-clamp-2",
-                        {description}
+                    if let Some(header_action) = header_action {
+                        div { class: "flex shrink-0 items-center justify-center", {header_action} }
                     }
                 }
-
-                if has_footer {
-                    div { class: "flex flex-col items-start w-full px-4 py-3 border-t border-web-card-divider",
-                        {children}
-                    }
+                p { class: "font-bold sp-dash-font-raleway text-sm text-font-primary",
+                    {app_type.translate(&lang()).to_string()}
                 }
-            
+                p { class: "font-medium h-8 leading-4 sp-dash-font-raleway text-xs text-font-body line-clamp-2",
+                    {description}
+                }
             }
-        
+
+            if has_footer {
+                div { class: "flex flex-col items-start w-full px-4 py-3 border-t border-web-card-divider",
+                    {children}
+                }
+            }
         }
     }
 }

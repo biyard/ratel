@@ -82,7 +82,9 @@ pub fn DashboardCard(
         },
         DashboardComponentData::StatSummary(data) => {
             rsx! {
-                div { class: "flex h-full w-full min-h-0 flex-col gap-5 p-[30px] max-tablet:p-5 max-mobile:p-4 rounded-2xl max-mobile:rounded-xl bg-web-card-bg",
+                SpaceCard {
+                    fill_height: true,
+                    class: "flex flex-col gap-5".to_string(),
                     CardHeader {
                         icon: data.icon.clone(),
                         main_value: format!("{}", data.participants),
@@ -94,7 +96,9 @@ pub fn DashboardCard(
         }
         DashboardComponentData::StatCard(data) => {
             rsx! {
-                div { class: "flex h-full w-full min-h-0 flex-col gap-2.5 p-[30px] max-tablet:p-5 max-mobile:p-4 rounded-2xl max-mobile:rounded-xl bg-web-card-bg",
+                SpaceCard {
+                    fill_height: true,
+                    class: "flex flex-col gap-2.5".to_string(),
                     CardHeader {
                         icon: data.icon.clone(),
                         main_value: data.value.clone(),
@@ -111,7 +115,9 @@ pub fn DashboardCard(
         }
         DashboardComponentData::ProgressList(data) => {
             rsx! {
-                div { class: "flex h-full w-full min-h-0 flex-col gap-5 p-[30px] max-tablet:p-5 max-mobile:p-4 rounded-2xl max-mobile:rounded-xl bg-web-card-bg",
+                SpaceCard {
+                    fill_height: true,
+                    class: "flex flex-col gap-5".to_string(),
                     CardHeader {
                         icon: data.icon.clone(),
                         main_value: format!("{}", data.poll_count + data.post_count),
@@ -123,13 +129,13 @@ pub fn DashboardCard(
         }
         DashboardComponentData::TabChart(data) => {
             let card_class = if data.participants == 0 {
-                "flex h-full w-full min-h-0 flex-col gap-2.5 p-[30px] max-tablet:p-5 max-mobile:p-4 rounded-2xl max-mobile:rounded-xl bg-web-card-bg"
+                "flex flex-col gap-2.5"
             } else {
-                "grid h-full w-full min-h-0 grid-rows-[auto_auto_minmax(0,_1fr)] gap-4 max-mobile:gap-3 p-[30px] max-tablet:p-5 max-mobile:p-4 rounded-2xl max-mobile:rounded-xl bg-web-card-bg"
+                "grid grid-rows-[auto_auto_minmax(0,_1fr)] gap-4 max-mobile:gap-3"
             };
 
             rsx! {
-                div { class: card_class,
+                SpaceCard { fill_height: true, class: card_class.to_string(),
                     CardHeader {
                         icon: data.icon.clone(),
                         main_value: format!("{}", data.participants),
@@ -141,7 +147,9 @@ pub fn DashboardCard(
         }
         DashboardComponentData::InfoCard(data) => {
             rsx! {
-                div { class: "flex h-full w-full min-h-0 flex-col gap-2.5 p-[30px] max-tablet:p-5 max-mobile:p-4 rounded-2xl max-mobile:rounded-xl bg-web-card-bg",
+                SpaceCard {
+                    fill_height: true,
+                    class: "flex flex-col gap-2.5".to_string(),
                     CardHeader {
                         icon: data.icon.clone(),
                         main_value: format!("{}", data.total_points),
@@ -387,7 +395,7 @@ fn ProgressListContent(data: ProgressListData, tr: DashboardTranslate) -> Elemen
                     span { class: "text-xs leading-4 font-medium font-raleway", "{tr.completed}" }
                 }
             }
-
+        
         // Discussion progress
         // div { class: "space-y-2 max-mobile:space-y-1.5",
         //     div { class: "flex items-center justify-between gap-2",

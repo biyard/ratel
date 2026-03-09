@@ -196,7 +196,9 @@ pub fn CreateActionModal(space_id: SpacePartition, has_subscription: bool) -> El
                 }
 
                 // Sample preview section
-                div { class: "flex flex-col gap-5 p-4 rounded-[0.75rem] border border-neutral-700 light:border-neutral-300 bg-neutral-800 light:bg-white",
+                SpaceCard {
+                    class: "flex flex-col gap-5 border border-neutral-700 light:border-neutral-300 !bg-neutral-800 light:!bg-white !rounded-[0.75rem] !p-4"
+                        .to_string(),
                     p { class: "text-[1.0625rem]/[1.25rem] font-medium text-white light:text-neutral-900",
                         {tr.sample_title}
                     }
@@ -207,13 +209,18 @@ pub fn CreateActionModal(space_id: SpacePartition, has_subscription: bool) -> El
 
             // Bottom bar
             div { class: "flex justify-end items-center gap-5 h-[5.25rem] px-5 border-t border-neutral-800 light:border-neutral-300 shrink-0",
-                button {
-                    class: "px-5 py-3 text-[0.875rem]/[1rem] font-bold text-white light:text-neutral-900 hover:opacity-80 transition-opacity",
+                Button {
+                    class: "!px-5 !py-3 !text-[0.875rem]/[1rem] !font-bold !text-white light:!text-neutral-900 hover:opacity-80"
+                        .to_string(),
+                    style: ButtonStyle::Text,
                     onclick: close_layover,
                     {tr.back}
                 }
-                button {
-                    class: "px-5 py-3 rounded-[0.625rem] text-[0.875rem]/[1rem] font-bold bg-yellow-400 light:bg-yellow-500 text-neutral-900 hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed",
+                Button {
+                    class: "!px-5 !py-3 !rounded-[0.625rem] !text-[0.875rem]/[1rem] !font-bold !bg-yellow-400 light:!bg-yellow-500 !text-neutral-900 hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
+                        .to_string(),
+                    style: ButtonStyle::Text,
+                    shape: ButtonShape::Square,
                     disabled: is_creating() || selected_type().is_none(),
                     onclick: create_action,
                     if is_creating() {
@@ -237,12 +244,27 @@ fn ActionTypeOption(
     icon: Element,
 ) -> Element {
     rsx! {
-        button {
-            class: "flex items-center gap-2.5 p-2.5 rounded-[0.75rem] border hover:opacity-90 transition-opacity text-left",
-            class: if selected { "border-yellow-400 bg-yellow-400/5" } else { "border-neutral-700 light:border-neutral-300 bg-neutral-800 light:bg-white" },
-            class: if disabled { "opacity-40 cursor-not-allowed" },
-            disabled,
-            onclick: move |e| onclick.call(e),
+        SpaceCard {
+            class: format!(
+                "flex items-center gap-2.5 text-left !p-2.5 !rounded-[0.75rem] border transition-opacity {} {}",
+                if selected {
+                    "border-yellow-400 !bg-yellow-400/5"
+                } else {
+                    "border-neutral-700 light:border-neutral-300 !bg-neutral-800 light:!bg-white"
+                },
+                if disabled {
+                    "opacity-40 cursor-not-allowed"
+                } else {
+                    "cursor-pointer hover:opacity-90"
+                },
+            ),
+            onclick: move |e| {
+                if disabled {
+                    return;
+                }
+                onclick.call(e);
+            },
+            "aria-disabled": disabled.to_string(),
 
             div { class: "flex justify-center items-center rounded-[0.625rem] size-11 bg-white light:bg-white shrink-0",
                 {icon}

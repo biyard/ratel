@@ -49,8 +49,9 @@ pub fn ActionCard(action: SpaceAction, space_id: SpacePartition) -> Element {
         action.description.clone()
     };
     rsx! {
-        button {
-            class: "flex flex-col gap-[0.625rem] p-[0.9375rem] rounded-[1rem] border border-neutral-800 light:border-neutral-300 bg-neutral-900 light:bg-white hover:bg-neutral-800 light:hover:bg-neutral-50 transition-colors text-left w-full",
+        SpaceCard {
+            class: "flex flex-col gap-[0.625rem] w-full cursor-pointer text-left !rounded-[1rem] !bg-neutral-900 light:!bg-white !p-[0.9375rem] border border-neutral-800 light:border-neutral-300 hover:!bg-neutral-800 light:hover:!bg-neutral-50 transition-colors"
+                .to_string(),
             onclick: move |_| {
                 let url = url.clone();
                 nav.push(url);

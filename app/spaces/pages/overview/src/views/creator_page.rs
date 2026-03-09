@@ -1,10 +1,10 @@
 use super::*;
 use common::{
-    components::{FileUploader, TiptapEditor},
+    components::{FileUploader, SpaceCard, TiptapEditor},
     icons::{edit::Edit1, other_devices::Save},
 };
-use space_app_file::components::{FileCard, FileUploadZone};
 use space_app_file::UpdateSpaceFilesRequest;
+use space_app_file::components::{FileCard, FileUploadZone};
 use space_common::hooks::use_space_query;
 
 #[component]
@@ -41,10 +41,7 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
             // Header image
             if let Some(url) = header_image() {
                 div { class: "relative w-full aspect-video overflow-hidden rounded-lg",
-                    img {
-                        class: "w-full h-full object-cover",
-                        src: "{url}",
-                    }
+                    img { class: "w-full h-full object-cover", src: "{url}" }
                     if editable() {
                         button {
                             class: "absolute top-2 right-2 w-8 h-8 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center cursor-pointer",
@@ -68,7 +65,7 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
             }
 
             // Content card with edit/save toggle
-            div { class: "w-full rounded-lg bg-card p-6 flex flex-col",
+            SpaceCard { class: "flex flex-col rounded-lg !p-6".to_string(),
                 div { class: "flex items-center justify-end flex-shrink-0",
                     div { class: "flex items-center gap-3",
                         if !editable() {
@@ -101,12 +98,12 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
                                         spawn(async move {
                                             // Save content
                                             match crate::controllers::update_space_content(
-                                                space_pk.clone(),
-                                                crate::controllers::UpdateContentRequest {
-                                                    content: html,
-                                                },
-                                            )
-                                            .await
+                                                    space_pk.clone(),
+                                                    crate::controllers::UpdateContentRequest {
+                                                        content: html,
+                                                    },
+                                                )
+                                                .await
                                             {
                                                 Ok(_) => {}
                                                 Err(err) => {
@@ -116,12 +113,12 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
 
                                             // Save files
                                             match space_app_file::update_space_files(
-                                                space_pk,
-                                                UpdateSpaceFilesRequest {
-                                                    files: current_files,
-                                                },
-                                            )
-                                            .await
+                                                    space_pk,
+                                                    UpdateSpaceFilesRequest {
+                                                        files: current_files,
+                                                    },
+                                                )
+                                                .await
                                             {
                                                 Ok(updated) => {
                                                     files.set(updated);
