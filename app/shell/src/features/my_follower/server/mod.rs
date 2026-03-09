@@ -1,4 +1,4 @@
-use super::*;
+use crate::features::my_follower::*;
 
 pub fn serve(app: fn() -> Element) {
     let config = config::get();

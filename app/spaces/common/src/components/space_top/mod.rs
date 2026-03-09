@@ -33,9 +33,15 @@ pub fn SpaceTop(
     let nav = use_navigator();
     let mut popup = use_popup();
     let role = use_space_role();
-    let is_creator = use_memo(move || role() == SpaceUserRole::Creator);
     let mut ctx = use_space_context();
+    let real_role = ctx.role();
+    let is_creator = use_memo(move || ctx.role() == SpaceUserRole::Creator);
     let mut toast = use_toast();
+    let can_preview = use_memo(move || {
+        let current_role = ctx.current_role();
+
+        current_role == SpaceUserRole::Creator
+    });
 
     rsx! {
         div { class: "flex flex-row justify-between items-center py-4 px-3 min-h-16 shrink-0",
@@ -59,28 +65,24 @@ pub fn SpaceTop(
                     p { {tr.go_home} }
                 }
 
-                Button {
-                    style: ButtonStyle::Outline,
-                    shape: ButtonShape::Square,
-                    class: "flex flex-row gap-1 justify-center items-center",
-                    onclick: move |_| {
-                        ctx.toggle_role();
-                    },
-                    Eye { class: "w-4 h-4 [&>path]:stroke-icon-secondary [&>circle]:stroke-icon-secondary" }
-                    p {
-                        {
+                if is_creator() {
+                    Button {
+                        style: ButtonStyle::Outline,
+                        shape: ButtonShape::Square,
+                        class: "flex flex-row gap-1 justify-center items-center",
+                        onclick: move |_| {
+                            ctx.toggle_role();
+                        },
+                        Eye { class: "w-4 h-4 [&>path]:stroke-icon-secondary [&>circle]:stroke-icon-secondary" }
+                        p {
                             if ctx.can_preview() {
-                                tr.preview
-                            } else if ctx.is_preview_mode() {
-                                tr.design
+                                {tr.preview}
                             } else {
-                                ""
+                                {tr.design}
                             }
                         }
                     }
-                }
 
-                if is_creator() {
                     Button {
                         shape: ButtonShape::Square,
                         onclick: move |_| {
