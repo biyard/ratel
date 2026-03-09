@@ -68,7 +68,7 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
 
     rsx! {
         SeoMeta { title: space.title.clone(), description: space.description() }
-        div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-component-bg text-web-font-primary",
+        div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] light:bg-[#ffffff] bg-[#191919] text-web-font-primary",
             div { class: "hidden tablet:flex",
                 SpaceNav {
                     logo: "https://metadata.ratel.foundation/logos/logo.png",
