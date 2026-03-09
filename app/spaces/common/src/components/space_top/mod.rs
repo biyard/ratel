@@ -43,6 +43,7 @@ pub fn SpaceTop(
 
         current_role == SpaceUserRole::Creator
     });
+    let is_published = ctx.space().publish_state == SpacePublishState::Published;
 
     rsx! {
         div { class: "flex flex-row justify-between items-center py-4 px-3 min-h-16 shrink-0",
@@ -84,31 +85,33 @@ pub fn SpaceTop(
                         }
                     }
 
-                    Button {
-                        shape: ButtonShape::Square,
-                        onclick: move |_| {
-                            popup.open(rsx! {
-                                SpaceVisibilityModal {
-                                    on_confirm: move |visibility| async move {
-                                        let space_id = ctx.space().id;
-                                        update_space(
-                                                space_id,
-                                                controllers::UpdateSpaceRequest::Publish {
-                                                    publish: true,
-                                                    // FIXME: Pass actual content and visibility
-                                                    visibility: SpaceVisibility::Public,
-                                                },
-                                            )
-                                            .await;
+                    if !is_published {
+                        Button {
+                            shape: ButtonShape::Square,
+                            onclick: move |_| {
+                                debug!("Publish button clicked. Current space status: {:?}", ctx.space().status);
+                                popup.open(rsx! {
+                                    SpaceVisibilityModal {
+                                        on_confirm: move |visibility| async move {
+                                            let space_id = ctx.space().id;
+                                            update_space(
+                                                    space_id,
+                                                    controllers::UpdateSpaceRequest::Publish {
+                                                        publish: true,
+                                                        // FIXME: Pass actual content and visibility
+                                                        visibility: SpaceVisibility::Public,
+                                                    },
+                                                )
 
+                                                .await;
+                                            ctx.space.restart();
+                                        },
 
-
-                                    },
-
-                                }
-                            });
-                        },
-                        {tr.publish}
+                                    }
+                                });
+                            },
+                            {tr.publish}
+                        }
                     }
                 }
 
