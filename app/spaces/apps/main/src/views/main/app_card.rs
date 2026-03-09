@@ -4,7 +4,6 @@ pub fn app_description(app_type: SpaceAppType, tr: &AppMainTranslate) -> String 
     match app_type {
         SpaceAppType::IncentivePool => tr.app_description_incentive_pool.to_string(),
         SpaceAppType::File => tr.app_description_file.to_string(),
-        SpaceAppType::Reward => tr.app_description_reward.to_string(),
         SpaceAppType::General => tr.app_description_general.to_string(),
     }
 }
@@ -20,7 +19,6 @@ pub fn AppCard(app_type: SpaceAppType, children: Option<Element>) -> Element {
         SpaceAppType::General => "bg-green-500",
         SpaceAppType::IncentivePool => "bg-violet-500",
         SpaceAppType::File => "bg-amber-500",
-        SpaceAppType::Reward => "bg-cyan-500",
     };
 
     let icon = match app_type {
@@ -40,13 +38,6 @@ pub fn AppCard(app_type: SpaceAppType, children: Option<Element>) -> Element {
         },
         SpaceAppType::File => rsx! {
             icons::file::File {
-                width: "24",
-                height: "24",
-                class: "text-white [&>path]:stroke-black",
-            }
-        },
-        SpaceAppType::Reward => rsx! {
-            icons::ratel::Thunder {
                 width: "24",
                 height: "24",
                 class: "text-white [&>path]:stroke-black",
@@ -75,9 +66,9 @@ pub fn AppCard(app_type: SpaceAppType, children: Option<Element>) -> Element {
                         {children}
                     }
                 }
-
+            
             }
-
+        
         }
     }
 }

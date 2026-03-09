@@ -19,10 +19,6 @@ translate! {
         en: "Manage and organize files shared in your space.",
         ko: "스페이스에서 공유되는 파일을 관리하고 정리하세요.",
     },
-    app_description_reward: {
-        en: "Ratel Point",
-        ko: "Ratel 포인트",
-    },
     app_description_general: {
         en: "Settings (Admin)",
         ko: "설정(관리자)",
