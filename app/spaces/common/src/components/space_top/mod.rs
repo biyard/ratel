@@ -33,9 +33,17 @@ pub fn SpaceTop(
     let nav = use_navigator();
     let mut popup = use_popup();
     let role = use_space_role();
-    let is_creator = use_memo(move || role() == SpaceUserRole::Creator);
     let mut ctx = use_space_context();
+    let real_role = ctx.role();
+    let is_creator = use_memo(move || ctx.role() == SpaceUserRole::Creator);
     let mut toast = use_toast();
+    let can_preview = use_memo(move || {
+        let current_role = ctx.current_role();
+        debug!("current_role: {current_role:?}, real_role: {real_role:?}");
+
+        current_role == SpaceUserRole::Creator
+    });
+    let is_published = ctx.space().publish_state == SpacePublishState::Published;
 
     rsx! {
         div { class: "flex flex-row justify-between items-center py-4 px-3 min-h-16 shrink-0",
@@ -59,42 +67,51 @@ pub fn SpaceTop(
                     p { {tr.go_home} }
                 }
 
-                Button {
-                    style: ButtonStyle::Outline,
-                    shape: ButtonShape::Square,
-                    class: "flex flex-row gap-1 justify-center items-center",
-                    onclick: move |_| {
-                        ctx.toggle_role();
-                    },
-                    Eye { class: "w-4 h-4 [&>path]:stroke-icon-secondary [&>circle]:stroke-icon-secondary" }
-                    p { {tr.preview} }
-                }
-
                 if is_creator() {
                     Button {
+                        style: ButtonStyle::Outline,
                         shape: ButtonShape::Square,
+                        class: "flex flex-row gap-1 justify-center items-center",
                         onclick: move |_| {
-                            popup.open(rsx! {
-                                SpaceVisibilityModal {
-                                    on_confirm: move |visibility| async move {
-                                        let space_id = ctx.space().id;
-                                        update_space(
-                                                space_id,
-                                                controllers::UpdateSpaceRequest::Publish {
-                                                    publish: true,
-                                                    // FIXME: Pass actual content and visibility
-                                                    visibility: SpaceVisibility::Public,
-                                                },
-                                            )
-                                            .await;
-
-
-                                    },
-
-                                }
-                            });
+                            ctx.toggle_role();
                         },
-                        {tr.publish}
+                        Eye { class: "w-4 h-4 [&>path]:stroke-icon-secondary [&>circle]:stroke-icon-secondary" }
+                        p {
+                            if can_preview() {
+                                {tr.preview}
+                            } else {
+                                {tr.design}
+                            }
+                        }
+                    }
+
+                    if !is_published {
+                        Button {
+                            shape: ButtonShape::Square,
+                            onclick: move |_| {
+                                debug!("Publish button clicked. Current space status: {:?}", ctx.space().status);
+                                popup.open(rsx! {
+                                    SpaceVisibilityModal {
+                                        on_confirm: move |visibility| async move {
+                                            let space_id = ctx.space().id;
+                                            update_space(
+                                                    space_id,
+                                                    controllers::UpdateSpaceRequest::Publish {
+                                                        publish: true,
+                                                        // FIXME: Pass actual content and visibility
+                                                        visibility: SpaceVisibility::Public,
+                                                    },
+                                                )
+
+                                                .await;
+                                            ctx.space.restart();
+                                        },
+
+                                    }
+                                });
+                            },
+                            {tr.publish}
+                        }
                     }
                 }
 
@@ -132,6 +149,11 @@ translate! {
     preview: {
         en: "Preview",
         ko: "미리보기",
+    }
+
+    design: {
+        en: "Design",
+        ko: "설계하기",
     }
 
     go_home: {

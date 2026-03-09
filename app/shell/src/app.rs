@@ -46,16 +46,16 @@ pub fn App() -> Element {
             keywords,
         }
         document::Script { src: MAIN_JS }
-        ratel_user_setting::Provider {}
-        ratel_user_credential::Provider {}
-        ratel_membership::Provider {}
+        document::Script { src: "https://cdn.portone.io/v2/browser-sdk.js" }
+
         common::Provider {}
         AuthProvider {}
         ratel_post::Provider {}
-        ratel_team_dao::Provider {}
 
         Router::<Route> {}
         ToastProvider {}
+
+        PopupZone {}
         if env == Environment::Dev || env == Environment::Local {
             DevTools {}
         }
