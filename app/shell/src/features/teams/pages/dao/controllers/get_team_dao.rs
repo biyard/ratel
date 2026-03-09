@@ -1,8 +1,8 @@
 use super::super::dto::{EligibleAdminResponse, TeamDao, TeamDaoTeamResponse};
 use super::super::*;
 
-use ratel_post::models::{Team, TeamOwner};
-use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
+use crate::features::posts::models::{Team, TeamOwner};
+use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use std::collections::{HashMap, HashSet};
 
 #[get("/api/teams/:teamname/dao/context", user: ratel_auth::OptionalUser, team: Team, permissions: TeamGroupPermissions)]

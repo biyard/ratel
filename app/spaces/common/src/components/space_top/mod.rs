@@ -142,7 +142,9 @@ pub fn SpaceTitle(title: String) -> Element {
         Fragment {
             if editing() {
                 Input {
-                    onconfirm: move |value| async move {
+                    onchange: move |evt: FormEvent| async move {
+                        let value = evt.value();
+
                         match update_space(
                                 space().id,
                                 controllers::UpdateSpaceRequest::Title {

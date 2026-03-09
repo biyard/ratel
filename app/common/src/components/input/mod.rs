@@ -13,8 +13,8 @@ pub fn Input(
     #[props(default)] onchange: EventHandler<FormEvent>,
     #[props(default)] onkeydown: EventHandler<KeyboardEvent>,
     #[props(default)] onblur: EventHandler<FocusEvent>,
-    #[props(default)] onconfirm: EventHandler<String>, // Keydown event with Enter key
-    #[props(default)] oncancel: EventHandler<String>,  // Keydown event with Escape key
+    #[props(default)] onconfirm: EventHandler<()>, // Keydown event with Enter key
+    #[props(default)] oncancel: EventHandler<()>,  // Keydown event with Escape key
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
 ) -> Element {
     let mut attributes = attributes;
@@ -37,9 +37,9 @@ pub fn Input(
             oninput,
             onkeydown: move |evt: KeyboardEvent| {
                 if evt.key() == Key::Enter {
-                    onconfirm.call(evt.value());
+                    onconfirm.call(());
                 } else if evt.key() == Key::Escape {
-                    oncancel.call(evt.value());
+                    oncancel.call(());
                 }
                 if evt.propagates() {
                     onkeydown.call(evt);

@@ -1,8 +1,8 @@
 use super::super::dto::*;
 use super::super::*;
 
-use ratel_post::models::{TeamGroup, TeamOwner};
-use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
+use crate::features::posts::models::{TeamGroup, TeamOwner};
+use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use std::collections::{HashMap, HashSet};
 
 #[get("/api/teams/:team_pk/members?bookmark&limit", user: ratel_auth::OptionalUser, permissions: TeamGroupPermissions)]

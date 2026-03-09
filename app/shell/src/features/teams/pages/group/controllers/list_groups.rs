@@ -1,7 +1,7 @@
 use super::super::dto::{ListItemsResponse, TeamGroupResponse};
 use super::super::*;
 
-use ratel_post::models::TeamGroup;
+use crate::features::posts::models::TeamGroup;
 
 #[get("/api/teams/:team_pk/groups?bookmark", user: ratel_auth::OptionalUser)]
 pub async fn list_groups_handler(

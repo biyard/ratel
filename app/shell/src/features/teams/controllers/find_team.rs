@@ -1,8 +1,8 @@
 use crate::features::teams::controllers::dto::TeamResponse;
 use crate::features::teams::*;
 
-use ratel_post::models::Team;
-use ratel_post::types::TeamGroupPermissions;
+use crate::features::posts::models::Team;
+use crate::features::posts::types::TeamGroupPermissions;
 
 #[get("/api/teams/find", user: OptionalUser)]
 pub async fn find_team_handler(username: String) -> Result<TeamResponse> {

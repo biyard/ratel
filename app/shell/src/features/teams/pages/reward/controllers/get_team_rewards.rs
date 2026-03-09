@@ -1,6 +1,6 @@
 use super::super::{dto::TeamRewardsResponse, *};
 
-use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
+use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 
 #[get("/api/teams/:team_pk/points?month", user: ratel_auth::User, permissions: TeamGroupPermissions)]
 pub async fn get_team_rewards_handler(

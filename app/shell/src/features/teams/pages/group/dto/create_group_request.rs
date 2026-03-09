@@ -6,5 +6,5 @@ pub struct CreateGroupRequest {
     pub name: String,
     pub description: String,
     pub image_url: String,
-    pub permissions: Vec<ratel_post::types::TeamGroupPermission>,
+    pub permissions: Vec<crate::features::posts::types::TeamGroupPermission>,
 }

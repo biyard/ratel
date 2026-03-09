@@ -1,6 +1,6 @@
 use super::super::*;
 
-use ratel_post::models::Team;
+use crate::features::posts::models::Team;
 
 #[get("/api/teams/:teamname/pk", team: Team)]
 pub async fn resolve_team_pk_handler(teamname: String) -> Result<String> {

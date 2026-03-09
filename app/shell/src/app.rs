@@ -50,7 +50,7 @@ pub fn App() -> Element {
 
         common::Provider {}
         AuthProvider {}
-        ratel_post::Provider {}
+        crate::features::posts::Provider {}
 
         Router::<Route> {}
         ToastProvider {}
