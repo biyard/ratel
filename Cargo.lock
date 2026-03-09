@@ -17590,6 +17590,7 @@ dependencies = [
  "dioxus",
  "serde",
  "serde_with 3.14.1",
+ "space-common",
 ]
 
 [[package]]
@@ -17603,6 +17604,7 @@ dependencies = [
  "serde",
  "serde_repr",
  "space-action-poll",
+ "space-common",
 ]
 
 [[package]]

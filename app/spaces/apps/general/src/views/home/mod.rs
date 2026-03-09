@@ -1,9 +1,10 @@
 use crate::controllers::{
-    delete_space, get_space_administrator, invite_space_participants,
-    InviteSpaceParticipantsRequest, SpaceAdministratorResponse,
+    InviteSpaceParticipantsRequest, SpaceAdministratorResponse, delete_space,
+    get_space_administrator, invite_space_participants,
 };
 use crate::i18n::GeneralTranslate;
 use crate::*;
+use space_common::hooks::use_space_role;
 
 const DEFAULT_PROFILE_IMAGE: &str = "https://metadata.ratel.foundation/ratel/default-profile.png";
 
@@ -61,7 +62,7 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
                 {tr.space_setting}
             }
 
-            div { class: "overflow-visible w-full shrink-0 rounded-[12px] bg-card",
+            SpaceCard { class: "overflow-visible w-full shrink-0 rounded-[12px] !p-0".to_string(),
                 div { class: "flex justify-between items-center self-stretch px-5 py-4 border-b border-separator",
                     p { class: "font-semibold text-center font-raleway text-[17px]/[20px] tracking-[-0.18px] text-web-font-primary",
                         {tr.invite_participant}
@@ -133,8 +134,9 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
                     }
 
                     div { class: "flex justify-end w-full max-tablet:justify-stretch",
-                        button {
-                            class: "flex flex-col justify-center items-center self-stretch w-fit max-tablet:w-full gap-[10px] rounded-full px-5 py-3 border bg-btn-primary-bg border-btn-primary-outline text-web-font-ab-bk hover:bg-btn-primary-hover-bg hover:border-btn-primary-hover-outline hover:text-btn-primary-hover-text disabled:bg-btn-primary-disable-bg disabled:border-btn-primary-disable-outline disabled:text-btn-primary-disable-text font-raleway text-[14px]/[16px] font-bold",
+                        Button {
+                            class: "self-stretch w-fit max-tablet:w-full",
+                            style: ButtonStyle::Primary,
                             disabled: invite_loading(),
                             onclick: move |_| {
                                 if invite_loading() {
@@ -192,7 +194,7 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
                 }
             }
 
-            div { class: "overflow-visible w-full shrink-0 rounded-[12px] bg-card",
+            SpaceCard { class: "overflow-visible w-full shrink-0 rounded-[12px] !p-0".to_string(),
                 div { class: "flex justify-between items-center self-stretch px-5 py-4 border-b border-separator",
                     p { class: "font-bold font-raleway text-[24px]/[28px] tracking-[-0.24px] text-web-font-primary",
                         {tr.administrator}
@@ -215,8 +217,9 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
             }
 
             div { class: "flex justify-end pt-5 w-full max-tablet:justify-stretch",
-                button {
-                    class: "flex flex-col justify-center items-center px-5 py-3 font-bold bg-transparent rounded-full border w-fit max-tablet:w-full gap-[10px] border-web-error text-web-error hover:bg-transparent hover:border-web-error hover:text-web-error disabled:border-web-error/40 disabled:text-web-error/40 font-raleway text-[14px]/[16px]",
+                Button {
+                    class: "w-fit max-tablet:w-full border border-web-error !bg-transparent !text-web-error hover:!bg-transparent hover:!border-web-error hover:!text-web-error disabled:!bg-transparent disabled:border-web-error/40 disabled:!text-web-error/40",
+                    style: ButtonStyle::Text,
                     disabled: delete_loading(),
                     onclick: move |_| {
                         if delete_loading() {
@@ -266,10 +269,16 @@ fn InviteEmailChip(value: String, on_remove: EventHandler<MouseEvent>) -> Elemen
             span { class: "font-medium leading-6 font-raleway text-[15px] tracking-[0.5px] text-btn-primary-text",
                 "{value}"
             }
-            button {
-                class: "flex justify-center items-center rounded-full size-5 text-btn-primary-text/90",
+            Button {
+                class: "size-5 rounded-full !p-0 hover:!bg-transparent disabled:opacity-50",
+                size: ButtonSize::Icon,
+                style: ButtonStyle::Text,
                 onclick: move |evt| on_remove.call(evt),
-                "×"
+                icons::ratel::XMarkIcon {
+                    width: "12",
+                    height: "12",
+                    class: "h-3 w-3 [&>path]:stroke-icon-primary",
+                }
             }
         }
     }
@@ -311,7 +320,6 @@ fn AdministratorRow(name: String, username: String, profile_url: String) -> Elem
                         p { class: "font-bold leading-5 font-raleway text-[17px] tracking-[-0.18px] text-web-font-primary",
                             "{name}"
                         }
-                        icons::shapes::Badge2 { width: "18", height: "18", class: "" }
                     }
                     p { class: "font-semibold leading-4 font-raleway text-[13px] tracking-[-0.14px] text-web-font-neutral",
                         "@{username}"
@@ -325,10 +333,9 @@ fn AdministratorRow(name: String, username: String, profile_url: String) -> Elem
 #[component]
 pub fn AppGeneralPage(space_id: SpacePartition) -> Element {
     let tr: GeneralTranslate = use_translate();
-    let role =
-        use_loader(move || async move { Ok::<SpaceUserRole, Error>(SpaceUserRole::Creator) })?;
+    let role = use_space_role()();
 
-    if role() == SpaceUserRole::Creator {
+    if role == SpaceUserRole::Creator {
         rsx! {
             GeneralPage { space_id }
         }

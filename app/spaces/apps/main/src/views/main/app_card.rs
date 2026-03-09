@@ -4,13 +4,16 @@ pub fn app_description(app_type: SpaceAppType, tr: &AppMainTranslate) -> String 
     match app_type {
         SpaceAppType::IncentivePool => tr.app_description_incentive_pool.to_string(),
         SpaceAppType::File => tr.app_description_file.to_string(),
-        SpaceAppType::Reward => tr.app_description_reward.to_string(),
         SpaceAppType::General => tr.app_description_general.to_string(),
     }
 }
 
 #[component]
-pub fn AppCard(app_type: SpaceAppType, children: Option<Element>) -> Element {
+pub fn AppCard(
+    app_type: SpaceAppType,
+    #[props(optional)] header_action: Option<Element>,
+    children: Option<Element>,
+) -> Element {
     let lang = use_language();
     let tr: AppMainTranslate = use_translate();
 
@@ -20,7 +23,6 @@ pub fn AppCard(app_type: SpaceAppType, children: Option<Element>) -> Element {
         SpaceAppType::General => "bg-green-500",
         SpaceAppType::IncentivePool => "bg-violet-500",
         SpaceAppType::File => "bg-amber-500",
-        SpaceAppType::Reward => "bg-cyan-500",
     };
 
     let icon = match app_type {
@@ -45,39 +47,32 @@ pub fn AppCard(app_type: SpaceAppType, children: Option<Element>) -> Element {
                 class: "text-white [&>path]:stroke-black",
             }
         },
-        SpaceAppType::Reward => rsx! {
-            icons::ratel::Thunder {
-                width: "24",
-                height: "24",
-                class: "text-white [&>path]:stroke-black",
-            }
-        },
     };
 
     rsx! {
-        div { class: "flex flex-col items-center w-full",
-
-            div { class: "flex flex-col items-start w-full bg-card rounded-lg",
-                div { class: "flex flex-col p-4 gap-2.5",
-                    div { class: "flex justify-center items-center size-11 rounded-[10px] {icon_bg}",
+        SpaceCard { class: "flex flex-col items-start overflow-hidden rounded-lg !p-0".to_string(),
+            div { class: "flex flex-col p-4 gap-2.5 w-full",
+                div { class: "flex items-start justify-between w-full gap-3",
+                    div { class: "flex justify-center items-center shrink-0 size-11 rounded-[10px] {icon_bg}",
                         {icon}
                     }
-                    p { class: "font-bold sp-dash-font-raleway text-sm text-font-primary",
-                        {app_type.translate(&lang()).to_string()}
-                    }
-                    p { class: "font-medium h-8 leading-4 sp-dash-font-raleway text-xs text-font-body line-clamp-2",
-                        {description}
+                    if let Some(header_action) = header_action {
+                        div { class: "flex shrink-0 items-center justify-center", {header_action} }
                     }
                 }
-
-                if has_footer {
-                    div { class: "flex flex-col items-start w-full px-4 py-3 border-t border-web-card-divider",
-                        {children}
-                    }
+                p { class: "font-bold sp-dash-font-raleway text-sm text-font-primary",
+                    {app_type.translate(&lang()).to_string()}
                 }
-
+                p { class: "font-medium h-8 leading-4 sp-dash-font-raleway text-xs text-font-body line-clamp-2",
+                    {description}
+                }
             }
 
+            if has_footer {
+                div { class: "flex flex-col items-start w-full px-4 py-3 border-t border-web-card-divider",
+                    {children}
+                }
+            }
         }
     }
 }

@@ -1,4 +1,3 @@
-use crate::*;
 use self::action_chip::ActionSettingsActionChip;
 use self::fields::{DateField, TimeZoneField};
 use self::i18n::ActionSettingsModalTranslate;
@@ -7,6 +6,7 @@ use self::utils::{
     action_label, apply_selected_action_dates, available_actions, resolve_action_time_range,
     reward_credit_summary, reward_preview_items, selected_actions, supports_action_settings,
 };
+use crate::*;
 
 mod action_chip;
 mod fields;
@@ -131,8 +131,8 @@ pub fn ActionSettingsModal(
     };
 
     rsx! {
-        div { class: "flex min-h-full w-full justify-end overflow-y-auto px-6 py-8 text-web-font-primary max-tablet:px-4 max-tablet:py-4 max-mobile:px-0 max-mobile:py-0",
-            div { class: "flex w-full max-w-[337px] shrink-0 flex-col gap-5 rounded-[24px] bg-neutral-950 p-6 shadow-[0_8px_20px_0_rgba(20,26,62,0.25)] max-tablet:max-w-full max-tablet:p-5 max-mobile:min-h-full max-mobile:gap-4 max-mobile:rounded-none max-mobile:p-4 max-mobile:shadow-none",
+        div { class: "flex h-full w-full justify-end overflow-hidden text-web-font-primary",
+            div { class: "flex h-full w-full shrink-0 flex-col gap-5 bg-neutral-950 px-6 py-6 max-tablet:px-5 max-tablet:py-5 max-mobile:min-h-full max-mobile:gap-4 max-mobile:px-4 max-mobile:py-4",
                 div { class: "flex items-center gap-3 max-mobile:gap-2.5",
                     Button {
                         size: ButtonSize::Icon,

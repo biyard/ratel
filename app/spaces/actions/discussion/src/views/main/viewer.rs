@@ -1,9 +1,11 @@
 use crate::controllers::{
-    add_comment, like_comment, list_comments, reply_comment, AddCommentRequest,
-    LikeCommentRequest, ReplyCommentRequest,
+    AddCommentRequest, LikeCommentRequest, ReplyCommentRequest, add_comment, like_comment,
+    list_comments, reply_comment,
 };
 use crate::*;
-use space_common::types::space_page_actions_discussion_key;
+use space_common::types::{
+    space_page_actions_discussion_comments_key, space_page_actions_discussion_key,
+};
 
 #[component]
 pub fn ViewerMain(
@@ -116,8 +118,10 @@ pub fn DiscussionComments(
                                     let req = AddCommentRequest { content };
                                     match add_comment(space_id.clone(), discussion_id.clone(), req).await {
                                         Ok(_) => {
-                                            let key = space_page_actions_discussion_key(&space_id, &discussion_id);
-                                            invalidate_query(&key);
+                                            let discussion_key = space_page_actions_discussion_key(&space_id, &discussion_id);
+                                            let comments_key = space_page_actions_discussion_comments_key(&space_id, &discussion_id);
+                                            invalidate_query(&discussion_key);
+                                            invalidate_query(&comments_key);
                                         }
                                         Err(e) => {
                                             error!("Failed to add comment: {:?}", e);
@@ -254,8 +258,10 @@ fn DeleteCommentButton(
                     async move {
                         match delete_comment(space_id.clone(), discussion_id.clone(), comment_sk).await {
                             Ok(_) => {
-                                let key = space_page_actions_discussion_key(&space_id, &discussion_id);
-                                invalidate_query(&key);
+                                let discussion_key = space_page_actions_discussion_key(&space_id, &discussion_id);
+                                let comments_key = space_page_actions_discussion_comments_key(&space_id, &discussion_id);
+                                invalidate_query(&discussion_key);
+                                invalidate_query(&comments_key);
                             }
                             Err(e) => {
                                 error!("Failed to delete comment: {:?}", e);
@@ -293,8 +299,8 @@ fn LikeButton(
                         let req = LikeCommentRequest { like: !liked };
                         match like_comment(space_id.clone(), discussion_id.clone(), comment_sk, req).await {
                             Ok(_) => {
-                                let key = space_page_actions_discussion_key(&space_id, &discussion_id);
-                                invalidate_query(&key);
+                                let comments_key = space_page_actions_discussion_comments_key(&space_id, &discussion_id);
+                                invalidate_query(&comments_key);
                             }
                             Err(e) => {
                                 error!("Failed to like comment: {:?}", e);
@@ -348,8 +354,10 @@ fn ReplyInput(
                             let req = ReplyCommentRequest { content };
                             match reply_comment(space_id.clone(), discussion_id.clone(), comment_sk, req).await {
                                 Ok(_) => {
-                                    let key = space_page_actions_discussion_key(&space_id, &discussion_id);
-                                    invalidate_query(&key);
+                                    let discussion_key = space_page_actions_discussion_key(&space_id, &discussion_id);
+                                    let comments_key = space_page_actions_discussion_comments_key(&space_id, &discussion_id);
+                                    invalidate_query(&discussion_key);
+                                    invalidate_query(&comments_key);
                                 }
                                 Err(e) => {
                                     error!("Failed to reply: {:?}", e);

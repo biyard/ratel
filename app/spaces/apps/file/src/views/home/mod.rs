@@ -3,6 +3,7 @@ use crate::controllers::{FileLinkInfo, UpdateSpaceFilesRequest};
 use crate::i18n::SpaceFileTranslate;
 use crate::types::FileLinkTarget;
 use crate::*;
+use space_common::hooks::use_space_role;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum FileTab {
@@ -96,11 +97,17 @@ pub fn FileManagerPage(space_id: SpacePartition) -> Element {
         .cloned()
         .collect();
 
-    let tab_button_class = |tab: FileTab| -> &'static str {
+    let tab_button_props = |tab: FileTab| -> (ButtonStyle, &'static str) {
         if active_tab() == tab {
-            "px-4 py-2 text-sm font-semibold rounded-[8px] bg-btn-primary-bg text-btn-primary-text"
+            (
+                ButtonStyle::Primary,
+                "!px-4 !py-2 !text-sm !font-semibold !rounded-[8px]",
+            )
         } else {
-            "px-4 py-2 text-sm font-semibold rounded-[8px] border border-btn-outline-outline bg-btn-outline-bg text-btn-outline-text hover:bg-card-hover"
+            (
+                ButtonStyle::Outline,
+                "!px-4 !py-2 !text-sm !font-semibold !rounded-[8px] hover:!bg-card-hover",
+            )
         }
     };
 
@@ -113,27 +120,50 @@ pub fn FileManagerPage(space_id: SpacePartition) -> Element {
             // Tabs + Edit/Save buttons
             div { class: "flex justify-between items-center flex-wrap gap-2",
                 div { class: "flex gap-2",
-                    button {
-                        class: tab_button_class(FileTab::All),
-                        onclick: move |_| active_tab.set(FileTab::All),
-                        {tr.tab_all}
+                    {
+                        let (style, class) = tab_button_props(FileTab::All);
+                        rsx! {
+                            Button {
+                                class: class.to_string(),
+                                style,
+                                shape: ButtonShape::Square,
+                                onclick: move |_| active_tab.set(FileTab::All),
+                                {tr.tab_all}
+                            }
+                        }
                     }
-                    button {
-                        class: tab_button_class(FileTab::Overview),
-                        onclick: move |_| active_tab.set(FileTab::Overview),
-                        {tr.tab_overview}
+                    {
+                        let (style, class) = tab_button_props(FileTab::Overview);
+                        rsx! {
+                            Button {
+                                class: class.to_string(),
+                                style,
+                                shape: ButtonShape::Square,
+                                onclick: move |_| active_tab.set(FileTab::Overview),
+                                {tr.tab_overview}
+                            }
+                        }
                     }
-                    button {
-                        class: tab_button_class(FileTab::Boards),
-                        onclick: move |_| active_tab.set(FileTab::Boards),
-                        {tr.tab_boards}
+                    {
+                        let (style, class) = tab_button_props(FileTab::Boards);
+                        rsx! {
+                            Button {
+                                class: class.to_string(),
+                                style,
+                                shape: ButtonShape::Square,
+                                onclick: move |_| active_tab.set(FileTab::Boards),
+                                {tr.tab_boards}
+                            }
+                        }
                     }
                 }
 
                 div { class: "flex gap-2",
                     if editing() {
-                        button {
-                            class: "px-4 py-2 text-sm font-semibold rounded-[8px] bg-btn-primary-bg text-btn-primary-text disabled:opacity-50",
+                        Button {
+                            class: "!px-4 !py-2 !text-sm !font-semibold !rounded-[8px]".to_string(),
+                            style: ButtonStyle::Primary,
+                            shape: ButtonShape::Square,
                             disabled: is_saving(),
                             onclick: {
                                 let space_id = space_id.clone();
@@ -147,12 +177,12 @@ pub fn FileManagerPage(space_id: SpacePartition) -> Element {
 
                                     spawn(async move {
                                         match update_space_files(
-                                            space_id,
-                                            UpdateSpaceFilesRequest {
-                                                files: current_files,
-                                            },
-                                        )
-                                        .await
+                                                space_id,
+                                                UpdateSpaceFilesRequest {
+                                                    files: current_files,
+                                                },
+                                            )
+                                            .await
                                         {
                                             Ok(updated) => {
                                                 files.set(updated);
@@ -168,8 +198,10 @@ pub fn FileManagerPage(space_id: SpacePartition) -> Element {
                             },
                             {tr.btn_save}
                         }
-                        button {
-                            class: "px-4 py-2 text-sm font-semibold rounded-[8px] border border-btn-outline-outline bg-btn-outline-bg text-btn-outline-text",
+                        Button {
+                            class: "!px-4 !py-2 !text-sm !font-semibold !rounded-[8px]".to_string(),
+                            style: ButtonStyle::Outline,
+                            shape: ButtonShape::Square,
                             onclick: move |_| {
                                 files.set(original_files());
                                 editing.set(false);
@@ -177,8 +209,10 @@ pub fn FileManagerPage(space_id: SpacePartition) -> Element {
                             {tr.btn_discard}
                         }
                     } else {
-                        button {
-                            class: "px-4 py-2 text-sm font-semibold rounded-[8px] border border-btn-outline-outline bg-btn-outline-bg text-btn-outline-text hover:bg-card-hover",
+                        Button {
+                            class: "!px-4 !py-2 !text-sm !font-semibold !rounded-[8px] hover:!bg-card-hover".to_string(),
+                            style: ButtonStyle::Outline,
+                            shape: ButtonShape::Square,
                             onclick: move |_| {
                                 original_files.set(files());
                                 editing.set(true);
@@ -189,7 +223,6 @@ pub fn FileManagerPage(space_id: SpacePartition) -> Element {
                 }
             }
 
-            // Upload zone (edit mode only)
             if editing() {
                 FileUploadZone {
                     on_upload: move |file: File| {
@@ -200,7 +233,6 @@ pub fn FileManagerPage(space_id: SpacePartition) -> Element {
                 }
             }
 
-            // File list
             if displayed_files.is_empty() {
                 div { class: "flex justify-center items-center w-full py-10 text-card-meta",
                     {tr.no_files}
@@ -222,7 +254,6 @@ pub fn FileManagerPage(space_id: SpacePartition) -> Element {
                 }
             }
 
-            // Image previews
             if !image_files.is_empty() && !editing() {
                 div { class: "grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-separator",
                     for file in image_files.iter() {
@@ -236,7 +267,6 @@ pub fn FileManagerPage(space_id: SpacePartition) -> Element {
                 }
             }
 
-            // Video previews
             if !video_files.is_empty() && !editing() {
                 div { class: "flex flex-col gap-3 mt-4 pt-4 border-t border-separator",
                     for file in video_files.iter() {
@@ -256,10 +286,9 @@ pub fn FileManagerPage(space_id: SpacePartition) -> Element {
 #[component]
 pub fn HomePage(space_id: SpacePartition) -> Element {
     let tr: SpaceFileTranslate = use_translate();
-    let role =
-        use_loader(move || async move { Ok::<SpaceUserRole, Error>(SpaceUserRole::Creator) })?;
+    let role = use_space_role()();
 
-    if role() == SpaceUserRole::Creator {
+    if role == SpaceUserRole::Creator {
         rsx! {
             FileManagerPage { space_id }
         }

@@ -34,8 +34,10 @@ pub fn SubscriptionCreatorPage(space_id: SpacePartition) -> Element {
     rsx! {
         div { class: "flex flex-col gap-4 w-full",
             // Back button
-            button {
-                class: "flex items-center gap-1 text-sm text-neutral-400 hover:text-white transition-colors w-fit",
+            Button {
+                class: "w-fit !p-0 !text-sm !font-medium !text-neutral-400 hover:!bg-transparent hover:!text-white"
+                    .to_string(),
+                style: ButtonStyle::Text,
                 onclick: on_back,
                 "← {tr.btn_back}"
             }
