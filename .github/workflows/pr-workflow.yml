@@ -163,12 +163,12 @@ jobs:
           path: /tmp/fetcher-image.tar.gz
           key: fetcher-image-${{ github.sha }}
 
-  ratel-app-shell:
+  ratel-app:
     runs-on: ubuntu-latest
 
     defaults:
       run:
-        working-directory: app/shell
+        working-directory: app/ratel
 
     outputs:
       image: ${{ steps.build.outputs.image }}
@@ -258,7 +258,7 @@ jobs:
           path: /tmp/app-shell-image.tar.gz
           retention-days: 7
 
-  ratel-app-shell-testing:
+  ratel-app-testing:
     runs-on: ubuntu-latest
 
     steps:
@@ -300,7 +300,7 @@ jobs:
           make infra
 
       - name: Run tests
-        working-directory: app/shell
+        working-directory: app/ratel
         env:
           DYNAMO_TABLE_PREFIX: ratel-local
           DYNAMO_ENDPOINT: http://localhost:4566
@@ -334,7 +334,7 @@ jobs:
   playwright-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [ratel-app-shell]
+    needs: [ratel-app]
 
     steps:
       - uses: actions/checkout@v4

@@ -1,6 +1,6 @@
 [workspace]
 members = [
-  "app/shell",
+  "app/*",
   "packages/*",
 ]
 resolver = "2"
