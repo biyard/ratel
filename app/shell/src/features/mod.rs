@@ -5,6 +5,8 @@ pub mod membership;
 
 pub mod my_follower;
 
+pub mod posts;
+
 #[cfg(feature = "users")]
 pub mod users;
 
