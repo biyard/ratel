@@ -10,7 +10,6 @@ use layout::AppLayout;
 use membership::Home as MembershipHome;
 use ratel_admin::Route as AdminRoute;
 use ratel_auth::Route as AuthRoute;
-use ratel_membership::Route as MembershipRoute;
 use ratel_my_follower::Route as MyFollowerRoute;
 use ratel_post::Route as PostRoute;
 use space_shell::Route as SpaceRoute;
@@ -74,7 +73,6 @@ macro_rules! define_app_wrapper {
 
 define_app_wrapper!(Admin, AdminRoute);
 define_app_wrapper!(Auth, AuthRoute);
-define_app_wrapper!(Membership, MembershipRoute);
 define_app_wrapper!(Space, SpaceRoute);
 define_app_wrapper!(Post, PostRoute);
 define_app_wrapper!(MyFollower, MyFollowerRoute);

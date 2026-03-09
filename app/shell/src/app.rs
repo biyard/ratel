@@ -48,7 +48,6 @@ pub fn App() -> Element {
         document::Script { src: MAIN_JS }
         document::Script { src: "https://cdn.portone.io/v2/browser-sdk.js" }
 
-        ratel_membership::Provider {}
         common::Provider {}
         AuthProvider {}
         ratel_post::Provider {}
