@@ -1,14 +1,22 @@
 use crate::context::UserContext;
+use crate::controllers::login::wallet_nonce_handler;
 use crate::controllers::send_code::{send_code_handler, SendCodeRequest};
 use crate::controllers::signup::{signup_handler, SignupRequest, SignupType};
 use crate::controllers::verify_code::{verify_code_handler, VerifyCodeRequest};
 use crate::hooks::use_user_context;
+#[cfg(feature = "web")]
+use crate::interop::wallet_sign_message;
 use crate::*;
 
 #[component]
-pub fn SignupModal(#[props(optional)] initial_email: Option<String>) -> Element {
+pub fn SignupModal(
+    #[props(optional)] initial_email: Option<String>,
+    #[props(optional)] initial_wallet_address: Option<String>,
+) -> Element {
     let tr: SignupModalTranslate = use_translate();
     let nav = use_navigator();
+    let is_wallet_signup = initial_wallet_address.is_some();
+    let wallet_address = use_signal(|| initial_wallet_address.clone().unwrap_or_default());
     let mut email = use_signal(|| initial_email.clone().unwrap_or_default());
     let mut password = use_signal(|| String::new());
     let mut display_name = use_signal(|| String::new());
@@ -63,14 +71,13 @@ pub fn SignupModal(#[props(optional)] initial_email: Option<String>) -> Element 
         || username().is_empty()
         || !is_valid_username(&username())
         || display_name().trim().is_empty()
-        || !is_valid_email();
+        || (!is_wallet_signup && !is_valid_email());
 
     rsx! {
         div {
             class: "overflow-y-scroll w-full max-h-[80vh] momentum scrollbar-hide",
             id: "signup_popup",
-            div {
-                class: "flex flex-col gap-4 w-full max-w-100 mx-auto",
+            div { class: "flex flex-col gap-4 w-full max-w-100 mx-auto",
 
                 // Profile Image
                 div { class: "flex relative justify-center items-center mx-auto group size-40 max-mobile:size-20",
@@ -88,8 +95,24 @@ pub fn SignupModal(#[props(optional)] initial_email: Option<String>) -> Element 
                     div { class: "text-sm text-red-500", "{err}" }
                 }
 
-                // Email + Verification Code
-                div { class: "flex flex-col w-full gap-1.25",
+                // Wallet address display (wallet signup only)
+                if is_wallet_signup {
+                    div { class: "flex flex-col w-full gap-1.25",
+                        label { class: "font-bold text-c-cg-30 text-base/7", {tr.wallet_address} }
+                        div { class: "flex px-5 w-full h-11 items-center text-base font-medium border bg-input-box-bg border-input-box-border rounded-lg text-text-primary opacity-70",
+                            {
+                                format!(
+                                    "{}...{}",
+                                    &wallet_address()[..6],
+                                    &wallet_address()[wallet_address().len() - 4..],
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Email + Verification Code (hidden for wallet signup)
+                div { class: if is_wallet_signup { "hidden" } else { "flex flex-col w-full gap-1.25" },
                     label { class: "font-bold text-c-cg-30 text-base/7", {tr.email} }
                     div { class: "flex flex-row gap-2.5 w-full items-center",
                         input {
@@ -122,9 +145,9 @@ pub fn SignupModal(#[props(optional)] initial_email: Option<String>) -> Element 
                                     email_warning.set(String::new());
                                     loading.set(true);
                                     let result = send_code_handler(SendCodeRequest::Email {
-                                        email: email.read().clone(),
-                                    })
-                                    .await;
+                                            email: email.read().clone(),
+                                        })
+                                        .await;
                                     loading.set(false);
                                     match result {
                                         Ok(_) => {
@@ -164,10 +187,10 @@ pub fn SignupModal(#[props(optional)] initial_email: Option<String>) -> Element 
                             onclick: move |_| async move {
                                 loading.set(true);
                                 let result = verify_code_handler(VerifyCodeRequest::Email {
-                                    email: email.read().clone(),
-                                    code: auth_code.read().clone(),
-                                })
-                                .await;
+                                        email: email.read().clone(),
+                                        code: auth_code.read().clone(),
+                                    })
+                                    .await;
                                 loading.set(false);
                                 match result {
                                     Ok(resp) => {
@@ -187,8 +210,8 @@ pub fn SignupModal(#[props(optional)] initial_email: Option<String>) -> Element 
                     }
                 }
 
-                // Password
-                div { class: "flex flex-col w-full gap-1.25",
+                // Password (hidden for wallet signup)
+                div { class: if is_wallet_signup { "hidden" } else { "flex flex-col w-full gap-1.25" },
                     label { class: "font-bold text-c-cg-30 text-base/7", {tr.password} }
                     input {
                         class: "flex px-5 w-full min-w-0 h-11 text-base font-medium border outline-none bg-input-box-bg border-input-box-border rounded-lg placeholder-gray-500 text-text-primary disabled:opacity-50 disabled:cursor-not-allowed",
@@ -246,7 +269,9 @@ pub fn SignupModal(#[props(optional)] initial_email: Option<String>) -> Element 
                         },
                     }
                     if !username_warning().is_empty() {
-                        p { class: "mt-1 text-sm text-c-p-50 light:text-red-600", {username_warning} }
+                        p { class: "mt-1 text-sm text-c-p-50 light:text-red-600",
+                            {username_warning}
+                        }
                     }
                 }
 
@@ -307,41 +332,97 @@ pub fn SignupModal(#[props(optional)] initial_email: Option<String>) -> Element 
                         }
 
                         loading.set(true);
-                        let req = SignupRequest {
-                            signup_type: SignupType::Email {
-                                email: email.read().clone(),
-                                password: password.read().clone(),
-                                code: auth_code.read().clone(),
-                            },
-                            display_name: display_name.read().clone(),
-                            username: username.read().clone(),
-                            profile_url: profile_url.read().clone(),
-                            description: String::new(),
-                            term_agreed: agreed_tos(),
-                            informed_agreed: agreed_news(),
-                            evm_address: None,
-                            phone_number: None,
-                            device_id: None,
-                        };
 
-                        let result = signup_handler(req).await;
-                        loading.set(false);
+                        if is_wallet_signup {
+                            // Wallet signup: nonce → sign message (via active session) → verify → register
+                            #[cfg(feature = "web")]
+                            {
+                                let addr = wallet_address.read().clone();
+                                let result: common::Result<_> = async {
+                                    let nonce_resp = wallet_nonce_handler().await?;
 
-                        match result {
-                            Ok(user) => {
-                                user_ctx.set(UserContext {
-                                    user: Some(user.user),
-                                    refresh_token: user.refresh_token,
-                                });
-                                popup.close();
-                                nav.push("/");
+                                    let signature = wallet_sign_message(&nonce_resp.message).await?;
+
+                                    let user = signup_handler(SignupRequest {
+                                            signup_type: SignupType::Wallet {
+                                                evm_address: addr.clone(),
+                                                signature,
+                                                message: nonce_resp.message,
+                                            },
+                                            display_name: display_name.read().clone(),
+                                            username: username.read().clone(),
+                                            profile_url: profile_url.read().clone(),
+                                            description: String::new(),
+                                            term_agreed: agreed_tos(),
+                                            informed_agreed: agreed_news(),
+                                            phone_number: None,
+                                            device_id: None,
+                                        })
+                                        .await?;
+
+                                    Ok(user)
+                                }
+                                    .await;
+
+                                loading.set(false);
+                                match result {
+                                    Ok(user) => {
+                                        user_ctx
+                                            .set(UserContext {
+                                                user: Some(user.user),
+                                                refresh_token: user.refresh_token,
+                                            });
+                                        popup.close();
+                                        nav.push("/");
+                                    }
+                                    Err(e) => {
+                                        error_message.set(Some(format!("{e}")));
+                                    }
+                                }
                             }
-                            Err(e) => {
-                                error_message.set(Some(format!("{e}")));
+                            #[cfg(not(feature = "web"))]
+                            {
+                                loading.set(false);
+                            }
+                        } else {
+                            let req = SignupRequest {
+                                signup_type: SignupType::Email {
+                                    email: email.read().clone(),
+                                    password: password.read().clone(),
+                                    code: auth_code.read().clone(),
+                                },
+                                display_name: display_name.read().clone(),
+                                username: username.read().clone(),
+                                profile_url: profile_url.read().clone(),
+                                description: String::new(),
+                                term_agreed: agreed_tos(),
+                                informed_agreed: agreed_news(),
+                                phone_number: None,
+                                device_id: None,
+                            };
+                            let result = signup_handler(req).await;
+                            loading.set(false);
+                            match result {
+                                Ok(user) => {
+                                    user_ctx
+                                        .set(UserContext {
+                                            user: Some(user.user),
+                                            refresh_token: user.refresh_token,
+                                        });
+                                    popup.close();
+                                    nav.push("/");
+                                }
+                                Err(e) => {
+                                    error_message.set(Some(format!("{e}")));
+                                }
                             }
                         }
                     },
-                    if loading() { {tr.loading} } else { {tr.finish_signup} }
+                    if loading() {
+                        {tr.loading}
+                    } else {
+                        {tr.finish_signup}
+                    }
                 }
 
                 // Footer
@@ -361,6 +442,10 @@ pub fn SignupModal(#[props(optional)] initial_email: Option<String>) -> Element 
 translate! {
     SignupModalTranslate;
 
+    wallet_address: {
+        en: "Wallet Address",
+        ko: "지갑 주소",
+    },
     email: {
         en: "Email",
         ko: "이메일",
