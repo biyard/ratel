@@ -1,7 +1,7 @@
 use super::super::*;
 use common::services::biyard::PointTransactionResponse;
 
-use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
+use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 
 pub type ListPointTransactionsResponse = ListResponse<PointTransactionResponse>;
 

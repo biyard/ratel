@@ -1,7 +1,7 @@
 #[cfg(feature = "users")]
 use crate::features::users::UserSidemenu;
 use crate::*;
-use ratel_post::components::{CreatePostButton, FeedList};
+use crate::features::posts::components::{CreatePostButton, FeedList};
 
 #[component]
 pub fn Index() -> Element {

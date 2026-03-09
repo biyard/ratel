@@ -1,7 +1,7 @@
 use super::super::*;
 use common::Switch;
 
-use ratel_post::types::TeamGroupPermission;
+use crate::features::posts::types::TeamGroupPermission;
 
 #[derive(Clone)]
 pub struct CreateGroupPayload {

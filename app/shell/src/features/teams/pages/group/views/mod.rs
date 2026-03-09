@@ -7,7 +7,7 @@ use admin_page::*;
 use viewer_page::*;
 
 use super::controllers::get_team_group_permission_handler;
-use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
+use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 
 #[component]
 pub fn Home(teamname: String) -> Element {

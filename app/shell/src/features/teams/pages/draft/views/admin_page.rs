@@ -1,6 +1,6 @@
 use super::super::*;
 use dioxus::prelude::*;
-use ratel_post::components::{CreatePostButton, TeamDrafts};
+use crate::features::posts::components::{CreatePostButton, TeamDrafts};
 
 #[component]
 pub fn AdminPage(teamname: String, team_pk: TeamPartition) -> Element {

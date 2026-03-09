@@ -2,7 +2,7 @@ use crate::features::teams::controllers::dto::TeamResponse;
 use crate::features::teams::controllers::find_team::find_team_handler;
 use crate::features::teams::*;
 use icons::{edit, folder, game, home, settings as settings_icon, user};
-use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
+use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 
 #[component]
 pub fn TeamLayout(teamname: String) -> Element {

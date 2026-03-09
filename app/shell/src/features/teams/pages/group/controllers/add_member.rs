@@ -1,8 +1,8 @@
 use super::super::dto::{AddMemberRequest, AddMemberResponse};
 use super::super::*;
 
-use ratel_post::models::{Team, TeamGroup};
-use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
+use crate::features::posts::models::{Team, TeamGroup};
+use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use std::collections::HashSet;
 
 #[post("/api/teams/:team_pk/groups/:group_sk/member", user: ratel_auth::User, team: Team, permissions: TeamGroupPermissions)]

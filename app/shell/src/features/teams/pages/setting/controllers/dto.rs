@@ -15,8 +15,8 @@ pub struct TeamResponse {
 }
 
 #[cfg(feature = "server")]
-impl From<(ratel_post::models::Team, i64)> for TeamResponse {
-    fn from((team, permissions): (ratel_post::models::Team, i64)) -> Self {
+impl From<(crate::features::posts::models::Team, i64)> for TeamResponse {
+    fn from((team, permissions): (crate::features::posts::models::Team, i64)) -> Self {
         Self {
             id: team.pk.into(),
             created_at: team.created_at,

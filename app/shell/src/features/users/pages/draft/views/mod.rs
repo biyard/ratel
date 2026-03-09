@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use ratel_post::components::{CreatePostButton, MyDrafts};
+use crate::features::posts::components::{CreatePostButton, MyDrafts};
 
 #[component]
 pub fn Home(username: String) -> Element {

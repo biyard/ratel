@@ -1,8 +1,8 @@
 use super::dto::{TeamResponse, UpdateTeamRequest};
 use super::super::*;
 
-use ratel_post::models::Team;
-use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
+use crate::features::posts::models::Team;
+use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 
 #[patch("/api/teams/:teamname/settings", user: ratel_auth::User, team: Team, permissions: TeamGroupPermissions)]
 pub async fn update_team_handler(

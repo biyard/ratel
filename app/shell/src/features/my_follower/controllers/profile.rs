@@ -1,6 +1,6 @@
 use crate::features::my_follower::controllers::dto::FollowUserProfile;
 use crate::features::my_follower::*;
-use ratel_post::models::Team;
+use crate::features::posts::models::Team;
 use std::collections::HashMap;
 
 #[cfg(feature = "server")]

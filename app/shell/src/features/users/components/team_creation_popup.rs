@@ -1,6 +1,6 @@
 use crate::features::users::controllers::{CreateTeamRequest, create_team_handler, get_user_teams_handler};
 use crate::features::users::*;
-use ratel_post::types::TeamGroupPermissions;
+use crate::features::posts::types::TeamGroupPermissions;
 
 #[component]
 pub fn TeamCreationPopup() -> Element {

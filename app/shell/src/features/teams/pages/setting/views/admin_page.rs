@@ -3,7 +3,7 @@ use super::super::controllers::TeamResponse;
 use super::super::controllers::{UpdateTeamRequest, delete_team_handler, update_team_handler};
 use super::super::*;
 use dioxus::prelude::*;
-use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
+use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 
 #[component]
 pub fn AdminPage(teamname: String, team: TeamResponse) -> Element {
