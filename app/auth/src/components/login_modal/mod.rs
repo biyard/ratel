@@ -1,7 +1,11 @@
 use crate::context::UserContext;
-use crate::controllers::login::{login_handler, LoginRequest};
+use crate::controllers::login::{
+    login_handler, wallet_check_handler, wallet_nonce_handler, LoginRequest, WalletCheckRequest,
+};
 use crate::hooks::use_user_context;
 use crate::interop::sign_in;
+#[cfg(feature = "web")]
+use crate::interop::{wallet_connect, wallet_sign_message};
 use crate::views::ForgotPassword;
 use crate::*;
 
@@ -18,8 +22,18 @@ pub fn LoginModal() -> Element {
 
     rsx! {
         div {
-            class: "flex flex-col gap-5 w-100 max-w-100 mx-1.25 max-mobile:w-full! max-mobile:max-w-full!",
+            class: "relative flex flex-col gap-5 w-100 max-w-100 mx-1.25 max-mobile:w-full! max-mobile:max-w-full!",
             id: "login_popup",
+
+            // Loading overlay
+            if loading() {
+                div {
+                    class: "absolute inset-0 w-full h-full flex items-center justify-center bg-background/95",
+                    common::components::LoadingIndicator {
+                        class: "size-8",
+                    }
+                }
+            }
             div { class: "flex flex-col gap-4 w-full",
                 div { class: "flex flex-row gap-1 justify-start items-center w-full text-sm",
                     label { class: "font-medium text-text-primary", {tr.new_user} }
@@ -221,6 +235,106 @@ pub fn LoginModal() -> Element {
                     }
                     div { class: "text-base font-semibold text-white", {tr.continue_with_google} }
                 }
+                button {
+                    class: "flex flex-row gap-5 items-center px-5 w-full cursor-pointer rounded-[10px] bg-[#3B99FC] py-5.5",
+                    disabled: loading(),
+                    onclick: move |_| async move {
+                        error_message.set(None);
+                        loading.set(true);
+
+                        #[cfg(feature = "web")]
+                        {
+                            // Step 1: Connect wallet
+                            let connect_result = match wallet_connect().await {
+                                Ok(r) => r,
+                                Err(e) => {
+                                    loading.set(false);
+                                    let msg = format!("{e}");
+                                    if !msg.contains("User cancelled") {
+                                        error_message.set(Some(msg));
+                                    }
+                                    return;
+                                }
+                            };
+
+                            // Step 2: Check if address exists in DB
+                            let check_resp = match wallet_check_handler(WalletCheckRequest {
+                                evm_address: connect_result.address.clone(),
+                            })
+                            .await
+                            {
+                                Ok(r) => r,
+                                Err(e) => {
+                                    loading.set(false);
+                                    error_message.set(Some(format!("{e}")));
+                                    return;
+                                }
+                            };
+
+                            if !check_resp.exists {
+                                // New user → open signup modal (signing happens there)
+                                loading.set(false);
+                                popup.close();
+                                popup.open(rsx! {
+                                    SignupModal {
+                                        initial_wallet_address: Some(connect_result.address),
+                                    }
+                                });
+                                return;
+                            }
+
+                            // Step 3: Existing user → nonce → sign → login
+                            let nonce_resp = match wallet_nonce_handler().await {
+                                Ok(r) => r,
+                                Err(e) => {
+                                    loading.set(false);
+                                    error_message.set(Some(format!("{e}")));
+                                    return;
+                                }
+                            };
+
+                            let signature = match wallet_sign_message(&nonce_resp.message).await {
+                                Ok(s) => s,
+                                Err(e) => {
+                                    loading.set(false);
+                                    let msg = format!("{e}");
+                                    if !msg.contains("User cancelled") && !msg.contains("rejected") {
+                                        error_message.set(Some(msg));
+                                    }
+                                    return;
+                                }
+                            };
+
+                            let login_result = login_handler(LoginRequest::Wallet {
+                                signature,
+                                evm_address: connect_result.address.clone(),
+                                message: nonce_resp.message,
+                            })
+                            .await;
+                            loading.set(false);
+
+                            match login_result {
+                                Ok(user) => {
+                                    user_ctx.set(UserContext {
+                                        user: Some(user.user),
+                                        refresh_token: user.refresh_token,
+                                    });
+                                    popup.close();
+                                }
+                                Err(e) => {
+                                    error_message.set(Some(format!("{e}")));
+                                }
+                            }
+                        }
+
+                        #[cfg(not(feature = "web"))]
+                        {
+                            loading.set(false);
+                        }
+                    },
+                    icons::wallet::WalletConnect { class: "fill-white", width: "24", height: "24" }
+                    div { class: "text-base font-semibold text-white", {tr.continue_with_wallet} }
+                }
             }
             div { class: "flex flex-row gap-2.5 justify-center items-center w-full",
                 div { class: "font-medium cursor-pointer text-neutral-400 text-xs/3.5",
@@ -280,6 +394,10 @@ translate! {
     continue_with_google: {
         en: "Continue With Google",
         ko: "Google로 계속하기",
+    },
+    continue_with_wallet: {
+        en: "Continue With Wallet",
+        ko: "지갑으로 계속하기",
     },
     privacy_policy: {
         en: "Privacy Policy",

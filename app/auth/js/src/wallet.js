@@ -1,6 +1,6 @@
 import { SignClient } from "@walletconnect/sign-client";
 import { createAppKit } from "@reown/appkit";
-import { mainnet } from "@reown/appkit/networks";
+import { mainnet, kaia } from "@reown/appkit/networks";
 
 let config = null;
 let client = null;
@@ -10,13 +10,9 @@ let activeSession = null;
 let connectedAddress = null;
 let connectedChainId = null;
 
-export function initialize(
-  projectId,
-  appName,
-  appDescription,
-  appUrl,
-  customWallets,
-) {
+export function initialize(projectId, appName, appDescription, appUrl) {
+  if (config || typeof window === "undefined") return;
+
   config = {
     projectId,
     metadata: {
@@ -25,7 +21,6 @@ export function initialize(
       url: appUrl || window.location.origin,
       icons: ["https://metadata.ratel.foundation/logos/logo-symbol.png"],
     },
-    customWallets: customWallets || [],
   };
   console.log("[wallet] config saved", projectId);
 }
@@ -44,13 +39,12 @@ async function getClient() {
       appKit = createAppKit({
         projectId: config.projectId,
         metadata: config.metadata,
-        networks: [mainnet],
+        networks: [mainnet, kaia],
         features: {
           analytics: false,
           email: false,
           socials: false,
         },
-        customWallets: config.customWallets,
         featuredWalletIds: [],
       });
 
@@ -69,7 +63,7 @@ export async function connect() {
   const { uri: wcUri, approval } = await client.connect({
     optionalNamespaces: {
       eip155: {
-        chains: ["eip155:1"],
+        chains: ["eip155:1", "eip155:8217"],
         methods: ["personal_sign"],
         events: ["chainChanged", "accountsChanged"],
       },
