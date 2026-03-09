@@ -21,18 +21,19 @@ pub async fn list_comments(
 
     // Use GSI3 (find_replies_by_likes) with ROOT_PARENT
     // This queries only top-level comments, already sorted by likes descending.
-    let root_parent = ROOT_PARENT.to_string();
-    let mut opt = SpacePostComment::opt()
-        .scan_index_forward(false)
-        .limit(50);
+    let mut opt = SpacePostComment::opt().scan_index_forward(false).limit(50);
     if let Some(b) = bookmark {
         opt = opt.bookmark(b);
     }
 
-    let (comments, _next_bookmark) =
-        SpacePostComment::find_replies_by_likes(cli, root_parent, opt).await?;
-
     let space_post_pk_p: Partition = space_post_pk.clone().into();
+    let (comments, _next_bookmark) =
+        SpacePostComment::find_by_post_order_by_likes(cli, space_post_pk_p.clone(), opt).await?;
+    let comments: Vec<_> = comments
+        .into_iter()
+        .filter(|comment| comment.parent_id_for_likes == ROOT_PARENT)
+        .take(50)
+        .collect();
 
     // Check which comments the current user has liked
     let liked_set: HashSet<String> = if let Some(ref u) = user.0 {
