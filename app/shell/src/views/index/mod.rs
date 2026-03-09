@@ -1,3 +1,5 @@
+#[cfg(feature = "users")]
+use crate::features::social::users::UserSidemenu;
 use crate::*;
 use ratel_post::components::{CreatePostButton, FeedList};
 
@@ -11,6 +13,7 @@ pub fn Index() -> Element {
             if let Some(user) = &user {
                 UserSidemenu { username: user.username.clone() }
             }
+
             div { class: "flex grow", FeedList {} }
 
             if user.is_some() {
@@ -22,4 +25,11 @@ pub fn Index() -> Element {
             }
         }
     }
+}
+
+#[cfg(not(feature = "users"))]
+#[component]
+fn UserSidemenu(username: String) -> Element {
+    let _ = username;
+    rsx! {}
 }
