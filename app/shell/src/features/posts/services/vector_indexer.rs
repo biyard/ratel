@@ -1,6 +1,6 @@
 use crate::features::posts::models::Post;
 use crate::features::posts::*;
-use common::utils::aws::{BedrockEmbeddingsClient, QdrantClient};
+use crate::common::utils::aws::{BedrockEmbeddingsClient, QdrantClient};
 
 pub async fn index_post_async(
     qdrant: &QdrantClient,

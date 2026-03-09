@@ -2,9 +2,9 @@
 use crate::features::spaces::space_common::models::SpaceInvitationMember;
 use crate::features::spaces::space_common::*;
 #[cfg(feature = "server")]
-use common::SpaceUserRole;
+use crate::common::SpaceUserRole;
 #[cfg(feature = "server")]
-use common::models::space::SpaceCommon;
+use crate::common::models::space::SpaceCommon;
 #[cfg(feature = "server")]
 use crate::features::posts::models::Post;
 #[cfg(feature = "server")]
@@ -208,7 +208,7 @@ pub async fn update_space(
     }
 
     if let Some(pu) = pu {
-        transact_write!(dynamo, su.transact_write_item(), pu.transact_write_item())?;
+        crate::transact_write!(dynamo, su.transact_write_item(), pu.transact_write_item())?;
     } else {
         su.execute(dynamo).await?;
     }

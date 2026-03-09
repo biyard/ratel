@@ -1,6 +1,6 @@
 use super::proxy_registry::ProxyRegistry;
-use common::tracing;
-use common::axum::{
+use crate::common::tracing;
+use crate::common::axum::{
     body::Body,
     extract::Request,
     http::{header, StatusCode},
@@ -33,7 +33,7 @@ pub async fn proxy_middleware(
     let method = req.method().clone();
     let headers = req.headers().clone();
 
-    let body_bytes = match common::axum::body::to_bytes(req.into_body(), MAX_BODY_SIZE).await {
+    let body_bytes = match crate::common::axum::body::to_bytes(req.into_body(), MAX_BODY_SIZE).await {
         Ok(bytes) => bytes,
         Err(e) => {
             tracing::error!("Failed to read request body: {}", e);

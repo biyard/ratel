@@ -1,18 +1,18 @@
 use crate::features::spaces::actions::subscription::models::*;
 use crate::features::spaces::actions::subscription::*;
-use common::models::space::SpaceCommon;
+use crate::common::models::space::SpaceCommon;
 use crate::features::posts::models::Team;
 
 #[post(
     "/api/spaces/{space_pk}/subscriptions",
     role: SpaceUserRole,
-    user: ratel_auth::User
+    user: crate::features::auth::User
 )]
 pub async fn create_subscription(space_pk: SpacePartition) -> Result<SpaceSubscription> {
-    use ratel_auth::{User, UserQueryOption};
+    use crate::features::auth::{User, UserQueryOption};
 
     SpaceSubscription::can_edit(&role)?;
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
 
     let pk: Partition = space_pk.clone().into();

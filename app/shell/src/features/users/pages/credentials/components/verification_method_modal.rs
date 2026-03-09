@@ -1,4 +1,4 @@
-use ratel_auth::hooks::use_user_context;
+use crate::features::auth::hooks::use_user_context;
 
 use super::super::{controllers::CredentialResponse, *};
 use super::CodeInputModal;

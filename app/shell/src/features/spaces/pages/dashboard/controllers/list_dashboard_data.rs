@@ -1,7 +1,7 @@
-use common::SpacePartition;
+use crate::common::SpacePartition;
 use dioxus::prelude::*;
 
-#[get("/api/spaces/:space_id/dashboard", space: common::models::space::SpaceCommon)]
+#[get("/api/spaces/:space_id/dashboard", space: crate::common::models::space::SpaceCommon)]
 pub async fn list_dashboard_data_handler(
     space_id: SpacePartition,
 ) -> Result<Vec<crate::features::spaces::space_common::types::dashboard::DashboardComponentData>> {
@@ -12,7 +12,7 @@ pub async fn list_dashboard_data_handler(
 
     let cfg = crate::features::spaces::pages::dashboard::config::get();
     let cli = cfg.dynamodb();
-    let space_pk: common::Partition = space_id.clone().into();
+    let space_pk: crate::common::Partition = space_id.clone().into();
 
     let agg = DashboardAggregate::get_or_default(cli, &space_pk).await?;
 

@@ -10,11 +10,11 @@ pub struct MembershipResponse {
     pub next_membership: Option<String>,
 }
 
-#[get("/api/me/membership", user: ratel_auth::User)]
+#[get("/api/me/membership", user: crate::features::auth::User)]
 pub async fn get_membership_handler() -> Result<MembershipResponse> {
     use super::super::models::UserMembershipLocal;
 
-    let conf = common::config::ServerConfig::default();
+    let conf = crate::common::config::ServerConfig::default();
     let cli = conf.dynamodb();
 
     let membership =

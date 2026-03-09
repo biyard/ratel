@@ -14,7 +14,7 @@ pub struct SpaceContextProvider {
 }
 
 impl SpaceContextProvider {
-    pub fn init(space_id: &SpacePartition) -> common::Result<Self, Loading> {
+    pub fn init(space_id: &SpacePartition) -> crate::common::Result<Self, Loading> {
         let v = space_id.clone();
         let role = use_loader(move || {
             let space_id = v.clone();

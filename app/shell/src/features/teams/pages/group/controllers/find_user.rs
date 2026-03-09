@@ -1,7 +1,7 @@
 use super::super::dto::FoundUserResponse;
 use super::super::*;
 
-use ratel_auth::{User, UserPhoneNumber};
+use crate::features::auth::{User, UserPhoneNumber};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
@@ -11,7 +11,7 @@ pub enum FindUserQueryType {
     PhoneNumber,
 }
 
-#[get("/api/users/find?user_type&value", user: ratel_auth::OptionalUser)]
+#[get("/api/users/find?user_type&value", user: crate::features::auth::OptionalUser)]
 pub async fn find_user_handler(
     user_type: FindUserQueryType,
     value: String,

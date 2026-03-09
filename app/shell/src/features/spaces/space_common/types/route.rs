@@ -1,4 +1,4 @@
-use common::{SpacePartition, SpacePollEntityType, SpacePostEntityType, SpaceQuizEntityType};
+use crate::common::{SpacePartition, SpacePollEntityType, SpacePostEntityType, SpaceQuizEntityType};
 
 pub fn space_root(space_id: &SpacePartition) -> String {
     format!("/spaces/{space_id}/dashboard")

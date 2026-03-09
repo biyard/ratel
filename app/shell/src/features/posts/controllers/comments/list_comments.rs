@@ -1,7 +1,7 @@
 use crate::features::posts::controllers::dto::*;
 use crate::features::posts::models::*;
 use crate::features::posts::*;
-use ratel_auth::OptionalUser;
+use crate::features::auth::OptionalUser;
 
 #[get("/api/posts/:post_id/comments/:comment_id?bookmark", user: OptionalUser)]
 pub async fn list_comments_handler(
@@ -12,7 +12,7 @@ pub async fn list_comments_handler(
     let conf = crate::features::posts::config::get();
     let cli = conf.dynamodb();
 
-    let user: Option<ratel_auth::User> = user.into();
+    let user: Option<crate::features::auth::User> = user.into();
     let post_pk: Partition = post_id.into();
     let comment_sk: EntityType = comment_id.into();
 

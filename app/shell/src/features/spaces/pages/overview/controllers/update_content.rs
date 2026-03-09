@@ -1,8 +1,8 @@
 use crate::features::spaces::pages::overview::*;
 #[cfg(feature = "server")]
-use common::models::space::SpaceCommon;
+use crate::common::models::space::SpaceCommon;
 #[cfg(feature = "server")]
-use common::SpaceUserRole;
+use crate::common::SpaceUserRole;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpdateContentRequest {

@@ -1,5 +1,5 @@
 use super::*;
-use common::FileUploader;
+use crate::common::FileUploader;
 use dioxus::prelude::*;
 
 mod my_info_tab;

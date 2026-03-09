@@ -8,4 +8,4 @@ use dioxus::prelude::*;
 pub use controllers::*;
 pub use route::Route;
 
-use common::*;
+use crate::common::*;

@@ -32,16 +32,16 @@ pub struct UserDetailResponse {
     pub evm_address: Option<String>,
 }
 
-#[get("/api/me", user: ratel_auth::User)]
+#[get("/api/me", user: crate::features::auth::User)]
 pub async fn get_user_detail_handler() -> Result<UserDetailResponse> {
-    let conf = common::config::ServerConfig::default();
+    let conf = crate::common::config::ServerConfig::default();
     let cli = conf.dynamodb();
 
-    let user = ratel_auth::User::get(cli, user.pk.clone(), Some(EntityType::User))
+    let user = crate::features::auth::User::get(cli, user.pk.clone(), Some(EntityType::User))
         .await?
         .ok_or(Error::NotFound("User not found".into()))?;
 
-    let evm_address = ratel_auth::UserEvmAddress::get(
+    let evm_address = crate::features::auth::UserEvmAddress::get(
         cli,
         user.pk.clone(),
         Some(EntityType::UserEvmAddress),
@@ -60,9 +60,9 @@ pub async fn get_user_detail_handler() -> Result<UserDetailResponse> {
     })
 }
 
-#[post("/api/me", user: ratel_auth::User)]
+#[post("/api/me", user: crate::features::auth::User)]
 pub async fn update_user_handler(body: UpdateUserRequest) -> Result<UserDetailResponse> {
-    let conf = common::config::ServerConfig::default();
+    let conf = crate::common::config::ServerConfig::default();
     let cli = conf.dynamodb();
 
     match body {
@@ -71,14 +71,14 @@ pub async fn update_user_handler(body: UpdateUserRequest) -> Result<UserDetailRe
             profile_url,
             description,
         } => {
-            let mut updater = ratel_auth::User::updater(user.pk.clone(), user.sk.clone())
+            let mut updater = crate::features::auth::User::updater(user.pk.clone(), user.sk.clone())
                 .with_display_name(nickname)
                 .with_profile_url(profile_url)
                 .with_description(description);
             updater.execute(cli).await?;
         }
         UpdateUserRequest::EvmAddress { evm_address } => {
-            ratel_auth::UserEvmAddress::new(user.pk.clone(), evm_address)
+            crate::features::auth::UserEvmAddress::new(user.pk.clone(), evm_address)
                 .upsert(cli)
                 .await?;
         }
@@ -89,11 +89,11 @@ pub async fn update_user_handler(body: UpdateUserRequest) -> Result<UserDetailRe
         }
     }
 
-    let user = ratel_auth::User::get(cli, user.pk.clone(), Some(EntityType::User))
+    let user = crate::features::auth::User::get(cli, user.pk.clone(), Some(EntityType::User))
         .await?
         .ok_or(Error::NotFound("User not found".into()))?;
 
-    let evm_address = ratel_auth::UserEvmAddress::get(
+    let evm_address = crate::features::auth::UserEvmAddress::get(
         cli,
         user.pk.clone(),
         Some(EntityType::UserEvmAddress),

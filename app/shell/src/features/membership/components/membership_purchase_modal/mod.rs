@@ -4,7 +4,7 @@ mod i18n;
 pub use i18n::*;
 
 use crate::features::membership::*;
-use common::components::Card;
+use crate::common::components::Card;
 use crate::features::membership::components::MembershipTier;
 use crate::features::membership::services::portone::VerifiedCustomer;
 

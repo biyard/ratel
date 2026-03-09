@@ -1,7 +1,7 @@
 use crate::features::spaces::space_common::*;
-use common::models::space::{SpaceCommon, SpaceParticipant};
-use common::models::{OptionalUser, User};
-use common::types::{Partition, SpacePartition};
+use crate::common::models::space::{SpaceCommon, SpaceParticipant};
+use crate::common::models::{OptionalUser, User};
+use crate::common::types::{Partition, SpacePartition};
 use crate::features::posts::models::Post;
 use crate::features::posts::types::{BoosterType, SpaceType};
 

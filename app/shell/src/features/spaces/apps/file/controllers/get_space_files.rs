@@ -2,7 +2,7 @@ use crate::features::spaces::apps::file::*;
 #[cfg(feature = "server")]
 use crate::features::spaces::apps::file::models::SpaceFile;
 #[cfg(feature = "server")]
-use common::SpaceUserRole;
+use crate::common::SpaceUserRole;
 
 #[get("/api/spaces/{space_pk}/files", _role: SpaceUserRole)]
 pub async fn get_space_files(space_pk: SpacePartition) -> Result<Vec<File>> {
@@ -19,7 +19,7 @@ pub async fn get_space_files(space_pk: SpacePartition) -> Result<Vec<File>> {
     let mut needs_update = false;
     for file in &mut space_file.files {
         if file.id.is_empty() {
-            file.id = common::uuid::Uuid::now_v7().to_string();
+            file.id = crate::common::uuid::Uuid::now_v7().to_string();
             needs_update = true;
         }
     }

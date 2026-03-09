@@ -120,7 +120,7 @@ impl UserMembership {
         duration_days: i32,
         credits: i64,
     ) -> Result<Self> {
-        let created_at = common::utils::time::now();
+        let created_at = crate::common::utils::time::now();
         let expired_at = if duration_days <= 0 {
             i64::MAX
         } else {
@@ -155,7 +155,7 @@ impl UserMembership {
             return -1;
         }
 
-        let now = common::utils::time::now();
+        let now = crate::common::utils::time::now();
         if self.expired_at <= now {
             return 0;
         }

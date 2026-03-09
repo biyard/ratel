@@ -1,7 +1,7 @@
 use crate::features::spaces::*;
-use common::utils::time;
+use crate::common::utils::time;
 use serde::{Deserialize, Serialize};
-use crate::features::spaces::space_common::ratel_auth::models::user::User;
+use crate::features::auth::models::user::User;
 
 #[derive(
     Debug,

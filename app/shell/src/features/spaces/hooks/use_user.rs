@@ -1,7 +1,7 @@
 use crate::features::spaces::controllers::user::get_user;
-use common::use_query;
+use crate::common::use_query;
 use dioxus::prelude::*;
-use crate::features::spaces::space_common::ratel_auth::models::user::User;
+use crate::features::auth::models::user::User;
 use std::collections::HashMap;
 
 pub const USER_QUERY_KEY: &[&str] = &["User"];

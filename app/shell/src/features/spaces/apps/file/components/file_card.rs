@@ -14,7 +14,7 @@ pub fn FileCard(file: File, editable: bool, on_delete: Option<EventHandler<Strin
                 move |_: Event<MouseData>| {
                     #[cfg(not(feature = "server"))]
                     if !_url.is_empty() {
-                        let _ = common::web_sys::window()
+                        let _ = crate::common::web_sys::window()
                             .and_then(|w| w.open_with_url_and_target(&_url, "_blank").ok());
                     }
                 }

@@ -1,9 +1,9 @@
 mod menus;
 
 use crate::*;
-use common::hooks::use_scroll_lock;
+use crate::common::hooks::use_scroll_lock;
 use menus as i;
-use ratel_auth::LoginModal;
+use crate::features::auth::LoginModal;
 
 translate! {
     AppMenuTranslate;
@@ -43,7 +43,7 @@ translate! {
 pub fn AppMenu() -> Element {
     let tr: AppMenuTranslate = use_translate();
     let mut popup = use_popup();
-    let user_ctx = ratel_auth::hooks::use_user_context();
+    let user_ctx = crate::features::auth::hooks::use_user_context();
     let mut mobile_menu_open = use_signal(|| false);
     use_scroll_lock(mobile_menu_open());
 

@@ -1,5 +1,5 @@
 use crate::features::spaces::models::did::{VerifiableAttribute, VerifiableAttributeWithQuota};
-use common::attribute::Age;
+use crate::common::attribute::Age;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]

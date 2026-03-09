@@ -10,15 +10,15 @@ pub mod types;
 pub mod interop;
 pub mod providers;
 
-use common::*;
+use crate::common::*;
 
 // Re-export
-pub use ratel_auth;
+pub use crate::features::auth as ratel_auth;
 pub use crate::features::posts as ratel_post;
 
 use dioxus::prelude::*;
 
-type Result<T> = common::Result<T>;
+type Result<T> = crate::common::Result<T>;
 type DioxusResult<T> = dioxus::prelude::Result<T>;
 
 use serde::{Deserialize, Serialize};

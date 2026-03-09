@@ -1,7 +1,7 @@
 use crate::features::posts::models::*;
 use crate::features::posts::types::*;
 use crate::features::posts::*;
-use ratel_auth::User;
+use crate::features::auth::User;
 
 #[delete("/api/posts/:post_id", user: User)]
 pub async fn delete_post_handler(post_id: FeedPartition, force: Option<bool>) -> Result<Post> {

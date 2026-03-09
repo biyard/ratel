@@ -19,7 +19,7 @@ pub async fn refresh_space_incentive_tokens(
     space_pk: SpacePartition,
 ) -> Result<RefreshSpaceIncentiveTokensResponse> {
     use crate::features::spaces::apps::incentive_pool::models::{SpaceIncentive, SpaceIncentiveToken};
-    use common::utils::time::get_now_timestamp_millis;
+    use crate::common::utils::time::get_now_timestamp_millis;
 
     use crate::features::spaces::apps::incentive_pool::utils::{fetch_token_state, fetch_transfer_logs, format_addr, parse_address};
     use ethers::providers::{Http, Middleware, Provider};
@@ -27,7 +27,7 @@ pub async fn refresh_space_incentive_tokens(
 
     SpaceIncentive::can_view(role)?;
 
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let dynamo = common_config.dynamodb();
 
     let space_pk: Partition = space_pk.into();

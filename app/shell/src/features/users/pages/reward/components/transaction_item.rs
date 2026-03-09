@@ -1,6 +1,6 @@
 use super::super::views::RewardsPageTranslate;
 use super::super::*;
-use common::services::PointTransactionResponse;
+use crate::common::services::PointTransactionResponse;
 
 pub fn transaction_item(
     tr: &RewardsPageTranslate,

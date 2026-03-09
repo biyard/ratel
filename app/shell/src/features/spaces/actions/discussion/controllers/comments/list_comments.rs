@@ -1,4 +1,4 @@
-use ratel_auth::OptionalUser;
+use crate::features::auth::OptionalUser;
 
 use crate::features::spaces::actions::discussion::*;
 use std::collections::HashSet;
@@ -10,7 +10,7 @@ pub async fn list_comments(
     bookmark: Option<String>,
 ) -> Result<Vec<DiscussionCommentResponse>> {
     SpacePost::can_view(&role)?;
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let discussion_sk_entity: EntityType = discussion_sk.into();
 

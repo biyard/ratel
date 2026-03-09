@@ -1,6 +1,6 @@
 use crate::features::posts::types::Visibility;
 use crate::features::posts::*;
-use common::components::Button;
+use crate::common::components::Button;
 use dioxus::prelude::*;
 
 translate! {

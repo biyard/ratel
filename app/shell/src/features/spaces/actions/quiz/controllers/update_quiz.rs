@@ -25,7 +25,7 @@ pub async fn update_quiz(
     req: UpdateQuizRequest,
 ) -> Result<String> {
     SpaceQuiz::can_edit(&role)?;
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let space_pk: Partition = space_pk.into();
     let quiz_sk: EntityType = quiz_id.clone().into();
@@ -39,7 +39,7 @@ pub async fn update_quiz(
         ));
     }
 
-    let now = common::utils::time::get_now_timestamp_millis();
+    let now = crate::common::utils::time::get_now_timestamp_millis();
     let mut updater = SpaceQuiz::updater(&space_pk, &quiz_sk).with_updated_at(now);
 
     if let Some(title) = req.title {

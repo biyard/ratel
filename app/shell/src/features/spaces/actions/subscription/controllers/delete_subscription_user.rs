@@ -1,11 +1,11 @@
 use crate::features::spaces::actions::subscription::models::SpaceSubscriptionUser;
 use crate::features::spaces::actions::subscription::*;
-use common::models::space::SpaceCommon;
+use crate::common::models::space::SpaceCommon;
 
 #[delete("/api/spaces/{space_id}/subscriptions/users", role: SpaceUserRole)]
 pub async fn delete_subscription_user(space_id: SpacePartition, user_pk: Partition) -> Result<()> {
     SpaceSubscription::can_edit(&role)?;
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
 
     let space_pk: Partition = space_id.clone().into();

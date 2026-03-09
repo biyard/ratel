@@ -21,7 +21,7 @@ pub struct PostResponse {
     pub author_profile_url: String,
     pub author_username: String,
     pub auth_pk: Partition,
-    pub author_type: ratel_auth::UserType,
+    pub author_type: crate::features::auth::UserType,
 
     pub space_pk: Option<Partition>,
     pub space_type: Option<SpaceType>,
@@ -85,8 +85,8 @@ impl From<Post> for PostResponse {
     }
 }
 
-impl From<(Option<ratel_auth::User>, Post)> for PostResponse {
-    fn from((user, post): (Option<ratel_auth::User>, Post)) -> Self {
+impl From<(Option<crate::features::auth::User>, Post)> for PostResponse {
+    fn from((user, post): (Option<crate::features::auth::User>, Post)) -> Self {
         let (space_pk, space_type) = match (user, post.space_visibility.clone()) {
             (_, Some(SpaceVisibility::Public)) => (post.space_pk.clone(), post.space_type.clone()),
             (Some(user), _) if user.pk == post.user_pk => {

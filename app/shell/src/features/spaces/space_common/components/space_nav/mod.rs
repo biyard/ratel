@@ -2,7 +2,7 @@ use crate::features::spaces::space_common::*;
 mod space_user_login;
 mod space_user_profile;
 
-use common::models::User;
+use crate::common::models::User;
 pub use space_user_login::*;
 pub use space_user_profile::*;
 

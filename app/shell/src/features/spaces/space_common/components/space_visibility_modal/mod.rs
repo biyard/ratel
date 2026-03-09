@@ -1,5 +1,5 @@
 use crate::features::spaces::space_common::*;
-use common::components::Button;
+use crate::common::components::Button;
 use dioxus::prelude::*;
 
 translate! {

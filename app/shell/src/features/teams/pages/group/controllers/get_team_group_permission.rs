@@ -3,7 +3,7 @@ use super::super::*;
 use crate::features::posts::models::Team;
 use crate::features::posts::types::TeamGroupPermissions;
 
-#[get("/api/teams/:teamname/groups/permission", user: ratel_auth::OptionalUser, team: Team, permissions: TeamGroupPermissions)]
+#[get("/api/teams/:teamname/groups/permission", user: crate::features::auth::OptionalUser, team: Team, permissions: TeamGroupPermissions)]
 pub async fn get_team_group_permission_handler(
     teamname: String,
 ) -> Result<super::super::dto::TeamGroupPermission> {

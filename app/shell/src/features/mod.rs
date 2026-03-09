@@ -1,4 +1,5 @@
 pub mod admin;
+pub mod auth;
 
 #[cfg(feature = "membership")]
 pub mod membership;

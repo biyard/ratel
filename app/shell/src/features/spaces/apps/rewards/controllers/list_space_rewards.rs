@@ -1,6 +1,6 @@
 use crate::features::spaces::apps::rewards::*;
 #[cfg(feature = "server")]
-use common::models::auth::OptionalUser;
+use crate::common::models::auth::OptionalUser;
 use crate::features::spaces::space_common::models::SpaceRewardResponse;
 
 #[get("/api/spaces/{space_id}/rewards?action_key", user: OptionalUser)]
@@ -8,9 +8,9 @@ pub async fn list_space_rewards(
     space_id: SpacePartition,
     action_key: Option<EntityType>,
 ) -> Result<ListResponse<SpaceRewardResponse>> {
-    use common::models::reward::UserReward;
+    use crate::common::models::reward::UserReward;
     use crate::features::spaces::space_common::models::SpaceReward;
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
 
     let space_rewards = SpaceReward::list_by_action(cli, space_id.clone(), action_key).await?;

@@ -4,7 +4,7 @@ use crate::features::spaces::space_common::models::aggregate::DashboardAggregate
 #[delete("/api/spaces/{space_pk}/polls/{poll_sk}", role: SpaceUserRole)]
 pub async fn delete_poll(space_pk: SpacePartition, poll_sk: SpacePollEntityType) -> Result<String> {
     SpacePoll::can_edit(&role)?;
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let space_pk: Partition = space_pk.into();
     let poll_sk_entity: EntityType = poll_sk.into();
@@ -17,7 +17,7 @@ pub async fn delete_poll(space_pk: SpacePartition, poll_sk: SpacePollEntityType)
 
     // Decrement poll count in aggregate
     let agg_item = DashboardAggregate::inc_polls(&space_pk, -1);
-    transact_write_items!(cli, vec![agg_item]).ok();
+    crate::transact_write_items!(cli, vec![agg_item]).ok();
 
     Ok("success".to_string())
 }

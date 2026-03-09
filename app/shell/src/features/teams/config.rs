@@ -1,4 +1,4 @@
-use common::CommonConfig;
+use crate::common::CommonConfig;
 
 #[derive(Debug)]
 pub struct Config {
@@ -7,7 +7,7 @@ pub struct Config {
 
 #[cfg(feature = "server")]
 impl Config {
-    pub fn dynamodb(&self) -> &common::aws_sdk_dynamodb::Client {
+    pub fn dynamodb(&self) -> &crate::common::aws_sdk_dynamodb::Client {
         self.common.dynamodb()
     }
 }

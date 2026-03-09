@@ -13,7 +13,7 @@ pub fn SpecBox(
                 class: "flex items-center gap-2 text-primary cursor-pointer",
                 onclick: on_click,
                 span { "{action_text}" }
-                common::lucide_dioxus::ChevronRight { size: 16 }
+                crate::common::lucide_dioxus::ChevronRight { size: 16 }
             }
         }
     }

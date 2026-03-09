@@ -1,5 +1,5 @@
 use super::controllers::list_my_spaces::{MySpaceResponse, list_my_spaces_handler};
-use common::hooks::use_infinite_query;
+use crate::common::hooks::use_infinite_query;
 use dioxus::prelude::*;
 
 #[component]
@@ -38,7 +38,7 @@ pub fn Home(username: String) -> Element {
 
 #[component]
 fn SpaceCard(space: MySpaceResponse) -> Element {
-    let space_id: common::types::SpacePartition = space.space_pk.clone().into();
+    let space_id: crate::common::types::SpacePartition = space.space_pk.clone().into();
     let nav = use_navigator();
     let href = format!("/spaces/{}", space_id);
 

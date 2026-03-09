@@ -3,9 +3,9 @@ use super::config::get;
 use super::controllers::get_credentials::{CredentialResponse, get_credentials_handler};
 use super::controllers::sign_attributes::{SignAttributesRequest, sign_attributes_handler};
 use super::*;
-use common::icons::ratel::*;
+use crate::common::icons::ratel::*;
 use dioxus::prelude::*;
-use ratel_auth::hooks::use_user_context;
+use crate::features::auth::hooks::use_user_context;
 
 #[component]
 pub fn Home(username: String) -> Element {

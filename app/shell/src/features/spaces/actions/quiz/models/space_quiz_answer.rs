@@ -1,4 +1,4 @@
-use common::utils::time::get_now_timestamp_millis;
+use crate::common::utils::time::get_now_timestamp_millis;
 
 use crate::features::spaces::actions::quiz::*;
 use crate::features::spaces::actions::quiz::macros::DynamoEntity;

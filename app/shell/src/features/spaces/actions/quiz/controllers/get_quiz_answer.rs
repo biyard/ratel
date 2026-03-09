@@ -6,7 +6,7 @@ pub async fn get_quiz_answer(
     quiz_id: SpaceQuizEntityType,
 ) -> Result<QuizAnswerResponse> {
     SpaceQuiz::can_edit(&role)?;
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let space_pk_partition: Partition = space_pk.into();
     let answer_sk = EntityType::SpaceQuizAnswer(quiz_id.to_string());

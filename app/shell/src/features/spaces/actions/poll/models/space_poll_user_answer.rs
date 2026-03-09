@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use common::attribute::*;
-use common::utils::time::get_now_timestamp_millis;
-use ratel_auth::User;
+use crate::common::attribute::*;
+use crate::common::utils::time::get_now_timestamp_millis;
+use crate::features::auth::User;
 
 use crate::features::spaces::actions::poll::*;
 

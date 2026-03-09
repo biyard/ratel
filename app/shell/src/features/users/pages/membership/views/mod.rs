@@ -4,8 +4,8 @@ use super::controllers::get_membership_transfer::{
     PurchaseHistoryResponse, get_purchase_history_handler,
 };
 use super::*;
-use common::chrono::TimeZone;
-use common::lucide_dioxus::Sparkles;
+use crate::common::chrono::TimeZone;
+use crate::common::lucide_dioxus::Sparkles;
 
 #[component]
 pub fn Home(username: String) -> Element {

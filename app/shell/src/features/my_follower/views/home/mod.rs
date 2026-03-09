@@ -3,8 +3,8 @@ mod i18n;
 use crate::features::my_follower::components::{FollowList, FollowTab, FollowTabs, MyFollowerHeader};
 use crate::features::my_follower::controllers::{follow_user, list_followers, list_followings, unfollow_user};
 use crate::features::my_follower::*;
-use common::hooks::use_infinite_query;
-use common::use_toast;
+use crate::common::hooks::use_infinite_query;
+use crate::common::use_toast;
 use dioxus::prelude::*;
 use i18n::MyFollowerTranslate;
 

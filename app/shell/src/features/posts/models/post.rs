@@ -53,7 +53,7 @@ pub struct Post {
     pub author_display_name: String,
     pub author_profile_url: String,
     pub author_username: String,
-    pub author_type: ratel_auth::UserType,
+    pub author_type: crate::features::auth::UserType,
 
     pub space_pk: Option<Partition>,
     pub space_type: Option<SpaceType>,
@@ -119,7 +119,7 @@ impl Post {
     pub async fn get_permissions(
         &self,
         cli: &aws_sdk_dynamodb::Client,
-        user: Option<ratel_auth::User>,
+        user: Option<crate::features::auth::User>,
     ) -> Result<TeamGroupPermissions> {
         if user.is_none() {
             return Ok(self.get_permissions_for_guest());
@@ -131,7 +131,7 @@ impl Post {
             return Ok(TeamGroupPermissions::all());
         }
 
-        if self.author_type == ratel_auth::UserType::Individual {
+        if self.author_type == crate::features::auth::UserType::Individual {
             return Ok(self.get_permissions_for_guest());
         }
 
@@ -250,7 +250,7 @@ impl Post {
         cli: &aws_sdk_dynamodb::Client,
         post_pk: Partition,
         content: String,
-        user: ratel_auth::User,
+        user: crate::features::auth::User,
     ) -> Result<PostComment> {
         let post = Post::updater(&post_pk, EntityType::Post)
             .increase_comments(1)

@@ -22,7 +22,7 @@ impl SpacePostCommentLike {
         comment_sk: EntityType,
         user_pk: UserPartition,
     ) -> Self {
-        let now = common::utils::time::get_now_timestamp_millis();
+        let now = crate::common::utils::time::get_now_timestamp_millis();
 
         let (pk, sk) = Self::keys(space_post_pk, comment_sk, &user_pk);
 

@@ -3,7 +3,7 @@ use crate::*;
 #[component]
 pub fn AppLayout() -> Element {
     TeamContext::init();
-    let user_ctx = ratel_auth::hooks::use_user_context();
+    let user_ctx = crate::features::auth::hooks::use_user_context();
     let mut team_ctx = use_team_context();
 
     // Load teams when user is logged in

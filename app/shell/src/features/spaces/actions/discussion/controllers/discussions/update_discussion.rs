@@ -21,12 +21,12 @@ pub async fn update_discussion(
     req: UpdateDiscussionRequest,
 ) -> Result<SpacePost> {
     SpacePost::can_edit(&role)?;
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let space_pk: Partition = space_id.clone().into();
     let discussion_sk_entity: EntityType = discussion_sk.into();
 
-    let now = common::utils::time::get_now_timestamp_millis();
+    let now = crate::common::utils::time::get_now_timestamp_millis();
     let mut updater = SpacePost::updater(&space_pk, &discussion_sk_entity).with_updated_at(now);
 
     if let Some(title) = req.title {

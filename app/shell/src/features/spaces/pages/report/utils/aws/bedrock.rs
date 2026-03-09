@@ -11,7 +11,7 @@ use aws_sdk_bedrockruntime::types::{
 };
 use aws_sdk_bedrockruntime::Client as BedrockClient;
 use aws_smithy_types::Document;
-use common::tracing::{debug, info};
+use crate::common::tracing::{debug, info};
 use dioxus::prelude::ServerFnError;
 
 const MAX_SECTION_CONTEXT_CHARS: usize = 120_000;

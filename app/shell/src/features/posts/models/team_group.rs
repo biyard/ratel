@@ -32,7 +32,7 @@ impl TeamGroup {
         description: String,
         permissions: TeamGroupPermissions,
     ) -> Self {
-        let now = common::utils::time::get_now_timestamp_millis();
+        let now = crate::common::utils::time::get_now_timestamp_millis();
 
         Self {
             pk,

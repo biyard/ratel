@@ -1,7 +1,7 @@
 use crate::features::posts::models::*;
 use crate::features::posts::types::*;
 use crate::features::posts::*;
-use ratel_auth::User;
+use crate::features::auth::User;
 
 #[cfg(feature = "server")]
 use crate::features::posts::utils::validator::{validate_content, validate_title};
@@ -146,7 +146,7 @@ pub async fn update_post_handler(post_id: FeedPartition, req: UpdatePostRequest)
         }
     };
 
-    transact_write_items!(cli, transacts)?;
+    crate::transact_write_items!(cli, transacts)?;
 
     if post.status == PostStatus::Published {
         crate::features::posts::services::index_post_async(conf.qdrant(), conf.bedrock_embeddings(), &post).await;

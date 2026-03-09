@@ -7,7 +7,7 @@ pub async fn list_discussions(
     bookmark: Option<String>,
 ) -> Result<ListResponse<SpacePost>> {
     SpacePost::can_view(&role)?;
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let space_pk: Partition = space_id.into();
 

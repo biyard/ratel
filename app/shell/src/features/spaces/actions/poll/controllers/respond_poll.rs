@@ -5,13 +5,13 @@ pub struct RespondPollRequest {
     pub answers: Vec<Answer>,
 }
 
-#[post("/api/spaces/{space_pk}/polls/{poll_sk}/respond", role: SpaceUserRole, user: ratel_auth::User)]
+#[post("/api/spaces/{space_pk}/polls/{poll_sk}/respond", role: SpaceUserRole, user: crate::features::auth::User)]
 pub async fn respond_poll(
     space_pk: SpacePartition,
     poll_sk: SpacePollEntityType,
     req: RespondPollRequest,
 ) -> Result<String> {
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let space_pk: Partition = space_pk.into();
     let poll_sk_entity: EntityType = poll_sk.into();
@@ -47,10 +47,10 @@ pub async fn respond_poll(
             crate::features::spaces::space_common::models::aggregate::DashboardAggregate::inc_poll_responses(
                 &space_pk, 1,
             );
-        transact_write_items!(cli, vec![agg_item]).ok();
+        crate::transact_write_items!(cli, vec![agg_item]).ok();
     } else if poll.response_editable {
         let (pk, sk) = SpacePollUserAnswer::keys(&user.pk, &poll_sk_entity, &space_pk);
-        let now = common::utils::time::get_now_timestamp_millis();
+        let now = crate::common::utils::time::get_now_timestamp_millis();
         SpacePollUserAnswer::updater(pk, sk)
             .with_answers(req.answers)
             .with_created_at(now)

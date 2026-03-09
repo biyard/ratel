@@ -1,6 +1,6 @@
 use crate::features::spaces::apps::rewards::*;
 #[cfg(feature = "server")]
-use common::models::reward::Reward;
+use crate::common::models::reward::Reward;
 #[cfg(feature = "server")]
 use crate::features::spaces::space_common::models::{SpaceReward, SpaceRewardResponse};
 #[cfg(not(feature = "server"))]
@@ -31,7 +31,7 @@ pub async fn create_space_reward(
 
     SpaceReward::can_edit(&role)?;
 
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
 
     // Fetch global reward template for this behavior
