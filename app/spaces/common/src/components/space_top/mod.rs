@@ -6,7 +6,7 @@ use common::{
 use crate::{
     components::{SpaceStatusBadge, SpaceVisibilityModal},
     controllers::update_space,
-    hooks::use_space_role,
+    hooks::{use_space, use_space_role},
     providers::{SpaceContextProvider, use_space_context},
     *,
 };
@@ -31,18 +31,14 @@ pub fn SpaceTop(
     //FIXME: Rotate Labels
     let title = labels.first().unwrap().label.clone();
     let nav = use_navigator();
-    let mut popup = use_popup();
-    let role = use_space_role();
-    let mut ctx = use_space_context();
-    let real_role = ctx.role();
-    let is_creator = use_memo(move || ctx.role() == SpaceUserRole::Creator);
     let mut toast = use_toast();
-    let can_preview = use_memo(move || {
-        let current_role = ctx.current_role();
-        debug!("current_role: {current_role:?}, real_role: {real_role:?}");
+    let mut popup = use_popup();
 
-        current_role == SpaceUserRole::Creator
-    });
+    let mut ctx = use_space_context();
+    let current_role = ctx.current_role();
+    let real_role = ctx.role();
+    let is_creator = real_role == SpaceUserRole::Creator;
+    let can_preview = current_role == SpaceUserRole::Creator;
     let is_published = ctx.space().publish_state == SpacePublishState::Published;
 
     rsx! {
@@ -67,7 +63,7 @@ pub fn SpaceTop(
                     p { {tr.go_home} }
                 }
 
-                if is_creator() {
+                if is_creator {
                     Button {
                         style: ButtonStyle::Outline,
                         shape: ButtonShape::Square,
@@ -77,7 +73,7 @@ pub fn SpaceTop(
                         },
                         Eye { class: "w-4 h-4 [&>path]:stroke-icon-secondary [&>circle]:stroke-icon-secondary" }
                         p {
-                            if can_preview() {
+                            if can_preview {
                                 {tr.preview}
                             } else {
                                 {tr.design}
@@ -102,6 +98,8 @@ pub fn SpaceTop(
                                                         visibility: SpaceVisibility::Public,
                                                     },
                                                 )
+
+
 
                                                 .await;
                                             ctx.space.restart();
@@ -133,8 +131,51 @@ pub fn SpaceTop(
 
 #[component]
 pub fn SpaceTitle(title: String) -> Element {
+    let mut toast = use_toast();
+
+    let mut space = use_space();
+    let role = use_space_role();
+
+    let mut editing = use_signal(|| false);
+
     rsx! {
-        div { class: "font-bold text-[15px] text-web-font-primary", {title} }
+        Fragment {
+            if editing() {
+                Input {
+                    onconfirm: move |value| async move {
+                        match update_space(
+                                space().id,
+                                controllers::UpdateSpaceRequest::Title {
+                                    title: value.clone(),
+                                },
+                            )
+                            .await
+                        {
+                            Ok(_) => {
+                                space
+                                    .with_mut(move |space| {
+                                        space.title = value;
+                                    });
+                            }
+                            Err(e) => {
+                                toast.error(e);
+                            }
+                        };
+                    },
+                    value: space().title,
+                }
+            } else {
+                div {
+                    class: "font-bold text-[15px] text-web-font-primary",
+                    onclick: move |_| {
+                        if role().can_edit() {
+                            editing.set(true);
+                        }
+                    },
+                    {title}
+                }
+            }
+        }
     }
 }
 
