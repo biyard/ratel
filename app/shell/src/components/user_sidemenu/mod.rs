@@ -1,1 +1,1 @@
-pub use crate::features::social::users::UserSidemenu;
+pub use crate::features::users::UserSidemenu;

@@ -67,7 +67,17 @@ pub fn SpaceTop(
                         ctx.toggle_role();
                     },
                     Eye { class: "w-4 h-4 [&>path]:stroke-icon-secondary [&>circle]:stroke-icon-secondary" }
-                    p { {tr.preview} }
+                    p {
+                        {
+                            if ctx.can_preview() {
+                                tr.preview
+                            } else if ctx.is_preview_mode() {
+                                tr.design
+                            } else {
+                                ""
+                            }
+                        }
+                    }
                 }
 
                 if is_creator() {
@@ -87,6 +97,7 @@ pub fn SpaceTop(
                                                 },
                                             )
                                             .await;
+
 
 
                                     },
@@ -132,6 +143,11 @@ translate! {
     preview: {
         en: "Preview",
         ko: "미리보기",
+    }
+
+    design: {
+        en: "Design",
+        ko: "설계하기",
     }
 
     go_home: {
