@@ -1,8 +1,8 @@
 use super::super::dto::UpdateGroupRequest;
 use super::super::*;
 
-use ratel_post::models::TeamGroup;
-use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
+use crate::features::posts::models::TeamGroup;
+use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 
 #[patch("/api/teams/:team_pk/groups/:group_sk", user: ratel_auth::User, permissions: TeamGroupPermissions)]
 pub async fn update_group_handler(

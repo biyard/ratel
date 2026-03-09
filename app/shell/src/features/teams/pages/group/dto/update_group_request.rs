@@ -5,5 +5,5 @@ use super::super::*;
 pub struct UpdateGroupRequest {
     pub name: Option<String>,
     pub description: Option<String>,
-    pub permissions: Option<Vec<ratel_post::types::TeamGroupPermission>>,
+    pub permissions: Option<Vec<crate::features::posts::types::TeamGroupPermission>>,
 }

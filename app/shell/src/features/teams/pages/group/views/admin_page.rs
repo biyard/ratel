@@ -4,7 +4,7 @@ use dioxus::prelude::*;
 use super::super::components::{CreateGroupModal, InviteMemberModal, InviteResult, ListGroups};
 use super::super::controllers::{create_group_handler, delete_group_handler, list_groups_handler};
 use super::super::dto::*;
-use ratel_post::types::{TeamGroupPermission, TeamGroupPermissions};
+use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 
 #[component]
 pub fn AdminPage(teamname: String, team_pk: TeamPartition, permissions: i64) -> Element {

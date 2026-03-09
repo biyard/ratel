@@ -3,6 +3,6 @@ use dioxus::prelude::*;
 #[component]
 pub fn Home(username: String) -> Element {
     rsx! {
-        ratel_post::components::MyPosts { username }
+        crate::features::posts::components::MyPosts { username }
     }
 }

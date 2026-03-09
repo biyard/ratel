@@ -43,11 +43,11 @@ pub async fn get_user_teams_handler() -> crate::Result<Vec<TeamItem>> {
         } else {
             let team_pk: common::types::Partition = team_pk.parse().unwrap_or_default();
             let perms =
-                ratel_post::models::Team::get_permissions_by_team_pk(cli, &team_pk, &user_pk)
+                crate::features::posts::models::Team::get_permissions_by_team_pk(cli, &team_pk, &user_pk)
                     .await
-                    .unwrap_or_else(|_| ratel_post::types::TeamGroupPermissions::empty());
+                    .unwrap_or_else(|_| crate::features::posts::types::TeamGroupPermissions::empty());
             let description =
-                ratel_post::models::Team::get(cli, &team_pk, Some(common::types::EntityType::Team))
+                crate::features::posts::models::Team::get(cli, &team_pk, Some(common::types::EntityType::Team))
                     .await
                     .ok()
                     .flatten()
@@ -94,8 +94,8 @@ pub async fn create_team_handler(body: CreateTeamRequest) -> crate::Result<Creat
     }
 
     // Check username uniqueness
-    use ratel_post::models::Team;
-    let opt = ratel_post::models::TeamQueryOption::builder()
+    use crate::features::posts::models::Team;
+    let opt = crate::features::posts::models::TeamQueryOption::builder()
         .sk(username.clone())
         .limit(1);
     let (existing, _): (Vec<Team>, _) = Team::find_by_username_prefix(cli, &username, opt).await?;
