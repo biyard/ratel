@@ -1,7 +1,7 @@
 use crate::features::posts::models::*;
 use crate::features::posts::types::*;
 use crate::features::posts::*;
-use ratel_auth::User;
+use crate::features::auth::User;
 
 #[post("/api/posts/:post_id/comments", user: User)]
 pub async fn add_comment_handler(post_id: FeedPartition, content: String) -> Result<PostComment> {

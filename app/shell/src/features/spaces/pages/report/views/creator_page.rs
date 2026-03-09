@@ -1,5 +1,5 @@
 use super::*;
-use common::{
+use crate::common::{
     components::{Button, ButtonStyle, TiptapEditor, Typo, Variant, Weight},
     icons::{edit::Edit1, other_devices::Save},
 };

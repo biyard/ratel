@@ -11,7 +11,7 @@ pub use menu::get_nav_item;
 pub use models::*;
 pub use route::Route;
 
-use common::*;
+use crate::common::*;
 use dioxus::prelude::*;
 
-type Result<T> = common::Result<T>;
+type Result<T> = crate::common::Result<T>;

@@ -4,7 +4,7 @@ mod i18n;
 pub use i18n::*;
 
 use crate::features::membership::*;
-use common::use_toast;
+use crate::common::use_toast;
 use crate::features::membership::components::*;
 use crate::features::membership::controllers::{
     change_membership_handler, identify_handler, ChangeMembershipRequest, IdentificationRequest,
@@ -13,10 +13,10 @@ use crate::features::membership::controllers::{
 use crate::features::membership::interop::request_identity_verification;
 use crate::features::membership::models::MembershipTier as ApiMembershipTier;
 use crate::features::membership::models::{CardInfo, Currency};
-use ratel_auth::LoginModal;
+use crate::features::auth::LoginModal;
 
-use common::wasm_bindgen::prelude::JsValue;
-use common::wasm_bindgen_futures::JsFuture;
+use crate::common::wasm_bindgen::prelude::JsValue;
+use crate::common::wasm_bindgen_futures::JsFuture;
 
 fn format_js_error(err: JsValue) -> String {
     if let Some(msg) = err.as_string() {
@@ -52,7 +52,7 @@ fn display_amount_for_tier(tier: MembershipTier, is_ko: bool) -> i64 {
 #[component]
 pub fn MembershipPlan() -> Element {
     let lang = use_language();
-    let user_ctx = ratel_auth::hooks::use_user_context();
+    let user_ctx = crate::features::auth::hooks::use_user_context();
     let mut popup = use_popup();
     let mut toast = use_toast();
 
@@ -186,7 +186,7 @@ pub fn MembershipPlan() -> Element {
                                                             match change_membership_handler(req).await {
                                                                 Ok(resp) => {
                                                                     let Some(membership_resp) = resp.membership else {
-                                                                        toast.error(common::Error::MembershipResponseMissing);
+                                                                        toast.error(crate::common::Error::MembershipResponseMissing);
                                                                         popup_modal.close();
                                                                         return;
                                                                     };
@@ -218,7 +218,7 @@ pub fn MembershipPlan() -> Element {
                                                                 }
                                                                 Err(err) => {
                                                                     error!("Failed to change membership: {:?}", err);
-                                                                    toast.error(common::Error::MembershipChangeFailed);
+                                                                    toast.error(crate::common::Error::MembershipChangeFailed);
                                                                     popup_modal.close();
                                                                 }
                                                             }

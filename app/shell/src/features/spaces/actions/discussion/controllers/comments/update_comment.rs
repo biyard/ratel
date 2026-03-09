@@ -5,7 +5,7 @@ pub struct UpdateCommentRequest {
     pub content: String,
 }
 
-#[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments/{comment_sk}", role: SpaceUserRole, user: ratel_auth::User)]
+#[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments/{comment_sk}", role: SpaceUserRole, user: crate::features::auth::User)]
 pub async fn update_comment(
     space_id: SpacePartition,
     discussion_sk: SpacePostEntityType,
@@ -13,7 +13,7 @@ pub async fn update_comment(
     req: UpdateCommentRequest,
 ) -> Result<SpacePostComment> {
     SpacePost::can_view(&role)?;
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let discussion_sk_entity: EntityType = discussion_sk.into();
 

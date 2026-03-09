@@ -1,12 +1,12 @@
 use crate::features::spaces::apps::incentive_pool::models::SpaceIncentive;
 use crate::features::spaces::apps::incentive_pool::*;
 #[cfg(feature = "server")]
-use common::SpaceUserRole;
+use crate::common::SpaceUserRole;
 
 #[get("/api/spaces/{space_pk}/incentives", role: SpaceUserRole)]
 pub async fn get_space_incentive(space_pk: SpacePartition) -> Result<SpaceIncentive> {
     SpaceIncentive::can_view(role)?;
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let dynamo = common_config.dynamodb();
 
     let space_pk: Partition = space_pk.into();

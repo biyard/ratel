@@ -1,11 +1,11 @@
 use crate::features::spaces::models::RespondentAttr;
 use crate::features::spaces::*;
-pub use common::models::did::VerifiedAttributes;
-use common::models::User;
+pub use crate::common::models::did::VerifiedAttributes;
+use crate::common::models::User;
 
 #[cfg(feature = "server")]
 pub async fn get_attributesss(
-    dynamo: &common::server_lib::DynamoClient,
+    dynamo: &crate::common::server_lib::DynamoClient,
     user_pk: Partition,
 ) -> Result<Option<RespondentAttr>> {
     let res = VerifiedAttributes::get(
@@ -20,7 +20,7 @@ pub async fn get_attributesss(
     let age = if res.age().is_none() {
         None
     } else {
-        use common::attribute::Age;
+        use crate::common::attribute::Age;
 
         match res.age().unwrap_or_default() {
             0..=17 => Some(Age::Range {

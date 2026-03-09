@@ -5,7 +5,7 @@ pub fn serve(app: fn() -> Element) {
 
     dioxus::serve(move || {
         let cli = config.common.dynamodb();
-        let session_layer = common::middlewares::session_layer::get_session_layer(
+        let session_layer = crate::common::middlewares::session_layer::get_session_layer(
             cli,
             config.common.env.to_string(),
         );

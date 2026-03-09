@@ -29,9 +29,9 @@ pub async fn check_subscription_users(
     req: CheckSubscriptionUsersRequest,
 ) -> Result<CheckSubscriptionUsersResponse> {
     SpaceSubscription::can_edit(&role)?;
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
-    use ratel_auth::models::user::UserQueryOption;
+    use crate::features::auth::models::user::UserQueryOption;
 
     let mut existing_identifiers = vec![];
     let mut seen = std::collections::HashSet::<String>::new();
@@ -50,7 +50,7 @@ pub async fn check_subscription_users(
         }
 
         if is_email {
-            let (users, _) = ratel_auth::User::find_by_email(
+            let (users, _) = crate::features::auth::User::find_by_email(
                 cli,
                 &identifier,
                 UserQueryOption::builder().limit(1),
@@ -62,7 +62,7 @@ pub async fn check_subscription_users(
             continue;
         }
 
-        let users = match ratel_auth::User::find_by_username(
+        let users = match crate::features::auth::User::find_by_username(
             cli,
             &identifier,
             UserQueryOption::builder().limit(1),

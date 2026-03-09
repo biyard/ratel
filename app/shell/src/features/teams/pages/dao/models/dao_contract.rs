@@ -33,9 +33,9 @@ pub async fn create_dao(
     rpc_url: &str,
     block_explorer_url: &str,
 ) -> std::result::Result<CreateDaoResult, DaoWalletError> {
-    use common::wasm_bindgen::JsValue;
-    use common::wasm_bindgen_futures::JsFuture;
-    use common::web_sys::js_sys::Array;
+    use crate::common::wasm_bindgen::JsValue;
+    use crate::common::wasm_bindgen_futures::JsFuture;
+    use crate::common::web_sys::js_sys::Array;
 
     let admins_js = Array::new();
     for admin in admins {
@@ -47,7 +47,7 @@ pub async fn create_dao(
 
     let value = JsFuture::from(promise).await.map_err(format_js_error)?;
     let result: CreateDaoResult =
-        common::serde_wasm_bindgen::from_value(value).map_err(|e| DaoWalletError {
+        crate::common::serde_wasm_bindgen::from_value(value).map_err(|e| DaoWalletError {
             code: None,
             message: format!("Invalid DAO response: {}", e),
         })?;
@@ -69,11 +69,11 @@ pub async fn create_dao(
 }
 
 #[cfg(not(feature = "server"))]
-fn format_js_error(err: common::wasm_bindgen::JsValue) -> DaoWalletError {
-    use common::web_sys::js_sys::{JSON, Reflect};
+fn format_js_error(err: crate::common::wasm_bindgen::JsValue) -> DaoWalletError {
+    use crate::common::web_sys::js_sys::{JSON, Reflect};
 
     let code = if err.is_object() {
-        Reflect::get(&err, &common::wasm_bindgen::JsValue::from_str("code"))
+        Reflect::get(&err, &crate::common::wasm_bindgen::JsValue::from_str("code"))
             .ok()
             .and_then(|value| value.as_string())
     } else {
@@ -83,7 +83,7 @@ fn format_js_error(err: common::wasm_bindgen::JsValue) -> DaoWalletError {
     let message = if let Some(msg) = err.as_string() {
         msg
     } else if err.is_object() {
-        Reflect::get(&err, &common::wasm_bindgen::JsValue::from_str("message"))
+        Reflect::get(&err, &crate::common::wasm_bindgen::JsValue::from_str("message"))
             .ok()
             .and_then(|value| value.as_string())
             .or_else(|| JSON::stringify(&err).ok().and_then(|v| v.as_string()))

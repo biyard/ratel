@@ -1,5 +1,5 @@
 use crate::features::spaces::EnumProp;
-use common::attribute::{Age, Gender};
+use crate::common::attribute::{Age, Gender};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]

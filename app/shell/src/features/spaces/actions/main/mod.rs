@@ -16,6 +16,6 @@ use dioxus::prelude::*;
 
 pub use route::Route;
 
-pub use common::*;
+pub use crate::common::*;
 
-type Result<T> = common::Result<T>;
+type Result<T> = crate::common::Result<T>;

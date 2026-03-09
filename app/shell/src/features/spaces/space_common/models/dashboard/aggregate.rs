@@ -1,4 +1,4 @@
-use common::{DynamoEntity, EntityType, Partition};
+use crate::common::{DynamoEntity, EntityType, Partition};
 use serde::{Deserialize, Serialize};
 
 /// Single aggregate row per space storing all dashboard counters.
@@ -30,7 +30,7 @@ impl DashboardAggregate {
     pub async fn get_or_create(
         cli: &aws_sdk_dynamodb::Client,
         space_pk: &Partition,
-    ) -> common::Result<Self> {
+    ) -> crate::common::Result<Self> {
         let aggregate = Self::get_or_default(cli, space_pk).await?;
         let (agg_pk, agg_sk) = Self::keys(space_pk);
 
@@ -50,7 +50,7 @@ impl DashboardAggregate {
     pub async fn get_or_default(
         cli: &aws_sdk_dynamodb::Client,
         space_pk: &Partition,
-    ) -> common::Result<Self> {
+    ) -> crate::common::Result<Self> {
         let (pk, sk) = Self::keys(space_pk);
         match Self::get(cli, &pk, Some(sk)).await? {
             Some(agg) => Ok(agg),

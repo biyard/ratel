@@ -13,7 +13,7 @@ pub async fn list_space_incentive_tokens(
 ) -> Result<ListResponse<SpaceIncentiveToken>> {
     use crate::features::spaces::apps::incentive_pool::models::SpaceIncentive;
     SpaceIncentive::can_view(role)?;
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let dynamo = common_config.dynamodb();
 
     let space_pk: Partition = space_pk.into();

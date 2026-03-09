@@ -1,17 +1,17 @@
 use super::super::*;
-use common::services::biyard::PointTransactionResponse;
+use crate::common::services::biyard::PointTransactionResponse;
 
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 
 pub type ListPointTransactionsResponse = ListResponse<PointTransactionResponse>;
 
-#[get("/api/teams/:team_pk/points/transactions?month&bookmark", user: ratel_auth::User, permissions: TeamGroupPermissions)]
+#[get("/api/teams/:team_pk/points/transactions?month&bookmark", user: crate::features::auth::User, permissions: TeamGroupPermissions)]
 pub async fn list_team_point_transactions_handler(
     team_pk: TeamPartition,
     month: Option<String>,
     bookmark: Option<String>,
 ) -> Result<ListPointTransactionsResponse> {
-    let cfg = common::CommonConfig::default();
+    let cfg = crate::common::CommonConfig::default();
     let team_pk: Partition = team_pk.into();
     let can_view = permissions.contains(TeamGroupPermission::TeamAdmin);
     if !can_view {

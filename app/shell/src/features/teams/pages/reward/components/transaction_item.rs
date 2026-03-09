@@ -1,4 +1,4 @@
-use common::services::PointTransactionResponse;
+use crate::common::services::PointTransactionResponse;
 
 use super::super::TeamRewardsTranslate;
 use super::super::*;

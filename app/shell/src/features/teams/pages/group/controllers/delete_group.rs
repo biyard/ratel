@@ -6,7 +6,7 @@ use aws_sdk_dynamodb::types::TransactWriteItem;
 use crate::features::posts::models::TeamGroup;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 
-#[delete("/api/teams/:team_pk/groups/:group_sk", user: ratel_auth::User, permissions: TeamGroupPermissions)]
+#[delete("/api/teams/:team_pk/groups/:group_sk", user: crate::features::auth::User, permissions: TeamGroupPermissions)]
 pub async fn delete_group_handler(
     team_pk: TeamPartition,
     group_sk: String,
@@ -54,17 +54,17 @@ pub async fn delete_group_handler(
     let mut bookmark: Option<String> = None;
     let mut transact_items: Vec<TransactWriteItem> = Vec::new();
     loop {
-        let mut option = ratel_auth::UserTeamGroupQueryOption::builder().limit(50);
+        let mut option = crate::features::auth::UserTeamGroupQueryOption::builder().limit(50);
         if let Some(b) = &bookmark {
             option = option.bookmark(b.clone());
         }
         let (user_team_groups, next) =
-            ratel_auth::UserTeamGroup::find_by_team_pk(cli, &team_pk, option).await?;
+            crate::features::auth::UserTeamGroup::find_by_team_pk(cli, &team_pk, option).await?;
 
         for utg in user_team_groups {
             if let EntityType::UserTeamGroup(utg_group_sk) = &utg.sk {
                 if *utg_group_sk == target_group.sk.to_string() {
-                    transact_items.push(ratel_auth::UserTeamGroup::delete_transact_write_item(
+                    transact_items.push(crate::features::auth::UserTeamGroup::delete_transact_write_item(
                         utg.pk, utg.sk,
                     ));
                     removed_members += 1;

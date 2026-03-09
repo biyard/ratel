@@ -1,5 +1,5 @@
 use super::*;
-use common::components::{SpaceCard, TiptapEditor};
+use crate::common::components::{SpaceCard, TiptapEditor};
 use crate::features::spaces::apps::file::components::FileCard;
 use crate::features::spaces::space_common::hooks::use_space_query;
 

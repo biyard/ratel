@@ -5,7 +5,7 @@ use crate::features::posts::controllers::{create_space_handler, CreateSpaceReque
 use crate::features::posts::models::Post;
 use crate::features::posts::types::Visibility;
 use crate::features::posts::*;
-use common::components::{ButtonShape, ButtonSize, ButtonStyle, InputVariant, TiptapEditor};
+use crate::common::components::{ButtonShape, ButtonSize, ButtonStyle, InputVariant, TiptapEditor};
 use dioxus::prelude::*;
 
 translate! {
@@ -103,7 +103,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
         }
         let post_id = v.clone();
         spawn(async move {
-            common::utils::time::sleep(std::time::Duration::from_secs(3)).await;
+            crate::common::utils::time::sleep(std::time::Duration::from_secs(3)).await;
 
             // Only save if version hasn't changed (no newer edits during wait)
             if save_version() != ver {

@@ -22,7 +22,7 @@ translate! {
 #[component]
 pub fn ProfileDropdown() -> Element {
     let tr: ProfileDropdownTranslate = use_translate();
-    let user_ctx = ratel_auth::hooks::use_user_context();
+    let user_ctx = crate::features::auth::hooks::use_user_context();
     let team_ctx = use_team_context();
     let mut open = use_signal(|| false);
     let mut popup = use_popup();
@@ -141,7 +141,7 @@ pub fn ProfileDropdown() -> Element {
                         onclick: move |_| {
                             open.set(false);
                             spawn(async move {
-                                let _ = ratel_auth::controllers::logout_handler().await;
+                                let _ = crate::features::auth::controllers::logout_handler().await;
                                 nav.push("/");
                                 // Force page reload to clear auth state
                                 #[cfg(target_arch = "wasm32")]

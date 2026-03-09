@@ -43,12 +43,12 @@ impl SpacePost {
         title: String,
         html_contents: String,
         category_name: String,
-        user: &ratel_auth::User,
+        user: &crate::features::auth::User,
         started_at: Option<i64>,
         ended_at: Option<i64>,
     ) -> Self {
         let pk: Partition = space_pk.into();
-        let now = common::utils::time::get_now_timestamp_millis();
+        let now = crate::common::utils::time::get_now_timestamp_millis();
         let uuid = uuid::Uuid::now_v7().to_string();
         let started_at = started_at.unwrap_or(now);
         // End At is 7 days after start date
@@ -87,7 +87,7 @@ impl SpacePost {
         space_pk: SpacePartition,
         space_post_pk: SpacePostPartition,
         content: String,
-        user: &ratel_auth::User,
+        user: &crate::features::auth::User,
     ) -> crate::features::spaces::actions::discussion::Result<SpacePostComment> {
         let (pk, sk) = SpacePost::keys(&space_pk, &space_post_pk);
         let post = SpacePost::updater(&pk, sk)
@@ -96,7 +96,7 @@ impl SpacePost {
         let comment = SpacePostComment::new(space_pk, space_post_pk, content, user);
         let comment_tx = comment.create_transact_write_item();
 
-        transact_write_items!(cli, vec![comment_tx, post]).map_err(|e| {
+        crate::transact_write_items!(cli, vec![comment_tx, post]).map_err(|e| {
             tracing::error!("Failed to add comment: {}", e);
             crate::features::spaces::actions::discussion::Error::Unknown(format!("Failed to add comment: {}", e))
         })?;
@@ -126,7 +126,7 @@ impl SpacePost {
         let pl_tx = SpacePostCommentLike::new(space_post_pk, comment_pk, user_pk)
             .create_transact_write_item();
 
-        transact_write_items!(cli, vec![comment_tx, pl_tx]).map_err(|e| {
+        crate::transact_write_items!(cli, vec![comment_tx, pl_tx]).map_err(|e| {
             tracing::error!("Failed to like comment: {}", e);
             crate::features::spaces::actions::discussion::Error::Unknown(format!("Failed to like comment: {}", e))
         })?;
@@ -155,7 +155,7 @@ impl SpacePost {
         let pcl = SpacePostCommentLike::new(space_post_pk, comment_pk, user_pk);
         let pl_tx = SpacePostCommentLike::delete_transact_write_item(&pcl.pk, &pcl.sk);
 
-        transact_write_items!(cli, vec![comment_tx, pl_tx]).map_err(|e| {
+        crate::transact_write_items!(cli, vec![comment_tx, pl_tx]).map_err(|e| {
             tracing::error!("Failed to unlike comment: {}", e);
             crate::features::spaces::actions::discussion::Error::Unknown(format!("Failed to unlike comment: {}", e))
         })?;
@@ -166,7 +166,7 @@ impl SpacePost {
 
 impl SpacePost {
     pub fn status(&self) -> DiscussionStatus {
-        let now = common::utils::time::get_now_timestamp_millis();
+        let now = crate::common::utils::time::get_now_timestamp_millis();
         let started_at = self.started_at;
         let ended_at = self.ended_at;
         if now < started_at {

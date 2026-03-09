@@ -1,8 +1,8 @@
 use crate::features::spaces::apps::general::*;
 #[cfg(feature = "server")]
-use common::SpaceUserRole;
+use crate::common::SpaceUserRole;
 #[cfg(feature = "server")]
-use ratel_auth::User;
+use crate::features::auth::User;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct SpaceAdministratorResponse {
@@ -15,15 +15,15 @@ pub struct SpaceAdministratorResponse {
 #[get("/api/spaces/{space_id}/administrator", role: SpaceUserRole)]
 pub async fn get_space_administrator(
     space_id: SpacePartition,
-) -> common::Result<SpaceAdministratorResponse> {
-    use common::models::space::SpaceCommon;
-    use common::types::Partition;
+) -> crate::common::Result<SpaceAdministratorResponse> {
+    use crate::common::models::space::SpaceCommon;
+    use crate::common::types::Partition;
 
     if role != SpaceUserRole::Creator {
         return Err(Error::NoPermission);
     }
 
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let dynamo = common_config.dynamodb();
     let space_pk: Partition = space_id.into();
     let space = SpaceCommon::get(dynamo, &space_pk, Some(&EntityType::SpaceCommon))

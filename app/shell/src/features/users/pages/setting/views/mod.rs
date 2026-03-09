@@ -5,9 +5,9 @@ use super::components::{
 use super::controllers::{UpdateUserRequest, get_user_detail_handler, update_user_handler};
 use super::*;
 #[cfg(not(feature = "server"))]
-use common::{wasm_bindgen, wasm_bindgen_futures, web_sys};
+use crate::common::{wasm_bindgen, wasm_bindgen_futures, web_sys};
 use dioxus::prelude::*;
-use ratel_auth::hooks::use_user_context;
+use crate::features::auth::hooks::use_user_context;
 #[cfg(not(feature = "server"))]
 use web_sys::js_sys::{JSON, Reflect};
 
@@ -39,7 +39,7 @@ pub fn Home(username: String) -> Element {
     let mut detail_loaded = use_signal(|| false);
     let mut active_tab = use_signal(|| 0usize);
     let mut lang = use_language();
-    let mut theme_service = common::use_theme();
+    let mut theme_service = crate::common::use_theme();
     let mut popup = use_popup();
 
     {

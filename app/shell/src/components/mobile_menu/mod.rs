@@ -1,5 +1,5 @@
 use crate::*;
-use ratel_auth::LoginModal;
+use crate::features::auth::LoginModal;
 
 translate! {
     MobileMenuTranslate;
@@ -68,7 +68,7 @@ translate! {
 #[component]
 pub fn MobileSideMenu(is_open: Signal<bool>) -> Element {
     let tr: MobileMenuTranslate = use_translate();
-    let user_ctx = ratel_auth::hooks::use_user_context();
+    let user_ctx = crate::features::auth::hooks::use_user_context();
     let team_ctx = use_team_context();
     let mut popup = use_popup();
     let nav = use_navigator();
@@ -238,7 +238,7 @@ pub fn MobileSideMenu(is_open: Signal<bool>) -> Element {
                         onclick: move |_| {
                             is_open.set(false);
                             spawn(async move {
-                                let _ = ratel_auth::controllers::logout_handler().await;
+                                let _ = crate::features::auth::controllers::logout_handler().await;
                                 nav.push("/");
                                 #[cfg(target_arch = "wasm32")]
                                 {

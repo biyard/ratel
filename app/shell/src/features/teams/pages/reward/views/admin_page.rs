@@ -3,7 +3,7 @@ use super::super::controllers::{get_team_rewards_handler, list_team_point_transa
 use super::super::dto::TeamRewardsResponse;
 use super::TeamRewardsTranslate;
 use super::super::*;
-use common::services::PointTransactionResponse;
+use crate::common::services::PointTransactionResponse;
 use dioxus::prelude::*;
 
 #[component]

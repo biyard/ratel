@@ -4,14 +4,14 @@ use crate::features::posts::controllers::like_post::like_post_handler;
 use crate::features::posts::controllers::{create_space_handler, delete_post_handler, CreateSpaceRequest};
 use crate::features::posts::types::*;
 use crate::features::posts::*;
-use common::components::{Button, ButtonSize, ButtonStyle};
+use crate::common::components::{Button, ButtonSize, ButtonStyle};
 use dioxus::prelude::*;
 
 #[component]
 pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: FeedPartition) -> Element {
     let t: PostDetailTranslate = use_translate();
     let nav = use_navigator();
-    let user_ctx = ratel_auth::hooks::use_user_context();
+    let user_ctx = crate::features::auth::hooks::use_user_context();
 
     let post = match &detail.post {
         Some(p) => p.clone(),
@@ -53,7 +53,7 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: FeedPartition) -> E
         })
     });
 
-    let img_class = if post.author_type == ratel_auth::UserType::Team {
+    let img_class = if post.author_type == crate::features::auth::UserType::Team {
         "rounded-lg object-cover object-top w-6 h-6"
     } else {
         "rounded-full object-cover object-top w-6 h-6"

@@ -1,4 +1,5 @@
 #![allow(unused_imports, dead_code)]
+pub mod common;
 mod app;
 pub mod components;
 pub mod config;
@@ -12,14 +13,14 @@ pub mod views;
 pub use app::App;
 pub use route::Route;
 
-use common::*;
+use crate::common::*;
 use components::*;
 use contexts::*;
 use dioxus::prelude::*;
 pub mod features;
 pub use features::*;
 
-type Result<T> = common::Result<T>;
+type Result<T> = crate::common::Result<T>;
 
 #[cfg(test)]
 pub mod tests;

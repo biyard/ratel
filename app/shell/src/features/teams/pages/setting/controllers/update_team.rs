@@ -4,7 +4,7 @@ use super::super::*;
 use crate::features::posts::models::Team;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 
-#[patch("/api/teams/:teamname/settings", user: ratel_auth::User, team: Team, permissions: TeamGroupPermissions)]
+#[patch("/api/teams/:teamname/settings", user: crate::features::auth::User, team: Team, permissions: TeamGroupPermissions)]
 pub async fn update_team_handler(
     teamname: String,
     body: UpdateTeamRequest,
@@ -50,16 +50,16 @@ pub async fn update_team_handler(
         let mut bookmark: Option<String> = None;
         let user_team_sk = EntityType::UserTeam(team.pk.to_string());
         loop {
-            let mut option = ratel_auth::UserTeamQueryOption::builder();
+            let mut option = crate::features::auth::UserTeamQueryOption::builder();
             if let Some(b) = &bookmark {
                 option = option.bookmark(b.clone());
             }
             option = option.limit(50);
             let (user_teams, next) =
-                ratel_auth::UserTeam::find_by_team(cli, &user_team_sk, option).await?;
+                crate::features::auth::UserTeam::find_by_team(cli, &user_team_sk, option).await?;
             for user_team in user_teams {
                 let mut user_team_updater =
-                    ratel_auth::UserTeam::updater(&user_team.pk, &user_team.sk)
+                    crate::features::auth::UserTeam::updater(&user_team.pk, &user_team.sk)
                         .with_display_name(team.display_name.clone())
                         .with_profile_url(team.profile_url.clone());
                 if let Some(ref dao_address) = team.dao_address {

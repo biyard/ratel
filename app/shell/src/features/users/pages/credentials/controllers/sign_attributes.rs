@@ -10,10 +10,10 @@ pub enum SignAttributesRequest {
     Code { code: String },
 }
 
-#[post("/api/me/did", user: ratel_auth::User)]
+#[post("/api/me/did", user: crate::features::auth::User)]
 pub async fn sign_attributes_handler(body: SignAttributesRequest) -> Result<CredentialResponse> {
     debug!("Handling sign attributes request: {:?}", body);
-    let conf = common::config::ServerConfig::default();
+    let conf = crate::common::config::ServerConfig::default();
     let cli = conf.dynamodb();
     let attrs = match body {
         SignAttributesRequest::PortOne { id } => portone_sign_attributes(cli, &user, id).await?,
@@ -29,8 +29,8 @@ pub async fn sign_attributes_handler(body: SignAttributesRequest) -> Result<Cred
 
 #[cfg(feature = "server")]
 async fn add_attributes_by_code(
-    cli: &common::aws_sdk_dynamodb::Client,
-    user: &ratel_auth::User,
+    cli: &crate::common::aws_sdk_dynamodb::Client,
+    user: &crate::features::auth::User,
     code: String,
 ) -> Result<VerifiedAttributes> {
     let code = code.trim().to_string();
@@ -69,8 +69,8 @@ async fn add_attributes_by_code(
 
 #[cfg(feature = "server")]
 async fn portone_sign_attributes(
-    cli: &common::aws_sdk_dynamodb::Client,
-    user: &ratel_auth::User,
+    cli: &crate::common::aws_sdk_dynamodb::Client,
+    user: &crate::features::auth::User,
     id: String,
 ) -> Result<VerifiedAttributes> {
     use super::super::services::PortOneClient;
@@ -80,8 +80,8 @@ async fn portone_sign_attributes(
     let verified = response.verified_customer;
 
     let gender = match verified.gender.to_lowercase().as_str() {
-        "male" => Some(common::attribute::Gender::Male),
-        "female" => Some(common::attribute::Gender::Female),
+        "male" => Some(crate::common::attribute::Gender::Male),
+        "female" => Some(crate::common::attribute::Gender::Female),
         _ => return Err(Error::BadRequest("Invalid gender".to_string())),
     };
 

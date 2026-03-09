@@ -1,7 +1,7 @@
 use super::components::{exchange_preview_card, points_summary_card, transaction_list};
 use super::controllers::{get_rewards_handler, list_point_transactions_handler};
 use super::dto::RewardsResponse;
-use common::services::PointTransactionResponse;
+use crate::common::services::PointTransactionResponse;
 use super::*;
 use dioxus::prelude::*;
 

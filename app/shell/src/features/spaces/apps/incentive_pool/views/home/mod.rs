@@ -10,7 +10,7 @@ use crate::features::spaces::apps::incentive_pool::utils::format::{
 };
 use crate::features::spaces::apps::incentive_pool::utils::service::{load_incentive_and_tokens, refresh_tokens, register_incentive_pool};
 use crate::features::spaces::apps::incentive_pool::*;
-use common::components::{Button, ButtonStyle};
+use crate::common::components::{Button, ButtonStyle};
 
 const DEFAULT_RECIPIENT_COUNT: i64 = 10;
 const MIX_RANKING_BPS: i64 = 7000;

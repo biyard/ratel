@@ -1,6 +1,6 @@
 use crate::features::posts::types::*;
 use crate::features::posts::*;
-use ratel_auth::User;
+use crate::features::auth::User;
 
 use super::{Post, PostCommentLike};
 
@@ -44,7 +44,7 @@ impl PostComment {
             ..
         }: User,
     ) -> Self {
-        let uuid = ratel_auth::utils::uuid::sorted_uuid();
+        let uuid = crate::features::auth::utils::uuid::sorted_uuid();
         let now = chrono::Utc::now().timestamp();
 
         Self {
@@ -114,7 +114,7 @@ impl PostComment {
         let mut comment = Self::new(Partition::PostReply(post_pk.to_string()), content, user)
             .with_parent_comment_sk(parent_comment_sk.clone());
 
-        let uuid = ratel_auth::utils::uuid::sorted_uuid();
+        let uuid = crate::features::auth::utils::uuid::sorted_uuid();
         comment.sk = EntityType::PostCommentReply(parent_comment_id, uuid);
 
         let comment_tx = comment.create_transact_write_item();

@@ -2,7 +2,7 @@ use crate::features::posts::controllers::dto::*;
 use crate::features::posts::models::PostArtworkMetadata;
 use crate::features::posts::types::*;
 use crate::features::posts::*;
-use common::components::TiptapEditor;
+use crate::common::components::TiptapEditor;
 use dioxus::prelude::*;
 
 #[component]

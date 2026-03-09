@@ -2,7 +2,7 @@ use crate::features::posts::controllers::dto::*;
 use crate::features::posts::models::*;
 use crate::features::posts::types::*;
 use crate::features::posts::*;
-use ratel_auth::User;
+use crate::features::auth::User;
 
 #[get("/api/posts/drafts?bookmark", user: User)]
 pub async fn list_user_drafts_handler(

@@ -1,12 +1,12 @@
 use crate::features::spaces::space_common::*;
 #[cfg(feature = "server")]
-use common::models::space::SpaceCommon;
+use crate::common::models::space::SpaceCommon;
 #[cfg(feature = "server")]
-use common::models::User;
+use crate::common::models::User;
 #[cfg(feature = "server")]
-use common::utils::aws::SesClient;
+use crate::common::utils::aws::SesClient;
 #[cfg(feature = "server")]
-use common::utils::time::get_now_timestamp_millis;
+use crate::common::utils::time::get_now_timestamp_millis;
 
 use super::SpaceEmailVerification;
 

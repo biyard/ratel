@@ -40,11 +40,11 @@ struct JsDeployResponse {
 }
 
 #[cfg(not(feature = "server"))]
-use common::wasm_bindgen::prelude::*;
+use crate::common::wasm_bindgen::prelude::*;
 #[cfg(not(feature = "server"))]
-use common::wasm_bindgen_futures::JsFuture;
+use crate::common::wasm_bindgen_futures::JsFuture;
 #[cfg(not(feature = "server"))]
-use common::web_sys::js_sys::{Promise, Reflect, JSON};
+use crate::common::web_sys::js_sys::{Promise, Reflect, JSON};
 
 #[cfg(not(feature = "server"))]
 #[wasm_bindgen(js_namespace = ["window", "ratel", "space_incentive_pool"])]
@@ -68,7 +68,7 @@ pub async fn deploy_space_incentive(
         env: req.env,
     };
 
-    let js_req = common::serde_wasm_bindgen::to_value(&js_req)
+    let js_req = crate::common::serde_wasm_bindgen::to_value(&js_req)
         .map_err(|err| Error::Unknown(format!("failed to serialize deploy request: {err}")))?;
 
     let promise =
@@ -77,7 +77,7 @@ pub async fn deploy_space_incentive(
         .await
         .map_err(|err| Error::Unknown(format_js_error(err)))?;
 
-    let res: JsDeployResponse = common::serde_wasm_bindgen::from_value(value)
+    let res: JsDeployResponse = crate::common::serde_wasm_bindgen::from_value(value)
         .map_err(|err| Error::Unknown(format!("invalid deploy response: {err}")))?;
 
     Ok(DeploySpaceIncentiveResponse {
@@ -115,7 +115,7 @@ pub async fn copy_text(_text: String) -> Result<()> {
 
 #[cfg(not(feature = "server"))]
 pub fn open_url(url: &str) {
-    let _ = common::web_sys::window().and_then(|window| window.open_with_url(url).ok());
+    let _ = crate::common::web_sys::window().and_then(|window| window.open_with_url(url).ok());
 }
 
 #[cfg(feature = "server")]

@@ -1,6 +1,6 @@
 use crate::features::spaces::actions::main::*;
 #[cfg(feature = "server")]
-use ratel_auth::models::user::OptionalUser;
+use crate::features::auth::models::user::OptionalUser;
 
 // TODO: If bookmark-based pagination is needed, consider introducing a separate DynamoDB entity
 #[get("/api/spaces/{space_pk}/actions", role: SpaceUserRole, user: OptionalUser)]

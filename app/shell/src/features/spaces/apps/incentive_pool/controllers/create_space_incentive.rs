@@ -1,7 +1,7 @@
 use crate::features::spaces::apps::incentive_pool::models::SpaceIncentive;
 use crate::features::spaces::apps::incentive_pool::*;
 #[cfg(feature = "server")]
-use common::SpaceUserRole;
+use crate::common::SpaceUserRole;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct CreateSpaceIncentiveRequest {
@@ -28,7 +28,7 @@ pub async fn create_space_incentive(
         ));
     }
 
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let dynamo = common_config.dynamodb();
 
     let incentive = SpaceIncentive::new(space_pk, req.contract_address, req.deploy_block);

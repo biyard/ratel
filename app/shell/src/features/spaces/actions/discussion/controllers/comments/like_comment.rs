@@ -5,7 +5,7 @@ pub struct LikeCommentRequest {
     pub like: bool,
 }
 
-#[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments/{comment_sk}/likes", role: SpaceUserRole, user: ratel_auth::User)]
+#[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments/{comment_sk}/likes", role: SpaceUserRole, user: crate::features::auth::User)]
 pub async fn like_comment(
     space_id: SpacePartition,
     discussion_sk: SpacePostEntityType,
@@ -13,7 +13,7 @@ pub async fn like_comment(
     req: LikeCommentRequest,
 ) -> Result<()> {
     SpacePost::can_view(&role)?;
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let space_post_pk = SpacePostPartition(discussion_sk.0.clone());
 
@@ -33,7 +33,7 @@ pub async fn like_comment(
     let space_pk: Partition = space_id.into();
     let delta = if req.like { 1 } else { -1 };
     let agg_item = crate::features::spaces::space_common::models::aggregate::DashboardAggregate::inc_likes(&space_pk, delta);
-    transact_write_items!(cli, vec![agg_item]).ok();
+    crate::transact_write_items!(cli, vec![agg_item]).ok();
 
     Ok(())
 }

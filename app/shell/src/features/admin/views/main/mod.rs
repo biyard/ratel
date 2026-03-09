@@ -8,9 +8,9 @@ use crate::features::admin::models::reward_types::{
     ConditionType, RewardConditionExt, RewardPeriodExt, RewardUserBehaviorExt,
 };
 use crate::features::admin::*;
-use common::RewardCondition;
-use common::RewardPeriod;
-use common::RewardUserBehavior;
+use crate::common::RewardCondition;
+use crate::common::RewardPeriod;
+use crate::common::RewardUserBehavior;
 use i18n::AdminRewardsTranslate;
 
 #[component]

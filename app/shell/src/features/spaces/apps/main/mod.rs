@@ -14,6 +14,6 @@ pub use models::*;
 pub use route::Route;
 pub use types::*;
 
-use common::*;
+use crate::common::*;
 
-type Result<T> = common::Result<T>;
+type Result<T> = crate::common::Result<T>;

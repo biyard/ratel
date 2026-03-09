@@ -4,9 +4,9 @@ mod i18n;
 pub use i18n::*;
 
 use crate::features::membership::*;
-use common::chrono::TimeZone;
-use common::components::Card;
-use common::components::{Button, ButtonStyle};
+use crate::common::chrono::TimeZone;
+use crate::common::components::Card;
+use crate::common::components::{Button, ButtonStyle};
 use crate::features::membership::components::MembershipTier;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -44,7 +44,7 @@ fn format_with_commas(value: i64) -> String {
 }
 
 fn format_date_time(timestamp_millis: i64) -> String {
-    let dt = common::chrono::Local
+    let dt = crate::common::chrono::Local
         .timestamp_millis_opt(timestamp_millis)
         .single();
     dt.map(|v| v.format("%Y-%m-%d %H:%M").to_string())

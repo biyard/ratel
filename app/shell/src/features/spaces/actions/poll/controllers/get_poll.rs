@@ -1,4 +1,4 @@
-use ratel_auth::OptionalUser;
+use crate::features::auth::OptionalUser;
 
 use crate::features::spaces::actions::poll::*;
 
@@ -8,7 +8,7 @@ pub async fn get_poll(
     poll_sk: SpacePollEntityType,
 ) -> Result<PollResponse> {
     SpacePoll::can_view(&role)?;
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let space_pk: Partition = space_pk.into();
     let poll_sk_entity: EntityType = poll_sk.into();

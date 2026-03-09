@@ -2,7 +2,7 @@ use crate::features::posts::controllers::dto::*;
 use crate::features::posts::models::*;
 use crate::features::posts::types::*;
 use crate::features::posts::*;
-use ratel_auth::OptionalUser;
+use crate::features::auth::OptionalUser;
 
 #[get("/api/posts/by-user/:username?bookmark", user: OptionalUser)]
 pub async fn list_user_posts_handler(
@@ -12,7 +12,7 @@ pub async fn list_user_posts_handler(
     let conf = crate::features::posts::config::get();
     let cli = conf.dynamodb();
 
-    let user: Option<ratel_auth::User> = user.into();
+    let user: Option<crate::features::auth::User> = user.into();
 
     tracing::debug!(
         "list_user_posts_handler: username = {:?} bookmark = {:?}",
@@ -20,7 +20,7 @@ pub async fn list_user_posts_handler(
         bookmark
     );
 
-    let (users, _) = ratel_auth::User::find_by_username(cli, &username, Default::default()).await?;
+    let (users, _) = crate::features::auth::User::find_by_username(cli, &username, Default::default()).await?;
     let target_user = users.into_iter().next().ok_or(Error::PostInvalidUsername)?;
     let user_pk = target_user.pk;
     let is_owner = match &user {
@@ -86,7 +86,7 @@ pub async fn list_team_posts_handler(
     let conf = crate::features::posts::config::get();
     let cli = conf.dynamodb();
 
-    let user: Option<ratel_auth::User> = user.into();
+    let user: Option<crate::features::auth::User> = user.into();
 
     tracing::debug!(
         "list_team_posts_handler: teamname = {:?} bookmark = {:?}",

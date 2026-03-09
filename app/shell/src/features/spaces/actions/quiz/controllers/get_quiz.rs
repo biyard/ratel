@@ -1,4 +1,4 @@
-use ratel_auth::OptionalUser;
+use crate::features::auth::OptionalUser;
 
 use crate::features::spaces::actions::quiz::*;
 
@@ -8,7 +8,7 @@ pub async fn get_quiz(
     quiz_id: SpaceQuizEntityType,
 ) -> Result<QuizResponse> {
     SpaceQuiz::can_view(&role)?;
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let space_pk: Partition = space_pk.into();
     let quiz_sk: EntityType = quiz_id.clone().into();

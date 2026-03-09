@@ -6,7 +6,7 @@ use crate::features::membership::models::PurchaseEntity;
 #[cfg(feature = "server")]
 use crate::features::membership::services::portone::PortOne;
 #[cfg(feature = "server")]
-use ratel_auth::utils::uuid::sorted_uuid;
+use crate::features::auth::utils::uuid::sorted_uuid;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
@@ -111,7 +111,7 @@ impl UserPurchase {
         tx_id: String,
     ) -> Self {
         let uuid = sorted_uuid();
-        let created_at = common::utils::time::now();
+        let created_at = crate::common::utils::time::now();
 
         Self {
             pk: CompositePartition::user_purchase_pk(pk.into()),
@@ -166,7 +166,7 @@ pub struct UserPayment {
 #[cfg(feature = "server")]
 impl UserPayment {
     pub fn new(pk: Partition, customer_id: String, name: String, birth_date: String) -> Self {
-        let now = common::utils::time::now();
+        let now = crate::common::utils::time::now();
         Self {
             pk: CompositePartition(pk, Partition::Payment),
             sk: EntityType::Created(now.to_string()),

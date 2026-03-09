@@ -33,7 +33,7 @@ pub fn QuizParticipantPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityTyp
         map
     });
 
-    let now = common::utils::time::get_now_timestamp_millis();
+    let now = crate::common::utils::time::get_now_timestamp_millis();
     let is_in_progress = now >= quiz.started_at && now <= quiz.ended_at;
     let is_not_started = now < quiz.started_at;
     let is_finished = now > quiz.ended_at;

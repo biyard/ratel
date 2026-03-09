@@ -1,6 +1,6 @@
 use crate::features::posts::models::*;
 use crate::features::posts::*;
-use ratel_auth::User;
+use crate::features::auth::User;
 
 #[post("/api/posts/:post_id/comments/:comment_id/reply", user: User)]
 pub async fn reply_to_comment_handler(

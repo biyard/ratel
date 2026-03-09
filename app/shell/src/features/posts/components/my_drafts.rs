@@ -3,7 +3,7 @@ use crate::features::posts::controllers::delete_post::delete_post_handler;
 use crate::features::posts::controllers::dto::*;
 use crate::features::posts::controllers::list_user_drafts::{list_team_drafts_handler, list_user_drafts_handler};
 use crate::features::posts::*;
-use common::hooks::use_infinite_query;
+use crate::common::hooks::use_infinite_query;
 use dioxus::prelude::*;
 use icons::edit::Delete2;
 use std::collections::HashSet;

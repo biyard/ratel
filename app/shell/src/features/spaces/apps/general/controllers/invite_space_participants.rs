@@ -1,8 +1,8 @@
 use crate::features::spaces::apps::general::*;
 #[cfg(feature = "server")]
-use common::SpaceUserRole;
+use crate::common::SpaceUserRole;
 #[cfg(feature = "server")]
-use ratel_auth::User;
+use crate::features::auth::User;
 #[cfg(feature = "server")]
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
@@ -97,7 +97,7 @@ impl SpaceInvitationMember {
             username,
             email,
             status: InvitationStatus::Pending,
-            created_at: common::utils::time::get_now_timestamp_millis(),
+            created_at: crate::common::utils::time::get_now_timestamp_millis(),
         }
     }
 
@@ -125,17 +125,17 @@ fn normalize_email(raw: &str) -> Option<String> {
 pub async fn invite_space_participants(
     space_id: SpacePartition,
     req: InviteSpaceParticipantsRequest,
-) -> common::Result<InviteSpaceParticipantsResponse> {
-    use common::models::space::{SpaceCommon, SpaceParticipant};
-    use common::types::SpacePublishState;
-    use ratel_auth::models::user::UserQueryOption;
+) -> crate::common::Result<InviteSpaceParticipantsResponse> {
+    use crate::common::models::space::{SpaceCommon, SpaceParticipant};
+    use crate::common::types::SpacePublishState;
+    use crate::features::auth::models::user::UserQueryOption;
     use std::collections::HashSet;
 
     if role != SpaceUserRole::Creator {
         return Err(Error::NoPermission);
     }
 
-    let common_config = common::CommonConfig::default();
+    let common_config = crate::common::CommonConfig::default();
     let dynamo = common_config.dynamodb();
     let space_pk: Partition = space_id.into();
     let space = SpaceCommon::get(dynamo, &space_pk, Some(&EntityType::SpaceCommon))

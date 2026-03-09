@@ -12,10 +12,10 @@ mod views;
 pub use components::*;
 pub use route::*;
 
-use common::*;
+use crate::common::*;
 use dioxus::prelude::*;
 
-type Result<T> = common::Result<T>;
+type Result<T> = crate::common::Result<T>;
 type DioxusResult<T> = dioxus::prelude::Result<T>;
 
 use serde::{Deserialize, Serialize};

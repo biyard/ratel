@@ -1,8 +1,8 @@
 use crate::features::spaces::{controllers::participate_space::participate_space, *};
 use crate::features::spaces::space_common::hooks::use_space_query;
 use crate::features::spaces::space_common::providers::SpaceContextProvider;
-use crate::features::spaces::space_common::ratel_auth::hooks::use_user_context;
-use crate::features::spaces::space_common::ratel_auth::{LoginModal, UserContextStoreExt};
+use crate::features::auth::hooks::use_user_context;
+use crate::features::auth::{LoginModal, UserContextStoreExt};
 use crate::features::spaces::space_common::types::space_key;
 use crate::features::spaces::space_common::{
     components::{SpaceNav, SpaceNavItem, SpaceTop, SpaceTopLabel},
@@ -26,7 +26,7 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
 
     let mut participate = use_action(participate_space);
 
-    let show_participate = matches!(space.status, Some(common::SpaceStatus::InProgress))
+    let show_participate = matches!(space.status, Some(crate::common::SpaceStatus::InProgress))
         && !space.participated
         && space.can_participate;
 
