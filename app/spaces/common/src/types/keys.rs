@@ -7,6 +7,7 @@ pub const SPACE_USER_ROLE_QUERY_KEY: &str = "UserRole";
 pub const SPACE_PAGE_ACTIONS_QUERY_KEY: &str = "Actions";
 pub const SPACE_PAGE_ACTIONS_POLL_QUERY_KEY: &str = "Poll";
 pub const SPACE_PAGE_ACTIONS_DISCUSSION_QUERY_KEY: &str = "Discussion";
+pub const SPACE_PAGE_ACTIONS_DISCUSSION_COMMENTS_QUERY_KEY: &str = "Comments";
 pub const SPACE_PAGE_ACTIONS_QUIZ_QUERY_KEY: &str = "Quiz";
 pub const SPACE_PAGE_DASHBOARD_QUERY_KEY: &str = "Dashboard";
 
@@ -43,6 +44,15 @@ pub fn space_page_actions_discussion_key(
     let mut k = space_page_actions_key(space_id);
     k.push(SPACE_PAGE_ACTIONS_DISCUSSION_QUERY_KEY.into());
     k.push(discussion_sk.to_string());
+    k
+}
+
+pub fn space_page_actions_discussion_comments_key(
+    space_id: &SpacePartition,
+    discussion_sk: &SpacePostEntityType,
+) -> QueryKey {
+    let mut k = space_page_actions_discussion_key(space_id, discussion_sk);
+    k.push(SPACE_PAGE_ACTIONS_DISCUSSION_COMMENTS_QUERY_KEY.into());
     k
 }
 
