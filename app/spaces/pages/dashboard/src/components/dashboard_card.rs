@@ -57,10 +57,10 @@ fn render_icon(icon: &DashboardIcon) -> Element {
             }
         },
         DashboardIcon::Rewards => rsx! {
-            icons::ratel::Clock {
+            icons::ratel::Reward {
                 width: "24",
                 height: "24",
-                class: "h-6 w-6 max-mobile:h-5 max-mobile:w-5 [&>circle]:fill-none",
+                class: "h-6 w-6 max-mobile:h-5 max-mobile:w-5",
             }
         },
     }
@@ -122,14 +122,20 @@ pub fn DashboardCard(
             }
         }
         DashboardComponentData::TabChart(data) => {
+            let card_class = if data.participants == 0 {
+                "flex h-full w-full min-h-0 flex-col gap-2.5 p-[30px] max-tablet:p-5 max-mobile:p-4 rounded-2xl max-mobile:rounded-xl bg-web-card-bg"
+            } else {
+                "grid h-full w-full min-h-0 grid-rows-[auto_auto_minmax(0,_1fr)] gap-4 max-mobile:gap-3 p-[30px] max-tablet:p-5 max-mobile:p-4 rounded-2xl max-mobile:rounded-xl bg-web-card-bg"
+            };
+
             rsx! {
-                div { class: "grid h-full w-full min-h-0 grid-rows-[auto_auto_minmax(0,_1fr)] gap-4 max-mobile:gap-3 p-[30px] max-tablet:p-5 max-mobile:p-4 rounded-2xl max-mobile:rounded-xl bg-web-card-bg",
+                div { class: card_class,
                     CardHeader {
                         icon: data.icon.clone(),
                         main_value: format!("{}", data.participants),
                         main_label: tr.total_participants.to_string(),
                     }
-                    TabChartContent { data }
+                    TabChartContent { data, tr }
                 }
             }
         }
@@ -141,7 +147,7 @@ pub fn DashboardCard(
                         main_value: format!("{}", data.total_points),
                         main_label: tr.points_available.to_string(),
                     }
-                    InfoCardContent { data }
+                    InfoCardContent { data, tr }
                 }
             }
         }
@@ -173,17 +179,33 @@ pub fn DashboardGrid(
             }
         }
     }
+    let stacked_len = stacked.len();
+    let stacked_container_class = if stacked_len == 1 {
+        "flex h-full flex-col gap-2.5"
+    } else {
+        "flex flex-col gap-2.5"
+    };
+    let top_level_count = tall_cards.len() + usize::from(stacked_len > 0);
+    let top_grid_class = match top_level_count {
+        1 => "grid grid-cols-1 max-tablet:grid-cols-1 max-mobile:grid-cols-1 gap-2.5 shrink-0",
+        2 => "grid grid-cols-2 max-tablet:grid-cols-2 max-mobile:grid-cols-1 gap-2.5 shrink-0",
+        3 => "grid grid-cols-3 max-tablet:grid-cols-2 max-mobile:grid-cols-1 gap-2.5 shrink-0",
+        _ => "grid grid-cols-4 max-tablet:grid-cols-2 max-mobile:grid-cols-1 gap-2.5 shrink-0",
+    };
 
     rsx! {
         div { class: "flex flex-col gap-2.5 w-full h-full min-h-0 overflow-y-auto",
-            div { class: "grid grid-cols-4 max-tablet:grid-cols-2 max-mobile:grid-cols-1 gap-2.5 shrink-0",
-                div { class: "flex flex-col gap-2.5",
-                    for (idx , data) in stacked.into_iter().enumerate() {
-                        {
-                            let sid = space_id.clone();
-                            rsx! {
-                                div { key: "{idx}",
-                                    DashboardCard { data, is_creator, space_id: sid }
+            div { class: top_grid_class,
+                if stacked_len > 0 {
+                    div { class: stacked_container_class,
+                        for (idx , data) in stacked.into_iter().enumerate() {
+                            {
+                                let sid = space_id.clone();
+                                let item_class = if stacked_len == 1 { "h-full" } else { "" };
+                                rsx! {
+                                    div { key: "{idx}", class: item_class,
+                                        DashboardCard { data, is_creator, space_id: sid }
+                                    }
                                 }
                             }
                         }
@@ -393,45 +415,63 @@ fn ProgressListContent(data: ProgressListData, tr: DashboardTranslate) -> Elemen
     }
 }
 
+#[component]
+fn EmptyStateLine(message: String) -> Element {
+    rsx! {
+        div { class: "flex items-center justify-between gap-2",
+            span { class: "min-w-0 text-text-primary text-xs leading-4 font-medium",
+                "{message}"
+            }
+        }
+    }
+}
+
 // ─── TabChart Content ─────────────────────────────────
 
 #[component]
-fn TabChartContent(data: TabChartData) -> Element {
+fn TabChartContent(data: TabChartData, tr: DashboardTranslate) -> Element {
     let mut selected_tab = use_signal(|| 0usize);
+    let has_tabs = data.participants > 0 && !data.tabs.is_empty();
 
     rsx! {
-        div { class: "flex items-start justify-end overflow-hidden rounded-lg",
-            for (idx , tab) in data.tabs.iter().enumerate() {
-                {
-                    let is_active = selected_tab() == idx;
-                    let is_first = idx == 0;
-                    let is_last = idx == data.tabs.len() - 1;
+        if has_tabs {
+            div { class: "flex items-start justify-end overflow-hidden rounded-lg",
+                for (idx , tab) in data.tabs.iter().enumerate() {
+                    {
+                        let is_active = selected_tab() == idx;
+                        let is_first = idx == 0;
+                        let is_last = idx == data.tabs.len() - 1;
 
-                    let base = "flex-1 px-4 py-1.5 text-sm font-bold font-raleway transition-all cursor-pointer text-center";
-                    let active_class = if is_active {
-                        " bg-web-btn-bg text-web-font-btn-b-w"
-                    } else {
-                        " border border-web-btn-storke text-text-primary"
-                    };
-                    let round = if is_first {
-                        " rounded-l-lg"
-                    } else if is_last {
-                        " rounded-r-lg"
-                    } else {
-                        ""
-                    };
+                        let base = "flex-1 px-4 py-1.5 text-sm font-bold font-raleway transition-all cursor-pointer text-center";
+                        let active_class = if is_active {
+                            " bg-web-btn-bg text-web-font-btn-b-w"
+                        } else {
+                            " border border-web-btn-storke text-text-primary"
+                        };
+                        let round = if is_first {
+                            " rounded-l-lg"
+                        } else if is_last {
+                            " rounded-r-lg"
+                        } else {
+                            ""
+                        };
 
-                    let class = format!("{base}{active_class}{round}");
+                        let class = format!("{base}{active_class}{round}");
 
-                    rsx! {
-                        button { class: "{class}", onclick: move |_| selected_tab.set(idx), "{tab.label}" }
+                        rsx! {
+                            button { class: "{class}", onclick: move |_| selected_tab.set(idx), "{tab.label}" }
+                        }
                     }
                 }
             }
         }
 
         div { class: "min-h-0",
-            if let Some(tab) = data.tabs.get(selected_tab()) {
+            if data.participants == 0 {
+                div { class: "h-full min-h-0 pr-1 overflow-y-auto pt-2.5",
+                    EmptyStateLine { message: tr.not_available_participants.to_string() }
+                }
+            } else if let Some(tab) = data.tabs.get(selected_tab()) {
                 div { class: "h-full min-h-0 pr-1 space-y-3 max-mobile:space-y-2 overflow-y-auto",
                     for cat in tab.categories.iter() {
                         div { class: "flex flex-col gap-0.5",
@@ -462,9 +502,17 @@ fn TabChartContent(data: TabChartData) -> Element {
 // ─── InfoCard Content ─────────────────────────────────
 
 #[component]
-fn InfoCardContent(data: InfoCardData) -> Element {
+fn InfoCardContent(data: InfoCardData, tr: DashboardTranslate) -> Element {
+    if data.items.is_empty() {
+        return rsx! {
+            div { class: "flex flex-1 flex-col min-h-[120px] max-mobile:min-h-[96px] pr-1 overflow-y-auto pt-2.5",
+                EmptyStateLine { message: tr.not_available_rewards.to_string() }
+            }
+        };
+    }
+
     rsx! {
-        div { class: "flex flex-1 min-h-0 flex-col justify-end gap-2 mt-4 max-mobile:mt-2 pr-1 overflow-y-auto",
+        div { class: "flex flex-1 min-h-[120px] max-mobile:min-h-[96px] flex-col justify-end gap-2 mt-4 max-mobile:mt-2 pr-1 overflow-y-auto",
             for item in data.items.iter() {
                 div { class: "flex items-center justify-between gap-2 text-text-primary",
                     span { class: "min-w-0 truncate text-xs leading-4 font-medium font-raleway",

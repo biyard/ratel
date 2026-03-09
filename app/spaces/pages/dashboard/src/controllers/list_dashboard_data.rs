@@ -31,13 +31,15 @@ pub async fn list_dashboard_data_handler(
         })
         .collect();
 
-    let total_points: i64 = rewards.iter().map(|r| r.total_points).sum();
+    if !reward_items.is_empty() {
+        let total_points: i64 = rewards.iter().map(|r| r.total_points).sum();
 
-    components.push(DashboardComponentData::InfoCard(InfoCardData {
-        icon: DashboardIcon::Rewards,
-        total_points,
-        items: reward_items,
-    }));
+        components.push(DashboardComponentData::InfoCard(InfoCardData {
+            icon: DashboardIcon::Rewards,
+            total_points,
+            items: reward_items,
+        }));
+    }
 
     // StatCard: only include when IncentivePool app is installed
     // let (app_pk, app_sk) =
