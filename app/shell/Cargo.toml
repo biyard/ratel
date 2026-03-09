@@ -53,19 +53,23 @@ full = ["membership","users", "teams"]
 default = ["full"]
 bypass = ["ratel-auth?/bypass"]
 web = [
+  "dioxus/web",
   "common/web",
   "ratel-auth/web",
   "gloo-timers",
 ]
 desktop = [
+  "dioxus/desktop",
   "common/desktop",
   "ratel-auth/desktop",
 ]
 mobile = [
+  "dioxus/mobile",
   "common/mobile",
   "ratel-auth/mobile",
 ]
 server = [
+  "dioxus/server",
   "common/server",
   "ratel-auth/server",
   "tower-sessions",
