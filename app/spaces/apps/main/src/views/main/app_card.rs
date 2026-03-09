@@ -9,7 +9,11 @@ pub fn app_description(app_type: SpaceAppType, tr: &AppMainTranslate) -> String 
 }
 
 #[component]
-pub fn AppCard(app_type: SpaceAppType, children: Option<Element>) -> Element {
+pub fn AppCard(
+    app_type: SpaceAppType,
+    #[props(optional)] header_action: Option<Element>,
+    children: Option<Element>,
+) -> Element {
     let lang = use_language();
     let tr: AppMainTranslate = use_translate();
 
@@ -50,8 +54,15 @@ pub fn AppCard(app_type: SpaceAppType, children: Option<Element>) -> Element {
 
             div { class: "flex flex-col items-start w-full bg-card rounded-lg",
                 div { class: "flex flex-col p-4 gap-2.5",
-                    div { class: "flex justify-center items-center size-11 rounded-[10px] {icon_bg}",
-                        {icon}
+                    div { class: "flex items-start justify-between w-full gap-3",
+                        div { class: "flex justify-center items-center shrink-0 size-11 rounded-[10px] {icon_bg}",
+                            {icon}
+                        }
+                        if let Some(header_action) = header_action {
+                            div { class: "flex shrink-0 items-center justify-center",
+                                {header_action}
+                            }
+                        }
                     }
                     p { class: "font-bold sp-dash-font-raleway text-sm text-font-primary",
                         {app_type.translate(&lang()).to_string()}

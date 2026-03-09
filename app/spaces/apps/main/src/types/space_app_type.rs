@@ -17,4 +17,12 @@ impl SpaceAppType {
     pub fn is_default(&self) -> bool {
         matches!(self, SpaceAppType::General | SpaceAppType::File)
     }
+
+    pub fn settings_path(&self, space_id: &SpacePartition) -> String {
+        match self {
+            SpaceAppType::General => format!("/spaces/{space_id}/apps/general"),
+            SpaceAppType::File => format!("/spaces/{space_id}/apps/file"),
+            SpaceAppType::IncentivePool => format!("/spaces/{space_id}/apps/incentive-pool"),
+        }
+    }
 }

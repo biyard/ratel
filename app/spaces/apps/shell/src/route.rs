@@ -16,7 +16,7 @@ pub enum Route {
         #[layout(SpaceAppsLayout)]
             #[route("/general/:..rest")]
             General { space_id: SpacePartition, rest: Vec<String> },
-            #[route("/incentive_pool/:..rest")]
+            #[route("/incentive-pool/:..rest")]
             IncentivePool { space_id: SpacePartition, rest: Vec<String> },
             #[route("/file/:..rest")]
             File { space_id: SpacePartition, rest: Vec<String> },
