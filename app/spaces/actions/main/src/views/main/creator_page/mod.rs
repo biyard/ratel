@@ -42,6 +42,7 @@ pub fn CreatorActionPage(space_id: SpacePartition) -> Element {
                 rsx! {
                     CreateActionModal { space_id: space_id.clone(), has_subscription }
                 },
+                None,
             );
         }
     };
@@ -62,6 +63,7 @@ pub fn CreatorActionPage(space_id: SpacePartition) -> Element {
                         on_applied: on_applied.clone(),
                     }
                 },
+                Some("!max-w-[337px] rounded-none border-l border-neutral-800 light:border-neutral-300 shadow-[0_8px_20px_0_rgba(20,26,62,0.25)] max-tablet:!max-w-full".to_string()),
             );
         }
     };

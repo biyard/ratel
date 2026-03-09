@@ -20,17 +20,27 @@ pub fn Layover() -> Element {
     });
 
     let config = layover.state();
-    let (is_open, title, content) = match config {
-        Some(c) => (true, c.title, c.content),
+    let (is_open, title, content, container_class) = match config {
+        Some(c) => (true, c.title, c.content, c.container_class),
         None => (
             false,
             String::new(),
             rsx! {
                 Fragment {}
             },
+            None,
         ),
     };
     let onclose = move |_| layover.close();
+    let panel_classes = format!(
+        "absolute top-0 right-0 h-full w-full max-w-50% bg-neutral-900 light:bg-neutral-200 border-l border-neutral-800 light:border-neutral-300 rounded-l-[24px] overflow-hidden transition-transform duration-300 ease-in-out max-tablet:max-w-full max-tablet:rounded-none {} {}",
+        if is_open {
+            "translate-x-0"
+        } else {
+            "translate-x-full"
+        },
+        container_class.unwrap_or_default()
+    );
 
     rsx! {
         div {
@@ -43,8 +53,7 @@ pub fn Layover() -> Element {
             }
 
             div {
-                class: "absolute top-0 right-0 h-full w-full max-w-50% bg-neutral-900 light:bg-neutral-200 border-l border-neutral-800 light:border-neutral-300 rounded-l-[24px] overflow-hidden transition-transform duration-300 ease-in-out max-tablet:max-w-full max-tablet:rounded-none",
-                class: if is_open { "translate-x-0" } else { "translate-x-full" },
+                class: "{panel_classes}",
                 onclick: move |e| e.stop_propagation(),
 
                 div { class: "flex flex-col h-full",
