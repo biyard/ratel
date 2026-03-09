@@ -1,3 +1,5 @@
+// FIXME: this page is not working. need to test and remove unused tag.
+#![allow(unused)]
 use crate::components::{DistributionModeCard, IconActionButton, SectionCard, SummaryStatCard};
 use crate::i18n::IncentivePoolTranslate;
 use crate::interop::{copy_text as copy_to_clipboard, open_url};
@@ -199,7 +201,6 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
                                             return;
                                         }
 
-
                                         let mut notice = notice.clone();
                                         let address = address.clone();
                                         let copied_address_notice = copied_address_notice.clone();
@@ -234,8 +235,6 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
                                         if is_refreshing() || !has_incentive {
                                             return;
                                         }
-
-
 
                                         is_refreshing.set(true);
                                         notice.set(None);
@@ -494,7 +493,10 @@ pub fn HomePage(space_id: SpacePartition) -> Element {
 
     if role() == SpaceUserRole::Creator {
         rsx! {
-            IncentivePoolPage { space_id }
+            div { class: "flex flex-col items-center justify-center w-full h-full",
+                h1 { class: "text-2xl font-bold", "Incentive App" }
+                p { class: "mt-2 text-gray-500", "Coming soon..." }
+            }
         }
     } else {
         rsx! {
