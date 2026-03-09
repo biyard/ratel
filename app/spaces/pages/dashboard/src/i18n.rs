@@ -3,6 +3,16 @@ use crate::*;
 translate! {
     DashboardTranslate;
 
+    not_available_rewards: {
+        ko: "이용가능한 리워드가 없습니다.",
+        en: "There are no rewards available."
+    }
+
+    not_available_participants: {
+        ko: "참여자가 없습니다.",
+        en: "There are no participants available."
+    }
+
     participation_action: {
         en: "Participation's Action",
         ko: "참여 액션",
