@@ -54,6 +54,8 @@ pub fn App() -> Element {
 
         Router::<Route> {}
         ToastProvider {}
+
+        PopupZone {}
         if env == Environment::Dev || env == Environment::Local {
             DevTools {}
         }
