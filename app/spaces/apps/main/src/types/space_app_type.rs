@@ -11,8 +11,6 @@ pub enum SpaceAppType {
     File,
     #[translate(en = "Incentive Pool", ko = "인센티브 풀")]
     IncentivePool,
-    #[translate(en = "Reward", ko = "리워드")]
-    Reward,
 }
 
 impl SpaceAppType {
