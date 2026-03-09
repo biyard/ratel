@@ -10,6 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@reown/appkit": "^1.8.19",
+    "@walletconnect/sign-client": "^2.23.7",
     "firebase": "^12.9.0"
   },
   "devDependencies": {
