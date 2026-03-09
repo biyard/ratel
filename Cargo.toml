@@ -1,6 +1,6 @@
 [workspace]
 members = [
-  "app/*",
+  "app/ratel",
   "packages/*",
 ]
 resolver = "2"
