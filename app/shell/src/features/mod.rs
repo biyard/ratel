@@ -12,3 +12,5 @@ pub mod users;
 
 #[cfg(feature = "teams")]
 pub mod teams;
+
+pub mod spaces;

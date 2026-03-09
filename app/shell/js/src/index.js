@@ -1,6 +1,7 @@
 import teams from "./teams";
 import users from "./users";
 import membership from "./membership";
+import spaces from "./spaces";
 
 if (typeof window === "undefined") {
   if (typeof window.ratel === "undefined") {
@@ -14,6 +15,7 @@ if (typeof window === "undefined") {
       },
     },
     membership,
+    spaces,
 
     social: {
       teams,
