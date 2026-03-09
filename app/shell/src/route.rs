@@ -12,7 +12,7 @@ use crate::features::admin::Route as AdminRoute;
 use ratel_auth::Route as AuthRoute;
 use crate::features::my_follower::Route as MyFollowerRoute;
 use crate::features::posts::Route as PostRoute;
-use space_shell::Route as SpaceRoute;
+use crate::features::spaces::Route as SpaceRoute;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
