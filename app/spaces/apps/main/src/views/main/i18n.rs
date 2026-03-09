@@ -20,8 +20,8 @@ translate! {
         ko: "이 앱을 스페이스에 설치하고 관리할 수 있습니다.",
     },
     app_description_incentive_pool: {
-        en: "Reward your top participants with transparent, rule-based incentives.",
-        ko: "투명하고 규칙 기반의 인센티브로 상위 참가자에게 보상하세요.",
+        en: "An incentive granted by the space creator, and granted upon finising according to the incentive rules",
+        ko: "스페이스 생성자가 부여하는 인센티브로 종료 시 인센티브 규칙에 따라 부여됩니다.",
     },
     app_description_file: {
         en: "Manage and organize files shared in your space.",
@@ -45,7 +45,7 @@ translate! {
     },
     setting: {
         en: "Setting",
-        ko: "설정",
+        ko: "설정하기",
     },
 
     installing: {
