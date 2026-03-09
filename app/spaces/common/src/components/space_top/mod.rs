@@ -39,6 +39,7 @@ pub fn SpaceTop(
     let mut toast = use_toast();
     let can_preview = use_memo(move || {
         let current_role = ctx.current_role();
+        debug!("current_role: {current_role:?}, real_role: {real_role:?}");
 
         current_role == SpaceUserRole::Creator
     });
@@ -75,7 +76,7 @@ pub fn SpaceTop(
                         },
                         Eye { class: "w-4 h-4 [&>path]:stroke-icon-secondary [&>circle]:stroke-icon-secondary" }
                         p {
-                            if ctx.can_preview() {
+                            if can_preview() {
                                 {tr.preview}
                             } else {
                                 {tr.design}
