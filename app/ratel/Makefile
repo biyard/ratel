@@ -1,3 +1,5 @@
+-include .env.local
+
 ENV ?= dev
 
 COMMIT ?= $(shell git rev-parse --short HEAD)

@@ -1,7 +1,10 @@
 use crate::features::posts::components::VisibilityModal;
 use crate::features::posts::controllers::get_post::get_post_handler;
 use crate::features::posts::controllers::update_post::{update_post_handler, UpdatePostRequest};
-use crate::features::posts::controllers::{create_space_handler, CreateSpaceRequest};
+use crate::features::posts::controllers::{
+    create_category_handler, create_space_handler, list_categories_handler, CreateCategoryRequest,
+    CreateSpaceRequest,
+};
 use crate::features::posts::models::Post;
 use crate::features::posts::types::Visibility;
 use crate::features::posts::*;
@@ -90,6 +93,24 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
 
     let mut last_saved = use_signal(move || (title(), content()));
     let mut skip_creating_space = use_signal(|| true);
+
+    // Category state
+    let mut category = use_signal(|| "".to_string());
+    let mut category_input = use_signal(|| "".to_string());
+    let mut show_category_dropdown = use_signal(|| false);
+    let mut is_creating_category = use_signal(|| false);
+    let mut category_error: Signal<Option<String>> = use_signal(|| None);
+
+    let categories_res = use_resource(list_categories_handler);
+    let mut extra_categories = use_signal(|| vec![]);
+    let categories = use_memo(move || {
+        let mut cats: Vec<String> = match &*categories_res.read() {
+            Some(Ok(list)) => list.iter().map(|c| c.name.clone()).collect(),
+            _ => vec![],
+        };
+        cats.extend(extra_categories());
+        cats
+    });
 
     // Auto-save: debounce by tracking an edit version counter.
     // Each edit increments save_version. use_effect fires on change,
@@ -258,6 +279,84 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                 }
                 div { class: "absolute right-3 top-1/2 text-sm -translate-y-1/2 pointer-events-none text-text-tertiary",
                     "{title_len}/{TITLE_MAX_LENGTH}"
+                }
+            }
+
+            // Category selector
+            div { class: "relative w-full",
+                Input {
+                    class: "w-full",
+                    variant: InputVariant::Default,
+                    placeholder: "Category",
+                    value: category_input,
+                    oninput: move |e: Event<FormData>| {
+                        category_input.set(e.value());
+                        show_category_dropdown.set(true);
+                    },
+                }
+
+                if show_category_dropdown() {
+                    div {
+                        class: "absolute z-20 mt-2 w-full rounded-md border shadow-md bg-card border-post-input-border max-h-60 overflow-y-auto",
+
+                        for cat in categories()
+                            .iter()
+                            .filter(|c| c.to_lowercase().contains(&category_input().to_lowercase()))
+                            .cloned()
+                        {
+                            div {
+                                key: "{cat}",
+                                class: "px-3 py-2 cursor-pointer hover:bg-muted text-sm text-text-primary",
+                                onclick: {
+                                    let cat = cat.clone();
+                                    move |_| {
+                                        category.set(cat.clone());
+                                        category_input.set(cat.clone());
+                                        show_category_dropdown.set(false);
+                                    }
+                                },
+                                "{cat}"
+                            }
+                        }
+
+                        if !category_input().is_empty()
+                            && !categories().contains(&category_input())
+                        {
+                            div {
+                                class: "px-3 py-2 cursor-pointer text-primary text-sm hover:bg-muted",
+                                onclick: move |_| {
+                                    if is_creating_category() { return; }
+                                    is_creating_category.set(true);
+
+                                    let new_cat = category_input();
+                                    spawn(async move {
+                                        match create_category_handler(CreateCategoryRequest {
+                                            name: new_cat,
+                                        })
+                                        .await
+                                        {
+                                            Ok(cat) => {
+                                                let name = cat.name;
+                                                category.set(name.clone());
+                                                category_input.set(name.clone());
+                                                extra_categories.write().push(name);
+                                                show_category_dropdown.set(false);
+                                            }
+                                            Err(e) => {
+                                                category_error.set(Some(e.to_string()));
+                                            }
+                                        }
+                                        is_creating_category.set(false);
+                                    });
+                                },
+                                if is_creating_category() {
+                                    "Creating..."
+                                } else {
+                                    "Create \"{category_input()}\""
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
