@@ -1,13 +1,13 @@
-use crate::features::spaces::{controllers::participate_space::participate_space, *};
-use crate::features::spaces::space_common::hooks::use_space_query;
-use crate::features::spaces::space_common::providers::SpaceContextProvider;
 use crate::features::auth::hooks::use_user_context;
 use crate::features::auth::{LoginModal, UserContextStoreExt};
+use crate::features::spaces::space_common::hooks::use_space_query;
+use crate::features::spaces::space_common::providers::SpaceContextProvider;
 use crate::features::spaces::space_common::types::space_key;
 use crate::features::spaces::space_common::{
     components::{SpaceNav, SpaceNavItem, SpaceTop, SpaceTopLabel},
     hooks::use_space_role,
 };
+use crate::features::spaces::{controllers::participate_space::participate_space, *};
 
 #[component]
 pub fn SpaceLayout(space_id: SpacePartition) -> Element {
@@ -20,13 +20,16 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
 
     let user_ctx = use_user_context();
     let user = user_ctx.read().user.clone();
+    let credential_path = user
+        .as_ref()
+        .map(|user| format!("/{}/credentials", user.username));
     let mut popup = use_popup();
     let tr: SpaceLayoutTranslate = use_translate();
     // FIXME
 
     let mut participate = use_action(participate_space);
 
-    let show_participate = matches!(space.status, Some(crate::common::SpaceStatus::InProgress))
+    let _show_participate = matches!(space.status, Some(crate::common::SpaceStatus::InProgress))
         && !space.participated
         && space.can_participate;
 
@@ -57,8 +60,9 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
     }];
     let space_status = space.status.clone();
 
+    let space_participant_id = space_id.clone();
     let on_participant = move |_| {
-        let space_id = space_id.clone();
+        let space_id = space_participant_id.clone();
         async move {
             let space_detail = space_key(&space_id);
             participate.call(space_id).await;
@@ -71,10 +75,13 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
         div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] light:bg-[#ffffff] bg-[#191919] text-web-font-primary",
             div { class: "hidden tablet:flex",
                 SpaceNav {
+                    space_id: space_id.clone(),
                     logo: "https://metadata.ratel.foundation/logos/logo.png",
                     menus,
                     user,
                     role,
+                    show_participation_card: false,
+                    credential_path,
                     login_handler: move |_| {
                         popup.open(rsx! {
                             LoginModal {}
@@ -86,7 +93,7 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
                 SpaceTop {
                     labels,
                     space_status,
-                    show_participate_button: show_participate,
+                    show_participate_button: true,
                     on_participant,
                 }
                 div { class: "flex overflow-auto flex-1 p-5 w-full bg-web-bg rounded-tl-[10px]",
