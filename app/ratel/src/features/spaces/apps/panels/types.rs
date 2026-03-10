@@ -49,15 +49,26 @@ pub struct SpacePanelQuotaResponse {
     pub panel_id: SpacePanelAttributeEntityType,
     pub quotas: i64,
     pub remains: i64,
+    #[serde(default)]
+    pub attributes_vec: Vec<PanelAttribute>,
     pub attributes: PanelAttribute,
 }
 
 impl From<SpacePanelQuota> for SpacePanelQuotaResponse {
     fn from(panel: SpacePanelQuota) -> Self {
+        let attributes_vec = if panel.attributes_vec.is_empty()
+            && !matches!(panel.attributes, PanelAttribute::None)
+        {
+            vec![panel.attributes]
+        } else {
+            panel.attributes_vec
+        };
+
         Self {
             panel_id: panel.sk.into(),
             quotas: panel.quotas,
             remains: panel.remains,
+            attributes_vec,
             attributes: panel.attributes,
         }
     }

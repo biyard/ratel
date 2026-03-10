@@ -2,7 +2,16 @@ use super::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct CreatePanelQuotaRequest {
+    #[serde(default)]
     pub attributes: Vec<PanelAttributeWithQuota>,
+    #[serde(default)]
+    pub attributes_vec: Vec<CreatePanelQuotaGroupRequest>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub struct CreatePanelQuotaGroupRequest {
+    pub attributes_vec: Vec<PanelAttribute>,
+    pub quota: i64,
 }
 
 #[post("/api/spaces/{space_id}/panels", role: SpaceUserRole)]
@@ -16,11 +25,18 @@ pub async fn create_panel_quotas(
     let cli = common_config.dynamodb();
     let space_pk: Partition = space_id.into();
 
-    let panels: Vec<SpacePanelQuota> = req
+    let mut panels: Vec<SpacePanelQuota> = req
         .attributes
         .into_iter()
         .map(|attribute| (space_pk.clone(), attribute).into())
         .collect();
+    panels.extend(req.attributes_vec.into_iter().map(|group| {
+        SpacePanelQuota::new_with_attributes_vec(
+            space_pk.clone(),
+            group.quota,
+            group.attributes_vec,
+        )
+    }));
 
     let items = panels
         .iter()

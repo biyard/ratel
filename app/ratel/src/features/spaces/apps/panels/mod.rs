@@ -10,7 +10,7 @@ pub use controllers::*;
 pub use types::*;
 pub use views::HomePage as SpaceAppPanelsPage;
 
-pub use crate::common::attribute::Gender;
+pub use crate::common::attribute::{Age, Gender};
 use crate::common::*;
 pub use crate::features::spaces::models::{
     CollectiveAttribute, PanelAttribute, PanelAttributeWithQuota, SpacePanelQuota,

@@ -67,7 +67,37 @@ translate! {
 }
 
 fn panel_group_label(panel: &SpacePanelQuotaResponse, tr: &PanelsTableTranslate) -> String {
-    match &panel.attributes {
+    let attributes = panel_attributes(panel);
+    if attributes.len() > 1 {
+        return attributes
+            .iter()
+            .map(|attribute| single_group_label(attribute, tr))
+            .collect::<Vec<_>>()
+            .join(", ");
+    }
+
+    match attributes.first().copied().unwrap_or(panel.attributes) {
+        PanelAttribute::CollectiveAttribute(CollectiveAttribute::University) => {
+            tr.university.to_string()
+        }
+        PanelAttribute::CollectiveAttribute(CollectiveAttribute::Age) => tr.age.to_string(),
+        PanelAttribute::CollectiveAttribute(CollectiveAttribute::Gender) => tr.gender.to_string(),
+        PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender(_)) => {
+            tr.gender.to_string()
+        }
+        PanelAttribute::VerifiableAttribute(VerifiableAttribute::Age(_)) => tr.age.to_string(),
+        PanelAttribute::VerifiableAttribute(VerifiableAttribute::Generation(_)) => {
+            tr.generation.to_string()
+        }
+        PanelAttribute::VerifiableAttribute(VerifiableAttribute::IsAdult(_)) => {
+            tr.adult.to_string()
+        }
+        _ => "-".to_string(),
+    }
+}
+
+fn single_group_label(attribute: &PanelAttribute, tr: &PanelsTableTranslate) -> String {
+    match attribute {
         PanelAttribute::CollectiveAttribute(CollectiveAttribute::University) => {
             tr.university.to_string()
         }
@@ -88,7 +118,20 @@ fn panel_group_label(panel: &SpacePanelQuotaResponse, tr: &PanelsTableTranslate)
 }
 
 fn panel_value_label(panel: &SpacePanelQuotaResponse, tr: &PanelsTableTranslate) -> String {
-    match &panel.attributes {
+    let attributes = panel_attributes(panel);
+    if attributes.len() > 1 {
+        return attributes
+            .iter()
+            .map(|attribute| single_value_label(attribute, tr))
+            .collect::<Vec<_>>()
+            .join(", ");
+    }
+
+    single_value_label(attributes.first().unwrap_or(&panel.attributes), tr)
+}
+
+fn single_value_label(attribute: &PanelAttribute, tr: &PanelsTableTranslate) -> String {
+    match attribute {
         PanelAttribute::CollectiveAttribute(CollectiveAttribute::University) => {
             tr.verified.to_string()
         }
@@ -108,7 +151,15 @@ fn panel_value_label(panel: &SpacePanelQuotaResponse, tr: &PanelsTableTranslate)
                 inclusive_min,
                 inclusive_max,
             },
-        )) => format!("{inclusive_min}-{inclusive_max}"),
+        )) => {
+            if *inclusive_min == 70 && *inclusive_max == u8::MAX {
+                "70+".to_string()
+            } else if *inclusive_min == 0 && *inclusive_max == 17 {
+                "0-17".to_string()
+            } else {
+                format!("{inclusive_min}-{inclusive_max}")
+            }
+        }
         PanelAttribute::VerifiableAttribute(VerifiableAttribute::Generation(generation)) => {
             format!("{generation:?}")
         }
@@ -119,6 +170,14 @@ fn panel_value_label(panel: &SpacePanelQuotaResponse, tr: &PanelsTableTranslate)
             tr.minor.to_string()
         }
         _ => "-".to_string(),
+    }
+}
+
+fn panel_attributes(panel: &SpacePanelQuotaResponse) -> Vec<PanelAttribute> {
+    if panel.attributes_vec.is_empty() && !matches!(panel.attributes, PanelAttribute::None) {
+        vec![panel.attributes]
+    } else {
+        panel.attributes_vec.clone()
     }
 }
 
@@ -134,13 +193,15 @@ pub fn PanelsTable(
     let visible_panels = panels
         .into_iter()
         .filter(|panel| {
-            matches!(
-                panel.attributes,
-                PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender(_))
-                    | PanelAttribute::VerifiableAttribute(VerifiableAttribute::Age(_))
-                    | PanelAttribute::VerifiableAttribute(VerifiableAttribute::Generation(_))
-                    | PanelAttribute::VerifiableAttribute(VerifiableAttribute::IsAdult(_))
-            )
+            panel_attributes(panel).into_iter().any(|attribute| {
+                matches!(
+                    attribute,
+                    PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender(_))
+                        | PanelAttribute::VerifiableAttribute(VerifiableAttribute::Age(_))
+                        | PanelAttribute::VerifiableAttribute(VerifiableAttribute::Generation(_))
+                        | PanelAttribute::VerifiableAttribute(VerifiableAttribute::IsAdult(_))
+                )
+            })
         })
         .collect::<Vec<_>>();
     let total_visible_quota = visible_panels
