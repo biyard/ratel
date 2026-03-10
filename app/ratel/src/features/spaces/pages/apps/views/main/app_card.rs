@@ -13,64 +13,47 @@ pub fn AppCard(
     app_type: SpaceAppType,
     #[props(optional)] header_action: Option<Element>,
     children: Option<Element>,
+    onclick: EventHandler<MouseEvent>,
+    action_label: String,
+    #[props(default)] disabled: bool,
 ) -> Element {
     let lang = use_language();
     let tr: AppMainTranslate = use_translate();
 
     let description = app_description(app_type, &tr);
     let has_footer = children.is_some();
-    let icon_bg = match app_type {
-        SpaceAppType::General => "bg-green-500",
-        SpaceAppType::IncentivePool => "bg-violet-500",
-        SpaceAppType::File => "bg-amber-500",
-    };
 
-    let icon = match app_type {
-        SpaceAppType::General => rsx! {
-            icons::settings::Settings2 {
-                width: "24",
-                height: "24",
-                class: "text-white [&>path]:fill-black [&>circle]:stroke-black",
-            }
-        },
-        SpaceAppType::IncentivePool => rsx! {
-            icons::ratel::Chest {
-                width: "24",
-                height: "24",
-                class: "text-white [&>path]:fill-none [&>path]:stroke-black",
-            }
-        },
-        SpaceAppType::File => rsx! {
-            icons::file::File {
-                width: "24",
-                height: "24",
-                class: "text-white [&>path]:stroke-black",
-            }
-        },
-    };
+    let icon = app_type.icon();
 
     rsx! {
-        SpaceCard { class: "flex flex-col items-start overflow-hidden rounded-lg !p-0".to_string(),
-            div { class: "flex flex-col p-4 gap-2.5 w-full",
-                div { class: "flex items-start justify-between w-full gap-3",
-                    div { class: "flex justify-center items-center shrink-0 size-11 rounded-[10px] {icon_bg}",
+        SpaceCard { class: "flex overflow-hidden flex-col items-start rounded-lg !p-0".to_string(),
+            div { class: "flex flex-col gap-2.5 p-4 w-full",
+                div { class: "flex gap-3 justify-between items-start w-full",
+                    div { class: "flex justify-center items-center shrink-0 size-11 rounded-[10px] {app_type}",
                         {icon}
                     }
                     if let Some(header_action) = header_action {
-                        div { class: "flex shrink-0 items-center justify-center", {header_action} }
+                        div { class: "flex justify-center items-center shrink-0", {header_action} }
                     }
                 }
-                p { class: "font-bold sp-dash-font-raleway text-sm text-font-primary",
+                p { class: "text-sm font-bold sp-dash-font-raleway text-font-primary",
                     {app_type.translate(&lang()).to_string()}
                 }
-                p { class: "font-medium h-8 leading-4 sp-dash-font-raleway text-xs text-font-body line-clamp-2",
+                p { class: "h-8 text-xs font-medium leading-4 sp-dash-font-raleway text-font-body line-clamp-2",
                     {description}
                 }
             }
 
             if has_footer {
-                div { class: "flex flex-col items-start w-full px-4 py-3 border-t border-web-card-divider",
-                    {children}
+                div { class: "flex flex-col items-start py-3 px-4 w-full border-t border-web-card-divider",
+                    Button {
+                        class: "w-full",
+                        style: ButtonStyle::Primary,
+                        shape: ButtonShape::Square,
+                        disabled,
+                        onclick,
+                        {action_label}
+                    }
                 }
             }
         }

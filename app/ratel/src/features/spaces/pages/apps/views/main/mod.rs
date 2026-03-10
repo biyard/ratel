@@ -6,79 +6,67 @@ mod i18n;
 use app_card::AppCard;
 
 use i18n::AppMainTranslate;
+#[component]
+pub fn SpaceAppGrid(children: Element) -> Element {
+    rsx! {
+        div { class: "grid grid-cols-3 content-start items-start w-full gap-[10px] max-tablet:grid-cols-2 max-mobile:grid-cols-1",
+            {children}
+        }
+    }
+}
 
 #[component]
-pub fn SpaceAppsPage(space_id: SpacePartition) -> Element {
-    let role = use_space_role()();
-    if !role.can_edit() {
-        return Err(Error::UnauthorizedAccess)?;
-    }
+pub fn SpaceAppsPage(space_id: ReadSignal<SpacePartition>) -> Element {
+    let mut ctx = use_space_apps_context();
+    let role = ctx.role();
+    let space_apps = ctx.apps();
 
     let tr: AppMainTranslate = use_translate();
     let navigator = use_navigator();
-    let mut space_apps_loader = use_space_apps(&space_id)?;
-    let space_apps = space_apps_loader.read().clone();
-    let installed_types: Vec<SpaceAppType> = space_apps.iter().map(|app| app.app_type).collect();
+    let mut toast = use_toast();
 
+    let mut in_progress = use_signal(|| Option::<SpaceAppType>::None);
+
+    let installed_types: Vec<SpaceAppType> = space_apps.iter().map(|app| app.app_type).collect();
     let installed_apps: Vec<SpaceAppType> = SpaceAppType::VARIANTS
         .into_iter()
         .copied()
         .filter(|app_type| app_type.is_default() || installed_types.contains(app_type))
         .collect();
-
     let available_apps: Vec<SpaceAppType> = SpaceAppType::VARIANTS
         .into_iter()
         .copied()
         .filter(|app_type| !app_type.is_default() && !installed_types.contains(app_type))
         .collect();
 
-    let mut in_progress = use_signal(|| Option::<SpaceAppType>::None);
-    let app_grid_class = "grid grid-cols-3 gap-[10px] content-start items-start w-full max-tablet:grid-cols-2 max-mobile:grid-cols-1";
-    let toggle_space_id = space_id.clone();
+    let handle_toggle_app = move |app_type: SpaceAppType, is_installed: bool| async move {
+        if in_progress().is_some() {
+            return;
+        }
 
-    let handle_toggle_app = move |app_type: SpaceAppType, is_installed: bool| {
-        let space_id = toggle_space_id.clone();
-        let mut space_apps_loader = space_apps_loader;
+        in_progress.set(Some(app_type));
 
-        move |_| {
-            if in_progress().is_some() {
-                return;
+        let result = if is_installed {
+            uninstall_space_app(space_id(), app_type).await.map(|_| ())
+        } else {
+            install_space_app(space_id(), app_type).await.map(|_| ())
+        };
+
+        in_progress.set(None);
+
+        match result {
+            Ok(_) => {
+                ctx.apps.restart();
             }
-
-            in_progress.set(Some(app_type));
-
-            let space_id = space_id.clone();
-
-            spawn(async move {
-                let action = if is_installed { "uninstall" } else { "install" };
-
-                let result = if is_installed {
-                    uninstall_space_app(space_id.clone(), app_type)
-                        .await
-                        .map(|_| ())
-                } else {
-                    install_space_app(space_id.clone(), app_type)
-                        .await
-                        .map(|_| ())
-                };
-
-                in_progress.set(None);
-
-                match result {
-                    Ok(_) => space_apps_loader.restart(),
-                    Err(err) => error!("Failed to {} app ({:?}): {:?}", action, app_type, err),
-                }
-            });
+            Err(err) => {
+                toast.error(err);
+            }
         }
     };
 
-    let handle_open_settings = move |settings_path: String| {
-        let navigator = navigator.clone();
-
-        move |_| {
-            navigator.push(settings_path.clone());
-        }
-    };
+    if !role.can_edit() {
+        return Err(Error::UnauthorizedAccess)?;
+    }
 
     rsx! {
         div { class: "flex flex-col items-start w-full gap-[20px]",
@@ -87,10 +75,9 @@ pub fn SpaceAppsPage(space_id: SpacePartition) -> Element {
                     p { class: "text-2xl font-bold leading-6 sp-dash-font-raleway text-font-primary",
                         {tr.installed_apps}
                     }
-                    div { class: app_grid_class,
+                    SpaceAppGrid {
                         for app_type in installed_apps {
                             {
-                                let settings_path = app_type.settings_path(&space_id);
                                 let is_progress = match in_progress() {
                                     Some(current) => current == app_type,
                                     None => false,
@@ -103,22 +90,22 @@ pub fn SpaceAppsPage(space_id: SpacePartition) -> Element {
                                                 size: ButtonSize::Icon,
                                                 style: ButtonStyle::Text,
                                                 disabled: in_progress().is_some(),
-                                                onclick: handle_toggle_app(app_type, true),
+                                                onclick: move |_| handle_toggle_app(app_type, true),
                                                 "aria-label": "Uninstall app",
                                                 icons::ratel::XMarkIcon { width: "16", height: "16", class: "w-4 h-4" }
                                             }
                                         }
                                     });
                                 rsx! {
-                                    AppCard { app_type, header_action,
-                                        Button {
-                                            class: "w-full",
-                                            style: ButtonStyle::Primary,
-                                            shape: ButtonShape::Square,
-                                            disabled: is_progress,
-                                            onclick: handle_open_settings(settings_path),
-                                            {tr.setting}
-                                        }
+                                    AppCard {
+                                        app_type,
+                                        header_action,
+                                        onclick: move |_| {
+                                            let settings_path = app_type.settings_path(space_id());
+                                            navigator.push(settings_path);
+                                        },
+                                        disabled: is_progress,
+                                        action_label: {tr.setting},
                                     }
                                 }
                             }
@@ -132,7 +119,7 @@ pub fn SpaceAppsPage(space_id: SpacePartition) -> Element {
                         p { class: "text-2xl font-bold leading-6 sp-dash-font-raleway text-font-primary",
                             {tr.available_apps}
                         }
-                        div { class: app_grid_class,
+                        SpaceAppGrid {
                             for app_type in available_apps {
                                 {
                                     let is_progress = match in_progress() {
@@ -141,19 +128,15 @@ pub fn SpaceAppsPage(space_id: SpacePartition) -> Element {
                                     };
 
                                     rsx! {
-                                        AppCard { app_type,
-                                            Button {
-                                                class: "w-full",
-                                                style: ButtonStyle::Primary,
-                                                shape: ButtonShape::Square,
-                                                disabled: in_progress().is_some(),
-                                                onclick: handle_toggle_app(app_type, false),
-                                                if is_progress {
-                                                    {tr.installing}
-                                                } else {
-                                                    {tr.install}
-                                                }
-                                            }
+                                        AppCard {
+                                            app_type,
+
+
+                                            disabled: in_progress().is_some(),
+                                            onclick: move |_| {
+                                                handle_toggle_app(app_type, false);
+                                            },
+                                            action_label: if is_progress { {tr.installing} } else { {tr.install} },
                                         }
                                     }
                                 }
