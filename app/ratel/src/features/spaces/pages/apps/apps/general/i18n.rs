@@ -79,4 +79,44 @@ translate! {
         en: "No permission",
         ko: "권한이 없습니다",
     },
+    anonymous_setting: {
+        en: "Anonymous Participation",
+        ko: "익명 참여",
+    },
+    anonymous_setting_description: {
+        en: "Allow participants to join and interact anonymously",
+        ko: "참가자가 익명으로 참여하고 활동할 수 있도록 허용합니다",
+    },
+    anonymous_enabled: {
+        en: "Enabled",
+        ko: "활성화",
+    },
+    anonymous_disabled: {
+        en: "Disabled",
+        ko: "비활성화",
+    },
+    anonymous_updated_successfully: {
+        en: "Anonymous participation setting updated.",
+        ko: "익명 참여 설정이 변경되었습니다.",
+    },
+    space_visibility: {
+        en: "Space Visibility",
+        ko: "스페이스 공개 설정",
+    },
+    space_visibility_description: {
+        en: "Control who can see and access this space",
+        ko: "이 스페이스에 접근할 수 있는 사용자를 설정합니다",
+    },
+    public_space: {
+        en: "Public",
+        ko: "공개",
+    },
+    private_space: {
+        en: "Private",
+        ko: "비공개",
+    },
+    visibility_updated_successfully: {
+        en: "Visibility updated successfully.",
+        ko: "공개 설정이 변경되었습니다.",
+    },
 }
