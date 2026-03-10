@@ -3,6 +3,7 @@ use crate::features::spaces::apps::main::{views::main::i18n::AppMainTranslate, *
 pub fn app_description(app_type: SpaceAppType, tr: &AppMainTranslate) -> String {
     match app_type {
         SpaceAppType::IncentivePool => tr.app_description_incentive_pool.to_string(),
+        SpaceAppType::Panels => tr.app_description_panels.to_string(),
         SpaceAppType::File => tr.app_description_file.to_string(),
         SpaceAppType::General => tr.app_description_general.to_string(),
     }
@@ -21,6 +22,7 @@ pub fn AppCard(
     let has_footer = children.is_some();
     let icon_bg = match app_type {
         SpaceAppType::General => "bg-green-500",
+        SpaceAppType::Panels => "bg-sky-500",
         SpaceAppType::IncentivePool => "bg-violet-500",
         SpaceAppType::File => "bg-amber-500",
     };
@@ -31,6 +33,13 @@ pub fn AppCard(
                 width: "24",
                 height: "24",
                 class: "text-white [&>path]:fill-black [&>circle]:stroke-black",
+            }
+        },
+        SpaceAppType::Panels => rsx! {
+            icons::user::User {
+                width: "24",
+                height: "24",
+                class: "text-white [&>path]:stroke-black",
             }
         },
         SpaceAppType::IncentivePool => rsx! {
