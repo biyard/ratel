@@ -192,7 +192,7 @@ pub fn TeamHome(teamname: String, rest: Vec<String>) -> Element {
 pub fn SpaceAppGeneralPage(space_id: SpacePartition, rest: Vec<String>) -> Element {
     let _ = rest;
     rsx! {
-        crate::features::spaces::apps::general::SpaceAppGeneralPage { space_id }
+        crate::features::spaces::pages::apps::apps::general::SpaceAppGeneralPage { space_id }
     }
 }
 
@@ -201,7 +201,7 @@ pub fn SpaceAppGeneralPage(space_id: SpacePartition, rest: Vec<String>) -> Eleme
 pub fn SpaceAppFilePage(space_id: SpacePartition, rest: Vec<String>) -> Element {
     let _ = rest;
     rsx! {
-        crate::features::spaces::apps::file::SpaceAppFilePage { space_id }
+        crate::features::spaces::pages::apps::apps::file::SpaceAppFilePage { space_id }
     }
 }
 
@@ -210,7 +210,7 @@ pub fn SpaceAppFilePage(space_id: SpacePartition, rest: Vec<String>) -> Element 
 pub fn SpaceAppPanelsPage(space_id: SpacePartition, rest: Vec<String>) -> Element {
     let _ = rest;
     rsx! {
-        crate::features::spaces::apps::panels::SpaceAppPanelsPage { space_id }
+        crate::features::spaces::pages::apps::apps::panels::SpaceAppPanelsPage { space_id }
     }
 }
 
@@ -219,6 +219,6 @@ pub fn SpaceAppPanelsPage(space_id: SpacePartition, rest: Vec<String>) -> Elemen
 pub fn SpaceAppIncentivePoolPage(space_id: SpacePartition, rest: Vec<String>) -> Element {
     let _ = rest;
     rsx! {
-        crate::features::spaces::apps::incentive_pool::SpaceAppIncentivePoolPage { space_id }
+        crate::features::spaces::pages::apps::apps::incentive_pool::SpaceAppIncentivePoolPage { space_id }
     }
 }
