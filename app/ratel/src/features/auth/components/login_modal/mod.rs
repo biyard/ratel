@@ -5,9 +5,16 @@ use crate::features::auth::controllers::login::{
 use crate::features::auth::hooks::use_user_context;
 use crate::features::auth::interop::sign_in;
 #[cfg(feature = "web")]
-use crate::features::auth::interop::{wallet_connect, wallet_sign_message};
+use crate::features::auth::interop::{wallet_connect, wallet_open_app, wallet_sign_message};
 use crate::features::auth::views::ForgotPassword;
 use crate::features::auth::*;
+
+#[derive(Debug, Clone, PartialEq)]
+enum WalletStep {
+    None,
+    WaitingSignature,
+    Done,
+}
 
 #[component]
 pub fn LoginModal() -> Element {
@@ -17,21 +24,230 @@ pub fn LoginModal() -> Element {
     let mut show_password = use_signal(|| false);
     let mut loading = use_signal(|| false);
     let mut error_message: Signal<Option<String>> = use_signal(|| None);
+    let mut wallet_step = use_signal(|| WalletStep::None);
     let mut popup = use_popup();
     let mut user_ctx = use_user_context();
 
+    let handle_open_signup = move |_| {
+        popup.close();
+        popup.open(rsx! {
+            SignupModal {}
+        });
+    };
+
+    let handle_forgot_password = move |_| {
+        popup.close();
+        popup.open(rsx! {
+            ForgotPassword {}
+        });
+    };
+
+    let handle_open_wallet_app = move |_| async move {
+        #[cfg(feature = "web")]
+        {
+            let _ = wallet_open_app().await;
+        }
+    };
+
+    let handle_email_login = move |_| async move {
+        error_message.set(None);
+
+        if !show_password() {
+            show_password.set(true);
+            return;
+        }
+
+        loading.set(true);
+        let result = login_handler(LoginRequest::Email {
+            email: email.read().clone(),
+            password: password.read().clone(),
+            device_id: None,
+        })
+        .await;
+        loading.set(false);
+
+        match result {
+            Ok(user) => {
+                user_ctx.set(UserContext {
+                    user: Some(user.user),
+                    refresh_token: user.refresh_token,
+                });
+                popup.close();
+            }
+            Err(e) => {
+                error_message.set(Some(format!("{e}")));
+            }
+        }
+    };
+
+    let handle_google_login = move |_| async move {
+        error_message.set(None);
+        loading.set(true);
+
+        match sign_in().await {
+            Ok(user_info) => {
+                let oauth_email = user_info
+                    .email
+                    .clone()
+                    .filter(|email| !email.trim().is_empty());
+                let result = login_handler(LoginRequest::OAuth {
+                    provider: OauthProvider::Google,
+                    access_token: user_info.access_token,
+                })
+                .await;
+                loading.set(false);
+
+                match result {
+                    Ok(user) => {
+                        user_ctx.set(UserContext {
+                            user: Some(user.user),
+                            refresh_token: user.refresh_token,
+                        });
+                        popup.close();
+                    }
+                    Err(Error::Unauthorized(_)) => {
+                        popup.close();
+                        popup.open(rsx! {
+                            SignupModal { initial_email: oauth_email }
+                        });
+                    }
+                    Err(e) => {
+                        error_message.set(Some(format!("{e}")));
+                    }
+                }
+            }
+            Err(e) => {
+                loading.set(false);
+                error_message.set(Some(format!("{e}")));
+            }
+        }
+    };
+
+    let handle_wallet_login = move |_| async move {
+        error_message.set(None);
+        loading.set(true);
+
+        #[cfg(feature = "web")]
+        {
+            let connect_result = match wallet_connect().await {
+                Ok(r) => r,
+                Err(e) => {
+                    loading.set(false);
+                    let msg = format!("{e}");
+                    if !msg.contains("User cancelled") {
+                        error_message.set(Some(msg));
+                    }
+                    return;
+                }
+            };
+
+            let check_resp = match wallet_check_handler(WalletCheckRequest {
+                evm_address: connect_result.address.clone(),
+            })
+            .await
+            {
+                Ok(r) => r,
+                Err(e) => {
+                    loading.set(false);
+                    error_message.set(Some(format!("{e}")));
+                    return;
+                }
+            };
+
+            if !check_resp.exists {
+                loading.set(false);
+                popup.close();
+                popup.open(rsx! {
+                    SignupModal { initial_wallet_address: Some(connect_result.address) }
+                });
+                return;
+            }
+
+            let nonce_resp = match wallet_nonce_handler().await {
+                Ok(r) => r,
+                Err(e) => {
+                    loading.set(false);
+                    error_message.set(Some(format!("{e}")));
+                    return;
+                }
+            };
+
+            wallet_step.set(WalletStep::WaitingSignature);
+
+            let signature = match wallet_sign_message(&nonce_resp.message).await {
+                Ok(s) => s,
+                Err(e) => {
+                    loading.set(false);
+                    wallet_step.set(WalletStep::None);
+                    let msg = format!("{e}");
+                    if !msg.contains("User cancelled") && !msg.contains("rejected") {
+                        error_message.set(Some(msg));
+                    }
+                    return;
+                }
+            };
+
+            wallet_step.set(WalletStep::Done);
+
+            let login_result = login_handler(LoginRequest::Wallet {
+                signature,
+                evm_address: connect_result.address.clone(),
+                message: nonce_resp.message,
+            })
+            .await;
+            loading.set(false);
+            wallet_step.set(WalletStep::None);
+
+            match login_result {
+                Ok(user) => {
+                    user_ctx.set(UserContext {
+                        user: Some(user.user),
+                        refresh_token: user.refresh_token,
+                    });
+                    popup.close();
+                }
+                Err(e) => {
+                    error_message.set(Some(format!("{e}")));
+                }
+            }
+        }
+        #[cfg(not(feature = "web"))]
+        {
+            loading.set(false);
+        }
+    };
+
     rsx! {
         div {
-            class: "relative flex flex-col gap-5 w-100 max-w-100 mx-1.25 max-mobile:w-full! max-mobile:max-w-full!",
+            class: "flex flex-col gap-5 w-100 max-w-100 mx-1.25 max-mobile:w-full! max-mobile:max-w-full!",
             id: "login_popup",
 
             // Loading overlay
-            if loading() {
-                div {
-                    class: "absolute inset-0 w-full h-full flex items-center justify-center bg-background/95",
-                    crate::common::components::LoadingIndicator {
-                        class: "size-8",
+            if wallet_step() == WalletStep::WaitingSignature {
+
+                div { class: "absolute inset-0 w-full h-full flex flex-col gap-10 items-center justify-center bg-background z-1 p-5",
+                    div { class: "w-full h-full max-h-200 flex flex-col justify-between",
+                        div { class: "flex flex-col w-full gap-4",
+                            p { class: "text-xl text-text-primary font-semibold text-center",
+                                {tr.waiting_wallet_signature}
+                            }
+                            p { class: "text-base text-muted-foreground text-center",
+                                {tr.waiting_wallet_description}
+                            }
+                        }
+
+                        Button {
+                            class: "w-full",
+                            onclick: handle_open_wallet_app,
+                            shape: ButtonShape::Square,
+                            {tr.open_wallet}
+                        }
                     }
+                
+                }
+            } else if loading() {
+                div { class: "absolute inset-0 w-full h-full flex items-center justify-center bg-background/95",
+                    crate::common::components::LoadingIndicator { class: "size-8" }
                 }
             }
             div { class: "flex flex-col gap-4 w-full",
@@ -39,12 +255,7 @@ pub fn LoginModal() -> Element {
                     label { class: "font-medium text-text-primary", {tr.new_user} }
                     button {
                         class: "text-primary/70 light:text-primary hover:text-primary",
-                        onclick: move |_| {
-                            popup.close();
-                            popup.open(rsx! {
-                                SignupModal {}
-                            });
-                        },
+                        onclick: handle_open_signup,
                         {tr.create_account}
                     }
                 }
@@ -94,12 +305,7 @@ pub fn LoginModal() -> Element {
                 div { class: "flex flex-row gap-2.5 justify-between items-center w-full text-sm",
                     button {
                         class: "text-sm text-primary/70 hover:text-primary",
-                        onclick: move |_| {
-                            popup.close();
-                            popup.open(rsx! {
-                                ForgotPassword {}
-                            });
-                        },
+                        onclick: handle_forgot_password,
                         {tr.forgot_password}
                     }
                     button {
@@ -107,38 +313,7 @@ pub fn LoginModal() -> Element {
                         "data-slot": "button",
                         "data-testid": "continue-button",
                         disabled: loading(),
-                        onclick: move |_| async move {
-                            error_message.set(None);
-
-                            if !show_password() {
-                                show_password.set(true);
-                                return;
-                            }
-
-                            loading.set(true);
-                            let result = login_handler(LoginRequest::Email {
-                                    email: email.read().clone(),
-                                    password: password.read().clone(),
-                                    device_id: None,
-                                })
-                                .await;
-                            loading.set(false);
-
-                            match result {
-                                Ok(user) => {
-                                    user_ctx
-                                        .set(UserContext {
-                                            user: Some(user.user),
-                                            refresh_token: user.refresh_token,
-                                        });
-
-                                    popup.close();
-                                }
-                                Err(e) => {
-                                    error_message.set(Some(format!("{e}")));
-                                }
-                            }
-                        },
+                        onclick: handle_email_login,
                         if loading() {
                             {tr.loading}
                         } else {
@@ -152,52 +327,7 @@ pub fn LoginModal() -> Element {
                 button {
                     class: "flex flex-row gap-5 items-center px-5 w-full cursor-pointer rounded-[10px] bg-[#000203] py-5.5",
                     disabled: loading(),
-                    onclick: move |_| async move {
-                        error_message.set(None);
-                        loading.set(true);
-
-                        match sign_in().await {
-                            Ok(user_info) => {
-                                let oauth_email = user_info
-                                    .email
-                                    .clone()
-                                    .filter(|email| !email.trim().is_empty());
-                                let result = login_handler(LoginRequest::OAuth {
-                                        provider: OauthProvider::Google,
-                                        access_token: user_info.access_token,
-                                    })
-                                    .await;
-                                loading.set(false);
-
-                                match result {
-                                    Ok(user) => {
-                                        user_ctx
-                                            .set(UserContext {
-                                                user: Some(user.user),
-                                                refresh_token: user.refresh_token,
-                                            });
-
-                                        popup.close();
-                                    }
-                                    Err(Error::Unauthorized(_)) => {
-                                        popup.close();
-                                        popup.open(rsx! {
-                                            SignupModal {
-                                                initial_email: oauth_email,
-                                            }
-                                        });
-                                    }
-                                    Err(e) => {
-                                        error_message.set(Some(format!("{e}")));
-                                    }
-                                }
-                            }
-                            Err(e) => {
-                                loading.set(false);
-                                error_message.set(Some(format!("{e}")));
-                            }
-                        }
-                    },
+                    onclick: handle_google_login,
                     svg {
                         fill: "none",
                         height: "24",
@@ -238,100 +368,7 @@ pub fn LoginModal() -> Element {
                 button {
                     class: "flex flex-row gap-5 items-center px-5 w-full cursor-pointer rounded-[10px] bg-[#3B99FC] py-5.5",
                     disabled: loading(),
-                    onclick: move |_| async move {
-                        error_message.set(None);
-                        loading.set(true);
-
-                        #[cfg(feature = "web")]
-                        {
-                            // Step 1: Connect wallet
-                            let connect_result = match wallet_connect().await {
-                                Ok(r) => r,
-                                Err(e) => {
-                                    loading.set(false);
-                                    let msg = format!("{e}");
-                                    if !msg.contains("User cancelled") {
-                                        error_message.set(Some(msg));
-                                    }
-                                    return;
-                                }
-                            };
-
-                            // Step 2: Check if address exists in DB
-                            let check_resp = match wallet_check_handler(WalletCheckRequest {
-                                evm_address: connect_result.address.clone(),
-                            })
-                            .await
-                            {
-                                Ok(r) => r,
-                                Err(e) => {
-                                    loading.set(false);
-                                    error_message.set(Some(format!("{e}")));
-                                    return;
-                                }
-                            };
-
-                            if !check_resp.exists {
-                                // New user → open signup modal (signing happens there)
-                                loading.set(false);
-                                popup.close();
-                                popup.open(rsx! {
-                                    SignupModal {
-                                        initial_wallet_address: Some(connect_result.address),
-                                    }
-                                });
-                                return;
-                            }
-
-                            // Step 3: Existing user → nonce → sign → login
-                            let nonce_resp = match wallet_nonce_handler().await {
-                                Ok(r) => r,
-                                Err(e) => {
-                                    loading.set(false);
-                                    error_message.set(Some(format!("{e}")));
-                                    return;
-                                }
-                            };
-
-                            let signature = match wallet_sign_message(&nonce_resp.message).await {
-                                Ok(s) => s,
-                                Err(e) => {
-                                    loading.set(false);
-                                    let msg = format!("{e}");
-                                    if !msg.contains("User cancelled") && !msg.contains("rejected") {
-                                        error_message.set(Some(msg));
-                                    }
-                                    return;
-                                }
-                            };
-
-                            let login_result = login_handler(LoginRequest::Wallet {
-                                signature,
-                                evm_address: connect_result.address.clone(),
-                                message: nonce_resp.message,
-                            })
-                            .await;
-                            loading.set(false);
-
-                            match login_result {
-                                Ok(user) => {
-                                    user_ctx.set(UserContext {
-                                        user: Some(user.user),
-                                        refresh_token: user.refresh_token,
-                                    });
-                                    popup.close();
-                                }
-                                Err(e) => {
-                                    error_message.set(Some(format!("{e}")));
-                                }
-                            }
-                        }
-
-                        #[cfg(not(feature = "web"))]
-                        {
-                            loading.set(false);
-                        }
-                    },
+                    onclick: handle_wallet_login,
                     icons::wallet::WalletConnect { class: "fill-white", width: "24", height: "24" }
                     div { class: "text-base font-semibold text-white", {tr.continue_with_wallet} }
                 }
@@ -398,6 +435,18 @@ translate! {
     continue_with_wallet: {
         en: "Continue With Wallet",
         ko: "지갑으로 계속하기",
+    },
+    waiting_wallet_signature: {
+        en: "Approve signature in your wallet",
+        ko: "지갑에서 서명을 승인해주세요",
+    },
+    waiting_wallet_description: {
+        en: "A signature request has been sent to your wallet app.",
+        ko: "지갑 앱으로 서명 요청이 전송되었습니다.",
+    },
+    open_wallet: {
+        en: "Signin",
+        ko: "로그인",
     },
     privacy_policy: {
         en: "Privacy Policy",
