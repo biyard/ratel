@@ -1,5 +1,5 @@
-use crate::features::spaces::apps::main::macros::DynamoEntity;
-use crate::features::spaces::apps::main::*;
+use crate::features::spaces::pages::apps::macros::DynamoEntity;
+use crate::features::spaces::pages::apps::*;
 use crate::common::utils::time::get_now_timestamp_millis;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, DynamoEntity, PartialEq)]

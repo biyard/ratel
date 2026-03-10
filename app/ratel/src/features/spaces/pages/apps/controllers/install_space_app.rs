@@ -1,5 +1,5 @@
-use crate::features::spaces::apps::main::models::SpaceApp;
-use crate::features::spaces::apps::main::*;
+use crate::features::spaces::pages::apps::models::SpaceApp;
+use crate::features::spaces::pages::apps::*;
 use crate::common::SpaceUserRole;
 use crate::common::types::Partition;
 use crate::common::types::SpacePartition;
@@ -19,7 +19,7 @@ pub async fn install_space_app(
 
     let items = vec![app.create_transact_write_item()];
     crate::transact_write_items!(dynamo, items)
-        .map_err(|e| crate::features::spaces::apps::main::Error::Unknown(format!("Failed to install app: {e}")))?;
+        .map_err(|e| crate::features::spaces::pages::apps::Error::Unknown(format!("Failed to install app: {e}")))?;
 
     Ok(app)
 }

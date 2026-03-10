@@ -13,7 +13,7 @@ use participant_page::*;
 use viewer_page::*;
 
 #[component]
-pub fn HomePage(space_id: SpacePartition) -> Element {
+pub fn SpaceReportPage(space_id: SpacePartition) -> Element {
     let role = use_server_future(move || async move { SpaceUserRole::Creator })?.value();
 
     match role().unwrap_or_default() {

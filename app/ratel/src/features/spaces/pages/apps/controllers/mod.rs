@@ -1,4 +1,4 @@
-use crate::features::spaces::apps::main::*;
+use crate::features::spaces::pages::apps::*;
 
 mod get_space_apps;
 mod install_space_app;

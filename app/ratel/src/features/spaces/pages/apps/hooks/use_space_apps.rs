@@ -1,6 +1,6 @@
 use dioxus::fullstack::{Loader, Loading};
 
-use crate::features::spaces::apps::main::*;
+use crate::features::spaces::pages::apps::*;
 
 pub fn use_space_apps(
     space_id: &SpacePartition,
