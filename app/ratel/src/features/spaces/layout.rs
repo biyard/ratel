@@ -1,13 +1,14 @@
-use crate::features::spaces::{controllers::participate_space::participate_space, *};
-use crate::features::spaces::space_common::hooks::use_space_query;
-use crate::features::spaces::space_common::providers::SpaceContextProvider;
+use super::*;
 use crate::features::auth::hooks::use_user_context;
 use crate::features::auth::{LoginModal, UserContextStoreExt};
+use crate::features::spaces::space_common::hooks::use_space_query;
+use crate::features::spaces::space_common::providers::SpaceContextProvider;
 use crate::features::spaces::space_common::types::space_key;
 use crate::features::spaces::space_common::{
     components::{SpaceNav, SpaceNavItem, SpaceTop, SpaceTopLabel},
     hooks::use_space_role,
 };
+use crate::features::spaces::{controllers::participate_space::participate_space, *};
 
 #[component]
 pub fn SpaceLayout(space_id: SpacePartition) -> Element {
@@ -33,8 +34,8 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
     let menus = vec![
         crate::features::spaces::pages::dashboard::get_nav_item(space_id.clone(), role.clone()),
         crate::features::spaces::pages::overview::get_nav_item(space_id.clone(), role.clone()),
-        crate::features::spaces::actions::shell::get_nav_item(space_id.clone(), role.clone()),
-        crate::features::spaces::apps::shell::get_nav_item(space_id.clone(), role.clone()),
+        crate::features::spaces::pages::actions::get_nav_item(space_id.clone(), role.clone()),
+        crate::features::spaces::pages::apps::get_nav_item(space_id.clone(), role.clone()),
         // crate::features::spaces::pages::report::get_nav_item(space_id.clone(), role.clone()),
     ]
     .into_iter()

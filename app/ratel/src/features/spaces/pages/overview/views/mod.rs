@@ -11,7 +11,7 @@ use viewer_page::*;
 use crate::features::spaces::space_common::hooks::use_space_role;
 
 #[component]
-pub fn HomePage(space_id: SpacePartition) -> Element {
+pub fn SpaceOverviewPage(space_id: SpacePartition) -> Element {
     let role = use_space_role()();
 
     match role {

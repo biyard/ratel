@@ -1,5 +1,22 @@
 use crate::*;
 
+use crate::features::admin::Route as AdminRoute;
+use crate::features::auth::Route as AuthRoute;
+use crate::features::my_follower::Route as MyFollowerRoute;
+use crate::features::posts::Route as PostRoute;
+
+#[cfg(feature = "spaces")]
+use crate::features::spaces::pages::actions::SpaceActionsPage;
+#[cfg(feature = "spaces")]
+use crate::features::spaces::pages::apps::SpaceAppsPage;
+#[cfg(feature = "spaces")]
+use crate::features::spaces::pages::dashboard::SpaceDashboardPage;
+#[cfg(feature = "spaces")]
+use crate::features::spaces::pages::overview::SpaceOverviewPage;
+#[cfg(feature = "spaces")]
+use crate::features::spaces::pages::report::SpaceReportPage;
+#[cfg(feature = "spaces")]
+use crate::features::spaces::SpaceLayout;
 #[cfg(feature = "teams")]
 use crate::features::teams::Route as TeamRoute;
 #[cfg(feature = "users")]
@@ -8,11 +25,6 @@ use crate::views::Index;
 use dioxus::router::components::child_router::ChildRouter;
 use layout::AppLayout;
 use membership::Home as MembershipHome;
-use crate::features::admin::Route as AdminRoute;
-use crate::features::auth::Route as AuthRoute;
-use crate::features::my_follower::Route as MyFollowerRoute;
-use crate::features::posts::Route as PostRoute;
-use crate::features::spaces::Route as SpaceRoute;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
@@ -48,8 +60,63 @@ pub enum Route {
         TeamHome { teamname: String, rest: Vec<String> },
     #[end_layout]
 
-    #[route("/spaces/:..rest")]
-    Space { rest: Vec<String> },
+
+    #[cfg_attr(feature="spaces", nest("/spaces/:space_id"))]
+        #[cfg_attr(feature="spaces", layout(SpaceLayout))]
+            #[cfg_attr(feature="spaces", route("/dashboard"))]
+            #[cfg(feature = "spaces")]
+            SpaceDashboardPage { space_id: SpacePartition },
+            #[cfg_attr(feature="spaces", route("/overview"))]
+            #[cfg(feature = "spaces")]
+            SpaceOverviewPage { space_id: SpacePartition },
+            #[cfg_attr(feature="spaces", route("/actions"))]
+            #[cfg(feature = "spaces")]
+            SpaceActionsPage { space_id: SpacePartition },
+    // #[nest("/spaces/:space_id/actions")]
+    //     #[route("/polls/:..rest")]
+    //     Poll { space_id: SpacePartition, rest: Vec<String> },
+    //     #[route("/quizzes/:..rest")]
+    //     Quiz { space_id: SpacePartition, rest: Vec<String> },
+    //     #[route("/discussions/:..rest")]
+    //     Discussion { space_id: SpacePartition, rest: Vec<String> },
+    //     #[route("/subscriptions/:..rest")]
+    //     Subscription { space_id: SpacePartition, rest: Vec<String> },
+    //     #[route("/:..rest")]
+    //     Main { space_id: SpacePartition, rest: Vec<String> },
+
+
+            #[cfg_attr(feature="spaces", route("/report"))]
+            #[cfg(feature = "spaces")]
+            SpaceReportPage { space_id: SpacePartition },
+
+            #[cfg_attr(feature="spaces", route("/apps"))]
+            #[cfg(feature = "spaces")]
+            SpaceAppsPage { space_id: SpacePartition },
+    // #[route("/general/:..rest")]
+    //         General { space_id: SpacePartition, rest: Vec<String> },
+    //         #[route("/incentive-pool/:..rest")]
+    //         IncentivePool { space_id: SpacePartition, rest: Vec<String> },
+    //         #[route("/file/:..rest")]
+    //         File { space_id: SpacePartition, rest: Vec<String> },
+    //         #[route("/rewards/:..rest")]
+    //         Rewards { space_id: SpacePartition, rest: Vec<String> },
+
+
+            #[cfg_attr(feature="spaces", redirect("/", |space_id: SpacePartition| Route::SpaceDashboardPage { space_id }))]
+        #[cfg_attr(feature="spaces", end_layout)]
+    #[cfg_attr(feature="spaces", end_nest)]
+
+    #[route("/:..rest")]
+    PageNotFound { rest: Vec<String> },
+}
+
+#[component]
+fn PageNotFound(rest: Vec<String>) -> Element {
+    rsx! {
+        h1 { "Page not found" }
+        p { "We are terribly sorry, but the page you requested doesn't exist." }
+        pre { color: "red", "log:\nattempted to navigate to: {rest:?}" }
+    }
 }
 
 macro_rules! define_app_wrapper {
@@ -73,7 +140,6 @@ macro_rules! define_app_wrapper {
 
 define_app_wrapper!(Admin, AdminRoute);
 define_app_wrapper!(Auth, AuthRoute);
-define_app_wrapper!(Space, SpaceRoute);
 define_app_wrapper!(Post, PostRoute);
 define_app_wrapper!(MyFollower, MyFollowerRoute);
 

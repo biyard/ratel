@@ -1,22 +1,22 @@
-pub mod components;
+mod components;
 #[cfg(feature = "server")]
 mod config;
-pub mod controllers;
-pub mod i18n;
+mod controllers;
+mod i18n;
 mod menu;
-pub mod route;
-pub mod types;
-pub mod views;
+mod types;
+mod views;
 
 #[cfg(feature = "server")]
 pub mod models;
 
-use dioxus::prelude::*;
-pub use types::*;
+use controllers::*;
+use i18n::*;
+use types::*;
 
-pub use crate::common::Error;
 pub use menu::get_nav_item;
-pub use route::Route;
+pub use views::*;
 
-use crate::common::*;
 use components::*;
+
+use crate::*;
