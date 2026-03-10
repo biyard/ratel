@@ -24,6 +24,7 @@ impl SpaceContextProvider {
             space,
             current_role,
         };
+        debug!("Initialized SpaceContextProvider");
         use_context_provider(move || srv);
 
         Ok(srv)
