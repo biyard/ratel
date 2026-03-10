@@ -3,8 +3,8 @@ use crate::common::{
     components::{FileUploader, SpaceCard, TiptapEditor},
     icons::{edit::Edit1, other_devices::Save},
 };
-use crate::features::spaces::apps::file::UpdateSpaceFilesRequest;
-use crate::features::spaces::apps::file::components::{FileCard, FileUploadZone};
+use crate::features::spaces::pages::apps::apps::file::UpdateSpaceFilesRequest;
+use crate::features::spaces::pages::apps::apps::file::components::{FileCard, FileUploadZone};
 use crate::features::spaces::space_common::hooks::use_space_query;
 
 #[component]
@@ -30,7 +30,7 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
 
         let space_id = space_id_for_load.clone();
         spawn(async move {
-            if let Ok(loaded_files) = crate::features::spaces::apps::file::get_space_files(space_id).await {
+            if let Ok(loaded_files) = crate::features::spaces::pages::apps::apps::file::get_space_files(space_id).await {
                 files.set(loaded_files);
             }
         });
@@ -112,7 +112,7 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
                                             }
 
                                             // Save files
-                                            match crate::features::spaces::apps::file::update_space_files(
+                                            match crate::features::spaces::pages::apps::apps::file::update_space_files(
                                                     space_pk,
                                                     UpdateSpaceFilesRequest {
                                                         files: current_files,

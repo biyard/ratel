@@ -1,1 +1,1 @@
-pub use crate::features::spaces::actions::poll::models::*;
+pub use crate::features::spaces::pages::actions::actions::poll::models::*;
