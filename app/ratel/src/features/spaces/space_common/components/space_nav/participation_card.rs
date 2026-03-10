@@ -106,17 +106,17 @@ pub fn ParticipationCard(
 }
 
 fn panel_requirement_label(
-    kind: crate::features::spaces::controllers::panel_requirements::PanelRequirementKind,
+    kind: crate::features::spaces::controllers::panel_requirements::PanelRequirementAttribute,
     tr: &ParticipationCardTranslate,
 ) -> String {
     match kind {
-        crate::features::spaces::controllers::panel_requirements::PanelRequirementKind::Age => {
+        crate::features::spaces::controllers::panel_requirements::PanelRequirementAttribute::Age => {
             tr.age.to_string()
         }
-        crate::features::spaces::controllers::panel_requirements::PanelRequirementKind::Gender => {
+        crate::features::spaces::controllers::panel_requirements::PanelRequirementAttribute::Gender => {
             tr.gender.to_string()
         }
-        crate::features::spaces::controllers::panel_requirements::PanelRequirementKind::University => {
+        crate::features::spaces::controllers::panel_requirements::PanelRequirementAttribute::University => {
             tr.university.to_string()
         }
     }

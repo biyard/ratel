@@ -11,7 +11,7 @@ use crate::features::spaces::models::verified_attributes::UserAttributesExt;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-pub enum PanelRequirementKind {
+pub enum PanelRequirementAttribute {
     Age,
     Gender,
     University,
@@ -19,7 +19,7 @@ pub enum PanelRequirementKind {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct PanelRequirementStatus {
-    pub kind: PanelRequirementKind,
+    pub kind: PanelRequirementAttribute,
     pub satisfied: bool,
 }
 
@@ -60,9 +60,9 @@ pub async fn get_panel_requirements(
 
     let mut statuses = vec![];
     for kind in [
-        PanelRequirementKind::Age,
-        PanelRequirementKind::Gender,
-        PanelRequirementKind::University,
+        PanelRequirementAttribute::Age,
+        PanelRequirementAttribute::Gender,
+        PanelRequirementAttribute::University,
     ] {
         let active_attributes = panel_quotas
             .iter()
@@ -124,18 +124,18 @@ pub(crate) fn panel_attributes(panel: &SpacePanelQuota) -> Vec<PanelAttribute> {
 }
 
 #[cfg(feature = "server")]
-fn panel_requirement_kind(attribute: &PanelAttribute) -> Option<PanelRequirementKind> {
+fn panel_requirement_kind(attribute: &PanelAttribute) -> Option<PanelRequirementAttribute> {
     match attribute {
         PanelAttribute::CollectiveAttribute(CollectiveAttribute::Age)
         | PanelAttribute::VerifiableAttribute(VerifiableAttribute::Age(_)) => {
-            Some(PanelRequirementKind::Age)
+            Some(PanelRequirementAttribute::Age)
         }
         PanelAttribute::CollectiveAttribute(CollectiveAttribute::Gender)
         | PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender(_)) => {
-            Some(PanelRequirementKind::Gender)
+            Some(PanelRequirementAttribute::Gender)
         }
         PanelAttribute::CollectiveAttribute(CollectiveAttribute::University) => {
-            Some(PanelRequirementKind::University)
+            Some(PanelRequirementAttribute::University)
         }
         _ => None,
     }
