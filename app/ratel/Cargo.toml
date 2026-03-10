@@ -144,6 +144,7 @@ users = []
 teams = []
 spaces = []
 spaces_full = ["spaces"]
+futures = ["dep:futures"]
 
 [dev-dependencies]
 axum = { workspace = true }
