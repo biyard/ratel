@@ -24,6 +24,8 @@ pub fn LoginModal() -> Element {
     let mut show_password = use_signal(|| false);
     let mut loading = use_signal(|| false);
     let mut error_message: Signal<Option<String>> = use_signal(|| None);
+    //NOTE: Web Feature issue
+    #[allow(unused_mut)]
     let mut wallet_step = use_signal(|| WalletStep::None);
     let mut popup = use_popup();
     let mut user_ctx = use_user_context();
