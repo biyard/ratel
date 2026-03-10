@@ -1,8 +1,4 @@
-use crate::features::spaces::pages::apps::apps::file::components::{FileCard, FileUploadZone};
-use crate::features::spaces::pages::apps::apps::file::controllers::{FileLinkInfo, UpdateSpaceFilesRequest};
-use crate::features::spaces::pages::apps::apps::file::i18n::SpaceFileTranslate;
-use crate::features::spaces::pages::apps::apps::file::types::FileLinkTarget;
-use crate::features::spaces::pages::apps::apps::file::*;
+use super::*;
 use crate::features::spaces::space_common::hooks::use_space_role;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -24,7 +20,7 @@ fn is_video_ext(ext: &FileExtension) -> bool {
 }
 
 #[component]
-pub fn FileManagerPage(space_id: SpacePartition) -> Element {
+pub fn SpaceFileAppPage(space_id: SpacePartition) -> Element {
     let tr: SpaceFileTranslate = use_translate();
 
     let mut active_tab = use_signal(|| FileTab::All);
@@ -112,13 +108,13 @@ pub fn FileManagerPage(space_id: SpacePartition) -> Element {
     };
 
     rsx! {
-        div { class: "flex flex-col gap-5 w-full max-w-[1024px] text-web-font-primary pb-6",
+        div { class: "flex flex-col gap-5 pb-6 w-full max-w-[1024px] text-web-font-primary",
             h3 { class: "font-bold font-raleway text-[24px]/[28px] tracking-[-0.24px] text-web-font-primary",
                 {tr.page_title}
             }
 
             // Tabs + Edit/Save buttons
-            div { class: "flex justify-between items-center flex-wrap gap-2",
+            div { class: "flex flex-wrap gap-2 justify-between items-center",
                 div { class: "flex gap-2",
                     {
                         let (style, class) = tab_button_props(FileTab::All);
@@ -210,7 +206,8 @@ pub fn FileManagerPage(space_id: SpacePartition) -> Element {
                         }
                     } else {
                         Button {
-                            class: "!px-4 !py-2 !text-sm !font-semibold !rounded-[8px] hover:!bg-card-hover".to_string(),
+                            class: "!px-4 !py-2 !text-sm !font-semibold !rounded-[8px] hover:!bg-card-hover"
+                                .to_string(),
                             style: ButtonStyle::Outline,
                             shape: ButtonShape::Square,
                             onclick: move |_| {
@@ -234,7 +231,7 @@ pub fn FileManagerPage(space_id: SpacePartition) -> Element {
             }
 
             if displayed_files.is_empty() {
-                div { class: "flex justify-center items-center w-full py-10 text-card-meta",
+                div { class: "flex justify-center items-center py-10 w-full text-card-meta",
                     {tr.no_files}
                 }
             } else {
@@ -255,20 +252,20 @@ pub fn FileManagerPage(space_id: SpacePartition) -> Element {
             }
 
             if !image_files.is_empty() && !editing() {
-                div { class: "grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-separator",
+                div { class: "grid grid-cols-1 gap-4 pt-4 mt-4 border-t md:grid-cols-2 border-separator",
                     for file in image_files.iter() {
                         img {
                             key: "img-{file.id}",
                             src: file.url.clone().unwrap_or_default(),
                             alt: "{file.name}",
-                            class: "w-full object-contain rounded-lg border border-separator max-h-[500px] bg-black",
+                            class: "object-contain w-full bg-black rounded-lg border border-separator max-h-[500px]",
                         }
                     }
                 }
             }
 
             if !video_files.is_empty() && !editing() {
-                div { class: "flex flex-col gap-3 mt-4 pt-4 border-t border-separator",
+                div { class: "flex flex-col gap-3 pt-4 mt-4 border-t border-separator",
                     for file in video_files.iter() {
                         video {
                             key: "video-{file.id}",
@@ -290,7 +287,7 @@ pub fn HomePage(space_id: SpacePartition) -> Element {
 
     if role == SpaceUserRole::Creator {
         rsx! {
-            FileManagerPage { space_id }
+            SpaceFileAppPage { space_id }
         }
     } else {
         rsx! {
