@@ -6,7 +6,7 @@ When performing a code review,
 * Pay special attention to `toast.error()` usage: it must receive a typed `common::Error` variant, never a raw string. See section 12 of `/docs/dioxus-convention.md` for the full toast convention.
 * For TailwindCSS styling, apply the conventions defined in `/docs/tailwindcss-convention.md`. Key checks:
   - Use semantic design tokens (`bg-card`, `text-text-primary`), not raw color values (`bg-neutral-800`).
-  - Use `light:` variant for light theme overrides; do not use `dark:` prefix (dark is default).
+  - Do not use `light:` or `dark:` prefixes in component classes; define both light/dark values as semantic tokens in `app/ratel/tailwind.css`.
   - Prefer `aria-selected:` / `group-aria-selected:` variants over Rust if/else class selection for toggleable states.
   - Flag excessive `!important` overrides (`!bg-*`, `!text-*`) — components should accept a `class` prop instead.
   - Use `max-tablet:` / `max-mobile:` for responsive breakpoints.
