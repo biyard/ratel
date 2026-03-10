@@ -88,7 +88,7 @@ lambda_http = { version = "1.0.2", optional = true }
 
 
 [features]
-full = ["membership","users", "teams"]
+full = ["membership","users", "teams", "spaces_full"]
 default = ["full"]
 bypass = []
 web = [
@@ -140,6 +140,8 @@ layout_test = ["web"]
 membership = []
 users = []
 teams = []
+spaces = []
+spaces_full = ["spaces"]
 
 [dev-dependencies]
 axum = { workspace = true }

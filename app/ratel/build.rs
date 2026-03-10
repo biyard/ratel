@@ -33,10 +33,6 @@ fn main() {
     )
     .expect("failed to copy dist/main.js to assets/ratel-app-shell.js");
 
-    println!("cargo:rerun-if-changed=build.rs");
-    println!(
-        "cargo:rerun-if-changed={}",
-        manifest_path.join("../").display()
-    );
+    println!("cargo:rerun-if-changed={}", "build.rs");
     println!("cargo:rerun-if-changed={}", js_dir.join("src").display());
 }

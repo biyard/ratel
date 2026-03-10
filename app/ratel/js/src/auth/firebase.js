@@ -9,20 +9,23 @@ import {
 let app;
 let auth;
 let provider;
+let initialized = false;
 
-export function initialize(conf) {
+export function init_firebase(conf) {
   try {
     app = initializeApp(conf);
     auth = getAuth(app);
     provider = new GoogleAuthProvider();
+
+    initialized = true;
   } catch (e) {
-    console.error("Firebase init failed:", e);
+    throw e;
   }
 }
 
 export async function signIn() {
-  if (!auth || !provider) {
-    console.error("Firebase not initialized");
+  if (!initialized) {
+    console.error("Firebase initialization failed:");
   }
 
   try {

@@ -2,15 +2,16 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::js_sys::Promise;
 
-use crate::features::auth::*;
 mod wallet_connect;
+use super::*;
 pub use wallet_connect::*;
 // ── Firebase interop ──────────────────────────────────────────────────
 
-#[wasm_bindgen(js_namespace = ["window", "ratel", "auth", "firebase"])]
+// static INITIALIZED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+#[wasm_bindgen(js_namespace = ["window","ratel", "auth", "firebase"])]
 extern "C" {
-    #[wasm_bindgen(js_name = initialize)]
-    pub fn initialize(config: &JsValue);
+    pub fn init_firebase(conf: &JsValue);
 
     #[wasm_bindgen(js_name = signIn)]
     fn sign_in_promise() -> Promise;
@@ -24,7 +25,12 @@ pub struct UserInfo {
     pub display_name: Option<String>,
     pub photo_url: Option<String>,
 }
+#[cfg(not(feature = "web"))]
+pub async fn sign_in() -> crate::common::Result<UserInfo> {
+    unimplemented!("sign_in is only implemented for the web feature")
+}
 
+#[cfg(feature = "web")]
 pub async fn sign_in() -> crate::common::Result<UserInfo> {
     let js_value = JsFuture::from(sign_in_promise())
         .await
