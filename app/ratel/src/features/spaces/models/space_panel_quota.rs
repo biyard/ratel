@@ -3,17 +3,29 @@ use crate::features::spaces::models::PanelAttributeWithQuota;
 use crate::features::spaces::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 #[cfg_attr(feature = "server", derive(DynamoEntity))]
 pub struct SpacePanelQuota {
     pub pk: CompositePartition,
     pub sk: EntityType,
     pub quotas: i64,
     pub remains: i64,
+    #[serde(default)]
     pub attributes: PanelAttribute,
 }
 
 impl SpacePanelQuota {
+    pub fn can_view(_role: SpaceUserRole) -> crate::common::Result<()> {
+        Ok(())
+    }
+
+    pub fn can_edit(role: SpaceUserRole) -> crate::common::Result<()> {
+        match role {
+            SpaceUserRole::Creator => Ok(()),
+            _ => Err(Error::NoPermission),
+        }
+    }
+
     pub fn new(
         space_pk: Partition,
         attribute_label: String,
