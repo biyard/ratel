@@ -27,7 +27,7 @@ pub fn InviteParticipant() -> Element {
                             {tr.email_address}
                         }
                         Input {
-                            id: "email-input".to_string(),
+                            id: "email-input",
                             r#type: InputType::Email,
                             placeholder: tr.email_placeholder,
                             value: email_input(),
