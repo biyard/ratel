@@ -19,25 +19,26 @@ pub fn SpaceAppGrid(children: Element) -> Element {
 pub fn SpaceAppsPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let mut ctx = use_space_apps_context();
     let role = ctx.role();
-    let space_apps = ctx.apps();
 
     let tr: AppMainTranslate = use_translate();
     let navigator = use_navigator();
+    let space_apps = ctx.apps();
     let mut toast = use_toast();
-
-    let mut in_progress = use_signal(|| Option::<SpaceAppType>::None);
-
     let installed_types: Vec<SpaceAppType> = space_apps.iter().map(|app| app.app_type).collect();
+
     let installed_apps: Vec<SpaceAppType> = SpaceAppType::VARIANTS
         .into_iter()
         .copied()
         .filter(|app_type| app_type.is_default() || installed_types.contains(app_type))
         .collect();
+
     let available_apps: Vec<SpaceAppType> = SpaceAppType::VARIANTS
         .into_iter()
         .copied()
         .filter(|app_type| !app_type.is_default() && !installed_types.contains(app_type))
         .collect();
+
+    let mut in_progress = use_signal(|| Option::<SpaceAppType>::None);
 
     let handle_toggle_app = move |app_type: SpaceAppType, is_installed: bool| async move {
         if in_progress().is_some() {
@@ -97,15 +98,18 @@ pub fn SpaceAppsPage(space_id: ReadSignal<SpacePartition>) -> Element {
                                         }
                                     });
                                 rsx! {
-                                    AppCard {
-                                        app_type,
-                                        header_action,
-                                        onclick: move |_| {
-                                            let settings_path = app_type.settings_path(space_id());
-                                            navigator.push(settings_path);
-                                        },
-                                        disabled: is_progress,
-                                        action_label: {tr.setting},
+                                    AppCard { app_type, header_action,
+                                        Button {
+                                            class: "w-full",
+                                            style: ButtonStyle::Primary,
+                                            shape: ButtonShape::Square,
+                                            disabled: is_progress,
+                                            onclick: move |_| {
+                                                let settings_path = app_type.settings_path(space_id());
+                                                navigator.push(settings_path);
+                                            },
+                                            {tr.setting}
+                                        }
                                     }
                                 }
                             }
@@ -128,15 +132,21 @@ pub fn SpaceAppsPage(space_id: ReadSignal<SpacePartition>) -> Element {
                                     };
 
                                     rsx! {
-                                        AppCard {
-                                            app_type,
-
-
-                                            disabled: in_progress().is_some(),
-                                            onclick: move |_| {
-                                                handle_toggle_app(app_type, false);
-                                            },
-                                            action_label: if is_progress { {tr.installing} } else { {tr.install} },
+                                        AppCard { app_type,
+                                            Button {
+                                                class: "w-full",
+                                                style: ButtonStyle::Primary,
+                                                shape: ButtonShape::Square,
+                                                disabled: in_progress().is_some(),
+                                                onclick: move |_| {
+                                                    handle_toggle_app(app_type, false);
+                                                },
+                                                if is_progress {
+                                                    {tr.installing}
+                                                } else {
+                                                    {tr.install}
+                                                }
+                                            }
                                         }
                                     }
                                 }
