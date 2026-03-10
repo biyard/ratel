@@ -1,4 +1,4 @@
-use super::*;
+use crate::features::spaces::pages::apps::apps::panels::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct UpdatePanelQuotaRequest {

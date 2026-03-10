@@ -1,4 +1,4 @@
-use super::*;
+use crate::features::spaces::pages::apps::apps::panels::*;
 
 #[get("/api/spaces/{space_id}/panels", role: SpaceUserRole)]
 pub async fn list_panels(

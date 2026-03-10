@@ -1,13 +1,12 @@
 mod i18n;
 
-use super::*;
 use crate::features::spaces::pages::apps::apps::panels::*;
 
 #[component]
 pub fn ViewerPage(space_id: SpacePartition) -> Element {
     let tr: i18n::PanelViewerTranslate = use_translate();
     let nav = navigator();
-    let space_id_clone = space_id.clone();
+    let _ = space_id;
 
     rsx! {
         div { class: "flex flex-col gap-5 items-center justify-center w-full min-h-[300px]",
