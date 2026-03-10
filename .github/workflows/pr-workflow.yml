@@ -222,7 +222,7 @@ jobs:
           COMMIT: pr-${{ github.sha }}
           ECR: ratel/app-shell
         run: |
-          npm install -D tailwindcss @tailwindcss/cli
+          npm i -D tailwindcss
           make build
           make docker
 
@@ -308,7 +308,7 @@ jobs:
           RUST_LOG: info
           ENV: local
         run: |
-          npm install -D tailwindcss @tailwindcss/cli
+          npm i -D tailwindcss
           make test
 
       # - name: Setup SSH session with tmate
