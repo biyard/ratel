@@ -67,7 +67,7 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
 
     rsx! {
         SeoMeta { title: space.title.clone(), description: space.description() }
-        div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] light:bg-[#ffffff] bg-[#191919] text-web-font-primary",
+        div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-space-bg text-web-font-primary",
             div { class: "hidden tablet:flex",
                 SpaceNav {
                     logo: "https://metadata.ratel.foundation/logos/logo.png",
@@ -88,7 +88,7 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
                     show_participate_button: show_participate,
                     on_participant,
                 }
-                div { class: "flex overflow-auto flex-1 p-5 w-full bg-web-bg rounded-tl-[10px]",
+                div { class: "flex overflow-auto flex-1 p-5 w-full bg-background rounded-tl-[10px]",
                     SuspenseBoundary {
                         fallback: |_| rsx! {
                             LoadingIndicator { max_width: "300px" }
