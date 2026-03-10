@@ -19,7 +19,7 @@ export function init_firebase(conf) {
 
     initialized = true;
   } catch (e) {
-    throw e;
+    console.error("Firebase initialization failed:", e);
   }
 }
 

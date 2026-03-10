@@ -6,3 +6,6 @@ run:
 
 test:
 	PLAYWRIGHT_BASE_URL=$(PLAYWRIGHT_BASE_URL) PLAYWRIGHT_TIMEOUT=$(PLAYWRIGHT_TIMEOUT) npm run test
+
+report:
+	npm run report
