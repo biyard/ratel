@@ -1,6 +1,5 @@
 mod components;
 mod controllers;
-mod route;
 mod types;
 mod views;
 
@@ -8,8 +7,8 @@ use dioxus::prelude::*;
 
 pub use components::*;
 pub use controllers::*;
-pub use route::Route;
 pub use types::*;
+pub use views::HomePage as SpaceAppPanelsPage;
 
 pub use crate::common::attribute::Gender;
 use crate::common::*;
