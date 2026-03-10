@@ -1,9 +1,9 @@
 use crate::features::spaces::pages::actions::*;
 use i18n::CreateActionModalTranslate;
-use crate::features::spaces::actions::discussion::controllers::create_discussion;
-use crate::features::spaces::actions::poll::controllers::create_poll;
-use crate::features::spaces::actions::quiz::controllers::create_quiz;
-use crate::features::spaces::actions::subscription::controllers::create_subscription;
+use crate::features::spaces::pages::actions::actions::discussion::controllers::create_discussion;
+use crate::features::spaces::pages::actions::actions::poll::controllers::create_poll;
+use crate::features::spaces::pages::actions::actions::quiz::controllers::create_quiz;
+use crate::features::spaces::pages::actions::actions::subscription::controllers::create_subscription;
 use crate::features::spaces::space_common::types::route::{
     space_action_discussion, space_action_poll, space_action_quiz, space_action_subscription,
 };

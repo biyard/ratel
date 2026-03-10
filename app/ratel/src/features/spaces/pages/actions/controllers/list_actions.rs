@@ -17,19 +17,19 @@ pub async fn list_actions(
         space_pk.clone(),
         SpacePoll::opt_all().sk(EntityType::SpacePoll(String::default()).to_string()),
     );
-    let quiz_future = crate::features::spaces::actions::quiz::SpaceQuiz::query(
+    let quiz_future = crate::features::spaces::pages::actions::actions::quiz::SpaceQuiz::query(
         cli,
         space_pk.clone(),
-        crate::features::spaces::actions::quiz::SpaceQuiz::opt_all()
+        crate::features::spaces::pages::actions::actions::quiz::SpaceQuiz::opt_all()
             .sk(EntityType::SpaceQuiz(String::default()).to_string()),
     );
-    let discussion_future = crate::features::spaces::actions::discussion::SpacePost::query(
+    let discussion_future = crate::features::spaces::pages::actions::actions::discussion::SpacePost::query(
         cli,
         space_pk.clone(),
-        crate::features::spaces::actions::discussion::SpacePost::opt_all()
+        crate::features::spaces::pages::actions::actions::discussion::SpacePost::opt_all()
             .sk(EntityType::SpacePost(String::default()).to_string()),
     );
-    let subscription_future = crate::features::spaces::actions::subscription::SpaceSubscription::get(
+    let subscription_future = crate::features::spaces::pages::actions::actions::subscription::SpaceSubscriptionAction::get(
         cli,
         &space_pk,
         Some(EntityType::SpaceSubscription),
