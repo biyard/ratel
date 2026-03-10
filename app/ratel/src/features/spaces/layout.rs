@@ -11,8 +11,8 @@ use crate::features::spaces::space_common::{
 use crate::features::spaces::{controllers::participate_space::participate_space, *};
 
 #[component]
-pub fn SpaceLayout(space_id: SpacePartition) -> Element {
-    let ctx = SpaceContextProvider::init(&space_id)?;
+pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
+    let ctx = SpaceContextProvider::init(space_id)?;
 
     use_context_provider(|| LayoverService::new());
     let role = ctx.current_role();
@@ -32,10 +32,10 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
         && space.can_participate;
 
     let menus = vec![
-        crate::features::spaces::pages::dashboard::get_nav_item(space_id.clone(), role.clone()),
-        crate::features::spaces::pages::overview::get_nav_item(space_id.clone(), role.clone()),
-        crate::features::spaces::pages::actions::get_nav_item(space_id.clone(), role.clone()),
-        crate::features::spaces::pages::apps::get_nav_item(space_id.clone(), role.clone()),
+        crate::features::spaces::pages::dashboard::get_nav_item(space_id(), role.clone()),
+        crate::features::spaces::pages::overview::get_nav_item(space_id(), role.clone()),
+        crate::features::spaces::pages::actions::get_nav_item(space_id(), role.clone()),
+        crate::features::spaces::pages::apps::get_nav_item(space_id(), role.clone()),
         // crate::features::spaces::pages::report::get_nav_item(space_id.clone(), role.clone()),
     ]
     .into_iter()
@@ -58,13 +58,11 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
     }];
     let space_status = space.status.clone();
 
-    let on_participant = move |_| {
-        let space_id = space_id.clone();
-        async move {
-            let space_detail = space_key(&space_id);
-            participate.call(space_id).await;
-            invalidate_query(&space_detail);
-        }
+    let on_participant = move |_| async move {
+        let space_id = space_id();
+        let space_detail = space_key(&space_id);
+        participate.call(space_id).await;
+        invalidate_query(&space_detail);
     };
 
     rsx! {

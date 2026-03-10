@@ -50,7 +50,7 @@ pub use providers::*;
 pub use query::*;
 pub use run::*;
 
-use dioxus::prelude::*;
+pub use dioxus::prelude::*;
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
 #[cfg(feature = "server")]
