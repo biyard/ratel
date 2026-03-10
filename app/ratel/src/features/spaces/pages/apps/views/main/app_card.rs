@@ -1,13 +1,5 @@
 use crate::features::spaces::pages::apps::{views::main::i18n::AppMainTranslate, *};
 
-pub fn app_description(app_type: SpaceAppType, tr: &AppMainTranslate) -> String {
-    match app_type {
-        SpaceAppType::IncentivePool => tr.app_description_incentive_pool.to_string(),
-        SpaceAppType::File => tr.app_description_file.to_string(),
-        SpaceAppType::General => tr.app_description_general.to_string(),
-    }
-}
-
 #[component]
 pub fn AppCard(
     app_type: SpaceAppType,
@@ -17,10 +9,8 @@ pub fn AppCard(
     let lang = use_language();
     let tr: AppMainTranslate = use_translate();
 
-    let description = app_description(app_type, &tr);
-
     rsx! {
-        SpaceCard { class: "flex overflow-hidden flex-col items-start rounded-lg !p-0".to_string(),
+        SpaceCard { class: "flex overflow-hidden flex-col items-start rounded-lg !p-0",
             div { class: "flex flex-col gap-2.5 p-4 w-full",
                 div { class: "flex gap-3 justify-between items-start w-full",
                     div { class: "flex justify-center items-center shrink-0 size-11 rounded-[10px] {app_type.class()}",
@@ -31,10 +21,10 @@ pub fn AppCard(
                     }
                 }
                 p { class: "text-sm font-bold sp-dash-font-raleway text-font-primary",
-                    {app_type.translate(&lang()).to_string()}
+                    {app_type.translate(&lang())}
                 }
                 p { class: "h-8 text-xs font-medium leading-4 sp-dash-font-raleway text-font-body line-clamp-2",
-                    {description}
+                    {tr.description(app_type)}
                 }
             }
 
