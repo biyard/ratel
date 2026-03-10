@@ -4,7 +4,7 @@ use dioxus::router::components::child_router::ChildRouter;
 use crate::features::spaces::apps::file::Route as FileRoute;
 use crate::features::spaces::apps::general::Route as GeneralRoute;
 use crate::features::spaces::apps::incentive_pool::Route as IncentivePoolRoute;
-use crate::features::spaces::apps::main::Route as MainRoute;
+use crate::features::spaces::pages::apps::Route as MainRoute;
 use crate::features::spaces::apps::rewards::Route as RewardsRoute;
 
 use layout::SpaceAppsLayout;

@@ -1,6 +1,6 @@
 use crate::features::spaces::pages::overview::*;
 
-use crate::features::spaces::pages::overview::views::HomePage;
+use crate::features::spaces::pages::overview::views::SpaceOverviewPage;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]

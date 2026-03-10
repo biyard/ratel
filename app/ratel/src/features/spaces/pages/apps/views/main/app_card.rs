@@ -1,4 +1,4 @@
-use crate::features::spaces::apps::main::{views::main::i18n::AppMainTranslate, *};
+use crate::features::spaces::pages::apps::{views::main::i18n::AppMainTranslate, *};
 
 pub fn app_description(app_type: SpaceAppType, tr: &AppMainTranslate) -> String {
     match app_type {

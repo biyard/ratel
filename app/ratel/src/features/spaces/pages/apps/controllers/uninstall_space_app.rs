@@ -1,5 +1,5 @@
-use crate::features::spaces::apps::main::models::SpaceApp;
-use crate::features::spaces::apps::main::*;
+use crate::features::spaces::pages::apps::models::SpaceApp;
+use crate::features::spaces::pages::apps::*;
 use crate::common::SpaceUserRole;
 use crate::common::types::Partition;
 use crate::common::types::SpacePartition;
@@ -20,7 +20,7 @@ pub async fn uninstall_space_app(
 
     let items = vec![SpaceApp::delete_transact_write_item(&pk, sk)];
     crate::transact_write_items!(dynamo, items)
-        .map_err(|e| crate::features::spaces::apps::main::Error::Unknown(format!("Failed to uninstall app: {e}")))?;
+        .map_err(|e| crate::features::spaces::pages::apps::Error::Unknown(format!("Failed to uninstall app: {e}")))?;
 
     Ok(app)
 }

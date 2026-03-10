@@ -1,5 +1,5 @@
-use crate::features::spaces::apps::main::models::SpaceApp;
-use crate::features::spaces::apps::main::*;
+use crate::features::spaces::pages::apps::models::SpaceApp;
+use crate::features::spaces::pages::apps::*;
 use crate::common::SpaceUserRole;
 use crate::common::types::Partition;
 use crate::common::types::SpacePartition;
