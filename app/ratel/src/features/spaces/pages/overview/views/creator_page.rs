@@ -3,8 +3,8 @@ use crate::common::{
     components::{FileUploader, SpaceCard, TiptapEditor},
     icons::{edit::Edit1, other_devices::Save},
 };
-use crate::features::spaces::pages::apps::apps::file::UpdateSpaceFilesRequest;
 use crate::features::spaces::pages::apps::apps::file::components::{FileCard, FileUploadZone};
+use crate::features::spaces::pages::apps::apps::file::UpdateSpaceFilesRequest;
 use crate::features::spaces::space_common::hooks::use_space_query;
 
 #[component]
@@ -30,21 +30,23 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
 
         let space_id = space_id_for_load.clone();
         spawn(async move {
-            if let Ok(loaded_files) = crate::features::spaces::pages::apps::apps::file::get_space_files(space_id).await {
+            if let Ok(loaded_files) =
+                crate::features::spaces::pages::apps::apps::file::get_space_files(space_id).await
+            {
                 files.set(loaded_files);
             }
         });
     });
 
     rsx! {
-        div { class: "flex flex-col w-full gap-2.5",
+        div { class: "flex flex-col gap-2.5 w-full",
             // Header image
             if let Some(url) = header_image() {
-                div { class: "relative w-full aspect-video overflow-hidden rounded-lg",
-                    img { class: "w-full h-full object-cover", src: "{url}" }
+                div { class: "overflow-hidden relative w-full rounded-lg aspect-video",
+                    img { class: "object-cover w-full h-full", src: "{url}" }
                     if editable() {
                         button {
-                            class: "absolute top-2 right-2 w-8 h-8 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center cursor-pointer",
+                            class: "flex absolute top-2 right-2 justify-center items-center w-8 h-8 text-white rounded-full cursor-pointer bg-black/60 hover:bg-black/80",
                             onclick: move |_| {
                                 header_image.set(None);
                             },
@@ -58,19 +60,19 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
                     on_upload_success: move |url: String| {
                         header_image.set(Some(url));
                     },
-                    div { class: "w-full aspect-video border-2 border-dashed border-separator rounded-lg flex items-center justify-center cursor-pointer hover:border-btn-primary-bg transition-colors",
+                    div { class: "flex justify-center items-center w-full rounded-lg border-2 border-dashed transition-colors cursor-pointer aspect-video border-separator hover:border-btn-primary-bg",
                         p { class: "text-sm text-card-meta", "{tr.upload_image}" }
                     }
                 }
             }
 
             // Content card with edit/save toggle
-            SpaceCard { class: "flex flex-col rounded-lg !p-6".to_string(),
-                div { class: "flex items-center justify-end flex-shrink-0",
-                    div { class: "flex items-center gap-3",
+            SpaceCard { class: "flex flex-col rounded-lg !p-6 !bg-transparent",
+                div { class: "flex flex-shrink-0 justify-end items-center",
+                    div { class: "flex gap-3 items-center",
                         if !editable() {
                             button {
-                                class: "cursor-pointer w-5 h-5 [&>path]:stroke-1",
+                                class: "w-5 h-5 cursor-pointer [&>path]:stroke-1",
                                 aria_label: tr.btn_edit,
                                 onclick: move |_| {
                                     if !is_saving() {
@@ -81,7 +83,7 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
                             }
                         } else {
                             button {
-                                class: "cursor-pointer w-5 h-5 [&>path]:stroke-1",
+                                class: "w-5 h-5 cursor-pointer [&>path]:stroke-1",
                                 aria_label: tr.btn_save,
                                 onclick: {
                                     let space_id = space_id.clone();
@@ -141,11 +143,11 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
 
                 // Error display
                 if let Some(message) = error() {
-                    div { class: "text-red-500 text-sm mt-2", "{tr.save_failed}: {message}" }
+                    div { class: "mt-2 text-sm text-red-500", "{tr.save_failed}: {message}" }
                 }
 
                 // TiptapEditor
-                div { class: "flex flex-col w-full min-h-0 flex-1 overflow-hidden",
+                div { class: "flex overflow-hidden flex-col flex-1 w-full min-h-0",
                     TiptapEditor {
                         class: "w-full h-fit [&>div]:bg-transparent [&_[data-tiptap-toolbar]]:bg-transparent",
                         content: content(),

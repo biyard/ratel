@@ -1,3 +1,4 @@
+use crate::common::components::{ButtonShape, ButtonSize, ButtonStyle, InputVariant, TiptapEditor};
 use crate::features::posts::components::VisibilityModal;
 use crate::features::posts::controllers::get_post::get_post_handler;
 use crate::features::posts::controllers::update_post::{update_post_handler, UpdatePostRequest};
@@ -5,7 +6,6 @@ use crate::features::posts::controllers::{create_space_handler, CreateSpaceReque
 use crate::features::posts::models::Post;
 use crate::features::posts::types::Visibility;
 use crate::features::posts::*;
-use crate::common::components::{ButtonShape, ButtonSize, ButtonStyle, InputVariant, TiptapEditor};
 use dioxus::prelude::*;
 
 translate! {
@@ -243,7 +243,6 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
             div { class: "relative",
                 Input {
                     class: "pr-14 w-full",
-                    r#type: "text",
                     placeholder: tr.title_placeholder,
                     maxlength: TITLE_MAX_LENGTH,
                     value: title,

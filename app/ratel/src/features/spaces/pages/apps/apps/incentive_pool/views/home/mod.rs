@@ -1,15 +1,10 @@
 // FIXME: this page is not working. need to test and remove unused tag.
-#![allow(unused)]
-use crate::features::spaces::pages::apps::apps::incentive_pool::components::{DistributionModeCard, IconActionButton, SectionCard, SummaryStatCard};
-use crate::features::spaces::pages::apps::apps::incentive_pool::i18n::IncentivePoolTranslate;
-use crate::features::spaces::pages::apps::apps::incentive_pool::interop::{copy_text as copy_to_clipboard, open_url};
-use crate::features::spaces::pages::apps::apps::incentive_pool::models::{SpaceIncentive, SpaceIncentiveToken};
-use crate::features::spaces::pages::apps::apps::incentive_pool::utils::format::{
+use super::utils::format::{
     default_usdt_token_address, format_token_balance, incentive_explorer_url, is_valid_usdt_input,
     usdt_tokens,
 };
-use crate::features::spaces::pages::apps::apps::incentive_pool::utils::service::{load_incentive_and_tokens, refresh_tokens, register_incentive_pool};
-use crate::features::spaces::pages::apps::apps::incentive_pool::*;
+use super::utils::service::{load_incentive_and_tokens, refresh_tokens, register_incentive_pool};
+use super::*;
 use crate::common::components::{Button, ButtonStyle};
 
 const DEFAULT_RECIPIENT_COUNT: i64 = 10;
@@ -40,7 +35,7 @@ impl DistributionMode {
 }
 
 #[component]
-pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
+pub fn SpaceIncentivePoolAppPage(space_id: SpacePartition) -> Element {
     let tr: IncentivePoolTranslate = use_translate();
 
     let mut distribution_mode = use_signal(|| DistributionMode::Top10RankOnly);
@@ -121,7 +116,7 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
             }
 
             if let Some(message) = notice() {
-                p { class: "px-4 py-3 text-sm border rounded-[8px] border-separator bg-card text-card-meta",
+                p { class: "py-3 px-4 text-sm border rounded-[8px] border-separator bg-card text-card-meta",
                     "{message}"
                 }
             }
@@ -175,7 +170,7 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
                                 let address = incentive_address.clone();
                                 rsx! {
                                     button {
-                                        class: "flex justify-center items-center w-11 h-full shrink-0 rounded-r-[8px] text-web-font-neutral disabled:opacity-50",
+                                        class: "flex justify-center items-center w-11 h-full disabled:opacity-50 shrink-0 rounded-r-[8px] text-web-font-neutral",
                                         disabled: address.trim().is_empty(),
                                         onclick: move |_| {
                                             if let Some(url) = incentive_explorer_url(&address) {
@@ -201,18 +196,22 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
                                             return;
                                         }
 
+
+
                                         let mut notice = notice.clone();
                                         let address = address.clone();
                                         let copied_address_notice = copied_address_notice.clone();
                                         let copy_address_failed_notice = copy_address_failed_notice.clone();
+                                        #[cfg(not(feature = "server"))]
                                         spawn(async move {
-                                            match copy_to_clipboard(address).await {
+                                            match common::utils::web::copy_text(&address).await {
                                                 Ok(_) => notice.set(Some(copied_address_notice)),
                                                 Err(err) => {
                                                     error!("Failed to copy address: {:?}", err);
                                                     notice.set(Some(copy_address_failed_notice));
                                                 }
                                             }
+
                                         });
                                     },
                                     icons::notes_clipboard::Clipboard { width: "24", height: "24", class: "[&>path]:stroke-current" }
@@ -235,6 +234,8 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
                                         if is_refreshing() || !has_incentive {
                                             return;
                                         }
+
+
 
                                         is_refreshing.set(true);
                                         notice.set(None);
@@ -440,6 +441,8 @@ pub fn IncentivePoolPage(space_id: SpacePartition) -> Element {
                                         return;
                                     }
 
+
+
                                     is_registering.set(true);
                                     notice.set(None);
 
@@ -493,7 +496,7 @@ pub fn HomePage(space_id: SpacePartition) -> Element {
 
     if role() == SpaceUserRole::Creator {
         rsx! {
-            div { class: "flex flex-col items-center justify-center w-full h-full",
+            div { class: "flex flex-col justify-center items-center w-full h-full",
                 h1 { class: "text-2xl font-bold", "Incentive App" }
                 p { class: "mt-2 text-gray-500", "Coming soon..." }
             }

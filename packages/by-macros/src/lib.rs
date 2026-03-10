@@ -268,6 +268,14 @@ pub fn derive_dioxus_controller(input: TokenStream) -> TokenStream {
                             (self.#field_name)()
                         }
                     }
+                } else if field_type.starts_with("ReadSignal") {
+                    let t = field_type.trim_start_matches("ReadSignal<");
+                    let t: proc_macro2::TokenStream = t[..t.len() - 1].parse().unwrap();
+                    quote! {
+                        pub fn #field_name(&self) -> #t {
+                            (self.#field_name)()
+                        }
+                    }
                 } else if field_type.starts_with("ReadOnlySignal") {
                     let t = field_type.trim_start_matches("ReadOnlySignal<");
                     let t: proc_macro2::TokenStream = t[..t.len() - 1].parse().unwrap();

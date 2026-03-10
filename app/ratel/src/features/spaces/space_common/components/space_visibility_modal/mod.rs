@@ -1,5 +1,5 @@
-use crate::features::spaces::space_common::*;
 use crate::common::components::Button;
+use crate::features::spaces::space_common::*;
 use dioxus::prelude::*;
 
 translate! {
@@ -46,7 +46,7 @@ pub fn SpaceVisibilityModal(
     on_cancel: Option<EventHandler<MouseEvent>>,
 ) -> Element {
     let tr: VisibilityModalTranslate = use_translate();
-    let mut selected = use_signal(move || initial.clone());
+    let mut selected = use_signal(move || initial);
     let mut popup = use_popup();
 
     let is_public = matches!(*selected.read(), SpaceVisibility::Public);

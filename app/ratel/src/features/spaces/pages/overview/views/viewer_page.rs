@@ -24,29 +24,28 @@ pub fn ViewerPage(space_id: SpacePartition) -> Element {
 
         let space_id = space_id_for_load.clone();
         spawn(async move {
-            if let Ok(loaded_files) = crate::features::spaces::pages::apps::apps::file::get_space_files(space_id).await {
+            if let Ok(loaded_files) =
+                crate::features::spaces::pages::apps::apps::file::get_space_files(space_id).await
+            {
                 files.set(loaded_files);
             }
         });
     });
 
     rsx! {
-        div { class: "flex flex-col w-full gap-2.5",
+        div { class: "flex flex-col gap-2.5 w-full",
             // Header image
             if let Some(url) = header_image {
-                div { class: "w-full aspect-video overflow-hidden rounded-lg",
-                    img {
-                        class: "w-full h-full object-cover",
-                        src: "{url}",
-                    }
+                div { class: "overflow-hidden w-full rounded-lg aspect-video",
+                    img { class: "object-cover w-full h-full", src: "{url}" }
                 }
             }
 
             // Content (read-only)
-            SpaceCard { class: "!p-6 rounded-lg".to_string(),
+            SpaceCard { class: "rounded-lg !p-6 !bg-transparent",
                 TiptapEditor {
                     class: "w-full h-fit [&>div]:bg-transparent [&_[data-tiptap-toolbar]]:bg-transparent",
-                    content: content,
+                    content,
                     editable: false,
                     placeholder: tr.placeholder,
                 }
