@@ -1,20 +1,45 @@
 use crate::common::*;
 
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Serialize,
+    Deserialize,
+    strum::Display,
+    strum::EnumString,
+    Default,
+)]
+pub enum InputType {
+    #[default]
+    #[strum(serialize = "text")]
+    Text,
+    #[strum(serialize = "email")]
+    Email,
+    #[strum(serialize = "number")]
+    Number,
+    #[strum(serialize = "password")]
+    Password,
+}
+
 #[component]
 pub fn Input(
     #[props(default)] variant: InputVariant,
     #[props(default)] class: String,
-    #[props(default = "text".into())] r#type: String,
+    #[props(default)] r#type: InputType,
     #[props(default)] value: String,
     #[props(optional)] placeholder: Option<String>,
     #[props(default)] maxlength: usize,
+    #[props(default = "off".to_string())] autocomplete: String,
     #[props(default)] disabled: bool,
+    #[props(default)] name: String,
     #[props(default)] oninput: EventHandler<FormEvent>,
     #[props(default)] onchange: EventHandler<FormEvent>,
     #[props(default)] onkeydown: EventHandler<KeyboardEvent>,
     #[props(default)] onblur: EventHandler<FocusEvent>,
-    #[props(default)] onconfirm: EventHandler<()>, // Keydown event with Enter key
-    #[props(default)] oncancel: EventHandler<()>,  // Keydown event with Escape key
+    #[props(default)] onconfirm: EventHandler<KeyboardEvent>, // Keydown event with Enter key
+    #[props(default)] oncancel: EventHandler<KeyboardEvent>,  // Keydown event with Escape key
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
 ) -> Element {
     let mut attributes = attributes;
@@ -29,17 +54,21 @@ pub fn Input(
 
     rsx! {
         input {
-            r#type,
+            r#type: r#type.to_string(),
             class: "{variant} {class}",
+            name,
             value,
             placeholder,
             disabled,
+            autocomplete,
             oninput,
             onkeydown: move |evt: KeyboardEvent| {
                 if evt.key() == Key::Enter {
-                    onconfirm.call(());
+                    debug!("Enter key pressed, triggering onconfirm");
+                    onconfirm.call(evt.clone());
                 } else if evt.key() == Key::Escape {
-                    oncancel.call(());
+                    debug!("Escape key pressed, triggering oncancel");
+                    oncancel.call(evt.clone());
                 }
                 if evt.propagates() {
                     onkeydown.call(evt);

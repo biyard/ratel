@@ -225,9 +225,12 @@ pub enum Error {
     #[error("Web function")]
     #[translate(
         en = "This function is only available on web.",
-        ko = "이 기능은 웹에서만 사용할 수 있습니다.",
+        ko = "이 기능은 웹에서만 사용할 수 있습니다."
     )]
     OnlyWebFunction,
+    #[error("Invalid email")]
+    #[translate(en = "Invalid email", ko = "유효하지 않은 이메일입니다.")]
+    InvalidEmail,
 }
 
 impl From<String> for Error {
