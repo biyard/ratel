@@ -1,6 +1,6 @@
 use crate::features::spaces::pages::apps::apps::general::controllers::{
-    InviteSpaceParticipantsRequest, SpaceAdministratorResponse, delete_space,
-    get_space_administrator, invite_space_participants,
+    delete_space, get_space_administrator, invite_space_participants,
+    InviteSpaceParticipantsRequest, SpaceAdministratorResponse,
 };
 use crate::features::spaces::pages::apps::apps::general::i18n::GeneralTranslate;
 use crate::features::spaces::pages::apps::apps::general::*;
@@ -17,7 +17,7 @@ fn normalize_email_input(raw: &str) -> Option<String> {
 }
 
 #[component]
-pub fn GeneralPage(space_id: SpacePartition) -> Element {
+pub fn SpaceGeneralAppPage(space_id: SpacePartition) -> Element {
     let navigator = use_navigator();
     let tr: GeneralTranslate = use_translate();
     let failed_to_load_administrator = tr.failed_to_load_administrator.to_string();
@@ -63,7 +63,7 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
             }
 
             SpaceCard { class: "overflow-visible w-full shrink-0 rounded-[12px] !p-0".to_string(),
-                div { class: "flex justify-between items-center self-stretch px-5 py-4 border-b border-separator",
+                div { class: "flex justify-between items-center self-stretch py-4 px-5 border-b border-separator",
                     p { class: "font-semibold text-center font-raleway text-[17px]/[20px] tracking-[-0.18px] text-web-font-primary",
                         {tr.invite_participant}
                     }
@@ -76,7 +76,7 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
                                 {tr.email_address}
                             }
                             input {
-                                class: "flex flex-col justify-center items-start px-3 py-2.5 w-full font-medium leading-6 border-gray-600 rounded-[8px] border-[0.5px] bg-web-input font-raleway text-[15px] tracking-[0.5px] text-web-font-primary placeholder:text-card-more-muted",
+                                class: "flex flex-col justify-center items-start py-2.5 px-3 w-full font-medium leading-6 border-gray-600 rounded-[8px] border-[0.5px] bg-web-input font-raleway text-[15px] tracking-[0.5px] text-web-font-primary placeholder:text-card-more-muted",
                                 placeholder: tr.email_placeholder.to_string(),
                                 value: email_input(),
                                 oninput: move |evt| {
@@ -155,15 +155,13 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
                                 let mut invited_emails = invited_emails.clone();
                                 let mut notice = notice.clone();
                                 let space_id = space_id_for_invite.clone();
-                                let success_text =
-                                    participants_invited_successfully.clone();
-                                let failed_prefix = failed_to_invite_participants.clone();
 
+                                let success_text = participants_invited_successfully.clone();
+                                let failed_prefix = failed_to_invite_participants.clone();
                                 spawn(async move {
                                     let result = invite_space_participants(
                                             space_id,
                                             InviteSpaceParticipantsRequest {
-
                                                 emails,
                                             },
                                         )
@@ -195,7 +193,7 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
             }
 
             SpaceCard { class: "overflow-visible w-full shrink-0 rounded-[12px] !p-0".to_string(),
-                div { class: "flex justify-between items-center self-stretch px-5 py-4 border-b border-separator",
+                div { class: "flex justify-between items-center self-stretch py-4 px-5 border-b border-separator",
                     p { class: "font-bold font-raleway text-[24px]/[28px] tracking-[-0.24px] text-web-font-primary",
                         {tr.administrator}
                     }
@@ -218,7 +216,7 @@ pub fn GeneralPage(space_id: SpacePartition) -> Element {
 
             div { class: "flex justify-end pt-5 w-full max-tablet:justify-stretch",
                 Button {
-                    class: "w-fit max-tablet:w-full border border-web-error !bg-transparent !text-web-error hover:!bg-transparent hover:!border-web-error hover:!text-web-error disabled:!bg-transparent disabled:border-web-error/40 disabled:!text-web-error/40",
+                    class: "border w-fit max-tablet:w-full border-web-error !bg-transparent !text-web-error hover:!bg-transparent hover:!border-web-error hover:!text-web-error disabled:!bg-transparent disabled:border-web-error/40 disabled:!text-web-error/40",
                     style: ButtonStyle::Text,
                     disabled: delete_loading(),
                     onclick: move |_| {
@@ -270,14 +268,14 @@ fn InviteEmailChip(value: String, on_remove: EventHandler<MouseEvent>) -> Elemen
                 "{value}"
             }
             Button {
-                class: "size-5 rounded-full !p-0 hover:!bg-transparent disabled:opacity-50",
+                class: "rounded-full disabled:opacity-50 size-5 !p-0 hover:!bg-transparent",
                 size: ButtonSize::Icon,
                 style: ButtonStyle::Text,
                 onclick: move |evt| on_remove.call(evt),
                 icons::ratel::XMarkIcon {
                     width: "12",
                     height: "12",
-                    class: "h-3 w-3 [&>path]:stroke-icon-primary",
+                    class: "w-3 h-3 [&>path]:stroke-icon-primary",
                 }
             }
         }
@@ -307,7 +305,7 @@ fn AdministratorRow(name: String, username: String, profile_url: String) -> Elem
     };
 
     rsx! {
-        div { class: "flex justify-between items-center px-4 py-3 w-full border rounded-[12px] border-separator bg-card max-tablet:flex-col max-tablet:items-start max-tablet:gap-3",
+        div { class: "flex justify-between items-center py-3 px-4 w-full border rounded-[12px] border-separator bg-card max-tablet:flex-col max-tablet:items-start max-tablet:gap-3",
             div { class: "flex items-center gap-[10px]",
                 img {
                     src: "{profile}",
@@ -337,7 +335,7 @@ pub fn AppGeneralPage(space_id: SpacePartition) -> Element {
 
     if role == SpaceUserRole::Creator {
         rsx! {
-            GeneralPage { space_id }
+            SpaceGeneralAppPage { space_id }
         }
     } else {
         rsx! {

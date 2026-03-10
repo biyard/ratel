@@ -52,6 +52,8 @@ web-sys = { workspace = true, features = [
     "Response",
     "Window",
     "console",
+    "Clipboard",
+    "Navigator",
 ] }
 wasm-bindgen = { workspace = true }
 wasm-bindgen-futures = { workspace = true }
