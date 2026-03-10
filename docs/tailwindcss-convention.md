@@ -76,20 +76,38 @@ Replace `primary` with `secondary` or `outline` for other button styles.
 
 ## 3. Theme Handling (Light / Dark)
 
-The project uses attribute-based theming with `data-theme`, NOT Tailwind's default media-query `dark:` mode.
+The project uses attribute-based theming with `data-theme`. Both light and dark color values are defined in `app/ratel/tailwind.css` as CSS custom properties. Developers should **never** use theme-variant prefixes (`light:`, `dark:`) in component class attributes. Instead, define both light and dark values for the semantic token in `tailwind.css`.
 
 ```rust
-// CORRECT: Use the custom `light:` variant for light theme overrides
-div { class: "bg-card light:bg-white text-text-primary light:text-neutral-900" }
+// CORRECT: Use a semantic token — both light/dark values are defined in tailwind.css
+div { class: "bg-card text-text-primary" }
 
-// WRONG: Do not use `dark:` — dark is the default, no prefix needed
+// WRONG: Do not use `light:` or `dark:` in component code
+div { class: "bg-card light:bg-white text-text-primary light:text-neutral-900" }  // WRONG
 div { class: "dark:bg-card bg-white" }  // WRONG
 ```
 
+**How to add theme support for a new token in `tailwind.css`:**
+
+```css
+/* Default (dark) theme */
+@theme {
+  --color-my-new-token: #1a1a1a;
+}
+
+/* Light theme override */
+[data-theme="light"] {
+  --color-my-new-token: #f5f5f5;
+}
+```
+
+Then use it in components as simply `bg-my-new-token`.
+
 **Rules:**
-- Dark theme is the default — no prefix needed
-- Use `light:` variant for light theme overrides
-- Do NOT use `dark:` — it uses media queries which conflict with the attribute-based system
+- Define both light and dark values for every semantic token in `app/ratel/tailwind.css`
+- Use only the semantic token class in components — `bg-card`, `text-text-primary`, `border-separator`
+- Do NOT use `light:` or `dark:` prefixes in component class attributes
+- If a semantic token doesn't have a light theme value yet, add one in the `[data-theme="light"]` block in `tailwind.css`
 
 ---
 
@@ -287,14 +305,15 @@ div { class: "bg-neutral-800 text-gray-400 border-gray-700" }
 div { class: "bg-card text-text-secondary border-separator" }
 ```
 
-### 9.4. Using `dark:` instead of `light:`
+### 9.4. Using `light:` or `dark:` prefixes in component code
 
 ```rust
-// BAD: media-query based dark mode
+// BAD: Theme variant prefixes in component class attributes
+div { class: "bg-card light:bg-white" }
 div { class: "bg-white dark:bg-card" }
 
-// GOOD: attribute-based theming (dark is default)
-div { class: "bg-card light:bg-white" }
+// GOOD: Semantic token only — define both light/dark in tailwind.css
+div { class: "bg-card" }
 ```
 
 ### 9.5. Rust if/else for styling that can use ARIA variants
@@ -318,10 +337,10 @@ button {
 | Concern | Convention |
 |---------|-----------|
 | Colors | Semantic tokens (`bg-card`, `text-text-primary`), not raw values |
-| Theme | `light:` variant for light overrides; dark is default, no prefix |
+| Theme | Semantic tokens only; define light/dark values in `tailwind.css`, not in component classes |
 | Responsive | `max-tablet:`, `max-mobile:` for responsive overrides |
 | Selection state | `aria-selected:` + `group-aria-selected:` variants |
 | Icon colors | `[&>path]:stroke-*` arbitrary selectors |
 | Component variants | `strum::Display` enums for class strings |
 | Font | `font-raleway` (primary), `font-inter` (secondary) |
-| Avoid | `!important`, inline styles, raw colors, `dark:` prefix, Rust if/else for class toggle |
+| Avoid | `!important`, inline styles, raw colors, `light:`/`dark:` in components, Rust if/else for class toggle |
