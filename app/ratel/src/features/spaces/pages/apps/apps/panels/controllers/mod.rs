@@ -3,7 +3,6 @@ mod delete_panel_quotas;
 mod list_panels;
 mod update_panel_quota;
 
-pub use super::*;
 pub use create_panel_quotas::*;
 pub use delete_panel_quotas::*;
 pub use list_panels::*;

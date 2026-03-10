@@ -1,4 +1,4 @@
-use super::*;
+use crate::features::spaces::pages::apps::apps::panels::*;
 
 #[component]
 pub fn AttributeButton(
