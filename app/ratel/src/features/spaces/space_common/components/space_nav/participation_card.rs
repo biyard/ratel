@@ -1,7 +1,7 @@
 use super::*;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum ParticipationTagKind {
+enum ParticipationTag {
     Warning,
     Success,
 }
@@ -76,7 +76,7 @@ pub fn ParticipationCard(
                             for requirement in panel_requirements.iter() {
                                 ParticipationRequirementTag {
                                     key: "{requirement.kind:?}",
-                                    kind: if requirement.satisfied { ParticipationTagKind::Success } else { ParticipationTagKind::Warning },
+                                    kind: if requirement.satisfied { ParticipationTag::Success } else { ParticipationTag::Warning },
                                     label: panel_requirement_label(requirement.kind, &tr),
                                 }
                             }
@@ -123,14 +123,14 @@ fn panel_requirement_label(
 }
 
 #[component]
-fn ParticipationRequirementTag(kind: ParticipationTagKind, label: String) -> Element {
+fn ParticipationRequirementTag(kind: ParticipationTag, label: String) -> Element {
     let (container_class, icon_class, text_class) = match kind {
-        ParticipationTagKind::Warning => (
+        ParticipationTag::Warning => (
             "border-red-500 bg-red-500/5",
             "border-red-500 text-red-500",
             "text-white",
         ),
-        ParticipationTagKind::Success => (
+        ParticipationTag::Success => (
             "border-green-500 bg-green-500/5",
             "border-green-500 text-green-500",
             "text-white",
@@ -141,7 +141,7 @@ fn ParticipationRequirementTag(kind: ParticipationTagKind, label: String) -> Ele
         div { class: "flex items-center justify-center px-[8px] py-[5.5px] rounded-full border {container_class}",
             div { class: "flex items-center gap-1",
                 div { class: "flex items-center justify-center size-[14px] {icon_class}",
-                    if kind == ParticipationTagKind::Warning {
+                    if kind == ParticipationTag::Warning {
                         crate::common::lucide_dioxus::CircleAlert { size: 15, class: "text-red-500" }
                     } else {
                         icons::validations::Check { class: "w-[15px] h-[15px] [&>path]:stroke-green-500" }
