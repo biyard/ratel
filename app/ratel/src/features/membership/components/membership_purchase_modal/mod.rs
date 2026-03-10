@@ -3,10 +3,10 @@ mod i18n;
 
 pub use i18n::*;
 
-use crate::features::membership::*;
 use crate::common::components::Card;
 use crate::features::membership::components::MembershipTier;
 use crate::features::membership::services::portone::VerifiedCustomer;
+use crate::features::membership::*;
 
 #[derive(Clone, Debug)]
 pub struct CustomerInfo {
@@ -171,7 +171,7 @@ pub fn MembershipPurchaseModal(
                                 }
                                 Input {
                                     class: "w-20",
-                                    r#type: "password",
+                                    r#type: InputType::Password,
                                     placeholder: tr.card_password_placeholder,
                                     maxlength: 2,
                                     value: card_password(),

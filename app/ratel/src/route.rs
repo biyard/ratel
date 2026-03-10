@@ -8,8 +8,6 @@ use crate::features::posts::Route as PostRoute;
 #[cfg(feature = "spaces")]
 use crate::features::spaces::pages::actions::SpaceActionsPage;
 #[cfg(feature = "spaces")]
-use crate::features::spaces::pages::apps::SpaceAppsPage;
-#[cfg(feature = "spaces")]
 use crate::features::spaces::pages::dashboard::SpaceDashboardPage;
 #[cfg(feature = "spaces")]
 use crate::features::spaces::pages::overview::SpaceOverviewPage;
@@ -17,6 +15,19 @@ use crate::features::spaces::pages::overview::SpaceOverviewPage;
 use crate::features::spaces::pages::report::SpaceReportPage;
 #[cfg(feature = "spaces")]
 use crate::features::spaces::SpaceLayout;
+
+// Space Apps
+#[cfg(feature = "spaces")]
+use crate::features::spaces::pages::apps::apps::file::SpaceFileAppPage;
+#[cfg(feature = "spaces")]
+use crate::features::spaces::pages::apps::apps::general::SpaceGeneralAppPage;
+#[cfg(feature = "spaces")]
+use crate::features::spaces::pages::apps::apps::incentive_pool::SpaceIncentivePoolAppPage;
+#[cfg(feature = "spaces")]
+use crate::features::spaces::pages::apps::Layout as SpaceAppsLayout;
+#[cfg(feature = "spaces")]
+use crate::features::spaces::pages::apps::SpaceAppsPage;
+
 #[cfg(feature = "teams")]
 use crate::features::teams::Route as TeamRoute;
 #[cfg(feature = "users")]
@@ -89,18 +100,26 @@ pub enum Route {
             #[cfg(feature = "spaces")]
             SpaceReportPage { space_id: SpacePartition },
 
-            #[cfg_attr(feature="spaces", route("/apps"))]
-            #[cfg(feature = "spaces")]
-            SpaceAppsPage { space_id: SpacePartition },
-    // #[route("/general/:..rest")]
-    //         General { space_id: SpacePartition, rest: Vec<String> },
-    //         #[route("/incentive-pool/:..rest")]
-    //         IncentivePool { space_id: SpacePartition, rest: Vec<String> },
-    //         #[route("/file/:..rest")]
-    //         File { space_id: SpacePartition, rest: Vec<String> },
-    //         #[route("/rewards/:..rest")]
-    //         Rewards { space_id: SpacePartition, rest: Vec<String> },
+            // Space Apps
+            #[cfg_attr(feature="spaces", nest("/apps"))]
+                #[cfg_attr(feature="spaces", layout(SpaceAppsLayout))]
+                    #[cfg_attr(feature="spaces", route("/"))]
+                    #[cfg(feature = "spaces")]
+                    SpaceAppsPage { space_id: SpacePartition },
 
+                    #[cfg_attr(feature="spaces", route("/general"))]
+                    #[cfg(feature = "spaces")]
+                    SpaceGeneralAppPage { space_id: SpacePartition },
+
+                    #[cfg_attr(feature="spaces", route("/files"))]
+                    #[cfg(feature = "spaces")]
+                    SpaceFileAppPage { space_id: SpacePartition },
+
+                    #[cfg_attr(feature="spaces", route("/incentive-pool"))]
+                    #[cfg(feature = "spaces")]
+                    SpaceIncentivePoolAppPage { space_id: SpacePartition },
+                #[cfg_attr(feature="spaces", end_layout)]
+            #[cfg_attr(feature="spaces", end_nest)]
 
             #[cfg_attr(feature="spaces", redirect("/", |space_id: SpacePartition| Route::SpaceDashboardPage { space_id }))]
         #[cfg_attr(feature="spaces", end_layout)]

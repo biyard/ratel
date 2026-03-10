@@ -7,11 +7,15 @@ mod route;
 mod utils;
 mod views;
 
-use dioxus::prelude::*;
+use components::*;
+use controllers::*;
+use i18n::*;
+use interop::*;
+use models::*;
+use utils::*;
+
+pub use views::*;
 
 pub use controllers::*;
-pub use route::Route;
 
-use crate::common::*;
-
-type Result<T> = crate::common::Result<T>;
+use crate::*;
