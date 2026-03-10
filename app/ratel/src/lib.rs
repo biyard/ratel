@@ -1,6 +1,6 @@
 #![allow(unused_imports, dead_code)]
-pub mod common;
 mod app;
+pub mod common;
 pub mod components;
 pub mod config;
 mod constants;
@@ -16,11 +16,10 @@ pub use route::Route;
 use crate::common::*;
 use components::*;
 use contexts::*;
-use dioxus::prelude::*;
 pub mod features;
 pub use features::*;
 
-type Result<T> = crate::common::Result<T>;
+use dioxus::fullstack::{Loader, Loading};
 
 #[cfg(test)]
 pub mod tests;

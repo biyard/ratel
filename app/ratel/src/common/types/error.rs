@@ -221,6 +221,16 @@ pub enum Error {
         ko = "유효하지 않은 사용자 이름입니다. URL을 확인해주세요."
     )]
     PostInvalidUsername,
+
+    #[error("Web function")]
+    #[translate(
+        en = "This function is only available on web.",
+        ko = "이 기능은 웹에서만 사용할 수 있습니다."
+    )]
+    OnlyWebFunction,
+    #[error("Invalid email")]
+    #[translate(en = "Invalid email", ko = "유효하지 않은 이메일입니다.")]
+    InvalidEmail,
 }
 
 impl From<String> for Error {

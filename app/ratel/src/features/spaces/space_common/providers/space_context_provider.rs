@@ -1,7 +1,7 @@
 use dioxus::fullstack::{Loader, Loading};
 
 use crate::features::spaces::space_common::{
-    controllers::{SpaceResponse, get_user_role},
+    controllers::{get_user_role, SpaceResponse},
     hooks::*,
     *,
 };
@@ -14,13 +14,9 @@ pub struct SpaceContextProvider {
 }
 
 impl SpaceContextProvider {
-    pub fn init(space_id: &SpacePartition) -> crate::common::Result<Self, Loading> {
-        let v = space_id.clone();
-        let role = use_loader(move || {
-            let space_id = v.clone();
-            async move { get_user_role(space_id.clone()).await }
-        })?;
-        let space = use_space_query(space_id)?;
+    pub fn init(space_id: ReadSignal<SpacePartition>) -> crate::common::Result<Self, Loading> {
+        let role = use_loader(move || async move { get_user_role(space_id()).await })?;
+        let space = use_loader(move || async move { get_space(space_id()).await })?;
         let current_role = use_signal(|| role());
 
         let srv = Self {
@@ -28,6 +24,7 @@ impl SpaceContextProvider {
             space,
             current_role,
         };
+        debug!("Initialized SpaceContextProvider");
         use_context_provider(move || srv);
 
         Ok(srv)

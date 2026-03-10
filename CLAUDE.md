@@ -10,19 +10,15 @@ Ratel is a decentralized legislative platform built with Rust (Dioxus fullstack)
 
 This is a monorepo with a Cargo workspace structure:
 
-- **app/** - Dioxus fullstack application modules (auth, posts, spaces, socials, shell)
+- **app/ratel/** - Dioxus fullstack application (single package with feature-gated modules: auth, posts, spaces, users, teams, membership, admin)
+- **app/interops/** - Reusable web components library (`dioxus-components`)
 - **packages/** - Rust workspace packages (APIs, workers, shared libraries, macros)
-- **ts-packages/** - TypeScript packages (legacy Vite/React web frontend)
 - **kaia/** - Blockchain contracts (Hardhat)
 - **contracts/** - Primary blockchain contracts (Hardhat)
 
-### Dioxus App Modules (`app/`)
+### Dioxus App (`app/ratel/`)
 
-The main web application is composed of modular Dioxus packages under `app/`. Each module follows a consistent structure with feature flags for multi-platform support (`web`, `server`, `desktop`, `mobile`).
-
-#### App Shell (`app/shell/`)
-
-Main application entry point that orchestrates all sub-modules via Dioxus Router.
+The main web application is a single Dioxus fullstack package (`app-shell`) with feature-gated modules. Previously split across many packages, it is now consolidated into `app/ratel/`.
 
 - **Package:** `app-shell`
 - **Entry:** `src/main.rs` with `Dioxus.toml` configuration
@@ -32,156 +28,178 @@ Main application entry point that orchestrates all sub-modules via Dioxus Router
 
 **Routes:**
 - `/` - Index/home page
-- `/auth/:..rest` - Authentication (delegates to `ratel-auth`)
-- `/posts/:..rest` - Post feed (delegates to `ratel-post`)
-- `/:username/:..rest` - User profile (delegates to `ratel-user-shell`)
-- `/teams/:teamname/:..rest` - Team pages (delegates to `ratel-team-shell`)
-- `/spaces/:..rest` - Space pages (delegates to `space-shell`)
+- `/auth/:..rest` - Authentication (ChildRouter to auth feature)
+- `/posts/:..rest` - Post feed (ChildRouter to posts feature)
+- `/my-follower/:..rest` - Follower feed
+- `/admin/:..rest` - Admin panel
+- `/:username/:..rest` - User profile (feature: `users`)
+- `/teams/:teamname/:..rest` - Team pages (feature: `teams`)
+- `/spaces/:space_id/...` - Space pages (feature: `spaces`)
 
-#### Common (`app/common/`)
-
-Foundational shared library used by all other app modules.
-
-- **Package:** `common`
-- **Provides:** Types, models, components, configuration, utilities, AWS integration
-- **Key types:**
-  - `Partition` enum - DynamoDB partition key variants (~90 entity types)
-  - `EntityType` enum - DynamoDB sort key variants (~130 entity types)
-  - `User` model - DynamoEntity with 6 GSIs (email, username, phone, user_type, etc.)
-- **Config:** `src/config/server/` (DynamoDB, S3, SES, SNS), `src/config/web/` (Firebase)
-- **Components:** Badge, Button, Layover, Popup, SeoMeta, ThemeSwitcher
-- **Tailwind:** `tailwind.css` is the shared TailwindCSS v4 entrypoint for all Dioxus apps
-- **Utils:** `src/utils/aws/` (DynamoDB, S3, SES, SNS helpers), password, sha256, time
-
-#### Auth (`app/auth/`)
-
-- **Package:** `ratel-auth`
-- **Handles:** Login, signup, email/phone verification (SES/SNS), password reset, OAuth, logout
-- **Models:** User, EmailVerification, PhoneVerification, UserOAuth, UserRefreshToken, UserTelegram, UserEVMAddress
-- **Components:** AuthProvider, LoginModal, SignUpModal
-- **Routes:** `/auth` (login), `/auth/forgot-password` (reset)
-
-#### Posts (`app/posts/`)
-
-- **Package:** `ratel-post`
-- **Handles:** Post CRUD, comments, likes, shares, visibility
-- **Models:** Post, PostComment, PostLike, PostCommentLike, PostRepost, PostArtwork
-- **Types:** PostType (Post, Article, Poll), PostStatus (Draft, Published, Archived), Visibility
-- **Components:** FeedCard, FeedList
-
-#### Spaces (`app/spaces/`)
-
-Governance/legislative spaces with panels, voting, and proposals.
+#### Project Structure
 
 ```
-app/spaces/
-  shell/          - space-shell (main container, navigation, layout)
+app/ratel/src/
+  main.rs              - Entry point
+  route.rs             - Top-level Dioxus Router enum
+  layout.rs            - AppLayout wrapper
+  config.rs            - App configuration
+  app.rs               - App component
+  assets.rs            - Static asset declarations
+  common/              - Shared foundation (see below)
+  components/          - App-level shell components (app_menu, mobile_menu, profile_dropdown, etc.)
+  contexts/            - App-level context providers
+  features/            - Feature modules (see below)
+  interop/             - JS FFI bindings (wasm_bindgen)
+  views/               - Top-level page views (Index, etc.)
+  tests/               - Test utilities and macros
+```
+
+#### Common (`src/common/`)
+
+Foundational shared code used by all feature modules.
+
+- **Types:** `Partition` enum (DynamoDB partition keys), `EntityType` enum (sort keys), custom types
+- **Models:** `User`, `SpaceCommon`, `SpaceParticipant`, etc. (DynamoEntity derive)
+- **Components:** Badge, Button, Card, Input, Switch, Popup, SeoMeta, ThemeSwitcher, LoadingIndicator, Textarea, Sidemenu, SpaceCard
+- **Config:** `config/server/` (DynamoDB, S3, SES, SNS), `config/web/` (Firebase, WalletConnect)
+- **Utils:** `utils/aws/` (DynamoDB, S3, SES, SNS helpers), password, sha256, time
+- **Hooks:** `use_scroll_lock`, etc.
+- **Services:** Biyard API integration
+- **Tailwind:** `app/ratel/tailwind.css` is the TailwindCSS v4 entrypoint
+
+#### Features (`src/features/`)
+
+Each feature module is gated by a Cargo feature flag and follows a consistent structure:
+
+| Feature | Path | Feature Flag | Description |
+|---------|------|-------------|-------------|
+| Auth | `features/auth/` | (always enabled) | Login, signup, verification, OAuth, password reset |
+| Posts | `features/posts/` | (always enabled) | Post CRUD, comments, likes, shares, visibility |
+| Spaces | `features/spaces/` | `spaces` | Governance spaces, panels, voting, proposals |
+| Users | `features/users/` | `users` | User profile, settings, credentials, rewards |
+| Teams | `features/teams/` | `teams` | Team management, members, groups, DAOs |
+| Admin | `features/admin/` | (always enabled) | Admin panel |
+| Membership | `features/membership/` | `membership` | Membership tiers and access |
+| My Follower | `features/my_follower/` | (always enabled) | Follower feed |
+
+**Spaces sub-pages** (`features/spaces/pages/`):
+
+```
+spaces/
+  space_common/     - Shared space models, hooks, components (SpaceNav, SpaceTop)
   pages/
-    overview/     - space-page-overview
-    dashboard/    - space-page-dashboard
-    actions/      - space-page-actions
-    apps/         - space-page-apps
-    report/       - space-page-report
-  actions/
-    poll/         - space-action-poll (voting)
+    overview/       - Space overview page
+    dashboard/      - Space dashboard page
+    actions/        - Space actions (polls, quizzes)
+    apps/           - Space app settings
+      apps/
+        general/    - General settings (visibility, anonymous, invite, admin)
+        file/       - File management
+        incentive_pool/ - Incentive pool settings
+        rewards/    - Rewards settings
+    report/         - Space report page
 ```
 
-- **Shell models:** Space, SpacePanelParticipant, SpacePanelQuota, VerifiedAttributes
-- **Components:** SpaceNav (sidebar), SpaceTop (header with title, participate button)
-
-#### Socials - Users (`app/socials/users/`)
-
-User profile and dashboard.
+**Users sub-pages** (`features/users/pages/`):
 
 ```
-app/socials/users/
-  shell/          - ratel-user-shell (layout, routing)
+users/
   pages/
-    post/         - ratel-user-post
-    reward/       - ratel-user-reward
-    setting/      - ratel-user-setting
-    membership/   - ratel-user-membership
-    draft/        - ratel-user-draft
-    credential/   - ratel-user-credential (DID)
-    space/        - ratel-user-space
+    post/           - User post feed
+    reward/         - User rewards
+    setting/        - User settings
+    membership/     - User membership
+    draft/          - User drafts
+    credentials/    - DID / Verifiable Credentials
+    space/          - User spaces
 ```
 
-#### Socials - Teams (`app/socials/teams/`)
-
-Team management and organization.
+**Teams sub-pages** (`features/teams/pages/`):
 
 ```
-app/socials/teams/
-  shell/          - ratel-team-shell (layout, routing)
+teams/
   pages/
-    home/         - ratel-team-home
-    draft/        - ratel-team-draft
-    group/        - ratel-team-group
-    member/       - ratel-team-member
-    dao/          - ratel-team-dao (governance)
-    reward/       - ratel-team-reward
-    setting/      - ratel-team-setting
+    home/           - Team home
+    draft/          - Team drafts
+    group/          - Team groups
+    member/         - Team members
+    dao/            - Team DAO governance
+    reward/         - Team rewards
+    setting/        - Team settings
 ```
+
+#### Feature Module Structure
+
+Each feature module follows a consistent internal structure:
+
+```
+features/<module>/
+  mod.rs            - Module exports, re-exports
+  route.rs          - Feature-level Dioxus Router routes
+  layout.rs         - Feature layout wrapper
+  config.rs         - Feature configuration
+  provider.rs       - State provider
+  constants.rs      - Constants
+  controllers/      - Server functions (#[get], #[post], #[patch], etc.)
+  models/           - DynamoDB entities (DynamoEntity derive, feature: server)
+  components/       - Reusable UI components
+  views/            - Page-level view components
+  hooks/            - Dioxus hooks for state management
+  interop/          - JavaScript FFI bindings (wasm_bindgen)
+  server/           - Server-only functionality (feature: server)
+  web/              - Web-only functionality (feature: web)
+  utils/            - Helper functions
+  dto/              - Data transfer objects
+  types/            - Custom type definitions
+  i18n.rs           - Translation strings (translate! macro)
+  services/         - Domain service logic
+```
+
+Not every module has all directories — only what is needed.
 
 #### Interops (`app/interops/web-components/`)
 
 - **Package:** `dioxus-components`
 - Reusable Dioxus components library for web integration
 
-### Dioxus App Module Structure
+### Feature Flags
 
-Each app module follows a consistent internal structure:
+The `app-shell` package uses these feature flags:
 
-```
-src/
-  lib.rs          - Public API exports
-  main.rs         - Entry point
-  route.rs        - Dioxus Router routes
-  layout.rs       - Layout wrapper component
-  config.rs       - Configuration
-  provider.rs     - State provider
-  constants.rs    - Constants
-  controllers/    - Server-side request handlers (feature: server)
-  models/         - DynamoDB entities with DynamoEntity derive (feature: server)
-  components/     - Dioxus UI components
-  views/          - Page-level view components
-  hooks/          - Dioxus hooks for state management
-  interop/        - JavaScript interoperability (feature: web)
-  server/         - Server-only functionality (feature: server)
-  web/            - Web-only functionality (feature: web)
-  utils/          - Helper functions
-  dto/            - Data transfer objects
-  types/          - Custom type definitions
-```
-
-### Feature Flags (All App Modules)
-
-All Dioxus app packages use consistent feature flags:
-
-- `web` - Dioxus web renderer, browser UI components
-- `server` - Dioxus server renderer, DynamoDB, AWS SDK, backend handlers
-- `desktop` - Dioxus desktop (Tauri) target
-- `mobile` - Dioxus mobile (Android/iOS) target
-- `bypass` - Skip authentication for testing (auth module only)
+| Flag | Description |
+|------|-------------|
+| `full` | Enables `membership`, `users`, `teams`, `spaces_full` (default) |
+| `web` | Dioxus web renderer, browser UI components |
+| `server` | Dioxus server renderer, DynamoDB, AWS SDK, backend handlers |
+| `desktop` | Dioxus desktop (Tauri) target |
+| `mobile` | Dioxus mobile (Android/iOS) target |
+| `lambda` | AWS Lambda deployment (includes `server`) |
+| `spaces` | Space feature modules |
+| `spaces_full` | Full spaces with all sub-features |
+| `users` | User profile feature modules |
+| `teams` | Team management feature modules |
+| `membership` | Membership feature module |
+| `bypass` | Skip authentication for testing |
 
 ### JavaScript Interop Pattern
 
-Dioxus app modules interact with JavaScript via `wasm_bindgen` FFI. Each module registers its JS functions under a namespaced global object `window.ratel.<module>`.
+The app interacts with JavaScript via `wasm_bindgen` FFI. Each module registers its JS functions under a namespaced global object `window.ratel.<module>`.
 
 #### How It Works
 
 There are 3 layers:
 
-1. **JavaScript source** (`<module>/js/src/` or `<module>/assets/`) - Plain JS functions
+1. **JavaScript source** (`app/ratel/js/src/` or `app/ratel/assets/`) - Plain JS functions
 2. **JS bundle entry** (`index.js`) - Registers exports onto `window.ratel.<namespace>`
-3. **Rust FFI binding** (`src/interop/mod.rs`) - Declares `extern "C"` functions via `wasm_bindgen`
+3. **Rust FFI binding** (`src/interop/mod.rs` or `src/features/<module>/interop/`) - Declares `extern "C"` functions via `wasm_bindgen`
 
 #### Step 1: Write JavaScript Functions
 
 Create JS source files with exported functions:
 
 ```js
-// app/common/js/src/theme.js
+// app/ratel/js/src/theme.js
 const STORAGE_KEY = "ratel-common-theme";
 
 export function load_theme() {
@@ -209,7 +227,7 @@ export function apply_theme(theme) {
 Create an entry point that mounts exports onto the global namespace:
 
 ```js
-// app/common/js/src/index.js
+// app/ratel/js/src/index.js
 import * as theme from "./theme";
 
 if (typeof window !== "undefined") {
@@ -229,14 +247,14 @@ The namespace convention is `window.ratel.<module_name>` with nested sub-modules
 | :--- | :--- |
 | common/theme | `window.ratel.common.theme` |
 | app-shell | `window.ratel.app_shell` |
-| ratel-auth (firebase) | `window.ratel.auth.firebase` |
-| ratel-post | `window.ratel.post` |
-| ratel-user-shell | `window.ratel.ratel_user_shell` |
-| ratel-team-shell | `window.ratel.ratel_team_shell` |
+| features/auth (firebase) | `window.ratel.auth.firebase` |
+| features/posts | `window.ratel.post` |
+| features/users | `window.ratel.ratel_user_shell` |
+| features/teams | `window.ratel.ratel_team_shell` |
 
 #### Step 3: Build the JS Bundle
 
-For modules with complex JS (e.g., `app/common/js/`), use webpack to bundle:
+For modules with complex JS (e.g., `app/ratel/js/`), use webpack to bundle:
 
 ```json
 // package.json
@@ -248,14 +266,14 @@ For modules with complex JS (e.g., `app/common/js/`), use webpack to bundle:
 }
 ```
 
-The output goes to `dist/main.js`. For simple modules, a hand-written minified `.js` file in `assets/` is sufficient (e.g., `app/shell/assets/ratel-app-shell.js`).
+The output goes to `dist/main.js`. For simple modules, a hand-written minified `.js` file in `assets/` is sufficient (e.g., `app/ratel/assets/ratel-app-shell.js`).
 
 #### Step 4: Declare Rust FFI Bindings
 
 Use `#[wasm_bindgen]` with `js_namespace` matching the global path:
 
 ```rust
-// app/common/src/components/theme_switcher/interop_theme.rs
+// app/ratel/src/common/components/theme_switcher/interop_theme.rs
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(js_namespace = ["window", "ratel", "common", "theme"])]
@@ -273,7 +291,7 @@ The `js_namespace` array maps directly to the nested object path on `window`.
 Include the JS file as a Dioxus `Asset` and load it via `document::Script`:
 
 ```rust
-// app/shell/src/main.rs
+// app/ratel/src/main.rs
 pub const MAIN_JS: Asset = asset!("/assets/ratel-app-shell.js");
 
 #[component]
@@ -290,7 +308,7 @@ fn App() -> Element {
 Use the imported functions directly in Dioxus components/services. Gate calls with `#[cfg(not(feature = "server"))]` since JS is unavailable during SSR:
 
 ```rust
-// app/common/src/components/theme_switcher/theme_service.rs
+// app/ratel/src/common/components/theme_switcher/theme_service.rs
 impl ThemeService {
     pub fn init() {
         #[cfg(not(feature = "server"))]
@@ -325,7 +343,7 @@ impl ThemeService {
 
 ### SeoMeta Component
 
-The `SeoMeta` component (`app/common/src/components/seo_meta/`) renders SEO meta tags into the document head. Every page-level view should include it for proper Google SEO, Open Graph, and Twitter Card support.
+The `SeoMeta` component (`app/ratel/src/common/components/seo_meta/`) renders SEO meta tags into the document head. Every page-level view should include it for proper Google SEO, Open Graph, and Twitter Card support.
 
 #### Props
 

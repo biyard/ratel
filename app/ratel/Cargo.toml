@@ -52,6 +52,8 @@ web-sys = { workspace = true, features = [
     "Response",
     "Window",
     "console",
+    "Clipboard",
+    "Navigator",
 ] }
 wasm-bindgen = { workspace = true }
 wasm-bindgen-futures = { workspace = true }
@@ -142,6 +144,7 @@ users = []
 teams = []
 spaces = []
 spaces_full = ["spaces"]
+futures = ["dep:futures"]
 
 [dev-dependencies]
 axum = { workspace = true }
