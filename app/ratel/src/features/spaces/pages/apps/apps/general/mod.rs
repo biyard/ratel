@@ -1,11 +1,11 @@
 mod controllers;
 mod i18n;
-mod route;
 mod views;
 
-use dioxus::prelude::*;
+use controllers::*;
+use i18n::*;
 
-pub use controllers::*;
-pub use route::Route;
+pub use views::*;
 
-use crate::common::*;
+use super::super::*;
+use crate::*;

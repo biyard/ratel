@@ -7,7 +7,7 @@ use crate::features::spaces::space_common::{
     components::{SpaceStatusBadge, SpaceVisibilityModal},
     controllers::update_space,
     hooks::{use_space, use_space_role},
-    providers::{SpaceContextProvider, use_space_context},
+    providers::{use_space_context, SpaceContextProvider},
     *,
 };
 
@@ -86,8 +86,10 @@ pub fn SpaceTop(
                             shape: ButtonShape::Square,
                             onclick: move |_| {
                                 debug!("Publish button clicked. Current space status: {:?}", ctx.space().status);
+                                let initial = ctx.space().visibility;
                                 popup.open(rsx! {
                                     SpaceVisibilityModal {
+                                        initial,
                                         on_confirm: move |visibility| async move {
                                             let space_id = ctx.space().id;
                                             update_space(
