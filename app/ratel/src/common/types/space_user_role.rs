@@ -27,6 +27,10 @@ pub enum SpaceUserRole {
 }
 
 impl SpaceUserRole {
+    pub fn is_admin(&self) -> bool {
+        matches!(self, SpaceUserRole::Creator)
+    }
+
     pub fn can_edit(&self) -> bool {
         matches!(self, SpaceUserRole::Creator)
     }

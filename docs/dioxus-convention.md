@@ -1236,6 +1236,60 @@ rsx! {
 
 ---
 
+## 18. Button Component (Loading Pattern)
+
+The `Button` component (`common::components::Button`) supports an optional `loading` prop for async click handlers. The parent component owns the loading state and passes it as a `ReadOnlySignal<bool>`.
+
+**Props:**
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `class` | `String` | `""` | Additional CSS classes |
+| `size` | `ButtonSize` | `Medium` | Size variant |
+| `style` | `ButtonStyle` | `Primary` | Style variant (`Primary`, `Secondary`, `Outline`, `Text`) |
+| `shape` | `ButtonShape` | `Rounded` | Shape variant (`Rounded`, `Square`) |
+| `disabled` | `bool` | `false` | Disable the button |
+| `loading` | `ReadSignal<bool>` | `false` | Show loading indicator and disable button |
+| `onclick` | `Option<EventHandler<MouseEvent>>` | `None` | Click handler |
+
+**Loading pattern for async handlers:**
+
+The `Button` cannot auto-detect async handlers because `EventHandler::call()` returns `()` (Dioxus spawns async futures internally via `SpawnIfAsync`). Instead, the parent manages a `loading` signal and passes it to the button.
+
+```rust
+use crate::common::*;
+
+#[component]
+pub fn MyView() -> Element {
+    let mut loading = use_signal(|| false);
+
+    rsx! {
+        Button {
+            loading: loading(),
+            onclick: move |_| async move {
+                loading.set(true);
+                let result = do_something_async().await;
+                loading.set(false);
+                match result {
+                    Ok(_) => { /* success */ }
+                    Err(err) => { /* handle error */ }
+                }
+            },
+            "Submit"
+        }
+    }
+}
+```
+
+**Rules:**
+- Always use `use_signal(|| false)` for loading state in the parent component.
+- Set `loading.set(true)` at the start and `loading.set(false)` after the async operation completes (in both success and error paths).
+- Guard against double-clicks by checking `if loading() { return; }` at the top of the async handler.
+- When `loading` is `true`, the button automatically disables itself and shows a `LoadingIndicator` instead of children.
+- For synchronous handlers, omit the `loading` prop entirely.
+
+---
+
 ## Quick Reference
 
 | Concern | Convention |
@@ -1257,3 +1311,4 @@ rsx! {
 | Imports | `use crate::*;` at file top |
 | JS interop | `#[wasm_bindgen(js_namespace = [...])]` + guard with `cfg` |
 | SEO | `SeoMeta { title, description, ... }` in every page view |
+| Button loading | Parent owns `use_signal(\|\| false)`, passes `loading: loading()`, sets in async handler |

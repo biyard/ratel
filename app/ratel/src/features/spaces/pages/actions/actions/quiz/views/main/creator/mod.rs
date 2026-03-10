@@ -2,9 +2,9 @@ use crate::features::spaces::pages::actions::actions::quiz::components::*;
 use crate::features::spaces::pages::actions::actions::quiz::controllers::*;
 use crate::features::spaces::pages::actions::actions::quiz::*;
 mod i18n;
-use i18n::QuizCreatorTranslate;
 use crate::features::spaces::pages::actions::actions::poll::components::QuestionViewer;
 use crate::features::spaces::space_common::types::space_page_actions_quiz_key;
+use i18n::QuizCreatorTranslate;
 
 #[component]
 pub fn QuizCreatorPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) -> Element {
@@ -200,7 +200,7 @@ pub fn QuizCreatorPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) -
             Button {
                 size: ButtonSize::Inline,
                 style: ButtonStyle::Text,
-                class: "flex items-center gap-1 text-sm text-neutral-400 hover:text-white transition-colors w-fit",
+                class: "flex gap-1 items-center text-sm transition-colors hover:text-white text-neutral-400 w-fit",
                 onclick: on_back,
                 "← {tr.btn_back}"
             }
@@ -237,7 +237,7 @@ pub fn QuizCreatorPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) -
                     "{tr.pass_score_label}"
                 }
                 Input {
-                    r#type: "number".to_string(),
+                    r#type: InputType::Number,
                     class: "text-base",
                     placeholder: tr.pass_score_placeholder,
                     value: pass_score().to_string(),
@@ -257,7 +257,7 @@ pub fn QuizCreatorPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) -
                     "{tr.retry_label}"
                 }
                 Input {
-                    r#type: "number".to_string(),
+                    r#type: InputType::Number,
                     class: "text-base",
                     placeholder: tr.retry_placeholder,
                     value: retry_count().to_string(),
@@ -273,7 +273,7 @@ pub fn QuizCreatorPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) -
             }
 
             if can_edit {
-                div { class: "flex justify-end gap-2",
+                div { class: "flex gap-2 justify-end",
                     if show_editor {
                         Button {
                             style: ButtonStyle::Primary,

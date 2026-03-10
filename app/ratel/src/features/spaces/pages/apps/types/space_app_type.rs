@@ -1,5 +1,5 @@
-use crate::common::macros::DynamoEnum;
-use crate::features::spaces::pages::apps::*;
+use super::*;
+
 #[derive(
     Debug, Clone, Copy, Serialize, Deserialize, Default, DynamoEnum, Eq, PartialEq, Translate,
 )]
@@ -20,12 +20,45 @@ impl SpaceAppType {
         matches!(self, SpaceAppType::General | SpaceAppType::File)
     }
 
-    pub fn settings_path(&self, space_id: &SpacePartition) -> String {
+    pub fn settings_path(&self, space_id: SpacePartition) -> Route {
         match self {
-            SpaceAppType::General => format!("/spaces/{space_id}/apps/general"),
-            SpaceAppType::File => format!("/spaces/{space_id}/apps/file"),
-            SpaceAppType::Panels => format!("/spaces/{space_id}/apps/panels"),
-            SpaceAppType::IncentivePool => format!("/spaces/{space_id}/apps/incentive-pool"),
+            SpaceAppType::General => Route::SpaceGeneralAppPage { space_id },
+            SpaceAppType::File => Route::SpaceFileAppPage { space_id },
+            SpaceAppType::IncentivePool => Route::SpaceIncentivePoolAppPage { space_id },
+        }
+    }
+
+    pub fn class(&self) -> &'static str {
+        match self {
+            SpaceAppType::General => "bg-green-500",
+            SpaceAppType::IncentivePool => "bg-amber-500",
+            SpaceAppType::File => "bg-violet-500",
+        }
+    }
+
+    pub fn icon(&self) -> Element {
+        match self {
+            SpaceAppType::General => rsx! {
+                icons::settings::Settings2 {
+                    width: "24",
+                    height: "24",
+                    class: "text-white [&>path]:fill-black [&>circle]:stroke-black",
+                }
+            },
+            SpaceAppType::IncentivePool => rsx! {
+                icons::ratel::Chest {
+                    width: "24",
+                    height: "24",
+                    class: "text-white [&>path]:fill-none [&>path]:stroke-black",
+                }
+            },
+            SpaceAppType::File => rsx! {
+                icons::file::File {
+                    width: "24",
+                    height: "24",
+                    class: "text-white [&>path]:stroke-black",
+                }
+            },
         }
     }
 }

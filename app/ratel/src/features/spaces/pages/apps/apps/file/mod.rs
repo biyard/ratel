@@ -2,17 +2,18 @@ pub mod components;
 #[cfg(feature = "server")]
 mod config;
 mod controllers;
-pub mod i18n;
-mod interop;
+mod i18n;
 mod models;
 mod types;
 mod views;
 
-use dioxus::prelude::*;
+use components::*;
+use i18n::*;
+use models::*;
+use types::*;
 
 pub use controllers::*;
-pub use views::FileManagerPage as SpaceAppFilePage;
 
-use crate::common::*;
+pub use views::*;
 
-type Result<T> = crate::common::Result<T>;
+use crate::*;

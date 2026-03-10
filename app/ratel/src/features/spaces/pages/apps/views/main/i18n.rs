@@ -65,3 +65,13 @@ translate! {
         ko: "권한이 없습니다",
     },
 }
+
+impl AppMainTranslate {
+    pub fn description(&self, app_type: SpaceAppType) -> &'static str {
+        match app_type {
+            SpaceAppType::IncentivePool => self.app_description_incentive_pool,
+            SpaceAppType::File => self.app_description_file,
+            SpaceAppType::General => self.app_description_general,
+        }
+    }
+}

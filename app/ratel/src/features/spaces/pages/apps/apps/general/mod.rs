@@ -2,9 +2,11 @@ mod controllers;
 mod i18n;
 mod views;
 
-use dioxus::prelude::*;
+use i18n::*;
 
 pub use controllers::*;
-pub use views::GeneralPage as SpaceAppGeneralPage;
+pub use views::*;
 
-use crate::common::*;
+
+use super::super::*;
+use crate::*;
