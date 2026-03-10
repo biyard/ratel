@@ -1,5 +1,5 @@
-use crate::features::spaces::apps::main::*;
 use crate::common::macros::DynamoEnum;
+use crate::features::spaces::apps::main::*;
 #[derive(
     Debug, Clone, Copy, Serialize, Deserialize, Default, DynamoEnum, Eq, PartialEq, Translate,
 )]
@@ -9,6 +9,8 @@ pub enum SpaceAppType {
     General,
     #[translate(en = "File", ko = "파일")]
     File,
+    #[translate(en = "Panels", ko = "패널")]
+    Panels,
     #[translate(en = "Incentive Pool", ko = "인센티브 풀")]
     IncentivePool,
 }
@@ -22,6 +24,7 @@ impl SpaceAppType {
         match self {
             SpaceAppType::General => format!("/spaces/{space_id}/apps/general"),
             SpaceAppType::File => format!("/spaces/{space_id}/apps/file"),
+            SpaceAppType::Panels => format!("/spaces/{space_id}/apps/panels"),
             SpaceAppType::IncentivePool => format!("/spaces/{space_id}/apps/incentive-pool"),
         }
     }

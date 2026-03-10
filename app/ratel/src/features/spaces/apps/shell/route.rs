@@ -5,6 +5,7 @@ use crate::features::spaces::apps::file::Route as FileRoute;
 use crate::features::spaces::apps::general::Route as GeneralRoute;
 use crate::features::spaces::apps::incentive_pool::Route as IncentivePoolRoute;
 use crate::features::spaces::apps::main::Route as MainRoute;
+use crate::features::spaces::apps::panels::Route as PanelsRoute;
 use crate::features::spaces::apps::rewards::Route as RewardsRoute;
 
 use layout::SpaceAppsLayout;
@@ -20,6 +21,8 @@ pub enum Route {
             IncentivePool { space_id: SpacePartition, rest: Vec<String> },
             #[route("/file/:..rest")]
             File { space_id: SpacePartition, rest: Vec<String> },
+            #[route("/panels/:..rest")]
+            Panels { space_id: SpacePartition, rest: Vec<String> },
             #[route("/rewards/:..rest")]
             Rewards { space_id: SpacePartition, rest: Vec<String> },
             #[route("/:..rest")]
@@ -50,4 +53,5 @@ define_apps_route_wrapper!(Main, MainRoute);
 define_apps_route_wrapper!(General, GeneralRoute);
 define_apps_route_wrapper!(IncentivePool, IncentivePoolRoute);
 define_apps_route_wrapper!(File, FileRoute);
+define_apps_route_wrapper!(Panels, PanelsRoute);
 define_apps_route_wrapper!(Rewards, RewardsRoute);
