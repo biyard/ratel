@@ -13,6 +13,7 @@ pub fn ParticipationCard(
     on_login: EventHandler<()>,
 ) -> Element {
     let tr: ParticipationCardTranslate = use_translate();
+    let mut layover = use_layover();
     let navigator = use_navigator();
     let mut participate =
         use_action(crate::features::spaces::controllers::participate_space::participate_space);
@@ -30,10 +31,16 @@ pub fn ParticipationCard(
         }
     })?;
     let panel_requirements = panel_requirements_loader.read().clone();
+    let all_requirements_satisfied = panel_requirements
+        .iter()
+        .all(|requirement| requirement.satisfied);
     let participate_credential_path = credential_path.clone();
     let credential_button_path = credential_path.clone();
     let login_for_participate = on_login.clone();
     let login_for_credentials = on_login;
+    let layover_requirements = panel_requirements.clone();
+    let layover_credential_path = credential_path.clone();
+    let layover_login = login_for_participate.clone();
 
     let handle_participate = move |_| {
         let space_id = space_id.clone();
@@ -43,10 +50,31 @@ pub fn ParticipationCard(
             return;
         }
 
+        if !all_requirements_satisfied {
+            layover.open(
+                "space-participation-requirements".to_string(),
+                String::new(),
+                rsx! {
+                    ParticipationRequirementsLayover {
+                        space_id: space_id.clone(),
+                        requirements: layover_requirements.clone(),
+                    }
+                },
+                Some("!max-w-[800px] !bg-[#1A1A1A] rounded-none border-l border-neutral-800 shadow-[0_8px_20px_0_rgba(20,26,62,0.25)] max-tablet:!max-w-full".to_string()),
+            );
+            return;
+        }
+
         spawn(async move {
             let space_detail = crate::features::spaces::space_common::types::space_key(&space_id);
+            let panel_requirements_key = vec![
+                "Space".to_string(),
+                space_id.to_string(),
+                "PanelRequirements".to_string(),
+            ];
             participate.call(space_id).await;
             invalidate_query(&space_detail);
+            invalidate_query(&panel_requirements_key);
         });
     };
 
@@ -75,9 +103,9 @@ pub fn ParticipationCard(
                         div { class: "flex items-center gap-1 flex-wrap",
                             for requirement in panel_requirements.iter() {
                                 ParticipationRequirementTag {
-                                    key: "{requirement.kind:?}",
+                                    key: "{requirement.attribute:?}",
                                     kind: if requirement.satisfied { ParticipationTag::Success } else { ParticipationTag::Warning },
-                                    label: panel_requirement_label(requirement.kind, &tr),
+                                    label: panel_requirement_label(requirement.attribute, &tr),
                                 }
                             }
                         }
@@ -106,10 +134,10 @@ pub fn ParticipationCard(
 }
 
 fn panel_requirement_label(
-    kind: crate::features::spaces::controllers::panel_requirements::PanelRequirementAttribute,
+    attribute: crate::features::spaces::controllers::panel_requirements::PanelRequirementAttribute,
     tr: &ParticipationCardTranslate,
 ) -> String {
-    match kind {
+    match attribute {
         crate::features::spaces::controllers::panel_requirements::PanelRequirementAttribute::Age => {
             tr.age.to_string()
         }

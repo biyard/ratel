@@ -30,7 +30,7 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
 
     let mut participate = use_action(participate_space);
 
-    let _show_participate = matches!(space.status, Some(crate::common::SpaceStatus::InProgress))
+    let show_participate = matches!(space.status, Some(crate::common::SpaceStatus::InProgress))
         && !space.participated
         && space.can_participate;
 
@@ -81,7 +81,7 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
                     menus,
                     user,
                     role,
-                    show_participation_card: true,
+                    show_participation_card: show_participate,
                     credential_path,
                     login_handler: move |_| {
                         popup.open(rsx! {
@@ -94,7 +94,7 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
                 SpaceTop {
                     labels,
                     space_status,
-                    show_participate_button: true,
+                    show_participate_button: false,
                     on_participant,
                 }
                 div { class: "flex overflow-auto flex-1 p-5 w-full bg-web-bg rounded-tl-[10px]",

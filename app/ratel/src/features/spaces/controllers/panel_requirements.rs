@@ -5,6 +5,8 @@ use crate::features::spaces::models::{
 };
 use crate::features::spaces::*;
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "server")]
+use std::collections::BTreeSet;
 
 #[cfg(feature = "server")]
 use crate::features::spaces::models::verified_attributes::UserAttributesExt;
@@ -19,8 +21,10 @@ pub enum PanelRequirementAttribute {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct PanelRequirementStatus {
-    pub kind: PanelRequirementAttribute,
+    pub attribute: PanelRequirementAttribute,
     pub satisfied: bool,
+    pub required_values: Vec<String>,
+    pub current_value: Option<String>,
 }
 
 #[get("/api/spaces/{space_id}/panel-requirements", user: OptionalUser)]
@@ -41,13 +45,14 @@ pub async fn get_panel_requirements(
     }
 
     let user: Option<User> = user.into();
-    let (age, gender, has_university) = if let Some(user) = user {
+    let (age, gender, university, has_university) = if let Some(user) = user {
         let user_attributes = user.get_attributes(dynamo).await?;
         (
             user_attributes
                 .age()
                 .and_then(|value| u8::try_from(value).ok()),
             user_attributes.gender,
+            user_attributes.university.clone(),
             user_attributes
                 .university
                 .as_ref()
@@ -55,11 +60,11 @@ pub async fn get_panel_requirements(
                 .unwrap_or(false),
         )
     } else {
-        (None, None, false)
+        (None, None, None, false)
     };
 
     let mut statuses = vec![];
-    for kind in [
+    for attribute in [
         PanelRequirementAttribute::Age,
         PanelRequirementAttribute::Gender,
         PanelRequirementAttribute::University,
@@ -67,18 +72,40 @@ pub async fn get_panel_requirements(
         let active_attributes = panel_quotas
             .iter()
             .flat_map(panel_attributes)
-            .filter(|attribute| panel_requirement_kind(attribute) == Some(kind))
+            .filter(|panel_attribute| {
+                panel_requirement_attribute(panel_attribute) == Some(attribute)
+            })
             .collect::<Vec<_>>();
 
         if active_attributes.is_empty() {
             continue;
         }
 
+        let required_values = active_attributes
+            .iter()
+            .filter_map(panel_requirement_value)
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            .collect::<Vec<_>>();
         let satisfied = active_attributes
             .iter()
             .any(|attribute| matches_panel_attribute(age, gender, has_university, attribute));
 
-        statuses.push(PanelRequirementStatus { kind, satisfied });
+        let current_value = if satisfied {
+            active_attributes
+                .iter()
+                .find(|attr| matches_panel_attribute(age, gender, has_university, attr))
+                .and_then(panel_requirement_value)
+        } else {
+            current_value_for_attribute(attribute, age, gender, university.clone())
+        };
+
+        statuses.push(PanelRequirementStatus {
+            attribute,
+            satisfied,
+            required_values,
+            current_value,
+        });
     }
 
     Ok(statuses)
@@ -124,7 +151,7 @@ pub(crate) fn panel_attributes(panel: &SpacePanelQuota) -> Vec<PanelAttribute> {
 }
 
 #[cfg(feature = "server")]
-fn panel_requirement_kind(attribute: &PanelAttribute) -> Option<PanelRequirementAttribute> {
+fn panel_requirement_attribute(attribute: &PanelAttribute) -> Option<PanelRequirementAttribute> {
     match attribute {
         PanelAttribute::CollectiveAttribute(CollectiveAttribute::Age)
         | PanelAttribute::VerifiableAttribute(VerifiableAttribute::Age(_)) => {
@@ -138,6 +165,50 @@ fn panel_requirement_kind(attribute: &PanelAttribute) -> Option<PanelRequirement
             Some(PanelRequirementAttribute::University)
         }
         _ => None,
+    }
+}
+
+#[cfg(feature = "server")]
+fn panel_requirement_value(attribute: &PanelAttribute) -> Option<String> {
+    match attribute {
+        PanelAttribute::CollectiveAttribute(CollectiveAttribute::University)
+        | PanelAttribute::CollectiveAttribute(CollectiveAttribute::Age)
+        | PanelAttribute::CollectiveAttribute(CollectiveAttribute::Gender) => {
+            Some("Verified".to_string())
+        }
+        PanelAttribute::VerifiableAttribute(VerifiableAttribute::Age(
+            crate::common::attribute::Age::Specific(value),
+        )) => Some(value.to_string()),
+        PanelAttribute::VerifiableAttribute(VerifiableAttribute::Age(
+            crate::common::attribute::Age::Range {
+                inclusive_min,
+                inclusive_max,
+            },
+        )) if *inclusive_max == u8::MAX => Some(format!("{inclusive_min}+")),
+        PanelAttribute::VerifiableAttribute(VerifiableAttribute::Age(
+            crate::common::attribute::Age::Range {
+                inclusive_min,
+                inclusive_max,
+            },
+        )) => Some(format!("{inclusive_min}-{inclusive_max}")),
+        PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender(gender)) => {
+            Some(gender.to_string())
+        }
+        _ => None,
+    }
+}
+
+#[cfg(feature = "server")]
+fn current_value_for_attribute(
+    attribute: PanelRequirementAttribute,
+    age: Option<u8>,
+    gender: Option<Gender>,
+    university: Option<String>,
+) -> Option<String> {
+    match attribute {
+        PanelRequirementAttribute::Age => age.map(|value| value.to_string()),
+        PanelRequirementAttribute::Gender => gender.map(|value| value.to_string()),
+        PanelRequirementAttribute::University => university.filter(|value| !value.is_empty()),
     }
 }
 

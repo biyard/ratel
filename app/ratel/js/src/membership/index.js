@@ -13,12 +13,13 @@ function requestIdentityVerification(storeId, channelKey, prefix) {
     channelKey,
   };
   return window.PortOne.requestIdentityVerification(payload).then(
-    () => identityVerificationId,
+    () => identityVerificationId
   );
 }
 
 const membership = {
   requestIdentityVerification,
+  request_identity_verification: requestIdentityVerification,
 };
 
 export default membership;

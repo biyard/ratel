@@ -20,6 +20,7 @@ if (typeof window !== "undefined") {
     spaces,
     auth,
     common,
+    user_credential: users.credential,
 
     social: {
       teams,
