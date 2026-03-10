@@ -1,4 +1,5 @@
 use super::*;
+use std::collections::HashSet;
 
 translate! {
     AttributeGroupsTranslate;
@@ -313,6 +314,8 @@ pub fn AttributeGroups(
         let mut keys = option_keys(PanelOption::University, &panels);
         keys.extend(option_keys(PanelOption::Age, &panels));
         keys.extend(option_keys(PanelOption::Gender, &panels));
+        let mut seen = HashSet::new();
+        keys.retain(|key| seen.insert(key.panel_id.clone()));
         keys
     };
 

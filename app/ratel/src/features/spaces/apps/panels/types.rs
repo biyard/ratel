@@ -2,7 +2,7 @@ use super::*;
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 use std::str::FromStr;
 
-#[derive(Debug, Clone, SerializeDisplay, DeserializeFromStr, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, SerializeDisplay, DeserializeFromStr, Default, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct SpacePanelAttributeEntityType(pub String);
 

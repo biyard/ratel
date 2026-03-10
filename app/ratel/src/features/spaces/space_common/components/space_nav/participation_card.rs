@@ -16,6 +16,20 @@ pub fn ParticipationCard(
     let navigator = use_navigator();
     let mut participate =
         use_action(crate::features::spaces::controllers::participate_space::participate_space);
+    let panel_requirements_query_key = vec![
+        "Space".to_string(),
+        space_id.to_string(),
+        "PanelRequirements".to_string(),
+    ];
+    let panel_requirements_loader = use_query(&panel_requirements_query_key, {
+        let space_id = space_id.clone();
+        move || {
+            crate::features::spaces::controllers::panel_requirements::get_panel_requirements(
+                space_id.clone(),
+            )
+        }
+    })?;
+    let panel_requirements = panel_requirements_loader.read().clone();
     let participate_credential_path = credential_path.clone();
     let credential_button_path = credential_path.clone();
     let login_for_participate = on_login.clone();
@@ -57,14 +71,15 @@ pub fn ParticipationCard(
                         }
                     }
 
-                    div { class: "flex items-center gap-1",
-                        ParticipationRequirementTag {
-                            kind: ParticipationTagKind::Warning,
-                            label: tr.age.to_string(),
-                        }
-                        ParticipationRequirementTag {
-                            kind: ParticipationTagKind::Success,
-                            label: tr.country.to_string(),
+                    if !panel_requirements.is_empty() {
+                        div { class: "flex items-center gap-1 flex-wrap",
+                            for requirement in panel_requirements.iter() {
+                                ParticipationRequirementTag {
+                                    key: "{requirement.kind:?}",
+                                    kind: if requirement.satisfied { ParticipationTagKind::Success } else { ParticipationTagKind::Warning },
+                                    label: panel_requirement_label(requirement.kind, &tr),
+                                }
+                            }
                         }
                     }
                 }
@@ -86,6 +101,23 @@ pub fn ParticipationCard(
                     }
                 }
             }
+        }
+    }
+}
+
+fn panel_requirement_label(
+    kind: crate::features::spaces::controllers::panel_requirements::PanelRequirementKind,
+    tr: &ParticipationCardTranslate,
+) -> String {
+    match kind {
+        crate::features::spaces::controllers::panel_requirements::PanelRequirementKind::Age => {
+            tr.age.to_string()
+        }
+        crate::features::spaces::controllers::panel_requirements::PanelRequirementKind::Gender => {
+            tr.gender.to_string()
+        }
+        crate::features::spaces::controllers::panel_requirements::PanelRequirementKind::University => {
+            tr.university.to_string()
         }
     }
 }
@@ -141,9 +173,14 @@ translate! {
         ko: "나이",
     },
 
-    country: {
-        en: "Country",
-        ko: "국가",
+    gender: {
+        en: "Gender",
+        ko: "성별",
+    },
+
+    university: {
+        en: "University",
+        ko: "대학교",
     },
 
     participate: {
