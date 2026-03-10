@@ -1,9 +1,10 @@
+pub mod actions;
 mod components;
 pub mod config;
 mod controllers;
 mod menu;
 mod models;
-mod types;
+pub mod types;
 mod views;
 
 use components::*;

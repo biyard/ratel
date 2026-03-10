@@ -1,6 +1,6 @@
 use super::*;
 use crate::common::components::{SpaceCard, TiptapEditor};
-use crate::features::spaces::apps::file::components::FileCard;
+use crate::features::spaces::pages::apps::apps::file::components::FileCard;
 use crate::features::spaces::space_common::hooks::use_space_query;
 
 #[component]
@@ -24,7 +24,7 @@ pub fn ViewerPage(space_id: SpacePartition) -> Element {
 
         let space_id = space_id_for_load.clone();
         spawn(async move {
-            if let Ok(loaded_files) = crate::features::spaces::apps::file::get_space_files(space_id).await {
+            if let Ok(loaded_files) = crate::features::spaces::pages::apps::apps::file::get_space_files(space_id).await {
                 files.set(loaded_files);
             }
         });

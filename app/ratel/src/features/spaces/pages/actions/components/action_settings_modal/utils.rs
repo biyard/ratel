@@ -1,7 +1,7 @@
 use crate::features::spaces::pages::actions::*;
 use crate::common::chrono::{Datelike, Duration, NaiveDate, NaiveDateTime, Weekday};
-use crate::features::spaces::actions::discussion::controllers::{UpdateDiscussionRequest, update_discussion};
-use crate::features::spaces::actions::poll::controllers::{UpdatePollRequest, update_poll};
+use crate::features::spaces::pages::actions::actions::discussion::controllers::{UpdateDiscussionRequest, update_discussion};
+use crate::features::spaces::pages::actions::actions::poll::controllers::{UpdatePollRequest, update_poll};
 
 use super::reward_cards::RewardPreviewData;
 
