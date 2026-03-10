@@ -15,12 +15,11 @@ use viewer_page::ViewerPage;
 #[component]
 pub fn SpaceAppsPage(space_id: SpacePartition) -> Element {
     let role = use_space_role()();
-    match role {
-        SpaceUserRole::Creator => rsx! {
-            CreatorPage { space_id }
-        },
-        _ => rsx! {
-            ViewerPage { space_id }
-        },
+    if !role.can_edit() {
+        return Err(Error::UnauthorizedAccess)?;
+    }
+
+    rsx! {
+        CreatorPage { space_id }
     }
 }

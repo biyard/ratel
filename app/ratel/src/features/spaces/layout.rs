@@ -34,7 +34,7 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
     let menus = vec![
         crate::features::spaces::pages::dashboard::get_nav_item(space_id.clone(), role.clone()),
         crate::features::spaces::pages::overview::get_nav_item(space_id.clone(), role.clone()),
-        crate::features::spaces::actions::shell::get_nav_item(space_id.clone(), role.clone()),
+        crate::features::spaces::pages::actions::get_nav_item(space_id.clone(), role.clone()),
         crate::features::spaces::pages::apps::get_nav_item(space_id.clone(), role.clone()),
         // crate::features::spaces::pages::report::get_nav_item(space_id.clone(), role.clone()),
     ]

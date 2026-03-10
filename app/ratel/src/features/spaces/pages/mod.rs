@@ -1,3 +1,4 @@
+pub mod actions;
 pub mod apps;
 pub mod dashboard;
 pub mod overview;
