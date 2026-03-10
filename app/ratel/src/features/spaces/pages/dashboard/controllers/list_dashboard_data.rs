@@ -43,9 +43,9 @@ pub async fn list_dashboard_data_handler(
 
     // StatCard: only include when IncentivePool app is installed
     // let (app_pk, app_sk) =
-    //     crate::features::spaces::apps::main::SpaceApp::keys(&space_pk, crate::features::spaces::apps::main::SpaceAppType::IncentivePool);
+    //     crate::features::spaces::pages::apps::SpaceApp::keys(&space_pk, crate::features::spaces::pages::apps::SpaceAppType::IncentivePool);
     // FIXME: We Need to chekc SpaceIncentive It self, not Space App,
-    // let has_incentive = crate::features::spaces::apps::main::SpaceApp::get(cli, &app_pk, Some(&app_sk))
+    // let has_incentive = crate::features::spaces::pages::apps::SpaceApp::get(cli, &app_pk, Some(&app_sk))
     //     .await
     //     .map(|opt| opt.is_some())
     //     .unwrap_or(false);

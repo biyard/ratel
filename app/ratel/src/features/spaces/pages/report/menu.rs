@@ -1,4 +1,4 @@
-use crate::features::spaces::pages::report::*;
+use super::*;
 
 pub fn get_nav_item(
     space_id: SpacePartition,
@@ -8,7 +8,7 @@ pub fn get_nav_item(
     Some((
         icon(),
         SpacePage::Report,
-        Route::HomePage { space_id }.into(),
+        Route::SpaceReportPage { space_id }.into(),
     ))
 }
 

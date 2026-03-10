@@ -1,10 +1,12 @@
-use crate::features::spaces::*;
 use crate::features::spaces::actions::shell::Route as ActionsRoute;
 use crate::features::spaces::apps::shell::Route as AppsRoute;
 use crate::features::spaces::pages::dashboard::Route as DashboardRoute;
-use dioxus::router::components::child_router::ChildRouter;
+use crate::features::spaces::pages::dashboard::*;
 use crate::features::spaces::pages::overview::Route as OverviewRoute;
 use crate::features::spaces::pages::report::Route as ReportRoute;
+use crate::features::spaces::*;
+
+use dioxus::router::components::child_router::ChildRouter;
 #[cfg(not(feature = "layout_test"))]
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
@@ -13,7 +15,7 @@ pub enum Route {
         #[nest("/:space_id")]
                 #[layout(SpaceLayout)]
                     #[route("/dashboard/:..rest")]
-                    Dashboard { space_id: SpacePartition, rest: Vec<String> },
+                    SpaceDashboardPage { space_id: SpacePartition, rest: Vec<String> },
                     #[route("/overview/:..rest")]
                     Overview { space_id: SpacePartition, rest: Vec<String> },
                     #[route("/actions/:..rest")]
@@ -29,7 +31,6 @@ pub enum Route {
     #[end_nest]
     #[route("/")]
     PageNotFound { route: Vec<String> },
-
 }
 
 #[cfg(feature = "layout_test")]

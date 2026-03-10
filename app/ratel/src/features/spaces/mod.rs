@@ -1,7 +1,6 @@
 #![allow(unused)]
 pub mod actions;
 pub mod apps;
-pub mod space_common;
 pub mod config;
 pub mod controllers;
 pub mod dto;
@@ -9,19 +8,11 @@ pub mod hooks;
 pub mod layout;
 pub mod models;
 pub mod pages;
-pub mod route;
-#[cfg(not(feature = "server"))]
-pub mod web;
-
-#[cfg(feature = "server")]
-pub mod server;
+pub mod space_common;
 
 pub use layout::SpaceLayout;
 
-pub use route::Route;
-
-use crate::common::*;
-use dioxus::prelude::*;
+use crate::*;
 
 // Re-export common types/macros for model derives.
 pub use crate::common::macros::dynamo_entity::DynamoEntity;
