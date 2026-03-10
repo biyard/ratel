@@ -1249,7 +1249,7 @@ The `Button` component (`common::components::Button`) supports an optional `load
 | `style` | `ButtonStyle` | `Primary` | Style variant (`Primary`, `Secondary`, `Outline`, `Text`) |
 | `shape` | `ButtonShape` | `Rounded` | Shape variant (`Rounded`, `Square`) |
 | `disabled` | `bool` | `false` | Disable the button |
-| `loading` | `ReadOnlySignal<bool>` | `false` | Show loading indicator and disable button |
+| `loading` | `ReadSignal<bool>` | `false` | Show loading indicator and disable button |
 | `onclick` | `Option<EventHandler<MouseEvent>>` | `None` | Click handler |
 
 **Loading pattern for async handlers:**

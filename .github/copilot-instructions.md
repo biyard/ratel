@@ -4,6 +4,12 @@ When performing a code review,
 * Find out the anti-pattern in the `/docs/troubleshooting.md` file.
 * For files under `app/`, apply the Dioxus convention checks defined in `/docs/dioxus-convention.md`. See `/docs/dioxus-convention-review-checklist.md` for the review checklist.
 * Pay special attention to `toast.error()` usage: it must receive a typed `common::Error` variant, never a raw string. See section 12 of `/docs/dioxus-convention.md` for the full toast convention.
+* For TailwindCSS styling, apply the conventions defined in `/docs/tailwindcss-convention.md`. Key checks:
+  - Use semantic design tokens (`bg-card`, `text-text-primary`), not raw color values (`bg-neutral-800`).
+  - Use `light:` variant for light theme overrides; do not use `dark:` prefix (dark is default).
+  - Prefer `aria-selected:` / `group-aria-selected:` variants over Rust if/else class selection for toggleable states.
+  - Flag excessive `!important` overrides (`!bg-*`, `!text-*`) — components should accept a `class` prop instead.
+  - Use `max-tablet:` / `max-mobile:` for responsive breakpoints.
 
 ## Playwright E2E Tests
 

@@ -84,8 +84,8 @@ translate! {
         ko: "익명 참여",
     },
     anonymous_setting_description: {
-        en: "Allow participants to join and interact anonymously",
-        ko: "참가자가 익명으로 참여하고 활동할 수 있도록 허용합니다",
+        en: "Set participants to join and engage anonymously.",
+        ko: "참가자가 익명으로 참여하고 활동하도록 설정합니다.",
     },
     anonymous_enabled: {
         en: "Enabled",
@@ -114,6 +114,14 @@ translate! {
     private_space: {
         en: "Private",
         ko: "비공개",
+    },
+    public_space_desc: {
+        en: "Anyone can see this space",
+        ko: "누구나 이 스페이스를 볼 수 있습니다",
+    },
+    private_space_desc: {
+        en: "Only invited members can access",
+        ko: "초대된 멤버만 접근할 수 있습니다",
     },
     visibility_updated_successfully: {
         en: "Visibility updated successfully.",
