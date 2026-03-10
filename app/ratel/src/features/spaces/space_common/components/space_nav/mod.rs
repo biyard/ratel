@@ -1,10 +1,22 @@
 use crate::features::spaces::space_common::*;
+mod participation_attributes_section;
 mod participation_card;
+mod participation_credential_section;
+mod participation_layover_header;
+mod participation_requirements_layover;
+mod participation_step_bar;
+mod participation_verification_section;
 mod space_user_login;
 mod space_user_profile;
 
 use crate::common::models::User;
+pub use participation_attributes_section::*;
 pub use participation_card::*;
+pub use participation_credential_section::*;
+pub use participation_layover_header::*;
+pub use participation_requirements_layover::*;
+pub use participation_step_bar::*;
+pub use participation_verification_section::*;
 pub use space_user_login::*;
 pub use space_user_profile::*;
 
