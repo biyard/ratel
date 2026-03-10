@@ -201,6 +201,8 @@ jobs:
           QDRANT_API_KEY: ${{secrets.DEV_QDRANT_API_KEY }}
 
           ECR: ${{ steps.ratel-ecr.outputs.registry }}/ratel/app-shell
+
+          WALLETCONNECT_PROJECT_ID: ${{ secrets.WALLETCONNECT_PROJECT_ID }}
         run: |
           npm i -D tailwindcss
           rm -rf ../../target/dx
