@@ -81,7 +81,7 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
                     menus,
                     user,
                     role,
-                    show_participation_card: false,
+                    show_participation_card: true,
                     credential_path,
                     login_handler: move |_| {
                         popup.open(rsx! {
