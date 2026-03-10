@@ -174,7 +174,6 @@ jobs:
       image: ${{ steps.build.outputs.image }}
 
     steps:
-
       - uses: actions/checkout@v4
 
       - uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -203,7 +202,6 @@ jobs:
         run: |
           cargo binstall dioxus-cli --force
 
-
       - name: Setup pnpm
         run: |
           corepack enable
@@ -224,7 +222,7 @@ jobs:
           COMMIT: pr-${{ github.sha }}
           ECR: ratel/app-shell
         run: |
-          npm i -D tailwindcss
+          npm install -D tailwindcss @tailwindcss/cli
           make build
           make docker
 
@@ -289,7 +287,6 @@ jobs:
         run: |
           cargo binstall dioxus-cli --force
 
-
       - name: Setup pnpm
         run: |
           corepack enable
@@ -329,7 +326,6 @@ jobs:
       #     ENV: local
       #   with:
       #     limit-access-to-actor: true
-
 
   playwright-tests:
     runs-on: ubuntu-latest
