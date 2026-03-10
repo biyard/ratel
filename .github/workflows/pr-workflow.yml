@@ -308,7 +308,7 @@ jobs:
           RUST_LOG: info
           ENV: local
         run: |
-          npm i -D tailwindcss
+          npm install -D tailwindcss @tailwindcss/cli
           make test
 
       # - name: Setup SSH session with tmate
