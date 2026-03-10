@@ -152,6 +152,29 @@ export async function disconnect() {
   connectedChainId = null;
 }
 
+// Open the wallet app for pending sign request
+// Tries session peer redirect, falls back to AppKit modal
+export async function openWalletApp() {
+  if (activeSession && activeSession.peer && activeSession.peer.metadata) {
+    const meta = activeSession.peer.metadata;
+    // Try native redirect first (works on mobile)
+    if (meta.redirect && meta.redirect.native) {
+      window.location.href = meta.redirect.native;
+      return;
+    }
+    if (meta.redirect && meta.redirect.universal) {
+      window.location.href = meta.redirect.universal;
+      return;
+    }
+  }
+
+  // Fallback: open AppKit modal which shows connected wallet
+  const { appKit } = await getClient();
+  if (appKit) {
+    await appKit.open();
+  }
+}
+
 export function isConnected() {
   return !!activeSession && !!connectedAddress;
 }

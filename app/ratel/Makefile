@@ -11,7 +11,7 @@ DYNAMO_TABLE_PREFIX ?= ratel-$(ENV)
 DYNAMO_ENDPOINT ?= none
 KAIA_ENDPOINT ?= https://public-en-kairos.node.kaia.io
 BLOCK_EXPLORER_URL ?= https://kairos.kaiascan.io
-
+WALLETCONNECT_PROJECT_ID ?= "WALLETCONNECT_PROJECT_ID"
 RUST_LOG ?= debug
 
 PORT ?= 8080
@@ -48,6 +48,7 @@ RUST_FLAG ?=
 
 test:
 	mkdir -p ./test-build-target/debug/deps/public
+	npx @tailwindcss/cli -i tailwind.css -o ./assets/tailwind.css
 	$(BUILD_ENV) CARGO_TARGET_DIR=./test-build-target cargo test --features server,bypass
 
 run:
