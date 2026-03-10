@@ -1,4 +1,5 @@
 #![allow(unused)]
+pub mod apps;
 mod controllers;
 mod hooks;
 mod menu;
