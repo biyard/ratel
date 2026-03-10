@@ -6,11 +6,15 @@ mod models;
 mod utils;
 mod views;
 
-use dioxus::prelude::*;
+use components::*;
+use i18n::*;
+use interop::*;
+use models::*;
+use utils::*;
+
+
+pub use views::*;
 
 pub use controllers::*;
-pub use views::IncentivePoolPage as SpaceAppIncentivePoolPage;
 
-use crate::common::*;
-
-type Result<T> = crate::common::Result<T>;
+use crate::*;

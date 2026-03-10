@@ -7,7 +7,7 @@ pub fn Button(
     #[props(default)] style: ButtonStyle,
     #[props(default)] shape: ButtonShape,
     #[props(default)] disabled: bool,
-
+    #[props(default)] loading: ReadSignal<bool>,
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
     onclick: Option<EventHandler<MouseEvent>>,
     children: Element,
@@ -15,7 +15,7 @@ pub fn Button(
     rsx! {
         button {
             class: "{size} {style} {shape} {class}",
-            disabled,
+            disabled: disabled || loading(),
             onclick: move |e| {
                 if disabled {
                     return;
@@ -25,7 +25,11 @@ pub fn Button(
                 }
             },
             ..attributes,
-            {children}
+            if loading() {
+                LoadingIndicator {}
+            } else {
+                {children}
+            }
         }
     }
 }

@@ -6,3 +6,4 @@ pub mod aws;
 pub mod password;
 #[cfg(feature = "server")]
 pub mod sha256;
+pub mod web;
