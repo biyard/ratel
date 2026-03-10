@@ -174,7 +174,6 @@ jobs:
       image: ${{ steps.build.outputs.image }}
 
     steps:
-
       - uses: actions/checkout@v4
 
       - uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -202,7 +201,6 @@ jobs:
       - name: Install Dioxus-cli
         run: |
           cargo binstall dioxus-cli --force
-
 
       - name: Setup pnpm
         run: |
@@ -289,7 +287,6 @@ jobs:
         run: |
           cargo binstall dioxus-cli --force
 
-
       - name: Setup pnpm
         run: |
           corepack enable
@@ -311,7 +308,7 @@ jobs:
           RUST_LOG: info
           ENV: local
         run: |
-          npm i -D tailwindcss
+          npm install -D tailwindcss @tailwindcss/cli
           make test
 
       # - name: Setup SSH session with tmate
@@ -329,7 +326,6 @@ jobs:
       #     ENV: local
       #   with:
       #     limit-access-to-actor: true
-
 
   playwright-tests:
     runs-on: ubuntu-latest

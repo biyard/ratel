@@ -40,6 +40,9 @@ extern "C" {
 
     #[wasm_bindgen(js_name = isConnected)]
     pub fn wallet_is_connected() -> bool;
+
+    #[wasm_bindgen(js_name = openWalletApp)]
+    fn wallet_open_app_promise() -> Promise;
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -77,6 +80,14 @@ pub async fn wallet_get_address() -> crate::common::Result<Option<String>> {
         .await
         .map_err(|e| Error::Unknown(format!("Failed to get address: {:?}", e)))?;
     Ok(js_value.as_string())
+}
+
+/// Open the wallet app (deep link or AppKit modal) for pending sign requests
+pub async fn wallet_open_app() -> crate::common::Result<()> {
+    JsFuture::from(wallet_open_app_promise())
+        .await
+        .map_err(|e| Error::Unknown(format!("Failed to open wallet app: {:?}", e)))?;
+    Ok(())
 }
 
 pub async fn wallet_disconnect() -> crate::common::Result<()> {
