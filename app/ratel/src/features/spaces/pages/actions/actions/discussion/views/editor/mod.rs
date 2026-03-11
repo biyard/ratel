@@ -67,11 +67,9 @@ pub fn DiscussionActionEditorPage(
             spawn(async move {
                 match delete_discussion(space_id.clone(), discussion_id).await {
                     Ok(_) => {
-                        nav.push(
-                            crate::features::spaces::space_common::types::route::space_actions(
-                                &space_id,
-                            ),
-                        );
+                        nav.push(Route::SpaceActionsPage {
+                            space_id: space_id.clone(),
+                        });
                     }
                     Err(e) => {
                         error!("Failed to delete discussion: {:?}", e);
