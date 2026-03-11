@@ -17,6 +17,7 @@ use types::*;
 pub use menu::get_nav_item;
 pub use views::*;
 
+use components::Pagination;
 use components::*;
 
 use crate::*;
