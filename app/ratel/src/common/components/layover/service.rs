@@ -15,9 +15,9 @@ pub enum LayoverSize {
     #[default]
     #[strum(serialize = "w-full")]
     Full,
-    #[strum(serialize = "w-[50%] !bg-[#1A1A1A] max-tablet:w-full")]
+    #[strum(serialize = "w-[50%] max-tablet:w-full")]
     Half,
-    #[strum(serialize = "max-w-[800px] !bg-[#1A1A1A] max-tablet:!max-w-full")]
+    #[strum(serialize = "max-w-[800px] max-tablet:max-w-full")]
     Medium,
     #[strum(serialize = "w-[337px] max-tablet:w-full")]
     Small,
