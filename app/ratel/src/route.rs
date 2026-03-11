@@ -38,6 +38,8 @@ use crate::features::spaces::pages::actions::actions::quiz::QuizActionPage;
 #[cfg(feature = "spaces")]
 use crate::features::spaces::pages::actions::actions::subscription::FollowActionPage;
 #[cfg(feature = "spaces")]
+use crate::features::spaces::pages::actions::SpaceActionsLayout;
+#[cfg(feature = "spaces")]
 use crate::features::spaces::pages::actions::SpaceActionsPage;
 
 #[cfg(feature = "teams")]
@@ -99,25 +101,28 @@ pub enum Route {
                     #[cfg(feature = "spaces")]
                     SpaceActionsPage { space_id: SpacePartition },
 
-                    #[cfg_attr(feature="spaces", route("/discussions/:discussion_id/edit"))]
-                    #[cfg(feature = "spaces")]
-                    DiscussionActionEditorPage { space_id: SpacePartition, discussion_id: SpacePostEntityType },
-
                     #[cfg_attr(feature="spaces", route("/discussions/:discussion_id"))]
                     #[cfg(feature = "spaces")]
                     DiscussionActionPage { space_id: SpacePartition, discussion_id: SpacePostEntityType },
 
-                    #[cfg_attr(feature="spaces", route("/polls/:poll_id"))]
-                    #[cfg(feature = "spaces")]
-                    PollActionPage { space_id: SpacePartition, poll_id: SpacePollEntityType },
+                    #[cfg_attr(feature="spaces", layout(SpaceActionsLayout))]
+                        #[cfg_attr(feature="spaces", route("/discussions/:discussion_id/edit"))]
+                        #[cfg(feature = "spaces")]
+                        DiscussionActionEditorPage { space_id: SpacePartition, discussion_id: SpacePostEntityType },
 
-                    #[cfg_attr(feature="spaces", route("/quizzes/:quiz_id"))]
-                    #[cfg(feature = "spaces")]
-                    QuizActionPage { space_id: SpacePartition, quiz_id: SpaceQuizEntityType },
 
-                    #[cfg_attr(feature="spaces", route("/follows"))]
-                    #[cfg(feature = "spaces")]
-                    FollowActionPage { space_id: SpacePartition },
+                        #[cfg_attr(feature="spaces", route("/polls/:poll_id"))]
+                        #[cfg(feature = "spaces")]
+                        PollActionPage { space_id: SpacePartition, poll_id: SpacePollEntityType },
+
+                        #[cfg_attr(feature="spaces", route("/quizzes/:quiz_id"))]
+                        #[cfg(feature = "spaces")]
+                        QuizActionPage { space_id: SpacePartition, quiz_id: SpaceQuizEntityType },
+
+                        #[cfg_attr(feature="spaces", route("/follows"))]
+                        #[cfg(feature = "spaces")]
+                        FollowActionPage { space_id: SpacePartition },
+                    #[cfg_attr(feature="spaces", end_layout)]
 
                 // #[cfg_attr(feature="spaces", end_layout)]
             #[cfg_attr(feature="spaces", end_nest)]
