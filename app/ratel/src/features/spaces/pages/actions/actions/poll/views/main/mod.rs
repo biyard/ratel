@@ -8,12 +8,12 @@ use participant::PollParticipantPage;
 mod viewer;
 use viewer::PollViewerPage;
 
-use participant::*;
 use crate::features::spaces::space_common::hooks::use_space_role;
+use participant::*;
 use viewer::*;
 
 #[component]
-pub fn MainPage(space_id: SpacePartition, poll_id: SpacePollEntityType) -> Element {
+pub fn PollActionPage(space_id: SpacePartition, poll_id: SpacePollEntityType) -> Element {
     let role = use_space_role()();
 
     match role {

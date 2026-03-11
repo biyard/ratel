@@ -37,14 +37,6 @@ pub fn QuizViewerPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) ->
 
     rsx! {
         div { class: "flex w-full flex-col gap-4",
-            Button {
-                size: ButtonSize::Inline,
-                style: ButtonStyle::Text,
-                class: "flex items-center gap-1 text-sm text-neutral-400 hover:text-white transition-colors w-fit",
-                onclick: move |_| nav.go_back(),
-                "← {tr.btn_back}"
-            }
-
             match current_section() {
                 QuizCreatorSection::Overview => rsx! {
                     OverviewPage {

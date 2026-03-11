@@ -13,7 +13,7 @@ use participant::*;
 use viewer::*;
 
 #[component]
-pub fn MainPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) -> Element {
+pub fn QuizActionPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) -> Element {
     let role = use_space_role()();
 
     match role {
