@@ -1,11 +1,11 @@
-use crate::features::spaces::pages::actions::actions::discussion::controllers::{
-    UpdateDiscussionRequest, delete_discussion, get_discussion, update_discussion,
-};
-use crate::features::spaces::pages::actions::actions::discussion::*;
+use super::*;
 use crate::features::spaces::space_common::types::space_page_actions_discussion_key;
 
 #[component]
-pub fn EditorPage(space_id: SpacePartition, discussion_id: SpacePostEntityType) -> Element {
+pub fn DiscussionActionEditorPage(
+    space_id: SpacePartition,
+    discussion_id: SpacePostEntityType,
+) -> Element {
     let nav = navigator();
     let key = space_page_actions_discussion_key(&space_id, &discussion_id);
     let discussion_loader = use_query(&key, {
@@ -67,7 +67,9 @@ pub fn EditorPage(space_id: SpacePartition, discussion_id: SpacePostEntityType) 
             spawn(async move {
                 match delete_discussion(space_id.clone(), discussion_id).await {
                     Ok(_) => {
-                        nav.push(crate::features::spaces::space_common::types::route::space_actions(&space_id));
+                        nav.push(Route::SpaceActionsPage {
+                            space_id: space_id.clone(),
+                        });
                     }
                     Err(e) => {
                         error!("Failed to delete discussion: {:?}", e);
@@ -82,18 +84,18 @@ pub fn EditorPage(space_id: SpacePartition, discussion_id: SpacePostEntityType) 
             // Header
             div { class: "flex justify-between items-center",
                 button {
-                    class: "flex items-center gap-2 text-sm text-neutral-400 hover:text-white light:text-neutral-600 light:hover:text-neutral-900 transition-colors",
+                    class: "flex gap-2 items-center text-sm transition-colors hover:text-white text-neutral-400 light:text-neutral-600 light:hover:text-neutral-900",
                     onclick: on_back,
                     "← Back"
                 }
                 div { class: "flex gap-2",
                     button {
-                        class: "px-4 py-2 rounded-lg border border-red-500 text-red-500 text-sm font-bold hover:bg-red-500/10 transition-colors",
+                        class: "py-2 px-4 text-sm font-bold text-red-500 rounded-lg border border-red-500 transition-colors hover:bg-red-500/10",
                         onclick: on_delete,
                         "Delete"
                     }
                     button {
-                        class: "px-4 py-2 rounded-lg bg-yellow-400 light:bg-yellow-500 text-neutral-900 text-sm font-bold hover:opacity-90 transition-opacity",
+                        class: "py-2 px-4 text-sm font-bold bg-yellow-400 rounded-lg transition-opacity hover:opacity-90 light:bg-yellow-500 text-neutral-900",
                         onclick: on_save,
                         "Save"
                     }
@@ -108,7 +110,7 @@ pub fn EditorPage(space_id: SpacePartition, discussion_id: SpacePostEntityType) 
                         "Title"
                     }
                     input {
-                        class: "w-full px-4 py-3 rounded-lg bg-neutral-800 light:bg-neutral-100 border border-neutral-700 light:border-neutral-300 text-white light:text-neutral-900 text-base placeholder-neutral-500",
+                        class: "py-3 px-4 w-full text-base text-white rounded-lg border bg-neutral-800 light:bg-neutral-100 border-neutral-700 light:border-neutral-300 light:text-neutral-900 placeholder-neutral-500",
                         placeholder: "Enter discussion title...",
                         value: "{title}",
                         oninput: move |e| title.set(e.value()),
@@ -121,7 +123,7 @@ pub fn EditorPage(space_id: SpacePartition, discussion_id: SpacePostEntityType) 
                         "Category"
                     }
                     input {
-                        class: "w-full px-4 py-3 rounded-lg bg-neutral-800 light:bg-neutral-100 border border-neutral-700 light:border-neutral-300 text-white light:text-neutral-900 text-sm placeholder-neutral-500",
+                        class: "py-3 px-4 w-full text-sm text-white rounded-lg border bg-neutral-800 light:bg-neutral-100 border-neutral-700 light:border-neutral-300 light:text-neutral-900 placeholder-neutral-500",
                         placeholder: "Enter category (optional)...",
                         value: "{category_name}",
                         oninput: move |e| category_name.set(e.value()),
@@ -134,7 +136,7 @@ pub fn EditorPage(space_id: SpacePartition, discussion_id: SpacePostEntityType) 
                         "Content"
                     }
                     textarea {
-                        class: "w-full min-h-[300px] px-4 py-3 rounded-lg bg-neutral-800 light:bg-neutral-100 border border-neutral-700 light:border-neutral-300 text-white light:text-neutral-900 text-sm placeholder-neutral-500 resize-y",
+                        class: "py-3 px-4 w-full text-sm text-white rounded-lg border resize-y min-h-[300px] bg-neutral-800 light:bg-neutral-100 border-neutral-700 light:border-neutral-300 light:text-neutral-900 placeholder-neutral-500",
                         placeholder: "Write your discussion content...",
                         value: "{html_contents}",
                         oninput: move |e| html_contents.set(e.value()),

@@ -1,2 +1,2 @@
 mod main;
-pub use main::MainPage;
+pub use main::QuizActionPage;

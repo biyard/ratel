@@ -2,10 +2,11 @@ mod controllers;
 mod i18n;
 mod views;
 
-use controllers::*;
 use i18n::*;
 
+pub use controllers::*;
 pub use views::*;
 
-use super::super::*;
+pub use crate::features::spaces::space_common::controllers::{update_space, UpdateSpaceRequest};
+pub use crate::features::spaces::space_common::hooks::use_space;
 use crate::*;

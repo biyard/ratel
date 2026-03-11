@@ -2,6 +2,7 @@ use crate::common::*;
 
 #[component]
 pub fn LoadingIndicator(
+    #[props(default = "300px".to_string())] max_width: String,
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
 ) -> Element {
     rsx! {
@@ -10,6 +11,7 @@ pub fn LoadingIndicator(
                 src: asset!("/assets/animations/loading.lottie"),
                 "autoplay": true,
                 "loop": true,
+                max_width,
                 ..attributes,
             }
         }
