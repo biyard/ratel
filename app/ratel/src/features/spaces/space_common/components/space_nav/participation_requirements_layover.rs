@@ -1,5 +1,14 @@
 use super::*;
 
+translate! {
+    ParticipationRequirementsLayoverTranslate;
+
+    join_space: {
+        en: "Join Space",
+        ko: "스페이스 참여",
+    },
+}
+
 #[component]
 pub fn ParticipationRequirementsLayover(
     space_id: SpacePartition,
@@ -7,6 +16,7 @@ pub fn ParticipationRequirementsLayover(
         crate::features::spaces::controllers::panel_requirements::PanelRequirementStatus,
     >,
 ) -> Element {
+    let tr: ParticipationRequirementsLayoverTranslate = use_translate();
     let mut current_step = use_signal(|| ParticipationLayoverStep::SeeYourDifference);
     let mut current_requirements = use_signal(|| requirements);
 
@@ -23,7 +33,7 @@ pub fn ParticipationRequirementsLayover(
 
     rsx! {
         div { class: "flex h-full w-full flex-col bg-[#1A1A1A] text-web-font-primary",
-            ParticipationLayoverHeader { title: "Join Space".to_string() }
+            ParticipationLayoverHeader { title: tr.join_space.to_string() }
             ParticipationStepBar { current_step: current_step() }
 
             match current_step() {
