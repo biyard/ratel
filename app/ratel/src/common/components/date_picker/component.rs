@@ -78,7 +78,6 @@ pub fn DatePicker(props: DatePickerProps) -> Element {
 #[component]
 pub fn DateRangePicker(props: DateRangePickerProps) -> Element {
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
         div {
             date_picker::DateRangePicker {
                 class: "date-picker",

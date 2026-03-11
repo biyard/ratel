@@ -23,7 +23,7 @@ pub struct SeparatorProps {
 
 #[component]
 pub fn Separator(props: SeparatorProps) -> Element {
-    let base = attributes!(button {
+    let base = attributes!(div {
         class: "separator {props.variant}"
     });
     let attributes = merge_attributes(vec![base, props.attributes]);
