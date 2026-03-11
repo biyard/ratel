@@ -1,3 +1,5 @@
+use crate::features::auth::User;
+use crate::features::posts::controllers::dto::*;
 use crate::features::posts::models::Category;
 use crate::*;
 
@@ -7,9 +9,9 @@ pub struct CreateCategoryRequest {
     pub name: String,
 }
 
-#[post("/api/categories")]
-pub async fn create_category_handler(req: CreateCategoryRequest) -> Result<Category> {
-    let conf = crate::config::get();
+#[post("/api/categories", user: User)]
+pub async fn create_category_handler(req: CreateCategoryRequest) -> Result<CategoryResponse> {
+    let conf = crate::features::posts::config::get();
     let cli = conf.dynamodb();
 
     if req.name.trim().is_empty() {
@@ -18,5 +20,7 @@ pub async fn create_category_handler(req: CreateCategoryRequest) -> Result<Categ
         ));
     }
 
-    Category::get_or_create_by_name(cli, req.name.trim().to_string()).await
+    Category::get_or_create_by_name(cli, req.name.trim().to_string())
+        .await
+        .map(CategoryResponse::from)
 }
