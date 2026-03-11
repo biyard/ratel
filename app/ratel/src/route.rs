@@ -6,16 +6,6 @@ use crate::features::my_follower::Route as MyFollowerRoute;
 use crate::features::posts::Route as PostRoute;
 
 #[cfg(feature = "spaces")]
-use crate::features::spaces::pages::actions::actions::discussion::Route as SpaceDiscussionRoute;
-#[cfg(feature = "spaces")]
-use crate::features::spaces::pages::actions::actions::poll::Route as SpacePollRoute;
-#[cfg(feature = "spaces")]
-use crate::features::spaces::pages::actions::actions::quiz::Route as SpaceQuizRoute;
-#[cfg(feature = "spaces")]
-use crate::features::spaces::pages::actions::actions::subscription::Route as SpaceSubscriptionRoute;
-#[cfg(feature = "spaces")]
-use crate::features::spaces::pages::actions::SpaceActionsPage;
-#[cfg(feature = "spaces")]
 use crate::features::spaces::pages::dashboard::SpaceDashboardPage;
 #[cfg(feature = "spaces")]
 use crate::features::spaces::pages::overview::SpaceOverviewPage;
@@ -35,6 +25,20 @@ use crate::features::spaces::pages::apps::apps::incentive_pool::SpaceIncentivePo
 use crate::features::spaces::pages::apps::Layout as SpaceAppsLayout;
 #[cfg(feature = "spaces")]
 use crate::features::spaces::pages::apps::SpaceAppsPage;
+
+// Space Actions
+#[cfg(feature = "spaces")]
+use crate::features::spaces::pages::actions::actions::discussion::{
+    DiscussionActionEditorPage, DiscussionActionPage,
+};
+#[cfg(feature = "spaces")]
+use crate::features::spaces::pages::actions::actions::poll::PollActionPage;
+#[cfg(feature = "spaces")]
+use crate::features::spaces::pages::actions::actions::quiz::QuizActionPage;
+#[cfg(feature = "spaces")]
+use crate::features::spaces::pages::actions::actions::subscription::FollowActionPage;
+#[cfg(feature = "spaces")]
+use crate::features::spaces::pages::actions::SpaceActionsPage;
 
 #[cfg(feature = "teams")]
 use crate::features::teams::Route as TeamRoute;
@@ -88,21 +92,47 @@ pub enum Route {
             #[cfg_attr(feature="spaces", route("/overview"))]
             #[cfg(feature = "spaces")]
             SpaceOverviewPage { space_id: SpacePartition },
-            #[cfg_attr(feature="spaces", route("/actions"))]
-            #[cfg(feature = "spaces")]
-            SpaceActionsPage { space_id: SpacePartition },
-            #[cfg_attr(feature="spaces", route("/actions/polls/:..rest"))]
-            #[cfg(feature = "spaces")]
-            SpacePoll { space_id: SpacePartition, rest: Vec<String> },
-            #[cfg_attr(feature="spaces", route("/actions/quizzes/:..rest"))]
-            #[cfg(feature = "spaces")]
-            SpaceQuiz { space_id: SpacePartition, rest: Vec<String> },
-            #[cfg_attr(feature="spaces", route("/actions/discussions/:..rest"))]
-            #[cfg(feature = "spaces")]
-            SpaceDiscussion { space_id: SpacePartition, rest: Vec<String> },
-            #[cfg_attr(feature="spaces", route("/actions/subscriptions/:..rest"))]
-            #[cfg(feature = "spaces")]
-            SpaceSubscription { space_id: SpacePartition, rest: Vec<String> },
+
+            #[cfg_attr(feature="spaces", nest("/actions"))]
+                // #[cfg_attr(feature="spaces", layout(SpaceAppsLayout))]
+                    #[cfg_attr(feature="spaces", route("/"))]
+                    #[cfg(feature = "spaces")]
+                    SpaceActionsPage { space_id: SpacePartition },
+
+                    #[cfg_attr(feature="spaces", route("/discussions/:discussion_id/edit"))]
+                    #[cfg(feature = "spaces")]
+                    DiscussionActionEditorPage { space_id: SpacePartition, discussion_id: SpacePostEntityType },
+
+                    #[cfg_attr(feature="spaces", route("/discussions/:discussion_id"))]
+                    #[cfg(feature = "spaces")]
+                    DiscussionActionPage { space_id: SpacePartition, discussion_id: SpacePostEntityType },
+
+                    #[cfg_attr(feature="spaces", route("/polls/:poll_id"))]
+                    #[cfg(feature = "spaces")]
+                    PollActionPage { space_id: SpacePartition, poll_id: SpacePollEntityType },
+
+                    #[cfg_attr(feature="spaces", route("/quizzes/:quiz_id"))]
+                    #[cfg(feature = "spaces")]
+                    QuizActionPage { space_id: SpacePartition, quiz_id: SpaceQuizEntityType },
+
+                    #[cfg_attr(feature="spaces", route("/follows"))]
+                    #[cfg(feature = "spaces")]
+                    FollowActionPage { space_id: SpacePartition },
+
+                // #[cfg_attr(feature="spaces", end_layout)]
+            #[cfg_attr(feature="spaces", end_nest)]
+
+    // #[nest("/spaces/:space_id/actions")]
+    //     #[route("/polls/:..rest")]
+    //     Poll { space_id: SpacePartition, rest: Vec<String> },
+    //     #[route("/quizzes/:..rest")]
+    //     Quiz { space_id: SpacePartition, rest: Vec<String> },
+    //     #[route("/discussions/:..rest")]
+    //     Discussion { space_id: SpacePartition, rest: Vec<String> },
+    //     #[route("/subscriptions/:..rest")]
+    //     Subscription { space_id: SpacePartition, rest: Vec<String> },
+    //     #[route("/:..rest")]
+    //     Main { space_id: SpacePartition, rest: Vec<String> },
 
 
             #[cfg_attr(feature="spaces", route("/report"))]
@@ -236,65 +266,5 @@ pub fn SpacePanelsAppPage(space_id: SpacePartition) -> Element {
 pub fn SpaceAppIncentivePoolPage(space_id: SpacePartition) -> Element {
     rsx! {
         crate::features::spaces::pages::apps::apps::incentive_pool::SpaceIncentivePoolAppPage { space_id }
-    }
-}
-
-#[cfg(feature = "spaces")]
-#[component]
-pub fn SpacePoll(space_id: SpacePartition, rest: Vec<String>) -> Element {
-    let router = use_context::<dioxus::router::RouterContext>();
-    let route: SpacePollRoute = router.current();
-
-    rsx! {
-        ChildRouter::<SpacePollRoute> {
-            route,
-            format_route_as_root_route: |r: SpacePollRoute| r.to_string(),
-            parse_route_from_root_route: |url: &str| { <SpacePollRoute as std::str::FromStr>::from_str(url).ok() },
-        }
-    }
-}
-
-#[cfg(feature = "spaces")]
-#[component]
-pub fn SpaceQuiz(space_id: SpacePartition, rest: Vec<String>) -> Element {
-    let router = use_context::<dioxus::router::RouterContext>();
-    let route: SpaceQuizRoute = router.current();
-
-    rsx! {
-        ChildRouter::<SpaceQuizRoute> {
-            route,
-            format_route_as_root_route: |r: SpaceQuizRoute| r.to_string(),
-            parse_route_from_root_route: |url: &str| { <SpaceQuizRoute as std::str::FromStr>::from_str(url).ok() },
-        }
-    }
-}
-
-#[cfg(feature = "spaces")]
-#[component]
-pub fn SpaceDiscussion(space_id: SpacePartition, rest: Vec<String>) -> Element {
-    let router = use_context::<dioxus::router::RouterContext>();
-    let route: SpaceDiscussionRoute = router.current();
-
-    rsx! {
-        ChildRouter::<SpaceDiscussionRoute> {
-            route,
-            format_route_as_root_route: |r: SpaceDiscussionRoute| r.to_string(),
-            parse_route_from_root_route: |url: &str| { <SpaceDiscussionRoute as std::str::FromStr>::from_str(url).ok() },
-        }
-    }
-}
-
-#[cfg(feature = "spaces")]
-#[component]
-pub fn SpaceSubscription(space_id: SpacePartition, rest: Vec<String>) -> Element {
-    let router = use_context::<dioxus::router::RouterContext>();
-    let route: SpaceSubscriptionRoute = router.current();
-
-    rsx! {
-        ChildRouter::<SpaceSubscriptionRoute> {
-            route,
-            format_route_as_root_route: |r: SpaceSubscriptionRoute| r.to_string(),
-            parse_route_from_root_route: |url: &str| { <SpaceSubscriptionRoute as std::str::FromStr>::from_str(url).ok() },
-        }
     }
 }
