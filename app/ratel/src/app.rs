@@ -37,6 +37,10 @@ pub fn App() -> Element {
     rsx! {
         document::Link { rel: "icon", href: crate::common::assets::FAVICON }
         document::Link { rel: "stylesheet", href: MAIN_CSS }
+        document::Link {
+            rel: "stylesheet",
+            href: asset!("/assets/dx-components-theme.css"),
+        }
         crate::common::SeoMeta {
             title: "Ratel – AI Knowledge Platform Powered by Human Essences",
             description: "Ratel is a participatory knowledge platform where users share expertise, opinions, and insights as structured “Essences”. AI agents learn from the knowledge base while users earn rewards through surveys, polls, and discussions.",
