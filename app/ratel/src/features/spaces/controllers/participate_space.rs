@@ -1,15 +1,14 @@
-use crate::features::spaces::models::{
-    InvitationStatus, SpaceInvitationMember, SpacePanelParticipant, SpacePanelQuota,
-    SpaceParticipant,
-};
-use crate::features::spaces::*;
-use crate::common::attribute::Gender;
 use crate::common::models::auth::{OptionalUser, User};
 use crate::common::models::space::SpaceCommon;
 use crate::common::utils::time::get_now_timestamp_millis;
 use crate::common::SpaceVisibility;
 use crate::features::posts::models::Post;
 use crate::features::posts::types::TeamGroupPermission;
+use crate::features::spaces::models::{
+    InvitationStatus, SpaceInvitationMember, SpacePanelParticipant, SpacePanelQuota,
+    SpaceParticipant,
+};
+use crate::features::spaces::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct ParticipateSpaceResponse {
@@ -126,14 +125,9 @@ async fn check_if_satisfying_panel_attribute(
 ) -> Result<()> {
     use crate::features::spaces::models::UserAttributesExt;
 
-    let panel_quota = SpacePanelQuota::query(
-        cli,
-        CompositePartition(space.pk.clone(), Partition::PanelAttribute),
-        SpacePanelQuota::opt_all().sk("SPACE_PANEL_ATTRIBUTE#".to_string()),
-    )
-    .await
-    .unwrap_or_default()
-    .0;
+    let panel_quota =
+        crate::features::spaces::controllers::panel_requirements::list_panel_quotas(cli, &space.pk)
+            .await?;
 
     if panel_quota.is_empty() {
         return Ok(());
@@ -142,6 +136,11 @@ async fn check_if_satisfying_panel_attribute(
     let user_attributes = user.get_attributes(cli).await?;
     let age: Option<u8> = user_attributes.age().and_then(|v| u8::try_from(v).ok());
     let gender = user_attributes.gender;
+    let has_university = user_attributes
+        .university
+        .as_ref()
+        .map(|value| !value.is_empty())
+        .unwrap_or(false);
 
     if space.remains <= 0 {
         return Err(Error::FullQuota);
@@ -152,13 +151,12 @@ async fn check_if_satisfying_panel_attribute(
             continue;
         }
 
-        if let EntityType::SpacePanelAttribute(label, _) = &q.sk {
-            if label.eq_ignore_ascii_case("university") {
-                continue;
-            }
-        }
-
-        if match_by_sk(age, gender, &q.sk) {
+        if crate::features::spaces::controllers::panel_requirements::panel_matches_user(
+            age,
+            gender,
+            has_university,
+            &q,
+        ) {
             let pk = q.pk;
             let sk = q.sk;
 
@@ -190,77 +188,4 @@ async fn check_if_satisfying_panel_attribute(
     }
 
     Err(Error::LackOfVerifiedAttributes)
-}
-
-// #[cfg(not(feature = "server"))]
-// async fn check_if_satisfying_panel_attribute(
-//     _space: &SpaceCommon,
-//     _cli: &(),
-//     _user: &crate::features::auth::User,
-// ) -> Result<()> {
-//     Ok(())
-// }
-
-fn match_by_sk(age: Option<u8>, gender: Option<Gender>, sk: &EntityType) -> bool {
-    if age.is_none() && gender.is_none() {
-        return false;
-    }
-
-    let (label_raw, value_raw) = match sk {
-        EntityType::SpacePanelAttribute(label, value) => (label.as_str(), value.as_str()),
-        _ => return false,
-    };
-
-    let label = label_raw.to_ascii_lowercase();
-    let value = value_raw.to_ascii_lowercase();
-
-    match label.as_str() {
-        "verifiable_attribute" => match value.as_str() {
-            v if v.starts_with("age") => match_age_rule(age, v),
-            v if v.starts_with("gender") => match_gender_rule(gender, v),
-            _ => false,
-        },
-        "collective_attribute" => true,
-        "gender" => {
-            let encoded = format!("gender:{value}");
-            match_gender_rule(gender, &encoded)
-        }
-        "university" => true,
-        _ => false,
-    }
-}
-
-fn match_age_rule(age: Option<u8>, v: &str) -> bool {
-    if v == "age" {
-        return age.is_some();
-    }
-
-    if let Some(rest) = v.strip_prefix("age:") {
-        if let Some((min_s, max_s)) = rest.split_once('-') {
-            if let (Ok(min), Ok(max)) = (min_s.trim().parse::<u8>(), max_s.trim().parse::<u8>()) {
-                return age.map(|a| a >= min && a <= max).unwrap_or(false);
-            }
-        } else if let Ok(specific) = rest.trim().parse::<u8>() {
-            return age.map(|a| a == specific).unwrap_or(false);
-        }
-    }
-
-    true
-}
-
-fn match_gender_rule(gender: Option<Gender>, v: &str) -> bool {
-    if v == "gender" {
-        return gender.is_some();
-    }
-
-    if let Some(rest) = v.strip_prefix("gender:") {
-        let want = rest.trim().to_ascii_lowercase();
-        return match (want.as_str(), gender) {
-            ("male", Some(Gender::Male)) => true,
-            ("female", Some(Gender::Female)) => true,
-            _ => false,
-        };
-    }
-
-    true
 }

@@ -115,6 +115,10 @@ pub enum Route {
                     #[cfg(feature = "spaces")]
                     SpaceFileAppPage { space_id: SpacePartition },
 
+                    #[cfg_attr(feature="spaces", route("/panels"))]
+                    #[cfg(feature = "spaces")]
+                    SpacePanelsAppPage { space_id: SpacePartition },
+
                     #[cfg_attr(feature="spaces", route("/incentive-pool"))]
                     #[cfg(feature = "spaces")]
                     SpaceIncentivePoolAppPage { space_id: SpacePartition },
@@ -191,5 +195,37 @@ pub fn TeamHome(teamname: String, rest: Vec<String>) -> Element {
             parse_route_from_root_route: |url: &str| { <TeamRoute as std::str::FromStr>::from_str(url).ok() },
 
         }
+    }
+}
+
+#[cfg(feature = "spaces")]
+#[component]
+pub fn SpaceAppGeneralPage(space_id: SpacePartition) -> Element {
+    rsx! {
+        crate::features::spaces::pages::apps::apps::general::SpaceGeneralAppPage { space_id }
+    }
+}
+
+#[cfg(feature = "spaces")]
+#[component]
+pub fn SpaceAppFilePage(space_id: SpacePartition) -> Element {
+    rsx! {
+        crate::features::spaces::pages::apps::apps::file::SpaceFileAppPage { space_id }
+    }
+}
+
+#[cfg(feature = "spaces")]
+#[component]
+pub fn SpacePanelsAppPage(space_id: SpacePartition) -> Element {
+    rsx! {
+        crate::features::spaces::pages::apps::apps::panels::SpacePanelsAppPage { space_id }
+    }
+}
+
+#[cfg(feature = "spaces")]
+#[component]
+pub fn SpaceAppIncentivePoolPage(space_id: SpacePartition) -> Element {
+    rsx! {
+        crate::features::spaces::pages::apps::apps::incentive_pool::SpaceIncentivePoolAppPage { space_id }
     }
 }
