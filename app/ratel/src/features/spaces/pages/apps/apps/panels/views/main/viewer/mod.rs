@@ -1,6 +1,6 @@
-mod i18n;
+use super::*;
 
-use crate::features::spaces::pages::apps::apps::panels::*;
+mod i18n;
 
 #[component]
 pub fn ViewerPage(space_id: SpacePartition) -> Element {

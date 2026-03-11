@@ -1,4 +1,4 @@
-use crate::features::spaces::pages::apps::apps::panels::*;
+use super::*;
 
 const PANELS_QUERY_KEY: &str = "Panels";
 
