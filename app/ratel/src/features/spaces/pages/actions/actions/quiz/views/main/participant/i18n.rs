@@ -43,6 +43,10 @@ translate! {
         en: "Score",
         ko: "점수",
     },
+    no_questions: {
+        en: "No questions yet.",
+        ko: "아직 질문이 없습니다.",
+    },
     status_pass: {
         en: "PASS",
         ko: "PASS",

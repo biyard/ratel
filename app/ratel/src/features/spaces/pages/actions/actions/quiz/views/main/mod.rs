@@ -8,8 +8,8 @@ use participant::QuizParticipantPage;
 mod viewer;
 use viewer::QuizViewerPage;
 
-use participant::*;
 use crate::features::spaces::space_common::hooks::use_space_role;
+use participant::*;
 use viewer::*;
 
 #[component]
