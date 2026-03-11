@@ -8,12 +8,12 @@ use participant::QuizParticipantPage;
 mod viewer;
 use viewer::QuizViewerPage;
 
-use participant::*;
 use crate::features::spaces::space_common::hooks::use_space_role;
+use participant::*;
 use viewer::*;
 
 #[component]
-pub fn MainPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) -> Element {
+pub fn QuizActionPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) -> Element {
     let role = use_space_role()();
 
     match role {

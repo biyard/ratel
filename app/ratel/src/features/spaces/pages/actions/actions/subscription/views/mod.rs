@@ -1,4 +1,4 @@
 mod main;
-pub use main::MainPage;
+pub use main::FollowActionPage;
 
 use super::*;
