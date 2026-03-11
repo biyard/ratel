@@ -5,7 +5,7 @@ use crate::features::spaces::pages::apps::apps::panels::*;
 use crate::features::spaces::space_common::hooks::use_space_role;
 
 #[component]
-pub fn HomePage(space_id: SpacePartition) -> Element {
+pub fn HomePage(space_id: ReadSignal<SpacePartition>) -> Element {
     let role = use_space_role()();
 
     if role == SpaceUserRole::Creator {
