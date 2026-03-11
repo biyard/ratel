@@ -5,6 +5,8 @@ pub struct UpdateQuizRequest {
     #[serde(default)]
     pub title: Option<String>,
     #[serde(default)]
+    pub description: Option<String>,
+    #[serde(default)]
     pub started_at: Option<i64>,
     #[serde(default)]
     pub ended_at: Option<i64>,
@@ -44,6 +46,10 @@ pub async fn update_quiz(
 
     if let Some(title) = req.title {
         updater = updater.with_title(title);
+    }
+
+    if let Some(description) = req.description {
+        updater = updater.with_description(description);
     }
 
     if req.started_at.is_some() || req.ended_at.is_some() {

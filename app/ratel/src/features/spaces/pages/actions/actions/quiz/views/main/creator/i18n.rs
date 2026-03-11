@@ -3,6 +3,10 @@ use crate::features::spaces::pages::actions::actions::quiz::*;
 translate! {
     QuizCreatorTranslate;
 
+    page_title: {
+        en: "Quiz",
+        ko: "퀴즈",
+    },
     btn_edit: {
         en: "Edit",
         ko: "편집",
@@ -19,6 +23,14 @@ translate! {
         en: "Back",
         ko: "뒤로",
     },
+    btn_next: {
+        en: "Next",
+        ko: "다음",
+    },
+    btn_done: {
+        en: "Done",
+        ko: "완료",
+    },
     no_questions: {
         en: "No questions added yet.",
         ko: "아직 질문이 없습니다.",
@@ -30,6 +42,14 @@ translate! {
     title_placeholder: {
         en: "Enter quiz title...",
         ko: "퀴즈 제목을 입력하세요...",
+    },
+    description_label: {
+        en: "Description",
+        ko: "설명",
+    },
+    description_placeholder: {
+        en: "Enter quiz description...",
+        ko: "퀴즈 설명을 입력하세요...",
     },
     retry_label: {
         en: "Retry Count",
@@ -46,5 +66,41 @@ translate! {
     pass_score_placeholder: {
         en: "Enter pass score...",
         ko: "통과 기준 점수를 입력하세요...",
+    },
+    overview_title: {
+        en: "Overview",
+        ko: "개요",
+    },
+    overview_description: {
+        en: "Configure the quiz title and introduction shown before participants start.",
+        ko: "참여 전에 보이는 퀴즈 제목과 소개를 설정합니다.",
+    },
+    upload_title: {
+        en: "Upload",
+        ko: "업로드",
+    },
+    upload_description: {
+        en: "Upload assets for this quiz section.",
+        ko: "이 퀴즈에 사용할 에셋을 업로드합니다.",
+    },
+    upload_placeholder: {
+        en: "Upload section UI will be added here.",
+        ko: "업로드 섹션 UI가 여기에 추가됩니다.",
+    },
+    quiz_section_title: {
+        en: "Quiz",
+        ko: "퀴즈",
+    },
+    quiz_section_description: {
+        en: "Create and manage quiz questions.",
+        ko: "퀴즈 문항을 만들고 관리합니다.",
+    },
+    setting_section_title: {
+        en: "Setting",
+        ko: "설정",
+    },
+    setting_section_description: {
+        en: "Manage schedule and scoring rules.",
+        ko: "일정과 점수 규칙을 관리합니다.",
     },
 }
