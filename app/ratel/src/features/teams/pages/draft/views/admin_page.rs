@@ -1,18 +1,15 @@
 use super::super::*;
-use dioxus::prelude::*;
 use crate::features::posts::components::{CreatePostButton, TeamDrafts};
+use crate::*;
 
 #[component]
 pub fn AdminPage(teamname: String, team_pk: TeamPartition) -> Element {
     let team_pk_str = team_pk.to_string();
 
     rsx! {
-        div { class: "flex relative flex-1 flex-row w-full",
-            div { class: "flex flex-1 flex-row max-mobile:px-2.5 w-full",
+        div { class: "flex relative flex-row flex-1 w-full",
+            div { class: "flex flex-row flex-1 w-full max-mobile:px-2.5",
                 SuspenseBoundary {
-                    fallback: |_| rsx! {
-                        div { class: "text-center text-gray-400 py-4", "Loading drafts..." }
-                    },
                     TeamDrafts { teamname: teamname.clone() }
                 }
             }

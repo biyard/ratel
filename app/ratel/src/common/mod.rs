@@ -51,6 +51,8 @@ pub use query::*;
 pub use run::*;
 
 pub use dioxus::prelude::*;
+// NOTE: it replaces dioxus::prelude::* and should be used after it.
+pub use components::SuspenseBoundary;
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
 #[cfg(feature = "server")]

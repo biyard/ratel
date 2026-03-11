@@ -138,9 +138,7 @@ pub fn SpaceAppsPage(space_id: ReadSignal<SpacePartition>) -> Element {
                                                 style: ButtonStyle::Primary,
                                                 shape: ButtonShape::Square,
                                                 disabled: in_progress().is_some(),
-                                                onclick: move |_| {
-                                                    handle_toggle_app(app_type, false);
-                                                },
+                                                onclick: move |_| handle_toggle_app(app_type, false),
                                                 if is_progress {
                                                     {tr.installing}
                                                 } else {

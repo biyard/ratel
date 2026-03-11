@@ -1,55 +1,51 @@
-use crate::common::{SpacePartition, SpacePollEntityType, SpacePostEntityType, SpaceQuizEntityType};
+use crate::common::{
+    SpacePartition, SpacePollEntityType, SpacePostEntityType, SpaceQuizEntityType,
+};
+use crate::Route;
 
-pub fn space_root(space_id: &SpacePartition) -> String {
-    format!("/spaces/{space_id}/dashboard")
-}
-
-pub fn space_overview(space_id: &SpacePartition) -> String {
-    format!("/spaces/{space_id}/overview")
-}
-
-pub fn space_actions(space_id: &SpacePartition) -> String {
-    format!("/spaces/{space_id}/actions")
-}
+// DEPRECATED: Use the `Route` enum directly instead of these helper functions.
 
 pub fn space_action_poll(space_id: &SpacePartition, poll_id: &SpacePollEntityType) -> String {
-    format!("/spaces/{space_id}/actions/polls/{poll_id}")
+    Route::PollActionPage {
+        space_id: space_id.clone(),
+        poll_id: poll_id.clone(),
+    }
+    .to_string()
 }
 
 pub fn space_action_discussion(
     space_id: &SpacePartition,
     discussion_id: &SpacePostEntityType,
 ) -> String {
-    format!("/spaces/{space_id}/actions/discussions/{discussion_id}")
+    Route::DiscussionActionPage {
+        space_id: space_id.clone(),
+        discussion_id: discussion_id.clone(),
+    }
+    .to_string()
 }
 
 pub fn space_action_subscription(space_id: &SpacePartition) -> String {
-    format!("/spaces/{space_id}/actions/subscriptions")
+    Route::FollowActionPage {
+        space_id: space_id.clone(),
+    }
+    .to_string()
 }
 
 pub fn space_action_quiz(space_id: &SpacePartition, quiz_id: &SpaceQuizEntityType) -> String {
-    format!("/spaces/{space_id}/actions/quizzes/{quiz_id}")
+    Route::QuizActionPage {
+        space_id: space_id.clone(),
+        quiz_id: quiz_id.clone(),
+    }
+    .to_string()
 }
 
 pub fn space_action_discussion_edit(
     space_id: &SpacePartition,
     discussion_id: &SpacePostEntityType,
 ) -> String {
-    format!("/spaces/{space_id}/actions/discussions/{discussion_id}/edit")
-}
-
-pub fn space_apps(space_id: &SpacePartition) -> String {
-    format!("/spaces/{space_id}/apps")
-}
-
-pub fn space_app_main(space_id: &SpacePartition) -> String {
-    format!("/spaces/{space_id}/apps")
-}
-
-pub fn space_app_general(space_id: &SpacePartition) -> String {
-    format!("/spaces/{space_id}/apps/general")
-}
-
-pub fn space_app_incentive_pool(space_id: &SpacePartition) -> String {
-    format!("/spaces/{space_id}/apps/incentive-pool")
+    Route::DiscussionActionEditorPage {
+        space_id: space_id.clone(),
+        discussion_id: discussion_id.clone(),
+    }
+    .to_string()
 }

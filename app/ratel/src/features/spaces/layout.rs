@@ -21,6 +21,9 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
 
     let user_ctx = use_user_context();
     let user = user_ctx.read().user.clone();
+    let credential_path = user
+        .as_ref()
+        .map(|user| format!("/{}/credentials", user.username));
     let mut popup = use_popup();
     let tr: SpaceLayoutTranslate = use_translate();
     // FIXME
@@ -70,10 +73,13 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
         div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-space-bg text-web-font-primary",
             div { class: "hidden tablet:flex",
                 SpaceNav {
+                    space_id: space_id(),
                     logo: "https://metadata.ratel.foundation/logos/logo.png",
                     menus,
                     user,
                     role,
+                    show_participation_card: show_participate,
+                    credential_path,
                     login_handler: move |_| {
                         popup.open(rsx! {
                             LoginModal {}
@@ -85,17 +91,11 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
                 SpaceTop {
                     labels,
                     space_status,
-                    show_participate_button: show_participate,
+                    show_participate_button: false,
                     on_participant,
                 }
                 div { class: "flex overflow-auto flex-1 p-5 w-full bg-background rounded-tl-[10px]",
-                    SuspenseBoundary {
-                        fallback: |_| rsx! {
-                            LoadingIndicator { max_width: "300px" }
-                        },
-
-                        Outlet::<Route> {}
-                    }
+                    SuspenseBoundary { Outlet::<Route> {} }
                 }
             }
         }

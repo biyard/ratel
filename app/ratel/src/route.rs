@@ -6,8 +6,6 @@ use crate::features::my_follower::Route as MyFollowerRoute;
 use crate::features::posts::Route as PostRoute;
 
 #[cfg(feature = "spaces")]
-use crate::features::spaces::pages::actions::SpaceActionsPage;
-#[cfg(feature = "spaces")]
 use crate::features::spaces::pages::dashboard::SpaceDashboardPage;
 #[cfg(feature = "spaces")]
 use crate::features::spaces::pages::overview::SpaceOverviewPage;
@@ -27,6 +25,22 @@ use crate::features::spaces::pages::apps::apps::incentive_pool::SpaceIncentivePo
 use crate::features::spaces::pages::apps::Layout as SpaceAppsLayout;
 #[cfg(feature = "spaces")]
 use crate::features::spaces::pages::apps::SpaceAppsPage;
+
+// Space Actions
+#[cfg(feature = "spaces")]
+use crate::features::spaces::pages::actions::actions::discussion::{
+    DiscussionActionEditorPage, DiscussionActionPage,
+};
+#[cfg(feature = "spaces")]
+use crate::features::spaces::pages::actions::actions::poll::PollActionPage;
+#[cfg(feature = "spaces")]
+use crate::features::spaces::pages::actions::actions::quiz::QuizActionPage;
+#[cfg(feature = "spaces")]
+use crate::features::spaces::pages::actions::actions::subscription::FollowActionPage;
+#[cfg(feature = "spaces")]
+use crate::features::spaces::pages::actions::SpaceActionsLayout;
+#[cfg(feature = "spaces")]
+use crate::features::spaces::pages::actions::SpaceActionsPage;
 
 #[cfg(feature = "teams")]
 use crate::features::teams::Route as TeamRoute;
@@ -80,9 +94,39 @@ pub enum Route {
             #[cfg_attr(feature="spaces", route("/overview"))]
             #[cfg(feature = "spaces")]
             SpaceOverviewPage { space_id: SpacePartition },
-            #[cfg_attr(feature="spaces", route("/actions"))]
-            #[cfg(feature = "spaces")]
-            SpaceActionsPage { space_id: SpacePartition },
+
+            #[cfg_attr(feature="spaces", nest("/actions"))]
+                // #[cfg_attr(feature="spaces", layout(SpaceAppsLayout))]
+                    #[cfg_attr(feature="spaces", route("/"))]
+                    #[cfg(feature = "spaces")]
+                    SpaceActionsPage { space_id: SpacePartition },
+
+                    #[cfg_attr(feature="spaces", route("/discussions/:discussion_id"))]
+                    #[cfg(feature = "spaces")]
+                    DiscussionActionPage { space_id: SpacePartition, discussion_id: SpacePostEntityType },
+
+                    #[cfg_attr(feature="spaces", layout(SpaceActionsLayout))]
+                        #[cfg_attr(feature="spaces", route("/discussions/:discussion_id/edit"))]
+                        #[cfg(feature = "spaces")]
+                        DiscussionActionEditorPage { space_id: SpacePartition, discussion_id: SpacePostEntityType },
+
+
+                        #[cfg_attr(feature="spaces", route("/polls/:poll_id"))]
+                        #[cfg(feature = "spaces")]
+                        PollActionPage { space_id: SpacePartition, poll_id: SpacePollEntityType },
+
+                        #[cfg_attr(feature="spaces", route("/quizzes/:quiz_id"))]
+                        #[cfg(feature = "spaces")]
+                        QuizActionPage { space_id: SpacePartition, quiz_id: SpaceQuizEntityType },
+
+                        #[cfg_attr(feature="spaces", route("/follows"))]
+                        #[cfg(feature = "spaces")]
+                        FollowActionPage { space_id: SpacePartition },
+                    #[cfg_attr(feature="spaces", end_layout)]
+
+                // #[cfg_attr(feature="spaces", end_layout)]
+            #[cfg_attr(feature="spaces", end_nest)]
+
     // #[nest("/spaces/:space_id/actions")]
     //     #[route("/polls/:..rest")]
     //     Poll { space_id: SpacePartition, rest: Vec<String> },
@@ -114,6 +158,10 @@ pub enum Route {
                     #[cfg_attr(feature="spaces", route("/files"))]
                     #[cfg(feature = "spaces")]
                     SpaceFileAppPage { space_id: SpacePartition },
+
+                    #[cfg_attr(feature="spaces", route("/panels"))]
+                    #[cfg(feature = "spaces")]
+                    SpacePanelsAppPage { space_id: SpacePartition },
 
                     #[cfg_attr(feature="spaces", route("/incentive-pool"))]
                     #[cfg(feature = "spaces")]
@@ -191,5 +239,37 @@ pub fn TeamHome(teamname: String, rest: Vec<String>) -> Element {
             parse_route_from_root_route: |url: &str| { <TeamRoute as std::str::FromStr>::from_str(url).ok() },
 
         }
+    }
+}
+
+#[cfg(feature = "spaces")]
+#[component]
+pub fn SpaceAppGeneralPage(space_id: SpacePartition) -> Element {
+    rsx! {
+        crate::features::spaces::pages::apps::apps::general::SpaceGeneralAppPage { space_id }
+    }
+}
+
+#[cfg(feature = "spaces")]
+#[component]
+pub fn SpaceAppFilePage(space_id: SpacePartition) -> Element {
+    rsx! {
+        crate::features::spaces::pages::apps::apps::file::SpaceFileAppPage { space_id }
+    }
+}
+
+#[cfg(feature = "spaces")]
+#[component]
+pub fn SpacePanelsAppPage(space_id: SpacePartition) -> Element {
+    rsx! {
+        crate::features::spaces::pages::apps::apps::panels::SpacePanelsAppPage { space_id }
+    }
+}
+
+#[cfg(feature = "spaces")]
+#[component]
+pub fn SpaceAppIncentivePoolPage(space_id: SpacePartition) -> Element {
+    rsx! {
+        crate::features::spaces::pages::apps::apps::incentive_pool::SpaceIncentivePoolAppPage { space_id }
     }
 }
