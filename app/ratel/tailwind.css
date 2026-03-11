@@ -529,6 +529,11 @@ a {
    TAILWIND UTILITIES FOR SEMANTIC TOKENS
    ========================================================================== */
 @layer utilities {
+  .border-dashed {
+    border-style: dashed;
+    dashes: 5, 5;
+  }
+
   /* Text colors */
   .text-text-primary {
     color: var(--foreground);
@@ -801,14 +806,29 @@ h3 {
 }
 
 [data-variant="default"] .tabs-content-themed {
-    border: 1px solid var(--light, var(--primary-color-6))
-        var(--dark, var(--primary-color-7));
-    border-radius: 0.5rem;
-    background: var(--light, var(--primary-color))
-        var(--dark, var(--primary-color-3));
-    box-shadow: var(--light, 0 1px 2px rgb(0 0 0 / 18%)) var(--dark, none);
 }
 
 .tabs-content[data-state="inactive"] {
-    display: none;
+  display: none;
+}
+
+
+/* ==========================================================================
+   Separator
+   ========================================================================== */
+
+@theme static {
+  --color-tag-stroke: #a1a1a1;
+}
+
+.separator {
+  @apply border-t border-tag-stroke
+}
+
+.separator[data-orientation="horizontal"] {
+  @apply w-full h-[1px]
+}
+
+.separator[data-orientation="vertical"] {
+  @apply w-[1px] h-full
 }

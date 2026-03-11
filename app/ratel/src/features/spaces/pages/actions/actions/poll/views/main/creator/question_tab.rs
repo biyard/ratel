@@ -11,158 +11,56 @@ pub fn QuestionTab() -> Element {
     let space_id = ctx.space_id;
     let poll_id = ctx.poll_id;
 
-    let mut editing = use_signal(|| false);
     let mut questions = use_signal(|| poll().questions);
     let mut title = use_signal(|| poll().title);
 
-    let on_title_save = move |_| async move {
+    let save_title = move || async move {
         let req = UpdatePollRequest::Title { title: title() };
         if let Err(e) = update_poll(space_id(), poll_id(), req).await {
             toast.error(e);
         } else {
-            let keys = space_page_actions_poll_key(&space_id(), &poll_id());
-            invalidate_query(&keys);
+            poll.with_mut(|poll| poll.title = title());
         }
     };
 
-    let on_time_change = move |(start, end): (i64, i64)| async move {
-        let req = UpdatePollRequest::Time {
-            started_at: start,
-            ended_at: end,
-        };
-
-        if let Err(e) = update_poll(space_id(), poll_id(), req).await {
-            toast.error(e);
-        } else {
-            poll.restart();
-        }
-    };
-
-    let on_response_editable_change = move |_| async move {
-        let req = UpdatePollRequest::ResponseEditable {
-            response_editable: !poll().response_editable,
-        };
-        if let Err(e) = update_poll(space_id(), poll_id(), req).await {
-            toast.error(e);
-        } else {
-            poll.restart();
-        }
-    };
-
-    let on_save = move |_| async move {
-        let req = UpdatePollRequest::Question {
-            questions: questions(),
-        };
-        if let Err(e) = update_poll(space_id(), poll_id(), req).await {
-            toast.error(e);
-        } else {
-            poll.restart();
-            editing.set(false);
-        }
-    };
-
-    let on_discard = move |_| {
-        questions.set(poll().questions);
-        editing.set(false);
-    };
-
-    let on_edit = move |_| {
-        editing.set(true);
-    };
-
-    let poll = poll();
-    let can_edit = poll.user_response_count == 0;
+    let can_edit = poll().user_response_count == 0;
 
     rsx! {
         div { class: "flex flex-col gap-4 w-full",
             // Title
             div { class: "flex flex-col gap-1",
-                label { class: "text-sm font-medium text-neutral-400 light:text-neutral-600",
-                    "{tr.title_label}"
-                }
-                input {
-                    class: "py-3 px-4 w-full text-base text-white rounded-lg border bg-neutral-800 light:bg-neutral-100 border-neutral-700 light:border-neutral-300 light:text-neutral-900 placeholder-neutral-500",
-                    placeholder: "{tr.title_placeholder}",
-                    value: "{title}",
-                    oninput: move |e| title.set(e.value()),
-                    onblur: on_title_save,
-                }
-            }
-
-            // Time range setting
-            TimeRangeSetting {
-                started_at: poll.started_at,
-                ended_at: poll.ended_at,
-                on_change: on_time_change,
-            }
-
-            // Response editable checkbox
-            if can_edit {
-                div { class: "flex gap-3 items-center",
-                    input {
-                        r#type: "checkbox",
-                        class: "w-4 h-4",
-                        checked: poll.response_editable,
-                        onchange: on_response_editable_change,
-                    }
-                    div { class: "flex flex-col gap-0.5",
-                        label { class: "text-sm font-medium text-white cursor-pointer",
-                            "{tr.response_editable_label}"
-                        }
-                        p { class: "text-xs text-neutral-400", "{tr.response_editable_description}" }
-                    }
-                }
-            }
-
-            // Edit / Save / Discard toolbar
-            if can_edit {
-                div { class: "flex gap-2 justify-end",
-                    if editing() {
-                        button {
-                            class: "py-2 px-4 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-500",
-                            onclick: on_save,
-                            "{tr.btn_save}"
-                        }
-                        button {
-                            class: "py-2 px-4 text-sm rounded-lg border border-neutral-600 text-neutral-300 hover:bg-neutral-800",
-                            onclick: on_discard,
-                            "{tr.btn_discard}"
-                        }
-                    } else {
-                        button {
-                            class: "py-2 px-4 text-sm rounded-lg border border-neutral-600 text-neutral-300 hover:bg-neutral-800",
-                            onclick: on_edit,
-                            "{tr.btn_edit}"
-                        }
-                    }
+                Label { html_for: "title", {tr.title_label} }
+                Input {
+                    id: "title",
+                    name: "title",
+                    placeholder: tr.title_placeholder,
+                    value: title,
+                    oninput: move |e: FormEvent| title.set(e.value()),
+                    onblur: move |_| async move {
+                        save_title().await;
+                    },
+                    onconfirm: move |_| async move {
+                        save_title().await;
+                    },
+                    oncancel: move |_| {
+                        title.set(poll().title);
+                    },
                 }
             }
 
             // Questions area
-            if editing() {
-                SurveyEditor { questions, on_save: move |_qs: Vec<Question>| {} }
-            } else {
-                if poll.questions.is_empty() {
-                    div { class: "flex justify-center items-center py-10 text-neutral-500",
-                        "{tr.no_questions}"
+            SurveyEditor {
+                questions,
+                on_save: move |questions: Vec<Question>| async move {
+                    let req = UpdatePollRequest::Question {
+                        questions: questions.clone(),
+                    };
+                    if let Err(e) = update_poll(space_id(), poll_id(), req).await {
+                        toast.error(e);
+                    } else {
+                        poll.with_mut(move |poll| poll.questions = questions);
                     }
-                }
-                for (idx , question) in poll.questions.iter().enumerate() {
-                    {
-                        let question = question.clone();
-                        rsx! {
-                            div { class: "p-4 rounded-lg border border-neutral-700 bg-neutral-900",
-                                QuestionViewer {
-                                    index: idx,
-                                    question,
-                                    answer: None,
-                                    disabled: true,
-                                    on_change: move |_ans: Answer| {},
-                                }
-                            }
-                        }
-                    }
-                }
+                },
             }
         }
     }
