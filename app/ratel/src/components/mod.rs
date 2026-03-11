@@ -11,3 +11,5 @@ pub use profile_dropdown::*;
 pub use team_creation_popup::*;
 #[cfg(feature = "users")]
 pub use user_sidemenu::*;
+
+pub use crate::common::components::*;
