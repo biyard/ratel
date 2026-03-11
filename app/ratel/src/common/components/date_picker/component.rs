@@ -8,31 +8,249 @@ use dioxus_primitives::{
     popover::{PopoverContentProps, PopoverTriggerProps},
     ContentAlign,
 };
-use time::{format_description, Date};
+use time::{ext::NumericalDuration, format_description, Date, OffsetDateTime};
 
-use crate::{Input, InputVariant, Separator};
+use strum::IntoEnumIterator;
+
+use crate::common::components::time_picker::TimePicker;
 
 use super::super::calendar::*;
 use super::super::popover::*;
+use super::super::select::*;
+
+#[derive(Debug, Clone, Copy, PartialEq, strum::EnumIter, strum::EnumCount)]
+pub enum Timezone {
+    Pacific,
+    Mountain,
+    Central,
+    Eastern,
+    Utc,
+    London,
+    Paris,
+    Istanbul,
+    Dubai,
+    Kolkata,
+    Bangkok,
+    Shanghai,
+    Seoul,
+    Sydney,
+}
+
+impl Timezone {
+    pub const fn label(&self) -> &'static str {
+        match self {
+            Timezone::Pacific => "Pacific (UTC-8)",
+            Timezone::Mountain => "Mountain (UTC-7)",
+            Timezone::Central => "Central (UTC-6)",
+            Timezone::Eastern => "Eastern (UTC-5)",
+            Timezone::Utc => "UTC (UTC+0)",
+            Timezone::London => "London (UTC+0)",
+            Timezone::Paris => "Paris (UTC+1)",
+            Timezone::Istanbul => "Istanbul (UTC+3)",
+            Timezone::Dubai => "Dubai (UTC+4)",
+            Timezone::Kolkata => "Kolkata (UTC+5:30)",
+            Timezone::Bangkok => "Bangkok (UTC+7)",
+            Timezone::Shanghai => "Shanghai (UTC+8)",
+            Timezone::Seoul => "Seoul (UTC+9)",
+            Timezone::Sydney => "Sydney (UTC+11)",
+        }
+    }
+
+    pub const fn short_label(&self) -> &'static str {
+        match self {
+            Timezone::Pacific => "PT",
+            Timezone::Mountain => "MT",
+            Timezone::Central => "CT",
+            Timezone::Eastern => "ET",
+            Timezone::Utc => "UTC",
+            Timezone::London => "GMT",
+            Timezone::Paris => "CET",
+            Timezone::Istanbul => "TRT",
+            Timezone::Dubai => "GST",
+            Timezone::Kolkata => "IST",
+            Timezone::Bangkok => "ICT",
+            Timezone::Shanghai => "CST",
+            Timezone::Seoul => "KST",
+            Timezone::Sydney => "AEDT",
+        }
+    }
+}
+
+impl Timezone {
+    /// Maps an IANA timezone name (e.g. "America/New_York") to the closest
+    /// `Timezone` variant. Returns `None` for unrecognized names.
+    pub fn from_iana(iana: &str) -> Option<Self> {
+        match iana {
+            // Pacific (UTC-8)
+            "America/Los_Angeles" | "America/Vancouver" | "America/Tijuana"
+            | "US/Pacific" | "PST8PDT" => Some(Timezone::Pacific),
+
+            // Mountain (UTC-7)
+            "America/Denver" | "America/Edmonton" | "America/Phoenix"
+            | "US/Mountain" | "MST7MDT" => Some(Timezone::Mountain),
+
+            // Central (UTC-6)
+            "America/Chicago" | "America/Winnipeg" | "America/Mexico_City"
+            | "US/Central" | "CST6CDT" => Some(Timezone::Central),
+
+            // Eastern (UTC-5)
+            "America/New_York" | "America/Toronto" | "America/Detroit"
+            | "US/Eastern" | "EST5EDT" => Some(Timezone::Eastern),
+
+            // UTC (UTC+0)
+            "UTC" | "Etc/UTC" | "Etc/GMT" | "GMT" => Some(Timezone::Utc),
+
+            // London (UTC+0 / UTC+1 BST)
+            "Europe/London" | "Europe/Dublin" | "Europe/Lisbon" => Some(Timezone::London),
+
+            // Paris (UTC+1)
+            "Europe/Paris" | "Europe/Berlin" | "Europe/Rome" | "Europe/Madrid"
+            | "Europe/Amsterdam" | "Europe/Brussels" | "Europe/Vienna"
+            | "Europe/Zurich" | "Europe/Stockholm" | "Europe/Oslo"
+            | "Europe/Copenhagen" | "Europe/Warsaw" | "Europe/Prague"
+            | "Europe/Budapest" | "CET" => Some(Timezone::Paris),
+
+            // Istanbul (UTC+3)
+            "Europe/Istanbul" | "Europe/Moscow" | "Europe/Minsk"
+            | "Asia/Riyadh" | "Asia/Baghdad" | "Africa/Nairobi" => Some(Timezone::Istanbul),
+
+            // Dubai (UTC+4)
+            "Asia/Dubai" | "Asia/Muscat" | "Asia/Tbilisi" | "Asia/Baku" => Some(Timezone::Dubai),
+
+            // Kolkata (UTC+5:30)
+            "Asia/Kolkata" | "Asia/Calcutta" | "Asia/Colombo" => Some(Timezone::Kolkata),
+
+            // Bangkok (UTC+7)
+            "Asia/Bangkok" | "Asia/Jakarta" | "Asia/Ho_Chi_Minh"
+            | "Asia/Saigon" => Some(Timezone::Bangkok),
+
+            // Shanghai (UTC+8)
+            "Asia/Shanghai" | "Asia/Hong_Kong" | "Asia/Taipei"
+            | "Asia/Singapore" | "Asia/Kuala_Lumpur" | "Asia/Makassar"
+            | "Asia/Manila" | "PRC" => Some(Timezone::Shanghai),
+
+            // Seoul (UTC+9)
+            "Asia/Seoul" | "Asia/Tokyo" | "Japan" | "ROK" => Some(Timezone::Seoul),
+
+            // Sydney (UTC+10/+11)
+            "Australia/Sydney" | "Australia/Melbourne" | "Australia/Brisbane"
+            | "Australia/Hobart" | "Pacific/Auckland" | "Pacific/Fiji" => Some(Timezone::Sydney),
+
+            _ => None,
+        }
+    }
+
+    /// Detects the user's local timezone from the browser environment.
+    /// Returns `Utc` on the server side or if detection fails.
+    pub fn detect_local() -> Self {
+        #[cfg(not(feature = "server"))]
+        {
+            js_sys::eval("Intl.DateTimeFormat().resolvedOptions().timeZone")
+                .ok()
+                .and_then(|v| v.as_string())
+                .and_then(|iana| Self::from_iana(&iana))
+                .unwrap_or(Timezone::Utc)
+        }
+        #[cfg(feature = "server")]
+        {
+            Timezone::Utc
+        }
+    }
+}
+
+impl std::fmt::Display for Timezone {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.short_label())
+    }
+}
 
 #[component]
-pub fn DateAndTimePicker() -> Element {
-    let mut selected_start_date = use_signal(|| None::<Date>);
-    let mut selected_end_date = use_signal(|| None::<Date>);
-    let format = format_description::parse("[year]-[month]-[day]").unwrap();
+pub fn TimezonePicker(#[props(default)] on_change: EventHandler<Timezone>) -> Element {
+    let local_tz = Timezone::detect_local();
+
+    let options = Timezone::iter().enumerate().map(|(i, tz)| {
+        rsx! {
+            SelectOption::<Option<Timezone>> { index: i, value: tz, text_value: "{tz}",
+                "{tz.label()}"
+                SelectItemIndicator {}
+            }
+        }
+    });
 
     rsx! {
+        div { class: "timezone-picker",
+            Select::<Option<Timezone>> {
+                placeholder: "Timezone",
+                default_value: Some(local_tz),
+                on_value_change: move |v: Option<Option<Timezone>>| {
+                    if let Some(Some(tz)) = v {
+                        on_change.call(tz);
+                    }
+                },
+                SelectTrigger { aria_label: "Select Timezone", min_width: "7rem", SelectValue {} }
+                SelectList { aria_label: "Timezone",
+                    SelectGroup { {options} }
+                }
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct DateTimeRange {
+    pub start_date: Option<Date>,
+    pub start_hour: u8,
+    pub start_minute: u8,
+    pub end_date: Option<Date>,
+    pub end_hour: u8,
+    pub end_minute: u8,
+}
+
+#[component]
+pub fn DateAndTimePicker(
+    #[props(default)] on_change: EventHandler<DateTimeRange>,
+) -> Element {
+    let now = OffsetDateTime::now_utc();
+    let next_hour = (now.hour() + 1) % 24;
+    let today = now.date();
+    let tomorrow = today.saturating_add(1.days());
+    let mut selected_start_date = use_signal(|| Some(today));
+    let mut selected_end_date = use_signal(|| Some(tomorrow));
+    let mut start_hour = use_signal(move || next_hour);
+    let mut start_minute = use_signal(|| 0u8);
+    let mut end_hour = use_signal(move || next_hour);
+    let mut end_minute = use_signal(|| 0u8);
+    let format = format_description::parse("[year]-[month]-[day]").unwrap();
+
+    let emit = move || {
+        on_change.call(DateTimeRange {
+            start_date: selected_start_date(),
+            start_hour: start_hour(),
+            start_minute: start_minute(),
+            end_date: selected_end_date(),
+            end_hour: end_hour(),
+            end_minute: end_minute(),
+        });
+    };
+
+    rsx! {
+        document::Link { rel: "stylesheet", href: asset!("./style.css") }
         div { class: "flex flex-row gap-4 items-center w-full",
             DatePicker {
                 selected_date: selected_start_date(),
                 on_value_change: move |v| {
                     selected_start_date.set(v);
+                    emit();
                 },
                 DatePickerInput { date: selected_start_date().and_then(|d| d.format(&format).ok()).unwrap_or_default() }
             }
-            input {
-                r#type: "time",
-                class: "flex flex-row flex-1 gap-1 justify-between items-center self-stretch bg-input-bg-regular border-input-stroker-regular rounded-[12px] border-[0.5px] p-[0.5em]",
+            TimePicker {
+                hour: next_hour,
+                on_change: move |(h, m)| {
+                    start_hour.set(h);
+                    start_minute.set(m);
+                    emit();
+                },
             }
 
             div { class: "h-[0.5px] w-[15px] bg-text-secondary" }
@@ -41,14 +259,21 @@ pub fn DateAndTimePicker() -> Element {
                 selected_date: selected_end_date(),
                 on_value_change: move |v| {
                     selected_end_date.set(v);
+                    emit();
                 },
                 DatePickerInput { date: selected_end_date().and_then(|d| d.format(&format).ok()).unwrap_or_default() }
             }
 
-            input {
-                r#type: "time",
-                class: "flex flex-row flex-1 gap-1 justify-between items-center self-stretch bg-input-bg-regular border-[0.5px] border-input-stroker-regular rounded-[12px] p-[0.5em]",
+            TimePicker {
+                hour: next_hour,
+                on_change: move |(h, m)| {
+                    end_hour.set(h);
+                    end_minute.set(m);
+                    emit();
+                },
             }
+
+            TimezonePicker {}
         }
     }
 }
@@ -56,9 +281,9 @@ pub fn DateAndTimePicker() -> Element {
 #[component]
 pub fn DatePicker(props: DatePickerProps) -> Element {
     rsx! {
-        div {
+        div { class: "flex-1 min-w-0",
             date_picker::DatePicker {
-                class: "flex-1 date-picker",
+                class: "flex-1 w-full date-picker",
                 on_value_change: props.on_value_change,
                 selected_date: props.selected_date,
                 disabled: props.disabled,
@@ -69,7 +294,7 @@ pub fn DatePicker(props: DatePickerProps) -> Element {
                 disabled_ranges: props.disabled_ranges,
                 roving_loop: props.roving_loop,
                 attributes: props.attributes,
-                date_picker::DatePickerPopover { popover_root: PopoverRoot, {props.children} }
+                date_picker::DatePickerPopover { class: "flex w-full", popover_root: PopoverRoot, {props.children} }
             }
         }
     }
@@ -100,9 +325,10 @@ pub fn DateRangePicker(props: DateRangePickerProps) -> Element {
 #[component]
 pub fn DatePickerInput(#[props(default)] date: String) -> Element {
     rsx! {
-        div { class: "flex-1 date-picker-group bg-input-bg-regular border-input-stroker-regular border-[0.5px] p-[0.5em] rounded-[12px]",
+        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        div { class: "flex-1 date-picker-group",
             DatePickerPopoverTrigger {
-                label { class: "flex flex-row justify-between items-center w-full min-w-0 h-8 rounded-[8px]",
+                div { class: "flex flex-row justify-between items-center w-full min-w-0 h-8 rounded-[8px]",
                     span { class: "grow", {date} }
 
                     icons::calendar::CalendarToday {
