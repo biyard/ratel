@@ -50,7 +50,7 @@ mod tests {
         Client, Config,
         config::{Credentials, Region},
     };
-    use crate::common::config::server::dynamodb::DynamoConfig;
+    use crate::dynamodb::DynamoConfig;
     use crate::common::aws_config::AwsConfig;
 
     async fn setup_ddb() -> Client {

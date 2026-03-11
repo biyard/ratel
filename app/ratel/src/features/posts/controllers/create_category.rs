@@ -9,7 +9,7 @@ pub struct CreateCategoryRequest {
     pub name: String,
 }
 
-#[post("/api/categories", user: User)]
+#[post("/api/categories", _user: User)]
 pub async fn create_category_handler(req: CreateCategoryRequest) -> Result<CategoryResponse> {
     let conf = crate::features::posts::config::get();
     let cli = conf.dynamodb();
