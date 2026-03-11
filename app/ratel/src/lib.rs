@@ -1,7 +1,7 @@
 #![allow(unused_imports, dead_code)]
 mod app;
 pub mod common;
-pub mod components;
+mod components;
 pub mod config;
 mod constants;
 pub mod contexts;
