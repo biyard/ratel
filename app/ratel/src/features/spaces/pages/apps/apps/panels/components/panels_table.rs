@@ -188,6 +188,7 @@ pub fn PanelsTable(
     panels_query_key: Vec<String>,
 ) -> Element {
     let tr: PanelsTableTranslate = use_translate();
+    let mut toast = use_toast();
     let mut editing_quotas = use_signal(HashMap::<String, String>::new);
 
     let visible_panels = panels
@@ -300,6 +301,7 @@ pub fn PanelsTable(
                                                             let space_id = space_id_for_confirm.clone();
                                                             let panel_id = panel_for_confirm.panel_id.clone();
                                                             let panels_query_key = panels_query_key_for_confirm.clone();
+                                                            let mut toast = toast;
                                                             spawn(async move {
                                                                 match update_panel_quota(
                                                                         space_id,
@@ -311,7 +313,10 @@ pub fn PanelsTable(
                                                                     .await
                                                                 {
                                                                     Ok(_) => invalidate_query(&panels_query_key),
-                                                                    Err(err) => error!("Failed to update panel row quota: {:?}", err),
+                                                                    Err(err) => {
+                                                                        error!("Failed to update panel row quota: {:?}", err);
+                                                                        toast.error(err);
+                                                                    }
                                                                 }
                                                             });
                                                         },
@@ -328,6 +333,7 @@ pub fn PanelsTable(
                                                             let space_id = space_id_for_blur.clone();
                                                             let panel_id = panel_for_blur.panel_id.clone();
                                                             let panels_query_key = panels_query_key_for_blur.clone();
+                                                            let mut toast = toast;
                                                             spawn(async move {
                                                                 match update_panel_quota(
                                                                         space_id,
@@ -339,7 +345,10 @@ pub fn PanelsTable(
                                                                     .await
                                                                 {
                                                                     Ok(_) => invalidate_query(&panels_query_key),
-                                                                    Err(err) => error!("Failed to update panel row quota: {:?}", err),
+                                                                    Err(err) => {
+                                                                        error!("Failed to update panel row quota: {:?}", err);
+                                                                        toast.error(err);
+                                                                    }
                                                                 }
                                                             });
                                                         },
@@ -359,10 +368,14 @@ pub fn PanelsTable(
                                                                     panel_id: panel_for_delete.panel_id.clone(),
                                                                 },
                                                             ];
+                                                            let mut toast = toast;
                                                             spawn(async move {
                                                                 match delete_panel_quotas(space_id, DeletePanelQuotaRequest { keys }).await {
                                                                     Ok(_) => invalidate_query(&panels_query_key),
-                                                                    Err(err) => error!("Failed to delete panel row: {:?}", err),
+                                                                    Err(err) => {
+                                                                        error!("Failed to delete panel row: {:?}", err);
+                                                                        toast.error(err);
+                                                                    }
                                                                 }
                                                             });
                                                         },
