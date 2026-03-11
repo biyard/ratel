@@ -61,7 +61,6 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
     }];
     let space_status = space.status.clone();
 
-
     let on_participant = move |_| async move {
         let space_id = space_id();
         let space_detail = space_key(&space_id);
@@ -74,7 +73,7 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
         div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-space-bg text-web-font-primary",
             div { class: "hidden tablet:flex",
                 SpaceNav {
-                    space_id: space_id.clone(),
+                    space_id: space_id(),
                     logo: "https://metadata.ratel.foundation/logos/logo.png",
                     menus,
                     user,
