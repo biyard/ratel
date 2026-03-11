@@ -36,6 +36,10 @@ translate! {
         en: "Go to Space",
         ko: "스페이스로 이동",
     },
+    category_placeholder: {
+        en: "Category",
+        ko: "카테고리",
+    },
     publishing: {
         en: "Publishing...",
         ko: "게시 중...",
@@ -100,7 +104,6 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
     let mut category_input = use_signal(|| "".to_string());
     let mut show_category_dropdown = use_signal(|| false);
     let mut is_creating_category = use_signal(|| false);
-    let mut category_error: Signal<Option<String>> = use_signal(|| None);
 
     let mut categories_query = use_infinite_query(move |bookmark| list_categories_handler(bookmark))?;
     let mut extra_categories = use_signal(|| vec![]);
@@ -280,11 +283,18 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
             }
 
             // Category selector
-            div { class: "relative w-full",
+            div {
+                class: "relative w-full",
+                onfocusout: move |_| {
+                    spawn(async move {
+                        crate::common::utils::time::sleep(std::time::Duration::from_millis(150)).await;
+                        show_category_dropdown.set(false);
+                    });
+                },
                 Input {
                     class: "w-full",
                     variant: InputVariant::Default,
-                    placeholder: "Category",
+                    placeholder: tr.category_placeholder,
                     value: category_input,
                     oninput: move |e: Event<FormData>| {
                         category_input.set(e.value());
@@ -316,13 +326,17 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                             }
                         }
 
-                        if !category_input().is_empty()
-                            && !categories().contains(&category_input())
+                        if !category_input().trim().is_empty()
+                            && !categories()
+                                .iter()
+                                .any(|c| c.to_lowercase() == category_input().trim().to_lowercase())
                         {
-                            div {
-                                class: "px-3 py-2 cursor-pointer text-primary text-sm hover:bg-muted",
+                            Button {
+                                class: "w-full px-3 py-2 text-primary text-sm",
+                                style: ButtonStyle::Text,
+                                shape: ButtonShape::Square,
+                                loading: is_creating_category(),
                                 onclick: move |_| {
-                                    if is_creating_category() { return; }
                                     is_creating_category.set(true);
 
                                     let new_cat = category_input();
@@ -340,17 +354,13 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                                                 show_category_dropdown.set(false);
                                             }
                                             Err(e) => {
-                                                category_error.set(Some(e.to_string()));
+                                                toast.error(e);
                                             }
                                         }
                                         is_creating_category.set(false);
                                     });
                                 },
-                                if is_creating_category() {
-                                    "Creating..."
-                                } else {
-                                    "Create \"{category_input()}\""
-                                }
+                                "Create \"{category_input()}\""
                             }
                         }
                     }
