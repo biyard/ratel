@@ -1,5 +1,22 @@
 use super::*;
 
+translate! {
+    ParticipationStepBarTranslate;
+
+    see_your_difference: {
+        en: "See your Difference",
+        ko: "차이 확인하기",
+    },
+    match_required_attributes: {
+        en: "Match Required Attributes",
+        ko: "필수 속성 맞추기",
+    },
+    create_credential: {
+        en: "Create Credential",
+        ko: "크리덴셜 생성",
+    },
+}
+
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ParticipationLayoverStep {
     SeeYourDifference = 1,
@@ -9,24 +26,26 @@ pub enum ParticipationLayoverStep {
 
 #[component]
 pub fn ParticipationStepBar(current_step: ParticipationLayoverStep) -> Element {
+    let tr: ParticipationStepBarTranslate = use_translate();
+
     rsx! {
         div { class: "flex w-full flex-col items-start bg-[#1A1A1A]",
             div { class: "flex w-full items-center justify-center gap-5 border-y border-[#262626] px-5 py-6 max-mobile:flex-col max-mobile:items-start max-mobile:gap-3",
                 StepBarItem {
                     step: 1,
-                    label: "See your Difference".to_string(),
+                    label: tr.see_your_difference.to_string(),
                     active: current_step >= ParticipationLayoverStep::SeeYourDifference,
                     show_line: true,
                 }
                 StepBarItem {
                     step: 2,
-                    label: "Match Required Attributes".to_string(),
+                    label: tr.match_required_attributes.to_string(),
                     active: current_step >= ParticipationLayoverStep::MatchRequiredAttributes,
                     show_line: true,
                 }
                 StepBarItem {
                     step: 3,
-                    label: "Create Credential".to_string(),
+                    label: tr.create_credential.to_string(),
                     active: current_step >= ParticipationLayoverStep::CreateCredential,
                     show_line: false,
                 }
