@@ -69,7 +69,6 @@ pub fn CreatorActionPage(space_id: ReadSignal<SpacePartition>) -> Element {
                     }
 
                     Button {
-                        //
                         style: ButtonStyle::Secondary,
                         onclick: move |_| {
                             layover

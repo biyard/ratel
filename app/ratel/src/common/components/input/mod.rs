@@ -28,12 +28,7 @@ pub fn Input(
     #[props(default)] variant: InputVariant,
     #[props(default)] class: String,
     #[props(default)] r#type: InputType,
-    #[props(default)] value: String,
-    #[props(optional)] placeholder: Option<String>,
-    #[props(default)] maxlength: usize,
     #[props(default = "off".to_string())] autocomplete: String,
-    #[props(default)] disabled: bool,
-    #[props(default)] name: String,
     oninput: Option<EventHandler<FormEvent>>,
     onchange: Option<EventHandler<FormEvent>>,
     oninvalid: Option<EventHandler<FormEvent>>,
@@ -58,24 +53,10 @@ pub fn Input(
     #[props(extends=input)]
     attributes: Vec<Attribute>,
 ) -> Element {
-    let mut attributes = attributes;
-    if maxlength > 0 {
-        attributes.push(Attribute::new(
-            "maxlength",
-            maxlength.to_string(),
-            None,
-            false,
-        ));
-    }
-
     rsx! {
         input {
             r#type: r#type.to_string(),
             class: "{variant} {class}",
-            name,
-            value,
-            placeholder,
-            disabled,
             autocomplete,
             oninput: move |e| _ = oninput.map(|callback| callback(e)),
             onchange: move |e| _ = onchange.map(|callback| callback(e)),
