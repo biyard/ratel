@@ -1,5 +1,7 @@
 mod main;
-pub use main::DiscussionMainPage;
+pub use main::DiscussionActionPage;
 
 mod editor;
-pub use editor::EditorPage;
+pub use editor::DiscussionActionEditorPage;
+
+use super::*;

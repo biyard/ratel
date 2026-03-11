@@ -1,17 +1,20 @@
 mod creator;
 pub(crate) mod viewer;
 
-use crate::features::spaces::pages::actions::actions::discussion::controllers::{get_discussion, list_comments};
-use crate::features::spaces::pages::actions::actions::discussion::*;
-use creator::CreatorMain;
+use super::*;
+
 use crate::features::spaces::space_common::hooks::use_space_role;
 use crate::features::spaces::space_common::types::{
     space_page_actions_discussion_comments_key, space_page_actions_discussion_key,
 };
+use creator::CreatorMain;
 use viewer::ViewerMain;
 
 #[component]
-pub fn DiscussionMainPage(space_id: SpacePartition, discussion_id: SpacePostEntityType) -> Element {
+pub fn DiscussionActionPage(
+    space_id: SpacePartition,
+    discussion_id: SpacePostEntityType,
+) -> Element {
     let key = space_page_actions_discussion_key(&space_id, &discussion_id);
     let discussion_loader = use_query(&key, {
         let space_id = space_id.clone();
