@@ -1,4 +1,3 @@
-use crate::features::spaces::pages::actions::actions::poll::*;
 mod creator;
 use creator::PollCreatorPage;
 
@@ -8,9 +7,10 @@ use participant::PollParticipantPage;
 mod viewer;
 use viewer::PollViewerPage;
 
-use crate::features::spaces::space_common::hooks::use_space_role;
 use participant::*;
 use viewer::*;
+
+use super::*;
 
 #[component]
 pub fn PollActionPage(space_id: SpacePartition, poll_id: SpacePollEntityType) -> Element {
