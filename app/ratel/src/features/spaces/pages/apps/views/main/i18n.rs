@@ -71,6 +71,7 @@ impl AppMainTranslate {
         match app_type {
             SpaceAppType::IncentivePool => self.app_description_incentive_pool,
             SpaceAppType::File => self.app_description_file,
+            SpaceAppType::Panels => self.app_description_panels,
             SpaceAppType::General => self.app_description_general,
         }
     }

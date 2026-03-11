@@ -24,6 +24,7 @@ impl SpaceAppType {
         match self {
             SpaceAppType::General => Route::SpaceGeneralAppPage { space_id },
             SpaceAppType::File => Route::SpaceFileAppPage { space_id },
+            SpaceAppType::Panels => Route::SpacePanelsAppPage { space_id },
             SpaceAppType::IncentivePool => Route::SpaceIncentivePoolAppPage { space_id },
         }
     }
@@ -33,6 +34,7 @@ impl SpaceAppType {
             SpaceAppType::General => "bg-green-500",
             SpaceAppType::IncentivePool => "bg-amber-500",
             SpaceAppType::File => "bg-violet-500",
+            SpaceAppType::Panels => "bg-sky-500",
         }
     }
 
@@ -57,6 +59,13 @@ impl SpaceAppType {
                     width: "24",
                     height: "24",
                     class: "text-white [&>path]:stroke-black",
+                }
+            },
+            SpaceAppType::Panels => rsx! {
+                icons::user::UserGroup {
+                    width: "24",
+                    height: "24",
+                    class: "text-white [&>path]:stroke-black [&>path]:fill-transparent",
                 }
             },
         }

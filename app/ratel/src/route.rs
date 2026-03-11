@@ -115,6 +115,10 @@ pub enum Route {
                     #[cfg(feature = "spaces")]
                     SpaceFileAppPage { space_id: SpacePartition },
 
+                    #[cfg_attr(feature="spaces", route("/panels"))]
+                    #[cfg(feature = "spaces")]
+                    SpacePanelsAppPage { space_id: SpacePartition },
+
                     #[cfg_attr(feature="spaces", route("/incentive-pool"))]
                     #[cfg(feature = "spaces")]
                     SpaceIncentivePoolAppPage { space_id: SpacePartition },
@@ -196,36 +200,32 @@ pub fn TeamHome(teamname: String, rest: Vec<String>) -> Element {
 
 #[cfg(feature = "spaces")]
 #[component]
-pub fn SpaceAppGeneralPage(space_id: SpacePartition, rest: Vec<String>) -> Element {
-    let _ = rest;
+pub fn SpaceAppGeneralPage(space_id: SpacePartition) -> Element {
     rsx! {
-        crate::features::spaces::pages::apps::apps::general::SpaceAppGeneralPage { space_id }
+        crate::features::spaces::pages::apps::apps::general::SpaceGeneralAppPage { space_id }
     }
 }
 
 #[cfg(feature = "spaces")]
 #[component]
-pub fn SpaceAppFilePage(space_id: SpacePartition, rest: Vec<String>) -> Element {
-    let _ = rest;
+pub fn SpaceAppFilePage(space_id: SpacePartition) -> Element {
     rsx! {
-        crate::features::spaces::pages::apps::apps::file::SpaceAppFilePage { space_id }
+        crate::features::spaces::pages::apps::apps::file::SpaceFileAppPage { space_id }
     }
 }
 
 #[cfg(feature = "spaces")]
 #[component]
-pub fn SpaceAppPanelsPage(space_id: SpacePartition, rest: Vec<String>) -> Element {
-    let _ = rest;
+pub fn SpacePanelsAppPage(space_id: SpacePartition) -> Element {
     rsx! {
-        crate::features::spaces::pages::apps::apps::panels::SpaceAppPanelsPage { space_id }
+        crate::features::spaces::pages::apps::apps::panels::SpacePanelsAppPage { space_id }
     }
 }
 
 #[cfg(feature = "spaces")]
 #[component]
-pub fn SpaceAppIncentivePoolPage(space_id: SpacePartition, rest: Vec<String>) -> Element {
-    let _ = rest;
+pub fn SpaceAppIncentivePoolPage(space_id: SpacePartition) -> Element {
     rsx! {
-        crate::features::spaces::pages::apps::apps::incentive_pool::SpaceAppIncentivePoolPage { space_id }
+        crate::features::spaces::pages::apps::apps::incentive_pool::SpaceIncentivePoolAppPage { space_id }
     }
 }
