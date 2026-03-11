@@ -80,12 +80,36 @@ translate! {
         ko: "업로드",
     },
     upload_description: {
-        en: "Upload assets for this quiz section.",
-        ko: "이 퀴즈에 사용할 에셋을 업로드합니다.",
+        en: "Upload quiz reference files for participants.",
+        ko: "참여자가 참고할 퀴즈 파일을 업로드합니다.",
     },
     upload_placeholder: {
         en: "Upload section UI will be added here.",
         ko: "업로드 섹션 UI가 여기에 추가됩니다.",
+    },
+    upload_drop_title: {
+        en: "Drag & Drop files here",
+        ko: "여기에 파일을 드래그 앤 드롭하세요",
+    },
+    upload_cta: {
+        en: "Upload",
+        ko: "업로드",
+    },
+    upload_supported_types: {
+        en: "PDF, DOCX, PPTX, XLSX, PNG, JPG, MP4, MOV",
+        ko: "PDF, DOCX, PPTX, XLSX, PNG, JPG, MP4, MOV",
+    },
+    upload_empty: {
+        en: "No uploaded files yet.",
+        ko: "아직 업로드된 파일이 없습니다.",
+    },
+    upload_view: {
+        en: "View",
+        ko: "보기",
+    },
+    upload_delete: {
+        en: "Delete",
+        ko: "삭제",
     },
     quiz_section_title: {
         en: "Quiz",

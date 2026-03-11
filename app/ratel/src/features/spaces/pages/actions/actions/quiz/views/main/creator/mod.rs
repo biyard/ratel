@@ -70,7 +70,13 @@ pub fn QuizCreatorPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) -
                     }
                 },
                 QuizCreatorSection::Upload => rsx! {
-                    UploadPage { current_section }
+                    UploadPage {
+                        space_id,
+                        quiz_id,
+                        initial_files: quiz.files.clone(),
+                        can_edit,
+                        current_section,
+                    }
                 },
                 QuizCreatorSection::Quiz => rsx! {
                     QuizPage {

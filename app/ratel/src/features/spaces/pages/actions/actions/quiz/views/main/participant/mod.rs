@@ -4,12 +4,9 @@ use super::creator::{QuizCreatorSection, QuizPage, SettingPage, UploadPage};
 use crate::features::spaces::pages::actions::actions::quiz::controllers::*;
 use crate::features::spaces::pages::actions::actions::quiz::*;
 use crate::features::spaces::space_common::types::space_page_actions_quiz_key;
-use i18n::QuizParticipantTranslate;
 
 #[component]
 pub fn QuizParticipantPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) -> Element {
-    let tr: QuizParticipantTranslate = use_translate();
-    let nav = navigator();
     let space_id = use_signal(|| space_id);
     let quiz_id = use_signal(|| quiz_id);
     let key = space_page_actions_quiz_key(&space_id(), &quiz_id());
@@ -50,7 +47,13 @@ pub fn QuizParticipantPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityTyp
                     }
                 },
                 QuizCreatorSection::Upload => rsx! {
-                    UploadPage { current_section }
+                    UploadPage {
+                        space_id,
+                        quiz_id,
+                        initial_files: quiz.files.clone(),
+                        can_edit: false,
+                        current_section,
+                    }
                 },
                 QuizCreatorSection::Quiz => rsx! {
                     QuizPage {
