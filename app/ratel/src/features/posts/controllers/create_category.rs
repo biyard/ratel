@@ -18,5 +18,5 @@ pub async fn create_category_handler(req: CreateCategoryRequest) -> Result<Categ
         ));
     }
 
-    Category::upsert_by_name(cli, req.name.trim().to_string()).await
+    Category::get_or_create_by_name(cli, req.name.trim().to_string()).await
 }
