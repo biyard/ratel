@@ -298,7 +298,7 @@ async fn rebuild_panels(
 
 #[component]
 pub fn AttributeGroups(
-    space_id: SpacePartition,
+    space_id: ReadSignal<SpacePartition>,
     panels: Vec<SpacePanelQuotaResponse>,
     current_quota: i64,
     panels_query_key: Vec<String>,
@@ -321,10 +321,8 @@ pub fn AttributeGroups(
     };
 
     let on_toggle_university = {
-        let space_id = space_id.clone();
         let keys = managed_keys.clone();
         move |_| {
-            let space_id = space_id.clone();
             let panels_query_key = panels_query_key_for_university.clone();
             let keys = keys.clone();
             let mut toast = toast;
@@ -333,7 +331,7 @@ pub fn AttributeGroups(
             let next_gender = has_gender;
             spawn(async move {
                 let result = rebuild_panels(
-                    space_id.clone(),
+                    space_id(),
                     keys,
                     build_panel_groups(next_university, next_age, next_gender, current_quota),
                 )
@@ -350,10 +348,8 @@ pub fn AttributeGroups(
         }
     };
     let on_toggle_age = {
-        let space_id = space_id.clone();
         let keys = managed_keys.clone();
         move |_| {
-            let space_id = space_id.clone();
             let panels_query_key = panels_query_key_for_age.clone();
             let keys = keys.clone();
             let mut toast = toast;
@@ -362,7 +358,7 @@ pub fn AttributeGroups(
             let next_gender = has_gender;
             spawn(async move {
                 let result = rebuild_panels(
-                    space_id.clone(),
+                    space_id(),
                     keys,
                     build_panel_groups(next_university, next_age, next_gender, current_quota),
                 )
@@ -379,10 +375,8 @@ pub fn AttributeGroups(
         }
     };
     let on_toggle_gender = {
-        let space_id = space_id.clone();
         let keys = managed_keys.clone();
         move |_| {
-            let space_id = space_id.clone();
             let panels_query_key = panels_query_key_for_gender.clone();
             let keys = keys.clone();
             let mut toast = toast;
@@ -391,7 +385,7 @@ pub fn AttributeGroups(
             let next_gender = !has_gender;
             spawn(async move {
                 let result = rebuild_panels(
-                    space_id.clone(),
+                    space_id(),
                     keys,
                     build_panel_groups(next_university, next_age, next_gender, current_quota),
                 )

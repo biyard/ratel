@@ -10,7 +10,7 @@ translate! {
 }
 
 #[component]
-pub fn TotalQuotas(space_id: SpacePartition, quota: i64) -> Element {
+pub fn TotalQuotas(space_id: ReadSignal<SpacePartition>, quota: i64) -> Element {
     let tr: TotalQuotasTranslate = use_translate();
     let space_ctx = use_space_context();
     let mut toast = use_toast();
@@ -25,18 +25,13 @@ pub fn TotalQuotas(space_id: SpacePartition, quota: i64) -> Element {
     });
 
     let on_confirm = {
-        let space_id = space_id.clone();
         move |_| {
             let next_quota = total_quota_input().parse::<i64>().unwrap_or_default();
-            let space_id = space_id.clone();
             let mut space_ctx = space_ctx;
             let mut toast = toast;
             spawn(async move {
-                match update_space(
-                    space_id.clone(),
-                    UpdateSpaceRequest::Quota { quotas: next_quota },
-                )
-                .await
+                match update_space(space_id(), UpdateSpaceRequest::Quota { quotas: next_quota })
+                    .await
                 {
                     Ok(_) => space_ctx.space.restart(),
                     Err(err) => {
@@ -48,18 +43,13 @@ pub fn TotalQuotas(space_id: SpacePartition, quota: i64) -> Element {
         }
     };
     let on_blur = {
-        let space_id = space_id.clone();
         move |_| {
             let next_quota = total_quota_input().parse::<i64>().unwrap_or_default();
-            let space_id = space_id.clone();
             let mut space_ctx = space_ctx;
             let mut toast = toast;
             spawn(async move {
-                match update_space(
-                    space_id.clone(),
-                    UpdateSpaceRequest::Quota { quotas: next_quota },
-                )
-                .await
+                match update_space(space_id(), UpdateSpaceRequest::Quota { quotas: next_quota })
+                    .await
                 {
                     Ok(_) => space_ctx.space.restart(),
                     Err(err) => {

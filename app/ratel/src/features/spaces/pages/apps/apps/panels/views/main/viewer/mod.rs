@@ -3,7 +3,7 @@ use super::*;
 mod i18n;
 
 #[component]
-pub fn ViewerPage(space_id: SpacePartition) -> Element {
+pub fn ViewerPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: i18n::PanelViewerTranslate = use_translate();
     let nav = navigator();
     let _ = space_id;

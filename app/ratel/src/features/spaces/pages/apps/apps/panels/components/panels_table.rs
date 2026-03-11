@@ -183,7 +183,7 @@ fn panel_attributes(panel: &SpacePanelQuotaResponse) -> Vec<PanelAttribute> {
 
 #[component]
 pub fn PanelsTable(
-    space_id: SpacePartition,
+    space_id: ReadSignal<SpacePartition>,
     panels: Vec<SpacePanelQuotaResponse>,
     panels_query_key: Vec<String>,
 ) -> Element {
@@ -243,9 +243,6 @@ pub fn PanelsTable(
                                         let input_key_for_input = input_key.clone();
                                         let input_key_for_confirm = input_key.clone();
                                         let input_key_for_blur = input_key.clone();
-                                        let space_id_for_confirm = space_id.clone();
-                                        let space_id_for_blur = space_id.clone();
-                                        let space_id_for_delete = space_id.clone();
                                         let panels_query_key_for_confirm = panels_query_key.clone();
                                         let panels_query_key_for_blur = panels_query_key.clone();
                                         let panels_query_key_for_delete = panels_query_key.clone();
@@ -298,13 +295,12 @@ pub fn PanelsTable(
                                                                 .with_mut(|map| {
                                                                     map.remove(&input_key_for_confirm);
                                                                 });
-                                                            let space_id = space_id_for_confirm.clone();
                                                             let panel_id = panel_for_confirm.panel_id.clone();
                                                             let panels_query_key = panels_query_key_for_confirm.clone();
                                                             let mut toast = toast;
                                                             spawn(async move {
                                                                 match update_panel_quota(
-                                                                        space_id,
+                                                                        space_id(),
                                                                         UpdatePanelQuotaRequest {
                                                                             panel_id,
                                                                             quota: next,
@@ -330,13 +326,12 @@ pub fn PanelsTable(
                                                                 .with_mut(|map| {
                                                                     map.remove(&input_key_for_blur);
                                                                 });
-                                                            let space_id = space_id_for_blur.clone();
                                                             let panel_id = panel_for_blur.panel_id.clone();
                                                             let panels_query_key = panels_query_key_for_blur.clone();
                                                             let mut toast = toast;
                                                             spawn(async move {
                                                                 match update_panel_quota(
-                                                                        space_id,
+                                                                        space_id(),
                                                                         UpdatePanelQuotaRequest {
                                                                             panel_id,
                                                                             quota: next,
@@ -361,7 +356,6 @@ pub fn PanelsTable(
                                                         class: "flex items-center justify-center size-8 !p-0 rounded-full !text-text-secondary hover:!bg-hover hover:!text-text-primary"
                                                             .to_string(),
                                                         onclick: move |_| {
-                                                            let space_id = space_id_for_delete.clone();
                                                             let panels_query_key = panels_query_key_for_delete.clone();
                                                             let keys = vec![
                                                                 DeletePanelKey {
@@ -370,7 +364,7 @@ pub fn PanelsTable(
                                                             ];
                                                             let mut toast = toast;
                                                             spawn(async move {
-                                                                match delete_panel_quotas(space_id, DeletePanelQuotaRequest { keys }).await {
+                                                                match delete_panel_quotas(space_id(), DeletePanelQuotaRequest { keys }).await {
                                                                     Ok(_) => invalidate_query(&panels_query_key),
                                                                     Err(err) => {
                                                                         error!("Failed to delete panel row: {:?}", err);
