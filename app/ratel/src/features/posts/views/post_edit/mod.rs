@@ -1,4 +1,5 @@
 use crate::common::components::{ButtonShape, ButtonSize, ButtonStyle, InputVariant, TiptapEditor};
+use crate::common::hooks::use_infinite_query;
 use crate::features::posts::components::VisibilityModal;
 use crate::features::posts::controllers::get_post::get_post_handler;
 use crate::features::posts::controllers::update_post::{update_post_handler, UpdatePostRequest};
@@ -101,13 +102,10 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
     let mut is_creating_category = use_signal(|| false);
     let mut category_error: Signal<Option<String>> = use_signal(|| None);
 
-    let categories_res = use_resource(list_categories_handler);
+    let mut categories_query = use_infinite_query(move |bookmark| list_categories_handler(bookmark))?;
     let mut extra_categories = use_signal(|| vec![]);
     let categories = use_memo(move || {
-        let mut cats: Vec<String> = match &*categories_res.read() {
-            Some(Ok(list)) => list.iter().map(|c| c.name.clone()).collect(),
-            _ => vec![],
-        };
+        let mut cats: Vec<String> = categories_query.items().iter().map(|c| c.name.clone()).collect();
         cats.extend(extra_categories());
         cats
     });
