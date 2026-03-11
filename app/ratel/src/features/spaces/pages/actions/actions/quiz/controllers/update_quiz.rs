@@ -18,6 +18,8 @@ pub struct UpdateQuizRequest {
     pub questions: Option<Vec<Question>>,
     #[serde(default)]
     pub answers: Option<Vec<QuizCorrectAnswer>>,
+    #[serde(default)]
+    pub files: Option<Vec<File>>,
 }
 
 #[post("/api/spaces/{space_pk}/quizzes/{quiz_id}", role: SpaceUserRole)]
@@ -104,6 +106,15 @@ pub async fn update_quiz(
             return Err(Error::BadRequest("Pass score must be >= 0".into()));
         }
         updater = updater.with_pass_score(pass_score);
+    }
+
+    if let Some(mut files) = req.files {
+        for file in &mut files {
+            if file.id.is_empty() {
+                file.id = crate::common::uuid::Uuid::now_v7().to_string();
+            }
+        }
+        updater = updater.with_files(files);
     }
 
     updater.execute(cli).await?;

@@ -14,6 +14,8 @@ pub struct QuizResponse {
     pub user_response_count: i64,
     pub questions: Vec<Question>,
     #[serde(default)]
+    pub files: Vec<File>,
+    #[serde(default)]
     pub my_response: Option<Vec<Answer>>,
     #[serde(default)]
     pub my_score: Option<i64>,
@@ -42,6 +44,7 @@ impl From<SpaceQuiz> for QuizResponse {
             description: quiz.description,
             user_response_count: quiz.user_response_count,
             questions: quiz.questions,
+            files: quiz.files,
             my_response: None,
             my_score: None,
             passed: None,

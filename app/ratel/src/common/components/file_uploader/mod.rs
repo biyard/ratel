@@ -1,9 +1,11 @@
 #[cfg(feature = "web")]
 use crate::common::{
-    Error, controllers::AssetPresignedUris, wasm_bindgen, wasm_bindgen_futures, web_sys,
+    controllers::AssetPresignedUris, wasm_bindgen, wasm_bindgen_futures, web_sys, Error,
 };
 #[cfg(feature = "web")]
 use dioxus::html::FileData;
+#[cfg(feature = "web")]
+use dioxus::html::HasFileData;
 use dioxus::prelude::*;
 
 #[cfg(feature = "web")]
@@ -24,30 +26,57 @@ pub fn FileUploader(
     };
 
     #[cfg(feature = "web")]
-    let on_change = {
+    let start_upload = {
         let accept = accept.clone();
         let on_upload_success = on_upload_success.clone();
-        move |evt: FormEvent| {
-            let Some(file) = evt.files().into_iter().next() else {
-                return;
-            };
+        move |file: FileData| {
             let accept = accept.clone();
             let on_upload_success = on_upload_success.clone();
             spawn(async move {
-                if let Err(err) =
-                    upload_via_presigned(&accept, file, on_upload_success).await
-                {
+                if let Err(err) = upload_via_presigned(&accept, file, on_upload_success).await {
                     web_log_error(&err.to_string());
                 }
             });
         }
     };
 
+    #[cfg(feature = "web")]
+    let on_change = {
+        let start_upload = start_upload.clone();
+        move |evt: FormEvent| {
+            let Some(file) = evt.files().into_iter().next() else {
+                return;
+            };
+            start_upload(file);
+        }
+    };
+
     #[cfg(not(feature = "web"))]
     let on_change = |_evt: FormEvent| {};
 
+    #[cfg(feature = "web")]
+    let on_drop = {
+        let start_upload = start_upload.clone();
+        move |evt: DragEvent| {
+            evt.prevent_default();
+            let Some(file) = evt.files().into_iter().next() else {
+                return;
+            };
+            start_upload(file);
+        }
+    };
+
+    #[cfg(not(feature = "web"))]
+    let on_drop = |_evt: DragEvent| {};
+
+    let on_drag_over = move |evt: DragEvent| {
+        evt.prevent_default();
+    };
+
     rsx! {
         label { class: "{class_name}",
+            ondragover: on_drag_over,
+            ondrop: on_drop,
             input {
                 class: "hidden",
                 r#type: "file",
