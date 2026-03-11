@@ -10,16 +10,18 @@ pub struct SurveyEditorProps {
 #[component]
 pub fn SurveyEditor(props: SurveyEditorProps) -> Element {
     let mut questions = props.questions;
+    let mut selecting_question_type = use_signal(|| false);
+    let tr: SurveyEditorTranslate = use_translate();
 
     rsx! {
-        div { class: "flex flex-col gap-2 w-full bg-[#1A1A1A] rounded-[12px] px-4 pt-1 pb-5",
+        div { class: "flex flex-col gap-2 pt-1 pb-5 w-full rounded-[12px]",
             for (idx , question) in questions.read().iter().enumerate() {
                 {
                     let total = questions.read().len();
                     let is_last = idx + 1 == total;
                     let question = question.clone();
                     rsx! {
-                        div { class: if is_last { "flex flex-col gap-3 pb-2" } else { "flex flex-col gap-3 pb-4 border-b border-[#262626]" },
+                        Card { class: "flex flex-col gap-3",
                             div { class: "flex justify-between items-center",
                                 span { class: "text-sm text-neutral-400", "Question {idx + 1}" }
                             }
@@ -35,13 +37,13 @@ pub fn SurveyEditor(props: SurveyEditorProps) -> Element {
                                 Button {
                                     size: ButtonSize::Small,
                                     style: ButtonStyle::Text,
-                                    class: "flex items-center gap-1 text-[#8C8C8C] text-[15px] leading-[24px] tracking-[0.5px] font-medium",
+                                    class: "flex gap-1 items-center font-medium text-text-secondary text-[15px] leading-[24px] tracking-[0.5px]",
                                     onclick: move |_| {
                                         let mut qs = questions.read().clone();
                                         qs.remove(idx);
                                         questions.set(qs);
                                     },
-                                    "Delete"
+                                    {tr.btn_delete}
                                     icons::edit::Delete2 { class: "w-6 h-6 [&>path]:stroke-[#737373]" }
                                 }
                             }
@@ -50,12 +52,82 @@ pub fn SurveyEditor(props: SurveyEditorProps) -> Element {
                 }
             }
 
-            QuestionTypeSelector {
-                on_add: move |q: Question| {
-                    let mut qs = questions.read().clone();
-                    qs.push(q);
-                    questions.set(qs);
-                },
+            if selecting_question_type() {
+                div { class: "flex justify-center items-center w-full",
+                    QuestionTypeSelector {
+                        on_add: move |q: Question| {
+                            let mut qs = questions.read().clone();
+                            qs.push(q);
+                            questions.set(qs);
+                            selecting_question_type.set(false);
+                        },
+                    }
+                }
+            } else {
+                AddQuestionButton {
+                    on_add: move |_| {
+                        selecting_question_type.set(true);
+                    },
+                }
+            }
+
+        }
+    }
+}
+
+#[component]
+fn AddQuestionButton(on_add: EventHandler<()>) -> Element {
+    rsx! {
+        div { class: "flex relative justify-center items-center w-full",
+            Button {
+                style: ButtonStyle::Outline,
+                onclick: move |_| on_add.call(()),
+                class: "flex justify-center items-center w-10 h-10 !p-0 z-2 !bg-background",
+                icons::validations::Add { class: "w-[13.3px] h-[13.3px] [&>path]:stroke-current" }
+            }
+            Separator {
+                variant: SeparatorVariant::Dashed,
+                class: "absolute left-0 top-1/2 w-full z-1",
+                horizontal: true,
+                decorative: false,
+            }
+        }
+    }
+}
+
+#[component]
+fn PlusIcon() -> Element {
+    rsx! {
+
+        svg {
+            class: "z-3 [&>path]:stoke-icon-primary",
+            fill: "none",
+            height: "13.3",
+            view_box: "0 0 40 40",
+            width: "13.3",
+            xmlns: "http://www.w3.org/2000/svg",
+            rect {
+                fill: "#262626",
+                height: "39",
+                rx: "19.5",
+                width: "39",
+                x: "0.5",
+                y: "0.5",
+            }
+            rect {
+                height: "39",
+                rx: "19.5",
+                stroke: "#A1A1A1",
+                width: "39",
+                x: "0.5",
+                y: "0.5",
+            }
+            path {
+                d: "M13.3334 20.0002L20 20.0002M20 20.0002L26.6667 20.0002M20 20.0002V13.3335M20 20.0002L20 26.6668",
+                stroke: "#A1A1A1",
+                stroke_linecap: "round",
+                stroke_linejoin: "round",
+                stroke_width: "2",
             }
         }
     }
@@ -185,7 +257,7 @@ fn SubjectiveQuestionEditor(
     let q = question.clone();
     rsx! {
         input {
-            class: "w-full p-2 bg-transparent border-b border-neutral-600 text-white placeholder-neutral-500 focus:border-blue-500 outline-none",
+            class: "p-2 w-full text-white bg-transparent border-b outline-none focus:border-blue-500 border-neutral-600 placeholder-neutral-500",
             r#type: "text",
             placeholder: "Question title",
             value: "{q.title}",
@@ -207,7 +279,7 @@ fn CheckboxQuestionEditor(
     let q = question.clone();
     rsx! {
         input {
-            class: "w-full p-2 bg-transparent border-b border-neutral-600 text-white placeholder-neutral-500 focus:border-blue-500 outline-none",
+            class: "p-2 w-full text-white bg-transparent border-b outline-none focus:border-blue-500 border-neutral-600 placeholder-neutral-500",
             r#type: "text",
             placeholder: "Question title",
             value: "{q.title}",
@@ -223,9 +295,9 @@ fn CheckboxQuestionEditor(
                     let question = question.clone();
                     let on_change = on_change.clone();
                     rsx! {
-                        div { class: "flex items-center gap-2",
+                        div { class: "flex gap-2 items-center",
                             input {
-                                class: "flex-1 p-2 bg-transparent border-b border-neutral-700 text-white text-sm outline-none",
+                                class: "flex-1 p-2 text-sm text-white bg-transparent border-b outline-none border-neutral-700",
                                 r#type: "text",
                                 value: "{option}",
                                 oninput: move |evt| {
@@ -250,7 +322,7 @@ fn DropdownQuestionEditor(
     let q = question.clone();
     rsx! {
         input {
-            class: "w-full p-2 bg-transparent border-b border-neutral-600 text-white placeholder-neutral-500 focus:border-blue-500 outline-none",
+            class: "p-2 w-full text-white bg-transparent border-b outline-none focus:border-blue-500 border-neutral-600 placeholder-neutral-500",
             r#type: "text",
             placeholder: "Question title",
             value: "{q.title}",
@@ -266,9 +338,9 @@ fn DropdownQuestionEditor(
                     let question = question.clone();
                     let on_change = on_change.clone();
                     rsx! {
-                        div { class: "flex items-center gap-2",
+                        div { class: "flex gap-2 items-center",
                             input {
-                                class: "flex-1 p-2 bg-transparent border-b border-neutral-700 text-white text-sm outline-none",
+                                class: "flex-1 p-2 text-sm text-white bg-transparent border-b outline-none border-neutral-700",
                                 r#type: "text",
                                 value: "{option}",
                                 oninput: move |evt| {
@@ -295,7 +367,7 @@ fn LinearScaleQuestionEditor(
     let max_val = question.max_value;
     rsx! {
         input {
-            class: "w-full p-2 bg-transparent border-b border-neutral-600 text-white placeholder-neutral-500 focus:border-blue-500 outline-none",
+            class: "p-2 w-full text-white bg-transparent border-b outline-none focus:border-blue-500 border-neutral-600 placeholder-neutral-500",
             r#type: "text",
             placeholder: "Question title",
             value: "{q.title}",
@@ -305,9 +377,18 @@ fn LinearScaleQuestionEditor(
                 on_change.call(Question::LinearScale(next));
             },
         }
-        div { class: "flex items-center gap-4 text-sm text-neutral-400",
+        div { class: "flex gap-4 items-center text-sm text-neutral-400",
             span { "Min: {min_val}" }
             span { "Max: {max_val}" }
         }
     }
+}
+
+translate! {
+    SurveyEditorTranslate;
+
+    btn_delete: {
+        en: "Delete",
+        ko: "삭제하기",
+    },
 }

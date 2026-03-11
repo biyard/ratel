@@ -87,6 +87,8 @@ dioxus-cli-config = "0.7.3"
 tracing-subscriber = { workspace = true }
 getrandom = { version = "0.4", features = ["wasm_js"], optional = true }
 lambda_http = { version = "1.0.2", optional = true }
+dioxus-primitives = { git = "https://github.com/DioxusLabs/components", version = "0.0.1", default-features = false, features = ["router"] }
+time = { version = "0.3.47", features = ["formatting"] }
 
 
 [features]
@@ -95,6 +97,7 @@ default = ["full"]
 bypass = []
 web = [
   "dioxus/web",
+  "time/wasm-bindgen",
   "gloo-timers",
   "getrandom",
 ]
