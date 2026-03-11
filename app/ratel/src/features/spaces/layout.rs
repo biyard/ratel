@@ -95,13 +95,7 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
                     on_participant,
                 }
                 div { class: "flex overflow-auto flex-1 p-5 w-full bg-background rounded-tl-[10px]",
-                    SuspenseBoundary {
-                        fallback: |_| rsx! {
-                            LoadingIndicator { max_width: "300px" }
-                        },
-
-                        Outlet::<Route> {}
-                    }
+                    SuspenseBoundary { Outlet::<Route> {} }
                 }
             }
         }
