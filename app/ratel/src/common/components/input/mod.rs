@@ -40,7 +40,9 @@ pub fn Input(
     #[props(default)] onblur: EventHandler<FocusEvent>,
     #[props(default)] onconfirm: EventHandler<KeyboardEvent>, // Keydown event with Enter key
     #[props(default)] oncancel: EventHandler<KeyboardEvent>,  // Keydown event with Escape key
-    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
+    #[props(extends=GlobalAttributes)]
+    #[props(extends=input)]
+    attributes: Vec<Attribute>,
 ) -> Element {
     let mut attributes = attributes;
     if maxlength > 0 {

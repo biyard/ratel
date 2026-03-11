@@ -28,6 +28,9 @@ BUILD_CDK_ENV ?= AWS_ACCESS_KEY_ID=$(ACCESS_KEY_ID) AWS_SECRET_ACCESS_KEY=$(SECR
 	mkdir -p .build
 	docker run --rm ghcr.io/foundry-rs/foundry:latest "cast wallet new --json" > .build/evm-keys.json
 
+preview:
+	dx server -p preview
+
 run: .build/evm-keys
 	COMMIT=${COMMIT} docker compose --profile development up -d --remove-orphans
 
