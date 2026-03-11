@@ -1,25 +1,20 @@
-use crate::features::spaces::pages::actions::components::ActionCard;
-use crate::features::spaces::pages::actions::controllers::list_actions;
-use crate::features::spaces::pages::actions::*;
+use super::*;
 use i18n::ParticipantActionPageTranslate;
 
 mod i18n;
 
 #[component]
-pub fn ParticipantActionPage(space_id: SpacePartition) -> Element {
+pub fn ParticipantPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: ParticipantActionPageTranslate = use_translate();
 
-    let actions = use_loader({
-        let space_id = space_id.clone();
-        move || list_actions(space_id.clone())
-    })?;
+    let actions = use_loader(move || async move { list_actions(space_id()).await })?;
 
     rsx! {
         div {
             id: "participant-action-page",
             class: "flex flex-col gap-5 items-start w-full text-web-font-primary",
 
-            div { class: "flex flex-col gap-2.5 w-full max-w-[1024px] mx-auto",
+            div { class: "flex flex-col gap-2.5 mx-auto w-full max-w-[1024px]",
                 h3 { {tr.title} }
 
                 // Action cards grid
@@ -29,7 +24,7 @@ pub fn ParticipantActionPage(space_id: SpacePartition) -> Element {
                             ActionCard {
                                 key: "{action.action_id}",
                                 action: action.clone(),
-                                space_id: space_id.clone(),
+                                space_id: space_id(),
                             }
                         }
                     }
