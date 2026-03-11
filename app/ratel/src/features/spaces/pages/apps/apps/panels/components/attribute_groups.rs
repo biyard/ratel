@@ -304,6 +304,7 @@ pub fn AttributeGroups(
     panels_query_key: Vec<String>,
 ) -> Element {
     let tr: AttributeGroupsTranslate = use_translate();
+    let mut toast = use_toast();
     let has_university = is_selected_option(PanelOption::University, &panels);
     let has_age = is_selected_option(PanelOption::Age, &panels);
     let has_gender = is_selected_option(PanelOption::Gender, &panels);
@@ -326,6 +327,7 @@ pub fn AttributeGroups(
             let space_id = space_id.clone();
             let panels_query_key = panels_query_key_for_university.clone();
             let keys = keys.clone();
+            let mut toast = toast;
             let next_university = !has_university;
             let next_age = has_age;
             let next_gender = has_gender;
@@ -339,7 +341,10 @@ pub fn AttributeGroups(
 
                 match result {
                     Ok(_) => invalidate_query(&panels_query_key),
-                    Err(err) => error!("Failed to toggle university panel: {:?}", err),
+                    Err(err) => {
+                        error!("Failed to toggle university panel: {:?}", err);
+                        toast.error(err);
+                    }
                 }
             });
         }
@@ -351,6 +356,7 @@ pub fn AttributeGroups(
             let space_id = space_id.clone();
             let panels_query_key = panels_query_key_for_age.clone();
             let keys = keys.clone();
+            let mut toast = toast;
             let next_university = has_university;
             let next_age = !has_age;
             let next_gender = has_gender;
@@ -364,7 +370,10 @@ pub fn AttributeGroups(
 
                 match result {
                     Ok(_) => invalidate_query(&panels_query_key),
-                    Err(err) => error!("Failed to toggle age panels: {:?}", err),
+                    Err(err) => {
+                        error!("Failed to toggle age panels: {:?}", err);
+                        toast.error(err);
+                    }
                 }
             });
         }
@@ -376,6 +385,7 @@ pub fn AttributeGroups(
             let space_id = space_id.clone();
             let panels_query_key = panels_query_key_for_gender.clone();
             let keys = keys.clone();
+            let mut toast = toast;
             let next_university = has_university;
             let next_age = has_age;
             let next_gender = !has_gender;
@@ -389,7 +399,10 @@ pub fn AttributeGroups(
 
                 match result {
                     Ok(_) => invalidate_query(&panels_query_key),
-                    Err(err) => error!("Failed to toggle gender panels: {:?}", err),
+                    Err(err) => {
+                        error!("Failed to toggle gender panels: {:?}", err);
+                        toast.error(err);
+                    }
                 }
             });
         }

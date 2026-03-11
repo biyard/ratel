@@ -13,6 +13,7 @@ translate! {
 pub fn TotalQuotas(space_id: SpacePartition, quota: i64) -> Element {
     let tr: TotalQuotasTranslate = use_translate();
     let space_ctx = use_space_context();
+    let mut toast = use_toast();
     let mut total_quota_input = use_signal(|| quota.to_string());
     let mut synced_quota = use_signal(|| quota);
 
@@ -29,6 +30,7 @@ pub fn TotalQuotas(space_id: SpacePartition, quota: i64) -> Element {
             let next_quota = total_quota_input().parse::<i64>().unwrap_or_default();
             let space_id = space_id.clone();
             let mut space_ctx = space_ctx;
+            let mut toast = toast;
             spawn(async move {
                 match update_space(
                     space_id.clone(),
@@ -37,7 +39,10 @@ pub fn TotalQuotas(space_id: SpacePartition, quota: i64) -> Element {
                 .await
                 {
                     Ok(_) => space_ctx.space.restart(),
-                    Err(err) => error!("Failed to update panel quota: {:?}", err),
+                    Err(err) => {
+                        error!("Failed to update panel quota: {:?}", err);
+                        toast.error(err);
+                    }
                 }
             });
         }
@@ -48,6 +53,7 @@ pub fn TotalQuotas(space_id: SpacePartition, quota: i64) -> Element {
             let next_quota = total_quota_input().parse::<i64>().unwrap_or_default();
             let space_id = space_id.clone();
             let mut space_ctx = space_ctx;
+            let mut toast = toast;
             spawn(async move {
                 match update_space(
                     space_id.clone(),
@@ -56,7 +62,10 @@ pub fn TotalQuotas(space_id: SpacePartition, quota: i64) -> Element {
                 .await
                 {
                     Ok(_) => space_ctx.space.restart(),
-                    Err(err) => error!("Failed to update panel quota: {:?}", err),
+                    Err(err) => {
+                        error!("Failed to update panel quota: {:?}", err);
+                        toast.error(err);
+                    }
                 }
             });
         }
