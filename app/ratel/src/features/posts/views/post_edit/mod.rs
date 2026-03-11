@@ -60,6 +60,10 @@ translate! {
         en: "Skip creating space",
         ko: "스페이스 만들기 건너뛰기",
     },
+    create_category: {
+        en: "Create",
+        ko: "생성",
+    },
 }
 
 const TITLE_MAX_LENGTH: usize = 50;
@@ -105,7 +109,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
     let mut show_category_dropdown = use_signal(|| false);
     let mut is_creating_category = use_signal(|| false);
 
-    let mut categories_query = use_infinite_query(move |bookmark| list_categories_handler(bookmark))?;
+    let categories_query = use_infinite_query(move |bookmark| list_categories_handler(bookmark))?;
     let mut extra_categories = use_signal(|| vec![]);
     let categories = use_memo(move || {
         let mut cats: Vec<String> = categories_query.items().iter().map(|c| c.name.clone()).collect();
@@ -360,7 +364,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                                         is_creating_category.set(false);
                                     });
                                 },
-                                "Create \"{category_input()}\""
+                                "{tr.create_category} \"{category_input()}\""
                             }
                         }
                     }
