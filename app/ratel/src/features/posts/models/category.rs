@@ -40,28 +40,7 @@ impl Category {
         }
     }
 
-    pub async fn find_all(cli: &aws_sdk_dynamodb::Client) -> Result<Vec<Self>> {
-        use aws_sdk_dynamodb::types::AttributeValue;
 
-        let resp = cli
-            .query()
-            .table_name(Self::table_name())
-            .key_condition_expression("#pk = :pk")
-            .expression_attribute_names("#pk", "pk")
-            .expression_attribute_values(":pk", AttributeValue::S(Partition::Category.to_string()))
-            .send()
-            .await
-            .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
-
-        let items: Vec<Self> = resp
-            .items
-            .unwrap_or_default()
-            .into_iter()
-            .map(serde_dynamo::from_item)
-            .collect::<std::result::Result<_, _>>()?;
-
-        Ok(items)
-    }
 }
 
 #[cfg(all(test, feature = "server"))]
@@ -71,15 +50,29 @@ mod tests {
         Client, Config,
         config::{Credentials, Region},
     };
+    use crate::common::config::server::dynamodb::DynamoConfig;
+    use crate::common::aws_config::AwsConfig;
 
     async fn setup_ddb() -> Client {
-        let config = Config::builder()
-            .region(Region::new("us-east-1"))
+        let dynamo_config = DynamoConfig::default();
+        let aws_config = AwsConfig::default();
+
+        let mut builder = Config::builder()
+            .region(Region::new(aws_config.region))
             .behavior_version_latest()
-            .credentials_provider(Credentials::new("test", "test", None, None, "test"))
-            .endpoint_url("http://localhost:4566")
-            .build();
-        Client::from_conf(config)
+            .credentials_provider(Credentials::new(
+                aws_config.access_key_id,
+                aws_config.secret_access_key,
+                None,
+                None,
+                "loaded-from-config",
+            ));
+
+        if let Some(ep) = dynamo_config.endpoint {
+            builder = builder.endpoint_url(ep);
+        }
+
+        Client::from_conf(builder.build())
     }
 
     #[tokio::test]
@@ -112,7 +105,7 @@ mod tests {
         let name = format!("TestCat-{}", chrono::Utc::now().timestamp_millis());
         Category::get_or_create_by_name(&cli, name.clone()).await.unwrap();
 
-        let all = Category::find_all(&cli).await.unwrap();
+        let (all, _) = Category::query(&cli, Partition::Category, Category::opt().limit(100)).await.unwrap();
         assert!(all.iter().any(|c| c.name == name));
     }
 }
