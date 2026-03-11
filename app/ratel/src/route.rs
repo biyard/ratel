@@ -6,8 +6,6 @@ use crate::features::my_follower::Route as MyFollowerRoute;
 use crate::features::posts::Route as PostRoute;
 
 #[cfg(feature = "spaces")]
-use crate::features::spaces::pages::actions::SpaceActionsPage;
-#[cfg(feature = "spaces")]
 use crate::features::spaces::pages::dashboard::SpaceDashboardPage;
 #[cfg(feature = "spaces")]
 use crate::features::spaces::pages::overview::SpaceOverviewPage;
@@ -27,6 +25,14 @@ use crate::features::spaces::pages::apps::apps::incentive_pool::SpaceIncentivePo
 use crate::features::spaces::pages::apps::Layout as SpaceAppsLayout;
 #[cfg(feature = "spaces")]
 use crate::features::spaces::pages::apps::SpaceAppsPage;
+
+// Space Actions
+#[cfg(feature = "spaces")]
+use crate::features::spaces::pages::actions::actions::discussion::{
+    DiscussionActionEditorPage, DiscussionActionPage,
+};
+#[cfg(feature = "spaces")]
+use crate::features::spaces::pages::actions::SpaceActionsPage;
 
 #[cfg(feature = "teams")]
 use crate::features::teams::Route as TeamRoute;
@@ -80,9 +86,24 @@ pub enum Route {
             #[cfg_attr(feature="spaces", route("/overview"))]
             #[cfg(feature = "spaces")]
             SpaceOverviewPage { space_id: SpacePartition },
-            #[cfg_attr(feature="spaces", route("/actions"))]
-            #[cfg(feature = "spaces")]
-            SpaceActionsPage { space_id: SpacePartition },
+
+            #[cfg_attr(feature="spaces", nest("/actions"))]
+                // #[cfg_attr(feature="spaces", layout(SpaceAppsLayout))]
+                    #[cfg_attr(feature="spaces", route("/"))]
+                    #[cfg(feature = "spaces")]
+                    SpaceActionsPage { space_id: SpacePartition },
+
+                    #[cfg_attr(feature="spaces", route("/discussions/:discussion_id/edit"))]
+                    #[cfg(feature = "spaces")]
+                    DiscussionActionEditorPage { space_id: SpacePartition, discussion_id: SpacePostEntityType },
+
+                    #[cfg_attr(feature="spaces", route("/discussions/:discussion_id"))]
+                    #[cfg(feature = "spaces")]
+                    DiscussionActionPage { space_id: SpacePartition, discussion_id: SpacePostEntityType },
+
+                // #[cfg_attr(feature="spaces", end_layout)]
+            #[cfg_attr(feature="spaces", end_nest)]
+
     // #[nest("/spaces/:space_id/actions")]
     //     #[route("/polls/:..rest")]
     //     Poll { space_id: SpacePartition, rest: Vec<String> },
