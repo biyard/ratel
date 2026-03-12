@@ -1,4 +1,5 @@
 mod components;
+mod context;
 mod models;
 mod types;
 mod views;
@@ -6,6 +7,8 @@ mod views;
 pub mod controllers;
 
 use components::*;
+use context::Context;
+use context::*;
 use controllers::*;
 
 pub use models::*;

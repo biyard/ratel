@@ -15,6 +15,18 @@ translate! {
         en: "Save",
         ko: "저장",
     },
+    saving: {
+        en: "Saving...",
+        ko: "저장 중...",
+    },
+    all_changes_saved: {
+        en: "All changes saved",
+        ko: "모든 변경사항 저장됨",
+    },
+    unsaved_changes: {
+        en: "Unsaved changes",
+        ko: "저장되지 않은 변경사항",
+    },
     btn_discard: {
         en: "Discard",
         ko: "취소",
