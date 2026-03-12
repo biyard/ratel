@@ -97,11 +97,11 @@ pub fn OverviewTab(can_edit: bool) -> Element {
             div { class: "flex w-full flex-col justify-center gap-2",
                 div { class: "flex w-full items-center justify-between gap-4",
                     div { class: "flex flex-row items-center",
-                        span { class: "text-[15px]/[18px] font-bold tracking-[-0.16px] text-[#8C8C8C]",
+                        span { class: "text-[15px]/[18px] font-bold tracking-[-0.16px] text-quiz-overview-label",
                             {tr.title_label}
                         }
                         if can_edit {
-                            span { class: "text-[15px]/[18px] font-bold text-[#EF4444]",
+                            span { class: "text-[15px]/[18px] font-bold text-red-500",
                                 "*"
                             }
                         }
@@ -139,7 +139,7 @@ pub fn OverviewTab(can_edit: bool) -> Element {
                             },
                         }
                         if can_edit {
-                            span { class: "pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[12px]/[15px] font-semibold text-[#6b6b6b]",
+                            span { class: "pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[12px]/[15px] font-semibold text-quiz-overview-counter",
                                 "{title_count}/50"
                             }
                         }
@@ -147,10 +147,10 @@ pub fn OverviewTab(can_edit: bool) -> Element {
                 }
             }
 
-            div { class: "flex min-h-0 w-full flex-col overflow-hidden rounded-[8px] border border-[#525252] bg-[#101010] px-3 pb-1 pt-3",
+            div { class: "flex min-h-0 w-full flex-col overflow-hidden rounded-[8px] border border-quiz-editor-border bg-quiz-editor-bg px-3 pb-1 pt-3",
                 div { class: "flex w-full grow flex-1 flex-col gap-3",
                     crate::common::components::TiptapEditor {
-                        class: "min-h-0 h-full w-full flex-1 [&>div]:flex [&>div]:h-full [&>div]:min-h-0 [&>div]:flex-1 [&>div]:overflow-hidden [&>div]:bg-transparent [&>div]:border-0 [&_[data-tiptap-toolbar]]:border-b [&_[data-tiptap-toolbar]]:border-[#262626] [&_[data-tiptap-toolbar]]:bg-transparent [&_[contenteditable='true']]:h-full [&_[contenteditable='true']]:min-h-[96px] [&_[contenteditable='true']]:overflow-y-auto [&_[contenteditable='true']]:bg-transparent [&_[contenteditable='true']]:px-0 [&_[contenteditable='true']]:text-[15px] [&_[contenteditable='true']]:leading-[22px] [&_[contenteditable='true']]:font-medium [&_[contenteditable='true']]:text-white [&_[contenteditable='true']]:outline-none [&_[contenteditable='true']]:placeholder:text-[#525252]",
+                        class: "min-h-0 h-full w-full flex-1 [&>div]:flex [&>div]:h-full [&>div]:min-h-0 [&>div]:flex-1 [&>div]:overflow-hidden [&>div]:bg-transparent [&>div]:border-0 [&_[data-tiptap-toolbar]]:border-b [&_[data-tiptap-toolbar]]:border-quiz-editor-toolbar-border [&_[data-tiptap-toolbar]]:bg-transparent [&_[contenteditable='true']]:h-full [&_[contenteditable='true']]:min-h-[96px] [&_[contenteditable='true']]:overflow-y-auto [&_[contenteditable='true']]:bg-transparent [&_[contenteditable='true']]:px-0 [&_[contenteditable='true']]:text-[15px] [&_[contenteditable='true']]:leading-[22px] [&_[contenteditable='true']]:font-medium [&_[contenteditable='true']]:text-text-primary [&_[contenteditable='true']]:outline-none [&_[contenteditable='true']]:placeholder:text-quiz-editor-placeholder",
                         content: description(),
                         editable: can_edit,
                         placeholder: tr.description_placeholder,
