@@ -32,6 +32,15 @@
   width: 210px;
   padding: 18px 30px;
   border-radius: 9999px;
+
+  font-family: Raleway;
+  font-weight: 600;
+  font-style: SemiBold;
+  font-size: 15px;
+  leading-trim: NONE;
+  line-height: 18px;
+  letter-spacing: -0.16px;
+  text-align: center;
 }
 
 [data-variant="default"] .tabs-trigger[data-state="active"] {
@@ -39,12 +48,20 @@
 }
 
 .tabs-trigger[data-state="active"] {
-    color: var(--secondary-color-1);
+  color: var(--color-text-primary);
+  font-family: Raleway;
+  font-weight: 600;
+  font-style: SemiBold;
+  font-size: 15px;
+  leading-trim: NONE;
+  line-height: 18px;
+  letter-spacing: -0.16px;
+  text-align: center;
 }
 
 .tabs-trigger[data-disabled="true"] {
-    color: var(--secondary-color-5);
-    cursor: not-allowed;
+  color: var(--secondary-color-5);
+  cursor: not-allowed;
 }
 
 .tabs-trigger:hover:not([data-disabled="true"]),

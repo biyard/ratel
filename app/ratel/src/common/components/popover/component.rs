@@ -8,7 +8,7 @@ pub fn PopoverRoot(props: PopoverRootProps) -> Element {
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
         popover::PopoverRoot {
-            class: "popover",
+            class: "flex flex-1 w-full popover grow",
             is_modal: props.is_modal,
             open: props.open,
             default_open: props.default_open,

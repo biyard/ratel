@@ -31,8 +31,9 @@ impl SpaceActionType {
                 Ok(space_action_discussion(&space_id, &discussion_id))
             }
             SpaceActionType::Follow => {
-                crate::features::spaces::pages::actions::actions::follow::controllers::create_follow(space_id.clone()).await?;
-                Ok(space_action_follow(&space_id))
+                let response = crate::features::spaces::pages::actions::actions::follow::controllers::create_follow(space_id.clone()).await?;
+                let follow_id = SpaceActionFollowEntityType::from(response.sk);
+                Ok(space_action_follow(&space_id, &follow_id))
             }
             SpaceActionType::Quiz => {
                 let response = crate::features::spaces::pages::actions::actions::quiz::controllers::create_quiz(space_id.clone()).await?;

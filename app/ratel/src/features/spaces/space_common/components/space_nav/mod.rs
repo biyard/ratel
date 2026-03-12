@@ -32,8 +32,8 @@ pub fn SpaceNav(
     credential_path: Option<String>,
 ) -> Element {
     rsx! {
-        div { class: "flex z-40 flex-col gap-2.5 justify-between pt-2.5 h-full divide-y shrink-0 divide-divider w-full",
-            div { class: "flex flex-col gap-2.5 w-full pb-4",
+        div { class: "flex z-40 flex-col gap-2.5 justify-between pt-2.5 w-full h-full divide-y shrink-0 divide-divider",
+            div { class: "flex flex-col gap-2.5 pb-4 w-full",
                 img { src: "{logo}", class: "mx-4 mt-5 mb-2.5 w-25" }
 
                 if show_participation_card {
@@ -50,14 +50,21 @@ pub fn SpaceNav(
                     }
                 }
             }
-            if let Some(user) = user {
-                SpaceUserProfile {
-                    image: user.profile_url.clone(),
-                    display_name: user.display_name.clone(),
-                    user_role: role,
+            Row {
+                main_axis_align: MainAxisAlign::Between,
+                cross_axis_align: CrossAxisAlign::Center,
+
+                if let Some(user) = user {
+                    SpaceUserProfile {
+                        image: user.profile_url.clone(),
+                        display_name: user.display_name.clone(),
+                        user_role: role,
+                    }
+                } else {
+                    SpaceUserLogin { onclick: login_handler }
                 }
-            } else {
-                SpaceUserLogin { onclick: login_handler }
+
+                SpaceThemeToggle {}
             }
         }
     }
@@ -78,7 +85,7 @@ fn NavItem(item: SpaceNavItem) -> Element {
     // NOTE: Link component does not support class attribute merging.
     rsx! {
         Link {
-            class: "flex flex-row gap-2 items-center py-2 px-1 w-full text-sm font-medium rounded-sm text-text hover:bg-space-nav-item-hover {selected}",
+            class: "flex flex-row gap-2 items-center py-2 px-1 w-full text-sm font-medium rounded-sm text-text {selected} hover:bg-space-nav-item-hover",
             to: item.link,
             {item.icon}
             {item.label}
@@ -90,4 +97,40 @@ pub struct SpaceNavItem {
     pub icon: Element,
     pub label: String,
     pub link: NavigationTarget,
+}
+
+#[component]
+fn SpaceThemeToggle() -> Element {
+    let mut theme_service = use_theme();
+    let is_dark = match theme_service.current() {
+        Theme::Dark => true,
+        Theme::Light => false,
+        Theme::System => true, // system default treated as dark
+    };
+
+    rsx! {
+        button {
+            class: "flex items-center justify-center p-1.5 rounded-lg transition-colors cursor-pointer hover:bg-space-nav-item-hover",
+            onclick: move |_| {
+                if is_dark {
+                    theme_service.set(Theme::Light);
+                } else {
+                    theme_service.set(Theme::Dark);
+                }
+            },
+            if is_dark {
+                Moon {
+                    width: "18",
+                    height: "18",
+                    class: "[&>path]:stroke-current text-web-font-neutral",
+                }
+            } else {
+                Sun {
+                    width: "18",
+                    height: "18",
+                    class: "[&>path]:stroke-current [&>circle]:stroke-current text-web-font-neutral",
+                }
+            }
+        }
+    }
 }
