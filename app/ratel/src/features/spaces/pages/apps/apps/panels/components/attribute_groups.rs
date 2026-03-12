@@ -305,6 +305,7 @@ pub fn AttributeGroups(
 ) -> Element {
     let tr: AttributeGroupsTranslate = use_translate();
     let mut toast = use_toast();
+    let mut query = use_query_store();
     let has_university = is_selected_option(PanelOption::University, &panels);
     let has_age = is_selected_option(PanelOption::Age, &panels);
     let has_gender = is_selected_option(PanelOption::Gender, &panels);
@@ -338,7 +339,7 @@ pub fn AttributeGroups(
                 .await;
 
                 match result {
-                    Ok(_) => invalidate_query(&panels_query_key),
+                    Ok(_) => query.invalidate(&panels_query_key),
                     Err(err) => {
                         error!("Failed to toggle university panel: {:?}", err);
                         toast.error(err);
@@ -365,7 +366,7 @@ pub fn AttributeGroups(
                 .await;
 
                 match result {
-                    Ok(_) => invalidate_query(&panels_query_key),
+                    Ok(_) => query.invalidate(&panels_query_key),
                     Err(err) => {
                         error!("Failed to toggle age panels: {:?}", err);
                         toast.error(err);
@@ -392,7 +393,7 @@ pub fn AttributeGroups(
                 .await;
 
                 match result {
-                    Ok(_) => invalidate_query(&panels_query_key),
+                    Ok(_) => query.invalidate(&panels_query_key),
                     Err(err) => {
                         error!("Failed to toggle gender panels: {:?}", err);
                         toast.error(err);

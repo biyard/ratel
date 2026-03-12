@@ -189,6 +189,7 @@ pub fn PanelsTable(
 ) -> Element {
     let tr: PanelsTableTranslate = use_translate();
     let mut toast = use_toast();
+    let mut query = use_query_store();
     let mut editing_quotas = use_signal(HashMap::<String, String>::new);
 
     let visible_panels = panels
@@ -308,7 +309,7 @@ pub fn PanelsTable(
                                                                     )
                                                                     .await
                                                                 {
-                                                                    Ok(_) => invalidate_query(&panels_query_key),
+                                                                    Ok(_) => query.invalidate(&panels_query_key),
                                                                     Err(err) => {
                                                                         error!("Failed to update panel row quota: {:?}", err);
                                                                         toast.error(err);
@@ -339,7 +340,7 @@ pub fn PanelsTable(
                                                                     )
                                                                     .await
                                                                 {
-                                                                    Ok(_) => invalidate_query(&panels_query_key),
+                                                                    Ok(_) => query.invalidate(&panels_query_key),
                                                                     Err(err) => {
                                                                         error!("Failed to update panel row quota: {:?}", err);
                                                                         toast.error(err);
@@ -365,7 +366,7 @@ pub fn PanelsTable(
                                                             let mut toast = toast;
                                                             spawn(async move {
                                                                 match delete_panel_quotas(space_id(), DeletePanelQuotaRequest { keys }).await {
-                                                                    Ok(_) => invalidate_query(&panels_query_key),
+                                                                    Ok(_) => query.invalidate(&panels_query_key),
                                                                     Err(err) => {
                                                                         error!("Failed to delete panel row: {:?}", err);
                                                                         toast.error(err);
