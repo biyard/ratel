@@ -11,7 +11,8 @@ pub async fn create_poll(space_pk: SpacePartition) -> Result<PollResponse> {
     let _ =
         crate::features::spaces::space_common::models::aggregate::DashboardAggregate::get_or_create(cli, &space_pk).await?;
 
-    let mut items = vec![poll.create_transact_write_item()];
+    let space_action = crate::features::spaces::pages::actions::models::SpaceAction::new(space_pk.clone(), poll.sk.clone());
+    let mut items = vec![poll.create_transact_write_item(), space_action.create_transact_write_item()];
     items.push(crate::features::spaces::space_common::models::aggregate::DashboardAggregate::inc_polls(&space_pk, 1));
     crate::transact_write_items!(cli, items)
         .map_err(|e| crate::features::spaces::pages::actions::actions::poll::Error::Unknown(format!("Failed to create poll: {e}")))?;

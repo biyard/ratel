@@ -1,5 +1,5 @@
-use crate::features::spaces::pages::actions::actions::subscription::models::SpaceSubscriptionUser;
-use crate::features::spaces::pages::actions::actions::subscription::*;
+use crate::features::spaces::pages::actions::actions::follow::models::SpaceFollowUser;
+use crate::features::spaces::pages::actions::actions::follow::*;
 use crate::common::models::auth::UserFollow;
 use crate::common::models::space::SpaceCommon;
 use crate::features::posts::models::Team;
@@ -7,7 +7,7 @@ use std::collections::HashSet;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-pub struct SubscriptionUserItem {
+pub struct FollowUserItem {
     pub user_pk: Partition,
     pub display_name: String,
     pub profile_url: String,
@@ -17,27 +17,27 @@ pub struct SubscriptionUserItem {
 }
 
 #[get(
-    "/api/spaces/{space_id}/subscriptions/users?bookmark",
+    "/api/spaces/{space_id}/follows/users?bookmark",
     role: SpaceUserRole,
     user: crate::features::auth::OptionalUser
 )]
-pub async fn list_subscription_users(
+pub async fn list_follow_users(
     space_id: SpacePartition,
     bookmark: Option<String>,
-) -> Result<ListResponse<SubscriptionUserItem>> {
+) -> Result<ListResponse<FollowUserItem>> {
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let space_pk: Partition = space_id.clone().into();
     let is_first_page = bookmark.is_none();
-    let mut opt = SpaceSubscriptionUser::opt()
+    let mut opt = SpaceFollowUser::opt()
         .sk(EntityType::SpaceSubscriptionUser(String::default()).to_string())
         .limit(10);
     if let Some(bookmark) = bookmark {
         opt = opt.bookmark(bookmark);
     }
 
-    let (users, bookmark) = SpaceSubscriptionUser::query(cli, space_pk.clone(), opt).await?;
-    let users: Vec<SpaceSubscriptionUser> = users
+    let (users, bookmark) = SpaceFollowUser::query(cli, space_pk.clone(), opt).await?;
+    let users: Vec<SpaceFollowUser> = users
         .into_iter()
         .filter(|u| u.user_pk != Partition::None)
         .collect();
@@ -113,9 +113,9 @@ pub async fn list_subscription_users(
         HashSet::new()
     };
 
-    let mut items: Vec<SubscriptionUserItem> = users
+    let mut items: Vec<FollowUserItem> = users
         .into_iter()
-        .map(|u| SubscriptionUserItem {
+        .map(|u| FollowUserItem {
             user_pk: u.user_pk.clone(),
             display_name: u.display_name,
             profile_url: u.profile_url,
@@ -131,9 +131,9 @@ pub async fn list_subscription_users(
     } else {
         if is_first_page {
             let creator_sk = EntityType::SpaceSubscriptionUser(creator_pk.to_string());
-            let creator = SpaceSubscriptionUser::get(cli, &space_pk, Some(creator_sk))
+            let creator = SpaceFollowUser::get(cli, &space_pk, Some(creator_sk))
                 .await?
-                .map(|u| SubscriptionUserItem {
+                .map(|u| FollowUserItem {
                     user_pk: u.user_pk.clone(),
                     display_name: u.display_name,
                     profile_url: u.profile_url,
@@ -146,7 +146,7 @@ pub async fn list_subscription_users(
             } else if let Some(user) =
                 crate::features::auth::User::get(cli, creator_pk.clone(), Some(EntityType::User)).await?
             {
-                Some(SubscriptionUserItem {
+                Some(FollowUserItem {
                     user_pk: creator_pk.clone(),
                     display_name: user.display_name,
                     profile_url: user.profile_url,
@@ -155,7 +155,7 @@ pub async fn list_subscription_users(
                     subscribed: subscribed_targets.contains(&creator_pk.to_string()),
                 })
             } else {
-                Some(SubscriptionUserItem {
+                Some(FollowUserItem {
                     user_pk: creator_pk.clone(),
                     display_name: creator_profile.0,
                     profile_url: creator_profile.1,

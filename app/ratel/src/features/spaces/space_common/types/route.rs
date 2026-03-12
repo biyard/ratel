@@ -24,7 +24,7 @@ pub fn space_action_discussion(
     .to_string()
 }
 
-pub fn space_action_subscription(space_id: &SpacePartition) -> String {
+pub fn space_action_follow(space_id: &SpacePartition) -> String {
     Route::FollowActionPage {
         space_id: space_id.clone(),
     }

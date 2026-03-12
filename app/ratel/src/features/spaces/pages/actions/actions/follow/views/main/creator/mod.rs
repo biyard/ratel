@@ -1,15 +1,15 @@
 use crate::common::hooks::use_infinite_query;
-use crate::features::spaces::pages::actions::actions::subscription::components::{
-    SubscriptionUserInvite, SubscriptionUserList,
+use crate::features::spaces::pages::actions::actions::follow::components::{
+    FollowUserInvite, FollowUserList,
 };
-use crate::features::spaces::pages::actions::actions::subscription::controllers::list_subscription_users;
-use crate::features::spaces::pages::actions::actions::subscription::*;
+use crate::features::spaces::pages::actions::actions::follow::controllers::list_follow_users;
+use crate::features::spaces::pages::actions::actions::follow::*;
 mod i18n;
-use i18n::SubscriptionCreatorTranslate;
+use i18n::FollowCreatorTranslate;
 
 #[component]
-pub fn SubscriptionCreatorPage(space_id: ReadSignal<SpacePartition>) -> Element {
-    let tr: SubscriptionCreatorTranslate = use_translate();
+pub fn FollowCreatorPage(space_id: ReadSignal<SpacePartition>) -> Element {
+    let tr: FollowCreatorTranslate = use_translate();
 
     let mut ctx = use_space_actions_context();
 
@@ -38,7 +38,7 @@ pub fn SubscriptionCreatorPage(space_id: ReadSignal<SpacePartition>) -> Element 
     };
 
     let mut users_query =
-        use_infinite_query(move |bookmark| list_subscription_users(space_id(), bookmark))?;
+        use_infinite_query(move |bookmark| list_follow_users(space_id(), bookmark))?;
     let users = users_query.items();
     let more_element = users_query.more_element();
     let on_refresh_invite = {
@@ -65,9 +65,9 @@ pub fn SubscriptionCreatorPage(space_id: ReadSignal<SpacePartition>) -> Element 
                 "← {tr.btn_back}"
             }
 
-            SubscriptionUserInvite { space_id: space_id(), on_refresh: on_refresh_invite }
+            FollowUserInvite { space_id: space_id(), on_refresh: on_refresh_invite }
 
-            SubscriptionUserList {
+            FollowUserList {
                 space_id: space_id(),
                 users,
                 can_delete: true,

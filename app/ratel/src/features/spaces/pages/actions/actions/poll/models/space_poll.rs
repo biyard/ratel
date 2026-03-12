@@ -111,7 +111,7 @@ impl SpacePoll {
     }
 }
 
-impl From<(SpacePoll, bool)> for crate::features::spaces::pages::actions::types::SpaceAction {
+impl From<(SpacePoll, bool)> for crate::features::spaces::pages::actions::types::SpaceActionSummary {
     fn from((poll, user_participated): (SpacePoll, bool)) -> Self {
         use crate::features::spaces::pages::actions::types::SpaceActionType;
         let action_id = poll.sk.to_string();

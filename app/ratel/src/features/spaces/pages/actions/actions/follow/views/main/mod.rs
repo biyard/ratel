@@ -1,9 +1,9 @@
 use super::*;
 mod creator;
-use creator::SubscriptionCreatorPage;
+use creator::FollowCreatorPage;
 
 mod viewer;
-use viewer::SubscriptionViewerPage;
+use viewer::FollowViewerPage;
 
 use crate::features::spaces::space_common::hooks::use_space_role;
 use viewer::*;
@@ -14,10 +14,10 @@ pub fn FollowActionPage(space_id: SpacePartition) -> Element {
 
     match role {
         SpaceUserRole::Creator => rsx! {
-            SubscriptionCreatorPage { space_id }
+            FollowCreatorPage { space_id }
         },
         _ => rsx! {
-            SubscriptionViewerPage { space_id }
+            FollowViewerPage { space_id }
         },
     }
 }

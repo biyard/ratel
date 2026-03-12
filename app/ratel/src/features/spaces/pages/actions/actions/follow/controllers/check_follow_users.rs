@@ -1,15 +1,15 @@
 use crate::features::posts::models::Team;
-use crate::features::spaces::pages::actions::actions::subscription::*;
+use crate::features::spaces::pages::actions::actions::follow::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-pub struct CheckSubscriptionUsersRequest {
+pub struct CheckFollowUsersRequest {
     pub identifiers: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-pub struct CheckSubscriptionUsersResponse {
+pub struct CheckFollowUsersResponse {
     pub existing_identifiers: Vec<String>,
 }
 
@@ -23,12 +23,12 @@ fn normalize_identifier(raw: &str) -> Option<(String, bool)> {
     Some((value, is_email))
 }
 
-#[post("/api/spaces/{space_id}/subscriptions/users/check", role: SpaceUserRole)]
-pub async fn check_subscription_users(
+#[post("/api/spaces/{space_id}/follows/users/check", role: SpaceUserRole)]
+pub async fn check_follow_users(
     space_id: SpacePartition,
-    req: CheckSubscriptionUsersRequest,
-) -> Result<CheckSubscriptionUsersResponse> {
-    SpaceSubscriptionAction::can_edit(&role)?;
+    req: CheckFollowUsersRequest,
+) -> Result<CheckFollowUsersResponse> {
+    SpaceFollowAction::can_edit(&role)?;
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     use crate::features::auth::models::user::UserQueryOption;
@@ -88,7 +88,7 @@ pub async fn check_subscription_users(
         }
     }
 
-    Ok(CheckSubscriptionUsersResponse {
+    Ok(CheckFollowUsersResponse {
         existing_identifiers,
     })
 }

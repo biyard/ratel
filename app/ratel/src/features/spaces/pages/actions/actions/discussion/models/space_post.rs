@@ -165,7 +165,7 @@ impl SpacePost {
 }
 
 #[cfg(feature = "server")]
-impl From<(SpacePost, SpaceUserRole)> for crate::features::spaces::pages::actions::types::SpaceAction {
+impl From<(SpacePost, SpaceUserRole)> for crate::features::spaces::pages::actions::types::SpaceActionSummary {
     fn from((post, role): (SpacePost, SpaceUserRole)) -> Self {
         use crate::features::spaces::pages::actions::types::SpaceActionType;
         let action_id = post.sk.to_string();

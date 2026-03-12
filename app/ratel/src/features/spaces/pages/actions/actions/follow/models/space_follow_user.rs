@@ -1,11 +1,11 @@
 use crate::common::utils::time::get_now_timestamp_millis;
 
-use crate::features::spaces::pages::actions::actions::subscription::macros::DynamoEntity;
-use crate::features::spaces::pages::actions::actions::subscription::*;
+use crate::features::spaces::pages::actions::actions::follow::macros::DynamoEntity;
+use crate::features::spaces::pages::actions::actions::follow::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, DynamoEntity)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-pub struct SpaceSubscriptionUser {
+pub struct SpaceFollowUser {
     pub pk: Partition,
     pub sk: EntityType,
 
@@ -25,7 +25,7 @@ pub struct SpaceSubscriptionUser {
 }
 
 #[cfg(feature = "server")]
-impl SpaceSubscriptionUser {
+impl SpaceFollowUser {
     pub fn new(
         space_pk: SpacePartition,
         user_pk: Partition,

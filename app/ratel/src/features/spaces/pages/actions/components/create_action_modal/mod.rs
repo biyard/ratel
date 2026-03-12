@@ -1,16 +1,16 @@
-use crate::features::spaces::pages::actions::*;
-use i18n::CreateActionModalTranslate;
 use crate::features::spaces::pages::actions::actions::discussion::controllers::create_discussion;
+use crate::features::spaces::pages::actions::actions::follow::controllers::create_follow;
 use crate::features::spaces::pages::actions::actions::poll::controllers::create_poll;
 use crate::features::spaces::pages::actions::actions::quiz::controllers::create_quiz;
-use crate::features::spaces::pages::actions::actions::subscription::controllers::create_subscription;
+use crate::features::spaces::pages::actions::*;
 use crate::features::spaces::space_common::types::route::{
-    space_action_discussion, space_action_poll, space_action_quiz, space_action_subscription,
+    space_action_discussion, space_action_follow, space_action_poll, space_action_quiz,
 };
+use i18n::CreateActionModalTranslate;
 mod i18n;
 
 #[component]
-pub fn CreateActionModal(space_id: SpacePartition, has_subscription: bool) -> Element {
+pub fn CreateActionModal(space_id: SpacePartition, has_follow: bool) -> Element {
     let tr: CreateActionModalTranslate = use_translate();
     let nav = navigator();
     let layover = use_layover();
@@ -90,20 +90,20 @@ pub fn CreateActionModal(space_id: SpacePartition, has_subscription: bool) -> El
                         }
                     });
                 }
-                SpaceActionType::Subscription => {
-                    if has_subscription {
+                SpaceActionType::Follow => {
+                    if has_follow {
                         is_creating.set(false);
                         return;
                     }
                     spawn(async move {
-                        match create_subscription(space_id.clone()).await {
+                        match create_follow(space_id.clone()).await {
                             Ok(_) => {
                                 is_creating.set(false);
-                                nav.push(space_action_subscription(&space_id));
+                                nav.push(space_action_follow(&space_id));
                                 layover.close();
                             }
                             Err(err) => {
-                                error!("Failed to create subscription: {:?}", err);
+                                error!("Failed to create follow: {:?}", err);
                                 is_creating.set(false);
                             }
                         }
@@ -132,7 +132,7 @@ pub fn CreateActionModal(space_id: SpacePartition, has_subscription: bool) -> El
 
         div { class: "flex flex-col flex-1 min-h-0 bg-neutral-900 light:bg-neutral-200",
             // Scrollable content area
-            div { class: "flex flex-col gap-5 p-[1.875rem] overflow-y-auto grow",
+            div { class: "flex overflow-y-auto flex-col gap-5 p-[1.875rem] grow",
                 // 2x2 grid of action type options
                 div { class: "grid grid-cols-2 gap-2.5",
                     ActionTypeOption {
@@ -177,11 +177,11 @@ pub fn CreateActionModal(space_id: SpacePartition, has_subscription: bool) -> El
                             }
                         },
                     }
-                    if !has_subscription {
+                    if !has_follow {
                         ActionTypeOption {
-                            selected: selected_type() == Some(SpaceActionType::Subscription),
+                            selected: selected_type() == Some(SpaceActionType::Follow),
                             disabled: false,
-                            onclick: move |_| selected_type.set(Some(SpaceActionType::Subscription)),
+                            onclick: move |_| selected_type.set(Some(SpaceActionType::Follow)),
                             title: tr.follow_title.to_string(),
                             caption: tr.follow_caption.to_string(),
                             icon: rsx! {
@@ -199,25 +199,25 @@ pub fn CreateActionModal(space_id: SpacePartition, has_subscription: bool) -> El
                 SpaceCard {
                     class: "flex flex-col gap-5 border border-neutral-700 light:border-neutral-300 !bg-neutral-800 light:!bg-white !rounded-[0.75rem] !p-4"
                         .to_string(),
-                    p { class: "text-[1.0625rem]/[1.25rem] font-medium text-white light:text-neutral-900",
+                    p { class: "font-medium text-white text-[1.0625rem]/[1.25rem] light:text-neutral-900",
                         {tr.sample_title}
                     }
-                    div { class: "w-full h-[14.875rem] rounded-[0.75rem] border border-neutral-700 light:border-neutral-300 bg-neutral-950/40 light:bg-neutral-100" }
+                    div { class: "w-full border h-[14.875rem] rounded-[0.75rem] border-neutral-700 light:border-neutral-300 bg-neutral-950/40 light:bg-neutral-100" }
                 }
-            
+
             }
 
             // Bottom bar
-            div { class: "flex justify-end items-center gap-5 h-[5.25rem] px-5 border-t border-neutral-800 light:border-neutral-300 shrink-0",
+            div { class: "flex gap-5 justify-end items-center px-5 border-t h-[5.25rem] border-neutral-800 light:border-neutral-300 shrink-0",
                 Button {
-                    class: "!px-5 !py-3 !text-[0.875rem]/[1rem] !font-bold !text-white light:!text-neutral-900 hover:opacity-80"
+                    class: "hover:opacity-80 !px-5 !py-3 !text-[0.875rem]/[1rem] !font-bold !text-white light:!text-neutral-900"
                         .to_string(),
                     style: ButtonStyle::Text,
                     onclick: close_layover,
                     {tr.back}
                 }
                 Button {
-                    class: "!px-5 !py-3 !rounded-[0.625rem] !text-[0.875rem]/[1rem] !font-bold !bg-yellow-400 light:!bg-yellow-500 !text-neutral-900 hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
+                    class: "hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed !px-5 !py-3 !rounded-[0.625rem] !text-[0.875rem]/[1rem] !font-bold !bg-yellow-400 light:!bg-yellow-500 !text-neutral-900"
                         .to_string(),
                     style: ButtonStyle::Text,
                     shape: ButtonShape::Square,
@@ -266,16 +266,16 @@ fn ActionTypeOption(
             },
             "aria-disabled": disabled.to_string(),
 
-            div { class: "flex justify-center items-center rounded-[0.625rem] size-11 bg-white light:bg-white shrink-0",
+            div { class: "flex justify-center items-center bg-white rounded-[0.625rem] size-11 light:bg-white shrink-0",
                 {icon}
-            
+
             }
 
-            div { class: "flex flex-col items-start gap-1",
-                p { class: "text-[1.0625rem]/[1.25rem] font-bold text-white light:text-neutral-900",
+            div { class: "flex flex-col gap-1 items-start",
+                p { class: "font-bold text-white text-[1.0625rem]/[1.25rem] light:text-neutral-900",
                     {title}
                 }
-                p { class: "text-[0.8125rem]/[1rem] font-semibold text-neutral-500 light:text-neutral-600",
+                p { class: "font-semibold text-[0.8125rem]/[1rem] text-neutral-500 light:text-neutral-600",
                     {caption}
                 }
             }

@@ -1,11 +1,11 @@
-use crate::features::spaces::pages::actions::actions::subscription::*;
+use crate::features::spaces::pages::actions::actions::follow::*;
 
 translate! {
-    SubscriptionUserInviteTranslate;
+    FollowUserInviteTranslate;
 
     title: {
-        en: "Users to subscribe",
-        ko: "구독할 유저"
+        en: "Users to follow",
+        ko: "팔로우할 유저"
     }
     identifier_label: {
         en: "Email or Username",

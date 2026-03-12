@@ -5,7 +5,7 @@ use i18n::ActionCardTranslate;
 mod i18n;
 
 #[component]
-pub fn ActionCard(action: SpaceAction, space_id: SpacePartition) -> Element {
+pub fn ActionCard(action: SpaceActionSummary, space_id: SpacePartition) -> Element {
     let tr: ActionCardTranslate = use_translate();
     let nav = navigator();
     let now = crate::common::utils::time::get_now_timestamp_millis();
@@ -22,7 +22,7 @@ pub fn ActionCard(action: SpaceAction, space_id: SpacePartition) -> Element {
         // SpaceActionType::StudyAndQuiz => tr.action_type_quiz,
         SpaceActionType::Poll => tr.action_type_poll,
         SpaceActionType::TopicDiscussion => tr.action_type_discussion,
-        SpaceActionType::Subscription => tr.action_type_subscription,
+        SpaceActionType::Follow => tr.action_type_follow,
         SpaceActionType::Quiz => tr.action_type_quiz,
     };
     let type_badge_color = action_type_badge_color(&action.action_type);
@@ -66,7 +66,7 @@ pub fn ActionCard(action: SpaceAction, space_id: SpacePartition) -> Element {
                         {type_label}
                     }
 
-                    if action.action_type != SpaceActionType::Subscription {
+                    if action.action_type != SpaceActionType::Follow {
                         Badge {
                             color: status_color,
                             variant: BadgeVariant::Rounded,
@@ -123,7 +123,7 @@ enum ActionStatus {
     Closed,
 }
 
-fn resolve_action_status(action: &SpaceAction, now_millis: i64) -> ActionStatus {
+fn resolve_action_status(action: &SpaceActionSummary, now_millis: i64) -> ActionStatus {
     match (action.started_at, action.ended_at) {
         (Some(started_at), Some(ended_at)) => {
             if now_millis < started_at {
@@ -158,7 +158,7 @@ fn action_type_badge_color(action_type: &SpaceActionType) -> BadgeColor {
         // SpaceActionType::StudyAndQuiz => BadgeColor::Purple,
         SpaceActionType::Poll => BadgeColor::Orange,
         SpaceActionType::TopicDiscussion => BadgeColor::Blue,
-        SpaceActionType::Subscription => BadgeColor::Pink,
+        SpaceActionType::Follow => BadgeColor::Pink,
         SpaceActionType::Quiz => BadgeColor::Purple,
     }
 }
