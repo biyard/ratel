@@ -33,7 +33,7 @@ pub fn Layover() -> Element {
     };
     let onclose = move |_| layover.close();
     let panel_classes = format!(
-        "absolute top-0 right-0 h-full w-full max-w-50% bg-neutral-900 light:bg-neutral-200 border-l border-neutral-800 light:border-neutral-300 rounded-l-[24px] overflow-hidden transition-transform duration-300 ease-in-out max-tablet:max-w-full max-tablet:rounded-none {} {}",
+        "absolute top-0 right-0 h-full bg-neutral-900 light:bg-neutral-200 border-l border-neutral-800 light:border-neutral-300 rounded-l-[24px] overflow-hidden transition-transform duration-300 ease-in-out max-tablet:max-w-full max-tablet:rounded-none {} {} shadow-[0_8px_20px_0_rgba(20,26,62,0.25)]",
         if is_open {
             "translate-x-0"
         } else {
@@ -47,7 +47,7 @@ pub fn Layover() -> Element {
             class: "fixed inset-0 z-100",
             class: if !is_open { "pointer-events-none" },
             div {
-                class: "absolute inset-0 bg-black backdrop-blur-sm transition-opacity duration-300",
+                class: "absolute inset-0 bg-black transition-opacity duration-300 backdrop-blur-sm",
                 class: if is_open { "opacity-50" } else { "opacity-0 pointer-events-none" },
                 onclick: onclose,
             }
@@ -60,7 +60,7 @@ pub fn Layover() -> Element {
                     if !title.is_empty() {
                         div { class: "flex flex-row gap-5 items-center px-5 h-16 border-b border-neutral-800 light:border-neutral-300 shrink-0",
                             button {
-                                class: "flex justify-center items-center rounded-md size-6 bg-transparent hover:bg-neutral-800 light:hover:bg-neutral-300 transition-colors cursor-pointer",
+                                class: "flex justify-center items-center bg-transparent rounded-md transition-colors cursor-pointer size-6 light:hover:bg-neutral-300 hover:bg-neutral-800",
                                 onclick: onclose,
                                 crate::common::icons::validations::Clear {
                                     width: "16",
@@ -69,7 +69,7 @@ pub fn Layover() -> Element {
                                 }
                             }
 
-                            h4 { class: "font-bold text-[20px]/[24px] tracking-[-0.2px] text-white light:text-neutral-900",
+                            h4 { class: "font-bold text-white text-[20px]/[24px] tracking-[-0.2px] light:text-neutral-900",
                                 {title}
                             }
                         }
