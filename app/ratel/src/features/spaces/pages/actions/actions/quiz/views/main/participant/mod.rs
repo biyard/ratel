@@ -38,6 +38,7 @@ pub fn QuizParticipantPage(
 
 #[component]
 fn ParticipantQuizTab() -> Element {
+    let mut query = use_query_store();
     let ctx = use_space_quiz_context();
     let tr: QuizParticipantTranslate = use_translate();
     let mut toast = use_toast();
@@ -71,7 +72,7 @@ fn ParticipantQuizTab() -> Element {
             match respond_quiz(space_id(), quiz_id(), req).await {
                 Ok(_) => {
                     let keys = space_page_actions_quiz_key(&space_id(), &quiz_id());
-                    invalidate_query(&keys);
+                    query.invalidate(&keys);
                     toast.info(tr.submit_success);
                 }
                 Err(err) => {

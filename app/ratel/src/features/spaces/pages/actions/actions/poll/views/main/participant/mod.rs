@@ -10,6 +10,7 @@ use crate::features::spaces::space_common::types::space_page_actions_poll_key;
 #[component]
 pub fn PollParticipantPage(space_id: SpacePartition, poll_id: SpacePollEntityType) -> Element {
     let tr: PollParticipantTranslate = use_translate();
+    let mut query = use_query_store();
     let nav = navigator();
     let key = space_page_actions_poll_key(&space_id, &poll_id);
 
@@ -58,7 +59,7 @@ pub fn PollParticipantPage(space_id: SpacePartition, poll_id: SpacePollEntityTyp
                 match respond_poll(space_id.clone(), poll_id.clone(), req).await {
                     Ok(_) => {
                         let keys = space_page_actions_poll_key(&space_id, &poll_id);
-                        invalidate_query(&keys);
+                        query.invalidate(&keys);
                     }
                     _ => {}
                 }
