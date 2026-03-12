@@ -13,7 +13,7 @@ pub async fn get_membership_handler() -> Result<UserMembershipResponse> {
         let user_membership =
             UserMembership::get(cli, user.pk.clone(), Some(EntityType::UserMembership)).await?;
 
-        let (user_membership, _membership) = match user_membership {
+        let (user_membership, membership) = match user_membership {
             Some(user_membership) => {
                 let membership_pk: Partition = user_membership.membership_pk.clone().into();
                 let membership = Membership::get(cli, membership_pk, Some(EntityType::Membership))
@@ -43,7 +43,9 @@ pub async fn get_membership_handler() -> Result<UserMembershipResponse> {
             }
         };
 
-        Ok(user_membership.into())
+        let mut resp: UserMembershipResponse = user_membership.into();
+        resp.max_credits_per_space = membership.max_credits_per_space;
+        Ok(resp)
     }
     .await;
 

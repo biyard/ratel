@@ -73,6 +73,8 @@ pub fn LoginModal() -> Element {
                 user_ctx.set(UserContext {
                     user: Some(user.user),
                     refresh_token: user.refresh_token,
+                    #[cfg(feature = "membership")]
+                    membership: None,
                 });
                 popup.close();
             }
@@ -104,6 +106,8 @@ pub fn LoginModal() -> Element {
                         user_ctx.set(UserContext {
                             user: Some(user.user),
                             refresh_token: user.refresh_token,
+                            #[cfg(feature = "membership")]
+                            membership: None,
                         });
                         popup.close();
                     }
@@ -205,6 +209,8 @@ pub fn LoginModal() -> Element {
                     user_ctx.set(UserContext {
                         user: Some(user.user),
                         refresh_token: user.refresh_token,
+                        #[cfg(feature = "membership")]
+                        membership: None,
                     });
                     popup.close();
                 }

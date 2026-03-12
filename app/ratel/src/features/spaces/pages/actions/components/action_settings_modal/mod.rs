@@ -17,7 +17,7 @@ mod utils;
 #[component]
 pub fn ActionSettingsModal(
     space_id: SpacePartition,
-    actions: Vec<SpaceAction>,
+    actions: Vec<SpaceActionSummary>,
     on_applied: EventHandler<()>,
 ) -> Element {
     let tr: ActionSettingsModalTranslate = use_translate();

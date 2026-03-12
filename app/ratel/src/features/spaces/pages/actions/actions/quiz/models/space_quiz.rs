@@ -33,7 +33,7 @@ pub struct SpaceQuiz {
     pub files: Vec<File>,
 }
 
-impl From<SpaceQuiz> for crate::features::spaces::pages::actions::types::SpaceAction {
+impl From<SpaceQuiz> for crate::features::spaces::pages::actions::types::SpaceActionSummary {
     fn from(quiz: SpaceQuiz) -> Self {
         use crate::features::spaces::pages::actions::types::SpaceActionType;
         let action_id = quiz.sk.to_string();
@@ -49,6 +49,7 @@ impl From<SpaceQuiz> for crate::features::spaces::pages::actions::types::SpaceAc
             started_at: Some(quiz.started_at),
             ended_at: Some(quiz.ended_at),
             user_participated: false,
+            credits: 0,
         }
     }
 }
