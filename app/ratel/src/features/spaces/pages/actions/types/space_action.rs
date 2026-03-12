@@ -52,7 +52,7 @@ impl SpaceActionSummary {
             SpaceActionType::TopicDiscussion => {
                 space_action_discussion(space_id, &self.action_id.clone().into())
             }
-            SpaceActionType::Follow => space_action_follow(space_id),
+            SpaceActionType::Follow => space_action_follow(space_id, &self.action_id.clone().into()),
             SpaceActionType::Quiz => space_action_quiz(space_id, &self.action_id.clone().into()),
         }
     }

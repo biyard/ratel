@@ -1,4 +1,6 @@
+mod prerequisite_setting;
 mod reward_setting;
+pub use prerequisite_setting::*;
 pub use reward_setting::*;
 
 use super::*;
@@ -10,6 +12,7 @@ pub fn ActionCommonSettings(
     action_setting: ReadSignal<SpaceAction>,
     #[props(default)] on_date_change: EventHandler<DateTimeRange>,
     #[props(default)] on_credit_change: EventHandler<u64>,
+    #[props(default)] on_prerequisite_change: EventHandler<bool>,
 ) -> Element {
     let tr: ActionCommonSettingsTranslate = use_translate();
     let mut toast = crate::common::use_toast();
@@ -47,6 +50,13 @@ pub fn ActionCommonSettings(
                         }
                     },
                 }
+            }
+
+            PrerequisiteSetting {
+                space_id,
+                action_id,
+                action_setting,
+                on_change: on_prerequisite_change,
             }
 
             RewardSetting {

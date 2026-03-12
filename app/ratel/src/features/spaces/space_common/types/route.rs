@@ -1,5 +1,6 @@
 use crate::common::{
-    SpacePartition, SpacePollEntityType, SpacePostEntityType, SpaceQuizEntityType,
+    SpaceActionFollowEntityType, SpacePartition, SpacePollEntityType, SpacePostEntityType,
+    SpaceQuizEntityType,
 };
 use crate::Route;
 
@@ -24,9 +25,10 @@ pub fn space_action_discussion(
     .to_string()
 }
 
-pub fn space_action_follow(space_id: &SpacePartition) -> String {
+pub fn space_action_follow(space_id: &SpacePartition, follow_id: &SpaceActionFollowEntityType) -> String {
     Route::FollowActionPage {
         space_id: space_id.clone(),
+        follow_id: follow_id.clone(),
     }
     .to_string()
 }

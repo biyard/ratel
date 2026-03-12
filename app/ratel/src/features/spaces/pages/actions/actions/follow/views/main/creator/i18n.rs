@@ -13,8 +13,8 @@ translate! {
     },
 
     tab_common: {
-        en: "Common Settings",
-        ko: "공통설정"
+        en: "Settings",
+        ko: "설정"
     },
 
     btn_back: {
