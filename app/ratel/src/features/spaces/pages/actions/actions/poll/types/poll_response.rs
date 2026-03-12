@@ -16,7 +16,7 @@ pub struct PollResponse {
     pub my_response: Option<Vec<Answer>>,
     pub status: PollStatus,
     pub default: bool,
-    pub space_action: Option<crate::features::spaces::pages::actions::models::SpaceAction>,
+    pub space_action: crate::features::spaces::pages::actions::models::SpaceAction,
 }
 
 #[cfg(feature = "server")]
@@ -36,7 +36,7 @@ impl From<SpacePoll> for PollResponse {
             status: poll.status(),
             default: poll.is_default_poll(),
             my_response: None,
-            space_action: None,
+            space_action: SpaceAction::default(),
         }
     }
 }

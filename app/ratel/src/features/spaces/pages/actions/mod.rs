@@ -10,7 +10,6 @@ use actions::*;
 use components::*;
 use controllers::*;
 use models::*;
-use models::*;
 use types::*;
 
 pub use menu::*;

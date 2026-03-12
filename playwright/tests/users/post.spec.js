@@ -1,25 +1,9 @@
 import { test } from "@playwright/test";
-import { waitPopup, click, fill, goto, getLocator, getEditor } from "../utils";
-
-test("Create a post", async ({ page }) => {
-  await goto(page, "/");
-
-  await click(page, { label: "Create Post" });
-  await fill(page, { placeholder: "Title" }, "Playwright Post");
-
-  const contents =
-    "This is a test post created using Playwright. The purpose of this post is to verify that the post creation functionality works correctly. We will fill in the title and content fields, publish the post, and check if it appears as expected. This test ensures that users can successfully create and publish posts on the platform.";
-
-  const editor = await getEditor(page);
-  await editor.fill(contents);
-
-  await click(page, { text: "Publish" });
-  await click(page, { testId: "public-option" });
-  await click(page, { label: "Confirm visibility selection" });
-  await getLocator(page, { label: "Create a Space" });
-});
+import { click, fill, goto, getLocator, getEditor } from "../utils";
 
 test.describe.serial("Post with Space", () => {
+  let spaceUrl;
+
   test("Create a post", async ({ page }) => {
     await goto(page, "/");
 
@@ -44,5 +28,64 @@ test.describe.serial("Post with Space", () => {
       waitUntil: "networkidle",
     });
     await getLocator(page, { text: "Dashboard" });
+
+    // save space base URL for subsequent tests
+    const url = new URL(page.url());
+    spaceUrl = url.pathname.replace(/\/dashboard$/, "");
+  });
+
+  test("Create a discussion in space", async ({ page }) => {
+    await goto(page, spaceUrl + "/actions");
+
+    // open create action modal
+    await click(page, { text: "Select Action Type" });
+    // select Discussion
+    await click(page, { text: "Discussion" });
+    // hide FAB that overlaps modal buttons
+    await page.evaluate(() => {
+      const fab = document.querySelector('[class*="fixed right-4 bottom-4"]');
+      if (fab) fab.style.display = "none";
+    });
+    // confirm creation
+    await click(page, { text: "Create" });
+
+    // wait for discussion viewer page
+    await page.waitForURL(/\/actions\/discussions\//, {
+      waitUntil: "networkidle",
+    });
+    await getLocator(page, { text: "Untitled Discussion" });
+
+    // go to editor
+    await click(page, { text: "Edit" });
+    await page.waitForURL(/\/actions\/discussions\/.*\/edit/, {
+      waitUntil: "networkidle",
+    });
+
+    // fill discussion fields
+    await fill(
+      page,
+      { placeholder: "Enter discussion title..." },
+      "Playwright Discussion Topic",
+    );
+    await fill(
+      page,
+      { placeholder: "Enter category (optional)..." },
+      "Testing",
+    );
+    await fill(
+      page,
+      { placeholder: "Write your discussion content..." },
+      "This is a test discussion created by Playwright to verify the discussion creation flow within a space.",
+    );
+
+    await click(page, { text: "Save" });
+  });
+
+  test("Publish space privately", async ({ page }) => {
+    await goto(page, spaceUrl + "/dashboard");
+
+    await click(page, { text: "Publish" });
+    await click(page, { testId: "private-option" });
+    await click(page, { label: "Confirm visibility selection" });
   });
 });

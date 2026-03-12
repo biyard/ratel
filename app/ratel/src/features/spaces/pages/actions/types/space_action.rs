@@ -19,6 +19,27 @@ pub struct SpaceActionSummary {
     pub ended_at: Option<i64>,
 
     pub user_participated: bool,
+    pub credits: u64,
+}
+
+impl From<crate::features::spaces::pages::actions::models::SpaceAction> for SpaceActionSummary {
+    fn from(action: crate::features::spaces::pages::actions::models::SpaceAction) -> Self {
+        let action_id = action.pk.1;
+        Self {
+            action_id,
+            action_type: action.space_action_type,
+            title: action.title,
+            description: action.description,
+            created_at: action.created_at,
+            updated_at: action.updated_at,
+            total_score: None,
+            total_point: None,
+            started_at: Some(action.started_at),
+            ended_at: Some(action.ended_at),
+            user_participated: false,
+            credits: action.credits,
+        }
+    }
 }
 
 use crate::features::spaces::space_common::types::route::{

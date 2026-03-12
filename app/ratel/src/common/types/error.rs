@@ -231,6 +231,13 @@ pub enum Error {
     #[error("Invalid email")]
     #[translate(en = "Invalid email", ko = "유효하지 않은 이메일입니다.")]
     InvalidEmail,
+
+}
+
+impl From<std::convert::Infallible> for Error {
+    fn from(e: std::convert::Infallible) -> Self {
+        match e {}
+    }
 }
 
 impl From<String> for Error {
