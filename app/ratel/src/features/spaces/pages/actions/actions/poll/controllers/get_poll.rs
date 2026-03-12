@@ -13,7 +13,7 @@ pub async fn get_poll(
     let space_id = space_pk;
     let poll_id = poll_sk;
     let space_pk: Partition = space_id.clone().into();
-    let poll_sk_entity: EntityType = poll_sk.clone().into();
+    let poll_sk_entity: EntityType = poll_id.clone().into();
 
     let poll = SpacePoll::get(cli, &space_pk, Some(poll_sk_entity.clone()))
         .await?
