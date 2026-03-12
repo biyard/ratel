@@ -26,7 +26,5 @@ pub fn AppLayout() -> Element {
             AppMenu {}
             Outlet::<Route> {}
         }
-        PopupZone {}
-        ToastProvider {}
     }
 }
