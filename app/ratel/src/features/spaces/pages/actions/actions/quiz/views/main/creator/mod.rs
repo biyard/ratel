@@ -16,7 +16,7 @@ pub fn QuizCreatorPage(
 ) -> Element {
     let tr: QuizCreatorTranslate = use_translate();
     let ctx = Context::init(space_id, quiz_id)?;
-    let can_edit = ctx.quiz.read().user_response_count == 0;
+    let can_edit_quiz = ctx.quiz.read().user_response_count == 0;
 
     rsx! {
         div { class: "flex min-h-0 w-full flex-1 flex-col gap-4",
@@ -32,13 +32,13 @@ pub fn QuizCreatorPage(
                     index: 0usize,
                     value: "overview-tab",
                     class: "flex min-h-0 flex-1",
-                    OverviewTab { can_edit }
+                    OverviewTab { can_edit: true }
                 }
                 TabContent { index: 1usize, value: "upload-tab",
-                    UploadTab { can_edit }
+                    UploadTab { can_edit: true }
                 }
                 TabContent { index: 2usize, value: "quiz-tab",
-                    QuizTab { can_edit }
+                    QuizTab { can_edit: can_edit_quiz }
                 }
                 TabContent { index: 3usize, value: "setting-tab", ActionCommonSettings {} }
             }
