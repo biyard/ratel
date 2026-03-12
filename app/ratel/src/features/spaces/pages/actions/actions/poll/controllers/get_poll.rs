@@ -24,7 +24,9 @@ pub async fn get_poll(
         &CompositePartition(space_pk.clone(), poll_sk_entity.clone()),
         Some(EntityType::SpaceAction),
     )
-    .await?;
+    .await?
+    .ok_or(Error::SpaceActionNotFound)?;
+
     response.space_action = space_action;
 
     if let Some(user) = user.0 {
