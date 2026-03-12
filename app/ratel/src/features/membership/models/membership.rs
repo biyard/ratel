@@ -23,9 +23,10 @@ pub enum MembershipTier {
     Enterprise(String),
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default, DynamoEnum, Eq, PartialEq)]
+#[derive(
+    Debug, Clone, SerializeDisplay, DeserializeFromStr, Default, DynamoEnum, Eq, PartialEq,
+)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-#[serde(rename_all = "UPPERCASE")]
 pub enum MembershipStatus {
     #[default]
     Active,
@@ -202,14 +203,21 @@ impl From<Membership> for MembershipResponse {
     }
 }
 
-#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct UserMembershipResponse {
     pub tier: MembershipPartition,
     pub expired_at: i64,
     pub total_credits: i64,
     pub remaining_credits: i64,
+    pub max_credits_per_space: i64,
     pub next_membership: Option<MembershipPartition>,
+}
+
+impl UserMembershipResponse {
+    pub fn is_paid(&self) -> bool {
+        !self.tier.0.contains("Free")
+    }
 }
 
 impl From<UserMembership> for UserMembershipResponse {
@@ -219,6 +227,7 @@ impl From<UserMembership> for UserMembershipResponse {
             expired_at: user_membership.expired_at,
             total_credits: user_membership.total_credits,
             remaining_credits: user_membership.remaining_credits,
+            max_credits_per_space: 0,
             next_membership: user_membership.next_membership,
         }
     }
