@@ -57,6 +57,7 @@ pub fn RewardSetting() -> Element {
                                     active: enable_reward(),
                                     on_toggle: move |_| {
                                         enable_reward.set(!enable_reward());
+                                        credits.set(1);
                                     },
                                 }
                             } else {
@@ -122,14 +123,26 @@ pub fn RewardSetting() -> Element {
                                     }
                                 }
                                 if max_credits > 0 {
-                                    div { class: "flex gap-3 justify-between items-center",
-                                        p { class: label_class, {tr.max_credits} }
+                                    div { class: "flex gap-3 justify-between items-center w-full",
+                                        div { class: "flex gap-1 items-center",
+                                            p { class: label_class, {tr.max_credits} }
+                                            Tooltip {
+                                                TooltipTrigger {
+                                                    icons::help_support::Info {
+                                                        width: "14",
+                                                        height: "14",
+                                                        class: "cursor-help text-web-font-neutral [&>path]:stroke-current [&>circle]:fill-current [&>path]:fill-none",
+                                                    }
+                                                }
+                                                TooltipContent { {tr.max_credits_tooltip} }
+                                            }
+                                        }
                                         p { class: "font-semibold text-web-font-neutral font-raleway text-[15px]/[18px] tracking-[-0.16px]",
                                             {format_number(max_credits)}
                                         }
                                     }
                                 }
-                                div { class: "flex gap-3 justify-between items-center",
+                                div { class: "flex gap-3 justify-between items-center w-full",
                                     p { class: label_class, {tr.remaining_credits} }
                                     p { class: "font-semibold text-green-500 font-raleway text-[15px]/[18px] tracking-[-0.16px]",
                                         {format_number(remaining_credits)}
@@ -235,8 +248,12 @@ translate! {
         ko: "크레딧 사용량",
     },
     max_credits: {
-        en: "Max Credits Per Space",
-        ko: "스페이스 당 최대 크레딧",
+        en: "Max Credits",
+        ko: "최대 크레딧",
+    },
+    max_credits_tooltip: {
+        en: "Upgrade your membership to increase max credits per space.",
+        ko: "멤버십을 업그레이드하면 스페이스당 최대 크레딧이 증가합니다.",
     },
     remaining_credits: {
         en: "Remaining Credits",
