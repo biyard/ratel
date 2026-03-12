@@ -12,3 +12,6 @@ pub use update_discussion::*;
 
 mod delete_discussion;
 pub use delete_discussion::*;
+
+mod get_discussion_detail;
+pub use get_discussion_detail::*;
