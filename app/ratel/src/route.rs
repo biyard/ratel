@@ -94,6 +94,9 @@ pub enum Route {
                 #[cfg_attr(feature="spaces", route("/overview"))]
                 #[cfg(feature = "spaces")]
                 SpaceOverviewPage { space_id: SpacePartition },
+                #[cfg_attr(feature="spaces", route("/report"))]
+                #[cfg(feature = "spaces")]
+                SpaceReportPage { space_id: SpacePartition },
 
                 #[cfg_attr(feature="spaces", nest("/actions"))]
                     #[cfg_attr(feature="spaces", route("/"))]
@@ -107,8 +110,6 @@ pub enum Route {
                     #[cfg_attr(feature="spaces", route("/discussions/:discussion_id/edit"))]
                     #[cfg(feature = "spaces")]
                     DiscussionActionEditorPage { space_id: SpacePartition, discussion_id: SpacePostEntityType },
-
-
                     #[cfg_attr(feature="spaces", route("/polls/:poll_id"))]
                     #[cfg(feature = "spaces")]
                     PollActionPage { space_id: SpacePartition, poll_id: SpacePollEntityType },
@@ -117,14 +118,10 @@ pub enum Route {
                     #[cfg(feature = "spaces")]
                     QuizActionPage { space_id: SpacePartition, quiz_id: SpaceQuizEntityType },
 
-                    #[cfg_attr(feature="spaces", route("/follows"))]
+                    #[cfg_attr(feature="spaces", route("/follows/:follow_id"))]
                     #[cfg(feature = "spaces")]
-                    FollowActionPage { space_id: SpacePartition },
+                    FollowActionPage { space_id: SpacePartition, follow_id: SpaceActionFollowEntityType },
                 #[cfg_attr(feature="spaces", end_nest)]
-
-                #[cfg_attr(feature="spaces", route("/report"))]
-                #[cfg(feature = "spaces")]
-                SpaceReportPage { space_id: SpacePartition },
 
                 // Space Apps
                 #[cfg_attr(feature="spaces", nest("/apps"))]

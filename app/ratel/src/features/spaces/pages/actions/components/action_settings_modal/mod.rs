@@ -1,15 +1,13 @@
 use self::action_chip::ActionSettingsActionChip;
-use self::fields::{DateField, TimeZoneField};
 use self::i18n::ActionSettingsModalTranslate;
 use self::reward_cards::{RewardSummaryCard, RewardsCreditsCard, RewardsInfoCard};
 use self::utils::{
-    action_label, apply_selected_action_dates, available_actions, resolve_action_time_range,
-    reward_credit_summary, reward_preview_items, selected_actions, supports_action_settings,
+    action_label, apply_selected_action_dates, available_actions, reward_credit_summary,
+    reward_preview_items, selected_actions, supports_action_settings,
 };
 use crate::features::spaces::pages::actions::*;
 
 mod action_chip;
-mod fields;
 mod i18n;
 mod reward_cards;
 mod utils;
@@ -35,9 +33,7 @@ pub fn ActionSettingsModal(
     let mut is_add_menu_open = use_signal(|| false);
     let mut is_date_enabled = use_signal(|| true);
     let mut is_rewards_enabled = use_signal(|| false);
-    let mut start_date = use_signal(String::new);
-    let mut end_date = use_signal(String::new);
-    let mut time_zone = use_signal(String::new);
+    let mut date_range = use_signal(|| None::<DateTimeRange>);
     let is_applying = use_signal(|| false);
 
     let current_lang = lang();
@@ -48,9 +44,6 @@ pub fn ActionSettingsModal(
     let (credit_usage, remaining_credits) = reward_credit_summary();
 
     let select_dates_error = tr.select_dates_error.to_string();
-    let select_time_zone_error = tr.select_time_zone_error.to_string();
-    let invalid_date_range_error = tr.invalid_date_range_error.to_string();
-    let unsupported_time_zone_error = tr.unsupported_time_zone_error.to_string();
     let applied_success = tr.applied_success.to_string();
 
     let close_modal = {
@@ -76,30 +69,24 @@ pub fn ActionSettingsModal(
                 return;
             }
 
-            if start_date().is_empty() || end_date().is_empty() {
-                toast.warn(select_dates_error.clone());
-                return;
-            }
-
-            if time_zone().is_empty() {
-                toast.warn(select_time_zone_error.clone());
-                return;
-            }
-
-            let (started_at, ended_at) = match resolve_action_time_range(
-                &start_date(),
-                &end_date(),
-                &time_zone(),
-                &select_dates_error,
-                &invalid_date_range_error,
-                &unsupported_time_zone_error,
-            ) {
-                Ok(range) => range,
-                Err(err) => {
-                    toast.error(err);
+            let range = match date_range() {
+                Some(r) => r,
+                None => {
+                    toast.warn(select_dates_error.clone());
                     return;
                 }
             };
+
+            let (start_date, end_date) = match (range.start_date, range.end_date) {
+                (Some(s), Some(e)) => (s, e),
+                _ => {
+                    toast.warn(select_dates_error.clone());
+                    return;
+                }
+            };
+
+            let started_at = date_time_to_millis(start_date, range.start_hour, range.start_minute);
+            let ended_at = date_time_to_millis(end_date, range.end_hour, range.end_minute);
 
             let selected_actions = selected_actions.clone();
             let space_id = space_id.clone();
@@ -131,14 +118,14 @@ pub fn ActionSettingsModal(
     };
 
     rsx! {
-        div { class: "flex h-full w-full justify-end overflow-hidden text-web-font-primary",
-            div { class: "flex h-full w-full shrink-0 flex-col gap-5 bg-neutral-950 px-6 py-6 max-tablet:px-5 max-tablet:py-5 max-mobile:min-h-full max-mobile:gap-4 max-mobile:px-4 max-mobile:py-4",
-                div { class: "flex items-center gap-3 max-mobile:gap-2.5",
+        div { class: "flex overflow-hidden justify-end w-full h-full text-web-font-primary",
+            div { class: "flex flex-col gap-5 py-6 px-6 w-full h-full shrink-0 bg-neutral-950 max-tablet:px-5 max-tablet:py-5 max-mobile:min-h-full max-mobile:gap-4 max-mobile:px-4 max-mobile:py-4",
+                div { class: "flex gap-3 items-center max-mobile:gap-2.5",
                     Button {
                         size: ButtonSize::Icon,
                         style: ButtonStyle::Text,
                         shape: ButtonShape::Square,
-                        class: "flex size-5 items-center justify-center rounded-none p-0 text-web-font-primary hover:bg-transparent",
+                        class: "flex justify-center items-center p-0 rounded-none hover:bg-transparent size-5 text-web-font-primary",
                         onclick: close_modal,
                         icons::arrows::LineArrowLeft {
                             width: "20",
@@ -183,7 +170,7 @@ pub fn ActionSettingsModal(
                             height: "20",
                             class: "text-web-font-neutral [&>path]:stroke-current",
                         }
-                        span { class: "min-w-0 truncate font-bold font-raleway text-[15px]/[18px] tracking-[-0.16px] text-web-font-neutral",
+                        span { class: "min-w-0 font-bold truncate font-raleway text-[15px]/[18px] tracking-[-0.16px] text-web-font-neutral",
                             if available_actions.is_empty() {
                                 {tr.no_available_actions}
                             } else {
@@ -193,14 +180,14 @@ pub fn ActionSettingsModal(
                     }
 
                     if is_add_menu_open() && !available_actions.is_empty() {
-                        div { class: "absolute left-0 top-full z-10 mt-2 flex w-full flex-col overflow-hidden rounded-[10px] border border-yellow-400 bg-neutral-800 shadow-[0_8px_20px_0_rgba(20,26,62,0.25)] max-mobile:max-h-56 overflow-y-auto",
+                        div { class: "flex overflow-hidden overflow-y-auto absolute left-0 top-full z-10 flex-col mt-2 w-full border border-yellow-400 rounded-[10px] bg-neutral-800 shadow-[0_8px_20px_0_rgba(20,26,62,0.25)] max-mobile:max-h-56",
                             for action in available_actions.iter() {
                                 Button {
                                     key: "{action.action_id}",
                                     size: ButtonSize::Medium,
                                     style: ButtonStyle::Text,
                                     shape: ButtonShape::Square,
-                                    class: "flex min-h-11 w-full items-start justify-start rounded-none px-3 py-2.5 text-left font-medium font-raleway text-[15px]/[18px] whitespace-normal break-words text-web-font-primary hover:bg-neutral-900",
+                                    class: "flex justify-start items-start py-2.5 px-3 w-full font-medium text-left whitespace-normal break-words rounded-none min-h-11 font-raleway text-[15px]/[18px] text-web-font-primary hover:bg-neutral-900",
                                     onclick: {
                                         let action_id = action.action_id.clone();
                                         let mut selected_action_ids = selected_action_ids;
@@ -217,11 +204,11 @@ pub fn ActionSettingsModal(
                     }
                 }
 
-                div { class: "h-px w-full bg-neutral-800" }
+                div { class: "w-full h-px bg-neutral-800" }
 
                 div { class: "flex flex-col gap-4",
-                    div { class: "flex items-center justify-between gap-3",
-                        div { class: "flex items-center gap-2.5 text-web-font-primary",
+                    div { class: "flex gap-3 justify-between items-center",
+                        div { class: "flex gap-2.5 items-center text-web-font-primary",
                             icons::calendar::CalendarToday {
                                 width: "20",
                                 height: "20",
@@ -239,39 +226,15 @@ pub fn ActionSettingsModal(
                     }
 
                     if is_date_enabled() {
-                        div { class: "flex flex-col gap-2.5",
-                            div { class: "flex flex-col gap-2.5",
-                                DateField {
-                                    label: tr.start_date.to_string(),
-                                    value: start_date(),
-                                    placeholder: tr.date_placeholder.to_string(),
-                                    min: None,
-                                    onchange: move |value| start_date.set(value),
-                                }
-
-                                DateField {
-                                    label: tr.end_date.to_string(),
-                                    value: end_date(),
-                                    placeholder: tr.date_placeholder.to_string(),
-                                    min: if start_date().is_empty() { None } else { Some(start_date()) },
-                                    onchange: move |value| end_date.set(value),
-                                }
-                            }
-
-                            TimeZoneField {
-                                value: time_zone(),
-                                placeholder: tr.time_zone.to_string(),
-                                onchange: move |value| time_zone.set(value),
-                            }
-                        }
+                        DateAndTimePicker { on_change: move |range| date_range.set(Some(range)) }
                     }
                 }
 
-                div { class: "h-px w-full bg-neutral-800" }
+                div { class: "w-full h-px bg-neutral-800" }
 
                 div { class: "flex flex-col gap-4 py-1",
-                    div { class: "flex items-center justify-between gap-3",
-                        div { class: "flex items-center gap-2.5 text-web-font-primary",
+                    div { class: "flex gap-3 justify-between items-center",
+                        div { class: "flex gap-2.5 items-center text-web-font-primary",
                             icons::shopping::Gift {
                                 width: "20",
                                 height: "20",
@@ -291,7 +254,7 @@ pub fn ActionSettingsModal(
                     if is_rewards_enabled() {
                         div { class: "flex flex-col gap-5 max-mobile:gap-4",
                             if reward_previews.is_empty() {
-                                Card { class: "w-full rounded-[8px] border-web-card-stroke bg-web-card-bg px-[17px] py-[17px] font-medium font-raleway text-[13px]/[20px] text-web-font-neutral max-mobile:px-4 max-mobile:py-4",
+                                Card { class: "w-full font-medium rounded-[8px] border-web-card-stroke bg-web-card-bg px-[17px] py-[17px] font-raleway text-[13px]/[20px] text-web-font-neutral max-mobile:px-4 max-mobile:py-4",
                                     {tr.no_rewards_configured}
                                 }
                             } else {
@@ -305,7 +268,7 @@ pub fn ActionSettingsModal(
                                 }
                             }
 
-                            Card { class: "flex w-full items-center justify-between gap-3 rounded-[8px] border-web-card-stroke bg-web-card-bg px-[17px] py-[17px] text-left max-mobile:px-4 max-mobile:py-4",
+                            Card { class: "flex gap-3 justify-between items-center w-full text-left rounded-[8px] border-web-card-stroke bg-web-card-bg px-[17px] py-[17px] max-mobile:px-4 max-mobile:py-4",
                                 span { class: "flex-1 font-bold font-raleway text-[15px]/[18px] tracking-[-0.16px] text-web-font-neutral",
                                     {tr.boost_multiplier_settings}
                                 }
@@ -336,12 +299,12 @@ pub fn ActionSettingsModal(
                     }
                 }
 
-                div { class: "mt-auto pt-2",
+                div { class: "pt-2 mt-auto",
                     Button {
                         size: ButtonSize::Medium,
                         style: ButtonStyle::Primary,
                         shape: ButtonShape::Square,
-                        class: "flex w-full justify-center rounded-[10px] font-raleway text-[15px]/[18px] tracking-[-0.16px]",
+                        class: "flex justify-center w-full rounded-[10px] font-raleway text-[15px]/[18px] tracking-[-0.16px]",
                         disabled: selected_actions.is_empty() || is_applying(),
                         onclick: apply_settings,
                         if is_applying() {
@@ -354,4 +317,10 @@ pub fn ActionSettingsModal(
             }
         }
     }
+}
+
+fn date_time_to_millis(date: time::Date, hour: u8, minute: u8) -> i64 {
+    let datetime = date.with_hms(hour, minute, 0).expect("valid time");
+    let offset_datetime = datetime.assume_utc();
+    offset_datetime.unix_timestamp() * 1000
 }
