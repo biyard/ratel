@@ -68,6 +68,19 @@ Foundational shared code used by all feature modules.
 - **Services:** Biyard API integration
 - **Tailwind:** `app/ratel/tailwind.css` is the TailwindCSS v4 entrypoint
 
+##### Primitive Component Library (`src/common/components/`)
+
+**IMPORTANT:** When building any UI in `app/ratel/src/`, always check and prefer primitive components from `src/common/components/` before creating custom elements. These are the project's design system primitives and MUST be used for visual consistency.
+
+Available primitive components:
+`Accordion`, `AlertDialog`, `AspectRatio`, `Avatar`, `Badge`, `Button`, `Calendar`, `Card`, `Checkbox`, `Collapsible`, `ContextMenu`, `DatePicker`, `DateAndTimePicker`, `TimePicker`, `TimezonePicker`, `Dialog`, `DragAndDropList`, `DropdownMenu`, `FileUploader`, `Form`, `HoverCard`, `Input`, `Label`, `Layover`, `LoadingIndicator`, `Menubar`, `Navbar`, `Pagination`, `Popover`, `Popup`, `Progress`, `RadioGroup`, `ScrollArea`, `Select`, `SeoMeta`, `Separator`, `Sheet`, `Sidebar`, `Sidemenu`, `Skeleton`, `Slider`, `SpaceCard`, `SuspenseBoundary`, `Switch`, `Tabs`, `TeamCreationForm`, `TeamSelector`, `Textarea`, `ThemeSwitcher`, `Toggle`, `ToggleGroup`, `Toolbar`, `Tooltip`
+
+Rules:
+- **Always use these primitives** instead of raw HTML elements for interactive UI (e.g., use `Button` not `button`, `Input` not `input`, `Select` not `select`, `Card` for card layouts)
+- **Check component props** before implementation — many support variants, sizes, and styling props (e.g., `Card` has `direction`, `main_axis_align`, `cross_axis_align`)
+- **Compose from primitives** — build complex UI by composing these components rather than writing raw divs with Tailwind
+- **Only create new primitives** in `src/common/components/` if no existing component fits the need
+
 #### Features (`src/features/`)
 
 Each feature module is gated by a Cargo feature flag and follows a consistent structure:
