@@ -1,5 +1,5 @@
 use crate::features::spaces::pages::actions::actions::discussion::*;
-use crate::features::spaces::space_common::types::{route::space_action_discussion_edit, space_page_actions_discussion_key};
+use crate::features::spaces::space_common::types::space_page_actions_discussion_key;
 
 use super::viewer::{DiscussionComments, DiscussionContent};
 
@@ -27,7 +27,10 @@ pub fn CreatorMain(
                         let discussion_id = discussion_id.clone();
                         let nav = nav.clone();
                         move |_| {
-                            nav.push(space_action_discussion_edit(&space_id, &discussion_id));
+                            nav.push(Route::DiscussionActionEditorPage {
+                                space_id: space_id.clone(),
+                                discussion_id: discussion_id.clone(),
+                            });
                         }
                     },
                     "Edit"
