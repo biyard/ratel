@@ -166,29 +166,29 @@ pub fn UploadTab(can_edit: bool) -> Element {
                         files.set(next.clone());
                         save_files(next);
                     },
-                    div { class: "flex px-4 py-2.5 w-full gap-5 flex-col items-center justify-center rounded-[12px] border border-dashed border-[#404040] bg-[#1A1A1A] text-center transition-colors hover:border-primary light:border-input-box-border light:bg-input-box-bg light:hover:border-input-box-border",
+                    div { class: "flex px-4 py-2.5 w-full gap-5 flex-col items-center justify-center rounded-[12px] border border-dashed border-quiz-upload-zone-border bg-quiz-upload-zone-bg text-center transition-colors hover:border-primary",
                         div { class: "flex flex-col w-full justify-center items-center gap-1",
                             icons::ratel::Cloud {
                                 width: "64",
                                 height: "64",
-                                class: "text-[#8C8C8C] light:text-card-meta [&>path]:stroke-current",
+                                class: "text-quiz-upload-meta [&>path]:stroke-current",
                             }
                             div { class: "text-[15px]/[18px] font-bold text-text-primary",
                                 {tr.upload_drop_title}
                             }
                         }
                         div { class: "flex flex-col w-full justify-center items-center gap-2.5",
-                            div { class: "inline-flex h-11 min-w-[118px] items-center justify-center gap-2 rounded-full border border-white bg-white px-5 text-black transition-colors hover:bg-white/90",
+                            div { class: "inline-flex h-11 min-w-[118px] items-center justify-center gap-2 rounded-full border border-white bg-white px-5 text-quiz-upload-cta-text transition-colors hover:bg-white/90",
                                 icons::upload_download::Upload2 {
                                     width: "20",
                                     height: "20",
-                                    class: "shrink-0 [&>path]:stroke-[#737373]",
+                                    class: "shrink-0 [&>path]:stroke-quiz-upload-cta-icon",
                                 }
-                                span { class: "text-[14px]/[16px] font-bold text-[#0A0A0A]",
+                                span { class: "text-[14px]/[16px] font-bold text-quiz-upload-cta-text",
                                     {tr.upload_cta}
                                 }
                             }
-                            p { class: "text-[13px]/[20px] font-medium text-[#A3A3A3] light:text-card-meta",
+                            p { class: "text-[13px]/[20px] font-medium text-quiz-upload-helper",
                                 {tr.upload_supported_types}
                             }
                         }
@@ -198,8 +198,8 @@ pub fn UploadTab(can_edit: bool) -> Element {
 
             div { class: "flex flex-col gap-2.5",
                 if files().is_empty() {
-                    div { class: "flex min-h-[96px] items-center justify-center rounded-[12px] border border-[#262626] bg-[#1A1A1A] px-6 text-center light:border-input-box-border light:bg-input-box-bg",
-                        p { class: "text-[15px]/[22px] font-medium text-[#8C8C8C] light:text-card-meta",
+                    div { class: "flex min-h-[96px] items-center justify-center rounded-[12px] border border-quiz-upload-card-border bg-quiz-upload-card-bg px-6 text-center",
+                        p { class: "text-[15px]/[22px] font-medium text-quiz-upload-meta",
                             {tr.upload_empty}
                         }
                     }
@@ -226,7 +226,7 @@ pub fn UploadTab(can_edit: bool) -> Element {
                         rsx! {
                             SpaceCard {
                                 key: "{file_id}",
-                                class: "relative !h-auto !rounded-[12px] !border !border-[#262626] !bg-[#1A1A1A] !px-5 !py-4 overflow-visible light:!border-input-box-border light:!bg-input-box-bg",
+                                class: "relative !h-auto !rounded-[12px] !border !border-quiz-upload-card-border !bg-quiz-upload-card-bg !px-5 !py-4 overflow-visible",
                                 div { class: "flex items-center justify-between gap-4",
                                     div { class: "flex min-w-0 items-center gap-5",
                                         div { class: "shrink-0 [&>svg]:size-10", {file_icon(&file.ext)} }
@@ -234,7 +234,7 @@ pub fn UploadTab(can_edit: bool) -> Element {
                                             p { class: "truncate text-[15px]/[20px] font-bold tracking-[0.5px] text-white light:text-text-primary",
                                                 "{file.name}"
                                             }
-                                            div { class: "flex min-w-0 items-center gap-2.5 font-medium text-[#8C8C8C] light:text-card-meta",
+                                            div { class: "flex min-w-0 items-center gap-2.5 font-medium text-quiz-upload-meta",
                                                 img {
                                                     class: "size-6 rounded-full object-cover shrink-0",
                                                     src: "{profile_url}",
@@ -243,7 +243,7 @@ pub fn UploadTab(can_edit: bool) -> Element {
                                                 span { class: "truncate text-[13px]/[20px] text-white light:text-text-primary",
                                                     "{uploader_name}"
                                                 }
-                                                span { class: "shrink-0 text-[12px]/[16px] text-[#8C8C8C] light:text-card-meta",
+                                                span { class: "shrink-0 text-[12px]/[16px] text-quiz-upload-meta",
                                                     "{uploaded_at}"
                                                 }
                                             }
@@ -255,7 +255,7 @@ pub fn UploadTab(can_edit: bool) -> Element {
                                             Button {
                                                 style: ButtonStyle::Outline,
                                                 shape: ButtonShape::Rounded,
-                                                class: "!text-[#0A0A0A] px-4 py-2 rounded-full border-white bg-white light:bg-[#404040] light:!text-[#FFFFFF] hover:bg-white/90 light:hover:bg-[#404040]/90",
+                                                class: "px-4 py-2 rounded-full border-white bg-quiz-upload-view-bg !text-quiz-upload-view-text hover:opacity-90",
                                                 onclick: move |_| {
                                                     #[cfg(not(feature = "server"))]
                                                     if let Some(url) = &file.url {
@@ -263,7 +263,7 @@ pub fn UploadTab(can_edit: bool) -> Element {
                                                             .and_then(|w| w.open_with_url_and_target(url, "_blank").ok());
                                                     }
                                                 },
-                                                span { class: "text-[#0A0A0A] light:text-[#FFFFFF]", {tr.upload_view} }
+                                                span { class: "text-quiz-upload-view-text", {tr.upload_view} }
                                             }
                                         }
                                         if can_edit {

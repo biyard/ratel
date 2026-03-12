@@ -56,7 +56,7 @@ pub fn QuizEditor(props: QuizEditorProps) -> Element {
                                 Button {
                                     size: ButtonSize::Small,
                                     style: ButtonStyle::Text,
-                                    class: "flex items-center gap-1 text-[#8C8C8C] text-[15px] leading-[24px] tracking-[0.5px] font-medium",
+                                    class: "flex items-center gap-1 text-quiz-editor-action text-[15px] leading-[24px] tracking-[0.5px] font-medium",
                                     onclick: move |_| {
                                         let mut qs = questions.read().clone();
                                         let mut ans = answers.read().clone();
@@ -73,7 +73,7 @@ pub fn QuizEditor(props: QuizEditorProps) -> Element {
                                         }
                                     },
                                     "Delete"
-                                    icons::edit::Delete2 { class: "w-6 h-6 [&>path]:stroke-[#737373]" }
+                                    icons::edit::Delete2 { class: "w-6 h-6 [&>path]:stroke-quiz-editor-icon" }
                                 }
                             }
                         }

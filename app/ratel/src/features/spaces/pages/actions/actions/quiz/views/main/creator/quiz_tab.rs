@@ -17,16 +17,9 @@ pub fn QuizTab(can_edit: bool) -> Element {
     rsx! {
         div { class: "flex w-full flex-col gap-6",
             div { class: "flex flex-col gap-1",
-                h3 { class: "text-[24px]/[28px] font-bold tracking-[-0.24px] text-white light:text-text-primary",
-                    {tr.quiz_section_title}
+                label { class: "text-sm font-medium text-neutral-400 light:text-text-secondary",
+                    "{tr.pass_score_label}"
                 }
-                p { class: "text-[15px]/[22px] font-medium text-[#D4D4D4] light:text-text-secondary",
-                    {tr.quiz_section_description}
-                }
-            }
-
-            div { class: "flex flex-col gap-1",
-                label { class: "text-sm font-medium text-neutral-400 light:text-text-secondary", "{tr.pass_score_label}" }
                 Input {
                     r#type: InputType::Number,
                     class: "text-base",
@@ -40,31 +33,17 @@ pub fn QuizTab(can_edit: bool) -> Element {
                         }
                     },
                     onblur: move |_| {
-                        save_quiz(
-                            space_id,
-                            quiz_id,
-                            questions,
-                            answers,
-                            pass_score,
-                            retry_count,
-                            toast,
-                        );
+                        save_quiz(space_id, quiz_id, questions, answers, pass_score, retry_count, toast);
                     },
                     onconfirm: move |_| {
-                        save_quiz(
-                            space_id,
-                            quiz_id,
-                            questions,
-                            answers,
-                            pass_score,
-                            retry_count,
-                            toast,
-                        );
+                        save_quiz(space_id, quiz_id, questions, answers, pass_score, retry_count, toast);
                     },
                 }
             }
             div { class: "flex flex-col gap-1",
-                label { class: "text-sm font-medium text-neutral-400 light:text-text-secondary", "{tr.retry_label}" }
+                label { class: "text-sm font-medium text-neutral-400 light:text-text-secondary",
+                    "{tr.retry_label}"
+                }
                 Input {
                     r#type: InputType::Number,
                     class: "text-base",
@@ -78,26 +57,10 @@ pub fn QuizTab(can_edit: bool) -> Element {
                         }
                     },
                     onblur: move |_| {
-                        save_quiz(
-                            space_id,
-                            quiz_id,
-                            questions,
-                            answers,
-                            pass_score,
-                            retry_count,
-                            toast,
-                        );
+                        save_quiz(space_id, quiz_id, questions, answers, pass_score, retry_count, toast);
                     },
                     onconfirm: move |_| {
-                        save_quiz(
-                            space_id,
-                            quiz_id,
-                            questions,
-                            answers,
-                            pass_score,
-                            retry_count,
-                            toast,
-                        );
+                        save_quiz(space_id, quiz_id, questions, answers, pass_score, retry_count, toast);
                     },
                 }
             }
@@ -107,15 +70,7 @@ pub fn QuizTab(can_edit: bool) -> Element {
                     questions,
                     answers,
                     on_save: move |_| {
-                        save_quiz(
-                            space_id,
-                            quiz_id,
-                            questions,
-                            answers,
-                            pass_score,
-                            retry_count,
-                            toast,
-                        );
+                        save_quiz(space_id, quiz_id, questions, answers, pass_score, retry_count, toast);
                     },
                 }
             } else {
