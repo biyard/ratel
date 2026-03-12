@@ -9,14 +9,6 @@ pub fn CreatorActionPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let mut layover = use_layover();
     let mut actions = use_loader(move || async move { list_actions(space_id()).await })?;
 
-    let has_follow = use_memo(move || {
-        let actions = actions();
-
-        actions
-            .iter()
-            .any(|action| action.action_type == SpaceActionType::Follow)
-    });
-
     rsx! {
         div {
             id: "creator-action-page",
@@ -76,10 +68,10 @@ pub fn CreatorActionPage(space_id: ReadSignal<SpacePartition>) -> Element {
                                     "space-actions-layover".to_string(),
                                     tr.layover_title.to_string(),
                                     rsx! {
-                                        CreateActionModal { space_id: space_id(), has_follow: has_follow() }
+                                        CreateActionModal { space_id: space_id() }
                                     },
                                 )
-                                .set_size(LayoverSize::Small);
+                                .set_size(LayoverSize::Half);
                         },
                         div { class: "flex flex-row gap-2 justify-center items-center w-full",
                             icons::validations::AddCircle {

@@ -1,22 +1,15 @@
-use crate::features::spaces::pages::actions::actions::discussion::controllers::create_discussion;
-use crate::features::spaces::pages::actions::actions::follow::controllers::create_follow;
-use crate::features::spaces::pages::actions::actions::poll::controllers::create_poll;
-use crate::features::spaces::pages::actions::actions::quiz::controllers::create_quiz;
 use crate::features::spaces::pages::actions::*;
-use crate::features::spaces::space_common::types::route::{
-    space_action_discussion, space_action_follow, space_action_poll, space_action_quiz,
-};
 use i18n::CreateActionModalTranslate;
 mod i18n;
 
 #[component]
-pub fn CreateActionModal(space_id: SpacePartition, has_follow: bool) -> Element {
+pub fn CreateActionModal(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: CreateActionModalTranslate = use_translate();
     let nav = navigator();
-    let layover = use_layover();
+    let mut layover = use_layover();
 
     let mut selected_type = use_signal(|| None::<SpaceActionType>);
-    let is_creating = use_signal(|| false);
+    let mut is_creating = use_signal(|| false);
 
     let close_layover = {
         let mut layover = layover;
@@ -27,103 +20,26 @@ pub fn CreateActionModal(space_id: SpacePartition, has_follow: bool) -> Element 
         }
     };
 
-    let create_action = {
-        let nav = nav.clone();
-        let space_id = space_id.clone();
-        let layover = layover;
+    let create_action = move |_| async move {
+        let selected = selected_type();
+        if selected.is_none() {
+            return;
+        }
 
-        let mut is_creating = is_creating;
-
-        move |_| {
-            if is_creating() {
-                return;
+        let selected = selected.unwrap();
+        if is_creating() {
+            return;
+        }
+        is_creating.set(true);
+        match selected.create(space_id()).await {
+            Ok(url) => {
+                is_creating.set(false);
+                nav.push(url);
+                layover.close();
             }
-
-            let selected = selected_type();
-            if selected.is_none() {
-                return;
-            }
-
-            is_creating.set(true);
-            let mut layover = layover;
-
-            let nav = nav.clone();
-            let space_id = space_id.clone();
-            let mut is_creating = is_creating;
-
-            match selected.unwrap() {
-                SpaceActionType::Poll => {
-                    spawn(async move {
-                        match create_poll(space_id.clone()).await {
-                            Ok(response) => match response.sk {
-                                EntityType::SpacePoll(poll_id) => {
-                                    is_creating.set(false);
-                                    nav.push(space_action_poll(&space_id, &poll_id.into()));
-                                    layover.close();
-                                }
-                                _ => {
-                                    error!("Unexpected entity type from create_poll");
-                                    is_creating.set(false);
-                                }
-                            },
-                            Err(err) => {
-                                error!("Failed to create poll: {:?}", err);
-                                is_creating.set(false);
-                            }
-                        }
-                    });
-                }
-                SpaceActionType::TopicDiscussion => {
-                    spawn(async move {
-                        match create_discussion(space_id.clone()).await {
-                            Ok(response) => {
-                                let discussion_pk: SpacePostEntityType =
-                                    response.sk.try_into().unwrap_or_default();
-                                is_creating.set(false);
-                                nav.push(space_action_discussion(&space_id, &discussion_pk));
-                                layover.close();
-                            }
-                            Err(err) => {
-                                error!("Failed to create discussion: {:?}", err);
-                                is_creating.set(false);
-                            }
-                        }
-                    });
-                }
-                SpaceActionType::Follow => {
-                    if has_follow {
-                        is_creating.set(false);
-                        return;
-                    }
-                    spawn(async move {
-                        match create_follow(space_id.clone()).await {
-                            Ok(_) => {
-                                is_creating.set(false);
-                                nav.push(space_action_follow(&space_id));
-                                layover.close();
-                            }
-                            Err(err) => {
-                                error!("Failed to create follow: {:?}", err);
-                                is_creating.set(false);
-                            }
-                        }
-                    });
-                }
-                SpaceActionType::Quiz => {
-                    spawn(async move {
-                        match create_quiz(space_id.clone()).await {
-                            Ok(response) => {
-                                is_creating.set(false);
-                                nav.push(space_action_quiz(&space_id, &response.quiz_id));
-                                layover.close();
-                            }
-                            Err(err) => {
-                                error!("Failed to create quiz: {:?}", err);
-                                is_creating.set(false);
-                            }
-                        }
-                    });
-                }
+            Err(err) => {
+                error!("Failed to create action: {:?}", err);
+                is_creating.set(false);
             }
         }
     };
@@ -177,33 +93,24 @@ pub fn CreateActionModal(space_id: SpacePartition, has_follow: bool) -> Element 
                             }
                         },
                     }
-                    if !has_follow {
-                        ActionTypeOption {
-                            selected: selected_type() == Some(SpaceActionType::Follow),
-                            disabled: false,
-                            onclick: move |_| selected_type.set(Some(SpaceActionType::Follow)),
-                            title: tr.follow_title.to_string(),
-                            caption: tr.follow_caption.to_string(),
-                            icon: rsx! {
-                                icons::user::UserGroup {
-                                    width: "22",
-                                    height: "22",
-                                    class: "[&>path]:fill-none [&>path]:stroke-neutral-900",
-                                }
-                            },
-                        }
+                    ActionTypeOption {
+                        selected: selected_type() == Some(SpaceActionType::Follow),
+                        disabled: false,
+                        onclick: move |_| selected_type.set(Some(SpaceActionType::Follow)),
+                        title: tr.follow_title.to_string(),
+                        caption: tr.follow_caption.to_string(),
+                        icon: rsx! {
+                            icons::user::UserGroup {
+                                width: "22",
+                                height: "22",
+                                class: "[&>path]:fill-none [&>path]:stroke-neutral-900",
+                            }
+                        },
                     }
                 }
 
-                // Sample preview section
-                SpaceCard {
-                    class: "flex flex-col gap-5 border border-neutral-700 light:border-neutral-300 !bg-neutral-800 light:!bg-white !rounded-[0.75rem] !p-4"
-                        .to_string(),
-                    p { class: "font-medium text-white text-[1.0625rem]/[1.25rem] light:text-neutral-900",
-                        {tr.sample_title}
-                    }
-                    div { class: "w-full border h-[14.875rem] rounded-[0.75rem] border-neutral-700 light:border-neutral-300 bg-neutral-950/40 light:bg-neutral-100" }
-                }
+                // Preview section
+                ActionPreview { selected: selected_type(), tr: tr.clone() }
 
             }
 
@@ -227,6 +134,165 @@ pub fn CreateActionModal(space_id: SpacePartition, has_follow: bool) -> Element 
                         {tr.creating}
                     } else {
                         {tr.create}
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+fn ActionPreview(selected: Option<SpaceActionType>, tr: CreateActionModalTranslate) -> Element {
+    let content = match selected {
+        Some(SpaceActionType::Poll) => rsx! { PollPreview {} },
+        Some(SpaceActionType::Quiz) => rsx! { QuizPreview {} },
+        Some(SpaceActionType::TopicDiscussion) => rsx! { DiscussionPreview {} },
+        Some(SpaceActionType::Follow) => rsx! { FollowPreview {} },
+        None => {
+            return rsx! {
+                SpaceCard {
+                    class: "flex flex-col gap-5 border border-neutral-700 light:border-neutral-300 !bg-neutral-800 light:!bg-white !rounded-[0.75rem] !p-4"
+                        .to_string(),
+                    p { class: "font-medium text-white text-[1.0625rem]/[1.25rem] light:text-neutral-900",
+                        {tr.preview_title}
+                    }
+                    div { class: "flex justify-center items-center w-full border h-[14.875rem] rounded-[0.75rem] border-neutral-700 light:border-neutral-300 bg-neutral-950/40 light:bg-neutral-100",
+                        p { class: "text-[0.875rem]/[1.25rem] text-neutral-500 light:text-neutral-400",
+                            {tr.preview_empty}
+                        }
+                    }
+                }
+            };
+        }
+    };
+
+    rsx! {
+        SpaceCard {
+            class: "flex flex-col gap-3 border border-yellow-400/30 !bg-neutral-800 light:!bg-white !rounded-[0.75rem] !p-4"
+                .to_string(),
+            p { class: "font-medium text-white text-[1.0625rem]/[1.25rem] light:text-neutral-900",
+                {tr.preview_title}
+            }
+            div { class: "flex flex-col gap-3 p-4 w-full rounded-[0.75rem] border border-neutral-700 light:border-neutral-300 bg-neutral-950/40 light:bg-neutral-100 pointer-events-none opacity-90",
+                {content}
+            }
+        }
+    }
+}
+
+// Mock poll viewer: time range + a sample question with radio options
+#[component]
+fn PollPreview() -> Element {
+    rsx! {
+        div { class: "flex flex-col gap-3 w-full",
+            div { class: "flex items-center gap-2 text-xs text-neutral-500",
+                span { "Mar 12, 2026 00:00" }
+                span { "~" }
+                span { "Mar 19, 2026 00:00" }
+            }
+            div { class: "p-3 rounded-lg border border-neutral-700 light:border-neutral-300",
+                div { class: "text-xs text-neutral-500 mb-2", "1 / 2" }
+                p { class: "text-sm font-medium text-white light:text-neutral-900 mb-2",
+                    "Which proposal do you support?"
+                }
+                div { class: "flex flex-col gap-1.5",
+                    for option in ["Proposal A", "Proposal B", "Proposal C"] {
+                        label { class: "flex items-center gap-2 text-sm text-neutral-300 light:text-neutral-700",
+                            div { class: "size-4 rounded-full border-2 border-neutral-600 light:border-neutral-400" }
+                            "{option}"
+                        }
+                    }
+                }
+            }
+            div { class: "py-2 rounded-lg bg-blue-600/20 text-center text-sm text-blue-400 font-medium",
+                "Submit"
+            }
+        }
+    }
+}
+
+// Mock quiz viewer: time range + score + a sample question
+#[component]
+fn QuizPreview() -> Element {
+    rsx! {
+        div { class: "flex flex-col gap-3 w-full",
+            div { class: "flex items-center justify-between",
+                div { class: "flex items-center gap-2 text-xs text-neutral-500",
+                    span { "Mar 12, 2026 00:00" }
+                    span { "~" }
+                    span { "Mar 19, 2026 00:00" }
+                }
+            }
+            div { class: "flex items-center gap-2 text-xs text-neutral-400",
+                span { class: "font-medium", "Remaining submissions:" }
+                span { "3" }
+            }
+            div { class: "p-3 rounded-lg border border-neutral-700 light:border-neutral-300",
+                div { class: "text-xs text-neutral-500 mb-2", "1 / 3" }
+                p { class: "text-sm font-medium text-white light:text-neutral-900 mb-2",
+                    "What is the governance threshold?"
+                }
+                div { class: "flex flex-col gap-1.5",
+                    for (i, option) in ["51%", "67%", "75%", "90%"].iter().enumerate() {
+                        label { class: "flex items-center gap-2 text-sm text-neutral-300 light:text-neutral-700",
+                            div { class: format!("size-4 rounded-full border-2 {}", if i == 1 { "border-yellow-400 bg-yellow-400/30" } else { "border-neutral-600 light:border-neutral-400" }) }
+                            "{option}"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Mock discussion viewer: title + content + comment area
+#[component]
+fn DiscussionPreview() -> Element {
+    rsx! {
+        div { class: "flex flex-col gap-3 w-full",
+            h3 { class: "text-base font-bold text-white light:text-neutral-900",
+                "Should we increase the staking reward?"
+            }
+            div { class: "flex items-center gap-2 text-xs text-neutral-500",
+                div { class: "size-5 rounded-full bg-neutral-600 light:bg-neutral-300" }
+                span { class: "font-medium", "alice.eth" }
+            }
+            p { class: "text-sm text-neutral-400 light:text-neutral-600 line-clamp-2",
+                "I propose we increase the staking reward from 5% to 8% to incentivize long-term holders and strengthen network security..."
+            }
+            hr { class: "border-neutral-700 light:border-neutral-300" }
+            p { class: "text-sm font-bold text-white light:text-neutral-900", "Comments (2)" }
+            div { class: "flex flex-col gap-2",
+                div { class: "p-2 rounded-lg border border-neutral-700 light:border-neutral-300 bg-neutral-800/50 light:bg-neutral-50",
+                    div { class: "flex items-center gap-2 text-xs mb-1",
+                        div { class: "size-4 rounded-full bg-neutral-600 light:bg-neutral-300" }
+                        span { class: "font-medium text-white light:text-neutral-900", "bob.eth" }
+                    }
+                    p { class: "text-xs text-neutral-400 light:text-neutral-600", "I agree, higher rewards will attract more stakers." }
+                    div { class: "flex items-center gap-3 mt-1 text-xs text-neutral-500",
+                        span { "♡ 3" }
+                        span { "Reply (1)" }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Mock follow viewer: user list
+#[component]
+fn FollowPreview() -> Element {
+    rsx! {
+        div { class: "flex flex-col gap-3 w-full",
+            p { class: "text-sm font-bold text-white light:text-neutral-900", "Followers" }
+            div { class: "flex flex-col gap-2",
+                for (name, handle) in [("Alice", "@alice.eth"), ("Bob", "@bob.eth"), ("Charlie", "@charlie.eth")] {
+                    div { class: "flex items-center gap-3 p-2 rounded-lg border border-neutral-700 light:border-neutral-300 bg-neutral-800/50 light:bg-neutral-50",
+                        div { class: "size-8 rounded-full bg-neutral-600 light:bg-neutral-300" }
+                        div { class: "flex flex-col",
+                            span { class: "text-sm font-medium text-white light:text-neutral-900", "{name}" }
+                            span { class: "text-xs text-neutral-500", "{handle}" }
+                        }
                     }
                 }
             }
