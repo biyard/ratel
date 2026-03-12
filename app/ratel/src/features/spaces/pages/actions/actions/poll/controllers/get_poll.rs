@@ -10,7 +10,9 @@ pub async fn get_poll(
     SpacePoll::can_view(&role)?;
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
-    let space_pk: Partition = space_pk.into();
+    let space_id = space_pk;
+    let poll_id = poll_sk;
+    let space_pk: Partition = space_id.clone().into();
     let poll_sk_entity: EntityType = poll_sk.clone().into();
 
     let poll = SpacePoll::get(cli, &space_pk, Some(poll_sk_entity.clone()))
@@ -21,7 +23,7 @@ pub async fn get_poll(
 
     let space_action = crate::features::spaces::pages::actions::models::SpaceAction::get(
         cli,
-        &CompositePartition(space_pk.clone(), poll_sk.clone()),
+        &CompositePartition(space_id.clone(), poll_id.clone()),
         Some(EntityType::SpaceAction),
     )
     .await?
