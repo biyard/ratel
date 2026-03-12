@@ -1,8 +1,12 @@
 use crate::common::components::{ButtonShape, ButtonSize, ButtonStyle, InputVariant, TiptapEditor};
+use crate::common::hooks::use_infinite_query;
 use crate::features::posts::components::VisibilityModal;
 use crate::features::posts::controllers::get_post::get_post_handler;
 use crate::features::posts::controllers::update_post::{update_post_handler, UpdatePostRequest};
-use crate::features::posts::controllers::{create_space_handler, CreateSpaceRequest};
+use crate::features::posts::controllers::{
+    create_category_handler, create_space_handler, list_categories_handler, CreateCategoryRequest,
+    CreateSpaceRequest,
+};
 use crate::features::posts::models::Post;
 use crate::features::posts::types::Visibility;
 use crate::features::posts::*;
@@ -32,6 +36,10 @@ translate! {
         en: "Go to Space",
         ko: "스페이스로 이동",
     },
+    category_placeholder: {
+        en: "Category",
+        ko: "카테고리",
+    },
     publishing: {
         en: "Publishing...",
         ko: "게시 중...",
@@ -51,6 +59,10 @@ translate! {
     skip_creating_space: {
         en: "Skip creating space",
         ko: "스페이스 만들기 건너뛰기",
+    },
+    create_category: {
+        en: "Create",
+        ko: "생성",
     },
 }
 
@@ -90,6 +102,18 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
 
     let mut last_saved = use_signal(move || (title(), content()));
     let mut skip_creating_space = use_signal(|| true);
+
+    // Category state
+    let mut category = use_signal(|| "".to_string());
+    let mut category_input = use_signal(|| "".to_string());
+    let mut show_category_dropdown = use_signal(|| false);
+    let mut is_creating_category = use_signal(|| false);
+
+    let categories_query = use_infinite_query(move |bookmark| list_categories_handler(bookmark))?;
+    let categories_query_for_memo = categories_query.clone();
+    let categories = use_memo(move || {
+        categories_query_for_memo.items().iter().map(|c| c.name.clone()).collect::<Vec<String>>()
+    });
 
     // Auto-save: debounce by tracking an edit version counter.
     // Each edit increments save_version. use_effect fires on change,
@@ -257,6 +281,92 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                 }
                 div { class: "absolute right-3 top-1/2 text-sm -translate-y-1/2 pointer-events-none text-text-tertiary",
                     "{title_len}/{TITLE_MAX_LENGTH}"
+                }
+            }
+
+            // Category selector
+            div {
+                class: "relative w-full",
+                onfocusout: move |_| {
+                    spawn(async move {
+                        crate::common::utils::time::sleep(std::time::Duration::from_millis(150)).await;
+                        show_category_dropdown.set(false);
+                    });
+                },
+                Input {
+                    class: "w-full",
+                    variant: InputVariant::Default,
+                    placeholder: tr.category_placeholder,
+                    value: category_input,
+                    oninput: move |e: Event<FormData>| {
+                        category_input.set(e.value());
+                        show_category_dropdown.set(true);
+                    },
+                }
+
+                if show_category_dropdown() {
+                    div {
+                        class: "absolute z-20 mt-2 w-full rounded-md border shadow-md bg-card border-post-input-border max-h-60 overflow-y-auto",
+
+                        for cat in categories()
+                            .iter()
+                            .filter(|c| c.to_lowercase().contains(&category_input().to_lowercase()))
+                            .cloned()
+                        {
+                            div {
+                                key: "{cat}",
+                                class: "px-3 py-2 cursor-pointer hover:bg-muted text-sm text-text-primary",
+                                onclick: {
+                                    let cat = cat.clone();
+                                    move |_| {
+                                        category.set(cat.clone());
+                                        category_input.set(cat.clone());
+                                        show_category_dropdown.set(false);
+                                    }
+                                },
+                                "{cat}"
+                            }
+                        }
+
+                        if !category_input().trim().is_empty()
+                            && !categories()
+                                .iter()
+                                .any(|c| c.to_lowercase() == category_input().trim().to_lowercase())
+                        {
+                            Button {
+                                class: "w-full px-3 py-2 text-primary text-sm",
+                                style: ButtonStyle::Text,
+                                shape: ButtonShape::Square,
+                                loading: is_creating_category(),
+                                onclick: move |_| {
+                                    is_creating_category.set(true);
+
+                                    let new_cat = category_input();
+                                    let mut cats_query = categories_query.clone();
+                                    spawn(async move {
+                                        match create_category_handler(CreateCategoryRequest {
+                                            name: new_cat,
+                                        })
+                                        .await
+                                        {
+                                            Ok(cat) => {
+                                                let name = cat.name;
+                                                category.set(name.clone());
+                                                category_input.set(name.clone());
+                                                cats_query.restart();
+                                                show_category_dropdown.set(false);
+                                            }
+                                            Err(e) => {
+                                                toast.error(e);
+                                            }
+                                        }
+                                        is_creating_category.set(false);
+                                    });
+                                },
+                                "{tr.create_category} \"{category_input()}\""
+                            }
+                        }
+                    }
                 }
             }
 
