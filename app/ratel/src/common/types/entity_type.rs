@@ -77,6 +77,7 @@ pub enum EntityType {
 
     // Poll Feature entity types
     SpacePoll(String), // SpacePoll#{uuid or space_id}
+    SpaceActionFollow(String),
     SpaceSubscription, // SpaceSubscription#{uuid or space_id}
     SpaceSubscriptionUser(String),
 
@@ -85,8 +86,8 @@ pub enum EntityType {
     SpacePollResult,
     SpacePollUserAnswer(String, String), // space_pk, poll_pk
 
-    SpaceQuiz(String), // SpaceQuiz#{uuid}
-    SpaceQuizAnswer(String), // SpaceQuizAnswer#{quiz_id}
+    SpaceQuiz(String),        // SpaceQuiz#{uuid}
+    SpaceQuizAnswer(String),  // SpaceQuizAnswer#{quiz_id}
     SpaceQuizAttempt(String), // SpaceQuizAttempt#{quiz_id}#{attempt_id}
 
     // Survery space entity types

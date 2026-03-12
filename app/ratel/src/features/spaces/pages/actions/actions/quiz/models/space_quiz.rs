@@ -47,13 +47,16 @@ impl From<SpaceQuiz> for crate::features::spaces::pages::actions::types::SpaceAc
             started_at: Some(quiz.started_at),
             ended_at: Some(quiz.ended_at),
             user_participated: false,
+            credits: 0,
         }
     }
 }
 
 #[cfg(feature = "server")]
 impl SpaceQuiz {
-    pub fn new(space_pk: SpacePartition) -> crate::features::spaces::pages::actions::actions::quiz::Result<Self> {
+    pub fn new(
+        space_pk: SpacePartition,
+    ) -> crate::features::spaces::pages::actions::actions::quiz::Result<Self> {
         let pk: Partition = space_pk.into();
         let sk = EntityType::SpaceQuiz(uuid::Uuid::now_v7().to_string());
         let now = get_now_timestamp_millis();
@@ -85,25 +88,34 @@ impl SpaceQuiz {
         }
     }
 
-    pub fn can_edit(user_role: &SpaceUserRole) -> crate::features::spaces::pages::actions::actions::quiz::Result<()> {
+    pub fn can_edit(
+        user_role: &SpaceUserRole,
+    ) -> crate::features::spaces::pages::actions::actions::quiz::Result<()> {
         match user_role {
             SpaceUserRole::Creator => Ok(()),
             _ => Err(crate::features::spaces::pages::actions::actions::quiz::Error::NoPermission),
         }
     }
 
-    pub fn can_participate(user_role: &SpaceUserRole) -> crate::features::spaces::pages::actions::actions::quiz::Result<()> {
+    pub fn can_participate(
+        user_role: &SpaceUserRole,
+    ) -> crate::features::spaces::pages::actions::actions::quiz::Result<()> {
         match user_role {
             SpaceUserRole::Participant => Ok(()),
             _ => Err(crate::features::spaces::pages::actions::actions::quiz::Error::NoPermission),
         }
     }
 
-    pub fn can_view(_user_role: &SpaceUserRole) -> crate::features::spaces::pages::actions::actions::quiz::Result<()> {
+    pub fn can_view(
+        _user_role: &SpaceUserRole,
+    ) -> crate::features::spaces::pages::actions::actions::quiz::Result<()> {
         Ok(())
     }
 
-    pub fn can_respond(&self, user_role: &SpaceUserRole) -> crate::features::spaces::pages::actions::actions::quiz::Result<()> {
+    pub fn can_respond(
+        &self,
+        user_role: &SpaceUserRole,
+    ) -> crate::features::spaces::pages::actions::actions::quiz::Result<()> {
         match user_role {
             SpaceUserRole::Creator | SpaceUserRole::Participant => {
                 if self.status() == QuizStatus::InProgress {

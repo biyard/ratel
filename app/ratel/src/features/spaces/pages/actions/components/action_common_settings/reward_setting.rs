@@ -4,10 +4,13 @@ use super::super::*;
 use crate::features::auth::hooks::use_user_membership;
 
 #[component]
-pub fn RewardSetting() -> Element {
+pub fn RewardSetting(
+    space_action: ReadSignal<SpaceAction>,
+    #[props(default)] on_change: EventHandler<u64>,
+) -> Element {
     let tr: RewardSettingTranslate = use_translate();
-    let mut enable_reward = use_signal(|| false);
-    let mut credits = use_signal(|| 0u64);
+    let mut enable_reward = use_signal(move || space_action().credits > 0);
+    let mut credits = use_signal(move || space_action().credits);
 
     #[cfg(feature = "membership")]
     let membership = use_user_membership();
@@ -56,8 +59,11 @@ pub fn RewardSetting() -> Element {
                                 Switch {
                                     active: enable_reward(),
                                     on_toggle: move |_| {
-                                        enable_reward.set(!enable_reward());
-                                        credits.set(1);
+                                        let new_enabled = !enable_reward();
+                                        enable_reward.set(new_enabled);
+                                        let new_credits = if new_enabled { 1 } else { 0 };
+                                        credits.set(new_credits);
+                                        on_change.call(new_credits);
                                     },
                                 }
                             } else {
@@ -119,6 +125,7 @@ pub fn RewardSetting() -> Element {
                                             let val = evt.value().parse::<u64>().unwrap_or(0);
                                             let clamped = if max_credits > 0 { val.min(max_credits) } else { val };
                                             credits.set(clamped);
+                                            on_change.call(clamped);
                                         },
                                     }
                                 }
