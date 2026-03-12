@@ -78,12 +78,12 @@ pub enum Route {
             #[route("/:username/:..rest")]
             #[cfg(feature = "users")]
             UserHome { username: String, rest: Vec<String> },
-
-            #[cfg(feature = "teams")]
-            #[route("/teams/:teamname/:..rest")]
-            #[cfg(feature = "teams")]
-            TeamHome { teamname: String, rest: Vec<String> },
         #[end_layout]
+
+        #[cfg(feature = "teams")]
+        #[route("/teams/:teamname/:..rest")]
+        #[cfg(feature = "teams")]
+        TeamHome { teamname: String, rest: Vec<String> },
 
 
         #[cfg_attr(feature="spaces", nest("/spaces/:space_id"))]

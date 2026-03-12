@@ -49,7 +49,7 @@ pub fn TeamPosts(teamname: String) -> Element {
     let mut teamname_signal = use_signal(|| teamname.clone());
     let mut v = use_infinite_query(move |bookmark| {
         let teamname = teamname_signal();
-        async move { list_team_posts_handler(teamname, bookmark).await }
+        async move { list_team_posts_handler(teamname, None, bookmark).await }
     })?;
 
     let mut v_clone = v.clone();
