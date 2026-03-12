@@ -14,7 +14,7 @@ pub use app::App;
 pub use route::Route;
 
 use crate::common::*;
-use components::*;
+pub use components::*;
 use contexts::*;
 pub mod features;
 pub use features::*;

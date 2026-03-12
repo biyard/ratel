@@ -579,6 +579,43 @@ transact_write!(
 - Use `uuid::Uuid::now_v7()` for generating unique IDs.
 - Gate all `impl` blocks with `#[cfg(feature = "server")]`.
 
+### Composite Partition Keys (`CompositePartition<T, S>`)
+
+When a model needs a composite partition key (e.g., `SPACE#{SPACE_ID}##SPACE_POLL#UUID`), use `CompositePartition<T, S>` as the `pk` type instead of a plain `Partition`. The value serializes as `{T}##{S}` (double hash separator).
+
+```rust
+use crate::common::macros::DynamoEntity;
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default, DynamoEntity)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct ActionReward {
+    pub pk: CompositePartition<Partition, EntityType>,
+    pub sk: EntityType,
+    pub created_at: i64,
+    pub updated_at: i64,
+    pub credits: u64,
+    pub boost_multiplier: u64,
+    pub total_reward: u64,
+}
+
+#[cfg(feature = "server")]
+impl ActionReward {
+    pub fn new(space_pk: Partition, action_sk: EntityType, credits: u64) -> Self {
+        let now = get_now_timestamp_millis();
+        Self {
+            pk: CompositePartition(space_pk, action_sk),
+            sk: EntityType::ActionReward,
+            ..Default::default()
+        }
+    }
+}
+```
+
+**Rules:**
+- Use `CompositePartition<Partition, EntityType>` when the PK combines a space partition with an action entity type.
+- The constructor takes the two parts as separate arguments: `CompositePartition(space_pk, action_sk)`.
+- Import `DynamoEntity` from `crate::common::macros::DynamoEntity` for models in `app/ratel`.
+
 ---
 
 ## 8. Hooks

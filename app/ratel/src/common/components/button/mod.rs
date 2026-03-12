@@ -8,7 +8,9 @@ pub fn Button(
     #[props(default)] shape: ButtonShape,
     #[props(default)] disabled: bool,
     #[props(default)] loading: ReadSignal<bool>,
-    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
+    #[props(extends=GlobalAttributes)]
+    #[props(extends=button)]
+    attributes: Vec<Attribute>,
     onclick: Option<EventHandler<MouseEvent>>,
     children: Element,
 ) -> Element {
