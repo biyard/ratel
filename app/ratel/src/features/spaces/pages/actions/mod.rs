@@ -2,7 +2,6 @@ pub mod actions;
 mod components;
 mod context;
 mod controllers;
-mod layout;
 mod menu;
 mod models;
 mod types;
@@ -16,7 +15,6 @@ use models::*;
 use models::*;
 use types::*;
 
-pub use layout::*;
 pub use menu::*;
 pub use views::*;
 
