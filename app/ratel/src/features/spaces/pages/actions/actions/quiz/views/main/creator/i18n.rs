@@ -108,8 +108,8 @@ translate! {
         ko: "업로드",
     },
     upload_supported_types: {
-        en: "PDF, DOCX, PPTX, XLSX, PNG, JPG, MP4, MOV",
-        ko: "PDF, DOCX, PPTX, XLSX, PNG, JPG, MP4, MOV",
+        en: "PDF, DOCX, PPTX, XLSX, PNG, JPG, MP4, MOV 100MB",
+        ko: "PDF, DOCX, PPTX, XLSX, PNG, JPG, MP4, MOV 100MB",
     },
     upload_empty: {
         en: "No uploaded files yet.",

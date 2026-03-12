@@ -120,11 +120,9 @@ pub fn OverviewTab(can_edit: bool) -> Element {
                 }
 
                 div { class: "flex w-full flex-col gap-1",
-                    div { class: "flex h-12 w-full items-center rounded-[8px] border border-[#525252] bg-[#101010] px-3",
+                    div { class: "relative flex h-12 w-full items-center",
                         Input {
-                            variant: InputVariant::Plain,
-                            class: "h-6 w-full text-[15px]/[24px] tracking-[0.5px] bg-[#101010] text-text-primary placeholder:text-[#525252] outline-none ring-0 focus:border-primary focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
-                                .to_string(),
+                            class: "w-full bg-transparent pr-14".to_string(),
                             placeholder: tr.title_placeholder,
                             value: title(),
                             disabled: !can_edit,
@@ -141,7 +139,7 @@ pub fn OverviewTab(can_edit: bool) -> Element {
                             },
                         }
                         if can_edit {
-                            span { class: "ml-3 shrink-0 text-[12px]/[15px] font-semibold text-[#6b6b6b]",
+                            span { class: "pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[12px]/[15px] font-semibold text-[#6b6b6b]",
                                 "{title_count}/50"
                             }
                         }

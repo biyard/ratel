@@ -1,10 +1,21 @@
 use super::*;
-use crate::common::components::FileUploader;
+use crate::common::components::SpaceCard;
+use crate::common::components::{FileUploader, UploadedFileMeta};
+use crate::features::spaces::hooks::use_user;
 use crate::features::spaces::space_common::types::space_page_actions_quiz_key;
 
-fn extension_from_url(url: &str) -> FileExtension {
-    let path = url.split('?').next().unwrap_or(url);
-    let ext = path.rsplit('.').next().unwrap_or("").to_lowercase();
+const DEFAULT_PROFILE_URL: &str = "https://metadata.ratel.foundation/ratel/default-profile.png";
+
+fn extension_from_name_or_url(name: &str, url: &str) -> FileExtension {
+    let ext = name
+        .rsplit('.')
+        .next()
+        .filter(|ext| *ext != name)
+        .unwrap_or_else(|| {
+            let path = url.split('?').next().unwrap_or(url);
+            path.rsplit('.').next().unwrap_or("")
+        })
+        .to_lowercase();
     match ext.as_str() {
         "jpg" | "jpeg" => FileExtension::JPG,
         "png" => FileExtension::PNG,
@@ -25,17 +36,54 @@ fn extract_filename_from_url(url: &str) -> String {
     path.rsplit('/').next().unwrap_or("untitled").to_string()
 }
 
+fn format_time_ago(timestamp_millis: i64) -> String {
+    let now = chrono::Utc::now().timestamp_millis();
+    let diff = (now - timestamp_millis).max(0);
+
+    if diff < 60_000 {
+        "just now".to_string()
+    } else if diff < 3_600_000 {
+        format!("{}m ago", diff / 1000 / 60)
+    } else if diff < 86_400_000 {
+        format!("{}h ago", diff / 1000 / 3600)
+    } else if diff < 604_800_000 {
+        format!("{}d ago", diff / 1000 / 86_400)
+    } else if diff < 31_536_000_000 {
+        format!("{}w ago", diff / 1000 / 604_800)
+    } else {
+        format!("{}y ago", diff / 1000 / 31_536_000)
+    }
+}
+
 fn file_icon(ext: &FileExtension) -> Element {
     match ext {
-        FileExtension::JPG => rsx! { icons::files::Jpg { width: "36", height: "36" } },
-        FileExtension::PNG => rsx! { icons::files::Png { width: "36", height: "36" } },
-        FileExtension::PDF => rsx! { icons::files::Pdf { width: "36", height: "36" } },
-        FileExtension::ZIP => rsx! { icons::files::Zip { width: "36", height: "36" } },
-        FileExtension::WORD => rsx! { icons::files::Docx { width: "36", height: "36" } },
-        FileExtension::PPTX => rsx! { icons::files::Pptx { width: "36", height: "36" } },
-        FileExtension::EXCEL => rsx! { icons::files::Xlsx { width: "36", height: "36" } },
-        FileExtension::MP4 => rsx! { icons::files::Mp4 { width: "36", height: "36" } },
-        FileExtension::MOV => rsx! { icons::files::Mov { width: "36", height: "36" } },
+        FileExtension::JPG => rsx! {
+            icons::files::Jpg { width: "36", height: "36" }
+        },
+        FileExtension::PNG => rsx! {
+            icons::files::Png { width: "36", height: "36" }
+        },
+        FileExtension::PDF => rsx! {
+            icons::files::Pdf { width: "36", height: "36" }
+        },
+        FileExtension::ZIP => rsx! {
+            icons::files::Zip { width: "36", height: "36" }
+        },
+        FileExtension::WORD => rsx! {
+            icons::files::Docx { width: "36", height: "36" }
+        },
+        FileExtension::PPTX => rsx! {
+            icons::files::Pptx { width: "36", height: "36" }
+        },
+        FileExtension::EXCEL => rsx! {
+            icons::files::Xlsx { width: "36", height: "36" }
+        },
+        FileExtension::MP4 => rsx! {
+            icons::files::Mp4 { width: "36", height: "36" }
+        },
+        FileExtension::MOV => rsx! {
+            icons::files::Mov { width: "36", height: "36" }
+        },
         FileExtension::MKV => rsx! {
             icons::file::File {
                 width: "36",
@@ -49,43 +97,37 @@ fn file_icon(ext: &FileExtension) -> Element {
 #[component]
 pub fn UploadTab(can_edit: bool) -> Element {
     let ctx = use_space_quiz_context();
-    let quiz = ctx.quiz.read().clone();
-    let current_section = use_signal(|| QuizCreatorSection::Upload);
-
-    rsx! {
-        UploadContent {
-            space_id: ctx.space_id,
-            quiz_id: ctx.quiz_id,
-            initial_files: quiz.files,
-            can_edit,
-            current_section,
-            show_navigation: false,
-        }
-    }
-}
-
-#[component]
-pub fn UploadContent(
-    space_id: ReadSignal<SpacePartition>,
-    quiz_id: ReadSignal<SpaceQuizEntityType>,
-    initial_files: Vec<File>,
-    can_edit: bool,
-    current_section: Signal<QuizCreatorSection>,
-    #[props(default = true)] show_navigation: bool,
-) -> Element {
     let tr: QuizCreatorTranslate = use_translate();
     let mut toast = use_toast();
-    let mut files = use_signal(|| initial_files);
+    let user = use_user()?;
+    let mut files = use_signal(|| ctx.quiz.read().files.clone());
     let mut opened_menu = use_signal(|| Option::<String>::None);
+    let space_id = ctx.space_id;
+    let quiz_id = ctx.quiz_id;
+    let uploader_name = user
+        .read()
+        .as_ref()
+        .map(|user| user.display_name.clone())
+        .unwrap_or_else(|| "".to_string());
+    let uploader_profile_url = user
+        .read()
+        .as_ref()
+        .map(|user| {
+            if user.profile_url.trim().is_empty() {
+                DEFAULT_PROFILE_URL.to_string()
+            } else {
+                user.profile_url.clone()
+            }
+        })
+        .unwrap_or_else(|| DEFAULT_PROFILE_URL.to_string());
+    let upload_uploader_name = uploader_name.clone();
+    let upload_uploader_profile_url = uploader_profile_url.clone();
 
-    let on_save = move |_evt: Event<MouseData>| {
-        if !can_edit {
-            return;
-        }
+    let save_files = move |next_files: Vec<File>| {
         let mut toast = toast;
         spawn(async move {
             let req = UpdateQuizRequest {
-                files: Some(files()),
+                files: Some(next_files),
                 ..Default::default()
             };
             if let Err(err) = update_quiz(space_id(), quiz_id(), req).await {
@@ -94,53 +136,70 @@ pub fn UploadContent(
             } else {
                 let keys = space_page_actions_quiz_key(&space_id(), &quiz_id());
                 invalidate_query(&keys);
-                opened_menu.set(None);
             }
         });
     };
 
     rsx! {
-        div { class: "flex w-full max-w-[1024px] flex-col gap-4",
+        div { class: "flex w-full flex-col gap-4",
             if can_edit {
                 FileUploader {
-                    accept: Some("*/*".to_string()),
-                    on_upload_success: move |url: String| {
+                    accept: ".pdf,.docx,.pptx,.xlsx,.png,.jpg,.jpeg,.mp4,.mov",
+                    on_upload_success: move |_url: String| {},
+                    on_upload_meta: move |uploaded: UploadedFileMeta| {
+                        let uploaded_name = if uploaded.name.trim().is_empty() {
+                            extract_filename_from_url(&uploaded.url)
+                        } else {
+                            uploaded.name.clone()
+                        };
                         let mut next = files();
                         next.push(File {
-                            id: url.clone(),
-                            name: extract_filename_from_url(&url),
-                            size: String::new(),
-                            ext: extension_from_url(&url),
-                            url: Some(url),
+                            id: uploaded.url.clone(),
+                            name: uploaded_name.clone(),
+                            size: uploaded.size,
+                            ext: extension_from_name_or_url(&uploaded_name, &uploaded.url),
+                            url: Some(uploaded.url),
+                            uploader_name: Some(upload_uploader_name.clone()),
+                            uploader_profile_url: Some(upload_uploader_profile_url.clone()),
+                            uploaded_at: Some(crate::common::utils::time::now()),
                         });
-                        files.set(next);
+                        files.set(next.clone());
+                        save_files(next);
                     },
-                    div { class: "flex min-h-[220px] w-full flex-col items-center justify-center rounded-[12px] border border-dashed border-[#404040] bg-[#1A1A1A] px-6 py-10 text-center transition-colors hover:border-primary",
-                        icons::ratel::Cloud {
-                            width: "56",
-                            height: "56",
-                            class: "mb-4 text-[#8C8C8C] [&>path]:stroke-current",
+                    div { class: "flex px-4 py-2.5 w-full gap-5 flex-col items-center justify-center rounded-[12px] border border-dashed border-[#404040] bg-[#1A1A1A] text-center transition-colors hover:border-primary light:border-input-box-border light:bg-input-box-bg light:hover:border-input-box-border",
+                        div { class: "flex flex-col w-full justify-center items-center gap-1",
+                            icons::ratel::Cloud {
+                                width: "64",
+                                height: "64",
+                                class: "text-[#8C8C8C] light:text-card-meta [&>path]:stroke-current",
+                            }
+                            div { class: "text-[15px]/[18px] font-bold text-text-primary",
+                                {tr.upload_drop_title}
+                            }
                         }
-                        p { class: "text-[24px]/[32px] font-bold text-white",
-                            {tr.upload_drop_title}
-                        }
-                        Button {
-                            style: ButtonStyle::Outline,
-                            shape: ButtonShape::Square,
-                            class: "mt-5 min-w-[120px] rounded-full border-white bg-white text-black hover:bg-white/90 hover:text-black",
-                            "{tr.upload_cta}"
-                        }
-                        p { class: "mt-4 text-[13px]/[20px] font-medium text-[#A3A3A3]",
-                            {tr.upload_supported_types}
+                        div { class: "flex flex-col w-full justify-center items-center gap-2.5",
+                            div { class: "inline-flex h-11 min-w-[118px] items-center justify-center gap-2 rounded-full border border-white bg-white px-5 text-black transition-colors hover:bg-white/90",
+                                icons::upload_download::Upload2 {
+                                    width: "20",
+                                    height: "20",
+                                    class: "shrink-0 [&>path]:stroke-[#737373]",
+                                }
+                                span { class: "text-[14px]/[16px] font-bold text-[#0A0A0A]",
+                                    {tr.upload_cta}
+                                }
+                            }
+                            p { class: "text-[13px]/[20px] font-medium text-[#A3A3A3] light:text-card-meta",
+                                {tr.upload_supported_types}
+                            }
                         }
                     }
                 }
             }
 
-            div { class: "flex flex-col gap-3",
+            div { class: "flex flex-col gap-2.5",
                 if files().is_empty() {
-                    div { class: "flex min-h-[96px] items-center justify-center rounded-[12px] border border-[#262626] bg-[#1A1A1A] px-6 text-center",
-                        p { class: "text-[15px]/[22px] font-medium text-[#8C8C8C]",
+                    div { class: "flex min-h-[96px] items-center justify-center rounded-[12px] border border-[#262626] bg-[#1A1A1A] px-6 text-center light:border-input-box-border light:bg-input-box-bg",
+                        p { class: "text-[15px]/[22px] font-medium text-[#8C8C8C] light:text-card-meta",
                             {tr.upload_empty}
                         }
                     }
@@ -152,19 +211,41 @@ pub fn UploadContent(
                         let menu_file_id = file_id.clone();
                         let delete_file_id = file_id.clone();
                         let is_menu_open = opened_menu().as_ref() == Some(&file_id);
+                        let profile_url = file
+                            .uploader_profile_url
+                            .clone()
+                            .unwrap_or_else(|| uploader_profile_url.clone());
+                        let uploader_name = file
+                            .uploader_name
+                            .clone()
+                            .unwrap_or_else(|| uploader_name.clone());
+                        let uploaded_at = file
+                            .uploaded_at
+                            .map(format_time_ago)
+                            .unwrap_or_else(|| "just now".to_string());
                         rsx! {
-                            div {
+                            SpaceCard {
                                 key: "{file_id}",
-                                class: "relative rounded-[12px] border border-[#262626] bg-[#1A1A1A] px-5 py-4",
+                                class: "relative !h-auto !rounded-[12px] !border !border-[#262626] !bg-[#1A1A1A] !px-5 !py-4 overflow-visible light:!border-input-box-border light:!bg-input-box-bg",
                                 div { class: "flex items-center justify-between gap-4",
-                                    div { class: "flex min-w-0 items-center gap-4",
+                                    div { class: "flex min-w-0 items-center gap-5",
                                         div { class: "shrink-0 [&>svg]:size-10", {file_icon(&file.ext)} }
-                                        div { class: "flex min-w-0 flex-col gap-1",
-                                            p { class: "truncate text-[20px]/[28px] font-bold text-white max-tablet:text-[18px]/[24px]",
+                                        div { class: "flex min-w-0 flex-1 flex-col gap-1",
+                                            p { class: "truncate text-[15px]/[20px] font-bold tracking-[0.5px] text-white light:text-text-primary",
                                                 "{file.name}"
                                             }
-                                            if !file.size.is_empty() {
-                                                p { class: "text-[13px]/[20px] font-medium text-[#8C8C8C]", "{file.size}" }
+                                            div { class: "flex min-w-0 items-center gap-2.5 font-medium text-[#8C8C8C] light:text-card-meta",
+                                                img {
+                                                    class: "size-6 rounded-full object-cover shrink-0",
+                                                    src: "{profile_url}",
+                                                    alt: "Profile",
+                                                }
+                                                span { class: "truncate text-[13px]/[20px] text-white light:text-text-primary",
+                                                    "{uploader_name}"
+                                                }
+                                                span { class: "shrink-0 text-[12px]/[16px] text-[#8C8C8C] light:text-card-meta",
+                                                    "{uploaded_at}"
+                                                }
                                             }
                                         }
                                     }
@@ -173,8 +254,8 @@ pub fn UploadContent(
                                         if file.url.is_some() {
                                             Button {
                                                 style: ButtonStyle::Outline,
-                                                shape: ButtonShape::Square,
-                                                class: "min-w-[88px] rounded-full border-white bg-white text-black hover:bg-white/90 hover:text-black",
+                                                shape: ButtonShape::Rounded,
+                                                class: "!text-[#0A0A0A] px-4 py-2 rounded-full border-white bg-white light:bg-[#404040] light:!text-[#FFFFFF] hover:bg-white/90 light:hover:bg-[#404040]/90",
                                                 onclick: move |_| {
                                                     #[cfg(not(feature = "server"))]
                                                     if let Some(url) = &file.url {
@@ -182,14 +263,15 @@ pub fn UploadContent(
                                                             .and_then(|w| w.open_with_url_and_target(url, "_blank").ok());
                                                     }
                                                 },
-                                                {tr.upload_view}
+                                                span { class: "text-[#0A0A0A] light:text-[#FFFFFF]", {tr.upload_view} }
                                             }
                                         }
                                         if can_edit {
                                             Button {
                                                 size: ButtonSize::Icon,
                                                 style: ButtonStyle::Text,
-                                                class: "size-10 rounded-full border border-transparent text-white hover:bg-white/10",
+                                                class: "p-1 rounded-full transition-colors focus:outline-none hover:bg-hover"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    .to_string(),
                                                 onclick: move |_| {
                                                     if opened_menu().as_ref() == Some(&menu_file_id) {
                                                         opened_menu.set(None);
@@ -197,65 +279,31 @@ pub fn UploadContent(
                                                         opened_menu.set(Some(menu_file_id.clone()));
                                                     }
                                                 },
-                                                "..."
+                                                icons::validations::Extra { class: "size-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent [&>circle]:fill-icon-primary" }
                                             }
                                         }
                                     }
                                 }
 
                                 if can_edit && is_menu_open {
-                                    div { class: "mt-3 flex justify-end",
+                                    div { class: "absolute right-0 top-full z-50 mt-2 w-40 rounded-md border border-divider bg-background light:bg-input-box-bg",
                                         Button {
-                                            style: ButtonStyle::Outline,
-                                            shape: ButtonShape::Square,
-                                            class: "min-w-[96px] border-red-500 text-red-400 hover:bg-red-500/10 hover:text-red-300",
+                                            size: ButtonSize::Inline,
+                                            style: ButtonStyle::Text,
+                                            class: "flex items-center py-2 px-4 w-full text-sm text-red-400 cursor-pointer hover:bg-hover"
+                                                .to_string(),
                                             onclick: move |_| {
                                                 let mut next = files();
                                                 next.retain(|f| f.id != delete_file_id);
-                                                files.set(next);
+                                                files.set(next.clone());
                                                 opened_menu.set(None);
+                                                save_files(next);
                                             },
-                                            {tr.upload_delete}
+                                            span { class: "inline-flex items-center text-red-400", {tr.upload_delete} }
                                         }
                                     }
                                 }
                             }
-                        }
-                    }
-                }
-            }
-
-            div { class: "flex w-full justify-end gap-3",
-                if show_navigation {
-                    Button {
-                        style: ButtonStyle::Outline,
-                        shape: ButtonShape::Square,
-                        class: "min-w-[110px]",
-                        onclick: move |_| current_section.set(QuizCreatorSection::Overview),
-                        {tr.btn_back}
-                    }
-                }
-                if can_edit {
-                    Button {
-                        style: ButtonStyle::Outline,
-                        shape: ButtonShape::Square,
-                        class: "min-w-[110px] inline-flex items-center justify-center gap-2 border-white text-white hover:text-white",
-                        onclick: on_save,
-                        crate::common::icons::other_devices::Save { class: "w-5 h-5 [&>path]:stroke-white [&>path]:fill-transparent" }
-                        {tr.btn_save}
-                    }
-                }
-                if show_navigation {
-                    Button {
-                        style: ButtonStyle::Primary,
-                        shape: ButtonShape::Square,
-                        class: "min-w-[110px] inline-flex items-center justify-center gap-2",
-                        onclick: move |_| current_section.set(QuizCreatorSection::Quiz),
-                        {tr.btn_next}
-                        icons::arrows::ArrowRight {
-                            width: "20",
-                            height: "20",
-                            class: "shrink-0 [&>path]:stroke-current",
                         }
                     }
                 }
