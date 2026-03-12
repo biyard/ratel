@@ -84,6 +84,7 @@ pub async fn get_space(space_id: SpacePartition) -> Result<SpaceResponse> {
         remains: space.remains,
         quota: space.quota,
         is_report: false,
+        logo: space.logo,
     })
 }
 
@@ -123,6 +124,8 @@ pub struct SpaceResponse {
     pub remains: i64,
     pub quota: i64,
     pub is_report: bool,
+    #[serde(default)]
+    pub logo: String,
 }
 
 impl SpaceResponse {

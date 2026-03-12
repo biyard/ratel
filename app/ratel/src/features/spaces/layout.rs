@@ -19,6 +19,7 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
     let space = ctx.space();
     let lang = use_language();
 
+    let mut query = use_query_store();
     let user_ctx = use_user_context();
     let user = user_ctx.read().user.clone();
     let credential_path = user
@@ -65,7 +66,7 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
         let space_id = space_id();
         let space_detail = space_key(&space_id);
         participate.call(space_id).await;
-        invalidate_query(&space_detail);
+        query.invalidate(&space_detail);
     };
 
     rsx! {
@@ -74,7 +75,11 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
             div { class: "hidden tablet:flex",
                 SpaceNav {
                     space_id: space_id(),
-                    logo: "https://metadata.ratel.foundation/logos/logo.png",
+                    logo: if space.logo.is_empty() {
+                        "https://metadata.ratel.foundation/logos/logo.png".to_string()
+                    } else {
+                        space.logo.clone()
+                    },
                     menus,
                     user,
                     role,

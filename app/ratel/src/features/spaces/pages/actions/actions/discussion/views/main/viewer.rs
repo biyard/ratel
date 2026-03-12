@@ -86,6 +86,7 @@ pub fn DiscussionComments(
     is_creator: bool,
 ) -> Element {
     let mut comment_input = use_signal(String::new);
+    let mut query = use_query_store();
 
     rsx! {
         div { class: "flex flex-col gap-4",
@@ -120,8 +121,8 @@ pub fn DiscussionComments(
                                         Ok(_) => {
                                             let discussion_key = space_page_actions_discussion_key(&space_id, &discussion_id);
                                             let comments_key = space_page_actions_discussion_comments_key(&space_id, &discussion_id);
-                                            invalidate_query(&discussion_key);
-                                            invalidate_query(&comments_key);
+                                            query.invalidate(&discussion_key);
+                                            query.invalidate(&comments_key);
                                         }
                                         Err(e) => {
                                             error!("Failed to add comment: {:?}", e);
@@ -243,6 +244,7 @@ fn DeleteCommentButton(
     comment_sk: SpacePostCommentEntityType,
 ) -> Element {
     use crate::features::spaces::pages::actions::actions::discussion::controllers::delete_comment;
+    let mut query = use_query_store();
 
     rsx! {
         button {
@@ -260,8 +262,8 @@ fn DeleteCommentButton(
                             Ok(_) => {
                                 let discussion_key = space_page_actions_discussion_key(&space_id, &discussion_id);
                                 let comments_key = space_page_actions_discussion_comments_key(&space_id, &discussion_id);
-                                invalidate_query(&discussion_key);
-                                invalidate_query(&comments_key);
+                                query.invalidate(&discussion_key);
+                                query.invalidate(&comments_key);
                             }
                             Err(e) => {
                                 error!("Failed to delete comment: {:?}", e);
@@ -283,6 +285,8 @@ fn LikeButton(
     likes: u64,
     liked: bool,
 ) -> Element {
+    let mut query = use_query_store();
+
     rsx! {
         button {
             class: "flex items-center gap-1 hover:text-yellow-400 transition-colors",
@@ -300,7 +304,7 @@ fn LikeButton(
                         match like_comment(space_id.clone(), discussion_id.clone(), comment_sk, req).await {
                             Ok(_) => {
                                 let comments_key = space_page_actions_discussion_comments_key(&space_id, &discussion_id);
-                                invalidate_query(&comments_key);
+                                query.invalidate(&comments_key);
                             }
                             Err(e) => {
                                 error!("Failed to like comment: {:?}", e);
@@ -324,6 +328,7 @@ fn ReplyInput(
 ) -> Element {
     let mut reply_input = reply_input;
     let mut show_reply_input = show_reply_input;
+    let mut query = use_query_store();
 
     rsx! {
         div { class: "flex gap-2 mt-1",
@@ -356,8 +361,8 @@ fn ReplyInput(
                                 Ok(_) => {
                                     let discussion_key = space_page_actions_discussion_key(&space_id, &discussion_id);
                                     let comments_key = space_page_actions_discussion_comments_key(&space_id, &discussion_id);
-                                    invalidate_query(&discussion_key);
-                                    invalidate_query(&comments_key);
+                                    query.invalidate(&discussion_key);
+                                    query.invalidate(&comments_key);
                                 }
                                 Err(e) => {
                                     error!("Failed to reply: {:?}", e);
