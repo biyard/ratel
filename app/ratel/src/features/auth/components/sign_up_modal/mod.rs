@@ -371,6 +371,8 @@ pub fn SignupModal(
                                             .set(UserContext {
                                                 user: Some(user.user),
                                                 refresh_token: user.refresh_token,
+                                                #[cfg(feature = "membership")]
+                                                membership: None,
                                             });
                                         popup.close();
                                         nav.push("/");
@@ -408,6 +410,8 @@ pub fn SignupModal(
                                         .set(UserContext {
                                             user: Some(user.user),
                                             refresh_token: user.refresh_token,
+                                            #[cfg(feature = "membership")]
+                                            membership: None,
                                         });
                                     popup.close();
                                     nav.push("/");

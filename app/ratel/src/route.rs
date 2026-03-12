@@ -32,11 +32,11 @@ use crate::features::spaces::pages::actions::actions::discussion::{
     DiscussionActionEditorPage, DiscussionActionPage,
 };
 #[cfg(feature = "spaces")]
+use crate::features::spaces::pages::actions::actions::follow::FollowActionPage;
+#[cfg(feature = "spaces")]
 use crate::features::spaces::pages::actions::actions::poll::PollActionPage;
 #[cfg(feature = "spaces")]
 use crate::features::spaces::pages::actions::actions::quiz::QuizActionPage;
-#[cfg(feature = "spaces")]
-use crate::features::spaces::pages::actions::actions::subscription::FollowActionPage;
 #[cfg(feature = "spaces")]
 use crate::features::spaces::pages::actions::SpaceActionsPage;
 
