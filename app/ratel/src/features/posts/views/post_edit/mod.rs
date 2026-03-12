@@ -111,8 +111,9 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
 
     let categories_query = use_infinite_query(move |bookmark| list_categories_handler(bookmark))?;
     let mut extra_categories = use_signal(|| vec![]);
+    let categories_query_for_memo = categories_query.clone();
     let categories = use_memo(move || {
-        let mut cats: Vec<String> = categories_query.items().iter().map(|c| c.name.clone()).collect();
+        let mut cats: Vec<String> = categories_query_for_memo.items().iter().map(|c| c.name.clone()).collect();
         cats.extend(extra_categories());
         cats
     });
@@ -344,6 +345,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                                     is_creating_category.set(true);
 
                                     let new_cat = category_input();
+                                    let mut cats_query = categories_query.clone();
                                     spawn(async move {
                                         match create_category_handler(CreateCategoryRequest {
                                             name: new_cat,
@@ -354,7 +356,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                                                 let name = cat.name;
                                                 category.set(name.clone());
                                                 category_input.set(name.clone());
-                                                extra_categories.write().push(name);
+                                                cats_query.restart();
                                                 show_category_dropdown.set(false);
                                             }
                                             Err(e) => {
