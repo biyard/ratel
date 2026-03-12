@@ -31,7 +31,7 @@ pub fn SelectTrigger(props: SelectTriggerProps) -> Element {
             class: "select-trigger @max-sm:w-full",
             attributes: props.attributes,
             div { class: "hidden @max-sm:w-full @max-sm:flex @max-sm:justify-center @max-sm:items-center",
-                {props.children}
+                {props.children.clone()}
             }
             {props.children}
 
