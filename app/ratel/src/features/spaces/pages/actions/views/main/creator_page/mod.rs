@@ -45,11 +45,8 @@ pub fn CreatorActionPage(space_id: ReadSignal<SpacePartition>) -> Element {
                                             },
                                         }
                                     },
-                                    Some(
-                                        "!max-w-[337px] rounded-none border-l border-neutral-800 light:border-neutral-300 shadow-[0_8px_20px_0_rgba(20,26,62,0.25)] max-tablet:!max-w-full"
-                                            .to_string(),
-                                    ),
-                                );
+                                )
+                                .set_size(LayoverSize::Small);
                         },
                         div { class: "flex flex-row gap-2.5 justify-center items-center",
                             icons::settings::Settings2 {
@@ -72,7 +69,6 @@ pub fn CreatorActionPage(space_id: ReadSignal<SpacePartition>) -> Element {
                     }
 
                     Button {
-                        //
                         style: ButtonStyle::Secondary,
                         onclick: move |_| {
                             layover
@@ -82,8 +78,8 @@ pub fn CreatorActionPage(space_id: ReadSignal<SpacePartition>) -> Element {
                                     rsx! {
                                         CreateActionModal { space_id: space_id(), has_subscription: has_subscription() }
                                     },
-                                    None,
-                                );
+                                )
+                                .set_size(LayoverSize::Small);
                         },
                         div { class: "flex flex-row gap-2 justify-center items-center w-full",
                             icons::validations::AddCircle {
