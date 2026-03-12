@@ -88,26 +88,6 @@ translate! {
         ko: "선택한 액션에 설정된 리워드가 아직 없습니다.",
     },
 
-    start_date: {
-        en: "Start date",
-        ko: "시작일",
-    },
-
-    end_date: {
-        en: "End date",
-        ko: "종료일",
-    },
-
-    date_placeholder: {
-        en: "MM-DD-YYYY",
-        ko: "MM-DD-YYYY",
-    },
-
-    time_zone: {
-        en: "Time Zone",
-        ko: "시간대",
-    },
-
     apply: {
         en: "Apply",
         ko: "적용",
@@ -131,21 +111,6 @@ translate! {
     select_dates_error: {
         en: "Select both start and end dates.",
         ko: "시작일과 종료일을 모두 선택해 주세요.",
-    },
-
-    select_time_zone_error: {
-        en: "Select a time zone.",
-        ko: "타임존을 선택해 주세요.",
-    },
-
-    invalid_date_range_error: {
-        en: "End date must be after start date.",
-        ko: "종료일은 시작일 이후여야 합니다.",
-    },
-
-    unsupported_time_zone_error: {
-        en: "Unsupported time zone.",
-        ko: "지원하지 않는 타임존입니다.",
     },
 
     applied_success: {
