@@ -37,7 +37,14 @@ pub async fn update_quiz(
     let existing = SpaceQuiz::get(cli, &space_pk, Some(quiz_sk.clone()))
         .await?
         .ok_or(Error::NotFound("Quiz not found".into()))?;
-    if existing.user_response_count > 0 {
+    let updates_locked_fields = req.started_at.is_some()
+        || req.ended_at.is_some()
+        || req.retry_count.is_some()
+        || req.pass_score.is_some()
+        || req.questions.is_some()
+        || req.answers.is_some();
+
+    if existing.user_response_count > 0 && updates_locked_fields {
         return Err(Error::BadRequest(
             "Quiz cannot be edited after responses exist".into(),
         ));
