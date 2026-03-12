@@ -15,23 +15,39 @@ pub async fn respond_quiz(
     quiz_id: SpaceQuizEntityType,
     req: RespondQuizRequest,
 ) -> Result<String> {
+    SpaceQuiz::can_respond(&role)?;
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
-    let space_pk: Partition = space_pk.into();
+    let space_id = space_pk;
+    let space_pk: Partition = space_id.clone().into();
     let quiz_sk: EntityType = quiz_id.clone().into();
 
     let quiz = SpaceQuiz::get(cli, &space_pk, Some(quiz_sk.clone()))
         .await?
         .ok_or(Error::NotFound("Quiz not found".into()))?;
 
-    quiz.can_respond(&role)?;
+    let space_action = crate::features::spaces::pages::actions::models::SpaceAction::get(
+        cli,
+        &CompositePartition(space_id, quiz_id.clone()),
+        Some(EntityType::SpaceAction),
+    )
+    .await?
+    .ok_or(Error::SpaceActionNotFound)?;
+
+    let now = crate::common::utils::time::get_now_timestamp_millis();
+    if now < space_action.started_at || now > space_action.ended_at {
+        return Err(Error::BadRequest("Poll is not in progress".into()));
+    }
 
     let answer_sk = EntityType::SpaceQuizAnswer(quiz_id.to_string());
     let correct = SpaceQuizAnswer::get(cli, &space_pk, Some(answer_sk))
         .await?
         .ok_or(Error::NotFound("Quiz answer not found".into()))?;
 
-    if !crate::features::spaces::pages::actions::actions::poll::types::validate_answers(quiz.questions.clone(), req.answers.clone()) {
+    if !crate::features::spaces::pages::actions::actions::poll::types::validate_answers(
+        quiz.questions.clone(),
+        req.answers.clone(),
+    ) {
         return Err(Error::BadRequest("Answers do not match questions".into()));
     }
 

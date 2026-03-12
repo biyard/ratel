@@ -9,3 +9,4 @@ assets/*.js
 
 # Remove Generated tailwind files
 assets/tailwind.css
+assets/common-tailwind.css

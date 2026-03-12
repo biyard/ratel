@@ -35,6 +35,10 @@ translate! {
         en: "Retries",
         ko: "재시도",
     },
+    survey_time_label: {
+        en: "Survey Time",
+        ko: "설문 시간",
+    },
     remaining_submissions: {
         en: "Remaining submissions",
         ko: "남은 제출 횟수",
@@ -42,6 +46,10 @@ translate! {
     score_label: {
         en: "Score",
         ko: "점수",
+    },
+    no_questions: {
+        en: "No questions yet.",
+        ko: "아직 질문이 없습니다.",
     },
     status_pass: {
         en: "PASS",

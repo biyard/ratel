@@ -12,11 +12,13 @@ pub fn ParticipationCard(
     credential_path: Option<String>,
     on_login: EventHandler<()>,
 ) -> Element {
+    let ctx = crate::features::spaces::space_common::providers::use_space_context();
     let tr: ParticipationCardTranslate = use_translate();
     let mut layover = use_layover();
     let navigator = use_navigator();
     let mut participate =
         use_action(crate::features::spaces::controllers::participate_space::participate_space);
+    let mut space = ctx.space;
     let panel_requirements_query_key = vec![
         "Space".to_string(),
         space_id.to_string(),
@@ -76,6 +78,7 @@ pub fn ParticipationCard(
             participate.call(space_id).await;
             invalidate_query(&space_detail);
             invalidate_query(&panel_requirements_key);
+            space.restart();
         });
     };
 
