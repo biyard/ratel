@@ -73,7 +73,7 @@ Foundational shared code used by all feature modules.
 **IMPORTANT:** When building any UI in `app/ratel/src/`, always check and prefer primitive components from `src/common/components/` before creating custom elements. These are the project's design system primitives and MUST be used for visual consistency.
 
 Available primitive components:
-`Accordion`, `AlertDialog`, `AspectRatio`, `Avatar`, `Badge`, `Button`, `Calendar`, `Card`, `Checkbox`, `Collapsible`, `ContextMenu`, `DatePicker`, `DateAndTimePicker`, `TimePicker`, `TimezonePicker`, `Dialog`, `DragAndDropList`, `DropdownMenu`, `FileUploader`, `Form`, `HoverCard`, `Input`, `Label`, `Layover`, `LoadingIndicator`, `Menubar`, `Navbar`, `Pagination`, `Popover`, `Popup`, `Progress`, `RadioGroup`, `ScrollArea`, `Select`, `SeoMeta`, `Separator`, `Sheet`, `Sidebar`, `Sidemenu`, `Skeleton`, `Slider`, `SpaceCard`, `SuspenseBoundary`, `Switch`, `Tabs`, `TeamCreationForm`, `TeamSelector`, `Textarea`, `ThemeSwitcher`, `Toggle`, `ToggleGroup`, `Toolbar`, `Tooltip`
+`Accordion`, `AlertDialog`, `AspectRatio`, `Avatar`, `Badge`, `Button`, `Calendar`, `Card`, `Checkbox`, `Col`, `Collapsible`, `ContextMenu`, `DatePicker`, `DateAndTimePicker`, `TimePicker`, `TimezonePicker`, `Dialog`, `DragAndDropList`, `DropdownMenu`, `FileUploader`, `Form`, `HoverCard`, `Input`, `Label`, `Layover`, `LoadingIndicator`, `Menubar`, `Navbar`, `Pagination`, `Popover`, `Popup`, `Progress`, `RadioGroup`, `Row`, `ScrollArea`, `Select`, `SeoMeta`, `Separator`, `Sheet`, `Sidebar`, `Sidemenu`, `Skeleton`, `Slider`, `SpaceCard`, `SuspenseBoundary`, `Switch`, `Tabs`, `TeamCreationForm`, `TeamSelector`, `Textarea`, `ThemeSwitcher`, `Toggle`, `ToggleGroup`, `Toolbar`, `Tooltip`
 
 Rules:
 - **Always use these primitives** instead of raw HTML elements for interactive UI (e.g., use `Button` not `button`, `Input` not `input`, `Select` not `select`, `Card` for card layouts)
@@ -95,6 +95,16 @@ Each feature module is gated by a Cargo feature flag and follows a consistent st
 | Admin | `features/admin/` | (always enabled) | Admin panel |
 | Membership | `features/membership/` | `membership` | Membership tiers and access |
 | My Follower | `features/my_follower/` | (always enabled) | Follower feed |
+
+**Auth Context & Membership Integration:**
+
+The `UserContext` (`features/auth/context/user_context.rs`) stores the logged-in user and, when the `membership` feature is enabled, their `UserMembershipResponse`. All membership-related fields use `#[cfg(feature = "membership")]` gating.
+
+- **`use_user_membership()` hook** (`features/auth/hooks/use_user_membership.rs`) — Returns `Option<UserMembershipResponse>`. Lazy-loads from server via `use_resource` when user is logged in but membership is `None` (e.g., after login/signup). Subsequent reads come from context.
+- **`UserMembershipResponse`** (`features/membership/models/membership.rs`) — Contains `tier: MembershipPartition`, `remaining_credits`, `max_credits_per_space`, etc. Has `is_paid()` helper that checks `!tier.0.contains("Free")`.
+- **`MembershipPartition`** — Newtype `pub MembershipPartition(pub String)` containing e.g. `"MEMBERSHIP#Free"`. Convert to `Partition` via `let pk: Partition = membership_pk.clone().into();` (explicit type annotation needed to avoid inference ambiguity).
+- **Membership tiers:** `Free`, `Pro`, `Max`, `Vip`, `Enterprise(String)` — Only paid tiers (non-Free) can access premium features like reward boost.
+- **Membership page route:** `/{username}/memberships` (`UserRoute::UserMemberships`)
 
 **Spaces sub-pages** (`features/spaces/pages/`):
 
