@@ -1,3 +1,4 @@
+pub mod category;
 pub mod post;
 pub mod post_artwork;
 pub mod post_comment;
@@ -9,6 +10,7 @@ pub mod team;
 pub mod team_group;
 pub mod team_owner;
 
+pub use category::*;
 pub use post::*;
 pub use post_artwork::*;
 pub use post_comment::*;
