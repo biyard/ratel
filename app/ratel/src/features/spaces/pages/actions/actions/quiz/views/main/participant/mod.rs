@@ -2,6 +2,7 @@ mod i18n;
 
 use super::creator::{OverviewTab, QuizCreatorTranslate, UploadTab};
 use crate::features::spaces::pages::actions::actions::poll::components::QuestionViewer;
+use crate::features::spaces::pages::actions::actions::poll::components::TimeRangeDisplay;
 use crate::features::spaces::pages::actions::actions::quiz::*;
 use crate::features::spaces::space_common::types::space_page_actions_quiz_key;
 use i18n::QuizParticipantTranslate;
@@ -90,6 +91,15 @@ fn ParticipantQuizTab() -> Element {
                     } else {
                         {tr.quiz_ended}
                     }
+                }
+            }
+
+            Card { class: "border border-neutral-700 bg-neutral-900 p-4 light:border-input-box-border light:bg-input-box-bg",
+                div { class: "text-xs text-neutral-500 light:text-text-secondary",
+                    "{tr.survey_time_label}"
+                }
+                div { class: "mt-1",
+                    TimeRangeDisplay { started_at: quiz.started_at, ended_at: quiz.ended_at }
                 }
             }
 

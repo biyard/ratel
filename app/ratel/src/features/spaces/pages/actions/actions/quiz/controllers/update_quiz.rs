@@ -31,7 +31,8 @@ pub async fn update_quiz(
     SpaceQuiz::can_edit(&role)?;
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
-    let space_pk: Partition = space_pk.into();
+    let space_id = space_pk;
+    let space_pk: Partition = space_id.clone().into();
     let quiz_sk: EntityType = quiz_id.clone().into();
 
     let existing = SpaceQuiz::get(cli, &space_pk, Some(quiz_sk.clone()))
@@ -52,13 +53,22 @@ pub async fn update_quiz(
 
     let now = crate::common::utils::time::get_now_timestamp_millis();
     let mut updater = SpaceQuiz::updater(&space_pk, &quiz_sk).with_updated_at(now);
+    let action_pk = CompositePartition(space_id, quiz_id.to_string());
+    let action_sk = EntityType::SpaceAction;
+    let mut action_updater = crate::features::spaces::pages::actions::models::SpaceAction::updater(
+        &action_pk, &action_sk,
+    )
+    .with_updated_at(now);
+    let mut should_update_action = false;
 
     if let Some(title) = req.title {
-        updater = updater.with_title(title);
+        action_updater = action_updater.with_title(title);
+        should_update_action = true;
     }
 
     if let Some(description) = req.description {
-        updater = updater.with_description(description);
+        action_updater = action_updater.with_description(description);
+        should_update_action = true;
     }
 
     if req.started_at.is_some() || req.ended_at.is_some() {
@@ -71,7 +81,10 @@ pub async fn update_quiz(
         if started_at >= ended_at {
             return Err(Error::BadRequest("Invalid time range".into()));
         }
-        updater = updater.with_started_at(started_at).with_ended_at(ended_at);
+        action_updater = action_updater
+            .with_started_at(started_at)
+            .with_ended_at(ended_at);
+        should_update_action = true;
     }
 
     if let Some(retry_count) = req.retry_count {
@@ -94,13 +107,7 @@ pub async fn update_quiz(
                 "Quiz only supports choice questions".into(),
             ));
         }
-        let description = questions
-            .first()
-            .map(|q| q.title().to_string())
-            .unwrap_or_default();
-        updater = updater
-            .with_questions(questions.clone())
-            .with_description(description);
+        updater = updater.with_questions(questions.clone());
         questions_for_answers = Some(questions);
     }
 
@@ -125,6 +132,9 @@ pub async fn update_quiz(
     }
 
     updater.execute(cli).await?;
+    if should_update_action {
+        action_updater.execute(cli).await?;
+    }
 
     if let Some(answers) = req.answers {
         let questions = questions_for_answers.unwrap_or_else(|| existing.questions.clone());
