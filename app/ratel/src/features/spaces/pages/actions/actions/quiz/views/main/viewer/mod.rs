@@ -1,4 +1,4 @@
-use super::creator::{OverviewTab, QuizCreatorTranslate, QuizTab, SettingTab, UploadTab};
+use super::creator::{OverviewTab, QuizCreatorTranslate, QuizTab, UploadTab};
 use crate::features::spaces::pages::actions::actions::quiz::*;
 
 #[component]
@@ -7,7 +7,7 @@ pub fn QuizViewerPage(
     quiz_id: ReadSignal<SpaceQuizEntityType>,
 ) -> Element {
     let tr: QuizCreatorTranslate = use_translate();
-    let ctx = Context::init(space_id, quiz_id)?;
+    Context::init(space_id, quiz_id)?;
 
     rsx! {
         div { class: "flex flex-col gap-4 w-full",
