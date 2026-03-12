@@ -75,7 +75,11 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
             div { class: "hidden tablet:flex",
                 SpaceNav {
                     space_id: space_id(),
-                    logo: "https://metadata.ratel.foundation/logos/logo.png",
+                    logo: if space.logo.is_empty() {
+                        "https://metadata.ratel.foundation/logos/logo.png".to_string()
+                    } else {
+                        space.logo.clone()
+                    },
                     menus,
                     user,
                     role,

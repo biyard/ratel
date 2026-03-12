@@ -2,11 +2,13 @@ use super::*;
 
 mod anonymous_setting;
 mod invite_participant;
+mod space_logo_setting;
 mod space_visibility_setting;
 use invite_participant::*;
 mod administrators;
 use administrators::*;
 use anonymous_setting::*;
+use space_logo_setting::*;
 use space_visibility_setting::*;
 
 const DEFAULT_PROFILE_IMAGE: &str = "https://metadata.ratel.foundation/ratel/default-profile.png";
@@ -32,6 +34,8 @@ pub fn SpaceGeneralAppPage(space_id: ReadSignal<SpacePartition>) -> Element {
             h3 { class: "font-bold font-raleway text-[24px]/[28px] tracking-[-0.24px] text-web-font-primary",
                 {tr.space_setting}
             }
+            SpaceLogoSetting {}
+
             SpaceVisibilitySetting {}
 
             InviteParticipant {}
