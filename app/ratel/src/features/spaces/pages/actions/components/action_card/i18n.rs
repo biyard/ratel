@@ -15,9 +15,9 @@ translate! {
         en: "Discussion",
         ko: "토론"
     },
-    action_type_subscription: {
-        en: "Subscription",
-        ko: "구독"
+    action_type_follow: {
+        en: "Follow",
+        ko: "팔로우"
     },
     status_draft: {
         en: "Draft",
