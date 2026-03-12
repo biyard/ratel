@@ -20,10 +20,32 @@ pub fn PollCreatorPage(
                     TabTrigger { index: 1usize, value: "setting-tab", {tr.tab_setting} }
                 }
                 TabContent { index: 0usize, value: "question-tab", QuestionTab {} }
-                TabContent { index: 1usize, value: "setting-tab", ActionCommonSettings {} }
+                TabContent { index: 1usize, value: "setting-tab",
+                    ActionCommonSettings {
+                        on_date_change: move |range: DateTimeRange| {
+                            let space_id = space_id();
+                            let poll_id = poll_id();
+                            spawn(async move {
+                                if let (Some(start_date), Some(end_date)) = (range.start_date, range.end_date) {
+                                    let started_at = date_time_to_millis(start_date, range.start_hour, range.start_minute);
+                                    let ended_at = date_time_to_millis(end_date, range.end_hour, range.end_minute);
+                                    let _ = update_poll(space_id, poll_id, UpdatePollRequest::Time { started_at, ended_at }).await;
+                                }
+                            });
+                        },
+                    }
+                }
             }
         }
     }
+}
+
+fn date_time_to_millis(date: time::Date, hour: u8, minute: u8) -> i64 {
+    let datetime = date
+        .with_hms(hour, minute, 0)
+        .expect("valid time");
+    let offset_datetime = datetime.assume_utc();
+    (offset_datetime.unix_timestamp()) * 1000
 }
 
 translate! {

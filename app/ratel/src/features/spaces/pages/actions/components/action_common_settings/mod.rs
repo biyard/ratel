@@ -1,33 +1,25 @@
+mod reward_setting;
+pub use reward_setting::*;
+
 use super::*;
-// use time::{ext::NumericalDuration, UtcDateTime};
 
 #[component]
-pub fn ActionCommonSettings() -> Element {
+pub fn ActionCommonSettings(
+    #[props(default)] on_date_change: EventHandler<DateTimeRange>,
+) -> Element {
     let tr: ActionCommonSettingsTranslate = use_translate();
-    let mut enable_reward = use_signal(|| false);
 
     rsx! {
         div { class: "flex flex-col gap-5 w-full",
             div { class: "flex flex-col gap-2.5",
                 p { {tr.date} }
-                DateAndTimePicker {}
+                DateAndTimePicker { on_change: move |range| on_date_change.call(range) }
             }
-            Card {
-                direction: CardDirection::Row,
-                main_axis_align: MainAxisAlign::Between,
-                cross_axis_align: CrossAxisAlign::Center,
-                p { {tr.reward_setting} }
-                Switch {
-                    active: enable_reward(),
-                    on_toggle: move |_| {
-                        enable_reward.set(!enable_reward());
-                    },
-                }
-            }
+
+            RewardSetting {}
         }
     }
 }
-use crate::*;
 
 translate! {
     ActionCommonSettingsTranslate;
@@ -35,9 +27,5 @@ translate! {
     date: {
         en: "Date",
         ko: "참여기간",
-    },
-    reward_setting: {
-        en: "Reward Setting",
-        ko: "보상 설정",
     },
 }
