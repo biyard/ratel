@@ -8,7 +8,7 @@ pub fn CreateActionModal(space_id: ReadSignal<SpacePartition>) -> Element {
     let nav = navigator();
     let mut layover = use_layover();
 
-    let mut selected_type = use_signal(|| None::<SpaceActionType>);
+    let mut selected_type = use_signal(|| Some(SpaceActionType::Quiz));
     let mut is_creating = use_signal(|| false);
 
     let close_layover = {
@@ -144,10 +144,18 @@ pub fn CreateActionModal(space_id: ReadSignal<SpacePartition>) -> Element {
 #[component]
 fn ActionPreview(selected: Option<SpaceActionType>, tr: CreateActionModalTranslate) -> Element {
     let content = match selected {
-        Some(SpaceActionType::Poll) => rsx! { PollPreview {} },
-        Some(SpaceActionType::Quiz) => rsx! { QuizPreview {} },
-        Some(SpaceActionType::TopicDiscussion) => rsx! { DiscussionPreview {} },
-        Some(SpaceActionType::Follow) => rsx! { FollowPreview {} },
+        Some(SpaceActionType::Poll) => rsx! {
+            PollPreview {}
+        },
+        Some(SpaceActionType::Quiz) => rsx! {
+            QuizPreview {}
+        },
+        Some(SpaceActionType::TopicDiscussion) => rsx! {
+            DiscussionPreview {}
+        },
+        Some(SpaceActionType::Follow) => rsx! {
+            FollowPreview {}
+        },
         None => {
             return rsx! {
                 SpaceCard {
@@ -173,7 +181,7 @@ fn ActionPreview(selected: Option<SpaceActionType>, tr: CreateActionModalTransla
             p { class: "font-medium text-white text-[1.0625rem]/[1.25rem] light:text-neutral-900",
                 {tr.preview_title}
             }
-            div { class: "flex flex-col gap-3 p-4 w-full rounded-[0.75rem] border border-neutral-700 light:border-neutral-300 bg-neutral-950/40 light:bg-neutral-100 pointer-events-none opacity-90",
+            div { class: "flex flex-col gap-3 p-4 w-full border opacity-90 pointer-events-none rounded-[0.75rem] border-neutral-700 light:border-neutral-300 bg-neutral-950/40 light:bg-neutral-100",
                 {content}
             }
         }
@@ -185,26 +193,26 @@ fn ActionPreview(selected: Option<SpaceActionType>, tr: CreateActionModalTransla
 fn PollPreview() -> Element {
     rsx! {
         div { class: "flex flex-col gap-3 w-full",
-            div { class: "flex items-center gap-2 text-xs text-neutral-500",
+            div { class: "flex gap-2 items-center text-xs text-neutral-500",
                 span { "Mar 12, 2026 00:00" }
                 span { "~" }
                 span { "Mar 19, 2026 00:00" }
             }
             div { class: "p-3 rounded-lg border border-neutral-700 light:border-neutral-300",
-                div { class: "text-xs text-neutral-500 mb-2", "1 / 2" }
-                p { class: "text-sm font-medium text-white light:text-neutral-900 mb-2",
+                div { class: "mb-2 text-xs text-neutral-500", "1 / 2" }
+                p { class: "mb-2 text-sm font-medium text-white light:text-neutral-900",
                     "Which proposal do you support?"
                 }
                 div { class: "flex flex-col gap-1.5",
                     for option in ["Proposal A", "Proposal B", "Proposal C"] {
-                        label { class: "flex items-center gap-2 text-sm text-neutral-300 light:text-neutral-700",
-                            div { class: "size-4 rounded-full border-2 border-neutral-600 light:border-neutral-400" }
+                        label { class: "flex gap-2 items-center text-sm text-neutral-300 light:text-neutral-700",
+                            div { class: "rounded-full border-2 size-4 border-neutral-600 light:border-neutral-400" }
                             "{option}"
                         }
                     }
                 }
             }
-            div { class: "py-2 rounded-lg bg-blue-600/20 text-center text-sm text-blue-400 font-medium",
+            div { class: "py-2 text-sm font-medium text-center text-blue-400 rounded-lg bg-blue-600/20",
                 "Submit"
             }
         }
@@ -216,26 +224,35 @@ fn PollPreview() -> Element {
 fn QuizPreview() -> Element {
     rsx! {
         div { class: "flex flex-col gap-3 w-full",
-            div { class: "flex items-center justify-between",
-                div { class: "flex items-center gap-2 text-xs text-neutral-500",
+            div { class: "flex justify-between items-center",
+                div { class: "flex gap-2 items-center text-xs text-neutral-500",
                     span { "Mar 12, 2026 00:00" }
                     span { "~" }
                     span { "Mar 19, 2026 00:00" }
                 }
             }
-            div { class: "flex items-center gap-2 text-xs text-neutral-400",
+            div { class: "flex gap-2 items-center text-xs text-neutral-400",
                 span { class: "font-medium", "Remaining submissions:" }
                 span { "3" }
             }
             div { class: "p-3 rounded-lg border border-neutral-700 light:border-neutral-300",
-                div { class: "text-xs text-neutral-500 mb-2", "1 / 3" }
-                p { class: "text-sm font-medium text-white light:text-neutral-900 mb-2",
+                div { class: "mb-2 text-xs text-neutral-500", "1 / 3" }
+                p { class: "mb-2 text-sm font-medium text-white light:text-neutral-900",
                     "What is the governance threshold?"
                 }
                 div { class: "flex flex-col gap-1.5",
-                    for (i, option) in ["51%", "67%", "75%", "90%"].iter().enumerate() {
-                        label { class: "flex items-center gap-2 text-sm text-neutral-300 light:text-neutral-700",
-                            div { class: format!("size-4 rounded-full border-2 {}", if i == 1 { "border-yellow-400 bg-yellow-400/30" } else { "border-neutral-600 light:border-neutral-400" }) }
+                    for (i , option) in ["51%", "67%", "75%", "90%"].iter().enumerate() {
+                        label { class: "flex gap-2 items-center text-sm text-neutral-300 light:text-neutral-700",
+                            div {
+                                class: format!(
+                                    "size-4 rounded-full border-2 {}",
+                                    if i == 1 {
+                                        "border-yellow-400 bg-yellow-400/30"
+                                    } else {
+                                        "border-neutral-600 light:border-neutral-400"
+                                    },
+                                ),
+                            }
                             "{option}"
                         }
                     }
@@ -253,8 +270,8 @@ fn DiscussionPreview() -> Element {
             h3 { class: "text-base font-bold text-white light:text-neutral-900",
                 "Should we increase the staking reward?"
             }
-            div { class: "flex items-center gap-2 text-xs text-neutral-500",
-                div { class: "size-5 rounded-full bg-neutral-600 light:bg-neutral-300" }
+            div { class: "flex gap-2 items-center text-xs text-neutral-500",
+                div { class: "rounded-full size-5 bg-neutral-600 light:bg-neutral-300" }
                 span { class: "font-medium", "alice.eth" }
             }
             p { class: "text-sm text-neutral-400 light:text-neutral-600 line-clamp-2",
@@ -264,12 +281,16 @@ fn DiscussionPreview() -> Element {
             p { class: "text-sm font-bold text-white light:text-neutral-900", "Comments (2)" }
             div { class: "flex flex-col gap-2",
                 div { class: "p-2 rounded-lg border border-neutral-700 light:border-neutral-300 bg-neutral-800/50 light:bg-neutral-50",
-                    div { class: "flex items-center gap-2 text-xs mb-1",
-                        div { class: "size-4 rounded-full bg-neutral-600 light:bg-neutral-300" }
-                        span { class: "font-medium text-white light:text-neutral-900", "bob.eth" }
+                    div { class: "flex gap-2 items-center mb-1 text-xs",
+                        div { class: "rounded-full size-4 bg-neutral-600 light:bg-neutral-300" }
+                        span { class: "font-medium text-white light:text-neutral-900",
+                            "bob.eth"
+                        }
                     }
-                    p { class: "text-xs text-neutral-400 light:text-neutral-600", "I agree, higher rewards will attract more stakers." }
-                    div { class: "flex items-center gap-3 mt-1 text-xs text-neutral-500",
+                    p { class: "text-xs text-neutral-400 light:text-neutral-600",
+                        "I agree, higher rewards will attract more stakers."
+                    }
+                    div { class: "flex gap-3 items-center mt-1 text-xs text-neutral-500",
                         span { "♡ 3" }
                         span { "Reply (1)" }
                     }
@@ -286,11 +307,13 @@ fn FollowPreview() -> Element {
         div { class: "flex flex-col gap-3 w-full",
             p { class: "text-sm font-bold text-white light:text-neutral-900", "Followers" }
             div { class: "flex flex-col gap-2",
-                for (name, handle) in [("Alice", "@alice.eth"), ("Bob", "@bob.eth"), ("Charlie", "@charlie.eth")] {
-                    div { class: "flex items-center gap-3 p-2 rounded-lg border border-neutral-700 light:border-neutral-300 bg-neutral-800/50 light:bg-neutral-50",
-                        div { class: "size-8 rounded-full bg-neutral-600 light:bg-neutral-300" }
+                for (name , handle) in [("Alice", "@alice.eth"), ("Bob", "@bob.eth"), ("Charlie", "@charlie.eth")] {
+                    div { class: "flex gap-3 items-center p-2 rounded-lg border border-neutral-700 light:border-neutral-300 bg-neutral-800/50 light:bg-neutral-50",
+                        div { class: "rounded-full size-8 bg-neutral-600 light:bg-neutral-300" }
                         div { class: "flex flex-col",
-                            span { class: "text-sm font-medium text-white light:text-neutral-900", "{name}" }
+                            span { class: "text-sm font-medium text-white light:text-neutral-900",
+                                "{name}"
+                            }
                             span { class: "text-xs text-neutral-500", "{handle}" }
                         }
                     }
