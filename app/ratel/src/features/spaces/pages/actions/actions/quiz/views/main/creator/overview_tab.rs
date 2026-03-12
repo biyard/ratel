@@ -93,7 +93,7 @@ pub fn OverviewTab(can_edit: bool) -> Element {
     };
 
     rsx! {
-        div { class: "flex w-full flex-col gap-[10px]",
+        div { class: "flex min-h-0 w-full flex-1 flex-col gap-[10px]",
             div { class: "flex w-full flex-col justify-center gap-2",
                 div { class: "flex w-full items-center justify-between gap-4",
                     div { class: "flex flex-row items-center",
@@ -147,8 +147,8 @@ pub fn OverviewTab(can_edit: bool) -> Element {
                 }
             }
 
-            div { class: "flex min-h-0 w-full flex-col overflow-hidden rounded-[8px] border border-quiz-editor-border bg-quiz-editor-bg px-3 pb-1 pt-3",
-                div { class: "flex w-full grow flex-1 flex-col gap-3",
+            div { class: "flex min-h-0 w-full flex-1 flex-col overflow-hidden rounded-[8px] border border-quiz-editor-border bg-quiz-editor-bg px-3 pb-1 pt-3",
+                div { class: "flex min-h-0 w-full grow flex-1 flex-col gap-3",
                     crate::common::components::TiptapEditor {
                         class: "min-h-0 h-full w-full flex-1 [&>div]:flex [&>div]:h-full [&>div]:min-h-0 [&>div]:flex-1 [&>div]:overflow-hidden [&>div]:bg-transparent [&>div]:border-0 [&_[data-tiptap-toolbar]]:border-b [&_[data-tiptap-toolbar]]:border-quiz-editor-toolbar-border [&_[data-tiptap-toolbar]]:bg-transparent [&_[contenteditable='true']]:h-full [&_[contenteditable='true']]:min-h-[96px] [&_[contenteditable='true']]:overflow-y-auto [&_[contenteditable='true']]:bg-transparent [&_[contenteditable='true']]:px-0 [&_[contenteditable='true']]:text-[15px] [&_[contenteditable='true']]:leading-[22px] [&_[contenteditable='true']]:font-medium [&_[contenteditable='true']]:text-text-primary [&_[contenteditable='true']]:outline-none [&_[contenteditable='true']]:placeholder:text-quiz-editor-placeholder",
                         content: description(),
