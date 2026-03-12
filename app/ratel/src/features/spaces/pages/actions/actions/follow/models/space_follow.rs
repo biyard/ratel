@@ -1,12 +1,12 @@
 use crate::common::utils::time::get_now_timestamp_millis;
 
-use crate::features::spaces::pages::actions::actions::subscription::*;
+use crate::features::spaces::pages::actions::actions::follow::*;
 
-use crate::features::spaces::pages::actions::actions::subscription::macros::DynamoEntity;
+use crate::features::spaces::pages::actions::actions::follow::macros::DynamoEntity;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, DynamoEntity)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-pub struct SpaceSubscriptionAction {
+pub struct SpaceFollowAction {
     pub pk: Partition,
     pub sk: EntityType,
 
@@ -14,17 +14,17 @@ pub struct SpaceSubscriptionAction {
     pub updated_at: i64,
 }
 
-impl From<SpaceSubscriptionAction> for crate::features::spaces::pages::actions::types::SpaceAction {
-    fn from(subscription: SpaceSubscriptionAction) -> Self {
+impl From<SpaceFollowAction> for crate::features::spaces::pages::actions::types::SpaceActionSummary {
+    fn from(follow: SpaceFollowAction) -> Self {
         use crate::features::spaces::pages::actions::types::SpaceActionType;
-        let action_id = subscription.sk.to_string();
+        let action_id = follow.sk.to_string();
         Self {
             action_id,
-            action_type: SpaceActionType::Subscription,
+            action_type: SpaceActionType::Follow,
             title: String::new(),
             description: String::new(),
-            created_at: subscription.created_at,
-            updated_at: subscription.updated_at,
+            created_at: follow.created_at,
+            updated_at: follow.updated_at,
             total_score: None,
             total_point: None,
             started_at: None,
@@ -35,7 +35,7 @@ impl From<SpaceSubscriptionAction> for crate::features::spaces::pages::actions::
 }
 
 #[cfg(feature = "server")]
-impl SpaceSubscriptionAction {
+impl SpaceFollowAction {
     pub fn new(space_pk: SpacePartition) -> Self {
         let pk: Partition = space_pk.into();
         let sk = EntityType::SpaceSubscription;
@@ -51,11 +51,11 @@ impl SpaceSubscriptionAction {
 
     pub fn can_edit(
         user_role: &SpaceUserRole,
-    ) -> crate::features::spaces::pages::actions::actions::subscription::Result<()> {
+    ) -> crate::features::spaces::pages::actions::actions::follow::Result<()> {
         match user_role {
             SpaceUserRole::Creator => Ok(()),
             _ => Err(
-                crate::features::spaces::pages::actions::actions::subscription::Error::NoPermission,
+                crate::features::spaces::pages::actions::actions::follow::Error::NoPermission,
             ),
         }
     }

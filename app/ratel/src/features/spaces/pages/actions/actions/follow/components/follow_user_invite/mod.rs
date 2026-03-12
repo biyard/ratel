@@ -1,10 +1,10 @@
-use crate::features::spaces::pages::actions::actions::subscription::controllers::{
-    AddSubscriptionUsersRequest, CheckSubscriptionUsersRequest, add_subscription_users,
-    check_subscription_users,
+use crate::features::spaces::pages::actions::actions::follow::controllers::{
+    AddFollowUsersRequest, CheckFollowUsersRequest, add_follow_users,
+    check_follow_users,
 };
-use crate::features::spaces::pages::actions::actions::subscription::*;
+use crate::features::spaces::pages::actions::actions::follow::*;
 mod i18n;
-use i18n::SubscriptionUserInviteTranslate;
+use i18n::FollowUserInviteTranslate;
 
 fn normalize_identifier_input(raw: &str) -> Vec<String> {
     raw.split(',')
@@ -14,8 +14,8 @@ fn normalize_identifier_input(raw: &str) -> Vec<String> {
 }
 
 #[component]
-pub fn SubscriptionUserInvite(space_id: SpacePartition, on_refresh: EventHandler<()>) -> Element {
-    let tr: SubscriptionUserInviteTranslate = use_translate();
+pub fn FollowUserInvite(space_id: SpacePartition, on_refresh: EventHandler<()>) -> Element {
+    let tr: FollowUserInviteTranslate = use_translate();
     let mut identifier_input = use_signal(String::new);
     let mut pending_identifiers = use_signal(Vec::<String>::new);
     let mut loading = use_signal(|| false);
@@ -44,9 +44,9 @@ pub fn SubscriptionUserInvite(space_id: SpacePartition, on_refresh: EventHandler
                 let space_id = space_id.clone();
                 let mut identifier_input = identifier_input.clone();
                 async move {
-                    let res = add_subscription_users(
+                    let res = add_follow_users(
                         space_id.clone(),
-                        AddSubscriptionUsersRequest { identifiers },
+                        AddFollowUsersRequest { identifiers },
                     )
                     .await;
                     loading.set(false);
@@ -92,9 +92,9 @@ pub fn SubscriptionUserInvite(space_id: SpacePartition, on_refresh: EventHandler
                                 let mut pending_identifiers = pending_identifiers.clone();
                                 let mut identifier_input = identifier_input.clone();
                                 spawn(async move {
-                                    if let Ok(res) = check_subscription_users(
+                                    if let Ok(res) = check_follow_users(
                                         space_id,
-                                        CheckSubscriptionUsersRequest { identifiers },
+                                        CheckFollowUsersRequest { identifiers },
                                     )
                                     .await
                                     {

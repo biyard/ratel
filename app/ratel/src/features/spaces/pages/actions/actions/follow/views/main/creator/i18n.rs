@@ -1,7 +1,7 @@
-use crate::features::spaces::pages::actions::actions::subscription::*;
+use crate::features::spaces::pages::actions::actions::follow::*;
 
 translate! {
-    SubscriptionCreatorTranslate;
+    FollowCreatorTranslate;
     title: {
         en: "Follow",
         ko: "팔로우"

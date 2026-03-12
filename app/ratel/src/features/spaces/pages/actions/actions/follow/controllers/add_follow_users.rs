@@ -1,16 +1,16 @@
 use crate::features::posts::models::Team;
-use crate::features::spaces::pages::actions::actions::subscription::models::SpaceSubscriptionUser;
-use crate::features::spaces::pages::actions::actions::subscription::*;
+use crate::features::spaces::pages::actions::actions::follow::models::SpaceFollowUser;
+use crate::features::spaces::pages::actions::actions::follow::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-pub struct AddSubscriptionUsersRequest {
+pub struct AddFollowUsersRequest {
     pub identifiers: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-pub struct AddSubscriptionUsersResponse {
+pub struct AddFollowUsersResponse {
     pub added_identifiers: Vec<String>,
 }
 
@@ -24,12 +24,12 @@ fn normalize_identifier(raw: &str) -> Option<(String, bool)> {
     Some((value, is_email))
 }
 
-#[post("/api/spaces/{space_id}/subscriptions/users", role: SpaceUserRole)]
-pub async fn add_subscription_users(
+#[post("/api/spaces/{space_id}/follows/users", role: SpaceUserRole)]
+pub async fn add_follow_users(
     space_id: SpacePartition,
-    req: AddSubscriptionUsersRequest,
-) -> Result<AddSubscriptionUsersResponse> {
-    SpaceSubscriptionAction::can_edit(&role)?;
+    req: AddFollowUsersRequest,
+) -> Result<AddFollowUsersResponse> {
+    SpaceFollowAction::can_edit(&role)?;
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     use crate::features::auth::models::user::UserQueryOption;
@@ -73,8 +73,8 @@ pub async fn add_subscription_users(
             }
         };
         let target_user = users.into_iter().next();
-        let subscription_user = if let Some(target_user) = target_user {
-            SpaceSubscriptionUser::new(
+        let follow_user = if let Some(target_user) = target_user {
+            SpaceFollowUser::new(
                 space_id.clone(),
                 target_user.pk,
                 target_user.display_name,
@@ -87,7 +87,7 @@ pub async fn add_subscription_users(
                 Team::find_by_username_prefix(cli, &identifier, Team::opt().limit(5)).await?;
             let target_team = teams.into_iter().find(|team| team.username == identifier);
             if let Some(team) = target_team {
-                SpaceSubscriptionUser::new(
+                SpaceFollowUser::new(
                     space_id.clone(),
                     team.pk,
                     team.display_name,
@@ -102,17 +102,17 @@ pub async fn add_subscription_users(
             return Err(Error::NotFound(format!("User not found: {}", identifier)));
         };
 
-        let (pk, sk) = SpaceSubscriptionUser::keys(&space_id, &subscription_user.user_pk);
-        if SpaceSubscriptionUser::get(cli, &pk, Some(sk))
+        let (pk, sk) = SpaceFollowUser::keys(&space_id, &follow_user.user_pk);
+        if SpaceFollowUser::get(cli, &pk, Some(sk))
             .await?
             .is_some()
         {
             continue;
         }
 
-        subscription_user.upsert(cli).await?;
+        follow_user.upsert(cli).await?;
         added_identifiers.push(identifier);
     }
 
-    Ok(AddSubscriptionUsersResponse { added_identifiers })
+    Ok(AddFollowUsersResponse { added_identifiers })
 }

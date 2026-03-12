@@ -1,16 +1,18 @@
-use crate::features::spaces::pages::actions::*;
 #[cfg(feature = "server")]
 use crate::features::auth::models::user::OptionalUser;
+use crate::features::spaces::pages::actions::*;
 
 // TODO: If bookmark-based pagination is needed, consider introducing a separate DynamoDB entity
 #[get("/api/spaces/{space_pk}/actions", role: SpaceUserRole, user: OptionalUser)]
 pub async fn list_actions(
     space_pk: SpacePartition,
     // bookmark: Option<String>,
-) -> Result<Vec<SpaceAction>> {
+) -> Result<Vec<SpaceActionSummary>> {
     use std::collections::HashSet;
 
-    let cli = crate::features::spaces::pages::actions::config::get().common.dynamodb();
+    let cli = crate::features::spaces::pages::actions::config::get()
+        .common
+        .dynamodb();
     let space_pk: Partition = space_pk.into();
     let poll_future = SpacePoll::query(
         cli,
@@ -23,26 +25,28 @@ pub async fn list_actions(
         crate::features::spaces::pages::actions::actions::quiz::SpaceQuiz::opt_all()
             .sk(EntityType::SpaceQuiz(String::default()).to_string()),
     );
-    let discussion_future = crate::features::spaces::pages::actions::actions::discussion::SpacePost::query(
-        cli,
-        space_pk.clone(),
-        crate::features::spaces::pages::actions::actions::discussion::SpacePost::opt_all()
-            .sk(EntityType::SpacePost(String::default()).to_string()),
-    );
-    let subscription_future = crate::features::spaces::pages::actions::actions::subscription::SpaceSubscriptionAction::get(
-        cli,
-        &space_pk,
-        Some(EntityType::SpaceSubscription),
-    );
-    let ((polls, _), (quizzes, _), (discussions, _), subscription) = tokio::try_join!(
+    let discussion_future =
+        crate::features::spaces::pages::actions::actions::discussion::SpacePost::query(
+            cli,
+            space_pk.clone(),
+            crate::features::spaces::pages::actions::actions::discussion::SpacePost::opt_all()
+                .sk(EntityType::SpacePost(String::default()).to_string()),
+        );
+    let follow_future =
+        crate::features::spaces::pages::actions::actions::follow::SpaceFollowAction::get(
+            cli,
+            &space_pk,
+            Some(EntityType::SpaceSubscription),
+        );
+    let ((polls, _), (quizzes, _), (discussions, _), follow) = tokio::try_join!(
         poll_future,
         quiz_future,
         discussion_future,
-        subscription_future
+        follow_future
     )
     .map_err(|e| Error::InternalServerError(format!("failed to load actions: {e:?}")))?;
 
-    let mut actions: Vec<SpaceAction> = if let Some(user) = user.0 {
+    let mut actions: Vec<SpaceActionSummary> = if let Some(user) = user.0 {
         let keys: Vec<_> = polls
             .iter()
             .map(|poll| SpacePollUserAnswer::keys(&user.pk, &poll.sk, &space_pk))
@@ -72,17 +76,17 @@ pub async fn list_actions(
         polls.into_iter().map(|poll| (poll, false).into()).collect()
     };
 
-    let quiz_actions: Vec<SpaceAction> = quizzes.into_iter().map(Into::into).collect();
+    let quiz_actions: Vec<SpaceActionSummary> = quizzes.into_iter().map(Into::into).collect();
     actions.extend(quiz_actions);
 
     // Add discussions to the actions list
-    let discussion_actions: Vec<SpaceAction> = discussions
+    let discussion_actions: Vec<SpaceActionSummary> = discussions
         .into_iter()
         .map(|post| (post, role).into())
         .collect();
     actions.extend(discussion_actions);
-    if let Some(subscription) = subscription {
-        actions.push(subscription.into());
+    if let Some(follow) = follow {
+        actions.push(follow.into());
     }
 
     // Sort by updated_at descending

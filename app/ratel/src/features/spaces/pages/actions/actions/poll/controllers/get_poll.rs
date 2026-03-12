@@ -19,6 +19,14 @@ pub async fn get_poll(
 
     let mut response: PollResponse = poll.into();
 
+    let space_action = crate::features::spaces::pages::actions::models::SpaceAction::get(
+        cli,
+        &CompositePartition(space_pk.clone(), poll_sk_entity.clone()),
+        Some(EntityType::SpaceAction),
+    )
+    .await?;
+    response.space_action = space_action;
+
     if let Some(user) = user.0 {
         let my_answer =
             SpacePollUserAnswer::find_one(cli, &space_pk, &poll_sk_entity, &user.pk).await?;

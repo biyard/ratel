@@ -31,7 +31,7 @@ pub struct SpaceQuiz {
     pub questions: Vec<Question>,
 }
 
-impl From<SpaceQuiz> for crate::features::spaces::pages::actions::types::SpaceAction {
+impl From<SpaceQuiz> for crate::features::spaces::pages::actions::types::SpaceActionSummary {
     fn from(quiz: SpaceQuiz) -> Self {
         use crate::features::spaces::pages::actions::types::SpaceActionType;
         let action_id = quiz.sk.to_string();

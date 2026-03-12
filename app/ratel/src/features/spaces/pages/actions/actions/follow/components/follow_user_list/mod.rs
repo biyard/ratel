@@ -1,20 +1,20 @@
-use crate::features::spaces::pages::actions::actions::subscription::controllers::delete_subscription_user;
-use crate::features::spaces::pages::actions::actions::subscription::controllers::list_subscription_users::SubscriptionUserItem;
-use crate::features::spaces::pages::actions::actions::subscription::*;
+use crate::features::spaces::pages::actions::actions::follow::controllers::delete_follow_user;
+use crate::features::spaces::pages::actions::actions::follow::controllers::list_follow_users::FollowUserItem;
+use crate::features::spaces::pages::actions::actions::follow::*;
 use crate::common::use_toast;
 use crate::features::my_follower::controllers::{follow_user, unfollow_user};
 mod i18n;
-use i18n::SubscriptionUserListTranslate;
+use i18n::FollowUserListTranslate;
 
 #[component]
-pub fn SubscriptionUserList(
+pub fn FollowUserList(
     space_id: SpacePartition,
-    users: Vec<SubscriptionUserItem>,
+    users: Vec<FollowUserItem>,
     can_delete: bool,
     on_refresh: EventHandler<()>,
     more_element: Element,
 ) -> Element {
-    let tr: SubscriptionUserListTranslate = use_translate();
+    let tr: FollowUserListTranslate = use_translate();
     let mut toast = use_toast();
     let list_empty = use_memo({
         let users = users.clone();
@@ -88,7 +88,7 @@ pub fn SubscriptionUserList(
                                     let user_pk = user_pk.clone();
                                     let on_refresh = on_refresh.clone();
                                     spawn(async move {
-                                        let _ = delete_subscription_user(space_id, user_pk).await;
+                                        let _ = delete_follow_user(space_id, user_pk).await;
                                         on_refresh.call(());
                                     });
                                 }
