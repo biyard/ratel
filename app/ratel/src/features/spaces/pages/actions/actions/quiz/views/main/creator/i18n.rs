@@ -67,6 +67,10 @@ translate! {
         en: "Retry Count",
         ko: "재시도 횟수",
     },
+    survey_time_label: {
+        en: "Survey Time",
+        ko: "설문 시간",
+    },
     retry_placeholder: {
         en: "Enter retry count...",
         ko: "재시도 횟수를 입력하세요...",

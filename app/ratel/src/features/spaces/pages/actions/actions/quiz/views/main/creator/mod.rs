@@ -40,7 +40,14 @@ pub fn QuizCreatorPage(
                 TabContent { index: 2usize, value: "quiz-tab",
                     QuizTab { can_edit: can_edit_quiz }
                 }
-                TabContent { index: 3usize, value: "setting-tab", ActionCommonSettings {} }
+                TabContent { index: 3usize, value: "setting-tab",
+                    ActionCommonSettings {
+                        space_id,
+                        action_id: quiz_id().to_string(),
+                        action_setting: ctx.quiz().space_action,
+                        on_date_change: move |_range: DateTimeRange| async move {},
+                    }
+                }
             }
         }
     }

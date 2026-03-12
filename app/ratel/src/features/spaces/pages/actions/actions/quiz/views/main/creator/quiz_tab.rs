@@ -1,5 +1,6 @@
 use super::*;
 use crate::features::spaces::pages::actions::actions::poll::components::QuestionViewer;
+use crate::features::spaces::pages::actions::actions::poll::components::TimeRangeDisplay;
 use crate::features::spaces::space_common::types::space_page_actions_quiz_key;
 
 #[component]
@@ -16,6 +17,15 @@ pub fn QuizTab(can_edit: bool) -> Element {
 
     rsx! {
         div { class: "flex w-full flex-col gap-6",
+            div { class: "flex flex-col gap-1",
+                label { class: "text-sm font-medium text-neutral-400 light:text-text-secondary",
+                    "{tr.survey_time_label}"
+                }
+                TimeRangeDisplay {
+                    started_at: ctx.quiz.read().started_at,
+                    ended_at: ctx.quiz.read().ended_at,
+                }
+            }
             div { class: "flex flex-col gap-1",
                 label { class: "text-sm font-medium text-neutral-400 light:text-text-secondary",
                     "{tr.pass_score_label}"

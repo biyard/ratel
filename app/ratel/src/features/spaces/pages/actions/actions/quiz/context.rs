@@ -13,8 +13,6 @@ pub struct Context {
     pub original_answers: Signal<Vec<QuizCorrectAnswer>>,
     pub questions: Signal<Vec<Question>>,
     pub answers: Signal<Vec<QuizCorrectAnswer>>,
-    pub started_at: Signal<i64>,
-    pub ended_at: Signal<i64>,
     pub retry_count: Signal<i64>,
     pub pass_score: Signal<i64>,
 }
@@ -61,8 +59,6 @@ impl Context {
             original_answers: use_signal(|| aligned_answers.clone()),
             questions: use_signal(|| questions.clone()),
             answers: use_signal(|| aligned_answers.clone()),
-            started_at: use_signal(|| quiz_value.started_at),
-            ended_at: use_signal(|| quiz_value.ended_at),
             retry_count: use_signal(|| quiz_value.retry_count),
             pass_score: use_signal(|| quiz_value.pass_score),
         };
