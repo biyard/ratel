@@ -110,12 +110,9 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
     let mut is_creating_category = use_signal(|| false);
 
     let categories_query = use_infinite_query(move |bookmark| list_categories_handler(bookmark))?;
-    let mut extra_categories = use_signal(|| vec![]);
     let categories_query_for_memo = categories_query.clone();
     let categories = use_memo(move || {
-        let mut cats: Vec<String> = categories_query_for_memo.items().iter().map(|c| c.name.clone()).collect();
-        cats.extend(extra_categories());
-        cats
+        categories_query_for_memo.items().iter().map(|c| c.name.clone()).collect::<Vec<String>>()
     });
 
     // Auto-save: debounce by tracking an edit version counter.
