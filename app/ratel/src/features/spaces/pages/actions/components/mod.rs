@@ -9,5 +9,6 @@ pub use create_action_modal::CreateActionModal;
 
 mod action_common_settings;
 pub use action_common_settings::ActionCommonSettings;
+pub use action_common_settings::RewardSetting;
 
 use super::*;

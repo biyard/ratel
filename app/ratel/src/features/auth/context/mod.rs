@@ -17,6 +17,8 @@ impl Context {
                 Ok(resp) => UserContext {
                     user: resp.user,
                     refresh_token: None,
+                    #[cfg(feature = "membership")]
+                    membership: resp.membership,
                 },
                 Err(_) => UserContext::default(),
             })

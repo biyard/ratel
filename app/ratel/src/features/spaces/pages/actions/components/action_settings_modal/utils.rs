@@ -5,7 +5,7 @@ use crate::features::spaces::pages::actions::actions::poll::controllers::{Update
 
 use super::reward_cards::RewardPreviewData;
 
-pub fn selected_actions(actions: &[SpaceAction], selected_ids: &[String]) -> Vec<SpaceAction> {
+pub fn selected_actions(actions: &[SpaceActionSummary], selected_ids: &[String]) -> Vec<SpaceActionSummary> {
     selected_ids
         .iter()
         .filter_map(|selected_id| {
@@ -17,7 +17,7 @@ pub fn selected_actions(actions: &[SpaceAction], selected_ids: &[String]) -> Vec
         .collect()
 }
 
-pub fn available_actions(actions: &[SpaceAction], selected_ids: &[String]) -> Vec<SpaceAction> {
+pub fn available_actions(actions: &[SpaceActionSummary], selected_ids: &[String]) -> Vec<SpaceActionSummary> {
     actions
         .iter()
         .filter(|action| supports_action_settings(action))
@@ -30,11 +30,11 @@ pub fn available_actions(actions: &[SpaceAction], selected_ids: &[String]) -> Ve
         .collect()
 }
 
-pub fn supports_action_settings(action: &SpaceAction) -> bool {
-    !matches!(action.action_type, SpaceActionType::Subscription)
+pub fn supports_action_settings(action: &SpaceActionSummary) -> bool {
+    !matches!(action.action_type, SpaceActionType::Follow)
 }
 
-pub fn action_label(action: &SpaceAction, lang: &Language, untitled: &str) -> String {
+pub fn action_label(action: &SpaceActionSummary, lang: &Language, untitled: &str) -> String {
     let title = if action.title.trim().is_empty() {
         untitled.to_string()
     } else {
@@ -44,7 +44,7 @@ pub fn action_label(action: &SpaceAction, lang: &Language, untitled: &str) -> St
     format!("{}: {}", action.action_type.translate(lang), title)
 }
 
-pub fn reward_preview_items(actions: &[SpaceAction]) -> Vec<RewardPreviewData> {
+pub fn reward_preview_items(actions: &[SpaceActionSummary]) -> Vec<RewardPreviewData> {
     if actions.is_empty() {
         return Vec::new();
     }
@@ -66,7 +66,7 @@ pub fn reward_credit_summary() -> (i64, i64) {
 
 pub async fn apply_selected_action_dates(
     space_id: SpacePartition,
-    actions: Vec<SpaceAction>,
+    actions: Vec<SpaceActionSummary>,
     started_at: i64,
     ended_at: i64,
 ) -> Result<()> {
@@ -113,7 +113,7 @@ pub async fn apply_selected_action_dates(
                 )
                 .await?;
             }
-            SpaceActionType::Subscription | SpaceActionType::Quiz => {
+            SpaceActionType::Follow | SpaceActionType::Quiz => {
                 return Err(Error::NotSupported(
                     "This action type is not supported yet.".to_string(),
                 ));
