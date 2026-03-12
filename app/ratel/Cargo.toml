@@ -88,7 +88,11 @@ tracing-subscriber = { workspace = true }
 getrandom = { version = "0.4", features = ["wasm_js"], optional = true }
 lambda_http = { version = "1.0.2", optional = true }
 dioxus-primitives = { git = "https://github.com/DioxusLabs/components", version = "0.0.1", default-features = false, features = ["router"] }
-
+ic-agent = { version = "0.46", optional = true }
+candid = { version = "0.10", optional = true }
+sampling = { path = "../../packages/sampling", default-features = false, features = [
+  "dto",
+], optional = true }
 
 [features]
 full = ["membership","users", "teams", "spaces_full"]
@@ -136,6 +140,9 @@ server = [
   "bdk/be",
   "ssi",
   "aws-credential-types",
+  "ic-agent",
+  "candid",
+  "sampling",
 ]
 
 lambda = [ "server", "lambda_http" ]

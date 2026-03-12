@@ -1,6 +1,6 @@
-// #[cfg(feature = "canister")]
+#[cfg(feature = "canister")]
 mod canister;
-// #[cfg(feature = "canister")]
+#[cfg(feature = "canister")]
 mod pipeline;
 
 pub mod types;
