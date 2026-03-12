@@ -36,7 +36,9 @@ pub struct SpacePoll {
 
 #[cfg(feature = "server")]
 impl SpacePoll {
-    pub fn new(space_pk: SpacePartition) -> crate::features::spaces::pages::actions::actions::poll::Result<Self> {
+    pub fn new(
+        space_pk: SpacePartition,
+    ) -> crate::features::spaces::pages::actions::actions::poll::Result<Self> {
         let pk: Partition = space_pk.into();
         let sk = EntityType::SpacePoll(uuid::Uuid::now_v7().to_string());
 
@@ -111,7 +113,9 @@ impl SpacePoll {
     }
 }
 
-impl From<(SpacePoll, bool)> for crate::features::spaces::pages::actions::types::SpaceAction {
+impl From<(SpacePoll, bool)>
+    for crate::features::spaces::pages::actions::types::SpaceActionSummary
+{
     fn from((poll, user_participated): (SpacePoll, bool)) -> Self {
         use crate::features::spaces::pages::actions::types::SpaceActionType;
         let action_id = poll.sk.to_string();
@@ -127,12 +131,15 @@ impl From<(SpacePoll, bool)> for crate::features::spaces::pages::actions::types:
             started_at: Some(poll.started_at),
             ended_at: Some(poll.ended_at),
             user_participated,
+            credits: 0,
         }
     }
 }
 
 impl SpacePoll {
-    pub fn can_view(_user_role: &SpaceUserRole) -> crate::features::spaces::pages::actions::actions::poll::Result<()> {
+    pub fn can_view(
+        _user_role: &SpaceUserRole,
+    ) -> crate::features::spaces::pages::actions::actions::poll::Result<()> {
         Ok(())
     }
 
@@ -147,14 +154,19 @@ impl SpacePoll {
         }
     }
 
-    pub fn can_edit(user_role: &SpaceUserRole) -> crate::features::spaces::pages::actions::actions::poll::Result<()> {
+    pub fn can_edit(
+        user_role: &SpaceUserRole,
+    ) -> crate::features::spaces::pages::actions::actions::poll::Result<()> {
         match user_role {
             SpaceUserRole::Creator => Ok(()),
             _ => Err(crate::features::spaces::pages::actions::actions::poll::Error::NoPermission),
         }
     }
 
-    pub fn can_respond(&self, user_role: &SpaceUserRole) -> crate::features::spaces::pages::actions::actions::poll::Result<()> {
+    pub fn can_respond(
+        &self,
+        user_role: &SpaceUserRole,
+    ) -> crate::features::spaces::pages::actions::actions::poll::Result<()> {
         match user_role {
             SpaceUserRole::Creator | SpaceUserRole::Participant => {
                 if self.status() == PollStatus::InProgress {
@@ -170,7 +182,9 @@ impl SpacePoll {
 impl TryFrom<Partition> for SpacePoll {
     type Error = crate::features::spaces::pages::actions::actions::poll::Error;
 
-    fn try_from(value: Partition) -> crate::features::spaces::pages::actions::actions::poll::Result<Self> {
+    fn try_from(
+        value: Partition,
+    ) -> crate::features::spaces::pages::actions::actions::poll::Result<Self> {
         let uuid = match value {
             Partition::Space(ref s) => s.clone(),
             _ => {

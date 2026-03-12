@@ -1,7 +1,6 @@
 use super::super::*;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(DynamoEntity))]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, DynamoEntity)]
 pub struct UserMembershipLocal {
     pub pk: Partition,
     pub sk: EntityType,

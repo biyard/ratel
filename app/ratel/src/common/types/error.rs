@@ -231,6 +231,19 @@ pub enum Error {
     #[error("Invalid email")]
     #[translate(en = "Invalid email", ko = "유효하지 않은 이메일입니다.")]
     InvalidEmail,
+
+    #[error("invalid space action")]
+    #[translate(
+        en = "Please delete and re-create the action",
+        ko = "액션을 삭제하고 다시 만들어주세요."
+    )]
+    SpaceActionNotFound,
+}
+
+impl From<std::convert::Infallible> for Error {
+    fn from(e: std::convert::Infallible) -> Self {
+        match e {}
+    }
 }
 
 impl From<String> for Error {

@@ -1,9 +1,14 @@
 use crate::features::auth::*;
 
+#[cfg(feature = "membership")]
+use crate::features::membership::models::UserMembershipResponse;
+
 #[derive(Store, Default, Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct UserContext {
     pub user: Option<User>,
     pub refresh_token: Option<String>,
+    #[cfg(feature = "membership")]
+    pub membership: Option<UserMembershipResponse>,
 }
 
 impl UserContext {
