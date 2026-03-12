@@ -1,5 +1,7 @@
 use nalgebra::DMatrix;
 
+const SAMPLE_THRESHOLD: usize = 500;
+
 pub fn score(data: &DMatrix<f64>, labels: &[u32]) -> f64 {
     let n = data.nrows();
     if n <= 1 {
@@ -18,9 +20,16 @@ pub fn score(data: &DMatrix<f64>, labels: &[u32]) -> f64 {
         cluster_members[l as usize].push(i);
     }
 
+    let sample_indices: Vec<usize> = if n <= SAMPLE_THRESHOLD {
+        (0..n).collect()
+    } else {
+        deterministic_sample(n, SAMPLE_THRESHOLD)
+    };
+
+    let sample_n = sample_indices.len();
     let mut total_sil = 0.0;
 
-    for i in 0..n {
+    for &i in &sample_indices {
         let ci = labels[i] as usize;
         let row_i: Vec<f64> = data.row(i).iter().copied().collect();
 
@@ -67,7 +76,14 @@ pub fn score(data: &DMatrix<f64>, labels: &[u32]) -> f64 {
         total_sil += s;
     }
 
-    total_sil / n as f64
+    total_sil / sample_n as f64
+}
+
+fn deterministic_sample(n: usize, sample_size: usize) -> Vec<usize> {
+    let step = n as f64 / sample_size as f64;
+    (0..sample_size)
+        .map(|i| ((i as f64 * step) as usize).min(n - 1))
+        .collect()
 }
 
 fn euclidean_distance(a: &[f64], b: &[f64]) -> f64 {
@@ -112,5 +128,13 @@ mod tests {
             "Single cluster silhouette should be 0, got {}",
             s
         );
+    }
+
+    #[test]
+    fn test_deterministic_sample() {
+        let indices = deterministic_sample(5000, 1000);
+        assert_eq!(indices.len(), 1000);
+        assert_eq!(indices[0], 0);
+        assert!(indices.windows(2).all(|w| w[0] < w[1]));
     }
 }
