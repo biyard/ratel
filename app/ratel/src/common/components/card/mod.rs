@@ -88,7 +88,7 @@ pub enum CardVariant {
     #[strum(serialize = "bg-card-bg border bg-card-bg border-card-border")]
     Normal,
 
-    #[strum(serialize = "border bg-card-bg border-card-border")]
+    #[strum(serialize = "border border-card-border")]
     Outlined,
 
     #[strum(serialize = "bg-card-bg")]
