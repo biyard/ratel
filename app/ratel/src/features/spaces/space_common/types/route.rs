@@ -5,7 +5,7 @@ use crate::common::{
 use crate::Route;
 
 // DEPRECATED: Use the `Route` enum directly instead of these helper functions.
-
+// NOTE: it causes burrow error
 pub fn space_action_poll(space_id: &SpacePartition, poll_id: &SpacePollEntityType) -> String {
     Route::PollActionPage {
         space_id: space_id.clone(),
@@ -25,7 +25,10 @@ pub fn space_action_discussion(
     .to_string()
 }
 
-pub fn space_action_follow(space_id: &SpacePartition, follow_id: &SpaceActionFollowEntityType) -> String {
+pub fn space_action_follow(
+    space_id: &SpacePartition,
+    follow_id: &SpaceActionFollowEntityType,
+) -> String {
     Route::FollowActionPage {
         space_id: space_id.clone(),
         follow_id: follow_id.clone(),
