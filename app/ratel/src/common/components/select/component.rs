@@ -30,9 +30,11 @@ pub fn SelectTrigger(props: SelectTriggerProps) -> Element {
         select::SelectTrigger {
             class: "select-trigger @max-sm:w-full",
             attributes: props.attributes,
-            div { class: "@max-sm:w-full @max-sm:flex @max-sm:justify-center @max-sm:items-center",
+            div { class: "hidden @max-sm:w-full @max-sm:flex @max-sm:justify-center @max-sm:items-center",
                 {props.children}
             }
+            {props.children}
+
             svg {
                 class: "select-expand-icon",
                 view_box: "0 0 24 24",
