@@ -1,6 +1,5 @@
 pub mod actions;
 mod components;
-mod context;
 mod controllers;
 mod menu;
 mod models;
@@ -9,7 +8,6 @@ mod views;
 
 use actions::*;
 use components::*;
-use context::*;
 use controllers::*;
 use models::*;
 use models::*;

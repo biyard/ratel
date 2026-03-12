@@ -11,27 +11,6 @@ use i18n::FollowCreatorTranslate;
 pub fn FollowCreatorPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: FollowCreatorTranslate = use_translate();
 
-    let mut ctx = use_space_actions_context();
-
-    // FIXME: This is just example not work properly.
-    ctx.mutate_title_and_tabs(
-        tr.title,
-        vec![
-            SpaceActionSettingTab::new(
-                tr.tab_general,
-                Route::FollowActionPage {
-                    space_id: space_id(),
-                },
-            ),
-            SpaceActionSettingTab::new(
-                tr.tab_common,
-                Route::FollowActionPage {
-                    space_id: space_id(),
-                },
-            ),
-        ],
-    );
-
     let nav = navigator();
     let on_back = move |_| {
         nav.go_back();
