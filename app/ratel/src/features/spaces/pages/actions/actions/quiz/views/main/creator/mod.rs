@@ -1,24 +1,13 @@
-use crate::features::spaces::pages::actions::actions::quiz::components::*;
 use crate::features::spaces::pages::actions::actions::quiz::*;
 use crate::features::spaces::pages::actions::ActionCommonSettings;
 mod i18n;
 mod overview_tab;
 mod quiz_tab;
-mod setting_tab;
 mod upload_tab;
 pub use i18n::QuizCreatorTranslate;
 pub use overview_tab::*;
 pub use quiz_tab::*;
-pub use setting_tab::*;
 pub use upload_tab::*;
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub(crate) enum QuizCreatorSection {
-    Overview,
-    Upload,
-    Quiz,
-    Setting,
-}
 
 #[component]
 pub fn QuizCreatorPage(
