@@ -127,4 +127,20 @@ translate! {
         en: "Visibility updated successfully.",
         ko: "공개 설정이 변경되었습니다.",
     },
+    space_logo: {
+        en: "Space Logo",
+        ko: "스페이스 로고",
+    },
+    space_logo_description: {
+        en: "Customize the logo displayed in the space sidebar.",
+        ko: "스페이스 사이드바에 표시되는 로고를 설정합니다.",
+    },
+    upload_logo: {
+        en: "Upload Logo",
+        ko: "로고 업로드",
+    },
+    logo_updated_successfully: {
+        en: "Space logo updated successfully.",
+        ko: "스페이스 로고가 변경되었습니다.",
+    },
 }

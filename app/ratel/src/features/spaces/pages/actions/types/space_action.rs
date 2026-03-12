@@ -42,18 +42,25 @@ impl From<crate::features::spaces::pages::actions::models::SpaceAction> for Spac
     }
 }
 
-use crate::features::spaces::space_common::types::route::{
-    space_action_discussion, space_action_follow, space_action_poll, space_action_quiz,
-};
 impl SpaceActionSummary {
-    pub fn get_url(&self, space_id: &SpacePartition) -> String {
+    pub fn get_url(&self, space_id: &SpacePartition) -> Route {
         match self.action_type {
-            SpaceActionType::Poll => space_action_poll(space_id, &self.action_id.clone().into()),
-            SpaceActionType::TopicDiscussion => {
-                space_action_discussion(space_id, &self.action_id.clone().into())
-            }
-            SpaceActionType::Follow => space_action_follow(space_id, &self.action_id.clone().into()),
-            SpaceActionType::Quiz => space_action_quiz(space_id, &self.action_id.clone().into()),
+            SpaceActionType::Poll => Route::PollActionPage {
+                space_id: space_id.clone(),
+                poll_id: self.action_id.clone().into(),
+            },
+            SpaceActionType::TopicDiscussion => Route::DiscussionActionPage {
+                space_id: space_id.clone(),
+                discussion_id: self.action_id.clone().into(),
+            },
+            SpaceActionType::Follow => Route::FollowActionPage {
+                space_id: space_id.clone(),
+                follow_id: self.action_id.clone().into(),
+            },
+            SpaceActionType::Quiz => Route::QuizActionPage {
+                space_id: space_id.clone(),
+                quiz_id: self.action_id.clone().into(),
+            },
         }
     }
 }
