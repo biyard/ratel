@@ -1,7 +1,28 @@
 use super::*;
+use crate::features::spaces::space_common::types::space_page_actions_quiz_key;
 
 #[component]
-pub fn SettingPage(
+pub fn SettingTab(can_edit: bool, #[props(default = true)] show_back: bool) -> Element {
+    let ctx = use_space_quiz_context();
+    let current_section = use_signal(|| QuizCreatorSection::Setting);
+
+    rsx! {
+        SettingContent {
+            space_id: ctx.space_id,
+            quiz_id: ctx.quiz_id,
+            can_edit,
+            started_at: ctx.started_at,
+            ended_at: ctx.ended_at,
+            retry_count: ctx.retry_count,
+            pass_score: ctx.pass_score,
+            current_section,
+            show_back,
+        }
+    }
+}
+
+#[component]
+pub fn SettingContent(
     space_id: ReadSignal<SpacePartition>,
     quiz_id: ReadSignal<SpaceQuizEntityType>,
     can_edit: bool,
@@ -10,6 +31,7 @@ pub fn SettingPage(
     retry_count: Signal<i64>,
     pass_score: Signal<i64>,
     current_section: Signal<QuizCreatorSection>,
+    #[props(default = true)] show_back: bool,
 ) -> Element {
     let tr: QuizCreatorTranslate = use_translate();
     let nav = navigator();
@@ -127,12 +149,14 @@ pub fn SettingPage(
             }
 
             div { class: "flex w-full justify-end gap-3",
-                Button {
-                    style: ButtonStyle::Outline,
-                    shape: ButtonShape::Square,
-                    class: "min-w-[110px]",
-                    onclick: move |_| current_section.set(QuizCreatorSection::Quiz),
-                    {tr.btn_back}
+                if show_back {
+                    Button {
+                        style: ButtonStyle::Outline,
+                        shape: ButtonShape::Square,
+                        class: "min-w-[110px]",
+                        onclick: move |_| current_section.set(QuizCreatorSection::Quiz),
+                        {tr.btn_back}
+                    }
                 }
                 Button {
                     style: ButtonStyle::Primary,

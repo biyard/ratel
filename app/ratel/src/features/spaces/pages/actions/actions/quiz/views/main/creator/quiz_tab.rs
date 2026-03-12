@@ -1,8 +1,30 @@
 use super::*;
 use crate::features::spaces::pages::actions::actions::poll::components::QuestionViewer;
+use crate::features::spaces::space_common::types::space_page_actions_quiz_key;
 
 #[component]
-pub fn QuizPage(
+pub fn QuizTab(can_edit: bool) -> Element {
+    let ctx = use_space_quiz_context();
+    let current_section = use_signal(|| QuizCreatorSection::Quiz);
+
+    rsx! {
+        QuizContent {
+            space_id: ctx.space_id,
+            quiz_id: ctx.quiz_id,
+            can_edit,
+            editing: ctx.editing,
+            questions: ctx.questions,
+            answers: ctx.answers,
+            original_questions: ctx.original_questions,
+            original_answers: ctx.original_answers,
+            current_section,
+            show_navigation: false,
+        }
+    }
+}
+
+#[component]
+pub fn QuizContent(
     space_id: ReadSignal<SpacePartition>,
     quiz_id: ReadSignal<SpaceQuizEntityType>,
     can_edit: bool,
@@ -12,6 +34,7 @@ pub fn QuizPage(
     original_questions: Signal<Vec<Question>>,
     original_answers: Signal<Vec<QuizCorrectAnswer>>,
     current_section: Signal<QuizCreatorSection>,
+    #[props(default = true)] show_navigation: bool,
 ) -> Element {
     let tr: QuizCreatorTranslate = use_translate();
     let mut toast = use_toast();
@@ -124,22 +147,42 @@ pub fn QuizPage(
                 }
             }
 
-            div { class: "flex w-full justify-end gap-3",
-                Button {
-                    style: ButtonStyle::Outline,
-                    shape: ButtonShape::Square,
-                    class: "min-w-[110px]",
-                    onclick: move |_| current_section.set(QuizCreatorSection::Upload),
-                    {tr.btn_back}
-                }
-                Button {
-                    style: ButtonStyle::Primary,
-                    shape: ButtonShape::Square,
-                    class: "min-w-[110px]",
-                    onclick: move |_| current_section.set(QuizCreatorSection::Setting),
-                    "{tr.btn_next} ->"
+            if show_navigation {
+                div { class: "flex w-full justify-end gap-3",
+                    Button {
+                        style: ButtonStyle::Outline,
+                        shape: ButtonShape::Square,
+                        class: "min-w-[110px]",
+                        onclick: move |_| current_section.set(QuizCreatorSection::Upload),
+                        {tr.btn_back}
+                    }
+                    Button {
+                        style: ButtonStyle::Primary,
+                        shape: ButtonShape::Square,
+                        class: "min-w-[110px]",
+                        onclick: move |_| current_section.set(QuizCreatorSection::Setting),
+                        "{tr.btn_next} ->"
+                    }
                 }
             }
         }
+    }
+}
+
+fn quiz_answer_to_viewer(question: &Question, answer: &QuizCorrectAnswer) -> Option<Answer> {
+    match (question, answer) {
+        (Question::SingleChoice(_), QuizCorrectAnswer::Single { answer }) => {
+            Some(Answer::SingleChoice {
+                answer: *answer,
+                other: None,
+            })
+        }
+        (Question::MultipleChoice(_), QuizCorrectAnswer::Multiple { answers }) => {
+            Some(Answer::MultipleChoice {
+                answer: Some(answers.clone()),
+                other: None,
+            })
+        }
+        _ => None,
     }
 }
