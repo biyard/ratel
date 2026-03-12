@@ -190,6 +190,8 @@ pub enum EntityType {
     SpaceReward,
 
     ContentReport,
+
+    Category(String), // CATEGORY#${name}
 }
 
 impl TryInto<Partition> for EntityType {
