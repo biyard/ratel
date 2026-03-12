@@ -1,11 +1,35 @@
-use dioxus::prelude::*;
+use crate::*;
+
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Serialize,
+    Deserialize,
+    strum::Display,
+    strum::EnumString,
+    Default,
+)]
+pub enum LayoverSize {
+    #[default]
+    #[strum(serialize = "w-full")]
+    Full,
+    #[strum(serialize = "w-[50%] max-tablet:w-full")]
+    Half,
+    #[strum(serialize = "max-w-[800px] max-tablet:max-w-full")]
+    Medium,
+    #[strum(serialize = "w-[337px] max-tablet:w-full")]
+    Small,
+    Fit,
+}
 
 #[derive(Clone)]
 pub struct Config {
     pub id: String,
     pub title: String,
     pub content: Element,
-    pub container_class: Option<String>,
+    pub container_class: Option<LayoverSize>,
 }
 
 #[derive(Clone, Copy)]
@@ -20,13 +44,7 @@ impl LayoverService {
         }
     }
 
-    pub fn open(
-        &mut self,
-        id: String,
-        title: String,
-        content: Element,
-        container_class: Option<String>,
-    ) -> &mut Self {
+    pub fn open(&mut self, id: String, title: String, content: Element) -> &mut Self {
         let mut need_update = true;
         if let Some(config) = self.state.read().as_ref() {
             if config.id == id {
@@ -38,9 +56,19 @@ impl LayoverService {
                 id,
                 title,
                 content,
-                container_class,
+                container_class: None,
             }));
         }
+        self
+    }
+
+    pub fn set_size(&mut self, size: LayoverSize) -> &mut Self {
+        self.state.with_mut(|state| {
+            if let Some(config) = state.as_mut() {
+                config.container_class = Some(size);
+            }
+        });
+
         self
     }
 

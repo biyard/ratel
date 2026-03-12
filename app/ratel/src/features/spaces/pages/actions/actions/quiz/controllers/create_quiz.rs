@@ -7,7 +7,14 @@ pub async fn create_quiz(space_pk: SpacePartition) -> Result<QuizResponse> {
     let cli = common_config.dynamodb();
     let quiz = SpaceQuiz::new(space_pk.clone())?;
 
-    quiz.create(cli).await?;
+    let space_action = crate::features::spaces::pages::actions::models::SpaceAction::new(
+        space_pk.clone(),
+        SpaceQuizEntityType::from(quiz.sk.clone()).to_string(),
+        crate::features::spaces::pages::actions::types::SpaceActionType::Quiz,
+    );
+    let items = vec![quiz.create_transact_write_item(), space_action.create_transact_write_item()];
+    crate::transact_write_items!(cli, items)
+        .map_err(|e| crate::features::spaces::pages::actions::actions::quiz::Error::Unknown(format!("Failed to create quiz: {e}")))?;
 
     let quiz_id: SpaceQuizEntityType = match &quiz.sk {
         EntityType::SpaceQuiz(id) => id.clone().into(),
