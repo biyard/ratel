@@ -58,9 +58,6 @@ pub fn App() -> Element {
         crate::features::posts::Provider {}
 
         Router::<Route> {}
-        ToastProvider {}
-
-        PopupZone {}
         if env == Environment::Dev || env == Environment::Local {
             DevTools {}
         }
