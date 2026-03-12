@@ -19,7 +19,7 @@ const PROSEMIRROR_CSS = `
 .ProseMirror {
   outline: none;
   min-height: 100%;
-  height: 100%;
+  height: auto;
   overflow-wrap: break-word;
   max-width: 100%;
   font-size: 15px;
@@ -200,10 +200,11 @@ class TiptapEditor extends HTMLElement {
     // Outer wrapper: matches React's rounded container with border
     const wrapper = document.createElement("div");
     wrapper.className =
-      "flex flex-col w-full grow rounded-lg border border-transparent transition-colors p-1 bg-[var(--surface-raised,#1a1a1a)] text-[var(--content-base,#fff)] focus-within:border-[var(--action-primary,#fcb300)]";
+      "flex h-full min-h-0 flex-col w-full grow rounded-lg border border-transparent transition-colors p-1 bg-[var(--surface-raised,#1a1a1a)] text-[var(--content-base,#fff)] focus-within:border-[var(--action-primary,#fcb300)]";
 
     const editorEl = document.createElement("div");
-    editorEl.className = "w-full grow px-5 py-3 outline-none overflow-hidden";
+    editorEl.className =
+      "w-full grow flex-1 min-h-0 overflow-y-auto px-5 py-3 outline-none";
 
     const placeholder = this.getAttribute("placeholder") || "Type here...";
     const editable = this.getAttribute("editable") !== "false";
