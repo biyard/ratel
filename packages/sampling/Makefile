@@ -111,21 +111,6 @@ upgrade-if-needed:
 test:
 	cargo test
 
-bench:
-	dfx canister call sampling run_sampling_with_metrics \
-		'(record { id = "bench"; data = vec { \
-			record { id = "a1"; bif = vec { 1.0; 1.0; 1.0; 1.0 }; demographics = null }; \
-			record { id = "a2"; bif = vec { 1.2; 1.1; 1.3; 1.0 }; demographics = null }; \
-			record { id = "a3"; bif = vec { 1.1; 0.9; 1.0; 1.2 }; demographics = null }; \
-			record { id = "a4"; bif = vec { 0.9; 1.0; 1.1; 0.8 }; demographics = null }; \
-			record { id = "a5"; bif = vec { 1.0; 1.2; 0.9; 1.1 }; demographics = null }; \
-			record { id = "b1"; bif = vec { 5.0; 5.0; 5.0; 5.0 }; demographics = null }; \
-			record { id = "b2"; bif = vec { 4.8; 5.1; 5.2; 4.9 }; demographics = null }; \
-			record { id = "b3"; bif = vec { 5.1; 4.9; 5.0; 5.2 }; demographics = null }; \
-			record { id = "b4"; bif = vec { 4.9; 5.0; 4.8; 5.1 }; demographics = null }; \
-			record { id = "b5"; bif = vec { 5.2; 5.1; 5.1; 4.8 }; demographics = null } \
-		}; min_k = 2 : nat32; max_k = 5 : nat32; variance_threshold = 0.85; max_iterations = 100 : nat32 })'
-
 # ─── Status & Ops ──────────────────────────────────────────────────────
 
 status:

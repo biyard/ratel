@@ -78,7 +78,7 @@ fn get_init_seeds(data: &DMatrix<f64>, n_init: usize) -> Vec<usize> {
 }
 
 pub fn fit(data: &DMatrix<f64>, k: u32, max_iterations: u32) -> KMeansResult {
-    let n_init = 10;
+    let n_init = 3;
     let seeds = get_init_seeds(data, n_init);
 
     let mut best_result: Option<KMeansResult> = None;
