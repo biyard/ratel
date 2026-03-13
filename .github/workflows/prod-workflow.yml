@@ -11,17 +11,12 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    needs: [main-api, fetcher, ratel-web, survey-worker, space-stream-worker]
+    needs: [fetcher, ratel-app, survey-worker, space-stream-worker]
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
-      - name: Download Main Api
-        uses: actions/download-artifact@v4
-        with:
-          name: ratel-main-api-${{ github.sha }}
-          path: ./cdk/main-api
       - name: Download Survey Worker
         uses: actions/download-artifact@v4
         with:
@@ -33,11 +28,11 @@ jobs:
           name: space-stream-worker-${{ github.sha }}
           path: ./cdk/space-stream-worker
 
-      - name: Write Firebase service account (prod)
-        run: |
-          mkdir -p cdk/main-api/.gcp
-          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 }}" \
-            | base64 -d > cdk/main-api/.gcp/firebase-service-account.json
+      # - name: Write Firebase service account (prod)
+      #   run: |
+      #     mkdir -p cdk/main-api/.gcp
+      #     echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 }}" \
+      #       | base64 -d > cdk/main-api/.gcp/firebase-service-account.json
 
       - uses: aws-actions/configure-aws-credentials@v2
         with:
