@@ -21,6 +21,7 @@ pub fn OverviewTab(can_edit: bool) -> Element {
     let mut last_saved = use_signal(|| (initial_title, initial_description));
     let mut status = use_signal(|| OverviewStatus::Idle);
     let mut save_version = use_signal(|| 0u64);
+    let mut query = use_query_store();
     let title_count = std::cmp::min(title().chars().count(), 50);
     let space_id = ctx.space_id;
     let quiz_id = ctx.quiz_id;
@@ -62,7 +63,7 @@ pub fn OverviewTab(can_edit: bool) -> Element {
                 last_saved.set((current_title, current_description));
                 status.set(OverviewStatus::Saved);
                 let keys = space_page_actions_quiz_key(&space_id(), &quiz_id());
-                invalidate_query(&keys);
+                query.invalidate(&keys);
             }
         });
     });
@@ -87,7 +88,7 @@ pub fn OverviewTab(can_edit: bool) -> Element {
                 last_saved.set((title(), description()));
                 status.set(OverviewStatus::Saved);
                 let keys = space_page_actions_quiz_key(&space_id(), &quiz_id());
-                invalidate_query(&keys);
+                query.invalidate(&keys);
             }
         });
     };

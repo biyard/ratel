@@ -12,6 +12,7 @@ pub fn ParticipationCard(
     credential_path: Option<String>,
     on_login: EventHandler<()>,
 ) -> Element {
+    let mut query = use_query_store();
     let ctx = crate::features::spaces::space_common::providers::use_space_context();
     let tr: ParticipationCardTranslate = use_translate();
     let mut layover = use_layover();
@@ -79,8 +80,8 @@ pub fn ParticipationCard(
             ];
             participate.call(space_id).await;
             current_role.set(SpaceUserRole::Participant);
-            invalidate_query(&space_detail);
-            invalidate_query(&panel_requirements_key);
+            query.invalidate(&space_detail);
+            query.invalidate(&panel_requirements_key);
             space.restart();
             role.restart();
         });

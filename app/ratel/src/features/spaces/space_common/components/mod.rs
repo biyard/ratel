@@ -8,7 +8,4 @@ pub use space_top::*;
 mod space_status_badge;
 pub use space_status_badge::*;
 
-mod app_root;
-pub use app_root::*;
-
 pub use space_visibility_modal::*;

@@ -122,6 +122,7 @@ pub fn UploadTab(can_edit: bool) -> Element {
         .unwrap_or_else(|| DEFAULT_PROFILE_URL.to_string());
     let upload_uploader_name = uploader_name.clone();
     let upload_uploader_profile_url = uploader_profile_url.clone();
+    let mut query = use_query_store();
 
     let save_files = move |next_files: Vec<File>| {
         let mut toast = toast;
@@ -135,7 +136,7 @@ pub fn UploadTab(can_edit: bool) -> Element {
                 toast.error(err);
             } else {
                 let keys = space_page_actions_quiz_key(&space_id(), &quiz_id());
-                invalidate_query(&keys);
+                query.invalidate(&keys);
             }
         });
     };
