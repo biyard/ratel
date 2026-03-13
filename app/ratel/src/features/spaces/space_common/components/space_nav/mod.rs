@@ -26,6 +26,7 @@ pub fn SpaceNav(
     logo: String,
     menus: Vec<SpaceNavItem>,
     user: Option<User>,
+    anonymous_user_profile: Option<(String, String)>,
     login_handler: EventHandler<()>,
     role: SpaceUserRole,
     show_participation_card: bool,
@@ -56,8 +57,14 @@ pub fn SpaceNav(
 
                 if let Some(user) = user {
                     SpaceUserProfile {
-                        image: user.profile_url.clone(),
-                        display_name: user.display_name.clone(),
+                        image: anonymous_user_profile
+                            .as_ref()
+                            .map(|(image, _)| image.clone())
+                            .unwrap_or_else(|| user.profile_url.clone()),
+                        display_name: anonymous_user_profile
+                            .as_ref()
+                            .map(|(_, display_name)| display_name.clone())
+                            .unwrap_or_else(|| user.display_name.clone()),
                         user_role: role,
                     }
                 } else {

@@ -22,6 +22,21 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
     let mut query = use_query_store();
     let user_ctx = use_user_context();
     let user = user_ctx.read().user.clone();
+    let anonymous_user_profile = if space.anonymous_participation
+        && matches!(role, SpaceUserRole::Participant | SpaceUserRole::Candidate)
+    {
+        Some((
+            space.participant_profile_url.clone().unwrap_or_else(|| {
+                "https://metadata.ratel.foundation/ratel/default-profile.png".to_string()
+            }),
+            space
+                .participant_display_name
+                .clone()
+                .unwrap_or_else(|| "Anonymous User".to_string()),
+        ))
+    } else {
+        None
+    };
     let credential_path = user
         .as_ref()
         .map(|user| format!("/{}/credentials", user.username));
@@ -79,6 +94,7 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
                     logo: if space.logo.is_empty() { "https://metadata.ratel.foundation/logos/logo.png".to_string() } else { space.logo.clone() },
                     menus,
                     user,
+                    anonymous_user_profile,
                     role,
                     show_participation_card: show_participate,
                     credential_path,

@@ -60,7 +60,7 @@ impl SpacePostComment {
         space_pk: SpacePartition,
         space_post_sk: SpacePostPartition,
         content: String,
-        user: &crate::features::auth::User,
+        author: &crate::common::models::space::SpaceAuthor,
     ) -> Self {
         use crate::common::utils::time::get_now_timestamp;
 
@@ -76,10 +76,10 @@ impl SpacePostComment {
             created_at: now,
             updated_at: now,
             content,
-            author_pk: user.pk.clone(),
-            author_display_name: user.display_name.clone(),
-            author_username: user.username.clone(),
-            author_profile_url: user.profile_url.clone(),
+            author_pk: author.pk.clone(),
+            author_display_name: author.display_name.clone(),
+            author_username: author.username.clone(),
+            author_profile_url: author.profile_url.clone(),
             likes: 0,
             likes_align: format!("{:020}", 0),
             updated_at_align: format!("{:020}", now),
@@ -93,14 +93,19 @@ impl SpacePostComment {
         cli: &aws_sdk_dynamodb::Client,
         comment_sk: EntityType,
         opt: SpacePostCommentQueryOption,
-    ) -> crate::features::spaces::pages::actions::actions::discussion::Result<(Vec<Self>, Option<String>)> {
+    ) -> crate::features::spaces::pages::actions::actions::discussion::Result<(
+        Vec<Self>,
+        Option<String>,
+    )> {
         let parent_comment_id = match comment_sk {
             EntityType::SpacePostComment(id) => id,
             _ => {
                 tracing::error!("Invalid parent comment sk: {:?}", comment_sk);
-                return Err(crate::features::spaces::pages::actions::actions::discussion::Error::Unknown(
-                    "Invalid parent comment sk".to_string(),
-                ));
+                return Err(
+                    crate::features::spaces::pages::actions::actions::discussion::Error::Unknown(
+                        "Invalid parent comment sk".to_string(),
+                    ),
+                );
             }
         };
 
@@ -113,7 +118,7 @@ impl SpacePostComment {
         space_post_pk: SpacePostPartition,
         parent_comment_sk: EntityType,
         content: String,
-        user: &crate::features::auth::User,
+        author: &crate::common::models::space::SpaceAuthor,
     ) -> crate::features::spaces::pages::actions::actions::discussion::Result<Self> {
         let space_post_pk_p: Partition = space_post_pk.clone().into();
 
@@ -125,9 +130,11 @@ impl SpacePostComment {
             EntityType::SpacePostComment(id) => id.to_string(),
             _ => {
                 tracing::error!("Invalid parent_comment_sk: {:?}", parent_comment_sk);
-                return Err(crate::features::spaces::pages::actions::actions::discussion::Error::Unknown(
-                    "Invalid parent comment sk".to_string(),
-                ));
+                return Err(
+                    crate::features::spaces::pages::actions::actions::discussion::Error::Unknown(
+                        "Invalid parent comment sk".to_string(),
+                    ),
+                );
             }
         };
 
@@ -137,7 +144,7 @@ impl SpacePostComment {
             .increase_comments(1)
             .transact_write_item();
 
-        let mut comment = Self::new(space_pk, space_post_pk, content, user)
+        let mut comment = Self::new(space_pk, space_post_pk, content, author)
             .with_parent_comment_sk(parent_comment_sk.clone());
 
         let uuid = uuid::Uuid::new_v4().to_string();
@@ -148,7 +155,10 @@ impl SpacePostComment {
 
         crate::transact_write_items!(cli, vec![parent_comment, comment_tx, post]).map_err(|e| {
             tracing::error!("Failed to reply comment: {}", e);
-            crate::features::spaces::pages::actions::actions::discussion::Error::Unknown(format!("Failed to reply comment: {}", e))
+            crate::features::spaces::pages::actions::actions::discussion::Error::Unknown(format!(
+                "Failed to reply comment: {}",
+                e
+            ))
         })?;
 
         Ok(comment)
