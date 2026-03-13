@@ -57,7 +57,7 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
     let show_file_menu =
         hide_apps_menu && space.files.as_ref().is_some_and(|files| !files.is_empty());
 
-    let mut menu_items = vec![
+    let mut menus = vec![
         crate::features::spaces::pages::dashboard::get_nav_item(space_id(), role.clone()),
         crate::features::spaces::pages::overview::get_nav_item(space_id(), role.clone()),
         crate::features::spaces::pages::actions::get_nav_item(space_id(), role.clone()),
