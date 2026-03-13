@@ -1,6 +1,4 @@
-use crate::common::{
-    types::*, utils::time::get_now_timestamp_millis, *,
-};
+use crate::common::{types::*, utils::time::get_now_timestamp_millis, *};
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, DynamoEntity)]
 pub struct UserReward {

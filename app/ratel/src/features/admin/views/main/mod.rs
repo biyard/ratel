@@ -17,7 +17,7 @@ use i18n::AdminRewardsTranslate;
 pub fn AdminMainPage() -> Element {
     let tr: AdminRewardsTranslate = use_translate();
 
-    let mut rewards_resource = use_server_future(move || async move { list_rewards(None).await })?;
+    let mut rewards_resource = use_server_future(move || async move { list_rewards().await })?;
     let rewards_state = rewards_resource.value();
 
     let mut show_form = use_signal(|| false);

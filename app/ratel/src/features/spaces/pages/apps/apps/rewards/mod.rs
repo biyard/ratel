@@ -1,7 +1,7 @@
-mod controllers;
+pub mod controllers;
 pub mod i18n;
 mod route;
-mod views;
+pub mod views;
 
 use dioxus::prelude::*;
 

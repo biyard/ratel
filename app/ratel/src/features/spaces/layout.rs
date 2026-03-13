@@ -61,30 +61,18 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
         crate::features::spaces::pages::dashboard::get_nav_item(space_id(), role.clone()),
         crate::features::spaces::pages::overview::get_nav_item(space_id(), role.clone()),
         crate::features::spaces::pages::actions::get_nav_item(space_id(), role.clone()),
-    ];
-
-    if !hide_apps_menu {
-        menu_items.push(crate::features::spaces::pages::apps::get_nav_item(
-            space_id(),
-            role.clone(),
-        ));
-    }
-
-    let menus = menu_items
-        .into_iter()
-        .map(|item| {
-            if let Some(item) = item {
-                Some(SpaceNavItem {
-                    icon: item.0,
-                    label: item.1.translate(&lang()).to_string(),
-                    link: item.2,
-                })
-            } else {
-                None
-            }
-        })
-        .flatten()
-        .collect::<Vec<SpaceNavItem>>();
+        crate::features::spaces::pages::apps::get_nav_item(space_id(), role.clone()),
+        crate::features::spaces::pages::rewards::get_nav_item(space_id(), role.clone()),
+        // crate::features::spaces::pages::report::get_nav_item(space_id.clone(), role.clone()),
+    ]
+    .into_iter()
+    .flatten()
+    .map(|item| SpaceNavItem {
+        icon: item.0,
+        label: item.1.translate(&lang()).to_string(),
+        link: item.2,
+    })
+    .collect::<Vec<SpaceNavItem>>();
     let labels = vec![SpaceTopLabel {
         label: space.title.clone(),
         link: None,
