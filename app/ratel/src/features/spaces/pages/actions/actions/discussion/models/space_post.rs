@@ -45,7 +45,7 @@ impl SpacePost {
         title: String,
         html_contents: String,
         category_name: String,
-        user: &crate::features::auth::User,
+        author: &crate::common::models::space::SpaceAuthor,
         started_at: Option<i64>,
         ended_at: Option<i64>,
     ) -> Self {
@@ -66,10 +66,10 @@ impl SpacePost {
             html_contents,
             category_name,
             comments: 0,
-            user_pk: user.pk.clone(),
-            author_display_name: user.display_name.clone(),
-            author_profile_url: user.profile_url.clone(),
-            author_username: user.username.clone(),
+            user_pk: author.pk.clone(),
+            author_display_name: author.display_name.clone(),
+            author_profile_url: author.profile_url.clone(),
+            author_username: author.username.clone(),
         }
     }
 
@@ -89,14 +89,14 @@ impl SpacePost {
         space_pk: SpacePartition,
         space_post_pk: SpacePostPartition,
         content: String,
-        user: &crate::features::auth::User,
+        author: &crate::common::models::space::SpaceAuthor,
     ) -> crate::features::spaces::pages::actions::actions::discussion::Result<SpacePostComment>
     {
         let (pk, sk) = SpacePost::keys(&space_pk, &space_post_pk);
         let post = SpacePost::updater(&pk, sk)
             .increase_comments(1)
             .transact_write_item();
-        let comment = SpacePostComment::new(space_pk, space_post_pk, content, user);
+        let comment = SpacePostComment::new(space_pk, space_post_pk, content, author);
         let comment_tx = comment.create_transact_write_item();
 
         crate::transact_write_items!(cli, vec![comment_tx, post]).map_err(|e| {
