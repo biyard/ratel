@@ -1,7 +1,7 @@
 import { test } from "@playwright/test";
 import { click, fill, goto, getLocator, getEditor } from "../utils";
 
-test.describe.serial("Post with Space", () => {
+test.describe.serial("Space with lots actions", () => {
   let spaceUrl;
 
   test("Create a post", async ({ page }) => {
@@ -49,19 +49,12 @@ test.describe.serial("Post with Space", () => {
     // confirm creation
     await click(page, { text: "Create" });
 
-    // wait for discussion viewer page
+    // wait for discussion page (creator sees inline editor directly)
     await page.waitForURL(/\/actions\/discussions\//, {
       waitUntil: "networkidle",
     });
-    await getLocator(page, { text: "Untitled Discussion" });
 
-    // go to editor
-    await click(page, { text: "Edit" });
-    await page.waitForURL(/\/actions\/discussions\/.*\/edit/, {
-      waitUntil: "networkidle",
-    });
-
-    // fill discussion fields
+    // fill discussion fields on CreatorMain (inline editing)
     await fill(
       page,
       { placeholder: "Enter discussion title..." },
@@ -72,9 +65,10 @@ test.describe.serial("Post with Space", () => {
       { placeholder: "Enter category (optional)..." },
       "Testing",
     );
-    await fill(
-      page,
-      { placeholder: "Write your discussion content..." },
+
+    // fill rich text content via TiptapEditor
+    const editor = await getEditor(page);
+    await editor.fill(
       "This is a test discussion created by Playwright to verify the discussion creation flow within a space.",
     );
 
