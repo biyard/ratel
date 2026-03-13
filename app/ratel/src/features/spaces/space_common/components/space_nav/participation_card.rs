@@ -78,8 +78,8 @@ pub fn ParticipationCard(
                 space_id.to_string(),
                 "PanelRequirements".to_string(),
             ];
-            participate.call(space_id).await;
             current_role.set(SpaceUserRole::Participant);
+            participate.call(space_id).await;
             query.invalidate(&space_detail);
             query.invalidate(&panel_requirements_key);
             space.restart();
