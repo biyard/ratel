@@ -118,6 +118,86 @@ translate! {
         ko: "설명은 최소 10자 이상이어야 합니다",
     },
 
+    general_settings: {
+        en: "General settings",
+        ko: "일반 설정",
+    },
+
+    thumbnail: {
+        en: "Thumbnail",
+        ko: "썸네일",
+    },
+
+    team_logo: {
+        en: "Team Logo",
+        ko: "팀 로고",
+    },
+
+    team_name: {
+        en: "Team name",
+        ko: "팀 이름",
+    },
+
+    change_name: {
+        en: "Change name",
+        ko: "이름 변경",
+    },
+
+    allow_invite: {
+        en: "Allow members to invite their connections",
+        ko: "멤버들이 연결 대상을 초대할 수 있도록 허용",
+    },
+
+    allow_create_space: {
+        en: "Allow members to create space",
+        ko: "멤버들이 스페이스를 생성할 수 있도록 허용",
+    },
+
+    last_saved_at: {
+        en: "Last saved at",
+        ko: "마지막 저장",
+    },
+
+    upload_banner: {
+        en: "Upload banner image",
+        ko: "배너 이미지 업로드",
+    },
+
+    thumbnail_hint: {
+        en: "Recommended size: 1200 × 400px (16:9 ratio) • Max file size: 5MB",
+        ko: "권장 크기: 1200 × 400px (16:9 비율) • 최대 파일 크기: 5MB",
+    },
+
+    team_logo_hint: {
+        en: "Recommended size: 256 × 256px (1:1 ratio) • Max file size: 2MB",
+        ko: "권장 크기: 256 × 256px (1:1 비율) • 최대 파일 크기: 2MB",
+    },
+
+    allow_invite_description: {
+        en: "Group members can invite 1st degree connections to the group. All requests to join will still require admin approval.",
+        ko: "그룹 멤버가 1촌 연결 대상을 그룹에 초대할 수 있습니다. 가입 요청은 여전히 관리자 승인이 필요합니다.",
+    },
+
+    allow_create_space_description: {
+        en: "Allow members to create and manage their own spaces within this group.",
+        ko: "멤버들이 이 그룹 내에서 자신의 스페이스를 생성하고 관리할 수 있도록 허용합니다.",
+    },
+
+    delete_team: {
+        en: "Delete team",
+        ko: "팀 삭제",
+    },
+
+    back_to_page: {
+        en: "Back to page",
+        ko: "페이지로 돌아가기",
+    },
+
+    settings: {
+        en: "Settings",
+        ko: "설정",
+    },
+
     no_permission_title: {
         en: "No permission",
         ko: "권한이 없습니다",

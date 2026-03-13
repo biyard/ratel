@@ -3,6 +3,7 @@ use crate::features::teams::*;
 use views::Home;
 
 use crate::features::teams::layout::TeamLayout;
+use crate::features::teams::pages::setting::layout::TeamSettingLayout;
 use dao::Home as DaoPage;
 use draft::Home as DraftPage;
 use group::Home as GroupPage;
@@ -10,6 +11,7 @@ use home::Home as HomePage;
 use member::Home as MemberPage;
 use crate::features::teams::pages::reward::Home as RewardPage;
 use setting::Home as SettingPage;
+use setting::ManagementPage as SettingManagementPage;
 
 macro_rules! define_team_app_page {
     ($wrapper_name:ident, $page_component:ident) => {
@@ -30,6 +32,13 @@ define_team_app_page!(TeamMember, MemberPage);
 define_team_app_page!(TeamReward, RewardPage);
 define_team_app_page!(TeamSetting, SettingPage);
 
+#[component]
+pub fn TeamSettingMember(teamname: String) -> Element {
+    rsx! {
+        SettingManagementPage { teamname }
+    }
+}
+
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
 pub enum Route {
@@ -47,8 +56,12 @@ pub enum Route {
             TeamMember { teamname: String },
             #[route("/rewards")]
             TeamReward { teamname: String },
+        #[end_layout]
+        #[layout(TeamSettingLayout)]
             #[route("/settings")]
             TeamSetting { teamname: String },
+            #[route("/settings/members")]
+            TeamSettingMember { teamname: String },
         #[end_layout]
     #[end_nest]
 

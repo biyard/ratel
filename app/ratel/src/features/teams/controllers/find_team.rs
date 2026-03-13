@@ -4,8 +4,8 @@ use crate::features::teams::*;
 use crate::features::posts::models::Team;
 use crate::features::posts::types::TeamGroupPermissions;
 
-#[get("/api/teams/find", user: OptionalUser)]
-pub async fn find_team_handler(username: String) -> Result<TeamResponse> {
+#[get("/api/teams/find?teamname", user: OptionalUser)]
+pub async fn find_team_handler(teamname: String) -> Result<TeamResponse> {
     let conf = crate::features::teams::config::get();
     let cli = conf.dynamodb();
 
@@ -13,11 +13,11 @@ pub async fn find_team_handler(username: String) -> Result<TeamResponse> {
     let team_query_option = Team::opt().sk(gsi2_sk_prefix);
 
     let (teams, _) =
-        Team::find_by_username_prefix(cli, username.clone(), team_query_option).await?;
+        Team::find_by_username_prefix(cli, teamname.clone(), team_query_option).await?;
 
     let team = teams
         .into_iter()
-        .find(|team| team.username == username)
+        .find(|team| team.username == teamname)
         .ok_or(Error::NotFound("Team not found".to_string()))?;
 
     let user: Option<User> = user.into();
