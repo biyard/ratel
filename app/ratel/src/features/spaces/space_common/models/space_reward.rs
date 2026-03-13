@@ -1,6 +1,8 @@
 use crate::common::{
     models::reward::{UserReward, UserRewardHistory},
-    types::*, utils::time::get_now_timestamp_millis, *,
+    types::*,
+    utils::time::get_now_timestamp_millis,
+    *,
 };
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, DynamoEntity)]
@@ -30,7 +32,7 @@ pub struct SpaceReward {
 impl SpaceReward {
     pub fn new(
         space_pk: SpacePartition,
-        entity_type: EntityType,
+        action_id: String,
         behavior: RewardUserBehavior,
         description: String,
         credits: i64,
@@ -38,7 +40,7 @@ impl SpaceReward {
         period: RewardPeriod,
         condition: RewardCondition,
     ) -> Self {
-        let sk = RewardKey::from((space_pk.clone(), entity_type, behavior.clone()));
+        let sk = RewardKey::from((space_pk.clone(), action_id, behavior.clone()));
         let now = get_now_timestamp_millis();
 
         Self {
@@ -65,11 +67,11 @@ impl SpaceReward {
     pub async fn get_by_action(
         cli: &aws_sdk_dynamodb::Client,
         space_pk: SpacePartition,
-        action: EntityType,
+        action_id: String,
         behavior: RewardUserBehavior,
     ) -> crate::common::Result<Self> {
         let pk: Partition = space_pk.clone().into();
-        let sk = RewardKey::from((space_pk, action, behavior));
+        let sk = RewardKey::from((space_pk, action_id, behavior));
 
         Self::get(cli, pk, Some(sk))
             .await?
@@ -80,10 +82,10 @@ impl SpaceReward {
     pub async fn list_by_action(
         cli: &aws_sdk_dynamodb::Client,
         space_pk: SpacePartition,
-        action: Option<EntityType>,
+        action_id: Option<String>,
     ) -> crate::common::Result<Vec<Self>> {
         let pk: Partition = space_pk.clone().into();
-        let sk = RewardKey::get_space_reward_sk_prefix(space_pk, action);
+        let sk = RewardKey::get_space_reward_sk_prefix(space_pk, action_id);
 
         let opt = SpaceReward::opt_all().sk(sk);
 
@@ -106,6 +108,7 @@ impl SpaceReward {
 impl SpaceReward {
     pub async fn award(
         cli: &aws_sdk_dynamodb::Client,
+        _space_action: &crate::features::spaces::pages::actions::models::SpaceAction,
         space_reward: &SpaceReward,
         target_pk: Partition,
     ) -> crate::common::Result<UserReward> {
