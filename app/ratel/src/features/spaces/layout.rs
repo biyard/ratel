@@ -32,7 +32,7 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
     let mut participate = use_action(participate_space);
 
     let show_participate = matches!(space.status, Some(crate::common::SpaceStatus::InProgress))
-        && matches!(role, SpaceUserRole::Viewer | SpaceUserRole::Candidate)
+        && matches!(role, SpaceUserRole::Viewer)
         && !space.participated
         && space.can_participate;
 
@@ -76,11 +76,7 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
             div { class: "hidden tablet:flex",
                 SpaceNav {
                     space_id: space_id(),
-                    logo: if space.logo.is_empty() {
-                        "https://metadata.ratel.foundation/logos/logo.png".to_string()
-                    } else {
-                        space.logo.clone()
-                    },
+                    logo: if space.logo.is_empty() { "https://metadata.ratel.foundation/logos/logo.png".to_string() } else { space.logo.clone() },
                     menus,
                     user,
                     role,
