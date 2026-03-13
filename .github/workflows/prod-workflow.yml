@@ -58,56 +58,70 @@ jobs:
           npm i -g aws-cdk
           make cdk-deploy-v2
 
-  main-api:
-    runs-on: ubuntu-22.04
-    needs: [ratel-web]
+  ratel-app:
+    runs-on: ubuntu-latest
+
     defaults:
       run:
-        working-directory: packages/main-api
+        working-directory: app/ratel
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
-      - name: Write Firebase service account (prod)
-        run: |
-          mkdir -p .gcp
-          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 }}" | base64 -d > .gcp/firebase-service-account.json
-
       - name: Cache builder
-        id: main-api-build-cache
+        id: app-shell-build-cache
         uses: actions/cache@v4
         with:
-          key: main-api-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
+          key: app-shell-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            main-api-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
-            main-api-build-${{ runner.os }}-
-            main-api-build-
+            app-shell-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
+            app-shell-build-${{ runner.os }}-
+            app-shell-build-
           path: |
-            packages/main-api/target
+            target
+
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
 
-      - name: Download Vite Web
-        uses: actions/download-artifact@v4
-        with:
-          name: ratel-web-${{ github.sha }}
-          path: ./packages/main-api
+      - name: Login to Amazon ECR
+        id: ratel-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
           target: wasm32-unknown-unknown
           toolchain: stable
+
       - uses: cargo-bins/cargo-binstall@main
-      - name: Install toml-cli
+      - name: Install system dependencies
         run: |
-          cargo binstall toml-cli --force
+          sudo apt update
+          sudo apt install -y libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            lld
+
+      - name: Install Dioxus-cli
+        run: |
+          cargo binstall dioxus-cli --force
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.15.0 --activate
 
       - name: Building APIs
         env:
@@ -116,10 +130,9 @@ jobs:
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
           ENV: prod
-          RUST_LOG: info
-          SERVICE: main-api
+          RUST_LOG: error
+          SERVICE: app-shell
           DOMAIN: ratel.foundation
-
           BUCKET_NAME: metadata.ratel.foundation
           SLACK_HOOK: ${{ secrets.SLACK_HOOK }}
 
@@ -149,18 +162,12 @@ jobs:
 
           DYNAMO_TABLE_PREFIX: ratel-prod
           DYNAMO_ENDPOINT: none
-          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          RUST_FLAG: "--features lambda --release"
-          WEB_BUILD: false
-
-          # NOTE: Change PORTONE API
-          PORTONE_API_SECRET: ${{ secrets.PORTONE_API_SECRET }}
-          PORTONE_KPN_CHANNEL_KEY: ${{ secrets.PORTONE_KPN_BILLING_KEY_CHANNEL_KEY }}
-          PORTONE_STORE_ID: ${{ secrets.PORTONE_STORE_ID }}
+          # RUST_FLAG: "--features lambda --release"
           ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
 
           FCM_ENABLED: true
           RATEL_PROJECT_ID: ${{ secrets.RATEL_PROJECT_ID }}
+          REWARD: true
 
           BEDROCK_AGENT_ID: ${{ secrets.PROD_BEDROCK_AGENT_ID }}
           BEDROCK_AGENT_ALIAS_ID: ${{ secrets.PROD_BEDROCK_AGENT_ALIAS_ID }}
@@ -169,88 +176,47 @@ jobs:
           BIYARD_API_KEY: ${{ secrets.BIYARD_API_KEY }}
           BIYARD_PROJECT_ID: ${{ secrets.BIYARD_PROJECT_ID }}
 
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
+
+          # NOTE: Change PORTONE API
+          PORTONE_API_SECRET: ${{ secrets.PORTONE_API_SECRET }}
+          PORTONE_KPN_CHANNEL_KEY: ${{ secrets.PORTONE_KPN_BILLING_KEY_CHANNEL_KEY }}
+          PORTONE_STORE_ID: ${{ secrets.PORTONE_STORE_ID }}
+          PORTONE_INICIS_CHANNEL_KEY: ${{ secrets.PROD_PORTONE_INICIS_CHANNEL_KEY }}
+
+          QDRANT_API_KEY: ${{secrets.DEV_QDRANT_API_KEY }}
+
+          ECR: ${{ steps.ratel-ecr.outputs.registry }}/ratel/app-shell
+
+          WALLETCONNECT_PROJECT_ID: ${{ secrets.WALLETCONNECT_PROJECT_ID }}
         run: |
-          tar xzvf dist.tar.gz
-          ls dist
-
-          make build
-
-          mkdir -p ../../.gcp
-          cp .gcp/firebase-service-account.json ../../.gcp/firebase-service-account.json
-
-          mv target/release/main-api ../../bootstrap
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ratel-main-api-${{ github.sha }}
-          path: ${{ github.workspace }}/bootstrap
-          if-no-files-found: error
-          retention-days: 7
-
-  ratel-web:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ts-packages/web
-    steps:
-      - uses: actions/checkout@v4
-      - uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-2
-
-      - name: Setup pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@10.15.0 --activate
-
-      - name: Build
-        env:
-          REGION: ap-northeast-2
-          VITE_LOG_LEVEL: info
-          VITE_RPC_URL: "https://public-en.node.kaia.io"
-          VITE_BLOCK_EXPLORER_URL: "https://kaiascan.io"
-          VITE_OPERATOR_ADDRESS: ${{ secrets.OPERATOR_ADDRESS }}
-          VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
-          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
-          VITE_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
-          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
-          VITE_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
-          VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
-
-          # NOTE: Replace them after accepting.
-          VITE_PORTONE_STORE_ID: ${{ secrets.PORTONE_STORE_ID}}
-          VITE_PORTONE_INICIS_CHANNEL_KEY: ${{ secrets.PROD_PORTONE_INICIS_CHANNEL_KEY }}
-
-          VITE_ENV: prod
-          VITE_SIGN_DOMAIN: ratel.foundation
-          VITE_API_URL: https://ratel.foundation
-          VITE_EXPERIMENT: false
-          VITE_TELEGRAM_BOTNAME: crypto_ratel_bot
-          VITE_USDT_ADDRESS: "0xd077a400968890eacc75cdc901f0356c943e4fdb"
-        run: |
-          make build
+          npm i -D tailwindcss
+          rm -rf ../../target/dx
+          make build-lambda
+          make docker
+          make docker.push
 
       - name: Deploy to S3
         env:
           BUCKET: ${{ secrets.PROD_RATEL_BUCKET }}
           CDN: ${{ secrets.PROD_RATEL_CDN }}
         run: |
-          aws s3 sync dist $BUCKET
+          aws s3 sync ../../target/dx/app-shell/release/web/public $BUCKET
           aws cloudfront create-invalidation --distribution-id $CDN --paths "/*"
-
-      - name: Prepare artifacts
-        run: |
-          tar czvf dist.tar.gz dist
+          cd ../..
+          tar czvf app-shell.tar.gz target/dx/app-shell/release/web
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ratel-web-${{ github.sha }}
-          path: ${{ github.workspace }}/ts-packages/web/dist.tar.gz
+          name: app-shell-${{ github.sha }}
+          path: ${{ github.workspace }}/app-shell.tar.gz
           if-no-files-found: error
           retention-days: 7
 
