@@ -91,7 +91,7 @@ where
                     div { class: "", "Loading more..." }
                 };
             } else {
-                let mut ctrl = self.clone();
+                let ctrl = self.clone();
                 let sentinel_id = format!("infinite-scroll-sentinel-{}", ctrl.key);
 
                 rsx! {
@@ -128,8 +128,8 @@ where
                                             ctrl.next();
                                         }
                                     });
-                                    let mut options = web_sys::IntersectionObserverInit::new();
-                                    options.threshold(&wasm_bindgen::JsValue::from_f64(0.1));
+                                    let options = web_sys::IntersectionObserverInit::new();
+                                    options.set_threshold(&wasm_bindgen::JsValue::from_f64(0.1));
                                     if let Ok(observer) = web_sys::IntersectionObserver::new_with_options(
                                         callback.as_ref().unchecked_ref(),
                                         &options,
