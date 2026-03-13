@@ -1,9 +1,9 @@
-use crate::features::spaces::space_common::*;
 use crate::common::models::space::{SpaceCommon, SpaceParticipant};
 use crate::common::models::{OptionalUser, User};
-use crate::common::types::{Partition, SpacePartition};
+use crate::common::types::{FeedPartition, Partition, SpacePartition};
 use crate::features::posts::models::Post;
 use crate::features::posts::types::{BoosterType, SpaceType};
+use crate::features::spaces::space_common::*;
 
 #[get("/api/spaces/{space_id}", user: OptionalUser)]
 pub async fn get_space(space_id: SpacePartition) -> Result<SpaceResponse> {
@@ -21,6 +21,11 @@ pub async fn get_space(space_id: SpacePartition) -> Result<SpaceResponse> {
     let user: Option<User> = user.into();
 
     let permissions = post.get_permissions(dynamo, user.clone()).await?;
+    let liked = if let Some(ref user) = user {
+        post.is_liked(dynamo, &user.pk).await?
+    } else {
+        false
+    };
 
     let (user_participant, can_participate) = if let Some(ref user) = user {
         let (participant_pk, participant_sk) =
@@ -47,6 +52,7 @@ pub async fn get_space(space_id: SpacePartition) -> Result<SpaceResponse> {
 
     Ok(SpaceResponse {
         id: space.pk.clone().into(),
+        post_id: post_pk.into(),
         sk: space.sk,
         title: post.title,
         content: if space.content.is_empty() {
@@ -69,6 +75,7 @@ pub async fn get_space(space_id: SpacePartition) -> Result<SpaceResponse> {
         likes: post.likes,
         comments: post.comments,
         shares: post.shares,
+        liked,
         reports: space.reports,
         rewards: space.rewards,
         visibility: space.visibility,
@@ -91,6 +98,7 @@ pub async fn get_space(space_id: SpacePartition) -> Result<SpaceResponse> {
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct SpaceResponse {
     pub id: SpacePartition,
+    pub post_id: FeedPartition,
     pub sk: EntityType,
     pub title: String,
     pub content: String,
@@ -109,6 +117,7 @@ pub struct SpaceResponse {
     pub likes: i64,
     pub comments: i64,
     pub shares: i64,
+    pub liked: bool,
     pub reports: i64,
     pub rewards: Option<i64>,
     pub visibility: SpaceVisibility,

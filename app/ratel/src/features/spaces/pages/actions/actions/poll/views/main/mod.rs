@@ -2,19 +2,18 @@ mod creator;
 use creator::PollCreatorPage;
 
 mod participant;
+pub use participant::PollContent;
 use participant::PollParticipantPage;
 
 mod viewer;
-use viewer::PollViewerPage;
-
-use participant::*;
-use viewer::*;
-
 use super::*;
+use viewer::PollViewerPage;
 
 #[component]
 pub fn PollActionPage(space_id: SpacePartition, poll_id: SpacePollEntityType) -> Element {
     let role = use_space_role()();
+    let space_id = use_signal(|| space_id);
+    let poll_id = use_signal(|| poll_id);
 
     match role {
         SpaceUserRole::Creator => rsx! {

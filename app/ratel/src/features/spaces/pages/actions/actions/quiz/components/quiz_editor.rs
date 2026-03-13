@@ -109,6 +109,7 @@ fn QuizAddQuestionButton(on_add: EventHandler<()>) -> Element {
     rsx! {
         div { class: "flex relative justify-center items-center w-full",
             Button {
+                "data-testid": "quiz-add-question",
                 style: ButtonStyle::Outline,
                 onclick: move |_| on_add.call(()),
                 class: "flex justify-center items-center w-10 h-10 !p-0 z-2 !bg-background",

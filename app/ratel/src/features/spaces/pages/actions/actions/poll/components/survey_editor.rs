@@ -12,6 +12,7 @@ pub fn SurveyEditor(props: SurveyEditorProps) -> Element {
     let mut questions = props.questions;
     let mut selecting_question_type = use_signal(|| false);
     let tr: SurveyEditorTranslate = use_translate();
+    let on_save = props.on_save;
 
     rsx! {
         div { class: "flex flex-col gap-2 pt-1 pb-5 w-full rounded-[12px]",
@@ -32,6 +33,9 @@ pub fn SurveyEditor(props: SurveyEditorProps) -> Element {
                                     qs[idx] = q;
                                     questions.set(qs);
                                 },
+                                on_save: move |_| {
+                                    on_save.call(questions());
+                                },
                             }
                             div { class: "flex justify-end",
                                 Button {
@@ -41,6 +45,7 @@ pub fn SurveyEditor(props: SurveyEditorProps) -> Element {
                                     onclick: move |_| {
                                         let mut qs = questions.read().clone();
                                         qs.remove(idx);
+                                        on_save.call(qs.clone());
                                         questions.set(qs);
                                     },
                                     {tr.btn_delete}
@@ -58,6 +63,7 @@ pub fn SurveyEditor(props: SurveyEditorProps) -> Element {
                         on_add: move |q: Question| {
                             let mut qs = questions.read().clone();
                             qs.push(q);
+                            on_save.call(qs.clone());
                             questions.set(qs);
                             selecting_question_type.set(false);
                         },
@@ -80,6 +86,7 @@ fn AddQuestionButton(on_add: EventHandler<()>) -> Element {
     rsx! {
         div { class: "flex relative justify-center items-center w-full",
             Button {
+                "data-testid": "poll-add-question",
                 style: ButtonStyle::Outline,
                 onclick: move |_| on_add.call(()),
                 class: "flex justify-center items-center w-10 h-10 !p-0 z-2 !bg-background",
@@ -226,25 +233,39 @@ fn QuestionTypeSelector(on_add: EventHandler<Question>) -> Element {
 }
 
 #[component]
-fn QuestionEditor(question: Question, on_change: EventHandler<Question>) -> Element {
+fn QuestionEditor(
+    question: Question,
+    on_change: EventHandler<Question>,
+    on_save: EventHandler<()>,
+) -> Element {
     match question {
         Question::SingleChoice(q) => rsx! {
-            ChoiceQuestionEditor { question: q, is_single: true, on_change }
+            ChoiceQuestionEditor {
+                question: q,
+                is_single: true,
+                on_change,
+                on_save,
+            }
         },
         Question::MultipleChoice(q) => rsx! {
-            ChoiceQuestionEditor { question: q, is_single: false, on_change }
+            ChoiceQuestionEditor {
+                question: q,
+                is_single: false,
+                on_change,
+                on_save,
+            }
         },
         Question::ShortAnswer(q) | Question::Subjective(q) => rsx! {
-            SubjectiveQuestionEditor { question: q, on_change }
+            SubjectiveQuestionEditor { question: q, on_change, on_save }
         },
         Question::Checkbox(q) => rsx! {
-            CheckboxQuestionEditor { question: q, on_change }
+            CheckboxQuestionEditor { question: q, on_change, on_save }
         },
         Question::Dropdown(q) => rsx! {
-            DropdownQuestionEditor { question: q, on_change }
+            DropdownQuestionEditor { question: q, on_change, on_save }
         },
         Question::LinearScale(q) => rsx! {
-            LinearScaleQuestionEditor { question: q, on_change }
+            LinearScaleQuestionEditor { question: q, on_change, on_save }
         },
     }
 }
@@ -253,18 +274,31 @@ fn QuestionEditor(question: Question, on_change: EventHandler<Question>) -> Elem
 fn SubjectiveQuestionEditor(
     question: SubjectiveQuestion,
     on_change: EventHandler<Question>,
+    #[props(default)] on_save: Option<EventHandler<()>>,
 ) -> Element {
     let q = question.clone();
+    let blur_save = on_save.clone();
+    let confirm_save = on_save.clone();
     rsx! {
-        input {
+        crate::common::components::Input {
+            variant: crate::common::components::InputVariant::Plain,
             class: "p-2 w-full text-white bg-transparent border-b outline-none focus:border-blue-500 border-neutral-600 placeholder-neutral-500",
-            r#type: "text",
             placeholder: "Question title",
             value: "{q.title}",
-            oninput: move |evt| {
+            oninput: move |evt: Event<FormData>| {
                 let mut next = q.clone();
                 next.title = evt.value().to_string();
                 on_change.call(Question::Subjective(next));
+            },
+            onblur: move |_| {
+                if let Some(on_save) = &blur_save {
+                    on_save.call(());
+                }
+            },
+            onconfirm: move |_| {
+                if let Some(on_save) = &confirm_save {
+                    on_save.call(());
+                }
             },
         }
         span { class: "text-xs text-neutral-500", "Text answer field" }
@@ -275,18 +309,31 @@ fn SubjectiveQuestionEditor(
 fn CheckboxQuestionEditor(
     question: CheckboxQuestion,
     on_change: EventHandler<Question>,
+    #[props(default)] on_save: Option<EventHandler<()>>,
 ) -> Element {
     let q = question.clone();
+    let title_blur_save = on_save.clone();
+    let title_confirm_save = on_save.clone();
     rsx! {
-        input {
+        crate::common::components::Input {
+            variant: crate::common::components::InputVariant::Plain,
             class: "p-2 w-full text-white bg-transparent border-b outline-none focus:border-blue-500 border-neutral-600 placeholder-neutral-500",
-            r#type: "text",
             placeholder: "Question title",
             value: "{q.title}",
-            oninput: move |evt| {
+            oninput: move |evt: Event<FormData>| {
                 let mut next = q.clone();
                 next.title = evt.value().to_string();
                 on_change.call(Question::Checkbox(next));
+            },
+            onblur: move |_| {
+                if let Some(on_save) = &title_blur_save {
+                    on_save.call(());
+                }
+            },
+            onconfirm: move |_| {
+                if let Some(on_save) = &title_confirm_save {
+                    on_save.call(());
+                }
             },
         }
         div { class: "flex flex-col gap-1",
@@ -294,16 +341,28 @@ fn CheckboxQuestionEditor(
                 {
                     let question = question.clone();
                     let on_change = on_change.clone();
+                    let option_blur_save = on_save.clone();
+                    let option_confirm_save = on_save.clone();
                     rsx! {
                         div { class: "flex gap-2 items-center",
-                            input {
+                            crate::common::components::Input {
+                                variant: crate::common::components::InputVariant::Plain,
                                 class: "flex-1 p-2 text-sm text-white bg-transparent border-b outline-none border-neutral-700",
-                                r#type: "text",
                                 value: "{option}",
-                                oninput: move |evt| {
+                                oninput: move |evt: Event<FormData>| {
                                     let mut next = question.clone();
                                     next.options[opt_idx] = evt.value().to_string();
                                     on_change.call(Question::Checkbox(next));
+                                },
+                                onblur: move |_| {
+                                    if let Some(on_save) = &option_blur_save {
+                                        on_save.call(());
+                                    }
+                                },
+                                onconfirm: move |_| {
+                                    if let Some(on_save) = &option_confirm_save {
+                                        on_save.call(());
+                                    }
                                 },
                             }
                         }
@@ -318,18 +377,31 @@ fn CheckboxQuestionEditor(
 fn DropdownQuestionEditor(
     question: DropdownQuestion,
     on_change: EventHandler<Question>,
+    #[props(default)] on_save: Option<EventHandler<()>>,
 ) -> Element {
     let q = question.clone();
+    let title_blur_save = on_save.clone();
+    let title_confirm_save = on_save.clone();
     rsx! {
-        input {
+        crate::common::components::Input {
+            variant: crate::common::components::InputVariant::Plain,
             class: "p-2 w-full text-white bg-transparent border-b outline-none focus:border-blue-500 border-neutral-600 placeholder-neutral-500",
-            r#type: "text",
             placeholder: "Question title",
             value: "{q.title}",
-            oninput: move |evt| {
+            oninput: move |evt: Event<FormData>| {
                 let mut next = q.clone();
                 next.title = evt.value().to_string();
                 on_change.call(Question::Dropdown(next));
+            },
+            onblur: move |_| {
+                if let Some(on_save) = &title_blur_save {
+                    on_save.call(());
+                }
+            },
+            onconfirm: move |_| {
+                if let Some(on_save) = &title_confirm_save {
+                    on_save.call(());
+                }
             },
         }
         div { class: "flex flex-col gap-1",
@@ -337,16 +409,28 @@ fn DropdownQuestionEditor(
                 {
                     let question = question.clone();
                     let on_change = on_change.clone();
+                    let option_blur_save = on_save.clone();
+                    let option_confirm_save = on_save.clone();
                     rsx! {
                         div { class: "flex gap-2 items-center",
-                            input {
+                            crate::common::components::Input {
+                                variant: crate::common::components::InputVariant::Plain,
                                 class: "flex-1 p-2 text-sm text-white bg-transparent border-b outline-none border-neutral-700",
-                                r#type: "text",
                                 value: "{option}",
-                                oninput: move |evt| {
+                                oninput: move |evt: Event<FormData>| {
                                     let mut next = question.clone();
                                     next.options[opt_idx] = evt.value().to_string();
                                     on_change.call(Question::Dropdown(next));
+                                },
+                                onblur: move |_| {
+                                    if let Some(on_save) = &option_blur_save {
+                                        on_save.call(());
+                                    }
+                                },
+                                onconfirm: move |_| {
+                                    if let Some(on_save) = &option_confirm_save {
+                                        on_save.call(());
+                                    }
                                 },
                             }
                         }
@@ -361,20 +445,33 @@ fn DropdownQuestionEditor(
 fn LinearScaleQuestionEditor(
     question: LinearScaleQuestion,
     on_change: EventHandler<Question>,
+    #[props(default)] on_save: Option<EventHandler<()>>,
 ) -> Element {
     let q = question.clone();
     let min_val = question.min_value;
     let max_val = question.max_value;
+    let blur_save = on_save.clone();
+    let confirm_save = on_save.clone();
     rsx! {
-        input {
+        crate::common::components::Input {
+            variant: crate::common::components::InputVariant::Plain,
             class: "p-2 w-full text-white bg-transparent border-b outline-none focus:border-blue-500 border-neutral-600 placeholder-neutral-500",
-            r#type: "text",
             placeholder: "Question title",
             value: "{q.title}",
-            oninput: move |evt| {
+            oninput: move |evt: Event<FormData>| {
                 let mut next = q.clone();
                 next.title = evt.value().to_string();
                 on_change.call(Question::LinearScale(next));
+            },
+            onblur: move |_| {
+                if let Some(on_save) = &blur_save {
+                    on_save.call(());
+                }
+            },
+            onconfirm: move |_| {
+                if let Some(on_save) = &confirm_save {
+                    on_save.call(());
+                }
             },
         }
         div { class: "flex gap-4 items-center text-sm text-neutral-400",
