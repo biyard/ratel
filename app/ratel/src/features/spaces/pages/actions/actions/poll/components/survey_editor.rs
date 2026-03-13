@@ -12,6 +12,7 @@ pub fn SurveyEditor(props: SurveyEditorProps) -> Element {
     let mut questions = props.questions;
     let mut selecting_question_type = use_signal(|| false);
     let tr: SurveyEditorTranslate = use_translate();
+    let on_save = props.on_save;
 
     rsx! {
         div { class: "flex flex-col gap-2 pt-1 pb-5 w-full rounded-[12px]",
@@ -31,6 +32,9 @@ pub fn SurveyEditor(props: SurveyEditorProps) -> Element {
                                     let mut qs = questions.read().clone();
                                     qs[idx] = q;
                                     questions.set(qs);
+                                },
+                                on_save: move |_| {
+                                    on_save.call(questions());
                                 },
                             }
                             div { class: "flex justify-end",
@@ -226,13 +230,17 @@ fn QuestionTypeSelector(on_add: EventHandler<Question>) -> Element {
 }
 
 #[component]
-fn QuestionEditor(question: Question, on_change: EventHandler<Question>) -> Element {
+fn QuestionEditor(
+    question: Question,
+    on_change: EventHandler<Question>,
+    on_save: EventHandler<()>,
+) -> Element {
     match question {
         Question::SingleChoice(q) => rsx! {
-            ChoiceQuestionEditor { question: q, is_single: true, on_change }
+            ChoiceQuestionEditor { question: q, is_single: true, on_change, on_save: Some(on_save) }
         },
         Question::MultipleChoice(q) => rsx! {
-            ChoiceQuestionEditor { question: q, is_single: false, on_change }
+            ChoiceQuestionEditor { question: q, is_single: false, on_change, on_save: Some(on_save) }
         },
         Question::ShortAnswer(q) | Question::Subjective(q) => rsx! {
             SubjectiveQuestionEditor { question: q, on_change }
