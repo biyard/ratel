@@ -5,6 +5,7 @@ use crate::features::posts::controllers::dto::CategoryResponse;
 use crate::features::posts::controllers::list_categories::list_categories_handler;
 use icons::settings as settings_icon;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
+use crate::common::*;
 
 #[component]
 pub fn TeamLayout(teamname: String) -> Element {
@@ -31,11 +32,9 @@ pub fn TeamLayout(teamname: String) -> Element {
     });
 
     rsx! {
-        div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-bg text-white",
-            if logged_in {
-                div { class: "hidden tablet:flex",
-                    TeamSidemenu { key: "{teamname}", teamname: teamname.clone() }
-                }
+        div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-team-bg text-text-primary",
+            div { class: "hidden tablet:flex",
+                TeamSidemenu { key: "{teamname}", teamname: teamname.clone(), logged_in }
             }
             div { class: "flex flex-col min-w-0 min-h-0",
                 div { class: "flex overflow-auto flex-1 p-5 w-full bg-background rounded-tl-[10px]",
@@ -47,7 +46,7 @@ pub fn TeamLayout(teamname: String) -> Element {
 }
 
 #[component]
-fn TeamSidemenu(teamname: String) -> Element {
+fn TeamSidemenu(teamname: String, logged_in: bool) -> Element {
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let mut team_ctx = crate::common::contexts::use_team_context();
     let nav = use_navigator();
@@ -66,6 +65,9 @@ fn TeamSidemenu(teamname: String) -> Element {
         list_categories_handler(None).await.map(|r| r.items).unwrap_or_default()
     });
 
+    // Hook must be at top level - not inside conditionals
+    let mut show_user_menu = use_signal(|| false);
+
     let data = resource.read();
     let fallback_team = {
         let teams = team_ctx.teams.read();
@@ -83,6 +85,14 @@ fn TeamSidemenu(teamname: String) -> Element {
         let permissions: TeamGroupPermissions = mask.into();
         let is_admin = permissions.contains(TeamGroupPermission::TeamAdmin);
         let can_team_edit = is_admin || permissions.contains(TeamGroupPermission::TeamEdit);
+
+        let user_role = if is_admin {
+            "Creator"
+        } else if can_team_edit {
+            "Manager"
+        } else {
+            "Member"
+        };
 
         let cats: Vec<CategoryResponse> = categories.read().as_ref().cloned().unwrap_or_default();
 
@@ -121,6 +131,22 @@ fn TeamSidemenu(teamname: String) -> Element {
                     }
                 }
 
+                // Auth buttons (guest only)
+                if !logged_in {
+                    div { class: "flex flex-col gap-2 px-4 pb-4 shrink-0",
+                        Link {
+                            to: "/auth/",
+                            class: "flex items-center justify-center w-full py-2.5 rounded-full bg-primary text-[#000000] font-semibold text-sm transition-opacity hover:opacity-90",
+                            "Sign up"
+                        }
+                        Link {
+                            to: "/auth/",
+                            class: "flex items-center justify-center w-full py-2.5 rounded-full border border-border text-text-primary font-semibold text-sm transition-colors hover:bg-white/5",
+                            "Log in"
+                        }
+                    }
+                }
+
                 // Category section
                 div { class: "flex flex-col flex-1 overflow-y-auto px-3 pb-4",
                     span { class: "px-2 pb-2 text-xs font-semibold text-foreground-muted uppercase tracking-wider",
@@ -130,7 +156,7 @@ fn TeamSidemenu(teamname: String) -> Element {
                     // "All" item
                     {
                         let is_active = selected_category().is_none();
-                        let active_class = if is_active { "bg-white/10 text-text-primary" } else { "text-text-secondary hover:bg-white/5" };
+                        let active_class = if is_active { "bg-white/10 text-text-primary" } else { "text-foreground-muted hover:bg-white/5 hover:text-text-primary" };
                         rsx! {
                             button {
                                 class: "flex items-center gap-2.5 w-full px-2 py-2 rounded-lg text-sm font-medium transition-colors text-left {active_class}",
@@ -146,7 +172,7 @@ fn TeamSidemenu(teamname: String) -> Element {
                             let cat_name = cat.name.clone();
                             let cat_name2 = cat.name.clone();
                             let is_active = selected_category().as_deref() == Some(cat_name.as_str());
-                            let active_class = if is_active { "bg-white/10 text-text-primary" } else { "text-text-secondary hover:bg-white/5" };
+                            let active_class = if is_active { "bg-white/10 text-text-primary" } else { "text-foreground-muted hover:bg-white/5 hover:text-text-primary" };
                             rsx! {
                                 button {
                                     key: "{cat_name}",
@@ -160,31 +186,90 @@ fn TeamSidemenu(teamname: String) -> Element {
                     }
                 }
 
-                // Bottom: user profile + team selector
-                div { class: "shrink-0 border-t border-divider px-4 py-3",
-                    crate::common::TeamSelector {
-                        selected_label: display_name.clone(),
-                        user_display_name: user.display_name.clone(),
-                        user_profile_url: user.profile_url.clone(),
-                        user_href: "/".to_string(),
-                        teams: teams.clone(),
-                        team_href_prefix: "/teams".to_string(),
-                        team_href_suffix: "/home".to_string(),
-                        on_select_team: move |idx| {
-                            team_ctx.set_selected_index(idx);
-                        },
-                        on_logout: move |_| {
-                            spawn(async move {
-                                let _ = crate::features::auth::controllers::logout_handler().await;
-                                nav.push("/");
-                                #[cfg(target_arch = "wasm32")]
-                                {
-                                    if let Some(window) = web_sys::window() {
-                                        let _ = window.location().reload();
+                // Bottom: user info + settings (logged-in only)
+                if logged_in {
+                    {
+                        let settings_to = if can_team_edit {
+                            Some(Route::TeamSetting { teamname: teamname.clone() }.to_string())
+                        } else {
+                            None
+                        };
+                        let user_display = user.display_name.clone();
+                        let user_profile = user.profile_url.clone();
+                        rsx! {
+                            div { class: "relative shrink-0 border-t border-separator px-3 py-3",
+                                if show_user_menu() {
+                                    div {
+                                        class: "fixed inset-0 z-10",
+                                        onclick: move |_| show_user_menu.set(false),
                                     }
                                 }
-                            });
-                        },
+                                div { class: "flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/5 transition-colors",
+                                    if !user_profile.is_empty() {
+                                        img {
+                                            src: "{user_profile}",
+                                            alt: "{user_display}",
+                                            class: "w-9 h-9 rounded-full object-cover shrink-0",
+                                        }
+                                    } else {
+                                        div { class: "w-9 h-9 rounded-full bg-neutral-600 shrink-0" }
+                                    }
+                                    div { class: "flex flex-col min-w-0 flex-1",
+                                        span { class: "text-sm font-semibold text-text-primary truncate", "{user_display}" }
+                                        span { class: "text-xs text-foreground-muted", "{user_role}" }
+                                    }
+                                    button {
+                                        class: "flex items-center justify-center w-7 h-7 rounded-md hover:bg-white/10 transition-colors shrink-0 relative z-20",
+                                        onclick: move |e| {
+                                            e.stop_propagation();
+                                            show_user_menu.toggle();
+                                        },
+                                        lucide_dioxus::Ellipsis {
+                                            class: "w-4 h-4 [&>circle]:fill-foreground-muted [&>circle]:stroke-none",
+                                        }
+                                    }
+                                }
+                                if show_user_menu() {
+                                    div {
+                                        class: "absolute bottom-full left-3 right-3 mb-1 bg-popover border border-border rounded-lg shadow-lg z-30 py-1 overflow-hidden",
+                                        onclick: move |e| e.stop_propagation(),
+                                        if let Some(ref settings_href) = settings_to {
+                                            Link {
+                                                to: "{settings_href}",
+                                                class: "flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-white/10 transition-colors",
+                                                onclick: move |_| show_user_menu.set(false),
+                                                settings_icon::Settings {
+                                                    width: "15",
+                                                    height: "15",
+                                                    class: "w-[15px] h-[15px] [&>path]:stroke-icon-primary shrink-0",
+                                                }
+                                                "Settings"
+                                            }
+                                        }
+                                        button {
+                                            class: "flex items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-white/10 transition-colors w-full text-left",
+                                            onclick: move |_| {
+                                                show_user_menu.set(false);
+                                                spawn(async move {
+                                                    let _ = crate::features::auth::controllers::logout_handler().await;
+                                                    nav.push("/");
+                                                    #[cfg(target_arch = "wasm32")]
+                                                    {
+                                                        if let Some(window) = web_sys::window() {
+                                                            let _ = window.location().reload();
+                                                        }
+                                                    }
+                                                });
+                                            },
+                                            lucide_dioxus::LogOut {
+                                                class: "w-[15px] h-[15px] [&>path]:stroke-destructive shrink-0",
+                                            }
+                                            "Log out"
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -246,11 +331,7 @@ fn TeamSidemenu(teamname: String) -> Element {
                 let teams = team_ctx.teams.read().clone();
                 render_menu(team.profile_url.clone(), selected_label, team.permissions.clone(), teams)
             } else {
-                rsx! {
-                    div { class: "flex items-center justify-center w-full h-full text-text-primary text-sm",
-                        "Loading..."
-                    }
-                }
+                render_menu("".to_string(), teamname.clone(), vec![], vec![])
             }
         }
         Err(err) => {
@@ -264,11 +345,8 @@ fn TeamSidemenu(teamname: String) -> Element {
                 let teams = team_ctx.teams.read().clone();
                 render_menu(team.profile_url.clone(), selected_label, team.permissions.clone(), teams)
             } else {
-                rsx! {
-                    div { class: "flex items-center justify-center w-full h-full text-text-primary text-sm",
-                        "Loading..."
-                    }
-                }
+                debug!("TeamSidemenu error: {}. No fallback.", err);
+                render_menu("".to_string(), teamname.clone(), vec![], vec![])
             }
         }
     }
