@@ -50,28 +50,41 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
         && matches!(role, SpaceUserRole::Viewer)
         && !space.participated
         && space.can_participate;
+    let hide_apps_menu = matches!(
+        space.publish_state,
+        crate::common::SpacePublishState::Published
+    ) && !matches!(role, SpaceUserRole::Creator);
+    let show_file_menu =
+        hide_apps_menu && space.files.as_ref().is_some_and(|files| !files.is_empty());
 
-    let menus = vec![
+    let mut menu_items = vec![
         crate::features::spaces::pages::dashboard::get_nav_item(space_id(), role.clone()),
         crate::features::spaces::pages::overview::get_nav_item(space_id(), role.clone()),
         crate::features::spaces::pages::actions::get_nav_item(space_id(), role.clone()),
-        crate::features::spaces::pages::apps::get_nav_item(space_id(), role.clone()),
-        // crate::features::spaces::pages::report::get_nav_item(space_id.clone(), role.clone()),
-    ]
-    .into_iter()
-    .map(|item| {
-        if let Some(item) = item {
-            Some(SpaceNavItem {
-                icon: item.0,
-                label: item.1.translate(&lang()).to_string(),
-                link: item.2,
-            })
-        } else {
-            None
-        }
-    })
-    .flatten()
-    .collect::<Vec<SpaceNavItem>>();
+    ];
+
+    if !hide_apps_menu {
+        menu_items.push(crate::features::spaces::pages::apps::get_nav_item(
+            space_id(),
+            role.clone(),
+        ));
+    }
+
+    let menus = menu_items
+        .into_iter()
+        .map(|item| {
+            if let Some(item) = item {
+                Some(SpaceNavItem {
+                    icon: item.0,
+                    label: item.1.translate(&lang()).to_string(),
+                    link: item.2,
+                })
+            } else {
+                None
+            }
+        })
+        .flatten()
+        .collect::<Vec<SpaceNavItem>>();
     let labels = vec![SpaceTopLabel {
         label: space.title.clone(),
         link: None,

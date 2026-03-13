@@ -10,6 +10,8 @@ pub enum SpacePage {
     Actions,
     #[translate(ko = "앱")]
     Apps,
+    #[translate(en = "File", ko = "파일")]
+    File,
     #[translate(ko = "보고서")]
     Report,
 }
