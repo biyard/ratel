@@ -16,7 +16,12 @@ pub fn QuizViewerPage(
                 TabList {
                     TabTrigger { index: 0usize, value: "overview-tab", {tr.overview_title} }
                     TabTrigger { index: 1usize, value: "upload-tab", {tr.upload_title} }
-                    TabTrigger { index: 2usize, value: "quiz-tab", {tr.quiz_section_title} }
+                    TabTrigger {
+                        index: 2usize,
+                        value: "quiz-tab",
+                        "data-testid": "quiz-viewer-tab",
+                        {tr.quiz_section_title}
+                    }
                 }
                 TabContent { index: 0usize, value: "overview-tab",
                     OverviewTab { can_edit: false }
@@ -24,7 +29,10 @@ pub fn QuizViewerPage(
                 TabContent { index: 1usize, value: "upload-tab",
                     UploadTab { can_edit: false }
                 }
-                TabContent { index: 2usize, value: "quiz-tab",
+                TabContent {
+                    index: 2usize,
+                    value: "quiz-tab",
+                    "data-testid": "quiz-viewer-panel",
                     QuizTab { can_edit: false }
                 }
             }

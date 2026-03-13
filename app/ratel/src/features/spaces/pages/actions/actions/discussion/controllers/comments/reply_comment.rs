@@ -5,7 +5,7 @@ pub struct ReplyCommentRequest {
     pub content: String,
 }
 
-#[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments/{comment_sk}/reply", role: SpaceUserRole, user: crate::features::auth::User)]
+#[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments/{comment_sk}/reply", role: SpaceUserRole, author: crate::common::models::space::SpaceAuthor)]
 pub async fn reply_comment(
     space_id: SpacePartition,
     discussion_sk: SpacePostEntityType,
@@ -30,13 +30,15 @@ pub async fn reply_comment(
         space_post_pk,
         comment_sk_entity,
         req.content,
-        &user,
+        &author,
     )
     .await?;
 
     let space_pk: Partition = space_id.into();
     let agg_item =
-        crate::features::spaces::space_common::models::aggregate::DashboardAggregate::inc_comments(&space_pk, 1);
+        crate::features::spaces::space_common::models::aggregate::DashboardAggregate::inc_comments(
+            &space_pk, 1,
+        );
     crate::transact_write_items!(cli, vec![agg_item]).ok();
 
     Ok(comment.into())

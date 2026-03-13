@@ -5,7 +5,7 @@ pub struct RespondPollRequest {
     pub answers: Vec<Answer>,
 }
 
-#[post("/api/spaces/{space_pk}/polls/{poll_sk}/respond", role: SpaceUserRole, user: crate::features::auth::User)]
+#[post("/api/spaces/{space_pk}/polls/{poll_sk}/respond", role: SpaceUserRole, author: crate::common::models::space::SpaceAuthor)]
 pub async fn respond_poll(
     space_pk: SpacePartition,
     poll_sk: SpacePollEntityType,
@@ -26,7 +26,8 @@ pub async fn respond_poll(
         return Err(Error::BadRequest("Answers do not match questions".into()));
     }
 
-    let existing = SpacePollUserAnswer::find_one(cli, &space_pk, &poll_sk_entity, &user.pk).await?;
+    let existing =
+        SpacePollUserAnswer::find_one(cli, &space_pk, &poll_sk_entity, &author.pk).await?;
 
     if existing.is_none() {
         let answer = SpacePollUserAnswer::new(
@@ -34,7 +35,7 @@ pub async fn respond_poll(
             poll_sk_entity.clone(),
             req.answers,
             None,
-            user,
+            author,
         );
         answer.create(cli).await?;
 
@@ -49,7 +50,7 @@ pub async fn respond_poll(
             );
         crate::transact_write_items!(cli, vec![agg_item]).ok();
     } else if poll.response_editable {
-        let (pk, sk) = SpacePollUserAnswer::keys(&user.pk, &poll_sk_entity, &space_pk);
+        let (pk, sk) = SpacePollUserAnswer::keys(&author.pk, &poll_sk_entity, &space_pk);
         let now = crate::common::utils::time::get_now_timestamp_millis();
         SpacePollUserAnswer::updater(pk, sk)
             .with_answers(req.answers)
