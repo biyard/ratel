@@ -1,4 +1,6 @@
-use crate::features::spaces::pages::actions::*;
+use crate::{
+    features::spaces::pages::actions::*, spaces::pages::actions::actions::quiz::SpaceQuiz,
+};
 #[derive(Debug, Clone, Default, Translate, Serialize, Deserialize, PartialEq)]
 pub enum SpaceActionType {
     #[default]
@@ -15,29 +17,38 @@ pub enum SpaceActionType {
 }
 
 impl SpaceActionType {
-    pub async fn create(&self, space_id: SpacePartition) -> Result<String> {
-        use crate::features::spaces::space_common::types::route::{
-            space_action_discussion, space_action_follow, space_action_poll, space_action_quiz,
-        };
+    pub async fn create(&self, space_id: SpacePartition) -> Result<Route> {
         match self {
             SpaceActionType::Poll => {
                 let response = crate::features::spaces::pages::actions::actions::poll::controllers::create_poll(space_id.clone()).await?;
                 let poll_id = SpacePollEntityType::from(response.sk);
-                Ok(space_action_poll(&space_id, &poll_id))
+                Ok(Route::PollActionPage {
+                    space_id: space_id.clone(),
+                    poll_id: poll_id.clone(),
+                })
             }
             SpaceActionType::TopicDiscussion => {
                 let response = crate::features::spaces::pages::actions::actions::discussion::controllers::create_discussion(space_id.clone()).await?;
                 let discussion_id: SpacePostEntityType = response.sk.try_into().unwrap_or_default();
-                Ok(space_action_discussion(&space_id, &discussion_id))
+                Ok(Route::DiscussionActionPage {
+                    space_id: space_id.clone(),
+                    discussion_id: discussion_id.clone(),
+                })
             }
             SpaceActionType::Follow => {
                 let response = crate::features::spaces::pages::actions::actions::follow::controllers::create_follow(space_id.clone()).await?;
                 let follow_id = SpaceActionFollowEntityType::from(response.sk);
-                Ok(space_action_follow(&space_id, &follow_id))
+                Ok(Route::FollowActionPage {
+                    space_id: space_id.clone(),
+                    follow_id: follow_id.clone(),
+                })
             }
             SpaceActionType::Quiz => {
                 let response = crate::features::spaces::pages::actions::actions::quiz::controllers::create_quiz(space_id.clone()).await?;
-                Ok(space_action_quiz(&space_id, &response.quiz_id))
+                Ok(Route::QuizActionPage {
+                    space_id: space_id.clone(),
+                    quiz_id: response.quiz_id.clone(),
+                })
             }
         }
     }
