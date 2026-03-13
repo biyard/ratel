@@ -17,7 +17,7 @@ impl SpaceContextProvider {
     pub fn init(space_id: ReadSignal<SpacePartition>) -> crate::common::Result<Self, Loading> {
         let role = use_loader(move || async move { get_user_role(space_id()).await })?;
         let space = use_loader(move || async move { get_space(space_id()).await })?;
-        let current_role = use_signal(|| role());
+        let mut current_role = use_signal(|| role());
 
         let srv = Self {
             role,
