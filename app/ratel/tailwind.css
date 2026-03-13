@@ -103,12 +103,15 @@ html[data-theme="light"] {
   /* Text hierarchy */
   --foreground: var(--dark, var(--gray-50)) var(--light, var(--gray-800));
   --foreground-muted: var(--dark, var(--gray-400)) var(--light, var(--gray-600));
-  --foreground-more-muted: var(--dark, var(--gray-600)) var(--light, var(--gray-400));
-  --foreground-inverted: var(--dark, var(--gray-50)) var(--light, var(--gray-700));
+  --foreground-more-muted: var(--dark, var(--gray-600))
+    var(--light, var(--gray-400));
+  --foreground-inverted: var(--dark, var(--gray-50))
+    var(--light, var(--gray-700));
   --popover-foreground: #000203;
   --card-foreground: var(--dark, var(--gray-400)) var(--light, var(--gray-800));
   --card-foreground-muted: var(--gray-600);
-  --card-foreground-more-muted: var(--dark, var(--gray-800)) var(--light, var(--gray-400));
+  --card-foreground-more-muted: var(--dark, var(--gray-800))
+    var(--light, var(--gray-400));
   --card-meta: var(--dark, var(--gray-300)) var(--light, var(--gray-600));
 
   /* Actions and states */
@@ -126,7 +129,8 @@ html[data-theme="light"] {
   --ring: var(--brand-primary);
 
   /* Borders and dividers */
-  --border: var(--dark, var(--ui-gray-80)) var(--light, var(--table-light-border));
+  --border: var(--dark, var(--ui-gray-80))
+    var(--light, var(--table-light-border));
   --border-separator: var(--dark, var(--gray-800)) var(--light, #e5e5e5);
   --border-subtle: var(--dark, #464646) var(--light, var(--gray-700));
 
@@ -137,9 +141,11 @@ html[data-theme="light"] {
   --table-header-fg: var(--dark, #f0f0f0) var(--light, #333333);
   --table-row-bg: var(--dark, #1a1a1a) var(--light, var(--gray-50));
   --table-row-alt-bg: var(--dark, #222222) var(--light, var(--gray-100));
-  --table-row-hover-bg: var(--dark, #222222) var(--light, var(--table-light-hover));
+  --table-row-hover-bg: var(--dark, #222222)
+    var(--light, var(--table-light-hover));
   --table-cell-fg: var(--dark, #e0e0e0) var(--light, #333333);
-  --table-selection-bg: var(--dark, var(--blue-selection)) var(--light, var(--table-light-selection));
+  --table-selection-bg: var(--dark, var(--blue-selection))
+    var(--light, var(--table-light-selection));
 
   /* ================================
      LEGACY TOKENS (Deprecated - for migration only)
@@ -155,7 +161,8 @@ html[data-theme="light"] {
   --color-space-box-bg: var(--dark, #191919) var(--light, #ffffff);
   --color-space-box-border: var(--dark, var(--background)) var(--light, #e5e5e5);
   --color-button-border: var(--dark, #ffffff) var(--light, #e5e5e5);
-  --color-neutral-400: var(--dark, var(--foreground-muted)) var(--light, var(--foreground-more-muted));
+  --color-neutral-400: var(--dark, var(--foreground-muted))
+    var(--light, var(--foreground-more-muted));
   --color-neutral-500: var(--gray-500);
   --color-neutral-600: var(--foreground-more-muted);
   --color-foreground: var(--foreground);
@@ -167,7 +174,8 @@ html[data-theme="light"] {
   --color-secondary: var(--brand-secondary);
   --color-supportive: var(--accent);
   --color-against: var(--accent-pink-light);
-  --color-footer: var(--dark, var(--bg-component-dark)) var(--light, var(--gray-900));
+  --color-footer: var(--dark, var(--bg-component-dark))
+    var(--light, var(--gray-900));
   --color-tag: var(--role-tag-static);
   --color-mission-title: var(--role-mission-static);
   --color-btn-hover: var(--accent-hover);
@@ -175,8 +183,8 @@ html[data-theme="light"] {
   --color-web-bg: var(--gray-950);
   --color-copyright: var(--role-copyright-static);
   --color-input: var(--input);
-  --color-input-bg-regular: var(--dark, #101010) var(--light, #F5F5F5);
-  --color-input-stroke-regular: var(--dark, #525252) var(--light, #A3A3A3);
+  --color-input-bg-regular: var(--dark, #101010) var(--light, #f5f5f5);
+  --color-input-stroke-regular: var(--dark, #525252) var(--light, #a3a3a3);
   --color-ring: var(--ring);
   --color-error: var(--destructive);
 
@@ -241,7 +249,8 @@ html[data-theme="light"] {
   --color-comment-icon-text: var(--dark, #a1a1a1) var(--light, #404040);
   --color-comment-box-bg: var(--dark, #171717) var(--light, #ffffff);
   --color-disabled-button-bg: var(--dark, #404040) var(--light, #d9d9d9);
-  --color-disabled-button-text: var(--dark, #737373) var(--light, var(--gray-600));
+  --color-disabled-button-text: var(--dark, #737373)
+    var(--light, var(--gray-600));
 
   /* Post creation colors */
   --color-post-input-bg: var(--dark, #101010) var(--light, #f5f5f5);
@@ -252,6 +261,27 @@ html[data-theme="light"] {
   --color-post-save-button-disabled-bg: #262626;
   --color-post-save-button-disabled-text: #737373;
 
+  /* Quiz colors */
+  --color-quiz-overview-label: #8c8c8c;
+  --color-quiz-overview-counter: #6b6b6b;
+  --color-quiz-editor-bg: var(--dark, #101010) var(--light, #f5f5f5);
+  --color-quiz-editor-border: var(--dark, #525252) var(--light, #a3a3a3);
+  --color-quiz-editor-toolbar-border: var(--dark, #262626) var(--light, #e5e5e5);
+  --color-quiz-editor-placeholder: var(--dark, #525252) var(--light, #737373);
+  --color-quiz-editor-action: #8c8c8c;
+  --color-quiz-editor-icon: #737373;
+  --color-quiz-section-description: var(--dark, #d4d4d4) var(--light, #262626);
+  --color-quiz-upload-zone-bg: var(--dark, #1a1a1a) var(--light, #fafafa);
+  --color-quiz-upload-zone-border: var(--dark, #404040) var(--light, #e5e5e5);
+  --color-quiz-upload-card-bg: var(--dark, #1a1a1a) var(--light, #fafafa);
+  --color-quiz-upload-card-border: var(--dark, #262626) var(--light, #e5e5e5);
+  --color-quiz-upload-meta: var(--dark, #8c8c8c) var(--light, #525252);
+  --color-quiz-upload-helper: var(--dark, #a3a3a3) var(--light, #525252);
+  --color-quiz-upload-cta-icon: #737373;
+  --color-quiz-upload-cta-text: var(--dark, #0a0a0a) var(--light, #ffffff);
+  --color-quiz-upload-view-bg: var(--dark, #ffffff) var(--light, #404040);
+  --color-quiz-upload-view-text: var(--dark, #0a0a0a) var(--light, #ffffff);
+
   /* Panel colors */
   --color-panel-container-bg: var(--dark, #1a1a1a) var(--light, #fafafa);
   --color-panel-title: var(--dark, #ffffff) var(--light, #171717);
@@ -261,7 +291,8 @@ html[data-theme="light"] {
   /* Dropdown/Select colors */
   --color-dropdown-bg: var(--dark, #1d1d1d) var(--light, #f5f5f5);
   --color-dropdown-item-bg: var(--dark, #101010) var(--light, #f5f5f5);
-  --color-dropdown-item-hover-bg: var(--dark, rgba(0, 0, 0, 0.2)) var(--light, rgba(0, 0, 0, 0.1));
+  --color-dropdown-item-hover-bg: var(--dark, rgba(0, 0, 0, 0.2))
+    var(--light, rgba(0, 0, 0, 0.1));
   --color-dropdown-border: var(--dark, #fcb300) var(--light, #a3a3a3);
   --color-dropdown-text: var(--dark, #ffffff) var(--light, #171717);
   --color-dropdown-text-placeholder: var(--dark, #525252) var(--light, #a3a3a3);
@@ -616,10 +647,12 @@ a {
   --color-btn-secondary-outline: var(--dark, #ffffff) var(--light, #404040);
   --color-btn-secondary-text: var(--dark, #0a0a0a) var(--light, #ffffff);
   --color-btn-secondary-hover-bg: var(--dark, #cccccc) var(--light, #333333);
-  --color-btn-secondary-hover-outline: var(--dark, #cccccc) var(--light, #333333);
+  --color-btn-secondary-hover-outline: var(--dark, #cccccc)
+    var(--light, #333333);
   --color-btn-secondary-hover-text: var(--dark, #0a0a0a) var(--light, #ffffff);
   --color-btn-secondary-disable-bg: var(--dark, #8e8e8e) var(--light, #999999);
-  --color-btn-secondary-disable-outline: var(--dark, #8e8e8e) var(--light, #999999);
+  --color-btn-secondary-disable-outline: var(--dark, #8e8e8e)
+    var(--light, #999999);
   --color-btn-secondary-disable-text: var(--dark, #0a0a0a) var(--light, #ffffff);
 
   /* Outline */
@@ -630,7 +663,8 @@ a {
   --color-btn-outline-hover-outline: var(--dark, #cccccc) var(--light, #a3a3a3);
   --color-btn-outline-hover-text: var(--dark, #ffffff) var(--light, #171717);
   --color-btn-outline-disable-bg: transparent;
-  --color-btn-outline-disable-outline: var(--dark, #8e8e8e) var(--light, #cacaca);
+  --color-btn-outline-disable-outline: var(--dark, #8e8e8e)
+    var(--light, #cacaca);
   --color-btn-outline-disable-text: var(--dark, #8e8e8e) var(--light, #848484);
 }
 
@@ -659,10 +693,11 @@ a {
    ========================================================================== */
 
 @theme static {
-  --color-space-bg: var(--dark, #191919) var(--light, #ffffff);
+  --color-space-bg: var(--dark, #191919) var(--light, #f9f9f9);
   --color-space-body-bg: #1d1d1d;
 
-  --color-space-nav-item-hover: #fcb3000d;
+  --color-space-nav-item-hover: var(--dark, #FCB30005) var(--light, #00000005);
+  --color-space-nav-item-selected: var(--dark, #FCB3000D) var(--light, #0000001A);
 }
 
 /* =============================================================
@@ -754,7 +789,6 @@ h3 {
   --color-badge-red: #ef4444;
 }
 
-
 /* ==========================================================================
    Separator
    ========================================================================== */
@@ -764,13 +798,13 @@ h3 {
 }
 
 .separator {
-  @apply border-t border-tag-stroke
+  @apply border-t border-tag-stroke;
 }
 
 .separator[data-orientation="horizontal"] {
-  @apply w-full h-[1px]
+  @apply w-full h-[1px];
 }
 
 .separator[data-orientation="vertical"] {
-  @apply w-[1px] h-full
+  @apply w-[1px] h-full;
 }

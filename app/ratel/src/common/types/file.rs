@@ -1,6 +1,7 @@
 use crate::common::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub struct File {
     #[serde(default)]
     pub id: String,
@@ -8,9 +9,16 @@ pub struct File {
     pub size: String,
     pub ext: FileExtension,
     pub url: Option<String>,
+    #[serde(default)]
+    pub uploader_name: Option<String>,
+    #[serde(default)]
+    pub uploader_profile_url: Option<String>,
+    #[serde(default)]
+    pub uploaded_at: Option<i64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub enum FileExtension {
     #[default]
     #[serde(alias = "jpg", alias = "jpeg", alias = "JPEG")]

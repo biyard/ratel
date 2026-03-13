@@ -5,6 +5,7 @@ use super::*;
 pub enum UpdateSpaceActionRequest {
     Credits { credits: u64 },
     Time { started_at: i64, ended_at: i64 },
+    Prerequisite { prerequisite: bool },
 }
 
 #[post("/api/spaces/{space_id}/actions/{action_id}", role: SpaceUserRole)]
@@ -40,6 +41,9 @@ pub async fn update_space_action(
                 return Err(Error::BadRequest("Invalid time range".into()));
             }
             updater = updater.with_started_at(started_at).with_ended_at(ended_at);
+        }
+        UpdateSpaceActionRequest::Prerequisite { prerequisite } => {
+            updater = updater.with_prerequisite(prerequisite);
         }
     }
 

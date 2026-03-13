@@ -1,6 +1,6 @@
+use crate::common::components::FileUploader;
 use crate::features::spaces::pages::apps::apps::file::i18n::SpaceFileTranslate;
 use crate::features::spaces::pages::apps::apps::file::*;
-use crate::common::components::FileUploader;
 
 fn guess_extension_from_url(url: &str) -> FileExtension {
     let path = url.split('?').next().unwrap_or(url);
@@ -41,6 +41,9 @@ pub fn FileUploadZone(on_upload: EventHandler<File>) -> Element {
                     size: String::new(),
                     ext: guess_extension_from_url(&url),
                     url: Some(url),
+                    uploader_name: None,
+                    uploader_profile_url: None,
+                    uploaded_at: None,
                 };
                 on_upload.call(file);
             },

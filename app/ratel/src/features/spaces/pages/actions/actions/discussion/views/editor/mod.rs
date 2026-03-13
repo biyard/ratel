@@ -1,5 +1,4 @@
 use super::*;
-use crate::features::spaces::space_common::types::space_page_actions_discussion_key;
 
 #[component]
 pub fn DiscussionActionEditorPage(
@@ -7,14 +6,9 @@ pub fn DiscussionActionEditorPage(
     discussion_id: SpacePostEntityType,
 ) -> Element {
     let nav = navigator();
-    let key = space_page_actions_discussion_key(&space_id, &discussion_id);
-    let discussion_loader = use_query(&key, {
-        let space_id = space_id.clone();
-        let discussion_id = discussion_id.clone();
-        move || get_discussion(space_id.clone(), discussion_id.clone())
-    })?;
+    let ctx = use_discussion_context();
 
-    let discussion = discussion_loader.read().clone();
+    let discussion = ctx.discussion().post;
     let mut title = use_signal(|| discussion.title.clone());
     let mut html_contents = use_signal(|| discussion.html_contents.clone());
     let mut category_name = use_signal(|| discussion.category_name.clone());

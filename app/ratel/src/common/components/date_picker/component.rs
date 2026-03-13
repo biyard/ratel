@@ -82,20 +82,26 @@ impl Timezone {
     pub fn from_iana(iana: &str) -> Option<Self> {
         match iana {
             // Pacific (UTC-8)
-            "America/Los_Angeles" | "America/Vancouver" | "America/Tijuana"
-            | "US/Pacific" | "PST8PDT" => Some(Timezone::Pacific),
+            "America/Los_Angeles"
+            | "America/Vancouver"
+            | "America/Tijuana"
+            | "US/Pacific"
+            | "PST8PDT" => Some(Timezone::Pacific),
 
             // Mountain (UTC-7)
-            "America/Denver" | "America/Edmonton" | "America/Phoenix"
-            | "US/Mountain" | "MST7MDT" => Some(Timezone::Mountain),
+            "America/Denver" | "America/Edmonton" | "America/Phoenix" | "US/Mountain"
+            | "MST7MDT" => Some(Timezone::Mountain),
 
             // Central (UTC-6)
-            "America/Chicago" | "America/Winnipeg" | "America/Mexico_City"
-            | "US/Central" | "CST6CDT" => Some(Timezone::Central),
+            "America/Chicago"
+            | "America/Winnipeg"
+            | "America/Mexico_City"
+            | "US/Central"
+            | "CST6CDT" => Some(Timezone::Central),
 
             // Eastern (UTC-5)
-            "America/New_York" | "America/Toronto" | "America/Detroit"
-            | "US/Eastern" | "EST5EDT" => Some(Timezone::Eastern),
+            "America/New_York" | "America/Toronto" | "America/Detroit" | "US/Eastern"
+            | "EST5EDT" => Some(Timezone::Eastern),
 
             // UTC (UTC+0)
             "UTC" | "Etc/UTC" | "Etc/GMT" | "GMT" => Some(Timezone::Utc),
@@ -105,14 +111,13 @@ impl Timezone {
 
             // Paris (UTC+1)
             "Europe/Paris" | "Europe/Berlin" | "Europe/Rome" | "Europe/Madrid"
-            | "Europe/Amsterdam" | "Europe/Brussels" | "Europe/Vienna"
-            | "Europe/Zurich" | "Europe/Stockholm" | "Europe/Oslo"
-            | "Europe/Copenhagen" | "Europe/Warsaw" | "Europe/Prague"
-            | "Europe/Budapest" | "CET" => Some(Timezone::Paris),
+            | "Europe/Amsterdam" | "Europe/Brussels" | "Europe/Vienna" | "Europe/Zurich"
+            | "Europe/Stockholm" | "Europe/Oslo" | "Europe/Copenhagen" | "Europe/Warsaw"
+            | "Europe/Prague" | "Europe/Budapest" | "CET" => Some(Timezone::Paris),
 
             // Istanbul (UTC+3)
-            "Europe/Istanbul" | "Europe/Moscow" | "Europe/Minsk"
-            | "Asia/Riyadh" | "Asia/Baghdad" | "Africa/Nairobi" => Some(Timezone::Istanbul),
+            "Europe/Istanbul" | "Europe/Moscow" | "Europe/Minsk" | "Asia/Riyadh"
+            | "Asia/Baghdad" | "Africa/Nairobi" => Some(Timezone::Istanbul),
 
             // Dubai (UTC+4)
             "Asia/Dubai" | "Asia/Muscat" | "Asia/Tbilisi" | "Asia/Baku" => Some(Timezone::Dubai),
@@ -121,20 +126,26 @@ impl Timezone {
             "Asia/Kolkata" | "Asia/Calcutta" | "Asia/Colombo" => Some(Timezone::Kolkata),
 
             // Bangkok (UTC+7)
-            "Asia/Bangkok" | "Asia/Jakarta" | "Asia/Ho_Chi_Minh"
-            | "Asia/Saigon" => Some(Timezone::Bangkok),
+            "Asia/Bangkok" | "Asia/Jakarta" | "Asia/Ho_Chi_Minh" | "Asia/Saigon" => {
+                Some(Timezone::Bangkok)
+            }
 
             // Shanghai (UTC+8)
-            "Asia/Shanghai" | "Asia/Hong_Kong" | "Asia/Taipei"
-            | "Asia/Singapore" | "Asia/Kuala_Lumpur" | "Asia/Makassar"
-            | "Asia/Manila" | "PRC" => Some(Timezone::Shanghai),
+            "Asia/Shanghai" | "Asia/Hong_Kong" | "Asia/Taipei" | "Asia/Singapore"
+            | "Asia/Kuala_Lumpur" | "Asia/Makassar" | "Asia/Manila" | "PRC" => {
+                Some(Timezone::Shanghai)
+            }
 
             // Seoul (UTC+9)
             "Asia/Seoul" | "Asia/Tokyo" | "Japan" | "ROK" => Some(Timezone::Seoul),
 
             // Sydney (UTC+10/+11)
-            "Australia/Sydney" | "Australia/Melbourne" | "Australia/Brisbane"
-            | "Australia/Hobart" | "Pacific/Auckland" | "Pacific/Fiji" => Some(Timezone::Sydney),
+            "Australia/Sydney"
+            | "Australia/Melbourne"
+            | "Australia/Brisbane"
+            | "Australia/Hobart"
+            | "Pacific/Auckland"
+            | "Pacific/Fiji" => Some(Timezone::Sydney),
 
             _ => None,
         }
@@ -178,8 +189,9 @@ pub fn TimezonePicker(#[props(default)] on_change: EventHandler<Timezone>) -> El
     });
 
     rsx! {
-        div { class: "timezone-picker",
+        div { class: "timezone-picker @max-sm:w-full",
             Select::<Option<Timezone>> {
+                class: "@max-sm:w-full",
                 placeholder: "Timezone",
                 default_value: Some(local_tz),
                 on_value_change: move |v: Option<Option<Timezone>>| {
@@ -187,7 +199,12 @@ pub fn TimezonePicker(#[props(default)] on_change: EventHandler<Timezone>) -> El
                         on_change.call(tz);
                     }
                 },
-                SelectTrigger { aria_label: "Select Timezone", min_width: "7rem", SelectValue {} }
+                SelectTrigger {
+                    class: "@max-sm:w-full",
+                    aria_label: "Select Timezone",
+                    min_width: "7rem",
+                    SelectValue {}
+                }
                 SelectList { aria_label: "Timezone",
                     SelectGroup { {options} }
                 }
@@ -207,9 +224,7 @@ pub struct DateTimeRange {
 }
 
 #[component]
-pub fn DateAndTimePicker(
-    #[props(default)] on_change: EventHandler<DateTimeRange>,
-) -> Element {
+pub fn DateAndTimePicker(#[props(default)] on_change: EventHandler<DateTimeRange>) -> Element {
     let now = OffsetDateTime::now_utc();
     let next_hour = (now.hour() + 1) % 24;
     let today = now.date();
@@ -235,45 +250,50 @@ pub fn DateAndTimePicker(
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
-        div { class: "flex flex-row gap-4 items-center w-full",
-            DatePicker {
-                selected_date: selected_start_date(),
-                on_value_change: move |v| {
-                    selected_start_date.set(v);
-                    emit();
-                },
-                DatePickerInput { date: selected_start_date().and_then(|d| d.format(&format).ok()).unwrap_or_default() }
-            }
-            TimePicker {
-                hour: next_hour,
-                on_change: move |(h, m)| {
-                    start_hour.set(h);
-                    start_minute.set(m);
-                    emit();
-                },
-            }
+        div { class: "flex items-center w-full @container",
+            div { class: "flex flex-row gap-4 items-center w-full @max-sm:flex-col",
+                div { class: "flex flex-row flex-1 gap-4 items-center min-w-0 @max-sm:flex-col @max-sm:w-full",
+                    DatePicker {
+                        selected_date: selected_start_date(),
+                        on_value_change: move |v| {
+                            selected_start_date.set(v);
+                            emit();
+                        },
+                        DatePickerInput { date: selected_start_date().and_then(|d| d.format(&format).ok()).unwrap_or_default() }
+                    }
+                    TimePicker {
+                        hour: next_hour,
+                        on_change: move |(h, m)| {
+                            start_hour.set(h);
+                            start_minute.set(m);
+                            emit();
+                        },
+                    }
+                }
 
-            div { class: "h-[0.5px] w-[15px] bg-text-secondary" }
+                div { class: "h-[0.5px] w-[15px] bg-text-secondary max-tablet:hidden" }
 
-            DatePicker {
-                selected_date: selected_end_date(),
-                on_value_change: move |v| {
-                    selected_end_date.set(v);
-                    emit();
-                },
-                DatePickerInput { date: selected_end_date().and_then(|d| d.format(&format).ok()).unwrap_or_default() }
+                div { class: "flex flex-row flex-1 gap-4 items-center min-w-0 @max-sm:flex-col @max-sm:w-full",
+                    DatePicker {
+                        selected_date: selected_end_date(),
+                        on_value_change: move |v| {
+                            selected_end_date.set(v);
+                            emit();
+                        },
+                        DatePickerInput { date: selected_end_date().and_then(|d| d.format(&format).ok()).unwrap_or_default() }
+                    }
+                    TimePicker {
+                        hour: next_hour,
+                        on_change: move |(h, m)| {
+                            end_hour.set(h);
+                            end_minute.set(m);
+                            emit();
+                        },
+                    }
+                }
+
+                TimezonePicker {}
             }
-
-            TimePicker {
-                hour: next_hour,
-                on_change: move |(h, m)| {
-                    end_hour.set(h);
-                    end_minute.set(m);
-                    emit();
-                },
-            }
-
-            TimezonePicker {}
         }
     }
 }
@@ -281,7 +301,7 @@ pub fn DateAndTimePicker(
 #[component]
 pub fn DatePicker(props: DatePickerProps) -> Element {
     rsx! {
-        div { class: "flex-1 min-w-0",
+        div { class: "flex flex-1 min-w-0 @max-sm:w-full",
             date_picker::DatePicker {
                 class: "flex-1 w-full date-picker",
                 on_value_change: props.on_value_change,
@@ -294,7 +314,11 @@ pub fn DatePicker(props: DatePickerProps) -> Element {
                 disabled_ranges: props.disabled_ranges,
                 roving_loop: props.roving_loop,
                 attributes: props.attributes,
-                date_picker::DatePickerPopover { class: "flex w-full", popover_root: PopoverRoot, {props.children} }
+                date_picker::DatePickerPopover {
+                    class: "flex flex-1 w-full grow",
+                    popover_root: PopoverRoot,
+                    {props.children}
+                }
             }
         }
     }
@@ -326,9 +350,9 @@ pub fn DateRangePicker(props: DateRangePickerProps) -> Element {
 pub fn DatePickerInput(#[props(default)] date: String) -> Element {
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
-        div { class: "flex-1 date-picker-group",
+        div { class: "flex-1 w-full grow date-picker-group @max-sm:w-full",
             DatePickerPopoverTrigger {
-                div { class: "flex flex-row justify-between items-center w-full min-w-0 h-8 rounded-[8px]",
+                div { class: "flex flex-row justify-between items-center w-full min-w-0 h-8 rounded-[8px] @max-sm:w-full",
                     span { class: "grow", {date} }
 
                     icons::calendar::CalendarToday {

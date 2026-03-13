@@ -49,7 +49,7 @@ RUST_FLAG ?=
 test:
 	mkdir -p ./test-build-target/debug/deps/public
 	npx @tailwindcss/cli -i tailwind.css -o ./assets/tailwind.css
-	$(BUILD_ENV) CARGO_TARGET_DIR=./test-build-target cargo test --features server,bypass
+	$(BUILD_ENV) CARGO_TARGET_DIR=./test-build-target cargo test --features server,bypass --tests
 
 run:
 	$(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web
