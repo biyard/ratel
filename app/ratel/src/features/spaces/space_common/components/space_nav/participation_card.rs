@@ -17,8 +17,6 @@ pub fn ParticipationCard(
     let tr: ParticipationCardTranslate = use_translate();
     let mut layover = use_layover();
     let navigator = use_navigator();
-    let mut participate =
-        use_action(crate::features::spaces::controllers::participate_space::participate_space);
     let mut space = ctx.space;
     let mut role = ctx.role;
     let mut current_role = ctx.current_role;
@@ -78,12 +76,16 @@ pub fn ParticipationCard(
                 space_id.to_string(),
                 "PanelRequirements".to_string(),
             ];
-            current_role.set(SpaceUserRole::Participant);
-            participate.call(space_id).await;
-            query.invalidate(&space_detail);
-            query.invalidate(&panel_requirements_key);
-            space.restart();
-            role.restart();
+            if crate::features::spaces::controllers::participate_space::participate_space(space_id)
+                .await
+                .is_ok()
+            {
+                current_role.set(SpaceUserRole::Participant);
+                query.invalidate(&space_detail);
+                query.invalidate(&panel_requirements_key);
+                space.restart();
+                role.restart();
+            }
         });
     };
 
