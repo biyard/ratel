@@ -17,12 +17,6 @@ jobs:
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
-      # - name: Download Main Api
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     name: app-shell-${{ github.sha }}
-      #     path: ./cdk/app-shell
-
       - name: Download Survey Fetcher Lambda
         uses: actions/download-artifact@v4
         with:
