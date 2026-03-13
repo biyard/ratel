@@ -1,4 +1,4 @@
-#![allow(warnings)]
+use crate::*;
 use dioxus::fullstack::{Loading, Transportable};
 use serde::de::DeserializeOwned;
 
@@ -151,6 +151,7 @@ where
 }
 
 /// Usage:
+/// ``rust,no_run
 /// #[component]
 /// fn Follows() -> Element {
 ///     let mut followers_query = use_infinite_query(move |bookmark| list_followers(bookmark))?;
@@ -169,6 +170,7 @@ where
 ///         }
 ///     }
 /// }
+/// ```
 pub fn use_infinite_query<Bookmark, I, T, F>(
     mut future: impl FnMut(Option<Bookmark>) -> F + 'static + Clone + Copy,
 ) -> dioxus::prelude::Result<InfiniteQuery<Bookmark, I, T>, RenderError>
