@@ -1,4 +1,4 @@
-When Performing a code review, respond in a language used by PR description.
+When Performing a code review, respond in Korean or English. If a PR is written by Korean, respond in Korean, otherwise English.
 
 When performing a code review,
 * Find out the anti-pattern in the `/docs/troubleshooting.md` file.

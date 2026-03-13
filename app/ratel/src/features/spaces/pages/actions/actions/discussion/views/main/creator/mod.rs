@@ -11,12 +11,12 @@ pub fn CreatorMain(
     discussion_id: ReadSignal<SpacePostEntityType>,
 ) -> Element {
     let tr: DiscussionCreatorTranslate = use_translate();
-    let ctx = Context::init(space_id, discussion_id)?;
+    let ctx = use_discussion_context();
 
     rsx! {
-        div { class: "flex min-h-0 w-full flex-1 flex-col gap-4",
+        div { class: "flex flex-col flex-1 gap-4 w-full min-h-0",
             h3 { {tr.page_title} }
-            Tabs { class: "min-h-0 flex-1", default_value: "overview-tab",
+            Tabs { class: "flex-1 min-h-0", default_value: "overview-tab",
                 TabList {
                     TabTrigger { index: 0usize, value: "overview-tab", {tr.tab_overview} }
                     TabTrigger { index: 1usize, value: "setting-tab", {tr.tab_setting} }
@@ -24,7 +24,7 @@ pub fn CreatorMain(
                 TabContent {
                     index: 0usize,
                     value: "overview-tab",
-                    class: "flex min-h-0 flex-1",
+                    class: "flex flex-1 min-h-0",
                     OverviewTab {}
                 }
                 TabContent { index: 1usize, value: "setting-tab",
@@ -53,11 +53,7 @@ pub fn CreatorMain(
                                     started_at: Some(started_at),
                                     ended_at: Some(ended_at),
                                 };
-                                let _ = update_discussion(
-                                    space_id,
-                                    discussion_id,
-                                    req,
-                                ).await;
+                                let _ = update_discussion(space_id, discussion_id, req).await;
                             }
                         },
                     }
