@@ -7,7 +7,6 @@ use crate::common::{
     *,
 };
 
-#[derive(Clone)]
 pub struct InfiniteQuery<Bookmark, I, T>
 where
     Bookmark: 'static,
@@ -22,6 +21,27 @@ where
     effect: Effect,
     loading: Signal<bool>,
     key: u64,
+}
+
+// Manual Clone/Copy impls: all fields (Signal, Memo, Resource, Effect, u64) are
+// Clone+Copy regardless of type parameters. Derive would add overly restrictive bounds.
+impl<Bookmark, I, T> Clone for InfiniteQuery<Bookmark, I, T>
+where
+    Bookmark: 'static,
+    I: 'static,
+    T: 'static + Clone,
+{
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<Bookmark, I, T> Copy for InfiniteQuery<Bookmark, I, T>
+where
+    Bookmark: 'static,
+    I: 'static,
+    T: 'static + Clone,
+{
 }
 
 impl<Bookmark, I, T> InfiniteQuery<Bookmark, I, T>
@@ -41,6 +61,11 @@ where
 
     pub fn items(&self) -> Vec<I> {
         self.accumulated.read().clone()
+    }
+
+    pub fn insert(&mut self, items: I) {
+        let mut new_items = vec![items];
+        new_items.extend(self.accumulated.read().clone());
     }
 
     pub fn restart(&mut self) {
@@ -125,6 +150,25 @@ where
     }
 }
 
+/// Usage:
+/// #[component]
+/// fn Follows() -> Element {
+///     let mut followers_query = use_infinite_query(move |bookmark| list_followers(bookmark))?;
+///     let followers_loading = followers_query.is_loading();
+///     let followers = followers_query.items();
+///     let followers_more = followers_query.more_element();
+///
+///     rsx! {
+///         FollowList {
+///             users: followers,
+///             selected: FollowTab::Followers,
+///             loading: followers_loading,
+///             on_follow,
+///             on_unfollow,
+///             more_element: followers_more,
+///         }
+///     }
+/// }
 pub fn use_infinite_query<Bookmark, I, T, F>(
     mut future: impl FnMut(Option<Bookmark>) -> F + 'static + Clone + Copy,
 ) -> dioxus::prelude::Result<InfiniteQuery<Bookmark, I, T>, RenderError>
