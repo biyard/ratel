@@ -6,6 +6,15 @@ mod i18n;
 use app_card::AppCard;
 
 use i18n::AppMainTranslate;
+
+fn app_test_id(app_type: SpaceAppType, action: &str) -> &'static str {
+    match (app_type, action) {
+        (SpaceAppType::Panels, "install") => "install-panels-app",
+        (SpaceAppType::Panels, "setting") => "setting-panels-app",
+        _ => "",
+    }
+}
+
 #[component]
 pub fn SpaceAppGrid(children: Element) -> Element {
     rsx! {
@@ -104,6 +113,7 @@ pub fn SpaceAppsPage(space_id: ReadSignal<SpacePartition>) -> Element {
                                             style: ButtonStyle::Primary,
                                             shape: ButtonShape::Square,
                                             disabled: is_progress,
+                                            "data-testid": app_test_id(app_type, "setting"),
                                             onclick: move |_| {
                                                 let settings_path = app_type.settings_path(space_id());
                                                 navigator.push(settings_path);
@@ -138,6 +148,7 @@ pub fn SpaceAppsPage(space_id: ReadSignal<SpacePartition>) -> Element {
                                                 style: ButtonStyle::Primary,
                                                 shape: ButtonShape::Square,
                                                 disabled: in_progress().is_some(),
+                                                "data-testid": app_test_id(app_type, "install"),
                                                 onclick: move |_| handle_toggle_app(app_type, false),
                                                 if is_progress {
                                                     {tr.installing}

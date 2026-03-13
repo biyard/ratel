@@ -19,6 +19,8 @@ pub fn ParticipationCard(
     let mut participate =
         use_action(crate::features::spaces::controllers::participate_space::participate_space);
     let mut space = ctx.space;
+    let mut role = ctx.role;
+    let mut current_role = ctx.current_role;
     let panel_requirements_query_key = vec![
         "Space".to_string(),
         space_id.to_string(),
@@ -76,19 +78,21 @@ pub fn ParticipationCard(
                 "PanelRequirements".to_string(),
             ];
             participate.call(space_id).await;
+            current_role.set(SpaceUserRole::Participant);
             invalidate_query(&space_detail);
             invalidate_query(&panel_requirements_key);
             space.restart();
+            role.restart();
         });
     };
 
-    let handle_open_credentials = move |_| {
-        if let Some(path) = &credential_button_path {
-            navigator.push(path.clone());
-        } else {
-            login_for_credentials.call(());
-        }
-    };
+    // let handle_open_credentials = move |_| {
+    //     if let Some(path) = &credential_button_path {
+    //         navigator.push(path.clone());
+    //     } else {
+    //         login_for_credentials.call(());
+    //     }
+    // };
 
     rsx! {
         div { class: "px-4 w-full",
@@ -124,13 +128,13 @@ pub fn ParticipationCard(
                         onclick: handle_participate,
                         {tr.participate}
                     }
-                    Button {
-                        class: "w-full",
-                        style: ButtonStyle::Outline,
-                        size: ButtonSize::Small,
-                        onclick: handle_open_credentials,
-                        {tr.see_my_credential}
-                    }
+                                // Button {
+                //     class: "w-full",
+                //     style: ButtonStyle::Outline,
+                //     size: ButtonSize::Small,
+                //     onclick: handle_open_credentials,
+                //     {tr.see_my_credential}
+                // }
                 }
             }
         }
