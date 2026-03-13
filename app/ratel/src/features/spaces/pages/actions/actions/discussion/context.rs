@@ -1,6 +1,4 @@
 use super::*;
-use crate::features::spaces::space_common::types::space_page_actions_discussion_key;
-
 #[derive(Clone, Copy, DioxusController)]
 pub struct Context {
     pub discussion: Loader<DiscussionResponse>,
@@ -17,9 +15,8 @@ impl Context {
         space_id: ReadSignal<SpacePartition>,
         discussion_id: ReadSignal<SpacePostEntityType>,
     ) -> Result<Self, Loading> {
-        let key = space_page_actions_discussion_key(&space_id(), &discussion_id());
-        let discussion = use_query(&key, {
-            move || get_discussion_detail(space_id(), discussion_id())
+        let discussion = use_loader(move || async move {
+            get_discussion_detail(space_id(), discussion_id()).await
         })?;
 
         let srv = Self {

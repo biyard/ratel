@@ -1,3 +1,4 @@
+use crate::common::types::ListResponse;
 use crate::features::auth::OptionalUser;
 
 use crate::features::spaces::pages::actions::actions::discussion::*;
@@ -8,7 +9,7 @@ pub async fn list_comments(
     space_id: SpacePartition,
     discussion_sk: SpacePostEntityType,
     bookmark: Option<String>,
-) -> Result<Vec<DiscussionCommentResponse>> {
+) -> Result<ListResponse<DiscussionCommentResponse>> {
     SpacePost::can_view(&role)?;
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
@@ -27,7 +28,7 @@ pub async fn list_comments(
     }
 
     let space_post_pk_p: Partition = space_post_pk.clone().into();
-    let (comments, _next_bookmark) =
+    let (comments, next_bookmark) =
         SpacePostComment::find_by_post_order_by_likes(cli, space_post_pk_p.clone(), opt).await?;
     let comments: Vec<_> = comments
         .into_iter()
@@ -64,5 +65,8 @@ pub async fn list_comments(
         })
         .collect();
 
-    Ok(responses)
+    Ok(ListResponse {
+        items: responses,
+        bookmark: next_bookmark,
+    })
 }

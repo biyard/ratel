@@ -241,6 +241,29 @@ fn SubjectiveQuestionViewer(
         _ => String::new(),
     };
 
+    let mut draft = use_signal(|| current_value.clone());
+    let mut synced_value = use_signal(|| current_value.clone());
+
+    use_effect(use_reactive((&current_value,), move |(current_value,)| {
+        let next = current_value.clone();
+        if synced_value() != next {
+            synced_value.set(next.clone());
+            draft.set(next);
+        }
+    }));
+
+    let on_change_answer = move |value: String| {
+        if is_short {
+            on_change.call(Answer::ShortAnswer {
+                answer: Some(value),
+            });
+        } else {
+            on_change.call(Answer::Subjective {
+                answer: Some(value),
+            });
+        }
+    };
+
     rsx! {
         QuestionTitle {
             title: question.title.clone(),
@@ -248,35 +271,26 @@ fn SubjectiveQuestionViewer(
             is_required: question.is_required,
         }
         if is_short {
-            input {
+            crate::common::components::Input {
+                variant: crate::common::components::InputVariant::Plain,
                 class: "w-full p-3 rounded-lg border border-neutral-700 bg-transparent text-white placeholder-neutral-500 focus:border-blue-500 outline-none light:border-input-box-border light:text-text-primary light:placeholder:text-text-secondary",
-                r#type: "text",
                 disabled,
-                value: "{current_value}",
-                oninput: move |evt| {
-                    if is_short {
-                        on_change
-                            .call(Answer::ShortAnswer {
-                                answer: Some(evt.value().to_string()),
-                            });
-                    } else {
-                        on_change
-                            .call(Answer::Subjective {
-                                answer: Some(evt.value().to_string()),
-                            });
-                    }
+                value: "{draft()}",
+                oninput: move |evt: Event<FormData>| {
+                    let next = evt.value().to_string();
+                    draft.set(next.clone());
+                    on_change_answer(next);
                 },
             }
         } else {
             textarea {
                 class: "w-full p-3 rounded-lg border border-neutral-700 bg-transparent text-white placeholder-neutral-500 focus:border-blue-500 outline-none min-h-[100px] light:border-input-box-border light:text-text-primary light:placeholder:text-text-secondary",
                 disabled,
-                value: "{current_value}",
-                oninput: move |evt| {
-                    on_change
-                        .call(Answer::Subjective {
-                            answer: Some(evt.value().to_string()),
-                        });
+                value: "{draft()}",
+                oninput: move |evt: Event<FormData>| {
+                    let next = evt.value().to_string();
+                    draft.set(next.clone());
+                    on_change_answer(next);
                 },
             }
         }
