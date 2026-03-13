@@ -2,14 +2,9 @@
 use crate::common::{
     controllers::AssetPresignedUris, wasm_bindgen, wasm_bindgen_futures, web_sys, Error,
 };
-#[cfg(feature = "web")]
+use crate::*;
 use dioxus::html::FileData;
-#[cfg(feature = "web")]
 use dioxus::html::HasFileData;
-use dioxus::prelude::*;
-
-#[cfg(feature = "web")]
-type UploadResult<T> = crate::common::Result<T>;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct UploadedFileMeta {
@@ -33,7 +28,6 @@ pub fn FileUploader(
         "cursor-pointer".to_string()
     };
 
-    #[cfg(feature = "web")]
     let start_upload = {
         let accept = accept.clone();
         let on_upload_success = on_upload_success.clone();
@@ -46,13 +40,12 @@ pub fn FileUploader(
                 if let Err(err) =
                     upload_via_presigned(&accept, file, on_upload_success, on_upload_meta).await
                 {
-                    web_log_error(&err.to_string());
+                    error!("FileUploader: {}", &err.to_string());
                 }
             });
         }
     };
 
-    #[cfg(feature = "web")]
     let on_change = {
         let start_upload = start_upload.clone();
         move |evt: FormEvent| {
@@ -63,10 +56,6 @@ pub fn FileUploader(
         }
     };
 
-    #[cfg(not(feature = "web"))]
-    let on_change = |_evt: FormEvent| {};
-
-    #[cfg(feature = "web")]
     let on_drop = {
         let start_upload = start_upload.clone();
         move |evt: DragEvent| {
@@ -77,9 +66,6 @@ pub fn FileUploader(
             start_upload(file);
         }
     };
-
-    #[cfg(not(feature = "web"))]
-    let on_drop = |_evt: DragEvent| {};
 
     let on_drag_over = move |evt: DragEvent| {
         evt.prevent_default();
@@ -101,13 +87,23 @@ pub fn FileUploader(
     }
 }
 
+#[cfg(not(feature = "web"))]
+async fn upload_via_presigned(
+    _accept: &str,
+    _file: FileData,
+    _on_upload_success: EventHandler<String>,
+    _on_upload_meta: Option<EventHandler<UploadedFileMeta>>,
+) -> Result<()> {
+    Ok(())
+}
+
 #[cfg(feature = "web")]
 async fn upload_via_presigned(
-    accept: &str,
+    _accept: &str,
     file: FileData,
     on_upload_success: EventHandler<String>,
     on_upload_meta: Option<EventHandler<UploadedFileMeta>>,
-) -> UploadResult<()> {
+) -> Result<()> {
     use dioxus::web::WebFileExt;
     use wasm_bindgen::JsCast;
 
@@ -116,9 +112,10 @@ async fn upload_via_presigned(
         return Err(Error::NotFound("Failed to get web file".to_string()));
     };
 
-    if !is_allowed_file(accept, &file) {
-        return Err(Error::NotSupported("Not supported files.".to_string()));
-    }
+    // FIXME: use mimetype_detector
+    // if !is_allowed_file(accept, &file) {
+    //     return Err(Error::NotSupported("Not supported files.".to_string()));
+    // }
 
     if web_file.size() > 100_f64 * 1024_f64 * 1024_f64 {
         return Err(Error::NotSupported(
@@ -181,15 +178,15 @@ async fn upload_via_presigned(
     Ok(())
 }
 
-#[cfg(feature = "web")]
-fn is_allowed_file(accept: &str, file: &FileData) -> bool {
-    let name = file.name().to_lowercase();
-    let ext = name.rsplit('.').next().unwrap_or("");
-    accept
-        .split(',')
-        .map(|item| item.trim().trim_start_matches('.').to_lowercase())
-        .any(|allowed| !allowed.is_empty() && allowed == ext)
-}
+// #[cfg(feature = "web")]
+// fn is_allowed_file(accept: &str, file: &FileData) -> bool {
+//     let name = file.name().to_lowercase();
+//     let ext = name.rsplit('.').next().unwrap_or("");
+//     accept
+//         .split(',')
+//         .map(|item| item.trim().trim_start_matches('.').to_lowercase())
+//         .any(|allowed| !allowed.is_empty() && allowed == ext)
+// }
 
 #[cfg(feature = "web")]
 fn format_file_size(size_bytes: f64) -> String {
@@ -203,7 +200,7 @@ fn format_file_size(size_bytes: f64) -> String {
 }
 
 #[cfg(feature = "web")]
-async fn request_presigned_url(file_type: &str) -> UploadResult<AssetPresignedUris> {
+async fn request_presigned_url(file_type: &str) -> Result<AssetPresignedUris> {
     crate::common::controllers::get_put_object_uri(Some(1), Some(file_type.to_string())).await
 }
 
