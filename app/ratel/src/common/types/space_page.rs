@@ -12,4 +12,6 @@ pub enum SpacePage {
     Apps,
     #[translate(ko = "보고서")]
     Report,
+    #[translate(ko = "보상")]
+    Rewards,
 }

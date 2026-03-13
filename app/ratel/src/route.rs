@@ -14,6 +14,10 @@ use crate::features::spaces::pages::report::SpaceReportPage;
 #[cfg(feature = "spaces")]
 use crate::features::spaces::SpaceLayout;
 
+// Space Rewards
+#[cfg(feature = "spaces")]
+use crate::features::spaces::pages::apps::apps::rewards::views::HomePage as SpaceRewardsHomePage;
+
 // Space Apps
 #[cfg(feature = "spaces")]
 use crate::features::spaces::pages::apps::apps::file::SpaceFileAppPage;
@@ -97,6 +101,10 @@ pub enum Route {
                 #[cfg_attr(feature="spaces", route("/report"))]
                 #[cfg(feature = "spaces")]
                 SpaceReportPage { space_id: SpacePartition },
+
+                #[cfg_attr(feature="spaces", route("/rewards"))]
+                #[cfg(feature = "spaces")]
+                SpaceRewardsPage { space_id: SpacePartition },
 
                 #[cfg_attr(feature="spaces", nest("/actions"))]
                     #[cfg_attr(feature="spaces", route("/"))]
@@ -250,5 +258,13 @@ pub fn SpacePanelsAppPage(space_id: SpacePartition) -> Element {
 pub fn SpaceAppIncentivePoolPage(space_id: SpacePartition) -> Element {
     rsx! {
         crate::features::spaces::pages::apps::apps::incentive_pool::SpaceIncentivePoolAppPage { space_id }
+    }
+}
+
+#[cfg(feature = "spaces")]
+#[component]
+pub fn SpaceRewardsPage(space_id: SpacePartition) -> Element {
+    rsx! {
+        SpaceRewardsHomePage { space_id }
     }
 }
