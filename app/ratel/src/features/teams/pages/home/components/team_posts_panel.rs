@@ -58,10 +58,6 @@ pub fn TeamPostsPanel(teamname: String, view_mode: HomeViewMode, selected_catego
 
             if v.has_more() {
                 {v.more_element()}
-            } else {
-                div { class: "py-8 text-center text-foreground-muted text-sm",
-                    "No more posts"
-                }
             }
         }
     }

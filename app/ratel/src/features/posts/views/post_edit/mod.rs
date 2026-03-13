@@ -181,6 +181,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                     image_urls: None,
                     publish: true,
                     visibility: Some(visibility),
+                    category: Some(category()).filter(|s| !s.is_empty()),
                 },
             )
             .await
@@ -214,6 +215,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                     image_urls: None,
                     publish: false,
                     visibility: None,
+                    category: Some(category()).filter(|s| !s.is_empty()),
                 },
             )
             .await;
