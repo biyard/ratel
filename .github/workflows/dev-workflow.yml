@@ -171,7 +171,6 @@ jobs:
           DYNAMO_TABLE_PREFIX: ratel-dev
           DYNAMO_ENDPOINT: none
           # RUST_FLAG: "--features lambda --release"
-          WEB_BUILD: false
           ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
 
           FCM_ENABLED: true
