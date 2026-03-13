@@ -84,15 +84,11 @@ fn NavItem(item: SpaceNavItem) -> Element {
         NavigationTarget::Internal(route) => current_path.starts_with(&route.to_string()),
         _ => false,
     };
-    let selected = if is_active {
-        "bg-space-nav-item-hover"
-    } else {
-        ""
-    };
     // NOTE: Link component does not support class attribute merging.
     rsx! {
         Link {
-            class: "flex flex-row gap-2 items-center py-2 px-1 w-full text-sm font-medium rounded-sm text-text {selected} hover:bg-space-nav-item-hover",
+            class: "flex flex-row gap-2 items-center py-2 px-1 w-full text-sm font-medium rounded-sm text-text aria-selected:bg-space-nav-item-selected hover:bg-space-nav-item-hover",
+            "aria-selected": is_active,
             to: item.link,
             {item.icon}
             {item.label}
@@ -117,7 +113,7 @@ fn SpaceThemeToggle() -> Element {
 
     rsx! {
         button {
-            class: "flex items-center justify-center p-1.5 rounded-lg transition-colors cursor-pointer hover:bg-space-nav-item-hover",
+            class: "flex justify-center items-center p-1.5 rounded-lg transition-colors cursor-pointer hover:bg-space-nav-item-hover",
             onclick: move |_| {
                 if is_dark {
                     theme_service.set(Theme::Light);

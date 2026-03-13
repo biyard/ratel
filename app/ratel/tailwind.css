@@ -693,10 +693,11 @@ a {
    ========================================================================== */
 
 @theme static {
-  --color-space-bg: var(--dark, #191919) var(--light, #ffffff);
+  --color-space-bg: var(--dark, #191919) var(--light, #f9f9f9);
   --color-space-body-bg: #1d1d1d;
 
-  --color-space-nav-item-hover: #fcb3000d;
+  --color-space-nav-item-hover: var(--dark, #FCB30005) var(--light, #00000005);
+  --color-space-nav-item-selected: var(--dark, #FCB3000D) var(--light, #0000001A);
 }
 
 /* =============================================================
