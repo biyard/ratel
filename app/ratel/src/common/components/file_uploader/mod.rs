@@ -99,7 +99,7 @@ async fn upload_via_presigned(
 
 #[cfg(feature = "web")]
 async fn upload_via_presigned(
-    accept: &str,
+    _accept: &str,
     file: FileData,
     on_upload_success: EventHandler<String>,
     on_upload_meta: Option<EventHandler<UploadedFileMeta>>,
