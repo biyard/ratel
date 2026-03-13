@@ -48,113 +48,112 @@ use crate::views::Index;
 use dioxus::router::components::child_router::ChildRouter;
 use layout::AppLayout;
 use membership::Home as MembershipHome;
+use root_layout::RootLayout;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
 pub enum Route {
-    #[layout(AppLayout)]
-        #[route("/")]
-        Index { },
+    #[layout(RootLayout)]
+        #[layout(AppLayout)]
+            #[route("/")]
+            Index { },
 
-        #[route("/auth/:..rest")]
-        Auth { rest: Vec<String> },
+            #[route("/auth/:..rest")]
+            Auth { rest: Vec<String> },
 
-        #[cfg_attr(feature="membership", route("/membership"))]
-        #[cfg(feature="membership")]
-        MembershipHome {  },
+            #[cfg_attr(feature="membership", route("/membership"))]
+            #[cfg(feature="membership")]
+            MembershipHome {  },
 
-        #[route("/posts/:..rest")]
-        Post { rest: Vec<String> },
+            #[route("/posts/:..rest")]
+            Post { rest: Vec<String> },
 
-        #[route("/my-follower/:..rest")]
-        MyFollower { rest: Vec<String> },
+            #[route("/my-follower/:..rest")]
+            MyFollower { rest: Vec<String> },
 
-        #[route("/admin/:..rest")]
-        Admin { rest: Vec<String> },
+            #[route("/admin/:..rest")]
+            Admin { rest: Vec<String> },
 
-        #[cfg(feature = "users")]
-        #[route("/:username/:..rest")]
-        #[cfg(feature = "users")]
-        UserHome { username: String, rest: Vec<String> },
+            #[cfg(feature = "users")]
+            #[route("/:username/:..rest")]
+            #[cfg(feature = "users")]
+            UserHome { username: String, rest: Vec<String> },
 
-        #[cfg(feature = "teams")]
-        #[route("/teams/:teamname/:..rest")]
-        #[cfg(feature = "teams")]
-        TeamHome { teamname: String, rest: Vec<String> },
-    #[end_layout]
+            #[cfg(feature = "teams")]
+            #[route("/teams/:teamname/:..rest")]
+            #[cfg(feature = "teams")]
+            TeamHome { teamname: String, rest: Vec<String> },
+        #[end_layout]
 
 
-    #[cfg_attr(feature="spaces", nest("/spaces/:space_id"))]
-        #[cfg_attr(feature="spaces", layout(SpaceLayout))]
-            #[cfg_attr(feature="spaces", route("/dashboard"))]
-            #[cfg(feature = "spaces")]
-            SpaceDashboardPage { space_id: SpacePartition },
-            #[cfg_attr(feature="spaces", route("/overview"))]
-            #[cfg(feature = "spaces")]
-            SpaceOverviewPage { space_id: SpacePartition },
-
-            #[cfg_attr(feature="spaces", nest("/actions"))]
-                #[cfg_attr(feature="spaces", route("/"))]
+        #[cfg_attr(feature="spaces", nest("/spaces/:space_id"))]
+            #[cfg_attr(feature="spaces", layout(SpaceLayout))]
+                #[cfg_attr(feature="spaces", route("/dashboard"))]
                 #[cfg(feature = "spaces")]
-                SpaceActionsPage { space_id: SpacePartition },
-
-                #[cfg_attr(feature="spaces", route("/discussions/:discussion_id"))]
+                SpaceDashboardPage { space_id: SpacePartition },
+                #[cfg_attr(feature="spaces", route("/overview"))]
                 #[cfg(feature = "spaces")]
-                DiscussionActionPage { space_id: SpacePartition, discussion_id: SpacePostEntityType },
-
-                #[cfg_attr(feature="spaces", route("/discussions/:discussion_id/edit"))]
+                SpaceOverviewPage { space_id: SpacePartition },
+                #[cfg_attr(feature="spaces", route("/report"))]
                 #[cfg(feature = "spaces")]
-                DiscussionActionEditorPage { space_id: SpacePartition, discussion_id: SpacePostEntityType },
+                SpaceReportPage { space_id: SpacePartition },
 
-
-                #[cfg_attr(feature="spaces", route("/polls/:poll_id"))]
-                #[cfg(feature = "spaces")]
-                PollActionPage { space_id: SpacePartition, poll_id: SpacePollEntityType },
-
-                #[cfg_attr(feature="spaces", route("/quizzes/:quiz_id"))]
-                #[cfg(feature = "spaces")]
-                QuizActionPage { space_id: SpacePartition, quiz_id: SpaceQuizEntityType },
-
-                #[cfg_attr(feature="spaces", route("/follows"))]
-                #[cfg(feature = "spaces")]
-                FollowActionPage { space_id: SpacePartition },
-            #[cfg_attr(feature="spaces", end_nest)]
-
-            #[cfg_attr(feature="spaces", route("/report"))]
-            #[cfg(feature = "spaces")]
-            SpaceReportPage { space_id: SpacePartition },
-
-            // Space Apps
-            #[cfg_attr(feature="spaces", nest("/apps"))]
-                #[cfg_attr(feature="spaces", layout(SpaceAppsLayout))]
+                #[cfg_attr(feature="spaces", nest("/actions"))]
                     #[cfg_attr(feature="spaces", route("/"))]
                     #[cfg(feature = "spaces")]
-                    SpaceAppsPage { space_id: SpacePartition },
+                    SpaceActionsPage { space_id: SpacePartition },
 
-                    #[cfg_attr(feature="spaces", route("/general"))]
+                    #[cfg_attr(feature="spaces", route("/discussions/:discussion_id"))]
                     #[cfg(feature = "spaces")]
-                    SpaceGeneralAppPage { space_id: SpacePartition },
+                    DiscussionActionPage { space_id: SpacePartition, discussion_id: SpacePostEntityType },
 
-                    #[cfg_attr(feature="spaces", route("/files"))]
+                    #[cfg_attr(feature="spaces", route("/discussions/:discussion_id/edit"))]
                     #[cfg(feature = "spaces")]
-                    SpaceFileAppPage { space_id: SpacePartition },
-
-                    #[cfg_attr(feature="spaces", route("/panels"))]
+                    DiscussionActionEditorPage { space_id: SpacePartition, discussion_id: SpacePostEntityType },
+                    #[cfg_attr(feature="spaces", route("/polls/:poll_id"))]
                     #[cfg(feature = "spaces")]
-                    SpacePanelsAppPage { space_id: SpacePartition },
+                    PollActionPage { space_id: SpacePartition, poll_id: SpacePollEntityType },
 
-                    #[cfg_attr(feature="spaces", route("/incentive-pool"))]
+                    #[cfg_attr(feature="spaces", route("/quizzes/:quiz_id"))]
                     #[cfg(feature = "spaces")]
-                    SpaceIncentivePoolAppPage { space_id: SpacePartition },
-                #[cfg_attr(feature="spaces", end_layout)]
-            #[cfg_attr(feature="spaces", end_nest)]
+                    QuizActionPage { space_id: SpacePartition, quiz_id: SpaceQuizEntityType },
 
-            #[cfg_attr(feature="spaces", redirect("/", |space_id: SpacePartition| Route::SpaceDashboardPage { space_id }))]
-        #[cfg_attr(feature="spaces", end_layout)]
-    #[cfg_attr(feature="spaces", end_nest)]
+                    #[cfg_attr(feature="spaces", route("/follows/:follow_id"))]
+                    #[cfg(feature = "spaces")]
+                    FollowActionPage { space_id: SpacePartition, follow_id: SpaceActionFollowEntityType },
+                #[cfg_attr(feature="spaces", end_nest)]
 
-    #[route("/:..rest")]
-    PageNotFound { rest: Vec<String> },
+                // Space Apps
+                #[cfg_attr(feature="spaces", nest("/apps"))]
+                    #[cfg_attr(feature="spaces", layout(SpaceAppsLayout))]
+                        #[cfg_attr(feature="spaces", route("/"))]
+                        #[cfg(feature = "spaces")]
+                        SpaceAppsPage { space_id: SpacePartition },
+
+                        #[cfg_attr(feature="spaces", route("/general"))]
+                        #[cfg(feature = "spaces")]
+                        SpaceGeneralAppPage { space_id: SpacePartition },
+
+                        #[cfg_attr(feature="spaces", route("/files"))]
+                        #[cfg(feature = "spaces")]
+                        SpaceFileAppPage { space_id: SpacePartition },
+
+                        #[cfg_attr(feature="spaces", route("/panels"))]
+                        #[cfg(feature = "spaces")]
+                        SpacePanelsAppPage { space_id: SpacePartition },
+
+                        #[cfg_attr(feature="spaces", route("/incentive-pool"))]
+                        #[cfg(feature = "spaces")]
+                        SpaceIncentivePoolAppPage { space_id: SpacePartition },
+                    #[cfg_attr(feature="spaces", end_layout)]
+                #[cfg_attr(feature="spaces", end_nest)]
+
+                #[cfg_attr(feature="spaces", redirect("/", |space_id: SpacePartition| Route::SpaceDashboardPage { space_id }))]
+            #[cfg_attr(feature="spaces", end_layout)]
+        #[cfg_attr(feature="spaces", end_nest)]
+
+        #[route("/:..rest")]
+        PageNotFound { rest: Vec<String> },
 }
 
 #[component]

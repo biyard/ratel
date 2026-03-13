@@ -52,8 +52,22 @@ pub fn RewardSetting(
                             main_axis_align: MainAxisAlign::Between,
                             cross_axis_align: CrossAxisAlign::Center,
                             class: if enable_reward() { "!rounded-b-none" } else { "" },
-                            p { class: "font-semibold font-raleway text-[15px]/[18px] tracking-[-0.16px] text-web-font-primary",
-                                {tr.reward_setting}
+                            div { class: "flex gap-1 items-center",
+                                p { class: "font-semibold font-raleway text-[15px]/[18px] tracking-[-0.16px] text-web-font-primary",
+                                    {tr.reward_setting}
+                                }
+                                Tooltip {
+                                    TooltipTrigger {
+                                        icons::help_support::Info {
+                                            width: "14",
+                                            height: "14",
+                                            class: "cursor-help text-web-font-neutral [&>path]:stroke-current [&>circle]:fill-current [&>path]:fill-none",
+                                        }
+                                    }
+                                    TooltipContent {
+                                        p { class: "w-100", {tr.reward_setting_tooltip} }
+                                    }
+                                }
                             }
                             if is_paid {
                                 Switch {
@@ -227,8 +241,12 @@ translate! {
     RewardSettingTranslate;
 
     reward_setting: {
-        en: "Reward Setting",
-        ko: "보상 설정",
+        en: "Reward",
+        ko: "보상",
+    },
+    reward_setting_tooltip: {
+        en: "Set Ratel Reward points for participants who complete this action. Use boost credits to multiply the base reward.",
+        ko: "이 액션을 완료한 참여자에게 지급할 Ratel 보상 포인트를 설정하세요. 부스트 크레딧을 사용하면 기본 보상을 배율로 늘릴 수 있습니다.",
     },
     default_reward: {
         en: "Default Reward",

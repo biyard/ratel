@@ -15,19 +15,15 @@ pub fn TimePicker(
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
-        div { class: "time-picker",
+        div { class: "time-picker @max-sm:w-full",
             div {
-                class: "time-picker-trigger",
+                class: "time-picker-trigger @max-sm:w-full",
                 onclick: move |e| {
                     e.stop_propagation();
                     is_open.toggle();
                 },
-                span { class: "time-picker-display", "{display}" }
-                Clock {
-                    width: "20",
-                    height: "20",
-                    class: "time-picker-icon",
-                }
+                span { class: "text-center time-picker-display", "{display}" }
+                Clock { width: "20", height: "20", class: "time-picker-icon" }
             }
 
             if is_open() {

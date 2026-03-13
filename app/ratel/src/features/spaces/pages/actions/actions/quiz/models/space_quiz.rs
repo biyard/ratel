@@ -12,15 +12,7 @@ pub struct SpaceQuiz {
     pub created_at: i64,
     pub updated_at: i64,
 
-    #[serde(default)]
-    pub title: String,
-    #[serde(default)]
-    pub description: String,
-
     pub user_response_count: i64,
-
-    pub started_at: i64,
-    pub ended_at: i64,
 
     pub retry_count: i64,
 
@@ -29,27 +21,8 @@ pub struct SpaceQuiz {
 
     #[serde(default)]
     pub questions: Vec<Question>,
-}
-
-impl From<SpaceQuiz> for crate::features::spaces::pages::actions::types::SpaceActionSummary {
-    fn from(quiz: SpaceQuiz) -> Self {
-        use crate::features::spaces::pages::actions::types::SpaceActionType;
-        let action_id = quiz.sk.to_string();
-        Self {
-            action_id,
-            action_type: SpaceActionType::Quiz,
-            title: quiz.title,
-            description: quiz.description,
-            created_at: quiz.created_at,
-            updated_at: quiz.updated_at,
-            total_score: None,
-            total_point: None,
-            started_at: Some(quiz.started_at),
-            ended_at: Some(quiz.ended_at),
-            user_participated: false,
-            credits: 0,
-        }
-    }
+    #[serde(default)]
+    pub files: Vec<File>,
 }
 
 #[cfg(feature = "server")]
@@ -66,26 +39,12 @@ impl SpaceQuiz {
             sk,
             created_at: now,
             updated_at: now,
-            title: String::new(),
-            description: String::new(),
             user_response_count: 0,
-            started_at: now,
-            ended_at: now + 7 * 24 * 60 * 60 * 1000,
             retry_count: 0,
             pass_score: 0,
             questions: vec![],
+            files: vec![],
         })
-    }
-
-    pub fn status(&self) -> QuizStatus {
-        let now = get_now_timestamp_millis();
-        if now < self.started_at {
-            QuizStatus::NotStarted
-        } else if now >= self.started_at && now <= self.ended_at {
-            QuizStatus::InProgress
-        } else {
-            QuizStatus::Finish
-        }
     }
 
     pub fn can_edit(
@@ -113,16 +72,10 @@ impl SpaceQuiz {
     }
 
     pub fn can_respond(
-        &self,
         user_role: &SpaceUserRole,
     ) -> crate::features::spaces::pages::actions::actions::quiz::Result<()> {
         match user_role {
-            SpaceUserRole::Creator | SpaceUserRole::Participant => {
-                if self.status() == QuizStatus::InProgress {
-                    return Ok(());
-                }
-                return Err(Error::BadRequest("Poll is not in progress".into()));
-            }
+            SpaceUserRole::Creator | SpaceUserRole::Participant => Ok(()),
             _ => Err(crate::features::spaces::pages::actions::actions::quiz::Error::NoPermission),
         }
     }

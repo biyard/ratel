@@ -1075,6 +1075,7 @@ dependencies = [
  "k256",
  "lambda_http 1.0.2",
  "lucide-dioxus",
+ "mimetype-detector",
  "names",
  "percent-encoding",
  "rand 0.10.0",
@@ -12446,6 +12447,12 @@ dependencies = [
  "mime",
  "unicase",
 ]
+
+[[package]]
+name = "mimetype-detector"
+version = "0.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e0115ede3c58574c9face0f9da4ca1affcfb8ce8370ab51bc964d7b1ac32a96b"
 
 [[package]]
 name = "minimal-lexical"

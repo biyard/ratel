@@ -49,6 +49,9 @@ pub struct SpaceCommon {
     pub anonymous_participation: bool,
 
     #[serde(default)]
+    pub logo: String,
+
+    #[serde(default)]
     pub participants: i64,
 
     #[serde(default = "max_quota")]

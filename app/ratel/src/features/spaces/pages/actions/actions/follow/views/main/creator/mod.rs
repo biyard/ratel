@@ -1,57 +1,39 @@
-use crate::common::hooks::use_infinite_query;
-use crate::features::spaces::pages::actions::actions::follow::components::{
-    FollowUserInvite, FollowUserList,
-};
-use crate::features::spaces::pages::actions::actions::follow::controllers::list_follow_users;
+mod follower_setting;
+use follower_setting::FollowerSetting;
+
+use crate::features::spaces::pages::actions::actions::follow::controllers::get_follow;
 use crate::features::spaces::pages::actions::actions::follow::*;
+
 mod i18n;
 use i18n::FollowCreatorTranslate;
 
 #[component]
-pub fn FollowCreatorPage(space_id: ReadSignal<SpacePartition>) -> Element {
+pub fn FollowCreatorPage(
+    space_id: ReadSignal<SpacePartition>,
+    follow_id: ReadSignal<SpaceActionFollowEntityType>,
+) -> Element {
     let tr: FollowCreatorTranslate = use_translate();
-
-    let nav = navigator();
-    let on_back = move |_| {
-        nav.go_back();
-    };
-
-    let mut users_query =
-        use_infinite_query(move |bookmark| list_follow_users(space_id(), bookmark))?;
-    let users = users_query.items();
-    let more_element = users_query.more_element();
-    let on_refresh_invite = {
-        let mut users_query_refresh = users_query.clone();
-        move |_| {
-            users_query_refresh.restart();
-        }
-    };
-    let on_refresh_list = {
-        let mut users_query_refresh = users_query.clone();
-        move |_| {
-            users_query_refresh.restart();
-        }
-    };
+    let action_setting =
+        use_loader(move || async move { get_follow(space_id(), follow_id()).await })?;
 
     rsx! {
         div { class: "flex flex-col gap-4 w-full",
-            // Back button
-            Button {
-                class: "w-fit !p-0 !text-sm !font-medium !text-neutral-400 hover:!bg-transparent hover:!text-white"
-                    .to_string(),
-                style: ButtonStyle::Text,
-                onclick: on_back,
-                "← {tr.btn_back}"
-            }
-
-            FollowUserInvite { space_id: space_id(), on_refresh: on_refresh_invite }
-
-            FollowUserList {
-                space_id: space_id(),
-                users,
-                can_delete: true,
-                on_refresh: on_refresh_list,
-                more_element,
+            h3 { {tr.title} }
+            Tabs { default_value: "follower-tab",
+                TabList {
+                    TabTrigger { index: 0usize, value: "follower-tab", {tr.tab_general} }
+                    TabTrigger { index: 1usize, value: "setting-tab", {tr.tab_common} }
+                }
+                TabContent { index: 0usize, value: "follower-tab",
+                    FollowerSetting { space_id }
+                }
+                TabContent { index: 1usize, value: "setting-tab",
+                    ActionCommonSettings {
+                        space_id,
+                        action_id: follow_id().to_string(),
+                        action_setting: action_setting(),
+                    }
+                }
             }
         }
     }

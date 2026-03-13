@@ -163,6 +163,47 @@ jobs:
           path: /tmp/fetcher-image.tar.gz
           key: fetcher-image-${{ github.sha }}
 
+  dx-check:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: app/ratel
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+          toolchain: stable
+          target: wasm32-unknown-unknown
+          cache: false
+
+      - uses: cargo-bins/cargo-binstall@main
+      - name: Install system dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            lld
+
+      - name: Install Dioxus-cli
+        run: |
+          cargo binstall dioxus-cli --force
+
+      - name: Building test
+        id: build
+        run: |
+          dx check --web
+
   ratel-app:
     runs-on: ubuntu-latest
 

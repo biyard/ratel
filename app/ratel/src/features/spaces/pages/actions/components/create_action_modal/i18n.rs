@@ -39,9 +39,13 @@ translate! {
         en: "Follow creator's space",
         ko: "크리에이터 스페이스 팔로우"
     },
-    sample_title: {
-        en: "Sample",
-        ko: "샘플"
+    preview_title: {
+        en: "Preview",
+        ko: "미리보기"
+    },
+    preview_empty: {
+        en: "Select an action type above to see a preview.",
+        ko: "위에서 액션 유형을 선택하면 미리보기를 확인할 수 있습니다."
     },
     back: {
         en: "Back",

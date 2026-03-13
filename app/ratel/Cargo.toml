@@ -96,6 +96,8 @@ candid = { version = "0.10", optional = true }
 sampling = { path = "../../packages/sampling", default-features = false, features = [
   "dto",
 ], optional = true }
+mimetype-detector = "0.3.6"
+
 
 [features]
 full = ["membership", "spaces_full", "teams", "users"]

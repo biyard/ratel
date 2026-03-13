@@ -1,39 +1,43 @@
-use crate::features::spaces::pages::actions::actions::discussion::controllers::{
-    AddCommentRequest, LikeCommentRequest, ReplyCommentRequest, add_comment, like_comment,
-    list_comments, reply_comment,
-};
-use crate::features::spaces::pages::actions::actions::discussion::*;
+mod context;
+
 use crate::features::spaces::space_common::types::{
     space_page_actions_discussion_comments_key, space_page_actions_discussion_key,
 };
 
+use super::*;
+use context::Context;
+use context::*;
+
 #[component]
 pub fn ViewerMain(
-    space_id: SpacePartition,
-    discussion_id: SpacePostEntityType,
-    discussion: SpacePost,
-    comments: Vec<DiscussionCommentResponse>,
-    can_comment: bool,
+    space_id: ReadSignal<SpacePartition>,
+    discussion_id: ReadSignal<SpacePostEntityType>,
 ) -> Element {
     let mut comment_input = use_signal(String::new);
+    let role = use_space_role()();
+    let can_comment = matches!(role, SpaceUserRole::Creator | SpaceUserRole::Participant);
+    let ctx = use_discussion_context();
+    let discussion = ctx.discussion().post;
+    Context::init(space_id, discussion_id)?;
 
     rsx! {
         div { class: "flex flex-col gap-5 w-full",
             div { class: "flex justify-between items-center",
                 button {
-                    class: "flex items-center gap-2 text-sm text-neutral-400 hover:text-white light:text-neutral-600 light:hover:text-neutral-900 transition-colors",
-                    onclick: move |_| { navigator().go_back(); },
+                    class: "flex gap-2 items-center text-sm transition-colors hover:text-white text-neutral-400 light:text-neutral-600 light:hover:text-neutral-900",
+                    onclick: move |_| {
+                        navigator().go_back();
+                    },
                     "← Back"
                 }
             }
             DiscussionContent { discussion: discussion.clone() }
             DiscussionComments {
-                space_id,
-                discussion_id,
+                space_id: space_id(),
+                discussion_id: discussion_id(),
                 discussion,
-                comments,
                 can_comment,
-                is_creator: false,
+                is_creator: role.is_admin(),
             }
         }
     }
@@ -50,7 +54,7 @@ pub fn DiscussionContent(discussion: SpacePost) -> Element {
                     "{discussion.title}"
                 }
             }
-            div { class: "flex items-center gap-3 text-sm text-neutral-400 light:text-neutral-600",
+            div { class: "flex gap-3 items-center text-sm text-neutral-400 light:text-neutral-600",
                 if !discussion.author_profile_url.is_empty() {
                     img {
                         class: "w-6 h-6 rounded-full",
@@ -59,14 +63,14 @@ pub fn DiscussionContent(discussion: SpacePost) -> Element {
                 }
                 span { class: "font-medium", "{discussion.author_display_name}" }
                 if !discussion.category_name.is_empty() {
-                    span { class: "px-2 py-0.5 rounded bg-neutral-700 light:bg-neutral-200 text-xs",
+                    span { class: "py-0.5 px-2 text-xs rounded bg-neutral-700 light:bg-neutral-200",
                         "{discussion.category_name}"
                     }
                 }
             }
             if !discussion.html_contents.is_empty() {
                 div {
-                    class: "prose prose-invert light:prose max-w-none text-neutral-200 light:text-neutral-800",
+                    class: "max-w-none prose prose-invert light:prose text-neutral-200 light:text-neutral-800",
                     dangerous_inner_html: "{discussion.html_contents}",
                 }
             }
@@ -81,11 +85,13 @@ pub fn DiscussionComments(
     space_id: SpacePartition,
     discussion_id: SpacePostEntityType,
     discussion: SpacePost,
-    comments: Vec<DiscussionCommentResponse>,
     can_comment: bool,
     is_creator: bool,
 ) -> Element {
     let mut comment_input = use_signal(String::new);
+    let mut ctx = use_discussion_comment_context();
+    let comments = ctx.comments.items();
+    let more_comments = ctx.comments.more_element();
 
     rsx! {
         div { class: "flex flex-col gap-4",
@@ -95,13 +101,13 @@ pub fn DiscussionComments(
             if can_comment {
                 div { class: "flex gap-2",
                     input {
-                        class: "flex-1 px-4 py-2 rounded-lg bg-neutral-800 light:bg-neutral-100 border border-neutral-700 light:border-neutral-300 text-white light:text-neutral-900 text-sm placeholder-neutral-500",
+                        class: "flex-1 py-2 px-4 text-sm text-white rounded-lg border bg-neutral-800 light:bg-neutral-100 border-neutral-700 light:border-neutral-300 light:text-neutral-900 placeholder-neutral-500",
                         placeholder: "Write a comment...",
                         value: "{comment_input}",
                         oninput: move |e| comment_input.set(e.value()),
                     }
                     button {
-                        class: "px-4 py-2 rounded-lg bg-yellow-400 light:bg-yellow-500 text-neutral-900 text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-50",
+                        class: "py-2 px-4 text-sm font-bold bg-yellow-400 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-50 light:bg-yellow-500 text-neutral-900",
                         disabled: comment_input().is_empty(),
                         onclick: {
                             let space_id = space_id.clone();
@@ -117,11 +123,8 @@ pub fn DiscussionComments(
                                     }
                                     let req = AddCommentRequest { content };
                                     match add_comment(space_id.clone(), discussion_id.clone(), req).await {
-                                        Ok(_) => {
-                                            let discussion_key = space_page_actions_discussion_key(&space_id, &discussion_id);
-                                            let comments_key = space_page_actions_discussion_comments_key(&space_id, &discussion_id);
-                                            invalidate_query(&discussion_key);
-                                            invalidate_query(&comments_key);
+                                        Ok(comment) => {
+                                            ctx.comments.insert(comment);
                                         }
                                         Err(e) => {
                                             error!("Failed to add comment: {:?}", e);
@@ -138,7 +141,11 @@ pub fn DiscussionComments(
                 for comment in comments.iter() {
                     {
                         let comment = comment.clone();
-                        let comment_sk: SpacePostCommentEntityType = comment.sk.clone().try_into().unwrap_or_default();
+                        let comment_sk: SpacePostCommentEntityType = comment
+                            .sk
+                            .clone()
+                            .try_into()
+                            .unwrap_or_default();
                         rsx! {
                             CommentItem {
                                 key: "{comment.sk}",
@@ -157,6 +164,11 @@ pub fn DiscussionComments(
                             }
                         }
                     }
+                }
+                if ctx.comments.is_loading() {
+                    LoadingIndicator { max_width: "100px" }
+                } else {
+                    {more_comments}
                 }
             }
         }
@@ -183,15 +195,17 @@ fn CommentItem(
 
     rsx! {
         div { class: "flex flex-col gap-2 p-3 rounded-lg border border-neutral-700 light:border-neutral-300 bg-neutral-800/50 light:bg-neutral-50",
-            div { class: "flex items-center justify-between",
-                div { class: "flex items-center gap-2 text-sm",
+            div { class: "flex justify-between items-center",
+                div { class: "flex gap-2 items-center text-sm",
                     if !author_profile_url.is_empty() {
                         img {
                             class: "w-5 h-5 rounded-full",
                             src: "{author_profile_url}",
                         }
                     }
-                    span { class: "font-medium text-white light:text-neutral-900", {author_display_name} }
+                    span { class: "font-medium text-white light:text-neutral-900",
+                        {author_display_name}
+                    }
                 }
                 if is_creator {
                     DeleteCommentButton {
@@ -202,7 +216,7 @@ fn CommentItem(
                 }
             }
             p { class: "text-sm text-neutral-300 light:text-neutral-700", {content} }
-            div { class: "flex items-center gap-4 text-xs text-neutral-500",
+            div { class: "flex gap-4 items-center text-xs text-neutral-500",
                 if can_interact {
                     LikeButton {
                         space_id: space_id.clone(),
@@ -212,7 +226,7 @@ fn CommentItem(
                         liked,
                     }
                     button {
-                        class: "hover:text-white transition-colors",
+                        class: "transition-colors hover:text-white",
                         onclick: move |_| show_reply_input.toggle(),
                         "Reply ({replies})"
                     }
@@ -243,10 +257,11 @@ fn DeleteCommentButton(
     comment_sk: SpacePostCommentEntityType,
 ) -> Element {
     use crate::features::spaces::pages::actions::actions::discussion::controllers::delete_comment;
+    let mut query = use_query_store();
 
     rsx! {
         button {
-            class: "text-xs text-red-400 hover:text-red-300 transition-colors",
+            class: "text-xs text-red-400 transition-colors hover:text-red-300",
             onclick: {
                 let space_id = space_id.clone();
                 let discussion_id = discussion_id.clone();
@@ -256,12 +271,20 @@ fn DeleteCommentButton(
                     let discussion_id = discussion_id.clone();
                     let comment_sk = comment_sk.clone();
                     async move {
-                        match delete_comment(space_id.clone(), discussion_id.clone(), comment_sk).await {
+                        match delete_comment(space_id.clone(), discussion_id.clone(), comment_sk)
+                            .await
+                        {
                             Ok(_) => {
-                                let discussion_key = space_page_actions_discussion_key(&space_id, &discussion_id);
-                                let comments_key = space_page_actions_discussion_comments_key(&space_id, &discussion_id);
-                                invalidate_query(&discussion_key);
-                                invalidate_query(&comments_key);
+                                let discussion_key = space_page_actions_discussion_key(
+                                    &space_id,
+                                    &discussion_id,
+                                );
+                                let comments_key = space_page_actions_discussion_comments_key(
+                                    &space_id,
+                                    &discussion_id,
+                                );
+                                query.invalidate(&discussion_key);
+                                query.invalidate(&comments_key);
                             }
                             Err(e) => {
                                 error!("Failed to delete comment: {:?}", e);
@@ -283,9 +306,11 @@ fn LikeButton(
     likes: u64,
     liked: bool,
 ) -> Element {
+    let mut query = use_query_store();
+
     rsx! {
         button {
-            class: "flex items-center gap-1 hover:text-yellow-400 transition-colors",
+            class: "flex gap-1 items-center transition-colors hover:text-yellow-400",
             class: if liked { "text-yellow-400" } else { "" },
             onclick: {
                 let space_id = space_id.clone();
@@ -297,10 +322,20 @@ fn LikeButton(
                     let comment_sk = comment_sk.clone();
                     async move {
                         let req = LikeCommentRequest { like: !liked };
-                        match like_comment(space_id.clone(), discussion_id.clone(), comment_sk, req).await {
+                        match like_comment(
+                                space_id.clone(),
+                                discussion_id.clone(),
+                                comment_sk,
+                                req,
+                            )
+                            .await
+                        {
                             Ok(_) => {
-                                let comments_key = space_page_actions_discussion_comments_key(&space_id, &discussion_id);
-                                invalidate_query(&comments_key);
+                                let comments_key = space_page_actions_discussion_comments_key(
+                                    &space_id,
+                                    &discussion_id,
+                                );
+                                query.invalidate(&comments_key);
                             }
                             Err(e) => {
                                 error!("Failed to like comment: {:?}", e);
@@ -309,7 +344,11 @@ fn LikeButton(
                     }
                 }
             },
-            if liked { "♥ {likes}" } else { "♡ {likes}" }
+            if liked {
+                "♥ {likes}"
+            } else {
+                "♡ {likes}"
+            }
         }
     }
 }
@@ -324,17 +363,19 @@ fn ReplyInput(
 ) -> Element {
     let mut reply_input = reply_input;
     let mut show_reply_input = show_reply_input;
+    let mut ctx = use_discussion_comment_context();
+    let mut query = use_query_store();
 
     rsx! {
         div { class: "flex gap-2 mt-1",
             input {
-                class: "flex-1 px-3 py-1.5 rounded-lg bg-neutral-700 light:bg-neutral-100 border border-neutral-600 light:border-neutral-300 text-white light:text-neutral-900 text-xs placeholder-neutral-500",
+                class: "flex-1 py-1.5 px-3 text-xs text-white rounded-lg border bg-neutral-700 light:bg-neutral-100 border-neutral-600 light:border-neutral-300 light:text-neutral-900 placeholder-neutral-500",
                 placeholder: "Write a reply...",
                 value: "{reply_input}",
                 oninput: move |e| reply_input.set(e.value()),
             }
             button {
-                class: "px-3 py-1.5 rounded-lg bg-yellow-400 light:bg-yellow-500 text-neutral-900 text-xs font-bold hover:opacity-90 disabled:opacity-50",
+                class: "py-1.5 px-3 text-xs font-bold bg-yellow-400 rounded-lg hover:opacity-90 disabled:opacity-50 light:bg-yellow-500 text-neutral-900",
                 disabled: reply_input().is_empty(),
                 onclick: {
                     let space_id = space_id.clone();
@@ -352,12 +393,19 @@ fn ReplyInput(
                                 return;
                             }
                             let req = ReplyCommentRequest { content };
-                            match reply_comment(space_id.clone(), discussion_id.clone(), comment_sk, req).await {
+                            match reply_comment(
+                                    space_id.clone(),
+                                    discussion_id.clone(),
+                                    comment_sk,
+                                    req,
+                                )
+                                .await
+                            {
                                 Ok(_) => {
-                                    let discussion_key = space_page_actions_discussion_key(&space_id, &discussion_id);
-                                    let comments_key = space_page_actions_discussion_comments_key(&space_id, &discussion_id);
-                                    invalidate_query(&discussion_key);
-                                    invalidate_query(&comments_key);
+                                    ctx.comments.restart();
+                                    let discussion_key =
+                                        space_page_actions_discussion_key(&space_id, &discussion_id);
+                                    query.invalidate(&discussion_key);
                                 }
                                 Err(e) => {
                                     error!("Failed to reply: {:?}", e);
