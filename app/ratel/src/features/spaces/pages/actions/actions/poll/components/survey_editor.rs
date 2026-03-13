@@ -45,6 +45,7 @@ pub fn SurveyEditor(props: SurveyEditorProps) -> Element {
                                     onclick: move |_| {
                                         let mut qs = questions.read().clone();
                                         qs.remove(idx);
+                                        on_save.call(qs.clone());
                                         questions.set(qs);
                                     },
                                     {tr.btn_delete}
@@ -62,6 +63,7 @@ pub fn SurveyEditor(props: SurveyEditorProps) -> Element {
                         on_add: move |q: Question| {
                             let mut qs = questions.read().clone();
                             qs.push(q);
+                            on_save.call(qs.clone());
                             questions.set(qs);
                             selecting_question_type.set(false);
                         },
@@ -84,6 +86,7 @@ fn AddQuestionButton(on_add: EventHandler<()>) -> Element {
     rsx! {
         div { class: "flex relative justify-center items-center w-full",
             Button {
+                "data-testid": "poll-add-question",
                 style: ButtonStyle::Outline,
                 onclick: move |_| on_add.call(()),
                 class: "flex justify-center items-center w-10 h-10 !p-0 z-2 !bg-background",
