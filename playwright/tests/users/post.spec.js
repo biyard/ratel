@@ -34,58 +34,58 @@ test.describe.serial("Post with Space", () => {
     spaceUrl = url.pathname.replace(/\/dashboard$/, "");
   });
 
-  // test("Create a discussion in space", async ({ page }) => {
-  //   await goto(page, spaceUrl + "/actions");
+  test("Create a discussion in space", async ({ page }) => {
+    await goto(page, spaceUrl + "/actions");
 
-  //   // open create action modal
-  //   await click(page, { text: "Select Action Type" });
-  //   // select Discussion
-  //   await click(page, { text: "Discussion" });
-  //   // hide FAB that overlaps modal buttons
-  //   await page.evaluate(() => {
-  //     const fab = document.querySelector('[class*="fixed right-4 bottom-4"]');
-  //     if (fab) fab.style.display = "none";
-  //   });
-  //   // confirm creation
-  //   await click(page, { text: "Create" });
+    // open create action modal
+    await click(page, { text: "Select Action Type" });
+    // select Discussion
+    await click(page, { text: "Discussion" });
+    // hide FAB that overlaps modal buttons
+    await page.evaluate(() => {
+      const fab = document.querySelector('[class*="fixed right-4 bottom-4"]');
+      if (fab) fab.style.display = "none";
+    });
+    // confirm creation
+    await click(page, { text: "Create" });
 
-  //   // wait for discussion viewer page
-  //   await page.waitForURL(/\/actions\/discussions\//, {
-  //     waitUntil: "networkidle",
-  //   });
-  //   await getLocator(page, { text: "Untitled Discussion" });
+    // wait for discussion viewer page
+    await page.waitForURL(/\/actions\/discussions\//, {
+      waitUntil: "networkidle",
+    });
+    await getLocator(page, { text: "Untitled Discussion" });
 
-  //   // go to editor
-  //   await click(page, { text: "Edit" });
-  //   await page.waitForURL(/\/actions\/discussions\/.*\/edit/, {
-  //     waitUntil: "networkidle",
-  //   });
+    // go to editor
+    await click(page, { text: "Edit" });
+    await page.waitForURL(/\/actions\/discussions\/.*\/edit/, {
+      waitUntil: "networkidle",
+    });
 
-  //   // fill discussion fields
-  //   await fill(
-  //     page,
-  //     { placeholder: "Enter discussion title..." },
-  //     "Playwright Discussion Topic",
-  //   );
-  //   await fill(
-  //     page,
-  //     { placeholder: "Enter category (optional)..." },
-  //     "Testing",
-  //   );
-  //   await fill(
-  //     page,
-  //     { placeholder: "Write your discussion content..." },
-  //     "This is a test discussion created by Playwright to verify the discussion creation flow within a space.",
-  //   );
+    // fill discussion fields
+    await fill(
+      page,
+      { placeholder: "Enter discussion title..." },
+      "Playwright Discussion Topic"
+    );
+    await fill(
+      page,
+      { placeholder: "Enter category (optional)..." },
+      "Testing"
+    );
+    await fill(
+      page,
+      { placeholder: "Write your discussion content..." },
+      "This is a test discussion created by Playwright to verify the discussion creation flow within a space."
+    );
 
-  //   await click(page, { text: "Save" });
-  // });
+    await click(page, { text: "Save" });
+  });
 
-  // test("Publish space privately", async ({ page }) => {
-  //   await goto(page, spaceUrl + "/dashboard");
+  test("Publish space privately", async ({ page }) => {
+    await goto(page, spaceUrl + "/dashboard");
 
-  //   await click(page, { text: "Publish" });
-  //   await click(page, { testId: "private-option" });
-  //   await click(page, { label: "Confirm visibility selection" });
-  // });
+    await click(page, { text: "Publish" });
+    await click(page, { testId: "private-option" });
+    await click(page, { label: "Confirm visibility selection" });
+  });
 });
