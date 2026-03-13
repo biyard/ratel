@@ -1,31 +1,29 @@
-use crate::features::spaces::pages::apps::apps::rewards::controllers::{
-    create_space_reward, delete_space_reward, list_space_rewards, update_space_reward,
-    CreateSpaceRewardRequest, DeleteSpaceRewardRequest, UpdateSpaceRewardRequest,
-};
+use crate::features::spaces::pages::actions::controllers::list_actions;
+use crate::features::spaces::pages::actions::controllers::update_space_action;
+use crate::features::spaces::pages::actions::controllers::UpdateSpaceActionRequest;
+use crate::features::spaces::pages::actions::types::SpaceActionSummary;
+use crate::features::spaces::pages::apps::apps::rewards::controllers::list_space_rewards;
 use crate::features::spaces::pages::apps::apps::rewards::i18n::SpaceRewardTranslate;
 use crate::features::spaces::pages::apps::apps::rewards::*;
 use crate::features::spaces::space_common::models::SpaceRewardResponse;
-
-fn behavior_label(behavior: &RewardUserBehavior, tr: &SpaceRewardTranslate) -> String {
-    match behavior {
-        RewardUserBehavior::RespondPoll => tr.respond_poll.to_string(),
-    }
-}
+use dioxus_translate::{Translate as _, use_language};
 
 #[component]
 fn RewardCard(
     reward: SpaceRewardResponse,
     tr: SpaceRewardTranslate,
-    on_edit: EventHandler<SpaceRewardResponse>,
     on_delete: EventHandler<SpaceRewardResponse>,
 ) -> Element {
+    let lang = use_language();
+
     rsx! {
-        div { class: "border border-card-border rounded-lg p-4 bg-card-bg",
+        Card {
+            class: "p-4",
             div { class: "flex flex-col gap-3",
                 div { class: "flex justify-between items-start",
                     div { class: "flex-1",
                         h4 { class: "text-lg font-semibold text-font-primary",
-                            {behavior_label(&reward.behavior, &tr)}
+                            {reward.behavior.translate(&lang())}
                         }
                         if !reward.description.is_empty() {
                             p { class: "text-sm text-font-secondary mt-1",
@@ -34,21 +32,14 @@ fn RewardCard(
                         }
                     }
                     div { class: "flex gap-2",
-                        button {
-                            class: "px-2 py-1 text-sm rounded border border-btn-outline-outline bg-btn-outline-bg text-btn-outline-text hover:bg-card-hover",
-                            onclick: {
-                                let reward = reward.clone();
-                                move |_| on_edit.call(reward.clone())
-                            },
-                            "✏️"
-                        }
-                        button {
-                            class: "px-2 py-1 text-sm rounded border border-btn-outline-outline bg-btn-outline-bg text-btn-outline-text hover:bg-card-hover",
+                        Button {
+                            class: "px-2 py-1 text-sm",
+                            style: ButtonStyle::Outline,
                             onclick: {
                                 let reward = reward.clone();
                                 move |_| on_delete.call(reward.clone())
                             },
-                            "🗑️"
+                            {tr.delete_reward.to_string()}
                         }
                     }
                 }
@@ -72,108 +63,96 @@ fn RewardCard(
     }
 }
 
+/// A section grouping rewards per SpaceAction (React RewardSection equivalent)
 #[component]
-fn RewardModal(
+fn RewardSection(
+    action: SpaceActionSummary,
+    rewards: Vec<SpaceRewardResponse>,
     tr: SpaceRewardTranslate,
-    editing_reward: Option<SpaceRewardResponse>,
-    on_close: EventHandler<()>,
-    on_submit: EventHandler<(RewardUserBehavior, String, i64)>,
-    is_submitting: bool,
+    space_id: SpacePartition,
+    on_reload: EventHandler<()>,
 ) -> Element {
-    let is_edit = editing_reward.is_some();
-    let title = if is_edit {
-        tr.edit_reward.to_string()
-    } else {
-        tr.create_reward.to_string()
-    };
-
-    let init_behavior = editing_reward
-        .as_ref()
-        .map(|r| r.behavior.clone())
-        .unwrap_or_default();
-    let init_description = editing_reward
-        .as_ref()
-        .map(|r| r.description.clone())
-        .unwrap_or_default();
-    let init_credits = editing_reward.as_ref().map(|r| r.credits).unwrap_or(1);
-
-    let mut description = use_signal(move || init_description);
-    let mut credits = use_signal(move || init_credits);
+    let reward_count = rewards.len();
+    let has_reward = reward_count > 0;
+    let mut is_submitting = use_signal(|| false);
 
     rsx! {
-        div { class: "fixed inset-0 z-50 flex items-center justify-center bg-black/50",
-            onclick: move |_| on_close.call(()),
+        Card {
+            class: "overflow-hidden",
+            // Section header
+            div { class: "flex items-center justify-between px-4 py-3 bg-card-bg border-b border-card-border",
+                div { class: "flex items-center gap-2",
+                    h3 { class: "text-base font-semibold text-font-primary",
+                        {action.title.clone()}
+                    }
+                    Badge {
+                        "{reward_count} {tr.action_reward_count}"
+                    }
+                }
+            }
 
-            div {
-                class: "bg-card-bg border border-card-border rounded-lg p-6 w-full max-w-md mx-4",
-                onclick: move |e| e.stop_propagation(),
-
-                h3 { class: "text-lg font-semibold text-font-primary mb-4", {title} }
-
-                div { class: "flex flex-col gap-4",
-                    // Behavior (read-only display)
-                    div {
-                        label { class: "block text-sm font-medium text-font-secondary mb-1",
-                            {tr.reward_behavior}
-                        }
-                        div { class: "px-3 py-2 rounded border border-card-border bg-card-bg text-font-primary text-sm",
-                            {behavior_label(&init_behavior, &tr)}
+            // Section content
+            div { class: "p-4",
+                if has_reward {
+                    div { class: "flex flex-col gap-3",
+                        for reward in rewards.iter() {
+                            RewardCard {
+                                key: "{reward.sk}",
+                                reward: reward.clone(),
+                                tr: tr.clone(),
+                                on_delete: {
+                                    let space_id = space_id.clone();
+                                    let action_id = action.action_id.clone();
+                                    let on_reload = on_reload.clone();
+                                    move |_r: SpaceRewardResponse| {
+                                        let space_id = space_id.clone();
+                                        let action_id = action_id.clone();
+                                        let on_reload = on_reload.clone();
+                                        spawn(async move {
+                                            let _ = update_space_action(
+                                                space_id,
+                                                action_id,
+                                                UpdateSpaceActionRequest::Credits { credits: 0 },
+                                            )
+                                            .await;
+                                            on_reload.call(());
+                                        });
+                                    }
+                                },
+                            }
                         }
                     }
-
-                    // Credits
-                    div {
-                        label { class: "block text-sm font-medium text-font-secondary mb-1",
-                            {tr.credits}
+                } else {
+                    div { class: "flex items-center justify-between",
+                        span { class: "text-sm text-font-secondary",
+                            {tr.no_reward_configured.to_string()}
                         }
-                        input {
-                            class: "w-full px-3 py-2 rounded border border-card-border bg-card-bg text-font-primary text-sm",
-                            r#type: "number",
-                            min: "1",
-                            value: "{credits()}",
-                            oninput: move |e| {
-                                if let Ok(v) = e.value().parse::<i64>() {
-                                    credits.set(v);
-                                }
-                            },
-                        }
-                    }
-
-                    // Description
-                    div {
-                        label { class: "block text-sm font-medium text-font-secondary mb-1",
-                            {tr.description}
-                        }
-                        input {
-                            class: "w-full px-3 py-2 rounded border border-card-border bg-card-bg text-font-primary text-sm",
-                            value: "{description()}",
-                            placeholder: tr.description_placeholder,
-                            oninput: move |e| description.set(e.value()),
-                        }
-                    }
-
-                    // Buttons
-                    div { class: "flex gap-3 justify-end mt-4",
-                        button {
-                            class: "px-4 py-2 text-sm font-semibold rounded border border-btn-outline-outline bg-btn-outline-bg text-btn-outline-text",
-                            disabled: is_submitting,
-                            onclick: move |_| on_close.call(()),
-                            {tr.cancel}
-                        }
-                        button {
-                            class: "px-4 py-2 text-sm font-semibold rounded bg-btn-primary-bg text-btn-primary-text disabled:opacity-50",
-                            disabled: is_submitting || credits() < 1,
+                        Button {
+                            style: ButtonStyle::Primary,
+                            class: "text-sm",
+                            disabled: is_submitting(),
                             onclick: {
-                                let behavior = init_behavior.clone();
+                                let space_id = space_id.clone();
+                                let action_id = action.action_id.clone();
+                                let on_reload = on_reload.clone();
                                 move |_| {
-                                    on_submit.call((
-                                        behavior.clone(),
-                                        description().trim().to_string(),
-                                        credits(),
-                                    ));
+                                    let space_id = space_id.clone();
+                                    let action_id = action_id.clone();
+                                    let on_reload = on_reload.clone();
+                                    is_submitting.set(true);
+                                    spawn(async move {
+                                        let _ = update_space_action(
+                                            space_id,
+                                            action_id,
+                                            UpdateSpaceActionRequest::Credits { credits: 1 },
+                                        )
+                                        .await;
+                                        is_submitting.set(false);
+                                        on_reload.call(());
+                                    });
                                 }
                             },
-                            if is_submitting { {tr.loading} } else { {tr.save} }
+                            "+ {tr.create_reward}"
                         }
                     }
                 }
@@ -183,141 +162,53 @@ fn RewardModal(
 }
 
 #[component]
-pub fn CreatorPage(space_id: SpacePartition) -> Element {
+pub fn CreatorPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: SpaceRewardTranslate = use_translate();
-    let mut rewards = use_signal(Vec::<SpaceRewardResponse>::new);
-    let mut did_load = use_signal(|| false);
-    let mut is_modal_open = use_signal(|| false);
-    let mut editing_reward = use_signal(|| None::<SpaceRewardResponse>);
-    let mut is_submitting = use_signal(|| false);
 
-    let space_id_for_load = space_id.clone();
-    let reload = move || {
-        let space_id = space_id_for_load.clone();
-        spawn(async move {
-            if let Ok(res) = list_space_rewards(space_id, None).await {
-                rewards.set(res.items);
-            }
-        });
-    };
+    let mut actions = use_loader(move || async move { list_actions(space_id()).await })?;
+    let mut rewards = use_loader(move || async move { list_space_rewards(space_id(), None).await })?;
 
-    {
-        let reload_fn = reload.clone();
-        use_effect(move || {
-            if did_load() {
-                return;
-            }
-            did_load.set(true);
-            reload_fn();
-        });
-    }
-
+    let action_list = actions();
     let reward_list = rewards();
 
     rsx! {
         div { class: "flex flex-col gap-4 p-4 w-full max-w-[1024px]",
-            div { class: "flex justify-between items-center",
-                h2 { class: "text-xl font-bold text-font-primary",
-                    {tr.title}
-                }
-                button {
-                    class: "px-4 py-2 text-sm font-semibold rounded bg-btn-primary-bg text-btn-primary-text hover:opacity-90",
-                    onclick: move |_| {
-                        editing_reward.set(None);
-                        is_modal_open.set(true);
-                    },
-                    "+ {tr.create_reward}"
-                }
+            h2 { class: "text-xl font-bold text-font-primary",
+                {tr.title}
             }
 
-            if reward_list.is_empty() && did_load() {
+            if action_list.is_empty() {
                 div { class: "text-center py-8 text-font-secondary text-sm",
-                    {tr.no_rewards}
+                    {tr.no_polls.to_string()}
                 }
             } else {
-                div { class: "flex flex-col gap-3",
-                    for reward in reward_list.iter() {
-                        RewardCard {
-                            key: "{reward.sk}",
-                            reward: reward.clone(),
-                            tr: tr.clone(),
-                            on_edit: move |r: SpaceRewardResponse| {
-                                editing_reward.set(Some(r));
-                                is_modal_open.set(true);
-                            },
-                            on_delete: {
-                                let space_id = space_id.clone();
-                                let reload = reload.clone();
-                                move |r: SpaceRewardResponse| {
-                                    let space_id = space_id.clone();
-                                    let reload = reload.clone();
-                                    spawn(async move {
-                                        let _ = delete_space_reward(
-                                            space_id,
-                                            DeleteSpaceRewardRequest { sk: r.sk },
-                                        )
-                                        .await;
-                                        reload();
-                                    });
+                div { class: "flex flex-col gap-4",
+                    for action in action_list.iter() {
+                        {
+                            let action_rewards: Vec<SpaceRewardResponse> = reward_list
+                                .items
+                                .iter()
+                                .filter(|r| {
+                                    r.sk.action_id.as_deref() == Some(&action.action_id)
+                                })
+                                .cloned()
+                                .collect();
+
+                            rsx! {
+                                RewardSection {
+                                    key: "{action.action_id}",
+                                    action: action.clone(),
+                                    rewards: action_rewards,
+                                    tr: tr.clone(),
+                                    space_id: space_id(),
+                                    on_reload: move |_| {
+                                        actions.restart();
+                                        rewards.restart();
+                                    },
                                 }
-                            },
+                            }
                         }
                     }
-                }
-            }
-
-            if is_modal_open() {
-                RewardModal {
-                    tr: tr.clone(),
-                    editing_reward: editing_reward(),
-                    on_close: move |_| {
-                        is_modal_open.set(false);
-                        editing_reward.set(None);
-                    },
-                    on_submit: {
-                        let space_id = space_id.clone();
-                        let reload = reload.clone();
-                        move |(behavior, description, credits): (RewardUserBehavior, String, i64)| {
-                            let space_id = space_id.clone();
-                            let editing = editing_reward();
-                            let reload = reload.clone();
-                            is_submitting.set(true);
-
-                            spawn(async move {
-                                let result = if let Some(existing) = editing {
-                                    update_space_reward(
-                                        space_id,
-                                        UpdateSpaceRewardRequest {
-                                            sk: existing.sk,
-                                            description,
-                                            credits,
-                                        },
-                                    )
-                                    .await
-                                } else {
-                                    create_space_reward(
-                                        space_id,
-                                        CreateSpaceRewardRequest {
-                                            action_key: EntityType::SpacePoll(Default::default()),
-                                            behavior,
-                                            description,
-                                            credits,
-                                        },
-                                    )
-                                    .await
-                                };
-
-                                is_submitting.set(false);
-
-                                if result.is_ok() {
-                                    is_modal_open.set(false);
-                                    editing_reward.set(None);
-                                    reload();
-                                }
-                            });
-                        }
-                    },
-                    is_submitting: is_submitting(),
                 }
             }
         }

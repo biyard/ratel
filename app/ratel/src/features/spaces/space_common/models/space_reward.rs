@@ -108,7 +108,6 @@ impl SpaceReward {
 impl SpaceReward {
     pub async fn award(
         cli: &aws_sdk_dynamodb::Client,
-        _space_action: &crate::features::spaces::pages::actions::models::SpaceAction,
         space_reward: &SpaceReward,
         target_pk: Partition,
     ) -> crate::common::Result<UserReward> {
