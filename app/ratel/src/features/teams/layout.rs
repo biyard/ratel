@@ -3,7 +3,6 @@ use crate::features::teams::controllers::find_team::find_team_handler;
 use crate::features::teams::*;
 use crate::features::posts::controllers::dto::CategoryResponse;
 use crate::features::posts::controllers::list_categories::list_categories_handler;
-use icons::settings as settings_icon;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use crate::common::*;
 
@@ -77,7 +76,7 @@ fn TeamSidemenu(teamname: String, logged_in: bool) -> Element {
     let render_menu = |profile_url: String,
                        display_name: String,
                        permissions_vec: Vec<u8>,
-                       teams: Vec<crate::common::contexts::TeamItem>| {
+                       _teams: Vec<crate::common::contexts::TeamItem>| {
         let mut mask = 0i64;
         for value in &permissions_vec {
             mask |= 1i64 << (*value as i32);
@@ -86,25 +85,17 @@ fn TeamSidemenu(teamname: String, logged_in: bool) -> Element {
         let is_admin = permissions.contains(TeamGroupPermission::TeamAdmin);
         let can_team_edit = is_admin || permissions.contains(TeamGroupPermission::TeamEdit);
 
-        let user_role = if is_admin {
+        let user_role = if is_admin || can_team_edit {
             "Creator"
-        } else if can_team_edit {
-            "Manager"
         } else {
-            "Member"
+            "Viewer"
         };
 
         let cats: Vec<CategoryResponse> = categories.read().as_ref().cloned().unwrap_or_default();
 
-        let settings_route = if can_team_edit {
-            Some(Route::TeamSetting { teamname: teamname.clone() }.to_string())
-        } else {
-            None
-        };
-
         rsx! {
             div { class: "flex flex-col w-full h-full overflow-hidden",
-                // Header: avatar + name + settings icon
+                // Header: avatar + name
                 div { class: "flex items-center justify-between px-4 py-4 shrink-0",
                     div { class: "flex items-center gap-3 min-w-0",
                         if !profile_url.is_empty() {
@@ -117,17 +108,6 @@ fn TeamSidemenu(teamname: String, logged_in: bool) -> Element {
                             div { class: "w-10 h-10 rounded-[10px] bg-neutral-600 shrink-0" }
                         }
                         span { class: "font-bold text-base text-text-primary truncate", "{display_name}" }
-                    }
-                    if let Some(settings_to) = settings_route {
-                        Link {
-                            to: "{settings_to}",
-                            class: "flex items-center justify-center w-8 h-8 rounded-lg hover:bg-white/10 transition-colors shrink-0",
-                            settings_icon::Settings {
-                                width: "18",
-                                height: "18",
-                                class: "w-[18px] h-[18px] [&>path]:stroke-icon-primary",
-                            }
-                        }
                     }
                 }
 
@@ -189,11 +169,6 @@ fn TeamSidemenu(teamname: String, logged_in: bool) -> Element {
                 // Bottom: user info + settings (logged-in only)
                 if logged_in {
                     {
-                        let settings_to = if can_team_edit {
-                            Some(Route::TeamSetting { teamname: teamname.clone() }.to_string())
-                        } else {
-                            None
-                        };
                         let user_display = user.display_name.clone();
                         let user_profile = user.profile_url.clone();
                         rsx! {
@@ -233,19 +208,6 @@ fn TeamSidemenu(teamname: String, logged_in: bool) -> Element {
                                     div {
                                         class: "absolute bottom-full left-3 right-3 mb-1 bg-popover border border-border rounded-lg shadow-lg z-30 py-1 overflow-hidden",
                                         onclick: move |e| e.stop_propagation(),
-                                        if let Some(ref settings_href) = settings_to {
-                                            Link {
-                                                to: "{settings_href}",
-                                                class: "flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-white/10 transition-colors",
-                                                onclick: move |_| show_user_menu.set(false),
-                                                settings_icon::Settings {
-                                                    width: "15",
-                                                    height: "15",
-                                                    class: "w-[15px] h-[15px] [&>path]:stroke-icon-primary shrink-0",
-                                                }
-                                                "Settings"
-                                            }
-                                        }
                                         button {
                                             class: "flex items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-white/10 transition-colors w-full text-left",
                                             onclick: move |_| {

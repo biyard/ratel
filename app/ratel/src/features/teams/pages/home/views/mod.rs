@@ -1,7 +1,10 @@
 use crate::common::*;
 use crate::features::teams::pages::home::components::*;
 use crate::features::teams::pages::home::HomeViewMode;
+use crate::features::teams::Route;
+use crate::features::teams::controllers::find_team::find_team_handler;
 use crate::features::posts::controllers::create_post::create_post_handler;
+use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use crate::features::posts::*;
 use dioxus::prelude::*;
 
@@ -28,18 +31,39 @@ pub fn Home(teamname: String) -> Element {
 
     let team_pk_str = team_item.as_ref().map(|t| t.pk.clone());
 
-    let (display_name, profile_url, description) = match team_item {
-        Some(team) => (
-            if team.nickname.is_empty() {
-                team.username.clone()
-            } else {
-                team.nickname.clone()
-            },
-            team.profile_url.clone(),
-            team.description.clone(),
-        ),
-        None => (teamname.clone(), String::new(), String::new()),
+    let (display_name, profile_url, description, is_creator) = match team_item {
+        Some(team) => {
+            let mut mask = 0i64;
+            for v in &team.permissions {
+                mask |= 1i64 << (*v as i32);
+            }
+            let permissions: TeamGroupPermissions = mask.into();
+            let is_creator = permissions.contains(TeamGroupPermission::TeamAdmin)
+                || permissions.contains(TeamGroupPermission::TeamEdit);
+            (
+                if team.nickname.is_empty() {
+                    team.username.clone()
+                } else {
+                    team.nickname.clone()
+                },
+                team.profile_url.clone(),
+                team.description.clone(),
+                is_creator,
+            )
+        }
+        None => (teamname.clone(), String::new(), String::new(), false),
     };
+
+    // Load thumbnail_url directly from Team entity via find_team_handler
+    let team_detail = use_resource(use_reactive((&teamname,), |(name,)| async move {
+        find_team_handler(name).await.ok()
+    }));
+    let thumbnail_url = team_detail.read().as_ref()
+        .and_then(|opt| opt.as_ref())
+        .and_then(|t| t.thumbnail_url.clone())
+        .unwrap_or_default();
+
+    let settings_route = Route::TeamSetting { teamname: teamname.clone() }.to_string();
 
     let selected_category = use_context::<Signal<Option<String>>>();
 
@@ -60,6 +84,9 @@ pub fn Home(teamname: String) -> Element {
                 display_name,
                 profile_url,
                 description,
+                thumbnail_url,
+                is_creator,
+                settings_route,
             }
 
             // View mode toggle + Create button

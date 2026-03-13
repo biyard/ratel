@@ -6,45 +6,59 @@ pub fn TeamHeader(
     display_name: String,
     profile_url: String,
     description: String,
+    thumbnail_url: String,
+    is_creator: bool,
+    settings_route: String,
 ) -> Element {
     rsx! {
-        div { class: "relative w-full mb-6",
-            // Banner
+        div { class: "w-full isolate",
+            // Banner — normal flow so content below paints on top
             div {
-                class: "w-full rounded-[10px] overflow-hidden",
-                style: "height: 140px; background-color: #2a2a2a;",
+                class: "relative z-0 w-full rounded-[10px] bg-card-bg border border-border",
+                style: "height: 180px; transform: translateZ(0);",
+                if !thumbnail_url.is_empty() {
+                    img {
+                        src: "{thumbnail_url}",
+                        alt: "banner",
+                        class: "w-full h-full object-cover",
+                    }
+                }
+                if is_creator {
+                    Link {
+                        to: "{settings_route}",
+                        class: "absolute top-3 right-3 flex items-center justify-center w-8 h-8 rounded-lg bg-black/40 hover:bg-black/60 transition-colors",
+                        lucide_dioxus::Settings {
+                            class: "w-[18px] h-[18px] [&>path]:stroke-white [&>line]:stroke-white [&>polyline]:stroke-white [&>circle]:stroke-white",
+                        }
+                    }
+                }
             }
 
-            // Avatar + Team info row (avatar overlaps banner by ~50px)
-            div {
-                class: "flex items-end gap-8 px-6",
-                style: "margin-top: -52px;",
-
-                // Avatar
+            // Avatar + Team info — comes after banner in DOM, paints on top automatically
+            div { class: "relative z-10 flex items-start gap-4 px-4 -mt-7",
                 if !profile_url.is_empty() {
                     img {
                         src: "{profile_url}",
                         alt: "{display_name}",
-                        class: "shrink-0 rounded-[24px] object-cover object-top",
-                        style: "width: 100px; height: 100px; border: 10px solid var(--background, #1d1d1d); flex-shrink: 0;",
+                        class: "shrink-0 w-20 h-20 rounded-[16px] object-cover object-top border-4 border-background",
                     }
                 } else {
-                    div {
-                        class: "shrink-0 rounded-[24px] bg-neutral-600",
-                        style: "width: 100px; height: 100px; border: 10px solid var(--background, #1d1d1d); flex-shrink: 0;",
-                    }
+                    div { class: "shrink-0 w-20 h-20 rounded-[16px] bg-neutral-600 border-4 border-background" }
                 }
 
-                // Team name + follow + description
-                div { class: "flex flex-col gap-2 pb-3 flex-1 min-w-0",
-                    h1 {
-                        class: "text-2xl font-bold text-text-primary whitespace-nowrap",
-                        "{display_name}"
+                div { class: "flex flex-col gap-1 pt-9 flex-1 min-w-0",
+                    div { class: "flex items-center gap-3",
+                        h1 { class: "text-xl font-bold text-text-primary", "{display_name}" }
+                        if !is_creator {
+                            button {
+                                class: "px-4 py-1 rounded-full border border-border text-sm font-semibold text-text-primary hover:bg-white/5 transition-colors",
+                                "Follow"
+                            }
+                        }
                     }
                     if !description.is_empty() {
                         p {
-                            class: "text-sm text-foreground leading-5",
-                            style: "overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;",
+                            class: "text-sm text-foreground-muted leading-5 line-clamp-2",
                             dangerous_inner_html: description,
                         }
                     }
