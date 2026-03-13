@@ -24,10 +24,8 @@ pub struct SpaceAction {
     pub started_at: i64,
     pub ended_at: i64,
 
-    // Reward fields (migrated from ActionReward)
     pub credits: u64,
-    pub boost_multiplier: u64,
-    pub total_reward: u64,
+    pub total_points: u64,
 }
 
 #[cfg(feature = "server")]
@@ -53,15 +51,7 @@ impl SpaceAction {
             started_at: now,
             ended_at: now + 7 * 24 * 60 * 60 * 1000, // Default 7 days
             credits: 0,
-            boost_multiplier: 0,
-            total_reward: 0,
+            total_points: 0,
         }
-    }
-
-    pub fn set_credits(mut self, credits: u64) -> Self {
-        self.credits = credits;
-        self.boost_multiplier = credits;
-        self.total_reward = credits * 10_000;
-        self
     }
 }
