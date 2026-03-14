@@ -138,6 +138,13 @@ pub async fn update_space(
         UpdateSpaceRequest::Visibility { visibility } => {
             su = su.with_visibility(visibility.clone());
 
+            let post_pk = space_pk.clone().to_post_key()?;
+            let post_updater = Post::updater(post_pk, EntityType::Post)
+                .with_updated_at(now)
+                .with_space_visibility(visibility.clone())
+                .with_visibility(visibility.clone().into());
+            pu = Some(post_updater);
+
             updated_space.visibility = visibility;
         }
         UpdateSpaceRequest::Content { content } => {

@@ -96,8 +96,7 @@ pub fn SpaceTop(
                                                     space_id,
                                                     controllers::UpdateSpaceRequest::Publish {
                                                         publish: true,
-                                                        // FIXME: Pass actual content and visibility
-                                                        visibility: SpaceVisibility::Public,
+                                                        visibility,
                                                     },
                                                 )
 
