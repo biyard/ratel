@@ -5,6 +5,8 @@ import { GlobalTableStack } from "../lib/dynamodb-stack";
 import { StaticStack } from "../lib/static-stack";
 import { DaemonStack } from "../lib/daemon-stack";
 import { QdrantStack } from "../lib/qdrant-stack";
+import { RegionalLambdaStack } from "../lib/regional-lambda-stack";
+import { EcsClusterStack } from "../lib/ecs-cluster-stack";
 
 const app = new App();
 
@@ -23,33 +25,16 @@ const webDomain = host;
 const apiDomain = `api.${host}`;
 const baseDomain = "ratel.foundation";
 
-// new ImageWorkerStack(app, `ratel-${env}-image-worker`, {
-//   env: {
-//     account: awsAccount,
-//     region: "ap-northeast-2",
-//   },
-// });
-
-const daemonStack = new DaemonStack(app, `ratel-${env}-daemon-ap-northeast-2`, {
-  env: {
-    account: awsAccount,
-    region: "ap-northeast-2",
+const escStack = new EcsClusterStack(
+  app,
+  `ratel-${env}-cluster-ap-northeast-2`,
+  {
+    env: {
+      account: awsAccount,
+      region: "ap-northeast-2",
+    },
   },
-  commit: process.env.COMMIT!,
-});
-
-new QdrantStack(app, `ratel-${env}-qdrant-ap-northeast-2`, {
-  env: {
-    account: awsAccount,
-    region: "ap-northeast-2",
-  },
-  stage: env,
-  cluster: daemonStack.cluster,
-  vpc: daemonStack.vpc,
-  qdrantApiKey: process.env.QDRANT_API_KEY,
-  baseDomain,
-  vectorDomain: `vector.${host}`,
-});
+);
 
 new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {
   env: {
@@ -65,37 +50,68 @@ new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {
   baseDomain,
   apiDomain,
   enableEcs: highTrafficRegions.includes("ap-northeast-2"),
-  cluster: daemonStack.cluster,
-  vpc: daemonStack.vpc,
+  vpc: escStack.vpc,
+  cluster: escStack.cluster,
 });
 
-new RegionalServiceStack(app, `ratel-${env}-svc-eu-central-1`, {
-  env: {
-    account: awsAccount,
-    region: "eu-central-1",
-  },
-  stage: env,
-  fullDomainName: host,
-  healthCheckPath: "/version",
-  commit: process.env.COMMIT!,
-  pghost: process.env.PGHOST_EU!,
-  baseDomain,
-  apiDomain,
-});
+// new DaemonStack(app, `ratel-${env}-daemon-ap-northeast-2`, {
+//   env: {
+//     account: awsAccount,
+//     region: "ap-northeast-2",
+//   },
+//   commit: process.env.COMMIT!,
+//   vpc: escStack.vpc,
+//   cluster: escStack.cluster,
+// });
 
-new RegionalServiceStack(app, `ratel-${env}-svc-us-east-1`, {
-  env: {
-    account: awsAccount,
-    region: "us-east-1",
-  },
-  stage: env,
-  fullDomainName: host,
-  healthCheckPath: "/version",
-  commit: process.env.COMMIT!,
-  pghost: process.env.PGHOST_US!,
-  baseDomain,
-  apiDomain,
-});
+// new QdrantStack(app, `ratel-${env}-qdrant-ap-northeast-2`, {
+//   env: {
+//     account: awsAccount,
+//     region: "ap-northeast-2",
+//   },
+//   stage: env,
+//   vpc: escStack.vpc,
+//   cluster: escStack.cluster,
+//   qdrantApiKey: process.env.QDRANT_API_KEY,
+//   baseDomain,
+//   vectorDomain: `vector.${host}`,
+// });
+
+// new RegionalLambdaStack(app, `ratel-${env}-lambda-ap-northeast-2`, {
+//   env: {
+//     account: awsAccount,
+//     region: "ap-northeast-2",
+//   },
+//   stage: env,
+// });
+
+// new RegionalServiceStack(app, `ratel-${env}-svc-eu-central-1`, {
+//   env: {
+//     account: awsAccount,
+//     region: "eu-central-1",
+//   },
+//   stage: env,
+//   fullDomainName: host,
+//   healthCheckPath: "/version",
+//   commit: process.env.COMMIT!,
+//   pghost: process.env.PGHOST_EU!,
+//   baseDomain,
+//   apiDomain,
+// });
+
+// new RegionalServiceStack(app, `ratel-${env}-svc-us-east-1`, {
+//   env: {
+//     account: awsAccount,
+//     region: "us-east-1",
+//   },
+//   stage: env,
+//   fullDomainName: host,
+//   healthCheckPath: "/version",
+//   commit: process.env.COMMIT!,
+//   pghost: process.env.PGHOST_US!,
+//   baseDomain,
+//   apiDomain,
+// });
 
 new GlobalAccelStack(app, "GlobalAccel", {
   stackName,
