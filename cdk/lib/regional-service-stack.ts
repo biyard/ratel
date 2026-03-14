@@ -49,6 +49,7 @@ export interface RegionalServiceStackProps extends StackProps {
   enableEcs?: boolean;
   cluster?: ecs.ICluster;
   vpc?: ec2.IVpc;
+  namespace?: sd.PrivateDnsNamespace;
 }
 
 export class RegionalServiceStack extends Stack {
@@ -66,7 +67,7 @@ export class RegionalServiceStack extends Stack {
       description: "Ratel API Gateway",
     });
 
-    if (props.enableEcs && props.cluster && props.vpc) {
+    if (props.enableEcs && props.cluster && props.vpc && props.namespace) {
       // --- ECS Fargate deployment (high-traffic region) ---
       const { cluster, vpc } = props;
 
@@ -131,11 +132,6 @@ export class RegionalServiceStack extends Stack {
         protocol: ecs.Protocol.TCP,
       });
 
-      const namespace = new sd.PrivateDnsNamespace(this, "AppShellNamespace", {
-        name: `ratel-${props.stage}-svc.local`,
-        vpc,
-      });
-
       const fargateService = new ecs.FargateService(this, "AppShellService", {
         cluster,
         taskDefinition,
@@ -146,9 +142,9 @@ export class RegionalServiceStack extends Stack {
         vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
         securityGroups: [sg],
         cloudMapOptions: {
-          name: "app-shell",
-          cloudMapNamespace: namespace,
-          dnsRecordType: sd.DnsRecordType.A,
+          name: "app",
+          cloudMapNamespace: props.namespace,
+          dnsRecordType: sd.DnsRecordType.SRV,
           container,
           containerPort: 8080,
         },

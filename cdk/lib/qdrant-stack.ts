@@ -146,7 +146,7 @@ export class QdrantStack extends Stack {
       cloudMapOptions: {
         name: "qdrant",
         cloudMapNamespace: namespace,
-        dnsRecordType: sd.DnsRecordType.A,
+        dnsRecordType: sd.DnsRecordType.SRV,
         container,
         containerPort: 6333,
       },
