@@ -53,39 +53,23 @@ fn serve(app: fn() -> Element) {
                             && payload.get("detail").is_some()
                         {
                             let eb_event: EventBridgeEnvelope = serde_json::from_value(payload)
-                                .map_err(|e| {
-                                    lambda_runtime::Error::from(format!(
-                                        "Failed to parse EventBridge event: {e}"
-                                    ))
-                                })?;
+                                .map_err(lambda_runtime::Error::from)?;
                             event_bridge_handler(LambdaEvent::new(eb_event, ctx)).await?;
                             Ok::<serde_json::Value, lambda_runtime::Error>(
                                 serde_json::json!({"statusCode": 200}),
                             )
                         } else {
                             let lambda_request: lambda_http::request::LambdaRequest =
-                                serde_json::from_value(payload).map_err(|e| {
-                                    lambda_runtime::Error::from(format!(
-                                        "Failed to parse HTTP event: {e}"
-                                    ))
-                                })?;
+                                serde_json::from_value(payload)
+                                    .map_err(lambda_runtime::Error::from)?;
                             let mut adapter = lambda_http::Adapter::from(app);
-                            let svc = adapter.ready().await.map_err(|e| {
-                                lambda_runtime::Error::from(format!("Service not ready: {e:?}"))
-                            })?;
+                            let svc = adapter.ready().await.map_err(lambda_runtime::Error::from)?;
+
                             let resp = svc
                                 .call(LambdaEvent::new(lambda_request, ctx))
                                 .await
-                                .map_err(|e| {
-                                    lambda_runtime::Error::from(format!(
-                                        "HTTP handler error: {e:?}"
-                                    ))
-                                })?;
-                            serde_json::to_value(resp).map_err(|e| {
-                                lambda_runtime::Error::from(format!(
-                                    "Failed to serialize response: {e}"
-                                ))
-                            })
+                                .map_err(lambda_runtime::Error::from)?;
+                            serde_json::to_value(resp).map_err(lambda_runtime::Error::from)
                         }
                     }
                 },
