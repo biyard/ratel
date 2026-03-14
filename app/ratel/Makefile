@@ -57,6 +57,9 @@ run:
 build:
 	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web --platform web @server --features server --platform server
 
+build-arm:
+	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web --platform web @server --features server --platform server --target aarch64-unknown-linux-gnu
+
 build-lambda:
 	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web --platform web @server --features lambda --platform server
 
