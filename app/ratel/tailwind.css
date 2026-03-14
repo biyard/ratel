@@ -1,0 +1,810 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "./assets/tailwind-colors.css";
+
+@import url("https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800&family=Inter:wght@400;500;700&display=swap");
+
+@source "./src/**/*.{rs,css}";
+
+@custom-variant light (&:where([data-theme=light], [data-theme=light] *));
+
+/* ==========================================================================
+   DESIGN TOKENS - CORE FOUNDATION
+   ========================================================================== */
+
+/* ----------------------------
+   THEME TOGGLE (CSS Space Toggle)
+   dark = default. [data-theme="light"] flips the toggles.
+   Pattern: var(--dark, <dark-val>) var(--light, <light-val>)
+   ---------------------------- */
+html[data-theme="dark"] {
+  --dark: initial;
+  --light: ;
+}
+
+html[data-theme="light"] {
+  --dark: ;
+  --light: initial;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --dark: initial;
+    --light: ;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --dark: ;
+    --light: initial;
+  }
+}
+
+/* ----------------------------
+   COLOR PALETTE (Raw values)
+   NEVER use these directly in components
+   ---------------------------- */
+@theme static {
+  /* Neutral grayscale */
+  --gray-50: #ffffff;
+  --gray-80: #6b6b6b;
+  --gray-100: #fafafa;
+  --gray-400: #a1a1a1;
+  --gray-500: #737373;
+  --gray-300: #d4d4d4;
+  --gray-600: #525252;
+  --gray-700: #404040;
+  --gray-800: #262626;
+  --gray-900: #171717;
+  --gray-950: #0a0a0a;
+
+  /* Base backgrounds */
+  --bg-dark: #1d1d1d;
+  --bg-component-dark: #191919;
+
+  /* Brand colors */
+  --brand-primary: #fcb300;
+  --brand-secondary: #777677;
+
+  /* Accent colors */
+  --accent-pink: #db2780;
+  --accent-pink-light: #ff9eee;
+  --accent-green: #6eedd8;
+
+  /* Special utilities */
+  --pink-transparent-10: #db27801a;
+  --blue-selection: #003366;
+
+  /* UI-specific grays */
+  --ui-gray-30: #aeaeae;
+  --ui-gray-50: #777677;
+  --ui-gray-70: #464646;
+  --ui-gray-80: #323232;
+  --ui-gray-cg-30: #aeb8b8;
+
+  /* Static roles (don't change with theme) */
+  --role-tag-static: #dee1e6;
+  --role-mission-static: #dee1e6;
+  --role-copyright-static: #9095a1;
+}
+
+/* ----------------------------
+   SEMANTIC TOKENS
+   Pattern: var(--dark, <dark-val>) var(--light, <light-val>)
+   Properties with same value in both themes use plain values.
+   ---------------------------- */
+@theme static {
+  /* Core surfaces */
+  --background: var(--dark, var(--bg-dark)) var(--light, var(--gray-50));
+  --card: var(--dark, var(--bg-component-dark)) var(--light, var(--gray-100));
+  --popover: var(--dark, #1a1a1a) var(--light, var(--gray-50));
+
+  /* Text hierarchy */
+  --foreground: var(--dark, var(--gray-50)) var(--light, var(--gray-800));
+  --foreground-muted: var(--dark, var(--gray-400)) var(--light, var(--gray-600));
+  --foreground-more-muted: var(--dark, var(--gray-600))
+    var(--light, var(--gray-400));
+  --foreground-inverted: var(--dark, var(--gray-50))
+    var(--light, var(--gray-700));
+  --popover-foreground: #000203;
+  --card-foreground: var(--dark, var(--gray-400)) var(--light, var(--gray-800));
+  --card-foreground-muted: var(--gray-600);
+  --card-foreground-more-muted: var(--dark, var(--gray-800))
+    var(--light, var(--gray-400));
+  --card-meta: var(--dark, var(--gray-300)) var(--light, var(--gray-600));
+
+  /* Actions and states */
+  --primary: var(--brand-primary);
+  --primary-foreground: #000000;
+  --accent: var(--accent-green);
+  --accent-foreground: #000000;
+  --accent-hover: var(--dark, #282828) var(--light, #e5e5e5);
+
+  --destructive: var(--accent-pink);
+  --destructive-foreground: #ffffff;
+
+  /* Forms and inputs */
+  --input: var(--dark, var(--ui-gray-80)) var(--light, #e0e0e0);
+  --ring: var(--brand-primary);
+
+  /* Borders and dividers */
+  --border: var(--dark, var(--ui-gray-80))
+    var(--light, var(--table-light-border));
+  --border-separator: var(--dark, var(--gray-800)) var(--light, #e5e5e5);
+  --border-subtle: var(--dark, #464646) var(--light, var(--gray-700));
+
+  /* Table styles */
+  --table-bg: var(--dark, var(--bg-dark)) var(--light, var(--gray-50));
+  --table-border: var(--dark, #444444) var(--light, var(--table-light-border));
+  --table-header-bg: var(--dark, #2d2d2d) var(--light, var(--gray-100));
+  --table-header-fg: var(--dark, #f0f0f0) var(--light, #333333);
+  --table-row-bg: var(--dark, #1a1a1a) var(--light, var(--gray-50));
+  --table-row-alt-bg: var(--dark, #222222) var(--light, var(--gray-100));
+  --table-row-hover-bg: var(--dark, #222222)
+    var(--light, var(--table-light-hover));
+  --table-cell-fg: var(--dark, #e0e0e0) var(--light, #333333);
+  --table-selection-bg: var(--dark, var(--blue-selection))
+    var(--light, var(--table-light-selection));
+
+  /* ================================
+     LEGACY TOKENS (Deprecated - for migration only)
+     ================================ */
+  --color-home-side: var(--dark, #ffffff) var(--light, #fcb300);
+  --color-home-side-text: var(--dark, #1d1d1d) var(--light, #262626);
+  --color-reply-box: var(--dark, #262626) var(--light, #ffffff);
+  --color-create-space-bg: var(--dark, #1a1a1a) var(--light, #fafafa);
+  --color-create-space-border: var(--dark, #262626) var(--light, #d4d4d4);
+  --color-create-space-desc: #525252;
+  --color-create-space-label: #a1a1a1;
+
+  --color-space-box-bg: var(--dark, #191919) var(--light, #ffffff);
+  --color-space-box-border: var(--dark, var(--background)) var(--light, #e5e5e5);
+  --color-button-border: var(--dark, #ffffff) var(--light, #e5e5e5);
+  --color-neutral-400: var(--dark, var(--foreground-muted))
+    var(--light, var(--foreground-more-muted));
+  --color-neutral-500: var(--gray-500);
+  --color-neutral-600: var(--foreground-more-muted);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --color-component-bg: var(--card);
+  --color-custom-white: var(--dark, #ffffff) var(--light, var(--gray-800));
+  --color-neutral-900: var(--dark, var(--gray-900)) var(--light, var(--gray-50));
+  --color-primary: var(--primary);
+  --color-secondary: var(--brand-secondary);
+  --color-supportive: var(--accent);
+  --color-against: var(--accent-pink-light);
+  --color-footer: var(--dark, var(--bg-component-dark))
+    var(--light, var(--gray-900));
+  --color-tag: var(--role-tag-static);
+  --color-mission-title: var(--role-mission-static);
+  --color-btn-hover: var(--accent-hover);
+  --color-tab-hover: var(--accent-hover);
+  --color-web-bg: var(--gray-950);
+  --color-copyright: var(--role-copyright-static);
+  --color-input: var(--input);
+  --color-input-bg-regular: var(--dark, #101010) var(--light, #f5f5f5);
+  --color-input-stroke-regular: var(--dark, #525252) var(--light, #a3a3a3);
+  --color-ring: var(--ring);
+  --color-error: var(--destructive);
+
+  --color-bg: var(--dark, #1d1d1d) var(--light, #f5f5f5);
+  --color-card-bg: var(--dark, #1a1a1a) var(--light, #fff);
+  --color-card-bg-secondary: var(--dark, #191919) var(--light, #ffffff);
+  --color-card-enable-border: var(--dark, #404040) var(--light, #e5e5e5);
+  --color-card-border: var(--dark, #262626) var(--light, #d4d4d4);
+  --color-card-border-secondary: var(--dark, #191919) var(--light, #e5e5e5);
+  --color-border-primary: var(--dark, #8d8d8d) var(--light, #262626);
+  --color-text-primary: var(--dark, #ffffff) var(--light, #262626);
+  --color-text-secondary: var(--dark, #f9fafb) var(--light, #262626);
+  --color-text-third: var(--dark, #171717) var(--light, #262626);
+  --color-profile-bg: #d9d9d9;
+  --color-button-bg: var(--dark, #ffffff) var(--light, #f5f5f5);
+  --color-create-button-bg: var(--dark, #ffffff) var(--light, #fcb300);
+  --color-more-text: var(--dark, #a1a1a1) var(--light, #737373);
+  --color-follow-button-bg: #404040;
+  --color-follow-button-text: #ffffff;
+  --color-follow-button-bg-secondary: var(--dark, #ffffff) var(--light, #fcb300);
+  --color-follow-button-text-secondary: #000203;
+  --color-follow-button-border: var(--dark, #ffffff) var(--light, #fcb300);
+  --color-unfollow-button-bg: var(--dark, #191919) var(--light, #ffffff);
+  --color-unfollow-button-text: var(--dark, #404040) var(--light, #000203);
+  --color-unfollow-button-border: var(--dark, #404040) var(--light, #000203);
+  --color-select-date-bg: var(--dark, #1a1a1a) var(--light, #f5f5f5);
+  --color-select-date-border: var(--dark, #262626) var(--light, #d4d4d4);
+  --color-select-booster-bg: var(--dark, #1a1a1a) var(--light, #fafafa);
+
+  --color-title-text: var(--dark, #d4d4d4) var(--light, #262626);
+  --color-desc-text: var(--dark, #d4d4d4) var(--light, #525252);
+  --color-time-text: #6d6d6d;
+  --color-divider: var(--dark, #262626) var(--light, #e5e5e5);
+  --color-enable-button-bg: #fcb300;
+  --color-enable-button-white-text: #ffffff;
+  --color-enable-button-text: #000203;
+  --color-disable-button-bg: var(--gray-600);
+  --color-disable-button-white-text: #ffffff;
+  --color-button-text: #18181b;
+
+  --color-menu-text: #737373;
+  --color-tab-label: #a1a1a1;
+  --color-setting-card-border: var(--dark, #262626) var(--light, #e5e5e5);
+  --color-modal-card-bg: var(--dark, #1a1a1a) var(--light, #fafafa);
+  --color-modal-card-border: var(--dark, #262626) var(--light, #d4d4d4);
+  --color-modal-label-text: #a1a1a1;
+
+  --color-label-color-bg: var(--dark, #1d1d1d) var(--light, #fcb300);
+  --color-label-color-border: #fcb300;
+  --color-label-color-text: var(--dark, #fcb300) var(--light, #ffffff);
+  --color-label-color-bg-secondary: #ffffff;
+  --color-label-color-border-secondary: #404040;
+  --color-label-text: var(--dark, #ffffff) var(--light, #404040);
+  --color-input-box-bg: var(--dark, #1a1a1a) var(--light, #fafafa);
+  --color-input-box-border: var(--dark, #464646) var(--light, #e5e5e5);
+  --color-hover: var(--dark, #282828) var(--light, #e5e5e5);
+  --color-write-comment-box-bg: var(--dark, #262626) var(--light, #e5e5e5);
+  --color-write-comment-box-border: var(--dark, #404040) var(--light, #d4d4d4);
+  --color-write-comment-box-icon: #737373;
+  --color-write-comment-box-text: var(--dark, #737373) var(--light, #a3a3a3);
+  --color-comment-icon: var(--dark, #aeaaab) var(--light, #737373);
+  --color-comment-icon-text: var(--dark, #a1a1a1) var(--light, #404040);
+  --color-comment-box-bg: var(--dark, #171717) var(--light, #ffffff);
+  --color-disabled-button-bg: var(--dark, #404040) var(--light, #d9d9d9);
+  --color-disabled-button-text: var(--dark, #737373)
+    var(--light, var(--gray-600));
+
+  /* Post creation colors */
+  --color-post-input-bg: var(--dark, #101010) var(--light, #f5f5f5);
+  --color-post-input-border: var(--dark, #404040) var(--light, #a3a3a3);
+  --color-post-input-placeholder: var(--dark, #525252) var(--light, #a3a3a3);
+  --color-post-input-counter: #6b6b6b;
+  --color-post-required-marker: #ef4444;
+  --color-post-save-button-disabled-bg: #262626;
+  --color-post-save-button-disabled-text: #737373;
+
+  /* Quiz colors */
+  --color-quiz-overview-label: #8c8c8c;
+  --color-quiz-overview-counter: #6b6b6b;
+  --color-quiz-editor-bg: var(--dark, #101010) var(--light, #f5f5f5);
+  --color-quiz-editor-border: var(--dark, #525252) var(--light, #a3a3a3);
+  --color-quiz-editor-toolbar-border: var(--dark, #262626) var(--light, #e5e5e5);
+  --color-quiz-editor-placeholder: var(--dark, #525252) var(--light, #737373);
+  --color-quiz-editor-action: #8c8c8c;
+  --color-quiz-editor-icon: #737373;
+  --color-quiz-section-description: var(--dark, #d4d4d4) var(--light, #262626);
+  --color-quiz-upload-zone-bg: var(--dark, #1a1a1a) var(--light, #fafafa);
+  --color-quiz-upload-zone-border: var(--dark, #404040) var(--light, #e5e5e5);
+  --color-quiz-upload-card-bg: var(--dark, #1a1a1a) var(--light, #fafafa);
+  --color-quiz-upload-card-border: var(--dark, #262626) var(--light, #e5e5e5);
+  --color-quiz-upload-meta: var(--dark, #8c8c8c) var(--light, #525252);
+  --color-quiz-upload-helper: var(--dark, #a3a3a3) var(--light, #525252);
+  --color-quiz-upload-cta-icon: #737373;
+  --color-quiz-upload-cta-text: var(--dark, #0a0a0a) var(--light, #ffffff);
+  --color-quiz-upload-view-bg: var(--dark, #ffffff) var(--light, #404040);
+  --color-quiz-upload-view-text: var(--dark, #0a0a0a) var(--light, #ffffff);
+
+  /* Panel colors */
+  --color-panel-container-bg: var(--dark, #1a1a1a) var(--light, #fafafa);
+  --color-panel-title: var(--dark, #ffffff) var(--light, #171717);
+  --color-panel-table-header: var(--dark, #737373) var(--light, #525252);
+  --color-panel-delete-icon: var(--dark, #ffffff) var(--light, #404040);
+
+  /* Dropdown/Select colors */
+  --color-dropdown-bg: var(--dark, #1d1d1d) var(--light, #f5f5f5);
+  --color-dropdown-item-bg: var(--dark, #101010) var(--light, #f5f5f5);
+  --color-dropdown-item-hover-bg: var(--dark, rgba(0, 0, 0, 0.2))
+    var(--light, rgba(0, 0, 0, 0.1));
+  --color-dropdown-border: var(--dark, #fcb300) var(--light, #a3a3a3);
+  --color-dropdown-text: var(--dark, #ffffff) var(--light, #171717);
+  --color-dropdown-text-placeholder: var(--dark, #525252) var(--light, #a3a3a3);
+  --color-dropdown-text-caption: #8c8c8c;
+  --color-dropdown-chevron: var(--dark, #ffffff) var(--light, #171717);
+  --color-dropdown-indicator: var(--dark, #fcb300) var(--light, #a3a3a3);
+  --color-dropdown-focus-bg: var(--dark, #171717) var(--light, #ffffff);
+
+  --color-cancel-button-bg: var(--dark, #1a1a1a) var(--light, #ffffff);
+  --color-cancel-button-text: var(--dark, #a1a1a1) var(--light, #a3a3a3);
+  --color-submit-button-bg: #fcb300;
+  --color-submit-button-text: #1d1d1d;
+  --color-space-side-label: var(--dark, #737373) var(--light, #262626);
+  --color-c-wg-70: var(--ui-gray-70);
+
+  --color-btn-outline: var(--ui-gray-70);
+  --color-btn-outline-hover: var(--color-white);
+  --color-btn-outline-text: var(--color-white);
+
+  --color-back-icon: var(--dark, #ffffff) var(--light, #737373);
+}
+
+/* ----------------------------
+   LAYOUT TOKENS
+   ---------------------------- */
+@theme static {
+  --breakpoint-desktop: 1177px;
+  --breakpoint-tablet: 900px;
+  --breakpoint-mobile: 500px;
+  --breakpoint-sm-mobile: 380px;
+
+  --container-desktop: 1177px;
+  --container-tablet: 900px;
+  --container-mobile: 500px;
+  --container-sm-mobile: 380px;
+}
+
+/* ----------------------------
+   LEGACY ALIASES (Avoid using in new code)
+   ---------------------------- */
+/* @theme static { */
+/*   --color-custom-white: var(--foreground); */
+/*   --color-neutral-900: var(--background); */
+/*   --color-neutral-80: var(--gray-80); */
+/*   --color-neutral-400: var(--gray-400); */
+/*   --color-neutral-500: var(--gray-500); */
+/*   --color-neutral-600: var(--gray-600); */
+/*   --color-neutral-700: var(--gray-700); */
+/*   --color-neutral-800: var(--gray-800); */
+/* } */
+
+/* ==========================================================================
+   GLOBAL STYLES
+   ========================================================================== */
+
+html {
+  background-color: var(--background);
+  color: var(--foreground-muted);
+}
+
+/* Modern macOS-style scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ui-gray-70) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--ui-gray-70);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--ui-gray-50);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.hide-scrollbar {
+  overflow-x: scroll;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+button,
+a {
+  @apply cursor-pointer;
+}
+
+:root {
+  --header-height: 88px;
+}
+
+@media (max-width: 500px) {
+  :root {
+    --header-height: 54px;
+  }
+}
+
+/* Light theme scrollbar overrides */
+[data-theme="light"] {
+  scrollbar-color: var(--gray-400) transparent;
+}
+
+[data-theme="light"] *::-webkit-scrollbar-thumb {
+  background-color: var(--gray-400);
+}
+
+[data-theme="light"] *::-webkit-scrollbar-thumb:hover {
+  background-color: var(--gray-500);
+}
+
+/* ==========================================================================
+   COMPONENT STYLES
+   ========================================================================== */
+
+/* ----------------------------
+   Table (ProseMirror / Tiptap)
+   ---------------------------- */
+.tiptap-table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1rem 0;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px var(--table-border);
+}
+
+.tiptap-table-header {
+  background-color: var(--table-header-bg) !important;
+  color: var(--table-header-fg) !important;
+  font-weight: 600;
+  text-align: left;
+  border: 1px solid var(--table-border) !important;
+  padding: 10px 12px;
+}
+
+.tiptap-table-cell {
+  background-color: var(--table-row-bg) !important;
+  color: var(--table-cell-fg) !important;
+  border: 1px solid var(--table-border) !important;
+  padding: 8px 12px;
+  vertical-align: top;
+}
+
+.tiptap-table-row:nth-child(even) .tiptap-table-cell {
+  background-color: var(--table-row-alt-bg) !important;
+}
+
+.tiptap-table .selectedCell {
+  background-color: var(--table-selection-bg) !important;
+}
+
+.tiptap-table-row:hover .tiptap-table-cell {
+  background-color: var(--table-row-hover-bg) !important;
+}
+
+.ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  z-index: 20;
+  background-color: #facc15;
+  pointer-events: auto;
+}
+
+.ProseMirror.resize-cursor {
+  cursor: col-resize;
+}
+
+/* ----------------------------
+   UI Components
+   ---------------------------- */
+.sidemenu-link {
+  @apply flex flex-row items-center gap-1 px-1 py-2 rounded-md font-bold text-sm;
+
+  &:hover {
+    background-color: var(--accent-hover);
+  }
+}
+
+.med-16 {
+  @apply font-medium text-base/[24px] align-middle tracking-[0.5px];
+}
+
+.feed-content h2 {
+  @apply text-base font-bold mb-2 mt-4;
+  color: var(--foreground);
+}
+
+.rule-with-text {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: var(--ui-gray-30);
+  font-size: 14px;
+}
+
+.rule-with-text::before,
+.rule-with-text::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid var(--ui-gray-80);
+  margin: 0 1rem;
+}
+
+/* ----------------------------
+   Utilities
+   ---------------------------- */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.ProseMirror ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+}
+.ProseMirror ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+}
+
+/* Toast overrides */
+.custom-toast-wrapper {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+.custom-toast-body {
+  padding: 0 !important;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.momentum {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ==========================================================================
+   TAILWIND UTILITIES FOR SEMANTIC TOKENS
+   ========================================================================== */
+@layer utilities {
+  .border-dashed {
+    border-style: dashed;
+    dashes: 5, 5;
+  }
+
+  /* Text colors */
+  .text-text-primary {
+    color: var(--foreground);
+  }
+  .text-text-primary-muted {
+    color: var(--foreground-muted);
+  }
+  .text-text-primary-more-muted {
+    color: var(--foreground-more-muted);
+  }
+  .text-popover-foreground {
+    color: var(--popover-foreground);
+  }
+  .text-text-primary-inverted {
+    color: var(--foreground-inverted);
+  }
+  .text-card-meta {
+    color: var(--card-meta);
+  }
+
+  .text-card-more-muted {
+    color: var(--card-foreground-more-muted);
+  }
+
+  /* Background colors */
+  .bg-popover {
+    background-color: var(--popover);
+  }
+  .bg-card {
+    background-color: var(--card);
+  }
+  .bg-card-foreground {
+    background-color: var(--card-foreground);
+  }
+  .bg-card-foreground-muted {
+    background-color: var(--card-foreground-muted);
+  }
+  .bg-card-foreground-more-muted {
+    background-color: var(--card-foreground-more-muted);
+  }
+  .bg-accent {
+    background-color: var(--accent);
+  }
+
+  /* Border colors */
+  .border-separator {
+    border-color: var(--border-separator);
+  }
+  .border-subtle {
+    border-color: var(--border-subtle);
+  }
+
+  /* Panel delete icon color override */
+  .panel-delete-btn svg path,
+  .panel-delete-btn svg rect {
+    stroke: var(--color-panel-delete-icon) !important;
+  }
+}
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
+
+@theme static {
+  /* Primary (same in both themes) */
+  --color-btn-primary-bg: #fcb300;
+  --color-btn-primary-outline: #fcb300;
+  --color-btn-primary-text: #0a0a0a;
+  --color-btn-primary-hover-bg: #ca8f00;
+  --color-btn-primary-hover-outline: #ca8f00;
+  --color-btn-primary-hover-text: #0a0a0a;
+  --color-btn-primary-disable-bg: #8c680f;
+  --color-btn-primary-disable-outline: #8c680f;
+  --color-btn-primary-disable-text: #0a0a0a;
+
+  /* Secondary */
+  --color-btn-secondary-bg: var(--dark, #ffffff) var(--light, #404040);
+  --color-btn-secondary-outline: var(--dark, #ffffff) var(--light, #404040);
+  --color-btn-secondary-text: var(--dark, #0a0a0a) var(--light, #ffffff);
+  --color-btn-secondary-hover-bg: var(--dark, #cccccc) var(--light, #333333);
+  --color-btn-secondary-hover-outline: var(--dark, #cccccc)
+    var(--light, #333333);
+  --color-btn-secondary-hover-text: var(--dark, #0a0a0a) var(--light, #ffffff);
+  --color-btn-secondary-disable-bg: var(--dark, #8e8e8e) var(--light, #999999);
+  --color-btn-secondary-disable-outline: var(--dark, #8e8e8e)
+    var(--light, #999999);
+  --color-btn-secondary-disable-text: var(--dark, #0a0a0a) var(--light, #ffffff);
+
+  /* Outline */
+  --color-btn-outline-bg: transparent;
+  --color-btn-outline-outline: var(--dark, #ffffff) var(--light, #a3a3a3);
+  --color-btn-outline-text: var(--dark, #ffffff) var(--light, #171717);
+  --color-btn-outline-hover-bg: var(--dark, #ffffff0d) var(--light, #c1c1c1);
+  --color-btn-outline-hover-outline: var(--dark, #cccccc) var(--light, #a3a3a3);
+  --color-btn-outline-hover-text: var(--dark, #ffffff) var(--light, #171717);
+  --color-btn-outline-disable-bg: transparent;
+  --color-btn-outline-disable-outline: var(--dark, #8e8e8e)
+    var(--light, #cacaca);
+  --color-btn-outline-disable-text: var(--dark, #8e8e8e) var(--light, #848484);
+}
+
+/* ==========================================================================
+   Icons
+   ========================================================================== */
+
+@theme static {
+  --color-icon-primary: #737373;
+  --color-icon-secondary: var(--dark, #ffffff) var(--light, #262626);
+}
+
+/* ==========================================================================
+   Font
+   ========================================================================== */
+
+@theme static {
+  --font-raleway: "Raleway", sans-serif;
+  --font-inter: "Inter", sans-serif;
+
+  --color-font-primary: var(--dark, #ffffff) var(--light, #191919);
+}
+
+/* ==========================================================================
+   Space Page
+   ========================================================================== */
+
+@theme static {
+  --color-space-bg: var(--dark, #191919) var(--light, #f9f9f9);
+  --color-space-body-bg: #1d1d1d;
+
+  --color-space-nav-item-hover: var(--dark, #FCB30005) var(--light, #00000005);
+  --color-space-nav-item-selected: var(--dark, #FCB3000D) var(--light, #0000001A);
+}
+
+/* =============================================================
+   Space Page Actions(sp-act)
+   ========================================================== */
+
+@theme static {
+  --color-sp-act-card-bg: var(--dark, #1a1a1a) var(--light, #ffffff);
+  --color-sp-act-card-stroke: var(--dark, #404040) var(--light, #e5e5e5);
+  --color-sp-act-icon-neutral: #737373;
+}
+
+/* =============================================================
+   Headings
+   ========================================================== */
+
+h3 {
+  @apply font-bold text-[24px]/[28px] tracking-[-0.24px];
+}
+
+/* ==========================================================================
+   Space Page Dashboard
+   ========================================================================== */
+
+@theme static {
+  --color-space-dashboard-card-bg: #171717;
+  --color-space-dashboard-header-bg: #262626;
+  --color-space-dashboard-accent: #fcb300;
+  --color-space-dashboard-text-dark: #1a1a1a;
+  --color-space-dashboard-text-muted: #8c8c8c;
+}
+
+@layer utilities {
+  /* Space Dashboard Backgrounds */
+  .bg-space-dashboard-card {
+    background-color: var(--color-space-dashboard-card-bg);
+  }
+  .bg-space-dashboard-header {
+    background-color: var(--color-space-dashboard-header-bg);
+  }
+  .bg-space-dashboard-accent {
+    background-color: var(--color-space-dashboard-accent);
+  }
+  .bg-space-dashboard-green {
+    background-color: var(--color-green-500);
+  }
+
+  /* Space Dashboard Text Colors */
+  .text-space-dashboard-dark {
+    color: var(--color-space-dashboard-text-dark);
+  }
+  .text-space-dashboard-muted {
+    color: var(--color-space-dashboard-text-muted);
+  }
+  .text-space-dashboard-accent {
+    color: var(--color-space-dashboard-accent);
+  }
+
+  /* Space Dashboard Border Colors */
+  .border-space-dashboard-accent {
+    border-color: var(--color-space-dashboard-accent);
+  }
+
+  /* Icon Colors */
+  .text-icon-primary {
+    color: var(--color-icon-primary);
+  }
+
+  /* Space Dashboard Fonts */
+  .sp-dash-font-inter {
+    font-family: var(--font-inter);
+  }
+  .sp-dash-font-raleway {
+    font-family: var(--font-raleway);
+  }
+}
+
+/* ==========================================================================
+   Badge
+   ========================================================================== */
+
+@theme static {
+  --color-badge-blue: #0ea5e9;
+  --color-badge-green: #22c55e;
+  --color-badge-grey: #99a1af;
+  --color-badge-orange: #f97316;
+  --color-badge-pink: #ec4899;
+  --color-badge-purple: #c27aff;
+  --color-badge-red: #ef4444;
+}
+
+/* ==========================================================================
+   Separator
+   ========================================================================== */
+
+@theme static {
+  --color-tag-stroke: #a1a1a1;
+}
+
+.separator {
+  @apply border-t border-tag-stroke;
+}
+
+.separator[data-orientation="horizontal"] {
+  @apply w-full h-[1px];
+}
+
+.separator[data-orientation="vertical"] {
+  @apply w-[1px] h-full;
+}

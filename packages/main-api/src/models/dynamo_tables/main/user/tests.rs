@@ -1,3 +1,4 @@
+// NOTE: User model tests - models have been migrated to ratel-auth::models
 use super::*;
 use crate::{
     tests::{create_nick_name, create_test_user, get_test_aws_config},

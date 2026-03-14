@@ -1,0 +1,33 @@
+use crate::features::spaces::pages::report::*;
+
+mod candidate_page;
+mod creator_page;
+mod i18n;
+mod participant_page;
+mod viewer_page;
+
+use candidate_page::*;
+use creator_page::*;
+use i18n::*;
+use participant_page::*;
+use viewer_page::*;
+
+#[component]
+pub fn SpaceReportPage(space_id: SpacePartition) -> Element {
+    let role = use_server_future(move || async move { SpaceUserRole::Creator })?.value();
+
+    match role().unwrap_or_default() {
+        SpaceUserRole::Creator => rsx! {
+            CreatorPage { space_id }
+        },
+        SpaceUserRole::Participant => rsx! {
+            ParticipantPage { space_id }
+        },
+        SpaceUserRole::Candidate => rsx! {
+            CandidatePage { space_id }
+        },
+        SpaceUserRole::Viewer => rsx! {
+            ViewerPage { space_id }
+        },
+    }
+}

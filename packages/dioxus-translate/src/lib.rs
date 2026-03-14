@@ -1,8 +1,91 @@
+use dioxus::prelude::*;
 pub use dioxus_translate_macro::*;
 pub use dioxus_translate_types::Translator;
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+
+static LANGUAGE: GlobalSignal<Language> = Signal::global(|| {
+    #[cfg(target_arch = "wasm32")]
+    {
+        if let Some(lang) = read_local_storage(STORAGE_KEY) {
+            if let Ok(l) = lang.parse::<Language>() {
+                return l;
+            }
+        }
+
+        if let Some(lang) = browser_language() {
+            if let Ok(l) = lang.parse::<Language>() {
+                return l;
+            }
+        }
+    }
+
+    Language::default()
+});
+
+pub const STORAGE_KEY: &str = "language";
+
+pub fn use_translate<T: Translator>() -> T {
+    let lang = use_language();
+    let l = lang();
+
+    translate::<T>(&l)
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn use_language() -> Signal<Language> {
+    LANGUAGE.signal()
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub fn use_language() -> Signal<Language> {
+    use_signal(|| language_from_cookie())
+}
+
+/// Reads the language from the `language` cookie in the current HTTP request.
+/// Uses `FullstackContext::current()` to access request headers during SSR.
+/// Returns `Language::default()` if no context or cookie is found.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn language_from_cookie() -> Language {
+    use dioxus::fullstack::FullstackContext;
+
+    let Some(ctx) = FullstackContext::current() else {
+        return Language::default();
+    };
+    let parts = ctx.parts_mut();
+    parts
+        .headers
+        .get("cookie")
+        .and_then(|v| v.to_str().ok())
+        .and_then(|cookies| {
+            cookies
+                .split(';')
+                .find_map(|c| c.trim().strip_prefix("language="))
+        })
+        .and_then(|v| v.parse::<Language>().ok())
+        .unwrap_or_default()
+}
+
+/// Sets the global language signal value.
+pub fn set_language(lang: Language) {
+    LANGUAGE.signal().set(lang);
+}
+
+#[cfg(target_arch = "wasm32")]
+fn read_local_storage(key: &str) -> Option<String> {
+    web_sys::window()?
+        .local_storage()
+        .ok()??
+        .get_item(key)
+        .ok()?
+}
+
+#[cfg(target_arch = "wasm32")]
+fn browser_language() -> Option<String> {
+    let lang = web_sys::window()?.navigator().language()?;
+    Some(lang.split('-').next().unwrap_or(&lang).to_string())
+}
 
 pub fn translate<T: Translator>(lang: &Language) -> T {
     match lang {
@@ -30,13 +113,33 @@ impl Default for Language {
 impl Language {
     pub fn switch(&self) -> Self {
         #[cfg(feature = "ko")]
-        match self {
-            Language::Ko => return Language::En,
-            Language::En => return Language::Ko,
+        let next = match self {
+            Language::Ko => Language::En,
+            Language::En => Language::Ko,
+        };
+
+        #[cfg(not(feature = "ko"))]
+        let next = Language::En;
+
+        LANGUAGE.signal().set(next);
+
+        #[cfg(target_arch = "wasm32")]
+        {
+            use web_sys::wasm_bindgen::JsCast;
+
+            if let Some(window) = web_sys::window() {
+                if let Ok(Some(storage)) = window.local_storage() {
+                    let _ = storage.set_item(STORAGE_KEY, &next.to_string());
+                }
+
+                if let Some(doc) = window.document() {
+                    let html_document = doc.dyn_into::<web_sys::HtmlDocument>().unwrap();
+                    let _ = html_document.set_cookie(&format!("language={}; path=/;", next));
+                }
+            }
         }
 
-        #[allow(unreachable_code)]
-        Language::En
+        next
     }
 
     pub fn open_graph_locale(&self) -> String {
@@ -90,4 +193,8 @@ impl Language {
             vec![Language::En]
         }
     }
+}
+
+pub trait Translate {
+    fn translate(&self, lang: &Language) -> &'static str;
 }

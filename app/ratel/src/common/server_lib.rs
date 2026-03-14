@@ -1,0 +1,23 @@
+pub use schemars::JsonSchema;
+pub use uuid;
+
+pub use aide::OperationIo;
+
+pub use bdk::prelude::*;
+
+pub use by_axum::axum::{
+    extract::{Extension, FromRef, FromRequest, FromRequestParts, Request, State},
+    http::request::Parts,
+};
+
+pub use aws_sdk_dynamodb;
+pub use bdk;
+pub use ethers;
+
+// Re-export for DynamoEntity
+pub use base64;
+pub use serde_dynamo;
+
+pub use tokio;
+
+pub type DynamoClient = aws_sdk_dynamodb::Client;

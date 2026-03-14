@@ -1,0 +1,117 @@
+use super::*;
+
+use crate::features::spaces::pages::actions::actions::poll::components::*;
+use crate::features::spaces::pages::actions::actions::poll::controllers::*;
+use crate::features::spaces::pages::actions::actions::poll::*;
+use crate::features::spaces::space_common::types::space_page_actions_poll_key;
+use std::collections::HashMap;
+
+#[component]
+pub fn PollContent(
+    space_id: ReadSignal<SpacePartition>,
+    poll_id: ReadSignal<SpacePollEntityType>,
+    can_respond: bool,
+) -> Element {
+    let tr: participant::i18n::PollParticipantTranslate = use_translate();
+    let mut query = use_query_store();
+    let nav = navigator();
+    let key = space_page_actions_poll_key(&space_id(), &poll_id());
+
+    let poll_loader = use_query(&key, { move || get_poll(space_id(), poll_id()) })?;
+
+    let poll = poll_loader.read();
+
+    let mut answers: Signal<HashMap<usize, Answer>> = use_signal(|| {
+        let mut map = HashMap::new();
+        if let Some(ref my_resp) = poll.my_response {
+            for (i, ans) in my_resp.iter().enumerate() {
+                map.insert(i, ans.clone());
+            }
+        }
+        map
+    });
+
+    let is_in_progress = poll.status == PollStatus::InProgress;
+    let has_response = poll.my_response.is_some();
+    let can_submit = can_respond && is_in_progress && !has_response;
+    let can_update = can_respond && is_in_progress && has_response && poll.response_editable;
+    let total = poll.questions.len();
+
+    let submit_handler = {
+        let questions = poll.questions.clone();
+        move |_: MouseEvent| {
+            let questions = questions.clone();
+
+            async move {
+                let answers_map = answers.read().clone();
+                let payload: Vec<Answer> = (0..questions.len())
+                    .map(|i| answers_map.get(&i).cloned().unwrap_or_default())
+                    .collect();
+
+                let req = RespondPollRequest { answers: payload };
+
+                if respond_poll(space_id(), poll_id(), req).await.is_ok() {
+                    let keys = space_page_actions_poll_key(&space_id(), &poll_id());
+                    query.invalidate(&keys);
+                }
+            }
+        }
+    };
+
+    rsx! {
+        div { class: "flex w-full flex-col gap-4",
+            TimeRangeDisplay { started_at: poll.started_at, ended_at: poll.ended_at }
+
+            if poll.status == PollStatus::Finish {
+                div { class: "rounded-lg bg-neutral-800 p-3 text-sm text-neutral-400",
+                    {tr.poll_ended}
+                }
+            }
+            if poll.status == PollStatus::NotStarted {
+                div { class: "rounded-lg bg-neutral-800 p-3 text-sm text-neutral-400",
+                    {tr.poll_not_started}
+                }
+            }
+
+            if total == 0 {
+                div { class: "flex items-center justify-center py-10 text-neutral-500",
+                    "No questions yet."
+                }
+            }
+
+            for (idx , question) in poll.questions.iter().enumerate() {
+                {
+                    let question = question.clone();
+                    let current_answer = answers.read().get(&idx).cloned();
+                    let display_idx = idx + 1;
+                    rsx! {
+                        div { class: "rounded-lg border border-neutral-700 bg-neutral-900 p-4",
+                            div { class: "mb-2 text-xs text-neutral-500", "{display_idx} / {total}" }
+                            QuestionViewer {
+                                index: idx,
+                                question,
+                                answer: current_answer,
+                                disabled: !can_respond || !is_in_progress || (!can_submit && !can_update),
+                                on_change: move |ans: Answer| {
+                                    answers.write().insert(idx, ans);
+                                },
+                            }
+                        }
+                    }
+                }
+            }
+
+            if can_submit || can_update {
+                button {
+                    class: "w-full rounded-lg bg-blue-600 py-3 font-medium text-white transition-colors hover:bg-blue-500",
+                    onclick: submit_handler,
+                    if can_update {
+                        {tr.btn_update}
+                    } else {
+                        {tr.btn_submit}
+                    }
+                }
+            }
+        }
+    }
+}

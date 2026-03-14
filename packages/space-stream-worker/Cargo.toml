@@ -1,0 +1,32 @@
+[package]
+name = "space-stream-worker"
+version = "0.1.0"
+authors.workspace = true
+description.workspace = true
+edition.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["fmt"] }
+futures = "0.3"
+
+main-api = { path = "../main-api", default-features = false, features = ["model-only", "server"] }
+
+lambda_runtime = { version = "0.14.3" }
+aws_lambda_events = { version = "0.17.0", features = ["dynamodb"] }
+
+chrono = "0.4"
+aws-config = "1"
+aws-sdk-s3 = "1"
+aws-sdk-dynamodb = { workspace = true }
+serde_dynamo = { workspace = true }
+
+[features]
+default = []
+local-run = []
+lambda = []

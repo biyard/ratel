@@ -2,8 +2,10 @@ use std::{fmt::Display, str::FromStr};
 
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 
-use crate::features::spaces::rewards::{FeatureType, RewardCondition, RewardPeriod};
 use crate::*;
+
+// RewardAction is available actions of a reward
+// Like Poll, Quiz, etc
 
 #[derive(
     Debug,
@@ -19,22 +21,16 @@ use crate::*;
 )]
 pub enum RewardAction {
     #[default]
-    None,
-    PollRespond,
+    Poll,
+    // Quiz,
 }
 
-impl RewardAction {
-    pub fn feature(&self) -> FeatureType {
-        match self {
-            Self::None => FeatureType::None,
-            Self::PollRespond => FeatureType::Poll,
-        }
-    }
-
-    pub fn all(feature: FeatureType) -> Vec<Self> {
-        match feature {
-            FeatureType::None => vec![],
-            FeatureType::Poll => vec![Self::PollRespond],
+impl TryFrom<&EntityType> for RewardAction {
+    type Error = Error;
+    fn try_from(entity_type: &EntityType) -> Result<Self> {
+        match entity_type {
+            EntityType::SpacePoll(_) => Ok(RewardAction::Poll),
+            _ => Err(Error::InvalidEntityType),
         }
     }
 }

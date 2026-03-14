@@ -29,6 +29,7 @@ export SLACK_CHANNEL_ABUSING="dummy"
 export SLACK_CHANNEL_MONITOR="dummy"
 
 export KAIA_ENDPOINT=https://public-en-kairos.node.kaia.io
+export KAIA_ARCHIVE_ENDPOINT=https://archive-en-kairos.node.kaia.io
 export KAIA_OWNER_ADDR=$ADDR
 export KAIA_OWNER_KEY=$KEY
 export KAIA_FEEPAYER_ADDR=$ADDR

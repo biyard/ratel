@@ -1,3 +1,4 @@
+// NOTE: These macros have been migrated to common::macros::dynamo
 #[macro_export]
 macro_rules! transact_write {
     ($cli:expr $(, $tx:expr )* $(,)?) => {{

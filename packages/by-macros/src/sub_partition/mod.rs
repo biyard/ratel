@@ -52,11 +52,10 @@ fn generate_enum_impl(ident: Ident, ds: &DataEnum) -> proc_macro2::TokenStream {
                     serde_with::SerializeDisplay,
                     serde_with::DeserializeFromStr,
                     Default,
-                    schemars::JsonSchema,
                     PartialEq,
                     Eq,
-                    aide::OperationIo,
                 )]
+                #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
                 pub struct #struct_name;
 
                 impl std::fmt::Display for #struct_name {
@@ -126,11 +125,10 @@ fn generate_enum_impl(ident: Ident, ds: &DataEnum) -> proc_macro2::TokenStream {
                         serde_with::SerializeDisplay,
                         serde_with::DeserializeFromStr,
                         Default,
-                        schemars::JsonSchema,
                         PartialEq,
                         Eq,
-                        aide::OperationIo,
                     )]
+                    #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
                     pub struct #struct_name(pub String);
 
                     impl std::fmt::Display for #struct_name {

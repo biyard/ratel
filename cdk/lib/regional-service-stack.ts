@@ -14,9 +14,13 @@ import {
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as r53Targets from "aws-cdk-lib/aws-route53-targets";
-import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
+import {
+  HttpLambdaIntegration,
+} from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
+import { Repository } from "aws-cdk-lib/aws-ecr";
 
 export interface RegionalServiceStackProps extends StackProps {
   // Domain parts, e.g. "dev2.ratel.foundation"
@@ -46,10 +50,17 @@ export class RegionalServiceStack extends Stack {
       domainName: baseDomain,
     });
 
-    const apiLambda = new lambda.Function(this, "Function", {
-      runtime: lambda.Runtime.PROVIDED_AL2023,
-      code: lambda.Code.fromAsset("main-api"),
-      handler: "bootstrap",
+    const appShellRepoName = "ratel/app-shell";
+    const appShellRepository = Repository.fromRepositoryName(
+      this,
+      "AppShellRepository",
+      appShellRepoName,
+    );
+
+    const apiLambda = new lambda.DockerImageFunction(this, "Function", {
+      code: lambda.DockerImageCode.fromEcr(appShellRepository, {
+        tagOrDigest: props.commit,
+      }),
       environment: {
         REGION: this.region,
         DISABLE_ANSI: "true",
@@ -74,7 +85,7 @@ export class RegionalServiceStack extends Stack {
         },
         memorySize: 256,
         timeout: Duration.seconds(150),
-      }
+      },
     );
 
     const eventBus = new events.EventBus(this, "RatelEventBus", {
@@ -103,7 +114,7 @@ export class RegionalServiceStack extends Stack {
     const mainTable = dynamodb.Table.fromTableName(
       this,
       "MainTable",
-      tableName
+      tableName,
     );
 
     mainTable.grantReadData(startSurveyLambda);
@@ -122,8 +133,63 @@ export class RegionalServiceStack extends Stack {
           `arn:aws:ses:${this.region}:${this.account}:identity/ratel.foundation`,
           `arn:aws:ses:${this.region}:${this.account}:template/start_survey`,
         ],
-      })
+      }),
     );
+
+    if (this.region === "ap-northeast-2") {
+      const mainTableStreamArn = cdk.Fn.importValue(
+        `ratel-${props.stage}-main-stream-arn`,
+      );
+      const mainTableWithStream = dynamodb.Table.fromTableAttributes(
+        this,
+        "MainTableWithStream",
+        {
+          tableName,
+          tableStreamArn: mainTableStreamArn,
+        },
+      );
+
+      const spaceStreamLambda = new lambda.Function(this, "SpaceStreamWorker", {
+        runtime: lambda.Runtime.PROVIDED_AL2023,
+        code: lambda.Code.fromAsset("space-stream-worker"),
+        handler: "bootstrap",
+        environment: {
+          REGION: this.region,
+          DISABLE_ANSI: "true",
+          NO_COLOR: "true",
+        },
+        memorySize: 256,
+        timeout: Duration.seconds(150),
+      });
+
+      const privateBucketName =
+        process.env.PRIVATE_BUCKET_NAME ?? "metadata.ratel.foundation";
+      if (privateBucketName) {
+        spaceStreamLambda.addToRolePolicy(
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: ["s3:GetObject", "s3:HeadObject", "s3:PutObject"],
+            resources: [`arn:aws:s3:::${privateBucketName}/*`],
+          }),
+        );
+        spaceStreamLambda.addToRolePolicy(
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: ["s3:ListBucket"],
+            resources: [`arn:aws:s3:::${privateBucketName}`],
+          }),
+        );
+      }
+
+      spaceStreamLambda.addEventSource(
+        new lambdaEventSources.DynamoEventSource(mainTableWithStream, {
+          startingPosition: lambda.StartingPosition.LATEST,
+          batchSize: 10,
+          bisectBatchOnError: true,
+          retryAttempts: 3,
+        }),
+      );
+    }
 
     startSurveyLambda.addToRolePolicy(
       new iam.PolicyStatement({
@@ -139,7 +205,7 @@ export class RegionalServiceStack extends Stack {
           "dynamodb:TransactWriteItems",
         ],
         resources: [mainTable.tableArn, `${mainTable.tableArn}/index/*`],
-      })
+      }),
     );
 
     // --- API Gateway HTTP API ---
@@ -151,7 +217,7 @@ export class RegionalServiceStack extends Stack {
     // Lambda integration
     const lambdaIntegration = new HttpLambdaIntegration(
       "LambdaIntegration",
-      apiLambda
+      apiLambda,
     );
 
     // Add route for all methods and paths
@@ -225,8 +291,8 @@ export class RegionalServiceStack extends Stack {
       target: route53.RecordTarget.fromAlias(
         new r53Targets.ApiGatewayv2DomainProperties(
           domainName.regionalDomainName,
-          domainName.regionalHostedZoneId
-        )
+          domainName.regionalHostedZoneId,
+        ),
       ),
     });
     new route53.AaaaRecord(this, "RegionalAliasV6", {
@@ -235,8 +301,8 @@ export class RegionalServiceStack extends Stack {
       target: route53.RecordTarget.fromAlias(
         new r53Targets.ApiGatewayv2DomainProperties(
           domainName.regionalDomainName,
-          domainName.regionalHostedZoneId
-        )
+          domainName.regionalHostedZoneId,
+        ),
       ),
     });
   }

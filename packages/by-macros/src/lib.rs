@@ -75,6 +75,21 @@ pub fn dynamo_entity_derive(input: TokenStream) -> TokenStream {
     dynamo_entity_impl(input)
 }
 
+#[proc_macro_derive(DummyDynamoEntity, attributes(dynamo))]
+pub fn dummy_dynamo_entity_derive(_input: TokenStream) -> TokenStream {
+    TokenStream::new()
+}
+
+#[proc_macro_derive(DummyJsonSchema)]
+pub fn dummy_json_schema_derive(_input: TokenStream) -> TokenStream {
+    TokenStream::new()
+}
+
+#[proc_macro_derive(DummyOperationIo)]
+pub fn dummy_operation_io_derive(_input: TokenStream) -> TokenStream {
+    TokenStream::new()
+}
+
 #[proc_macro_derive(SubPartition)]
 pub fn sub_partition_derive(input: TokenStream) -> TokenStream {
     let _ = tracing_subscriber::fmt()
@@ -253,6 +268,14 @@ pub fn derive_dioxus_controller(input: TokenStream) -> TokenStream {
                             (self.#field_name)()
                         }
                     }
+                } else if field_type.starts_with("ReadSignal") {
+                    let t = field_type.trim_start_matches("ReadSignal<");
+                    let t: proc_macro2::TokenStream = t[..t.len() - 1].parse().unwrap();
+                    quote! {
+                        pub fn #field_name(&self) -> #t {
+                            (self.#field_name)()
+                        }
+                    }
                 } else if field_type.starts_with("ReadOnlySignal") {
                     let t = field_type.trim_start_matches("ReadOnlySignal<");
                     let t: proc_macro2::TokenStream = t[..t.len() - 1].parse().unwrap();
@@ -276,6 +299,15 @@ pub fn derive_dioxus_controller(input: TokenStream) -> TokenStream {
                     quote! {
                         pub fn #field_name(&self) -> std::result::Result<#t, RenderError> {
                             Ok(self.#field_name.suspend()?())
+                        }
+                    }
+                } else if field_type.starts_with("Loader<") {
+                    let t = field_type.trim_start_matches("Loader<");
+                    let t: proc_macro2::TokenStream = t[..t.len() - 1].parse().unwrap();
+
+                    quote! {
+                        pub fn #field_name(&self) -> #t {
+                            (self.#field_name)()
                         }
                     }
                 } else {

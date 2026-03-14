@@ -1,0 +1,387 @@
+# Playwright E2E Testing
+
+This document provides comprehensive instructions for writing and maintaining Playwright E2E tests for the Ratel Dioxus application.
+
+## Overview
+
+Playwright tests verify the Dioxus fullstack app (served at `http://localhost:8000`) through browser automation. Tests are written in plain JavaScript and use a shared utility layer for consistent element interaction. All authenticated tests depend on a global auth setup that logs in once and saves browser storage state.
+
+## Directory Structure
+
+```
+playwright/
+  playwright.config.js            # Playwright config (ESM)
+  package.json                    # type: commonjs, devDeps: @playwright/test
+  user.json                       # Generated: saved storageState after auth setup
+  tests/
+    config.js                     # Shared constants (TIMEOUT, BASE_URL, ID)
+    utils.js                      # Shared helpers (click, fill, goto, etc.)
+    user.auth.setup.js            # Auth setup — logs in and saves storageState
+    users/                        # Authenticated user test specs
+      post.spec.js                # Example: post creation test
+      *.spec.js                   # New test files go here
+```
+
+## Configuration
+
+### `tests/config.js`
+
+Exports a `CONFIGS` object used across all tests:
+
+| Constant | Env Variable | Default | Description |
+|----------|-------------|---------|-------------|
+| `TIMEOUT` | `PLAYWRIGHT_TIMEOUT` | `5000` | Global timeout (ms) for locator waits and test timeout |
+| `BASE_URL` | `PLAYWRIGHT_BASE_URL` | `http://localhost:8000` | Base URL of the Dioxus app |
+| `ID` | `PLAYWRIGHT_ID` | `Date.now()` | Unique ID for test isolation |
+
+### `playwright.config.js`
+
+Key settings:
+
+- **testDir**: `.` (project root)
+- **fullyParallel**: `true` (parallel file execution)
+- **retries**: `2` on CI, `0` locally
+- **workers**: `1` on CI, auto locally
+- **reporter**: HTML (opens never, hosts on `0.0.0.0`)
+- **trace/video/screenshot**: all `"on"`
+
+### Projects
+
+| Project | testMatch | Description |
+|---------|-----------|-------------|
+| `auth-setup` | `**/*.auth.setup.js` | Runs first; logs in and saves `user.json` |
+| `Individual user tests` | `tests/users/**/*.spec.js` | Depends on `auth-setup`; uses saved `user.json` storageState |
+
+Authenticated tests run on Desktop Chrome at **1440x950** viewport.
+
+## Authentication Flow
+
+The `tests/user.auth.setup.js` file runs before all authenticated tests:
+
+1. Navigates to `/`
+2. Clicks "Sign In" button
+3. Enters email and clicks "Continue"
+4. Enters password and clicks "Continue"
+5. Waits for popup to close (login success)
+6. Saves browser storage state to `user.json`
+
+All tests in `tests/users/` automatically load this storage state, so they start as an authenticated user.
+
+### Reference: `user.auth.setup.js`
+
+```js
+import { test } from "@playwright/test";
+import { waitPopup, click, fill, goto } from "./utils";
+
+test("create storage state", async ({ page }) => {
+  const email = `hi+user1@biyard.co`;
+  const password = "admin!234";
+
+  await goto(page, "/");
+
+  await click(page, { role: "button", text: /sign in/i });
+  await fill(page, { placeholder: "Enter your email address" }, email);
+  await click(page, { text: "Continue" });
+  await fill(page, { placeholder: "Enter your password" }, password);
+  await click(page, { text: "Continue" });
+
+  await waitPopup(page, { visible: false });
+
+  await page.context().storageState({ path: "user.json" });
+});
+```
+
+## Utility Functions
+
+All interaction helpers are defined in `tests/utils.js`. **Always use these instead of raw Playwright APIs.**
+
+### `goto(page, path)`
+
+Navigates to `BASE_URL + path` and waits for `networkidle`.
+
+```js
+await goto(page, "/");           // → http://localhost:8000/
+await goto(page, "/spaces");     // → http://localhost:8000/spaces
+```
+
+### `click(page, opts)`
+
+Finds an element using locator options, asserts it's visible, clicks it, and waits for `networkidle`. Returns the locator.
+
+```js
+await click(page, { role: "button", text: /sign in/i });
+await click(page, { text: "Continue" });
+await click(page, { label: "Create Post" });
+```
+
+### `fill(page, opts, value)`
+
+Finds an element using locator options, asserts it's visible, and fills it with the given value. Returns the locator.
+
+```js
+await fill(page, { placeholder: "Enter your email address" }, "user@example.com");
+await fill(page, { placeholder: "Title" }, "My Post Title");
+```
+
+### `getLocator(page, opts)`
+
+Finds an element using locator options, asserts it's visible (with `CONFIGS.TIMEOUT`), and returns the locator. Use this for visibility assertions.
+
+```js
+// Assert that "Publish" button is visible
+await getLocator(page, { text: "Publish" });
+
+// Get locator for further interaction
+const btn = await getLocator(page, { role: "button", text: "Submit" });
+await expect(btn).toHaveText("Submit");
+```
+
+### `getEditor(page)`
+
+Returns the `[contenteditable]` locator for rich text editor fields (e.g., post body). Asserts the editor is visible.
+
+```js
+const editor = await getEditor(page);
+await editor.fill("Post body content here.");
+```
+
+### `waitPopup(page, { visible })`
+
+Waits for the popup overlay to appear or disappear. The overlay is identified by the CSS class `.backdrop-blur-[10px]`.
+
+- `{ visible: true }` — waits for popup to appear (default)
+- `{ visible: false }` — waits for popup to close (removed from DOM)
+
+```js
+await waitPopup(page, { visible: true });   // popup opened
+await waitPopup(page, { visible: false });  // popup closed
+```
+
+**How popups work in Ratel:** The Dioxus `PopupZone` component renders a full-screen overlay `div` with `backdrop-blur-[10px]` and `z-[101]`. When `popup.close()` is called, the internal signal is set to `None` and the entire overlay is **removed from the DOM** (not hidden with CSS).
+
+### `wrap(page, project, baseDir)`
+
+Adds ordered screenshot capture helpers to the page object. Useful for visual regression or documentation.
+
+```js
+const p = wrap(page, "my-project", "login-flow");
+await p.capture("after-login");        // → screenshots/my-project/login-flow/001-after-login.png
+await p.fullCapture("full-page");      // → full-page screenshot
+await p.clickAndCapture("Continue");   // → clicks text, waits 500ms, captures
+```
+
+## Locator Options
+
+`click`, `fill`, and `getLocator` accept the same options object. Provide exactly one locator strategy:
+
+| Option | Playwright API | Example |
+|--------|---------------|---------|
+| `testId` | `page.getByTestId(id)` | `{ testId: "email-input" }` |
+| `label` | `page.getByLabel(label, { exact: true })` | `{ label: "Create Post" }` |
+| `role` + optional `text` | `page.getByRole(role, { name: text, exact: true })` | `{ role: "button", text: /sign in/i }` |
+| `placeholder` | `page.getByPlaceholder(ph, { exact: true })` | `{ placeholder: "Enter your email address" }` |
+| `text` | `page.getByText(text, { exact: true })` | `{ text: "Continue" }` |
+
+**Resolution priority**: `testId` > `label` > `role` > `placeholder` > `text`
+
+The `text` option in `role` supports both strings and RegExp (e.g., `/sign in/i` for case-insensitive match).
+
+## Writing a New Test
+
+### Step 1: Create a file
+
+Add a new `.spec.js` file under `playwright/tests/users/`:
+
+```
+playwright/tests/users/my-feature.spec.js
+```
+
+### Step 2: Write the test
+
+```js
+import { test } from "@playwright/test";
+import { click, fill, goto, getLocator } from "../utils";
+
+test("should do something after login", async ({ page }) => {
+  // Navigate (storageState is auto-loaded, user is already authenticated)
+  await goto(page, "/");
+
+  // Interact
+  await click(page, { label: "Create Post" });
+  await fill(page, { placeholder: "Title" }, "Test Post");
+
+  // Assert
+  await getLocator(page, { text: "Expected outcome" });
+});
+```
+
+### Step 3: Run the test
+
+```bash
+cd playwright
+npm test                                         # Run all tests
+npx playwright test tests/users/my-feature.spec.js  # Run specific file
+```
+
+## Complete Example: Post Creation
+
+```js
+import { test } from "@playwright/test";
+import { click, fill, goto, getLocator, getEditor } from "../utils";
+
+test("Create a post", async ({ page }) => {
+  await goto(page, "/");
+
+  // Click "Create Post" button (identified by aria-label)
+  await click(page, { label: "Create Post" });
+
+  // Fill in the title
+  await fill(page, { placeholder: "Title" }, "My Playwright Post");
+
+  // Fill in the rich text body
+  const editor = await getEditor(page);
+  await editor.fill("This is a post created using Playwright.");
+
+  // Publish the post
+  await click(page, { text: "Publish" });
+
+  // Verify navigation to the next page
+  await getLocator(page, { label: "Create a Space" });
+});
+```
+
+## App-Specific Reference
+
+### Known `data-testid` Values
+
+| testId | Location | Element |
+|--------|----------|---------|
+| `email-input` | Login modal | Email input field |
+| `password-input` | Login modal | Password input field |
+| `continue-button` | Login modal | Continue/submit button |
+
+### Known `aria-label` Values
+
+| aria-label | Location | Element |
+|------------|----------|---------|
+| `Create Post` | Home page sidebar | Create post button/link |
+| `End of feed message` | Feed list | End-of-feed indicator |
+| `Sidebar` | Home page | Right sidebar container |
+
+### Login Modal (Two-Step Flow)
+
+1. **Step 1**: Email only → placeholder `"Enter your email address"` → click `"Continue"`
+2. **Step 2**: Password appears → placeholder `"Enter your password"` → click `"Continue"`
+3. **Success**: Popup overlay is removed from DOM
+
+### Key UI Elements
+
+| Element | Locator Strategy | Value |
+|---------|-----------------|-------|
+| Sign In button | `{ role: "button", text: /sign in/i }` | Header (unauthenticated) |
+| Home nav link | `{ role: "link", text: /home/i }` | Navigation menu |
+| Membership nav link | `{ role: "link", text: /membership/i }` | Navigation menu |
+| Create Post | `{ label: "Create Post" }` | Home sidebar |
+| Log Out | `{ text: "Log Out" }` | Profile dropdown |
+| Create Team | `{ text: "Create Team" }` | Profile dropdown |
+| Post title input | `{ placeholder: "Title" }` | Post editor |
+| Post editor body | `getEditor(page)` | `[contenteditable]` |
+| Publish button | `{ text: "Publish" }` | Post editor |
+
+### App Routes
+
+| Route | Page |
+|-------|------|
+| `/` | Home (feed list) |
+| `/auth` | Login page |
+| `/auth/forgot-password` | Password reset |
+| `/posts/:..rest` | Post feed/detail/editor |
+| `/membership/:..rest` | Membership pages |
+| `/spaces/:..rest` | Governance spaces |
+| `/:username/:..rest` | User profile |
+| `/teams/:teamname/:..rest` | Team pages |
+| `/admin/:..rest` | Admin section |
+
+## Running Tests
+
+### Local Development
+
+```bash
+cd playwright
+
+# Install dependencies (first time)
+npm install
+npx playwright install chromium
+
+# Run all tests (auth-setup → authenticated tests)
+npm test
+
+# Run only authenticated tests (skips auth-setup if user.json exists)
+npm run test:auth
+
+# Run only auth setup
+npm run test:setup
+
+# Run specific test file
+npx playwright test tests/users/post.spec.js
+
+# Run in headed mode (see the browser)
+npx playwright test --headed
+
+# Run in debug mode (step through)
+npx playwright test --debug
+
+# Open interactive UI mode
+npm run ui
+
+# View HTML report after test run
+npm run report
+```
+
+### Environment Variables
+
+```bash
+# Override base URL (e.g., for staging)
+PLAYWRIGHT_BASE_URL=https://dev.ratel.foundation npx playwright test
+
+# Override timeout (ms)
+PLAYWRIGHT_TIMEOUT=10000 npx playwright test
+
+# Set unique test ID for isolation
+PLAYWRIGHT_ID=my-test-run npx playwright test
+```
+
+## Troubleshooting
+
+### Test Times Out
+
+- Default timeout is 5000ms. Increase with `PLAYWRIGHT_TIMEOUT` env var.
+- Ensure the app is running at `http://localhost:8000` (or set `PLAYWRIGHT_BASE_URL`).
+- Check that `networkidle` is reachable (no long-polling or WebSocket connections that prevent idle).
+
+### Auth Setup Fails
+
+- Verify the test user credentials in `user.auth.setup.js` match a real account.
+- Ensure the login modal elements haven't changed (check `data-testid` and placeholder values).
+- Check that the popup overlay class `backdrop-blur-[10px]` is still used.
+
+### Element Not Found
+
+- Use `npx playwright test --debug` to step through and inspect the DOM.
+- Verify the locator matches by checking the app in a browser at `http://localhost:8000`.
+- Ensure you're using the correct locator option (`testId`, `label`, `role`, `placeholder`, `text`).
+
+### Stale `user.json`
+
+- Delete `playwright/user.json` and re-run to regenerate.
+- The auth-setup project will run again automatically.
+
+## Best Practices
+
+1. **Always use utility helpers** — `goto`, `click`, `fill`, `getLocator` instead of raw Playwright APIs. This keeps tests consistent and handles waits automatically.
+2. **One assertion per test** — Keep tests focused on a single behavior for clear failure messages.
+3. **Use `getLocator` for assertions** — It internally calls `toBeVisible()` with the configured timeout.
+4. **Prefer `label` and `testId`** — These are stable selectors. Avoid CSS class selectors except for `waitPopup`.
+5. **Don't use `page.waitForTimeout()`** — Use `waitPopup`, `getLocator`, or Playwright's built-in auto-waiting instead.
+6. **Plain JavaScript** — All test files use `.js`, not TypeScript.
+7. **No `test.describe` needed** — Individual `test()` calls are fine for simple specs.

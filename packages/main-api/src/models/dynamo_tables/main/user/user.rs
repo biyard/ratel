@@ -1,3 +1,4 @@
+// NOTE: User struct has been migrated to common::models::user
 use crate::features::did::VerifiedAttributes;
 use crate::features::membership::Membership;
 use crate::features::membership::UserMembership;
@@ -171,8 +172,6 @@ impl FromRequestParts<AppState> for Option<User> {
     type Rejection = crate::Error;
 
     async fn from_request_parts(parts: &mut Parts, state: &AppState) -> Result<Self> {
-        tracing::debug!("extracting optional user from request parts");
-
         Ok(User::from_request_parts(parts, state).await.ok())
     }
 }

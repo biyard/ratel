@@ -1,0 +1,4361 @@
+{
+  "Records": [
+    {
+      "eventID": "1",
+      "eventName": "MODIFY",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000000,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "SPACE_COMMON"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "SPACE_COMMON"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "title": {
+            "S": "공론조사_1차 토론"
+          },
+          "overview": {
+            "S": "본 조사는 국회 입법조사처와 협력하여 진행하는 블록체인 기반 공론형 여론조사입니다. 조사 주제는 강간죄 구성요건의 '동의 부재' 기준 전환(비동의 간음죄) 도입에 대한 의견이며, 조사 목적은 공정한 정보 제공과 숙고된 토론을 통해 여론의 형성과 변화를 과학적으로 분석하여 입법 결정의 합리적 참고자료로 활용하는 데 있습니다. 개인정보 보호 및 익명성은 DID 기반 보호, 암호화·분산형 관리, 익명 처리 및 연구 목적 사용, 블록체인 기록의 위·변조 방지로 보장됩니다. 중요 고지사항으로 성폭력 관련 범죄 의견을 묻는 내용이므로 불편하거나 심리적 어려움을 느끼면 언제든 참여를 중단할 수 있고 불이익은 없습니다."
+          },
+          "status": {
+            "S": "InProgress"
+          },
+          "created_at": {
+            "N": "1699999000"
+          },
+          "updated_at": {
+            "N": "1700000001"
+          }
+        },
+        "OldImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "SPACE_COMMON"
+          },
+          "status": {
+            "S": "Draft"
+          },
+          "updated_at": {
+            "N": "1699998000"
+          }
+        },
+        "SequenceNumber": "111",
+        "SizeBytes": 320,
+        "StreamViewType": "NEW_AND_OLD_IMAGES"
+      }
+    },
+    {
+      "eventID": "2",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000005,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_SURVEY#SURVEY#001"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_SURVEY#SURVEY#001"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "title": {
+            "S": "사전 설문"
+          },
+          "questions": {
+            "L": [
+              {
+                "S": "A1. 나는 강간죄의 구성요건을 현재의 '폭행 또는 협박' 기준에서 '동의 부재' 기준으로 전환할 필요가 있다고 생각한다."
+              },
+              {
+                "S": "A2. 비동의 간음죄 도입은 성폭력 피해자 보호를 실질적으로 강화할 것이라고 생각한다."
+              },
+              {
+                "S": "A3. 비동의 간음죄 도입은 무고와 잘못된 기소 위험을 높일 수 있다."
+              },
+              {
+                "S": "A4. '동의'라는 개념은 형법에서 충분히 명확하게 정의될 수 있다."
+              },
+              {
+                "S": "A5. 비동의 간음죄 도입은 나와 또래 세대의 연애·성 문화에 긍정적 영향을 줄 가능성이 크다."
+              },
+              {
+                "S": "A6. 비동의 간음죄 도입 여부는 20대인 나에게 직접적인 이해관계가 있는 문제다."
+              },
+              {
+                "S": "A7. '명시적 거부 표현이 없으면 동의로 간주'하는 방식(No means No)이 적절하다고 생각한다."
+              },
+              {
+                "S": "A8. '명시적 동의 표현이 있어야만 성관계가 허용'되는 방식(Only Yes means Yes)이 적절하다고 생각한다."
+              },
+              {
+                "S": "A9. 성관계에서 동의는 '언어적 표현'보다 '비언어적 신호'로도 충분히 확인될 수 있다."
+              },
+              {
+                "S": "A10. 나는 친밀한 관계에서 매번 명시적으로 성적 동의를 구하는 것이 현실적이라고 생각한다."
+              },
+              {
+                "S": "B1. 나는 비동의 간음죄 논쟁의 주요 쟁점(예: 피해자 보호, 무고, 법적 명확성 등)을 어느 정도 알고 있다."
+              },
+              {
+                "S": "B2. 나는 이 이슈에 전반적으로 얼마나 관심이 있는가?"
+              },
+              {
+                "S": "B3. 나는 비동의 간음죄에 대한 나 자신의 입장을 꽤 확고하게 가지고 있다."
+              },
+              {
+                "S": "B4-1. 나는 비동의 간음죄에 대한 나의 현재 입장이 확고하다고 생각한다."
+              },
+              {
+                "S": "B4-2. 다음 중 귀하의 현재 입장을 바꿀 수 있는 요인은 무엇인가? (복수선택 가능)"
+              },
+              {
+                "S": "C1. 지난 1년 동안, 비동의 간음죄나 성적 동의 문화에 대해 친구나 동료와 진지하게 이야기한 적이 있다."
+              },
+              {
+                "S": "C2. 대학이나 다른 교육기관에서 성폭력 예방 교육이나 성적 동의(Consent) 관련 교육을 받은 경험이 있다."
+              },
+              {
+                "S": "C3. 주변 사람(지인, 온라인 커뮤니티 등)의 경험이나 사건을 통해 성폭력·성적 동의 문제의 심각성을 느낀 적이 있다."
+              },
+              {
+                "S": "C4. 온라인에서 비동의 간음죄 관련 논쟁(댓글, 게시판, SNS 토론 등)에 직접 참여한 적이 있다."
+              },
+              {
+                "S": "D1. 지난 6개월 동안, 비동의 간음죄 논쟁을 다룬 뉴스 기사나 시사 프로그램을 접한 빈도는 어느 정도인가?"
+              },
+              {
+                "S": "D2. 이 이슈에 대해 주로 접한 정보 채널은 무엇인가? (복수응답 가능)"
+              },
+              {
+                "S": "D3. 내가 접한 정보는 찬반 양쪽의 논거를 비교적 균형 있게 제공했다고 느낀다."
+              },
+              {
+                "S": "E1. 나는 블록체인 기술이 무엇인지 대략 알고 있다."
+              },
+              {
+                "S": "E2. 나는 온라인 설문조사나 여론조사에 자주 참여하는 편이다."
+              },
+              {
+                "S": "E3. 나는 온라인 조사 결과가 조작되거나 왜곡될 수 있다고 걱정한 적이 있다."
+              },
+              {
+                "S": "E4. 블록체인 같은 새로운 기술이 선거·여론조사에 쓰이는 것에 비교적 긍정적이다."
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000005"
+          }
+        },
+        "SequenceNumber": "112",
+        "SizeBytes": 280,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "3",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000010,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#001"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#001"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#inquisitive button 1682"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "어느 정도 안다"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "그렇다"
+              },
+              {
+                "S": "그렇다"
+              },
+              {
+                "S": "피해자 보호 효과에 대한 실증적 증거, 무고 증가에 대한 구체적 통계 자료, 법률 전문가의 명확한 해석"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "가끔 본 편이다"
+              },
+              {
+                "S": "온라인 뉴스(포털, 언론사 사이트), SNS(인스타그램, X/트위터, 페이스북 등), 유튜브·팟캐스트 등 동영상 플랫폼"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "3"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000010"
+          }
+        },
+        "SequenceNumber": "113",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "4",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000011,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#002"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#002"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#shy squirrel 0578"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "관심 있다"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "피해자 보호 효과에 대한 실증적 증거, 법률 전문가의 명확한 해석, 다른 참여자들의 설득력 있는 논거"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "자주 본 편이다"
+              },
+              {
+                "S": "지상파 TV·케이블 뉴스, 온라인 뉴스(포털, 언론사 사이트), SNS(인스타그램, X/트위터, 페이스북 등), 유튜브·팟캐스트 등 동영상 플랫폼"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000011"
+          }
+        },
+        "SequenceNumber": "114",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "5",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000012,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#003"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#003"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#peaceful bait 0312"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "2"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "전혀 모른다"
+              },
+              {
+                "S": "전혀 관심 없다"
+              },
+              {
+                "S": "그렇다"
+              },
+              {
+                "S": "그렇다"
+              },
+              {
+                "S": "무고 증가에 대한 구체적 통계 자료, 다른 참여자들의 설득력 있는 논거, 해외 사례의 성공/실패 증거"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "자주 본 편이다"
+              },
+              {
+                "S": "유튜브·팟캐스트 등 동영상 플랫폼"
+              },
+              {
+                "S": "그렇다"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000012"
+          }
+        },
+        "SequenceNumber": "115",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "6",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000013,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#004"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#004"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#probable stick 0769"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "3"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "잘 모른다"
+              },
+              {
+                "S": "관심 없다"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "피해자 보호 효과에 대한 실증적 증거, 무고 증가에 대한 구체적 통계 자료, 법률 전문가의 명확한 해석"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1-2회 정도 본 적 있다"
+              },
+              {
+                "S": "온라인 뉴스(포털, 언론사 사이트)"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000013"
+          }
+        },
+        "SequenceNumber": "116",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "7",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000014,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#005"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#005"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#spooky plants 6422"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "어느 정도 안다"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "피해자 보호 효과에 대한 실증적 증거, 다른 참여자들의 설득력 있는 논거, 해외 사례의 성공/실패 증거"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1-2회 정도 본 적 있다"
+              },
+              {
+                "S": "온라인 뉴스(포털, 언론사 사이트), 유튜브·팟캐스트 등 동영상 플랫폼"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "3"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000014"
+          }
+        },
+        "SequenceNumber": "117",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "8",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000015,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#006"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#006"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#panoramic lumber 1927"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "어느 정도 안다"
+              },
+              {
+                "S": "관심 있다"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "법률 전문가의 명확한 해석, 다른 참여자들의 설득력 있는 논거"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1-2회 정도 본 적 있다"
+              },
+              {
+                "S": "SNS(인스타그램, X/트위터, 페이스북 등)"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "3"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000015"
+          }
+        },
+        "SequenceNumber": "118",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "9",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000016,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#007"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#007"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#parched bear 3014"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "어느 정도 안다"
+              },
+              {
+                "S": "관심 있다"
+              },
+              {
+                "S": "매우 그렇다"
+              },
+              {
+                "S": "매우 그렇다"
+              },
+              {
+                "S": "피해자 보호 효과에 대한 실증적 증거, 법률 전문가의 명확한 해석, 해외 사례의 성공/실패 증거"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "가끔 본 편이다"
+              },
+              {
+                "S": "온라인 뉴스(포털, 언론사 사이트)"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "5"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000016"
+          }
+        },
+        "SequenceNumber": "119",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "10",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000017,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#008"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#008"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#heartbreaking frame 6280"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "잘 모른다"
+              },
+              {
+                "S": "관심 있다"
+              },
+              {
+                "S": "매우 그렇다"
+              },
+              {
+                "S": "매우 그렇다"
+              },
+              {
+                "S": "무고 증가에 대한 구체적 통계 자료, 법률 전문가의 명확한 해석, 해외 사례의 성공/실패 증거"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "전혀 본 적 없다"
+              },
+              {
+                "S": "지상파 TV·케이블 뉴스"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000017"
+          }
+        },
+        "SequenceNumber": "120",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "11",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000018,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#009"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#009"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#pale stomach 8455"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "5"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "관심 있다"
+              },
+              {
+                "S": "그렇다"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "법률 전문가의 명확한 해석, 다른 참여자들의 설득력 있는 논거"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "1-2회 정도 본 적 있다"
+              },
+              {
+                "S": "온라인 뉴스(포털, 언론사 사이트), SNS(인스타그램, X/트위터, 페이스북 등)"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000018"
+          }
+        },
+        "SequenceNumber": "121",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "12",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000019,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#010"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#010"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#selective girls 5539"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "어느 정도 안다"
+              },
+              {
+                "S": "관심 있다"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "그렇다"
+              },
+              {
+                "S": "무고 증가에 대한 구체적 통계 자료"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1-2회 정도 본 적 있다"
+              },
+              {
+                "S": "온라인 뉴스(포털, 언론사 사이트), SNS(인스타그램, X/트위터, 페이스북 등)"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "3"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000019"
+          }
+        },
+        "SequenceNumber": "122",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "13",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000020,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#011"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#011"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#nice hill 1861"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "피해자 보호 효과에 대한 실증적 증거, 무고 증가에 대한 구체적 통계 자료, 법률 전문가의 명확한 해석, 해외 사례의 성공/실패 증거"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1-2회 정도 본 적 있다"
+              },
+              {
+                "S": "온라인 뉴스(포털, 언론사 사이트), SNS(인스타그램, X/트위터, 페이스북 등)"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000020"
+          }
+        },
+        "SequenceNumber": "123",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "14",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000021,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#012"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#012"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#shy love 6190"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "4"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "어느 정도 안다"
+              },
+              {
+                "S": "관심 있다"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "피해자 보호 효과에 대한 실증적 증거, 법률 전문가의 명확한 해석, 다른 참여자들의 설득력 있는 논거"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "가끔 본 편이다"
+              },
+              {
+                "S": "온라인 뉴스(포털, 언론사 사이트), SNS(인스타그램, X/트위터, 페이스북 등), 유튜브·팟캐스트 등 동영상 플랫폼, 커뮤니티/게시판(DC인사이드, 에브리타임 등)"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000021"
+          }
+        },
+        "SequenceNumber": "124",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "15",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000022,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#013"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#013"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#halting country 9547"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "관심 있다"
+              },
+              {
+                "S": "그렇다"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "피해자 보호 효과에 대한 실증적 증거, 법률 전문가의 명확한 해석, 다른 참여자들의 설득력 있는 논거"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "가끔 본 편이다"
+              },
+              {
+                "S": "SNS(인스타그램, X/트위터, 페이스북 등), 유튜브·팟캐스트 등 동영상 플랫폼"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "3"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000022"
+          }
+        },
+        "SequenceNumber": "125",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "16",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000023,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#014"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#014"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#young scent 5514"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "관심 있다"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "피해자 보호 효과에 대한 실증적 증거, 법률 전문가의 명확한 해석, 해외 사례의 성공/실패 증거"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1-2회 정도 본 적 있다"
+              },
+              {
+                "S": "온라인 뉴스(포털, 언론사 사이트), SNS(인스타그램, X/트위터, 페이스북 등), 유튜브·팟캐스트 등 동영상 플랫폼"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "3"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000023"
+          }
+        },
+        "SequenceNumber": "126",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "17",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000024,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#015"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#015"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#bashful pin 1985"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "어느 정도 안다"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "피해자 보호 효과에 대한 실증적 증거, 무고 증가에 대한 구체적 통계 자료, 해외 사례의 성공/실패 증거"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "1-2회 정도 본 적 있다"
+              },
+              {
+                "S": "지상파 TV·케이블 뉴스, 온라인 뉴스(포털, 언론사 사이트), SNS(인스타그램, X/트위터, 페이스북 등), 유튜브·팟캐스트 등 동영상 플랫폼"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "4"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000024"
+          }
+        },
+        "SequenceNumber": "127",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "18",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000025,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#016"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#016"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#upbeat good bye 9707"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "전혀 모른다"
+              },
+              {
+                "S": "전혀 관심 없다"
+              },
+              {
+                "S": "전혀 그렇지 않다"
+              },
+              {
+                "S": "전혀 그렇지 않다"
+              },
+              {
+                "S": "피해자 보호 효과에 대한 실증적 증거"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "전혀 본 적 없다"
+              },
+              {
+                "S": "지상파 TV·케이블 뉴스"
+              },
+              {
+                "S": "전혀 그렇지 않다"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000025"
+          }
+        },
+        "SequenceNumber": "128",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "19",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000026,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#017"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#017"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#bloody cats 8266"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "4"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "관심 있다"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "피해자 보호 효과에 대한 실증적 증거, 무고 증가에 대한 구체적 통계 자료"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "1-2회 정도 본 적 있다"
+              },
+              {
+                "S": "유튜브·팟캐스트 등 동영상 플랫폼"
+              },
+              {
+                "S": "그렇다"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "3"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000026"
+          }
+        },
+        "SequenceNumber": "129",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "20",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000027,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#018"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#018"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#messy scent 6315"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "5"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "피해자 보호 효과에 대한 실증적 증거, 무고 증가에 대한 구체적 통계 자료, 법률 전문가의 명확한 해석, 해외 사례의 성공/실패 증거"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "가끔 본 편이다"
+              },
+              {
+                "S": "온라인 뉴스(포털, 언론사 사이트), SNS(인스타그램, X/트위터, 페이스북 등), 유튜브·팟캐스트 등 동영상 플랫폼"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000027"
+          }
+        },
+        "SequenceNumber": "130",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "21",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000028,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#019"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#019"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#didactic clover 7503"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "전혀 모른다"
+              },
+              {
+                "S": "전혀 관심 없다"
+              },
+              {
+                "S": "전혀 그렇지 않다"
+              },
+              {
+                "S": "전혀 그렇지 않다"
+              },
+              {
+                "S": "피해자 보호 효과에 대한 실증적 증거"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "전혀 본 적 없다"
+              },
+              {
+                "S": "지상파 TV·케이블 뉴스"
+              },
+              {
+                "S": "전혀 그렇지 않다"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000028"
+          }
+        },
+        "SequenceNumber": "131",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "22",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000029,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#020"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#020"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#green wax 3190"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "어느 정도 안다"
+              },
+              {
+                "S": "관심 있다"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "무고 증가에 대한 구체적 통계 자료"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1-2회 정도 본 적 있다"
+              },
+              {
+                "S": "온라인 뉴스(포털, 언론사 사이트)"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "5"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000029"
+          }
+        },
+        "SequenceNumber": "132",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "23",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000030,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#021"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#021"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#magnificent pencil 4753"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "5"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "전혀 모른다"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "그렇다"
+              },
+              {
+                "S": "피해자 보호 효과에 대한 실증적 증거, 무고 증가에 대한 구체적 통계 자료"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "전혀 본 적 없다"
+              },
+              {
+                "S": "SNS(인스타그램, X/트위터, 페이스북 등)"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "3"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000030"
+          }
+        },
+        "SequenceNumber": "133",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "24",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000031,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#022"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#022"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#dirty lip 1929"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "매우 관심 있다"
+              },
+              {
+                "S": "매우 그렇다"
+              },
+              {
+                "S": "그렇다"
+              },
+              {
+                "S": "무고 증가에 대한 구체적 통계 자료, 법률 전문가의 명확한 해석"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "가끔 본 편이다"
+              },
+              {
+                "S": "SNS(인스타그램, X/트위터, 페이스북 등), 커뮤니티/게시판(DC인사이드, 에브리타임 등)"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000031"
+          }
+        },
+        "SequenceNumber": "134",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "25",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000032,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#023"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#023"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#tearful breakfast 4638"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "3"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "어느 정도 안다"
+              },
+              {
+                "S": "관심 있다"
+              },
+              {
+                "S": "그렇다"
+              },
+              {
+                "S": "그렇다"
+              },
+              {
+                "S": "무고 증가에 대한 구체적 통계 자료, 법률 전문가의 명확한 해석, 해외 사례의 성공/실패 증거"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "가끔 본 편이다"
+              },
+              {
+                "S": "지상파 TV·케이블 뉴스, 온라인 뉴스(포털, 언론사 사이트), SNS(인스타그램, X/트위터, 페이스북 등)"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000032"
+          }
+        },
+        "SequenceNumber": "135",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "26",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000033,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#024"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#024"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#domineering hands 4365"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "잘 모른다"
+              },
+              {
+                "S": "관심 없다"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "법률 전문가의 명확한 해석, 다른 참여자들의 설득력 있는 논거"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1-2회 정도 본 적 있다"
+              },
+              {
+                "S": "SNS(인스타그램, X/트위터, 페이스북 등)"
+              },
+              {
+                "S": "그렇다"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000033"
+          }
+        },
+        "SequenceNumber": "136",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "27",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000034,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#025"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#025"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#thankful afterthought 1448"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "잘 모른다"
+              },
+              {
+                "S": "관심 없다"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "피해자 보호 효과에 대한 실증적 증거, 무고 증가에 대한 구체적 통계 자료, 다른 참여자들의 설득력 있는 논거, 해외 사례의 성공/실패 증거"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "자주 본 편이다"
+              },
+              {
+                "S": "SNS(인스타그램, X/트위터, 페이스북 등), 유튜브·팟캐스트 등 동영상 플랫폼"
+              },
+              {
+                "S": "그렇다"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000034"
+          }
+        },
+        "SequenceNumber": "137",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "28",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000035,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#026"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#026"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#oafish point 8845"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "5"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "어느 정도 안다"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "그렇다"
+              },
+              {
+                "S": "그렇다"
+              },
+              {
+                "S": "다른 참여자들의 설득력 있는 논거, 해외 사례의 성공/실패 증거"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "자주 본 편이다"
+              },
+              {
+                "S": "온라인 뉴스(포털, 언론사 사이트), SNS(인스타그램, X/트위터, 페이스북 등), 유튜브·팟캐스트 등 동영상 플랫폼"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "3"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000035"
+          }
+        },
+        "SequenceNumber": "138",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "29",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000036,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#027"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#027"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#deep sugar 4837"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "어느 정도 안다"
+              },
+              {
+                "S": "관심 있다"
+              },
+              {
+                "S": "매우 그렇다"
+              },
+              {
+                "S": "매우 그렇다"
+              },
+              {
+                "S": "법률 전문가의 명확한 해석, 해외 사례의 성공/실패 증거"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "가끔 본 편이다"
+              },
+              {
+                "S": "온라인 뉴스(포털, 언론사 사이트), SNS(인스타그램, X/트위터, 페이스북 등), 유튜브·팟캐스트 등 동영상 플랫폼, 커뮤니티/게시판(DC인사이드, 에브리타임 등)"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "5"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000036"
+          }
+        },
+        "SequenceNumber": "139",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "30",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000037,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#028"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#028"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#used boy 7291"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "잘 모른다"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "피해자 보호 효과에 대한 실증적 증거, 무고 증가에 대한 구체적 통계 자료, 법률 전문가의 명확한 해석, 다른 참여자들의 설득력 있는 논거, 해외 사례의 성공/실패 증거"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "1-2회 정도 본 적 있다"
+              },
+              {
+                "S": "SNS(인스타그램, X/트위터, 페이스북 등)"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000037"
+          }
+        },
+        "SequenceNumber": "140",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "31",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000038,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#029"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#029"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#wandering interest 6320"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "5"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "어느 정도 안다"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "그렇지 않다"
+              },
+              {
+                "S": "무고 증가에 대한 구체적 통계 자료, 법률 전문가의 명확한 해석, 해외 사례의 성공/실패 증거"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1-2회 정도 본 적 있다"
+              },
+              {
+                "S": "지상파 TV·케이블 뉴스"
+              },
+              {
+                "S": "보통이다"
+              },
+              {
+                "S": "3"
+              },
+              {
+                "S": "4"
+              },
+              {
+                "S": "2"
+              },
+              {
+                "S": "4"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000038"
+          }
+        },
+        "SequenceNumber": "141",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "32",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000039,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#030"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "DELIBERATION_RESPONSE#RESP#030"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "user_pk": {
+            "S": "USER#wistful side 7366"
+          },
+          "answers": {
+            "L": [
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "전혀 모른다"
+              },
+              {
+                "S": "전혀 관심 없다"
+              },
+              {
+                "S": "전혀 그렇지 않다"
+              },
+              {
+                "S": "전혀 그렇지 않다"
+              },
+              {
+                "S": "피해자 보호 효과에 대한 실증적 증거"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "전혀 본 적 없다"
+              },
+              {
+                "S": "지상파 TV·케이블 뉴스"
+              },
+              {
+                "S": "전혀 그렇지 않다"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              },
+              {
+                "S": "1"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000039"
+          }
+        },
+        "SequenceNumber": "142",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "33",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000020,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "SPACE_POLL#poll-001"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "SPACE_POLL#poll-001"
+          },
+          "title": {
+            "S": "비동의 간음죄 도입"
+          },
+          "options": {
+            "L": [
+              {
+                "S": "찬성"
+              },
+              {
+                "S": "반대"
+              },
+              {
+                "S": "유보"
+              }
+            ]
+          },
+          "created_at": {
+            "N": "1700000020"
+          }
+        },
+        "SequenceNumber": "143",
+        "SizeBytes": 240,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "34",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000025,
+        "Keys": {
+          "pk": {
+            "S": "SPACE_POLL_USER_ANSWER#USER#001"
+          },
+          "sk": {
+            "S": "SPACE_POLL_USER_ANSWER#SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d#POLL#poll-001"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE_POLL_USER_ANSWER#USER#001"
+          },
+          "sk": {
+            "S": "SPACE_POLL_USER_ANSWER#SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d#POLL#poll-001"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "poll_id": {
+            "S": "poll-001"
+          },
+          "answer": {
+            "S": "찬성"
+          },
+          "created_at": {
+            "N": "1700000025"
+          }
+        },
+        "SequenceNumber": "144",
+        "SizeBytes": 230,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "35",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000026,
+        "Keys": {
+          "pk": {
+            "S": "SPACE_POLL_USER_ANSWER#USER#002"
+          },
+          "sk": {
+            "S": "SPACE_POLL_USER_ANSWER#SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d#POLL#poll-001"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE_POLL_USER_ANSWER#USER#002"
+          },
+          "sk": {
+            "S": "SPACE_POLL_USER_ANSWER#SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d#POLL#poll-001"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "poll_id": {
+            "S": "poll-001"
+          },
+          "answer": {
+            "S": "반대"
+          },
+          "created_at": {
+            "N": "1700000026"
+          }
+        },
+        "SequenceNumber": "145",
+        "SizeBytes": 230,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "36",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000027,
+        "Keys": {
+          "pk": {
+            "S": "SPACE_POLL_USER_ANSWER#USER#003"
+          },
+          "sk": {
+            "S": "SPACE_POLL_USER_ANSWER#SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d#POLL#poll-001"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE_POLL_USER_ANSWER#USER#003"
+          },
+          "sk": {
+            "S": "SPACE_POLL_USER_ANSWER#SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d#POLL#poll-001"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "poll_id": {
+            "S": "poll-001"
+          },
+          "answer": {
+            "S": "유보"
+          },
+          "created_at": {
+            "N": "1700000027"
+          }
+        },
+        "SequenceNumber": "146",
+        "SizeBytes": 230,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "37",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000030,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "SPACE_POST#post-001"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "SPACE_POST#post-001"
+          },
+          "title": {
+            "S": "비동의 간음죄, 무고에 대한 우려"
+          },
+          "html_contents": {
+            "S": "<p>무고 및 악용 우려를 줄이기 위해서는 어떤 것이 필요하다고 보시나요?</p><p>증거 기준, 수사 절차, 피·가해자 보호 체계, 법률 해석의 명확성 등 구체적인 개선 방향을 중심으로 의견을 남겨주세요.</p>"
+          },
+          "category_name": {
+            "S": "의견"
+          },
+          "user_pk": {
+            "S": "USER#001"
+          },
+          "created_at": {
+            "N": "1700000030"
+          },
+          "updated_at": {
+            "N": "1700000030"
+          }
+        },
+        "SequenceNumber": "147",
+        "SizeBytes": 260,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "38",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000035,
+        "Keys": {
+          "pk": {
+            "S": "SPACE_POST#post-001"
+          },
+          "sk": {
+            "S": "SPACE_POST_COMMENT#comment-001"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE_POST#post-001"
+          },
+          "sk": {
+            "S": "SPACE_POST_COMMENT#comment-001"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "author_pk": {
+            "S": "USER#002"
+          },
+          "author_display_name": {
+            "S": "참여자2"
+          },
+          "content": {
+            "S": "무고 우려를 줄이려면 수사 단계에서 사실관계 확인을 더 촘촘하게 해야 한다고 생각해요. 신고 접수 후 즉시 처벌 중심으로 가기보다, 정황 증거와 진술의 일관성을 검토하는 장치가 강화되면 좋겠습니다."
+          },
+          "created_at": {
+            "N": "1700000035"
+          }
+        },
+        "SequenceNumber": "148",
+        "SizeBytes": 240,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "39",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000036,
+        "Keys": {
+          "pk": {
+            "S": "SPACE_POST#post-001"
+          },
+          "sk": {
+            "S": "SPACE_POST_COMMENT#comment-002"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE_POST#post-001"
+          },
+          "sk": {
+            "S": "SPACE_POST_COMMENT#comment-002"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "author_pk": {
+            "S": "USER#003"
+          },
+          "author_display_name": {
+            "S": "참여자3"
+          },
+          "content": {
+            "S": "동의 기준이 모호하면 피해자 보호도 어렵고, 반대로 무고에 대한 불안도 커질 수 있죠. 법률적으로 어떤 행위가 동의로 간주되는지, 부재가 무엇을 의미하는지 명확한 가이드라인이 필요합니다."
+          },
+          "created_at": {
+            "N": "1700000036"
+          }
+        },
+        "SequenceNumber": "149",
+        "SizeBytes": 240,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "40",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000037,
+        "Keys": {
+          "pk": {
+            "S": "SPACE_POST#post-001"
+          },
+          "sk": {
+            "S": "SPACE_POST_COMMENT#comment-003"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE_POST#post-001"
+          },
+          "sk": {
+            "S": "SPACE_POST_COMMENT#comment-003"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "author_pk": {
+            "S": "USER#001"
+          },
+          "author_display_name": {
+            "S": "참여자1"
+          },
+          "content": {
+            "S": "제 생각에는 예방 교육과 사후 지원 체계가 함께 가야 해요. 법 개정만으로 해결되지 않는 부분이 많고, 실제 피해자 지원과 피의자 인권 보장 사이 균형이 중요하다고 봅니다."
+          },
+          "created_at": {
+            "N": "1700000037"
+          }
+        },
+        "SequenceNumber": "150",
+        "SizeBytes": 240,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "41",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000038,
+        "Keys": {
+          "pk": {
+            "S": "SPACE_POST#post-001"
+          },
+          "sk": {
+            "S": "SPACE_POST_COMMENT#comment-004"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE_POST#post-001"
+          },
+          "sk": {
+            "S": "SPACE_POST_COMMENT#comment-004"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "author_pk": {
+            "S": "USER#002"
+          },
+          "author_display_name": {
+            "S": "참여자2"
+          },
+          "content": {
+            "S": "증거 기준의 현실성이 가장 큰 문제 같아요. 디지털 증거가 핵심이 될 텐데, 수집과 보존 절차가 일관되지 않으면 양쪽 모두에 불신이 생길 수 있으니 제도 설계가 필요합니다."
+          },
+          "created_at": {
+            "N": "1700000038"
+          }
+        },
+        "SequenceNumber": "151",
+        "SizeBytes": 240,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "42",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000039,
+        "Keys": {
+          "pk": {
+            "S": "SPACE_POST#post-001"
+          },
+          "sk": {
+            "S": "SPACE_POST_COMMENT#comment-005"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE_POST#post-001"
+          },
+          "sk": {
+            "S": "SPACE_POST_COMMENT#comment-005"
+          },
+          "space_pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "author_pk": {
+            "S": "USER#004"
+          },
+          "author_display_name": {
+            "S": "참여자4"
+          },
+          "content": {
+            "S": "사회적으로는 동의 문화가 정착되는 것이 먼저라고 느껴집니다. 법적 논의와 동시에 교육과 캠페인을 병행하면 실제 사건 감소와 인식 개선에 도움이 될 것 같아요."
+          },
+          "created_at": {
+            "N": "1700000039"
+          }
+        },
+        "SequenceNumber": "152",
+        "SizeBytes": 240,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    },
+    {
+      "eventID": "43",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1700000040,
+        "Keys": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "SPACE_ANALYZE"
+          }
+        },
+        "NewImage": {
+          "pk": {
+            "S": "SPACE#019c4b77-56a8-77f0-aee0-97eaf747d25d"
+          },
+          "sk": {
+            "S": "SPACE_ANALYZE"
+          },
+          "created_at": {
+            "N": "1700000040"
+          },
+          "lda_topics": {
+            "L": [
+              {
+                "M": {
+                  "topic": {
+                    "S": "토픽1"
+                  },
+                  "keyword": {
+                    "S": "동의"
+                  }
+                }
+              },
+              {
+                "M": {
+                  "topic": {
+                    "S": "토픽2"
+                  },
+                  "keyword": {
+                    "S": "무고"
+                  }
+                }
+              }
+            ]
+          },
+          "tf_idf": {
+            "L": [
+              {
+                "M": {
+                  "keyword": {
+                    "S": "동의"
+                  },
+                  "tf_idf": {
+                    "N": "2.34"
+                  }
+                }
+              },
+              {
+                "M": {
+                  "keyword": {
+                    "S": "무고"
+                  },
+                  "tf_idf": {
+                    "N": "1.27"
+                  }
+                }
+              }
+            ]
+          },
+          "network": {
+            "M": {
+              "nodes": {
+                "L": [
+                  {
+                    "M": {
+                      "node": {
+                        "S": "동의"
+                      },
+                      "degree_centrality": {
+                        "N": "0.82"
+                      },
+                      "betweenness_centrality": {
+                        "N": "0.24"
+                      }
+                    }
+                  },
+                  {
+                    "M": {
+                      "node": {
+                        "S": "무고"
+                      },
+                      "degree_centrality": {
+                        "N": "0.60"
+                      },
+                      "betweenness_centrality": {
+                        "N": "0.18"
+                      }
+                    }
+                  }
+                ]
+              },
+              "edges": {
+                "L": [
+                  {
+                    "M": {
+                      "source": {
+                        "S": "동의"
+                      },
+                      "target": {
+                        "S": "무고"
+                      },
+                      "weight": {
+                        "N": "3"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "remove_topics": {
+            "L": [
+              {
+                "S": "잡담"
+              }
+            ]
+          }
+        },
+        "SequenceNumber": "153",
+        "SizeBytes": 520,
+        "StreamViewType": "NEW_IMAGE"
+      }
+    }
+  ]
+}
