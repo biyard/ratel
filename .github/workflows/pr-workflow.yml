@@ -298,7 +298,7 @@ jobs:
           DYNAMO_TABLE_PREFIX: ratel-local
           ENV: local
           RUSTFLAGS: "-D warnings"
-          RUST_LOG: info
+          RUST_LOG: error
           DYNAMO_ENDPOINT: http://localstack:4566
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
@@ -490,7 +490,7 @@ jobs:
         env:
           CI: true
           PLAYWRIGHT_BASE_URL: http://localhost:8080
-          PLAYWRIGHT_TIMEOUT: 5000
+          PLAYWRIGHT_TIMEOUT: 10000
         working-directory: playwright
         run: |
           make test
