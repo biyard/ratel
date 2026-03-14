@@ -60,13 +60,6 @@ export class RegionalServiceStack extends Stack {
       domainName: baseDomain,
     });
 
-    const appShellRepoName = "ratel/app-shell";
-    const appShellRepository = Repository.fromRepositoryName(
-      this,
-      "AppShellRepository",
-      appShellRepoName,
-    );
-
     // --- HTTP API (shared between ECS and Lambda) ---
     const httpApi = new apigw.HttpApi(this, "HttpApi", {
       apiName: `ratel-api-${this.stackName}`,
@@ -76,6 +69,12 @@ export class RegionalServiceStack extends Stack {
     if (props.enableEcs && props.cluster && props.vpc) {
       // --- ECS Fargate deployment (high-traffic region) ---
       const { cluster, vpc } = props;
+
+      const appShellRepository = Repository.fromRepositoryName(
+        this,
+        "AppShellRepository",
+        "ratel/app-shell",
+      );
 
       const sg = new ec2.SecurityGroup(this, "AppShellSG", {
         vpc,
@@ -101,16 +100,12 @@ export class RegionalServiceStack extends Stack {
         ),
       );
 
-      const taskDefinition = new ecs.TaskDefinition(
-        this,
-        "AppShellTaskDef",
-        {
-          compatibility: ecs.Compatibility.FARGATE,
-          cpu: "512",
-          memoryMiB: "1024",
-          executionRole: taskExecutionRole,
-        },
-      );
+      const taskDefinition = new ecs.TaskDefinition(this, "AppShellTaskDef", {
+        compatibility: ecs.Compatibility.FARGATE,
+        cpu: "256",
+        memoryMiB: "512",
+        executionRole: taskExecutionRole,
+      });
 
       const container = taskDefinition.addContainer("AppShellContainer", {
         image: ecs.ContainerImage.fromEcrRepository(
@@ -136,36 +131,28 @@ export class RegionalServiceStack extends Stack {
         protocol: ecs.Protocol.TCP,
       });
 
-      const namespace = new sd.PrivateDnsNamespace(
-        this,
-        "AppShellNamespace",
-        {
-          name: `ratel-${props.stage}-svc.local`,
-          vpc,
-        },
-      );
+      const namespace = new sd.PrivateDnsNamespace(this, "AppShellNamespace", {
+        name: `ratel-${props.stage}-svc.local`,
+        vpc,
+      });
 
-      const fargateService = new ecs.FargateService(
-        this,
-        "AppShellService",
-        {
-          cluster,
-          taskDefinition,
-          desiredCount: props.minCapacity ?? 1,
-          maxHealthyPercent: 200,
-          minHealthyPercent: 100,
-          assignPublicIp: true,
-          vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
-          securityGroups: [sg],
-          cloudMapOptions: {
-            name: "app-shell",
-            cloudMapNamespace: namespace,
-            dnsRecordType: sd.DnsRecordType.A,
-            container,
-            containerPort: 8080,
-          },
+      const fargateService = new ecs.FargateService(this, "AppShellService", {
+        cluster,
+        taskDefinition,
+        desiredCount: props.minCapacity ?? 1,
+        maxHealthyPercent: 200,
+        minHealthyPercent: 100,
+        assignPublicIp: true,
+        vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
+        securityGroups: [sg],
+        cloudMapOptions: {
+          name: "app-shell",
+          cloudMapNamespace: namespace,
+          dnsRecordType: sd.DnsRecordType.A,
+          container,
+          containerPort: 8080,
         },
-      );
+      });
 
       const supportedSubnets = vpc.publicSubnets.filter(
         (s) => s.availabilityZone !== "ap-northeast-2d",
@@ -195,6 +182,12 @@ export class RegionalServiceStack extends Stack {
       });
     } else {
       // --- Lambda deployment (default) ---
+      const appShellRepository = Repository.fromRepositoryName(
+        this,
+        "AppShellRepository",
+        "ratel/app-shell-lambda",
+      );
+
       const apiLambda = new lambda.DockerImageFunction(this, "Function", {
         code: lambda.DockerImageCode.fromEcr(appShellRepository, {
           tagOrDigest: props.commit,

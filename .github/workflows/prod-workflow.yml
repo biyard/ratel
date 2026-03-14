@@ -194,7 +194,11 @@ jobs:
         run: |
           npm i -D tailwindcss
           rm -rf ../../target/dx
-          make build-lambda
+          ECR=$ECR-lambda make build-lambda
+          ECR=$ECR-lambda make docker
+          ECR=$ECR-lambda make docker.push
+
+          make build
           make docker
           make docker.push
 
