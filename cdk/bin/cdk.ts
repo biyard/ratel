@@ -52,66 +52,67 @@ new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {
   enableEcs: highTrafficRegions.includes("ap-northeast-2"),
   vpc: escStack.vpc,
   cluster: escStack.cluster,
+  namespace: escStack.namespace,
 });
 
-// new DaemonStack(app, `ratel-${env}-daemon-ap-northeast-2`, {
-//   env: {
-//     account: awsAccount,
-//     region: "ap-northeast-2",
-//   },
-//   commit: process.env.COMMIT!,
-//   vpc: escStack.vpc,
-//   cluster: escStack.cluster,
-// });
+new DaemonStack(app, `ratel-${env}-daemon-ap-northeast-2`, {
+  env: {
+    account: awsAccount,
+    region: "ap-northeast-2",
+  },
+  commit: process.env.COMMIT!,
+  vpc: escStack.vpc,
+  cluster: escStack.cluster,
+});
 
-// new QdrantStack(app, `ratel-${env}-qdrant-ap-northeast-2`, {
-//   env: {
-//     account: awsAccount,
-//     region: "ap-northeast-2",
-//   },
-//   stage: env,
-//   vpc: escStack.vpc,
-//   cluster: escStack.cluster,
-//   qdrantApiKey: process.env.QDRANT_API_KEY,
-//   baseDomain,
-//   vectorDomain: `vector.${host}`,
-// });
+new QdrantStack(app, `ratel-${env}-qdrant-ap-northeast-2`, {
+  env: {
+    account: awsAccount,
+    region: "ap-northeast-2",
+  },
+  stage: env,
+  vpc: escStack.vpc,
+  cluster: escStack.cluster,
+  qdrantApiKey: process.env.QDRANT_API_KEY,
+  baseDomain,
+  vectorDomain: `vector.${host}`,
+});
 
-// new RegionalLambdaStack(app, `ratel-${env}-lambda-ap-northeast-2`, {
-//   env: {
-//     account: awsAccount,
-//     region: "ap-northeast-2",
-//   },
-//   stage: env,
-// });
+new RegionalLambdaStack(app, `ratel-${env}-lambda-ap-northeast-2`, {
+  env: {
+    account: awsAccount,
+    region: "ap-northeast-2",
+  },
+  stage: env,
+});
 
-// new RegionalServiceStack(app, `ratel-${env}-svc-eu-central-1`, {
-//   env: {
-//     account: awsAccount,
-//     region: "eu-central-1",
-//   },
-//   stage: env,
-//   fullDomainName: host,
-//   healthCheckPath: "/version",
-//   commit: process.env.COMMIT!,
-//   pghost: process.env.PGHOST_EU!,
-//   baseDomain,
-//   apiDomain,
-// });
+new RegionalServiceStack(app, `ratel-${env}-svc-eu-central-1`, {
+  env: {
+    account: awsAccount,
+    region: "eu-central-1",
+  },
+  stage: env,
+  fullDomainName: host,
+  healthCheckPath: "/version",
+  commit: process.env.COMMIT!,
+  pghost: process.env.PGHOST_EU!,
+  baseDomain,
+  apiDomain,
+});
 
-// new RegionalServiceStack(app, `ratel-${env}-svc-us-east-1`, {
-//   env: {
-//     account: awsAccount,
-//     region: "us-east-1",
-//   },
-//   stage: env,
-//   fullDomainName: host,
-//   healthCheckPath: "/version",
-//   commit: process.env.COMMIT!,
-//   pghost: process.env.PGHOST_US!,
-//   baseDomain,
-//   apiDomain,
-// });
+new RegionalServiceStack(app, `ratel-${env}-svc-us-east-1`, {
+  env: {
+    account: awsAccount,
+    region: "us-east-1",
+  },
+  stage: env,
+  fullDomainName: host,
+  healthCheckPath: "/version",
+  commit: process.env.COMMIT!,
+  pghost: process.env.PGHOST_US!,
+  baseDomain,
+  apiDomain,
+});
 
 new GlobalAccelStack(app, "GlobalAccel", {
   stackName,
