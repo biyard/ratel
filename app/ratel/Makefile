@@ -68,5 +68,11 @@ docker.push:
 	docker push $(ECR):$(COMMIT)
 	docker push $(ECR):$(ENV)
 
+docker.run:
+	docker run -d --name ratel-app -e "IP=0.0.0.0" -p 8080:8080 $(ECR):$(COMMIT)
+
+docker.rm:
+	docker rm -f ratel-app
+
 docker.login:
 	aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com

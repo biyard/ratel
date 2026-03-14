@@ -10,15 +10,23 @@ use chrono::Datelike;
     DynamoEnum,
     Eq,
     PartialEq,
+    Translate,
 )]
 pub enum RewardPeriod {
     #[default]
+    #[translate(en = "Once", ko = "1회")]
     Once, // Permanently, one-time reward
+    #[translate(en = "Hourly", ko = "매시간")]
     Hourly,
+    #[translate(en = "Daily", ko = "매일")]
     Daily,
+    #[translate(en = "Weekly", ko = "매주")]
     Weekly,
+    #[translate(en = "Monthly", ko = "매월")]
     Monthly,
+    #[translate(en = "Yearly", ko = "매년")]
     Yearly,
+    #[translate(en = "Unlimited", ko = "무제한")]
     Unlimited,
 }
 

@@ -4,6 +4,7 @@ mod entity_type;
 mod error;
 mod oauth_provider;
 mod partition;
+
 mod reward;
 mod space;
 mod space_page;

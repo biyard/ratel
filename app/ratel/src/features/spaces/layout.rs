@@ -22,39 +22,49 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
     let mut query = use_query_store();
     let user_ctx = use_user_context();
     let user = user_ctx.read().user.clone();
+    let anonymous_user_profile = if space.anonymous_participation
+        && matches!(role, SpaceUserRole::Participant | SpaceUserRole::Candidate)
+    {
+        Some((
+            space.participant_profile_url.clone().unwrap_or_else(|| {
+                "https://metadata.ratel.foundation/ratel/default-profile.png".to_string()
+            }),
+            space
+                .participant_display_name
+                .clone()
+                .unwrap_or_else(|| "Anonymous User".to_string()),
+        ))
+    } else {
+        None
+    };
     let credential_path = user
         .as_ref()
         .map(|user| format!("/{}/credentials", user.username));
     let mut popup = use_popup();
     let tr: SpaceLayoutTranslate = use_translate();
-    // FIXME
 
     let mut participate = use_action(participate_space);
 
     let show_participate = matches!(space.status, Some(crate::common::SpaceStatus::InProgress))
+        && matches!(role, SpaceUserRole::Viewer)
         && !space.participated
         && space.can_participate;
 
-    let menus = vec![
+    let mut menus = vec![
         crate::features::spaces::pages::dashboard::get_nav_item(space_id(), role.clone()),
         crate::features::spaces::pages::overview::get_nav_item(space_id(), role.clone()),
         crate::features::spaces::pages::actions::get_nav_item(space_id(), role.clone()),
         crate::features::spaces::pages::apps::get_nav_item(space_id(), role.clone()),
+        crate::features::spaces::pages::rewards::get_nav_item(space_id(), role.clone()),
         // crate::features::spaces::pages::report::get_nav_item(space_id.clone(), role.clone()),
     ]
     .into_iter()
-    .map(|item| {
-        if let Some(item) = item {
-            Some(SpaceNavItem {
-                icon: item.0,
-                label: item.1.translate(&lang()).to_string(),
-                link: item.2,
-            })
-        } else {
-            None
-        }
-    })
     .flatten()
+    .map(|item| SpaceNavItem {
+        icon: item.0,
+        label: item.1.translate(&lang()).to_string(),
+        link: item.2,
+    })
     .collect::<Vec<SpaceNavItem>>();
     let labels = vec![SpaceTopLabel {
         label: space.title.clone(),
@@ -75,13 +85,10 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
             div { class: "hidden tablet:flex",
                 SpaceNav {
                     space_id: space_id(),
-                    logo: if space.logo.is_empty() {
-                        "https://metadata.ratel.foundation/logos/logo.png".to_string()
-                    } else {
-                        space.logo.clone()
-                    },
+                    logo: if space.logo.is_empty() { "https://metadata.ratel.foundation/logos/logo.png".to_string() } else { space.logo.clone() },
                     menus,
                     user,
+                    anonymous_user_profile,
                     role,
                     show_participation_card: show_participate,
                     credential_path,

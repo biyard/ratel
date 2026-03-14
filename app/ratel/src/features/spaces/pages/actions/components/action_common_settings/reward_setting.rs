@@ -88,7 +88,7 @@ pub fn RewardSetting(
                 },
             }
             CollapsibleContent {
-                Card { class: "gap-1.5 w-full !rounded-t-none",
+                Card { class: "gap-1.5 w-full rounded-t-none!",
                     div { class: "flex flex-col gap-5 w-full tablet:flex-row tablet:gap-5",
                         // Default Reward column
                         div { class: "flex flex-col flex-1 gap-2.5",

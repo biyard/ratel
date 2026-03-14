@@ -17,12 +17,6 @@ jobs:
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
-      # - name: Download Main Api
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     name: app-shell-${{ github.sha }}
-      #     path: ./cdk/app-shell
-
       - name: Download Survey Fetcher Lambda
         uses: actions/download-artifact@v4
         with:
@@ -137,7 +131,7 @@ jobs:
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
           ENV: dev
-          RUST_LOG: info
+          RUST_LOG: error
           SERVICE: app-shell
           DOMAIN: dev.ratel.foundation
           BUCKET_NAME: metadata.ratel.foundation
@@ -171,7 +165,6 @@ jobs:
           DYNAMO_TABLE_PREFIX: ratel-dev
           DYNAMO_ENDPOINT: none
           # RUST_FLAG: "--features lambda --release"
-          WEB_BUILD: false
           ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
 
           FCM_ENABLED: true
@@ -206,7 +199,11 @@ jobs:
         run: |
           npm i -D tailwindcss
           rm -rf ../../target/dx
-          make build-lambda
+          ECR=$ECR-lambda make build-lambda
+          ECR=$ECR-lambda make docker
+          ECR=$ECR-lambda make docker.push
+
+          make build
           make docker
           make docker.push
 
