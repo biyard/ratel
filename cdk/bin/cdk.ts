@@ -33,6 +33,7 @@ const escStack = new EcsClusterStack(
       account: awsAccount,
       region: "ap-northeast-2",
     },
+    stage: env,
   },
 );
 

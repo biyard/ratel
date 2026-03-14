@@ -22,6 +22,7 @@ export interface QdrantStackProps extends StackProps {
   qdrantApiKey?: string;
   baseDomain: string;
   vectorDomain: string;
+  namespace: sd.PrivateDnsNamespace;
 }
 
 export class QdrantStack extends Stack {
@@ -128,12 +129,6 @@ export class QdrantStack extends Stack {
     // Allow task to connect to EFS
     fileSystem.connections.allowDefaultPortFrom(sg);
 
-    // Cloud Map private DNS namespace for VPC Link service discovery
-    const namespace = new sd.PrivateDnsNamespace(this, "QdrantNamespace", {
-      name: `ratel-${props.stage}.local`,
-      vpc,
-    });
-
     const fargateService = new ecs.FargateService(this, "QdrantService", {
       cluster,
       taskDefinition,
@@ -145,7 +140,7 @@ export class QdrantStack extends Stack {
       securityGroups: [sg],
       cloudMapOptions: {
         name: "qdrant",
-        cloudMapNamespace: namespace,
+        cloudMapNamespace: props.namespace,
         dnsRecordType: sd.DnsRecordType.SRV,
         container,
         containerPort: 6333,
