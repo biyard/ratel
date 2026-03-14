@@ -48,7 +48,7 @@ cdk-deploy-v2:
 	cd cdk && npm i
 	cd cdk && $(BUILD_CDK_ENV) npm run build
 	cd cdk && $(BUILD_CDK_ENV) cdk synth
-	# cd cdk && $(BUILD_CDK_ENV) cdk deploy --require-approval never $(AWS_FLAG) --all --concurrency 3
+	cd cdk && $(BUILD_CDK_ENV) cdk deploy --require-approval never $(AWS_FLAG) --all --concurrency 3
 
 DEPLOY_AGENT_ENV ?= AGENT_NAME=$(AGENT_NAME) AWS_ACCESS_KEY_ID=$(ACCESS_KEY_ID) AWS_SECRET_ACCESS_KEY=$(SECRET_ACCESS_KEY) AWS_REGION=$(REGION)
 # FIXME: Use cdk-deploy-v2 with flag
