@@ -74,6 +74,7 @@ new QdrantStack(app, `ratel-${env}-qdrant-ap-northeast-2`, {
   stage: env,
   vpc: escStack.vpc,
   cluster: escStack.cluster,
+  namespace: escStack.namespace,
   qdrantApiKey: process.env.QDRANT_API_KEY,
   baseDomain,
   vectorDomain: `vector.${host}`,
