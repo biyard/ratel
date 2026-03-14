@@ -35,7 +35,7 @@ jobs:
             space-stream-worker-build-${{ runner.os }}-
             space-stream-worker-build-
           path: |
-            target
+            packages/space-stream-worker/target
 
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
