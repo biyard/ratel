@@ -26,6 +26,17 @@ jobs:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
+      - name: Restore build cache
+        uses: actions/cache/restore@v4
+        with:
+          key: space-stream-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            space-stream-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
+            space-stream-worker-build-${{ runner.os }}-
+            space-stream-worker-build-
+          path: |
+            target
+
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
@@ -82,6 +93,17 @@ jobs:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
+      - name: Restore build cache
+        uses: actions/cache/restore@v4
+        with:
+          key: survey-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            survey-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
+            survey-worker-build-${{ runner.os }}-
+            survey-worker-build-
+          path: |
+            packages/survey-worker/target
+
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
@@ -114,6 +136,17 @@ jobs:
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - name: Restore build cache
+        uses: actions/cache/restore@v4
+        with:
+          key: fetcher-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            fetcher-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
+            fetcher-build-${{ runner.os }}-
+            fetcher-build-
+          path: |
+            packages/fetcher/target
 
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
@@ -216,6 +249,17 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Restore build cache
+        uses: actions/cache/restore@v4
+        with:
+          key: app-shell-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            app-shell-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
+            app-shell-build-${{ runner.os }}-
+            app-shell-build-
+          path: |
+            target
 
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
