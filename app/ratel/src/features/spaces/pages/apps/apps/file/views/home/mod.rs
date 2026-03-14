@@ -108,7 +108,7 @@ pub fn SpaceFileAppPage(space_id: SpacePartition) -> Element {
     };
 
     rsx! {
-        div { class: "flex flex-col gap-5 pb-6 w-full max-w-[1024px] text-web-font-primary",
+        div { class: "flex flex-col gap-5 pb-6 w-full text-web-font-primary",
             h3 { class: "font-bold font-raleway text-[24px]/[28px] tracking-[-0.24px] text-web-font-primary",
                 {tr.page_title}
             }
@@ -254,11 +254,13 @@ pub fn SpaceFileAppPage(space_id: SpacePartition) -> Element {
             if !image_files.is_empty() && !editing() {
                 div { class: "grid grid-cols-1 gap-4 pt-4 mt-4 border-t md:grid-cols-2 border-separator",
                     for file in image_files.iter() {
-                        img {
-                            key: "img-{file.id}",
-                            src: file.url.clone().unwrap_or_default(),
-                            alt: "{file.name}",
-                            class: "object-contain w-full bg-black rounded-lg border border-separator max-h-[500px]",
+                        if let Some(url) = file.url.clone().filter(|url| !url.is_empty()) {
+                            img {
+                                key: "img-{file.id}",
+                                src: url,
+                                alt: "",
+                                class: "object-contain w-full bg-black rounded-lg border border-separator max-h-[500px]",
+                            }
                         }
                     }
                 }

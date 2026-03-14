@@ -2,16 +2,18 @@ use crate::features::spaces::pages::overview::*;
 
 mod creator_page;
 mod i18n;
+mod overview_content;
 mod viewer_page;
 
 use creator_page::*;
 use i18n::*;
+use overview_content::*;
 use viewer_page::*;
 
 use crate::features::spaces::space_common::hooks::use_space_role;
 
 #[component]
-pub fn SpaceOverviewPage(space_id: SpacePartition) -> Element {
+pub fn SpaceOverviewPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let role = use_space_role()();
 
     match role {

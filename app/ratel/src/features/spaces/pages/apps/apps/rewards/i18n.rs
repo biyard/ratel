@@ -115,40 +115,12 @@ translate! {
         en: "points",
         ko: "포인트",
     },
-    respond_poll: {
-        en: "Poll Response",
-        ko: "투표 응답",
+    no_reward_configured: {
+        en: "No reward configured",
+        ko: "보상이 설정되지 않았습니다",
     },
-    period_once: {
-        en: "Once",
-        ko: "1회",
-    },
-    period_hourly: {
-        en: "Hourly",
-        ko: "매시간",
-    },
-    period_daily: {
-        en: "Daily",
-        ko: "매일",
-    },
-    period_weekly: {
-        en: "Weekly",
-        ko: "매주",
-    },
-    period_monthly: {
-        en: "Monthly",
-        ko: "매월",
-    },
-    period_yearly: {
-        en: "Yearly",
-        ko: "매년",
-    },
-    period_unlimited: {
-        en: "Unlimited",
-        ko: "무제한",
-    },
-    reward_type_required: {
-        en: "Reward type is required.",
-        ko: "보상 유형을 선택하세요.",
+    action_reward_count: {
+        en: "Reward",
+        ko: "보상",
     },
 }
