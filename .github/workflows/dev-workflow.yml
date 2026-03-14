@@ -53,6 +53,7 @@ jobs:
           STACK: ratel-dev-stack
           DEPLOY_STORYBOOK: false
           DEPLOY_STATIC: false
+          HIGH_TRAFFIC_REGION: ap-northeast-2
 
           QDRANT_API_KEY: ${{secrets.DEV_QDRANT_API_KEY }}
         run: |

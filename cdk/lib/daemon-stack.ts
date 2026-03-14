@@ -11,6 +11,8 @@ import { Construct } from "constructs";
 
 export interface DaemonStackProps extends StackProps {
   commit: string;
+  cluster: ecs.Cluster;
+  vpc: ec2.IVpc;
 }
 
 export class DaemonStack extends Stack {
@@ -19,9 +21,6 @@ export class DaemonStack extends Stack {
 
   constructor(scope: Construct, id: string, props: DaemonStackProps) {
     super(scope, id, { ...props, crossRegionReferences: true });
-
-    this.vpc = ec2.Vpc.fromLookup(this, "Vpc", { isDefault: true });
-    this.cluster = new ecs.Cluster(this, "Cluster", { vpc: this.vpc });
 
     // 4) Task execution role
     const taskExecutionRole = new iam.Role(this, "TaskExecutionRole", {
@@ -69,7 +68,7 @@ export class DaemonStack extends Stack {
     });
 
     new ecs.FargateService(this, "DaemonServiceV3", {
-      cluster: this.cluster,
+      cluster: props.cluster,
       taskDefinition,
       desiredCount: 1,
       maxHealthyPercent: 100,
