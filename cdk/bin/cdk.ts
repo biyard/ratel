@@ -13,6 +13,10 @@ const awsAccount =
   process.env.CDK_DEFAULT_ACCOUNT || process.env.AWS_ACCOUNT_ID;
 
 const env = process.env.ENV || "dev";
+const highTrafficRegions = (process.env.HIGH_TRAFFIC_REGION || "")
+  .split(",")
+  .map((r) => r.trim())
+  .filter((r) => r.length > 0);
 // Common host
 const host = process.env.DOMAIN || "dev.ratel.foundation";
 const webDomain = host;
@@ -60,6 +64,9 @@ new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {
   enableDaemon: true,
   baseDomain,
   apiDomain,
+  enableEcs: highTrafficRegions.includes("ap-northeast-2"),
+  cluster: daemonStack.cluster,
+  vpc: daemonStack.vpc,
 });
 
 new RegionalServiceStack(app, `ratel-${env}-svc-eu-central-1`, {

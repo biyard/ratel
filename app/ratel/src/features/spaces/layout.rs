@@ -42,7 +42,6 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
         .map(|user| format!("/{}/credentials", user.username));
     let mut popup = use_popup();
     let tr: SpaceLayoutTranslate = use_translate();
-    // FIXME
 
     let mut participate = use_action(participate_space);
 
@@ -50,12 +49,6 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
         && matches!(role, SpaceUserRole::Viewer)
         && !space.participated
         && space.can_participate;
-    let hide_apps_menu = matches!(
-        space.publish_state,
-        crate::common::SpacePublishState::Published
-    ) && !matches!(role, SpaceUserRole::Creator);
-    let show_file_menu =
-        hide_apps_menu && space.files.as_ref().is_some_and(|files| !files.is_empty());
 
     let mut menus = vec![
         crate::features::spaces::pages::dashboard::get_nav_item(space_id(), role.clone()),
