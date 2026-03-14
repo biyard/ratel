@@ -129,6 +129,7 @@ impl Post {
             rewards: None,
             urls: vec![],
             space_visibility: None,
+            category: None,
         }
     }
 
