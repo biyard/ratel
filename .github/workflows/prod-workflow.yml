@@ -94,6 +94,7 @@ jobs:
           components: clippy, rustfmt
           target: wasm32-unknown-unknown
           toolchain: stable
+          cache: false
 
       - uses: cargo-bins/cargo-binstall@main
       - name: Install system dependencies
@@ -240,15 +241,19 @@ jobs:
           components: clippy, rustfmt
           target: wasm32-unknown-unknown
           toolchain: stable
+          cache: false
       - uses: cargo-bins/cargo-binstall@main
       - name: Install dependencies
         run: |
           cargo binstall toml-cli
       - name: Restore build cache
-        id: fetcher-build-cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
-          key: fetcher-build-cache
+          key: fetcher-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            fetcher-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
+            fetcher-build-${{ runner.os }}-
+            fetcher-build-
           path: |
             packages/fetcher/target
       - name: Deploy APIs
@@ -289,6 +294,18 @@ jobs:
         with:
           components: clippy, rustfmt
           toolchain: stable
+          cache: false
+
+      - name: Restore build cache
+        uses: actions/cache/restore@v4
+        with:
+          key: survey-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            survey-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
+            survey-worker-build-${{ runner.os }}-
+            survey-worker-build-
+          path: |
+            packages/survey-worker/target
 
       - uses: cargo-bins/cargo-binstall@main
       - name: Install toml-cli
@@ -322,38 +339,38 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-  deploy-pdf-ai-agent:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+  # deploy-pdf-ai-agent:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: recursive
+  #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
-      - uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-2
+  #     - uses: aws-actions/configure-aws-credentials@v2
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         aws-region: ap-northeast-2
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "20"
-          cache: "npm"
-          cache-dependency-path: cdk/package-lock.json
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v3
+  #       with:
+  #         node-version: "20"
+  #         cache: "npm"
+  #         cache-dependency-path: cdk/package-lock.json
 
-      - name: Deploy AI Agent Stack
-        env:
-          ENV: prod
-          AWS_REGION: ap-northeast-2
-          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AGENT_NAME: pdf
-          BUCKET_PREFIX: "prod/spaces"
-        run: |
-          npm i -g aws-cdk
-          make cdk-deploy-ai-stack
+  #     - name: Deploy AI Agent Stack
+  #       env:
+  #         ENV: prod
+  #         AWS_REGION: ap-northeast-2
+  #         ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AGENT_NAME: pdf
+  #         BUCKET_PREFIX: "prod/spaces"
+  #       run: |
+  #         npm i -g aws-cdk
+  #         make cdk-deploy-ai-stack
 
   space-stream-worker:
     runs-on: ubuntu-22.04
@@ -377,11 +394,19 @@ jobs:
         with:
           components: clippy, rustfmt
           toolchain: stable
+          cache: false
 
       - uses: cargo-bins/cargo-binstall@main
-      - name: Install toml-cli
-        run: |
-          cargo binstall toml-cli --force
+      - name: Restore build cache
+        uses: actions/cache/restore@v4
+        with:
+          key: space-stream-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            space-stream-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
+            space-stream-worker-build-${{ runner.os }}-
+            space-stream-worker-build-
+          path: |
+            packages/space-stream-worker/target
 
       - name: Build space-stream-worker Lambda
         env:
