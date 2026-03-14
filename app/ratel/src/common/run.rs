@@ -48,14 +48,17 @@ fn serve(app: fn() -> Element) {
                     async move {
                         let (payload, ctx) = event.into_parts();
 
-                        if payload.get("Records").is_some() {
+                        if payload.get("source").is_some()
+                            && payload.get("detail-type").is_some()
+                            && payload.get("detail").is_some()
+                        {
                             let eb_event: EventBridgeEnvelope = serde_json::from_value(payload)
                                 .map_err(|e| {
                                     lambda_runtime::Error::from(format!(
                                         "Failed to parse EventBridge event: {e}"
                                     ))
                                 })?;
-                            dynamo_streams_handler(LambdaEvent::new(eb_event, ctx)).await?;
+                            event_bridge_handler(LambdaEvent::new(eb_event, ctx)).await?;
                             Ok::<serde_json::Value, lambda_runtime::Error>(
                                 serde_json::json!({"statusCode": 200}),
                             )
@@ -123,7 +126,7 @@ pub struct EventBridgeEnvelope {
 }
 
 #[cfg(feature = "lambda")]
-async fn dynamo_streams_handler(
+async fn event_bridge_handler(
     event: lambda_runtime::LambdaEvent<EventBridgeEnvelope>,
 ) -> Result<(), lambda_runtime::Error> {
     let (envelope, _ctx) = event.into_parts();
