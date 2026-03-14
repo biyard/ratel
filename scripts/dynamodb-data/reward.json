@@ -5,11 +5,14 @@
         "Item": {
           "created_at": { "N": "1764227900883722" },
           "updated_at": { "N": "1764227900883722" },
-          "sk": { "S": "POLL_RESPOND" },
+          "sk": { "S": "RESPOND_POLL" },
           "pk": { "S": "REWARD" },
           "point": { "N": "10000" },
           "period": { "S": "Once" },
-          "condition": { "S": "None" }
+          "action": { "S": "Poll" },
+          "condition": { "S": "None" },
+          "gsi1_pk": { "S": "ACTION#POLL" },
+          "gsi1_sk": { "S": "1764227900883722" }
         }
       }
     }

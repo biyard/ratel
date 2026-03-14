@@ -10,11 +10,13 @@ pub mod templates;
 
 pub mod analyzes;
 pub mod artworks;
+pub mod incentives;
 pub mod models;
 pub mod sprint_leagues;
 pub mod topics;
 mod types;
 
+pub use incentives::*;
 pub use models::*;
 pub use types::*;
 

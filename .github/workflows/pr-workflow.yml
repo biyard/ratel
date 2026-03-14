@@ -14,117 +14,59 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  ratel-storybook:
-    runs-on: ubuntu-latest
-
+  space-stream-worker:
+    runs-on: ubuntu-22.04
     defaults:
       run:
-        working-directory: ts-packages/web
-
-    outputs:
-      image: ${{ steps.build.outputs.image }}
+        working-directory: packages/space-stream-worker
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@10.15.0 --activate
-
-      - name: Build and cache Docker image
-        id: build
-        env:
-          ECR_NAME: web
-          COMMIT: pr-${{ github.sha }}
-        run: |
-          pnpm i
-          npx storybook build
-
-  ratel-web:
-    runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: ts-packages/web
-
-    outputs:
-      image: ${{ steps.build.outputs.image }}
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@10.15.0 --activate
-
-      - name: Build and cache Docker image
-        id: build
-        env:
-          ECR_NAME: web
-          COMMIT: pr-${{ github.sha }}
-        run: |
-          # Build and tag image
-          make build
-
-  main-api-test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-
-    steps:
-      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
           toolchain: stable
+          cache: false
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose pkg-config libfontconfig1-dev
-
-      - name: Setup test environment
+      - name: Build space-stream-worker
         env:
-          COMMIT: pr-${{ github.sha }}
-        run: |
-          mkdir -p .build
-          docker-compose --profile infra up -d
-
-      - name: Setup pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@10.15.0 --activate
-
-      - name: Cache builder
-        id: main-api-test-build-cache
-        uses: actions/cache@v4
-        with:
-          key: main-api-test-build-${{ hashFiles('Cargo.lock') }}
-          restore-keys: |
-            main-api-test-build-
-          path: |
-            packages/main-api/target
-
-      - name: Run Rust tests
-        env:
-          DYNAMO_TABLE_PREFIX: ratel-local
-          ENV: test
-          RUST_FLAG: "--features no-secret"
-          RUSTFLAGS: "-A warnings"
-          RUST_LOG: info
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ratel
-          DYNAMO_ENDPOINT: http://localhost:4566
+          AWS_ACCOUNT_ID: 000000000000
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
-          AWS_REGION: us-east-1
-          MIGRATE: true
-          WEB_BUILD: false
+          AWS_REGION: ap-northeast-2
+          ENV: test
+          DOMAIN: dev.ratel.foundation
+          DYNAMO_TABLE_PREFIX: ratel-test
+          DYNAMO_ENDPOINT: http://localhost:4566
+          PRIVATE_BUCKET_NAME: metadata.ratel.foundation
         run: |
-          make .build/evm-keys
-          cd packages/main-api
-          make dist
+          cargo build --release
+
+  contracts-test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: contracts
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: |
+          npm ci
+
+      - name: Run contract tests
+        run: |
           make test
 
   survey-worker-lambda:
@@ -144,16 +86,7 @@ jobs:
         with:
           components: clippy, rustfmt
           toolchain: stable
-
-      - name: Cache builder
-        id: survey-worker-build-cache
-        uses: actions/cache@v4
-        with:
-          key: survey-worker-build-${{ hashFiles('Cargo.lock') }}
-          restore-keys: |
-            survey-worker-build-
-          path: |
-            packages/survey-worker/target
+          cache: false
 
       - name: Build survey-worker Lambda
         env:
@@ -169,158 +102,6 @@ jobs:
           S3_REGION: us-east-1
         run: |
           cargo build --release
-
-  main-api-clean-build:
-    runs-on: ubuntu-22.04
-
-    defaults:
-      run:
-        working-directory: packages/main-api
-
-    outputs:
-      image: ${{ steps.build.outputs.image }}
-
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          ssh-key: ${{ secrets.PULL_KEY_REPO }}
-
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          components: clippy, rustfmt
-          target: wasm32-unknown-unknown
-          toolchain: stable
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y pkg-config libfontconfig1-dev
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - uses: cargo-bins/cargo-binstall@main
-      - name: Install toml-cli
-        run: |
-          cargo binstall toml-cli
-
-      - name: Setup pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@10.15.0 --activate
-
-      - name: Cache builder
-        id: main-api-clean-build-cache
-        uses: actions/cache@v4
-        with:
-          key: main-api-clean-build-${{ hashFiles('Cargo.lock') }}
-          restore-keys: |
-            main-api-clean-build-
-          path: |
-            packages/main-api/target
-
-      - name: Build and cache Docker image
-        id: build
-        env:
-          AWS_REGION: ap-northeast-2
-          AWS_ACCESS_KEY_ID: test
-          AWS_SECRET_ACCESS_KEY: test
-          ENV: dev
-          SERVICE: main-api
-          DOMAIN: api.dev.ratel.foundation
-          ECR_NAME: main-api
-          MIGRATE: true
-          DYNAMO_TABLE_PREFIX: ratel-local
-          BEDROCK_AGENT_ID: test
-          BEDROCK_AGENT_ALIAS_ID: test
-        run: |
-          # Build and tag image
-          make dist
-          make docker.build
-
-  main-api:
-    runs-on: ubuntu-22.04
-
-    defaults:
-      run:
-        working-directory: packages/main-api
-
-    outputs:
-      image: ${{ steps.build.outputs.image }}
-
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          ssh-key: ${{ secrets.PULL_KEY_REPO }}
-
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          components: clippy, rustfmt
-          target: wasm32-unknown-unknown
-          toolchain: stable
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y pkg-config libfontconfig1-dev
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - uses: cargo-bins/cargo-binstall@main
-      - name: Install toml-cli
-        run: |
-          cargo binstall toml-cli
-
-      - name: Cache builder
-        id: main-api-build-cache
-        uses: actions/cache@v4
-        with:
-          key: main-api-build-${{ hashFiles('Cargo.lock') }}
-          restore-keys: |
-            main-api-build-
-          path: |
-            packages/main-api/target
-
-      - name: Setup pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@10.15.0 --activate
-
-      - name: Build and cache Docker image
-        id: build
-        env:
-          AWS_REGION: ap-northeast-2
-          AWS_ACCESS_KEY_ID: test
-          AWS_SECRET_ACCESS_KEY: test
-          ENV: dev
-          SERVICE: main-api
-          DOMAIN: api.dev.ratel.foundation
-          ECR_NAME: main-api
-          COMMIT: pr-${{ github.sha }}
-          MIGRATE: true
-          RUST_LOG: info
-          DYNAMO_TABLE_PREFIX: ratel-local
-          RUST_FLAG: "--features bypass,no-secret"
-          BEDROCK_AGENT_ID: test
-          BEDROCK_AGENT_ALIAS_ID: test
-          PDF_BUCKET_NAME: test
-        run: |
-          # Build and tag image
-          make dist
-          make docker.build
-
-          # Save image to cache
-          docker save $ECR_NAME:$COMMIT | gzip > /tmp/main-api-image.tar.gz
-          echo "image=$ECR_NAME:$COMMIT" >> $GITHUB_OUTPUT
-
-      - name: Cache Docker image
-        uses: actions/cache@v4
-        with:
-          path: /tmp/main-api-image.tar.gz
-          key: main-api-image-${{ github.sha }}
 
   fetcher:
     runs-on: ubuntu-latest
@@ -339,6 +120,7 @@ jobs:
           components: clippy, rustfmt
           target: wasm32-unknown-unknown
           toolchain: stable
+          cache: false
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -347,16 +129,6 @@ jobs:
       - name: Install dependencies
         run: |
           cargo binstall toml-cli
-
-      - name: Cache builder
-        id: fetcher-build-cache
-        uses: actions/cache@v4
-        with:
-          key: fetcher-build-${{ hashFiles('Cargo.lock') }}
-          restore-keys: |
-            fetcher-build-
-          path: |
-            packages/fetcher/target
 
       - name: Build and cache Docker image
         id: build
@@ -385,16 +157,221 @@ jobs:
           docker save $ECR_NAME:$COMMIT | gzip > /tmp/fetcher-image.tar.gz
           echo "image=$ECR_NAME:$COMMIT" >> $GITHUB_OUTPUT
 
-      - name: Cache Docker image
-        uses: actions/cache@v4
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v4
         with:
           path: /tmp/fetcher-image.tar.gz
           key: fetcher-image-${{ github.sha }}
 
+  dx-check:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: app/ratel
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+          toolchain: stable
+          target: wasm32-unknown-unknown
+          cache: false
+
+      - uses: cargo-bins/cargo-binstall@main
+      - name: Install system dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            lld
+
+      - name: Install Dioxus-cli
+        run: |
+          cargo binstall dioxus-cli --force
+
+      - name: Building test
+        id: build
+        run: |
+          dx check --web
+
+  ratel-app:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: app/ratel
+
+    outputs:
+      image: ${{ steps.build.outputs.image }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+          toolchain: stable
+          target: wasm32-unknown-unknown
+          cache: false
+
+      - uses: cargo-bins/cargo-binstall@main
+      - name: Install system dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            lld
+
+      - name: Install Dioxus-cli
+        run: |
+          cargo binstall dioxus-cli --force
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.15.0 --activate
+
+      - name: Building test
+        id: build
+        env:
+          DYNAMO_TABLE_PREFIX: ratel-local
+          ENV: local
+          RUSTFLAGS: "-D warnings"
+          RUST_LOG: info
+          DYNAMO_ENDPOINT: http://localstack:4566
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_REGION: us-east-1
+          AWS_ACCOUNT_ID: test
+          COMMIT: pr-${{ github.sha }}
+          ECR: ratel/app-shell
+        run: |
+          npm i -D tailwindcss
+          make build
+          make docker
+
+          # Save image for artifact upload
+          docker save $ECR:$COMMIT | gzip > /tmp/app-shell-image.tar.gz
+          echo "image=$ECR:$COMMIT" >> $GITHUB_OUTPUT
+
+      # - name: Setup SSH session with tmate
+      #   uses: mxschmitt/action-tmate@v3
+      #   if: failure()
+      #   timeout-minutes: 15
+      #   env:
+      #     DYNAMO_TABLE_PREFIX: ratel-local
+      #     ENV: local
+      #     RUSTFLAGS: "-D warnings"
+      #     RUST_LOG: info
+      #     DYNAMO_ENDPOINT: http://localstack:4566
+      #     AWS_ACCESS_KEY_ID: test
+      #     AWS_SECRET_ACCESS_KEY: test
+      #     AWS_REGION: us-east-1
+      #     AWS_ACCOUNT_ID: test
+      #     COMMIT: pr-${{ github.sha }}
+      #     ECR: ratel/app-shell
+      #   with:
+      #     limit-access-to-actor: true
+
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-shell-image-${{ github.sha }}
+          path: /tmp/app-shell-image.tar.gz
+          retention-days: 7
+
+  ratel-app-testing:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+          toolchain: stable
+          cache: false
+
+      - uses: cargo-bins/cargo-binstall@main
+      - name: Install system dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            lld
+
+      - name: Install Dioxus-cli
+        run: |
+          cargo binstall dioxus-cli --force
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.15.0 --activate
+
+      - name: Start infrastructure
+        run: |
+          make infra
+
+      - name: Run tests
+        working-directory: app/ratel
+        env:
+          DYNAMO_TABLE_PREFIX: ratel-local
+          DYNAMO_ENDPOINT: http://localhost:4566
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_REGION: us-east-1
+          AWS_ACCOUNT_ID: test
+          RUST_LOG: info
+          ENV: local
+        run: |
+          npm install -D tailwindcss @tailwindcss/cli
+          make test
+
+      # - name: Setup SSH session with tmate
+      #   uses: mxschmitt/action-tmate@v3
+      #   if: failure()
+      #   timeout-minutes: 15
+      #   env:
+      #     DYNAMO_TABLE_PREFIX: ratel-local
+      #     DYNAMO_ENDPOINT: http://localhost:4566
+      #     AWS_ACCESS_KEY_ID: test
+      #     AWS_SECRET_ACCESS_KEY: test
+      #     AWS_REGION: us-east-1
+      #     AWS_ACCOUNT_ID: test
+      #     RUST_LOG: info
+      #     ENV: local
+      #   with:
+      #     limit-access-to-actor: true
+
   playwright-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [ratel-web, main-api, fetcher]
+    needs: [ratel-app]
 
     steps:
       - uses: actions/checkout@v4
@@ -407,54 +384,18 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y docker-compose
 
-      - name: Setup pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@10.15.0 --activate
-
-      - name: Install dependencies
-        run: pnpm i
-
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
-
-      # - name: Restore web image cache
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: /tmp/web-image.tar.gz
-      #     key: web-image-${{ github.sha }}
-      #     fail-on-cache-miss: true
-
-      - name: Restore main-api image cache
-        uses: actions/cache@v4
+      - name: Download Docker image artifact
+        uses: actions/download-artifact@v4
         with:
-          path: /tmp/main-api-image.tar.gz
-          key: main-api-image-${{ github.sha }}
-          fail-on-cache-miss: true
-
-      # - name: Restore fetcher image cache
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: /tmp/fetcher-image.tar.gz
-      #     key: fetcher-image-${{ github.sha }}
-      #     fail-on-cache-miss: true
+          name: app-shell-image-${{ github.sha }}
+          path: /tmp
 
       - name: Load Docker images
         run: |
           # Load images from cache
-          # docker load < /tmp/web-image.tar.gz
-          docker load < /tmp/main-api-image.tar.gz
-          # docker load < /tmp/fetcher-image.tar.gz
+          docker load < /tmp/app-shell-image.tar.gz
 
-          # Verify images are loaded
           docker images
-
-      # - name: Setup SSH session with tmate
-      #   uses: mxschmitt/action-tmate@v3
-      #   env:
-      #     COMMIT: pr-${{ github.sha }}
-      #   with:
-      #     limit-access-to-actor: true
 
       - name: Setup test environment
         env:
@@ -473,51 +414,56 @@ jobs:
           interval=10
           elapsed=0
           while [ $elapsed -lt $timeout ]; do
-            if curl -f -s http://localhost:3000/version > /dev/null 2>&1; then
-              echo "✅ Main API is responding (took ${elapsed}s)"
+            if curl -f -s http://localhost:8080/ > /dev/null 2>&1; then
+              echo "✅ App Shell is responding (took ${elapsed}s)"
               break
             fi
-            echo "⏳ Main API not ready yet... (${elapsed}/${timeout}s)"
+            echo "⏳ App Shell not ready yet... (${elapsed}/${timeout}s)"
             sleep $interval
             elapsed=$((elapsed + interval))
           done
 
           if [ $elapsed -ge $timeout ]; then
-            echo "❌ Main API failed to respond with 200 status within ${timeout}s"
+            echo "❌ App Shell failed to respond with 200 status within ${timeout}s"
             echo "🔍 Checking Docker services status:"
             docker-compose -f docker-compose.yaml ps
-            echo "🔍 Main API logs:"
-            docker-compose -f docker-compose.yaml logs main-api-testing --tail=50
+            echo "🔍 App Shell logs:"
+            docker-compose -f docker-compose.yaml logs app-shell-testing
             exit 1
           fi
 
-          # Wait for Web frontend (180 second timeout)
-          # echo "🔄 Checking Web frontend..."
-          # elapsed=0
-          # while [ $elapsed -lt $timeout ]; do
-          #   if curl -f -s http://localhost:8080/api/version > /dev/null 2>&1; then
-          #     echo "✅ Web frontend is responding (took ${elapsed}s)"
-          #     break
-          #   fi
-          #   echo "⏳ Web frontend not ready yet... (${elapsed}/${timeout}s)"
-          #   sleep $interval
-          #   elapsed=$((elapsed + interval))
-          # done
-
           echo "🎉 All services are ready!"
+
+      - name: Install dependencies
+        working-directory: playwright
+        run: npm i
+
+      - name: Install Playwright Browsers
+        working-directory: playwright
+        run: npx playwright install --with-deps chromium
 
       - name: Run Playwright Tests
         env:
           CI: true
-          RATEL_TEST_PLAYWRIGHT_URL: http://localhost:3000
+          PLAYWRIGHT_BASE_URL: http://localhost:8080
+          PLAYWRIGHT_TIMEOUT: 5000
+        working-directory: playwright
         run: |
-          cd ts-packages/web
           make test
+
+      # - name: Setup SSH session with tmate
+      #   uses: mxschmitt/action-tmate@v3
+      #   if: failure()
+      #   timeout-minutes: 15
+      #   env:
+      #     COMMIT: pr-${{ github.sha }}
+      #   with:
+      #     limit-access-to-actor: true
 
       - name: Move Playwright Tests
         if: always()
         run: |
-          mv ts-packages/web/playwright-report ./
+          mv playwright/playwright-report ./
 
       - name: Upload test results
         uses: actions/upload-artifact@v4

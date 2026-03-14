@@ -1,7 +1,11 @@
 [workspace]
-members = ["packages/*"]
+members = [
+  "app/ratel",
+  "packages/*",
+  "design-system-preview",
+]
 resolver = "2"
-exclude = ["deps", "benchmark/*"]
+exclude = ["benchmark/*", "deps", "packages/template"]
 
 [workspace.package]
 authors = ["Biyard"]
@@ -16,21 +20,28 @@ btracing = { path = "packages/btracing", version = "0.1.*" }
 by-axum = { path = "packages/by-axum", version = "0.2.*" }
 by-types = { path = "packages/by-types", version = "0.3.*" }
 rest-api = { path = "packages/rest-api", version = "0.1.*" }
-dioxus-translate = { path = "packages/dioxus-translate", version = "0.1.*" }
+dioxus-translate = { path = "packages/dioxus-translate", version = "0.1.*", features = [
+  "ko",
+] }
 dioxus-translate-types = { path = "packages/dioxus-translate-types", version = "0.1.*" }
 dioxus-translate-macro = { path = "packages/dioxus-translate-macro", version = "0.1.*" }
 by-macros = { path = "packages/by-macros", version = "0.6.*" }
+
+dioxus-components = { path = "app/interops/web-components" }
+icons = { path = "packages/icons" }
+
 bigdecimal = "0.4.7"
 
 serde = { version = "1.0", features = ["derive"] }
+serde_repr = "0.1.19"
 serde_json = "1.0"
 dto = { path = "./packages/dto" }
 sqlx = { version = "0.8.3", features = [
-  "sqlite",
+  "bigdecimal",
   "postgres",
   "runtime-tokio",
+  "sqlite",
   "time",
-  "bigdecimal",
 ] }
 tokio = { version = "1.40.0", features = ["full"] }
 tracing = "0.1.41"
@@ -39,34 +50,34 @@ reqwest = { version = "0.12.12", features = ["blocking", "json", "multipart"] }
 schemars = { version = "1.0.4", features = ["uuid1"] }
 aide = { version = "0.15", git = "https://github.com/tamasfe/aide.git", features = [
   "axum",
-  "axum-query",
   "axum-extra",
   "axum-extra-headers",
   "axum-extra-query",
   "axum-json",
-  "swagger",
+  "axum-query",
+  "macros",
   "redoc",
   "scalar",
-  "macros",
+  "swagger",
 ] }
 axum = { version = "0.8.1", features = ["macros"] }
+async-trait = "0.1.81"
 
-[profile.wasm-dev]
-inherits = "dev"
-opt-level = 1
+aws-sdk-bedrockruntime = "1"
+aws-sdk-dynamodb = "1.92.0"
+serde_dynamo = { version = "4.2.14", features = ["aws-sdk-dynamodb+1"] }
+thiserror = "2.0.16"
+uuid = { version = "1.10.1", features = ["v7"] }
+chrono = "0.4.39"
+serde_with = "3.14.0"
+percent-encoding = "2.3.2"
+base64 = "0.22.1"
+hyper = "1.6.0"
 
-[profile.server-dev]
-inherits = "dev"
+dioxus = { version = "0.7.1", features = ["fullstack", "router"] }
+lucide-dioxus = { version = "2.569.0", features = ["all-icons"] }
 
-[profile.android-dev]
-inherits = "dev"
-
-
-[profile.bevy-wasm-release]
-# Default to release profile values.
-inherits = "release"
-# Optimize with size in mind (also try "z", sometimes it is better).
-# Slightly slows compile times, great improvements to file size and runtime performance.
-opt-level = "z"
-# Strip all debugging information from the binary to slightly reduce file size.
-strip = "debuginfo"
+web-sys = {version = "0.3", features = ["Clipboard"] }
+wasm-bindgen = { version = "0.2", features = [] }
+wasm-bindgen-futures = "0.4"
+serde-wasm-bindgen = "0.6"

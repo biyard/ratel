@@ -1,17 +1,8 @@
-use crate::features::spaces::rewards::{RewardAction, RewardCondition, RewardKey, RewardPeriod};
+use crate::features::spaces::rewards::{
+    RewardAction, RewardCondition, RewardKey, RewardPeriod, RewardUserBehavior,
+};
 use crate::types::*;
 use crate::*;
-
-/// SpaceReward: 스페이스에 설정한 리워드
-///
-/// Key Structure:
-/// - PK: SPACE#{space_pk}##REWARD
-/// - SK: {EntityType}#{RewardAction}
-///
-/// Examples:
-/// - Get All Rewards: SpaceReward::query(pk)
-/// - Get Specific Entity Reward: SpaceReward::query_begins_with_sk(EntityType)
-/// - Get Specific Reward: SpaceReward::get(pk, sk)
 
 #[derive(
     Debug,
@@ -23,24 +14,16 @@ use crate::*;
     serde::Serialize,
     serde::Deserialize,
 )]
-/// SpaceReward: 스페이스에 설정한 리워드
-///
-/// Key Structure:
-/// - PK: SPACE#{space_pk}##REWARD
-/// - SK: {EntityType}#{RewardAction}
-///
-/// Examples:
-/// - Get All Rewards: SpaceReward::query(pk)
-/// - Get Specific Entity Reward: SpaceReward::query_begins_with_sk(EntityType)
-/// - Get Specific Reward: SpaceReward::get(pk, sk)
+
 pub struct SpaceReward {
-    pub pk: CompositePartition,
+    pub pk: Partition,
     pub sk: RewardKey,
 
     pub created_at: i64,
     pub updated_at: i64,
 
-    pub action: RewardAction,
+    #[serde(default)]
+    pub behavior: RewardUserBehavior,
     #[serde(default)]
     pub description: String,
 
@@ -57,24 +40,24 @@ pub struct SpaceReward {
 impl SpaceReward {
     pub fn new(
         space_pk: SpacePartition,
-        reward_key: RewardKey,
+        entity_type: EntityType,
+        behavior: RewardUserBehavior,
         description: String,
         credits: i64,
         point: i64,
         period: RewardPeriod,
         condition: RewardCondition,
     ) -> Self {
-        let action = reward_key.get_action();
-        let (pk, sk) = Self::keys(space_pk, reward_key);
+        let sk = RewardKey::from((space_pk.clone(), entity_type, behavior.clone()));
+
         let now = now();
 
         Self {
-            pk,
+            pk: space_pk.into(),
             sk,
-
+            behavior,
             created_at: now,
             updated_at: now,
-            action,
             credits,
             point,
             description,
@@ -86,56 +69,35 @@ impl SpaceReward {
         }
     }
 
-    pub fn keys(
-        space_pk: SpacePartition,
-        reward_key: RewardKey,
-    ) -> (CompositePartition, RewardKey) {
-        // SPACE#{space_pk}##REWARD
-        (
-            CompositePartition(space_pk.into(), Partition::Reward),
-            reward_key,
-        )
-    }
-
     pub fn get_amount(&self) -> i64 {
         self.point * self.credits
     }
-
-    pub fn get_space_pk(&self) -> SpacePartition {
-        self.pk.0.clone().into()
-    }
-
-    pub async fn get_by_reward_key(
+    pub async fn get_by_action(
         cli: &aws_sdk_dynamodb::Client,
         space_pk: SpacePartition,
-        reward_key: RewardKey,
+        action: EntityType,
+        behavior: RewardUserBehavior,
     ) -> Result<Self> {
-        let key = Self::keys(space_pk, reward_key);
-        let res = Self::get(cli, key.0, Some(key.1))
+        let pk: Partition = space_pk.clone().into();
+        let sk = RewardKey::from((space_pk, action, behavior));
+
+        Self::get(cli, pk, Some(sk))
             .await?
-            .ok_or(Error::RewardNotFound)?;
-        Ok(res)
+            .ok_or(Error::SpaceRewardNotFound)
     }
 
-    pub async fn list_by_feature(
+    pub async fn list_by_action(
         cli: &aws_sdk_dynamodb::Client,
         space_pk: SpacePartition,
-        entity_type: Option<EntityType>,
-        bookmark: Option<String>,
-    ) -> Result<(Vec<Self>, Option<String>)> {
-        let pk: CompositePartition = CompositePartition(space_pk.into(), Partition::Reward);
-        let mut opt = SpaceRewardQueryOption::builder();
-        if let Some(bookmark) = bookmark {
-            opt = opt.bookmark(bookmark);
-        }
+        action: Option<EntityType>,
+    ) -> Result<Vec<Self>> {
+        let pk: Partition = space_pk.clone().into();
+        let sk = RewardKey::get_space_reward_sk_prefix(space_pk, action);
 
-        if let Some(entity_type) = entity_type {
-            let begin_sk = RewardKey::get_sk_prefix(entity_type);
-            opt = opt.sk(begin_sk);
-        }
+        let opt = SpaceReward::opt_all().sk(sk);
 
-        let (items, next) = Self::query(cli, pk, opt).await?;
+        let (items, _) = Self::query(cli, pk, opt).await?;
 
-        Ok((items, next))
+        Ok(items)
     }
 }

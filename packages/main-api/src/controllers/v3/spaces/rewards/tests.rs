@@ -1,31 +1,33 @@
+use tokio::time::sleep;
+
 use crate::controllers::v3::me::memberships::change_membership::ChangeMembershipResponse;
 use crate::controllers::v3::me::memberships::tests::seed_test_user_payment;
+use crate::controllers::v3::spaces::participate_space::ParticipateSpaceResponse;
 use crate::controllers::v3::spaces::polls::RespondPollSpaceResponse;
 use crate::controllers::v3::spaces::polls::tests::setup_published_poll_space;
 use crate::features::membership::*;
 use crate::features::payment::*;
-use crate::features::spaces::rewards::PollRewardKey;
 use crate::features::spaces::rewards::*;
 use crate::tests::v3_setup::*;
+use crate::types::SpacePartition;
 use crate::types::*;
 use crate::*;
 
 /// Helper function to seed reward definitions
 #[allow(dead_code)]
 async fn default_poll_rewards(cli: &aws_sdk_dynamodb::Client) {
-    // Create PollRespond reward if it doesn't exist
     let poll_respond_pk = Partition::Reward;
     if Reward::get(
         cli,
         poll_respond_pk.clone(),
-        Some(&RewardAction::PollRespond),
+        Some(RewardUserBehavior::RespondPoll),
     )
     .await
     .unwrap()
     .is_none()
     {
         let poll_reward = Reward::new(
-            RewardAction::PollRespond,
+            RewardUserBehavior::RespondPoll,
             10_000, // 10,000 points
             RewardPeriod::Daily,
             RewardCondition::None,
@@ -82,9 +84,8 @@ async fn test_create_reward_success() {
         path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "reward": {
-                "poll_sk": poll_sk.to_string()
-            },
+            "action_key": poll_sk.to_string(),
+            "behavior": "RespondPoll",
             "description": "Get points for responding to this poll",
             "credits": 10
         },
@@ -96,10 +97,15 @@ async fn test_create_reward_success() {
     assert_eq!(body.points, 10_000);
 
     // Verify the reward was created in DB
-    let reward_key = RewardKey::Poll(poll_sk.clone().into(), PollRewardKey::Respond);
-    let space_reward = SpaceReward::get_by_reward_key(&ddb, space_pk.clone().into(), reward_key)
+    let reward_key = RewardKey::from((
+        SpacePartition::from(space_pk.clone()),
+        poll_sk.clone(),
+        RewardUserBehavior::RespondPoll,
+    ));
+    let space_reward = SpaceReward::get(&ddb, space_pk.clone(), Some(reward_key))
         .await
-        .expect("SpaceReward should exist");
+        .expect("SpaceReward should exist")
+        .unwrap();
 
     assert_eq!(
         space_reward.description,
@@ -141,9 +147,8 @@ async fn test_create_reward_insufficient_credits() {
         path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "reward": {
-                "poll_sk": poll_sk.to_string()
-            },
+            "action_key": poll_sk.to_string(),
+            "behavior": "RespondPoll",
             "description": "Too expensive",
             "credits": 10
         },
@@ -171,9 +176,8 @@ async fn test_list_rewards_authenticated() {
         path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "reward": {
-                "poll_sk": poll_sk.to_string()
-            },
+            "action_key": poll_sk.to_string(),
+            "behavior": "RespondPoll",
             "description": "Description",
             "credits": 10
         },
@@ -214,9 +218,8 @@ async fn test_list_rewards_guest() {
         path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "reward": {
-                "poll_sk": poll_sk.to_string()
-            },
+            "action_key": poll_sk.to_string(),
+            "behavior": "RespondPoll",
             "description": "Description",
             "credits": 10
         },
@@ -257,9 +260,8 @@ async fn test_list_rewards_filtered_by_feature() {
         path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "reward": {
-                "poll_sk": poll_sk.to_string()
-            },
+            "action_key": poll_sk.to_string(),
+            "behavior": "RespondPoll",
             "description": "Description",
             "credits": 10
         },
@@ -299,9 +301,8 @@ async fn test_update_reward_success() {
         path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "reward": {
-                "poll_sk": poll_sk.to_string()
-            },
+            "action_key": poll_sk.to_string(),
+            "behavior": "RespondPoll",
             "description": "Original Description",
             "credits": 10
         },
@@ -310,7 +311,11 @@ async fn test_update_reward_success() {
     assert_eq!(status, 200);
 
     // Update the reward
-    let reward_key = RewardKey::Poll(poll_sk.clone().into(), PollRewardKey::Respond);
+    let reward_key = RewardKey::from((
+        SpacePartition::from(space_pk.clone()),
+        poll_sk.clone(),
+        RewardUserBehavior::RespondPoll,
+    ));
     let (status, _headers, body) = put! {
         app: app,
         path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
@@ -328,8 +333,9 @@ async fn test_update_reward_success() {
     assert_eq!(body.credits, 15);
 
     // Verify the reward was updated in DB
-    let space_reward = SpaceReward::get_by_reward_key(&ddb, space_pk.clone().into(), reward_key)
+    let space_reward = SpaceReward::get(&ddb, space_pk.clone(), Some(reward_key))
         .await
+        .unwrap()
         .expect("SpaceReward should exist");
 
     assert_eq!(space_reward.description, "Updated Description");
@@ -363,9 +369,8 @@ async fn test_update_reward_reduce_credits() {
         path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "reward": {
-                "poll_sk": poll_sk.to_string()
-            },
+            "action_key": poll_sk.to_string(),
+            "behavior": "RespondPoll",
             "description": "Description",
             "credits": 20
         },
@@ -382,7 +387,11 @@ async fn test_update_reward_reduce_credits() {
     assert_eq!(user_membership.remaining_credits, 20); // 40 - 20 = 20
 
     // Update reward with fewer credits (reduce to 10)
-    let reward_key = RewardKey::Poll(poll_sk.clone().into(), PollRewardKey::Respond);
+    let reward_key = RewardKey::from((
+        SpacePartition::from(space_pk.clone()),
+        poll_sk.clone(),
+        RewardUserBehavior::RespondPoll,
+    ));
     let (status, _headers, body) = put! {
         app: app,
         path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
@@ -426,9 +435,8 @@ async fn test_update_reward_without_permission() {
         path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "reward": {
-                "poll_sk": poll_sk.to_string()
-            },
+            "action_key": poll_sk.to_string(),
+            "behavior": "RespondPoll",
             "description": "Description",
             "credits": 10
         },
@@ -437,7 +445,11 @@ async fn test_update_reward_without_permission() {
     assert_eq!(status, 200);
 
     // Try to update reward with different user (user2) who doesn't have permission
-    let reward_key = RewardKey::Poll(poll_sk.clone().into(), PollRewardKey::Respond);
+    let reward_key = RewardKey::from((
+        SpacePartition::from(space_pk.clone()),
+        poll_sk.clone(),
+        RewardUserBehavior::RespondPoll,
+    ));
     let (status, _headers, _body) = put! {
         app: app,
         path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
@@ -471,9 +483,8 @@ async fn test_delete_reward_success() {
         path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "reward": {
-                "poll_sk": poll_sk.to_string()
-            },
+            "action_key": poll_sk.to_string(),
+            "behavior": "RespondPoll",
             "description": "To be deleted",
             "credits": 10
         },
@@ -490,23 +501,27 @@ async fn test_delete_reward_success() {
     assert_eq!(user_membership.remaining_credits, 30); // 40 - 10 = 30
 
     // Delete the reward
-    let reward_key = RewardKey::Poll(poll_sk.clone().into(), PollRewardKey::Respond);
+    let reward_key = RewardKey::from((
+        SpacePartition::from(space_pk.clone()),
+        poll_sk.clone(),
+        RewardUserBehavior::RespondPoll,
+    ));
     let (status, _headers, _body) = delete! {
         app: app,
         path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "sk": reward_key.to_string()
+            "sk": reward_key.to_string(),
         },
         response_type: serde_json::Value
     };
 
     assert_eq!(status, 200);
-
     // Verify the reward was deleted from DB
-    let space_reward =
-        SpaceReward::get_by_reward_key(&ddb, space_pk.clone().into(), reward_key).await;
-    assert!(space_reward.is_err()); // Should not exist
+    let space_reward = SpaceReward::get(&ddb, space_pk.clone(), Some(reward_key))
+        .await
+        .expect("Request failed");
+    assert!(space_reward.is_none()); // Should not exist
 
     // Verify credits were refunded
     let user_membership =
@@ -531,18 +546,22 @@ async fn test_delete_reward_nonexistent() {
     setup_user_with_credits(&ddb, &test_user.0.pk).await;
 
     // Try to delete a reward that doesn't exist
-    let reward_key = RewardKey::Poll(poll_sk.clone().into(), PollRewardKey::Respond);
+    let reward_key = RewardKey::from((
+        SpacePartition::from(space_pk.clone()),
+        poll_sk.clone(),
+        RewardUserBehavior::RespondPoll,
+    ));
     let (status, _headers, _body) = delete! {
         app: app,
         path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "sk": reward_key.to_string()
+            "sk": reward_key.to_string(),
         },
         response_type: serde_json::Value
     };
 
-    assert_eq!(status, 400); // Not found
+    assert_eq!(status, 404); // Not found
 }
 
 #[tokio::test]
@@ -564,9 +583,8 @@ async fn test_delete_reward_without_permission() {
         path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "reward": {
-                "poll_sk": poll_sk.to_string()
-            },
+            "action_key": poll_sk.to_string(),
+            "behavior": "RespondPoll",
             "description": "Description",
             "credits": 10
         },
@@ -575,13 +593,17 @@ async fn test_delete_reward_without_permission() {
     assert_eq!(status, 200);
 
     // Try to delete reward with different user (user2) who doesn't have permission
-    let reward_key = RewardKey::Poll(poll_sk.clone().into(), PollRewardKey::Respond);
+    let reward_key = RewardKey::from((
+        SpacePartition::from(space_pk.clone()),
+        poll_sk.clone(),
+        RewardUserBehavior::RespondPoll,
+    ));
     let (status, _headers, _body) = delete! {
         app: app,
         path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
         headers: user2.1.clone(),
         body: {
-            "sk": reward_key.to_string()
+            "sk": reward_key.to_string(),
         },
         response_type: serde_json::Value
     };
@@ -608,9 +630,8 @@ async fn test_create_multiple_rewards_deducts_total_credits() {
         path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "reward": {
-                "poll_sk": poll_sk.to_string()
-            },
+            "action_key": poll_sk.to_string(),
+            "behavior": "RespondPoll",
             "description": "Description",
             "credits": 10
         },
@@ -650,9 +671,8 @@ async fn test_poll_respond_increases_user_claim() {
         path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "reward": {
-                "poll_sk": poll_sk.to_string()
-            },
+            "action_key": poll_sk.to_string(),
+            "behavior": "RespondPoll",
             "description": "Get points for responding to this poll",
             "credits": 10
         },
@@ -685,6 +705,18 @@ async fn test_poll_respond_increases_user_claim() {
         },
     ];
 
+    // user2 participates in the space before responding to poll
+    let (status, _headers, _res) = post! {
+        app: app,
+        path: format!("/v3/spaces/{}/participate", space_pk.to_string()),
+        headers: user2.1.clone(),
+        body: {
+            "verifiable_presentation": ""
+        },
+        response_type: ParticipateSpaceResponse
+    };
+    assert_eq!(status, 200, "user2 failed to participate");
+
     // user2 responds to the poll
     let (status, _headers, _res) = post! {
         app: app,
@@ -712,12 +744,13 @@ async fn test_poll_respond_increases_user_claim() {
     );
 
     // Verify UserReward was created with correct values
-    let reward_key = RewardKey::Poll(poll_sk.clone().into(), PollRewardKey::Respond);
-    let (user_reward_pk, user_reward_sk) = UserReward::keys(
-        user2.0.pk.clone().into(),
-        space_pk.clone().into(),
-        reward_key,
-    );
+    let reward_key = RewardKey::from((
+        SpacePartition::from(space_pk.clone()),
+        poll_sk.clone(),
+        RewardUserBehavior::RespondPoll,
+    ));
+    let (user_reward_pk, user_reward_sk) =
+        UserReward::keys(user2.0.pk.clone(), reward_key).expect("Should create UserReward keys");
     let user_reward = UserReward::get(&ddb, user_reward_pk, Some(user_reward_sk))
         .await
         .unwrap()
@@ -798,9 +831,8 @@ async fn test_full_flow_membership_to_reward_configuration() {
         path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "reward": {
-                "poll_sk": poll_sk.to_string()
-            },
+            "action_key": poll_sk.to_string(),
+            "behavior": "RespondPoll",
             "description": "Earn points for responding to our poll",
             "credits": 10
         },
@@ -829,7 +861,19 @@ async fn test_full_flow_membership_to_reward_configuration() {
         "Credits should be 30 after creating reward (40 - 10)"
     );
 
-    // Step 7: Another user (user2) responds to the poll
+    // Step 7: Another user (user2) participates and responds to the poll
+    // user2 participates in the space before responding to poll
+    let (status, _headers, _res) = post! {
+        app: app,
+        path: format!("/v3/spaces/{}/participate", space_pk.to_string()),
+        headers: user2.1.clone(),
+        body: {
+            "verifiable_presentation": ""
+        },
+        response_type: ParticipateSpaceResponse
+    };
+    assert_eq!(status, 200, "user2 failed to participate");
+
     let answers = vec![
         Answer::SingleChoice {
             answer: Some(1),
@@ -867,12 +911,13 @@ async fn test_full_flow_membership_to_reward_configuration() {
     );
 
     // Step 9: Verify UserReward record was created for user2
-    let reward_key = RewardKey::Poll(poll_sk.clone().into(), PollRewardKey::Respond);
-    let (user_reward_pk, user_reward_sk) = UserReward::keys(
-        user2.0.pk.clone().into(),
-        space_pk.clone().into(),
-        reward_key,
-    );
+    let reward_key = RewardKey::from((
+        SpacePartition::from(space_pk.clone()),
+        poll_sk.clone(),
+        RewardUserBehavior::RespondPoll,
+    ));
+    let (user_reward_pk, user_reward_sk) =
+        UserReward::keys(user2.0.pk.clone(), reward_key).expect("Should create UserReward keys");
     let user_reward = UserReward::get(&ddb, user_reward_pk, Some(user_reward_sk))
         .await
         .unwrap()
@@ -886,13 +931,15 @@ async fn test_full_flow_membership_to_reward_configuration() {
     );
 
     // Step 10: Verify SpaceReward total_claims was incremented
-    let space_reward = SpaceReward::get_by_reward_key(
-        &ddb,
-        space_pk.clone().into(),
-        RewardKey::Poll(poll_sk.clone().into(), PollRewardKey::Respond),
-    )
-    .await
-    .expect("SpaceReward should exist");
+    let reward_key = RewardKey::from((
+        SpacePartition::from(space_pk.clone()),
+        poll_sk.clone(),
+        RewardUserBehavior::RespondPoll,
+    ));
+    let space_reward = SpaceReward::get(&ddb, space_pk.clone(), Some(reward_key))
+        .await
+        .unwrap()
+        .expect("SpaceReward should exist");
     assert_eq!(
         space_reward.total_claims, 1,
         "SpaceReward total_claims should be 1"
@@ -911,9 +958,8 @@ async fn test_free_user_cannot_create_rewards() {
         path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "reward": {
-                "poll_sk": poll_sk.to_string()
-            },
+            "action_key": poll_sk.to_string(),
+            "behavior": "RespondPoll",
             "description": "No credits",
             "credits": 10
         },

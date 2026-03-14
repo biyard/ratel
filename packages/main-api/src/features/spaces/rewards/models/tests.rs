@@ -1,7 +1,7 @@
 use crate::features::spaces::polls::{Poll, PollResponse, PollUserAnswer};
 use crate::features::spaces::rewards::{
-    FeatureRewardKeyTrait, PollRewardKey, RewardAction, RewardCondition, RewardKey, RewardPeriod,
-    SpaceReward, UserReward, UserRewardHistory, UserRewardHistoryQueryOption,
+    RewardAction, RewardCondition, RewardKey, RewardPeriod, RewardUserBehavior, SpaceReward,
+    UserReward, UserRewardHistory, UserRewardHistoryKey, UserRewardHistoryQueryOption,
 };
 use crate::types::*;
 use crate::utils::time::get_now_timestamp_millis;
@@ -72,7 +72,8 @@ async fn test_reward_period_daily() {
     // Create a reward with Daily period
     let reward = SpaceReward::new(
         space.pk.clone().into(),
-        RewardKey::Poll(poll.sk.clone().into(), PollRewardKey::Respond),
+        poll.sk.clone(),
+        RewardUserBehavior::RespondPoll,
         "Can be claimed once per day".to_string(),
         credits,
         point,
@@ -101,12 +102,9 @@ async fn test_reward_period_daily() {
     let now = get_now_timestamp_millis();
     let today_key = RewardPeriod::Daily.to_time_key(now);
 
-    let (history_pk, history_sk) = UserRewardHistory::keys(
-        user.pk.clone(),
-        space.pk.clone().into(),
-        reward.sk.clone(),
-        today_key.clone(),
-    );
+    let history = UserRewardHistory::new(user.pk.clone(), reward.clone());
+    let history_pk = history.pk.clone();
+    let history_sk = UserRewardHistoryKey(reward.sk.clone(), today_key);
 
     // Verify history exists for today
     let histories = UserRewardHistory::query(
@@ -135,7 +133,8 @@ async fn test_reward_condition_max_user_claims() {
     // Create a reward with MaxUserClaims(2) - user can claim only 2 times
     let reward = SpaceReward::new(
         space.pk.clone().into(),
-        RewardKey::Poll(poll.sk.clone().into(), PollRewardKey::Respond),
+        poll.sk.clone(),
+        RewardUserBehavior::RespondPoll,
         "Can be claimed only 2 times per user".to_string(),
         credits,
         point,
@@ -162,14 +161,14 @@ async fn test_reward_condition_max_user_claims() {
     let result3 = UserReward::award(&cli, &biyard, reward.clone(), user.pk.clone(), None).await;
     assert!(result3.is_err(), "Third claim should fail");
     match result3 {
-        Err(crate::Error::RewardMaxUserClaimsReached) => {
+        Err(crate::Error::SpaceRewardMaxUserClaimsReached) => {
             // Expected error
         }
-        _ => panic!("Expected RewardMaxUserClaimsReached error"),
+        _ => panic!("Expected SpaceRewardMaxUserClaimsReached error"),
     }
 
     // Verify UserReward still has only 2 claims
-    let (pk, sk) = UserReward::keys(user.pk.clone(), space.pk.clone().into(), reward.sk.clone());
+    let (pk, sk) = UserReward::keys(user.pk.clone(), reward.sk.clone()).unwrap();
     let final_user_reward = UserReward::get(&cli, pk, Some(sk)).await.unwrap().unwrap();
     assert_eq!(final_user_reward.total_claims, 2);
     assert_eq!(final_user_reward.total_points, reward.get_amount() * 2);
@@ -191,7 +190,8 @@ async fn test_user_reward_award_flow() {
     // Create a SpaceReward
     let reward = SpaceReward::new(
         space.pk.clone().into(),
-        RewardKey::Poll(poll.sk.clone().into(), PollRewardKey::Respond),
+        poll.sk.clone(),
+        RewardUserBehavior::RespondPoll,
         "Testing full award flow".to_string(),
         credits,
         point,
@@ -212,8 +212,7 @@ async fn test_user_reward_award_flow() {
     assert_eq!(user_reward.total_points, initial_reward_point);
 
     // 2. Verify UserReward persisted in DB
-    let (ur_pk, ur_sk) =
-        UserReward::keys(user.pk.clone(), space.pk.clone().into(), reward.sk.clone());
+    let (ur_pk, ur_sk) = UserReward::keys(user.pk.clone(), reward.sk.clone()).unwrap();
     let fetched_user_reward = UserReward::get(&cli, ur_pk.clone(), Some(ur_sk.clone()))
         .await
         .unwrap()
@@ -222,10 +221,8 @@ async fn test_user_reward_award_flow() {
     assert_eq!(fetched_user_reward.total_points, initial_reward_point);
 
     // 3. Verify SpaceReward total_claims and total_points increased
-    let (sr_pk, sr_sk) = SpaceReward::keys(
-        space.pk.clone().into(),
-        RewardKey::Poll(poll.sk.clone().into(), PollRewardKey::Respond),
-    );
+    let sr_pk: Partition = space.pk.clone().into();
+    let sr_sk = reward.sk.clone();
     let updated_space_reward = SpaceReward::get(&cli, sr_pk, Some(sr_sk))
         .await
         .unwrap()
@@ -233,26 +230,7 @@ async fn test_user_reward_award_flow() {
     assert_eq!(updated_space_reward.total_claims, 1);
     assert_eq!(updated_space_reward.total_points, initial_reward_point);
 
-    // 4. Verify UserRewardHistory was created
-    let now = get_now_timestamp_millis();
-    let (history_pk, _) = UserRewardHistory::keys(
-        user.pk.clone(),
-        space.pk.clone().into(),
-        reward.sk.clone(),
-        reward.period.to_time_key(now),
-    );
-    let histories = UserRewardHistory::query(
-        &cli,
-        history_pk,
-        UserRewardHistoryQueryOption::builder().sk(reward.sk.to_string()),
-    )
-    .await
-    .unwrap();
-    assert_eq!(histories.0.len(), 1, "Should have one history entry");
-    let history = &histories.0[0];
-    assert_eq!(history.point, initial_reward_point);
-
-    // 5. Test second award to verify incremental updates
+    // 4. Test second award to verify incremental updates
     let result2 = UserReward::award(&cli, &biyard, reward.clone(), user.pk.clone(), None).await;
     assert!(result2.is_ok(), "Second award should succeed");
     let user_reward2 = result2.unwrap();
@@ -276,7 +254,8 @@ async fn test_biyard_transaction_rollback_on_duplicate() {
     // Create a reward with Once period (can only be claimed once)
     let reward = SpaceReward::new(
         space.pk.clone().into(),
-        RewardKey::Poll(poll.sk.clone().into(), PollRewardKey::Respond),
+        poll.sk.clone(),
+        RewardUserBehavior::RespondPoll,
         "Can only be claimed once".to_string(),
         credits,
         point,
@@ -290,12 +269,9 @@ async fn test_biyard_transaction_rollback_on_duplicate() {
     assert!(result1.is_ok(), "First award should succeed");
 
     // Verify first history was created
-    let (history_pk, history_sk) = UserRewardHistory::keys(
-        user.pk.clone(),
-        space.pk.clone().into(),
-        reward.sk.clone(),
-        "ONCE".to_string(),
-    );
+    let history = UserRewardHistory::new(user.pk.clone(), reward.clone());
+    let history_pk = history.pk.clone();
+    let history_sk = history.sk.clone();
     let opt = UserRewardHistoryQueryOption::builder().sk(history_sk.to_string());
     let histories1 = UserRewardHistory::query(&cli, history_pk.clone(), opt)
         .await
@@ -314,10 +290,10 @@ async fn test_biyard_transaction_rollback_on_duplicate() {
         "Second award should fail due to duplicate history"
     );
     match result2 {
-        Err(crate::Error::RewardAlreadyClaimedInPeriod) => {
+        Err(crate::Error::SpaceRewardAlreadyClaimedInPeriod) => {
             // Expected error when transaction fails
         }
-        _ => panic!("Expected RewardAlreadyClaimedInPeriod error"),
+        _ => panic!("Expected SpaceRewardAlreadyClaimedInPeriod error"),
     }
     let opt = UserRewardHistoryQueryOption::builder().sk(history_sk.to_string());
 
@@ -332,8 +308,7 @@ async fn test_biyard_transaction_rollback_on_duplicate() {
     );
 
     // Verify UserReward still shows only 1 claim
-    let (ur_pk, ur_sk) =
-        UserReward::keys(user.pk.clone(), space.pk.clone().into(), reward.sk.clone());
+    let (ur_pk, ur_sk) = UserReward::keys(user.pk.clone(), reward.sk.clone()).unwrap();
     let user_reward = UserReward::get(&cli, ur_pk, Some(ur_sk))
         .await
         .unwrap()
@@ -342,10 +317,8 @@ async fn test_biyard_transaction_rollback_on_duplicate() {
     assert_eq!(user_reward.total_points, reward.get_amount());
 
     // Verify SpaceReward still shows only 1 claim
-    let (sr_pk, sr_sk) = SpaceReward::keys(
-        space.pk.clone().into(),
-        RewardKey::Poll(poll.sk.clone().into(), PollRewardKey::Respond),
-    );
+    let sr_pk: Partition = space.pk.clone().into();
+    let sr_sk = reward.sk.clone();
     let space_reward = SpaceReward::get(&cli, sr_pk, Some(sr_sk))
         .await
         .unwrap()

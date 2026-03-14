@@ -1,3 +1,4 @@
+// NOTE: This model has been migrated to ratel-auth::models::user_team
 use std::collections::HashMap;
 
 use crate::Error;

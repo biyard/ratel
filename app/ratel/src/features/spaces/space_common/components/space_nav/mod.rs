@@ -1,0 +1,139 @@
+use crate::features::spaces::space_common::*;
+mod participation_attributes_section;
+mod participation_card;
+mod participation_credential_section;
+mod participation_layover_header;
+mod participation_requirements_layover;
+mod participation_step_bar;
+mod participation_verification_section;
+mod space_user_login;
+mod space_user_profile;
+
+use crate::common::models::User;
+pub use participation_attributes_section::*;
+pub use participation_card::*;
+pub use participation_credential_section::*;
+pub use participation_layover_header::*;
+pub use participation_requirements_layover::*;
+pub use participation_step_bar::*;
+pub use participation_verification_section::*;
+pub use space_user_login::*;
+pub use space_user_profile::*;
+
+#[component]
+pub fn SpaceNav(
+    space_id: SpacePartition,
+    logo: String,
+    menus: Vec<SpaceNavItem>,
+    user: Option<User>,
+    anonymous_user_profile: Option<(String, String)>,
+    login_handler: EventHandler<()>,
+    role: SpaceUserRole,
+    show_participation_card: bool,
+    credential_path: Option<String>,
+) -> Element {
+    rsx! {
+        div { class: "flex z-40 flex-col gap-2.5 justify-between pt-2.5 w-full h-full divide-y shrink-0 divide-divider",
+            div { class: "flex flex-col gap-2.5 pb-4 w-full",
+                img { src: "{logo}", class: "mx-4 mt-5 mb-2.5 w-25" }
+
+                if show_participation_card {
+                    ParticipationCard {
+                        space_id,
+                        credential_path,
+                        on_login: login_handler,
+                    }
+                }
+
+                div { class: "flex flex-col gap-1.5 items-start px-4 pt-2.5 font-bold text-xs/[14px]",
+                    for item in menus.iter() {
+                        NavItem { item: item.clone() }
+                    }
+                }
+            }
+            Row {
+                main_axis_align: MainAxisAlign::Between,
+                cross_axis_align: CrossAxisAlign::Center,
+
+                if let Some(user) = user {
+                    SpaceUserProfile {
+                        image: anonymous_user_profile
+                            .as_ref()
+                            .map(|(image, _)| image.clone())
+                            .unwrap_or_else(|| user.profile_url.clone()),
+                        display_name: anonymous_user_profile
+                            .as_ref()
+                            .map(|(_, display_name)| display_name.clone())
+                            .unwrap_or_else(|| user.display_name.clone()),
+                        user_role: role,
+                    }
+                } else {
+                    SpaceUserLogin { onclick: login_handler }
+                }
+
+                SpaceThemeToggle {}
+            }
+        }
+    }
+}
+
+#[component]
+fn NavItem(item: SpaceNavItem) -> Element {
+    let current_path = use_context::<dioxus::router::RouterContext>().full_route_string();
+    let is_active = match &item.link {
+        NavigationTarget::Internal(route) => current_path.starts_with(&route.to_string()),
+        _ => false,
+    };
+    // NOTE: Link component does not support class attribute merging.
+    rsx! {
+        Link {
+            class: "flex flex-row gap-2 items-center py-2 px-1 w-full text-sm font-medium rounded-sm text-text aria-selected:bg-space-nav-item-selected hover:bg-space-nav-item-hover",
+            "aria-selected": is_active,
+            to: item.link,
+            {item.icon}
+            {item.label}
+        }
+    }
+}
+#[derive(Clone, PartialEq)]
+pub struct SpaceNavItem {
+    pub icon: Element,
+    pub label: String,
+    pub link: NavigationTarget,
+}
+
+#[component]
+fn SpaceThemeToggle() -> Element {
+    let mut theme_service = use_theme();
+    let is_dark = match theme_service.current() {
+        Theme::Dark => true,
+        Theme::Light => false,
+        Theme::System => true, // system default treated as dark
+    };
+
+    rsx! {
+        button {
+            class: "flex justify-center items-center p-1.5 rounded-lg transition-colors cursor-pointer hover:bg-space-nav-item-hover",
+            onclick: move |_| {
+                if is_dark {
+                    theme_service.set(Theme::Light);
+                } else {
+                    theme_service.set(Theme::Dark);
+                }
+            },
+            if is_dark {
+                Moon {
+                    width: "18",
+                    height: "18",
+                    class: "[&>path]:stroke-current text-web-font-neutral",
+                }
+            } else {
+                Sun {
+                    width: "18",
+                    height: "18",
+                    class: "[&>path]:stroke-current [&>circle]:stroke-current text-web-font-neutral",
+                }
+            }
+        }
+    }
+}

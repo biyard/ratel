@@ -225,4 +225,99 @@ impl PortOne {
 
         Ok(res)
     }
+
+    pub async fn list_payments(&self, page: i32, page_size: i32) -> Result<PaymentListResponse> {
+        let portone_conf = config::get().portone;
+
+        let url = format!("{}/payments", BASE_URL);
+
+        let body = serde_json::json!({
+            "page": {
+                "number": page,
+                "size": page_size
+            },
+            "filter": {
+                "storeId": portone_conf.store_id
+            }
+        });
+
+        debug!("PortOne list payments request URL: {}, body: {:?}", url, body);
+
+        let res = self
+            .cli
+            .get(&url)
+            .json(&body)
+            .send()
+            .await?;
+
+        if !res.status().is_success() {
+            let err_text = res.text().await?;
+            error!("PortOne list payments error: {}", err_text);
+            return Err(Error::PortOnePaymentListError(err_text));
+        }
+
+        let response: PaymentListResponse = res.json().await?;
+        debug!("PortOne list payments response: {:?}", response);
+        Ok(response)
+    }
+
+    pub async fn cancel_payment(
+        &self,
+        payment_id: &str,
+        reason: String,
+        amount: Option<i64>,
+        requester: Option<PortoneCancelRequester>,
+    ) -> Result<CancelPaymentResponse> {
+        let portone_conf = config::get().portone;
+
+        let url = format!("{}/payments/{}/cancel", BASE_URL, payment_id);
+
+        let body = CancelPaymentRequest {
+            store_id: portone_conf.store_id.to_string(),
+            reason,
+            amount,
+            requester,
+        };
+
+        debug!("PortOne cancel payment request URL: {}, body: {:?}", url, body);
+
+        let res = self
+            .cli
+            .post(&url)
+            .json(&body)
+            .send()
+            .await?;
+
+        if !res.status().is_success() {
+            let err_text = res.text().await?;
+            error!("PortOne cancel payment error: {}", err_text);
+            return Err(Error::PortOneCancelPaymentError(err_text));
+        }
+
+        let response: CancelPaymentResponse = res.json().await?;
+        debug!("PortOne cancel payment response: {:?}", response);
+        Ok(response)
+    }
+
+    pub async fn get_payment(&self, payment_id: &str) -> Result<PaymentItem> {
+        let url = format!("{}/payments/{}", BASE_URL, payment_id);
+        
+        debug!("PortOne get payment request URL: {}", url);
+        
+        let res = self
+            .cli
+            .get(&url)
+            .send()
+            .await?;
+        
+        if !res.status().is_success() {
+            let err_text = res.text().await?;
+            error!("PortOne get payment error: {}", err_text);
+            return Err(Error::PortOnePaymentNotFound(err_text));
+        }
+        
+        let response: PaymentItem = res.json().await?;
+        debug!("PortOne get payment response: {:?}", response);
+        Ok(response)
+    }
 }

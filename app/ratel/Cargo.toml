@@ -1,0 +1,160 @@
+[package]
+name = "app-shell"
+version = "0.1.0"
+authors = ["hackartists <hackartists@gmail.com>"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+dioxus = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_repr = "0.1.20"
+serde_with = { workspace = true }
+tower-sessions = { version = "0.15.0", optional = true }
+icons = { workspace = true }
+percent-encoding = { workspace = true }
+aws-config = { version = "1", optional = true }
+aws-sdk-s3 = { version = "1", optional = true }
+aws-sdk-bedrockruntime = { workspace = true, optional = true }
+aws-sdk-bedrockagentruntime = { version = "1", optional = true }
+aws-smithy-types = { version = "1", optional = true }
+aws-sdk-dynamodb = { workspace = true, optional = true }
+schemars = { workspace = true, optional = true }
+aide = { workspace = true, optional = true }
+tracing = { workspace = true }
+gloo-timers = { version = "0.3", features = ["futures"], optional = true }
+serde_dynamo = { workspace = true, optional = true }
+base64 = { workspace = true }
+uuid = { workspace = true, optional = true }
+chrono = { workspace = true }
+regex = { version = "1" }
+ethers = { version = "=2.0.14", optional = true }
+names = { version = "0.14.0", optional = true }
+rand = { version = "0.10" }
+futures = { version = "0.3", optional = true }
+urlencoding = { version = "2" }
+tokio = { workspace = true, optional = true }
+
+web-sys = { workspace = true, features = [
+    "Blob",
+    "Document",
+    "Element",
+    "File",
+    "Headers",
+    "IntersectionObserver",
+    "IntersectionObserverEntry",
+    "IntersectionObserverInit",
+    "Request",
+    "RequestCredentials",
+    "RequestInit",
+    "Response",
+    "Window",
+    "console",
+    "Clipboard",
+    "Navigator",
+] }
+wasm-bindgen = { workspace = true }
+wasm-bindgen-futures = { workspace = true }
+serde-wasm-bindgen = { workspace = true }
+random-string = { version = "1.1.0", optional = true }
+reqwest = { workspace = true, optional = true }
+async-trait = { workspace = true }
+sha3 = { version = "0.10.8", optional = true }
+sha2 = { version = "0.10", optional = true }
+hex = { version = "0.4.3", optional = true }
+k256 = { version = "0.13", features = ["ecdsa"], optional = true }
+hmac = { version = "0.12.1", optional = true }
+url = { version = "2", optional = true }
+validator = { version = "0.20.0", optional = true }
+aws-sdk-sns = { version = "1.83.0", optional = true }
+aws-sdk-sesv2 = { version = "1.83.0", optional = true }
+thiserror = { workspace = true }
+
+# Dependencies from common
+by-macros = { workspace = true }
+dioxus-translate = { workspace = true }
+dioxus-components = { workspace = true }
+lucide-dioxus = { workspace = true }
+bdk = { workspace = true, optional = true }
+ssi = { version = "0.12.0", features = ["bbs"], optional = true }
+aws-credential-types = { version = "1.2.6", optional = true }
+strum = { version = "0.27.2", features = ["derive"] }
+js-sys = "0.3"
+tracing-wasm = "0.2.1"
+dioxus-cli-config = "0.7.3"
+tracing-subscriber = { workspace = true }
+getrandom = { version = "0.4", features = ["wasm_js"], optional = true }
+lambda_http = { version = "1.0.2", optional = true }
+dioxus-primitives = { git = "https://github.com/DioxusLabs/components", version = "0.0.1", default-features = false, features = ["router"] }
+time = { version = "0.3.47", features = ["formatting"] }
+mimetype-detector = "0.3.6"
+
+
+[features]
+full = ["membership","users", "teams", "spaces_full"]
+default = ["full"]
+bypass = []
+web = [
+  "dioxus/web",
+  "time/wasm-bindgen",
+  "gloo-timers",
+  "getrandom",
+]
+desktop = [
+  "dioxus/desktop",
+]
+mobile = [
+  "dioxus/mobile",
+]
+server = [
+  "dioxus/server",
+  "tower-sessions",
+  "aws-config",
+  "aws-sdk-s3",
+  "aws-sdk-bedrockruntime",
+  "aws-sdk-bedrockagentruntime",
+  "aws-smithy-types",
+  "random-string",
+  "reqwest",
+  "schemars",
+  "aide",
+  "aws-sdk-dynamodb",
+  "serde_dynamo",
+  "uuid",
+  "ethers",
+  "names",
+  "futures",
+  "tokio",
+  "sha3",
+  "sha2",
+  "hex",
+  "k256",
+  "hmac",
+  "url",
+  "validator",
+  "aws-sdk-sns",
+  "aws-sdk-sesv2",
+  "bdk/be",
+  "ssi",
+  "aws-credential-types",
+]
+
+lambda = [ "server", "lambda_http" ]
+layout_test = ["web"]
+membership = []
+users = []
+teams = []
+spaces = []
+spaces_full = ["spaces"]
+futures = ["dep:futures"]
+
+[dev-dependencies]
+axum = { workspace = true }
+tower = { version = "0.5" }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }

@@ -2,7 +2,7 @@ use super::*;
 use crate::features::report::ContentReport;
 use crate::features::spaces::members::{SpaceEmailVerification, SpaceInvitationMember};
 use crate::features::spaces::{
-    SpaceDao, SpaceRequirement, SpaceRequirementDto, SpaceRequirementQueryOption,
+    SpaceIncentive, SpaceRequirement, SpaceRequirementDto, SpaceRequirementQueryOption,
     SpaceRequirementResponse,
 };
 use crate::models::user::User;
@@ -66,7 +66,7 @@ pub struct GetSpaceResponse {
     pub quota: i64,
 
     pub is_report: bool,
-    pub dao_address: Option<String>,
+    pub incentive_address: Option<String>,
 }
 
 pub async fn get_space_handler(
@@ -85,11 +85,16 @@ pub async fn get_space_handler(
 
     let permissions = post.get_permissions(&dynamo.client, user.clone()).await?;
 
-    let user_participant = if user.is_some() {
-        let (pk, sk) = SpaceParticipant::keys(space_pk.clone(), user.as_ref().unwrap().pk.clone());
-        SpaceParticipant::get(&dynamo.client, pk, Some(sk)).await?
+    let (user_participant, can_participate) = if let Some(ref user) = user {
+        let user_participant = space.get_participant(&dynamo.client, &user.pk).await?;
+        let can_participate = if user_participant.is_some() {
+            false
+        } else {
+            space.can_participate(&dynamo.client, &user.pk).await
+        };
+        (user_participant, can_participate)
     } else {
-        None
+        (None, false)
     };
 
     let (req_pk, sk) = SpaceRequirement::keys(&space_pk, None);
@@ -100,21 +105,11 @@ pub async fn get_space_handler(
     let (mut requirements, _bookmark) =
         SpaceRequirement::query(&dynamo.client, req_pk, opt).await?;
 
-    let dao = SpaceDao::get(&dynamo.client, &space_pk, Some(&EntityType::SpaceDao)).await?;
-
-    let can_participate = if let Some(ref user) = user {
-        let (pk, sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
-        let invitation = SpaceInvitationMember::get(&dynamo.client, &pk, Some(&sk)).await?;
-
-        invitation.is_some()
-            && user_participant.is_none()
-            && space.status == Some(SpaceStatus::InProgress)
-    } else {
-        false
-    };
+    let incentive =
+        SpaceIncentive::get(&dynamo.client, &space_pk, Some(&EntityType::SpaceIncentive)).await?;
 
     let mut res = GetSpaceResponse::from((space.clone(), post, permissions, user_participant));
-    res.dao_address = dao.map(|item| item.contract_address);
+    res.incentive_address = incentive.map(|item| item.contract_address);
     requirements.sort_by(|a, b| a.order.cmp(&b.order));
 
     let (is_report, keys) = if let Some(ref user) = user {
@@ -210,7 +205,7 @@ impl
             files: space.files,
             anonymous_participation: space.anonymous_participation,
             can_participate: false,
-            change_visibility: space.change_visibility,
+            change_visibility: false,
             participated,
             participant_display_name,
             participant_profile_url,
@@ -220,7 +215,7 @@ impl
             quota: space.quota,
 
             is_report: false,
-            dao_address: None,
+            incentive_address: None,
         }
     }
 }

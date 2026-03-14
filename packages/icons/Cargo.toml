@@ -1,0 +1,18 @@
+[package]
+name = "icons"
+version = "0.1.0"
+authors.workspace = true
+description.workspace = true
+edition.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+dioxus.workspace = true
+
+[build-dependencies]
+roxmltree = "0.21"
+convert_case = "0.11"
+
+[lib]
+path = "src/lib.rs"
