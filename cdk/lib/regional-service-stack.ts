@@ -29,18 +29,12 @@ import { Repository } from "aws-cdk-lib/aws-ecr";
 
 export interface RegionalServiceStackProps extends StackProps {
   // Domain parts, e.g. "dev2.ratel.foundation"
-  fullDomainName: string;
   stage: string;
   // Health check path for ALB target group
-  healthCheckPath?: string;
   commit: string;
   // Repository names
-  apiRepoName?: string;
-  webRepoName?: string;
   minCapacity?: number;
   maxCapacity?: number;
-  enableDaemon?: boolean;
-  pghost: string;
 
   apiDomain: string;
   baseDomain: string;

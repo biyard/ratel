@@ -1072,6 +1072,7 @@ dependencies = [
  "js-sys",
  "k256",
  "lambda_http 1.0.2",
+ "lambda_runtime 1.1.1",
  "lucide-dioxus",
  "mimetype-detector",
  "names",
@@ -10946,7 +10947,7 @@ dependencies = [
  "http-body 1.0.1",
  "http-body-util",
  "hyper 1.7.0",
- "lambda_runtime 1.0.1",
+ "lambda_runtime 1.1.1",
  "mime",
  "percent-encoding",
  "pin-project-lite",
@@ -10984,9 +10985,9 @@ dependencies = [
 
 [[package]]
 name = "lambda_runtime"
-version = "1.0.1"
+version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "46e566d19773ae483b0d32cc6045c5420d7b3eec6192ecb1c26ffa4e0091388a"
+checksum = "23583c918bee8de7bc005ba2ad8ebd84529894bfd9a863cf24226bb6c7787690"
 dependencies = [
  "async-stream",
  "base64 0.22.1",
@@ -10996,7 +10997,7 @@ dependencies = [
  "http-body-util",
  "http-serde",
  "hyper 1.7.0",
- "lambda_runtime_api_client 1.0.1",
+ "lambda_runtime_api_client 1.0.2",
  "pin-project",
  "serde",
  "serde_json",
@@ -11028,9 +11029,9 @@ dependencies = [
 
 [[package]]
 name = "lambda_runtime_api_client"
-version = "1.0.1"
+version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c039f06329949692a81a993ede4cfaa6abab3ac8e72590cf7c5e6a64a9ec7b1"
+checksum = "7b4873061514cb57ffb6a599b77c46c65d6d783efe9bad8fd56b7cba7f0459ef"
 dependencies = [
  "bytes",
  "futures-channel",
@@ -21196,7 +21197,7 @@ dependencies = [
  "aws-sdk-dynamodb",
  "bdk",
  "futures",
- "lambda_runtime 1.0.1",
+ "lambda_runtime 1.1.1",
  "main-api",
  "serde",
  "serde_json",
