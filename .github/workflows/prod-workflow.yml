@@ -66,9 +66,9 @@ jobs:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
-      - name: Cache builder
+      - name: Restore build cache
         id: app-shell-build-cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           key: app-shell-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
@@ -239,9 +239,9 @@ jobs:
       - name: Install dependencies
         run: |
           cargo binstall toml-cli
-      - name: Cache builder
+      - name: Restore build cache
         id: fetcher-build-cache
-        uses: actions/cache@v3
+        uses: actions/cache/restore@v3
         with:
           key: fetcher-build-cache
           path: |
