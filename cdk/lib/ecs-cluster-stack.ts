@@ -23,11 +23,6 @@ export class EcsClusterStack extends Stack {
     this.vpc = ec2.Vpc.fromLookup(this, "Vpc", { isDefault: true });
     this.cluster = new ecs.Cluster(this, "Cluster", { vpc: this.vpc });
 
-    this.namespace = new sd.PrivateDnsNamespace(this, "Namespace", {
-      name: `ratel-svc.local`,
-      vpc: this.vpc,
-    });
-
     this.namespace = new sd.PrivateDnsNamespace(this, `${props.stage}-Namespace`, {
       name: `ratel-${props.stage}-svc.local`,
       vpc: this.vpc,
