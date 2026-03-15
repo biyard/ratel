@@ -107,8 +107,8 @@ pub fn MyDrafts() -> Element {
 }
 
 #[component]
-pub fn TeamDrafts(teamname: String) -> Element {
-    let teamname_signal = use_signal(|| teamname);
+pub fn TeamDrafts(username: String) -> Element {
+    let teamname_signal = use_signal(|| username);
     let mut v = use_infinite_query(move |bookmark| {
         let teamname = teamname_signal();
         async move { list_team_drafts_handler(teamname, bookmark).await }

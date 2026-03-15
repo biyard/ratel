@@ -1,13 +1,14 @@
-use crate::*;
+use crate::features::social::controllers::{CreateTeamRequest, create_team_handler, get_user_teams_handler};
+use crate::features::social::*;
 use crate::features::posts::types::TeamGroupPermissions;
 
 #[component]
 pub fn TeamCreationPopup() -> Element {
     let mut popup = use_popup();
-    let team_ctx = use_team_context();
+    let mut team_ctx = use_team_context();
     let nav = use_navigator();
-    let error_msg = use_signal(|| Option::<String>::None);
-    let submitting = use_signal(|| false);
+    let mut error_msg = use_signal(|| Option::<String>::None);
+    let mut submitting = use_signal(|| false);
 
     rsx! {
         crate::common::TeamCreationForm {

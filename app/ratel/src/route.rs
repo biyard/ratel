@@ -44,10 +44,8 @@ use crate::features::spaces::pages::actions::actions::quiz::QuizActionPage;
 #[cfg(feature = "spaces")]
 use crate::features::spaces::pages::actions::SpaceActionsPage;
 
-#[cfg(feature = "teams")]
-use crate::features::teams::Route as TeamRoute;
-#[cfg(feature = "users")]
-use crate::features::users::Route as UserRoute;
+#[cfg(feature = "social")]
+use crate::features::social::Route as SocialRoute;
 use crate::views::Index;
 use dioxus::router::components::child_router::ChildRouter;
 use layout::AppLayout;
@@ -78,17 +76,11 @@ pub enum Route {
             #[route("/admin/:..rest")]
             Admin { rest: Vec<String> },
 
-            #[cfg(feature = "users")]
+            #[cfg(feature = "social")]
             #[route("/:username/:..rest")]
-            #[cfg(feature = "users")]
-            UserHome { username: String, rest: Vec<String> },
+            #[cfg(feature = "social")]
+            SocialHome { username: String, rest: Vec<String> },
         #[end_layout]
-
-        #[cfg(feature = "teams")]
-        #[route("/teams/:teamname/:..rest")]
-        #[cfg(feature = "teams")]
-        TeamHome { teamname: String, rest: Vec<String> },
-
 
         #[cfg_attr(feature="spaces", nest("/spaces/:space_id"))]
             #[cfg_attr(feature="spaces", layout(SpaceLayout))]
@@ -197,33 +189,17 @@ define_app_wrapper!(Auth, AuthRoute);
 define_app_wrapper!(Post, PostRoute);
 define_app_wrapper!(MyFollower, MyFollowerRoute);
 
-#[cfg(feature = "users")]
+#[cfg(feature = "social")]
 #[component]
-pub fn UserHome(username: String, rest: Vec<String>) -> Element {
+pub fn SocialHome(username: String, rest: Vec<String>) -> Element {
     let router = use_context::<dioxus::router::RouterContext>();
-    let route: UserRoute = router.current();
+    let route: SocialRoute = router.current();
 
     rsx! {
-        ChildRouter::<UserRoute> {
+        ChildRouter::<SocialRoute> {
             route,
-            format_route_as_root_route: |r: UserRoute| r.to_string(),
-            parse_route_from_root_route: |url: &str| { <UserRoute as std::str::FromStr>::from_str(url).ok() },
-
-        }
-    }
-}
-
-#[cfg(feature = "teams")]
-#[component]
-pub fn TeamHome(teamname: String, rest: Vec<String>) -> Element {
-    let router = use_context::<dioxus::router::RouterContext>();
-    let route: TeamRoute = router.current();
-
-    rsx! {
-        ChildRouter::<TeamRoute> {
-            route,
-            format_route_as_root_route: |r: TeamRoute| r.to_string(),
-            parse_route_from_root_route: |url: &str| { <TeamRoute as std::str::FromStr>::from_str(url).ok() },
+            format_route_as_root_route: |r: SocialRoute| r.to_string(),
+            parse_route_from_root_route: |url: &str| { <SocialRoute as std::str::FromStr>::from_str(url).ok() },
 
         }
     }
