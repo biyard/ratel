@@ -23,11 +23,12 @@ pub async fn create_follow(space_pk: SpacePartition) -> Result<SpaceFollowAction
     }
 
     let follow = SpaceFollowAction::new(space_pk.clone());
-    let space_action = crate::features::spaces::pages::actions::models::SpaceAction::new(
+    let mut space_action = crate::features::spaces::pages::actions::models::SpaceAction::new(
         space_pk.clone(),
         SpaceActionFollowEntityType::from(follow.sk.clone()).to_string(),
         crate::features::spaces::pages::actions::types::SpaceActionType::Follow,
     );
+    space_action.title = user.username.clone();
     let items = vec![
         follow.create_transact_write_item(),
         space_action.create_transact_write_item(),
