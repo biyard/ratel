@@ -20,7 +20,9 @@ test.describe.serial("Space with actions created by a team", () => {
     "and publishing. The content is intentionally long enough to meet the minimum " +
     "character requirement for post content validation.";
 
-  async function createTeamAndPostWithSpace(page) {
+  test("Create a team and post with space, then verify dashboard", async ({
+    page,
+  }) => {
     // Step 1: Navigate to home and open profile dropdown
     await goto(page, "/");
 
@@ -84,24 +86,10 @@ test.describe.serial("Space with actions created by a team", () => {
     await page.waitForURL(/\/spaces\/[a-z0-9-]+\/dashboard/, {
       waitUntil: "networkidle",
     });
+    await getLocator(page, { text: "Dashboard" });
 
     const url = new URL(page.url());
     spaceUrl = url.pathname.replace(/\/dashboard$/, "");
-  }
-
-  test.beforeAll(async ({ browser }) => {
-    const context = await browser.newContext({ storageState: "user.json" });
-    const page = await context.newPage();
-
-    await createTeamAndPostWithSpace(page);
-
-    await context.close();
-  });
-
-  test("Verify space dashboard is accessible", async ({ page }) => {
-    // Navigate to the space dashboard and verify it loaded
-    await goto(page, `${spaceUrl}/dashboard`);
-    await getLocator(page, { text: "Dashboard" });
   });
 
   test("Create a discussion action in the space", async ({ page }) => {
