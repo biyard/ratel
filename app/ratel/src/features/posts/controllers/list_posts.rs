@@ -1,8 +1,8 @@
+use crate::features::auth::OptionalUser;
 use crate::features::posts::controllers::dto::*;
 use crate::features::posts::models::*;
 use crate::features::posts::types::*;
 use crate::features::posts::*;
-use crate::features::auth::OptionalUser;
 
 #[get("/api/posts?bookmark", user: OptionalUser)]
 pub async fn list_posts_handler(
@@ -24,8 +24,12 @@ pub async fn list_posts_handler(
     if let Some(bookmark) = bookmark {
         query_options = query_options.bookmark(bookmark);
     }
-    let (posts, bookmark) =
-        Post::find_by_visibility(cli, Visibility::Public, query_options).await?;
+    let (posts, bookmark) = Post::find_by_visibility(
+        cli,
+        format!("{}#{}", Visibility::Public, PostStatus::Published),
+        query_options,
+    )
+    .await?;
     tracing::debug!(
         "list_posts_handler: found {} posts, next bookmark = {:?}",
         posts.len(),

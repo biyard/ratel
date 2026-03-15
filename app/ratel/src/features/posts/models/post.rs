@@ -22,9 +22,10 @@ pub struct Post {
     pub post_type: PostType,
 
     #[dynamo(index = "gsi5", order = 1, sk)]
+    #[dynamo(index = "gsi6", name = "find_by_visibility", order = 2, pk)]
     pub status: PostStatus,
 
-    #[dynamo(index = "gsi6", name = "find_by_visibility", pk)]
+    #[dynamo(index = "gsi6", name = "find_by_visibility", order = 1, pk)]
     #[dynamo(index = "gsi2", order = 1, sk)]
     #[dynamo(index = "gsi5", order = 2, sk)]
     pub visibility: Option<Visibility>,
