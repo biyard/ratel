@@ -1,9 +1,11 @@
 use dioxus::prelude::*;
 
 mod admin_page;
+mod management_page;
 mod viewer_page;
 
 use admin_page::*;
+pub use management_page::ManagementPage;
 use viewer_page::*;
 
 use super::controllers::get_team_settings_handler;

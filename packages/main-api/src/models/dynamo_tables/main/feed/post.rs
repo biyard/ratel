@@ -76,6 +76,9 @@ pub struct Post {
     pub rewards: Option<i64>,
 
     pub urls: Vec<String>,
+
+    #[serde(default)]
+    pub category: Option<String>,
 }
 
 impl Post {
@@ -126,6 +129,7 @@ impl Post {
             rewards: None,
             urls: vec![],
             space_visibility: None,
+            category: None,
         }
     }
 
