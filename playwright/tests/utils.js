@@ -1,5 +1,4 @@
 import { expect } from "@playwright/test";
-import { CONFIGS } from "./config";
 
 export function wrap(page, project, baseDir) {
   const pageWithCapture = page;
@@ -55,8 +54,6 @@ export async function getLocator(
   page,
   { placeholder, text, role, label, testId },
 ) {
-  const timeout = { timeout: CONFIGS.TIMEOUT };
-
   let selected;
 
   if (testId) {
@@ -77,7 +74,7 @@ export async function getLocator(
     throw new Error("Either text, label, or data-pw must be provided");
   }
 
-  await expect(selected).toBeVisible(timeout);
+  await expect(selected).toBeVisible();
 
   return selected;
 }
@@ -91,14 +88,11 @@ export async function waitPopup(page, { visible = true }) {
 }
 
 export async function goto(page, url) {
-  await page.goto(`${CONFIGS.BASE_URL}${url}`);
-  await page.waitForLoadState("networkidle", {
-    timeout: 10000,
-  });
+  await page.goto(url);
+  await page.waitForLoadState("networkidle");
   // Wait WASM to load
   await page.waitForFunction(
     () => document.querySelector("[data-dioxus-id]") !== null,
-    { timeout: CONFIGS.TIMEOUT },
   );
 }
 
