@@ -205,7 +205,81 @@ test.describe.serial("Space with actions created by a team", () => {
       "This quiz tests knowledge about the governance protocol. Created by the team for participant engagement.",
     );
 
+    // Save the overview tab
     await click(page, { text: "Save" });
+
+    // Switch to the Quiz tab to add questions.
+    // Use role="tab" to avoid ambiguity with the "Quiz" page heading.
+    await page.getByRole("tab", { name: "Quiz" }).click();
+    await page.waitForLoadState("networkidle");
+
+    // --- Add first question (Single Choice) ---
+    await click(page, { testId: "quiz-add-question" });
+    await click(page, { text: "Single Choice" });
+
+    // A question card appears with header "Question 1", a title input
+    // (placeholder "Input"), and two default options ("Option 1", "Option 2").
+    //
+    // On the Quiz tab the visible text inputs (type="text") are ordered:
+    //   [0] Q1 title (placeholder "Input")
+    //   [1] Q1 option 1
+    //   [2] Q1 option 2
+    // Number inputs (Pass Score, Retry Count) are type="number" and excluded.
+    const textInputs = page.locator('input[type="text"]:visible');
+
+    // Fill the question title
+    await textInputs.nth(0).fill(
+      "What is the primary purpose of governance in a DAO?",
+    );
+
+    // Edit the default option texts
+    await textInputs.nth(1).fill("To centralize power");
+    await textInputs.nth(2).fill("To enable collective decision-making");
+
+    // Add a third option via the "Add Option" button
+    await page.getByRole("button", { name: "Add Option" }).first().click();
+    await page.waitForLoadState("networkidle");
+
+    // The new option appears as text input index 3
+    await textInputs.nth(3).fill("To maximize profits only");
+
+    // Mark the correct answer by clicking the checkbox label next to option 2
+    // (index 1, "To enable collective decision-making").
+    // Each option row has a <label> wrapping a hidden checkbox.
+    const checkboxLabels = page.locator('label:has(input[type="checkbox"])');
+    await checkboxLabels.nth(1).click();
+    await page.waitForLoadState("networkidle");
+
+    // --- Add second question (Multiple Choice) ---
+    await click(page, { testId: "quiz-add-question" });
+    await click(page, { text: "Multiple Choice" });
+
+    // After adding Q2 the text input ordering becomes:
+    //   [0] Q1 title, [1-3] Q1 options (3 total),
+    //   [4] Q2 title (placeholder "Input"), [5] Q2 option 1, [6] Q2 option 2
+    await textInputs.nth(4).fill(
+      "Which of the following are benefits of decentralized governance?",
+    );
+    await textInputs.nth(5).fill("Transparency");
+    await textInputs.nth(6).fill("Community participation");
+
+    // Add a third option for question 2 (use the second "Add Option" button)
+    await page.getByRole("button", { name: "Add Option" }).nth(1).click();
+    await page.waitForLoadState("networkidle");
+
+    // New option is text input index 7
+    await textInputs.nth(7).fill("Single point of failure");
+
+    // Mark correct answers for the multiple-choice question.
+    // Q1 has 3 checkbox labels (indices 0-2).
+    // Q2's checkbox labels start at index 3.
+    // Check options 1 and 2 ("Transparency", "Community participation").
+    await checkboxLabels.nth(3).click();
+    await checkboxLabels.nth(4).click();
+
+    // Trigger save by pressing Tab to blur the last active element
+    await page.keyboard.press("Tab");
+    await page.waitForLoadState("networkidle");
   });
 
   test("Create a follow action in the space", async ({ page }) => {
