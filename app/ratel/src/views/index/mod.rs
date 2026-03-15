@@ -1,7 +1,8 @@
-#[cfg(feature = "users")]
-use crate::features::users::UserSidemenu;
+#[cfg(feature = "social")]
+use crate::features::social::UserSidemenu;
 use crate::*;
 use crate::features::posts::components::{CreatePostButton, FeedList};
+use crate::features::timeline::components::TimelineFeed;
 
 #[component]
 pub fn Index() -> Element {
@@ -10,11 +11,17 @@ pub fn Index() -> Element {
 
     rsx! {
         div { class: "flex overflow-x-hidden gap-5 justify-between py-3 mx-auto min-h-screen max-w-desktop max-tablet:px-2.5",
-            if let Some(user) = &user {
+            if let Some(ref user) = user {
                 UserSidemenu { username: user.username.clone() }
             }
 
-            div { class: "flex grow", FeedList {} }
+            div { class: "flex flex-col grow gap-4",
+                if user.is_some() {
+                    TimelineFeed {}
+                } else {
+                    PopularFeedSection {}
+                }
+            }
 
             if user.is_some() {
                 div {
@@ -27,7 +34,22 @@ pub fn Index() -> Element {
     }
 }
 
-#[cfg(not(feature = "users"))]
+/// Anonymous users see a popular posts feed with a header.
+#[component]
+fn PopularFeedSection() -> Element {
+    rsx! {
+        section { class: "flex flex-col gap-3 w-full",
+            div { class: "flex items-center px-1",
+                h2 { class: "text-lg font-semibold text-text-primary",
+                    "Popular Posts"
+                }
+            }
+            FeedList {}
+        }
+    }
+}
+
+#[cfg(not(feature = "social"))]
 #[component]
 fn UserSidemenu(username: String) -> Element {
     let _ = username;
