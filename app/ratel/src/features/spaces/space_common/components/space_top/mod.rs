@@ -53,7 +53,7 @@ pub fn SpaceTop(
             div { class: "flex flex-row gap-2.5 justify-start items-center w-full min-w-0 max-tablet:flex-1",
                 img {
                     src: "{space_logo}",
-                    class: "object-contain w-auto h-7",
+                    class: "hidden object-contain w-auto h-7 max-tablet:block",
                     alt: "Space logo",
                 }
 
