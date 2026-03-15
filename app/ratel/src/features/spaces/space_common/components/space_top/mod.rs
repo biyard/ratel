@@ -11,6 +11,8 @@ use crate::features::spaces::space_common::{
     *,
 };
 
+const DEFAULT_LOGO: &str = "https://metadata.ratel.foundation/logos/logo.png";
+
 #[derive(Clone, PartialEq)]
 pub struct SpaceTopLabel {
     pub label: String,
@@ -24,9 +26,6 @@ pub fn SpaceTop(
     on_participant: Option<EventHandler<()>>,
 ) -> Element {
     let tr: SpaceTopTranslates = use_translate();
-    // let space_pk = space_id.clone();
-    // let mut space = use_loader(move || get_space(space_id.clone()))?;
-    // let space_data = space();
 
     //FIXME: Rotate Labels
     let title = labels.first().unwrap().label.clone();
@@ -40,10 +39,93 @@ pub fn SpaceTop(
     let is_creator = real_role == SpaceUserRole::Creator;
     let can_preview = current_role == SpaceUserRole::Creator;
     let is_published = ctx.space().publish_state == SpacePublishState::Published;
+    let space_logo = {
+        let logo = ctx.space().logo.clone();
+        if logo.is_empty() { DEFAULT_LOGO.to_string() } else { logo }
+    };
 
     rsx! {
-        div { class: "flex flex-row justify-between items-center py-4 px-3 min-h-16 shrink-0",
-            div { class: "flex flex-row gap-2.5 justify-start items-center w-full",
+        // Mobile top bar (< tablet): space logo left, icon buttons right — YouTube style
+        div { class: "flex tablet:hidden flex-row justify-between items-center py-2 px-3 min-h-12 shrink-0",
+            // Left: space logo + title
+            div { class: "flex flex-row gap-2 items-center min-w-0 flex-1",
+                Link {
+                    class: "flex items-center shrink-0",
+                    to: "/",
+                    img {
+                        src: "{space_logo}",
+                        class: "h-7 w-auto object-contain",
+                        alt: "Space logo",
+                    }
+                }
+                span { class: "font-bold text-sm text-web-font-primary truncate", {title.clone()} }
+            }
+
+            // Right: icon-only action buttons
+            div { class: "flex flex-row gap-1 items-center shrink-0",
+                // Home icon button
+                button {
+                    class: "flex items-center justify-center w-9 h-9 rounded-full hover:bg-space-nav-item-hover transition-colors cursor-pointer",
+                    onclick: move |_| { nav.push("/"); },
+                    Home1 { class: "w-5 h-5 [&>path]:stroke-icon-primary" }
+                }
+
+                if is_creator {
+                    // Preview/Design icon button
+                    button {
+                        class: "flex items-center justify-center w-9 h-9 rounded-full hover:bg-space-nav-item-hover transition-colors cursor-pointer",
+                        onclick: move |_| { ctx.toggle_role(); },
+                        Eye { class: "w-5 h-5 [&>path]:stroke-icon-primary [&>circle]:stroke-icon-primary" }
+                    }
+
+                    if !is_published {
+                        Button {
+                            shape: ButtonShape::Square,
+                            class: "!py-1 !px-2 !text-xs",
+                            onclick: move |_| {
+                                debug!("Publish button clicked. Current space status: {:?}", ctx.space().status);
+                                let initial = ctx.space().visibility;
+                                popup.open(rsx! {
+                                    SpaceVisibilityModal {
+                                        initial,
+                                        on_confirm: move |visibility| async move {
+                                            let space_id = ctx.space().id;
+                                            update_space(
+                                                    space_id,
+                                                    controllers::UpdateSpaceRequest::Publish {
+                                                        publish: true,
+                                                        visibility,
+                                                    },
+                                                )
+                                                .await;
+                                            ctx.space.restart();
+                                        },
+                                    }
+                                });
+                            },
+                            {tr.publish}
+                        }
+                    }
+                }
+
+                if show_participate_button {
+                    Button {
+                        style: ButtonStyle::Primary,
+                        class: "!py-1 !px-2 !text-xs",
+                        onclick: move |_| {
+                            if let Some(func) = &on_participant {
+                                func.call(());
+                            }
+                        },
+                        {tr.participant_button_label}
+                    }
+                }
+            }
+        }
+
+        // Desktop top bar (>= tablet): status badge + title left, labeled buttons right
+        div { class: "hidden tablet:flex flex-row justify-between items-center py-4 px-3 min-h-16 shrink-0",
+            div { class: "flex flex-row gap-2.5 justify-start items-center w-full min-w-0",
                 if let Some(space_status) = space_status {
                     SpaceStatusBadge { status: space_status }
                 }
@@ -99,13 +181,9 @@ pub fn SpaceTop(
                                                         visibility,
                                                     },
                                                 )
-
-
-
                                                 .await;
                                             ctx.space.restart();
                                         },
-
                                     }
                                 });
                             },

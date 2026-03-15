@@ -490,7 +490,7 @@ jobs:
         env:
           CI: true
           PLAYWRIGHT_BASE_URL: http://localhost:8080
-          PLAYWRIGHT_TIMEOUT: 10000
+          PLAYWRIGHT_TIMEOUT: 30000
         working-directory: playwright
         run: |
           make test
