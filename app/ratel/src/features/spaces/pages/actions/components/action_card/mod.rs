@@ -1,5 +1,5 @@
-use crate::features::spaces::pages::actions::*;
 use crate::common::chrono::{DateTime, Utc};
+use crate::features::spaces::pages::actions::*;
 use i18n::ActionCardTranslate;
 
 mod i18n;
@@ -50,7 +50,7 @@ pub fn ActionCard(action: SpaceActionSummary, space_id: SpacePartition) -> Eleme
     };
     rsx! {
         SpaceCard {
-            class: "flex flex-col gap-[0.625rem] w-full cursor-pointer text-left !rounded-[1rem] !bg-neutral-900 light:!bg-white !p-[0.9375rem] border border-neutral-800 light:border-neutral-300 hover:!bg-neutral-800 light:hover:!bg-neutral-50 transition-colors"
+            class: "flex flex-col w-full text-left border transition-colors cursor-pointer gap-[0.625rem] !rounded-[1rem] !bg-neutral-900 light:!bg-white !p-[0.9375rem] border-neutral-800 light:border-neutral-300 light:hover:!bg-neutral-50 hover:!bg-neutral-800"
                 .to_string(),
             onclick: move |_| {
                 let url = url.clone();
@@ -58,8 +58,8 @@ pub fn ActionCard(action: SpaceActionSummary, space_id: SpacePartition) -> Eleme
             },
 
             // Top: badges + date
-            div { class: "flex justify-between items-center gap-3 w-full",
-                div { class: "flex items-center gap-2",
+            div { class: "flex gap-3 justify-between items-center w-full",
+                div { class: "flex gap-2 items-center",
                     Badge {
                         color: type_badge_color,
                         variant: BadgeVariant::Rounded,
@@ -73,11 +73,10 @@ pub fn ActionCard(action: SpaceActionSummary, space_id: SpacePartition) -> Eleme
                             {status_label}
                         }
                     }
-                
                 }
 
                 if let Some(period) = period {
-                    span { class: "text-[0.75rem]/[1rem] font-medium text-neutral-500",
+                    span { class: "font-medium text-[0.75rem]/[1rem] text-neutral-500",
                         {period}
                     }
                 }
@@ -85,28 +84,28 @@ pub fn ActionCard(action: SpaceActionSummary, space_id: SpacePartition) -> Eleme
 
             // Title
             p {
-                class: "text-[1.125rem]/[1.75rem] font-semibold truncate w-full",
+                class: "w-full font-semibold text-[1.125rem]/[1.75rem] truncate",
                 class: if action.title.is_empty() { "text-neutral-500 italic" } else { "text-white light:text-neutral-900" },
                 {title}
             }
 
             // Description
             p {
-                class: "text-[0.75rem]/[1rem] font-medium text-neutral-300 light:text-neutral-600 break-words flex-1 min-h-0 w-full",
+                class: "flex-1 w-full min-h-0 font-medium break-words line-clamp-1 text-[0.75rem]/[1rem] text-neutral-300 light:text-neutral-600",
                 class: if action.description.is_empty() { " text-white light:text-neutral-900" },
-                {description}
+                dangerous_inner_html: description,
             }
 
             if has_stats {
                 // Bottom: points + score (border-top as separator)
-                div { class: "flex items-center gap-2 w-full border-t border-neutral-800 light:border-neutral-300 pt-[0.6875rem]",
+                div { class: "flex gap-2 items-center w-full border-t border-neutral-800 light:border-neutral-300 pt-[0.6875rem]",
                     if point_value != 0 {
-                        span { class: "inline-flex items-center gap-[6px] h-[32px] px-[10px] rounded-[10px] bg-neutral-800/50 light:bg-neutral-100 text-white light:text-neutral-900 text-[15px]/[22px] font-semibold",
+                        span { class: "inline-flex items-center font-semibold text-white gap-[6px] h-[32px] px-[10px] rounded-[10px] bg-neutral-800/50 light:bg-neutral-100 light:text-neutral-900 text-[15px]/[22px]",
                             {points}
                         }
                     }
                     if score_value != 0 {
-                        span { class: "inline-flex items-center gap-[6px] h-[32px] px-[10px] rounded-[10px] bg-neutral-800/50 light:bg-neutral-100 text-white light:text-neutral-900 text-[15px]/[22px] font-semibold",
+                        span { class: "inline-flex items-center font-semibold text-white gap-[6px] h-[32px] px-[10px] rounded-[10px] bg-neutral-800/50 light:bg-neutral-100 light:text-neutral-900 text-[15px]/[22px]",
                             {score}
                         }
                     }
