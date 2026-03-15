@@ -149,6 +149,7 @@ users = []
 teams = []
 spaces = []
 spaces_full = ["spaces"]
+local-dev = []
 futures = ["dep:futures"]
 
 [dev-dependencies]

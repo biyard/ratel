@@ -15,3 +15,5 @@ pub mod users;
 pub mod teams;
 
 pub mod spaces;
+
+pub mod timeline;
