@@ -114,7 +114,7 @@ pub fn ParticipationVerificationSection(
                     onclick: move |_| {
                         #[cfg(not(feature = "server"))]
                         {
-                            let conf = crate::features::users::pages::credentials::config::get();
+                            let conf = crate::features::social::pages::credentials::config::get();
                             let store_id = conf.portone.store_id.to_string();
                             let channel_key = conf.portone.inicis_channel_key.to_string();
                             let prefix = user_ctx().user_id().unwrap_or_default();
@@ -124,7 +124,7 @@ pub fn ParticipationVerificationSection(
                             let verification_failed_message = tr.verification_failed.to_string();
 
                             spawn(async move {
-                                match crate::features::users::pages::credentials::interop::verify_identity(
+                                match crate::features::social::pages::credentials::interop::verify_identity(
                                         &store_id,
                                         &channel_key,
                                         &prefix,

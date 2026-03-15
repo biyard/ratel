@@ -1,5 +1,5 @@
-#[cfg(feature = "users")]
-use crate::features::users::UserSidemenu;
+#[cfg(feature = "social")]
+use crate::features::social::UserSidemenu;
 use crate::*;
 use crate::features::posts::components::{CreatePostButton, FeedList};
 use crate::features::timeline::components::TimelineFeed;
@@ -49,7 +49,7 @@ fn PopularFeedSection() -> Element {
     }
 }
 
-#[cfg(not(feature = "users"))]
+#[cfg(not(feature = "social"))]
 #[component]
 fn UserSidemenu(username: String) -> Element {
     let _ = username;
