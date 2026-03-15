@@ -156,6 +156,20 @@ pub async fn update_post_handler(post_id: FeedPartition, req: UpdatePostRequest)
 
     if post.status == PostStatus::Published {
         crate::features::posts::services::index_post_async(conf.qdrant(), conf.bedrock_embeddings(), &post).await;
+
+        #[cfg(feature = "local-dev")]
+        {
+            let _ = crate::features::timeline::services::fan_out_timeline_entries(
+                cli,
+                &post.pk,
+                &post.user_pk,
+                post.updated_at,
+            )
+            .await
+            .map_err(|e| {
+                tracing::error!("local-dev timeline fan-out failed: {}", e);
+            });
+        }
     }
 
     Ok(post)

@@ -119,6 +119,132 @@ async fn event_bridge_handler(
         detail_type = %envelope.detail_type,
         "Received EventBridge event"
     );
-    // TODO: implement EventBridge event handling logic
+
+    match (envelope.source.as_str(), envelope.detail_type.as_str()) {
+        ("ratel.dynamodb.stream", "TimelineUpdate") => {
+            handle_timeline_update(envelope.detail).await?;
+        }
+        ("ratel.dynamodb.stream", "PopularPostUpdate") => {
+            handle_popular_post_update(envelope.detail).await?;
+        }
+        _ => {
+            tracing::warn!(
+                "Unhandled EventBridge event: source={}, detail-type={}",
+                envelope.source,
+                envelope.detail_type
+            );
+        }
+    }
+
+    Ok(())
+}
+
+#[cfg(feature = "lambda")]
+async fn handle_timeline_update(
+    detail: serde_json::Value,
+) -> Result<(), lambda_runtime::Error> {
+    use crate::common::types::{EntityType, Partition};
+
+    // Parse the DynamoDB stream record from the EventBridge detail
+    // Expected format: { "post_pk": "FEED#...", "author_pk": "USER#...", "created_at": 123456 }
+    let post_pk_str = detail
+        .get("post_pk")
+        .and_then(|v| v.as_str())
+        .ok_or("missing post_pk in detail")?;
+    let author_pk_str = detail
+        .get("author_pk")
+        .and_then(|v| v.as_str())
+        .ok_or("missing author_pk in detail")?;
+    let created_at = detail
+        .get("created_at")
+        .and_then(|v| v.as_i64())
+        .ok_or("missing created_at in detail")?;
+
+    let post_pk: Partition = post_pk_str
+        .parse()
+        .map_err(|e| format!("invalid post_pk: {}", e))?;
+    let author_pk: Partition = author_pk_str
+        .parse()
+        .map_err(|e| format!("invalid author_pk: {}", e))?;
+
+    tracing::info!(
+        "Timeline update: post_pk={}, author_pk={}, created_at={}",
+        post_pk,
+        author_pk,
+        created_at
+    );
+
+    let cfg = crate::common::CommonConfig::default();
+    let cli = cfg.dynamodb();
+
+    crate::features::timeline::services::fan_out_timeline_entries(
+        cli,
+        &post_pk,
+        &author_pk,
+        created_at,
+    )
+    .await
+    .map_err(|e| {
+        tracing::error!("Timeline fan-out failed: {}", e);
+        lambda_runtime::Error::from(format!("Timeline fan-out failed: {}", e))
+    })?;
+
+    Ok(())
+}
+
+#[cfg(feature = "lambda")]
+async fn handle_popular_post_update(
+    detail: serde_json::Value,
+) -> Result<(), lambda_runtime::Error> {
+    use crate::common::types::Partition;
+
+    let post_pk_str = detail
+        .get("post_pk")
+        .and_then(|v| v.as_str())
+        .ok_or("missing post_pk in detail")?;
+    let author_pk_str = detail
+        .get("author_pk")
+        .and_then(|v| v.as_str())
+        .ok_or("missing author_pk in detail")?;
+    let created_at = detail
+        .get("created_at")
+        .and_then(|v| v.as_i64())
+        .ok_or("missing created_at in detail")?;
+    let likes = detail.get("likes").and_then(|v| v.as_i64()).unwrap_or(0);
+    let comments = detail
+        .get("comments")
+        .and_then(|v| v.as_i64())
+        .unwrap_or(0);
+    let shares = detail.get("shares").and_then(|v| v.as_i64()).unwrap_or(0);
+
+    if !crate::features::timeline::services::is_popular(likes, comments, shares) {
+        return Ok(());
+    }
+
+    let post_pk: Partition = post_pk_str
+        .parse()
+        .map_err(|e| format!("invalid post_pk: {}", e))?;
+    let author_pk: Partition = author_pk_str
+        .parse()
+        .map_err(|e| format!("invalid author_pk: {}", e))?;
+
+    tracing::info!(
+        "Popular post fan-out: post_pk={}, likes={}, comments={}, shares={}",
+        post_pk,
+        likes,
+        comments,
+        shares
+    );
+
+    let cfg = crate::common::CommonConfig::default();
+    let cli = cfg.dynamodb();
+
+    crate::features::timeline::services::fan_out_popular_post(cli, &post_pk, &author_pk, created_at)
+        .await
+        .map_err(|e| {
+            tracing::error!("Popular post fan-out failed: {}", e);
+            lambda_runtime::Error::from(format!("Popular post fan-out failed: {}", e))
+        })?;
+
     Ok(())
 }

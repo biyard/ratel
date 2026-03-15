@@ -8,10 +8,9 @@ pub mod my_follower;
 
 pub mod posts;
 
-#[cfg(feature = "users")]
-pub mod users;
-
-#[cfg(feature = "teams")]
-pub mod teams;
+#[cfg(feature = "social")]
+pub mod social;
 
 pub mod spaces;
+
+pub mod timeline;
