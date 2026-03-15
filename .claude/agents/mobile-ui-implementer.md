@@ -69,9 +69,9 @@ div { class: "grid grid-cols-[250px_1fr] h-screen max-tablet:flex max-tablet:fle
 }
 ```
 
-### Media Query Approach (the default and preferred approach)
+### Single Unified DOM — the ONLY approach
 
-Add responsive TailwindCSS classes using `max-tablet:` and `max-mobile:` breakpoint prefixes to existing components.
+Every element exists once. Use `max-tablet:` and `max-mobile:` classes to adapt its appearance on smaller screens. **Never duplicate DOM blocks** with `tablet:hidden` / `hidden tablet:flex` pairs — that is the same anti-pattern as creating separate components, just inline.
 
 ```rust
 // GOOD: Adding media query classes alongside existing ones
@@ -87,25 +87,34 @@ rsx! {
 - Add these classes to existing `class` attributes without removing or changing existing classes
 - For SSR: no special handling needed since both desktop and mobile styles coexist in the same markup
 
-### Separated DOM Blocks (ONLY for fundamentally different content)
-
-Use `tablet:hidden` / `hidden tablet:flex` to show different DOM only when the mobile version renders entirely different content (not just a different layout of the same content). Example: SpaceTop mobile shows a logo+icon bar while desktop shows a title+button bar — these are different content, not just rearranged.
-
+**Real example — SpaceTop unified responsive bar:**
 ```rust
+// WRONG: Two separate divs — one for mobile, one for desktop (duplicates all logic)
+// CORRECT: One div, responsive classes adapt it
 rsx! {
-    // Mobile: logo + icon buttons
-    div { class: "flex tablet:hidden items-center",
-        img { src: "{logo}" }
-        span { class: "truncate", {title} }
-        button { HomeIcon {} }
-    }
-    // Desktop: title + labeled buttons
-    div { class: "hidden tablet:flex items-center",
-        SpaceTitle { title }
-        Button { "Go Home" }
+    div { class: "flex flex-row justify-between items-center py-4 px-3 min-h-16 shrink-0",
+        div { class: "flex flex-row gap-2.5 items-center min-w-0 max-tablet:flex-1",
+            img { class: "object-contain w-auto h-7", src: "{logo}" }  // Shows on both
+            SpaceTitle { title }  // Truncates on mobile via max-tablet:truncate
+        }
+        div { class: "flex flex-row gap-2.5 items-center shrink-0 max-tablet:gap-1",
+            Button {
+                class: "max-tablet:p-0 max-tablet:w-9 max-tablet:h-9",  // Compact on mobile
+                Home1 { class: "w-4 h-4 max-tablet:w-5 max-tablet:h-5" }  // Larger icon on mobile
+                p { class: "max-tablet:hidden", {tr.go_home} }  // Hide label on mobile
+            }
+        }
     }
 }
 ```
+
+Key responsive patterns for unified DOM:
+- **Hide labels:** `p { class: "max-tablet:hidden", {label} }`
+- **Compact buttons:** `max-tablet:p-0 max-tablet:w-9 max-tablet:h-9 max-tablet:border-0`
+- **Resize icons:** `max-tablet:w-5 max-tablet:h-5`
+- **Change icon colors:** `max-tablet:[&>path]:stroke-icon-primary`
+- **Truncate text:** `max-tablet:truncate max-tablet:text-sm`
+- **Adjust spacing:** `gap-2.5 ... max-tablet:gap-1`
 
 ## Implementation Workflow
 
