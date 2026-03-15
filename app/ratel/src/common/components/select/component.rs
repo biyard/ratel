@@ -33,7 +33,7 @@ pub fn SelectTrigger(props: SelectTriggerProps) -> Element {
             div { class: "hidden @max-sm:w-full @max-sm:flex @max-sm:justify-center @max-sm:items-center",
                 {props.children.clone()}
             }
-            {props.children}
+            div { class: "@max-sm:hidden", {props.children} }
 
             svg {
                 class: "select-expand-icon",
