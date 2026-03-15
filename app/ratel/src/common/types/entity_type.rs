@@ -194,6 +194,8 @@ pub enum EntityType {
     ContentReport,
 
     Category(String), // CATEGORY#${name}
+
+    TimelineEntry(String), // TIMELINE_ENTRY#${timestamp}#${post_pk_inner}
 }
 
 impl TryInto<Partition> for EntityType {

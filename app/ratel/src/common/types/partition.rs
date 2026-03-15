@@ -92,6 +92,8 @@ pub enum Partition {
 
     SpaceIncentive(String), // SPACE_INCENTIVE#{contract_address}
 
+    Timeline(String), // TIMELINE#{user_id}
+
     Category, // CATEGORY - shared pk for all categories
 }
 
