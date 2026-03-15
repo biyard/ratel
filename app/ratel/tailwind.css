@@ -808,3 +808,7 @@ h3 {
 .separator[data-orientation="vertical"] {
   @apply w-[1px] h-full;
 }
+
+body {
+  @apply overflow-hidden;
+}
