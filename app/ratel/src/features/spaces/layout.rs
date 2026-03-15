@@ -79,34 +79,35 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
         query.invalidate(&space_detail);
     };
 
+    let bottom_nav_menus = menus.clone();
+
     rsx! {
         SeoMeta { title: space.title.clone(), description: space.description() }
-        div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-space-bg text-web-font-primary",
-            div { class: "hidden tablet:flex",
-                SpaceNav {
-                    space_id: space_id(),
-                    logo: if space.logo.is_empty() { "https://metadata.ratel.foundation/logos/logo.png".to_string() } else { space.logo.clone() },
-                    menus,
-                    user,
-                    anonymous_user_profile,
-                    role,
-                    show_participation_card: show_participate,
-                    credential_path,
-                    login_handler: move |_| {
-                        popup.open(rsx! {
-                            LoginModal {}
-                        }).with_title(tr.title);
-                    },
-                }
+        div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-space-bg text-web-font-primary max-tablet:flex max-tablet:flex-col",
+            SpaceNav {
+                class: "max-tablet:order-1",
+                space_id: space_id(),
+                logo: if space.logo.is_empty() { "https://metadata.ratel.foundation/logos/logo.png".to_string() } else { space.logo.clone() },
+                menus,
+                user,
+                anonymous_user_profile,
+                role,
+                show_participation_card: show_participate,
+                credential_path,
+                login_handler: move |_| {
+                    popup.open(rsx! {
+                        LoginModal {}
+                    }).with_title(tr.title);
+                },
             }
-            div { class: "flex flex-col min-w-0 min-h-0",
+            div { class: "flex flex-col min-w-0 min-h-0 max-tablet:flex-1 max-tablet:order-0",
                 SpaceTop {
                     labels,
                     space_status,
                     show_participate_button: false,
                     on_participant,
                 }
-                div { class: "flex overflow-auto flex-1 p-5 w-full bg-background rounded-tl-[10px]",
+                div { class: "flex overflow-auto flex-1 p-5 w-full bg-background rounded-tl-[10px] max-tablet:rounded-tl-none max-tablet:p-3 max-mobile:p-2",
                     SuspenseBoundary { Outlet::<Route> {} }
                 }
             }
