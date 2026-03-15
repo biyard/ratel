@@ -41,40 +41,46 @@ pub fn SpaceTop(
     let is_published = ctx.space().publish_state == SpacePublishState::Published;
     let space_logo = {
         let logo = ctx.space().logo.clone();
-        if logo.is_empty() { DEFAULT_LOGO.to_string() } else { logo }
+        if logo.is_empty() {
+            DEFAULT_LOGO.to_string()
+        } else {
+            logo
+        }
     };
 
     rsx! {
         // Mobile top bar (< tablet): space logo left, icon buttons right — YouTube style
-        div { class: "flex tablet:hidden flex-row justify-between items-center py-2 px-3 min-h-12 shrink-0",
+        div { class: "flex flex-row justify-between items-center py-2 px-3 tablet:hidden min-h-12 shrink-0",
             // Left: space logo + title
-            div { class: "flex flex-row gap-2 items-center min-w-0 flex-1",
-                Link {
-                    class: "flex items-center shrink-0",
-                    to: "/",
+            div { class: "flex flex-row flex-1 gap-2 items-center min-w-0",
+                Link { class: "flex items-center shrink-0", to: "/",
                     img {
                         src: "{space_logo}",
-                        class: "h-7 w-auto object-contain",
+                        class: "object-contain w-auto h-7",
                         alt: "Space logo",
                     }
                 }
-                span { class: "font-bold text-sm text-web-font-primary truncate", {title.clone()} }
+                span { class: "text-sm font-bold text-web-font-primary truncate", {title.clone()} }
             }
 
             // Right: icon-only action buttons
             div { class: "flex flex-row gap-1 items-center shrink-0",
                 // Home icon button
                 button {
-                    class: "flex items-center justify-center w-9 h-9 rounded-full hover:bg-space-nav-item-hover transition-colors cursor-pointer",
-                    onclick: move |_| { nav.push("/"); },
+                    class: "flex justify-center items-center w-9 h-9 rounded-full transition-colors cursor-pointer hover:bg-space-nav-item-hover",
+                    onclick: move |_| {
+                        nav.push("/");
+                    },
                     Home1 { class: "w-5 h-5 [&>path]:stroke-icon-primary" }
                 }
 
                 if is_creator {
                     // Preview/Design icon button
                     button {
-                        class: "flex items-center justify-center w-9 h-9 rounded-full hover:bg-space-nav-item-hover transition-colors cursor-pointer",
-                        onclick: move |_| { ctx.toggle_role(); },
+                        class: "flex justify-center items-center w-9 h-9 rounded-full transition-colors cursor-pointer hover:bg-space-nav-item-hover",
+                        onclick: move |_| {
+                            ctx.toggle_role();
+                        },
                         Eye { class: "w-5 h-5 [&>path]:stroke-icon-primary [&>circle]:stroke-icon-primary" }
                     }
 
@@ -124,7 +130,7 @@ pub fn SpaceTop(
         }
 
         // Desktop top bar (>= tablet): status badge + title left, labeled buttons right
-        div { class: "hidden tablet:flex flex-row justify-between items-center py-4 px-3 min-h-16 shrink-0",
+        div { class: "hidden flex-row justify-between items-center py-4 px-3 tablet:flex min-h-16 shrink-0",
             div { class: "flex flex-row gap-2.5 justify-start items-center w-full min-w-0",
                 if let Some(space_status) = space_status {
                     SpaceStatusBadge { status: space_status }
