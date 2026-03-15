@@ -114,10 +114,8 @@ pub fn AdminPage(teamname: String, context: TeamDao) -> Element {
                 let update_result = update_team_handler(
                     teamname,
                     UpdateTeamRequest {
-                        nickname: None,
-                        description: None,
-                        profile_url: None,
                         dao_address: Some(dao_result.dao_address.clone()),
+                        ..Default::default()
                     },
                 )
                 .await;

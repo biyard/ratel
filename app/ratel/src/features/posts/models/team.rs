@@ -45,6 +45,13 @@ pub struct Team {
     pub description: String,
 
     pub dao_address: Option<String>,
+
+    #[serde(default)]
+    pub thumbnail_url: Option<String>,
+    #[serde(default)]
+    pub allow_invite: bool,
+    #[serde(default)]
+    pub allow_create_space: bool,
 }
 
 #[cfg(feature = "server")]
@@ -72,6 +79,9 @@ impl Team {
             followers: 0,
             followings: 0,
             dao_address: None,
+            thumbnail_url: None,
+            allow_invite: false,
+            allow_create_space: false,
         }
     }
 

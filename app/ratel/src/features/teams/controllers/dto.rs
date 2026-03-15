@@ -11,6 +11,7 @@ pub struct TeamResponse {
     pub profile_url: Option<String>,
     pub dao_address: Option<String>,
     pub html_contents: String,
+    pub thumbnail_url: Option<String>,
     pub permissions: Option<Vec<crate::features::posts::types::TeamGroupPermission>>,
 }
 
@@ -27,6 +28,7 @@ impl From<(crate::features::posts::models::Team, i64)> for TeamResponse {
             profile_url: Some(team.profile_url),
             dao_address: team.dao_address,
             html_contents: team.description,
+            thumbnail_url: team.thumbnail_url,
             permissions: Some(perms.0),
         }
     }

@@ -12,6 +12,11 @@ pub struct TeamResponse {
     pub dao_address: Option<String>,
     pub html_contents: String,
     pub permissions: Option<i64>,
+    pub thumbnail_url: Option<String>,
+    #[serde(default)]
+    pub allow_invite: bool,
+    #[serde(default)]
+    pub allow_create_space: bool,
 }
 
 #[cfg(feature = "server")]
@@ -27,6 +32,9 @@ impl From<(crate::features::posts::models::Team, i64)> for TeamResponse {
             dao_address: team.dao_address,
             html_contents: team.description,
             permissions: Some(permissions),
+            thumbnail_url: team.thumbnail_url,
+            allow_invite: team.allow_invite,
+            allow_create_space: team.allow_create_space,
         }
     }
 }
@@ -38,6 +46,9 @@ pub struct UpdateTeamRequest {
     pub description: Option<String>,
     pub profile_url: Option<String>,
     pub dao_address: Option<String>,
+    pub thumbnail_url: Option<String>,
+    pub allow_invite: Option<bool>,
+    pub allow_create_space: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
