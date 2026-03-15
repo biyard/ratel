@@ -5,7 +5,7 @@ use crate::features::spaces::space_common::hooks::use_space_query;
 use crate::features::spaces::space_common::providers::SpaceContextProvider;
 use crate::features::spaces::space_common::types::space_key;
 use crate::features::spaces::space_common::{
-    components::{SpaceBottomNav, SpaceNav, SpaceNavItem, SpaceTop, SpaceTopLabel},
+    components::{SpaceNav, SpaceNavItem, SpaceTop, SpaceTopLabel},
     hooks::use_space_role,
 };
 use crate::features::spaces::{controllers::participate_space::participate_space, *};
@@ -83,38 +83,33 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
 
     rsx! {
         SeoMeta { title: space.title.clone(), description: space.description() }
-        div { class: "grid overflow-hidden grid-cols-1 w-full h-[calc(100vh-var(--header-height))] tablet:grid-cols-[250px_1fr] bg-space-bg text-web-font-primary",
-            // Desktop sidebar -- hidden below tablet breakpoint
-            div { class: "hidden tablet:flex",
-                SpaceNav {
-                    space_id: space_id(),
-                    logo: if space.logo.is_empty() { "https://metadata.ratel.foundation/logos/logo.png".to_string() } else { space.logo.clone() },
-                    menus,
-                    user,
-                    anonymous_user_profile,
-                    role,
-                    show_participation_card: show_participate,
-                    credential_path,
-                    login_handler: move |_| {
-                        popup.open(rsx! {
-                            LoginModal {}
-                        }).with_title(tr.title);
-                    },
-                }
+        div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-space-bg text-web-font-primary max-tablet:flex max-tablet:flex-col",
+            SpaceNav {
+                class: "max-tablet:order-1",
+                space_id: space_id(),
+                logo: if space.logo.is_empty() { "https://metadata.ratel.foundation/logos/logo.png".to_string() } else { space.logo.clone() },
+                menus,
+                user,
+                anonymous_user_profile,
+                role,
+                show_participation_card: show_participate,
+                credential_path,
+                login_handler: move |_| {
+                    popup.open(rsx! {
+                        LoginModal {}
+                    }).with_title(tr.title);
+                },
             }
-            // Main content column
-            div { class: "flex flex-col min-w-0 min-h-0",
+            div { class: "flex flex-col min-w-0 min-h-0 max-tablet:flex-1 max-tablet:order-0",
                 SpaceTop {
                     labels,
                     space_status,
                     show_participate_button: false,
                     on_participant,
                 }
-                div { class: "flex overflow-auto flex-1 p-5 max-tablet:p-3 max-mobile:p-2 w-full bg-background rounded-tl-[10px] max-tablet:rounded-tl-none",
+                div { class: "flex overflow-auto flex-1 p-5 w-full bg-background rounded-tl-[10px] max-tablet:rounded-tl-none max-tablet:p-3 max-mobile:p-2",
                     SuspenseBoundary { Outlet::<Route> {} }
                 }
-                // Mobile/tablet bottom navigation bar
-                SpaceBottomNav { menus: bottom_nav_menus }
             }
         }
         Layover {}
