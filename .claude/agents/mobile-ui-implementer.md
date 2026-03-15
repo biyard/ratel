@@ -20,10 +20,58 @@ Before implementing anything, always start by reading and understanding the rele
 ### NEVER modify existing component styles
 You must not change any existing desktop styles. All mobile adaptations are additive only.
 
-### Two Approaches (prefer media queries)
+### NEVER create separate mobile-only components — reuse existing components with media queries
 
-**Approach 1: Media Query Styles (PREFERRED)**
-Add responsive TailwindCSS classes using `max-tablet:` and `max-mobile:` breakpoint prefixes to existing components. This is the default approach for most cases.
+This is the most important rule. When making a component responsive:
+- **DO:** Add `max-tablet:` and `max-mobile:` classes to the existing component
+- **DO:** Add a `#[props(default)] class: String` prop so parents can inject responsive classes
+- **DO:** Use CSS `order` property (`max-tablet:order-1`) to reposition elements on mobile
+- **DO:** Use `max-tablet:hidden` on sub-elements that shouldn't appear on mobile
+- **DON'T:** Create a new component that duplicates existing functionality for mobile
+- **DON'T:** Wrap components in visibility divs (`div { class: "hidden tablet:flex", Comp {} }`) — apply classes directly to the component
+
+**Real example — making a sidebar into a bottom nav on mobile:**
+```rust
+// WRONG: Creating a separate SpaceBottomNav component
+// CORRECT: Make SpaceNav responsive with media queries
+#[component]
+pub fn SpaceNav(
+    menus: Vec<SpaceNavItem>,
+    #[props(default)] class: String,  // Allow parent to pass responsive classes
+) -> Element {
+    rsx! {
+        // Vertical sidebar on desktop, horizontal bottom bar on mobile
+        div { class: "flex flex-col gap-2.5 w-full h-full {class} max-tablet:flex-row max-tablet:h-16 max-tablet:items-stretch max-tablet:justify-around",
+            // Hide logo on mobile
+            img { class: "mx-4 w-25 max-tablet:hidden", src: "{logo}" }
+            // Nav items: vertical on desktop, horizontal on mobile
+            div { class: "flex flex-col gap-1.5 max-tablet:flex-row max-tablet:justify-around",
+                for item in menus.iter() {
+                    NavItem { item: item.clone() }
+                }
+            }
+            // Hide user profile section on mobile
+            Row { class: "max-tablet:hidden",
+                // user profile...
+            }
+        }
+    }
+}
+```
+
+**Parent layout uses CSS order to position nav at bottom on mobile:**
+```rust
+div { class: "grid grid-cols-[250px_1fr] h-screen max-tablet:flex max-tablet:flex-col",
+    SpaceNav { class: "max-tablet:order-1" }  // Moves to bottom on mobile
+    div { class: "flex flex-col max-tablet:flex-1 max-tablet:order-0",  // Content first on mobile
+        // page content
+    }
+}
+```
+
+### Media Query Approach (the default and preferred approach)
+
+Add responsive TailwindCSS classes using `max-tablet:` and `max-mobile:` breakpoint prefixes to existing components.
 
 ```rust
 // GOOD: Adding media query classes alongside existing ones
@@ -34,95 +82,45 @@ rsx! {
 }
 ```
 
-- `max-tablet:` — applies at tablet width and below
-- `max-mobile:` — applies at mobile width and below
+- `max-tablet:` — applies at tablet width and below (<900px)
+- `max-mobile:` — applies at mobile width and below (<500px)
 - Add these classes to existing `class` attributes without removing or changing existing classes
 - For SSR: no special handling needed since both desktop and mobile styles coexist in the same markup
 
-**Approach 2: Separated Components (ONLY when layouts are fundamentally different)**
-Use this only when media queries cannot achieve the desired result (e.g., completely different DOM structure, different component trees).
+### Separated DOM Blocks (ONLY for fundamentally different content)
 
-File structure:
-```
-component_name/
-  mod.rs        — Wrapper component (public API)
-  desktop.rs    — Desktop-specific component (private)
-  mobile.rs     — Mobile-specific component (private)
-```
+Use `tablet:hidden` / `hidden tablet:flex` to show different DOM only when the mobile version renders entirely different content (not just a different layout of the same content). Example: SpaceTop mobile shows a logo+icon bar while desktop shows a title+button bar — these are different content, not just rearranged.
 
 ```rust
-// mod.rs — The ONLY public component
-mod desktop;
-mod mobile;
-
-use desktop::CompDesktop;
-use mobile::CompMobile;
-
-#[component]
-pub fn Comp(/* shared props */) -> Element {
-    let is_mobile = use_is_mobile(); // see below
-    
-    if is_mobile {
-        rsx! { CompMobile { /* props */ } }
-    } else {
-        rsx! { CompDesktop { /* props */ } }
+rsx! {
+    // Mobile: logo + icon buttons
+    div { class: "flex tablet:hidden items-center",
+        img { src: "{logo}" }
+        span { class: "truncate", {title} }
+        button { HomeIcon {} }
+    }
+    // Desktop: title + labeled buttons
+    div { class: "hidden tablet:flex items-center",
+        SpaceTitle { title }
+        Button { "Go Home" }
     }
 }
 ```
-
-### SSR Default Rendering for Separated Components
-
-For separated components, the wrapper must determine mobile vs desktop during SSR using the `User-Agent` header. Implement a `use_is_mobile()` hook or utility:
-
-```rust
-pub fn use_is_mobile() -> bool {
-    #[cfg(feature = "server")]
-    {
-        // During SSR, check User-Agent header
-        use dioxus::prelude::*;
-        if let Some(request) = try_consume_context::<axum::extract::Request>() {
-            if let Some(ua) = request.headers().get("user-agent").and_then(|v| v.to_str().ok()) {
-                let ua_lower = ua.to_lowercase();
-                return ua_lower.contains("mobile") 
-                    || ua_lower.contains("android") 
-                    || ua_lower.contains("iphone");
-            }
-        }
-        false // default to desktop during SSR
-    }
-    
-    #[cfg(not(feature = "server"))]
-    {
-        // On client, check window width
-        // Use existing interop or web_sys to get viewport width
-        use web_sys::window;
-        window()
-            .and_then(|w| w.inner_width().ok())
-            .and_then(|v| v.as_f64())
-            .map(|width| width < 768.0)
-            .unwrap_or(false)
-    }
-}
-```
-
-Check if a similar hook or utility already exists in the codebase before creating a new one. Look in `app/ratel/src/common/hooks/` and `app/ratel/src/contexts/`.
 
 ## Implementation Workflow
 
 1. **Read the target component(s)** — Understand current structure, props, and DOM hierarchy
-2. **Decide approach** — Media queries (preferred) or separated components
-3. **For media queries:**
+2. **Default to media queries** — Almost always the right approach. Only use separated DOM blocks when mobile renders entirely different *content* (not just different layout)
+3. **Make existing components responsive:**
    - Add `max-tablet:` and `max-mobile:` classes to existing elements
-   - Common patterns: hide/show elements (`max-mobile:hidden`, `hidden max-mobile:block`), stack layouts (`max-mobile:flex-col`), adjust spacing/sizing
-   - Never remove or modify existing classes
-4. **For separated components:**
-   - Create the mod.rs/desktop.rs/mobile.rs structure
-   - Move existing component code to desktop.rs (unchanged)
-   - Create mobile.rs with mobile-optimized layout
-   - Create wrapper in mod.rs with User-Agent SSR detection
-   - Update all imports to use the wrapper component only
+   - Add `#[props(default)] class: String` prop if parent needs to inject responsive classes
+   - Use CSS `order` to reposition elements on mobile
+   - Use `max-tablet:hidden` on sub-elements to hide on mobile
+   - Switch parent layout mode (e.g., `grid ... max-tablet:flex max-tablet:flex-col`)
+   - Never remove or modify existing desktop classes
+4. **Never create separate mobile-only components** that duplicate existing component logic. If a sidebar needs to become a bottom nav on mobile, make the sidebar component itself responsive.
 5. **Use primitive components** from `src/common/components/` — Always prefer `Button`, `Card`, `Input`, `Col`, `Row`, etc. over raw HTML
-6. **Run verification** — After changes, run `cd app/ratel && dx check --features web` to verify compilation
+6. **Run verification** — After changes, run `DYNAMO_TABLE_PREFIX=ratel-dev cargo check -p app-shell --features web` to verify compilation
 
 ## TailwindCSS v4 Notes
 
@@ -133,9 +131,12 @@ Check if a similar hook or utility already exists in the codebase before creatin
 
 ## Common Mobile Patterns
 
-- **Navigation:** Collapse side nav into hamburger menu or bottom tab bar
+- **Sidebar → bottom nav:** Make the sidebar component responsive with `max-tablet:flex-row max-tablet:h-16`, use CSS `order` in parent to reposition to bottom
+- **Reorder elements:** `max-tablet:order-0` (content first), `max-tablet:order-1` (nav last/bottom)
+- **Switch layout mode:** `grid grid-cols-[250px_1fr] max-tablet:flex max-tablet:flex-col`
+- **Add class prop:** `#[props(default)] class: String` on components for parent responsive injection
 - **Grid layouts:** `grid-cols-3 max-tablet:grid-cols-2 max-mobile:grid-cols-1`
-- **Sidebars:** `max-mobile:hidden` with toggle, or `max-mobile:fixed max-mobile:inset-0 max-mobile:z-50`
+- **Hide sub-elements:** `max-tablet:hidden` on logo, user profile, labels that don't fit mobile
 - **Typography:** `text-lg max-mobile:text-base`, `text-2xl max-mobile:text-xl`
 - **Spacing:** `p-8 max-mobile:p-4`, `gap-6 max-mobile:gap-3`
 - **Flex direction:** `flex-row max-mobile:flex-col`
@@ -143,10 +144,11 @@ Check if a similar hook or utility already exists in the codebase before creatin
 
 ## Quality Checks
 
-- Verify no existing styles were modified (only additions)
-- Ensure all new components use primitives from `src/common/components/`
-- For separated components, verify only the wrapper is exported publicly
-- Run `cd app/ratel && dx check --features web` after every implementation
+- Verify no existing desktop styles were modified (only additions via `max-tablet:` / `max-mobile:`)
+- Verify no separate mobile-only components were created that duplicate existing component logic
+- Ensure all new UI uses primitives from `src/common/components/`
+- Run `DYNAMO_TABLE_PREFIX=ratel-dev cargo check -p app-shell --features web` after every implementation
+- Run `DYNAMO_TABLE_PREFIX=ratel-dev cargo check -p app-shell --features server` to verify server build too
 - Check that SSR rendering produces reasonable default output
 
 **Update your agent memory** as you discover component hierarchies, responsive patterns already in use, breakpoint configurations, existing mobile utilities/hooks, and layout conventions in this codebase. Write concise notes about what you found and where.
