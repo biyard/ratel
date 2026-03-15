@@ -100,7 +100,7 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
                     }).with_title(tr.title);
                 },
             }
-            div { class: "flex flex-col min-w-0 min-h-0 max-tablet:flex-1 max-tablet:order-0",
+            div { class: "flex overflow-x-hidden flex-col min-w-0 min-h-0 max-tablet:flex-1 max-tablet:order-0",
                 SpaceTop {
                     labels,
                     space_status,
