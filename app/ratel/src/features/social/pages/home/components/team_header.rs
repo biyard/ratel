@@ -1,4 +1,5 @@
 use crate::common::*;
+use crate::common::assets::TEAM_BANNER_DEFAULT;
 use dioxus::prelude::*;
 
 #[component]
@@ -19,14 +20,12 @@ pub fn TeamHeader(
         div { class: "w-full isolate",
             // Banner
             div {
-                class: "relative z-0 w-full rounded-[10px] bg-card-bg border border-border",
+                class: "relative z-0 w-full rounded-[10px] bg-card-bg overflow-hidden",
                 style: "height: 180px; transform: translateZ(0);",
-                if !thumbnail_url.is_empty() {
-                    img {
-                        src: "{thumbnail_url}",
-                        alt: "banner",
-                        class: "w-full h-full object-cover",
-                    }
+                img {
+                    src: if !thumbnail_url.is_empty() { thumbnail_url.clone() } else { TEAM_BANNER_DEFAULT.to_string() },
+                    alt: "banner",
+                    class: "w-full h-full object-cover",
                 }
                 if is_creator {
                     Link {
