@@ -155,7 +155,7 @@ pub fn PollContent(
                 }
             }
 
-            div { class: "flex items-center justify-between gap-3 border-t border-card-border bg-card-bg px-5 py-3",
+            div { class: "-mx-5 -mb-5 max-tablet:-mx-3 max-tablet:-mb-3 max-mobile:-mx-2 max-mobile:-mb-2 flex items-center justify-between gap-3 border-t border-card-border bg-card-bg px-5 py-3",
                 div {}
                 div { class: "flex items-center gap-3",
                     if !is_first_question && total > 0 {
