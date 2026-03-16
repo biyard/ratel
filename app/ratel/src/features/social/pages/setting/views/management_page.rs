@@ -2,6 +2,10 @@ use crate::features::social::pages::member::controllers::{
     get_team_member_permission_handler, list_members_handler,
 };
 use crate::features::social::pages::member::dto::TeamMemberResponse;
+use crate::features::social::pages::group::components::{InviteMemberModal, InviteResult};
+use crate::features::social::pages::group::controllers::{list_groups_handler, remove_member_handler};
+use crate::features::social::pages::group::dto::RemoveMemberRequest;
+use crate::features::social::pages::setting::i18n::TeamSettingsTranslate;
 use crate::features::social::*;
 use dioxus::prelude::*;
 
@@ -9,12 +13,10 @@ const PAGE_SIZE: i32 = 10;
 
 #[component]
 pub fn ManagementPage(username: String) -> Element {
-    let user_ctx = crate::features::auth::hooks::use_user_context();
-    let current_user_pk = user_ctx()
-        .user
-        .as_ref()
-        .map(|u| u.pk.to_string())
-        .unwrap_or_default();
+    let tr: TeamSettingsTranslate = use_translate();
+    use_context_provider(|| PopupService::new());
+    let mut popup = use_popup();
+
 
     let ctx_resource = use_loader(use_reactive((&username,), |(name,)| async move {
         Ok::<_, super::super::Error>(
@@ -31,13 +33,63 @@ pub fn ManagementPage(username: String) -> Element {
 
     let team_pk = ctx.team_pk.clone();
 
+    let mut refresh = use_signal(|| 0u64);
+
+    // Load groups for invite modal
+    let group_resource = use_loader(use_reactive((&team_pk,), move |(team_pk,)| {
+        let _ = refresh();
+        async move {
+            Ok::<_, super::super::Error>(
+                list_groups_handler(team_pk, None)
+                    .await
+                    .map_err(|e| e.to_string()),
+            )
+        }
+    }))?;
+
+    let groups = {
+        let data = group_resource.read();
+        match data.as_ref() {
+            Ok(list) => list.items.clone(),
+            Err(_) => vec![],
+        }
+    };
+
+    let on_add_members_click = {
+        let mut popup = popup;
+        let team_pk = team_pk.clone();
+        let username = username.clone();
+        let groups = groups.clone();
+        let mut refresh = refresh.clone();
+        move |_| {
+            let on_close = { let mut popup = popup; move |_| { popup.close(); } };
+            let on_invited = {
+                let mut refresh = refresh.clone();
+                move |result: InviteResult| {
+                    if result.total_added > 0 {
+                        refresh.set(refresh() + 1);
+                    }
+                }
+            };
+            popup.open(rsx! {
+                InviteMemberModal {
+                    team_pk: team_pk.clone(),
+                    username: username.clone(),
+                    groups: groups.clone(),
+                    on_close,
+                    on_invited,
+                }
+            });
+        }
+    };
+
     // page_cursors[i] = bookmark to fetch page i (None for first page)
     let mut page_cursors: Signal<Vec<Option<String>>> = use_signal(|| vec![None]);
     let mut current_page = use_signal(|| 0usize); // 0-indexed
 
     let member_resource = use_loader(use_reactive(
-        (&team_pk, &current_page),
-        move |(team_pk, page)| {
+        (&team_pk, &current_page, &refresh),
+        move |(team_pk, page, _refresh)| {
             let cursor = page_cursors.read().get(page()).cloned().flatten();
             async move {
                 Ok::<_, super::super::Error>(
@@ -82,22 +134,23 @@ pub fn ManagementPage(username: String) -> Element {
         div { class: "flex flex-col gap-6 w-full max-w-2xl",
             // Header
             div { class: "flex items-center justify-between",
-                h1 { class: "text-xl font-bold text-text-primary", "Team management" }
+                h1 { class: "text-xl font-bold text-text-primary", {tr.team_management} }
                 button {
-                    class: "flex items-center gap-2 px-4 py-2 rounded-full bg-white text-neutral-900 text-sm font-medium hover:bg-neutral-200 transition-colors cursor-pointer",
+                    class: "flex items-center gap-2 px-4 py-2 rounded-full bg-btn-primary-bg text-btn-primary-text text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer",
+                    onclick: on_add_members_click,
                     lucide_dioxus::UserPlus {
-                        class: "w-4 h-4 [&>path]:stroke-neutral-900 [&>line]:stroke-neutral-900",
+                        class: "w-4 h-4 [&>path]:stroke-btn-primary-text [&>line]:stroke-btn-primary-text",
                     }
-                    "Add members"
+                    {tr.add_members}
                 }
             }
 
             // Members list
-            div { class: "flex flex-col rounded-[10px] border border-border overflow-hidden",
+            div { class: "flex flex-col rounded-[10px] border border-border",
                 // Section header
                 div { class: "px-4 py-3 border-b border-border",
                     span { class: "text-sm font-semibold text-text-primary",
-                        "Members ({members.len()})"
+                        "{tr.members} ({members.len()})"
                     }
                 }
 
@@ -105,14 +158,32 @@ pub fn ManagementPage(username: String) -> Element {
                 for (idx, member) in members.iter().enumerate() {
                     {
                         let is_last = idx == members.len() - 1;
-                        let is_you = member.user_id == current_user_pk;
                         let member = member.clone();
+                        let team_pk = team_pk.clone();
+                        let mut refresh = refresh.clone();
                         rsx! {
                             MemberRow {
                                 key: "{member.user_id}",
-                                member,
-                                is_you,
+                                member: member.clone(),
                                 is_last,
+                                on_remove: move |_| {
+                                    let member = member.clone();
+                                    let team_pk = team_pk.clone();
+                                    let mut refresh = refresh.clone();
+                                    spawn(async move {
+                                        for group in &member.groups {
+                                            let _ = remove_member_handler(
+                                                team_pk.clone(),
+                                                group.group_id.clone(),
+                                                RemoveMemberRequest {
+                                                    user_pks: vec![member.user_id.clone()],
+                                                },
+                                            )
+                                            .await;
+                                        }
+                                        refresh.set(refresh() + 1);
+                                    });
+                                },
                             }
                         }
                     }
@@ -120,7 +191,7 @@ pub fn ManagementPage(username: String) -> Element {
 
                 if members.is_empty() {
                     div { class: "px-4 py-8 text-center text-sm text-foreground-muted",
-                        "No members found."
+                        {tr.no_members}
                     }
                 }
             }
@@ -175,13 +246,17 @@ pub fn ManagementPage(username: String) -> Element {
                 }
             }
         }
+        PopupZone {}
     }
 }
 
 #[component]
-fn MemberRow(member: TeamMemberResponse, is_you: bool, is_last: bool) -> Element {
+fn MemberRow(member: TeamMemberResponse, is_last: bool, on_remove: EventHandler<()>) -> Element {
+    let tr: TeamSettingsTranslate = use_translate();
     let border_class = if is_last { "" } else { "border-b border-border" };
-    let role_label = if member.is_owner { "Owner" } else { "Member" };
+    let mut show_menu = use_signal(|| false);
+    // (top, right) in viewport px for fixed dropdown
+    let mut menu_pos = use_signal(|| (0f64, 0f64));
 
     let display = if member.display_name.is_empty() {
         member.username.clone()
@@ -190,7 +265,7 @@ fn MemberRow(member: TeamMemberResponse, is_you: bool, is_last: bool) -> Element
     };
 
     rsx! {
-        div { class: "flex items-center gap-3 px-4 py-3 {border_class}",
+        div { class: "relative flex items-center gap-3 px-4 py-3 {border_class}",
             // Avatar
             if !member.profile_url.is_empty() {
                 img {
@@ -214,28 +289,56 @@ fn MemberRow(member: TeamMemberResponse, is_you: bool, is_last: bool) -> Element
 
             // Role
             if member.is_owner {
-                span { class: "text-sm text-foreground-muted shrink-0", "Owner" }
+                span { class: "text-sm text-foreground-muted shrink-0", {tr.owner} }
             } else {
-                button {
-                    class: "flex items-center gap-1 text-sm text-foreground-muted hover:text-text-primary transition-colors shrink-0 cursor-pointer",
-                    "Member"
-                    lucide_dioxus::ChevronDown {
-                        class: "w-3.5 h-3.5 [&>polyline]:stroke-current",
-                    }
-                }
-            }
-
-            // "You" badge
-            if is_you {
-                span { class: "text-xs text-foreground-muted shrink-0", "You" }
+                span { class: "text-sm text-foreground-muted shrink-0", {tr.member_role} }
             }
 
             // More options
             if !member.is_owner {
-                button {
-                    class: "flex items-center justify-center w-7 h-7 rounded-md hover:bg-white/10 transition-colors shrink-0 cursor-pointer",
-                    lucide_dioxus::Ellipsis {
-                        class: "w-4 h-4 [&>circle]:fill-foreground-muted [&>circle]:stroke-none",
+                div { class: "shrink-0",
+                    if show_menu() {
+                        div {
+                            class: "fixed inset-0 z-10",
+                            onclick: move |_| show_menu.set(false),
+                        }
+                    }
+                    button {
+                        class: "flex items-center justify-center w-7 h-7 rounded-md hover:bg-white/10 transition-colors cursor-pointer relative z-20",
+                        onmounted: move |e| {
+                            spawn(async move {
+                                if let Ok(rect) = e.get_client_rect().await {
+                                    let bottom = rect.origin.y + rect.size.height;
+                                    let right = rect.origin.x + rect.size.width;
+                                    menu_pos.set((bottom, right));
+                                }
+                            });
+                        },
+                        onclick: move |e| {
+                            e.stop_propagation();
+                            show_menu.toggle();
+                        },
+                        lucide_dioxus::Ellipsis {
+                            class: "w-4 h-4 [&>circle]:fill-text-primary [&>circle]:stroke-none",
+                        }
+                    }
+                    if show_menu() {
+                        div {
+                            class: "fixed z-30 w-44 bg-popover border border-border rounded-lg shadow-lg py-1 overflow-hidden",
+                            style: "top: {menu_pos().0 + 4.0}px; right: calc(100vw - {menu_pos().1}px);",
+                            onclick: move |e| e.stop_propagation(),
+                            button {
+                                class: "flex items-center gap-2 w-full px-3 py-2 text-sm text-destructive hover:bg-white/10 transition-colors text-left",
+                                onclick: move |_| {
+                                    show_menu.set(false);
+                                    on_remove.call(());
+                                },
+                                lucide_dioxus::UserMinus {
+                                    class: "w-4 h-4 [&>path]:stroke-destructive [&>line]:stroke-destructive",
+                                }
+                                {tr.remove_from_team}
+                            }
+                        }
                     }
                 }
             } else {
