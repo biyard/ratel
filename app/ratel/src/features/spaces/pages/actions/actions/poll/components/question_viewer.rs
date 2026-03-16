@@ -11,6 +11,10 @@ translate! {
         en: "Next",
         ko: "다음",
     },
+    subjective_input_placeholder: {
+        en: "Write your answer...",
+        ko: "답변을 입력하세요...",
+    },
 }
 
 pub fn should_auto_next(question: &Question, answer: &Answer) -> bool {
@@ -203,9 +207,13 @@ pub fn QuestionViewer(props: QuestionViewerProps) -> Element {
 #[component]
 fn QuestionTitle(title: String, description: Option<String>, is_required: Option<bool>) -> Element {
     rsx! {
-        div { class: "mb-3 flex flex-col gap-1", "data-question-title-wrap": true,
+        div {
+            class: "mb-3 flex flex-col gap-1",
+            "data-question-title-wrap": true,
             div { class: "flex items-center gap-1",
-                span { class: "text-lg font-semibold text-white light:text-text-primary", "data-question-title": true,
+                span {
+                    class: "text-lg font-semibold text-white light:text-text-primary",
+                    "data-question-title": true,
                     "{title}"
                 }
                 if is_required.unwrap_or(false) {
@@ -214,7 +222,9 @@ fn QuestionTitle(title: String, description: Option<String>, is_required: Option
             }
             if let Some(desc) = description {
                 if !desc.is_empty() {
-                    p { class: "text-sm text-neutral-400 light:text-text-secondary", "data-question-desc": true,
+                    p {
+                        class: "text-sm text-neutral-400 light:text-text-secondary",
+                        "data-question-desc": true,
                         "{desc}"
                     }
                 }
@@ -345,6 +355,7 @@ fn SubjectiveQuestionViewer(
     on_change: EventHandler<Answer>,
     is_short: bool,
 ) -> Element {
+    let tr: QuestionViewerTranslate = use_translate();
     let current_value = match &answer {
         Some(Answer::ShortAnswer { answer }) => answer.clone().unwrap_or_default(),
         Some(Answer::Subjective { answer }) => answer.clone().unwrap_or_default(),
@@ -375,33 +386,38 @@ fn SubjectiveQuestionViewer(
     };
 
     rsx! {
-        QuestionTitle {
-            title: question.title.clone(),
-            description: Some(question.description.clone()),
-            is_required: question.is_required,
-        }
-        if is_short {
-            crate::common::components::Input {
-                variant: crate::common::components::InputVariant::Plain,
-                class: "w-full p-3 rounded-lg border border-neutral-700 bg-transparent text-white placeholder-neutral-500 focus:border-blue-500 outline-none light:border-input-box-border light:text-text-primary light:placeholder:text-text-secondary",
-                disabled,
-                value: "{draft()}",
-                oninput: move |evt: Event<FormData>| {
-                    let next = evt.value().to_string();
-                    draft.set(next.clone());
-                    on_change_answer(next);
-                },
+        div { class: "flex w-full flex-col gap-[10px]",
+            QuestionTitle {
+                title: question.title.clone(),
+                description: Some(question.description.clone()),
+                is_required: question.is_required,
             }
-        } else {
-            textarea {
-                class: "w-full p-3 rounded-lg border border-neutral-700 bg-transparent text-white placeholder-neutral-500 focus:border-blue-500 outline-none min-h-[100px] light:border-input-box-border light:text-text-primary light:placeholder:text-text-secondary",
-                disabled,
-                value: "{draft()}",
-                oninput: move |evt: Event<FormData>| {
-                    let next = evt.value().to_string();
-                    draft.set(next.clone());
-                    on_change_answer(next);
-                },
+            if is_short {
+                crate::common::components::Input {
+                    variant: crate::common::components::InputVariant::Plain,
+                    r#type: crate::common::components::InputType::Text,
+                    class: "px-4 py-3 text-base rounded-lg border focus:border-yellow-500 focus:outline-none bg-input-box-bg border-input-box-border text-text-primary placeholder:text-neutral-600",
+                    placeholder: tr.subjective_input_placeholder,
+                    disabled,
+                    value: "{draft()}",
+                    oninput: move |evt: Event<FormData>| {
+                        let next = evt.value().to_string();
+                        draft.set(next.clone());
+                        on_change_answer(next);
+                    },
+                }
+            } else {
+                crate::common::components::TextArea {
+                    class: "px-4 py-3 text-base rounded-lg border focus:border-yellow-500 focus:outline-none bg-input-box-bg border-input-box-border min-h-[185px] text-text-primary placeholder:text-neutral-600",
+                    placeholder: tr.subjective_input_placeholder,
+                    disabled,
+                    value: "{draft()}",
+                    oninput: move |evt: Event<FormData>| {
+                        let next = evt.value().to_string();
+                        draft.set(next.clone());
+                        on_change_answer(next);
+                    },
+                }
             }
         }
     }
@@ -536,31 +552,41 @@ fn LinearScaleViewer(
             description: question.description.clone(),
             is_required: question.is_required,
         }
-        div { class: "flex flex-col gap-2",
-            div { class: "flex justify-between text-xs text-neutral-400",
-                span { "{question.min_label}" }
-                span { "{question.max_label}" }
-            }
-            div { class: "flex gap-1 justify-center flex-wrap",
+        div { class: "flex flex-col w-full justify-center items-center select-none overflow-x-auto no-scrollbar touch-pan-x md:cursor-grab",
+            div { class: "flex w-fit flex-row items-center justify-center gap-5 px-2",
+                div { class: "shrink-0 break-words text-center text-sm font-medium text-neutral-400",
+                    "{question.min_label}"
+                }
+
                 for val in min..=max {
                     {
                         let is_selected = selected == Some(val as i32);
                         let on_change = on_change.clone();
                         rsx! {
-                            button {
-                                class: "w-10 h-10 rounded-full border-2 flex items-center justify-center text-sm transition-colors",
-                                class: if is_selected { "border-blue-500 bg-blue-500 text-white" } else { "border-neutral-600 text-neutral-400 hover:border-neutral-400" },
-                                disabled,
-                                onclick: move |_| {
-                                    on_change
-                                        .call(Answer::LinearScale {
-                                            answer: Some(val as i32),
-                                        })
-                                },
-                                "{val}"
+                            div { class: "flex w-8 shrink-0 flex-col items-center gap-1",
+                                div { class: "text-sm font-medium text-neutral-400", "{val}" }
+                                button {
+                                    class: "flex size-5 items-center justify-center rounded-full border transition-colors",
+                                    class: if is_selected { "border-primary" } else { "border-neutral-500" },
+                                    class: if disabled { "cursor-not-allowed opacity-60" } else { "cursor-pointer" },
+                                    disabled,
+                                    onclick: move |_| {
+                                        on_change
+                                            .call(Answer::LinearScale {
+                                                answer: Some(val as i32),
+                                            });
+                                    },
+                                    if is_selected {
+                                        div { class: "size-2 rounded-full bg-primary" }
+                                    }
+                                }
                             }
                         }
                     }
+                }
+
+                div { class: "shrink-0 break-words text-center text-sm font-medium text-neutral-400",
+                    "{question.max_label}"
                 }
             }
         }
