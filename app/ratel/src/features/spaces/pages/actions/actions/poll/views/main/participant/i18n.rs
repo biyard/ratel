@@ -35,6 +35,14 @@ translate! {
         en: "This poll has not started yet.",
         ko: "이 투표는 아직 시작되지 않았습니다.",
     },
+    question_label: {
+        en: "Question",
+        ko: "질문",
+    },
+    no_questions: {
+        en: "No questions yet.",
+        ko: "아직 질문이 없습니다.",
+    },
     submit_success: {
         en: "Response submitted successfully.",
         ko: "응답이 성공적으로 제출되었습니다.",
