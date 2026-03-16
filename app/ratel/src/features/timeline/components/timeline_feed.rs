@@ -1,4 +1,4 @@
-use crate::features::timeline::components::TimelineRow;
+use crate::features::timeline::components::{DraftTimeline, TimelineRow};
 use crate::features::timeline::controllers::list_timeline::list_timeline_feed_handler;
 use crate::features::timeline::*;
 
@@ -19,18 +19,22 @@ pub fn TimelineFeed() -> Element {
         Ok(feed_response) => {
             if feed_response.categories.is_empty() {
                 rsx! {
-                    div { class: "flex flex-col items-center justify-center py-20 text-center text-text-secondary",
-                        p { class: "text-lg font-medium",
-                            "Your timeline is empty"
-                        }
-                        p { class: "mt-2 text-sm",
-                            "Follow people or join teams to see posts here."
+                    div { class: "flex flex-col gap-8 w-full",
+                        DraftTimeline {}
+                        div { class: "flex flex-col items-center justify-center py-20 text-center text-text-secondary",
+                            p { class: "text-lg font-medium",
+                                "Your timeline is empty"
+                            }
+                            p { class: "mt-2 text-sm",
+                                "Follow people or join teams to see posts here."
+                            }
                         }
                     }
                 }
             } else {
                 rsx! {
                     div { class: "flex flex-col gap-8 w-full",
+                        DraftTimeline {}
                         for row in feed_response.categories.iter() {
                             TimelineRow {
                                 key: "cat-{row.category}",
