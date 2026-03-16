@@ -90,7 +90,7 @@ pub fn TeamCreationPopup() -> Element {
                                 }
                             }
                             popup.close();
-                            nav.push(format!("/teams/{}/home", username));
+                            nav.push(format!("/{}/home", username));
                         }
                         Err(e) => {
                             error_msg.set(Some(format!("{}", e)));

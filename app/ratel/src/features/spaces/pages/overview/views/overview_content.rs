@@ -8,6 +8,7 @@ use crate::features::posts::controllers::like_post::like_post_handler;
 use crate::features::spaces::pages::apps::apps::file::components::{FileCard, FileUploadZone};
 use crate::features::spaces::pages::apps::apps::file::UpdateSpaceFilesRequest;
 use crate::features::spaces::space_common::hooks::use_space_query;
+use common::utils::time::time_ago;
 
 const DEFAULT_PROFILE_IMAGE: &str = "https://metadata.ratel.foundation/ratel/default-profile.png";
 
@@ -46,20 +47,20 @@ pub fn OverviewContent(
     let allow_edit = editable && is_editing();
 
     rsx! {
-        div { class: "mx-auto flex w-full justify-center px-4 pt-5",
-            div { class: "flex w-full max-w-desktop flex-col gap-5",
-                div { class: "flex items-center justify-between gap-2.5",
-                    h1 { class: "flex-1 text-[28px]/[32px] font-bold text-text-primary",
+        div { class: "flex justify-center px-4 pt-5 mx-auto w-full",
+            div { class: "flex flex-col gap-5 w-full max-w-desktop",
+                div { class: "flex gap-2.5 justify-between items-center",
+                    h1 { class: "flex-1 font-bold text-[28px]/[32px] text-text-primary",
                         "{space.title}"
                     }
-                    div { class: "flex items-center gap-2",
+                    div { class: "flex gap-2 items-center",
                         if editable {
                             if !is_editing() {
                                 Button {
                                     size: ButtonSize::Medium,
                                     style: ButtonStyle::Outline,
                                     shape: ButtonShape::Rounded,
-                                    class: "inline-flex items-center gap-2",
+                                    class: "inline-flex gap-2 items-center",
                                     onclick: move |_| {
                                         if !is_saving() {
                                             is_editing.set(true);
@@ -73,7 +74,7 @@ pub fn OverviewContent(
                                     size: ButtonSize::Medium,
                                     style: ButtonStyle::Outline,
                                     shape: ButtonShape::Rounded,
-                                    class: "inline-flex items-center gap-2",
+                                    class: "inline-flex gap-2 items-center",
                                     loading: is_saving,
                                     onclick: {
                                         move |_| {
@@ -130,23 +131,23 @@ pub fn OverviewContent(
                     }
                 }
 
-                div { class: "flex items-center justify-between border-y border-card-border py-4",
-                    div { class: "flex min-w-0 items-center gap-2.5",
-                        div { class: "flex flex-row w-fit items-center gap-[8px]",
+                div { class: "flex justify-between items-center py-4 border-y border-card-border",
+                    div { class: "flex gap-2.5 items-center min-w-0",
+                        div { class: "flex flex-row items-center w-fit gap-[8px]",
                             {render_author_avatar(&space.author_profile_url, &space.author_display_name)}
-                            div { class: "min-w-0 text-[14px]/[20px] font-semibold text-text-primary",
+                            div { class: "min-w-0 font-semibold text-[14px]/[20px] text-text-primary",
                                 "{space.author_display_name}"
                             }
                         }
-                        div { class: "shrink-0 text-[14px] font-light text-text-primary",
+                        div { class: "font-light shrink-0 text-[14px] text-text-primary",
                             "{time_ago(space.created_at)}"
                         }
                     }
-                    div { class: "flex items-center gap-5",
+                    div { class: "flex gap-5 items-center",
                         Button {
                             size: ButtonSize::Inline,
                             style: ButtonStyle::Text,
-                            class: "inline-flex items-center gap-1 text-text-primary disabled:opacity-50".to_string(),
+                            class: "inline-flex gap-1 items-center disabled:opacity-50 text-text-primary".to_string(),
                             disabled: is_like_processing(),
                             onclick: move |_| {
                                 if is_like_processing() {
@@ -169,11 +170,11 @@ pub fn OverviewContent(
                             }
                             span { class: "text-[15px]", "{space.likes}" }
                         }
-                        div { class: "inline-flex items-center gap-1 text-text-primary",
+                        div { class: "inline-flex gap-1 items-center text-text-primary",
                             icons::chat::SquareChat { class: "size-5 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
                             span { class: "text-[15px]", "{space.comments}" }
                         }
-                        div { class: "inline-flex items-center gap-1 text-text-primary",
+                        div { class: "inline-flex gap-1 items-center text-text-primary",
                             {render_visibility(&space.visibility)}
                         }
                     }
@@ -183,7 +184,7 @@ pub fn OverviewContent(
                     div { class: "text-sm text-red-500", "{tr.save_failed}: {message}" }
                 }
 
-                SpaceCard { class: "border-none !bg-transparent !p-0 shadow-none",
+                SpaceCard { class: "border-none shadow-none !bg-transparent !p-0",
                     TiptapEditor {
                         class: "w-full h-fit [&>div]:border-0 [&>div]:bg-transparent [&_[data-tiptap-toolbar]]:hidden [&_[contenteditable='true']]:px-0 [&_[contenteditable='true']]:py-0 [&_[contenteditable='true']]:text-[15px]/[24px] [&_[contenteditable='true']]:tracking-[0.5px] [&_[contenteditable='true']]:text-[#D4D4D4]",
                         content: content(),
@@ -195,7 +196,7 @@ pub fn OverviewContent(
                     }
                 }
 
-                div { class: "flex w-full flex-col gap-2.5",
+                div { class: "flex flex-col gap-2.5 w-full",
                     for file in files().iter() {
                         FileCard {
                             key: "{file.id}",
@@ -233,29 +234,10 @@ fn render_author_avatar(profile_url: &str, display_name: &str) -> Element {
 
     rsx! {
         img {
-            class: "size-5 rounded-full object-cover",
+            class: "object-cover rounded-full size-5",
             src: "{image_src}",
             alt: "{display_name}",
         }
-    }
-}
-
-fn time_ago(timestamp_millis: i64) -> String {
-    let now = chrono::Utc::now().timestamp_millis();
-    let diff = now - timestamp_millis;
-
-    if diff < 60 * 1000 {
-        format!("{}s ago", diff / 1000)
-    } else if diff < 3600 * 1000 {
-        format!("{}m ago", diff / 1000 / 60)
-    } else if diff < 86400 * 1000 {
-        format!("{}h ago", diff / 1000 / 3600)
-    } else if diff < 604800 * 1000 {
-        format!("{}d ago", diff / 1000 / 86400)
-    } else if diff < 31536000 * 1000 {
-        format!("{}w ago", diff / 1000 / 604800)
-    } else {
-        format!("{}y ago", diff / 1000 / 31536000)
     }
 }
 

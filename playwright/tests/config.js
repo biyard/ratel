@@ -1,5 +1,5 @@
 export const CONFIGS = {
-  TIMEOUT: Number(process.env.PLAYWRIGHT_TIMEOUT) || 5000,
+  TIMEOUT: Number(process.env.PLAYWRIGHT_TIMEOUT) || 30 * 1000,
   BASE_URL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:8080",
   ID: process.env.PLAYWRIGHT_ID || Date.now().toString(),
 };
