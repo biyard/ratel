@@ -10,14 +10,26 @@ use crate::features::spaces::space_common::{
 };
 use crate::features::spaces::{controllers::participate_space::participate_space, *};
 
+#[derive(Clone, Copy)]
+pub struct SpaceLayoutUiContext {
+    pub sidebar_visible: Signal<bool>,
+}
+
+pub fn use_space_layout_ui() -> SpaceLayoutUiContext {
+    use_context()
+}
+
 #[component]
 pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
     let ctx = SpaceContextProvider::init(space_id)?;
 
     use_context_provider(|| LayoverService::new());
+    let sidebar_visible = use_signal(|| true);
+    use_context_provider(move || SpaceLayoutUiContext { sidebar_visible });
     let role = ctx.current_role();
     let space = ctx.space();
     let lang = use_language();
+    let show_sidebar = sidebar_visible();
 
     let mut query = use_query_store();
     let user_ctx = use_user_context();
@@ -81,31 +93,41 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
 
     let bottom_nav_menus = menus.clone();
 
+    let layout_class = if show_sidebar {
+        "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-space-bg text-web-font-primary max-tablet:flex max-tablet:flex-col"
+    } else {
+        "grid overflow-hidden grid-cols-1 w-full h-screen bg-space-bg text-web-font-primary max-tablet:flex max-tablet:flex-col"
+    };
+
     rsx! {
         SeoMeta { title: space.title.clone(), description: space.description() }
-        div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-space-bg text-web-font-primary max-tablet:flex max-tablet:flex-col",
-            SpaceNav {
-                class: "max-tablet:order-1",
-                space_id: space_id(),
-                logo: if space.logo.is_empty() { "https://metadata.ratel.foundation/logos/logo.png".to_string() } else { space.logo.clone() },
-                menus,
-                user,
-                anonymous_user_profile,
-                role,
-                show_participation_card: show_participate,
-                credential_path,
-                login_handler: move |_| {
-                    popup.open(rsx! {
-                        LoginModal {}
-                    }).with_title(tr.title);
-                },
+        div { class: "{layout_class}",
+            if show_sidebar {
+                SpaceNav {
+                    class: "max-tablet:order-1",
+                    space_id: space_id(),
+                    logo: if space.logo.is_empty() { "https://metadata.ratel.foundation/logos/logo.png".to_string() } else { space.logo.clone() },
+                    menus,
+                    user,
+                    anonymous_user_profile,
+                    role,
+                    show_participation_card: show_participate,
+                    credential_path,
+                    login_handler: move |_| {
+                        popup.open(rsx! {
+                            LoginModal {}
+                        }).with_title(tr.title);
+                    },
+                }
             }
             div { class: "flex overflow-x-hidden flex-col min-w-0 min-h-0 max-tablet:flex-1 max-tablet:order-0",
-                SpaceTop {
-                    labels,
-                    space_status,
-                    show_participate_button: false,
-                    on_participant,
+                if show_sidebar {
+                    SpaceTop {
+                        labels,
+                        space_status,
+                        show_participate_button: false,
+                        on_participant,
+                    }
                 }
                 div { class: "flex overflow-auto flex-1 p-5 w-full bg-background rounded-tl-[10px] max-tablet:rounded-tl-none max-tablet:p-3 max-mobile:p-2",
                     SuspenseBoundary { Outlet::<Route> {} }

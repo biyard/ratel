@@ -13,6 +13,9 @@ pub async fn reply_comment(
     req: ReplyCommentRequest,
 ) -> Result<DiscussionCommentResponse> {
     SpacePost::can_view(&role)?;
+    if !matches!(role, SpaceUserRole::Creator | SpaceUserRole::Participant) {
+        return Err(Error::NoPermission);
+    }
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let discussion_sk_entity: EntityType = discussion_sk.into();
