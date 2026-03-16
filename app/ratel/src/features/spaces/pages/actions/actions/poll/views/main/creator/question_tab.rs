@@ -77,6 +77,7 @@ pub fn QuestionTab() -> Element {
                             div { class: "mb-2 text-xs text-neutral-500", "Question {idx + 1}" }
                             QuestionViewer {
                                 index: idx,
+                                total: poll().questions.len(),
                                 question: question.clone(),
                                 answer: None,
                                 disabled: true,
