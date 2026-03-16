@@ -1,9 +1,9 @@
 mod menus;
 
-use crate::*;
-use crate::common::hooks::use_scroll_lock;
-use menus as i;
+use crate::common::components::sidebar::*;
 use crate::features::auth::LoginModal;
+use crate::*;
+use menus as i;
 
 translate! {
     AppMenuTranslate;
@@ -11,16 +11,6 @@ translate! {
     home: {
         en: "Home",
         ko: "홈",
-    },
-
-    my_network: {
-        en: "My Network",
-        ko: "네트워크",
-    },
-
-    notification: {
-        en: "Notification",
-        ko: "알림",
     },
 
     membership: {
@@ -37,6 +27,11 @@ translate! {
         en: "Join the Movement",
         ko: "참여하기",
     },
+
+    logout: {
+        en: "Log Out",
+        ko: "로그아웃",
+    },
 }
 
 #[component]
@@ -44,169 +39,342 @@ pub fn AppMenu() -> Element {
     let tr: AppMenuTranslate = use_translate();
     let mut popup = use_popup();
     let user_ctx = crate::features::auth::hooks::use_user_context();
-    let mut mobile_menu_open = use_signal(|| false);
-    use_scroll_lock(mobile_menu_open());
+    let ctx = use_sidebar();
+    let collapsed = (ctx.state)() == SidebarState::Collapsed;
 
     let logged_in = user_ctx().is_logged_in();
 
     rsx! {
-        header { class: "flex justify-center items-center py-2.5 px-2.5 border-b border-divider bg-bg! h-(--header-height) z-999 text-menu-text",
-            nav { class: "flex justify-between items-center mx-2.5 w-full gap-12.5 max-w-desktop [&>path]:stroke-menu-text group-hover:[&>path]:stroke-menu-text/80",
-                // Logo
-                div { class: "flex gap-5 items-center",
-                    Link { to: "/",
-                        icons::ratel::Logo { class: "mobile:size-12 size-13.5" }
-                    }
-                }
+        SidebarHeader { class: "flex justify-between items-center p-4",
+            Link { to: "/",
+                icons::ratel::Logo { class: "size-10" }
+            }
+        }
 
-                // Desktop nav items
-                div { class: "flex gap-2.5 justify-center items-center max-tablet:hidden",
-                    // Home
-                    NavItem {
+        SidebarContent {
+            SidebarGroup {
+                SidebarMenu {
+                    NavMenuItem {
                         href: "/",
                         label: tr.home,
+                        collapsed,
                         icon: rsx! {
-                            i::HomeIcon {
-                            }
+                            i::HomeIcon {}
                         },
                     }
-
-                    // My Network (authorized only)
-                    // if logged_in {
-                    //     NavItem {
-                    //         href: "/my-network",
-                    //         label: tr.my_network,
-                    //         icon: rsx! {
-                    //             icons::user::UserGroup {}
-                    //         },
-                    //     }
-                    // }
-
-                    // Notification (authorized only)
-                    // if logged_in {
-                    //     NavItem {
-                    //         href: "/notifications",
-                    //         label: tr.notification,
-                    //         icon: rsx! {
-                    //             icons::notification::Bell { class: "transition-all [&>path]:stroke-menu-text group-hover:[&>path]:stroke-menu-text/80" }
-                    //         },
-                    //     }
-                    // }
-
-                    // Membership
-                    NavItem {
+                    NavMenuItem {
                         href: "/membership",
                         label: tr.membership,
+                        collapsed,
                         icon: rsx! {
                             i::MembershipIcon {}
                         },
                     }
+                }
+            }
+        }
 
-                    ThemeSwitcher {}
-                    // Language toggle
-                    LanguageToggle {}
-
-                    // Sign In / Profile
-                    if logged_in {
-                        ProfileDropdown {}
-                    } else {
-                        button {
-                            class: "flex flex-col justify-center items-center p-2.5 font-bold cursor-pointer group text-menu-text text-[15px]",
-                            onclick: move |_| {
-                                popup.open(rsx! {
-                                    LoginModal {}
-                                }).with_title(tr.join_the_movement);
-                            },
-                            i::SignInIcon {}
-                            span { class: "font-medium whitespace-nowrap transition-all text-menu-text text-[15px] group-hover:text-menu-text/80",
-                                "{tr.sign_in}"
+        SidebarFooter { class: "px-2 pb-4",
+            SidebarMenu {
+                // Language toggle
+                SidebarMenuItem {
+                    SidebarMenuButton {
+                        r#as: Callback::new(move |attrs: Vec<Attribute>| {
+                            rsx! {
+                                button {
+                                    onclick: move |_| {
+                                        let lang = use_language();
+                                        lang().switch();
+                                    },
+                                    ..attrs,
+                                    LanguageIcon {}
+                                    if !collapsed {
+                                        span { {language_label()} }
+                                    }
+                                }
                             }
+                        }),
+                    }
+                }
+
+                // Theme toggle
+                SidebarMenuItem {
+                    ThemeToggleButton { collapsed }
+                }
+
+                // Profile or Sign In
+                if logged_in {
+                    SidebarMenuItem {
+                        ProfileButton { collapsed }
+                    }
+                } else {
+                    SidebarMenuItem {
+                        SidebarMenuButton {
+                            r#as: Callback::new(move |attrs: Vec<Attribute>| {
+                                rsx! {
+                                    button {
+                                        onclick: move |_| {
+                                            popup.open(rsx! {
+                                                LoginModal {}
+                                            }).with_title(tr.join_the_movement);
+                                        },
+                                        ..attrs,
+                                        i::SignInIcon {}
+                                        if !collapsed {
+                                            span { "{tr.sign_in}" }
+                                        }
+                                    }
+                                }
+                            }),
                         }
                     }
                 }
 
-                // Mobile hamburger / close toggle
-                div {
-                    class: "hidden cursor-pointer max-tablet:block",
-                    onclick: move |_| {
-                        mobile_menu_open.set(!mobile_menu_open());
-                    },
-                    if mobile_menu_open() {
-                        icons::validations::Clear {
-                            width: "32",
-                            height: "32",
-                            class: "transition-all [&>path]:stroke-menu-text",
-                        }
-                    } else {
-                        icons::layouts::ThreeRow {
-                            width: "32",
-                            height: "32",
-                            class: "transition-all [&>path]:stroke-menu-text",
-                        }
+                // Expand/Collapse toggle
+                SidebarMenuItem {
+                    SidebarMenuButton {
+                        r#as: Callback::new(move |attrs: Vec<Attribute>| {
+                            rsx! {
+                                button {
+                                    onclick: move |_| {
+                                        ctx.toggle();
+                                    },
+                                    ..attrs,
+                                    if collapsed {
+                                        lucide_dioxus::PanelLeftOpen {
+                                            size: 20,
+                                            class: "[&>path]:stroke-icon-primary [&>rect]:stroke-icon-primary",
+                                        }
+                                    } else {
+                                        lucide_dioxus::PanelLeftClose {
+                                            size: 20,
+                                            class: "[&>path]:stroke-icon-primary [&>rect]:stroke-icon-primary",
+                                        }
+                                        span { "Collapse" }
+                                    }
+                                }
+                            }
+                        }),
                     }
                 }
             }
         }
-
-        // Mobile side menu
-        MobileSideMenu { is_open: mobile_menu_open }
     }
 }
 
 #[component]
-fn NavItem(href: &'static str, label: &'static str, icon: Element) -> Element {
+fn NavMenuItem(href: &'static str, label: &'static str, collapsed: bool, icon: Element) -> Element {
     rsx! {
-        Link {
-            class: "flex flex-col justify-center items-center p-2.5 group",
-            to: href,
-            {icon}
-            span { class: "font-medium whitespace-nowrap transition-all text-menu-text text-[15px] group-hover:text-menu-text/80",
-                "{label}"
+        SidebarMenuItem {
+            Link {
+                to: href,
+                class: "flex gap-2 items-center py-1.5 w-full text-sm rounded-md aria-extended:px-2 sidebar-menu-button hover:bg-accent/10",
+                "aria-extended": collapsed,
+                {icon}
+                if !collapsed {
+                    span { "{label}" }
+                }
             }
         }
     }
 }
 
+/// Theme toggle rendered as a SidebarMenuButton — icon only when collapsed.
 #[component]
-fn LanguageToggle() -> Element {
-    let lang = use_language();
+fn ThemeToggleButton(collapsed: bool) -> Element {
+    let mut theme_service = use_theme();
+    let current = theme_service.current();
 
-    let is_ko = lang().to_string() == "ko";
-    let (flag, label) = if is_ko {
-        (
-            rsx! {
-                i::KrIcon {
-                    width: "16",
-                    height: "16",
-                    class: "object-cover rounded-full cursor-pointer",
-                }
-            },
-            "KO",
-        )
-    } else {
-        (
-            rsx! {
-                i::EnIcon {
-                    width: "16",
-                    height: "16",
-                    class: "object-cover rounded-full cursor-pointer",
-                }
-            },
-            "EN",
-        )
+    let next = match current {
+        Theme::Light => Theme::Dark,
+        Theme::Dark => Theme::System,
+        Theme::System => Theme::Light,
     };
 
     rsx! {
-        button {
-            class: "flex flex-col justify-center items-center p-2.5 font-bold cursor-pointer group text-menu-text text-[15px]",
-            onclick: move |_| {
-                let next = lang().switch();
-                debug!("Language switched to: {}", next);
-            },
-            div { class: "flex flex-col justify-center items-center h-6 w-fit", {flag} }
-            span { class: "font-medium whitespace-nowrap transition-all text-menu-text text-[15px] group-hover:text-menu-text/80",
-                "{label}"
+        SidebarMenuButton {
+            r#as: Callback::new(move |attrs: Vec<Attribute>| {
+                rsx! {
+                    button {
+                        onclick: move |_| {
+                            theme_service.set(next);
+                        },
+                        ..attrs,
+                        {current.icon()}
+                        if !collapsed {
+                            span { "{current.label()}" }
+                        }
+                    }
+                }
+            }),
+        }
+    }
+}
+
+/// Profile button rendered as a SidebarMenuButton — avatar only when collapsed, with dropdown.
+#[component]
+fn ProfileButton(collapsed: bool) -> Element {
+    let tr: AppMenuTranslate = use_translate();
+    let user_ctx = crate::features::auth::hooks::use_user_context();
+    let team_ctx = use_team_context();
+    let mut open = use_signal(|| false);
+    let mut popup = use_popup();
+    let nav = use_navigator();
+
+    let user = user_ctx().user.clone();
+    let Some(user) = user else {
+        return rsx! {};
+    };
+
+    let profile_url = user.profile_url.clone();
+    let display_name = user.display_name.clone();
+    let teams = team_ctx.teams.read().clone();
+
+    rsx! {
+        div { class: "relative",
+            SidebarMenuButton {
+                r#as: Callback::new(move |attrs: Vec<Attribute>| {
+                    let profile_url = profile_url.clone();
+                    let display_name = display_name.clone();
+                    let avatar_class = if collapsed {
+                        "w-8 h-8 rounded-full object-cover"
+                    } else {
+                        "w-5 h-5 rounded-full object-cover"
+                    };
+                    let placeholder_class = if collapsed {
+                        "w-8 h-8 bg-neutral-500 rounded-full"
+                    } else {
+                        "w-5 h-5 bg-neutral-500 rounded-full"
+                    };
+                    rsx! {
+                        button {
+                            onclick: move |_| {
+                                open.set(!open());
+                            },
+                            ..attrs,
+                            if !profile_url.is_empty() {
+                                img { src: "{profile_url}", alt: "Profile", class: "{avatar_class}" }
+                            } else {
+                                div { class: "{placeholder_class}" }
+                            }
+                            if !collapsed {
+                                span { class: "truncate max-w-24", "{display_name}" }
+                            }
+                        }
+                    }
+                }),
+            }
+
+            if open() {
+                div {
+                    class: "fixed inset-0 z-998",
+                    onclick: move |_| open.set(false),
+                }
+
+                div { class: "absolute bottom-0 left-full p-2 ml-2 rounded-lg border w-[220px] border-divider bg-bg z-999",
+                    // User
+                    Link {
+                        class: "flex gap-2 items-center py-1.5 px-2 w-full rounded-md cursor-pointer hover:bg-hover",
+                        to: "/",
+                        onclick: move |_| open.set(false),
+                        if !user.profile_url.is_empty() {
+                            img {
+                                src: "{user.profile_url}",
+                                alt: "{user.display_name}",
+                                class: "object-cover w-5 h-5 rounded-full",
+                            }
+                        } else {
+                            div { class: "w-5 h-5 rounded-full bg-neutral-600" }
+                        }
+                        span { class: "text-sm truncate", "{user.display_name}" }
+                    }
+
+                    // Teams
+                    for team in teams.iter() {
+                        Link {
+                            class: "flex gap-2 items-center py-1.5 px-2 w-full rounded-md cursor-pointer hover:bg-hover",
+                            to: format!("/teams/{}/home", team.username),
+                            onclick: move |_| open.set(false),
+                            if !team.profile_url.is_empty() {
+                                img {
+                                    src: "{team.profile_url}",
+                                    alt: "{team.nickname}",
+                                    class: "object-cover w-5 h-5 rounded-full",
+                                }
+                            } else {
+                                div { class: "w-5 h-5 rounded-full bg-neutral-600" }
+                            }
+                            span { class: "text-sm truncate", "{team.nickname}" }
+                        }
+                    }
+
+                    div { class: "my-1.5 h-px bg-divider" }
+
+                    // Create Team
+                    button {
+                        class: "py-1.5 px-2 w-full text-sm text-left rounded-md cursor-pointer hover:bg-hover",
+                        onclick: move |_| {
+                            open.set(false);
+                            popup.open(rsx! {
+                                TeamCreationPopup {}
+                            });
+                        },
+                        "Create Team"
+                    }
+
+                    // Logout
+                    button {
+                        class: "py-1.5 px-2 w-full text-sm text-left rounded-md cursor-pointer hover:bg-hover",
+                        onclick: move |_| {
+                            open.set(false);
+                            spawn(async move {
+                                let _ = crate::features::auth::controllers::logout_handler().await;
+                                nav.push("/");
+                                #[cfg(target_arch = "wasm32")]
+                                {
+                                    if let Some(window) = web_sys::window() {
+                                        let _ = window.location().reload();
+                                    }
+                                }
+                            });
+                        },
+                        "{tr.logout}"
+                    }
+                }
             }
         }
+    }
+}
+
+#[component]
+fn LanguageIcon() -> Element {
+    let lang = use_language();
+    let is_ko = lang().to_string() == "ko";
+
+    if is_ko {
+        rsx! {
+            i::KrIcon {
+                width: "16",
+                height: "16",
+                class: "object-cover rounded-full",
+            }
+        }
+    } else {
+        rsx! {
+            i::EnIcon {
+                width: "16",
+                height: "16",
+                class: "object-cover rounded-full",
+            }
+        }
+    }
+}
+
+fn language_label() -> &'static str {
+    let lang = use_language();
+    if lang().to_string() == "ko" {
+        "KO"
+    } else {
+        "EN"
     }
 }
