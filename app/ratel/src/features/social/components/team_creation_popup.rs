@@ -1,11 +1,13 @@
-use crate::features::social::controllers::{CreateTeamRequest, create_team_handler, get_user_teams_handler};
-use crate::features::social::*;
 use crate::features::posts::types::TeamGroupPermissions;
+use crate::features::social::controllers::{
+    create_team_handler, get_user_teams_handler, CreateTeamRequest,
+};
+use crate::features::social::*;
 
 #[component]
 pub fn TeamCreationPopup() -> Element {
     let mut popup = use_popup();
-    let mut team_ctx = use_team_context();
+    let team_ctx = use_team_context();
     let nav = use_navigator();
     let mut error_msg = use_signal(|| Option::<String>::None);
     let mut submitting = use_signal(|| false);
@@ -50,8 +52,9 @@ pub fn TeamCreationPopup() -> Element {
                                 .map(|p| p as u8)
                                 .collect();
                             let mut teams = team_ctx.teams.read().clone();
-                            if let Some(existing) =
-                                teams.iter_mut().find(|team| team.username == username)
+                            if let Some(existing) = teams
+                                .iter_mut()
+                                .find(|team| team.username == username)
                                 .iter_mut()
                                 .find(|team| team.username == username)
                             {

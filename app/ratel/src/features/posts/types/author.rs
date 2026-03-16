@@ -1,5 +1,6 @@
+use crate::common::types::UserType;
+use crate::features::auth::User;
 use crate::features::posts::models::Team;
-use crate::features::auth::{User, UserType};
 
 use crate::features::posts::*;
 

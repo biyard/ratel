@@ -90,18 +90,25 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
         async move { get_post_handler(post_id).await }
     })?();
 
+    let post = res.post.unwrap_or_default();
+    let post_space_pk = post.space_pk.clone();
+    let existing_space_id = post_space_pk.and_then(|pk| match pk {
+        Partition::Space(id) => Some(id),
+        _ => None,
+    });
+    let has_existing_space = existing_space_id.is_some();
     let Post {
         title,
         html_contents,
         ..
-    } = res.post.unwrap_or_default();
+    } = post;
 
     let mut title = use_signal(move || title.clone());
     let mut content = use_signal(move || html_contents.clone());
     let mut status = use_signal(|| EditorStatus::Idle);
 
     let mut last_saved = use_signal(move || (title(), content()));
-    let mut skip_creating_space = use_signal(|| true);
+    let mut skip_creating_space = use_signal(move || has_existing_space);
 
     // Category state
     let mut category = use_signal(|| "".to_string());
@@ -252,7 +259,9 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
         match status {
             EditorStatus::Publishing => tr.publishing,
             _ => {
-                if skip_space {
+                if has_existing_space {
+                    tr.go_to_space
+                } else if skip_space {
                     tr.publish
                 } else {
                     tr.go_to_space
@@ -421,7 +430,9 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                     class: "text-base min-w-[150px]",
                     disabled: !can_submit,
                     onclick: move |_| {
-                        if skip_creating_space() {
+                        if let Some(space_id) = &existing_space_id {
+                            nav.push(format!("/spaces/{}/dashboard", space_id));
+                        } else if skip_creating_space() {
                             let publish = publish.clone();
                             popup.open(rsx! {
                                 VisibilityModal {

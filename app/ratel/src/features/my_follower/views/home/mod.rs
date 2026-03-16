@@ -1,15 +1,19 @@
 mod i18n;
 
-use crate::features::my_follower::components::{FollowList, FollowTab, FollowTabs, MyFollowerHeader};
-use crate::features::my_follower::controllers::{follow_user, list_followers, list_followings, unfollow_user};
-use crate::features::my_follower::*;
 use crate::common::hooks::use_infinite_query;
 use crate::common::use_toast;
+use crate::features::my_follower::components::{
+    FollowList, FollowTab, FollowTabs, MyFollowerHeader,
+};
+use crate::features::my_follower::controllers::{
+    follow_user, list_followers, list_followings, unfollow_user,
+};
+use crate::features::my_follower::*;
 use dioxus::prelude::*;
 use i18n::MyFollowerTranslate;
 
 #[component]
-pub fn Home() -> Element {
+pub fn MyFollowerPage() -> Element {
     let tr: MyFollowerTranslate = use_translate();
     let mut selected = use_signal(|| FollowTab::Followings);
     let toast = use_toast();
@@ -26,8 +30,8 @@ pub fn Home() -> Element {
     let followings_more = followings_query.more_element();
 
     let on_follow = {
-        let mut followers_query = followers_query.clone();
-        let mut followings_query = followings_query.clone();
+        let followers_query = followers_query.clone();
+        let followings_query = followings_query.clone();
         let toast = toast.clone();
         move |target_pk: Partition| {
             let mut followers_query = followers_query.clone();
@@ -49,8 +53,8 @@ pub fn Home() -> Element {
     };
 
     let on_unfollow = {
-        let mut followers_query = followers_query.clone();
-        let mut followings_query = followings_query.clone();
+        let followers_query = followers_query.clone();
+        let followings_query = followings_query.clone();
         let toast = toast.clone();
         move |target_pk: Partition| {
             let mut followers_query = followers_query.clone();
@@ -72,7 +76,7 @@ pub fn Home() -> Element {
     };
 
     rsx! {
-        div { class: "flex flex-col w-full max-w-desktop mx-auto gap-5 max-tablet:px-2.5",
+        div { class: "flex flex-col gap-5 mx-auto w-full max-w-desktop max-tablet:px-2.5",
             MyFollowerHeader {}
 
             FollowTabs { selected: selected(), on_select: move |tab| selected.set(tab) }

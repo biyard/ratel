@@ -1,4 +1,5 @@
-use crate::features::posts::components::{time_ago, FeedContents, UserBadge};
+use crate::common::utils::time::time_ago;
+use crate::features::posts::components::{FeedContents, UserBadge};
 use crate::features::posts::controllers::dto::*;
 use crate::features::posts::controllers::list_user_drafts::list_user_drafts_handler;
 use crate::features::posts::types::*;
@@ -85,9 +86,9 @@ pub fn DraftTimeline() -> Element {
                         // Scroll right by one card width
                         let _ = document::eval(
                             r#"
-                                                                                                            const el = document.querySelector('[aria-label="Drafts section"] .scrollbar-none');
-                                                                                                            if (el) el.scrollBy({ left: 340, behavior: 'smooth' });
-                                                                                                        "#,
+                                                                                                                            const el = document.querySelector('[aria-label="Drafts section"] .scrollbar-none');
+                                                                                                                            if (el) el.scrollBy({ left: 340, behavior: 'smooth' });
+                                                                                                                        "#,
                         );
                     },
                     lucide_dioxus::ChevronRight {
