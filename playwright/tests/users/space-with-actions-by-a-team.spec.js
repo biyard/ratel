@@ -54,16 +54,13 @@ test.describe.serial("Space with actions created by a team", () => {
     await click(page, { text: "Create" });
 
     // Wait for navigation to the team home page
-    await page.waitForURL(new RegExp(`/teams/${teamUsername}/home`), {
+    // Routes use /{username}/home (no /teams/ prefix)
+    await page.waitForURL(new RegExp(`/${teamUsername}/home`), {
       waitUntil: "networkidle",
     });
 
-    // Step 4: Navigate to the team's Drafts page via direct URL
-    // (sidemenu may still be loading, so use goto instead of clicking sidemenu link)
-    await goto(page, `/teams/${teamUsername}/drafts`);
-
-    // Step 5: Click "Create Post" button on the draft page
-    await click(page, { label: "Create Post" });
+    // Step 4: Create a post via the Create button on the team home page
+    await click(page, { text: "Create" });
 
     // Wait for post edit page to load
     await page.waitForURL(/\/posts\/.*\/edit/, {
@@ -168,6 +165,35 @@ test.describe.serial("Space with actions created by a team", () => {
 
     // Trigger blur to save title
     await page.keyboard.press("Tab");
+    await page.waitForLoadState("networkidle");
+
+    // --- Add a Single Choice question on the Questions tab (default tab) ---
+    await click(page, { testId: "poll-add-question" });
+    await click(page, { text: "Single Choice" });
+
+    // Fill the question title and options
+    const textInputs = page.locator('input[type="text"]:visible');
+    await textInputs.nth(0).fill("How should the team allocate the Q2 budget?");
+    await textInputs.nth(1).fill("Increase marketing spend");
+    await textInputs.nth(2).fill("Invest in R&D");
+
+    // Add a third option
+    await page.getByRole("button", { name: "Add Option" }).first().click();
+    await page.waitForLoadState("networkidle");
+    await textInputs.nth(3).fill("Save for reserves");
+
+    // Trigger blur to save question
+    await page.keyboard.press("Tab");
+    await page.waitForLoadState("networkidle");
+
+    // --- Switch to the Settings tab and enable Prerequisite ---
+    await page.getByRole("tab", { name: "Settings" }).click();
+    await page.waitForLoadState("networkidle");
+
+    // The Prerequisite row: paragraph "Prerequisite" is inside a div,
+    // and the Switch button is a sibling of that div. Go up two levels to the Card.
+    const prerequisiteCard = page.locator("text=Prerequisite").locator("../..");
+    await prerequisiteCard.locator("button").click();
     await page.waitForLoadState("networkidle");
   });
 

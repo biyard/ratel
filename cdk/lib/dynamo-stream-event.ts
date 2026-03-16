@@ -12,6 +12,7 @@ import { Construct } from "constructs";
 
 export interface DynamoStreamEventStackProps extends StackProps {
   stage: string;
+  lambdaFunction: lambda.Function;
 }
 
 export class DynamoStreamEventStack extends Stack {
@@ -75,8 +76,8 @@ export class DynamoStreamEventStack extends Stack {
                 eventName: ["MODIFY"],
                 dynamodb: {
                   NewImage: {
-                    sk: { S: [{ prefix: "Post" }] },
-                    status: { S: ["Published"] },
+                    sk: { S: [{ prefix: "POST" }] },
+                    status: { S: ["PUBLISHED"] },
                   },
                 },
               }),
@@ -116,8 +117,8 @@ export class DynamoStreamEventStack extends Stack {
                 eventName: ["MODIFY"],
                 dynamodb: {
                   NewImage: {
-                    sk: { S: [{ prefix: "Post" }] },
-                    status: { S: ["Published"] },
+                    sk: { S: [{ prefix: "POST" }] },
+                    status: { S: ["PUBLISHED"] },
                     likes: { N: [{ exists: true }] },
                   },
                 },
@@ -143,22 +144,16 @@ export class DynamoStreamEventStack extends Stack {
       },
     });
 
-    // ── Import app-shell Lambda ──────────────────────────────────────
-    const appShellLambda = lambda.Function.fromFunctionName(
-      this,
-      "AppShellLambda",
-      `ratel-${stage}-lambda-${this.region}-Function`,
-    );
-
     // ── Rule: Route TimelineUpdate events to app-shell Lambda ────────
     new events.Rule(this, "TimelineUpdateRule", {
       eventBus,
-      description: "Route post publish events to app-shell for follower/team fan-out",
+      description:
+        "Route post publish events to app-shell for follower/team fan-out",
       eventPattern: {
         source: ["ratel.dynamodb.stream"],
         detailType: ["TimelineUpdate"],
       },
-      targets: [new eventsTargets.LambdaFunction(appShellLambda)],
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
     });
 
     // ── Rule: Route PopularPostUpdate events to app-shell Lambda ─────
@@ -169,7 +164,7 @@ export class DynamoStreamEventStack extends Stack {
         source: ["ratel.dynamodb.stream"],
         detailType: ["PopularPostUpdate"],
       },
-      targets: [new eventsTargets.LambdaFunction(appShellLambda)],
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
     });
   }
 }

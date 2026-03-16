@@ -77,7 +77,7 @@ jobs:
         id: app-shell-build-cache
         uses: actions/cache@v4
         with:
-          key: app-shell-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
+          key: app-shell-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}-${{ github.run_id }}
           restore-keys: |
             app-shell-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
             app-shell-build-${{ runner.os }}-
@@ -312,7 +312,7 @@ jobs:
         id: fetcher-build-cache
         uses: actions/cache@v4
         with:
-          key: fetcher-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
+          key: fetcher-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}-${{ github.run_id }}
           restore-keys: |
             fetcher-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
             fetcher-build-${{ runner.os }}-
@@ -367,7 +367,7 @@ jobs:
         id: survey-worker-build-cache
         uses: actions/cache@v4
         with:
-          key: survey-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
+          key: survey-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}-${{ github.run_id }}
           restore-keys: |
             survey-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
             survey-worker-build-${{ runner.os }}-
@@ -434,7 +434,7 @@ jobs:
         id: space-stream-worker-build-cache
         uses: actions/cache@v4
         with:
-          key: space-stream-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
+          key: space-stream-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}-${{ github.run_id }}
           restore-keys: |
             space-stream-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
             space-stream-worker-build-${{ runner.os }}-
