@@ -15,6 +15,10 @@ translate! {
         en: "Back",
         ko: "뒤로",
     },
+    btn_cancel: {
+        en: "Cancel",
+        ko: "취소",
+    },
     btn_login: {
         en: "Login to Participate",
         ko: "로그인하여 참여",

@@ -1,5 +1,6 @@
 use super::*;
 
+use crate::features::spaces::layout::use_space_layout_ui;
 use crate::features::spaces::pages::actions::actions::poll::components::*;
 use crate::features::spaces::pages::actions::actions::poll::controllers::*;
 use crate::features::spaces::pages::actions::actions::poll::*;
@@ -14,6 +15,9 @@ pub fn PollContent(
 ) -> Element {
     let tr: participant::i18n::PollParticipantTranslate = use_translate();
     let mut query = use_query_store();
+    let mut hide_once = use_signal(|| false);
+    let layout_ui = use_space_layout_ui();
+    let sidebar_visible = layout_ui.sidebar_visible;
     let nav = navigator();
     let key = space_page_actions_poll_key(&space_id(), &poll_id());
 
@@ -36,13 +40,29 @@ pub fn PollContent(
     let can_submit = can_respond && is_in_progress && !has_response;
     let can_update = can_respond && is_in_progress && has_response && poll.response_editable;
     let total = poll.questions.len();
+    let show_submit_button = can_respond && (can_submit || can_update);
 
-    let submit_handler = {
+    use_effect(move || {
+        if hide_once() {
+            return;
+        }
+        hide_once.set(true);
+        let mut sidebar_visible = sidebar_visible;
+        sidebar_visible.set(false);
+    });
+
+    use_drop(move || {
+        let mut sidebar_visible = sidebar_visible;
+        sidebar_visible.set(true);
+    });
+
+    let on_submit = {
         let questions = poll.questions.clone();
-        move |_: MouseEvent| {
+        move |_| {
             let questions = questions.clone();
+            let mut query = query;
 
-            async move {
+            spawn(async move {
                 let answers_map = answers.read().clone();
                 let payload: Vec<Answer> = (0..questions.len())
                     .map(|i| answers_map.get(&i).cloned().unwrap_or_default())
@@ -54,61 +74,81 @@ pub fn PollContent(
                     let keys = space_page_actions_poll_key(&space_id(), &poll_id());
                     query.invalidate(&keys);
                 }
-            }
+            });
         }
     };
 
+    let on_cancel = move |_| {
+        let mut sidebar_visible = sidebar_visible;
+        sidebar_visible.set(true);
+        nav.push(format!("/spaces/{}/actions", space_id()));
+    };
+
     rsx! {
-        div { class: "flex w-full flex-col gap-4",
-            TimeRangeDisplay { started_at: poll.started_at, ended_at: poll.ended_at }
-
-            if poll.status == PollStatus::Finish {
-                div { class: "rounded-lg bg-neutral-800 p-3 text-sm text-neutral-400",
-                    {tr.poll_ended}
+        div { class: "flex min-h-0 w-full flex-1 flex-col gap-4",
+            div { class: "flex flex-1 flex-col gap-4 overflow-y-auto pb-6",
+                if poll.status == PollStatus::Finish {
+                    div { class: "rounded-lg bg-neutral-800 p-3 text-sm text-neutral-400",
+                        {tr.poll_ended}
+                    }
                 }
-            }
-            if poll.status == PollStatus::NotStarted {
-                div { class: "rounded-lg bg-neutral-800 p-3 text-sm text-neutral-400",
-                    {tr.poll_not_started}
+                if poll.status == PollStatus::NotStarted {
+                    div { class: "rounded-lg bg-neutral-800 p-3 text-sm text-neutral-400",
+                        {tr.poll_not_started}
+                    }
                 }
-            }
 
-            if total == 0 {
-                div { class: "flex items-center justify-center py-10 text-neutral-500",
-                    "No questions yet."
+                if total == 0 {
+                    div { class: "flex items-center justify-center py-10 text-neutral-500",
+                        "No questions yet."
+                    }
                 }
-            }
 
-            for (idx , question) in poll.questions.iter().enumerate() {
-                {
-                    let question = question.clone();
-                    let current_answer = answers.read().get(&idx).cloned();
-                    let display_idx = idx + 1;
-                    rsx! {
-                        div { class: "rounded-lg border border-neutral-700 bg-neutral-900 p-4",
-                            div { class: "mb-2 text-xs text-neutral-500", "{display_idx} / {total}" }
-                            QuestionViewer {
-                                index: idx,
-                                question,
-                                answer: current_answer,
-                                disabled: !can_respond || !is_in_progress || (!can_submit && !can_update),
-                                on_change: move |ans: Answer| {
-                                    answers.write().insert(idx, ans);
-                                },
+                for (idx , question) in poll.questions.iter().enumerate() {
+                    {
+                        let question = question.clone();
+                        let current_answer = answers.read().get(&idx).cloned();
+                        let display_idx = idx + 1;
+                        rsx! {
+                            div { class: "rounded-lg border border-neutral-700 bg-neutral-900 p-4",
+                                div { class: "mb-2 text-xs text-neutral-500", "{display_idx} / {total}" }
+                                QuestionViewer {
+                                    index: idx,
+                                    question,
+                                    answer: current_answer,
+                                    disabled: !can_respond || !is_in_progress || (!can_submit && !can_update),
+                                    on_change: move |ans: Answer| {
+                                        answers.write().insert(idx, ans);
+                                    },
+                                }
                             }
                         }
                     }
                 }
             }
 
-            if can_submit || can_update {
-                button {
-                    class: "w-full rounded-lg bg-blue-600 py-3 font-medium text-white transition-colors hover:bg-blue-500",
-                    onclick: submit_handler,
-                    if can_update {
-                        {tr.btn_update}
-                    } else {
-                        {tr.btn_submit}
+            div { class: "-mx-5 max-tablet:-mx-3 max-mobile:-mx-2 flex items-center justify-between gap-3 border-t border-neutral-700/80 bg-[#171a20] px-5 py-3 light:border-input-box-border light:bg-background",
+                div {}
+                div { class: "flex items-center gap-3",
+                    Button {
+                        style: ButtonStyle::Outline,
+                        shape: ButtonShape::Square,
+                        class: "min-w-[120px]",
+                        onclick: on_cancel,
+                        {tr.btn_cancel}
+                    }
+                    if show_submit_button {
+                        Button {
+                            style: ButtonStyle::Primary,
+                            shape: ButtonShape::Square,
+                            class: "min-w-[120px]",
+                            onclick: on_submit,
+                            if can_update {
+                                {tr.btn_update}
+                            } else {
+                                {tr.btn_submit}
+                            }
+                        }
                     }
                 }
             }
