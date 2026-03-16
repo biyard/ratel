@@ -71,18 +71,39 @@ pub fn TimelineRow(row: TimelineCategoryRow) -> Element {
             }
 
             // Horizontal scroll of post cards
-            div { class: "flex overflow-x-auto gap-4 pb-2 snap-x snap-mandatory scrollbar-thin",
-                for post in items {
-                    div {
-                        class: "snap-start shrink-0 w-[340px] max-mobile:w-[280px]",
-                        key: "tl-{post.pk}",
-                        FeedCard { post: post.clone() }
+            div { class: "relative",
+                div { class: "flex overflow-x-auto gap-4 pb-2 snap-x snap-mandatory scrollbar-none",
+                    for post in items {
+                        div {
+                            class: "snap-start shrink-0 w-[340px] max-mobile:w-[280px]",
+                            key: "tl-{post.pk}",
+                            FeedCard { post: post.clone() }
+                        }
+                    }
+                    if *loading.read() {
+                        div { class: "snap-start shrink-0 w-[340px] flex items-center justify-center text-text-secondary",
+                            "Loading..."
+                        }
                     }
                 }
-                if *loading.read() {
-                    div { class: "snap-start shrink-0 w-[340px] flex items-center justify-center text-text-secondary",
-                        "Loading..."
-                    }
+                div { class: "absolute top-0 right-0 w-12 h-full bg-gradient-to-l from-bg to-transparent pointer-events-none z-100" }
+                button {
+                    class: "absolute top-1/2 right-0 -translate-y-1/2 z-101 p-1 rounded-full cursor-pointer hover:bg-accent/20 transition-colors",
+                    onclick: {
+                        let aria = display_name.to_string();
+                        move |_| {
+                            let selector = format!(
+                                "[aria-label=\"{} section\"] .scrollbar-none",
+                                aria
+                            );
+                            let js = format!(
+                                "const el = document.querySelector('{}'); if (el) el.scrollBy({{ left: 340, behavior: 'smooth' }});",
+                                selector
+                            );
+                            let _ = document::eval(&js);
+                        }
+                    },
+                    crate::common::lucide_dioxus::ChevronRight { size: 20, class: "[&>path]:stroke-foreground-muted hover:[&>path]:stroke-text-primary transition-colors" }
                 }
             }
         }
