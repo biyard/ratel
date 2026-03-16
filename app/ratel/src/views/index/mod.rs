@@ -1,8 +1,8 @@
-#[cfg(feature = "social")]
-use crate::features::social::UserSidemenu;
+use crate::features::posts::components::CreatePostButton;
+use crate::features::timeline::components::{
+    DraftTimeline, FollowingTimeline, PopularTimeline, TeamTimeline,
+};
 use crate::*;
-use crate::features::posts::components::{CreatePostButton, FeedList};
-use crate::features::timeline::components::TimelineFeed;
 
 #[component]
 pub fn Index() -> Element {
@@ -10,17 +10,14 @@ pub fn Index() -> Element {
     let user = user_ctx().user.clone();
 
     rsx! {
-        div { class: "flex overflow-x-hidden gap-5 justify-between py-3 mx-auto min-h-screen max-w-desktop max-tablet:px-2.5",
-            if let Some(ref user) = user {
-                UserSidemenu { username: user.username.clone() }
-            }
-
-            div { class: "flex flex-col grow gap-4",
+        div { class: "flex overflow-x-hidden gap-5 justify-between py-3 mx-auto w-full min-h-screen max-tablet:px-2.5",
+            div { class: "flex flex-col gap-4 w-full",
                 if user.is_some() {
-                    TimelineFeed {}
-                } else {
-                    PopularFeedSection {}
+                    DraftTimeline {}
+                    FollowingTimeline {}
+                    TeamTimeline {}
                 }
+                PopularTimeline {}
             }
 
             if user.is_some() {
@@ -32,26 +29,4 @@ pub fn Index() -> Element {
             }
         }
     }
-}
-
-/// Anonymous users see a popular posts feed with a header.
-#[component]
-fn PopularFeedSection() -> Element {
-    rsx! {
-        section { class: "flex flex-col gap-3 w-full",
-            div { class: "flex items-center px-1",
-                h2 { class: "text-lg font-semibold text-text-primary",
-                    "Popular Posts"
-                }
-            }
-            FeedList {}
-        }
-    }
-}
-
-#[cfg(not(feature = "social"))]
-#[component]
-fn UserSidemenu(username: String) -> Element {
-    let _ = username;
-    rsx! {}
 }
