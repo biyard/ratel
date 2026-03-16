@@ -19,7 +19,6 @@ pub fn PollContent(
     let mut hide_once = use_signal(|| false);
     let layout_ui = use_space_layout_ui();
     let sidebar_visible = layout_ui.sidebar_visible;
-    let nav = navigator();
     let key = space_page_actions_poll_key(&space_id(), &poll_id());
 
     let poll_loader = use_query(&key, { move || get_poll(space_id(), poll_id()) })?;
@@ -54,6 +53,16 @@ pub fn PollContent(
     let can_submit = can_respond && is_in_progress && !has_response;
     let can_update = can_respond && is_in_progress && has_response && poll.response_editable;
     let total = poll.questions.len();
+    let current_idx = question_index().min(total.saturating_sub(1));
+    let current_question = poll.questions.get(current_idx).cloned();
+    let current_answer = answers.read().get(&current_idx).cloned();
+    let has_current_answer = current_question
+        .as_ref()
+        .map(|q| has_answer_for_question(q, current_answer.as_ref()))
+        .unwrap_or(false);
+    let is_first_question = total == 0 || current_idx == 0;
+    let is_last_question = total == 0 || current_idx + 1 >= total;
+    let poll_next_disabled = can_submit && !has_current_answer;
 
     let show_submit_button = can_respond && (can_submit || can_update);
 
@@ -93,15 +102,9 @@ pub fn PollContent(
         }
     };
 
-    let on_cancel = move |_| {
-        let mut sidebar_visible = sidebar_visible;
-        sidebar_visible.set(true);
-        nav.push(format!("/spaces/{}/actions", space_id()));
-    };
-
     rsx! {
         div { class: "flex min-h-0 w-full flex-1 flex-col gap-4",
-            div { class: "flex flex-1 flex-col gap-4 overflow-y-auto pb-6",
+            div { class: "mx-auto flex w-full max-w-desktop flex-1 flex-col gap-4 overflow-y-auto pb-6",
                 if poll.status == PollStatus::Finish {
                     div { class: "rounded-lg bg-neutral-800 p-3 text-sm text-neutral-400",
                         {tr.poll_ended}
@@ -115,7 +118,7 @@ pub fn PollContent(
 
                 if total == 0 {
                     div { class: "flex items-center justify-center py-10 text-neutral-500",
-                        "No questions yet."
+                        {tr.no_questions}
                     }
                 }
 
@@ -125,39 +128,26 @@ pub fn PollContent(
                         let question = poll.questions[idx].clone();
                         let current_answer = answers.read().get(&idx).cloned();
                         let can_next = idx + 1 < total;
-                        let has_current_answer =
-                            has_answer_for_question(
-                            &question,
-                            current_answer.as_ref(),
-                        );
-                        let next_disabled = idx + 1 >= total || (can_respond && !has_current_answer);
                         rsx! {
-                            div { class: "rounded-lg border border-neutral-700 bg-neutral-900 p-4",
-                                div { class: "mb-2 text-xs text-neutral-500", "{idx + 1} / {total}" }
-                                QuestionViewer {
-                                    index: idx,
-                                    total,
-                                    question: question.clone(),
-                                    answer: current_answer,
-                                    disabled: !can_respond || !is_in_progress || (!can_submit && !can_update),
-                                    on_change: move |ans: Answer| {
-                                        answers.write().insert(idx, ans.clone());
+                            div { key: "poll-read-question-{idx}", class: "w-full",
+                                div { class: "mb-5 flex items-center justify-end text-[16px] font-normal text-text-primary",
+                                    "{tr.question_label}: {idx + 1}/{total}"
+                                }
+                                div { class: "w-full [&_[data-question-title-wrap]]:mb-5 [&_[data-question-title-wrap]>div]:justify-center [&_[data-question-title]]:text-center [&_[data-question-title]]:text-[21px] [&_[data-question-desc]]:text-center",
+                                    QuestionViewer {
+                                        index: idx,
+                                        total,
+                                        question: question.clone(),
+                                        answer: current_answer,
+                                        disabled: !can_respond || !is_in_progress || (!can_submit && !can_update),
+                                        on_change: move |ans: Answer| {
+                                            answers.write().insert(idx, ans.clone());
 
-                                        if can_submit && can_next && should_auto_next(&question, &ans) {
-                                            question_index.set(idx + 1);
-                                        }
-                                    },
-                                    on_prev: move |_| {
-                                        if idx > 0 {
-                                            question_index.set(idx - 1);
-                                        }
-                                    },
-                                    on_next: move |_| {
-                                        if idx + 1 < total && (!can_respond || has_current_answer) {
-                                            question_index.set(idx + 1);
-                                        }
-                                    },
-                                    next_disabled,
+                                            if can_submit && can_next && should_auto_next(&question, &ans) {
+                                                question_index.set(idx + 1);
+                                            }
+                                        },
+                                    }
                                 }
                             }
                         }
@@ -165,17 +155,41 @@ pub fn PollContent(
                 }
             }
 
-            div { class: "-mx-5 max-tablet:-mx-3 max-mobile:-mx-2 flex items-center justify-between gap-3 border-t border-neutral-700/80 bg-[#171a20] px-5 py-3 light:border-input-box-border light:bg-background",
+            div { class: "flex items-center justify-between gap-3 border-t border-card-border bg-card-bg px-5 py-3",
                 div {}
                 div { class: "flex items-center gap-3",
-                    Button {
-                        style: ButtonStyle::Outline,
-                        shape: ButtonShape::Square,
-                        class: "min-w-[120px]",
-                        onclick: on_cancel,
-                        {tr.btn_cancel}
+                    if !is_first_question && total > 0 {
+                        Button {
+                            style: ButtonStyle::Outline,
+                            shape: ButtonShape::Square,
+                            class: "min-w-[120px]",
+                            onclick: move |_| {
+                                let current = question_index();
+                                if current > 0 {
+                                    question_index.set(current - 1);
+                                }
+                            },
+                            {tr.btn_back}
+                        }
                     }
-                    if show_submit_button {
+
+                    if !is_last_question && total > 0 {
+                        Button {
+                            style: ButtonStyle::Outline,
+                            shape: ButtonShape::Square,
+                            class: "min-w-[120px]",
+                            disabled: poll_next_disabled,
+                            onclick: move |_| {
+                                let current = question_index();
+                                if current + 1 < total {
+                                    question_index.set(current + 1);
+                                }
+                            },
+                            {tr.btn_next}
+                        }
+                    }
+
+                    if is_last_question && show_submit_button && total > 0 {
                         Button {
                             style: ButtonStyle::Primary,
                             shape: ButtonShape::Square,
