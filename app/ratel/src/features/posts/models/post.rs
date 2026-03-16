@@ -136,7 +136,7 @@ impl Post {
             return Ok(TeamGroupPermissions::all());
         }
 
-        if self.author_type == crate::features::auth::UserType::Individual {
+        if self.author_type == crate::common::types::UserType::Individual {
             return Ok(self.get_permissions_for_guest());
         }
 

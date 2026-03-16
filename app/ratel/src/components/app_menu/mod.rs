@@ -36,6 +36,7 @@ translate! {
 
 #[component]
 pub fn AppMenu() -> Element {
+    let lang = use_language();
     let tr: AppMenuTranslate = use_translate();
     let mut popup = use_popup();
     let user_ctx = crate::features::auth::hooks::use_user_context();
@@ -83,13 +84,12 @@ pub fn AppMenu() -> Element {
                             rsx! {
                                 button {
                                     onclick: move |_| {
-                                        let lang = use_language();
                                         lang().switch();
                                     },
                                     ..attrs,
                                     LanguageIcon {}
                                     if !collapsed {
-                                        span { {language_label()} }
+                                        span { class: "uppercase", {lang.to_string()} }
                                     }
                                 }
                             }
@@ -349,9 +349,8 @@ fn ProfileButton(collapsed: bool) -> Element {
 #[component]
 fn LanguageIcon() -> Element {
     let lang = use_language();
-    let is_ko = lang().to_string() == "ko";
 
-    if is_ko {
+    if lang() == Language::Ko {
         rsx! {
             i::KrIcon {
                 width: "16",
@@ -367,14 +366,5 @@ fn LanguageIcon() -> Element {
                 class: "object-cover rounded-full",
             }
         }
-    }
-}
-
-fn language_label() -> &'static str {
-    let lang = use_language();
-    if lang().to_string() == "ko" {
-        "KO"
-    } else {
-        "EN"
     }
 }

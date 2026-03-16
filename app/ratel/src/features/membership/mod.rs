@@ -3,15 +3,12 @@ pub mod components;
 pub mod config;
 pub mod controllers;
 pub mod models;
-pub mod route;
 pub mod services;
 
 #[cfg(not(feature = "server"))]
 pub mod interop;
 mod views;
 pub use views::*;
-
-pub use route::Route;
 
 pub use crate::common::macros::dynamo_entity::DynamoEntity;
 pub use crate::common::models::*;

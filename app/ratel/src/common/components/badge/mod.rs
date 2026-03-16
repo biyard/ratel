@@ -9,7 +9,7 @@ pub fn Badge(
     children: Element,
 ) -> Element {
     rsx! {
-        div { class: "px-[13px] py-[7px] {color} {size} {variant}", ..attributes, {children} }
+        div { class: "{color} {size} {variant}", ..attributes, {children} }
     }
 }
 
@@ -55,8 +55,11 @@ pub enum BadgeColor {
 )]
 pub enum BadgeSize {
     #[default]
-    #[strum(serialize = "text-[12px]/[16px] font-semibold")]
+    #[strum(serialize = "px-[13px] py-[7px] text-[12px]/[16px] font-semibold")]
     Normal,
+
+    #[strum(serialize = "py-1 px-2 text-[12px] font-semibold")]
+    Small,
 }
 
 #[derive(
