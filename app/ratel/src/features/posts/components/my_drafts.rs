@@ -1,9 +1,12 @@
-use super::feed_card::{time_ago, FeedContents, UserBadge};
+use super::feed_card::{FeedContents, UserBadge};
+use crate::common::hooks::use_infinite_query;
+use crate::common::utils::time::time_ago;
 use crate::features::posts::controllers::delete_post::delete_post_handler;
 use crate::features::posts::controllers::dto::*;
-use crate::features::posts::controllers::list_user_drafts::{list_team_drafts_handler, list_user_drafts_handler};
+use crate::features::posts::controllers::list_user_drafts::{
+    list_team_drafts_handler, list_user_drafts_handler,
+};
 use crate::features::posts::*;
-use crate::common::hooks::use_infinite_query;
 use dioxus::prelude::*;
 use icons::edit::Delete2;
 use std::collections::HashSet;
@@ -52,7 +55,7 @@ pub fn MyDrafts() -> Element {
                     rsx! {
                         div {
                             key: "{post.pk}",
-                            class: "flex flex-col pt-5 pb-2.5 gap-2.5 rounded-lg border cursor-pointer bg-card-bg border-card-enable-border",
+                            class: "flex flex-col gap-2.5 pt-5 pb-2.5 rounded-lg border cursor-pointer bg-card-bg border-card-enable-border",
                             onclick: move |_| {
                                 let nav = nav.clone();
                                 let post_pk: FeedPartition = post_pk_for_nav.clone().into();
@@ -107,8 +110,8 @@ pub fn MyDrafts() -> Element {
 }
 
 #[component]
-pub fn TeamDrafts(teamname: String) -> Element {
-    let teamname_signal = use_signal(|| teamname);
+pub fn TeamDrafts(username: String) -> Element {
+    let teamname_signal = use_signal(|| username);
     let mut v = use_infinite_query(move |bookmark| {
         let teamname = teamname_signal();
         async move { list_team_drafts_handler(teamname, bookmark).await }
@@ -142,7 +145,7 @@ pub fn TeamDrafts(teamname: String) -> Element {
                     rsx! {
                         div {
                             key: "{post.pk}",
-                            class: "flex flex-col pt-5 pb-2.5 gap-2.5 rounded-lg border cursor-pointer bg-card-bg border-card-enable-border",
+                            class: "flex flex-col gap-2.5 pt-5 pb-2.5 rounded-lg border cursor-pointer bg-card-bg border-card-enable-border",
                             onclick: move |_| {
                                 let nav = nav.clone();
                                 let post_pk: FeedPartition = post_pk_for_nav.clone().into();

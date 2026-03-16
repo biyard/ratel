@@ -2,6 +2,7 @@ import { App } from "aws-cdk-lib";
 import { RegionalServiceStack } from "../lib/regional-service-stack";
 import { GlobalAccelStack } from "../lib/global-accel-stack";
 import { GlobalTableStack } from "../lib/dynamodb-stack";
+import { DynamoStreamEventStack } from "../lib/dynamo-stream-event";
 import { StaticStack } from "../lib/static-stack";
 import { DaemonStack } from "../lib/daemon-stack";
 import { QdrantStack } from "../lib/qdrant-stack";
@@ -76,16 +77,20 @@ new QdrantStack(app, `ratel-${env}-qdrant-ap-northeast-2`, {
   vectorDomain: `vector.${host}`,
 });
 
-new RegionalLambdaStack(app, `ratel-${env}-lambda-ap-northeast-2`, {
-  env: {
-    account: awsAccount,
-    region: "ap-northeast-2",
+const ap_northeast_2_lambda = new RegionalLambdaStack(
+  app,
+  `ratel-${env}-lambda-ap-northeast-2`,
+  {
+    env: {
+      account: awsAccount,
+      region: "ap-northeast-2",
+    },
+    stage: env,
+    commit: process.env.COMMIT!,
+    baseDomain,
+    apiDomain: `lambda-${apiDomain}`,
   },
-  stage: env,
-  commit: process.env.COMMIT!,
-  baseDomain,
-  apiDomain: `lambda-${apiDomain}`,
-});
+);
 
 new RegionalLambdaStack(app, `ratel-${env}-svc-eu-central-1`, {
   env: {
@@ -128,4 +133,13 @@ new GlobalTableStack(app, `ratel-${env}-dynamodb`, {
     account: awsAccount,
     region: "ap-northeast-2",
   },
+});
+
+new DynamoStreamEventStack(app, `ratel-${env}-stream-ap-northeast-2`, {
+  env: {
+    account: awsAccount,
+    region: "ap-northeast-2",
+  },
+  stage: env,
+  lambdaFunction: ap_northeast_2_lambda.lambdaFunction,
 });

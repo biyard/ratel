@@ -30,6 +30,8 @@ pub struct PostResponse {
 
     pub urls: Vec<String>,
     pub liked: bool,
+    pub category: Option<String>,
+    pub status: PostStatus,
 }
 
 impl PostResponse {
@@ -81,6 +83,8 @@ impl From<Post> for PostResponse {
             auth_pk: post.user_pk,
             space_type,
             author_type: post.author_type,
+            category: post.category,
+            status: post.status,
         }
     }
 }
@@ -113,6 +117,8 @@ impl From<(Option<crate::features::auth::User>, Post)> for PostResponse {
             liked: false,
             auth_pk: post.user_pk,
             author_type: post.author_type,
+            category: post.category,
+            status: post.status,
 
             space_pk,
             space_type,

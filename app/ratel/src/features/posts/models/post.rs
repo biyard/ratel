@@ -22,9 +22,10 @@ pub struct Post {
     pub post_type: PostType,
 
     #[dynamo(index = "gsi5", order = 1, sk)]
+    #[dynamo(index = "gsi6", name = "find_by_visibility", order = 2, pk)]
     pub status: PostStatus,
 
-    #[dynamo(index = "gsi6", name = "find_by_visibility", pk)]
+    #[dynamo(index = "gsi6", name = "find_by_visibility", order = 1, pk)]
     #[dynamo(index = "gsi2", order = 1, sk)]
     #[dynamo(index = "gsi5", order = 2, sk)]
     pub visibility: Option<Visibility>,
@@ -62,6 +63,9 @@ pub struct Post {
     pub rewards: Option<i64>,
 
     pub urls: Vec<String>,
+
+    #[serde(default)]
+    pub category: Option<String>,
 }
 
 #[cfg(feature = "server")]
@@ -113,6 +117,7 @@ impl Post {
             rewards: None,
             urls: vec![],
             space_visibility: None,
+            category: None,
         }
     }
 
@@ -131,7 +136,7 @@ impl Post {
             return Ok(TeamGroupPermissions::all());
         }
 
-        if self.author_type == crate::features::auth::UserType::Individual {
+        if self.author_type == crate::common::types::UserType::Individual {
             return Ok(self.get_permissions_for_guest());
         }
 

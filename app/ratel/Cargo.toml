@@ -94,7 +94,7 @@ lambda_runtime = { version = "1.1.1", optional = true }
 
 
 [features]
-full = ["membership","users", "teams", "spaces_full"]
+full = ["membership", "social", "spaces_full"]
 default = ["full"]
 bypass = []
 web = [
@@ -145,10 +145,10 @@ server = [
 lambda = [ "server", "lambda_http", "lambda_runtime" ]
 layout_test = ["web"]
 membership = []
-users = []
-teams = []
+social = []
 spaces = []
 spaces_full = ["spaces"]
+local-dev = []
 futures = ["dep:futures"]
 
 [dev-dependencies]

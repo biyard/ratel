@@ -56,7 +56,6 @@ pub fn App() -> Element {
 
         crate::common::Provider {}
         AuthProvider {}
-        crate::features::posts::Provider {}
 
         Router::<Route> {}
         if env == Environment::Dev || env == Environment::Local {

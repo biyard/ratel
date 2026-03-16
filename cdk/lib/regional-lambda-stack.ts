@@ -40,6 +40,8 @@ export interface RegionalLambdaStackProps extends StackProps {
 }
 
 export class RegionalLambdaStack extends Stack {
+  readonly lambdaFunction: lambda.Function;
+
   constructor(scope: Construct, id: string, props: RegionalLambdaStackProps) {
     super(scope, id, { ...props, crossRegionReferences: true });
 
@@ -73,6 +75,7 @@ export class RegionalLambdaStack extends Stack {
       memorySize: 128,
       timeout: cdk.Duration.seconds(30),
     });
+    this.lambdaFunction = apiLambda;
 
     const lambdaIntegration = new HttpLambdaIntegration(
       "LambdaIntegration",

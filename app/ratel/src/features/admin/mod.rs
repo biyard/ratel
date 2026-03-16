@@ -1,24 +1,16 @@
-#![allow(unused)]
-pub mod components;
-pub mod controllers;
-pub mod hooks;
-pub mod layout;
-pub mod models;
-pub mod route;
-
-#[cfg(not(feature = "server"))]
-pub mod interop;
+mod components;
+mod controllers;
+mod layout;
+mod models;
 
 mod views;
 
-pub use models::*;
-pub use route::Route;
+use components::*;
+use controllers::*;
+use models::*;
 
-use crate::common::*;
-use crate::common::models::Reward;
-use dioxus::prelude::*;
+pub use layout::AppLayout as AdminLayout;
+pub use views::AdminMainPage;
 
-type Result<T> = crate::common::Result<T>;
-type DioxusResult<T> = dioxus::prelude::Result<T>;
-
-use serde::{Deserialize, Serialize};
+use crate::common::models::*;
+use crate::*;
