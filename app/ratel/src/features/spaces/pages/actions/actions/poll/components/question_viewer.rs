@@ -552,22 +552,21 @@ fn LinearScaleViewer(
             description: question.description.clone(),
             is_required: question.is_required,
         }
-        div { class: "flex flex-col w-full justify-center items-center select-none overflow-x-auto no-scrollbar touch-pan-x md:cursor-grab",
-            div { class: "flex w-fit flex-row items-center justify-center gap-5 px-2",
-                div { class: "shrink-0 break-words text-center text-sm font-medium text-neutral-400",
-                    "{question.min_label}"
-                }
-
-                for val in min..=max {
-                    {
-                        let is_selected = selected == Some(val as i32);
-                        let on_change = on_change.clone();
-                        rsx! {
-                            div { class: "flex w-8 shrink-0 flex-col items-center gap-1",
-                                div { class: "text-sm font-medium text-neutral-400", "{val}" }
+        div { class: "flex w-full flex-col gap-5 select-none",
+            div { class: "flex w-full items-center justify-between text-sm font-medium text-neutral-400 light:text-text-secondary",
+                span { class: "max-w-[40%] truncate", "{question.min_label}" }
+                span { class: "max-w-[40%] truncate text-right", "{question.max_label}" }
+            }
+            div { class: "w-full overflow-x-auto no-scrollbar touch-pan-x",
+                div { class: "mx-auto flex w-fit min-w-full items-center justify-center gap-2 px-1 pb-1",
+                    for val in min..=max {
+                        {
+                            let is_selected = selected == Some(val as i32);
+                            let on_change = on_change.clone();
+                            rsx! {
                                 button {
-                                    class: "flex size-5 items-center justify-center rounded-full border transition-colors",
-                                    class: if is_selected { "border-primary" } else { "border-neutral-500" },
+                                    class: "flex size-10 shrink-0 items-center justify-center rounded-lg text-[15px] font-normal transition-colors",
+                                    class: if is_selected { "bg-primary text-white" } else { "bg-neutral-700 text-white" },
                                     class: if disabled { "cursor-not-allowed opacity-60" } else { "cursor-pointer" },
                                     disabled,
                                     onclick: move |_| {
@@ -576,17 +575,11 @@ fn LinearScaleViewer(
                                                 answer: Some(val as i32),
                                             });
                                     },
-                                    if is_selected {
-                                        div { class: "size-2 rounded-full bg-primary" }
-                                    }
+                                    "{val}"
                                 }
                             }
                         }
                     }
-                }
-
-                div { class: "shrink-0 break-words text-center text-sm font-medium text-neutral-400",
-                    "{question.max_label}"
                 }
             }
         }
