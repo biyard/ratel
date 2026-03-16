@@ -1,7 +1,7 @@
+use super::*;
 use crate::features::posts::controllers::dto::*;
 use crate::features::posts::controllers::like_post::like_post_handler;
 use crate::features::posts::types::*;
-use crate::features::posts::*;
 use dioxus::prelude::*;
 
 fn convert_number_to_string(n: i64) -> String {
@@ -18,25 +18,6 @@ fn convert_number_to_string(n: i64) -> String {
         format!("{}", n)
     } else {
         format!("{} {}", value as i64, suffixes[i - 1])
-    }
-}
-
-pub fn time_ago(timestamp_millis: i64) -> String {
-    let now = chrono::Utc::now().timestamp_millis();
-    let diff = now - timestamp_millis;
-
-    if diff < 60 * 1000 {
-        format!("{}s ago", diff / 1000)
-    } else if diff < 3600 * 1000 {
-        format!("{}m ago", diff / 1000 / 60)
-    } else if diff < 86400 * 1000 {
-        format!("{}h ago", diff / 1000 / 3600)
-    } else if diff < 604800 * 1000 {
-        format!("{}d ago", diff / 1000 / 86400)
-    } else if diff < 31536000 * 1000 {
-        format!("{}w ago", diff / 1000 / 604800)
-    } else {
-        format!("{}y ago", diff / 1000 / 31536000)
     }
 }
 
@@ -64,7 +45,7 @@ pub fn FeedCard(
     let link_href = href.unwrap_or_default();
 
     rsx! {
-        div { class: "relative flex flex-col border rounded-[10px] bg-card-bg-secondary border-card-enable-border",
+        div { class: "flex relative flex-col border rounded-[10px] bg-card-bg-secondary border-card-enable-border",
             Link { class: "block", to: post.url(),
                 FeedBody { post: post.clone(), on_edit }
             }
@@ -170,7 +151,7 @@ fn FeedBody(post: PostResponse, on_edit: Option<EventHandler<MouseEvent>>) -> El
 #[component]
 pub fn FeedContents(contents: String, urls: Vec<String>) -> Element {
     rsx! {
-        div { class: "break-all text-desc-text px-5 mt-2.5",
+        div { class: "px-5 mt-2.5 break-all text-desc-text",
             div {
                 class: "border-none",
                 style: "min-height: 50px; max-height: 200px; overflow: hidden;",
@@ -242,7 +223,11 @@ fn FeedFooter(
 }
 
 #[component]
-pub fn UserBadge(profile_url: String, name: String, author_type: crate::features::auth::UserType) -> Element {
+pub fn UserBadge(
+    profile_url: String,
+    name: String,
+    author_type: crate::features::auth::UserType,
+) -> Element {
     let img_class = if author_type == crate::features::auth::UserType::Team {
         "w-6 h-6 rounded-sm object-cover"
     } else {
@@ -250,7 +235,7 @@ pub fn UserBadge(profile_url: String, name: String, author_type: crate::features
     };
 
     rsx! {
-        div { class: "flex flex-row items-center w-fit med-16 text-text-primary gap-2.5",
+        div { class: "flex flex-row gap-2.5 items-center w-fit med-16 text-text-primary",
             if !profile_url.is_empty() {
                 img { src: profile_url, alt: "User Profile", class: img_class }
             }
