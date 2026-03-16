@@ -11,6 +11,7 @@ pub enum SpaceAppType {
     File,
     #[translate(en = "Panels", ko = "패널")]
     Panels,
+    #[cfg(feature = "beta")]
     #[translate(en = "Incentive Pool", ko = "인센티브 풀")]
     IncentivePool,
 }
@@ -25,6 +26,7 @@ impl SpaceAppType {
             SpaceAppType::General => Route::SpaceGeneralAppPage { space_id },
             SpaceAppType::File => Route::SpaceFileAppPage { space_id },
             SpaceAppType::Panels => Route::SpacePanelsAppPage { space_id },
+            #[cfg(feature = "beta")]
             SpaceAppType::IncentivePool => Route::SpaceIncentivePoolAppPage { space_id },
         }
     }
@@ -32,6 +34,7 @@ impl SpaceAppType {
     pub fn class(&self) -> &'static str {
         match self {
             SpaceAppType::General => "bg-green-500",
+            #[cfg(feature = "beta")]
             SpaceAppType::IncentivePool => "bg-amber-500",
             SpaceAppType::File => "bg-violet-500",
             SpaceAppType::Panels => "bg-sky-500",
@@ -47,6 +50,7 @@ impl SpaceAppType {
                     class: "text-white [&>path]:fill-black [&>circle]:stroke-black",
                 }
             },
+            #[cfg(feature = "beta")]
             SpaceAppType::IncentivePool => rsx! {
                 icons::ratel::Chest {
                     width: "24",
@@ -70,4 +74,38 @@ impl SpaceAppType {
             },
         }
     }
+
+    pub fn description(&self, lang: &Language) -> String {
+        let tr = SpaceAppTypeTranslate::new(lang);
+
+        match self {
+            #[cfg(feature = "beta")]
+            SpaceAppType::IncentivePool => tr.app_description_incentive_pool,
+            SpaceAppType::File => tr.app_description_file,
+            SpaceAppType::Panels => tr.app_description_panels,
+            SpaceAppType::General => tr.app_description_general,
+        }
+        .to_string()
+    }
+}
+
+translate! {
+    SpaceAppTypeTranslate;
+
+    app_description_incentive_pool: {
+        en: "An incentive granted by the space creator, and granted upon finising according to the incentive rules",
+        ko: "스페이스 생성자가 부여하는 인센티브로 종료 시 인센티브 규칙에 따라 부여됩니다.",
+    },
+    app_description_file: {
+        en: "Manage and organize files shared in your space.",
+        ko: "스페이스에서 공유되는 파일을 관리하고 정리하세요.",
+    },
+    app_description_panels: {
+        en: "Configure panel participation rules",
+        ko: "패널 참여 조건을 설정하세요.",
+    },
+    app_description_general: {
+        en: "Settings (Admin)",
+        ko: "설정(관리자)",
+    },
 }
