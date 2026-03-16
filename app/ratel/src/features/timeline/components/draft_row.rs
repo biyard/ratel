@@ -3,6 +3,7 @@ use crate::features::posts::controllers::dto::*;
 use crate::features::posts::controllers::list_user_drafts::list_user_drafts_handler;
 use crate::features::posts::types::*;
 use crate::features::timeline::*;
+use dioxus_translate::use_language;
 
 /// A horizontal row of the user's draft posts, displayed at the top of the timeline.
 #[component]
@@ -22,6 +23,7 @@ pub fn DraftTimeline() -> Element {
     }
 
     let nav = use_navigator();
+    let lang = use_language();
 
     rsx! {
         section { class: "flex flex-col gap-3 w-full", aria_label: "Drafts section",
@@ -44,9 +46,16 @@ pub fn DraftTimeline() -> Element {
                                         let post_pk: FeedPartition = post_pk.clone().into();
                                         nav.push(format!("/posts/{post_pk}/edit"));
                                     },
-                                    div { class: "flex flex-row gap-1 items-center px-5 w-full font-bold align-middle line-clamp-2 text-xl/[25px] tracking-[0.5px] text-text-primary",
-                                        div { class: "text-sm font-normal text-foreground-muted", "(Draft)" }
-                                        div { class: "font-normal", "{post.title}" }
+                                    Col { class: "gap-1 px-5 w-full",
+                                        Badge {
+                                            size: BadgeSize::Small,
+                                            variant: BadgeVariant::Rounded,
+                                            color: BadgeColor::Orange,
+                                            {post.status.translate(&lang())}
+                                        }
+                                        p { class: "w-full text-base font-normal text-text-primary truncate line-clamp-1",
+                                            "{post.title}"
+                                        }
                                     }
                                     div { class: "flex flex-row justify-between items-center px-5",
                                         UserBadge {
@@ -69,17 +78,22 @@ pub fn DraftTimeline() -> Element {
                         }
                     }
                 }
-                div { class: "absolute top-0 right-0 w-12 h-full bg-gradient-to-l from-bg to-transparent pointer-events-none z-100" }
+                div { class: "absolute top-0 right-0 w-12 h-full bg-gradient-to-l to-transparent pointer-events-none from-bg z-100" }
                 button {
-                    class: "absolute top-1/2 right-0 -translate-y-1/2 z-101 p-1 rounded-full cursor-pointer hover:bg-accent/20 transition-colors",
+                    class: "absolute right-0 top-1/2 p-1 rounded-full transition-colors -translate-y-1/2 cursor-pointer z-101 hover:bg-accent/20",
                     onclick: move |_| {
                         // Scroll right by one card width
-                        let _ = document::eval(r#"
-                            const el = document.querySelector('[aria-label="Drafts section"] .scrollbar-none');
-                            if (el) el.scrollBy({ left: 340, behavior: 'smooth' });
-                        "#);
+                        let _ = document::eval(
+                            r#"
+                                                                                                            const el = document.querySelector('[aria-label="Drafts section"] .scrollbar-none');
+                                                                                                            if (el) el.scrollBy({ left: 340, behavior: 'smooth' });
+                                                                                                        "#,
+                        );
                     },
-                    lucide_dioxus::ChevronRight { size: 20, class: "[&>path]:stroke-foreground-muted hover:[&>path]:stroke-text-primary transition-colors" }
+                    lucide_dioxus::ChevronRight {
+                        size: 20,
+                        class: "transition-colors [&>path]:stroke-foreground-muted hover:[&>path]:stroke-text-primary",
+                    }
                 }
             }
         }
