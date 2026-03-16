@@ -2,7 +2,9 @@ use super::creator::QuizCreatorTranslate;
 use super::participant::QuizParticipantTranslate;
 use crate::common::components::{Button, ButtonShape, ButtonStyle, TiptapEditor};
 use crate::features::spaces::layout::use_space_layout_ui;
-use crate::features::spaces::pages::actions::actions::poll::components::QuestionViewer;
+use crate::features::spaces::pages::actions::actions::poll::components::{
+    has_answer_for_question, should_auto_next, QuestionViewer,
+};
 use crate::features::spaces::pages::actions::actions::quiz::*;
 use crate::features::spaces::pages::apps::apps::file::components::FileCard;
 use crate::features::spaces::space_common::types::space_page_actions_quiz_key;
@@ -26,6 +28,7 @@ pub fn QuizReadPage(
     let mut query = use_query_store();
     let mut toast = use_toast();
     let mut step = use_signal(|| QuizReadStep::Overview);
+    let mut question_index = use_signal(|| 0usize);
     let mut hide_once = use_signal(|| false);
     let layout_ui = use_space_layout_ui();
     let sidebar_visible = layout_ui.sidebar_visible;
@@ -38,6 +41,19 @@ pub fn QuizReadPage(
             .collect()
     });
     let mut answers = use_signal(|| initial_answers);
+    let all_answered = use_memo({
+        let quiz = quiz.clone();
+        move || {
+            if quiz.questions.len() == 0 {
+                return false;
+            }
+            let answers_read = answers.read();
+            quiz.questions
+                .iter()
+                .enumerate()
+                .all(|(idx, question)| has_answer_for_question(question, answers_read.get(idx)))
+        }
+    });
 
     let now = crate::common::utils::time::get_now_timestamp_millis();
     let is_in_progress = now >= quiz.started_at && now <= quiz.ended_at;
@@ -47,6 +63,7 @@ pub fn QuizReadPage(
         can_respond && is_in_progress && !has_passed && quiz.attempt_count < quiz.retry_count;
     let remaining_submissions = quiz.retry_count.saturating_sub(quiz.attempt_count);
     let total_questions = quiz.questions.len();
+
     let score_text = quiz
         .my_score
         .map(|score| score.to_string())
@@ -157,7 +174,10 @@ pub fn QuizReadPage(
                                 class: "min-w-[120px]",
                                 disabled: quiz.questions.is_empty(),
                                 "data-testid": "quiz-read-next",
-                                onclick: move |_| step.set(QuizReadStep::Quiz),
+                                onclick: move |_| {
+                                    question_index.set(0);
+                                    step.set(QuizReadStep::Quiz);
+                                },
                                 {creator_tr.btn_next}
                             }
                         }
@@ -214,22 +234,53 @@ pub fn QuizReadPage(
                                 {participant_tr.no_questions}
                             }
                         } else {
-                            for (idx , question) in quiz.questions.iter().enumerate() {
-                                Card {
-                                    key: "read-question-{idx}",
-                                    class: "border border-neutral-700 bg-neutral-900 p-4 light:border-input-box-border light:bg-input-box-bg",
-                                    QuestionViewer {
-                                        index: idx,
-                                        question: question.clone(),
-                                        answer: answers.read().get(idx).cloned(),
-                                        disabled: !can_submit,
-                                        on_change: move |next_answer: Answer| {
-                                            let mut next = answers();
-                                            if idx < next.len() {
-                                                next[idx] = next_answer;
-                                            }
-                                            answers.set(next);
-                                        },
+                            {
+                                let idx = question_index().min(total_questions.saturating_sub(1));
+                                let question = quiz.questions[idx].clone();
+                                let answer = answers.read().get(idx).cloned();
+                                let can_next = idx + 1 < total_questions;
+                                let has_current_answer = has_answer_for_question(&question, answer.as_ref());
+                                let next_disabled = idx + 1 >= total_questions
+                                    || (can_respond && !has_current_answer);
+                                rsx! {
+                                    Card {
+                                        key: "read-question-{idx}",
+                                        class: "border border-neutral-700 bg-neutral-900 p-4 light:border-input-box-border light:bg-input-box-bg",
+                                        div { class: "mb-2 text-xs text-neutral-500 light:text-text-secondary",
+                                            "{idx + 1} / {total_questions}"
+                                        }
+                                        QuestionViewer {
+                                            index: idx,
+                                            total: total_questions,
+                                            question: question.clone(),
+                                            answer,
+                                            disabled: !can_submit,
+                                            on_change: move |next_answer: Answer| {
+                                                let mut next = answers();
+                                                if idx < next.len() {
+                                                    next[idx] = next_answer.clone();
+                                                }
+                                                answers.set(next);
+
+                                                if can_submit
+                                                    && can_next
+                                                    && should_auto_next(&question, &next_answer)
+                                                {
+                                                    question_index.set(idx + 1);
+                                                }
+                                            },
+                                            on_prev: move |_| {
+                                                if idx > 0 {
+                                                    question_index.set(idx - 1);
+                                                }
+                                            },
+                                            on_next: move |_| {
+                                                if idx + 1 < total_questions && (!can_respond || has_current_answer) {
+                                                    question_index.set(idx + 1);
+                                                }
+                                            },
+                                            next_disabled,
+                                        }
                                     }
                                 }
                             }
@@ -253,7 +304,7 @@ pub fn QuizReadPage(
                                     style: ButtonStyle::Primary,
                                     shape: ButtonShape::Square,
                                     class: "min-w-[120px]",
-                                    disabled: !can_submit,
+                                    disabled: !can_submit || !all_answered(),
                                     onclick: on_submit,
                                     {participant_tr.btn_submit}
                                 }

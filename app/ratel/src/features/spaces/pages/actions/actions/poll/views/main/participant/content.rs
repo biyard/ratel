@@ -15,6 +15,7 @@ pub fn PollContent(
 ) -> Element {
     let tr: participant::i18n::PollParticipantTranslate = use_translate();
     let mut query = use_query_store();
+    let mut question_index = use_signal(|| 0usize);
     let mut hide_once = use_signal(|| false);
     let layout_ui = use_space_layout_ui();
     let sidebar_visible = layout_ui.sidebar_visible;
@@ -34,12 +35,26 @@ pub fn PollContent(
         }
         map
     });
+    let all_answered = use_memo({
+        let poll = poll.clone();
+        move || {
+            if poll.questions.len() == 0 {
+                return false;
+            }
+            let answers_read = answers.read();
+            poll.questions
+                .iter()
+                .enumerate()
+                .all(|(idx, question)| has_answer_for_question(question, answers_read.get(&idx)))
+        }
+    });
 
     let is_in_progress = poll.status == PollStatus::InProgress;
     let has_response = poll.my_response.is_some();
     let can_submit = can_respond && is_in_progress && !has_response;
     let can_update = can_respond && is_in_progress && has_response && poll.response_editable;
     let total = poll.questions.len();
+
     let show_submit_button = can_respond && (can_submit || can_update);
 
     use_effect(move || {
@@ -104,22 +119,45 @@ pub fn PollContent(
                     }
                 }
 
-                for (idx , question) in poll.questions.iter().enumerate() {
+                if total > 0 {
                     {
-                        let question = question.clone();
+                        let idx = question_index().min(total.saturating_sub(1));
+                        let question = poll.questions[idx].clone();
                         let current_answer = answers.read().get(&idx).cloned();
-                        let display_idx = idx + 1;
+                        let can_next = idx + 1 < total;
+                        let has_current_answer =
+                            has_answer_for_question(
+                            &question,
+                            current_answer.as_ref(),
+                        );
+                        let next_disabled = idx + 1 >= total || (can_respond && !has_current_answer);
                         rsx! {
                             div { class: "rounded-lg border border-neutral-700 bg-neutral-900 p-4",
-                                div { class: "mb-2 text-xs text-neutral-500", "{display_idx} / {total}" }
+                                div { class: "mb-2 text-xs text-neutral-500", "{idx + 1} / {total}" }
                                 QuestionViewer {
                                     index: idx,
-                                    question,
+                                    total,
+                                    question: question.clone(),
                                     answer: current_answer,
                                     disabled: !can_respond || !is_in_progress || (!can_submit && !can_update),
                                     on_change: move |ans: Answer| {
-                                        answers.write().insert(idx, ans);
+                                        answers.write().insert(idx, ans.clone());
+
+                                        if can_submit && can_next && should_auto_next(&question, &ans) {
+                                            question_index.set(idx + 1);
+                                        }
                                     },
+                                    on_prev: move |_| {
+                                        if idx > 0 {
+                                            question_index.set(idx - 1);
+                                        }
+                                    },
+                                    on_next: move |_| {
+                                        if idx + 1 < total && (!can_respond || has_current_answer) {
+                                            question_index.set(idx + 1);
+                                        }
+                                    },
+                                    next_disabled,
                                 }
                             }
                         }
@@ -142,6 +180,7 @@ pub fn PollContent(
                             style: ButtonStyle::Primary,
                             shape: ButtonShape::Square,
                             class: "min-w-[120px]",
+                            disabled: !all_answered(),
                             onclick: on_submit,
                             if can_update {
                                 {tr.btn_update}

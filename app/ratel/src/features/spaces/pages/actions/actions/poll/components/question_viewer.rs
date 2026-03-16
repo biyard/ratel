@@ -1,90 +1,202 @@
 use crate::features::spaces::pages::actions::actions::poll::*;
 
+translate! {
+    QuestionViewerTranslate;
+
+    btn_back: {
+        en: "Back",
+        ko: "뒤로",
+    },
+    btn_next: {
+        en: "Next",
+        ko: "다음",
+    },
+}
+
+pub fn should_auto_next(question: &Question, answer: &Answer) -> bool {
+    match (question, answer) {
+        (
+            Question::SingleChoice(_),
+            Answer::SingleChoice {
+                answer: Some(_), ..
+            },
+        ) => true,
+        (Question::Dropdown(_), Answer::Dropdown { answer: Some(_) }) => true,
+        (Question::LinearScale(_), Answer::LinearScale { answer: Some(_) }) => true,
+        _ => false,
+    }
+}
+
+pub fn has_answer_for_question(question: &Question, answer: Option<&Answer>) -> bool {
+    match (question, answer) {
+        (
+            Question::SingleChoice(_),
+            Some(Answer::SingleChoice {
+                answer: Some(_), ..
+            }),
+        ) => true,
+        (
+            Question::MultipleChoice(_),
+            Some(Answer::MultipleChoice {
+                answer: Some(selected),
+                ..
+            }),
+        ) => !selected.is_empty(),
+        (
+            Question::ShortAnswer(_),
+            Some(Answer::ShortAnswer {
+                answer: Some(value),
+            }),
+        ) => !value.trim().is_empty(),
+        (
+            Question::Subjective(_),
+            Some(Answer::Subjective {
+                answer: Some(value),
+            }),
+        ) => !value.trim().is_empty(),
+        (
+            Question::Checkbox(_),
+            Some(Answer::Checkbox {
+                answer: Some(selected),
+            }),
+        ) => !selected.is_empty(),
+        (Question::Dropdown(_), Some(Answer::Dropdown { answer: Some(_) })) => true,
+        (Question::LinearScale(_), Some(Answer::LinearScale { answer: Some(_) })) => true,
+        _ => false,
+    }
+}
+
 #[derive(Props, Clone, PartialEq)]
 pub struct QuestionViewerProps {
     pub index: usize,
+    pub total: usize,
     pub question: Question,
     pub answer: Option<Answer>,
     pub disabled: bool,
     pub on_change: EventHandler<Answer>,
+    #[props(default)]
+    pub on_prev: Option<EventHandler<MouseEvent>>,
+    #[props(default)]
+    pub on_next: Option<EventHandler<MouseEvent>>,
+    #[props(default)]
+    pub next_disabled: bool,
 }
 
 #[component]
 pub fn QuestionViewer(props: QuestionViewerProps) -> Element {
     let QuestionViewerProps {
         index,
+        total,
         question,
         answer,
         disabled,
         on_change,
+        on_prev,
+        on_next,
+        next_disabled,
     } = props;
+    let tr: QuestionViewerTranslate = use_translate();
 
-    match question {
-        Question::SingleChoice(q) => rsx! {
-            SingleChoiceViewer {
-                index,
-                question: q,
-                answer: answer.clone(),
-                disabled,
-                on_change,
+    rsx! {
+        div { class: "flex flex-col gap-4 w-full",
+            match question {
+                Question::SingleChoice(q) => rsx! {
+                    SingleChoiceViewer {
+                        index,
+                        question: q,
+                        answer: answer.clone(),
+                        disabled,
+                        on_change,
+                    }
+                },
+                Question::MultipleChoice(q) => rsx! {
+                    MultipleChoiceViewer {
+                        index,
+                        question: q,
+                        answer: answer.clone(),
+                        disabled,
+                        on_change,
+                    }
+                },
+                Question::ShortAnswer(q) => rsx! {
+                    SubjectiveQuestionViewer {
+                        index,
+                        question: q,
+                        answer: answer.clone(),
+                        disabled,
+                        on_change,
+                        is_short: true,
+                    }
+                },
+                Question::Subjective(q) => rsx! {
+                    SubjectiveQuestionViewer {
+                        index,
+                        question: q,
+                        answer: answer.clone(),
+                        disabled,
+                        on_change,
+                        is_short: false,
+                    }
+                },
+                Question::Checkbox(q) => rsx! {
+                    CheckboxViewer {
+                        index,
+                        question: q,
+                        answer: answer.clone(),
+                        disabled,
+                        on_change,
+                    }
+                },
+                Question::Dropdown(q) => rsx! {
+                    DropdownViewer {
+                        index,
+                        question: q,
+                        answer: answer.clone(),
+                        disabled,
+                        on_change,
+                    }
+                },
+                Question::LinearScale(q) => rsx! {
+                    LinearScaleViewer {
+                        index,
+                        question: q,
+                        answer: answer.clone(),
+                        disabled,
+                        on_change,
+                    }
+                },
             }
-        },
-        Question::MultipleChoice(q) => rsx! {
-            MultipleChoiceViewer {
-                index,
-                question: q,
-                answer: answer.clone(),
-                disabled,
-                on_change,
+
+            if on_prev.is_some() || on_next.is_some() {
+                div { class: "flex w-full items-center justify-end gap-3 pt-2",
+                    if index > 0 {
+                        if let Some(on_prev) = on_prev {
+                            crate::common::components::Button {
+                                style: crate::common::components::ButtonStyle::Outline,
+                                shape: crate::common::components::ButtonShape::Square,
+                                class: "min-w-[120px]",
+                                onclick: on_prev,
+                                {tr.btn_back}
+                            }
+                        }
+                    }
+                    if index + 1 < total {
+                        crate::common::components::Button {
+                            style: crate::common::components::ButtonStyle::Outline,
+                            shape: crate::common::components::ButtonShape::Square,
+                            class: "min-w-[120px]",
+                            disabled: next_disabled,
+                            onclick: move |e| {
+                                if let Some(handler) = &on_next {
+                                    handler.call(e);
+                                }
+                            },
+                            {tr.btn_next}
+                        }
+                    }
+                }
             }
-        },
-        Question::ShortAnswer(q) => rsx! {
-            SubjectiveQuestionViewer {
-                index,
-                question: q,
-                answer: answer.clone(),
-                disabled,
-                on_change,
-                is_short: true,
-            }
-        },
-        Question::Subjective(q) => rsx! {
-            SubjectiveQuestionViewer {
-                index,
-                question: q,
-                answer: answer.clone(),
-                disabled,
-                on_change,
-                is_short: false,
-            }
-        },
-        Question::Checkbox(q) => rsx! {
-            CheckboxViewer {
-                index,
-                question: q,
-                answer: answer.clone(),
-                disabled,
-                on_change,
-            }
-        },
-        Question::Dropdown(q) => rsx! {
-            DropdownViewer {
-                index,
-                question: q,
-                answer: answer.clone(),
-                disabled,
-                on_change,
-            }
-        },
-        Question::LinearScale(q) => rsx! {
-            LinearScaleViewer {
-                index,
-                question: q,
-                answer: answer.clone(),
-                disabled,
-                on_change,
-            }
-        },
+        }
     }
 }
 
