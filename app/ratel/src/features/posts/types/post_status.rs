@@ -1,18 +1,9 @@
 use crate::features::posts::*;
 
 #[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    serde_repr::Serialize_repr,
-    serde_repr::Deserialize_repr,
-    Default,
-    DynamoEnum,
+    Debug, Clone, Copy, PartialEq, Eq, SerializeDisplay, DeserializeFromStr, Default, DynamoEnum,
 )]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema_repr))]
-#[repr(u8)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub enum PostStatus {
     #[default]
     Draft = 1,
