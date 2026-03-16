@@ -52,7 +52,8 @@ test:
 	$(BUILD_ENV) CARGO_TARGET_DIR=./test-build-target cargo test --features server,bypass --tests
 
 run:
-	$(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web
+	$(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web --features local-dev
+
 
 build:
 	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web --platform web @server --features server --platform server

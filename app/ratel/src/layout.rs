@@ -32,7 +32,7 @@ pub fn AppLayout() -> Element {
             SidebarInset { class: "overflow-x-hidden relative flex-1 min-w-0",
                 // Right gradient blur edge
                 div { class: "fixed top-0 right-0 z-40 w-10 h-full bg-gradient-to-l to-transparent pointer-events-none from-bg backdrop-blur-sm [mask-image:linear-gradient(to_left,black,transparent)]" }
-                div { class: "px-2", Outlet::<Route> {} }
+                Outlet::<Route> {}
             }
         }
     }
