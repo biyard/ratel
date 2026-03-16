@@ -66,6 +66,7 @@ where
     pub fn insert(&mut self, items: I) {
         let mut new_items = vec![items];
         new_items.extend(self.accumulated.read().clone());
+        self.accumulated.set(new_items);
     }
 
     pub fn restart(&mut self) {
