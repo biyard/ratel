@@ -1,6 +1,7 @@
 use super::*;
 use crate::common::components::SpaceCard;
 use crate::common::components::{FileUploader, UploadedFileMeta};
+use crate::common::utils::time::time_ago;
 use crate::features::spaces::hooks::use_user;
 use crate::features::spaces::space_common::types::space_page_actions_quiz_key;
 
@@ -34,25 +35,6 @@ fn extension_from_name_or_url(name: &str, url: &str) -> FileExtension {
 fn extract_filename_from_url(url: &str) -> String {
     let path = url.split('?').next().unwrap_or(url);
     path.rsplit('/').next().unwrap_or("untitled").to_string()
-}
-
-fn format_time_ago(timestamp_millis: i64) -> String {
-    let now = chrono::Utc::now().timestamp_millis();
-    let diff = (now - timestamp_millis).max(0);
-
-    if diff < 60_000 {
-        "just now".to_string()
-    } else if diff < 3_600_000 {
-        format!("{}m ago", diff / 1000 / 60)
-    } else if diff < 86_400_000 {
-        format!("{}h ago", diff / 1000 / 3600)
-    } else if diff < 604_800_000 {
-        format!("{}d ago", diff / 1000 / 86_400)
-    } else if diff < 31_536_000_000 {
-        format!("{}w ago", diff / 1000 / 604_800)
-    } else {
-        format!("{}y ago", diff / 1000 / 31_536_000)
-    }
 }
 
 fn file_icon(ext: &FileExtension) -> Element {
@@ -222,7 +204,7 @@ pub fn UploadTab(can_edit: bool) -> Element {
                             .unwrap_or_else(|| uploader_name.clone());
                         let uploaded_at = file
                             .uploaded_at
-                            .map(format_time_ago)
+                            .map(time_ago)
                             .unwrap_or_else(|| "just now".to_string());
                         rsx! {
                             SpaceCard {

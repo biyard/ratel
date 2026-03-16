@@ -1,6 +1,7 @@
 use super::super::views::RewardsPageTranslate;
 use super::super::*;
 use crate::common::services::PointTransactionResponse;
+use crate::common::utils::time::time_ago;
 
 pub fn transaction_item(
     tr: &RewardsPageTranslate,
@@ -8,7 +9,7 @@ pub fn transaction_item(
     idx: usize,
 ) -> Element {
     let is_received = transaction.transaction_type.eq_ignore_ascii_case("award");
-    let time_ago = format_time_ago(transaction.created_at);
+    let time_ago_label = time_ago(transaction.created_at);
     let description = transaction
         .description
         .clone()
@@ -47,7 +48,7 @@ pub fn transaction_item(
                     }
                 }
                 div { class: "flex items-center gap-1",
-                    span { class: "text-sm font-medium text-text-primary", "{time_ago}" }
+                    span { class: "text-sm font-medium text-text-primary", "{time_ago_label}" }
                 }
             }
         }
@@ -73,24 +74,5 @@ fn format_with_commas(value: i64, suffix: Option<&str>) -> String {
         format!("{}{}{}", sign, formatted, suffix)
     } else {
         format!("{}{}", sign, formatted)
-    }
-}
-
-fn format_time_ago(timestamp_millis: i64) -> String {
-    let now = chrono::Utc::now().timestamp_millis();
-    let diff = now - timestamp_millis;
-
-    if diff < 60 * 1000 {
-        format!("{}s ago", diff / 1000)
-    } else if diff < 3600 * 1000 {
-        format!("{}m ago", diff / 1000 / 60)
-    } else if diff < 86400 * 1000 {
-        format!("{}h ago", diff / 1000 / 3600)
-    } else if diff < 604800 * 1000 {
-        format!("{}d ago", diff / 1000 / 86400)
-    } else if diff < 31536000 * 1000 {
-        format!("{}w ago", diff / 1000 / 604800)
-    } else {
-        format!("{}y ago", diff / 1000 / 31536000)
     }
 }

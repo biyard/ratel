@@ -1,4 +1,5 @@
 use crate::common::components::{Button, ButtonShape, ButtonStyle};
+use crate::common::utils::time::time_ago;
 use crate::features::spaces::layout::use_space_layout_ui;
 use crate::features::spaces::pages::actions::actions::poll::components::{
     has_answer_for_question, should_auto_next, QuestionViewer,
@@ -346,25 +347,6 @@ pub fn QuizReadPage(
                 }
             }
         }
-    }
-}
-
-fn time_ago(timestamp_millis: i64) -> String {
-    let now = chrono::Utc::now().timestamp_millis();
-    let diff = now - timestamp_millis;
-
-    if diff < 60 * 1000 {
-        format!("{}s ago", diff / 1000)
-    } else if diff < 3600 * 1000 {
-        format!("{}m ago", diff / 1000 / 60)
-    } else if diff < 86400 * 1000 {
-        format!("{}h ago", diff / 1000 / 3600)
-    } else if diff < 604800 * 1000 {
-        format!("{}d ago", diff / 1000 / 86400)
-    } else if diff < 31536000 * 1000 {
-        format!("{}w ago", diff / 1000 / 604800)
-    } else {
-        format!("{}y ago", diff / 1000 / 31536000)
     }
 }
 
