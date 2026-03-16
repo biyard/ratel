@@ -1,5 +1,3 @@
-use super::creator::QuizCreatorTranslate;
-use super::participant::QuizParticipantTranslate;
 use crate::common::components::{Button, ButtonShape, ButtonStyle, TiptapEditor};
 use crate::features::spaces::layout::use_space_layout_ui;
 use crate::features::spaces::pages::actions::actions::poll::components::{
@@ -7,6 +5,7 @@ use crate::features::spaces::pages::actions::actions::poll::components::{
 };
 use crate::features::spaces::pages::actions::actions::quiz::*;
 use crate::features::spaces::pages::apps::apps::file::components::FileCard;
+use crate::features::spaces::space_common::hooks::use_space_query;
 use crate::features::spaces::space_common::types::space_page_actions_quiz_key;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -15,15 +14,79 @@ enum QuizReadStep {
     Quiz,
 }
 
+const DEFAULT_PROFILE_IMAGE: &str = "https://metadata.ratel.foundation/ratel/default-profile.png";
+
+translate! {
+    QuizReadTranslate;
+
+    btn_next: {
+        en: "Next",
+        ko: "다음",
+    },
+    btn_cancel: {
+        en: "Cancel",
+        ko: "취소",
+    },
+    page_title: {
+        en: "Quiz",
+        ko: "퀴즈",
+    },
+    upload_title: {
+        en: "Upload",
+        ko: "업로드",
+    },
+    btn_back: {
+        en: "Back",
+        ko: "뒤로",
+    },
+    btn_submit: {
+        en: "Submit",
+        ko: "제출",
+    },
+    quiz_ended: {
+        en: "This quiz has ended.",
+        ko: "이 퀴즈가 종료되었습니다.",
+    },
+    quiz_not_started: {
+        en: "This quiz has not started yet.",
+        ko: "이 퀴즈는 아직 시작되지 않았습니다.",
+    },
+    submit_success: {
+        en: "Response submitted successfully.",
+        ko: "응답이 성공적으로 제출되었습니다.",
+    },
+    remaining_submissions: {
+        en: "Remaining submissions",
+        ko: "남은 제출 횟수",
+    },
+    score_label: {
+        en: "Score",
+        ko: "점수",
+    },
+    no_questions: {
+        en: "No questions yet.",
+        ko: "아직 질문이 없습니다.",
+    },
+    status_pass: {
+        en: "PASS",
+        ko: "PASS",
+    },
+    status_failed: {
+        en: "FAILED",
+        ko: "FAILED",
+    },
+}
+
 #[component]
 pub fn QuizReadPage(
     space_id: ReadSignal<SpacePartition>,
     quiz_id: ReadSignal<SpaceQuizEntityType>,
     can_respond: bool,
 ) -> Element {
-    let creator_tr: QuizCreatorTranslate = use_translate();
-    let participant_tr: QuizParticipantTranslate = use_translate();
+    let i18n: QuizReadTranslate = use_translate();
     let ctx = Context::init(space_id, quiz_id)?;
+    let space_loader = use_space_query(&space_id())?;
+    let space = space_loader.read().clone();
     let quiz = ctx.quiz.read().clone();
     let mut query = use_query_store();
     let mut toast = use_toast();
@@ -78,7 +141,7 @@ pub fn QuizReadPage(
                 Ok(_) => {
                     let keys = space_page_actions_quiz_key(&space_id(), &quiz_id());
                     query.invalidate(&keys);
-                    toast.info(participant_tr.submit_success);
+                    toast.info(i18n.submit_success);
                 }
                 Err(err) => {
                     error!("Failed to submit quiz response: {:?}", err);
@@ -112,19 +175,32 @@ pub fn QuizReadPage(
         div { class: "flex min-h-0 w-full flex-1 flex-col gap-4",
             if step() == QuizReadStep::Overview {
                 div {
-                    class: "flex min-h-0 flex-1 flex-col",
+                    class: "mx-auto flex min-h-0 w-full flex-1 flex-col",
                     "data-testid": "quiz-read-overview",
 
                     div { class: "flex flex-1 flex-col gap-6 overflow-y-auto pb-6",
-                        div { class: "flex flex-col gap-2",
-                            div { class: "text-xl font-semibold text-white light:text-text-primary",
-                                "{quiz.title}"
+                        div { class: "text-[28px]/[34px] font-bold text-text-primary",
+                            "{quiz.title}"
+                        }
+
+                        div { class: "flex items-center justify-between border-y border-card-border py-4",
+                            div { class: "flex flex-row w-full items-center justify-between gap-2.5",
+                                div { class: "flex min-w-0 items-center gap-2",
+                                    {render_author_avatar(&space.author_profile_url, &space.author_display_name)}
+                                    div { class: "min-w-0 text-[14px]/[20px] font-semibold text-text-primary",
+                                        "{space.author_display_name}"
+                                    }
+                                }
+
+                                div { class: "shrink-0 text-[14px] font-light text-text-primary",
+                                    "{time_ago(quiz.created_at)}"
+                                }
                             }
                         }
 
                         if !quiz.description.is_empty() {
                             div { class: "flex flex-col gap-2",
-                                div { class: "rounded-lg border border-neutral-700 bg-neutral-900 p-4 light:border-input-box-border light:bg-input-box-bg",
+                                div { class: "rounded-lg border border-card-border bg-card-bg p-4",
                                     TiptapEditor {
                                         class: "w-full h-fit [&>div]:border-0 [&>div]:bg-transparent [&_[data-tiptap-toolbar]]:hidden [&_[contenteditable='true']]:px-0 [&_[contenteditable='true']]:py-0 [&_[contenteditable='true']]:text-[15px]/[24px] [&_[contenteditable='true']]:tracking-[0.5px] [&_[contenteditable='true']]:text-[#D4D4D4] light:[&_[contenteditable='true']]:text-text-primary",
                                         content: quiz.description.clone(),
@@ -137,11 +213,10 @@ pub fn QuizReadPage(
                         }
 
                         div { class: "flex flex-col gap-2",
-                            if quiz.files.is_empty() {
-                                div { class: "rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-6 text-sm text-neutral-400 light:border-input-box-border light:bg-input-box-bg light:text-text-secondary",
-                                    {creator_tr.upload_empty}
-                                }
-                            } else {
+                            div { class: "text-sm font-semibold text-text-primary",
+                                "{i18n.upload_title}"
+                            }
+                            if !quiz.files.is_empty() {
                                 div { class: "flex flex-col gap-2.5",
                                     for file in quiz.files.iter() {
                                         FileCard {
@@ -158,7 +233,7 @@ pub fn QuizReadPage(
 
                     div { class: "mt-auto -mx-5 max-tablet:-mx-3 max-mobile:-mx-2 flex items-center justify-between gap-3 border-t border-neutral-700/80 bg-[#171a20] px-5 py-3 light:border-input-box-border light:bg-background",
                         div { class: "text-sm text-neutral-300 light:text-neutral-700",
-                            "{participant_tr.remaining_submissions} {remaining_submissions}/{quiz.retry_count}"
+                            "{i18n.remaining_submissions} {remaining_submissions}/{quiz.retry_count}"
                         }
                         div { class: "flex items-center gap-3",
                             Button {
@@ -166,7 +241,7 @@ pub fn QuizReadPage(
                                 shape: ButtonShape::Square,
                                 class: "min-w-[120px]",
                                 onclick: on_cancel,
-                                {creator_tr.btn_cancel}
+                                {i18n.btn_cancel}
                             }
                             Button {
                                 style: ButtonStyle::Primary,
@@ -178,7 +253,7 @@ pub fn QuizReadPage(
                                     question_index.set(0);
                                     step.set(QuizReadStep::Quiz);
                                 },
-                                {creator_tr.btn_next}
+                                {i18n.btn_next}
                             }
                         }
                     }
@@ -196,9 +271,9 @@ pub fn QuizReadPage(
                         if !is_in_progress {
                             Card { class: "bg-neutral-800 p-3 text-sm text-neutral-400 light:bg-input-box-bg light:text-text-secondary",
                                 if now < quiz.started_at {
-                                    {participant_tr.quiz_not_started}
+                                    {i18n.quiz_not_started}
                                 } else {
-                                    {participant_tr.quiz_ended}
+                                    {i18n.quiz_ended}
                                 }
                             }
                         }
@@ -206,7 +281,7 @@ pub fn QuizReadPage(
                         if can_respond {
                             Card { class: "border border-neutral-700 bg-neutral-900 p-4 light:border-input-box-border light:bg-input-box-bg",
                                 div { class: "text-xs text-neutral-500 light:text-text-secondary",
-                                    {participant_tr.score_label}
+                                    {i18n.score_label}
                                 }
                                 div { class: "mt-1 flex items-center gap-2",
                                     div { class: "text-lg font-semibold text-white light:text-text-primary",
@@ -218,11 +293,11 @@ pub fn QuizReadPage(
                                     }
                                     if has_passed {
                                         span { class: "inline-flex items-center rounded-full border border-green-600 bg-green-500/10 px-2 py-0.5 text-xs font-semibold text-green-400",
-                                            {participant_tr.status_pass}
+                                            {i18n.status_pass}
                                         }
                                     } else if is_failed {
                                         span { class: "inline-flex items-center rounded-full border border-red-600 bg-red-500/10 px-2 py-0.5 text-xs font-semibold text-red-400",
-                                            {participant_tr.status_failed}
+                                            {i18n.status_failed}
                                         }
                                     }
                                 }
@@ -231,7 +306,7 @@ pub fn QuizReadPage(
 
                         if quiz.questions.is_empty() {
                             div { class: "flex items-center justify-center py-10 text-neutral-500 light:text-text-secondary",
-                                {participant_tr.no_questions}
+                                {i18n.no_questions}
                             }
                         } else {
                             {
@@ -289,7 +364,7 @@ pub fn QuizReadPage(
 
                     div { class: "-mx-5 max-tablet:-mx-3 max-mobile:-mx-2 flex items-center justify-between gap-3 border-t border-neutral-700/80 bg-[#171a20] px-5 py-3 light:border-input-box-border light:bg-background",
                         div { class: "text-sm text-neutral-300 light:text-neutral-700",
-                            "{participant_tr.remaining_submissions} {remaining_submissions}/{quiz.retry_count}"
+                            "{i18n.remaining_submissions} {remaining_submissions}/{quiz.retry_count}"
                         }
                         div { class: "flex items-center gap-3",
                             Button {
@@ -297,7 +372,7 @@ pub fn QuizReadPage(
                                 shape: ButtonShape::Square,
                                 class: "min-w-[120px]",
                                 onclick: move |_| step.set(QuizReadStep::Overview),
-                                {participant_tr.btn_back}
+                                {i18n.btn_back}
                             }
                             if can_respond {
                                 Button {
@@ -306,13 +381,48 @@ pub fn QuizReadPage(
                                     class: "min-w-[120px]",
                                     disabled: !can_submit || !all_answered(),
                                     onclick: on_submit,
-                                    {participant_tr.btn_submit}
+                                    {i18n.btn_submit}
                                 }
                             }
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+fn time_ago(timestamp_millis: i64) -> String {
+    let now = chrono::Utc::now().timestamp_millis();
+    let diff = now - timestamp_millis;
+
+    if diff < 60 * 1000 {
+        format!("{}s ago", diff / 1000)
+    } else if diff < 3600 * 1000 {
+        format!("{}m ago", diff / 1000 / 60)
+    } else if diff < 86400 * 1000 {
+        format!("{}h ago", diff / 1000 / 3600)
+    } else if diff < 604800 * 1000 {
+        format!("{}d ago", diff / 1000 / 86400)
+    } else if diff < 31536000 * 1000 {
+        format!("{}w ago", diff / 1000 / 604800)
+    } else {
+        format!("{}y ago", diff / 1000 / 31536000)
+    }
+}
+
+fn render_author_avatar(profile_url: &str, display_name: &str) -> Element {
+    let image_src = if profile_url.is_empty() {
+        DEFAULT_PROFILE_IMAGE
+    } else {
+        profile_url
+    };
+
+    rsx! {
+        img {
+            class: "size-5 rounded-full object-cover",
+            src: "{image_src}",
+            alt: "{display_name}",
         }
     }
 }
