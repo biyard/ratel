@@ -203,9 +203,9 @@ pub fn QuestionViewer(props: QuestionViewerProps) -> Element {
 #[component]
 fn QuestionTitle(title: String, description: Option<String>, is_required: Option<bool>) -> Element {
     rsx! {
-        div { class: "flex flex-col gap-1 mb-3",
+        div { class: "mb-3 flex flex-col gap-1", "data-question-title-wrap": true,
             div { class: "flex items-center gap-1",
-                span { class: "font-semibold text-lg text-white light:text-text-primary",
+                span { class: "text-lg font-semibold text-white light:text-text-primary", "data-question-title": true,
                     "{title}"
                 }
                 if is_required.unwrap_or(false) {
@@ -214,7 +214,7 @@ fn QuestionTitle(title: String, description: Option<String>, is_required: Option
             }
             if let Some(desc) = description {
                 if !desc.is_empty() {
-                    p { class: "text-sm text-neutral-400 light:text-text-secondary",
+                    p { class: "text-sm text-neutral-400 light:text-text-secondary", "data-question-desc": true,
                         "{desc}"
                     }
                 }
@@ -242,7 +242,7 @@ fn SingleChoiceViewer(
             description: question.description.clone(),
             is_required: question.is_required,
         }
-        div { class: "flex flex-col w-full gap-2",
+        div { class: "grid w-full grid-cols-1 gap-3 md:grid-cols-2",
             for (opt_idx , option) in question.options.iter().enumerate() {
                 {
                     let is_selected = selected == Some(opt_idx as i32);
@@ -250,8 +250,9 @@ fn SingleChoiceViewer(
                     let on_change = on_change.clone();
                     rsx! {
                         button {
-                            class: "flex w-full items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
-                            class: if is_selected { "border-blue-500 bg-blue-500/10" } else { "border-neutral-700 hover:border-neutral-500 light:border-input-box-border light:hover:border-input-box-border" },
+                            class: "relative flex min-h-[88px] w-full items-center overflow-hidden rounded-xl text-left transition-all",
+                            class: if is_selected { "bg-gradient-to-r from-primary/80 to-primary shadow-[0_8px_20px_rgba(0,0,0,0.2)]" } else { "bg-gradient-to-r from-primary/40 to-primary/60 hover:from-primary/50 hover:to-primary/70" },
+                            class: if disabled { "cursor-not-allowed opacity-60" } else { "cursor-pointer" },
                             disabled,
                             onclick: move |_| {
                                 let next = if is_selected { None } else { Some(opt_idx) };
@@ -261,14 +262,12 @@ fn SingleChoiceViewer(
                                         other: None,
                                     })
                             },
-                            div {
-                                class: "w-4 h-4 rounded-full border-2 flex items-center justify-center",
-                                class: if is_selected { "border-blue-500" } else { "border-neutral-500 light:border-input-box-border" },
-                                if is_selected {
-                                    div { class: "w-2 h-2 rounded-full bg-blue-500" }
-                                }
+                            div { class: "absolute inset-y-0 left-0 w-[72px] bg-primary" }
+                            div { class: "relative z-10 flex w-full items-center justify-between px-5 py-4",
+                                div { class: "w-10 shrink-0" }
+                                span { class: "text-[20px] font-semibold tracking-[0.2px] text-text-third", "{option}" }
+                                div { class: "w-10 shrink-0" }
                             }
-                            span { class: "text-sm text-neutral-300 light:text-text-primary", "{option}" }
                         }
                     }
                 }
@@ -296,7 +295,7 @@ fn MultipleChoiceViewer(
             description: question.description.clone(),
             is_required: question.is_required,
         }
-        div { class: "flex flex-col w-full gap-2",
+        div { class: "grid w-full grid-cols-1 gap-3 md:grid-cols-2",
             for (opt_idx , option) in question.options.iter().enumerate() {
                 {
                     let is_selected = selected.contains(&(opt_idx as i32));
@@ -305,8 +304,9 @@ fn MultipleChoiceViewer(
                     let on_change = on_change.clone();
                     rsx! {
                         button {
-                            class: "flex w-full items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
-                            class: if is_selected { "border-blue-500 bg-blue-500/10" } else { "border-neutral-700 hover:border-neutral-500 light:border-input-box-border light:hover:border-input-box-border" },
+                            class: "relative flex min-h-[88px] w-full items-center overflow-hidden rounded-xl text-left transition-all",
+                            class: if is_selected { "bg-gradient-to-r from-primary/80 to-primary shadow-[0_8px_20px_rgba(0,0,0,0.2)]" } else { "bg-gradient-to-r from-primary/40 to-primary/60 hover:from-primary/50 hover:to-primary/70" },
+                            class: if disabled { "cursor-not-allowed opacity-60" } else { "cursor-pointer" },
                             disabled,
                             onclick: move |_| {
                                 let mut next = selected.clone();
@@ -322,14 +322,12 @@ fn MultipleChoiceViewer(
                                     }
                                     )
                             },
-                            div {
-                                class: "w-4 h-4 rounded border-2 flex items-center justify-center",
-                                class: if is_selected { "border-blue-500 bg-blue-500" } else { "border-neutral-500 light:border-input-box-border" },
-                                if is_selected {
-                                    span { class: "text-white text-xs", "v" }
-                                }
+                            div { class: "absolute inset-y-0 left-0 w-[72px] bg-primary" }
+                            div { class: "relative z-10 flex w-full items-center justify-between px-5 py-4",
+                                div { class: "w-10 shrink-0" }
+                                span { class: "text-[20px] font-semibold tracking-[0.2px] text-text-third", "{option}" }
+                                div { class: "w-10 shrink-0" }
                             }
-                            span { class: "text-sm text-neutral-300 light:text-text-primary", "{option}" }
                         }
                     }
                 }

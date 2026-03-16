@@ -75,6 +75,10 @@ translate! {
         en: "FAILED",
         ko: "FAILED",
     },
+    question_label: {
+        en: "Question",
+        ko: "질문",
+    },
 }
 
 #[component]
@@ -121,16 +125,20 @@ pub fn QuizReadPage(
     let now = crate::common::utils::time::get_now_timestamp_millis();
     let is_in_progress = now >= quiz.started_at && now <= quiz.ended_at;
     let has_passed = quiz.passed.unwrap_or(false);
-    let is_failed = quiz.attempt_count > 0 && !has_passed;
     let can_submit =
         can_respond && is_in_progress && !has_passed && quiz.attempt_count < quiz.retry_count;
     let remaining_submissions = quiz.retry_count.saturating_sub(quiz.attempt_count);
     let total_questions = quiz.questions.len();
-
-    let score_text = quiz
-        .my_score
-        .map(|score| score.to_string())
-        .unwrap_or_else(|| "-".to_string());
+    let current_idx = question_index().min(total_questions.saturating_sub(1));
+    let current_question = quiz.questions.get(current_idx).cloned();
+    let current_answer = answers.read().get(current_idx).cloned();
+    let has_current_answer = current_question
+        .as_ref()
+        .map(|q| has_answer_for_question(q, current_answer.as_ref()))
+        .unwrap_or(false);
+    let is_first_question = total_questions == 0 || current_idx == 0;
+    let is_last_question = total_questions == 0 || current_idx + 1 >= total_questions;
+    let quiz_next_disabled = can_submit && !has_current_answer;
 
     let on_submit = move |_| {
         let req = RespondQuizRequest { answers: answers() };
@@ -231,7 +239,7 @@ pub fn QuizReadPage(
                         }
                     }
 
-                    div { class: "mt-auto -mx-5 max-tablet:-mx-3 max-mobile:-mx-2 flex items-center justify-between gap-3 border-t border-neutral-700/80 bg-[#171a20] px-5 py-3 light:border-input-box-border light:bg-background",
+                    div { class: "mt-auto flex items-center justify-between gap-3 border-t border-card-border bg-card-bg px-5 py-3",
                         div { class: "text-sm text-neutral-300 light:text-neutral-700",
                             "{i18n.remaining_submissions} {remaining_submissions}/{quiz.retry_count}"
                         }
@@ -260,121 +268,94 @@ pub fn QuizReadPage(
                 }
             } else {
                 div {
-                    class: "flex min-h-0 flex-1 flex-col",
+                    class: "flex min-h-0 flex-1 flex-col w-full",
                     "data-testid": "quiz-read-quiz",
 
-                    div { class: "flex flex-1 flex-col gap-4 overflow-y-auto pb-6",
-                        div { class: "text-xl font-semibold text-white light:text-text-primary",
-                            "{quiz.title}"
-                        }
+                    div { class: "flex flex-row w-full justify-center items-start min-h-0 flex-1",
+                        div { class: "flex flex-1 flex-col gap-4 overflow-y-auto max-w-desktop pb-6",
 
-                        if !is_in_progress {
-                            Card { class: "bg-neutral-800 p-3 text-sm text-neutral-400 light:bg-input-box-bg light:text-text-secondary",
-                                if now < quiz.started_at {
-                                    {i18n.quiz_not_started}
-                                } else {
-                                    {i18n.quiz_ended}
+                            if quiz.questions.is_empty() {
+                                div { class: "flex items-center justify-center py-10 text-neutral-500 light:text-text-secondary",
+                                    {i18n.no_questions}
                                 }
-                            }
-                        }
+                            } else {
+                                {
+                                    let idx = question_index().min(total_questions.saturating_sub(1));
+                                    let question = quiz.questions[idx].clone();
+                                    let answer = answers.read().get(idx).cloned();
+                                    let can_next = idx + 1 < total_questions;
+                                    rsx! {
+                                        div { key: "read-question-{idx}", class: "w-full",
+                                            div { class: "mb-5 flex items-center justify-end text-[16px] font-normal text-text-primary",
+                                                "{i18n.question_label}: {idx + 1}/{total_questions}"
+                                            }
+                                            div { class: "w-full [&_[data-question-title-wrap]]:mb-5 [&_[data-question-title-wrap]>div]:justify-center [&_[data-question-title]]:text-center [&_[data-question-title]]:text-[21px] [&_[data-question-desc]]:text-center",
+                                                QuestionViewer {
+                                                    index: idx,
+                                                    total: total_questions,
+                                                    question: question.clone(),
+                                                    answer,
+                                                    disabled: !can_submit,
+                                                    on_change: move |next_answer: Answer| {
+                                                        let mut next = answers();
+                                                        if idx < next.len() {
+                                                            next[idx] = next_answer.clone();
+                                                        }
+                                                        answers.set(next);
 
-                        if can_respond {
-                            Card { class: "border border-neutral-700 bg-neutral-900 p-4 light:border-input-box-border light:bg-input-box-bg",
-                                div { class: "text-xs text-neutral-500 light:text-text-secondary",
-                                    {i18n.score_label}
-                                }
-                                div { class: "mt-1 flex items-center gap-2",
-                                    div { class: "text-lg font-semibold text-white light:text-text-primary",
-                                        if total_questions > 0 {
-                                            "{score_text} / {total_questions}"
-                                        } else {
-                                            "{score_text}"
-                                        }
-                                    }
-                                    if has_passed {
-                                        span { class: "inline-flex items-center rounded-full border border-green-600 bg-green-500/10 px-2 py-0.5 text-xs font-semibold text-green-400",
-                                            {i18n.status_pass}
-                                        }
-                                    } else if is_failed {
-                                        span { class: "inline-flex items-center rounded-full border border-red-600 bg-red-500/10 px-2 py-0.5 text-xs font-semibold text-red-400",
-                                            {i18n.status_failed}
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        if quiz.questions.is_empty() {
-                            div { class: "flex items-center justify-center py-10 text-neutral-500 light:text-text-secondary",
-                                {i18n.no_questions}
-                            }
-                        } else {
-                            {
-                                let idx = question_index().min(total_questions.saturating_sub(1));
-                                let question = quiz.questions[idx].clone();
-                                let answer = answers.read().get(idx).cloned();
-                                let can_next = idx + 1 < total_questions;
-                                let has_current_answer = has_answer_for_question(&question, answer.as_ref());
-                                let next_disabled = idx + 1 >= total_questions
-                                    || (can_respond && !has_current_answer);
-                                rsx! {
-                                    Card {
-                                        key: "read-question-{idx}",
-                                        class: "border border-neutral-700 bg-neutral-900 p-4 light:border-input-box-border light:bg-input-box-bg",
-                                        div { class: "mb-2 text-xs text-neutral-500 light:text-text-secondary",
-                                            "{idx + 1} / {total_questions}"
-                                        }
-                                        QuestionViewer {
-                                            index: idx,
-                                            total: total_questions,
-                                            question: question.clone(),
-                                            answer,
-                                            disabled: !can_submit,
-                                            on_change: move |next_answer: Answer| {
-                                                let mut next = answers();
-                                                if idx < next.len() {
-                                                    next[idx] = next_answer.clone();
+                                                        if can_submit
+                                                            && can_next
+                                                            && should_auto_next(&question, &next_answer)
+                                                        {
+                                                            question_index.set(idx + 1);
+                                                        }
+                                                    },
                                                 }
-                                                answers.set(next);
-
-                                                if can_submit
-                                                    && can_next
-                                                    && should_auto_next(&question, &next_answer)
-                                                {
-                                                    question_index.set(idx + 1);
-                                                }
-                                            },
-                                            on_prev: move |_| {
-                                                if idx > 0 {
-                                                    question_index.set(idx - 1);
-                                                }
-                                            },
-                                            on_next: move |_| {
-                                                if idx + 1 < total_questions && (!can_respond || has_current_answer) {
-                                                    question_index.set(idx + 1);
-                                                }
-                                            },
-                                            next_disabled,
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
+                    
                     }
-
-                    div { class: "-mx-5 max-tablet:-mx-3 max-mobile:-mx-2 flex items-center justify-between gap-3 border-t border-neutral-700/80 bg-[#171a20] px-5 py-3 light:border-input-box-border light:bg-background",
+                    div { class: "flex items-center justify-between gap-3 border-t border-card-border bg-card-bg px-5 py-3",
                         div { class: "text-sm text-neutral-300 light:text-neutral-700",
                             "{i18n.remaining_submissions} {remaining_submissions}/{quiz.retry_count}"
                         }
                         div { class: "flex items-center gap-3",
-                            Button {
-                                style: ButtonStyle::Outline,
-                                shape: ButtonShape::Square,
-                                class: "min-w-[120px]",
-                                onclick: move |_| step.set(QuizReadStep::Overview),
-                                {i18n.btn_back}
+                            if !is_first_question && total_questions > 0 {
+                                Button {
+                                    style: ButtonStyle::Outline,
+                                    shape: ButtonShape::Square,
+                                    class: "min-w-[120px]",
+                                    onclick: move |_| {
+                                        let current = question_index();
+                                        if current > 0 {
+                                            question_index.set(current - 1);
+                                        }
+                                    },
+                                    {i18n.btn_back}
+                                }
                             }
-                            if can_respond {
+
+                            if !is_last_question && total_questions > 0 {
+                                Button {
+                                    style: ButtonStyle::Outline,
+                                    shape: ButtonShape::Square,
+                                    class: "min-w-[120px]",
+                                    disabled: quiz_next_disabled,
+                                    onclick: move |_| {
+                                        let current = question_index();
+                                        if current + 1 < total_questions {
+                                            question_index.set(current + 1);
+                                        }
+                                    },
+                                    {i18n.btn_next}
+                                }
+                            }
+
+                            if is_last_question && can_respond && total_questions > 0 {
                                 Button {
                                     style: ButtonStyle::Primary,
                                     shape: ButtonShape::Square,
