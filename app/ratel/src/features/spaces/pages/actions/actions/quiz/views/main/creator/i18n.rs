@@ -27,8 +27,8 @@ translate! {
         en: "Unsaved changes",
         ko: "저장되지 않은 변경사항",
     },
-    btn_discard: {
-        en: "Discard",
+    btn_cancel: {
+        en: "Cancel",
         ko: "취소",
     },
     btn_back: {

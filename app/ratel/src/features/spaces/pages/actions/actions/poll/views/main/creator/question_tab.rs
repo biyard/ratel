@@ -72,11 +72,12 @@ pub fn QuestionTab() -> Element {
                 }
             } else {
                 div { class: "flex w-full flex-col gap-4",
-                    for (idx, question) in poll().questions.iter().enumerate() {
+                    for (idx , question) in poll().questions.iter().enumerate() {
                         div { class: "rounded-lg border border-neutral-700 bg-neutral-900 p-4",
                             div { class: "mb-2 text-xs text-neutral-500", "Question {idx + 1}" }
                             QuestionViewer {
                                 index: idx,
+                                total: poll().questions.len(),
                                 question: question.clone(),
                                 answer: None,
                                 disabled: true,

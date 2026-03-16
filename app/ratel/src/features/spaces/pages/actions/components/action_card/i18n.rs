@@ -39,4 +39,12 @@ translate! {
         en: "No description",
         ko: "설명 없음"
     },
+    quiz_pass: {
+        en: "PASS",
+        ko: "PASS"
+    },
+    quiz_failed: {
+        en: "FAILED",
+        ko: "FAILED"
+    },
 }
