@@ -237,13 +237,24 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                                             e.stop_propagation();
                                             show_user_menu.toggle();
                                         },
-                                        lucide_dioxus::Ellipsis { class: "w-4 h-4 [&>circle]:fill-foreground-muted [&>circle]:stroke-none" }
+                                        lucide_dioxus::Ellipsis {
+                                            class: "w-4 h-4 [&>circle]:fill-text-primary [&>circle]:stroke-none",
+                                        }
                                     }
                                 }
                                 if show_user_menu() {
                                     div {
                                         class: "overflow-hidden absolute right-3 left-3 bottom-full z-30 py-1 mb-1 rounded-lg border shadow-lg bg-popover border-border",
                                         onclick: move |e| e.stop_propagation(),
+                                        Link {
+                                            to: Route::TeamSetting { username: username.clone() },
+                                            class: "flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-white/10 transition-colors w-full text-left",
+                                            onclick: move |_| show_user_menu.set(false),
+                                            lucide_dioxus::Settings {
+                                                class: "w-[15px] h-[15px] [&>path]:stroke-text-primary [&>line]:stroke-text-primary [&>polyline]:stroke-text-primary [&>circle]:stroke-text-primary shrink-0",
+                                            }
+                                            "Settings"
+                                        }
                                         button {
                                             class: "flex gap-2 items-center py-2 px-3 w-full text-sm text-left transition-colors text-destructive hover:bg-white/10",
                                             onclick: move |_| {
