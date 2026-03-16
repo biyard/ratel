@@ -58,17 +58,34 @@ pub fn translate(input: TokenStream) -> TokenStream {
     #[cfg(feature = "ko")]
     let ko = quote! {
         fn ko() -> Self {
-                Self {
-                    #(#ko_impl)*
-                }
+            Self {
+                #(#ko_impl)*
             }
+        }
 
+    };
+
+    #[allow(unused_variables)]
+    let new_ko = quote! {};
+
+    #[cfg(feature = "ko")]
+    let new_ko = quote! {
+        dioxus_translate::Language::Ko => Self::ko(),
     };
 
     let expanded = quote! {
         #[derive(Debug, Clone, PartialEq)]
         pub struct #struct_name {
             #(#fields)*
+        }
+
+        impl #struct_name {
+            pub fn new(lang: &dioxus_translate::Language) -> Self {
+                match lang {
+                    dioxus_translate::Language::En => Self::en(),
+                    #new_ko
+                }
+            }
         }
 
         impl dioxus_translate::Translator for #struct_name {
