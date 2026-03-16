@@ -1,36 +1,25 @@
-#![allow(unused_imports, dead_code)]
+mod constants;
+mod utils;
+mod views;
+
+#[cfg(feature = "server")]
+mod services;
+
 pub mod components;
 pub mod config;
-mod constants;
 pub mod controllers;
-pub mod interop;
 pub mod models;
-mod provider;
-mod route;
 pub mod types;
-pub mod utils;
-pub mod views;
 
-#[cfg(feature = "server")]
-pub mod services;
+pub use common::utils::time::time_ago;
+use components::*;
+use config::*;
+use constants::*;
+use controllers::*;
+use services::*;
+use utils::*;
 
-pub use provider::Provider;
-pub use route::Route;
+use auth::User;
+pub use views::*;
 
-// Re-export common types needed by models (available via `use crate::*;`)
-pub use crate::common::macros::dynamo_entity::DynamoEntity;
-pub use crate::common::models::*;
-pub use crate::common::types::*;
-pub use crate::common::{DeserializeFromStr, DynamoEnum, EnumProp, SerializeDisplay};
-pub use serde::{Deserialize, Serialize};
-
-use crate::common::*;
-use dioxus::prelude::*;
-
-type Result<T> = crate::common::Result<T>;
-
-#[cfg(not(feature = "server"))]
-pub mod web;
-
-#[cfg(feature = "server")]
-pub mod server;
+use crate::*;

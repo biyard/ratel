@@ -1,10 +1,12 @@
 use crate::features::posts::*;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, SerializeDisplay, Default, DynamoEnum)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, SerializeDisplay, Default, DynamoEnum, Translate)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub enum PostStatus {
     #[default]
+    #[translate(en = "Draft", ko = "초안")]
     Draft,
+    #[translate(en = "Published", ko = "게시완료")]
     Published,
 }
 
@@ -22,7 +24,10 @@ impl<'de> serde::Deserialize<'de> for PostStatus {
                 formatter.write_str("a number (1 or 2) or a string")
             }
 
-            fn visit_u64<E: serde::de::Error>(self, value: u64) -> std::result::Result<PostStatus, E> {
+            fn visit_u64<E: serde::de::Error>(
+                self,
+                value: u64,
+            ) -> std::result::Result<PostStatus, E> {
                 match value {
                     1 => Ok(PostStatus::Draft),
                     2 => Ok(PostStatus::Published),
@@ -30,11 +35,17 @@ impl<'de> serde::Deserialize<'de> for PostStatus {
                 }
             }
 
-            fn visit_i64<E: serde::de::Error>(self, value: i64) -> std::result::Result<PostStatus, E> {
+            fn visit_i64<E: serde::de::Error>(
+                self,
+                value: i64,
+            ) -> std::result::Result<PostStatus, E> {
                 self.visit_u64(value as u64)
             }
 
-            fn visit_str<E: serde::de::Error>(self, value: &str) -> std::result::Result<PostStatus, E> {
+            fn visit_str<E: serde::de::Error>(
+                self,
+                value: &str,
+            ) -> std::result::Result<PostStatus, E> {
                 value.parse().map_err(E::custom)
             }
         }

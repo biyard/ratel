@@ -1,6 +1,7 @@
 use crate::features::social::controllers::dto::TeamResponse;
 use crate::features::social::*;
 
+use crate::features::auth::*;
 use crate::features::posts::models::Team;
 use crate::features::posts::types::TeamGroupPermissions;
 

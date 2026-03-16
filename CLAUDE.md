@@ -837,3 +837,17 @@ impl EmailVerification {
 - **ECR** - Container registry for Docker images
 - **Lambda** - Serverless function deployments (main-api, fetcher, survey-worker, space-stream-worker)
 - **CloudFormation** - Stack management and orchestration
+
+## Enum Display in UI
+
+When displaying an Enum type value in the UI, always use `.translate()` (e.g., `{value.translate(&lang())}`) instead of `Display` / `.to_string()`. If the Enum type does not yet derive `Translate`, implement it by adding:
+
+```rust
+#[derive(Translate)]
+pub enum MyEnum {
+    #[translate(en = "English Label", ko = "한국어 라벨")]
+    Variant,
+}
+```
+
+Use `let lang = use_language();` in the component, then `{value.translate(&lang())}` in RSX.

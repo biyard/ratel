@@ -1,9 +1,6 @@
 use crate::*;
 
-use crate::features::admin::Route as AdminRoute;
-use crate::features::auth::Route as AuthRoute;
-use crate::features::my_follower::Route as MyFollowerRoute;
-use crate::features::posts::Route as PostRoute;
+use crate::features::my_follower::MyFollowerPage;
 
 #[cfg(feature = "spaces")]
 use crate::features::spaces::pages::dashboard::SpaceDashboardPage;
@@ -26,6 +23,8 @@ use crate::features::spaces::pages::apps::apps::general::SpaceGeneralAppPage;
 #[cfg(feature = "spaces")]
 use crate::features::spaces::pages::apps::apps::incentive_pool::SpaceIncentivePoolAppPage;
 #[cfg(feature = "spaces")]
+use crate::features::spaces::pages::apps::apps::panels::SpacePanelsAppPage;
+#[cfg(feature = "spaces")]
 use crate::features::spaces::pages::apps::Layout as SpaceAppsLayout;
 #[cfg(feature = "spaces")]
 use crate::features::spaces::pages::apps::SpaceAppsPage;
@@ -44,13 +43,54 @@ use crate::features::spaces::pages::actions::actions::quiz::QuizActionPage;
 #[cfg(feature = "spaces")]
 use crate::features::spaces::pages::actions::SpaceActionsPage;
 
-#[cfg(feature = "social")]
-use crate::features::social::Route as SocialRoute;
+use crate::features::admin::{AdminLayout, AdminMainPage};
+
+use crate::features::posts::{Index as PostIndex, PostDetail, PostEdit};
+
 use crate::views::Index;
-use dioxus::router::components::child_router::ChildRouter;
 use layout::AppLayout;
 use membership::Home as MembershipHome;
 use root_layout::RootLayout;
+
+// Team pages
+#[cfg(feature = "social")]
+use crate::features::social::layout::SocialLayout;
+#[cfg(feature = "social")]
+use crate::features::social::pages::dao::Home as TeamDao;
+#[cfg(feature = "social")]
+use crate::features::social::pages::draft::Home as TeamDraft;
+#[cfg(feature = "social")]
+use crate::features::social::pages::group::Home as TeamGroup;
+#[cfg(feature = "social")]
+use crate::features::social::pages::home::Home as TeamHome;
+#[cfg(feature = "social")]
+use crate::features::social::pages::member::Home as TeamMember;
+#[cfg(feature = "social")]
+use crate::features::social::pages::reward::Home as TeamReward;
+#[cfg(feature = "social")]
+use crate::features::social::pages::setting::layout::TeamSettingLayout;
+#[cfg(feature = "social")]
+use crate::features::social::pages::setting::Home as TeamSetting;
+#[cfg(feature = "social")]
+use crate::features::social::pages::setting::ManagementPage as TeamSettingMember;
+
+// User pages
+#[cfg(feature = "social")]
+use crate::features::social::pages::credentials::Home as CredentialPage;
+#[cfg(feature = "social")]
+use crate::features::social::pages::post::Home as UserPosts;
+#[cfg(feature = "social")]
+use crate::features::social::pages::space::Home as UserSpaces;
+#[cfg(feature = "social")]
+use crate::features::social::pages::user_draft::Home as UserDrafts;
+#[cfg(feature = "social")]
+use crate::features::social::pages::user_membership::Home as UserMemberships;
+#[cfg(feature = "social")]
+use crate::features::social::pages::user_reward::Home as UserRewards;
+#[cfg(feature = "social")]
+use crate::features::social::pages::user_setting::Home as UserSettingPage;
+#[cfg(feature = "social")]
+use crate::features::social::user_views::Home as UserHomeRoot;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
@@ -60,26 +100,64 @@ pub enum Route {
             #[route("/")]
             Index { },
 
-            #[route("/auth/:..rest")]
-            Auth { rest: Vec<String> },
-
             #[cfg_attr(feature="membership", route("/membership"))]
             #[cfg(feature="membership")]
             MembershipHome {  },
 
-            #[route("/posts/:..rest")]
-            Post { rest: Vec<String> },
+            #[nest("/posts")]
+                #[route("/")]
+                PostIndex { },
+                #[route("/:post_id/edit")]
+                PostEdit { post_id: FeedPartition },
+                #[route("/:post_id")]
+                PostDetail { post_id: FeedPartition },
+            #[end_nest]
 
-            #[route("/my-follower/:..rest")]
-            MyFollower { rest: Vec<String> },
+            #[route("/my-follower")]
+            MyFollowerPage { },
 
-            #[route("/admin/:..rest")]
-            Admin { rest: Vec<String> },
+            #[layout(AdminLayout)]
+                #[route("/")]
+                AdminMainPage {},
+            #[end_layout]
 
             #[cfg(feature = "social")]
-            #[route("/:username/:..rest")]
-            #[cfg(feature = "social")]
-            SocialHome { username: String, rest: Vec<String> },
+            #[nest("/:username")]
+                #[layout(SocialLayout)]
+                    #[route("/")]
+                    UserHomeRoot { username: String },
+                    #[route("/posts")]
+                    UserPosts { username: String },
+                    #[route("/rewards")]
+                    UserRewards { username: String },
+                    #[route("/memberships")]
+                    UserMemberships { username: String },
+                    #[route("/drafts")]
+                    UserDrafts { username: String },
+                    #[route("/credentials")]
+                    CredentialPage { username: String },
+                    #[route("/spaces")]
+                    UserSpaces { username: String },
+                    #[route("/home")]
+                    TeamHome { username: String },
+                    #[route("/team-drafts")]
+                    TeamDraft { username: String },
+                    #[route("/groups")]
+                    TeamGroup { username: String },
+                    #[route("/dao")]
+                    TeamDao { username: String },
+                    #[route("/members")]
+                    TeamMember { username: String },
+                    #[route("/team-rewards")]
+                    TeamReward { username: String },
+                #[end_layout]
+                #[layout(TeamSettingLayout)]
+                    #[route("/settings")]
+                    TeamSetting { username: String },
+                    #[route("/settings/members")]
+                    TeamSettingMember { username: String },
+                #[end_layout]
+            #[end_nest]
         #[end_layout]
 
         #[cfg_attr(feature="spaces", nest("/spaces/:space_id"))]
@@ -93,10 +171,6 @@ pub enum Route {
                 #[cfg_attr(feature="spaces", route("/report"))]
                 #[cfg(feature = "spaces")]
                 SpaceReportPage { space_id: SpacePartition },
-
-                #[cfg_attr(feature="spaces", route("/rewards"))]
-                #[cfg(feature = "spaces")]
-                SpaceRewardsPage { space_id: SpacePartition },
 
                 #[cfg_attr(feature="spaces", nest("/actions"))]
                     #[cfg_attr(feature="spaces", route("/"))]
@@ -162,85 +236,5 @@ fn PageNotFound(rest: Vec<String>) -> Element {
         h1 { "Page not found" }
         p { "We are terribly sorry, but the page you requested doesn't exist." }
         pre { color: "red", "log:\nattempted to navigate to: {rest:?}" }
-    }
-}
-
-macro_rules! define_app_wrapper {
-    ($wrapper_name:ident, $route_module:ident) => {
-        #[component]
-        pub fn $wrapper_name(rest: Vec<String>) -> Element {
-            let router = use_context::<dioxus::router::RouterContext>();
-            let route: $route_module = router.current();
-            rsx! {
-                ChildRouter::<$route_module> {
-                    route,
-                    format_route_as_root_route: |r: $route_module| r.to_string(),
-                    parse_route_from_root_route: |url: &str| {
-                        <$route_module as std::str::FromStr>::from_str(url).ok()
-                    },
-                }
-            }
-        }
-    };
-}
-
-define_app_wrapper!(Admin, AdminRoute);
-define_app_wrapper!(Auth, AuthRoute);
-define_app_wrapper!(Post, PostRoute);
-define_app_wrapper!(MyFollower, MyFollowerRoute);
-
-#[cfg(feature = "social")]
-#[component]
-pub fn SocialHome(username: String, rest: Vec<String>) -> Element {
-    let router = use_context::<dioxus::router::RouterContext>();
-    let route: SocialRoute = router.current();
-
-    rsx! {
-        ChildRouter::<SocialRoute> {
-            route,
-            format_route_as_root_route: |r: SocialRoute| r.to_string(),
-            parse_route_from_root_route: |url: &str| { <SocialRoute as std::str::FromStr>::from_str(url).ok() },
-
-        }
-    }
-}
-
-#[cfg(feature = "spaces")]
-#[component]
-pub fn SpaceAppGeneralPage(space_id: SpacePartition) -> Element {
-    rsx! {
-        crate::features::spaces::pages::apps::apps::general::SpaceGeneralAppPage { space_id }
-    }
-}
-
-#[cfg(feature = "spaces")]
-#[component]
-pub fn SpaceAppFilePage(space_id: SpacePartition) -> Element {
-    rsx! {
-        crate::features::spaces::pages::apps::apps::file::SpaceFileAppPage { space_id }
-    }
-}
-
-#[cfg(feature = "spaces")]
-#[component]
-pub fn SpacePanelsAppPage(space_id: SpacePartition) -> Element {
-    rsx! {
-        crate::features::spaces::pages::apps::apps::panels::SpacePanelsAppPage { space_id }
-    }
-}
-
-#[cfg(feature = "spaces")]
-#[component]
-pub fn SpaceAppIncentivePoolPage(space_id: SpacePartition) -> Element {
-    rsx! {
-        crate::features::spaces::pages::apps::apps::incentive_pool::SpaceIncentivePoolAppPage { space_id }
-    }
-}
-
-#[cfg(feature = "spaces")]
-#[component]
-pub fn SpaceRewardsPage(space_id: SpacePartition) -> Element {
-    rsx! {
-        SpaceRewardsHomePage { space_id }
     }
 }

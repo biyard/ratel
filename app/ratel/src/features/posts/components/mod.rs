@@ -12,3 +12,5 @@ pub use feed_list::*;
 pub use my_drafts::*;
 pub use my_posts::*;
 pub use visibility_modal::*;
+
+use super::*;
