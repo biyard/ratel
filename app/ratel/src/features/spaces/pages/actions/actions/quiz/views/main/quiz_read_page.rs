@@ -144,12 +144,14 @@ pub fn QuizReadPage(
         let req = RespondQuizRequest { answers: answers() };
         let mut query = query;
         let mut toast = toast;
+        let nav = nav.clone();
         spawn(async move {
             match respond_quiz(space_id(), quiz_id(), req).await {
                 Ok(_) => {
                     let keys = space_page_actions_quiz_key(&space_id(), &quiz_id());
                     query.invalidate(&keys);
                     toast.info(i18n.submit_success);
+                    nav.push(format!("/spaces/{}/actions", space_id()));
                 }
                 Err(err) => {
                     error!("Failed to submit quiz response: {:?}", err);
