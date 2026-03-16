@@ -14,6 +14,9 @@ pub struct SpaceActionSummary {
 
     pub total_score: Option<i64>,
     pub total_point: Option<i64>,
+    pub quiz_score: Option<i64>,
+    pub quiz_total_score: Option<i64>,
+    pub quiz_passed: Option<bool>,
 
     pub started_at: Option<i64>,
     pub ended_at: Option<i64>,
@@ -34,6 +37,9 @@ impl From<crate::features::spaces::pages::actions::models::SpaceAction> for Spac
             updated_at: action.updated_at,
             total_score: None,
             total_point: None,
+            quiz_score: None,
+            quiz_total_score: None,
+            quiz_passed: None,
             started_at: Some(action.started_at),
             ended_at: Some(action.ended_at),
             user_participated: false,
