@@ -1,10 +1,12 @@
 use super::{utils::*, PostDetailTranslate};
+use crate::common::components::{Button, ButtonSize, ButtonStyle};
 use crate::features::posts::controllers::dto::*;
 use crate::features::posts::controllers::like_post::like_post_handler;
-use crate::features::posts::controllers::{create_space_handler, delete_post_handler, CreateSpaceRequest};
+use crate::features::posts::controllers::{
+    create_space_handler, delete_post_handler, CreateSpaceRequest,
+};
 use crate::features::posts::types::*;
 use crate::features::posts::*;
-use crate::common::components::{Button, ButtonSize, ButtonStyle};
 use dioxus::prelude::*;
 
 #[component]
