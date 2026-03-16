@@ -1,11 +1,10 @@
-use crate::common::components::{Button, ButtonShape, ButtonStyle, TiptapEditor};
+use crate::common::components::{Button, ButtonShape, ButtonStyle};
 use crate::features::spaces::layout::use_space_layout_ui;
 use crate::features::spaces::pages::actions::actions::poll::components::{
     has_answer_for_question, should_auto_next, QuestionViewer,
 };
 use crate::features::spaces::pages::actions::actions::quiz::*;
 use crate::features::spaces::pages::apps::apps::file::components::FileCard;
-use crate::features::spaces::space_common::hooks::use_space_query;
 use crate::features::spaces::space_common::types::space_page_actions_quiz_key;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -13,8 +12,6 @@ enum QuizReadStep {
     Overview,
     Quiz,
 }
-
-const DEFAULT_PROFILE_IMAGE: &str = "https://metadata.ratel.foundation/ratel/default-profile.png";
 
 translate! {
     QuizReadTranslate;
@@ -30,10 +27,6 @@ translate! {
     page_title: {
         en: "Quiz",
         ko: "퀴즈",
-    },
-    upload_title: {
-        en: "Upload",
-        ko: "업로드",
     },
     btn_back: {
         en: "Back",
@@ -89,8 +82,6 @@ pub fn QuizReadPage(
 ) -> Element {
     let i18n: QuizReadTranslate = use_translate();
     let ctx = Context::init(space_id, quiz_id)?;
-    let space_loader = use_space_query(&space_id())?;
-    let space = space_loader.read().clone();
     let quiz = ctx.quiz.read().clone();
     let mut query = use_query_store();
     let mut toast = use_toast();
@@ -188,52 +179,35 @@ pub fn QuizReadPage(
                     class: "mx-auto flex min-h-0 w-full flex-1 flex-col",
                     "data-testid": "quiz-read-overview",
 
-                    div { class: "flex flex-1 flex-col gap-6 overflow-y-auto pb-6",
-                        div { class: "text-[28px]/[34px] font-bold text-text-primary",
-                            "{quiz.title}"
-                        }
+                    div { class: "flex flex-row w-full justify-center items-center",
+                        div { class: "flex flex-1 flex-col max-w-desktop gap-6 overflow-y-auto pb-6",
+                            div { class: "text-[28px]/[34px] font-bold text-text-primary",
+                                "{quiz.title}"
+                            }
 
-                        div { class: "flex items-center justify-between border-y border-card-border py-4",
-                            div { class: "flex flex-row w-full items-center justify-between gap-2.5",
-                                div { class: "flex min-w-0 items-center gap-2",
-                                    {render_author_avatar(&space.author_profile_url, &space.author_display_name)}
-                                    div { class: "min-w-0 text-[14px]/[20px] font-semibold text-text-primary",
-                                        "{space.author_display_name}"
-                                    }
-                                }
-
+                            div { class: "flex items-center justify-end border-y border-card-border py-4",
                                 div { class: "shrink-0 text-[14px] font-light text-text-primary",
                                     "{time_ago(quiz.created_at)}"
                                 }
                             }
-                        }
 
-                        if !quiz.description.is_empty() {
-                            div { class: "flex flex-col gap-2",
-                                div { class: "rounded-lg border border-card-border bg-card-bg p-4",
-                                    TiptapEditor {
-                                        class: "w-full h-fit [&>div]:border-0 [&>div]:bg-transparent [&_[data-tiptap-toolbar]]:hidden [&_[contenteditable='true']]:px-0 [&_[contenteditable='true']]:py-0 [&_[contenteditable='true']]:text-[15px]/[24px] [&_[contenteditable='true']]:tracking-[0.5px] [&_[contenteditable='true']]:text-[#D4D4D4] light:[&_[contenteditable='true']]:text-text-primary",
-                                        content: quiz.description.clone(),
-                                        editable: false,
-                                        placeholder: String::new(),
-                                        on_content_change: move |_html: String| {},
-                                    }
+                            if !quiz.description.is_empty() {
+                                div {
+                                    class: "text-[15px]/[24px] tracking-[0.5px] text-[#D4D4D4] light:text-text-primary",
+                                    dangerous_inner_html: quiz.description.clone(),
                                 }
                             }
-                        }
 
-                        div { class: "flex flex-col gap-2",
-                            div { class: "text-sm font-semibold text-text-primary",
-                                "{i18n.upload_title}"
-                            }
-                            if !quiz.files.is_empty() {
-                                div { class: "flex flex-col gap-2.5",
-                                    for file in quiz.files.iter() {
-                                        FileCard {
-                                            key: "{file.id}",
-                                            file: file.clone(),
-                                            editable: false,
-                                            on_delete: None,
+                            div { class: "flex flex-col gap-2",
+                                if !quiz.files.is_empty() {
+                                    div { class: "grid grid-cols-4 gap-2.5 max-desktop:grid-cols-3 max-tablet:grid-cols-2 max-mobile:grid-cols-1",
+                                        for file in quiz.files.iter() {
+                                            FileCard {
+                                                key: "{file.id}",
+                                                file: file.clone(),
+                                                editable: false,
+                                                on_delete: None,
+                                            }
                                         }
                                     }
                                 }
@@ -241,7 +215,7 @@ pub fn QuizReadPage(
                         }
                     }
 
-                    div { class: "mt-auto flex items-center justify-between gap-3 border-t border-card-border bg-card-bg px-5 py-3",
+                    div { class: "mt-auto -mx-5 -mb-5 max-tablet:-mx-3 max-tablet:-mb-3 max-mobile:-mx-2 max-mobile:-mb-2 flex items-center justify-between gap-3 border-t border-card-border bg-card-bg px-5 py-3",
                         div { class: "text-sm text-neutral-300 light:text-neutral-700",
                             "{i18n.remaining_submissions} {remaining_submissions}/{quiz.retry_count}"
                         }
@@ -321,7 +295,7 @@ pub fn QuizReadPage(
                         }
                     
                     }
-                    div { class: "flex items-center justify-between gap-3 border-t border-card-border bg-card-bg px-5 py-3",
+                    div { class: "-mx-5 -mb-5 max-tablet:-mx-3 max-tablet:-mb-3 max-mobile:-mx-2 max-mobile:-mb-2 flex items-center justify-between gap-3 border-t border-card-border bg-card-bg px-5 py-3",
                         div { class: "text-sm text-neutral-300 light:text-neutral-700",
                             "{i18n.remaining_submissions} {remaining_submissions}/{quiz.retry_count}"
                         }
@@ -391,22 +365,6 @@ fn time_ago(timestamp_millis: i64) -> String {
         format!("{}w ago", diff / 1000 / 604800)
     } else {
         format!("{}y ago", diff / 1000 / 31536000)
-    }
-}
-
-fn render_author_avatar(profile_url: &str, display_name: &str) -> Element {
-    let image_src = if profile_url.is_empty() {
-        DEFAULT_PROFILE_IMAGE
-    } else {
-        profile_url
-    };
-
-    rsx! {
-        img {
-            class: "size-5 rounded-full object-cover",
-            src: "{image_src}",
-            alt: "{display_name}",
-        }
     }
 }
 
