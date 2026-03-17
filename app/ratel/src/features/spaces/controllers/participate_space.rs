@@ -1,7 +1,7 @@
+use crate::common::SpaceVisibility;
 use crate::common::models::auth::{OptionalUser, User};
 use crate::common::models::space::SpaceCommon;
 use crate::common::utils::time::get_now_timestamp_millis;
-use crate::common::SpaceVisibility;
 use crate::features::posts::models::Post;
 use crate::features::posts::types::TeamGroupPermission;
 use crate::features::spaces::models::{
