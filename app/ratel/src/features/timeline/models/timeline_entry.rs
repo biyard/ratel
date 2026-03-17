@@ -11,6 +11,8 @@ pub enum TimelineReason {
     TeamMember,
     /// Post is trending (met popularity criteria)
     Popular,
+    /// Space associated with the post is popular (>5 participants)
+    PopularSpace,
 }
 
 impl std::fmt::Display for TimelineReason {
@@ -19,6 +21,7 @@ impl std::fmt::Display for TimelineReason {
             TimelineReason::Following => write!(f, "following"),
             TimelineReason::TeamMember => write!(f, "team_member"),
             TimelineReason::Popular => write!(f, "popular"),
+            TimelineReason::PopularSpace => write!(f, "popular_space"),
         }
     }
 }
@@ -31,6 +34,7 @@ impl std::str::FromStr for TimelineReason {
             "following" => Ok(TimelineReason::Following),
             "team_member" => Ok(TimelineReason::TeamMember),
             "popular" => Ok(TimelineReason::Popular),
+            "popular_space" => Ok(TimelineReason::PopularSpace),
             _ => Err(format!("unknown timeline reason: {}", s)),
         }
     }
@@ -41,6 +45,7 @@ pub const TIMELINE_CATEGORIES: &[TimelineReason] = &[
     TimelineReason::Following,
     TimelineReason::TeamMember,
     TimelineReason::Popular,
+    TimelineReason::PopularSpace,
 ];
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, DynamoEntity, PartialEq)]
