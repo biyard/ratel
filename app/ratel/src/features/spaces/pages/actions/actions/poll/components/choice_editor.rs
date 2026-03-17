@@ -9,6 +9,8 @@ pub struct ChoiceOptionRowProps {
     pub leading: Element,
     #[props(default)]
     pub on_save: Option<EventHandler<()>>,
+    #[props(default)]
+    pub placeholder: String,
 }
 
 #[component]
@@ -19,6 +21,7 @@ pub fn ChoiceOptionRow(props: ChoiceOptionRowProps) -> Element {
         on_remove,
         leading,
         on_save,
+        placeholder,
     } = props;
 
     rsx! {
@@ -28,6 +31,7 @@ pub fn ChoiceOptionRow(props: ChoiceOptionRowProps) -> Element {
                 variant: InputVariant::Plain,
                 class: "flex-1 w-full h-11 px-3 bg-[#262626] border border-[#737373] rounded-lg text-sm text-neutral-300 placeholder:text-neutral-500 focus:border-[#FCB300] focus-visible:border-[#FCB300] focus-visible:ring-0 light:bg-input-box-bg light:border-input-box-border light:text-text-primary light:placeholder:text-text-secondary",
                 value: value.clone(),
+                placeholder,
                 oninput: move |evt: Event<FormData>| on_change.call(evt.value()),
                 onblur: move |_| {
                     if let Some(on_save) = &on_save {
@@ -101,6 +105,7 @@ pub fn ChoiceQuestionEditor(
             rsx! {
                 ChoiceOptionRow {
                     value: option.clone(),
+                    placeholder: format!("Option {}", opt_idx + 1),
                     leading,
                     on_save: on_save.clone(),
                     on_change: move |value: String| {
@@ -139,7 +144,7 @@ pub fn ChoiceQuestionEditor(
                 class: "text-sm text-neutral-500 justify-start px-0 flex items-center gap-2 w-full text-left light:text-text-secondary",
                 onclick: move |_| {
                     let mut next = question.clone();
-                    next.options.push(format!("Option {}", next.options.len() + 1));
+                    next.options.push(String::new());
                     if is_single {
                         on_change.call(Question::SingleChoice(next));
                     } else {
