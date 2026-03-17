@@ -13,9 +13,6 @@ pub async fn reply_comment(
     req: ReplyCommentRequest,
 ) -> Result<DiscussionCommentResponse> {
     SpacePost::can_view(&role)?;
-    if !matches!(role, SpaceUserRole::Creator | SpaceUserRole::Participant) {
-        return Err(Error::NoPermission);
-    }
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let discussion_sk_entity: EntityType = discussion_sk.into();
@@ -24,6 +21,11 @@ pub async fn reply_comment(
         EntityType::SpacePost(id) => SpacePostPartition(id.clone()),
         _ => return Err(Error::BadRequest("Invalid discussion id".into())),
     };
+    let (post_pk, post_sk) = SpacePost::keys(&space_id, &space_post_pk);
+    let post = SpacePost::get(cli, &post_pk, Some(post_sk))
+        .await?
+        .ok_or(Error::NotFound("Discussion not found".into()))?;
+    post.can_participate(&role)?;
 
     let comment_sk_entity: EntityType = comment_sk.into();
 

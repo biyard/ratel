@@ -21,6 +21,10 @@ pub async fn update_comment(
         EntityType::SpacePost(id) => Partition::SpacePost(id.clone()),
         _ => return Err(Error::BadRequest("Invalid discussion id".into())),
     };
+    let post = SpacePost::get(cli, &space_post_pk, Some(discussion_sk_entity.clone()))
+        .await?
+        .ok_or(Error::NotFound("Discussion not found".into()))?;
+    post.can_participate(&role)?;
 
     let comment_sk_entity: EntityType = comment_sk.into();
 

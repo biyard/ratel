@@ -26,12 +26,14 @@ pub fn ViewerMain(
 ) -> Element {
     let tr: DiscussionViewerTranslate = use_translate();
     let role = use_space_role()();
-    let can_comment = matches!(role, SpaceUserRole::Creator | SpaceUserRole::Participant);
-    let can_manage_comments = matches!(role, SpaceUserRole::Creator | SpaceUserRole::Participant);
     let user = crate::features::spaces::hooks::use_user()?;
     let current_user_pk = user.read().as_ref().map(|u| u.pk.to_string());
     let ctx = use_discussion_context();
     let discussion = ctx.discussion().post;
+    let can_participate = discussion.status() == DiscussionStatus::InProgress;
+    let can_comment =
+        matches!(role, SpaceUserRole::Creator | SpaceUserRole::Participant) && can_participate;
+    let can_manage_comments = can_comment;
 
     rsx! {
         div { class: "flex flex-col gap-5 w-full",
