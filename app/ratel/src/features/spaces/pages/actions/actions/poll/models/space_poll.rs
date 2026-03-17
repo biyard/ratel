@@ -135,6 +135,7 @@ impl From<(SpacePoll, bool)>
             ended_at: Some(poll.ended_at),
             user_participated,
             credits: 0,
+            prerequisite: false,
         }
     }
 }
