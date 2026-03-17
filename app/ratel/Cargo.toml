@@ -38,22 +38,22 @@ urlencoding = { version = "2" }
 tokio = { workspace = true, optional = true }
 
 web-sys = { workspace = true, features = [
-    "Blob",
-    "Document",
-    "Element",
-    "File",
-    "Headers",
-    "IntersectionObserver",
-    "IntersectionObserverEntry",
-    "IntersectionObserverInit",
-    "Request",
-    "RequestCredentials",
-    "RequestInit",
-    "Response",
-    "Window",
-    "console",
-    "Clipboard",
-    "Navigator",
+  "Blob",
+  "Clipboard",
+  "Document",
+  "Element",
+  "File",
+  "Headers",
+  "IntersectionObserver",
+  "IntersectionObserverEntry",
+  "IntersectionObserverInit",
+  "Navigator",
+  "Request",
+  "RequestCredentials",
+  "RequestInit",
+  "Response",
+  "Window",
+  "console",
 ] }
 wasm-bindgen = { workspace = true }
 wasm-bindgen-futures = { workspace = true }
@@ -87,8 +87,15 @@ dioxus-cli-config = "0.7.3"
 tracing-subscriber = { workspace = true }
 getrandom = { version = "0.4", features = ["wasm_js"], optional = true }
 lambda_http = { version = "1.0.2", optional = true }
-dioxus-primitives = { git = "https://github.com/DioxusLabs/components", version = "0.0.1", default-features = false, features = ["router"] }
+dioxus-primitives = { git = "https://github.com/DioxusLabs/components", version = "0.0.1", default-features = false, features = [
+  "router",
+] }
 time = { version = "0.3.47", features = ["formatting"] }
+ic-agent = { version = "0.46", optional = true }
+candid = { version = "0.10", optional = true }
+sampling = { path = "../../packages/sampling", default-features = false, features = [
+  "dto",
+], optional = true }
 mimetype-detector = "0.3.6"
 lambda_runtime = { version = "1.1.1", optional = true }
 
@@ -97,52 +104,46 @@ lambda_runtime = { version = "1.1.1", optional = true }
 full = ["membership", "social", "spaces_full"]
 default = ["full"]
 bypass = []
-web = [
-  "dioxus/web",
-  "time/wasm-bindgen",
-  "gloo-timers",
-  "getrandom",
-]
-desktop = [
-  "dioxus/desktop",
-]
-mobile = [
-  "dioxus/mobile",
-]
+web = ["dioxus/web", "getrandom", "gloo-timers", "time/wasm-bindgen"]
+desktop = ["dioxus/desktop"]
+mobile = ["dioxus/mobile"]
 server = [
-  "dioxus/server",
-  "tower-sessions",
+  "aide",
   "aws-config",
-  "aws-sdk-s3",
-  "aws-sdk-bedrockruntime",
+  "aws-credential-types",
   "aws-sdk-bedrockagentruntime",
+  "aws-sdk-bedrockruntime",
+  "aws-sdk-dynamodb",
+  "aws-sdk-s3",
+  "aws-sdk-sesv2",
+  "aws-sdk-sns",
   "aws-smithy-types",
+  "bdk/be",
+  "candid",
+  "dioxus/server",
+  "ethers",
+  "futures",
+  "hex",
+  "hmac",
+  "ic-agent",
+  "k256",
+  "names",
   "random-string",
   "reqwest",
+  "sampling",
   "schemars",
-  "aide",
-  "aws-sdk-dynamodb",
   "serde_dynamo",
-  "uuid",
-  "ethers",
-  "names",
-  "futures",
-  "tokio",
-  "sha3",
   "sha2",
-  "hex",
-  "k256",
-  "hmac",
-  "url",
-  "validator",
-  "aws-sdk-sns",
-  "aws-sdk-sesv2",
-  "bdk/be",
+  "sha3",
   "ssi",
-  "aws-credential-types",
+  "tokio",
+  "tower-sessions",
+  "url",
+  "uuid",
+  "validator",
 ]
 
-lambda = [ "server", "lambda_http", "lambda_runtime" ]
+lambda = ["lambda_http", "lambda_runtime", "server"]
 layout_test = ["web"]
 membership = []
 social = []

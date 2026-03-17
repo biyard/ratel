@@ -1,0 +1,17 @@
+# Build artifacts
+target/
+.dfx/
+.build/
+pocket-ic
+
+# Environment
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+scripts/
+*.did

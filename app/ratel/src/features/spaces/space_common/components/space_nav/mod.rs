@@ -6,6 +6,7 @@ mod participation_layover_header;
 mod participation_requirements_layover;
 mod participation_step_bar;
 mod participation_verification_section;
+mod prerequisite_actions_layover;
 mod space_user_login;
 mod space_user_profile;
 
@@ -17,6 +18,7 @@ pub use participation_layover_header::*;
 pub use participation_requirements_layover::*;
 pub use participation_step_bar::*;
 pub use participation_verification_section::*;
+pub use prerequisite_actions_layover::*;
 pub use space_user_login::*;
 pub use space_user_profile::*;
 

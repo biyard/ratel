@@ -91,11 +91,7 @@ export class DynamoStreamEventStack extends Stack {
           source: "ratel.dynamodb.stream",
           detailType: "TimelineUpdate",
         },
-        inputTemplate: JSON.stringify({
-          post_pk: "<$.dynamodb.NewImage.pk.S>",
-          author_pk: "<$.dynamodb.NewImage.user_pk.S>",
-          created_at: "<$.dynamodb.NewImage.updated_at.N>",
-        }),
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
       },
     });
 
@@ -133,14 +129,44 @@ export class DynamoStreamEventStack extends Stack {
           source: "ratel.dynamodb.stream",
           detailType: "PopularPostUpdate",
         },
-        inputTemplate: JSON.stringify({
-          post_pk: "<$.dynamodb.NewImage.pk.S>",
-          author_pk: "<$.dynamodb.NewImage.user_pk.S>",
-          created_at: "<$.dynamodb.NewImage.updated_at.N>",
-          likes: "<$.dynamodb.NewImage.likes.N>",
-          comments: "<$.dynamodb.NewImage.comments.N>",
-          shares: "<$.dynamodb.NewImage.shares.N>",
-        }),
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    // ── Pipe 3: Participant Change → PopularSpaceUpdate ──────────────
+    // Triggers when participants field changes on a SpaceCommon entity
+    new pipes.CfnPipe(this, "PopularSpacePipe", {
+      name: `ratel-${stage}-popular-space-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["MODIFY"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: ["SPACE_COMMON"] },
+                    participants: { N: [{ exists: true }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "PopularSpaceUpdate",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
       },
     });
 
@@ -163,6 +189,18 @@ export class DynamoStreamEventStack extends Stack {
       eventPattern: {
         source: ["ratel.dynamodb.stream"],
         detailType: ["PopularPostUpdate"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
+    // ── Rule: Route PopularSpaceUpdate events to app-shell Lambda ────
+    new events.Rule(this, "PopularSpaceUpdateRule", {
+      eventBus,
+      description:
+        "Route popular space events to app-shell for broader fan-out",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["PopularSpaceUpdate"],
       },
       targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
     });
