@@ -95,7 +95,7 @@ fn serve(app: fn() -> Element) {
 pub struct EventBridgeEnvelope {
     pub source: String,
     #[serde(rename = "detail-type")]
-    pub detail_type: String,
+    pub detail_type: DetailType,
     pub detail: serde_json::Value,
     #[serde(default)]
     pub account: String,
@@ -110,31 +110,57 @@ pub struct EventBridgeEnvelope {
 }
 
 #[cfg(feature = "lambda")]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub enum DetailType {
+    TimelineUpdate,
+    PopularPostUpdate,
+    PopularSpaceUpdate,
+    #[serde(other)]
+    Unknown,
+}
+
+#[cfg(feature = "lambda")]
+impl DetailType {
+    fn parse_detail<T: serde::de::DeserializeOwned>(
+        detail: &serde_json::Value,
+    ) -> Result<T, lambda_runtime::Error> {
+        let new_image = detail
+            .get("newImage")
+            .ok_or("missing newImage in detail")?;
+
+        let item: std::collections::HashMap<String, serde_dynamo::AttributeValue> =
+            serde_json::from_value(new_image.clone())
+                .map_err(|e| format!("failed to parse DynamoDB image: {}", e))?;
+
+        serde_dynamo::from_item(item)
+            .map_err(|e| lambda_runtime::Error::from(format!("failed to deserialize: {}", e)))
+    }
+}
+
+#[cfg(feature = "lambda")]
 async fn event_bridge_handler(
     event: lambda_runtime::LambdaEvent<EventBridgeEnvelope>,
 ) -> Result<(), lambda_runtime::Error> {
     let (envelope, _ctx) = event.into_parts();
     tracing::info!(
-        source = %envelope.source,
-        detail_type = %envelope.detail_type,
+        detail_type = ?envelope.detail_type,
         "Received EventBridge event"
     );
 
-    match (envelope.source.as_str(), envelope.detail_type.as_str()) {
-        ("ratel.dynamodb.stream", "TimelineUpdate") => {
+    match envelope.detail_type {
+        DetailType::TimelineUpdate => {
             handle_timeline_update(envelope.detail).await?;
         }
-        ("ratel.dynamodb.stream", "PopularPostUpdate") => {
+        DetailType::PopularPostUpdate => {
             handle_popular_post_update(envelope.detail).await?;
         }
-        ("ratel.dynamodb.stream", "PopularSpaceUpdate") => {
+        DetailType::PopularSpaceUpdate => {
             handle_popular_space_update(envelope.detail).await?;
         }
-        _ => {
+        DetailType::Unknown => {
             tracing::warn!(
-                "Unhandled EventBridge event: source={}, detail-type={}",
+                "Unhandled EventBridge event: source={}",
                 envelope.source,
-                envelope.detail_type
             );
         }
     }
@@ -146,35 +172,15 @@ async fn event_bridge_handler(
 async fn handle_timeline_update(
     detail: serde_json::Value,
 ) -> Result<(), lambda_runtime::Error> {
-    use crate::common::types::{EntityType, Partition};
+    use crate::features::posts::models::Post;
 
-    // Parse the DynamoDB stream record from the EventBridge detail
-    // Expected format: { "post_pk": "FEED#...", "author_pk": "USER#...", "created_at": 123456 }
-    let post_pk_str = detail
-        .get("post_pk")
-        .and_then(|v| v.as_str())
-        .ok_or("missing post_pk in detail")?;
-    let author_pk_str = detail
-        .get("author_pk")
-        .and_then(|v| v.as_str())
-        .ok_or("missing author_pk in detail")?;
-    let created_at = detail
-        .get("created_at")
-        .and_then(|v| v.as_i64())
-        .ok_or("missing created_at in detail")?;
-
-    let post_pk: Partition = post_pk_str
-        .parse()
-        .map_err(|e| format!("invalid post_pk: {}", e))?;
-    let author_pk: Partition = author_pk_str
-        .parse()
-        .map_err(|e| format!("invalid author_pk: {}", e))?;
+    let post: Post = DetailType::parse_detail(&detail)?;
 
     tracing::info!(
         "Timeline update: post_pk={}, author_pk={}, created_at={}",
-        post_pk,
-        author_pk,
-        created_at
+        post.pk,
+        post.user_pk,
+        post.created_at
     );
 
     let cfg = crate::common::CommonConfig::default();
@@ -182,9 +188,9 @@ async fn handle_timeline_update(
 
     crate::features::timeline::services::fan_out_timeline_entries(
         cli,
-        &post_pk,
-        &author_pk,
-        created_at,
+        &post.pk,
+        &post.user_pk,
+        post.created_at,
     )
     .await
     .map_err(|e| {
@@ -199,50 +205,26 @@ async fn handle_timeline_update(
 async fn handle_popular_post_update(
     detail: serde_json::Value,
 ) -> Result<(), lambda_runtime::Error> {
-    use crate::common::types::Partition;
+    use crate::features::posts::models::Post;
 
-    let post_pk_str = detail
-        .get("post_pk")
-        .and_then(|v| v.as_str())
-        .ok_or("missing post_pk in detail")?;
-    let author_pk_str = detail
-        .get("author_pk")
-        .and_then(|v| v.as_str())
-        .ok_or("missing author_pk in detail")?;
-    let created_at = detail
-        .get("created_at")
-        .and_then(|v| v.as_i64())
-        .ok_or("missing created_at in detail")?;
-    let likes = detail.get("likes").and_then(|v| v.as_i64()).unwrap_or(0);
-    let comments = detail
-        .get("comments")
-        .and_then(|v| v.as_i64())
-        .unwrap_or(0);
-    let shares = detail.get("shares").and_then(|v| v.as_i64()).unwrap_or(0);
+    let post: Post = DetailType::parse_detail(&detail)?;
 
-    if !crate::features::timeline::services::is_popular(likes, comments, shares) {
+    if !crate::features::timeline::services::is_popular(post.likes, post.comments, post.shares) {
         return Ok(());
     }
 
-    let post_pk: Partition = post_pk_str
-        .parse()
-        .map_err(|e| format!("invalid post_pk: {}", e))?;
-    let author_pk: Partition = author_pk_str
-        .parse()
-        .map_err(|e| format!("invalid author_pk: {}", e))?;
-
     tracing::info!(
         "Popular post fan-out: post_pk={}, likes={}, comments={}, shares={}",
-        post_pk,
-        likes,
-        comments,
-        shares
+        post.pk,
+        post.likes,
+        post.comments,
+        post.shares
     );
 
     let cfg = crate::common::CommonConfig::default();
     let cli = cfg.dynamodb();
 
-    crate::features::timeline::services::fan_out_popular_post(cli, &post_pk, &author_pk, created_at)
+    crate::features::timeline::services::fan_out_popular_post(cli, &post.pk, &post.user_pk, post.created_at)
         .await
         .map_err(|e| {
             tracing::error!("Popular post fan-out failed: {}", e);
@@ -256,47 +238,18 @@ async fn handle_popular_post_update(
 async fn handle_popular_space_update(
     detail: serde_json::Value,
 ) -> Result<(), lambda_runtime::Error> {
-    use crate::common::types::Partition;
+    use crate::common::models::space::SpaceCommon;
 
-    let space_pk_str = detail
-        .get("space_pk")
-        .and_then(|v| v.as_str())
-        .ok_or("missing space_pk in detail")?;
-    let post_pk_str = detail
-        .get("post_pk")
-        .and_then(|v| v.as_str())
-        .ok_or("missing post_pk in detail")?;
-    let author_pk_str = detail
-        .get("author_pk")
-        .and_then(|v| v.as_str())
-        .ok_or("missing author_pk in detail")?;
-    let created_at = detail
-        .get("created_at")
-        .and_then(|v| v.as_i64())
-        .ok_or("missing created_at in detail")?;
-    let participants = detail
-        .get("participants")
-        .and_then(|v| v.as_i64())
-        .unwrap_or(0);
+    let space: SpaceCommon = DetailType::parse_detail(&detail)?;
 
-    if !crate::features::timeline::services::is_popular_space(participants) {
+    if !crate::features::timeline::services::is_popular_space(space.participants) {
         return Ok(());
     }
 
-    let space_pk: Partition = space_pk_str
-        .parse()
-        .map_err(|e| format!("invalid space_pk: {}", e))?;
-    let post_pk: Partition = post_pk_str
-        .parse()
-        .map_err(|e| format!("invalid post_pk: {}", e))?;
-    let author_pk: Partition = author_pk_str
-        .parse()
-        .map_err(|e| format!("invalid author_pk: {}", e))?;
-
     tracing::info!(
         "Popular space fan-out: space_pk={}, participants={}",
-        space_pk,
-        participants
+        space.pk,
+        space.participants
     );
 
     let cfg = crate::common::CommonConfig::default();
@@ -304,10 +257,10 @@ async fn handle_popular_space_update(
 
     crate::features::timeline::services::fan_out_popular_space(
         cli,
-        &space_pk,
-        &post_pk,
-        &author_pk,
-        created_at,
+        &space.pk,
+        &space.post_pk,
+        &space.user_pk,
+        space.created_at,
     )
     .await
     .map_err(|e| {
