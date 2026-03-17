@@ -36,15 +36,13 @@ pub fn DiscussionComments(
     current_user_pk: Option<String>,
 ) -> Element {
     let tr: DiscussionCommentsTranslate = use_translate();
+    let discussion_ctx = use_discussion_context();
     DiscussionCommentContext::init(space_id, discussion_id)?;
     let mut comment_input = use_signal(String::new);
     let mut ctx = use_discussion_comment_context();
     let comments = ctx.comments.items();
     let more_comments = ctx.comments.more_element();
-    let comment_count: usize = comments
-        .iter()
-        .map(|comment| 1usize + (comment.replies as usize))
-        .sum();
+    let comment_count = discussion_ctx.discussion().post.comments.max(0) as usize;
 
     rsx! {
         div { class: "flex flex-col gap-4",
@@ -72,11 +70,13 @@ pub fn DiscussionComments(
                                 }
                                 comment_input.set(String::new());
                                 let mut comments_query = ctx.comments;
+                                let mut discussion_query = discussion_ctx.discussion;
                                 spawn(async move {
                                     let req = AddCommentRequest { content };
                                     match add_comment(space_id(), discussion_id(), req).await {
                                         Ok(comment) => {
                                             comments_query.insert(comment);
+                                            discussion_query.restart();
                                         }
                                         Err(e) => {
                                             error!("Failed to add comment: {:?}", e);
@@ -103,6 +103,7 @@ pub fn DiscussionComments(
                         let comment = comment.clone();
                         let comment_sk: SpacePostCommentEntityType = comment.sk.clone().into();
                         let mut comments_query = ctx.comments;
+                        let mut discussion_query = discussion_ctx.discussion;
                         rsx! {
                             div { key: "{comment.sk}", class: "py-3 first:pt-0 last:pb-0",
                                 CommentItem {
@@ -113,7 +114,10 @@ pub fn DiscussionComments(
                                     can_comment,
                                     can_manage_comments,
                                     current_user_pk: current_user_pk.clone(),
-                                    on_refresh_comments: move |_| comments_query.restart(),
+                                    on_refresh_comments: move |_| {
+                                        comments_query.restart();
+                                        discussion_query.restart();
+                                    },
                                 }
                             }
                         }
