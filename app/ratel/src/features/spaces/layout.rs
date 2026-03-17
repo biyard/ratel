@@ -10,51 +10,73 @@ use crate::features::spaces::space_common::{
 };
 use crate::features::spaces::{controllers::participate_space::participate_space, *};
 
+#[derive(Clone, Copy)]
+pub struct SpaceLayoutUiContext {
+    pub sidebar_visible: Signal<bool>,
+}
+
+pub fn use_space_layout_ui() -> SpaceLayoutUiContext {
+    use_context()
+}
+
 #[component]
 pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
     let ctx = SpaceContextProvider::init(space_id)?;
 
     use_context_provider(|| LayoverService::new());
+    let sidebar_visible = use_signal(|| true);
+    use_context_provider(move || SpaceLayoutUiContext { sidebar_visible });
     let role = ctx.current_role();
     let space = ctx.space();
     let lang = use_language();
+    let show_sidebar = sidebar_visible();
 
     let mut query = use_query_store();
     let user_ctx = use_user_context();
     let user = user_ctx.read().user.clone();
+    let anonymous_user_profile = if space.anonymous_participation
+        && matches!(role, SpaceUserRole::Participant | SpaceUserRole::Candidate)
+    {
+        Some((
+            space.participant_profile_url.clone().unwrap_or_else(|| {
+                "https://metadata.ratel.foundation/ratel/default-profile.png".to_string()
+            }),
+            space
+                .participant_display_name
+                .clone()
+                .unwrap_or_else(|| "Anonymous User".to_string()),
+        ))
+    } else {
+        None
+    };
     let credential_path = user
         .as_ref()
         .map(|user| format!("/{}/credentials", user.username));
     let mut popup = use_popup();
     let tr: SpaceLayoutTranslate = use_translate();
-    // FIXME
 
     let mut participate = use_action(participate_space);
 
     let show_participate = matches!(space.status, Some(crate::common::SpaceStatus::InProgress))
+        && matches!(role, SpaceUserRole::Viewer)
         && !space.participated
         && space.can_participate;
 
-    let menus = vec![
+    let mut menus = vec![
         crate::features::spaces::pages::dashboard::get_nav_item(space_id(), role.clone()),
         crate::features::spaces::pages::overview::get_nav_item(space_id(), role.clone()),
         crate::features::spaces::pages::actions::get_nav_item(space_id(), role.clone()),
         crate::features::spaces::pages::apps::get_nav_item(space_id(), role.clone()),
+        // crate::features::spaces::pages::rewards::get_nav_item(space_id(), role.clone()),
         // crate::features::spaces::pages::report::get_nav_item(space_id.clone(), role.clone()),
     ]
     .into_iter()
-    .map(|item| {
-        if let Some(item) = item {
-            Some(SpaceNavItem {
-                icon: item.0,
-                label: item.1.translate(&lang()).to_string(),
-                link: item.2,
-            })
-        } else {
-            None
-        }
-    })
     .flatten()
+    .map(|item| SpaceNavItem {
+        icon: item.0,
+        label: item.1.translate(&lang()).to_string(),
+        link: item.2,
+    })
     .collect::<Vec<SpaceNavItem>>();
     let labels = vec![SpaceTopLabel {
         label: space.title.clone(),
@@ -69,19 +91,25 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
         query.invalidate(&space_detail);
     };
 
+    let bottom_nav_menus = menus.clone();
+
+    let layout_class = if show_sidebar {
+        "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-space-bg text-web-font-primary max-tablet:flex max-tablet:flex-col"
+    } else {
+        "grid overflow-hidden grid-cols-1 w-full h-screen bg-space-bg text-web-font-primary max-tablet:flex max-tablet:flex-col"
+    };
+
     rsx! {
         SeoMeta { title: space.title.clone(), description: space.description() }
-        div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-space-bg text-web-font-primary",
-            div { class: "hidden tablet:flex",
+        div { class: "{layout_class}",
+            if show_sidebar {
                 SpaceNav {
+                    class: "max-tablet:order-1",
                     space_id: space_id(),
-                    logo: if space.logo.is_empty() {
-                        "https://metadata.ratel.foundation/logos/logo.png".to_string()
-                    } else {
-                        space.logo.clone()
-                    },
+                    logo: if space.logo.is_empty() { "https://metadata.ratel.foundation/logos/logo.png".to_string() } else { space.logo.clone() },
                     menus,
                     user,
+                    anonymous_user_profile,
                     role,
                     show_participation_card: show_participate,
                     credential_path,
@@ -92,14 +120,16 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
                     },
                 }
             }
-            div { class: "flex flex-col min-w-0 min-h-0",
-                SpaceTop {
-                    labels,
-                    space_status,
-                    show_participate_button: false,
-                    on_participant,
+            div { class: "flex overflow-x-hidden flex-col min-w-0 min-h-0 max-tablet:flex-1 max-tablet:order-0",
+                if show_sidebar {
+                    SpaceTop {
+                        labels,
+                        space_status,
+                        show_participate_button: false,
+                        on_participant,
+                    }
                 }
-                div { class: "flex overflow-auto flex-1 p-5 w-full bg-background rounded-tl-[10px]",
+                div { class: "flex overflow-auto flex-1 p-5 w-full bg-background rounded-tl-[10px] max-tablet:rounded-tl-none max-tablet:p-3 max-mobile:p-2",
                     SuspenseBoundary { Outlet::<Route> {} }
                 }
             }

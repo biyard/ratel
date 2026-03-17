@@ -1,23 +1,23 @@
 mod i18n;
 
+use crate::common::RewardCondition;
+use crate::common::RewardPeriod;
+use crate::common::RewardUserBehavior;
 use crate::features::admin::controllers::{
-    CreateGlobalRewardRequest, RewardResponse, UpdateGlobalRewardRequest, create_reward,
-    list_rewards, update_reward,
+    create_reward, list_rewards, update_reward, CreateGlobalRewardRequest, RewardResponse,
+    UpdateGlobalRewardRequest,
 };
 use crate::features::admin::models::reward_types::{
     ConditionType, RewardConditionExt, RewardPeriodExt, RewardUserBehaviorExt,
 };
 use crate::features::admin::*;
-use crate::common::RewardCondition;
-use crate::common::RewardPeriod;
-use crate::common::RewardUserBehavior;
 use i18n::AdminRewardsTranslate;
 
 #[component]
 pub fn AdminMainPage() -> Element {
     let tr: AdminRewardsTranslate = use_translate();
 
-    let mut rewards_resource = use_server_future(move || async move { list_rewards(None).await })?;
+    let mut rewards_resource = use_server_future(move || async move { list_rewards().await })?;
     let rewards_state = rewards_resource.value();
 
     let mut show_form = use_signal(|| false);
@@ -65,10 +65,8 @@ pub fn AdminMainPage() -> Element {
         let condition_type = form_condition_type.read().clone();
         let condition_value = *form_condition_value.read();
         let condition = RewardCondition::from_type_and_value(&condition_type, condition_value);
-        let reward_resource = rewards_resource.clone();
         is_submitting.set(true);
         spawn(async move {
-            let mut reward_resource = reward_resource.clone();
             let result = if is_edit {
                 update_reward(UpdateGlobalRewardRequest {
                     behavior,
@@ -103,7 +101,7 @@ pub fn AdminMainPage() -> Element {
 
     if rewards_state.read().is_none() {
         return rsx! {
-            div { class: "w-full max-w-desktop mx-auto px-4 py-8",
+            div { class: "py-8 px-4 mx-auto w-full max-w-desktop",
                 div { class: "text-center text-text-primary", "{tr.loading}" }
             }
         };
@@ -113,7 +111,7 @@ pub fn AdminMainPage() -> Element {
         Some(Ok(data)) => data.items.clone(),
         Some(Err(e)) => {
             return rsx! {
-                div { class: "w-full max-w-desktop mx-auto px-4 py-8",
+                div { class: "py-8 px-4 mx-auto w-full max-w-desktop",
                     div { class: "text-center text-red-500", "{tr.error}: {e}" }
                 }
             };
@@ -128,12 +126,12 @@ pub fn AdminMainPage() -> Element {
     let show_condition_value = current_condition_type != ConditionType::None;
 
     rsx! {
-        div { class: "w-full max-w-desktop mx-auto px-4 py-6",
+        div { class: "py-6 px-4 mx-auto w-full max-w-desktop",
             // Header
-            div { class: "flex items-center justify-between mb-6",
+            div { class: "flex justify-between items-center mb-6",
                 h1 { class: "text-2xl font-bold text-text-primary", "{tr.title}" }
                 button {
-                    class: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors",
+                    class: "py-2 px-4 text-white bg-blue-600 rounded-lg transition-colors hover:bg-blue-700 disabled:opacity-50",
                     onclick: open_create_form,
                     "{tr.add_reward}"
                 }
@@ -142,13 +140,13 @@ pub fn AdminMainPage() -> Element {
             // Modal overlay
             if show_form_val {
                 div {
-                    class: "fixed inset-0 z-50 flex items-center justify-center bg-black/50",
+                    class: "flex fixed inset-0 z-50 justify-center items-center bg-black/50",
                     onclick: close_form,
                     div {
-                        class: "bg-bg border border-card-border rounded-lg p-6 w-full max-w-md mx-4",
+                        class: "p-6 mx-4 w-full max-w-md rounded-lg border bg-bg border-card-border",
                         onclick: move |e| e.stop_propagation(),
 
-                        h2 { class: "text-lg font-semibold text-text-primary mb-4",
+                        h2 { class: "mb-4 text-lg font-semibold text-text-primary",
                             if is_editing {
                                 "{tr.edit_reward}"
                             } else {
@@ -158,11 +156,11 @@ pub fn AdminMainPage() -> Element {
 
                         // Behavior select
                         div { class: "mb-4",
-                            label { class: "block text-sm font-medium text-text-secondary mb-1",
+                            label { class: "block mb-1 text-sm font-medium text-text-secondary",
                                 "{tr.action_label}"
                             }
                             select {
-                                class: "w-full px-3 py-2 rounded-lg bg-bg border border-card-border text-text-primary",
+                                class: "py-2 px-3 w-full rounded-lg border bg-bg border-card-border text-text-primary",
                                 disabled: is_editing,
                                 onchange: move |e| {
                                     if let Ok(b) = e.value().parse::<RewardUserBehavior>() {
@@ -181,12 +179,12 @@ pub fn AdminMainPage() -> Element {
 
                         // Points input
                         div { class: "mb-4",
-                            label { class: "block text-sm font-medium text-text-secondary mb-1",
+                            label { class: "block mb-1 text-sm font-medium text-text-secondary",
                                 "{tr.point}"
                             }
                             input {
                                 r#type: "number",
-                                class: "w-full px-3 py-2 rounded-lg bg-bg border border-card-border text-text-primary",
+                                class: "py-2 px-3 w-full rounded-lg border bg-bg border-card-border text-text-primary",
                                 value: "{form_point}",
                                 onchange: move |e| {
                                     if let Ok(v) = e.value().parse::<i64>() {
@@ -198,11 +196,11 @@ pub fn AdminMainPage() -> Element {
 
                         // Period select
                         div { class: "mb-4",
-                            label { class: "block text-sm font-medium text-text-secondary mb-1",
+                            label { class: "block mb-1 text-sm font-medium text-text-secondary",
                                 "{tr.period}"
                             }
                             select {
-                                class: "w-full px-3 py-2 rounded-lg bg-bg border border-card-border text-text-primary",
+                                class: "py-2 px-3 w-full rounded-lg border bg-bg border-card-border text-text-primary",
                                 onchange: move |e| {
                                     if let Ok(p) = e.value().parse::<RewardPeriod>() {
                                         form_period.set(p);
@@ -220,11 +218,11 @@ pub fn AdminMainPage() -> Element {
 
                         // Condition select
                         div { class: "mb-4",
-                            label { class: "block text-sm font-medium text-text-secondary mb-1",
+                            label { class: "block mb-1 text-sm font-medium text-text-secondary",
                                 "{tr.condition}"
                             }
                             select {
-                                class: "w-full px-3 py-2 rounded-lg bg-bg border border-card-border text-text-primary",
+                                class: "py-2 px-3 w-full rounded-lg border bg-bg border-card-border text-text-primary",
                                 onchange: move |e| {
                                     let val = e.value();
                                     let ct = match val.as_str() {
@@ -267,12 +265,12 @@ pub fn AdminMainPage() -> Element {
                         // Condition value input (conditional)
                         if show_condition_value {
                             div { class: "mb-4",
-                                label { class: "block text-sm font-medium text-text-secondary mb-1",
+                                label { class: "block mb-1 text-sm font-medium text-text-secondary",
                                     "{tr.condition_value}"
                                 }
                                 input {
                                     r#type: "number",
-                                    class: "w-full px-3 py-2 rounded-lg bg-bg border border-card-border text-text-primary",
+                                    class: "py-2 px-3 w-full rounded-lg border bg-bg border-card-border text-text-primary",
                                     value: "{form_condition_value}",
                                     onchange: move |e| {
                                         if let Ok(v) = e.value().parse::<i64>() {
@@ -284,14 +282,14 @@ pub fn AdminMainPage() -> Element {
                         }
 
                         // Buttons
-                        div { class: "flex justify-end gap-3 mt-6",
+                        div { class: "flex gap-3 justify-end mt-6",
                             button {
-                                class: "px-4 py-2 rounded-lg border border-card-border text-text-primary hover:bg-card-border transition-colors",
+                                class: "py-2 px-4 rounded-lg border transition-colors border-card-border text-text-primary hover:bg-card-border",
                                 onclick: close_form,
                                 "{tr.cancel}"
                             }
                             button {
-                                class: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors",
+                                class: "py-2 px-4 text-white bg-blue-600 rounded-lg transition-colors hover:bg-blue-700 disabled:opacity-50",
                                 disabled: is_submitting_val,
                                 onclick: on_submit,
                                 "{tr.save}"
@@ -302,31 +300,31 @@ pub fn AdminMainPage() -> Element {
             }
 
             // Rewards table
-            div { class: "bg-bg border border-card-border rounded-lg overflow-hidden",
-                div { class: "px-4 py-3 border-b border-card-border",
+            div { class: "overflow-hidden rounded-lg border bg-bg border-card-border",
+                div { class: "py-3 px-4 border-b border-card-border",
                     span { class: "text-sm font-medium text-text-primary", "{tr.tab_rules}" }
                 }
 
                 if rewards.is_empty() {
-                    div { class: "px-4 py-8 text-center text-text-secondary", "{tr.no_rewards}" }
+                    div { class: "py-8 px-4 text-center text-text-secondary", "{tr.no_rewards}" }
                 } else {
                     div { class: "overflow-x-auto",
                         table { class: "w-full text-sm",
                             thead {
                                 tr { class: "border-b border-card-border bg-card-border/30",
-                                    th { class: "px-4 py-3 text-left font-medium text-text-secondary",
+                                    th { class: "py-3 px-4 font-medium text-left text-text-secondary",
                                         "{tr.action_label}"
                                     }
-                                    th { class: "px-4 py-3 text-left font-medium text-text-secondary",
+                                    th { class: "py-3 px-4 font-medium text-left text-text-secondary",
                                         "{tr.point}"
                                     }
-                                    th { class: "px-4 py-3 text-left font-medium text-text-secondary",
+                                    th { class: "py-3 px-4 font-medium text-left text-text-secondary",
                                         "{tr.period}"
                                     }
-                                    th { class: "px-4 py-3 text-left font-medium text-text-secondary",
+                                    th { class: "py-3 px-4 font-medium text-left text-text-secondary",
                                         "{tr.condition}"
                                     }
-                                    th { class: "px-4 py-3 text-left font-medium text-text-secondary",
+                                    th { class: "py-3 px-4 font-medium text-left text-text-secondary",
                                         "{tr.actions}"
                                     }
                                 }
@@ -336,14 +334,14 @@ pub fn AdminMainPage() -> Element {
                                     {
                                         let reward_clone = reward.clone();
                                         rsx! {
-                                            tr { class: "border-b border-card-border hover:bg-card-border/10 transition-colors",
-                                                td { class: "px-4 py-3 text-text-primary", "{reward.reward_behavior.label()}" }
-                                                td { class: "px-4 py-3 text-text-primary", "{reward.point}" }
-                                                td { class: "px-4 py-3 text-text-primary", "{reward.period.label()}" }
-                                                td { class: "px-4 py-3 text-text-primary", "{reward.condition.label()}" }
-                                                td { class: "px-4 py-3",
+                                            tr { class: "border-b transition-colors border-card-border hover:bg-card-border/10",
+                                                td { class: "py-3 px-4 text-text-primary", "{reward.reward_behavior.label()}" }
+                                                td { class: "py-3 px-4 text-text-primary", "{reward.point}" }
+                                                td { class: "py-3 px-4 text-text-primary", "{reward.period.label()}" }
+                                                td { class: "py-3 px-4 text-text-primary", "{reward.condition.label()}" }
+                                                td { class: "py-3 px-4",
                                                     button {
-                                                        class: "text-blue-500 hover:text-blue-400 text-sm font-medium",
+                                                        class: "text-sm font-medium text-blue-500 hover:text-blue-400",
                                                         onclick: move |_| open_edit_form(reward_clone.clone()),
                                                         "{tr.edit}"
                                                     }

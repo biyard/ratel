@@ -52,10 +52,14 @@ test:
 	$(BUILD_ENV) CARGO_TARGET_DIR=./test-build-target cargo test --features server,bypass --tests
 
 run:
-	$(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web
+	$(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web --features local-dev
+
 
 build:
 	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web --platform web @server --features server --platform server
+
+build-arm:
+	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web --platform web @server --features server --platform server --target aarch64-unknown-linux-gnu
 
 build-lambda:
 	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web --platform web @server --features lambda --platform server
@@ -67,6 +71,12 @@ docker.push:
 	docker tag $(ECR):$(COMMIT) $(ECR):$(ENV)
 	docker push $(ECR):$(COMMIT)
 	docker push $(ECR):$(ENV)
+
+docker.run:
+	docker run -d --name ratel-app -e "IP=0.0.0.0" -p 8080:8080 $(ECR):$(COMMIT)
+
+docker.rm:
+	docker rm -f ratel-app
 
 docker.login:
 	aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com

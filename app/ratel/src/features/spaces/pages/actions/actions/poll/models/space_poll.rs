@@ -128,10 +128,14 @@ impl From<(SpacePoll, bool)>
             updated_at: poll.updated_at,
             total_score: Some(poll.total_score),
             total_point: Some(poll.total_point),
+            quiz_score: None,
+            quiz_total_score: None,
+            quiz_passed: None,
             started_at: Some(poll.started_at),
             ended_at: Some(poll.ended_at),
             user_participated,
             credits: 0,
+            prerequisite: false,
         }
     }
 }

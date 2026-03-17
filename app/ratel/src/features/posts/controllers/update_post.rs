@@ -16,6 +16,7 @@ pub enum UpdatePostRequest {
         image_urls: Option<Vec<String>>,
         publish: bool,
         visibility: Option<Visibility>,
+        category: Option<String>,
     },
     PostType {
         r#type: PostType,
@@ -84,6 +85,7 @@ pub async fn update_post_handler(post_id: FeedPartition, req: UpdatePostRequest)
             title,
             visibility,
             image_urls,
+            category,
         } => {
             validate_title(&title)?;
             validate_content(&content)?;
@@ -106,11 +108,15 @@ pub async fn update_post_handler(post_id: FeedPartition, req: UpdatePostRequest)
             post.title = title.clone();
             post.html_contents = content.clone();
             post.visibility = Some(visibility.clone());
-            let updater = updater
+            post.category = category.clone();
+            let mut updater = updater
                 .with_status(status)
                 .with_title(title)
                 .with_html_contents(content)
                 .with_visibility(visibility);
+            if let Some(cat) = category {
+                updater = updater.with_category(cat);
+            }
             if let Some(image_urls) = image_urls {
                 post.urls = image_urls.clone();
                 vec![updater.with_urls(image_urls).transact_write_item()]
@@ -150,6 +156,20 @@ pub async fn update_post_handler(post_id: FeedPartition, req: UpdatePostRequest)
 
     if post.status == PostStatus::Published {
         crate::features::posts::services::index_post_async(conf.qdrant(), conf.bedrock_embeddings(), &post).await;
+
+        #[cfg(feature = "local-dev")]
+        {
+            let _ = crate::features::timeline::services::fan_out_timeline_entries(
+                cli,
+                &post.pk,
+                &post.user_pk,
+                post.updated_at,
+            )
+            .await
+            .map_err(|e| {
+                tracing::error!("local-dev timeline fan-out failed: {}", e);
+            });
+        }
     }
 
     Ok(post)

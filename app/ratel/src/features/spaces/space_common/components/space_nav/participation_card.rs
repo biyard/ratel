@@ -17,9 +17,9 @@ pub fn ParticipationCard(
     let tr: ParticipationCardTranslate = use_translate();
     let mut layover = use_layover();
     let navigator = use_navigator();
-    let mut participate =
-        use_action(crate::features::spaces::controllers::participate_space::participate_space);
     let mut space = ctx.space;
+    let mut role = ctx.role;
+    let mut current_role = ctx.current_role;
     let panel_requirements_query_key = vec![
         "Space".to_string(),
         space_id.to_string(),
@@ -76,20 +76,57 @@ pub fn ParticipationCard(
                 space_id.to_string(),
                 "PanelRequirements".to_string(),
             ];
-            participate.call(space_id).await;
-            query.invalidate(&space_detail);
-            query.invalidate(&panel_requirements_key);
-            space.restart();
+            if crate::features::spaces::controllers::participate_space::participate_space(
+                space_id.clone(),
+            )
+            .await
+            .is_ok()
+            {
+                current_role.set(SpaceUserRole::Participant);
+                query.invalidate(&space_detail);
+                query.invalidate(&panel_requirements_key);
+                space.restart();
+                role.restart();
+
+                // Show prerequisite actions layover if any exist
+                if let Ok(actions) =
+                    crate::features::spaces::pages::actions::controllers::list_actions(
+                        space_id.clone(),
+                    )
+                    .await
+                {
+                    let prerequisite_actions: Vec<
+                        crate::features::spaces::pages::actions::types::SpaceActionSummary,
+                    > = actions
+                        .into_iter()
+                        .filter(|a| a.prerequisite)
+                        .collect();
+                    if !prerequisite_actions.is_empty() {
+                        layover
+                            .open(
+                                "space-prerequisite-actions".to_string(),
+                                String::new(),
+                                rsx! {
+                                    PrerequisiteActionsLayover {
+                                        space_id,
+                                        actions: prerequisite_actions,
+                                    }
+                                },
+                            )
+                            .set_size(LayoverSize::Medium);
+                    }
+                }
+            }
         });
     };
 
-    let handle_open_credentials = move |_| {
-        if let Some(path) = &credential_button_path {
-            navigator.push(path.clone());
-        } else {
-            login_for_credentials.call(());
-        }
-    };
+    // let handle_open_credentials = move |_| {
+    //     if let Some(path) = &credential_button_path {
+    //         navigator.push(path.clone());
+    //     } else {
+    //         login_for_credentials.call(());
+    //     }
+    // };
 
     rsx! {
         div { class: "px-4 w-full",
@@ -125,13 +162,13 @@ pub fn ParticipationCard(
                         onclick: handle_participate,
                         {tr.participate}
                     }
-                    Button {
-                        class: "w-full",
-                        style: ButtonStyle::Outline,
-                        size: ButtonSize::Small,
-                        onclick: handle_open_credentials,
-                        {tr.see_my_credential}
-                    }
+                                // Button {
+                //     class: "w-full",
+                //     style: ButtonStyle::Outline,
+                //     size: ButtonSize::Small,
+                //     onclick: handle_open_credentials,
+                //     {tr.see_my_credential}
+                // }
                 }
             }
         }

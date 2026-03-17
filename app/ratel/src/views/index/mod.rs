@@ -1,7 +1,8 @@
-#[cfg(feature = "users")]
-use crate::features::users::UserSidemenu;
+use crate::features::posts::components::CreatePostButton;
+use crate::features::timeline::components::{
+    DraftTimeline, FollowingTimeline, PopularTimeline, TeamTimeline,
+};
 use crate::*;
-use crate::features::posts::components::{CreatePostButton, FeedList};
 
 #[component]
 pub fn Index() -> Element {
@@ -9,12 +10,15 @@ pub fn Index() -> Element {
     let user = user_ctx().user.clone();
 
     rsx! {
-        div { class: "flex overflow-x-hidden gap-5 justify-between py-3 mx-auto min-h-screen max-w-desktop max-tablet:px-2.5",
-            if let Some(user) = &user {
-                UserSidemenu { username: user.username.clone() }
+        div { class: "flex overflow-x-hidden gap-5 justify-between py-3 pl-2 mx-auto w-full min-h-screen max-tablet:px-2.5",
+            div { class: "flex flex-col gap-4 w-full",
+                if user.is_some() {
+                    DraftTimeline {}
+                    FollowingTimeline {}
+                    TeamTimeline {}
+                }
+                PopularTimeline {}
             }
-
-            div { class: "flex grow", FeedList {} }
 
             if user.is_some() {
                 div {
@@ -25,11 +29,4 @@ pub fn Index() -> Element {
             }
         }
     }
-}
-
-#[cfg(not(feature = "users"))]
-#[component]
-fn UserSidemenu(username: String) -> Element {
-    let _ = username;
-    rsx! {}
 }

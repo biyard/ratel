@@ -40,10 +40,14 @@ impl From<SpaceFollowAction>
             updated_at: follow.updated_at,
             total_score: None,
             total_point: None,
+            quiz_score: None,
+            quiz_total_score: None,
+            quiz_passed: None,
             started_at: None,
             ended_at: None,
             user_participated: false,
             credits: 0,
+            prerequisite: false,
         }
     }
 }

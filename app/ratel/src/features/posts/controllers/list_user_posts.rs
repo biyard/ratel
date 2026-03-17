@@ -78,9 +78,10 @@ pub async fn list_user_posts_handler(
     Ok(ListItemsResponse { items, bookmark })
 }
 
-#[get("/api/posts/by-team/:teamname?bookmark", user: OptionalUser)]
+#[get("/api/posts/by-team/:teamname?category&bookmark", user: OptionalUser)]
 pub async fn list_team_posts_handler(
     teamname: String,
+    category: Option<String>,
     bookmark: Option<String>,
 ) -> Result<ListItemsResponse<PostResponse>> {
     let conf = crate::features::posts::config::get();
@@ -89,8 +90,9 @@ pub async fn list_team_posts_handler(
     let user: Option<crate::features::auth::User> = user.into();
 
     tracing::debug!(
-        "list_team_posts_handler: teamname = {:?} bookmark = {:?}",
+        "list_team_posts_handler: teamname = {:?} category = {:?} bookmark = {:?}",
         teamname,
+        category,
         bookmark
     );
 
@@ -102,13 +104,20 @@ pub async fn list_team_posts_handler(
         .ok_or(Error::NotFound(format!("Team not found: {}", teamname)))?;
     let team_pk = team.pk;
 
-    let mut query_options = Post::opt().limit(10).sk(PostStatus::Published.to_string());
+    let fetch_limit = if category.is_some() { 50 } else { 10 };
+    let mut query_options = Post::opt().limit(fetch_limit).sk(PostStatus::Published.to_string());
 
     if let Some(bookmark) = bookmark {
         query_options = query_options.bookmark(bookmark);
     }
 
     let (posts, bookmark) = Post::find_by_user_and_status(cli, &team_pk, query_options).await?;
+
+    let posts = if let Some(ref cat) = category {
+        posts.into_iter().filter(|p| p.category.as_deref() == Some(cat.as_str())).collect::<Vec<_>>()
+    } else {
+        posts
+    };
 
     tracing::debug!(
         "list_team_posts_handler: found {} posts, next bookmark = {:?}",

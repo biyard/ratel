@@ -689,6 +689,14 @@ a {
 }
 
 /* ==========================================================================
+   Team Page
+   ========================================================================== */
+
+@theme static {
+  --color-team-bg: var(--dark, #111111) var(--light, #f1f1f1);
+}
+
+/* ==========================================================================
    Space Page
    ========================================================================== */
 
@@ -807,4 +815,31 @@ h3 {
 
 .separator[data-orientation="vertical"] {
   @apply w-[1px] h-full;
+}
+
+body {
+  @apply overflow-hidden;
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+  border-radius: 3px;
 }

@@ -3,17 +3,17 @@ use crate::features::spaces::pages::apps::apps::rewards::*;
 use crate::common::models::auth::OptionalUser;
 use crate::features::spaces::space_common::models::SpaceRewardResponse;
 
-#[get("/api/spaces/{space_id}/rewards?action_key", user: OptionalUser)]
+#[get("/api/spaces/{space_id}/rewards?action_id", user: OptionalUser)]
 pub async fn list_space_rewards(
     space_id: SpacePartition,
-    action_key: Option<EntityType>,
+    action_id: Option<String>,
 ) -> Result<ListResponse<SpaceRewardResponse>> {
     use crate::common::models::reward::UserReward;
     use crate::features::spaces::space_common::models::SpaceReward;
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
 
-    let space_rewards = SpaceReward::list_by_action(cli, space_id.clone(), action_key).await?;
+    let space_rewards = SpaceReward::list_by_action(cli, space_id.clone(), action_id).await?;
 
     let user_rewards = if let Some(user) = user.0 {
         let user_reward_keys: Vec<_> = space_rewards

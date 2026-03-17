@@ -6,6 +6,7 @@ mod participation_layover_header;
 mod participation_requirements_layover;
 mod participation_step_bar;
 mod participation_verification_section;
+mod prerequisite_actions_layover;
 mod space_user_login;
 mod space_user_profile;
 
@@ -17,6 +18,7 @@ pub use participation_layover_header::*;
 pub use participation_requirements_layover::*;
 pub use participation_step_bar::*;
 pub use participation_verification_section::*;
+pub use prerequisite_actions_layover::*;
 pub use space_user_login::*;
 pub use space_user_profile::*;
 
@@ -26,15 +28,20 @@ pub fn SpaceNav(
     logo: String,
     menus: Vec<SpaceNavItem>,
     user: Option<User>,
+    anonymous_user_profile: Option<(String, String)>,
     login_handler: EventHandler<()>,
     role: SpaceUserRole,
     show_participation_card: bool,
     credential_path: Option<String>,
+    #[props(default)] class: String,
 ) -> Element {
     rsx! {
-        div { class: "flex z-40 flex-col gap-2.5 justify-between pt-2.5 w-full h-full divide-y shrink-0 divide-divider",
+        div { class: "flex z-40 flex-col gap-2.5 justify-between pt-2.5 w-full h-full divide-y shrink-0 divide-divider {class} max-tablet:flex-row max-tablet:h-16 max-tablet:items-stretch max-tablet:jstify-around",
             div { class: "flex flex-col gap-2.5 pb-4 w-full",
-                img { src: "{logo}", class: "mx-4 mt-5 mb-2.5 w-25" }
+                img {
+                    src: "{logo}",
+                    class: "mx-4 mt-5 mb-2.5 w-25 max-tablet:hidden",
+                }
 
                 if show_participation_card {
                     ParticipationCard {
@@ -44,20 +51,27 @@ pub fn SpaceNav(
                     }
                 }
 
-                div { class: "flex flex-col gap-1.5 items-start px-4 pt-2.5 font-bold text-xs/[14px]",
+                div { class: "flex flex-col gap-1.5 items-start px-4 pt-2.5 font-bold text-xs/[14px] max-tablet:flex-row max-tablet:items-stretch max-tablet:justify-around max-tablet:p-0",
                     for item in menus.iter() {
                         NavItem { item: item.clone() }
                     }
                 }
             }
             Row {
+                class: "max-tablet:hidden",
                 main_axis_align: MainAxisAlign::Between,
                 cross_axis_align: CrossAxisAlign::Center,
 
                 if let Some(user) = user {
                     SpaceUserProfile {
-                        image: user.profile_url.clone(),
-                        display_name: user.display_name.clone(),
+                        image: anonymous_user_profile
+                            .as_ref()
+                            .map(|(image, _)| image.clone())
+                            .unwrap_or_else(|| user.profile_url.clone()),
+                        display_name: anonymous_user_profile
+                            .as_ref()
+                            .map(|(_, display_name)| display_name.clone())
+                            .unwrap_or_else(|| user.display_name.clone()),
                         user_role: role,
                     }
                 } else {
@@ -80,10 +94,12 @@ fn NavItem(item: SpaceNavItem) -> Element {
     // NOTE: Link component does not support class attribute merging.
     rsx! {
         Link {
-            class: "flex flex-row gap-2 items-center py-2 px-1 w-full text-sm font-medium rounded-sm text-text aria-selected:bg-space-nav-item-selected hover:bg-space-nav-item-hover",
+            class: "flex flex-row gap-2 items-center py-2 px-1 w-full text-sm font-medium rounded-sm text-text aria-selected:bg-space-nav-item-selected max-tablet:flex-col max-tablet:gap-0.5 aria-selected:text-primary max-tablet:aria-selected:bg-transparent max-tablet:py-0 hover:bg-space-nav-item-hover",
             "aria-selected": is_active,
             to: item.link,
-            {item.icon}
+            div { class: "max-tablet:h-6 max-tablet:w-6 max-tablet:flex max-tablet:items-center max-tablet:justify-center",
+                {item.icon}
+            }
             {item.label}
         }
     }

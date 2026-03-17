@@ -19,6 +19,7 @@ pub enum UpdatePostRequest {
         image_urls: Option<Vec<String>>,
         publish: bool,
         visibility: Option<Visibility>,
+        category: Option<String>,
     },
     PostType {
         r#type: PostType,
@@ -89,6 +90,7 @@ pub async fn update_post_handler(
             title,
             visibility,
             image_urls,
+            category,
         } => {
             validate_title(&title)?;
             validate_content(&content)?;
@@ -115,12 +117,16 @@ pub async fn update_post_handler(
             post.title = title.clone();
             post.html_contents = content.clone();
             post.visibility = Some(visibility.clone());
+            post.category = category.clone();
             post.status = PostStatus::Published;
-            let updater = updater
+            let mut updater = updater
                 .with_status(PostStatus::Published)
                 .with_title(title)
                 .with_html_contents(content)
                 .with_visibility(visibility);
+            if let Some(cat) = category {
+                updater = updater.with_category(cat);
+            }
             if let Some(image_urls) = image_urls {
                 post.urls = image_urls.clone();
                 vec![updater.with_urls(image_urls).transact_write_item()]

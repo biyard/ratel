@@ -24,7 +24,7 @@ pub fn AppCard(
                     {app_type.translate(&lang())}
                 }
                 p { class: "h-8 text-xs font-medium leading-4 sp-dash-font-raleway text-font-body line-clamp-2",
-                    {tr.description(app_type)}
+                    {app_type.description(&lang())}
                 }
             }
 

@@ -1,13 +1,10 @@
-mod controllers;
+pub mod controllers;
 pub mod i18n;
 mod route;
-mod views;
-
-use dioxus::prelude::*;
+pub mod views;
 
 pub use controllers::*;
-pub use route::Route;
 
-use crate::common::*;
+pub use views::HomePage as SpaceRewardAppPage;
 
-type Result<T> = crate::common::Result<T>;
+use crate::*;
