@@ -252,7 +252,9 @@ impl SpacePost {
                 if self.status() == DiscussionStatus::InProgress {
                     Ok(())
                 } else {
-                    Err(crate::features::spaces::pages::actions::actions::discussion::Error::SpacePostNotStarted)
+                    Err(
+                        crate::features::spaces::pages::actions::actions::discussion::Error::DiscussionNotInProgress,
+                    )
                 }
             }
             _ => Err(

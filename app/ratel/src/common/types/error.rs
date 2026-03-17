@@ -133,12 +133,12 @@ pub enum Error {
     )]
     InvalidSpaceAuthor,
 
-    #[error("space post not started")]
+    #[error("discussion is not in progress")]
     #[translate(
-        en = "Space post not started",
-        ko = "스페이스 게시글이 시작되지 않았습니다."
+        en = "Discussion is not in progress",
+        ko = "토론이 진행중 상태가 아닙니다."
     )]
-    SpacePostNotStarted,
+    DiscussionNotInProgress,
 
     #[error("space post ended")]
     #[translate(en = "Space post ended", ko = "스페이스 게시글이 종료되었습니다.")]

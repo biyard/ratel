@@ -6,6 +6,7 @@ use crate::features::spaces::pages::actions::actions::poll::components::{
 };
 use crate::features::spaces::pages::actions::actions::quiz::*;
 use crate::features::spaces::pages::apps::apps::file::components::FileCard;
+use crate::features::spaces::space_common::hooks::use_space;
 use crate::features::spaces::space_common::types::space_page_actions_quiz_key;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -44,6 +45,10 @@ translate! {
     quiz_not_started: {
         en: "This quiz has not started yet.",
         ko: "이 퀴즈는 아직 시작되지 않았습니다.",
+    },
+    space_not_active: {
+        en: "This action is available only when the space is started or in progress.",
+        ko: "이 액션은 스페이스가 시작/진행중 상태일 때만 참여할 수 있습니다.",
     },
     submit_success: {
         en: "Response submitted successfully.",
@@ -92,6 +97,7 @@ pub fn QuizReadPage(
     let layout_ui = use_space_layout_ui();
     let sidebar_visible = layout_ui.sidebar_visible;
     let nav = navigator();
+    let space = use_space().read().clone();
 
     let initial_answers = quiz.my_response.clone().unwrap_or_else(|| {
         quiz.questions
@@ -116,9 +122,16 @@ pub fn QuizReadPage(
 
     let now = crate::common::utils::time::get_now_timestamp_millis();
     let is_in_progress = now >= quiz.started_at && now <= quiz.ended_at;
+    let is_space_active = matches!(
+        space.status,
+        Some(crate::common::SpaceStatus::Started | crate::common::SpaceStatus::InProgress)
+    );
     let has_passed = quiz.passed.unwrap_or(false);
-    let can_submit =
-        can_respond && is_in_progress && !has_passed && quiz.attempt_count < quiz.retry_count;
+    let can_submit = can_respond
+        && is_space_active
+        && is_in_progress
+        && !has_passed
+        && quiz.attempt_count < quiz.retry_count;
     let remaining_submissions = quiz.retry_count.saturating_sub(quiz.attempt_count);
     let total_questions = quiz.questions.len();
     let current_idx = question_index().min(total_questions.saturating_sub(1));
@@ -250,6 +263,21 @@ pub fn QuizReadPage(
 
                     div { class: "flex flex-row w-full justify-center items-start min-h-0 flex-1",
                         div { class: "flex flex-1 flex-col gap-4 overflow-y-auto max-w-desktop pb-6",
+                            if !is_space_active {
+                                div { class: "rounded-lg bg-neutral-800 p-3 text-sm text-neutral-400",
+                                    {i18n.space_not_active}
+                                }
+                            } else if !is_in_progress {
+                                if now < quiz.started_at {
+                                    div { class: "rounded-lg bg-neutral-800 p-3 text-sm text-neutral-400",
+                                        {i18n.quiz_not_started}
+                                    }
+                                } else {
+                                    div { class: "rounded-lg bg-neutral-800 p-3 text-sm text-neutral-400",
+                                        {i18n.quiz_ended}
+                                    }
+                                }
+                            }
 
                             if quiz.questions.is_empty() {
                                 div { class: "flex items-center justify-center py-10 text-neutral-500 light:text-text-secondary",

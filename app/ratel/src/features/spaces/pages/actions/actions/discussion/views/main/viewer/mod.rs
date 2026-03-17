@@ -1,6 +1,7 @@
 use super::*;
 use crate::common::components::{Button, ButtonSize, ButtonStyle};
 use crate::features::spaces::pages::actions::actions::discussion::components::DiscussionComments;
+use crate::features::spaces::space_common::hooks::use_space;
 
 translate! {
     DiscussionViewerTranslate;
@@ -29,10 +30,17 @@ pub fn ViewerMain(
     let user = crate::features::spaces::hooks::use_user()?;
     let current_user_pk = user.read().as_ref().map(|u| u.pk.to_string());
     let ctx = use_discussion_context();
+    let space = use_space().read().clone();
     let discussion = ctx.discussion().post;
+    let is_space_active = matches!(
+        space.status,
+        Some(crate::common::SpaceStatus::Started | crate::common::SpaceStatus::InProgress)
+    );
     let can_participate = discussion.status() == DiscussionStatus::InProgress;
     let can_comment =
-        matches!(role, SpaceUserRole::Creator | SpaceUserRole::Participant) && can_participate;
+        matches!(role, SpaceUserRole::Creator | SpaceUserRole::Participant)
+            && is_space_active
+            && can_participate;
     let can_manage_comments = can_comment;
 
     rsx! {
