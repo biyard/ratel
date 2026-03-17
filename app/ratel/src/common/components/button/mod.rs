@@ -28,7 +28,9 @@ pub fn Button(
             },
             ..attributes,
             if loading() {
-                LoadingIndicator {}
+                lucide_dioxus::LoaderCircle {
+                    class: "w-4 h-4 animate-spin",
+                }
             } else {
                 {children}
             }

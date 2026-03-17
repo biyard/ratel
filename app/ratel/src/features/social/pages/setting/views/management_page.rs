@@ -27,13 +27,23 @@ pub fn ManagementPage(username: String) -> Element {
     }))?;
 
     let ctx = ctx_resource.read();
-    let Ok(ctx) = ctx.as_ref() else {
-        return rsx! { div { class: "text-foreground-muted text-sm p-4", "Loading..." } };
+    let ctx = match ctx.as_ref() {
+        Ok(ctx) => ctx.clone(),
+        Err(_) => {
+            return rsx! {
+                div { class: "flex flex-col gap-2 p-4",
+                    span { class: "text-sm font-semibold text-text-primary", {tr.no_permission_title} }
+                    span { class: "text-sm text-foreground-muted", {tr.no_permission_description} }
+                }
+            };
+        }
     };
 
     let team_pk = ctx.team_pk.clone();
 
     let mut refresh = use_signal(|| 0u64);
+    let mut error_msg = use_signal(|| Option::<String>::None);
+    let failed_remove_member = tr.failed_remove_member.to_string();
 
     // Load groups for invite modal
     let group_resource = use_loader(use_reactive((&team_pk,), move |(team_pk,)| {
@@ -145,6 +155,13 @@ pub fn ManagementPage(username: String) -> Element {
                 }
             }
 
+            // Error message
+            if let Some(msg) = error_msg() {
+                div { class: "px-4 py-3 rounded-[10px] border border-destructive bg-destructive/10 text-sm text-destructive",
+                    "{msg}"
+                }
+            }
+
             // Members list
             div { class: "flex flex-col rounded-[10px] border border-border",
                 // Section header
@@ -161,6 +178,7 @@ pub fn ManagementPage(username: String) -> Element {
                         let member = member.clone();
                         let team_pk = team_pk.clone();
                         let mut refresh = refresh.clone();
+                        let failed_remove_member = failed_remove_member.clone();
                         rsx! {
                             MemberRow {
                                 key: "{member.user_id}",
@@ -170,18 +188,30 @@ pub fn ManagementPage(username: String) -> Element {
                                     let member = member.clone();
                                     let team_pk = team_pk.clone();
                                     let mut refresh = refresh.clone();
+                                    let mut error_msg = error_msg.clone();
+                                    let failed_msg = failed_remove_member.clone();
                                     spawn(async move {
+                                        let mut failed = false;
                                         for group in &member.groups {
-                                            let _ = remove_member_handler(
+                                            if remove_member_handler(
                                                 team_pk.clone(),
                                                 group.group_id.clone(),
                                                 RemoveMemberRequest {
                                                     user_pks: vec![member.user_id.clone()],
                                                 },
                                             )
-                                            .await;
+                                            .await
+                                            .is_err()
+                                            {
+                                                failed = true;
+                                            }
                                         }
-                                        refresh.set(refresh() + 1);
+                                        if failed {
+                                            error_msg.set(Some(failed_msg));
+                                        } else {
+                                            error_msg.set(None);
+                                            refresh.set(refresh() + 1);
+                                        }
                                     });
                                 },
                             }
@@ -200,7 +230,7 @@ pub fn ManagementPage(username: String) -> Element {
             if total_pages > 1 || can_prev {
                 div { class: "flex items-center justify-center gap-1",
                     button {
-                        class: "flex items-center justify-center w-8 h-8 rounded-lg transition-colors text-foreground-muted hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed",
+                        class: "flex items-center justify-center w-8 h-8 rounded-lg transition-colors text-foreground-muted hover:bg-hover disabled:opacity-30 disabled:cursor-not-allowed",
                         disabled: !can_prev,
                         onclick: move |_| {
                             if can_prev {
@@ -218,7 +248,7 @@ pub fn ManagementPage(username: String) -> Element {
                             let active_class = if is_active {
                                 "bg-white text-neutral-900 font-semibold"
                             } else {
-                                "text-foreground-muted hover:bg-white/5"
+                                "text-foreground-muted hover:bg-hover"
                             };
                             rsx! {
                                 button {
@@ -232,7 +262,7 @@ pub fn ManagementPage(username: String) -> Element {
                     }
 
                     button {
-                        class: "flex items-center justify-center w-8 h-8 rounded-lg transition-colors text-foreground-muted hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed",
+                        class: "flex items-center justify-center w-8 h-8 rounded-lg transition-colors text-foreground-muted hover:bg-hover disabled:opacity-30 disabled:cursor-not-allowed",
                         disabled: !can_next,
                         onclick: move |_| {
                             if can_next {
@@ -257,6 +287,7 @@ fn MemberRow(member: TeamMemberResponse, is_last: bool, on_remove: EventHandler<
     let mut show_menu = use_signal(|| false);
     // (top, right) in viewport px for fixed dropdown
     let mut menu_pos = use_signal(|| (0f64, 0f64));
+    let mut btn_mounted: Signal<Option<std::rc::Rc<MountedData>>> = use_signal(|| None);
 
     let display = if member.display_name.is_empty() {
         member.username.clone()
@@ -304,19 +335,25 @@ fn MemberRow(member: TeamMemberResponse, is_last: bool, on_remove: EventHandler<
                         }
                     }
                     button {
-                        class: "flex items-center justify-center w-7 h-7 rounded-md hover:bg-white/10 transition-colors cursor-pointer relative z-20",
+                        class: "flex items-center justify-center w-7 h-7 rounded-md hover:bg-hover transition-colors cursor-pointer relative z-20",
                         onmounted: move |e| {
-                            spawn(async move {
-                                if let Ok(rect) = e.get_client_rect().await {
-                                    let bottom = rect.origin.y + rect.size.height;
-                                    let right = rect.origin.x + rect.size.width;
-                                    menu_pos.set((bottom, right));
-                                }
-                            });
+                            btn_mounted.set(Some(e.data()));
                         },
                         onclick: move |e| {
                             e.stop_propagation();
-                            show_menu.toggle();
+                            let mounted = btn_mounted.read().clone();
+                            if let Some(mounted) = mounted {
+                                spawn(async move {
+                                    if let Ok(rect) = mounted.get_client_rect().await {
+                                        let bottom = rect.origin.y + rect.size.height;
+                                        let right = rect.origin.x + rect.size.width;
+                                        menu_pos.set((bottom, right));
+                                    }
+                                    show_menu.toggle();
+                                });
+                            } else {
+                                show_menu.toggle();
+                            }
                         },
                         lucide_dioxus::Ellipsis {
                             class: "w-4 h-4 [&>circle]:fill-text-primary [&>circle]:stroke-none",
@@ -328,7 +365,7 @@ fn MemberRow(member: TeamMemberResponse, is_last: bool, on_remove: EventHandler<
                             style: "top: {menu_pos().0 + 4.0}px; right: calc(100vw - {menu_pos().1}px);",
                             onclick: move |e| e.stop_propagation(),
                             button {
-                                class: "flex items-center gap-2 w-full px-3 py-2 text-sm text-destructive hover:bg-white/10 transition-colors text-left",
+                                class: "flex items-center gap-2 w-full px-3 py-2 text-sm text-destructive hover:bg-hover transition-colors text-left",
                                 onclick: move |_| {
                                     show_menu.set(false);
                                     on_remove.call(());
