@@ -6,9 +6,8 @@ use crate::features::social::controllers::dto::TeamResponse;
 use crate::features::social::controllers::find_team::find_team_handler;
 use crate::features::social::*;
 
-/// Unified layout that detects whether username is a team or individual user.
-/// - If find_team_handler returns a team, show TeamLayout (sidebar with categories)
-/// - If it's a user, show UserLayout (sidebar with user menu)
+/// Team layout — used exclusively for team routes (home, drafts, groups, dao, members, rewards).
+/// Always renders TeamSidemenu with categories sidebar.
 #[component]
 pub fn SocialLayout(username: String) -> Element {
     crate::common::contexts::TeamContext::init();
@@ -33,38 +32,30 @@ pub fn SocialLayout(username: String) -> Element {
         }
     });
 
-    // Check if this username maps to a team
-    let team_check = use_resource(use_reactive((&username,), |(name,)| async move {
-        find_team_handler(name).await.ok()
-    }));
-
-    let is_team = team_check
-        .read()
-        .as_ref()
-        .and_then(|opt| opt.as_ref())
-        .is_some();
-
-    if is_team {
-        // Team layout
-        rsx! {
-            div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-team-bg text-text-primary",
-                div { class: "hidden tablet:flex",
-                    TeamSidemenu {
-                        key: "{username}",
-                        username: username.clone(),
-                        logged_in,
-                    }
-                }
-                div { class: "flex flex-col min-w-0 min-h-0",
-                    div { class: "flex overflow-auto flex-1 p-5 w-full bg-background rounded-tl-[10px]",
-                        Outlet::<Route> {}
-                    }
+    rsx! {
+        div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-team-bg text-text-primary",
+            div { class: "hidden tablet:flex",
+                TeamSidemenu { key: "{username}", username: username.clone(), logged_in }
+            }
+            div { class: "flex flex-col min-w-0 min-h-0",
+                div { class: "flex overflow-auto flex-1 p-5 w-full bg-background rounded-tl-[10px]",
+                    Outlet::<Route> {}
                 }
             }
         }
-    } else {
-        // User layout
-        rsx! {
+    }
+}
+
+/// User layout — used for user profile routes (posts, rewards, settings, etc.).
+/// Includes AppMenu header and UserSidemenu.
+#[component]
+pub fn UserLayout(username: String) -> Element {
+    let user_ctx = crate::features::auth::hooks::use_user_context();
+    let logged_in = user_ctx().user.is_some();
+
+    rsx! {
+        div { class: "antialiased bg-bg",
+            crate::AppMenu {}
             div { class: "flex overflow-x-hidden gap-5 justify-between py-3 mx-auto min-h-screen text-white bg-bg max-w-desktop max-tablet:px-2.5",
                 if logged_in {
                     UserSidemenu { username: username.clone() }
@@ -75,21 +66,6 @@ pub fn SocialLayout(username: String) -> Element {
     }
 }
 
-/// Backward-compatible UserLayout for direct usage (if needed).
-#[component]
-pub fn UserLayout(username: String) -> Element {
-    let user_ctx = crate::features::auth::hooks::use_user_context();
-    let logged_in = user_ctx().user.is_some();
-
-    rsx! {
-        div { class: "flex overflow-x-hidden gap-5 justify-between py-3 mx-auto min-h-screen text-white bg-bg max-w-desktop max-tablet:px-2.5",
-            if logged_in {
-                UserSidemenu { username: username.clone() }
-            }
-            div { class: "flex flex-col px-5 grow", Outlet::<Route> {} }
-        }
-    }
-}
 
 #[component]
 fn TeamSidemenu(username: String, logged_in: bool) -> Element {
@@ -261,13 +237,24 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                                             e.stop_propagation();
                                             show_user_menu.toggle();
                                         },
-                                        lucide_dioxus::Ellipsis { class: "w-4 h-4 [&>circle]:fill-foreground-muted [&>circle]:stroke-none" }
+                                        lucide_dioxus::Ellipsis {
+                                            class: "w-4 h-4 [&>circle]:fill-text-primary [&>circle]:stroke-none",
+                                        }
                                     }
                                 }
                                 if show_user_menu() {
                                     div {
                                         class: "overflow-hidden absolute right-3 left-3 bottom-full z-30 py-1 mb-1 rounded-lg border shadow-lg bg-popover border-border",
                                         onclick: move |e| e.stop_propagation(),
+                                        Link {
+                                            to: Route::TeamSetting { username: username.clone() },
+                                            class: "flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-white/10 transition-colors w-full text-left",
+                                            onclick: move |_| show_user_menu.set(false),
+                                            lucide_dioxus::Settings {
+                                                class: "w-[15px] h-[15px] [&>path]:stroke-text-primary [&>line]:stroke-text-primary [&>polyline]:stroke-text-primary [&>circle]:stroke-text-primary shrink-0",
+                                            }
+                                            "Settings"
+                                        }
                                         button {
                                             class: "flex gap-2 items-center py-2 px-3 w-full text-sm text-left transition-colors text-destructive hover:bg-white/10",
                                             onclick: move |_| {
