@@ -62,4 +62,3 @@ user.json
 /playwright/.auth/
 
 .playwright-mcp
-/.claude/agent-memory
