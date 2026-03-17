@@ -91,11 +91,7 @@ export class DynamoStreamEventStack extends Stack {
           source: "ratel.dynamodb.stream",
           detailType: "TimelineUpdate",
         },
-        inputTemplate: JSON.stringify({
-          post_pk: "<$.dynamodb.NewImage.pk.S>",
-          author_pk: "<$.dynamodb.NewImage.user_pk.S>",
-          created_at: "<$.dynamodb.NewImage.updated_at.N>",
-        }),
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
       },
     });
 
@@ -133,14 +129,7 @@ export class DynamoStreamEventStack extends Stack {
           source: "ratel.dynamodb.stream",
           detailType: "PopularPostUpdate",
         },
-        inputTemplate: JSON.stringify({
-          post_pk: "<$.dynamodb.NewImage.pk.S>",
-          author_pk: "<$.dynamodb.NewImage.user_pk.S>",
-          created_at: "<$.dynamodb.NewImage.updated_at.N>",
-          likes: "<$.dynamodb.NewImage.likes.N>",
-          comments: "<$.dynamodb.NewImage.comments.N>",
-          shares: "<$.dynamodb.NewImage.shares.N>",
-        }),
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
       },
     });
 
@@ -177,13 +166,7 @@ export class DynamoStreamEventStack extends Stack {
           source: "ratel.dynamodb.stream",
           detailType: "PopularSpaceUpdate",
         },
-        inputTemplate: JSON.stringify({
-          space_pk: "<$.dynamodb.NewImage.pk.S>",
-          post_pk: "<$.dynamodb.NewImage.post_pk.S>",
-          author_pk: "<$.dynamodb.NewImage.user_pk.S>",
-          created_at: "<$.dynamodb.NewImage.updated_at.N>",
-          participants: "<$.dynamodb.NewImage.participants.N>",
-        }),
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
       },
     });
 
