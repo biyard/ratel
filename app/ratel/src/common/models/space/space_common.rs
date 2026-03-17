@@ -107,6 +107,13 @@ impl SpaceCommon {
     pub fn is_public(&self) -> bool {
         matches!(self.visibility, SpaceVisibility::Public) && self.is_published()
     }
+
+    pub fn is_active(&self) -> bool {
+        matches!(
+            self.status,
+            Some(SpaceStatus::Started | SpaceStatus::InProgress)
+        )
+    }
 }
 
 #[cfg(feature = "server")]

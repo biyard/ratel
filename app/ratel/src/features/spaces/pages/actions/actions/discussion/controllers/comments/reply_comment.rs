@@ -1,3 +1,4 @@
+use crate::common::models::space::{SpaceAuthor, SpaceCommon};
 use crate::features::spaces::pages::actions::actions::discussion::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -5,7 +6,7 @@ pub struct ReplyCommentRequest {
     pub content: String,
 }
 
-#[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments/{comment_sk}/reply", role: SpaceUserRole, author: crate::common::models::space::SpaceAuthor)]
+#[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments/{comment_sk}/reply", role: SpaceUserRole, author: SpaceAuthor, space: SpaceCommon)]
 pub async fn reply_comment(
     space_id: SpacePartition,
     discussion_sk: SpacePostEntityType,
@@ -15,6 +16,9 @@ pub async fn reply_comment(
     SpacePost::can_view(&role)?;
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
+    if !space.is_active() {
+        return Err(Error::BadRequest("Space is not active".into()));
+    }
     let discussion_sk_entity: EntityType = discussion_sk.into();
 
     let space_post_pk: SpacePostPartition = match &discussion_sk_entity {

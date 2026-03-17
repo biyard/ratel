@@ -1,6 +1,7 @@
+use crate::common::models::space::SpaceCommon;
 use crate::features::spaces::pages::actions::actions::discussion::*;
 
-#[delete("/api/spaces/{space_id}/discussions/{discussion_sk}/comments/{comment_sk}", role: SpaceUserRole, user : crate::features::auth::User)]
+#[delete("/api/spaces/{space_id}/discussions/{discussion_sk}/comments/{comment_sk}", role: SpaceUserRole, user : crate::features::auth::User, space: SpaceCommon)]
 pub async fn delete_comment(
     space_id: SpacePartition,
     discussion_sk: SpacePostEntityType,
@@ -10,6 +11,9 @@ pub async fn delete_comment(
 
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
+    if !space.is_active() {
+        return Err(Error::BadRequest("Space is not active".into()));
+    }
     let space_post_id = SpacePostPartition(discussion_sk.0.clone());
     let space_post_pk: Partition = space_post_id.clone().into();
     let discussion_sk_entity: EntityType = discussion_sk.clone().into();

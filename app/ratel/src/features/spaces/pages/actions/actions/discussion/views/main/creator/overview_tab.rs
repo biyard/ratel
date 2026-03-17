@@ -1,5 +1,6 @@
 use super::*;
 use crate::features::spaces::pages::actions::actions::discussion::components::DiscussionComments;
+use crate::features::spaces::space_common::hooks::use_space;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum OverviewStatus {
@@ -16,8 +17,14 @@ pub fn OverviewTab() -> Element {
     let mut toast = use_toast();
     let user = crate::features::spaces::hooks::use_user()?;
     let current_user_pk = user.read().as_ref().map(|u| u.pk.to_string());
+    let space = use_space().read().clone();
     let discussion = ctx.discussion.read().clone();
-    let can_participate = discussion.post.status() == DiscussionStatus::InProgress;
+    let is_space_active = matches!(
+        space.status,
+        Some(crate::common::SpaceStatus::Started | crate::common::SpaceStatus::InProgress)
+    );
+    let can_participate =
+        is_space_active && discussion.post.status() == DiscussionStatus::InProgress;
     let initial_title = discussion.post.title.clone();
     let initial_description = discussion.post.html_contents.clone();
     let initial_category = discussion.post.category_name.clone();

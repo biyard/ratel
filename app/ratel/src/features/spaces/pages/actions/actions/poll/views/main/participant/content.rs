@@ -4,6 +4,7 @@ use crate::features::spaces::layout::use_space_layout_ui;
 use crate::features::spaces::pages::actions::actions::poll::components::*;
 use crate::features::spaces::pages::actions::actions::poll::controllers::*;
 use crate::features::spaces::pages::actions::actions::poll::*;
+use crate::features::spaces::space_common::hooks::use_space;
 use crate::features::spaces::space_common::types::space_page_actions_poll_key;
 use std::collections::HashMap;
 
@@ -24,6 +25,11 @@ pub fn PollContent(
     let poll_loader = use_query(&key, { move || get_poll(space_id(), poll_id()) })?;
 
     let poll = poll_loader.read();
+    let space = use_space().read().clone();
+    let is_space_active = matches!(
+        space.status,
+        Some(crate::common::SpaceStatus::Started | crate::common::SpaceStatus::InProgress)
+    );
 
     let mut answers: Signal<HashMap<usize, Answer>> = use_signal(|| {
         let mut map = HashMap::new();
@@ -50,8 +56,9 @@ pub fn PollContent(
 
     let is_in_progress = poll.status == PollStatus::InProgress;
     let has_response = poll.my_response.is_some();
-    let can_submit = can_respond && is_in_progress && !has_response;
-    let can_update = can_respond && is_in_progress && has_response && poll.response_editable;
+    let can_submit = can_respond && is_space_active && is_in_progress && !has_response;
+    let can_update =
+        can_respond && is_space_active && is_in_progress && has_response && poll.response_editable;
     let total = poll.questions.len();
     let current_idx = question_index().min(total.saturating_sub(1));
     let current_question = poll.questions.get(current_idx).cloned();
@@ -115,6 +122,11 @@ pub fn PollContent(
                         {tr.poll_not_started}
                     }
                 }
+                if !is_space_active {
+                    div { class: "rounded-lg bg-neutral-800 p-3 text-sm text-neutral-400",
+                        {tr.space_not_active}
+                    }
+                }
 
                 if total == 0 {
                     div { class: "flex items-center justify-center py-10 text-neutral-500",
@@ -139,7 +151,7 @@ pub fn PollContent(
                                         total,
                                         question: question.clone(),
                                         answer: current_answer,
-                                        disabled: !can_respond || !is_in_progress || (!can_submit && !can_update),
+                                        disabled: !can_respond || !is_space_active || !is_in_progress || (!can_submit && !can_update),
                                         on_change: move |ans: Answer| {
                                             answers.write().insert(idx, ans.clone());
 
