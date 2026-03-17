@@ -151,7 +151,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                         }
                         Link {
                             to: "/auth/",
-                            class: "flex justify-center items-center py-2.5 w-full text-sm font-semibold rounded-full border transition-colors border-border text-text-primary hover:bg-white/5",
+                            class: "flex justify-center items-center py-2.5 w-full text-sm font-semibold rounded-full border transition-colors border-border text-text-primary hover:bg-hover",
                             "Log in"
                         }
                     }
@@ -167,9 +167,9 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                     {
                         let is_active = selected_category().is_none();
                         let active_class = if is_active {
-                            "bg-white/10 text-text-primary"
+                            "bg-hover text-text-primary"
                         } else {
-                            "text-foreground-muted hover:bg-white/5 hover:text-text-primary"
+                            "text-foreground-muted hover:bg-hover hover:text-text-primary"
                         };
                         rsx! {
                             button {
@@ -187,9 +187,9 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                             let cat_name2 = cat.name.clone();
                             let is_active = selected_category().as_deref() == Some(cat_name.as_str());
                             let active_class = if is_active {
-                                "bg-white/10 text-text-primary"
+                                "bg-hover text-text-primary"
                             } else {
-                                "text-foreground-muted hover:bg-white/5 hover:text-text-primary"
+                                "text-foreground-muted hover:bg-hover hover:text-text-primary"
                             };
                             rsx! {
                                 button {
@@ -217,7 +217,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                                         onclick: move |_| show_user_menu.set(false),
                                     }
                                 }
-                                div { class: "flex gap-3 items-center py-2 px-2 rounded-lg transition-colors hover:bg-white/5",
+                                div { class: "flex gap-3 items-center py-2 px-2 rounded-lg transition-colors hover:bg-hover",
                                     if !user_profile.is_empty() {
                                         img {
                                             src: "{user_profile}",
@@ -232,7 +232,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                                         span { class: "text-xs text-foreground-muted", "{user_role}" }
                                     }
                                     button {
-                                        class: "flex relative z-20 justify-center items-center w-7 h-7 rounded-md transition-colors shrink-0 hover:bg-white/10",
+                                        class: "flex relative z-20 justify-center items-center w-7 h-7 rounded-md transition-colors shrink-0 hover:bg-hover",
                                         onclick: move |e| {
                                             e.stop_propagation();
                                             show_user_menu.toggle();
@@ -248,7 +248,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                                         onclick: move |e| e.stop_propagation(),
                                         Link {
                                             to: Route::TeamSetting { username: username.clone() },
-                                            class: "flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-white/10 transition-colors w-full text-left",
+                                            class: "flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-hover transition-colors w-full text-left",
                                             onclick: move |_| show_user_menu.set(false),
                                             lucide_dioxus::Settings {
                                                 class: "w-[15px] h-[15px] [&>path]:stroke-text-primary [&>line]:stroke-text-primary [&>polyline]:stroke-text-primary [&>circle]:stroke-text-primary shrink-0",
@@ -256,7 +256,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                                             "Settings"
                                         }
                                         button {
-                                            class: "flex gap-2 items-center py-2 px-3 w-full text-sm text-left transition-colors text-destructive hover:bg-white/10",
+                                            class: "flex gap-2 items-center py-2 px-3 w-full text-sm text-left transition-colors text-destructive hover:bg-hover",
                                             onclick: move |_| {
                                                 show_user_menu.set(false);
                                                 spawn(async move {
