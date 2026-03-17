@@ -9,7 +9,7 @@ pub struct LikeCommentRequest {
 pub async fn like_comment(
     space_id: SpacePartition,
     discussion_sk: SpacePostEntityType,
-    comment_sk: SpacePostCommentEntityType,
+    comment_sk: SpacePostCommentTargetEntityType,
     req: LikeCommentRequest,
 ) -> Result<()> {
     SpacePost::can_view(&role)?;
