@@ -207,6 +207,7 @@ impl From<(SpacePost, SpaceUserRole)>
             started_at: Some(post.started_at),
             ended_at: Some(post.ended_at),
             credits: 0,
+            prerequisite: false,
         }
     }
 }

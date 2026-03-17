@@ -1,5 +1,5 @@
 pub mod actions;
-mod components;
+pub mod components;
 pub mod controllers;
 mod menu;
 pub mod models;

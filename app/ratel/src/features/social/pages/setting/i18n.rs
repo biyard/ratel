@@ -207,4 +207,39 @@ translate! {
         en: "You don't have permission to view this page.",
         ko: "이 페이지에 접근 권한이 없습니다.",
     },
+
+    team_management: {
+        en: "Team management",
+        ko: "팀 관리",
+    },
+
+    add_members: {
+        en: "Add members",
+        ko: "멤버 추가",
+    },
+
+    members: {
+        en: "Members",
+        ko: "멤버",
+    },
+
+    no_members: {
+        en: "No members found.",
+        ko: "멤버가 없습니다.",
+    },
+
+    remove_from_team: {
+        en: "Remove from team",
+        ko: "팀에서 제거",
+    },
+
+    owner: {
+        en: "Owner",
+        ko: "소유자",
+    },
+
+    member_role: {
+        en: "Member",
+        ko: "멤버",
+    },
 }

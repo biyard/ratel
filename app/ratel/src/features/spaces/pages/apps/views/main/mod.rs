@@ -67,7 +67,10 @@ pub fn SpaceAppsPage(space_id: ReadSignal<SpacePartition>) -> Element {
     };
 
     if !role.can_edit() {
-        return Err(Error::UnauthorizedAccess)?;
+        navigator.push(Route::SpaceOverviewPage {
+            space_id: space_id(),
+        });
+        return rsx! {};
     }
 
     rsx! {

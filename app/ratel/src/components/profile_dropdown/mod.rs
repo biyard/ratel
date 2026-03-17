@@ -101,7 +101,7 @@ pub fn ProfileDropdown() -> Element {
                         for team in teams.iter() {
                             Link {
                                 class: "flex items-center gap-2 w-full px-2 py-1.5 hover:bg-hover rounded-md cursor-pointer",
-                                to: format!("/teams/{}/home", team.username),
+                                to: format!("/{}/home", team.username),
                                 onclick: move |_| {
                                     open.set(false);
                                 },
