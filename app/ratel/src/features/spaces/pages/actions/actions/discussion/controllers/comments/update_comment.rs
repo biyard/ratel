@@ -9,7 +9,7 @@ pub struct UpdateCommentRequest {
 pub async fn update_comment(
     space_id: SpacePartition,
     discussion_sk: SpacePostEntityType,
-    comment_sk: SpacePostCommentEntityType,
+    comment_sk: SpacePostCommentTargetEntityType,
     req: UpdateCommentRequest,
 ) -> Result<SpacePostComment> {
     SpacePost::can_view(&role)?;

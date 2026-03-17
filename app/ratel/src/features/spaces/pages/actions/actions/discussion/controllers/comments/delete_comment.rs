@@ -4,7 +4,7 @@ use crate::features::spaces::pages::actions::actions::discussion::*;
 pub async fn delete_comment(
     space_id: SpacePartition,
     discussion_sk: SpacePostEntityType,
-    comment_sk: SpacePostCommentEntityType,
+    comment_sk: SpacePostCommentTargetEntityType,
 ) -> Result<()> {
     SpacePost::can_view(&role)?;
 
@@ -18,7 +18,7 @@ pub async fn delete_comment(
         .await?
         .ok_or(Error::NotFound("Comment not found".into()))?;
 
-    if comment.author_pk != user.pk && role != SpaceUserRole::Creator {
+    if comment.author_pk != user.pk {
         return Err(Error::NoPermission);
     }
 
@@ -32,7 +32,9 @@ pub async fn delete_comment(
 
     let space_pk: Partition = space_id.into();
     let agg_item =
-        crate::features::spaces::space_common::models::aggregate::DashboardAggregate::inc_comments(&space_pk, -1);
+        crate::features::spaces::space_common::models::aggregate::DashboardAggregate::inc_comments(
+            &space_pk, -1,
+        );
 
     let mut txs = vec![delete_comment_tx, post_tx, agg_item];
 
@@ -45,7 +47,10 @@ pub async fn delete_comment(
 
     crate::transact_write_items!(cli, txs).map_err(|e| {
         tracing::error!("Failed to delete comment: {}", e);
-        crate::features::spaces::pages::actions::actions::discussion::Error::Unknown(format!("Failed to delete comment: {}", e))
+        crate::features::spaces::pages::actions::actions::discussion::Error::Unknown(format!(
+            "Failed to delete comment: {}",
+            e
+        ))
     })?;
 
     Ok(())
