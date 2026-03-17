@@ -247,8 +247,7 @@ impl SpacePost {
         user_role: &SpaceUserRole,
     ) -> crate::features::spaces::pages::actions::actions::discussion::Result<()> {
         match user_role {
-            SpaceUserRole::Creator => Ok(()),
-            SpaceUserRole::Participant => {
+            SpaceUserRole::Creator | SpaceUserRole::Participant => {
                 if self.status() == DiscussionStatus::InProgress {
                     Ok(())
                 } else {

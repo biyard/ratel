@@ -17,6 +17,7 @@ pub fn OverviewTab() -> Element {
     let user = crate::features::spaces::hooks::use_user()?;
     let current_user_pk = user.read().as_ref().map(|u| u.pk.to_string());
     let discussion = ctx.discussion.read().clone();
+    let can_participate = discussion.post.status() == DiscussionStatus::InProgress;
     let initial_title = discussion.post.title.clone();
     let initial_description = discussion.post.html_contents.clone();
     let initial_category = discussion.post.category_name.clone();
@@ -210,8 +211,8 @@ pub fn OverviewTab() -> Element {
             DiscussionComments {
                 space_id,
                 discussion_id,
-                can_comment: true,
-                can_manage_comments: true,
+                can_comment: can_participate,
+                can_manage_comments: can_participate,
                 current_user_pk,
             }
         }

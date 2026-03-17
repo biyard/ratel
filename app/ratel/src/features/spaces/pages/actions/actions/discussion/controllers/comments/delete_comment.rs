@@ -12,6 +12,11 @@ pub async fn delete_comment(
     let cli = common_config.dynamodb();
     let space_post_id = SpacePostPartition(discussion_sk.0.clone());
     let space_post_pk: Partition = space_post_id.clone().into();
+    let discussion_sk_entity: EntityType = discussion_sk.clone().into();
+    let post = SpacePost::get(cli, &space_post_pk, Some(discussion_sk_entity))
+        .await?
+        .ok_or(Error::NotFound("Discussion not found".into()))?;
+    post.can_participate(&role)?;
     let comment_sk_entity: EntityType = comment_sk.into();
 
     let comment = SpacePostComment::get(cli, &space_post_pk, Some(comment_sk_entity.clone()))
