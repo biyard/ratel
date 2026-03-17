@@ -76,15 +76,46 @@ pub fn ParticipationCard(
                 space_id.to_string(),
                 "PanelRequirements".to_string(),
             ];
-            if crate::features::spaces::controllers::participate_space::participate_space(space_id)
-                .await
-                .is_ok()
+            if crate::features::spaces::controllers::participate_space::participate_space(
+                space_id.clone(),
+            )
+            .await
+            .is_ok()
             {
                 current_role.set(SpaceUserRole::Participant);
                 query.invalidate(&space_detail);
                 query.invalidate(&panel_requirements_key);
                 space.restart();
                 role.restart();
+
+                // Show prerequisite actions layover if any exist
+                if let Ok(actions) =
+                    crate::features::spaces::pages::actions::controllers::list_actions(
+                        space_id.clone(),
+                    )
+                    .await
+                {
+                    let prerequisite_actions: Vec<
+                        crate::features::spaces::pages::actions::types::SpaceActionSummary,
+                    > = actions
+                        .into_iter()
+                        .filter(|a| a.prerequisite)
+                        .collect();
+                    if !prerequisite_actions.is_empty() {
+                        layover
+                            .open(
+                                "space-prerequisite-actions".to_string(),
+                                String::new(),
+                                rsx! {
+                                    PrerequisiteActionsLayover {
+                                        space_id,
+                                        actions: prerequisite_actions,
+                                    }
+                                },
+                            )
+                            .set_size(LayoverSize::Medium);
+                    }
+                }
             }
         });
     };

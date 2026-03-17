@@ -6,6 +6,7 @@ use crate::features::social::controllers::find_team::find_team_handler;
 use crate::features::posts::controllers::create_post::create_post_handler;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use crate::features::posts::*;
+use crate::features::my_follower::controllers::{check_follow_status_handler, follow_user, unfollow_user};
 use dioxus::prelude::*;
 
 translate! {
@@ -22,7 +23,9 @@ pub fn Home(username: String) -> Element {
     let tr: HomeTranslate = use_translate();
     let mut view_mode: Signal<HomeViewMode> = use_signal(|| HomeViewMode::List);
     let team_ctx = crate::common::contexts::use_team_context();
+    let user_ctx = crate::features::auth::hooks::use_user_context();
     let nav = use_navigator();
+    let logged_in = user_ctx().user.is_some();
 
     let team_item = {
         let teams = team_ctx.teams.read();
@@ -63,6 +66,23 @@ pub fn Home(username: String) -> Element {
         .and_then(|t| t.thumbnail_url.clone())
         .unwrap_or_default();
 
+    // Follow status — use_server_future so target_pk is available when button renders
+    let username_for_status = username.clone();
+    let follow_status = use_server_future(move || {
+        let name = username_for_status.clone();
+        async move { check_follow_status_handler(name).await }
+    })?;
+
+    let follow_status_val = follow_status.read();
+    let initial_status = follow_status_val.as_ref().unwrap();
+
+    let mut is_following = use_signal(move || {
+        initial_status.as_ref().map(|s| s.is_following).unwrap_or(false)
+    });
+    let mut processing = use_signal(|| false);
+
+    let follow_target_pk = initial_status.as_ref().ok().map(|s| s.target_pk.clone());
+
     let settings_route = Route::TeamSetting { username: username.clone() }.to_string();
 
     let selected_category = use_context::<Signal<Option<String>>>();
@@ -87,6 +107,41 @@ pub fn Home(username: String) -> Element {
                 thumbnail_url,
                 is_creator,
                 settings_route,
+                is_following: is_following(),
+                processing: processing(),
+                logged_in,
+                on_follow: {
+                    let pk = follow_target_pk.clone();
+                    move |_| {
+                        let pk = pk.clone();
+                        processing.set(true);
+                        spawn(async move {
+                            if let Some(pk) = pk {
+                                match follow_user(pk).await {
+                                    Ok(_) => is_following.set(true),
+                                    Err(e) => tracing::error!("Follow failed: {:?}", e),
+                                }
+                            }
+                            processing.set(false);
+                        });
+                    }
+                },
+                on_unfollow: {
+                    let pk = follow_target_pk.clone();
+                    move |_| {
+                        let pk = pk.clone();
+                        processing.set(true);
+                        spawn(async move {
+                            if let Some(pk) = pk {
+                                match unfollow_user(pk).await {
+                                    Ok(_) => is_following.set(false),
+                                    Err(e) => tracing::error!("Unfollow failed: {:?}", e),
+                                }
+                            }
+                            processing.set(false);
+                        });
+                    }
+                },
             }
 
             // View mode toggle + Create button

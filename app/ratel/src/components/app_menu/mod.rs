@@ -293,7 +293,7 @@ fn ProfileButton(collapsed: bool) -> Element {
                     for team in teams.iter() {
                         Link {
                             class: "flex gap-2 items-center py-1.5 px-2 w-full rounded-md cursor-pointer hover:bg-hover",
-                            to: format!("/teams/{}/home", team.username),
+                            to: format!("/{}/home", team.username),
                             onclick: move |_| open.set(false),
                             if !team.profile_url.is_empty() {
                                 img {

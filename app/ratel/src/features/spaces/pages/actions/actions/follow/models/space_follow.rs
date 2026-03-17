@@ -47,6 +47,7 @@ impl From<SpaceFollowAction>
             ended_at: None,
             user_participated: false,
             credits: 0,
+            prerequisite: false,
         }
     }
 }
