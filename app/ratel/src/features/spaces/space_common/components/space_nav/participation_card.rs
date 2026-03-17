@@ -97,10 +97,7 @@ pub fn ParticipationCard(
                 {
                     let prerequisite_actions: Vec<
                         crate::features::spaces::pages::actions::types::SpaceActionSummary,
-                    > = actions
-                        .into_iter()
-                        .filter(|a| a.prerequisite)
-                        .collect();
+                    > = actions.into_iter().filter(|a| a.prerequisite).collect();
                     if !prerequisite_actions.is_empty() {
                         layover
                             .open(
