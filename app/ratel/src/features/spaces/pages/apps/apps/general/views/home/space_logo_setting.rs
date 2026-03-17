@@ -7,8 +7,6 @@ pub fn SpaceLogoSetting() -> Element {
     let mut toast = use_toast();
     let mut loading = use_signal(|| false);
 
-    let current_logo = space().logo.clone();
-
     let on_upload = move |url: String| {
         let url = url.clone();
         spawn(async move {
@@ -37,6 +35,8 @@ pub fn SpaceLogoSetting() -> Element {
         });
     };
 
+    let logo = space().logo.clone();
+
     rsx! {
         Card {
             div { class: "flex justify-between items-center self-stretch py-4 px-5 border-b border-separator",
@@ -52,19 +52,19 @@ pub fn SpaceLogoSetting() -> Element {
 
                 div { class: "flex flex-row gap-4 items-center",
                     FileUploader { on_upload_success: on_upload,
-                        if current_logo.is_empty() {
+                        if logo.is_empty() {
                             div { class: "flex justify-center items-center w-20 h-20 rounded-lg border-2 border-dashed cursor-pointer border-border hover:border-primary transition-colors",
                                 span { class: "text-2xl text-card-meta", "+" }
                             }
                         } else {
                             img {
-                                src: "{current_logo}",
+                                src: "{logo}",
                                 class: "object-contain w-20 h-20 rounded-lg border cursor-pointer border-border hover:border-primary transition-colors",
                             }
                         }
                     }
 
-                    if !current_logo.is_empty() {
+                    if !logo.is_empty() {
                         Button {
                             class: "border border-web-error !bg-transparent !text-web-error hover:!bg-transparent hover:!border-web-error hover:!text-web-error",
                             style: ButtonStyle::Text,
