@@ -26,6 +26,7 @@ pub fn DraftTimeline() -> Element {
 
     let nav = use_navigator();
     let lang = use_language();
+    let has_more = items.len() > 1;
 
     rsx! {
         section { class: "flex flex-col gap-3 w-full", aria_label: "Drafts section",
@@ -81,21 +82,21 @@ pub fn DraftTimeline() -> Element {
                         }
                     }
                 }
-                div { class: "absolute top-0 right-0 w-12 h-full bg-gradient-to-l to-transparent pointer-events-none from-bg z-100" }
-                button {
-                    class: "absolute right-0 top-1/2 p-1 rounded-full transition-colors -translate-y-1/2 cursor-pointer z-101 hover:bg-accent/20",
-                    onclick: move |_| {
-                        // Scroll right by one card width
-                        let _ = document::eval(
-                            r#"
-                                                                                                                                                                                                                            const el = document.querySelector('[aria-label="Drafts section"] .scrollbar-none');
-                                                                                                                                                                                                                            if (el) el.scrollBy({ left: 340, behavior: 'smooth' });
-                                                                                                                                                                                                                        "#,
-                        );
-                    },
-                    lucide_dioxus::ChevronRight {
-                        size: 20,
-                        class: "transition-colors [&>path]:stroke-foreground-muted hover:[&>path]:stroke-text-primary",
+                if has_more {
+                    button {
+                        class: "absolute right-0 top-1/2 p-1 rounded-full transition-colors -translate-y-1/2 cursor-pointer z-101 hover:bg-accent/20",
+                        onclick: move |_| {
+                            let _ = document::eval(
+                                r#"
+                                    const el = document.querySelector('[aria-label="Drafts section"] .scrollbar-none');
+                                    if (el) el.scrollBy({ left: 340, behavior: 'smooth' });
+                                "#,
+                            );
+                        },
+                        lucide_dioxus::ChevronRight {
+                            size: 20,
+                            class: "transition-colors [&>path]:stroke-foreground-muted hover:[&>path]:stroke-text-primary",
+                        }
                     }
                 }
             }
