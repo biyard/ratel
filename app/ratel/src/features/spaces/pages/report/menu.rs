@@ -1,14 +1,17 @@
 use super::*;
+use crate::features::spaces::space_common::controllers::SpaceResponse;
 
 pub fn get_nav_item(
-    space_id: SpacePartition,
+    space: &SpaceResponse,
     _role: SpaceUserRole,
 ) -> Option<(Element, SpacePage, NavigationTarget)> {
-    // TODO: implement space status
     Some((
         icon(),
         SpacePage::Report,
-        Route::SpaceReportPage { space_id }.into(),
+        Route::SpaceReportPage {
+            space_id: space.id.clone(),
+        }
+        .into(),
     ))
 }
 
