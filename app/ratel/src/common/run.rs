@@ -127,6 +127,9 @@ async fn event_bridge_handler(
         ("ratel.dynamodb.stream", "PopularPostUpdate") => {
             handle_popular_post_update(envelope.detail).await?;
         }
+        ("ratel.dynamodb.stream", "PopularSpaceUpdate") => {
+            handle_popular_space_update(envelope.detail).await?;
+        }
         _ => {
             tracing::warn!(
                 "Unhandled EventBridge event: source={}, detail-type={}",
@@ -245,6 +248,72 @@ async fn handle_popular_post_update(
             tracing::error!("Popular post fan-out failed: {}", e);
             lambda_runtime::Error::from(format!("Popular post fan-out failed: {}", e))
         })?;
+
+    Ok(())
+}
+
+#[cfg(feature = "lambda")]
+async fn handle_popular_space_update(
+    detail: serde_json::Value,
+) -> Result<(), lambda_runtime::Error> {
+    use crate::common::types::Partition;
+
+    let space_pk_str = detail
+        .get("space_pk")
+        .and_then(|v| v.as_str())
+        .ok_or("missing space_pk in detail")?;
+    let post_pk_str = detail
+        .get("post_pk")
+        .and_then(|v| v.as_str())
+        .ok_or("missing post_pk in detail")?;
+    let author_pk_str = detail
+        .get("author_pk")
+        .and_then(|v| v.as_str())
+        .ok_or("missing author_pk in detail")?;
+    let created_at = detail
+        .get("created_at")
+        .and_then(|v| v.as_i64())
+        .ok_or("missing created_at in detail")?;
+    let participants = detail
+        .get("participants")
+        .and_then(|v| v.as_i64())
+        .unwrap_or(0);
+
+    if !crate::features::timeline::services::is_popular_space(participants) {
+        return Ok(());
+    }
+
+    let space_pk: Partition = space_pk_str
+        .parse()
+        .map_err(|e| format!("invalid space_pk: {}", e))?;
+    let post_pk: Partition = post_pk_str
+        .parse()
+        .map_err(|e| format!("invalid post_pk: {}", e))?;
+    let author_pk: Partition = author_pk_str
+        .parse()
+        .map_err(|e| format!("invalid author_pk: {}", e))?;
+
+    tracing::info!(
+        "Popular space fan-out: space_pk={}, participants={}",
+        space_pk,
+        participants
+    );
+
+    let cfg = crate::common::CommonConfig::default();
+    let cli = cfg.dynamodb();
+
+    crate::features::timeline::services::fan_out_popular_space(
+        cli,
+        &space_pk,
+        &post_pk,
+        &author_pk,
+        created_at,
+    )
+    .await
+    .map_err(|e| {
+        tracing::error!("Popular space fan-out failed: {}", e);
+        lambda_runtime::Error::from(format!("Popular space fan-out failed: {}", e))
+    })?;
 
     Ok(())
 }

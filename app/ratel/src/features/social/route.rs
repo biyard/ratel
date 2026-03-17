@@ -105,7 +105,7 @@ pub fn UserHomeRoot(username: String) -> Element {
 #[rustfmt::skip]
 pub enum Route {
     #[nest("/:username")]
-        #[layout(SocialLayout)]
+        #[layout(UserLayout)]
             #[route("/")]
             UserHomeRoot { username: String },
             #[route("/posts")]
@@ -120,6 +120,8 @@ pub enum Route {
             CredentialPage { username: String },
             #[route("/spaces")]
             UserSpaces { username: String },
+        #[end_layout]
+        #[layout(SocialLayout)]
             #[route("/home")]
             TeamHome { username: String },
             #[route("/team-drafts")]

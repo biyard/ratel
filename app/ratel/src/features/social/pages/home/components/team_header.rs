@@ -1,4 +1,5 @@
 use crate::common::*;
+use crate::common::assets::TEAM_BANNER_DEFAULT;
 use dioxus::prelude::*;
 
 #[component]
@@ -9,19 +10,22 @@ pub fn TeamHeader(
     thumbnail_url: String,
     is_creator: bool,
     settings_route: String,
+    is_following: bool,
+    processing: bool,
+    on_follow: EventHandler<()>,
+    on_unfollow: EventHandler<()>,
+    logged_in: bool,
 ) -> Element {
     rsx! {
         div { class: "w-full isolate",
-            // Banner — normal flow so content below paints on top
+            // Banner
             div {
-                class: "relative z-0 w-full rounded-[10px] bg-card-bg border border-border",
+                class: "relative z-0 w-full rounded-[10px] bg-card-bg overflow-hidden",
                 style: "height: 180px; transform: translateZ(0);",
-                if !thumbnail_url.is_empty() {
-                    img {
-                        src: "{thumbnail_url}",
-                        alt: "banner",
-                        class: "w-full h-full object-cover",
-                    }
+                img {
+                    src: if !thumbnail_url.is_empty() { thumbnail_url.clone() } else { TEAM_BANNER_DEFAULT.to_string() },
+                    alt: "banner",
+                    class: "w-full h-full object-cover",
                 }
                 if is_creator {
                     Link {
@@ -34,7 +38,7 @@ pub fn TeamHeader(
                 }
             }
 
-            // Avatar + Team info — comes after banner in DOM, paints on top automatically
+            // Avatar + Team info
             div { class: "relative z-10 flex items-start gap-4 px-4 -mt-7",
                 if !profile_url.is_empty() {
                     img {
@@ -49,10 +53,21 @@ pub fn TeamHeader(
                 div { class: "flex flex-col gap-1 pt-9 flex-1 min-w-0",
                     div { class: "flex items-center gap-3",
                         h1 { class: "text-xl font-bold text-text-primary", "{display_name}" }
-                        if !is_creator {
-                            button {
-                                class: "px-4 py-1 rounded-full border border-border text-sm font-semibold text-text-primary hover:bg-white/5 transition-colors",
-                                "Follow"
+                        if logged_in {
+                            if is_following {
+                                button {
+                                    class: "px-4 py-1 rounded-full border border-border text-sm font-semibold text-foreground-muted hover:bg-white/5 transition-colors disabled:opacity-50",
+                                    disabled: processing,
+                                    onclick: move |_| on_unfollow.call(()),
+                                    "Unfollow"
+                                }
+                            } else {
+                                button {
+                                    class: "px-4 py-1 rounded-full border border-border text-sm font-semibold text-text-primary hover:bg-white/5 transition-colors disabled:opacity-50",
+                                    disabled: processing,
+                                    onclick: move |_| on_follow.call(()),
+                                    "Follow"
+                                }
                             }
                         }
                     }

@@ -23,6 +23,7 @@ pub struct SpaceActionSummary {
 
     pub user_participated: bool,
     pub credits: u64,
+    pub prerequisite: bool,
 }
 
 impl From<crate::features::spaces::pages::actions::models::SpaceAction> for SpaceActionSummary {
@@ -44,6 +45,7 @@ impl From<crate::features::spaces::pages::actions::models::SpaceAction> for Spac
             ended_at: Some(action.ended_at),
             user_participated: false,
             credits: action.credits,
+            prerequisite: action.prerequisite,
         }
     }
 }
