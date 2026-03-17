@@ -1,4 +1,5 @@
 use crate::features::spaces::pages::actions::actions::discussion::*;
+use crate::features::spaces::pages::actions::models::SpaceAction;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpdateDiscussionRequest {
@@ -24,16 +25,28 @@ pub async fn update_discussion(
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let space_pk: Partition = space_id.clone().into();
-    let discussion_sk_entity: EntityType = discussion_sk.into();
+    let discussion_sk_entity: EntityType = discussion_sk.clone().into();
 
     let now = crate::common::utils::time::get_now_timestamp_millis();
     let mut updater = SpacePost::updater(&space_pk, &discussion_sk_entity).with_updated_at(now);
 
+    let action_pk = CompositePartition::<SpacePartition, String>(
+        space_id.clone(),
+        discussion_sk.to_string(),
+    );
+    let mut action_updater =
+        SpaceAction::updater(&action_pk, &EntityType::SpaceAction).with_updated_at(now);
+    let mut update_action = false;
+
     if let Some(title) = req.title {
-        updater = updater.with_title(title);
+        updater = updater.with_title(title.clone());
+        action_updater = action_updater.with_title(title);
+        update_action = true;
     }
     if let Some(html_contents) = req.html_contents {
-        updater = updater.with_html_contents(html_contents);
+        updater = updater.with_html_contents(html_contents.clone());
+        action_updater = action_updater.with_description(html_contents);
+        update_action = true;
     }
     if let Some(category_name) = &req.category_name {
         updater = updater.with_category_name(category_name.clone());
@@ -46,6 +59,10 @@ pub async fn update_discussion(
     }
 
     let post = updater.execute(cli).await?;
+
+    if update_action {
+        action_updater.execute(cli).await?;
+    }
 
     if let Some(category_name) = req.category_name {
         if !category_name.is_empty() {

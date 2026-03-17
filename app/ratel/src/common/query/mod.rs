@@ -2,7 +2,7 @@ use dioxus::{
     fullstack::{Loader, Loading},
     prelude::*,
 };
-use serde::{Serialize, de::DeserializeOwned};
+use serde::{de::DeserializeOwned, Serialize};
 use std::collections::HashMap;
 
 pub type QueryKey = Vec<String>;
@@ -13,7 +13,7 @@ pub struct QueryStore {
 }
 
 impl QueryStore {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             versions: Store::new(HashMap::new()),
         }
@@ -67,11 +67,7 @@ impl QueryStore {
     }
 }
 
-pub fn query_provider() -> QueryStore {
-    use_context_provider(QueryStore::new)
-}
-
-fn use_query_store() -> QueryStore {
+pub fn use_query_store() -> QueryStore {
     try_consume_context::<QueryStore>()
         .expect("#[PROVIDER NEEDED] use_query_store must be used in a `query_provider`")
 }
@@ -101,9 +97,4 @@ where
         let _version = query.stamp(&key);
         future()
     }))
-}
-
-pub fn invalidate_query(key: &[impl AsRef<str>]) {
-    let mut query = use_query_store();
-    query.invalidate(key);
 }

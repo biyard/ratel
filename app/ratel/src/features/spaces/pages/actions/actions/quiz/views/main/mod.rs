@@ -1,4 +1,6 @@
 use crate::features::spaces::pages::actions::actions::quiz::*;
+mod quiz_read_page;
+pub use quiz_read_page::QuizReadPage;
 mod creator;
 use creator::QuizCreatorPage;
 
@@ -9,8 +11,6 @@ mod viewer;
 use viewer::QuizViewerPage;
 
 use crate::features::spaces::space_common::hooks::use_space_role;
-use participant::*;
-use viewer::*;
 
 #[component]
 pub fn QuizActionPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) -> Element {

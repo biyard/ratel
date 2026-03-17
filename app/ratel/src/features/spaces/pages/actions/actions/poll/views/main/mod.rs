@@ -1,20 +1,19 @@
-use crate::features::spaces::pages::actions::actions::poll::*;
 mod creator;
 use creator::PollCreatorPage;
 
 mod participant;
+pub use participant::PollContent;
 use participant::PollParticipantPage;
 
 mod viewer;
+use super::*;
 use viewer::PollViewerPage;
-
-use crate::features::spaces::space_common::hooks::use_space_role;
-use participant::*;
-use viewer::*;
 
 #[component]
 pub fn PollActionPage(space_id: SpacePartition, poll_id: SpacePollEntityType) -> Element {
     let role = use_space_role()();
+    let space_id = use_signal(|| space_id);
+    let poll_id = use_signal(|| poll_id);
 
     match role {
         SpaceUserRole::Creator => rsx! {

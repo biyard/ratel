@@ -1,23 +1,25 @@
+use crate::features::spaces::pages::actions::actions::poll::components::ChoiceQuestionEditor;
 use crate::features::spaces::pages::actions::actions::quiz::*;
-use crate::features::spaces::pages::actions::actions::poll::components::ChoiceOptionRow;
 
 #[derive(Props, Clone, PartialEq)]
 pub struct QuizEditorProps {
     pub questions: Signal<Vec<Question>>,
     pub answers: Signal<Vec<QuizCorrectAnswer>>,
+    #[props(default)]
+    pub on_save: Option<EventHandler<()>>,
 }
 
 #[component]
 pub fn QuizEditor(props: QuizEditorProps) -> Element {
     let mut questions = props.questions;
     let mut answers = props.answers;
+    let on_save = props.on_save;
+    let mut selecting_question_type = use_signal(|| false);
 
     rsx! {
-        div { class: "flex flex-col gap-2 w-full bg-[#1A1A1A] rounded-[12px] px-4 pt-1 pb-5",
+        div { class: "flex flex-col gap-2 pt-1 pb-5 w-full rounded-[12px]",
             for (idx , question) in questions.read().iter().enumerate() {
                 {
-                    let total = questions.read().len();
-                    let is_last = idx + 1 == total;
                     let question = question.clone();
                     let answer = answers
                         .read()
@@ -26,14 +28,17 @@ pub fn QuizEditor(props: QuizEditorProps) -> Element {
                         .unwrap_or_else(|| QuizCorrectAnswer::for_question(&question));
                     let mut questions = questions;
                     let mut answers = answers;
+                    let row_save = on_save.clone();
+                    let delete_save = on_save.clone();
                     rsx! {
-                        div { class: if is_last { "flex flex-col gap-3 pb-2" } else { "flex flex-col gap-3 pb-4 border-b border-[#262626]" },
+                        Card { class: "flex flex-col gap-3",
                             div { class: "flex justify-between items-center",
                                 span { class: "text-sm text-neutral-400", "Question {idx + 1}" }
                             }
                             QuizQuestionEditor {
                                 question,
                                 answer,
+                                on_save: row_save,
                                 on_change: move |(q, a): (Question, QuizCorrectAnswer)| {
                                     let mut qs = questions.read().clone();
                                     let mut ans = answers.read().clone();
@@ -51,7 +56,7 @@ pub fn QuizEditor(props: QuizEditorProps) -> Element {
                                 Button {
                                     size: ButtonSize::Small,
                                     style: ButtonStyle::Text,
-                                    class: "flex items-center gap-1 text-[#8C8C8C] text-[15px] leading-[24px] tracking-[0.5px] font-medium",
+                                    class: "flex items-center gap-1 text-quiz-editor-action text-[15px] leading-[24px] tracking-[0.5px] font-medium",
                                     onclick: move |_| {
                                         let mut qs = questions.read().clone();
                                         let mut ans = answers.read().clone();
@@ -63,9 +68,12 @@ pub fn QuizEditor(props: QuizEditorProps) -> Element {
                                         }
                                         questions.set(qs);
                                         answers.set(ans);
+                                        if let Some(on_save) = &delete_save {
+                                            on_save.call(());
+                                        }
                                     },
                                     "Delete"
-                                    icons::edit::Delete2 { class: "w-6 h-6 [&>path]:stroke-[#737373]" }
+                                    icons::edit::Delete2 { class: "w-6 h-6 [&>path]:stroke-quiz-editor-icon" }
                                 }
                             }
                         }
@@ -73,24 +81,58 @@ pub fn QuizEditor(props: QuizEditorProps) -> Element {
                 }
             }
 
-            QuizQuestionTypeSelector {
-                on_add: move |q: Question| {
-                    let mut qs = questions.read().clone();
-                    let mut ans = answers.read().clone();
-                    let default_answer = QuizCorrectAnswer::for_question(&q);
-                    qs.push(q);
-                    ans.push(default_answer);
-                    questions.set(qs);
-                    answers.set(ans);
-                },
+            if selecting_question_type() {
+                div { class: "flex justify-center items-center w-full",
+                    QuizQuestionTypeSelector {
+                        on_save: on_save.clone(),
+                        on_add: move |q: Question| {
+                            let mut qs = questions.read().clone();
+                            let mut ans = answers.read().clone();
+                            let default_answer = QuizCorrectAnswer::for_question(&q);
+                            qs.push(q);
+                            ans.push(default_answer);
+                            questions.set(qs);
+                            answers.set(ans);
+                            selecting_question_type.set(false);
+                        },
+                    }
+                }
+            } else {
+                QuizAddQuestionButton { on_add: move |_| selecting_question_type.set(true) }
             }
         }
     }
 }
 
 #[component]
-fn QuizQuestionTypeSelector(on_add: EventHandler<Question>) -> Element {
+fn QuizAddQuestionButton(on_add: EventHandler<()>) -> Element {
+    rsx! {
+        div { class: "flex relative justify-center items-center w-full",
+            Button {
+                "data-testid": "quiz-add-question",
+                style: ButtonStyle::Outline,
+                onclick: move |_| on_add.call(()),
+                class: "flex justify-center items-center w-10 h-10 !p-0 z-2 !bg-background",
+                icons::validations::Add { class: "w-[13.3px] h-[13.3px] [&>path]:stroke-current" }
+            }
+            Separator {
+                variant: SeparatorVariant::Dashed,
+                class: "absolute left-0 top-1/2 w-full z-1",
+                horizontal: true,
+                decorative: false,
+            }
+        }
+    }
+}
+
+#[component]
+fn QuizQuestionTypeSelector(
+    on_add: EventHandler<Question>,
+    #[props(default)] on_save: Option<EventHandler<()>>,
+) -> Element {
     let button_class = "px-3 py-2 text-sm border border-neutral-600 rounded-lg hover:bg-neutral-800 text-neutral-300 flex items-center gap-1";
+    let single_save = on_save.clone();
+    let multi_save = on_save.clone();
     rsx! {
         div { class: "flex flex-wrap gap-2",
             div { class: "flex flex-row justify-start items-center gap-2",
@@ -111,6 +153,9 @@ fn QuizQuestionTypeSelector(on_add: EventHandler<Question>) -> Element {
                                     allow_other: None,
                                 }),
                             );
+                        if let Some(on_save) = &single_save {
+                            on_save.call(());
+                        }
                     },
                     icons::validations::Add { class: "w-4 h-4 [&>path]:stroke-current" }
                     "Single Choice"
@@ -133,6 +178,9 @@ fn QuizQuestionTypeSelector(on_add: EventHandler<Question>) -> Element {
                                     allow_other: None,
                                 }),
                             );
+                        if let Some(on_save) = &multi_save {
+                            on_save.call(());
+                        }
                     },
                     icons::validations::Add { class: "w-4 h-4 [&>path]:stroke-current" }
                     "Multiple Choice"
@@ -146,6 +194,7 @@ fn QuizQuestionTypeSelector(on_add: EventHandler<Question>) -> Element {
 fn QuizQuestionEditor(
     question: Question,
     answer: QuizCorrectAnswer,
+    #[props(default)] on_save: Option<EventHandler<()>>,
     on_change: EventHandler<(Question, QuizCorrectAnswer)>,
 ) -> Element {
     match question {
@@ -154,6 +203,7 @@ fn QuizQuestionEditor(
                 question: q,
                 is_single: true,
                 answer,
+                on_save,
                 on_change,
             }
         },
@@ -162,6 +212,7 @@ fn QuizQuestionEditor(
                 question: q,
                 is_single: false,
                 answer,
+                on_save,
                 on_change,
             }
         },
@@ -176,130 +227,49 @@ fn QuizChoiceEditor(
     question: ChoiceQuestion,
     is_single: bool,
     answer: QuizCorrectAnswer,
+    #[props(default)] on_save: Option<EventHandler<()>>,
     on_change: EventHandler<(Question, QuizCorrectAnswer)>,
 ) -> Element {
-    let q = question.clone();
-    let answer = align_answer_with_options(answer, q.options.len(), is_single);
-    let answer_for_title = answer.clone();
-    let q_for_title = q.clone();
+    let normalized_answer = align_answer_with_options(answer, question.options.len(), is_single);
+    let selected_options = match normalized_answer.clone() {
+        QuizCorrectAnswer::Single { answer } => answer.into_iter().collect(),
+        QuizCorrectAnswer::Multiple { answers } => answers,
+    };
+    let answer_for_change = normalized_answer.clone();
+    let answer_for_toggle = normalized_answer;
+    let question_for_toggle = question.clone();
+    let toggle_save = on_save.clone();
 
     rsx! {
-        Input {
-            variant: InputVariant::Plain,
-            class: "w-full h-11 px-3 bg-[#262626] border border-[#737373] rounded-lg text-sm text-neutral-300 placeholder:text-neutral-500 focus:border-[#FCB300] focus-visible:border-[#FCB300] focus-visible:ring-0",
-            placeholder: "Input",
-            value: q.title.clone(),
-            oninput: move |evt: Event<FormData>| {
-                let mut next = q_for_title.clone();
-                next.title = evt.value().to_string();
-                let q_enum = if is_single {
-                    Question::SingleChoice(next)
-                } else {
-                    Question::MultipleChoice(next)
+        ChoiceQuestionEditor {
+            question: question.clone(),
+            is_single,
+            selected_options,
+            on_save,
+            on_change: move |next_question: Question| {
+                let options_len = match &next_question {
+                    Question::SingleChoice(q) | Question::MultipleChoice(q) => q.options.len(),
+                    _ => 0,
                 };
-                on_change.call((q_enum, answer_for_title.clone()));
+                let next_answer = align_answer_with_options(
+                    answer_for_change.clone(),
+                    options_len,
+                    is_single,
+                );
+                on_change.call((next_question, next_answer));
             },
-        }
-        div { class: "flex flex-col gap-2",
-            for (opt_idx , option) in q.options.iter().enumerate() {
-                {
-                    let question_for_input = q.clone();
-                    let question_for_remove = q.clone();
-                    let current_answer = answer.clone();
-                    let on_change_input = on_change.clone();
-                    let on_change_remove = on_change.clone();
-                    let question_for_toggle = q.clone();
-                    let answer_for_toggle = current_answer.clone();
-                    let answer_for_text = current_answer.clone();
-                    let answer_for_remove = current_answer.clone();
-                    let on_change_toggle = on_change.clone();
-                    let checked = is_option_checked(&current_answer, opt_idx, is_single);
-                    rsx! {
-                        ChoiceOptionRow {
-                            key: "{option}-{checked}",
-                            value: option.clone(),
-                            leading: rsx! {
-                                div { class: "flex items-center gap-2.5",
-                                    icons::security::DialPad { class: "w-6 h-6 [&>path]:stroke-[#737373]" }
-                                    label { class: "flex items-center cursor-pointer",
-                                        input {
-                                            r#type: "checkbox",
-                                            checked,
-                                            class: "sr-only peer",
-                                            onchange: move |e| {
-                                                let next_checked = e.checked();
-                                                let next_answer = toggle_answer(
-                                                    &answer_for_toggle,
-                                                    opt_idx,
-                                                    is_single,
-                                                    next_checked,
-                                                );
-                                                let q_enum = if is_single {
-                                                    Question::SingleChoice(question_for_toggle.clone())
-                                                } else {
-                                                    Question::MultipleChoice(question_for_toggle.clone())
-                                                };
-                                                on_change_toggle.call((q_enum, next_answer));
-                                            },
-                                        }
-                                        div { class: "w-6 h-6 rounded-[4px] border-2 border-[#737373] bg-[#101010] flex items-center justify-center peer-checked:bg-[#FCB300] peer-checked:border-[#FCB300] [&>svg]:opacity-0 peer-checked:[&>svg]:opacity-100",
-                                            icons::validations::Check { class: "w-5 h-5 [&>path]:stroke-[#0A0A0A]" }
-                                        }
-                                    }
-                                }
-                            },
-                            on_change: move |value: String| {
-                                let mut next = question_for_input.clone();
-                                next.options[opt_idx] = value;
-                                let q_enum = if is_single {
-                                    Question::SingleChoice(next)
-                                } else {
-                                    Question::MultipleChoice(next)
-                                };
-                                on_change_input.call((q_enum, answer_for_text.clone()));
-                            },
-                            on_remove: move |_| {
-                                let mut next = question_for_remove.clone();
-                                next.options.remove(opt_idx);
-                                let next_answer = remove_option_from_answer(
-                                    &answer_for_remove,
-                                    opt_idx,
-                                    is_single,
-                                );
-                                let q_enum = if is_single {
-                                    Question::SingleChoice(next)
-                                } else {
-                                    Question::MultipleChoice(next)
-                                };
-                                on_change_remove.call((q_enum, next_answer));
-                            },
-                        }
-                    }
+            on_toggle_option: move |(opt_idx, checked): (usize, bool)| {
+                let next_answer = toggle_answer(&answer_for_toggle, opt_idx, is_single, checked);
+                let q_enum = if is_single {
+                    Question::SingleChoice(question_for_toggle.clone())
+                } else {
+                    Question::MultipleChoice(question_for_toggle.clone())
+                };
+                on_change.call((q_enum, next_answer));
+                if let Some(on_save) = &toggle_save {
+                    on_save.call(());
                 }
-            }
-            {
-                let question = q.clone();
-                let current_answer = answer.clone();
-                rsx! {
-                    Button {
-                        size: ButtonSize::Small,
-                        style: ButtonStyle::Text,
-                        class: "text-sm text-neutral-500 justify-start px-0 flex items-center gap-2 w-full text-left",
-                        onclick: move |_| {
-                            let mut next = question.clone();
-                            next.options.push(format!("Option {}", next.options.len() + 1));
-                            let q_enum = if is_single {
-                                Question::SingleChoice(next)
-                            } else {
-                                Question::MultipleChoice(next)
-                            };
-                            on_change.call((q_enum, current_answer.clone()));
-                        },
-                        icons::validations::Add { class: "w-4 h-4 [&>path]:stroke-current" }
-                        "Add Option"
-                    }
-                }
-            }
+            },
         }
     }
 }
@@ -342,22 +312,6 @@ fn remove_option_from_answer(
             .collect();
         QuizCorrectAnswer::Multiple { answers: next }
     }
-}
-
-fn is_option_checked(answer: &QuizCorrectAnswer, opt_idx: usize, is_single: bool) -> bool {
-    let checked = match answer {
-        QuizCorrectAnswer::Single { answer } if is_single => {
-            answer.map(|v| v as usize == opt_idx).unwrap_or(false)
-        }
-        QuizCorrectAnswer::Multiple { answers } if !is_single => {
-            answers.iter().any(|v| *v as usize == opt_idx)
-        }
-        _ => false,
-    };
-
-    debug!("option checked: {:?}", checked);
-
-    checked
 }
 
 fn toggle_answer(

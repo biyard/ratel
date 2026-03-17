@@ -2,6 +2,7 @@
 members = [
   "app/ratel",
   "packages/*",
+  "design-system-preview",
 ]
 resolver = "2"
 exclude = ["benchmark/*", "deps", "packages/template"]

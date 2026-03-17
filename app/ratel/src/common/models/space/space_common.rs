@@ -49,6 +49,9 @@ pub struct SpaceCommon {
     pub anonymous_participation: bool,
 
     #[serde(default)]
+    pub logo: String,
+
+    #[serde(default)]
     pub participants: i64,
 
     #[serde(default = "max_quota")]
@@ -103,6 +106,13 @@ impl SpaceCommon {
 
     pub fn is_public(&self) -> bool {
         matches!(self.visibility, SpaceVisibility::Public) && self.is_published()
+    }
+
+    pub fn is_active(&self) -> bool {
+        matches!(
+            self.status,
+            Some(SpaceStatus::Started | SpaceStatus::InProgress)
+        )
     }
 }
 

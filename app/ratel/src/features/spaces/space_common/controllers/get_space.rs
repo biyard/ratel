@@ -1,9 +1,9 @@
-use crate::features::spaces::space_common::*;
 use crate::common::models::space::{SpaceCommon, SpaceParticipant};
 use crate::common::models::{OptionalUser, User};
-use crate::common::types::{Partition, SpacePartition};
+use crate::common::types::{FeedPartition, Partition, SpacePartition};
 use crate::features::posts::models::Post;
 use crate::features::posts::types::{BoosterType, SpaceType};
+use crate::features::spaces::space_common::*;
 
 #[get("/api/spaces/{space_id}", user: OptionalUser)]
 pub async fn get_space(space_id: SpacePartition) -> Result<SpaceResponse> {
@@ -21,13 +21,20 @@ pub async fn get_space(space_id: SpacePartition) -> Result<SpaceResponse> {
     let user: Option<User> = user.into();
 
     let permissions = post.get_permissions(dynamo, user.clone()).await?;
+    let liked = if let Some(ref user) = user {
+        post.is_liked(dynamo, &user.pk).await?
+    } else {
+        false
+    };
+
+    let is_participation_open = matches!(space.status, Some(SpaceStatus::InProgress));
 
     let (user_participant, can_participate) = if let Some(ref user) = user {
         let (participant_pk, participant_sk) =
             SpaceParticipant::keys(space.pk.clone(), user.pk.clone());
         let participant =
             SpaceParticipant::get(dynamo, &participant_pk, Some(&participant_sk)).await?;
-        let can_participate = participant.is_none();
+        let can_participate = participant.is_none() && is_participation_open;
         (participant, can_participate)
     } else {
         (None, false)
@@ -47,6 +54,7 @@ pub async fn get_space(space_id: SpacePartition) -> Result<SpaceResponse> {
 
     Ok(SpaceResponse {
         id: space.pk.clone().into(),
+        post_id: post_pk.into(),
         sk: space.sk,
         title: post.title,
         content: if space.content.is_empty() {
@@ -69,6 +77,7 @@ pub async fn get_space(space_id: SpacePartition) -> Result<SpaceResponse> {
         likes: post.likes,
         comments: post.comments,
         shares: post.shares,
+        liked,
         reports: space.reports,
         rewards: space.rewards,
         visibility: space.visibility,
@@ -84,12 +93,14 @@ pub async fn get_space(space_id: SpacePartition) -> Result<SpaceResponse> {
         remains: space.remains,
         quota: space.quota,
         is_report: false,
+        logo: space.logo,
     })
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct SpaceResponse {
     pub id: SpacePartition,
+    pub post_id: FeedPartition,
     pub sk: EntityType,
     pub title: String,
     pub content: String,
@@ -108,6 +119,7 @@ pub struct SpaceResponse {
     pub likes: i64,
     pub comments: i64,
     pub shares: i64,
+    pub liked: bool,
     pub reports: i64,
     pub rewards: Option<i64>,
     pub visibility: SpaceVisibility,
@@ -123,6 +135,8 @@ pub struct SpaceResponse {
     pub remains: i64,
     pub quota: i64,
     pub is_report: bool,
+    #[serde(default)]
+    pub logo: String,
 }
 
 impl SpaceResponse {

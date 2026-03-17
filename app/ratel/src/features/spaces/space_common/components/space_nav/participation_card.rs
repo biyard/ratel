@@ -12,11 +12,14 @@ pub fn ParticipationCard(
     credential_path: Option<String>,
     on_login: EventHandler<()>,
 ) -> Element {
+    let mut query = use_query_store();
+    let ctx = crate::features::spaces::space_common::providers::use_space_context();
     let tr: ParticipationCardTranslate = use_translate();
     let mut layover = use_layover();
     let navigator = use_navigator();
-    let mut participate =
-        use_action(crate::features::spaces::controllers::participate_space::participate_space);
+    let mut space = ctx.space;
+    let mut role = ctx.role;
+    let mut current_role = ctx.current_role;
     let panel_requirements_query_key = vec![
         "Space".to_string(),
         space_id.to_string(),
@@ -51,17 +54,18 @@ pub fn ParticipationCard(
         }
 
         if !all_requirements_satisfied {
-            layover.open(
-                "space-participation-requirements".to_string(),
-                String::new(),
-                rsx! {
-                    ParticipationRequirementsLayover {
-                        space_id: space_id.clone(),
-                        requirements: layover_requirements.clone(),
-                    }
-                },
-                Some("!max-w-[800px] !bg-[#1A1A1A] rounded-none border-l border-neutral-800 shadow-[0_8px_20px_0_rgba(20,26,62,0.25)] max-tablet:!max-w-full".to_string()),
-            );
+            layover
+                .open(
+                    "space-participation-requirements".to_string(),
+                    String::new(),
+                    rsx! {
+                        ParticipationRequirementsLayover {
+                            space_id: space_id.clone(),
+                            requirements: layover_requirements.clone(),
+                        }
+                    },
+                )
+                .set_size(LayoverSize::Medium);
             return;
         }
 
@@ -72,35 +76,70 @@ pub fn ParticipationCard(
                 space_id.to_string(),
                 "PanelRequirements".to_string(),
             ];
-            participate.call(space_id).await;
-            invalidate_query(&space_detail);
-            invalidate_query(&panel_requirements_key);
+            if crate::features::spaces::controllers::participate_space::participate_space(
+                space_id.clone(),
+            )
+            .await
+            .is_ok()
+            {
+                current_role.set(SpaceUserRole::Participant);
+                query.invalidate(&space_detail);
+                query.invalidate(&panel_requirements_key);
+                space.restart();
+                role.restart();
+
+                // Show prerequisite actions layover if any exist
+                if let Ok(actions) =
+                    crate::features::spaces::pages::actions::controllers::list_actions(
+                        space_id.clone(),
+                    )
+                    .await
+                {
+                    let prerequisite_actions: Vec<
+                        crate::features::spaces::pages::actions::types::SpaceActionSummary,
+                    > = actions.into_iter().filter(|a| a.prerequisite).collect();
+                    if !prerequisite_actions.is_empty() {
+                        layover
+                            .open(
+                                "space-prerequisite-actions".to_string(),
+                                String::new(),
+                                rsx! {
+                                    PrerequisiteActionsLayover {
+                                        space_id,
+                                        actions: prerequisite_actions,
+                                    }
+                                },
+                            )
+                            .set_size(LayoverSize::Medium);
+                    }
+                }
+            }
         });
     };
 
-    let handle_open_credentials = move |_| {
-        if let Some(path) = &credential_button_path {
-            navigator.push(path.clone());
-        } else {
-            login_for_credentials.call(());
-        }
-    };
+    // let handle_open_credentials = move |_| {
+    //     if let Some(path) = &credential_button_path {
+    //         navigator.push(path.clone());
+    //     } else {
+    //         login_for_credentials.call(());
+    //     }
+    // };
 
     rsx! {
         div { class: "px-4 w-full",
-            div { class: "flex flex-col items-start gap-2.5 px-3 py-4 w-full rounded-[12px] border border-primary bg-primary/5",
-                div { class: "flex flex-col items-start gap-2.5 w-full",
-                    div { class: "flex flex-col items-start gap-1 w-full",
-                        p { class: "w-full font-bold font-raleway text-[15px]/[18px] tracking-[-0.16px] text-white",
+            div { class: "flex flex-col gap-2.5 items-start py-4 px-3 w-full border rounded-[12px] border-primary bg-primary/5",
+                div { class: "flex flex-col gap-2.5 items-start w-full",
+                    div { class: "flex flex-col gap-1 items-start w-full",
+                        p { class: "w-full font-bold text-white font-raleway text-[15px]/[18px] tracking-[-0.16px]",
                             {tr.title}
                         }
-                        p { class: "w-full font-medium font-raleway text-[13px]/[20px] text-gray-300",
+                        p { class: "w-full font-medium text-gray-300 font-raleway text-[13px]/[20px]",
                             {tr.description}
                         }
                     }
 
                     if !panel_requirements.is_empty() {
-                        div { class: "flex items-center gap-1 flex-wrap",
+                        div { class: "flex flex-wrap gap-1 items-center",
                             for requirement in panel_requirements.iter() {
                                 ParticipationRequirementTag {
                                     key: "{requirement.attribute:?}",
@@ -112,7 +151,7 @@ pub fn ParticipationCard(
                     }
                 }
 
-                div { class: "flex flex-col items-start gap-2.5 w-full",
+                div { class: "flex flex-col gap-2.5 items-start w-full",
                     Button {
                         class: "w-full",
                         style: ButtonStyle::Primary,
@@ -120,13 +159,13 @@ pub fn ParticipationCard(
                         onclick: handle_participate,
                         {tr.participate}
                     }
-                    Button {
-                        class: "w-full",
-                        style: ButtonStyle::Outline,
-                        size: ButtonSize::Small,
-                        onclick: handle_open_credentials,
-                        {tr.see_my_credential}
-                    }
+                                // Button {
+                //     class: "w-full",
+                //     style: ButtonStyle::Outline,
+                //     size: ButtonSize::Small,
+                //     onclick: handle_open_credentials,
+                //     {tr.see_my_credential}
+                // }
                 }
             }
         }
@@ -166,9 +205,9 @@ fn ParticipationRequirementTag(kind: ParticipationTag, label: String) -> Element
     };
 
     rsx! {
-        div { class: "flex items-center justify-center px-[8px] py-[5.5px] rounded-full border {container_class}",
-            div { class: "flex items-center gap-1",
-                div { class: "flex items-center justify-center size-[14px] {icon_class}",
+        div { class: "flex justify-center items-center rounded-full border px-[8px] py-[5.5px] {container_class}",
+            div { class: "flex gap-1 items-center",
+                div { class: "flex justify-center items-center size-[14px] {icon_class}",
                     if kind == ParticipationTag::Warning {
                         crate::common::lucide_dioxus::CircleAlert { size: 15, class: "text-red-500" }
                     } else {

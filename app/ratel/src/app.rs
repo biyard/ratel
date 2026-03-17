@@ -17,7 +17,8 @@ pub fn App() -> Element {
     crate::common::contexts::TeamContext::init();
     let conf = config::get();
     let env = conf.common.env;
-    crate::common::query::query_provider();
+    use_context_provider(QueryStore::new);
+
     let keywords = vec![
         "ratel".to_string(),
         "knowledge platform".to_string(),
@@ -55,13 +56,9 @@ pub fn App() -> Element {
 
         crate::common::Provider {}
         AuthProvider {}
-        crate::features::posts::Provider {}
 
         Router::<Route> {}
-        ToastProvider {}
-
-        PopupZone {}
-        if env == Environment::Dev || env == Environment::Local {
+        if env == Environment::Local {
             DevTools {}
         }
     }

@@ -2,9 +2,12 @@ use super::*;
 
 // Space Layout Menu
 pub fn get_nav_item(
-    space_id: SpacePartition,
-    _role: SpaceUserRole,
+    space: &SpaceResponse,
+    role: SpaceUserRole,
 ) -> Option<(Element, SpacePage, NavigationTarget)> {
+    if role != SpaceUserRole::Creator {
+        return None;
+    }
     Some((
         rsx! {
             icons::layouts::Apps {
@@ -14,6 +17,9 @@ pub fn get_nav_item(
             }
         },
         SpacePage::Apps,
-        Route::SpaceAppsPage { space_id }.into(),
+        Route::SpaceAppsPage {
+            space_id: space.id.clone(),
+        }
+        .into(),
     ))
 }

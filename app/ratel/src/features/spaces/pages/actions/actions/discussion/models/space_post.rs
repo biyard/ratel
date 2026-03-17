@@ -1,7 +1,9 @@
 use crate::features::spaces::pages::actions::actions::discussion::*;
 
 use crate::features::spaces::pages::actions::actions::discussion::macros::DynamoEntity;
-use crate::features::spaces::pages::actions::actions::discussion::models::{SpacePostComment, SpacePostCommentLike};
+use crate::features::spaces::pages::actions::actions::discussion::models::{
+    SpacePostComment, SpacePostCommentLike,
+};
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, DynamoEntity, PartialEq, Eq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
@@ -43,7 +45,7 @@ impl SpacePost {
         title: String,
         html_contents: String,
         category_name: String,
-        user: &crate::features::auth::User,
+        author: &crate::common::models::space::SpaceAuthor,
         started_at: Option<i64>,
         ended_at: Option<i64>,
     ) -> Self {
@@ -64,10 +66,10 @@ impl SpacePost {
             html_contents,
             category_name,
             comments: 0,
-            user_pk: user.pk.clone(),
-            author_display_name: user.display_name.clone(),
-            author_profile_url: user.profile_url.clone(),
-            author_username: user.username.clone(),
+            user_pk: author.pk.clone(),
+            author_display_name: author.display_name.clone(),
+            author_profile_url: author.profile_url.clone(),
+            author_username: author.username.clone(),
         }
     }
 
@@ -87,18 +89,22 @@ impl SpacePost {
         space_pk: SpacePartition,
         space_post_pk: SpacePostPartition,
         content: String,
-        user: &crate::features::auth::User,
-    ) -> crate::features::spaces::pages::actions::actions::discussion::Result<SpacePostComment> {
+        author: &crate::common::models::space::SpaceAuthor,
+    ) -> crate::features::spaces::pages::actions::actions::discussion::Result<SpacePostComment>
+    {
         let (pk, sk) = SpacePost::keys(&space_pk, &space_post_pk);
         let post = SpacePost::updater(&pk, sk)
             .increase_comments(1)
             .transact_write_item();
-        let comment = SpacePostComment::new(space_pk, space_post_pk, content, user);
+        let comment = SpacePostComment::new(space_pk, space_post_pk, content, author);
         let comment_tx = comment.create_transact_write_item();
 
         crate::transact_write_items!(cli, vec![comment_tx, post]).map_err(|e| {
             tracing::error!("Failed to add comment: {}", e);
-            crate::features::spaces::pages::actions::actions::discussion::Error::Unknown(format!("Failed to add comment: {}", e))
+            crate::features::spaces::pages::actions::actions::discussion::Error::Unknown(format!(
+                "Failed to add comment: {}",
+                e
+            ))
         })?;
 
         Ok(comment)
@@ -115,7 +121,11 @@ impl SpacePost {
         // Use atomic increase for likes; likes_align is best-effort for GSI sorting.
         let comment = SpacePostComment::get(cli, &space_post_pk_p, Some(comment_pk.clone()))
             .await?
-            .ok_or(crate::features::spaces::pages::actions::actions::discussion::Error::NotFound("Comment not found".into()))?;
+            .ok_or(
+                crate::features::spaces::pages::actions::actions::discussion::Error::NotFound(
+                    "Comment not found".into(),
+                ),
+            )?;
         let approx_likes_align = format!("{:020}", comment.likes.saturating_add(1));
 
         let comment_tx = SpacePostComment::updater(&space_post_pk_p, &comment_pk)
@@ -128,7 +138,10 @@ impl SpacePost {
 
         crate::transact_write_items!(cli, vec![comment_tx, pl_tx]).map_err(|e| {
             tracing::error!("Failed to like comment: {}", e);
-            crate::features::spaces::pages::actions::actions::discussion::Error::Unknown(format!("Failed to like comment: {}", e))
+            crate::features::spaces::pages::actions::actions::discussion::Error::Unknown(format!(
+                "Failed to like comment: {}",
+                e
+            ))
         })?;
 
         Ok(())
@@ -144,7 +157,11 @@ impl SpacePost {
 
         let comment = SpacePostComment::get(cli, &space_post_pk_p, Some(comment_pk.clone()))
             .await?
-            .ok_or(crate::features::spaces::pages::actions::actions::discussion::Error::NotFound("Comment not found".into()))?;
+            .ok_or(
+                crate::features::spaces::pages::actions::actions::discussion::Error::NotFound(
+                    "Comment not found".into(),
+                ),
+            )?;
         let approx_likes_align = format!("{:020}", comment.likes.saturating_sub(1));
 
         let comment_tx = SpacePostComment::updater(&space_post_pk_p, &comment_pk)
@@ -157,7 +174,10 @@ impl SpacePost {
 
         crate::transact_write_items!(cli, vec![comment_tx, pl_tx]).map_err(|e| {
             tracing::error!("Failed to unlike comment: {}", e);
-            crate::features::spaces::pages::actions::actions::discussion::Error::Unknown(format!("Failed to unlike comment: {}", e))
+            crate::features::spaces::pages::actions::actions::discussion::Error::Unknown(format!(
+                "Failed to unlike comment: {}",
+                e
+            ))
         })?;
 
         Ok(())
@@ -165,7 +185,9 @@ impl SpacePost {
 }
 
 #[cfg(feature = "server")]
-impl From<(SpacePost, SpaceUserRole)> for crate::features::spaces::pages::actions::types::SpaceAction {
+impl From<(SpacePost, SpaceUserRole)>
+    for crate::features::spaces::pages::actions::types::SpaceActionSummary
+{
     fn from((post, role): (SpacePost, SpaceUserRole)) -> Self {
         use crate::features::spaces::pages::actions::types::SpaceActionType;
         let action_id = post.sk.to_string();
@@ -179,8 +201,13 @@ impl From<(SpacePost, SpaceUserRole)> for crate::features::spaces::pages::action
             updated_at: post.updated_at,
             total_score: None,
             total_point: None,
+            quiz_score: None,
+            quiz_total_score: None,
+            quiz_passed: None,
             started_at: Some(post.started_at),
             ended_at: Some(post.ended_at),
+            credits: 0,
+            prerequisite: false,
         }
     }
 }
@@ -199,28 +226,40 @@ impl SpacePost {
         }
     }
 
-    pub fn can_view(_user_role: &SpaceUserRole) -> crate::features::spaces::pages::actions::actions::discussion::Result<()> {
+    pub fn can_view(
+        _user_role: &SpaceUserRole,
+    ) -> crate::features::spaces::pages::actions::actions::discussion::Result<()> {
         Ok(())
     }
 
-    pub fn can_edit(user_role: &SpaceUserRole) -> crate::features::spaces::pages::actions::actions::discussion::Result<()> {
+    pub fn can_edit(
+        user_role: &SpaceUserRole,
+    ) -> crate::features::spaces::pages::actions::actions::discussion::Result<()> {
         match user_role {
             SpaceUserRole::Creator => Ok(()),
-            _ => Err(crate::features::spaces::pages::actions::actions::discussion::Error::NoPermission),
+            _ => Err(
+                crate::features::spaces::pages::actions::actions::discussion::Error::NoPermission,
+            ),
         }
     }
 
-    pub fn can_participate(&self, user_role: &SpaceUserRole) -> crate::features::spaces::pages::actions::actions::discussion::Result<()> {
+    pub fn can_participate(
+        &self,
+        user_role: &SpaceUserRole,
+    ) -> crate::features::spaces::pages::actions::actions::discussion::Result<()> {
         match user_role {
-            SpaceUserRole::Creator => Ok(()),
-            SpaceUserRole::Participant => {
+            SpaceUserRole::Creator | SpaceUserRole::Participant => {
                 if self.status() == DiscussionStatus::InProgress {
                     Ok(())
                 } else {
-                    Err(crate::features::spaces::pages::actions::actions::discussion::Error::SpacePostNotStarted)
+                    Err(
+                        crate::features::spaces::pages::actions::actions::discussion::Error::DiscussionNotInProgress,
+                    )
                 }
             }
-            _ => Err(crate::features::spaces::pages::actions::actions::discussion::Error::NoPermission),
+            _ => Err(
+                crate::features::spaces::pages::actions::actions::discussion::Error::NoPermission,
+            ),
         }
     }
 }

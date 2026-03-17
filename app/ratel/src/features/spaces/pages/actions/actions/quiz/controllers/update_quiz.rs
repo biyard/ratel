@@ -5,6 +5,8 @@ pub struct UpdateQuizRequest {
     #[serde(default)]
     pub title: Option<String>,
     #[serde(default)]
+    pub description: Option<String>,
+    #[serde(default)]
     pub started_at: Option<i64>,
     #[serde(default)]
     pub ended_at: Option<i64>,
@@ -16,6 +18,8 @@ pub struct UpdateQuizRequest {
     pub questions: Option<Vec<Question>>,
     #[serde(default)]
     pub answers: Option<Vec<QuizCorrectAnswer>>,
+    #[serde(default)]
+    pub files: Option<Vec<File>>,
 }
 
 #[post("/api/spaces/{space_pk}/quizzes/{quiz_id}", role: SpaceUserRole)]
@@ -27,13 +31,21 @@ pub async fn update_quiz(
     SpaceQuiz::can_edit(&role)?;
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
-    let space_pk: Partition = space_pk.into();
+    let space_id = space_pk;
+    let space_pk: Partition = space_id.clone().into();
     let quiz_sk: EntityType = quiz_id.clone().into();
 
     let existing = SpaceQuiz::get(cli, &space_pk, Some(quiz_sk.clone()))
         .await?
         .ok_or(Error::NotFound("Quiz not found".into()))?;
-    if existing.user_response_count > 0 {
+    let updates_locked_fields = req.started_at.is_some()
+        || req.ended_at.is_some()
+        || req.retry_count.is_some()
+        || req.pass_score.is_some()
+        || req.questions.is_some()
+        || req.answers.is_some();
+
+    if existing.user_response_count > 0 && updates_locked_fields {
         return Err(Error::BadRequest(
             "Quiz cannot be edited after responses exist".into(),
         ));
@@ -41,9 +53,22 @@ pub async fn update_quiz(
 
     let now = crate::common::utils::time::get_now_timestamp_millis();
     let mut updater = SpaceQuiz::updater(&space_pk, &quiz_sk).with_updated_at(now);
+    let action_pk = CompositePartition(space_id, quiz_id.to_string());
+    let action_sk = EntityType::SpaceAction;
+    let mut action_updater = crate::features::spaces::pages::actions::models::SpaceAction::updater(
+        &action_pk, &action_sk,
+    )
+    .with_updated_at(now);
+    let mut should_update_action = false;
 
     if let Some(title) = req.title {
-        updater = updater.with_title(title);
+        action_updater = action_updater.with_title(title);
+        should_update_action = true;
+    }
+
+    if let Some(description) = req.description {
+        action_updater = action_updater.with_description(description);
+        should_update_action = true;
     }
 
     if req.started_at.is_some() || req.ended_at.is_some() {
@@ -56,7 +81,10 @@ pub async fn update_quiz(
         if started_at >= ended_at {
             return Err(Error::BadRequest("Invalid time range".into()));
         }
-        updater = updater.with_started_at(started_at).with_ended_at(ended_at);
+        action_updater = action_updater
+            .with_started_at(started_at)
+            .with_ended_at(ended_at);
+        should_update_action = true;
     }
 
     if let Some(retry_count) = req.retry_count {
@@ -79,13 +107,7 @@ pub async fn update_quiz(
                 "Quiz only supports choice questions".into(),
             ));
         }
-        let description = questions
-            .first()
-            .map(|q| q.title().to_string())
-            .unwrap_or_default();
-        updater = updater
-            .with_questions(questions.clone())
-            .with_description(description);
+        updater = updater.with_questions(questions.clone());
         questions_for_answers = Some(questions);
     }
 
@@ -100,7 +122,19 @@ pub async fn update_quiz(
         updater = updater.with_pass_score(pass_score);
     }
 
+    if let Some(mut files) = req.files {
+        for file in &mut files {
+            if file.id.is_empty() {
+                file.id = crate::common::uuid::Uuid::now_v7().to_string();
+            }
+        }
+        updater = updater.with_files(files);
+    }
+
     updater.execute(cli).await?;
+    if should_update_action {
+        action_updater.execute(cli).await?;
+    }
 
     if let Some(answers) = req.answers {
         let questions = questions_for_answers.unwrap_or_else(|| existing.questions.clone());

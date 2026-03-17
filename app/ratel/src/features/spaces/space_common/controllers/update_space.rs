@@ -41,6 +41,9 @@ pub enum UpdateSpaceRequest {
     Quota {
         quotas: i64,
     },
+    Logo {
+        logo: String,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
@@ -56,6 +59,8 @@ pub struct UpdateSpaceResponse {
     pub anonymous_participation: bool,
     pub quota: i64,
     pub remains: i64,
+    #[serde(default)]
+    pub logo: String,
 }
 
 #[cfg(feature = "server")]
@@ -73,6 +78,7 @@ impl From<SpaceCommon> for UpdateSpaceResponse {
             anonymous_participation: s.anonymous_participation,
             quota: s.quota,
             remains: s.remains,
+            logo: s.logo,
         }
     }
 }
@@ -131,6 +137,13 @@ pub async fn update_space(
         }
         UpdateSpaceRequest::Visibility { visibility } => {
             su = su.with_visibility(visibility.clone());
+
+            let post_pk = space_pk.clone().to_post_key()?;
+            let post_updater = Post::updater(post_pk, EntityType::Post)
+                .with_updated_at(now)
+                .with_space_visibility(visibility.clone())
+                .with_visibility(visibility.clone().into());
+            pu = Some(post_updater);
 
             updated_space.visibility = visibility;
         }
@@ -192,6 +205,11 @@ pub async fn update_space(
             return Err(Error::InternalServerError(
                 "ChangeVisibility is deprecated".to_string(),
             ));
+        }
+        UpdateSpaceRequest::Logo { logo } => {
+            su = su.with_logo(logo.clone());
+
+            updated_space.logo = logo;
         }
         UpdateSpaceRequest::Quota { quotas } => {
             let remains = updated_space.remains + (quotas - updated_space.quota);

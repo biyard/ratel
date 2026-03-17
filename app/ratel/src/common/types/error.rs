@@ -133,12 +133,12 @@ pub enum Error {
     )]
     InvalidSpaceAuthor,
 
-    #[error("space post not started")]
+    #[error("discussion is not in progress")]
     #[translate(
-        en = "Space post not started",
-        ko = "스페이스 게시글이 시작되지 않았습니다."
+        en = "Discussion is not in progress",
+        ko = "토론이 진행중 상태가 아닙니다."
     )]
-    SpacePostNotStarted,
+    DiscussionNotInProgress,
 
     #[error("space post ended")]
     #[translate(en = "Space post ended", ko = "스페이스 게시글이 종료되었습니다.")]
@@ -231,6 +231,19 @@ pub enum Error {
     #[error("Invalid email")]
     #[translate(en = "Invalid email", ko = "유효하지 않은 이메일입니다.")]
     InvalidEmail,
+
+    #[error("invalid space action")]
+    #[translate(
+        en = "Please delete and re-create the action",
+        ko = "액션을 삭제하고 다시 만들어주세요."
+    )]
+    SpaceActionNotFound,
+}
+
+impl From<std::convert::Infallible> for Error {
+    fn from(e: std::convert::Infallible) -> Self {
+        match e {}
+    }
 }
 
 impl From<String> for Error {

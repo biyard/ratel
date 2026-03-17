@@ -1,22 +1,15 @@
 use crate::features::spaces::pages::actions::*;
 use i18n::CreateActionModalTranslate;
-use crate::features::spaces::pages::actions::actions::discussion::controllers::create_discussion;
-use crate::features::spaces::pages::actions::actions::poll::controllers::create_poll;
-use crate::features::spaces::pages::actions::actions::quiz::controllers::create_quiz;
-use crate::features::spaces::pages::actions::actions::subscription::controllers::create_subscription;
-use crate::features::spaces::space_common::types::route::{
-    space_action_discussion, space_action_poll, space_action_quiz, space_action_subscription,
-};
 mod i18n;
 
 #[component]
-pub fn CreateActionModal(space_id: SpacePartition, has_subscription: bool) -> Element {
+pub fn CreateActionModal(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: CreateActionModalTranslate = use_translate();
     let nav = navigator();
-    let layover = use_layover();
+    let mut layover = use_layover();
 
-    let mut selected_type = use_signal(|| None::<SpaceActionType>);
-    let is_creating = use_signal(|| false);
+    let mut selected_type = use_signal(|| Some(SpaceActionType::Quiz));
+    let mut is_creating = use_signal(|| false);
 
     let close_layover = {
         let mut layover = layover;
@@ -27,103 +20,26 @@ pub fn CreateActionModal(space_id: SpacePartition, has_subscription: bool) -> El
         }
     };
 
-    let create_action = {
-        let nav = nav.clone();
-        let space_id = space_id.clone();
-        let layover = layover;
+    let create_action = move |_| async move {
+        let selected = selected_type();
+        if selected.is_none() {
+            return;
+        }
 
-        let mut is_creating = is_creating;
-
-        move |_| {
-            if is_creating() {
-                return;
+        let selected = selected.unwrap();
+        if is_creating() {
+            return;
+        }
+        is_creating.set(true);
+        match selected.create(space_id()).await {
+            Ok(url) => {
+                is_creating.set(false);
+                nav.push(url);
+                layover.close();
             }
-
-            let selected = selected_type();
-            if selected.is_none() {
-                return;
-            }
-
-            is_creating.set(true);
-            let mut layover = layover;
-
-            let nav = nav.clone();
-            let space_id = space_id.clone();
-            let mut is_creating = is_creating;
-
-            match selected.unwrap() {
-                SpaceActionType::Poll => {
-                    spawn(async move {
-                        match create_poll(space_id.clone()).await {
-                            Ok(response) => match response.sk {
-                                EntityType::SpacePoll(poll_id) => {
-                                    is_creating.set(false);
-                                    nav.push(space_action_poll(&space_id, &poll_id.into()));
-                                    layover.close();
-                                }
-                                _ => {
-                                    error!("Unexpected entity type from create_poll");
-                                    is_creating.set(false);
-                                }
-                            },
-                            Err(err) => {
-                                error!("Failed to create poll: {:?}", err);
-                                is_creating.set(false);
-                            }
-                        }
-                    });
-                }
-                SpaceActionType::TopicDiscussion => {
-                    spawn(async move {
-                        match create_discussion(space_id.clone()).await {
-                            Ok(response) => {
-                                let discussion_pk: SpacePostEntityType =
-                                    response.sk.try_into().unwrap_or_default();
-                                is_creating.set(false);
-                                nav.push(space_action_discussion(&space_id, &discussion_pk));
-                                layover.close();
-                            }
-                            Err(err) => {
-                                error!("Failed to create discussion: {:?}", err);
-                                is_creating.set(false);
-                            }
-                        }
-                    });
-                }
-                SpaceActionType::Subscription => {
-                    if has_subscription {
-                        is_creating.set(false);
-                        return;
-                    }
-                    spawn(async move {
-                        match create_subscription(space_id.clone()).await {
-                            Ok(_) => {
-                                is_creating.set(false);
-                                nav.push(space_action_subscription(&space_id));
-                                layover.close();
-                            }
-                            Err(err) => {
-                                error!("Failed to create subscription: {:?}", err);
-                                is_creating.set(false);
-                            }
-                        }
-                    });
-                }
-                SpaceActionType::Quiz => {
-                    spawn(async move {
-                        match create_quiz(space_id.clone()).await {
-                            Ok(response) => {
-                                is_creating.set(false);
-                                nav.push(space_action_quiz(&space_id, &response.quiz_id));
-                                layover.close();
-                            }
-                            Err(err) => {
-                                error!("Failed to create quiz: {:?}", err);
-                                is_creating.set(false);
-                            }
-                        }
-                    });
-                }
+            Err(err) => {
+                error!("Failed to create action: {:?}", err);
+                is_creating.set(false);
             }
         }
     };
@@ -132,7 +48,7 @@ pub fn CreateActionModal(space_id: SpacePartition, has_subscription: bool) -> El
 
         div { class: "flex flex-col flex-1 min-h-0 bg-neutral-900 light:bg-neutral-200",
             // Scrollable content area
-            div { class: "flex flex-col gap-5 p-[1.875rem] overflow-y-auto grow",
+            div { class: "flex overflow-y-auto flex-col gap-5 p-[1.875rem] grow",
                 // 2x2 grid of action type options
                 div { class: "grid grid-cols-2 gap-2.5",
                     ActionTypeOption {
@@ -177,47 +93,38 @@ pub fn CreateActionModal(space_id: SpacePartition, has_subscription: bool) -> El
                             }
                         },
                     }
-                    if !has_subscription {
-                        ActionTypeOption {
-                            selected: selected_type() == Some(SpaceActionType::Subscription),
-                            disabled: false,
-                            onclick: move |_| selected_type.set(Some(SpaceActionType::Subscription)),
-                            title: tr.follow_title.to_string(),
-                            caption: tr.follow_caption.to_string(),
-                            icon: rsx! {
-                                icons::user::UserGroup {
-                                    width: "22",
-                                    height: "22",
-                                    class: "[&>path]:fill-none [&>path]:stroke-neutral-900",
-                                }
-                            },
-                        }
+                    ActionTypeOption {
+                        selected: selected_type() == Some(SpaceActionType::Follow),
+                        disabled: false,
+                        onclick: move |_| selected_type.set(Some(SpaceActionType::Follow)),
+                        title: tr.follow_title.to_string(),
+                        caption: tr.follow_caption.to_string(),
+                        icon: rsx! {
+                            icons::user::UserGroup {
+                                width: "22",
+                                height: "22",
+                                class: "[&>path]:fill-none [&>path]:stroke-neutral-900",
+                            }
+                        },
                     }
                 }
 
-                // Sample preview section
-                SpaceCard {
-                    class: "flex flex-col gap-5 border border-neutral-700 light:border-neutral-300 !bg-neutral-800 light:!bg-white !rounded-[0.75rem] !p-4"
-                        .to_string(),
-                    p { class: "text-[1.0625rem]/[1.25rem] font-medium text-white light:text-neutral-900",
-                        {tr.sample_title}
-                    }
-                    div { class: "w-full h-[14.875rem] rounded-[0.75rem] border border-neutral-700 light:border-neutral-300 bg-neutral-950/40 light:bg-neutral-100" }
-                }
-            
+                // Preview section
+                ActionPreview { selected: selected_type(), tr: tr.clone() }
+
             }
 
             // Bottom bar
-            div { class: "flex justify-end items-center gap-5 h-[5.25rem] px-5 border-t border-neutral-800 light:border-neutral-300 shrink-0",
+            div { class: "flex gap-5 justify-end items-center px-5 border-t h-[5.25rem] border-neutral-800 light:border-neutral-300 shrink-0",
                 Button {
-                    class: "!px-5 !py-3 !text-[0.875rem]/[1rem] !font-bold !text-white light:!text-neutral-900 hover:opacity-80"
+                    class: "hover:opacity-80 !px-5 !py-3 !text-[0.875rem]/[1rem] !font-bold !text-white light:!text-neutral-900"
                         .to_string(),
                     style: ButtonStyle::Text,
                     onclick: close_layover,
                     {tr.back}
                 }
                 Button {
-                    class: "!px-5 !py-3 !rounded-[0.625rem] !text-[0.875rem]/[1rem] !font-bold !bg-yellow-400 light:!bg-yellow-500 !text-neutral-900 hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
+                    class: "hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed !px-5 !py-3 !rounded-[0.625rem] !text-[0.875rem]/[1rem] !font-bold !bg-yellow-400 light:!bg-yellow-500 !text-neutral-900"
                         .to_string(),
                     style: ButtonStyle::Text,
                     shape: ButtonShape::Square,
@@ -227,6 +134,188 @@ pub fn CreateActionModal(space_id: SpacePartition, has_subscription: bool) -> El
                         {tr.creating}
                     } else {
                         {tr.create}
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+fn ActionPreview(selected: Option<SpaceActionType>, tr: CreateActionModalTranslate) -> Element {
+    let content = match selected {
+        Some(SpaceActionType::Poll) => rsx! {
+            PollPreview {}
+        },
+        Some(SpaceActionType::Quiz) => rsx! {
+            QuizPreview {}
+        },
+        Some(SpaceActionType::TopicDiscussion) => rsx! {
+            DiscussionPreview {}
+        },
+        Some(SpaceActionType::Follow) => rsx! {
+            FollowPreview {}
+        },
+        None => {
+            return rsx! {
+                SpaceCard {
+                    class: "flex flex-col gap-5 border border-neutral-700 light:border-neutral-300 !bg-neutral-800 light:!bg-white !rounded-[0.75rem] !p-4"
+                        .to_string(),
+                    p { class: "font-medium text-white text-[1.0625rem]/[1.25rem] light:text-neutral-900",
+                        {tr.preview_title}
+                    }
+                    div { class: "flex justify-center items-center w-full border h-[14.875rem] rounded-[0.75rem] border-neutral-700 light:border-neutral-300 bg-neutral-950/40 light:bg-neutral-100",
+                        p { class: "text-[0.875rem]/[1.25rem] text-neutral-500 light:text-neutral-400",
+                            {tr.preview_empty}
+                        }
+                    }
+                }
+            };
+        }
+    };
+
+    rsx! {
+        SpaceCard {
+            class: "flex flex-col gap-3 border border-yellow-400/30 !bg-neutral-800 light:!bg-white !rounded-[0.75rem] !p-4"
+                .to_string(),
+            p { class: "font-medium text-white text-[1.0625rem]/[1.25rem] light:text-neutral-900",
+                {tr.preview_title}
+            }
+            div { class: "flex flex-col gap-3 p-4 w-full border opacity-90 pointer-events-none rounded-[0.75rem] border-neutral-700 light:border-neutral-300 bg-neutral-950/40 light:bg-neutral-100",
+                {content}
+            }
+        }
+    }
+}
+
+// Mock poll viewer: time range + a sample question with radio options
+#[component]
+fn PollPreview() -> Element {
+    rsx! {
+        div { class: "flex flex-col gap-3 w-full",
+            div { class: "flex gap-2 items-center text-xs text-neutral-500",
+                span { "Mar 12, 2026 00:00" }
+                span { "~" }
+                span { "Mar 19, 2026 00:00" }
+            }
+            div { class: "p-3 rounded-lg border border-neutral-700 light:border-neutral-300",
+                div { class: "mb-2 text-xs text-neutral-500", "1 / 2" }
+                p { class: "mb-2 text-sm font-medium text-white light:text-neutral-900",
+                    "Which proposal do you support?"
+                }
+                div { class: "flex flex-col gap-1.5",
+                    for option in ["Proposal A", "Proposal B", "Proposal C"] {
+                        label { class: "flex gap-2 items-center text-sm text-neutral-300 light:text-neutral-700",
+                            div { class: "rounded-full border-2 size-4 border-neutral-600 light:border-neutral-400" }
+                            "{option}"
+                        }
+                    }
+                }
+            }
+            div { class: "py-2 text-sm font-medium text-center text-blue-400 rounded-lg bg-blue-600/20",
+                "Submit"
+            }
+        }
+    }
+}
+
+// Mock quiz viewer: time range + score + a sample question
+#[component]
+fn QuizPreview() -> Element {
+    rsx! {
+        div { class: "flex flex-col gap-3 w-full",
+            div { class: "flex justify-between items-center",
+                div { class: "flex gap-2 items-center text-xs text-neutral-500",
+                    span { "Mar 12, 2026 00:00" }
+                    span { "~" }
+                    span { "Mar 19, 2026 00:00" }
+                }
+            }
+            div { class: "flex gap-2 items-center text-xs text-neutral-400",
+                span { class: "font-medium", "Remaining submissions:" }
+                span { "3" }
+            }
+            div { class: "p-3 rounded-lg border border-neutral-700 light:border-neutral-300",
+                div { class: "mb-2 text-xs text-neutral-500", "1 / 3" }
+                p { class: "mb-2 text-sm font-medium text-white light:text-neutral-900",
+                    "What is the governance threshold?"
+                }
+                div { class: "flex flex-col gap-1.5",
+                    for (i , option) in ["51%", "67%", "75%", "90%"].iter().enumerate() {
+                        label { class: "flex gap-2 items-center text-sm text-neutral-300 light:text-neutral-700",
+                            div {
+                                class: format!(
+                                    "size-4 rounded-full border-2 {}",
+                                    if i == 1 {
+                                        "border-yellow-400 bg-yellow-400/30"
+                                    } else {
+                                        "border-neutral-600 light:border-neutral-400"
+                                    },
+                                ),
+                            }
+                            "{option}"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Mock discussion viewer: title + content + comment area
+#[component]
+fn DiscussionPreview() -> Element {
+    rsx! {
+        div { class: "flex flex-col gap-3 w-full",
+            h3 { class: "text-base font-bold text-white light:text-neutral-900",
+                "Should we increase the staking reward?"
+            }
+            div { class: "flex gap-2 items-center text-xs text-neutral-500",
+                div { class: "rounded-full size-5 bg-neutral-600 light:bg-neutral-300" }
+                span { class: "font-medium", "alice.eth" }
+            }
+            p { class: "text-sm text-neutral-400 light:text-neutral-600 line-clamp-2",
+                "I propose we increase the staking reward from 5% to 8% to incentivize long-term holders and strengthen network security..."
+            }
+            hr { class: "border-neutral-700 light:border-neutral-300" }
+            p { class: "text-sm font-bold text-white light:text-neutral-900", "Comments (2)" }
+            div { class: "flex flex-col gap-2",
+                div { class: "p-2 rounded-lg border border-neutral-700 light:border-neutral-300 bg-neutral-800/50 light:bg-neutral-50",
+                    div { class: "flex gap-2 items-center mb-1 text-xs",
+                        div { class: "rounded-full size-4 bg-neutral-600 light:bg-neutral-300" }
+                        span { class: "font-medium text-white light:text-neutral-900",
+                            "bob.eth"
+                        }
+                    }
+                    p { class: "text-xs text-neutral-400 light:text-neutral-600",
+                        "I agree, higher rewards will attract more stakers."
+                    }
+                    div { class: "flex gap-3 items-center mt-1 text-xs text-neutral-500",
+                        span { "♡ 3" }
+                        span { "Reply (1)" }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Mock follow viewer: user list
+#[component]
+fn FollowPreview() -> Element {
+    rsx! {
+        div { class: "flex flex-col gap-3 w-full",
+            p { class: "text-sm font-bold text-white light:text-neutral-900", "Followers" }
+            div { class: "flex flex-col gap-2",
+                for (name , handle) in [("Alice", "@alice.eth"), ("Bob", "@bob.eth"), ("Charlie", "@charlie.eth")] {
+                    div { class: "flex gap-3 items-center p-2 rounded-lg border border-neutral-700 light:border-neutral-300 bg-neutral-800/50 light:bg-neutral-50",
+                        div { class: "rounded-full size-8 bg-neutral-600 light:bg-neutral-300" }
+                        div { class: "flex flex-col",
+                            span { class: "text-sm font-medium text-white light:text-neutral-900",
+                                "{name}"
+                            }
+                            span { class: "text-xs text-neutral-500", "{handle}" }
+                        }
                     }
                 }
             }
@@ -266,16 +355,16 @@ fn ActionTypeOption(
             },
             "aria-disabled": disabled.to_string(),
 
-            div { class: "flex justify-center items-center rounded-[0.625rem] size-11 bg-white light:bg-white shrink-0",
+            div { class: "flex justify-center items-center bg-white rounded-[0.625rem] size-11 light:bg-white shrink-0",
                 {icon}
-            
+
             }
 
-            div { class: "flex flex-col items-start gap-1",
-                p { class: "text-[1.0625rem]/[1.25rem] font-bold text-white light:text-neutral-900",
+            div { class: "flex flex-col gap-1 items-start",
+                p { class: "font-bold text-white text-[1.0625rem]/[1.25rem] light:text-neutral-900",
                     {title}
                 }
-                p { class: "text-[0.8125rem]/[1rem] font-semibold text-neutral-500 light:text-neutral-600",
+                p { class: "font-semibold text-[0.8125rem]/[1rem] text-neutral-500 light:text-neutral-600",
                     {caption}
                 }
             }

@@ -91,6 +91,10 @@ pub enum Partition {
     UserRewardHistory(String), // USER_REWARD_HISTORY#{user_id}
 
     SpaceIncentive(String), // SPACE_INCENTIVE#{contract_address}
+
+    Timeline(String), // TIMELINE#{user_id}
+
+    Category, // CATEGORY - shared pk for all categories
 }
 
 impl Partition {

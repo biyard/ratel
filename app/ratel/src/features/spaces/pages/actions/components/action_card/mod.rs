@@ -1,11 +1,11 @@
-use crate::features::spaces::pages::actions::*;
 use crate::common::chrono::{DateTime, Utc};
+use crate::features::spaces::pages::actions::*;
 use i18n::ActionCardTranslate;
 
 mod i18n;
 
 #[component]
-pub fn ActionCard(action: SpaceAction, space_id: SpacePartition) -> Element {
+pub fn ActionCard(action: SpaceActionSummary, space_id: SpacePartition) -> Element {
     let tr: ActionCardTranslate = use_translate();
     let nav = navigator();
     let now = crate::common::utils::time::get_now_timestamp_millis();
@@ -22,7 +22,7 @@ pub fn ActionCard(action: SpaceAction, space_id: SpacePartition) -> Element {
         // SpaceActionType::StudyAndQuiz => tr.action_type_quiz,
         SpaceActionType::Poll => tr.action_type_poll,
         SpaceActionType::TopicDiscussion => tr.action_type_discussion,
-        SpaceActionType::Subscription => tr.action_type_subscription,
+        SpaceActionType::Follow => tr.action_type_follow,
         SpaceActionType::Quiz => tr.action_type_quiz,
     };
     let type_badge_color = action_type_badge_color(&action.action_type);
@@ -35,6 +35,14 @@ pub fn ActionCard(action: SpaceAction, space_id: SpacePartition) -> Element {
         score_value.to_string()
     };
     let has_stats = point_value != 0 || score_value != 0;
+    let quiz_score_text = match (action.quiz_score, action.quiz_total_score) {
+        (Some(my_score), Some(total_score)) => Some(format!("{my_score}/{total_score}")),
+        _ => None,
+    };
+    let quiz_result_label =
+        action
+            .quiz_passed
+            .map(|passed| if passed { tr.quiz_pass } else { tr.quiz_failed });
     let url = action.get_url(&space_id);
 
     let title = if action.title.is_empty() {
@@ -50,7 +58,7 @@ pub fn ActionCard(action: SpaceAction, space_id: SpacePartition) -> Element {
     };
     rsx! {
         SpaceCard {
-            class: "flex flex-col gap-[0.625rem] w-full cursor-pointer text-left !rounded-[1rem] !bg-neutral-900 light:!bg-white !p-[0.9375rem] border border-neutral-800 light:border-neutral-300 hover:!bg-neutral-800 light:hover:!bg-neutral-50 transition-colors"
+            class: "flex flex-col w-full text-left border transition-colors cursor-pointer gap-[0.625rem] !rounded-[1rem] !bg-neutral-900 light:!bg-white !p-[0.9375rem] border-neutral-800 light:border-neutral-300 light:hover:!bg-neutral-50 hover:!bg-neutral-800"
                 .to_string(),
             onclick: move |_| {
                 let url = url.clone();
@@ -58,26 +66,25 @@ pub fn ActionCard(action: SpaceAction, space_id: SpacePartition) -> Element {
             },
 
             // Top: badges + date
-            div { class: "flex justify-between items-center gap-3 w-full",
-                div { class: "flex items-center gap-2",
+            div { class: "flex gap-3 justify-between items-center w-full",
+                div { class: "flex gap-2 items-center",
                     Badge {
                         color: type_badge_color,
                         variant: BadgeVariant::Rounded,
                         {type_label}
                     }
 
-                    if action.action_type != SpaceActionType::Subscription {
+                    if action.action_type != SpaceActionType::Follow {
                         Badge {
                             color: status_color,
                             variant: BadgeVariant::Rounded,
                             {status_label}
                         }
                     }
-                
                 }
 
                 if let Some(period) = period {
-                    span { class: "text-[0.75rem]/[1rem] font-medium text-neutral-500",
+                    span { class: "font-medium text-[0.75rem]/[1rem] text-neutral-500",
                         {period}
                     }
                 }
@@ -85,29 +92,46 @@ pub fn ActionCard(action: SpaceAction, space_id: SpacePartition) -> Element {
 
             // Title
             p {
-                class: "text-[1.125rem]/[1.75rem] font-semibold truncate w-full",
+                class: "w-full font-semibold text-[1.125rem]/[1.75rem] truncate",
                 class: if action.title.is_empty() { "text-neutral-500 italic" } else { "text-white light:text-neutral-900" },
                 {title}
             }
 
             // Description
             p {
-                class: "text-[0.75rem]/[1rem] font-medium text-neutral-300 light:text-neutral-600 break-words flex-1 min-h-0 w-full",
+                class: "flex-1 w-full min-h-0 font-medium break-words line-clamp-1 text-[0.75rem]/[1rem] text-neutral-300 light:text-neutral-600",
                 class: if action.description.is_empty() { " text-white light:text-neutral-900" },
-                {description}
+                dangerous_inner_html: description,
             }
 
             if has_stats {
                 // Bottom: points + score (border-top as separator)
-                div { class: "flex items-center gap-2 w-full border-t border-neutral-800 light:border-neutral-300 pt-[0.6875rem]",
+                div { class: "flex gap-2 items-center w-full border-t border-neutral-800 light:border-neutral-300 pt-[0.6875rem]",
                     if point_value != 0 {
-                        span { class: "inline-flex items-center gap-[6px] h-[32px] px-[10px] rounded-[10px] bg-neutral-800/50 light:bg-neutral-100 text-white light:text-neutral-900 text-[15px]/[22px] font-semibold",
+                        span { class: "inline-flex items-center font-semibold text-white gap-[6px] h-[32px] px-[10px] rounded-[10px] bg-neutral-800/50 light:bg-neutral-100 light:text-neutral-900 text-[15px]/[22px]",
                             {points}
                         }
                     }
                     if score_value != 0 {
-                        span { class: "inline-flex items-center gap-[6px] h-[32px] px-[10px] rounded-[10px] bg-neutral-800/50 light:bg-neutral-100 text-white light:text-neutral-900 text-[15px]/[22px] font-semibold",
+                        span { class: "inline-flex items-center font-semibold text-white gap-[6px] h-[32px] px-[10px] rounded-[10px] bg-neutral-800/50 light:bg-neutral-100 light:text-neutral-900 text-[15px]/[22px]",
                             {score}
+                        }
+                    }
+                }
+            }
+
+            if action.action_type == SpaceActionType::Quiz && quiz_score_text.is_some() {
+                div { class: "mt-auto flex w-full justify-end gap-2",
+                    if let Some(result) = quiz_result_label {
+                        span {
+                            class: "inline-flex h-[26px] items-center rounded-[8px] px-2.5 text-[12px]/[18px] font-semibold",
+                            class: if action.quiz_passed == Some(true) { "bg-green-500/20 text-green-400 light:bg-green-100 light:text-green-700" } else { "bg-red-500/20 text-red-400 light:bg-red-100 light:text-red-700" },
+                            {result}
+                        }
+                    }
+                    if let Some(score_text) = quiz_score_text {
+                        span { class: "inline-flex h-[26px] items-center rounded-[8px] bg-primary/20 px-2.5 text-[12px]/[18px] font-semibold text-primary",
+                            {score_text}
                         }
                     }
                 }
@@ -123,7 +147,7 @@ enum ActionStatus {
     Closed,
 }
 
-fn resolve_action_status(action: &SpaceAction, now_millis: i64) -> ActionStatus {
+fn resolve_action_status(action: &SpaceActionSummary, now_millis: i64) -> ActionStatus {
     match (action.started_at, action.ended_at) {
         (Some(started_at), Some(ended_at)) => {
             if now_millis < started_at {
@@ -158,7 +182,7 @@ fn action_type_badge_color(action_type: &SpaceActionType) -> BadgeColor {
         // SpaceActionType::StudyAndQuiz => BadgeColor::Purple,
         SpaceActionType::Poll => BadgeColor::Orange,
         SpaceActionType::TopicDiscussion => BadgeColor::Blue,
-        SpaceActionType::Subscription => BadgeColor::Pink,
+        SpaceActionType::Follow => BadgeColor::Pink,
         SpaceActionType::Quiz => BadgeColor::Purple,
     }
 }
