@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 use crate::common::attribute::*;
 use crate::common::utils::time::get_now_timestamp_millis;
-use crate::features::auth::User;
 
 use crate::features::spaces::pages::actions::actions::poll::*;
 
@@ -33,15 +32,9 @@ impl SpacePollUserAnswer {
         poll_sk: EntityType,
         answers: Vec<Answer>,
         respondent: Option<RespondentAttr>,
-        User {
-            pk,
-            display_name,
-            profile_url,
-            username,
-            ..
-        }: User,
+        author: crate::common::models::space::SpaceAuthor,
     ) -> Self {
-        let user_pk = pk;
+        let user_pk = author.pk;
         let created_at = get_now_timestamp_millis();
         let (pk, sk) = Self::keys(&user_pk, &poll_sk, &space_pk);
         Self {
@@ -51,9 +44,9 @@ impl SpacePollUserAnswer {
             answers,
             respondent,
             user_pk: Some(user_pk),
-            display_name: Some(display_name),
-            profile_url: Some(profile_url),
-            username: Some(username),
+            display_name: Some(author.display_name),
+            profile_url: Some(author.profile_url),
+            username: Some(author.username),
         }
     }
     // FIXME: Because of EntityType(String, String) Type cannot deserialize from string

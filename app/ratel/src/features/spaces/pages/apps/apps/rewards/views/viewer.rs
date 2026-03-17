@@ -2,6 +2,7 @@ use crate::features::spaces::pages::apps::apps::rewards::controllers::list_space
 use crate::features::spaces::pages::apps::apps::rewards::i18n::SpaceRewardTranslate;
 use crate::features::spaces::pages::apps::apps::rewards::*;
 use crate::features::spaces::space_common::models::SpaceRewardResponse;
+use dioxus_translate::{Translate as _, use_language};
 
 #[derive(Clone, PartialEq)]
 enum ClaimStatus {
@@ -50,26 +51,9 @@ fn get_claim_status(reward: &SpaceRewardResponse) -> ClaimStatus {
     }
 }
 
-fn behavior_label(behavior: &RewardUserBehavior, tr: &SpaceRewardTranslate) -> String {
-    match behavior {
-        RewardUserBehavior::RespondPoll => tr.respond_poll.to_string(),
-    }
-}
-
-fn period_label(period: &RewardPeriod, tr: &SpaceRewardTranslate) -> String {
-    match period {
-        RewardPeriod::Once => tr.period_once.to_string(),
-        RewardPeriod::Hourly => tr.period_hourly.to_string(),
-        RewardPeriod::Daily => tr.period_daily.to_string(),
-        RewardPeriod::Weekly => tr.period_weekly.to_string(),
-        RewardPeriod::Monthly => tr.period_monthly.to_string(),
-        RewardPeriod::Yearly => tr.period_yearly.to_string(),
-        RewardPeriod::Unlimited => tr.period_unlimited.to_string(),
-    }
-}
-
 #[component]
 fn RewardViewCard(reward: SpaceRewardResponse, tr: SpaceRewardTranslate) -> Element {
+    let lang = use_language();
     let status = get_claim_status(&reward);
     let is_claimed = status == ClaimStatus::Claimed;
     let per_claim_points = reward.points * reward.credits.max(1);
@@ -99,21 +83,21 @@ fn RewardViewCard(reward: SpaceRewardResponse, tr: SpaceRewardTranslate) -> Elem
 
                 div { class: "flex-1 min-w-0",
                     div { class: "flex items-center gap-2",
-                        h4 { class: "text-base font-semibold text-font-primary truncate",
-                            {behavior_label(&reward.behavior, &tr)}
+                        h4 { class: "text-base font-semibold text-web-font-primary truncate",
+                            {reward.behavior.translate(&lang())}
                         }
                         if is_claimed {
                             span { class: "px-2 py-0.5 text-xs rounded border border-yellow-500/60 bg-yellow-500/10 text-yellow-500",
                                 {tr.claimed}
                             }
                         } else {
-                            span { class: "px-2 py-0.5 text-xs rounded border border-btn-primary-bg/60 bg-btn-primary-bg/10 text-btn-primary-text",
-                                {period_label(&reward.period, &tr)}
+                            span { class: "px-2 py-0.5 text-xs rounded border border-btn-primary-bg/60 bg-btn-primary-bg/10 text-web-font-primary",
+                                {reward.period.translate(&lang())}
                             }
                         }
                     }
                     if !reward.description.is_empty() {
-                        p { class: "text-sm text-font-secondary truncate",
+                        p { class: "text-sm text-text-secondary truncate",
                             {reward.description.clone()}
                         }
                     }
@@ -126,13 +110,13 @@ fn RewardViewCard(reward: SpaceRewardResponse, tr: SpaceRewardTranslate) -> Elem
                     let unit_label = if *unit == "claims" { tr.claims_unit.to_string() } else { tr.points_unit.to_string() };
                     rsx! {
                         div { class: "mt-3 flex items-center gap-3",
-                            div { class: "flex-1 h-2 bg-font-secondary/20 rounded-full overflow-hidden",
+                            div { class: "flex-1 h-2 bg-text-secondary/20 rounded-full overflow-hidden",
                                 div {
-                                    class: "h-full bg-font-secondary rounded-full transition-all duration-300",
+                                    class: "h-full bg-text-secondary rounded-full transition-all duration-300",
                                     style: "width: {pct}%",
                                 }
                             }
-                            span { class: "text-xs text-font-secondary whitespace-nowrap",
+                            span { class: "text-xs text-text-secondary whitespace-nowrap",
                                 "{current} / {max} {unit_label}"
                             }
                         }
@@ -143,29 +127,29 @@ fn RewardViewCard(reward: SpaceRewardResponse, tr: SpaceRewardTranslate) -> Elem
                         div { class: "flex-1 h-2 rounded-full overflow-hidden",
                             div { class: "h-full bg-btn-primary-bg rounded-full w-full" }
                         }
-                        span { class: "text-xs text-font-secondary whitespace-nowrap",
+                        span { class: "text-xs text-text-secondary whitespace-nowrap",
                             {tr.completed}
                         }
                     }
                 },
                 ClaimStatus::Unlimited => rsx! {
                     div { class: "mt-3 flex items-center gap-2",
-                        span { class: "text-font-secondary", "∞" }
-                        span { class: "text-xs text-font-secondary", {tr.no_limit} }
+                        span { class: "text-text-secondary", "∞" }
+                        span { class: "text-xs text-text-secondary", {tr.no_limit} }
                     }
                 },
             }
 
             div { class: "mt-3 flex items-center justify-between text-sm",
-                span { class: "text-font-secondary",
+                span { class: "text-text-secondary",
                     "{tr.per_claim}: "
-                    span { class: "font-semibold text-font-primary",
+                    span { class: "font-semibold text-web-font-primary",
                         "{per_claim_points} P"
                     }
                 }
-                span { class: "text-font-secondary",
+                span { class: "text-text-secondary",
                     "{tr.earned}: "
-                    span { class: "font-semibold text-btn-primary-text",
+                    span { class: "font-semibold text-web-font-primary",
                         "{reward.user_points} P"
                     }
                 }
@@ -175,50 +159,40 @@ fn RewardViewCard(reward: SpaceRewardResponse, tr: SpaceRewardTranslate) -> Elem
 }
 
 #[component]
-pub fn ViewerPage(space_id: SpacePartition) -> Element {
+pub fn ViewerPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: SpaceRewardTranslate = use_translate();
-    let mut rewards = use_signal(Vec::<SpaceRewardResponse>::new);
-    let mut did_load = use_signal(|| false);
 
-    let space_id_clone = space_id.clone();
-    use_effect(move || {
-        if did_load() {
-            return;
-        }
-        did_load.set(true);
-        let space_id = space_id_clone.clone();
-        spawn(async move {
-            if let Ok(res) = list_space_rewards(space_id, None).await {
-                rewards.set(res.items);
-            }
-        });
-    });
+    let rewards = use_loader(move || async move {
+        list_space_rewards(space_id(), None).await
+    })?;
 
     let reward_list = rewards();
 
-    if reward_list.is_empty() && did_load() {
+    if reward_list.items.is_empty() {
         return rsx! {
             div { class: "flex items-center justify-center p-8",
                 div { class: "flex flex-col items-center gap-2",
                     span { class: "text-4xl", "🎁" }
-                    p { class: "text-font-secondary", {tr.no_rewards} }
+                    p { class: "text-text-secondary", {tr.no_rewards} }
                 }
             }
         };
     }
 
     rsx! {
-        div { class: "flex flex-col gap-4 p-4 w-full max-w-[1024px]",
-            h2 { class: "text-xl font-bold text-font-primary",
-                {tr.viewer_title}
-            }
+        div {
+            class: "flex flex-col gap-5 items-start w-full text-web-font-primary",
 
-            div { class: "flex flex-col gap-3",
-                for reward in reward_list.iter() {
-                    RewardViewCard {
-                        key: "{reward.sk}",
-                        reward: reward.clone(),
-                        tr: tr.clone(),
+            div { class: "flex flex-col gap-2.5 mx-auto w-full max-w-[1024px]",
+                h3 { {tr.viewer_title} }
+
+                div { class: "flex flex-col gap-3",
+                    for reward in reward_list.items.iter() {
+                        RewardViewCard {
+                            key: "{reward.sk}",
+                            reward: reward.clone(),
+                            tr: tr.clone(),
+                        }
                     }
                 }
             }

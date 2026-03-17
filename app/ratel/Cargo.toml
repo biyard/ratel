@@ -97,10 +97,11 @@ sampling = { path = "../../packages/sampling", default-features = false, feature
   "dto",
 ], optional = true }
 mimetype-detector = "0.3.6"
+lambda_runtime = { version = "1.1.1", optional = true }
 
 
 [features]
-full = ["membership", "spaces_full", "teams", "users"]
+full = ["membership", "social", "spaces_full"]
 default = ["full"]
 bypass = []
 web = ["dioxus/web", "getrandom", "gloo-timers", "time/wasm-bindgen"]
@@ -142,13 +143,14 @@ server = [
   "validator",
 ]
 
-lambda = ["lambda_http", "server"]
+lambda = ["lambda_http", "lambda_runtime", "server"]
 layout_test = ["web"]
 membership = []
-users = []
-teams = []
+social = []
 spaces = []
 spaces_full = ["spaces"]
+local-dev = ["beta"]
+beta = []
 futures = ["dep:futures"]
 
 [dev-dependencies]

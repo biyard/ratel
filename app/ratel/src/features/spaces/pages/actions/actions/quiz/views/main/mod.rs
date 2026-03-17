@@ -1,4 +1,6 @@
 use crate::features::spaces::pages::actions::actions::quiz::*;
+mod quiz_read_page;
+pub use quiz_read_page::QuizReadPage;
 mod creator;
 use creator::QuizCreatorPage;
 

@@ -98,12 +98,20 @@ pub trait RewardUserBehaviorExt {
 
 impl RewardUserBehaviorExt for RewardUserBehavior {
     fn all() -> Vec<RewardUserBehavior> {
-        vec![RewardUserBehavior::RespondPoll]
+        vec![
+            RewardUserBehavior::RespondPoll,
+            RewardUserBehavior::DiscussionComment,
+            RewardUserBehavior::QuizAnswer,
+            RewardUserBehavior::Follow,
+        ]
     }
 
     fn label(&self) -> &'static str {
         match self {
             RewardUserBehavior::RespondPoll => "Poll Response",
+            RewardUserBehavior::DiscussionComment => "Discussion Comment",
+            RewardUserBehavior::QuizAnswer => "Quiz Answer",
+            RewardUserBehavior::Follow => "Follow",
         }
     }
 }

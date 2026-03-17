@@ -1,5 +1,5 @@
-use crate::features::admin::*;
 use crate::common::models::auth::AdminUser;
+use crate::features::admin::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RewardResponse {
@@ -20,24 +20,13 @@ impl From<Reward> for RewardResponse {
     }
 }
 
-#[get("/api/admin/rewards?action", _user: AdminUser)]
-pub async fn list_rewards(action: Option<String>) -> Result<ListResponse<RewardResponse>> {
+#[get("/api/admin/rewards", _user: AdminUser)]
+pub async fn list_rewards() -> Result<ListResponse<RewardResponse>> {
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
 
-    let action: Option<RewardAction> = action
-        .map(|s| s.parse())
-        .transpose()
-        .map_err(|_| Error::BadRequest("Invalid action".into()))?;
-
     let opt = Reward::opt_all();
-
-    let (items, _) = if let Some(action) = action {
-        let pk = Reward::compose_gsi1_pk(action);
-        Reward::find_by_action(cli, &pk, opt).await?
-    } else {
-        Reward::query(cli, Partition::Reward, opt).await?
-    };
+    let (items, _) = Reward::query(cli, Partition::Reward, opt).await?;
 
     let items = items.into_iter().map(RewardResponse::from).collect();
 

@@ -1,5 +1,6 @@
 use crate::{
-    features::spaces::pages::actions::*, spaces::pages::actions::actions::quiz::SpaceQuiz,
+    common::RewardUserBehavior, features::spaces::pages::actions::*,
+    spaces::pages::actions::actions::quiz::SpaceQuiz,
 };
 #[derive(Debug, Clone, Default, Translate, Serialize, Deserialize, PartialEq)]
 pub enum SpaceActionType {
@@ -17,6 +18,15 @@ pub enum SpaceActionType {
 }
 
 impl SpaceActionType {
+    pub fn to_behavior(&self) -> RewardUserBehavior {
+        match self {
+            SpaceActionType::Poll => RewardUserBehavior::RespondPoll,
+            SpaceActionType::TopicDiscussion => RewardUserBehavior::DiscussionComment,
+            SpaceActionType::Quiz => RewardUserBehavior::QuizAnswer,
+            SpaceActionType::Follow => RewardUserBehavior::Follow,
+        }
+    }
+
     pub async fn create(&self, space_id: SpacePartition) -> Result<Route> {
         match self {
             SpaceActionType::Poll => {
