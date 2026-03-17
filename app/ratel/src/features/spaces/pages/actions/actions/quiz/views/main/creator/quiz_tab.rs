@@ -101,6 +101,7 @@ pub fn QuizTab(can_edit: bool) -> Element {
                             div { class: "rounded-lg border border-neutral-700 bg-neutral-900 p-4 light:border-input-box-border light:bg-input-box-bg",
                                 QuestionViewer {
                                     index: idx,
+                                    total: questions.read().len(),
                                     question,
                                     answer: viewer_answer,
                                     disabled: true,

@@ -1,10 +1,7 @@
 mod context;
 
-use crate::features::spaces::space_common::types::{
-    space_page_actions_discussion_comments_key, space_page_actions_discussion_key,
-};
-
 use super::*;
+use crate::common::hooks::use_infinite_query;
 use context::Context;
 use context::*;
 
@@ -13,7 +10,6 @@ pub fn ViewerMain(
     space_id: ReadSignal<SpacePartition>,
     discussion_id: ReadSignal<SpacePostEntityType>,
 ) -> Element {
-    let mut comment_input = use_signal(String::new);
     let role = use_space_role()();
     let can_comment = matches!(role, SpaceUserRole::Creator | SpaceUserRole::Participant);
     let ctx = use_discussion_context();
@@ -33,9 +29,8 @@ pub fn ViewerMain(
             }
             DiscussionContent { discussion: discussion.clone() }
             DiscussionComments {
-                space_id: space_id(),
-                discussion_id: discussion_id(),
-                discussion,
+                space_id,
+                discussion_id,
                 can_comment,
                 is_creator: role.is_admin(),
             }
@@ -82,9 +77,8 @@ pub fn DiscussionContent(discussion: SpacePost) -> Element {
 #[allow(clippy::too_many_arguments)]
 #[component]
 pub fn DiscussionComments(
-    space_id: SpacePartition,
-    discussion_id: SpacePostEntityType,
-    discussion: SpacePost,
+    space_id: ReadSignal<SpacePartition>,
+    discussion_id: ReadSignal<SpacePostEntityType>,
     can_comment: bool,
     is_creator: bool,
 ) -> Element {
@@ -92,11 +86,12 @@ pub fn DiscussionComments(
     let mut ctx = use_discussion_comment_context();
     let comments = ctx.comments.items();
     let more_comments = ctx.comments.more_element();
+    let comment_count = comments.len();
 
     rsx! {
         div { class: "flex flex-col gap-4",
             h2 { class: "text-lg font-bold text-white light:text-neutral-900",
-                "Comments ({discussion.comments})"
+                "Comments ({comment_count})"
             }
             if can_comment {
                 div { class: "flex gap-2",
@@ -108,29 +103,26 @@ pub fn DiscussionComments(
                     }
                     button {
                         class: "py-2 px-4 text-sm font-bold bg-yellow-400 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-50 light:bg-yellow-500 text-neutral-900",
-                        disabled: comment_input().is_empty(),
+                        disabled: comment_input().trim().is_empty(),
                         onclick: {
-                            let space_id = space_id.clone();
-                            let discussion_id = discussion_id.clone();
                             move |_| {
-                                let content = comment_input();
+                                let content = comment_input().trim().to_string();
+                                if content.is_empty() {
+                                    return;
+                                }
                                 comment_input.set(String::new());
-                                let space_id = space_id.clone();
-                                let discussion_id = discussion_id.clone();
-                                async move {
-                                    if content.is_empty() {
-                                        return;
-                                    }
+                                let mut comments_query = ctx.comments;
+                                spawn(async move {
                                     let req = AddCommentRequest { content };
-                                    match add_comment(space_id.clone(), discussion_id.clone(), req).await {
+                                    match add_comment(space_id(), discussion_id(), req).await {
                                         Ok(comment) => {
-                                            ctx.comments.insert(comment);
+                                            comments_query.insert(comment);
                                         }
                                         Err(e) => {
                                             error!("Failed to add comment: {:?}", e);
                                         }
                                     }
-                                }
+                                });
                             }
                         },
                         "Send"
@@ -141,26 +133,18 @@ pub fn DiscussionComments(
                 for comment in comments.iter() {
                     {
                         let comment = comment.clone();
-                        let comment_sk: SpacePostCommentEntityType = comment
-                            .sk
-                            .clone()
-                            .try_into()
-                            .unwrap_or_default();
+                        let comment_sk: SpacePostCommentEntityType = comment.sk.clone().into();
+                        let mut comments_query = ctx.comments;
                         rsx! {
                             CommentItem {
                                 key: "{comment.sk}",
-                                space_id: space_id.clone(),
-                                discussion_id: discussion_id.clone(),
+                                space_id,
+                                discussion_id,
                                 comment_sk,
-                                content: comment.content.clone(),
-                                author_pk: comment.author_pk.clone(),
-                                author_display_name: comment.author_display_name.clone(),
-                                author_profile_url: comment.author_profile_url.clone(),
-                                likes: comment.likes,
-                                replies: comment.replies,
-                                liked: comment.liked,
+                                comment,
                                 is_creator,
-                                can_interact: can_comment,
+                                can_comment,
+                                on_refresh_comments: move |_| comments_query.restart(),
                             }
                         }
                     }
@@ -177,73 +161,159 @@ pub fn DiscussionComments(
 
 #[component]
 fn CommentItem(
-    space_id: SpacePartition,
-    discussion_id: SpacePostEntityType,
+    space_id: ReadSignal<SpacePartition>,
+    discussion_id: ReadSignal<SpacePostEntityType>,
     comment_sk: SpacePostCommentEntityType,
-    content: String,
-    author_pk: Partition,
-    author_display_name: String,
-    author_profile_url: String,
-    likes: u64,
-    replies: u64,
-    liked: bool,
+    comment: DiscussionCommentResponse,
     is_creator: bool,
-    can_interact: bool,
+    can_comment: bool,
+    on_refresh_comments: EventHandler<()>,
 ) -> Element {
+    let comment_sk = use_signal(|| comment_sk);
     let mut show_reply_input = use_signal(|| false);
+    let mut show_replies = use_signal(|| comment.replies > 0);
     let mut reply_input = use_signal(String::new);
+    let mut reply_count = use_signal(|| comment.replies);
+    let mut replies_query = use_infinite_query(move |bookmark| {
+        list_replies(space_id(), discussion_id(), comment_sk(), bookmark)
+    })?;
+    let replies = replies_query.items();
+    let more_replies = replies_query.more_element();
 
     rsx! {
         div { class: "flex flex-col gap-2 p-3 rounded-lg border border-neutral-700 light:border-neutral-300 bg-neutral-800/50 light:bg-neutral-50",
             div { class: "flex justify-between items-center",
                 div { class: "flex gap-2 items-center text-sm",
-                    if !author_profile_url.is_empty() {
+                    if !comment.author_profile_url.is_empty() {
                         img {
                             class: "w-5 h-5 rounded-full",
-                            src: "{author_profile_url}",
+                            src: "{comment.author_profile_url}",
                         }
                     }
                     span { class: "font-medium text-white light:text-neutral-900",
-                        {author_display_name}
+                        {comment.author_display_name}
                     }
                 }
                 if is_creator {
                     DeleteCommentButton {
-                        space_id: space_id.clone(),
-                        discussion_id: discussion_id.clone(),
-                        comment_sk: comment_sk.clone(),
+                        space_id,
+                        discussion_id,
+                        comment_sk,
+                        on_deleted: move |_| {
+                            on_refresh_comments.call(());
+                        },
                     }
                 }
             }
-            p { class: "text-sm text-neutral-300 light:text-neutral-700", {content} }
+            p { class: "text-sm text-neutral-300 light:text-neutral-700", {comment.content.clone()} }
             div { class: "flex gap-4 items-center text-xs text-neutral-500",
-                if can_interact {
-                    LikeButton {
-                        space_id: space_id.clone(),
-                        discussion_id: discussion_id.clone(),
-                        comment_sk: comment_sk.clone(),
-                        likes,
-                        liked,
+                LikeButton {
+                    space_id,
+                    discussion_id,
+                    comment_sk: SpacePostCommentTargetEntityType::from(comment.sk.clone()),
+                    likes: comment.likes,
+                    liked: comment.liked,
+                    on_changed: move |_| {
+                        on_refresh_comments.call(());
+                    },
+                }
+                if reply_count() > 0 {
+                    button {
+                        class: "transition-colors hover:text-white",
+                        onclick: move |_| show_replies.toggle(),
+                        if show_replies() {
+                            "Hide replies"
+                        } else {
+                            "Replies ({reply_count()})"
+                        }
                     }
+                }
+                if can_comment {
                     button {
                         class: "transition-colors hover:text-white",
                         onclick: move |_| show_reply_input.toggle(),
-                        "Reply ({replies})"
-                    }
-                } else {
-                    span { class: if liked { "text-yellow-400" } else { "" }, "♥ {likes}" }
-                    if replies > 0 {
-                        span { "{replies} replies" }
+                        "Reply"
                     }
                 }
             }
-            if show_reply_input() {
+            if can_comment && show_reply_input() {
                 ReplyInput {
-                    space_id: space_id.clone(),
-                    discussion_id: discussion_id.clone(),
-                    comment_sk: comment_sk.clone(),
+                    space_id,
+                    discussion_id,
+                    comment_sk,
                     reply_input,
                     show_reply_input,
+                    on_success: move |_| {
+                        reply_count.set(reply_count() + 1);
+                        show_replies.set(true);
+                        replies_query.restart();
+                        on_refresh_comments.call(());
+                    },
+                }
+            }
+            if show_replies() && reply_count() > 0 {
+                div { class: "ml-4 flex flex-col gap-2",
+                    for reply in replies.iter() {
+                        {
+                            let reply = reply.clone();
+                            let mut replies_query = replies_query;
+                            rsx! {
+                                ReplyItem {
+                                    key: "{reply.sk}",
+                                    space_id,
+                                    discussion_id,
+                                    comment_sk: SpacePostCommentTargetEntityType::from(reply.sk.clone()),
+                                    reply,
+                                    on_refresh_replies: move |_| {
+                                        replies_query.restart();
+                                    },
+                                }
+                            }
+                        }
+                    }
+                    if replies_query.is_loading() {
+                        LoadingIndicator { max_width: "80px" }
+                    } else {
+                        {more_replies}
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+fn ReplyItem(
+    space_id: ReadSignal<SpacePartition>,
+    discussion_id: ReadSignal<SpacePostEntityType>,
+    comment_sk: SpacePostCommentTargetEntityType,
+    reply: DiscussionCommentResponse,
+    on_refresh_replies: EventHandler<()>,
+) -> Element {
+    rsx! {
+        div { class: "flex flex-col gap-2 rounded-lg border border-neutral-700/50 bg-neutral-900/40 p-2.5 light:border-neutral-200 light:bg-neutral-100",
+            div { class: "flex items-center gap-2 text-sm",
+                if !reply.author_profile_url.is_empty() {
+                    img {
+                        class: "size-4 rounded-full",
+                        src: "{reply.author_profile_url}",
+                    }
+                }
+                span { class: "font-medium text-white light:text-neutral-900",
+                    {reply.author_display_name}
+                }
+            }
+            p { class: "text-sm text-neutral-300 light:text-neutral-700", {reply.content.clone()} }
+            div { class: "flex justify-end",
+                LikeButton {
+                    space_id,
+                    discussion_id,
+                    comment_sk: comment_sk.clone(),
+                    likes: reply.likes,
+                    liked: reply.liked,
+                    on_changed: move |_| {
+                        on_refresh_replies.call(());
+                    },
                 }
             }
         }
@@ -252,45 +322,30 @@ fn CommentItem(
 
 #[component]
 fn DeleteCommentButton(
-    space_id: SpacePartition,
-    discussion_id: SpacePostEntityType,
-    comment_sk: SpacePostCommentEntityType,
+    space_id: ReadSignal<SpacePartition>,
+    discussion_id: ReadSignal<SpacePostEntityType>,
+    comment_sk: ReadSignal<SpacePostCommentEntityType>,
+    on_deleted: EventHandler<()>,
 ) -> Element {
     use crate::features::spaces::pages::actions::actions::discussion::controllers::delete_comment;
-    let mut query = use_query_store();
 
     rsx! {
         button {
             class: "text-xs text-red-400 transition-colors hover:text-red-300",
             onclick: {
-                let space_id = space_id.clone();
-                let discussion_id = discussion_id.clone();
-                let comment_sk = comment_sk.clone();
                 move |_| {
-                    let space_id = space_id.clone();
-                    let discussion_id = discussion_id.clone();
-                    let comment_sk = comment_sk.clone();
-                    async move {
-                        match delete_comment(space_id.clone(), discussion_id.clone(), comment_sk)
+                    spawn(async move {
+                        match delete_comment(space_id(), discussion_id(), comment_sk())
                             .await
                         {
                             Ok(_) => {
-                                let discussion_key = space_page_actions_discussion_key(
-                                    &space_id,
-                                    &discussion_id,
-                                );
-                                let comments_key = space_page_actions_discussion_comments_key(
-                                    &space_id,
-                                    &discussion_id,
-                                );
-                                query.invalidate(&discussion_key);
-                                query.invalidate(&comments_key);
+                                on_deleted.call(());
                             }
                             Err(e) => {
                                 error!("Failed to delete comment: {:?}", e);
                             }
                         }
-                    }
+                    });
                 }
             },
             "Delete"
@@ -300,54 +355,73 @@ fn DeleteCommentButton(
 
 #[component]
 fn LikeButton(
-    space_id: SpacePartition,
-    discussion_id: SpacePostEntityType,
-    comment_sk: SpacePostCommentEntityType,
+    space_id: ReadSignal<SpacePartition>,
+    discussion_id: ReadSignal<SpacePostEntityType>,
+    comment_sk: SpacePostCommentTargetEntityType,
     likes: u64,
     liked: bool,
+    on_changed: EventHandler<()>,
 ) -> Element {
-    let mut query = use_query_store();
+    let mut optimistic_liked = use_signal(|| liked);
+    let mut optimistic_likes = use_signal(|| likes as i64);
+    let mut is_processing = use_signal(|| false);
+
+    use_effect(use_reactive(
+        (&liked, &likes),
+        move |(next_liked, next_likes)| {
+            optimistic_liked.set(next_liked);
+            optimistic_likes.set(next_likes as i64);
+        },
+    ));
 
     rsx! {
         button {
             class: "flex gap-1 items-center transition-colors hover:text-yellow-400",
-            class: if liked { "text-yellow-400" } else { "" },
+            class: if optimistic_liked() { "text-yellow-400" } else { "" },
+            disabled: is_processing(),
             onclick: {
-                let space_id = space_id.clone();
-                let discussion_id = discussion_id.clone();
-                let comment_sk = comment_sk.clone();
                 move |_| {
-                    let space_id = space_id.clone();
-                    let discussion_id = discussion_id.clone();
+                    if is_processing() {
+                        return;
+                    }
+                    let next_like = !optimistic_liked();
+                    let prev_like = optimistic_liked();
+                    let prev_likes = optimistic_likes();
+                    let delta: i64 = if next_like { 1 } else { -1 };
+                    optimistic_liked.set(next_like);
+                    optimistic_likes.set((prev_likes + delta).max(0));
+                    is_processing.set(true);
+
                     let comment_sk = comment_sk.clone();
-                    async move {
-                        let req = LikeCommentRequest { like: !liked };
+                    spawn(async move {
+                        let req = LikeCommentRequest {
+                            like: next_like,
+                        };
                         match like_comment(
-                                space_id.clone(),
-                                discussion_id.clone(),
+                                space_id(),
+                                discussion_id(),
                                 comment_sk,
                                 req,
                             )
                             .await
                         {
                             Ok(_) => {
-                                let comments_key = space_page_actions_discussion_comments_key(
-                                    &space_id,
-                                    &discussion_id,
-                                );
-                                query.invalidate(&comments_key);
+                                on_changed.call(());
                             }
                             Err(e) => {
+                                optimistic_liked.set(prev_like);
+                                optimistic_likes.set(prev_likes);
                                 error!("Failed to like comment: {:?}", e);
                             }
                         }
-                    }
+                        is_processing.set(false);
+                    });
                 }
             },
-            if liked {
-                "♥ {likes}"
+            if optimistic_liked() {
+                "♥ {optimistic_likes()}"
             } else {
-                "♡ {likes}"
+                "♡ {optimistic_likes()}"
             }
         }
     }
@@ -355,16 +429,15 @@ fn LikeButton(
 
 #[component]
 fn ReplyInput(
-    space_id: SpacePartition,
-    discussion_id: SpacePostEntityType,
-    comment_sk: SpacePostCommentEntityType,
+    space_id: ReadSignal<SpacePartition>,
+    discussion_id: ReadSignal<SpacePostEntityType>,
+    comment_sk: ReadSignal<SpacePostCommentEntityType>,
     reply_input: Signal<String>,
     show_reply_input: Signal<bool>,
+    on_success: EventHandler<()>,
 ) -> Element {
     let mut reply_input = reply_input;
     let mut show_reply_input = show_reply_input;
-    let mut ctx = use_discussion_comment_context();
-    let mut query = use_query_store();
 
     rsx! {
         div { class: "flex gap-2 mt-1",
@@ -376,42 +449,33 @@ fn ReplyInput(
             }
             button {
                 class: "py-1.5 px-3 text-xs font-bold bg-yellow-400 rounded-lg hover:opacity-90 disabled:opacity-50 light:bg-yellow-500 text-neutral-900",
-                disabled: reply_input().is_empty(),
+                disabled: reply_input().trim().is_empty(),
                 onclick: {
-                    let space_id = space_id.clone();
-                    let discussion_id = discussion_id.clone();
-                    let comment_sk = comment_sk.clone();
                     move |_| {
-                        let content = reply_input();
-                        reply_input.set(String::new());
-                        show_reply_input.set(false);
-                        let space_id = space_id.clone();
-                        let discussion_id = discussion_id.clone();
-                        let comment_sk = comment_sk.clone();
-                        async move {
-                            if content.is_empty() {
-                                return;
-                            }
+                        let content = reply_input().trim().to_string();
+                        if content.is_empty() {
+                            return;
+                        }
+                        spawn(async move {
                             let req = ReplyCommentRequest { content };
                             match reply_comment(
-                                    space_id.clone(),
-                                    discussion_id.clone(),
-                                    comment_sk,
+                                    space_id(),
+                                    discussion_id(),
+                                    comment_sk(),
                                     req,
                                 )
                                 .await
                             {
                                 Ok(_) => {
-                                    ctx.comments.restart();
-                                    let discussion_key =
-                                        space_page_actions_discussion_key(&space_id, &discussion_id);
-                                    query.invalidate(&discussion_key);
+                                    reply_input.set(String::new());
+                                    show_reply_input.set(false);
+                                    on_success.call(());
                                 }
                                 Err(e) => {
                                     error!("Failed to reply: {:?}", e);
                                 }
                             }
-                        }
+                        });
                     }
                 },
                 "Reply"

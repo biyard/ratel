@@ -12,6 +12,9 @@ pub async fn add_comment(
     req: AddCommentRequest,
 ) -> Result<DiscussionCommentResponse> {
     SpacePost::can_view(&role)?;
+    if !matches!(role, SpaceUserRole::Creator | SpaceUserRole::Participant) {
+        return Err(Error::NoPermission);
+    }
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let space_post_id: SpacePostPartition = SpacePostPartition(discussion_sk.0.clone());

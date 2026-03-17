@@ -95,9 +95,30 @@ pub enum CardVariant {
     Filled,
 }
 
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Serialize,
+    Deserialize,
+    strum::Display,
+    strum::EnumString,
+    Default,
+)]
+pub enum CardShape {
+    #[default]
+    #[strum(serialize = "rounded-[10px]")]
+    Rounded,
+
+    #[strum(serialize = "rounded-0")]
+    Squere,
+}
+
 #[component]
 pub fn Card(
     #[props(default)] variant: CardVariant,
+    #[props(default)] shape: CardShape,
     #[props(default)] direction: CardDirection,
     #[props(default)] main_axis_align: MainAxisAlign,
     #[props(default)] cross_axis_align: CrossAxisAlign,
@@ -108,7 +129,7 @@ pub fn Card(
 ) -> Element {
     rsx! {
         div {
-            class: "py-5 px-4 rounded-[10px] {variant} {direction} {main_axis_align} {cross_axis_align} {class}",
+            class: "py-5 px-4 {shape} {variant} {direction} {main_axis_align} {cross_axis_align} {class}",
             ..attributes,
             {children}
         }
