@@ -1,5 +1,7 @@
 use super::*;
 #[cfg(feature = "server")]
+use crate::common::models::space::SpaceCommon;
+#[cfg(feature = "server")]
 use crate::features::auth::models::user::OptionalUser;
 #[cfg(feature = "server")]
 use crate::features::spaces::pages::actions::actions::quiz::{SpaceQuiz, SpaceQuizAttempt};
@@ -10,6 +12,17 @@ pub async fn list_actions(space_pk: SpacePartition) -> Result<Vec<SpaceActionSum
         .common
         .dynamodb();
     let space_pk: Partition = space_pk.into();
+    let space = SpaceCommon::get(cli, &space_pk, Some(&EntityType::SpaceCommon))
+        .await?
+        .ok_or_else(|| Error::NotFound("Space Not Found".to_string()))?;
+
+    let show_actions_for_viewer = matches!(
+        space.status,
+        Some(SpaceStatus::Started | SpaceStatus::Finished)
+    );
+    if matches!(role, SpaceUserRole::Viewer) && !show_actions_for_viewer {
+        return Ok(vec![]);
+    }
 
     let (space_actions, _) = SpaceAction::find_by_space(cli, &space_pk, SpaceAction::opt())
         .await
