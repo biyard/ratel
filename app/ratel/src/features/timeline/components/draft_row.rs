@@ -26,6 +26,7 @@ pub fn DraftTimeline() -> Element {
 
     let nav = use_navigator();
     let lang = use_language();
+    let mut can_scroll_right = use_signal(|| false);
 
     rsx! {
         section { class: "flex flex-col gap-3 w-full", aria_label: "Drafts section",
@@ -36,7 +37,38 @@ pub fn DraftTimeline() -> Element {
             }
 
             div { class: "relative",
-                div { class: "flex overflow-x-auto gap-4 pb-2 snap-x snap-mandatory scrollbar-none",
+                div {
+                    class: "flex overflow-x-auto gap-4 pb-2 snap-x snap-mandatory scrollbar-none",
+                    onmounted: move |_| {
+                        spawn(async move {
+                            let mut eval = document::eval(r#"
+                                const el = document.querySelector('[aria-label="Drafts section"] .scrollbar-none');
+                                if (el) {
+                                    dioxus.send(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+                                } else {
+                                    dioxus.send(false);
+                                }
+                            "#);
+                            if let Ok(val) = eval.recv::<bool>().await {
+                                can_scroll_right.set(val);
+                            }
+                        });
+                    },
+                    onscroll: move |_| {
+                        spawn(async move {
+                            let mut eval = document::eval(r#"
+                                const el = document.querySelector('[aria-label="Drafts section"] .scrollbar-none');
+                                if (el) {
+                                    dioxus.send(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+                                } else {
+                                    dioxus.send(false);
+                                }
+                            "#);
+                            if let Ok(val) = eval.recv::<bool>().await {
+                                can_scroll_right.set(val);
+                            }
+                        });
+                    },
                     for post in items {
                         {
                             let post_pk = post.pk.clone();
@@ -81,21 +113,21 @@ pub fn DraftTimeline() -> Element {
                         }
                     }
                 }
-                div { class: "absolute top-0 right-0 w-12 h-full bg-gradient-to-l to-transparent pointer-events-none from-bg z-100" }
-                button {
-                    class: "absolute right-0 top-1/2 p-1 rounded-full transition-colors -translate-y-1/2 cursor-pointer z-101 hover:bg-accent/20",
-                    onclick: move |_| {
-                        // Scroll right by one card width
-                        let _ = document::eval(
-                            r#"
-                                                                                                                                                                                                                            const el = document.querySelector('[aria-label="Drafts section"] .scrollbar-none');
-                                                                                                                                                                                                                            if (el) el.scrollBy({ left: 340, behavior: 'smooth' });
-                                                                                                                                                                                                                        "#,
-                        );
-                    },
-                    lucide_dioxus::ChevronRight {
-                        size: 20,
-                        class: "transition-colors [&>path]:stroke-foreground-muted hover:[&>path]:stroke-text-primary",
+                if can_scroll_right() {
+                    button {
+                        class: "absolute right-0 top-1/2 p-1 rounded-full transition-colors -translate-y-1/2 cursor-pointer z-101 hover:bg-accent/20",
+                        onclick: move |_| {
+                            let _ = document::eval(
+                                r#"
+                                    const el = document.querySelector('[aria-label="Drafts section"] .scrollbar-none');
+                                    if (el) el.scrollBy({ left: 340, behavior: 'smooth' });
+                                "#,
+                            );
+                        },
+                        lucide_dioxus::ChevronRight {
+                            size: 20,
+                            class: "transition-colors [&>path]:stroke-foreground-muted hover:[&>path]:stroke-text-primary",
+                        }
                     }
                 }
             }
