@@ -1,19 +1,18 @@
-use crate::common::hooks::{use_infinite_query, InfiniteQuery};
+use super::*;
+use crate::common::hooks::{InfiniteQuery, use_infinite_query};
 use crate::common::types::ListResponse;
 
-use super::*;
-
 #[derive(Clone, Copy, DioxusController)]
-pub struct Context {
+pub struct DiscussionCommentContext {
     pub comments:
         InfiniteQuery<String, DiscussionCommentResponse, ListResponse<DiscussionCommentResponse>>,
 }
 
-pub fn use_discussion_comment_context() -> Context {
+pub fn use_discussion_comment_context() -> DiscussionCommentContext {
     use_context()
 }
 
-impl Context {
+impl DiscussionCommentContext {
     pub fn init(
         space_id: ReadSignal<SpacePartition>,
         discussion_id: ReadSignal<SpacePostEntityType>,

@@ -1,7 +1,7 @@
+use crate::common::SpaceVisibility;
 use crate::common::models::auth::{OptionalUser, User};
 use crate::common::models::space::SpaceCommon;
 use crate::common::utils::time::get_now_timestamp_millis;
-use crate::common::SpaceVisibility;
 use crate::features::posts::models::Post;
 use crate::features::posts::types::TeamGroupPermission;
 use crate::features::spaces::models::{
@@ -27,6 +27,11 @@ pub async fn participate_space(space_id: SpacePartition) -> Result<ParticipateSp
     let space =
         SpaceCommon::get(dynamo, &space_pk_partition, Some(&EntityType::SpaceCommon)).await?;
     let space = space.ok_or_else(|| Error::NotFound("Space Not Found".to_string()))?;
+    if space.status != Some(crate::common::SpaceStatus::InProgress) {
+        return Err(Error::BadRequest(
+            "Participation is only available while the space is in progress.".to_string(),
+        ));
+    }
 
     let post_pk = space.pk.clone().to_post_key()?;
     let post = Post::get(dynamo, &post_pk, Some(EntityType::Post)).await?;

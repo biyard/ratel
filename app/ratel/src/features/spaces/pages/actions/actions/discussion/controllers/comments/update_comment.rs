@@ -1,3 +1,4 @@
+use crate::common::models::space::SpaceCommon;
 use crate::features::spaces::pages::actions::actions::discussion::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -5,22 +6,29 @@ pub struct UpdateCommentRequest {
     pub content: String,
 }
 
-#[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments/{comment_sk}", role: SpaceUserRole, user: crate::features::auth::User)]
+#[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments/{comment_sk}", role: SpaceUserRole, user: crate::features::auth::User, space: SpaceCommon)]
 pub async fn update_comment(
     space_id: SpacePartition,
     discussion_sk: SpacePostEntityType,
-    comment_sk: SpacePostCommentEntityType,
+    comment_sk: SpacePostCommentTargetEntityType,
     req: UpdateCommentRequest,
 ) -> Result<SpacePostComment> {
     SpacePost::can_view(&role)?;
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
+    if !space.is_active() {
+        return Err(Error::BadRequest("Space is not active".into()));
+    }
     let discussion_sk_entity: EntityType = discussion_sk.into();
 
     let space_post_pk = match &discussion_sk_entity {
         EntityType::SpacePost(id) => Partition::SpacePost(id.clone()),
         _ => return Err(Error::BadRequest("Invalid discussion id".into())),
     };
+    let post = SpacePost::get(cli, &space_post_pk, Some(discussion_sk_entity.clone()))
+        .await?
+        .ok_or(Error::NotFound("Discussion not found".into()))?;
+    post.can_participate(&role)?;
 
     let comment_sk_entity: EntityType = comment_sk.into();
 
