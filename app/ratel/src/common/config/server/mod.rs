@@ -6,6 +6,7 @@ pub mod aws_sns;
 pub mod bedrock_embeddings_config;
 pub mod biyard;
 pub mod dynamodb;
+pub mod icp;
 pub mod qdrant_config;
 
 use super::*;
@@ -39,6 +40,9 @@ impl ServerConfig {
     }
     pub fn biyard(&self) -> &crate::common::services::BiyardService {
         &biyard::BIYARD_SERVICE
+    }
+    pub fn icp_sampling(&self) -> &crate::common::services::icp::IcpSamplingService {
+        &icp::ICP_SAMPLING_SERVICE
     }
 }
 
