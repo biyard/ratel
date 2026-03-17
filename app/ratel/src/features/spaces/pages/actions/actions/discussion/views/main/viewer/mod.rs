@@ -1,6 +1,7 @@
 use super::*;
 use crate::common::components::{Button, ButtonSize, ButtonStyle};
 use crate::features::spaces::pages::actions::actions::discussion::components::DiscussionComments;
+use crate::features::spaces::pages::actions::components::FullActionLayover;
 use crate::features::spaces::space_common::hooks::use_space;
 
 translate! {
@@ -37,33 +38,35 @@ pub fn ViewerMain(
         Some(crate::common::SpaceStatus::Started | crate::common::SpaceStatus::InProgress)
     );
     let can_participate = discussion.status() == DiscussionStatus::InProgress;
-    let can_comment =
-        matches!(role, SpaceUserRole::Creator | SpaceUserRole::Participant)
-            && is_space_active
-            && can_participate;
+    let can_comment = matches!(role, SpaceUserRole::Creator | SpaceUserRole::Participant)
+        && is_space_active
+        && can_participate;
     let can_manage_comments = can_comment;
+    let nav = navigator();
 
     rsx! {
-        div { class: "flex flex-col gap-5 w-full",
-            div { class: "flex justify-between items-center",
+        FullActionLayover {
+            content_class: "gap-5".to_string(),
+            bottom_right: rsx! {
                 Button {
-                    size: ButtonSize::Inline,
-                    style: ButtonStyle::Text,
-                    class: "inline-flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary"
-                        .to_string(),
+                    style: ButtonStyle::Outline,
+                    shape: ButtonShape::Square,
+                    class: "min-w-[120px]",
                     onclick: move |_| {
-                        navigator().go_back();
+                        nav.push(format!("/spaces/{}/actions", space_id()));
                     },
-                    "← {tr.back}"
+                    {tr.back}
                 }
-            }
-            DiscussionContent { discussion: discussion.clone() }
-            DiscussionComments {
-                space_id,
-                discussion_id,
-                can_comment,
-                can_manage_comments,
-                current_user_pk,
+            },
+            div { class: "w-full",
+                DiscussionContent { discussion: discussion.clone() }
+                DiscussionComments {
+                    space_id,
+                    discussion_id,
+                    can_comment,
+                    can_manage_comments,
+                    current_user_pk,
+                }
             }
         }
     }
