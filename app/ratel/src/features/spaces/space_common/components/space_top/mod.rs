@@ -39,6 +39,8 @@ pub fn SpaceTop(
     let is_creator = real_role == SpaceUserRole::Creator;
     let can_preview = current_role == SpaceUserRole::Creator;
     let is_published = ctx.space().publish_state == SpacePublishState::Published;
+    let is_in_progress = ctx.space().status == Some(SpaceStatus::InProgress);
+    let is_started = ctx.space().status == Some(SpaceStatus::Started);
     let space_logo = {
         let logo = ctx.space().logo.clone();
         if logo.is_empty() {
@@ -121,6 +123,36 @@ pub fn SpaceTop(
                             },
                             {tr.publish}
                         }
+                    } else if is_in_progress {
+                        Button {
+                            shape: ButtonShape::Square,
+                            class: "max-tablet:py-1 max-tablet:px-2 max-tablet:text-xs",
+                            onclick: move |_| async move {
+                                let space_id = ctx.space().id;
+                                update_space(
+                                    space_id,
+                                    controllers::UpdateSpaceRequest::Start { start: true },
+                                )
+                                .await;
+                                ctx.space.restart();
+                            },
+                            {tr.start}
+                        }
+                    } else if is_started {
+                        Button {
+                            shape: ButtonShape::Square,
+                            class: "max-tablet:py-1 max-tablet:px-2 max-tablet:text-xs",
+                            onclick: move |_| async move {
+                                let space_id = ctx.space().id;
+                                update_space(
+                                    space_id,
+                                    controllers::UpdateSpaceRequest::Finish { finished: true },
+                                )
+                                .await;
+                                ctx.space.restart();
+                            },
+                            {tr.finish}
+                        }
                     }
                 }
 
@@ -198,6 +230,16 @@ translate! {
     publish: {
         en: "Publish",
         ko: "게시하기",
+    }
+
+    start: {
+        en: "Start",
+        ko: "시작하기",
+    }
+
+    finish: {
+        en: "Finish",
+        ko: "종료하기",
     }
 
     preview: {
