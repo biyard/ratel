@@ -73,6 +73,10 @@ pub struct ProgressListData {
     pub icon: DashboardIcon,
     pub poll_count: i64,
     pub post_count: i64,
+    #[serde(default)]
+    pub quiz_count: i64,
+    #[serde(default)]
+    pub follow_count: i64,
 }
 
 fn default_color() -> String {
