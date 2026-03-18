@@ -22,6 +22,20 @@ pub fn encrypt_vote(
     Ok(EncryptedVote { ciphertext })
 }
 
+impl EncryptedVote {
+    /// Parse from JSON, accepting both `EncryptedVote` and raw `CpAbeCiphertext` formats.
+    pub fn from_json(json: &str) -> Result<Self, AttrVotingError> {
+        match serde_json::from_str::<EncryptedVote>(json) {
+            Ok(v) => Ok(v),
+            Err(_) => {
+                let ciphertext: CpAbeCiphertext =
+                    serde_json::from_str(json).map_err(AttrVotingError::SerializationError)?;
+                Ok(EncryptedVote { ciphertext })
+            }
+        }
+    }
+}
+
 pub fn decrypt_vote(
     sk: &CpAbeSecretKey,
     encrypted: &EncryptedVote,
@@ -30,3 +44,4 @@ pub fn decrypt_vote(
         bsw::decrypt(sk, &encrypted.ciphertext).map_err(|_| AttrVotingError::DecryptionFailed)?;
     serde_json::from_slice(&plaintext).map_err(AttrVotingError::SerializationError)
 }
+
