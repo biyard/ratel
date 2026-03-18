@@ -1,6 +1,6 @@
 use nalgebra::DMatrix;
 
-use crate::error::SamplingError;
+use crate::sampling::error::SamplingError;
 
 pub struct ScalerResult {
     pub scaled: DMatrix<f64>,

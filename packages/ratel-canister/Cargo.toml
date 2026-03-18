@@ -1,5 +1,5 @@
 [package]
-name = "sampling"
+name = "ratel-canister"
 version = "0.1.0"
 edition = "2021"
 
@@ -12,12 +12,13 @@ thiserror = { version = "2" }
 candid = { version = "0.10", optional = true }
 ic-cdk = { version = "0.20", optional = true }
 ic-stable-structures = { version = "0.7", optional = true }
+serde_cbor = { version = "0.11", optional = true }
 nalgebra = { version = "0.34", default-features = false, features = [
     "std",
 ], optional = true }
 
 [features]
-canister = ["candid", "ic-cdk", "ic-stable-structures", "nalgebra"]
+canister = ["candid", "ic-cdk", "ic-stable-structures", "nalgebra", "serde_cbor"]
 default = ["canister", "perf"]
 perf = ["canister"]
 dto = ["candid"]
