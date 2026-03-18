@@ -153,6 +153,9 @@ pub fn SignupModal(
                                         Ok(_) => {
                                             sent_code.set(true);
                                         }
+                                        Err(Error::Duplicate(_)) => {
+                                            email_warning.set(tr.email_already_registered.to_string());
+                                        }
                                         Err(e) => {
                                             email_warning.set(format!("{}: {e}", tr.failed_send_code));
                                         }
@@ -549,6 +552,10 @@ translate! {
     failed_send_code: {
         en: "Failed to send verification code",
         ko: "인증 코드 전송에 실패했습니다",
+    },
+    email_already_registered: {
+        en: "This email is already registered. Please use Forgot Password.",
+        ko: "이미 등록된 이메일입니다. 비밀번호 찾기를 이용해주세요.",
     },
     failed_verify_code: {
         en: "Verification code is incorrect or has expired",
