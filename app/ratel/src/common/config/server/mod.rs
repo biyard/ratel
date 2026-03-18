@@ -41,8 +41,8 @@ impl ServerConfig {
     pub fn biyard(&self) -> &crate::common::services::BiyardService {
         &biyard::BIYARD_SERVICE
     }
-    pub fn icp_sampling(&self) -> &crate::common::services::icp::IcpSamplingService {
-        &icp::ICP_SAMPLING_SERVICE
+    pub fn icp_canister(&self) -> &crate::common::services::icp::IcpCanisterService {
+        &icp::ICP_CANISTER_SERVICE
     }
 }
 

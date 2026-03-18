@@ -1,8 +1,8 @@
 {
   "canisters": {
-    "sampling": {
-      "candid": ".build/did/sampling.did",
-      "package": "sampling",
+    "ratel-canister": {
+      "candid": ".build/did/ratel-canister.did",
+      "package": "ratel-canister",
       "type": "rust",
       "optimize": "cycles"
     }
