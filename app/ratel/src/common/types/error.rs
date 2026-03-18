@@ -238,6 +238,20 @@ pub enum Error {
         ko = "액션을 삭제하고 다시 만들어주세요."
     )]
     SpaceActionNotFound,
+
+    #[error("Space is not started")]
+    #[translate(
+        en = "Space is not started yet",
+        ko = "스페이스가 아직 시작되지 않았습니다."
+    )]
+    SpaceNotStarted,
+
+    #[error("Action has ended")]
+    #[translate(
+        en = "This action has ended",
+        ko = "이 액션은 종료되었습니다."
+    )]
+    ActionEnded,
 }
 
 impl From<std::convert::Infallible> for Error {
