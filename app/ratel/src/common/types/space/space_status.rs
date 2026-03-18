@@ -13,13 +13,12 @@ use crate::common::*;
 )]
 pub enum SpaceStatus {
     #[default]
-    #[translate(ko = "대기중")]
-    Waiting, // Draft
-    #[translate(ko = "진행중")]
-    InProgress, // Published
-    // TODO: fix translate.
-    #[translate(ko = "시작")]
-    Started, // Started
-    #[translate(ko = "종료")]
-    Finished, // Finished
+    #[translate(en = "Processing", ko = "집계중")]
+    Waiting,
+    #[translate(en = "Open", ko = "모집중")]
+    InProgress,
+    #[translate(en = "Ongoing", ko = "진행중")]
+    Started,
+    #[translate(en = "Completed", ko = "종료")]
+    Finished,
 }
