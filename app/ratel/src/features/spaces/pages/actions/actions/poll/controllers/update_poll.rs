@@ -8,6 +8,7 @@ pub enum UpdatePollRequest {
     Time { started_at: i64, ended_at: i64 },
     Question { questions: Vec<Question> },
     ResponseEditable { response_editable: bool },
+    CanisterUploadEnabled { canister_upload_enabled: bool },
 }
 
 #[post("/api/spaces/{space_pk}/polls/{poll_sk}", role: SpaceUserRole)]
@@ -25,12 +26,10 @@ pub async fn update_poll(
     let now = crate::common::utils::time::get_now_timestamp_millis();
     let mut poll_updater = SpacePoll::updater(&space_pk, &poll_sk_entity).with_updated_at(now);
 
-    let action_pk = CompositePartition::<SpacePartition, String>(
-        space_pk.clone().into(),
-        poll_sk.to_string(),
-    );
-    let mut action_updater = SpaceAction::updater(&action_pk, &EntityType::SpaceAction)
-        .with_updated_at(now);
+    let action_pk =
+        CompositePartition::<SpacePartition, String>(space_pk.clone().into(), poll_sk.to_string());
+    let mut action_updater =
+        SpaceAction::updater(&action_pk, &EntityType::SpaceAction).with_updated_at(now);
     let mut update_action = false;
 
     match req {
@@ -66,6 +65,16 @@ pub async fn update_poll(
         }
         UpdatePollRequest::ResponseEditable { response_editable } => {
             poll_updater = poll_updater.with_response_editable(response_editable);
+        }
+        UpdatePollRequest::CanisterUploadEnabled {
+            canister_upload_enabled,
+        } => {
+            poll_updater = poll_updater.with_canister_upload_enabled(canister_upload_enabled);
+            // When enabling encrypted upload, force response_editable to false
+            // because encrypted votes cannot be edited after submission.
+            if canister_upload_enabled {
+                poll_updater = poll_updater.with_response_editable(false);
+            }
         }
     }
 

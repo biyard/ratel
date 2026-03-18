@@ -71,7 +71,11 @@ pub fn score(data: &DMatrix<f64>, labels: &[u32]) -> f64 {
         }
 
         let max_ab = a.max(b);
-        let s = if max_ab > 1e-12 { (b - a) / max_ab } else { 0.0 };
+        let s = if max_ab > 1e-12 {
+            (b - a) / max_ab
+        } else {
+            0.0
+        };
 
         total_sil += s;
     }

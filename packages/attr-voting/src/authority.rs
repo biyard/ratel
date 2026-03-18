@@ -35,4 +35,14 @@ impl VotingAuthority {
     pub fn from_json(json: &str) -> Result<Self, AttrVotingError> {
         serde_json::from_str(json).map_err(AttrVotingError::SerializationError)
     }
+
+    /// Serialize a CP-ABE secret key to JSON for storage (e.g. in DynamoDB).
+    pub fn serialize_key(sk: &CpAbeSecretKey) -> Result<String, AttrVotingError> {
+        serde_json::to_string(sk).map_err(AttrVotingError::SerializationError)
+    }
+
+    /// Deserialize a CP-ABE secret key from JSON.
+    pub fn deserialize_key(json: &str) -> Result<CpAbeSecretKey, AttrVotingError> {
+        serde_json::from_str(json).map_err(AttrVotingError::SerializationError)
+    }
 }
