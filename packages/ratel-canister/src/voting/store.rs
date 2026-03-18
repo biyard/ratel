@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use serde::{Deserialize, Serialize};
 
 use super::error::VotingError;
-use super::types::{QuestionVote, VoterTag};
+use super::types::{QuestionOptionCount, QuestionVote, VoterTag};
 use crate::canister::storage::{StorableVoteData, StringKey, VOTE_DATA};
 
 /// Vote data for a single option within a question.
@@ -51,18 +51,30 @@ impl VoteData {
         self.voters.contains(voter_tag)
     }
 
-    pub fn submit(
+    /// Insert or replace votes for a voter.
+    pub fn upsert(
         &mut self,
         voter_tag: &VoterTag,
         votes: &[QuestionVote],
-    ) -> Result<(), VotingError> {
+    ) -> Result<bool, VotingError> {
         if votes.is_empty() {
             return Err(VotingError::EmptyVotes);
         }
-        if self.has_voter(voter_tag) {
-            return Err(VotingError::DuplicateVoter(voter_tag.to_string()));
+
+        let is_update = self.has_voter(voter_tag);
+
+        // Remove old votes if updating
+        if is_update {
+            for question in self.questions.values_mut() {
+                for option in question.options.values_mut() {
+                    if option.votes.remove(voter_tag).is_some() {
+                        option.count = option.count.saturating_sub(1);
+                    }
+                }
+            }
         }
 
+        // Insert new votes
         self.voters.insert(voter_tag.clone());
         for vote in votes {
             let encoded = candid::encode_one(vote)
@@ -77,45 +89,8 @@ impl VoteData {
             option.count += 1;
             option.votes.insert(voter_tag.clone(), encoded);
         }
-        Ok(())
-    }
 
-    pub fn update(
-        &mut self,
-        voter_tag: &VoterTag,
-        votes: &[QuestionVote],
-    ) -> Result<(), VotingError> {
-        if votes.is_empty() {
-            return Err(VotingError::EmptyVotes);
-        }
-        if !self.has_voter(voter_tag) {
-            return Err(VotingError::VoterNotFound(voter_tag.to_string()));
-        }
-
-        // Remove old votes
-        for question in self.questions.values_mut() {
-            for option in question.options.values_mut() {
-                if option.votes.remove(voter_tag).is_some() {
-                    option.count = option.count.saturating_sub(1);
-                }
-            }
-        }
-
-        // Insert new votes
-        for vote in votes {
-            let encoded = candid::encode_one(vote)
-                .map_err(|e| VotingError::EncodeFailed(e.to_string()))?;
-            let option = self
-                .questions
-                .entry(vote.question_index)
-                .or_default()
-                .options
-                .entry(vote.option_index)
-                .or_default();
-            option.count += 1;
-            option.votes.insert(voter_tag.clone(), encoded);
-        }
-        Ok(())
+        Ok(is_update)
     }
 
     pub fn counts(&self) -> Vec<QuestionOptionCount> {
@@ -148,5 +123,3 @@ impl VoteData {
         results
     }
 }
-
-use super::types::QuestionOptionCount;
