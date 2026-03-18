@@ -62,6 +62,69 @@ fn build_version() -> String {
     }
 }
 
+// ─── Poll Voting ────────────────────────────────────────────────────
+
+#[ic_cdk::update]
+fn submit_poll_vote(poll_sk: String, votes: Vec<QuestionVote>) -> SubmitVoteResult {
+    require_controller();
+
+    if votes.is_empty() {
+        ic_cdk::api::trap("votes cannot be empty");
+    }
+
+    let voter_tag = &votes[0].voter_tag;
+
+    // Check for duplicate submission
+    if storage::poll_voter_exists(&poll_sk, voter_tag) {
+        ic_cdk::api::trap("duplicate vote: this voter has already submitted");
+    }
+
+    // Store each vote entry and increment counts
+    for vote in &votes {
+        if vote.voter_tag != *voter_tag {
+            ic_cdk::api::trap("all votes in a submission must have the same voter_tag");
+        }
+
+        let encoded =
+            candid::encode_one(vote).unwrap_or_else(|e| ic_cdk::api::trap(&e.to_string()));
+
+        storage::poll_vote_insert(
+            &poll_sk,
+            vote.question_index,
+            vote.option_index,
+            &vote.voter_tag,
+            encoded,
+        );
+        storage::poll_count_increment(&poll_sk, vote.question_index, vote.option_index);
+    }
+
+    // Mark voter as submitted
+    storage::poll_voter_mark(&poll_sk, voter_tag);
+
+    let record_id = format!("{}:{}", poll_sk, voter_tag);
+    SubmitVoteResult { record_id, poll_sk }
+}
+
+#[ic_cdk::query]
+fn get_poll_vote_counts(poll_sk: String) -> Vec<QuestionOptionCount> {
+    storage::poll_counts_by_poll(&poll_sk)
+        .into_iter()
+        .map(|(qi, oi, count)| QuestionOptionCount {
+            question_index: qi,
+            option_index: oi,
+            count,
+        })
+        .collect()
+}
+
+#[ic_cdk::query]
+fn get_poll_vote_by_tag(poll_sk: String, voter_tag: String) -> Vec<QuestionVote> {
+    storage::poll_votes_by_voter(&poll_sk, &voter_tag)
+        .into_iter()
+        .filter_map(|(_qi, _oi, blob)| candid::decode_one::<QuestionVote>(&blob).ok())
+        .collect()
+}
+
 // ─── HTTP Gateway ────────────────────────────────────────────────────
 
 #[derive(CandidType, Deserialize)]

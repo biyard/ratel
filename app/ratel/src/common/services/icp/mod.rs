@@ -6,17 +6,17 @@ use candid::{Decode, Encode};
 use ic_agent::Agent;
 
 #[cfg(feature = "server")]
-pub use sampling::types::*;
+pub use ratel_canister::types::*;
 
 #[cfg(feature = "server")]
 #[derive(Debug, Clone)]
-pub struct IcpSamplingService {
+pub struct IcpCanisterService {
     agent: Agent,
     canister_id: candid::Principal,
 }
 
 #[cfg(feature = "server")]
-impl IcpSamplingService {
+impl IcpCanisterService {
     pub async fn new(ic_url: &str, canister_id: &str) -> Result<Self> {
         let agent = Agent::builder()
             .with_url(ic_url)
@@ -31,7 +31,7 @@ impl IcpSamplingService {
         }
 
         let canister_id = candid::Principal::from_text(canister_id.trim())
-            .map_err(|e| Error::BadRequest(format!("Invalid SAMPLING_CANISTER_ID: {}", e)))?;
+            .map_err(|e| Error::BadRequest(format!("Invalid RATEL_CANISTER_ID: {}", e)))?;
 
         Ok(Self {
             agent,
