@@ -25,6 +25,7 @@ pub struct PanelRequirementStatus {
     pub satisfied: bool,
     pub required_values: Vec<String>,
     pub current_value: Option<String>,
+    pub collective: bool,
 }
 
 #[get("/api/spaces/{space_id}/panel-requirements", user: OptionalUser)]
@@ -34,10 +35,17 @@ pub async fn get_panel_requirements(
     let config = crate::features::spaces::config::get();
     let dynamo = config.common.dynamodb();
     let space_pk: Partition = space_id.into();
-    let panel_quotas = list_panel_quotas(dynamo, &space_pk)
-        .await?
+    let panel_quotas = list_panel_quotas(dynamo, &space_pk).await?;
+
+    // Include panels that either have remaining quota (conditional) or are collective (unlimited)
+    let panel_quotas = panel_quotas
         .into_iter()
-        .filter(|panel| panel.remains > 0)
+        .filter(|panel| {
+            panel.remains > 0
+                || panel_attributes(panel)
+                    .iter()
+                    .all(|attr| matches!(attr, PanelAttribute::CollectiveAttribute(_)))
+        })
         .collect::<Vec<_>>();
 
     if panel_quotas.is_empty() {
@@ -81,9 +89,13 @@ pub async fn get_panel_requirements(
             continue;
         }
 
+        let is_collective = active_attributes.iter().any(|attr| {
+            matches!(attr, PanelAttribute::CollectiveAttribute(_))
+        });
+
         let required_values = active_attributes
             .iter()
-            .filter_map(panel_requirement_value)
+            .flat_map(|attr| expand_panel_requirement_values(attr))
             .collect::<BTreeSet<_>>()
             .into_iter()
             .collect::<Vec<_>>();
@@ -91,20 +103,14 @@ pub async fn get_panel_requirements(
             .iter()
             .any(|attribute| matches_panel_attribute(age, gender, has_university, attribute));
 
-        let current_value = if satisfied {
-            active_attributes
-                .iter()
-                .find(|attr| matches_panel_attribute(age, gender, has_university, attr))
-                .and_then(panel_requirement_value)
-        } else {
-            current_value_for_attribute(attribute, age, gender, university.clone())
-        };
+        let current_value = current_value_for_attribute(attribute, age, gender, university.clone());
 
         statuses.push(PanelRequirementStatus {
             attribute,
             satisfied,
             required_values,
             current_value,
+            collective: is_collective,
         });
     }
 
@@ -199,6 +205,43 @@ fn panel_requirement_value(attribute: &PanelAttribute) -> Option<String> {
 }
 
 #[cfg(feature = "server")]
+fn age_to_range_label(age: u8) -> String {
+    match age {
+        0..=17 => "0-17".to_string(),
+        18..=29 => "18-29".to_string(),
+        30..=39 => "30-39".to_string(),
+        40..=49 => "40-49".to_string(),
+        50..=59 => "50-59".to_string(),
+        60..=69 => "60-69".to_string(),
+        _ => "70+".to_string(),
+    }
+}
+
+#[cfg(feature = "server")]
+fn expand_panel_requirement_values(attribute: &PanelAttribute) -> Vec<String> {
+    match attribute {
+        PanelAttribute::CollectiveAttribute(CollectiveAttribute::Gender) => {
+            vec![Gender::Male.to_string(), Gender::Female.to_string()]
+        }
+        PanelAttribute::CollectiveAttribute(CollectiveAttribute::Age) => {
+            vec![
+                "0-17".to_string(),
+                "18-29".to_string(),
+                "30-39".to_string(),
+                "40-49".to_string(),
+                "50-59".to_string(),
+                "60-69".to_string(),
+                "70+".to_string(),
+            ]
+        }
+        PanelAttribute::CollectiveAttribute(CollectiveAttribute::University) => {
+            vec![]
+        }
+        other => panel_requirement_value(other).into_iter().collect(),
+    }
+}
+
+#[cfg(feature = "server")]
 fn current_value_for_attribute(
     attribute: PanelRequirementAttribute,
     age: Option<u8>,
@@ -206,7 +249,7 @@ fn current_value_for_attribute(
     university: Option<String>,
 ) -> Option<String> {
     match attribute {
-        PanelRequirementAttribute::Age => age.map(|value| value.to_string()),
+        PanelRequirementAttribute::Age => age.map(|value| age_to_range_label(value)),
         PanelRequirementAttribute::Gender => gender.map(|value| value.to_string()),
         PanelRequirementAttribute::University => university.filter(|value| !value.is_empty()),
     }
