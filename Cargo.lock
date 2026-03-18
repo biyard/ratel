@@ -15471,6 +15471,7 @@ dependencies = [
  "ic-stable-structures",
  "nalgebra 0.34.1",
  "serde",
+ "serde_cbor",
  "thiserror 2.0.17",
 ]
 
