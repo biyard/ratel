@@ -1,0 +1,5 @@
+{
+  "enabledPlugins": {
+    "dioxus-knowledge-patch@nevaberry-plugins": true
+  }
+}

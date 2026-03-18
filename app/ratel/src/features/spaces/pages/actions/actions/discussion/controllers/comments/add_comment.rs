@@ -1,3 +1,4 @@
+use crate::common::models::space::{SpaceAuthor, SpaceCommon};
 use crate::features::spaces::pages::actions::actions::discussion::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -5,19 +6,28 @@ pub struct AddCommentRequest {
     pub content: String,
 }
 
-#[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments", role: SpaceUserRole, author: crate::common::models::space::SpaceAuthor)]
+#[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments", role: SpaceUserRole, author: SpaceAuthor, space: SpaceCommon)]
 pub async fn add_comment(
     space_id: SpacePartition,
     discussion_sk: SpacePostEntityType,
     req: AddCommentRequest,
 ) -> Result<DiscussionCommentResponse> {
     SpacePost::can_view(&role)?;
-    if !matches!(role, SpaceUserRole::Creator | SpaceUserRole::Participant) {
-        return Err(Error::NoPermission);
-    }
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
-    let space_post_id: SpacePostPartition = SpacePostPartition(discussion_sk.0.clone());
+    if !space.is_active() {
+        return Err(Error::BadRequest("Space is not active".into()));
+    }
+    let discussion_sk_entity: EntityType = discussion_sk.clone().into();
+    let space_post_id = match &discussion_sk_entity {
+        EntityType::SpacePost(id) => SpacePostPartition(id.clone()),
+        _ => return Err(Error::BadRequest("Invalid discussion id".into())),
+    };
+    let (post_pk, post_sk) = SpacePost::keys(&space_id, &space_post_id);
+    let post = SpacePost::get(cli, &post_pk, Some(post_sk))
+        .await?
+        .ok_or(Error::NotFound("Discussion not found".into()))?;
+    post.can_participate(&role)?;
 
     let comment =
         SpacePost::comment(cli, space_id.clone(), space_post_id, req.content, &author).await?;

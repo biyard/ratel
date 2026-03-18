@@ -63,12 +63,12 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
         && space.can_participate;
 
     let mut menus = vec![
-        crate::features::spaces::pages::dashboard::get_nav_item(space_id(), role.clone()),
-        crate::features::spaces::pages::overview::get_nav_item(space_id(), role.clone()),
-        crate::features::spaces::pages::actions::get_nav_item(space_id(), role.clone()),
-        crate::features::spaces::pages::apps::get_nav_item(space_id(), role.clone()),
-        // crate::features::spaces::pages::rewards::get_nav_item(space_id(), role.clone()),
-        // crate::features::spaces::pages::report::get_nav_item(space_id.clone(), role.clone()),
+        crate::features::spaces::pages::dashboard::get_nav_item(&space, role.clone()),
+        crate::features::spaces::pages::overview::get_nav_item(&space, role.clone()),
+        crate::features::spaces::pages::actions::get_nav_item(&space, role.clone()),
+        crate::features::spaces::pages::apps::get_nav_item(&space, role.clone()),
+        // crate::features::spaces::pages::rewards::get_nav_item(&space, role.clone()),
+        // crate::features::spaces::pages::report::get_nav_item(&space, role.clone()),
     ]
     .into_iter()
     .flatten()

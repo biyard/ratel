@@ -1,4 +1,6 @@
 use super::*;
+use crate::features::spaces::pages::actions::actions::discussion::components::DiscussionComments;
+use crate::features::spaces::space_common::hooks::use_space;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum OverviewStatus {
@@ -13,7 +15,16 @@ pub fn OverviewTab() -> Element {
     let mut ctx = use_discussion_context();
     let tr: DiscussionCreatorTranslate = use_translate();
     let mut toast = use_toast();
+    let user = crate::features::spaces::hooks::use_user()?;
+    let current_user_pk = user.read().as_ref().map(|u| u.pk.to_string());
+    let space = use_space().read().clone();
     let discussion = ctx.discussion.read().clone();
+    let is_space_active = matches!(
+        space.status,
+        Some(crate::common::SpaceStatus::Started | crate::common::SpaceStatus::InProgress)
+    );
+    let can_participate =
+        is_space_active && discussion.post.status() == DiscussionStatus::InProgress;
     let initial_title = discussion.post.title.clone();
     let initial_description = discussion.post.html_contents.clone();
     let initial_category = discussion.post.category_name.clone();
@@ -114,7 +125,7 @@ pub fn OverviewTab() -> Element {
     };
 
     rsx! {
-        div { class: "flex flex-col flex-1 w-full min-h-0 gap-[10px]",
+        div { class: "flex flex-col w-full gap-[10px]",
             div { class: "flex flex-col gap-2 justify-center w-full",
                 div { class: "flex gap-4 justify-between items-center w-full",
                     div { class: "flex flex-row items-center",
@@ -170,8 +181,8 @@ pub fn OverviewTab() -> Element {
             }
 
             // Rich text editor for content
-            div { class: "flex overflow-hidden flex-col flex-1 px-3 pt-3 pb-1 w-full min-h-0 border rounded-[8px] border-c-wg-30 bg-background",
-                div { class: "flex flex-col flex-1 gap-3 w-full min-h-0 grow",
+            div { class: "flex overflow-hidden flex-col px-3 pt-3 pb-1 w-full min-h-[280px] border rounded-[8px] border-c-wg-30 bg-background",
+                div { class: "flex flex-col gap-3 w-full h-full",
                     crate::common::components::TiptapEditor {
                         class: "flex-1 w-full h-full min-h-0 [&>div]:flex [&>div]:h-full [&>div]:min-h-0 [&>div]:flex-1 [&>div]:overflow-hidden [&>div]:bg-transparent [&>div]:border-0 [&_[data-tiptap-toolbar]]:border-b [&_[data-tiptap-toolbar]]:border-c-wg-30 [&_[data-tiptap-toolbar]]:bg-transparent [&_[contenteditable='true']]:h-full [&_[contenteditable='true']]:min-h-[96px] [&_[contenteditable='true']]:overflow-y-auto [&_[contenteditable='true']]:bg-transparent [&_[contenteditable='true']]:px-0 [&_[contenteditable='true']]:text-[15px] [&_[contenteditable='true']]:leading-[22px] [&_[contenteditable='true']]:font-medium [&_[contenteditable='true']]:text-text-primary [&_[contenteditable='true']]:outline-none [&_[contenteditable='true']]:placeholder:text-text-tertiary",
                         content: description(),
@@ -202,6 +213,14 @@ pub fn OverviewTab() -> Element {
                         }
                     }
                 }
+            }
+
+            DiscussionComments {
+                space_id,
+                discussion_id,
+                can_comment: can_participate,
+                can_manage_comments: can_participate,
+                current_user_pk,
             }
         }
     }
