@@ -14,7 +14,6 @@ pub fn SignupModal(
     #[props(optional)] initial_wallet_address: Option<String>,
 ) -> Element {
     let tr: SignupModalTranslate = use_translate();
-    let nav = use_navigator();
     let is_wallet_signup = initial_wallet_address.is_some();
     let wallet_address = use_signal(|| initial_wallet_address.clone().unwrap_or_default());
     let mut email = use_signal(|| initial_email.clone().unwrap_or_default());
@@ -378,7 +377,6 @@ pub fn SignupModal(
                                                 membership: None,
                                             });
                                         popup.close();
-                                        nav.push("/");
                                     }
                                     Err(e) => {
                                         error_message.set(Some(format!("{e}")));
@@ -417,7 +415,6 @@ pub fn SignupModal(
                                             membership: None,
                                         });
                                     popup.close();
-                                    nav.push("/");
                                 }
                                 Err(e) => {
                                     error_message.set(Some(format!("{e}")));
