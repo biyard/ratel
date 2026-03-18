@@ -114,13 +114,14 @@ pub fn DashboardCard(
             }
         }
         DashboardComponentData::ProgressList(data) => {
+            let total = data.poll_count + data.post_count + data.quiz_count + data.follow_count;
             rsx! {
                 SpaceCard {
                     fill_height: true,
                     class: "flex flex-col gap-5".to_string(),
                     CardHeader {
                         icon: data.icon.clone(),
-                        main_value: format!("{}", data.poll_count + data.post_count),
+                        main_value: format!("{total}"),
                         main_label: tr.participation_action.to_string(),
                     }
                     ProgressListContent { data, tr }
@@ -367,58 +368,72 @@ fn StatCardContent(
 
 #[component]
 fn ProgressListContent(data: ProgressListData, tr: DashboardTranslate) -> Element {
-    let total = (data.poll_count + data.post_count).max(1) as f64;
+    let total = (data.poll_count + data.post_count + data.quiz_count + data.follow_count).max(1);
+
+    let action_types: Vec<(&str, i64)> = vec![
+        (&tr.poll_completion, data.poll_count),
+        (&tr.discussion_completion, data.post_count),
+        (&tr.quiz_completion, data.quiz_count),
+        (&tr.follow_completion, data.follow_count),
+    ];
+
+    let visible_types: Vec<(&str, i64)> = action_types
+        .into_iter()
+        .filter(|(_, count)| *count > 0)
+        .collect();
 
     rsx! {
         div {
             class: "flex-1 min-h-0 pr-1 space-y-5 max-mobile:space-y-3 overflow-y-auto",
-            // Poll progress
-            div { class: "space-y-2 max-mobile:space-y-1.5",
-                div { class: "flex items-center justify-between gap-2",
-                    span { class: "min-w-0 truncate text-text-primary text-xs leading-4 font-medium font-raleway",
-                        "{tr.poll_completion}"
+            if visible_types.is_empty() {
+                div { class: "space-y-2 max-mobile:space-y-1.5",
+                    div { class: "flex items-center justify-between gap-2",
+                        span { class: "min-w-0 truncate text-text-primary text-xs leading-4 font-medium font-raleway",
+                            "{tr.poll_completion}"
+                        }
+                        span { class: "shrink-0 text-text-primary text-xs leading-4 font-semibold font-inter",
+                            "0"
+                        }
                     }
-                    span { class: "shrink-0 text-text-primary text-xs leading-4 font-semibold font-inter",
-                        "{data.poll_count}"
+                    div { class: "h-2 w-full overflow-hidden rounded-full bg-popover",
+                        div {
+                            class: "h-full rounded-full transition-all duration-300 bg-primary",
+                            style: "width: 0%;",
+                        }
+                    }
+                    div { class: "flex items-center gap-1 text-xs text-web-font-neutral",
+                        span { class: "text-xs leading-4 font-medium font-inter",
+                            "0 / 0"
+                        }
+                        span { class: "text-xs leading-4 font-medium font-raleway", "{tr.completed}" }
                     }
                 }
-                div { class: "h-2 w-full overflow-hidden rounded-full bg-popover",
-                    div {
-                        class: "h-full rounded-full transition-all duration-300 bg-primary",
-                        style: "width: {(data.poll_count as f64 / total * 100.0).min(100.0):.1}%;",
+            } else {
+                for (label , count) in visible_types.iter() {
+                    div { class: "space-y-2 max-mobile:space-y-1.5",
+                        div { class: "flex items-center justify-between gap-2",
+                            span { class: "min-w-0 truncate text-text-primary text-xs leading-4 font-medium font-raleway",
+                                "{label}"
+                            }
+                            span { class: "shrink-0 text-text-primary text-xs leading-4 font-semibold font-inter",
+                                "{count}"
+                            }
+                        }
+                        div { class: "h-2 w-full overflow-hidden rounded-full bg-popover",
+                            div {
+                                class: "h-full rounded-full transition-all duration-300 bg-primary",
+                                style: "width: {(*count as f64 / total as f64 * 100.0).min(100.0):.1}%;",
+                            }
+                        }
+                        div { class: "flex items-center gap-1 text-xs text-web-font-neutral",
+                            span { class: "text-xs leading-4 font-medium font-inter",
+                                "{count} / {total}"
+                            }
+                            span { class: "text-xs leading-4 font-medium font-raleway", "{tr.completed}" }
+                        }
                     }
-                }
-                div { class: "flex items-center gap-1 text-xs text-web-font-neutral",
-                    span { class: "text-xs leading-4 font-medium font-inter",
-                        "{data.poll_count} / {data.poll_count + data.post_count}"
-                    }
-                    span { class: "text-xs leading-4 font-medium font-raleway", "{tr.completed}" }
                 }
             }
-        
-        // Discussion progress
-        // div { class: "space-y-2 max-mobile:space-y-1.5",
-        //     div { class: "flex items-center justify-between gap-2",
-        //         span { class: "min-w-0 truncate text-text-primary text-xs leading-4 font-medium font-raleway",
-        //             "{tr.discussion_completion}"
-        //         }
-        //         span { class: "shrink-0 text-text-primary text-xs leading-4 font-semibold font-inter",
-        //             "{data.post_count}"
-        //         }
-        //     }
-        //     div { class: "h-2 w-full overflow-hidden rounded-full bg-popover",
-        //         div {
-        //             class: "h-full rounded-full transition-all duration-300 bg-primary",
-        //             style: "width: {(data.post_count as f64 / total * 100.0).min(100.0):.1}%;",
-        //         }
-        //     }
-        //     div { class: "flex items-center gap-1 text-xs text-web-font-neutral",
-        //         span { class: "text-xs leading-4 font-medium font-inter",
-        //             "{data.post_count} / {data.poll_count + data.post_count}"
-        //         }
-        //         span { class: "text-xs leading-4 font-medium font-raleway", "{tr.completed}" }
-        //     }
-        // }
         }
     }
 }
