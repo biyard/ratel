@@ -3,6 +3,7 @@ pub mod components;
 pub mod controllers;
 mod menu;
 pub mod models;
+pub mod services;
 pub mod types;
 mod views;
 

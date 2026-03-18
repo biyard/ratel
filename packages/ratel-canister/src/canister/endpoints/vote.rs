@@ -1,18 +1,19 @@
 use crate::canister::auth::require_controller;
 use crate::voting::error::VotingError;
 use crate::voting::store::VoteData;
-use crate::voting::{QuestionOptionCount, QuestionVote, SubmitVoteResult, VoteKey, VoterTag};
+use crate::voting::{QuestionOptionCount, SubmitVoteResult, VoteBallot, VoteKey, VoterTag};
 
 fn trap(err: VotingError) -> ! {
     ic_cdk::api::trap(&err.to_string())
 }
 
 #[ic_cdk::update]
-fn upsert_vote(vote_key: String, voter_tag: VoterTag, votes: Vec<QuestionVote>) -> SubmitVoteResult {
+fn upsert_vote(vote_key: String, voter_tag: String, ballot: VoteBallot) -> SubmitVoteResult {
     require_controller();
 
+    let voter_tag = VoterTag(voter_tag);
     let mut data = VoteData::load(&vote_key);
-    data.upsert(&voter_tag, &votes).unwrap_or_else(|e| trap(e));
+    data.upsert(&voter_tag, &ballot).unwrap_or_else(|e| trap(e));
     data.save(&vote_key);
 
     SubmitVoteResult {
@@ -27,6 +28,7 @@ fn get_vote_counts(vote_key: String) -> Vec<QuestionOptionCount> {
 }
 
 #[ic_cdk::query]
-fn get_vote_by_tag(vote_key: String, voter_tag: VoterTag) -> Vec<QuestionVote> {
-    VoteData::load(&vote_key).votes_by_voter(&voter_tag)
+fn get_ballot_by_tag(vote_key: String, voter_tag: String) -> Option<VoteBallot> {
+    let voter_tag = VoterTag(voter_tag);
+    VoteData::load(&vote_key).ballot_by_voter(&voter_tag)
 }

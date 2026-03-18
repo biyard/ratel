@@ -8,7 +8,6 @@ pub mod biyard;
 pub mod dynamodb;
 pub mod icp;
 pub mod qdrant_config;
-
 use super::*;
 
 #[derive(Debug, Clone, Copy)]
