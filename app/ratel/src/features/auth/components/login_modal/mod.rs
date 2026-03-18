@@ -17,7 +17,7 @@ enum WalletStep {
 }
 
 #[component]
-pub fn LoginModal() -> Element {
+pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Element {
     let tr: LoginModalTranslate = use_translate();
     let mut email = use_signal(|| String::new());
     let mut password = use_signal(|| String::new());
@@ -33,7 +33,7 @@ pub fn LoginModal() -> Element {
     let handle_open_signup = move |_| {
         popup.close();
         popup.open(rsx! {
-            SignupModal {}
+            SignupModal { on_success }
         });
     };
 
@@ -76,6 +76,9 @@ pub fn LoginModal() -> Element {
                     #[cfg(feature = "membership")]
                     membership: None,
                 });
+                if let Some(handler) = &on_success {
+                    handler.call(());
+                }
                 popup.close();
             }
             Err(e) => {
@@ -109,12 +112,15 @@ pub fn LoginModal() -> Element {
                             #[cfg(feature = "membership")]
                             membership: None,
                         });
+                        if let Some(handler) = &on_success {
+                            handler.call(());
+                        }
                         popup.close();
                     }
                     Err(Error::Unauthorized(_)) => {
                         popup.close();
                         popup.open(rsx! {
-                            SignupModal { initial_email: oauth_email }
+                            SignupModal { initial_email: oauth_email, on_success }
                         });
                     }
                     Err(e) => {
@@ -164,7 +170,7 @@ pub fn LoginModal() -> Element {
                 loading.set(false);
                 popup.close();
                 popup.open(rsx! {
-                    SignupModal { initial_wallet_address: Some(connect_result.address) }
+                    SignupModal { initial_wallet_address: Some(connect_result.address), on_success }
                 });
                 return;
             }
@@ -212,6 +218,9 @@ pub fn LoginModal() -> Element {
                         #[cfg(feature = "membership")]
                         membership: None,
                     });
+                    if let Some(handler) = &on_success {
+                        handler.call(());
+                    }
                     popup.close();
                 }
                 Err(e) => {
