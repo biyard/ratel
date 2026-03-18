@@ -1,3 +1,4 @@
+use crate::common::models::space::SpaceCommon;
 use crate::features::spaces::pages::actions::actions::quiz::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -8,7 +9,8 @@ pub struct RespondQuizRequest {
 #[post(
     "/api/spaces/{space_pk}/quizzes/{quiz_id}/respond",
     role: SpaceUserRole,
-    user: crate::features::auth::User
+    user: crate::features::auth::User,
+    space: SpaceCommon
 )]
 pub async fn respond_quiz(
     space_pk: SpacePartition,
@@ -21,6 +23,9 @@ pub async fn respond_quiz(
     let space_id = space_pk;
     let space_pk: Partition = space_id.clone().into();
     let quiz_sk: EntityType = quiz_id.clone().into();
+    if !space.is_active() {
+        return Err(Error::BadRequest("Space is not active".into()));
+    }
 
     let quiz = SpaceQuiz::get(cli, &space_pk, Some(quiz_sk.clone()))
         .await?
@@ -36,7 +41,7 @@ pub async fn respond_quiz(
 
     let now = crate::common::utils::time::get_now_timestamp_millis();
     if now < space_action.started_at || now > space_action.ended_at {
-        return Err(Error::BadRequest("Poll is not in progress".into()));
+        return Err(Error::BadRequest("Quiz is not in progress".into()));
     }
 
     let answer_sk = EntityType::SpaceQuizAnswer(quiz_id.to_string());

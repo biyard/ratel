@@ -4,7 +4,7 @@ use crate::common::{
 };
 
 use crate::features::spaces::space_common::{
-    components::{SpaceStatusBadge, SpaceVisibilityModal},
+    components::{SpaceEndModal, SpaceStartModal, SpaceStatusBadge, SpaceVisibilityModal},
     controllers::update_space,
     hooks::{use_space, use_space_role},
     providers::{use_space_context, SpaceContextProvider},
@@ -30,7 +30,6 @@ pub fn SpaceTop(
     //FIXME: Rotate Labels
     let title = labels.first().unwrap().label.clone();
     let nav = use_navigator();
-    let mut toast = use_toast();
     let mut popup = use_popup();
 
     let mut ctx = use_space_context();
@@ -39,6 +38,9 @@ pub fn SpaceTop(
     let is_creator = real_role == SpaceUserRole::Creator;
     let can_preview = current_role == SpaceUserRole::Creator;
     let is_published = ctx.space().publish_state == SpacePublishState::Published;
+    let is_in_progress = ctx.space().status == Some(SpaceStatus::InProgress);
+    let is_started = ctx.space().status == Some(SpaceStatus::Started);
+    let space_id = use_signal(|| ctx.space().id);
     let space_logo = {
         let logo = ctx.space().logo.clone();
         if logo.is_empty() {
@@ -97,7 +99,7 @@ pub fn SpaceTop(
                     if !is_published {
                         Button {
                             shape: ButtonShape::Square,
-                            class: "max-tablet:py-1 max-tablet:px-2 max-tablet:text-xs max-tablet:py-1 max-tablet:px-2 max-tablet:text-xs",
+                            class: "max-tablet:py-1 max-tablet:px-2 max-tablet:text-xs",
                             onclick: move |_| {
                                 debug!("Publish button clicked. Current space status: {:?}", ctx.space().status);
                                 let initial = ctx.space().visibility;
@@ -120,6 +122,38 @@ pub fn SpaceTop(
                                 });
                             },
                             {tr.publish}
+                        }
+                    } else if is_in_progress {
+                        Button {
+                            shape: ButtonShape::Square,
+                            class: "max-tablet:py-1 max-tablet:px-2 max-tablet:text-xs",
+                            onclick: move |_| {
+                                popup.open(rsx! {
+                                    SpaceStartModal {
+                                        space_id,
+                                        on_started: move |_| {
+                                            ctx.space.restart();
+                                        },
+                                    }
+                                });
+                            },
+                            {tr.start}
+                        }
+                    } else if is_started {
+                        Button {
+                            shape: ButtonShape::Square,
+                            class: "max-tablet:py-1 max-tablet:px-2 max-tablet:text-xs",
+                            onclick: move |_| {
+                                popup.open(rsx! {
+                                    SpaceEndModal {
+                                        space_id,
+                                        on_ended: move |_| {
+                                            ctx.space.restart();
+                                        },
+                                    }
+                                });
+                            },
+                            {tr.finish}
                         }
                     }
                 }
@@ -198,6 +232,16 @@ translate! {
     publish: {
         en: "Publish",
         ko: "게시하기",
+    }
+
+    start: {
+        en: "Start",
+        ko: "시작하기",
+    }
+
+    finish: {
+        en: "Finish",
+        ko: "종료하기",
     }
 
     preview: {

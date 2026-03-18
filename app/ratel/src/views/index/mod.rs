@@ -1,4 +1,3 @@
-use crate::features::posts::components::CreatePostButton;
 use crate::features::timeline::components::{
     DraftTimeline, FollowingTimeline, PopularTimeline, TeamTimeline,
 };
@@ -18,14 +17,6 @@ pub fn Index() -> Element {
                     TeamTimeline {}
                 }
                 PopularTimeline {}
-            }
-
-            if user.is_some() {
-                div {
-                    class: "flex flex-col gap-2.5 shrink-0 max-tablet:fixed max-tablet:bottom-4 max-tablet:right-4 max-tablet:z-50 max-tablet:w-auto",
-                    aria_label: "Sidebar",
-                    CreatePostButton {}
-                }
             }
         }
     }
