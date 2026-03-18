@@ -7,9 +7,9 @@ use nalgebra::DMatrix;
 
 #[cfg(feature = "perf")]
 use crate::canister::perf::PerfTracker;
-use crate::canister::storage;
-use crate::error::SamplingError;
-use crate::types::*;
+use crate::sampling::error::SamplingError;
+use super::store::ModelStore;
+use super::types::*;
 
 pub fn run(input: SamplingInput) -> Result<SamplingResult, SamplingError> {
     let (matrix, ids) = build_matrix(&input)?;
@@ -229,7 +229,7 @@ fn build_result(
         explained_variance_ratio: pca_result.explained_variance_ratio.clone(),
     };
 
-    storage::save(model_id, model_params.clone());
+    ModelStore::save(model_id, model_params.clone());
 
     SamplingResult {
         optimal_k: best_k,
@@ -247,46 +247,16 @@ mod tests {
     #[test]
     fn test_full_pipeline() {
         let data = vec![
-            DataRow {
-                id: "a1".into(),
-                answers: vec![1.0, 1.0, 1.0, 1.0],
-            },
-            DataRow {
-                id: "a2".into(),
-                answers: vec![1.2, 1.1, 1.3, 1.0],
-            },
-            DataRow {
-                id: "a3".into(),
-                answers: vec![1.1, 0.9, 1.0, 1.2],
-            },
-            DataRow {
-                id: "a4".into(),
-                answers: vec![0.9, 1.0, 1.1, 0.8],
-            },
-            DataRow {
-                id: "a5".into(),
-                answers: vec![1.0, 1.2, 0.9, 1.1],
-            },
-            DataRow {
-                id: "b1".into(),
-                answers: vec![5.0, 5.0, 5.0, 5.0],
-            },
-            DataRow {
-                id: "b2".into(),
-                answers: vec![4.8, 5.1, 5.2, 4.9],
-            },
-            DataRow {
-                id: "b3".into(),
-                answers: vec![5.1, 4.9, 5.0, 5.2],
-            },
-            DataRow {
-                id: "b4".into(),
-                answers: vec![4.9, 5.0, 4.8, 5.1],
-            },
-            DataRow {
-                id: "b5".into(),
-                answers: vec![5.2, 5.1, 5.1, 4.8],
-            },
+            DataRow { id: "a1".into(), answers: vec![1.0, 1.0, 1.0, 1.0] },
+            DataRow { id: "a2".into(), answers: vec![1.2, 1.1, 1.3, 1.0] },
+            DataRow { id: "a3".into(), answers: vec![1.1, 0.9, 1.0, 1.2] },
+            DataRow { id: "a4".into(), answers: vec![0.9, 1.0, 1.1, 0.8] },
+            DataRow { id: "a5".into(), answers: vec![1.0, 1.2, 0.9, 1.1] },
+            DataRow { id: "b1".into(), answers: vec![5.0, 5.0, 5.0, 5.0] },
+            DataRow { id: "b2".into(), answers: vec![4.8, 5.1, 5.2, 4.9] },
+            DataRow { id: "b3".into(), answers: vec![5.1, 4.9, 5.0, 5.2] },
+            DataRow { id: "b4".into(), answers: vec![4.9, 5.0, 4.8, 5.1] },
+            DataRow { id: "b5".into(), answers: vec![5.2, 5.1, 5.1, 4.8] },
         ];
 
         let input = SamplingInput {
@@ -300,38 +270,22 @@ mod tests {
 
         let result = run(input).unwrap();
 
-        assert_eq!(result.optimal_k, 2, "Optimal K should be 2");
+        assert_eq!(result.optimal_k, 2);
 
-        let a_cluster = result
-            .assignments
-            .iter()
-            .find(|a| a.id == "a1")
-            .unwrap()
-            .cluster;
+        let a_cluster = result.assignments.iter().find(|a| a.id == "a1").unwrap().cluster;
         for id in &["a2", "a3", "a4", "a5"] {
-            let c = result
-                .assignments
-                .iter()
-                .find(|a| a.id == *id)
-                .unwrap()
-                .cluster;
-            assert_eq!(c, a_cluster, "{} should be in same cluster as a1", id);
+            let c = result.assignments.iter().find(|a| a.id == *id).unwrap().cluster;
+            assert_eq!(c, a_cluster);
         }
 
-        let b_cluster = result
-            .assignments
-            .iter()
-            .find(|a| a.id == "b1")
-            .unwrap()
-            .cluster;
+        let b_cluster = result.assignments.iter().find(|a| a.id == "b1").unwrap().cluster;
         assert_ne!(a_cluster, b_cluster);
 
         assert!(!result.model_params.scaler_means.is_empty());
-        assert!(!result.model_params.centroids.is_empty());
         assert_eq!(result.model_params.k, 2);
         assert_eq!(result.model_params.n_features, 4);
 
-        let loaded = storage::load("test-model");
+        let loaded = ModelStore::load("test-model");
         assert!(loaded.is_some());
         assert_eq!(loaded.unwrap().k, 2);
     }

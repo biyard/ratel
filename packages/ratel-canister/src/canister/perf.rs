@@ -1,4 +1,4 @@
-use crate::types::{PerfMetrics, StepInstructions};
+use crate::sampling::{PerfMetrics, StepInstructions};
 
 pub fn instruction_counter() -> u64 {
     #[cfg(target_arch = "wasm32")]
