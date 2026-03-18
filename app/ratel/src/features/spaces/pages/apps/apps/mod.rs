@@ -1,3 +1,4 @@
+pub mod analyzes;
 pub mod file;
 pub mod general;
 pub mod incentive_pool;
