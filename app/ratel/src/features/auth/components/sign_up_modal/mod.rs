@@ -12,6 +12,7 @@ use crate::features::auth::*;
 pub fn SignupModal(
     #[props(optional)] initial_email: Option<String>,
     #[props(optional)] initial_wallet_address: Option<String>,
+    #[props(optional)] on_success: Option<Callback<()>>,
 ) -> Element {
     let tr: SignupModalTranslate = use_translate();
     let is_wallet_signup = initial_wallet_address.is_some();
@@ -376,6 +377,9 @@ pub fn SignupModal(
                                                 #[cfg(feature = "membership")]
                                                 membership: None,
                                             });
+                                        if let Some(handler) = &on_success {
+                                            handler.call(());
+                                        }
                                         popup.close();
                                     }
                                     Err(e) => {
@@ -414,6 +418,9 @@ pub fn SignupModal(
                                             #[cfg(feature = "membership")]
                                             membership: None,
                                         });
+                                    if let Some(handler) = &on_success {
+                                        handler.call(());
+                                    }
                                     popup.close();
                                 }
                                 Err(e) => {
