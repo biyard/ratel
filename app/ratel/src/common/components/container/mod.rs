@@ -18,7 +18,7 @@ pub fn Container(props: ContainerProps) -> Element {
 
     rsx! {
         div {..merged,
-            div { class: "flex overflow-y-auto flex-1 justify-center items-center w-full scrollbar-none",
+            div { class: "flex overflow-y-auto flex-1 justify-center items-start w-full scrollbar-none",
                 {props.children}
             }
             if let Some(bottom_sheet) = props.bottom_sheet {
