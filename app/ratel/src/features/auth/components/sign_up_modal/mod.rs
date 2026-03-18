@@ -12,9 +12,9 @@ use crate::features::auth::*;
 pub fn SignupModal(
     #[props(optional)] initial_email: Option<String>,
     #[props(optional)] initial_wallet_address: Option<String>,
+    #[props(optional)] on_success: Option<Callback<()>>,
 ) -> Element {
     let tr: SignupModalTranslate = use_translate();
-    let nav = use_navigator();
     let is_wallet_signup = initial_wallet_address.is_some();
     let wallet_address = use_signal(|| initial_wallet_address.clone().unwrap_or_default());
     let mut email = use_signal(|| initial_email.clone().unwrap_or_default());
@@ -152,6 +152,9 @@ pub fn SignupModal(
                                     match result {
                                         Ok(_) => {
                                             sent_code.set(true);
+                                        }
+                                        Err(Error::Duplicate(_)) => {
+                                            email_warning.set(tr.email_already_registered.to_string());
                                         }
                                         Err(e) => {
                                             email_warning.set(format!("{}: {e}", tr.failed_send_code));
@@ -374,8 +377,10 @@ pub fn SignupModal(
                                                 #[cfg(feature = "membership")]
                                                 membership: None,
                                             });
+                                        if let Some(handler) = &on_success {
+                                            handler.call(());
+                                        }
                                         popup.close();
-                                        nav.push("/");
                                     }
                                     Err(e) => {
                                         error_message.set(Some(format!("{e}")));
@@ -413,8 +418,10 @@ pub fn SignupModal(
                                             #[cfg(feature = "membership")]
                                             membership: None,
                                         });
+                                    if let Some(handler) = &on_success {
+                                        handler.call(());
+                                    }
                                     popup.close();
-                                    nav.push("/");
                                 }
                                 Err(e) => {
                                     error_message.set(Some(format!("{e}")));
@@ -549,6 +556,10 @@ translate! {
     failed_send_code: {
         en: "Failed to send verification code",
         ko: "인증 코드 전송에 실패했습니다",
+    },
+    email_already_registered: {
+        en: "This email is already registered. Please use Forgot Password.",
+        ko: "이미 등록된 이메일입니다. 비밀번호 찾기를 이용해주세요.",
     },
     failed_verify_code: {
         en: "Verification code is incorrect or has expired",
