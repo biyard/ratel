@@ -48,15 +48,23 @@ impl AsRef<str> for VoteKey {
     }
 }
 
-/// A single vote entry for one question+option, submitted to the canister.
+/// A lightweight question+option selection (no ciphertext duplication).
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "candid", derive(candid::CandidType))]
-pub struct QuestionVote {
+pub struct QuestionSelection {
     pub question_index: u32,
     pub option_index: u32,
+}
+
+/// A complete vote ballot submitted by one voter for one poll.
+/// Ciphertext is stored once, selections reference individual question+option choices.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "candid", derive(candid::CandidType))]
+pub struct VoteBallot {
     pub ciphertext_hash: String,
     pub ciphertext_blob: Vec<u8>,
     pub submitted_at_ms: i64,
+    pub selections: Vec<QuestionSelection>,
 }
 
 /// Result returned after successfully submitting a vote.

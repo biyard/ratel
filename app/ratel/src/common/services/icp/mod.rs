@@ -71,9 +71,9 @@ impl CanisterService {
         &self,
         vote_key: &str,
         voter_tag: &str,
-        votes: Vec<QuestionVote>,
+        ballot: VoteBallot,
     ) -> Result<SubmitVoteResult> {
-        let args = Encode!(&vote_key.to_string(), &voter_tag.to_string(), &votes)
+        let args = Encode!(&vote_key.to_string(), &voter_tag.to_string(), &ballot)
             .map_err(|e| Error::InternalServerError(format!("Candid encode error: {}", e)))?;
 
         let response = self
@@ -104,23 +104,23 @@ impl CanisterService {
             .map_err(|e| Error::InternalServerError(format!("Candid decode error: {}", e)))
     }
 
-    pub async fn get_vote_by_tag(
+    pub async fn get_ballot_by_tag(
         &self,
         vote_key: &str,
         voter_tag: &str,
-    ) -> Result<Vec<QuestionVote>> {
+    ) -> Result<Option<VoteBallot>> {
         let args = Encode!(&vote_key.to_string(), &voter_tag.to_string())
             .map_err(|e| Error::InternalServerError(format!("Candid encode error: {}", e)))?;
 
         let response = self
             .agent
-            .query(&self.canister_id, "get_vote_by_tag")
+            .query(&self.canister_id, "get_ballot_by_tag")
             .with_arg(args)
             .call()
             .await
             .map_err(|e| Error::InternalServerError(format!("IC query error: {}", e)))?;
 
-        Decode!(response.as_slice(), Vec<QuestionVote>)
+        Decode!(response.as_slice(), Option<VoteBallot>)
             .map_err(|e| Error::InternalServerError(format!("Candid decode error: {}", e)))
     }
 }

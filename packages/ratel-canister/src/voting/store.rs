@@ -3,31 +3,25 @@ use std::collections::{BTreeMap, BTreeSet};
 use serde::{Deserialize, Serialize};
 
 use super::error::VotingError;
-use super::types::{QuestionOptionCount, QuestionVote, VoterTag};
+use super::types::{QuestionOptionCount, QuestionSelection, VoteBallot, VoterTag};
 use crate::canister::storage::{StorableVoteData, StringKey, VOTE_DATA};
 
-/// Vote data for a single option within a question.
+/// Per-voter ballot storage (internal representation).
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-pub(crate) struct OptionData {
-    pub count: u64,
-    /// voter_tag → encoded vote blob
-    pub votes: BTreeMap<VoterTag, Vec<u8>>,
-}
-
-/// All vote data for a single question.
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
-pub(crate) struct QuestionData {
-    /// option_index → OptionData
-    pub options: BTreeMap<u32, OptionData>,
+pub(crate) struct VoterBallotData {
+    pub ciphertext_hash: String,
+    pub ciphertext_blob: Vec<u8>,
+    pub submitted_at_ms: i64,
+    pub selections: Vec<QuestionSelection>,
 }
 
 /// Aggregate vote data stored as a single document per voting context (poll/quiz).
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub(crate) struct VoteData {
-    /// question_index → QuestionData
-    pub questions: BTreeMap<u32, QuestionData>,
-    /// Set of voter tags that have voted
-    pub voters: BTreeSet<VoterTag>,
+    /// voter_tag → ballot data (ciphertext stored once per voter)
+    pub ballots: BTreeMap<VoterTag, VoterBallotData>,
+    /// question_index → option_index → set of voter tags (for fast counting)
+    pub counts: BTreeMap<u32, BTreeMap<u32, BTreeSet<VoterTag>>>,
 }
 
 impl VoteData {
@@ -48,60 +42,68 @@ impl VoteData {
     }
 
     pub fn has_voter(&self, voter_tag: &VoterTag) -> bool {
-        self.voters.contains(voter_tag)
+        self.ballots.contains_key(voter_tag)
     }
 
-    /// Insert or replace votes for a voter.
+    /// Insert or replace a ballot for a voter.
     pub fn upsert(
         &mut self,
         voter_tag: &VoterTag,
-        votes: &[QuestionVote],
+        ballot: &VoteBallot,
     ) -> Result<bool, VotingError> {
-        if votes.is_empty() {
+        if ballot.selections.is_empty() {
             return Err(VotingError::EmptyVotes);
         }
 
         let is_update = self.has_voter(voter_tag);
 
-        // Remove old votes if updating
+        // Remove old selections from counts if updating
         if is_update {
-            for question in self.questions.values_mut() {
-                for option in question.options.values_mut() {
-                    if option.votes.remove(voter_tag).is_some() {
-                        option.count = option.count.saturating_sub(1);
+            if let Some(old) = self.ballots.get(voter_tag) {
+                for sel in &old.selections {
+                    if let Some(options) = self.counts.get_mut(&sel.question_index) {
+                        if let Some(voters) = options.get_mut(&sel.option_index) {
+                            voters.remove(voter_tag);
+                        }
                     }
                 }
             }
         }
 
-        // Insert new votes
-        self.voters.insert(voter_tag.clone());
-        for vote in votes {
-            let encoded = candid::encode_one(vote)
-                .map_err(|e| VotingError::EncodeFailed(e.to_string()))?;
-            let option = self
-                .questions
-                .entry(vote.question_index)
+        // Insert new selections into counts
+        for sel in &ballot.selections {
+            self.counts
+                .entry(sel.question_index)
                 .or_default()
-                .options
-                .entry(vote.option_index)
-                .or_default();
-            option.count += 1;
-            option.votes.insert(voter_tag.clone(), encoded);
+                .entry(sel.option_index)
+                .or_default()
+                .insert(voter_tag.clone());
         }
+
+        // Store ballot (ciphertext stored once)
+        self.ballots.insert(
+            voter_tag.clone(),
+            VoterBallotData {
+                ciphertext_hash: ballot.ciphertext_hash.clone(),
+                ciphertext_blob: ballot.ciphertext_blob.clone(),
+                submitted_at_ms: ballot.submitted_at_ms,
+                selections: ballot.selections.clone(),
+            },
+        );
 
         Ok(is_update)
     }
 
     pub fn counts(&self) -> Vec<QuestionOptionCount> {
         let mut results = Vec::new();
-        for (&qi, question) in &self.questions {
-            for (&oi, option) in &question.options {
-                if option.count > 0 {
+        for (&qi, options) in &self.counts {
+            for (&oi, voters) in options {
+                let count = voters.len() as u64;
+                if count > 0 {
                     results.push(QuestionOptionCount {
                         question_index: qi,
                         option_index: oi,
-                        count: option.count,
+                        count,
                     });
                 }
             }
@@ -109,17 +111,12 @@ impl VoteData {
         results
     }
 
-    pub fn votes_by_voter(&self, voter_tag: &VoterTag) -> Vec<QuestionVote> {
-        let mut results = Vec::new();
-        for question in self.questions.values() {
-            for option in question.options.values() {
-                if let Some(blob) = option.votes.get(voter_tag) {
-                    if let Ok(vote) = candid::decode_one::<QuestionVote>(blob) {
-                        results.push(vote);
-                    }
-                }
-            }
-        }
-        results
+    pub fn ballot_by_voter(&self, voter_tag: &VoterTag) -> Option<VoteBallot> {
+        self.ballots.get(voter_tag).map(|data| VoteBallot {
+            ciphertext_hash: data.ciphertext_hash.clone(),
+            ciphertext_blob: data.ciphertext_blob.clone(),
+            submitted_at_ms: data.submitted_at_ms,
+            selections: data.selections.clone(),
+        })
     }
 }
