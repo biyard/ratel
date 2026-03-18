@@ -1,3 +1,4 @@
+use crate::common::assets::RATEL_LOGO;
 use crate::features::auth::context::UserContext;
 use crate::features::auth::controllers::login::{
     login_handler, wallet_check_handler, wallet_nonce_handler, LoginRequest, WalletCheckRequest,
@@ -267,6 +268,12 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                     crate::common::components::LoadingIndicator { class: "size-8" }
                 }
             }
+            img {
+                src: RATEL_LOGO,
+                alt: "Ratel",
+                class: "h-10 object-contain",
+            }
+
             div { class: "flex flex-col gap-4 w-full",
                 div { class: "flex flex-row gap-1 justify-start items-center w-full text-sm",
                     label { class: "font-medium text-text-primary", {tr.new_user} }
