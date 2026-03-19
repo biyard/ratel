@@ -74,7 +74,7 @@ fn TeamPostCard(post: PostResponse) -> Element {
     let comments = post.comments;
     let thumbnail = post.urls.first().cloned();
     let html_contents = post.html_contents.clone();
-    let category = post.category.clone().unwrap_or_default();
+    let post_categories = post.categories.clone();
 
     rsx! {
         Link {
@@ -83,11 +83,15 @@ fn TeamPostCard(post: PostResponse) -> Element {
             div { class: "flex flex-col gap-4 py-6 border-b border-separator",
                 // Header row: tag + actions
                 div { class: "flex items-center justify-between",
-                    // Category badge
-                    if !category.is_empty() {
-                        div { class: "flex items-center border border-[#a1a1a1] rounded-[8px] px-2 py-0.5",
-                            span { class: "text-[12px] font-bold text-text-primary leading-[14px] tracking-[-0.12px]",
-                                "{category}"
+                    // Category badges
+                    if !post_categories.is_empty() {
+                        div { class: "flex items-center gap-1 flex-wrap",
+                            for cat in post_categories.iter() {
+                                div { class: "flex items-center border border-[#a1a1a1] rounded-[8px] px-2 py-0.5",
+                                    span { class: "text-[12px] font-bold text-text-primary leading-[14px] tracking-[-0.12px]",
+                                        "{cat}"
+                                    }
+                                }
                             }
                         }
                     } else {
@@ -157,18 +161,22 @@ fn TeamPostListItem(post: PostResponse) -> Element {
     let created_at = post.created_at;
     let likes = post.likes;
     let comments = post.comments;
-    let category = post.category.clone().unwrap_or_default();
+    let post_categories = post.categories.clone();
 
     rsx! {
         Link {
             to: "{post_url}",
             class: "block",
             div { class: "flex flex-col gap-3 py-5 border-b border-separator",
-                // Category badge
-                if !category.is_empty() {
-                    div { class: "flex items-center border border-[#a1a1a1] rounded-[8px] px-2 py-0.5 w-fit",
-                        span { class: "text-[12px] font-bold text-text-primary leading-[14px] tracking-[-0.12px]",
-                            "{category}"
+                // Category badges
+                if !post_categories.is_empty() {
+                    div { class: "flex items-center gap-1 flex-wrap",
+                        for cat in post_categories.iter() {
+                            div { class: "flex items-center border border-[#a1a1a1] rounded-[8px] px-2 py-0.5 w-fit",
+                                span { class: "text-[12px] font-bold text-text-primary leading-[14px] tracking-[-0.12px]",
+                                    "{cat}"
+                                }
+                            }
                         }
                     }
                 }

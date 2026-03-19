@@ -1,4 +1,7 @@
-use crate::common::components::{ButtonShape, ButtonSize, ButtonStyle, InputVariant, TiptapEditor};
+use crate::common::components::{
+    BadgeColor, BadgeSize, BadgeVariant, ButtonShape, ButtonSize, ButtonStyle, InputVariant,
+    TiptapEditor,
+};
 use crate::common::hooks::use_infinite_query;
 use crate::features::posts::components::VisibilityModal;
 use crate::features::posts::controllers::get_post::get_post_handler;
@@ -97,6 +100,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
         _ => None,
     });
     let has_existing_space = existing_space_id.is_some();
+    let initial_categories = post.categories.clone();
     let Post {
         title,
         html_contents,
@@ -110,15 +114,15 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
     let mut last_saved = use_signal(move || (title(), content()));
     let mut skip_creating_space = use_signal(move || !has_existing_space);
 
-    // Category state
-    let mut category = use_signal(|| "".to_string());
+    // Category state - multiple categories
+    let mut categories = use_signal(move || initial_categories.clone());
     let mut category_input = use_signal(|| "".to_string());
     let mut show_category_dropdown = use_signal(|| false);
     let mut is_creating_category = use_signal(|| false);
 
     let categories_query = use_infinite_query(move |bookmark| list_categories_handler(bookmark))?;
     let categories_query_for_memo = categories_query.clone();
-    let categories = use_memo(move || {
+    let all_categories = use_memo(move || {
         categories_query_for_memo
             .items()
             .iter()
@@ -192,7 +196,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                     image_urls: None,
                     publish: true,
                     visibility: Some(visibility),
-                    category: Some(category()).filter(|s| !s.is_empty()),
+                    categories: Some(categories()).filter(|c| !c.is_empty()),
                 },
             )
             .await
@@ -226,7 +230,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                     image_urls: None,
                     publish: false,
                     visibility: None,
-                    category: Some(category()).filter(|s| !s.is_empty()),
+                    categories: Some(categories()).filter(|c| !c.is_empty()),
                 },
             )
             .await;
@@ -348,7 +352,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                     }
                 }
 
-                // Category selector
+                // Multi-category tag input
                 div {
                     class: "relative w-full",
                     onfocusout: move |_| {
@@ -358,23 +362,96 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                             show_category_dropdown.set(false);
                         });
                     },
+
+                    // Selected category badges
+                    if !categories().is_empty() {
+                        div { class: "flex flex-wrap gap-2 mb-2",
+                            for cat in categories().iter().cloned() {
+                                div {
+                                    key: "{cat}",
+                                    class: "cursor-pointer",
+                                    "data-testid": "category-badge",
+                                    onclick: {
+                                        let cat = cat.clone();
+                                        move |_| {
+                                            let mut current = categories();
+                                            current.retain(|c| c != &cat);
+                                            categories.set(current);
+                                        }
+                                    },
+                                    Badge {
+                                        color: BadgeColor::Blue,
+                                        size: BadgeSize::Small,
+                                        variant: BadgeVariant::Rounded,
+                                        class: "flex items-center gap-1",
+                                        span { "{cat}" }
+                                        span { class: "ml-1 text-[10px] opacity-60", "\u{2715}" }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     Input {
                         class: "w-full",
                         variant: InputVariant::Default,
                         placeholder: tr.category_placeholder,
                         value: category_input,
+                        "data-testid": "category-input",
                         oninput: move |e: Event<FormData>| {
-                            category_input.set(e.value());
-                            show_category_dropdown.set(true);
+                            let val = e.value();
+                            // If user types a comma, add the text before comma as a category
+                            if val.ends_with(',') {
+                                let trimmed = val.trim_end_matches(',').trim().to_string();
+                                if !trimmed.is_empty() {
+                                    let mut current = categories();
+                                    let lower = trimmed.to_lowercase();
+                                    if !current.iter().any(|c| c.to_lowercase() == lower) {
+                                        current.push(trimmed);
+                                        categories.set(current);
+                                    }
+                                    category_input.set("".to_string());
+                                }
+                                show_category_dropdown.set(false);
+                            } else {
+                                category_input.set(val);
+                                show_category_dropdown.set(true);
+                            }
+                        },
+                        onconfirm: move |_| {
+                            let trimmed = category_input().trim().to_string();
+                            if !trimmed.is_empty() {
+                                let mut current = categories();
+                                let lower = trimmed.to_lowercase();
+                                if !current.iter().any(|c| c.to_lowercase() == lower) {
+                                    current.push(trimmed);
+                                    categories.set(current);
+                                }
+                                category_input.set("".to_string());
+                            }
+                            show_category_dropdown.set(false);
+                        },
+                        onkeydown: move |e: KeyboardEvent| {
+                            if e.key() == Key::Backspace && category_input().is_empty() {
+                                // Remove last category on Backspace when input is empty
+                                let mut current = categories();
+                                if !current.is_empty() {
+                                    current.pop();
+                                    categories.set(current);
+                                }
+                            }
                         },
                     }
 
-                    if show_category_dropdown() {
+                    if show_category_dropdown() && !category_input().trim().is_empty() {
                         div { class: "overflow-y-auto absolute z-20 mt-2 w-full max-h-60 rounded-md border shadow-md bg-card border-post-input-border",
 
-                            for cat in categories()
+                            for cat in all_categories()
                                 .iter()
-                                .filter(|c| c.to_lowercase().contains(&category_input().to_lowercase()))
+                                .filter(|c| {
+                                    c.to_lowercase().contains(&category_input().to_lowercase())
+                                        && !categories().iter().any(|sel| sel.to_lowercase() == c.to_lowercase())
+                                })
                                 .cloned()
                             {
                                 div {
@@ -383,8 +460,13 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                                     onclick: {
                                         let cat = cat.clone();
                                         move |_| {
-                                            category.set(cat.clone());
-                                            category_input.set(cat.clone());
+                                            let mut current = categories();
+                                            let lower = cat.to_lowercase();
+                                            if !current.iter().any(|c| c.to_lowercase() == lower) {
+                                                current.push(cat.clone());
+                                                categories.set(current);
+                                            }
+                                            category_input.set("".to_string());
                                             show_category_dropdown.set(false);
                                         }
                                     },
@@ -393,7 +475,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                             }
 
                             if !category_input().trim().is_empty()
-                                && !categories()
+                                && !all_categories()
                                     .iter()
                                     .any(|c| c.to_lowercase() == category_input().trim().to_lowercase())
                             {
@@ -415,8 +497,13 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                                             {
                                                 Ok(cat) => {
                                                     let name = cat.name;
-                                                    category.set(name.clone());
-                                                    category_input.set(name.clone());
+                                                    let mut current = categories();
+                                                    let lower = name.to_lowercase();
+                                                    if !current.iter().any(|c| c.to_lowercase() == lower) {
+                                                        current.push(name);
+                                                        categories.set(current);
+                                                    }
+                                                    category_input.set("".to_string());
                                                     cats_query.restart();
                                                     show_category_dropdown.set(false);
                                                 }
