@@ -223,6 +223,25 @@ pub struct DateTimeRange {
     pub end_minute: u8,
 }
 
+/// Converts a date + hour + minute into total minutes since an arbitrary epoch,
+/// used to compute and preserve the duration between start and end.
+fn to_total_minutes(date: Date, hour: u8, minute: u8) -> i64 {
+    let datetime = date.with_hms(hour, minute, 0).expect("valid time");
+    let offset_datetime = datetime.assume_utc();
+    offset_datetime.unix_timestamp() / 60
+}
+
+/// Converts total minutes (since Unix epoch) back into (Date, hour, minute).
+fn from_total_minutes(total: i64) -> (Date, u8, u8) {
+    let offset_datetime =
+        OffsetDateTime::from_unix_timestamp(total * 60).expect("valid timestamp");
+    (
+        offset_datetime.date(),
+        offset_datetime.hour(),
+        offset_datetime.minute(),
+    )
+}
+
 #[component]
 pub fn DateAndTimePicker(#[props(default)] on_change: EventHandler<DateTimeRange>) -> Element {
     let now = OffsetDateTime::now_utc();
@@ -248,6 +267,26 @@ pub fn DateAndTimePicker(#[props(default)] on_change: EventHandler<DateTimeRange
         });
     };
 
+    // Computes the duration (in minutes) between the current start and end.
+    let get_duration = move || -> i64 {
+        let sd = selected_start_date().unwrap_or(today);
+        let ed = selected_end_date().unwrap_or(tomorrow);
+        let start_total = to_total_minutes(sd, start_hour(), start_minute());
+        let end_total = to_total_minutes(ed, end_hour(), end_minute());
+        (end_total - start_total).max(1)
+    };
+
+    // Adjusts the end date/time to preserve the given duration from the current start.
+    let mut adjust_end = move |duration_minutes: i64| {
+        let sd = selected_start_date().unwrap_or(today);
+        let new_end_total =
+            to_total_minutes(sd, start_hour(), start_minute()) + duration_minutes;
+        let (new_end_date, new_end_h, new_end_m) = from_total_minutes(new_end_total);
+        selected_end_date.set(Some(new_end_date));
+        end_hour.set(new_end_h);
+        end_minute.set(new_end_m);
+    };
+
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
         div { class: "flex items-center w-full @container",
@@ -256,16 +295,21 @@ pub fn DateAndTimePicker(#[props(default)] on_change: EventHandler<DateTimeRange
                     DatePicker {
                         selected_date: selected_start_date(),
                         on_value_change: move |v| {
+                            let duration = get_duration();
                             selected_start_date.set(v);
+                            adjust_end(duration);
                             emit();
                         },
                         DatePickerInput { date: selected_start_date().and_then(|d| d.format(&format).ok()).unwrap_or_default() }
                     }
                     TimePicker {
-                        hour: next_hour,
+                        hour: start_hour(),
+                        minute: start_minute(),
                         on_change: move |(h, m)| {
+                            let duration = get_duration();
                             start_hour.set(h);
                             start_minute.set(m);
+                            adjust_end(duration);
                             emit();
                         },
                     }
@@ -283,7 +327,8 @@ pub fn DateAndTimePicker(#[props(default)] on_change: EventHandler<DateTimeRange
                         DatePickerInput { date: selected_end_date().and_then(|d| d.format(&format).ok()).unwrap_or_default() }
                     }
                     TimePicker {
-                        hour: next_hour,
+                        hour: end_hour(),
+                        minute: end_minute(),
                         on_change: move |(h, m)| {
                             end_hour.set(h);
                             end_minute.set(m);
