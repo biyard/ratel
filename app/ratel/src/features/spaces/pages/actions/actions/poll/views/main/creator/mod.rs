@@ -53,33 +53,65 @@ pub fn PollCreatorPage(
                     }
 
                     // Encrypted Upload toggle
-                    Card { class: "mt-4",
-                        div { class: "flex justify-between items-center self-stretch py-4 px-5 border-b border-separator",
-                            p { class: "font-semibold text-center font-raleway text-[17px]/[20px] tracking-[-0.18px] text-text-primary",
-                                {tr.encrypted_upload_title}
-                            }
-                        }
-                        div { class: "flex flex-row justify-between items-center self-stretch p-5 gap-[10px]",
-                            p { class: "font-normal leading-6 font-raleway text-[15px] tracking-[0.5px] text-foreground-muted",
-                                {tr.encrypted_upload_desc}
-                            }
-                            Switch {
-                                active: ctx.poll().encrypted_upload_enabled,
-                                on_toggle: move |_| async move {
-                                    let enabled = !ctx.poll().encrypted_upload_enabled;
-                                    let _ = update_poll(
-                                            space_id(),
-                                            poll_id(),
-                                            UpdatePollRequest::CanisterUploadEnabled {
-                                                canister_upload_enabled: enabled,
-                                            },
-                                        )
-                                        .await;
-                                },
-                            }
+                    EncryptedUploadSetting { space_id, poll_id }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+fn EncryptedUploadSetting(
+    space_id: ReadSignal<SpacePartition>,
+    poll_id: ReadSignal<SpacePollEntityType>,
+) -> Element {
+    let tr: CreatorTranslate = use_translate();
+    let mut toast = crate::common::use_toast();
+    let ctx = use_space_poll_context();
+    let mut enabled = use_signal(move || ctx.poll().encrypted_upload_enabled);
+
+    rsx! {
+        Card {
+            direction: CardDirection::Row,
+            main_axis_align: MainAxisAlign::Between,
+            cross_axis_align: CrossAxisAlign::Center,
+            div { class: "flex gap-1 items-center",
+                p { class: "font-semibold font-raleway text-[15px]/[18px] tracking-[-0.16px] text-web-font-primary",
+                    {tr.encrypted_upload_title}
+                }
+                Tooltip {
+                    TooltipTrigger {
+                        icons::help_support::Info {
+                            width: "14",
+                            height: "14",
+                            class: "cursor-help text-web-font-neutral [&>path]:stroke-current [&>circle]:fill-current [&>path]:fill-none",
                         }
                     }
+                    TooltipContent { {tr.encrypted_upload_tooltip} }
                 }
+            }
+            Switch {
+                active: enabled(),
+                on_toggle: move |_| async move {
+                    let new_val = !enabled();
+                    match update_poll(
+                            space_id(),
+                            poll_id(),
+                            UpdatePollRequest::CanisterUploadEnabled {
+                                canister_upload_enabled: new_val,
+                            },
+                        )
+                        .await
+                    {
+                        Ok(_) => {
+                            enabled.set(new_val);
+                            toast.info(tr.encrypted_upload_updated.to_string());
+                        }
+                        Err(e) => {
+                            toast.error(e);
+                        }
+                    }
+                },
             }
         }
     }
@@ -114,8 +146,13 @@ translate! {
         ko: "암호화 업로드",
     }
 
-    encrypted_upload_desc: {
+    encrypted_upload_tooltip: {
         en: "Encrypt vote results and store on-chain for transparency. Once enabled, responses cannot be edited after submission.",
         ko: "투표 결과를 암호화하여 온체인에 저장합니다. 활성화하면 제출 후 응답을 수정할 수 없습니다.",
+    }
+
+    encrypted_upload_updated: {
+        en: "Encrypted upload setting updated.",
+        ko: "암호화 업로드 설정이 업데이트되었습니다.",
     }
 }
