@@ -5,11 +5,21 @@ pub fn Badge(
     #[props(default)] color: BadgeColor,
     #[props(default)] size: BadgeSize,
     #[props(default)] variant: BadgeVariant,
+    #[props(default)] onclick: Option<EventHandler<MouseEvent>>,
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
 ) -> Element {
     rsx! {
-        div { class: "{color} {size} {variant}", ..attributes, {children} }
+        div {
+            class: "{color} {size} {variant}",
+            onclick: move |e| {
+                if let Some(handler) = &onclick {
+                    handler.call(e);
+                }
+            },
+            ..attributes,
+            {children}
+        }
     }
 }
 

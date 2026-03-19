@@ -367,9 +367,12 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                     if !categories().is_empty() {
                         div { class: "flex flex-wrap gap-2 mb-2",
                             for cat in categories().iter().cloned() {
-                                div {
+                                Badge {
                                     key: "{cat}",
-                                    class: "cursor-pointer",
+                                    color: BadgeColor::Blue,
+                                    size: BadgeSize::Small,
+                                    variant: BadgeVariant::Rounded,
+                                    class: "flex items-center gap-1 cursor-pointer",
                                     "data-testid": "category-badge",
                                     onclick: {
                                         let cat = cat.clone();
@@ -379,14 +382,8 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                                             categories.set(current);
                                         }
                                     },
-                                    Badge {
-                                        color: BadgeColor::Blue,
-                                        size: BadgeSize::Small,
-                                        variant: BadgeVariant::Rounded,
-                                        class: "flex items-center gap-1",
-                                        span { "{cat}" }
-                                        span { class: "ml-1 text-[10px] opacity-60", "\u{2715}" }
-                                    }
+                                    span { "{cat}" }
+                                    span { class: "ml-1 text-[10px] opacity-60", "\u{2715}" }
                                 }
                             }
                         }
