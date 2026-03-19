@@ -117,7 +117,7 @@ pub fn TeamCreationForm(
 
             div { class: "flex flex-col gap-2.5 w-full",
                 input {
-                    class: "w-full px-3 py-2 rounded-lg border border-divider bg-bg text-sm text-text-primary outline-none focus:border-primary placeholder:text-c-secondary",
+                    class: "w-full px-3 py-2 rounded-lg border border-divider bg-bg text-sm text-text-primary light:text-neutral-900 outline-none focus:border-primary placeholder:text-c-secondary",
                     r#type: "text",
                     placeholder: "{tr.team_display_name}",
                     value: "{nickname}",
@@ -132,7 +132,7 @@ pub fn TeamCreationForm(
                             "@"
                         }
                         input {
-                            class: "w-full pl-8 pr-3 py-2 rounded-lg border border-divider bg-bg text-sm text-text-primary outline-none focus:border-primary placeholder:text-c-secondary",
+                            class: "w-full pl-8 pr-3 py-2 rounded-lg border border-divider bg-bg text-sm text-text-primary light:text-neutral-900 outline-none focus:border-primary placeholder:text-c-secondary",
                             r#type: "text",
                             placeholder: "{tr.team_id} (ex. ratel)",
                             value: "{username}",
@@ -154,7 +154,7 @@ pub fn TeamCreationForm(
                     }
                 }
                 textarea {
-                    class: "w-full px-3 py-2 rounded-lg border border-divider bg-bg text-sm text-text-primary outline-none focus:border-primary resize-none placeholder:text-c-secondary",
+                    class: "w-full px-3 py-2 rounded-lg border border-divider bg-bg text-sm text-text-primary light:text-neutral-900 outline-none focus:border-primary resize-none placeholder:text-c-secondary",
                     rows: "3",
                     placeholder: "{tr.team_description}",
                     value: "{description}",
