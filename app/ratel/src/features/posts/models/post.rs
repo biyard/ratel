@@ -64,7 +64,7 @@ pub struct Post {
 
     pub urls: Vec<String>,
 
-    #[serde(default, deserialize_with = "deserialize_categories")]
+    #[serde(default, deserialize_with = "deserialize_categories", alias = "category")]
     pub categories: Vec<String>,
 }
 
