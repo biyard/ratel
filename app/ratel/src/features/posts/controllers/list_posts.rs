@@ -113,6 +113,9 @@ async fn fetch_timeline_posts(
 }
 
 /// Fetch posts from the global public feed (GSI6).
+///
+/// Space posts are only included when they meet the popularity threshold
+/// or when the associated space has 5+ participants.
 #[cfg(feature = "server")]
 async fn fetch_global_posts(
     cli: &aws_sdk_dynamodb::Client,
@@ -124,10 +127,54 @@ async fn fetch_global_posts(
         query_options = query_options.bookmark(bk);
     }
 
-    Post::find_by_visibility(
+    let (posts, bookmark) = Post::find_by_visibility(
         cli,
         format!("{}#{}", Visibility::Public, PostStatus::Published),
         query_options,
     )
-    .await
+    .await?;
+
+    // Batch-fetch SpaceCommon for all space posts to check participant count.
+    let mut seen_space_pks = std::collections::HashSet::new();
+    let space_keys: Vec<(Partition, EntityType)> = posts
+        .iter()
+        .filter_map(|p| p.space_pk.clone())
+        .filter(|pk| seen_space_pks.insert(pk.to_string()))
+        .map(|pk| (pk, EntityType::SpaceCommon))
+        .collect();
+
+    let space_participants: std::collections::HashMap<String, i64> =
+        if space_keys.is_empty() {
+            std::collections::HashMap::new()
+        } else {
+            crate::common::models::space::SpaceCommon::batch_get(cli, space_keys)
+                .await
+                .unwrap_or_default()
+                .into_iter()
+                .map(|s| (s.pk.to_string(), s.participants))
+                .collect()
+        };
+
+    let posts = posts
+        .into_iter()
+        .filter(|post| {
+            let Some(ref space_pk) = post.space_pk else {
+                return true;
+            };
+            if crate::features::timeline::services::is_popular(
+                post.likes,
+                post.comments,
+                post.shares,
+            ) {
+                return true;
+            }
+            let participants = space_participants
+                .get(&space_pk.to_string())
+                .copied()
+                .unwrap_or(0);
+            participants >= 5
+        })
+        .collect();
+
+    Ok((posts, bookmark))
 }
