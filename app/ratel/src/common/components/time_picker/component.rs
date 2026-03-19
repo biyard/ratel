@@ -13,10 +13,12 @@ pub fn TimePicker(
 
     // Sync internal state when props change from parent (e.g., auto-adjusted end time).
     use_effect(move || {
-        selected_hour.set(hour);
-    });
-    use_effect(move || {
-        selected_minute.set(minute);
+        if selected_hour() != hour {
+            selected_hour.set(hour);
+        }
+        if selected_minute() != minute {
+            selected_minute.set(minute);
+        }
     });
 
     let display = format!("{:02}:{:02}", selected_hour(), selected_minute());

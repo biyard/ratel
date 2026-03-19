@@ -223,7 +223,7 @@ pub struct DateTimeRange {
     pub end_minute: u8,
 }
 
-/// Converts a date + hour + minute into total minutes since an arbitrary epoch,
+/// Converts a date + hour + minute into total minutes since the Unix epoch (UTC),
 /// used to compute and preserve the duration between start and end.
 fn to_total_minutes(date: Date, hour: u8, minute: u8) -> i64 {
     let datetime = date.with_hms(hour, minute, 0).expect("valid time");
