@@ -69,6 +69,7 @@ pub fn UserLayout(username: String) -> Element {
 
 #[component]
 fn TeamSidemenu(username: String, logged_in: bool) -> Element {
+    let tr: TeamMenuTranslate = use_translate();
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let team_ctx = crate::common::contexts::use_team_context();
     let nav = use_navigator();
@@ -253,7 +254,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                                             lucide_dioxus::Settings {
                                                 class: "w-[15px] h-[15px] [&>path]:stroke-text-primary [&>line]:stroke-text-primary [&>polyline]:stroke-text-primary [&>circle]:stroke-text-primary shrink-0",
                                             }
-                                            "Settings"
+                                            {tr.settings}
                                         }
                                         button {
                                             class: "flex gap-2 items-center py-2 px-3 w-full text-sm text-left transition-colors text-destructive hover:bg-hover",
@@ -271,7 +272,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                                                 });
                                             },
                                             lucide_dioxus::LogOut { class: "w-[15px] h-[15px] [&>path]:stroke-destructive shrink-0" }
-                                            "Log out"
+                                            {tr.log_out}
                                         }
                                     }
                                 }
@@ -375,5 +376,10 @@ translate! {
     settings: {
         en: "Settings",
         ko: "설정",
+    },
+
+    log_out: {
+        en: "Log out",
+        ko: "로그아웃",
     },
 }
