@@ -115,49 +115,53 @@ async fn fetch_timeline_posts(
 /// Fetch posts from the global public feed (GSI6).
 ///
 /// Space posts are only included when they meet the popularity threshold
-/// or when the associated space has 5+ participants.
+/// (popular by engagement) or when the associated space has more than 5 participants.
+/// Pagination loops server-side until a full page is accumulated or all posts are exhausted,
+/// preventing empty pages from reaching the client and causing request churn.
 #[cfg(feature = "server")]
 async fn fetch_global_posts(
     cli: &aws_sdk_dynamodb::Client,
     bookmark: Option<String>,
 ) -> Result<(Vec<Post>, Option<String>)> {
-    let mut query_options = Post::opt().limit(10);
+    const PAGE_SIZE: usize = 10;
 
-    if let Some(bk) = bookmark {
-        query_options = query_options.bookmark(bk);
-    }
+    let mut result: Vec<Post> = Vec::with_capacity(PAGE_SIZE);
+    let mut current_bookmark = bookmark;
 
-    let (posts, bookmark) = Post::find_by_visibility(
-        cli,
-        format!("{}#{}", Visibility::Public, PostStatus::Published),
-        query_options,
-    )
-    .await?;
+    loop {
+        let mut query_options = Post::opt().limit(PAGE_SIZE as i32);
+        if let Some(bk) = current_bookmark.take() {
+            query_options = query_options.bookmark(bk);
+        }
 
-    // Batch-fetch SpaceCommon for all space posts to check participant count.
-    let mut seen_space_pks = std::collections::HashSet::new();
-    let space_keys: Vec<(Partition, EntityType)> = posts
-        .iter()
-        .filter_map(|p| p.space_pk.clone())
-        .filter(|pk| seen_space_pks.insert(pk.to_string()))
-        .map(|pk| (pk, EntityType::SpaceCommon))
-        .collect();
+        let (posts, next_bookmark) = Post::find_by_visibility(
+            cli,
+            format!("{}#{}", Visibility::Public, PostStatus::Published),
+            query_options,
+        )
+        .await?;
 
-    let space_participants: std::collections::HashMap<String, i64> =
-        if space_keys.is_empty() {
-            std::collections::HashMap::new()
-        } else {
-            crate::common::models::space::SpaceCommon::batch_get(cli, space_keys)
-                .await
-                .unwrap_or_default()
-                .into_iter()
-                .map(|s| (s.pk.to_string(), s.participants))
-                .collect()
-        };
+        // Batch-fetch SpaceCommon for all space posts to check participant count.
+        let mut seen_space_pks = std::collections::HashSet::new();
+        let space_keys: Vec<(Partition, EntityType)> = posts
+            .iter()
+            .filter_map(|p| p.space_pk.clone())
+            .filter(|pk| seen_space_pks.insert(pk.to_string()))
+            .map(|pk| (pk, EntityType::SpaceCommon))
+            .collect();
 
-    let posts = posts
-        .into_iter()
-        .filter(|post| {
+        let space_participants: std::collections::HashMap<String, i64> =
+            if space_keys.is_empty() {
+                std::collections::HashMap::new()
+            } else {
+                crate::common::models::space::SpaceCommon::batch_get(cli, space_keys)
+                    .await?
+                    .into_iter()
+                    .map(|s| (s.pk.to_string(), s.participants))
+                    .collect()
+            };
+
+        let filtered = posts.into_iter().filter(|post| {
             let Some(ref space_pk) = post.space_pk else {
                 return true;
             };
@@ -172,9 +176,16 @@ async fn fetch_global_posts(
                 .get(&space_pk.to_string())
                 .copied()
                 .unwrap_or(0);
-            participants >= 5
-        })
-        .collect();
+            crate::features::timeline::services::is_popular_space(participants)
+        });
 
-    Ok((posts, bookmark))
+        result.extend(filtered);
+        current_bookmark = next_bookmark;
+
+        if result.len() >= PAGE_SIZE || current_bookmark.is_none() {
+            break;
+        }
+    }
+
+    Ok((result, current_bookmark))
 }
