@@ -11,7 +11,8 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    needs: [ratel-app, ratel-canister, fetcher, survey-worker, space-stream-worker]
+    needs:
+      [ratel-app, ratel-canister, fetcher, survey-worker, space-stream-worker]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -60,59 +61,59 @@ jobs:
           npm i -g aws-cdk
           make cdk-deploy-v2
 
-  ratel-canister:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/ratel-canister
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+  # ratel-canister:
+  #   runs-on: ubuntu-latest
+  #   defaults:
+  #     run:
+  #       working-directory: packages/ratel-canister
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         submodules: recursive
+  #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: stable
-          target: wasm32-unknown-unknown
+  #     - uses: actions-rust-lang/setup-rust-toolchain@v1
+  #       with:
+  #         toolchain: stable
+  #         target: wasm32-unknown-unknown
 
-      - name: Install dfx
-        uses: dfinity/setup-dfx@main
+  #     - name: Install dfx
+  #       uses: dfinity/setup-dfx@main
 
-      - name: Install candid-extractor
-        run: cargo install candid-extractor
+  #     - name: Install candid-extractor
+  #       run: cargo install candid-extractor
 
-      - name: Cache Cargo build
-        uses: actions/cache@v4
-        with:
-          key: canister-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}-${{ github.run_id }}
-          restore-keys: |
-            canister-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}-
-            canister-${{ runner.os }}-
-          path: ../../target
+  #     - name: Cache Cargo build
+  #       uses: actions/cache@v4
+  #       with:
+  #         key: canister-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}-${{ github.run_id }}
+  #         restore-keys: |
+  #           canister-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}-
+  #           canister-${{ runner.os }}-
+  #         path: ../../target
 
-      - name: Setup dfx identity
-        env:
-          DFX_IDENTITY_PEM_BASE64: ${{ secrets.DFX_IDENTITY_PEM_BASE64 }}
-        run: |
-          echo "$DFX_IDENTITY_PEM_BASE64" | base64 -d > /tmp/identity.pem
-          dfx identity import deploy /tmp/identity.pem --storage-mode plaintext
-          dfx identity use deploy
-          rm /tmp/identity.pem
+  #     - name: Setup dfx identity
+  #       env:
+  #         DFX_IDENTITY_PEM_BASE64: ${{ secrets.DFX_IDENTITY_PEM_BASE64 }}
+  #       run: |
+  #         echo "$DFX_IDENTITY_PEM_BASE64" | base64 -d > /tmp/identity.pem
+  #         dfx identity import deploy /tmp/identity.pem --storage-mode plaintext
+  #         dfx identity use deploy
+  #         rm /tmp/identity.pem
 
-      - name: Deploy or upgrade
-        env:
-          ENV: dev
-        run: make upgrade-if-needed
+  #     - name: Deploy or upgrade
+  #       env:
+  #         ENV: dev
+  #       run: make upgrade-if-needed
 
-      - name: Verify
-        env:
-          ENV: dev
-        run: make status
+  #     - name: Verify
+  #       env:
+  #         ENV: dev
+  #       run: make status
 
   ratel-app:
     runs-on: ubuntu-latest
-    needs: [ratel-canister]
+    needs: []
 
     defaults:
       run:
