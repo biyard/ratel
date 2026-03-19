@@ -16,13 +16,13 @@ use crate::common::*;
 )]
 pub enum SpaceUserRole {
     #[default]
-    #[translate(ko = "뷰어")]
+    #[translate(en = "Viewer", ko = "뷰어")]
     Viewer,
-    #[translate(ko = "참가자")]
+    #[translate(en = "Participant", ko = "참가자")]
     Participant,
-    #[translate(ko = "참가후보")]
+    #[translate(en = "Candidate", ko = "참가후보")]
     Candidate,
-    #[translate(ko = "관리자")]
+    #[translate(en = "Admin", ko = "관리자")]
     Creator,
 }
 
@@ -95,8 +95,13 @@ where
         .flatten();
 
         if participant.is_some() {
-            parts.extensions.insert(SpaceUserRole::Participant);
-            return Ok(SpaceUserRole::Participant);
+            let role = if matches!(space.status, Some(crate::common::SpaceStatus::InProgress)) {
+                SpaceUserRole::Candidate
+            } else {
+                SpaceUserRole::Participant
+            };
+            parts.extensions.insert(role);
+            return Ok(role);
         }
 
         // For public spaces, unauthenticated users are Viewers (handled above),
