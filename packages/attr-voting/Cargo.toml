@@ -9,5 +9,9 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 
+[[bin]]
+name = "attr-voting-keygen"
+path = "src/bin/keygen.rs"
+
 [features]
 default = []
