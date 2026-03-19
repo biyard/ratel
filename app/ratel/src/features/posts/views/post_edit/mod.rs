@@ -1,5 +1,5 @@
 use crate::common::components::{
-    BadgeColor, BadgeSize, BadgeVariant, ButtonShape, ButtonSize, ButtonStyle, InputVariant,
+    Badge, BadgeColor, BadgeSize, BadgeVariant, ButtonShape, ButtonSize, ButtonStyle, InputVariant,
     TiptapEditor,
 };
 use crate::common::hooks::use_infinite_query;

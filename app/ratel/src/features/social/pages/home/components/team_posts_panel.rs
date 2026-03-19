@@ -87,7 +87,9 @@ fn TeamPostCard(post: PostResponse) -> Element {
                     if !post_categories.is_empty() {
                         div { class: "flex items-center gap-1 flex-wrap",
                             for cat in post_categories.iter() {
-                                div { class: "flex items-center border border-[#a1a1a1] rounded-[8px] px-2 py-0.5",
+                                div {
+                                    key: "{cat}",
+                                    class: "flex items-center border border-border rounded-[8px] px-2 py-0.5",
                                     span { class: "text-[12px] font-bold text-text-primary leading-[14px] tracking-[-0.12px]",
                                         "{cat}"
                                     }
@@ -172,7 +174,9 @@ fn TeamPostListItem(post: PostResponse) -> Element {
                 if !post_categories.is_empty() {
                     div { class: "flex items-center gap-1 flex-wrap",
                         for cat in post_categories.iter() {
-                            div { class: "flex items-center border border-[#a1a1a1] rounded-[8px] px-2 py-0.5 w-fit",
+                            div {
+                                key: "{cat}",
+                                class: "flex items-center border border-border rounded-[8px] px-2 py-0.5 w-fit",
                                 span { class: "text-[12px] font-bold text-text-primary leading-[14px] tracking-[-0.12px]",
                                     "{cat}"
                                 }
