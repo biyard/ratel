@@ -6,7 +6,9 @@ pub async fn list_dashboard_data_handler(
     space_id: SpacePartition,
 ) -> Result<Vec<crate::features::spaces::space_common::types::dashboard::DashboardComponentData>> {
     use crate::features::spaces::space_common::models::dashboard::aggregate::DashboardAggregate;
-    use crate::features::spaces::space_common::models::dashboard::recalculate::build_dashboard_components;
+    use crate::features::spaces::space_common::models::dashboard::recalculate::{
+        build_dashboard_components, ActionTypeCounts,
+    };
     use crate::features::spaces::space_common::models::space_reward::SpaceReward;
     use crate::features::spaces::space_common::types::dashboard::*;
 
@@ -16,7 +18,28 @@ pub async fn list_dashboard_data_handler(
 
     let agg = DashboardAggregate::get_or_default(cli, &space_pk).await?;
 
-    let mut components = build_dashboard_components(&agg, space.participants);
+    // Query SpaceActions to get per-type counts
+    let action_counts = {
+        use crate::features::spaces::pages::actions::models::SpaceAction;
+        use crate::features::spaces::pages::actions::types::SpaceActionType;
+
+        let (actions, _) = SpaceAction::find_by_space(cli, &space_pk, SpaceAction::opt())
+            .await
+            .unwrap_or_default();
+
+        let mut counts = ActionTypeCounts::default();
+        for action in &actions {
+            match action.space_action_type {
+                SpaceActionType::Poll => counts.poll_count += 1,
+                SpaceActionType::TopicDiscussion => counts.discussion_count += 1,
+                SpaceActionType::Quiz => counts.quiz_count += 1,
+                SpaceActionType::Follow => counts.follow_count += 1,
+            }
+        }
+        counts
+    };
+
+    let mut components = build_dashboard_components(&agg, space.participants, action_counts);
 
     // InfoCard: populate with SpaceReward data
     let rewards = SpaceReward::list_by_action(cli, space_id.clone(), None)

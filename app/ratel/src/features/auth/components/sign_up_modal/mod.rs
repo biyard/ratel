@@ -1,3 +1,4 @@
+use crate::common::assets::RATEL_LOGO;
 use crate::features::auth::context::UserContext;
 use crate::features::auth::controllers::login::wallet_nonce_handler;
 use crate::features::auth::controllers::send_code::{send_code_handler, SendCodeRequest};
@@ -12,13 +13,15 @@ use crate::features::auth::*;
 pub fn SignupModal(
     #[props(optional)] initial_email: Option<String>,
     #[props(optional)] initial_wallet_address: Option<String>,
+    #[props(optional)] on_success: Option<Callback<()>>,
 ) -> Element {
     let tr: SignupModalTranslate = use_translate();
-    let nav = use_navigator();
     let is_wallet_signup = initial_wallet_address.is_some();
     let wallet_address = use_signal(|| initial_wallet_address.clone().unwrap_or_default());
     let mut email = use_signal(|| initial_email.clone().unwrap_or_default());
     let mut password = use_signal(|| String::new());
+    let mut confirm_password = use_signal(|| String::new());
+    let mut confirm_password_warning = use_signal(|| String::new());
     let mut display_name = use_signal(|| String::new());
     let mut username = use_signal(|| String::new());
     let mut auth_code = use_signal(|| String::new());
@@ -71,7 +74,8 @@ pub fn SignupModal(
         || username().is_empty()
         || !is_valid_username(&username())
         || display_name().trim().is_empty()
-        || (!is_wallet_signup && !is_valid_email());
+        || (!is_wallet_signup && !is_valid_email())
+        || (!is_wallet_signup && password() != confirm_password());
 
     rsx! {
         div {
@@ -79,15 +83,12 @@ pub fn SignupModal(
             id: "signup_popup",
             div { class: "flex flex-col gap-4 w-full max-w-100 mx-auto",
 
-                // Profile Image
-                div { class: "flex relative justify-center items-center mx-auto group size-40 max-mobile:size-20",
+                // Logo
+                div { class: "flex justify-center",
                     img {
-                        src: "{profile_url}",
-                        alt: "Profile",
-                        class: "object-cover relative w-40 h-40 rounded-full cursor-pointer group max-mobile:size-20",
-                    }
-                    div { class: "flex absolute inset-0 justify-center items-center w-40 h-40 font-semibold text-center text-white rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-component-bg/50",
-                        {tr.clicked_image}
+                        src: RATEL_LOGO,
+                        alt: "Ratel",
+                        class: "h-10 object-contain",
                     }
                 }
 
@@ -152,6 +153,9 @@ pub fn SignupModal(
                                     match result {
                                         Ok(_) => {
                                             sent_code.set(true);
+                                        }
+                                        Err(Error::Duplicate(_)) => {
+                                            email_warning.set(tr.email_already_registered.to_string());
                                         }
                                         Err(e) => {
                                             email_warning.set(format!("{}: {e}", tr.failed_send_code));
@@ -231,6 +235,30 @@ pub fn SignupModal(
                     }
                     if !password_warning().is_empty() {
                         p { class: "mt-1 text-sm text-red-500", {password_warning} }
+                    }
+                }
+
+                // Confirm Password (hidden for wallet signup)
+                div { class: if is_wallet_signup { "hidden" } else { "flex flex-col w-full gap-1.25" },
+                    label { class: "font-bold text-c-cg-30 text-base/7", {tr.confirm_password} }
+                    input {
+                        class: "flex px-5 w-full min-w-0 h-11 text-base font-medium border outline-none bg-input-box-bg border-input-box-border rounded-lg placeholder-gray-500 text-text-primary disabled:opacity-50 disabled:cursor-not-allowed",
+                        disabled: loading(),
+                        placeholder: "{tr.confirm_password_placeholder}",
+                        r#type: "password",
+                        value: confirm_password(),
+                        oninput: move |ev| {
+                            let val = ev.data().value();
+                            confirm_password.set(val.clone());
+                            if !val.is_empty() && val != password() {
+                                confirm_password_warning.set(tr.password_mismatch.to_string());
+                            } else {
+                                confirm_password_warning.set(String::new());
+                            }
+                        },
+                    }
+                    if !confirm_password_warning().is_empty() {
+                        p { class: "mt-1 text-sm text-red-500", {confirm_password_warning} }
                     }
                 }
 
@@ -374,8 +402,10 @@ pub fn SignupModal(
                                                 #[cfg(feature = "membership")]
                                                 membership: None,
                                             });
+                                        if let Some(handler) = &on_success {
+                                            handler.call(());
+                                        }
                                         popup.close();
-                                        nav.push("/");
                                     }
                                     Err(e) => {
                                         error_message.set(Some(format!("{e}")));
@@ -413,8 +443,10 @@ pub fn SignupModal(
                                             #[cfg(feature = "membership")]
                                             membership: None,
                                         });
+                                    if let Some(handler) = &on_success {
+                                        handler.call(());
+                                    }
                                     popup.close();
-                                    nav.push("/");
                                 }
                                 Err(e) => {
                                     error_message.set(Some(format!("{e}")));
@@ -473,6 +505,18 @@ translate! {
     password_placeholder: {
         en: "Enter your password",
         ko: "비밀번호를 입력하세요",
+    },
+    confirm_password: {
+        en: "Confirm Password",
+        ko: "비밀번호 확인",
+    },
+    confirm_password_placeholder: {
+        en: "Re-enter your password",
+        ko: "비밀번호를 다시 입력하세요",
+    },
+    password_mismatch: {
+        en: "Passwords do not match.",
+        ko: "비밀번호가 일치하지 않습니다.",
     },
     display_name: {
         en: "Display Name",
@@ -549,6 +593,10 @@ translate! {
     failed_send_code: {
         en: "Failed to send verification code",
         ko: "인증 코드 전송에 실패했습니다",
+    },
+    email_already_registered: {
+        en: "This email is already registered. Please use Forgot Password.",
+        ko: "이미 등록된 이메일입니다. 비밀번호 찾기를 이용해주세요.",
     },
     failed_verify_code: {
         en: "Verification code is incorrect or has expired",

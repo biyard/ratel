@@ -1,4 +1,5 @@
 use crate::features::spaces::pages::apps::apps::panels::*;
+use dioxus_primitives::{ContentAlign, ContentSide};
 
 translate! {
     TotalQuotasTranslate;
@@ -6,6 +7,10 @@ translate! {
     total_quotas: {
         en: "Total quotas",
         ko: "총 쿼터",
+    },
+    total_quotas_desc: {
+        en: "Setting the quota to 0 allows anyone to participate without a limit.",
+        ko: "쿼터를 0으로 설정하면, 인원 제한 없이 누구나 참여하도록 설정할 수 있습니다.",
     },
 }
 
@@ -63,8 +68,16 @@ pub fn TotalQuotas(space_id: ReadSignal<SpacePartition>, quota: i64) -> Element 
 
     rsx! {
         div { class: "flex items-center gap-5 shrink-0",
-            div { class: "text-sm font-medium text-text-primary whitespace-nowrap",
+            div { class: "flex items-center gap-2 text-sm font-medium text-text-primary whitespace-nowrap",
                 {tr.total_quotas}
+                Tooltip {
+                    TooltipTrigger {
+                        icons::help_support::Info { width: "16", height: "16", class: "h-4 w-4 [&>path]:stroke-text-secondary [&>circle]:fill-text-secondary cursor-help" }
+                    }
+                    TooltipContent { side: ContentSide::Bottom, align: ContentAlign::Start,
+                        {tr.total_quotas_desc}
+                    }
+                }
             }
             Input {
                 class: "w-20 h-9 !px-3 text-center text-sm font-semibold".to_string(),

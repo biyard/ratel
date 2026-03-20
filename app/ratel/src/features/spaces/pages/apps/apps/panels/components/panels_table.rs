@@ -1,12 +1,17 @@
 use crate::features::spaces::pages::apps::apps::panels::*;
+use dioxus_primitives::{ContentAlign, ContentSide};
 use std::collections::HashMap;
 
 translate! {
     PanelsTableTranslate;
 
     panels: {
-        en: "Panels",
-        ko: "패널",
+        en: "Conditional Panel Attributes",
+        ko: "Conditional 패널 속성",
+    },
+    conditional_desc: {
+        en: "Participation is based on quotas, and participants are distributed by attribute.",
+        ko: "인원 수 기반으로 참여가 이루어지며 속성별로 참여자를 분배합니다.",
     },
     attribute_group: {
         en: "Attribute group",
@@ -20,13 +25,17 @@ translate! {
         en: "Ratio",
         ko: "비율",
     },
-    total_quotas: {
-        en: "Total quotas",
-        ko: "총 쿼터",
+    max_quotas: {
+        en: "Max quotas",
+        ko: "최대 쿼터",
     },
     no_attributes: {
         en: "No attributes",
         ko: "속성이 없습니다",
+    },
+    ratio_warning: {
+        en: "The sum of max quotas exceeds total quotas. Some attributes may not reach their max quota.",
+        ko: "최대 쿼터의 합이 총 쿼터를 초과합니다. 일부 속성의 최대 쿼터가 충족되지 않을 수 있습니다.",
     },
     university: {
         en: "University",
@@ -191,6 +200,8 @@ pub fn PanelsTable(
     let mut toast = use_toast();
     let mut query = use_query_store();
     let mut editing_quotas = use_signal(HashMap::<String, String>::new);
+    let space = use_space();
+    let space_quota = space().quota;
 
     let visible_panels = panels
         .into_iter()
@@ -214,17 +225,39 @@ pub fn PanelsTable(
     rsx! {
         SpaceCard { class: "!p-6".to_string(),
             div { class: "flex flex-col gap-4 min-w-0",
-                h2 { class: "text-lg font-semibold text-panel-title", {tr.panels} }
+                div { class: "flex items-center gap-2",
+                    h2 { class: "text-lg font-semibold text-panel-title", {tr.panels} }
+                    Tooltip {
+                        TooltipTrigger {
+                            icons::help_support::Info {
+                                width: "16",
+                                height: "16",
+                                class: "h-4 w-4 [&>path]:stroke-text-secondary [&>circle]:fill-text-secondary cursor-help",
+                            }
+                        }
+                        TooltipContent {
+                            side: ContentSide::Bottom,
+                            align: ContentAlign::Start,
+                            {tr.conditional_desc}
+                        }
+                    }
+                }
 
                 div { class: "overflow-x-auto min-w-0",
-                    table { class: "w-full overflow-hidden rounded-xl border border-input-box-border text-sm",
+                    table { class: "w-full min-w-[640px] overflow-hidden rounded-xl border border-input-box-border text-sm",
                         thead { class: "bg-panel-container-bg text-panel-table-header",
                             tr {
-                                th { class: "px-4 py-3 text-left font-medium", {tr.attribute_group} }
-                                th { class: "px-4 py-3 text-left font-medium", {tr.attributes} }
-                                th { class: "px-4 py-3 text-right font-medium", {tr.ratio} }
-                                th { class: "px-4 py-3 text-center font-medium", {tr.total_quotas} }
-                                th { class: "px-4 py-3 text-right font-medium", "" }
+                                th { class: "px-4 py-3 text-left font-medium w-[15%]",
+                                    {tr.attribute_group}
+                                }
+                                th { class: "px-4 py-3 text-left font-medium w-[15%]",
+                                    {tr.attributes}
+                                }
+                                th { class: "px-4 py-3 text-center font-medium w-[10%]",
+                                    {tr.ratio}
+                                }
+                                th { class: "px-4 py-3 text-center font-medium", {tr.max_quotas} }
+                                th { class: "px-4 py-3 w-[48px]", "" }
                             }
                         }
                         tbody {
@@ -266,14 +299,14 @@ pub fn PanelsTable(
 
                                         rsx! {
                                             tr { key: "{panel.panel_id}", class: "border-t border-input-box-border",
-                                                td { class: "px-4 py-3 text-left font-medium text-text-primary",
+                                                td { class: "px-4 py-3 text-left font-medium text-text-primary w-[15%]",
                                                     {panel_group_label(&panel, &tr)}
                                                 }
-                                                td { class: "px-4 py-3 text-left text-text-primary", {panel_value_label(&panel, &tr)} }
-                                                td { class: "px-4 py-3 text-right text-text-secondary", "{ratio}%" }
+                                                td { class: "px-4 py-3 text-left text-text-primary w-[15%]", {panel_value_label(&panel, &tr)} }
+                                                td { class: "px-4 py-3 text-center text-text-secondary w-[10%]", "{ratio}%" }
                                                 td { class: "px-4 py-3 text-center",
                                                     Input {
-                                                        class: "w-20 h-9 !px-3 text-center text-sm font-semibold".to_string(),
+                                                        class: "w-full h-9 !px-3 text-center text-sm font-semibold".to_string(),
                                                         value: displayed_value,
                                                         oninput: move |evt: Event<FormData>| {
                                                             let digits = evt
@@ -350,7 +383,7 @@ pub fn PanelsTable(
                                                         },
                                                     }
                                                 }
-                                                td { class: "px-4 py-3 text-right",
+                                                td { class: "px-2 py-3 w-[48px]",
                                                     Button {
                                                         size: ButtonSize::Icon,
                                                         style: ButtonStyle::Text,
@@ -365,7 +398,8 @@ pub fn PanelsTable(
                                                             ];
                                                             let mut toast = toast;
                                                             spawn(async move {
-                                                                match delete_panel_quotas(space_id(), DeletePanelQuotaRequest { keys }).await {
+                                                                match delete_panel_quotas(space_id(), DeletePanelQuotaRequest { keys }).await
+                                                                {
                                                                     Ok(_) => query.invalidate(&panels_query_key),
                                                                     Err(err) => {
                                                                         error!("Failed to delete panel row: {:?}", err);
@@ -383,6 +417,12 @@ pub fn PanelsTable(
                                 }
                             }
                         }
+                    }
+                }
+
+                if space_quota > 0 && total_visible_quota > space_quota {
+                    div { class: "flex flex-row w-full justify-end items-end",
+                        p { class: "text-xs text-red-500 mt-1", {tr.ratio_warning} }
                     }
                 }
             }

@@ -23,14 +23,14 @@ translate! {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum PanelOption {
+pub enum PanelOption {
     University,
     Age,
     Gender,
 }
 
 impl PanelOption {
-    fn label(self, tr: &AttributeGroupsTranslate) -> String {
+    pub fn label(self, tr: &AttributeGroupsTranslate) -> String {
         match self {
             Self::University => tr.university.to_string(),
             Self::Age => tr.age.to_string(),
@@ -39,7 +39,7 @@ impl PanelOption {
     }
 }
 
-fn is_selected_option(option: PanelOption, panels: &[SpacePanelQuotaResponse]) -> bool {
+pub fn is_selected_option(option: PanelOption, panels: &[SpacePanelQuotaResponse]) -> bool {
     panels.iter().any(|panel| {
         panel_attributes(panel)
             .into_iter()
@@ -47,7 +47,44 @@ fn is_selected_option(option: PanelOption, panels: &[SpacePanelQuotaResponse]) -
     })
 }
 
-fn option_keys(option: PanelOption, panels: &[SpacePanelQuotaResponse]) -> Vec<DeletePanelKey> {
+pub fn is_collective_option(option: PanelOption, panels: &[SpacePanelQuotaResponse]) -> bool {
+    panels.iter().any(|panel| {
+        panel_attributes(panel).into_iter().any(|attribute| {
+            matches!(
+                (option, &attribute),
+                (
+                    PanelOption::University,
+                    PanelAttribute::CollectiveAttribute(CollectiveAttribute::University)
+                ) | (
+                    PanelOption::Age,
+                    PanelAttribute::CollectiveAttribute(CollectiveAttribute::Age)
+                ) | (
+                    PanelOption::Gender,
+                    PanelAttribute::CollectiveAttribute(CollectiveAttribute::Gender)
+                )
+            )
+        })
+    })
+}
+
+pub fn is_conditional_option(option: PanelOption, panels: &[SpacePanelQuotaResponse]) -> bool {
+    panels.iter().any(|panel| {
+        panel_attributes(panel).into_iter().any(|attribute| {
+            matches!(
+                (option, &attribute),
+                (
+                    PanelOption::Age,
+                    PanelAttribute::VerifiableAttribute(VerifiableAttribute::Age(_))
+                ) | (
+                    PanelOption::Gender,
+                    PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender(_))
+                )
+            )
+        })
+    })
+}
+
+pub fn option_keys(option: PanelOption, panels: &[SpacePanelQuotaResponse]) -> Vec<DeletePanelKey> {
     panels
         .iter()
         .filter(|panel| {
@@ -61,7 +98,7 @@ fn option_keys(option: PanelOption, panels: &[SpacePanelQuotaResponse]) -> Vec<D
         .collect()
 }
 
-fn panel_attributes(panel: &SpacePanelQuotaResponse) -> Vec<PanelAttribute> {
+pub fn panel_attributes(panel: &SpacePanelQuotaResponse) -> Vec<PanelAttribute> {
     if panel.attributes_vec.is_empty() && !matches!(panel.attributes, PanelAttribute::None) {
         vec![panel.attributes]
     } else {
@@ -90,83 +127,6 @@ fn matches_option(option: PanelOption, attribute: &PanelAttribute) -> bool {
     }
 }
 
-fn default_attributes(option: PanelOption, total_quota: i64) -> Vec<PanelAttributeWithQuota> {
-    match option {
-        PanelOption::University => {
-            vec![PanelAttributeWithQuota::CollectiveAttribute(
-                CollectiveAttribute::University,
-            )]
-        }
-        PanelOption::Age => {
-            let quotas = split_quotas(total_quota, 7);
-            vec![
-                PanelAttributeWithQuota::VerifiableAttribute(VerifiableAttributeWithQuota {
-                    attribute: VerifiableAttribute::Age(Age::Range {
-                        inclusive_min: 0,
-                        inclusive_max: 17,
-                    }),
-                    quota: quotas[0],
-                }),
-                PanelAttributeWithQuota::VerifiableAttribute(VerifiableAttributeWithQuota {
-                    attribute: VerifiableAttribute::Age(Age::Range {
-                        inclusive_min: 18,
-                        inclusive_max: 29,
-                    }),
-                    quota: quotas[1],
-                }),
-                PanelAttributeWithQuota::VerifiableAttribute(VerifiableAttributeWithQuota {
-                    attribute: VerifiableAttribute::Age(Age::Range {
-                        inclusive_min: 30,
-                        inclusive_max: 39,
-                    }),
-                    quota: quotas[2],
-                }),
-                PanelAttributeWithQuota::VerifiableAttribute(VerifiableAttributeWithQuota {
-                    attribute: VerifiableAttribute::Age(Age::Range {
-                        inclusive_min: 40,
-                        inclusive_max: 49,
-                    }),
-                    quota: quotas[3],
-                }),
-                PanelAttributeWithQuota::VerifiableAttribute(VerifiableAttributeWithQuota {
-                    attribute: VerifiableAttribute::Age(Age::Range {
-                        inclusive_min: 50,
-                        inclusive_max: 59,
-                    }),
-                    quota: quotas[4],
-                }),
-                PanelAttributeWithQuota::VerifiableAttribute(VerifiableAttributeWithQuota {
-                    attribute: VerifiableAttribute::Age(Age::Range {
-                        inclusive_min: 60,
-                        inclusive_max: 69,
-                    }),
-                    quota: quotas[5],
-                }),
-                PanelAttributeWithQuota::VerifiableAttribute(VerifiableAttributeWithQuota {
-                    attribute: VerifiableAttribute::Age(Age::Range {
-                        inclusive_min: 70,
-                        inclusive_max: u8::MAX,
-                    }),
-                    quota: quotas[6],
-                }),
-            ]
-        }
-        PanelOption::Gender => {
-            let default_quota = (total_quota.max(0) + 1) / 2;
-            vec![
-                PanelAttributeWithQuota::VerifiableAttribute(VerifiableAttributeWithQuota {
-                    attribute: VerifiableAttribute::Gender(Gender::Male),
-                    quota: default_quota,
-                }),
-                PanelAttributeWithQuota::VerifiableAttribute(VerifiableAttributeWithQuota {
-                    attribute: VerifiableAttribute::Gender(Gender::Female),
-                    quota: default_quota,
-                }),
-            ]
-        }
-    }
-}
-
 fn split_quotas(total_quota: i64, count: usize) -> Vec<i64> {
     let total_quota = total_quota.max(0);
     let base = total_quota / count as i64;
@@ -183,11 +143,10 @@ fn split_quotas(total_quota: i64, count: usize) -> Vec<i64> {
         .collect()
 }
 
-fn build_panel_groups(
+fn build_collective_groups(
     include_university: bool,
     include_age: bool,
     include_gender: bool,
-    total_quota: i64,
 ) -> Vec<CreatePanelQuotaGroupRequest> {
     let mut groups = vec![];
 
@@ -196,84 +155,124 @@ fn build_panel_groups(
             attributes_vec: vec![PanelAttribute::CollectiveAttribute(
                 CollectiveAttribute::University,
             )],
-            quota: 1_000_000_000,
+            quota: 0,
         });
     }
 
-    if include_age && include_gender {
-        let age_ranges = vec![
-            Age::Range {
-                inclusive_min: 0,
-                inclusive_max: 17,
-            },
-            Age::Range {
-                inclusive_min: 18,
-                inclusive_max: 29,
-            },
-            Age::Range {
-                inclusive_min: 30,
-                inclusive_max: 39,
-            },
-            Age::Range {
-                inclusive_min: 40,
-                inclusive_max: 49,
-            },
-            Age::Range {
-                inclusive_min: 50,
-                inclusive_max: 59,
-            },
-            Age::Range {
-                inclusive_min: 60,
-                inclusive_max: 69,
-            },
-            Age::Range {
-                inclusive_min: 70,
-                inclusive_max: u8::MAX,
-            },
-        ];
-        let quotas = split_quotas(total_quota, age_ranges.len() * 2);
+    if include_age {
+        groups.push(CreatePanelQuotaGroupRequest {
+            attributes_vec: vec![PanelAttribute::CollectiveAttribute(
+                CollectiveAttribute::Age,
+            )],
+            quota: 0,
+        });
+    }
 
-        for (age_idx, age_range) in age_ranges.into_iter().enumerate() {
-            for (gender_idx, gender) in [Gender::Male, Gender::Female].into_iter().enumerate() {
-                groups.push(CreatePanelQuotaGroupRequest {
-                    attributes_vec: vec![
-                        PanelAttribute::VerifiableAttribute(VerifiableAttribute::Age(age_range)),
-                        PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender(gender)),
-                    ],
-                    quota: quotas[age_idx * 2 + gender_idx],
-                });
-            }
-        }
-    } else if include_age {
-        groups.extend(
-            default_attributes(PanelOption::Age, total_quota)
-                .into_iter()
-                .map(|attribute| {
-                    let quota = attribute.quota();
-                    CreatePanelQuotaGroupRequest {
-                        attributes_vec: vec![attribute.into()],
-                        quota,
-                    }
-                }),
-        );
-    } else if include_gender {
-        groups.extend(
-            default_attributes(PanelOption::Gender, total_quota)
-                .into_iter()
-                .map(|attribute| {
-                    let quota = attribute.quota();
-                    CreatePanelQuotaGroupRequest {
-                        attributes_vec: vec![attribute.into()],
-                        quota,
-                    }
-                }),
-        );
+    if include_gender {
+        groups.push(CreatePanelQuotaGroupRequest {
+            attributes_vec: vec![PanelAttribute::CollectiveAttribute(
+                CollectiveAttribute::Gender,
+            )],
+            quota: 0,
+        });
     }
 
     groups
 }
 
-async fn rebuild_panels(
+pub fn build_conditional_groups(
+    option: PanelOption,
+    total_quota: i64,
+    include_gender_cross: bool,
+) -> Vec<CreatePanelQuotaGroupRequest> {
+    let mut groups = vec![];
+
+    match option {
+        PanelOption::Age => {
+            let age_ranges = vec![
+                Age::Range {
+                    inclusive_min: 0,
+                    inclusive_max: 17,
+                },
+                Age::Range {
+                    inclusive_min: 18,
+                    inclusive_max: 29,
+                },
+                Age::Range {
+                    inclusive_min: 30,
+                    inclusive_max: 39,
+                },
+                Age::Range {
+                    inclusive_min: 40,
+                    inclusive_max: 49,
+                },
+                Age::Range {
+                    inclusive_min: 50,
+                    inclusive_max: 59,
+                },
+                Age::Range {
+                    inclusive_min: 60,
+                    inclusive_max: 69,
+                },
+                Age::Range {
+                    inclusive_min: 70,
+                    inclusive_max: u8::MAX,
+                },
+            ];
+
+            if include_gender_cross {
+                let quotas = split_quotas(total_quota, age_ranges.len() * 2);
+                for (age_idx, age_range) in age_ranges.into_iter().enumerate() {
+                    for (gender_idx, gender) in
+                        [Gender::Male, Gender::Female].into_iter().enumerate()
+                    {
+                        groups.push(CreatePanelQuotaGroupRequest {
+                            attributes_vec: vec![
+                                PanelAttribute::VerifiableAttribute(VerifiableAttribute::Age(
+                                    age_range,
+                                )),
+                                PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender(
+                                    gender,
+                                )),
+                            ],
+                            quota: quotas[age_idx * 2 + gender_idx],
+                        });
+                    }
+                }
+            } else {
+                let quotas = split_quotas(total_quota, age_ranges.len());
+                for (idx, age_range) in age_ranges.into_iter().enumerate() {
+                    groups.push(CreatePanelQuotaGroupRequest {
+                        attributes_vec: vec![PanelAttribute::VerifiableAttribute(
+                            VerifiableAttribute::Age(age_range),
+                        )],
+                        quota: quotas[idx],
+                    });
+                }
+            }
+        }
+        PanelOption::Gender => {
+            let quotas = split_quotas(total_quota, 2);
+            groups.push(CreatePanelQuotaGroupRequest {
+                attributes_vec: vec![PanelAttribute::VerifiableAttribute(
+                    VerifiableAttribute::Gender(Gender::Male),
+                )],
+                quota: quotas[0],
+            });
+            groups.push(CreatePanelQuotaGroupRequest {
+                attributes_vec: vec![PanelAttribute::VerifiableAttribute(
+                    VerifiableAttribute::Gender(Gender::Female),
+                )],
+                quota: quotas[1],
+            });
+        }
+        PanelOption::University => {}
+    }
+
+    groups
+}
+
+pub async fn rebuild_panels(
     space_id: SpacePartition,
     keys: Vec<DeletePanelKey>,
     groups: Vec<CreatePanelQuotaGroupRequest>,
@@ -309,9 +308,9 @@ pub fn AttributeGroups(
     let has_university = is_selected_option(PanelOption::University, &panels);
     let has_age = is_selected_option(PanelOption::Age, &panels);
     let has_gender = is_selected_option(PanelOption::Gender, &panels);
-    let panels_query_key_for_university = panels_query_key.clone();
-    let panels_query_key_for_age = panels_query_key.clone();
-    let panels_query_key_for_gender = panels_query_key.clone();
+    let is_age_conditional = is_conditional_option(PanelOption::Age, &panels);
+    let is_gender_conditional = is_conditional_option(PanelOption::Gender, &panels);
+
     let managed_keys = {
         let mut keys = option_keys(PanelOption::University, &panels);
         keys.extend(option_keys(PanelOption::Age, &panels));
@@ -321,85 +320,64 @@ pub fn AttributeGroups(
         keys
     };
 
-    let on_toggle_university = {
-        let keys = managed_keys.clone();
-        move |_| {
-            let panels_query_key = panels_query_key_for_university.clone();
-            let keys = keys.clone();
+    let make_toggle = {
+        move |option: PanelOption| {
+            let keys = managed_keys.clone();
+            let panels_query_key = panels_query_key.clone();
             let mut toast = toast;
-            let next_university = !has_university;
-            let next_age = has_age;
-            let next_gender = has_gender;
-            spawn(async move {
-                let result = rebuild_panels(
-                    space_id(),
-                    keys,
-                    build_panel_groups(next_university, next_age, next_gender, current_quota),
-                )
-                .await;
+            let mut query = query;
 
-                match result {
-                    Ok(_) => query.invalidate(&panels_query_key),
-                    Err(err) => {
-                        error!("Failed to toggle university panel: {:?}", err);
-                        toast.error(err);
-                    }
-                }
-            });
-        }
-    };
-    let on_toggle_age = {
-        let keys = managed_keys.clone();
-        move |_| {
-            let panels_query_key = panels_query_key_for_age.clone();
-            let keys = keys.clone();
-            let mut toast = toast;
-            let next_university = has_university;
-            let next_age = !has_age;
-            let next_gender = has_gender;
-            spawn(async move {
-                let result = rebuild_panels(
-                    space_id(),
-                    keys,
-                    build_panel_groups(next_university, next_age, next_gender, current_quota),
-                )
-                .await;
+            let (next_uni, next_age, next_gender) = match option {
+                PanelOption::University => (!has_university, has_age, has_gender),
+                PanelOption::Age => (has_university, !has_age, has_gender),
+                PanelOption::Gender => (has_university, has_age, !has_gender),
+            };
 
-                match result {
-                    Ok(_) => query.invalidate(&panels_query_key),
-                    Err(err) => {
-                        error!("Failed to toggle age panels: {:?}", err);
-                        toast.error(err);
-                    }
-                }
-            });
-        }
-    };
-    let on_toggle_gender = {
-        let keys = managed_keys.clone();
-        move |_| {
-            let panels_query_key = panels_query_key_for_gender.clone();
-            let keys = keys.clone();
-            let mut toast = toast;
-            let next_university = has_university;
-            let next_age = has_age;
-            let next_gender = !has_gender;
-            spawn(async move {
-                let result = rebuild_panels(
-                    space_id(),
-                    keys,
-                    build_panel_groups(next_university, next_age, next_gender, current_quota),
-                )
-                .await;
+            let next_age_conditional = if option == PanelOption::Age {
+                false
+            } else {
+                is_age_conditional
+            };
+            let next_gender_conditional = if option == PanelOption::Gender {
+                false
+            } else {
+                is_gender_conditional
+            };
 
-                match result {
-                    Ok(_) => query.invalidate(&panels_query_key),
-                    Err(err) => {
-                        error!("Failed to toggle gender panels: {:?}", err);
-                        toast.error(err);
+            move |_| {
+                let keys = keys.clone();
+                let panels_query_key = panels_query_key.clone();
+                spawn(async move {
+                    let mut groups = build_collective_groups(
+                        next_uni,
+                        next_age && !next_age_conditional,
+                        next_gender && !next_gender_conditional,
+                    );
+
+                    if next_age && next_age_conditional {
+                        groups.extend(build_conditional_groups(
+                            PanelOption::Age,
+                            current_quota,
+                            next_gender_conditional,
+                        ));
                     }
-                }
-            });
+                    if next_gender && next_gender_conditional && !next_age_conditional {
+                        groups.extend(build_conditional_groups(
+                            PanelOption::Gender,
+                            current_quota,
+                            false,
+                        ));
+                    }
+
+                    match rebuild_panels(space_id(), keys, groups).await {
+                        Ok(_) => query.invalidate(&panels_query_key),
+                        Err(err) => {
+                            error!("Failed to toggle panel: {:?}", err);
+                            toast.error(err);
+                        }
+                    }
+                });
+            }
         }
     };
 
@@ -412,17 +390,17 @@ pub fn AttributeGroups(
                 AttributeButton {
                     label: PanelOption::University.label(&tr),
                     selected: has_university,
-                    onclick: on_toggle_university,
+                    onclick: make_toggle(PanelOption::University),
                 }
                 AttributeButton {
                     label: PanelOption::Age.label(&tr),
                     selected: has_age,
-                    onclick: on_toggle_age,
+                    onclick: make_toggle(PanelOption::Age),
                 }
                 AttributeButton {
                     label: PanelOption::Gender.label(&tr),
                     selected: has_gender,
-                    onclick: on_toggle_gender,
+                    onclick: make_toggle(PanelOption::Gender),
                 }
             }
         }

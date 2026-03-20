@@ -1,5 +1,6 @@
 use crate::common::chrono::{DateTime, Utc};
 use crate::features::spaces::pages::actions::*;
+use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
 use i18n::ActionCardTranslate;
 
 mod i18n;
@@ -8,6 +9,9 @@ mod i18n;
 pub fn ActionCard(action: SpaceActionSummary, space_id: SpacePartition) -> Element {
     let tr: ActionCardTranslate = use_translate();
     let nav = navigator();
+    let mut toast = use_toast();
+    let space = use_space();
+    let role = use_space_role()();
     let now = crate::common::utils::time::get_now_timestamp_millis();
 
     let period = format_action_period(action.started_at, action.ended_at);
@@ -56,13 +60,36 @@ pub fn ActionCard(action: SpaceActionSummary, space_id: SpacePartition) -> Eleme
     } else {
         action.description.clone()
     };
+    let is_closed = matches!(status, ActionStatus::Closed);
+    let card_class = if is_closed {
+        "flex flex-col w-full text-left border transition-colors cursor-pointer gap-[0.625rem] !rounded-[1rem] !bg-neutral-900 light:!bg-white !p-[0.9375rem] border-neutral-800 light:border-neutral-300 opacity-60"
+    } else {
+        "flex flex-col w-full text-left border transition-colors cursor-pointer gap-[0.625rem] !rounded-[1rem] !bg-neutral-900 light:!bg-white !p-[0.9375rem] border-neutral-800 light:border-neutral-300 light:hover:!bg-neutral-50 hover:!bg-neutral-800"
+    };
     rsx! {
         SpaceCard {
-            class: "flex flex-col w-full text-left border transition-colors cursor-pointer gap-[0.625rem] !rounded-[1rem] !bg-neutral-900 light:!bg-white !p-[0.9375rem] border-neutral-800 light:border-neutral-300 light:hover:!bg-neutral-50 hover:!bg-neutral-800"
-                .to_string(),
-            onclick: move |_| {
-                let url = url.clone();
-                nav.push(url);
+            class: card_class.to_string(),
+            onclick: {
+                move |_| {
+                    if role != SpaceUserRole::Creator {
+                        let enable_action = matches!(status, ActionStatus::Ongoing)
+                            && action.prerequisite;
+
+                        if !enable_action {
+                            let space_status = space().status;
+                            if !matches!(space_status, Some(SpaceStatus::Started)) {
+                                toast.error(crate::common::Error::SpaceNotStarted);
+                                return;
+                            }
+                            if matches!(status, ActionStatus::Closed) {
+                                toast.error(crate::common::Error::ActionEnded);
+                                return;
+                            }
+                        }
+                    }
+                    let url = url.clone();
+                    nav.push(url);
+                }
             },
 
             // Top: badges + date
