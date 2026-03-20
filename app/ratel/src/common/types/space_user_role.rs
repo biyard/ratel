@@ -137,29 +137,26 @@ async fn has_completed_discussion_action(
     action_id: &str,
     user_pk: &Partition,
 ) -> Result<bool> {
-    use crate::features::spaces::pages::actions::actions::discussion::{
-        SpacePostComment, SpacePostCommentQueryOption,
-    };
+    use crate::features::spaces::pages::actions::actions::discussion::SpacePostComment;
 
     let discussion_pk = Partition::SpacePost(action_id.to_string());
     let mut bookmark: Option<String> = None;
 
     loop {
-        let opt = if let Some(next_bookmark) = bookmark.clone() {
-            SpacePostCommentQueryOption::builder()
-                .bookmark(next_bookmark)
-                .limit(100)
+        let opt = if let Some(next_bookmark) = bookmark {
+            SpacePostComment::opt().bookmark(next_bookmark).limit(100)
         } else {
-            SpacePostCommentQueryOption::builder().limit(100)
+            SpacePostComment::opt().limit(100)
         };
 
-        let (comments, next_bookmark) = SpacePostComment::find_by_user_pk(cli, user_pk, opt)
-            .await
-            .map_err(|err| {
-                prerequisite_check_error("Failed to verify discussion prerequisite", err)
-            })?;
+        let (comments, next_bookmark) =
+            SpacePostComment::find_by_post_order_by_likes(cli, discussion_pk.clone(), opt)
+                .await
+                .map_err(|err| {
+                    prerequisite_check_error("Failed to verify discussion prerequisite", err)
+                })?;
 
-        if comments.iter().any(|comment| comment.pk == discussion_pk) {
+        if comments.iter().any(|comment| &comment.author_pk == user_pk) {
             return Ok(true);
         }
 
