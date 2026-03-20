@@ -89,7 +89,7 @@ export async function waitPopup(page, { visible = true }) {
 
 export async function goto(page, url) {
   await page.goto(url);
-  await page.waitForLoadState("domcontentloaded");
+  await page.waitForLoadState("networkidle");
   // Wait WASM to load
   await page.waitForFunction(
     () => document.querySelector("[data-dioxus-id]") !== null,

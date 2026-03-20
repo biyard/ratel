@@ -10,13 +10,16 @@ echo 'Waiting for LocalStack to be ready...'
 until aws dynamodb --endpoint-url=$ENDPOINT  list-tables >/dev/null 2>&1; do
     sleep 2
 done
-echo 'Deleting ratel-local-main table if exists...'
-aws --endpoint-url=$ENDPOINT dynamodb delete-table --table-name ratel-local-main 2>/dev/null && \
-  aws --endpoint-url=$ENDPOINT dynamodb wait table-not-exists --table-name ratel-local-main 2>/dev/null || true
+if [ "${RESET_DB}" = "true" ]; then
+  echo 'Deleting ratel-local-main table if exists...'
+  aws --endpoint-url=$ENDPOINT dynamodb delete-table --table-name ratel-local-main 2>/dev/null && \
+    aws --endpoint-url=$ENDPOINT dynamodb wait table-not-exists --table-name ratel-local-main 2>/dev/null || true
+fi
 
 echo 'Creating ratel-local table with GSIs...'
-aws --endpoint-url=$ENDPOINT dynamodb create-table --cli-input-json file:///scripts/dynamodb-schema.json
-echo 'ratel-local-main table and GSIs created successfully'
+aws --endpoint-url=$ENDPOINT dynamodb create-table --cli-input-json file:///scripts/dynamodb-schema.json 2>/dev/null || \
+  echo 'ratel-local-main table already exists, skipping creation'
+echo 'ratel-local-main table and GSIs ready'
 
 echo 'Waiting for LocalStack to be ready...'
 until aws --endpoint-url=$ENDPOINT sqs list-queues >/dev/null 2>&1; do

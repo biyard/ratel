@@ -134,6 +134,7 @@ services:
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-test}
       AWS_DEFAULT_REGION: ${AWS_REGION:-us-east-1}
       LOCALSTACK_ENDPOINT: http://localstack:4566
+      RESET_DB: ${RESET_DB:-false}
     volumes:
       - ./scripts:/scripts
     networks:

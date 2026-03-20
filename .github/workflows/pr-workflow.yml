@@ -444,6 +444,7 @@ jobs:
       - name: Setup test environment
         env:
           COMMIT: pr-${{ github.sha }}
+          RESET_DB: "true"
         run: |
           docker-compose --profile testing up -d
 
