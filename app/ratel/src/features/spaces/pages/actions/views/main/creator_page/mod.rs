@@ -44,7 +44,7 @@ pub fn CreatorActionPage(space_id: ReadSignal<SpacePartition>) -> Element {
                             icons::settings::Settings2 {
                                 width: "16",
                                 height: "16",
-                                class: "[&>path]:fill-web-font-ab-bk [&>circle]:stroke-web-font-ab-bk",
+                                class: "[&>path]:fill-web-font-ab-bk [&>circle]:stroke-web-font-ab-bk [&>circle]:fill-none",
                             }
                             span { {tr.button_settings_label} }
                         }
@@ -81,7 +81,7 @@ pub fn CreatorActionPage(space_id: ReadSignal<SpacePartition>) -> Element {
                             }
                             span { {tr.button_add_action_label} }
                         }
-
+                    
                     }
 
                     p { class: "font-semibold text-center text-[0.75rem]/[1rem] text-neutral-400 light:text-neutral-600",
@@ -102,7 +102,7 @@ pub fn CreatorActionPage(space_id: ReadSignal<SpacePartition>) -> Element {
                     }
                 }
             }
-
+        
         }
     }
 }
