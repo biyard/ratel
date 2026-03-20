@@ -1,4 +1,4 @@
-use super::super::views::RewardsPageTranslate;
+use super::super::views::{format_points, RewardsPageTranslate};
 use super::super::*;
 use crate::common::services::PointTransactionResponse;
 use crate::common::utils::time::time_ago;
@@ -29,50 +29,38 @@ pub fn transaction_item(
     rsx! {
         div {
             key: "{transaction.created_at}-{idx}",
-            class: "rounded border border-card-border bg-card-bg px-4 py-4",
-            div { class: "flex items-center justify-between w-full",
+            class: "rounded border border-[var(--web\\/card\\/stroke2,#262626)] p-5",
+            div { class: "flex items-end justify-between w-full",
                 div { class: "flex flex-col gap-0.5",
                     div { class: "flex items-center gap-2.5",
                         span { class: "{status_class}", "{status_label}" }
                         div { class: "flex items-center",
                             div { class: "w-5 h-5 rounded-full bg-primary mr-1" }
-                            span { class: "text-[15px] font-medium text-white", "{amount_label}" }
+                            span { class: "text-[15px] font-medium text-text-primary",
+                                "{amount_label}"
+                            }
                         }
                     }
-                    div { class: "flex items-center gap-2.5",
-                        span { class: "text-sm font-semibold text-text-primary", "{tr.from}" }
-                        div { class: "flex items-center gap-1",
-                            div { class: "w-3 h-3 rounded-full bg-bg" }
-                            span { class: "text-sm font-semibold text-white", "{description}" }
+                    div { class: "flex items-center gap-1",
+                        span { class: "text-sm font-semibold text-foreground-muted tracking-[0.5px]",
+                            "{tr.from}"
+                        }
+                        div { class: "w-5 h-5 rounded-full bg-foreground-muted" }
+                        span { class: "text-sm font-semibold text-text-primary tracking-[0.5px]",
+                            "{description}"
                         }
                     }
                 }
                 div { class: "flex items-center gap-1",
-                    span { class: "text-sm font-medium text-text-primary", "{time_ago_label}" }
+                    span { class: "text-sm font-medium text-foreground-muted tracking-[0.5px]",
+                        "{time_ago_label}"
+                    }
+                    lucide_dioxus::ExternalLink {
+                        size: 18,
+                        class: "[&>path]:stroke-foreground-muted [&>polyline]:stroke-foreground-muted [&>line]:stroke-foreground-muted",
+                    }
                 }
             }
         }
-    }
-}
-
-fn format_points(points: i64) -> String {
-    format_with_commas(points, None)
-}
-
-fn format_with_commas(value: i64, suffix: Option<&str>) -> String {
-    let sign = if value < 0 { "-" } else { "" };
-    let digits = value.abs().to_string();
-    let mut out = String::new();
-    for (idx, ch) in digits.chars().rev().enumerate() {
-        if idx > 0 && idx % 3 == 0 {
-            out.push(',');
-        }
-        out.push(ch);
-    }
-    let formatted: String = out.chars().rev().collect();
-    if let Some(suffix) = suffix {
-        format!("{}{}{}", sign, formatted, suffix)
-    } else {
-        format!("{}{}", sign, formatted)
     }
 }
