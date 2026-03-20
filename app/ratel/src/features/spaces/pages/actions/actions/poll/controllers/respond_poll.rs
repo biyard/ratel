@@ -17,6 +17,105 @@ struct PollMetadata {
     submitted_at_ms: i64,
 }
 
+#[cfg(feature = "server")]
+fn age_to_respondent_age(age: u32) -> crate::common::attribute::Age {
+    use crate::common::attribute::Age;
+
+    match age {
+        0..=17 => Age::Range {
+            inclusive_min: 0,
+            inclusive_max: 17,
+        },
+        18..=29 => Age::Range {
+            inclusive_min: 18,
+            inclusive_max: 29,
+        },
+        30..=39 => Age::Range {
+            inclusive_min: 30,
+            inclusive_max: 39,
+        },
+        40..=49 => Age::Range {
+            inclusive_min: 40,
+            inclusive_max: 49,
+        },
+        50..=59 => Age::Range {
+            inclusive_min: 50,
+            inclusive_max: 59,
+        },
+        60..=69 => Age::Range {
+            inclusive_min: 60,
+            inclusive_max: 69,
+        },
+        _ => Age::Range {
+            inclusive_min: 70,
+            inclusive_max: 100,
+        },
+    }
+}
+
+#[cfg(feature = "server")]
+fn respondent_from_panel_attributes(
+    attributes: &[crate::features::spaces::models::PanelAttribute],
+    verified_attributes: &crate::common::models::did::VerifiedAttributes,
+) -> Option<RespondentAttr> {
+    use crate::features::spaces::models::{CollectiveAttribute, PanelAttribute, VerifiableAttribute};
+
+    let mut respondent = RespondentAttr::default();
+
+    for attribute in attributes {
+        match attribute {
+            PanelAttribute::CollectiveAttribute(CollectiveAttribute::University) => {
+                respondent.school = verified_attributes
+                    .university
+                    .clone()
+                    .filter(|value| !value.is_empty());
+            }
+            PanelAttribute::CollectiveAttribute(CollectiveAttribute::Age) => {
+                respondent.age = verified_attributes.age().map(age_to_respondent_age);
+            }
+            PanelAttribute::CollectiveAttribute(CollectiveAttribute::Gender) => {
+                respondent.gender = verified_attributes.gender;
+            }
+            PanelAttribute::VerifiableAttribute(VerifiableAttribute::Age(age)) => {
+                respondent.age = Some(*age);
+            }
+            PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender(gender)) => {
+                respondent.gender = Some(*gender);
+            }
+            _ => {}
+        }
+    }
+
+    if respondent.is_empty() {
+        None
+    } else {
+        Some(respondent)
+    }
+}
+
+#[cfg(feature = "server")]
+async fn get_respondent_from_panels(
+    cli: &aws_sdk_dynamodb::Client,
+    space_pk: &Partition,
+    user_pk: &Partition,
+) -> Result<Option<RespondentAttr>> {
+    let (pk, sk) = crate::common::models::did::VerifiedAttributes::keys(user_pk);
+    let verified_attributes = crate::common::models::did::VerifiedAttributes::get(cli, pk, Some(sk))
+        .await?
+        .unwrap_or_default();
+    let matched_attributes = crate::features::spaces::controllers::panel_requirements::matched_panel_attributes(
+        cli,
+        space_pk,
+        &verified_attributes,
+    )
+    .await?;
+
+    Ok(respondent_from_panel_attributes(
+        &matched_attributes,
+        &verified_attributes,
+    ))
+}
+
 #[post("/api/spaces/{space_pk}/polls/{poll_sk}/respond", role: SpaceUserRole, author: SpaceAuthor, space: SpaceCommon)]
 pub async fn respond_poll(
     space_pk: SpacePartition,
@@ -111,11 +210,12 @@ pub async fn respond_poll(
             .execute(cli)
             .await?;
     } else {
+        let respondent = get_respondent_from_panels(cli, &space_pk, &author.pk).await?;
         let answer_record = SpacePollUserAnswer::new(
             space_pk.clone(),
             poll_sk_entity.clone(),
             req.answers,
-            None,
+            respondent,
             author,
         );
         answer_record.create(cli).await?;
