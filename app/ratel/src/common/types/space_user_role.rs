@@ -74,17 +74,36 @@ where
 
         let user = user.unwrap();
 
-        // NOTE: individual creator not a team.
+        // Individual creator check
         if user.pk == space.user_pk {
             parts.extensions.insert(SpaceUserRole::Creator);
             return Ok(SpaceUserRole::Creator);
         }
 
-        // TODO: Check team member
-
-        // Check participant
         let conf = config::ServerConfig::default();
         let cli = conf.dynamodb();
+
+        // Team admin check: if the space is owned by a team, check if the user
+        // has TeamAdmin permission within that team.
+        if matches!(&space.user_pk, Partition::Team(_)) {
+            use crate::features::posts::models::Team;
+            use crate::features::posts::types::TeamGroupPermission;
+
+            if Team::has_permission(
+                cli,
+                &space.user_pk,
+                &user.pk,
+                TeamGroupPermission::TeamAdmin,
+            )
+            .await
+            .unwrap_or(false)
+            {
+                parts.extensions.insert(SpaceUserRole::Creator);
+                return Ok(SpaceUserRole::Creator);
+            }
+        }
+
+        // Check participant
         let participant = SpaceParticipant::get(
             cli,
             CompositePartition(space.pk.clone(), user.pk.clone()),
