@@ -140,32 +140,43 @@ async fn has_completed_discussion_action(
     use crate::features::spaces::pages::actions::actions::discussion::SpacePostComment;
 
     let discussion_pk = Partition::SpacePost(action_id.to_string());
-    let mut bookmark: Option<String> = None;
+    let prefixes = [
+        EntityType::SpacePostComment(String::default()).to_string(),
+        EntityType::SpacePostCommentReply(String::default(), String::default()).to_string(),
+    ];
 
-    loop {
-        let opt = if let Some(next_bookmark) = bookmark {
-            SpacePostComment::opt().bookmark(next_bookmark).limit(100)
-        } else {
-            SpacePostComment::opt().limit(100)
-        };
+    for sk_prefix in prefixes {
+        let mut bookmark: Option<String> = None;
 
-        let (comments, next_bookmark) =
-            SpacePostComment::find_by_post_order_by_likes(cli, discussion_pk.clone(), opt)
+        loop {
+            let opt = if let Some(next_bookmark) = bookmark.clone() {
+                SpacePostComment::opt()
+                    .sk(sk_prefix.clone())
+                    .bookmark(next_bookmark)
+                    .limit(100)
+            } else {
+                SpacePostComment::opt().sk(sk_prefix.clone()).limit(100)
+            };
+
+            let (comments, next_bookmark) = SpacePostComment::find_by_user_pk(cli, user_pk, opt)
                 .await
                 .map_err(|err| {
                     prerequisite_check_error("Failed to verify discussion prerequisite", err)
                 })?;
 
-        if comments.iter().any(|comment| &comment.author_pk == user_pk) {
-            return Ok(true);
-        }
+            if comments.iter().any(|comment| comment.pk == discussion_pk) {
+                return Ok(true);
+            }
 
-        if next_bookmark.is_none() {
-            return Ok(false);
-        }
+            if next_bookmark.is_none() {
+                break;
+            }
 
-        bookmark = next_bookmark;
+            bookmark = next_bookmark;
+        }
     }
+
+    Ok(false)
 }
 
 #[cfg(feature = "server")]
