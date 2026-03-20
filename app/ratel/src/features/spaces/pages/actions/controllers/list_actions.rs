@@ -40,6 +40,17 @@ pub async fn list_actions(space_pk: SpacePartition) -> Result<Vec<SpaceActionSum
         }
     }
 
+    // Filter out actions that haven't started yet (for non-creators)
+    let now = crate::common::utils::time::get_now_timestamp_millis();
+    if !matches!(role, SpaceUserRole::Creator) {
+        actions.retain(|action| {
+            action
+                .started_at
+                .map(|started_at| now >= started_at)
+                .unwrap_or(false)
+        });
+    }
+
     // Sort by started_at descending
     actions.sort_by(|a, b| b.started_at.cmp(&a.started_at));
 

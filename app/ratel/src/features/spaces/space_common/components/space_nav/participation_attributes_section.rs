@@ -99,7 +99,7 @@ fn AttributeRequirementRow(
                 }
             }
 
-            div { class: "h-[60px] flex flex-1 flex-row flex-wrap items-center gap-1 rounded-[8px] px-[10px] py-[15px] {value_box_class} max-mobile:w-full",
+            div { class: "h-auto min-h-[60px] flex flex-1 flex-row flex-wrap items-center gap-1 rounded-[8px] px-[10px] py-[15px] {value_box_class} max-mobile:w-full",
                 for value in requirement.required_values.iter() {
                     RequirementValueTag {
                         value: value.clone(),
@@ -186,5 +186,10 @@ translate! {
     university: {
         en: "University",
         ko: "대학교",
+    },
+
+    verification_required: {
+        en: "Verification required",
+        ko: "인증 필요",
     },
 }

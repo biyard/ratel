@@ -1,3 +1,4 @@
+use crate::common::assets::RATEL_LOGO;
 use crate::features::auth::context::UserContext;
 use crate::features::auth::controllers::login::{
     login_handler, wallet_check_handler, wallet_nonce_handler, LoginRequest, WalletCheckRequest,
@@ -17,7 +18,7 @@ enum WalletStep {
 }
 
 #[component]
-pub fn LoginModal() -> Element {
+pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Element {
     let tr: LoginModalTranslate = use_translate();
     let mut email = use_signal(|| String::new());
     let mut password = use_signal(|| String::new());
@@ -33,7 +34,7 @@ pub fn LoginModal() -> Element {
     let handle_open_signup = move |_| {
         popup.close();
         popup.open(rsx! {
-            SignupModal {}
+            SignupModal { on_success }
         });
     };
 
@@ -76,6 +77,9 @@ pub fn LoginModal() -> Element {
                     #[cfg(feature = "membership")]
                     membership: None,
                 });
+                if let Some(handler) = &on_success {
+                    handler.call(());
+                }
                 popup.close();
             }
             Err(e) => {
@@ -109,12 +113,15 @@ pub fn LoginModal() -> Element {
                             #[cfg(feature = "membership")]
                             membership: None,
                         });
+                        if let Some(handler) = &on_success {
+                            handler.call(());
+                        }
                         popup.close();
                     }
                     Err(Error::Unauthorized(_)) => {
                         popup.close();
                         popup.open(rsx! {
-                            SignupModal { initial_email: oauth_email }
+                            SignupModal { initial_email: oauth_email, on_success }
                         });
                     }
                     Err(e) => {
@@ -164,7 +171,7 @@ pub fn LoginModal() -> Element {
                 loading.set(false);
                 popup.close();
                 popup.open(rsx! {
-                    SignupModal { initial_wallet_address: Some(connect_result.address) }
+                    SignupModal { initial_wallet_address: Some(connect_result.address), on_success }
                 });
                 return;
             }
@@ -212,6 +219,9 @@ pub fn LoginModal() -> Element {
                         #[cfg(feature = "membership")]
                         membership: None,
                     });
+                    if let Some(handler) = &on_success {
+                        handler.call(());
+                    }
                     popup.close();
                 }
                 Err(e) => {
@@ -258,6 +268,12 @@ pub fn LoginModal() -> Element {
                     crate::common::components::LoadingIndicator { class: "size-8" }
                 }
             }
+            img {
+                src: RATEL_LOGO,
+                alt: "Ratel",
+                class: "h-10 object-contain",
+            }
+
             div { class: "flex flex-col gap-4 w-full",
                 div { class: "flex flex-row gap-1 justify-start items-center w-full text-sm",
                     label { class: "font-medium text-text-primary", {tr.new_user} }

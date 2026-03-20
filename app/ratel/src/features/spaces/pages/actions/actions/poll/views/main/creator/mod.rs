@@ -51,6 +51,34 @@ pub fn PollCreatorPage(
                             }
                         },
                     }
+
+                    // Encrypted Upload toggle
+                    Card { class: "mt-4",
+                        div { class: "flex justify-between items-center self-stretch py-4 px-5 border-b border-separator",
+                            p { class: "font-semibold text-center font-raleway text-[17px]/[20px] tracking-[-0.18px] text-text-primary",
+                                {tr.encrypted_upload_title}
+                            }
+                        }
+                        div { class: "flex flex-row justify-between items-center self-stretch p-5 gap-[10px]",
+                            p { class: "font-normal leading-6 font-raleway text-[15px] tracking-[0.5px] text-foreground-muted",
+                                {tr.encrypted_upload_desc}
+                            }
+                            Switch {
+                                active: ctx.poll().encrypted_upload_enabled,
+                                on_toggle: move |_| async move {
+                                    let enabled = !ctx.poll().encrypted_upload_enabled;
+                                    let _ = update_poll(
+                                            space_id(),
+                                            poll_id(),
+                                            UpdatePollRequest::CanisterUploadEnabled {
+                                                canister_upload_enabled: enabled,
+                                            },
+                                        )
+                                        .await;
+                                },
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -79,5 +107,15 @@ translate! {
     tab_setting: {
         en: "Settings",
         ko: "설정",
+    }
+
+    encrypted_upload_title: {
+        en: "Encrypted Upload",
+        ko: "암호화 업로드",
+    }
+
+    encrypted_upload_desc: {
+        en: "Encrypt vote results and store on-chain for transparency. Once enabled, responses cannot be edited after submission.",
+        ko: "투표 결과를 암호화하여 온체인에 저장합니다. 활성화하면 제출 후 응답을 수정할 수 없습니다.",
     }
 }

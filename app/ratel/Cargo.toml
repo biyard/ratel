@@ -93,9 +93,10 @@ dioxus-primitives = { git = "https://github.com/DioxusLabs/components", version 
 time = { version = "0.3.47", features = ["formatting"] }
 ic-agent = { version = "0.46", optional = true }
 candid = { version = "0.10", optional = true }
-sampling = { path = "../../packages/sampling", default-features = false, features = [
+ratel-canister = { path = "../../packages/ratel-canister", default-features = false, features = [
   "dto",
 ], optional = true }
+attr-voting = { path = "../../packages/attr-voting", optional = true }
 mimetype-detector = "0.3.6"
 lambda_runtime = { version = "1.1.1", optional = true }
 
@@ -130,10 +131,11 @@ server = [
   "names",
   "random-string",
   "reqwest",
-  "sampling",
+  "ratel-canister",
   "schemars",
   "serde_dynamo",
   "sha2",
+  "attr-voting",
   "sha3",
   "ssi",
   "tokio",
