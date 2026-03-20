@@ -1,4 +1,6 @@
-use super::components::{exchange_preview_card, points_summary_card, transaction_list};
+use super::components::{
+    exchange_preview_card, points_summary_card, transaction_list, PointsBarChart,
+};
 use super::controllers::{get_rewards_handler, list_point_transactions_handler};
 use super::dto::RewardsResponse;
 use crate::common::services::PointTransactionResponse;
@@ -131,6 +133,14 @@ pub fn Home(username: String) -> Element {
     rsx! {
         div { class: "w-full max-w-desktop mx-auto px-4 py-6",
             {points_summary_card(&tr, &rewards, estimated_tokens)}
+
+            div { class: "mt-6 border-t border-separator pt-6",
+                PointsBarChart {
+                    transactions: transactions.read().clone(),
+                    month: month.clone(),
+                }
+            }
+
             {exchange_preview_card(&tr, &rewards, estimated_tokens)}
 
             div { class: "mt-6",
@@ -160,17 +170,17 @@ pub fn Home(username: String) -> Element {
     }
 }
 
-fn format_points(points: i64) -> String {
+pub fn format_points(points: i64) -> String {
     format_with_commas(points, None)
 }
 
-fn format_tokens(tokens: f64) -> String {
+pub fn format_tokens(tokens: f64) -> String {
     let formatted = format!("{:.2}", tokens);
     let trimmed = formatted.trim_end_matches('0').trim_end_matches('.');
     format_with_commas_str(trimmed)
 }
 
-fn format_with_commas(value: i64, suffix: Option<&str>) -> String {
+pub fn format_with_commas(value: i64, suffix: Option<&str>) -> String {
     let sign = if value < 0 { "-" } else { "" };
     let digits = value.abs().to_string();
     let mut out = String::new();
@@ -188,7 +198,7 @@ fn format_with_commas(value: i64, suffix: Option<&str>) -> String {
     }
 }
 
-fn format_with_commas_str(value: &str) -> String {
+pub fn format_with_commas_str(value: &str) -> String {
     let (sign, raw) = if let Some(stripped) = value.strip_prefix('-') {
         ("-", stripped)
     } else {
