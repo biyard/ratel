@@ -1,6 +1,7 @@
 ENV ?= dev
 BASE_DOMAIN ?= ratel.foundation
 DOMAIN ?= $(ENV).$(BASE_DOMAIN)
+COMMIT ?= $(shell git rev-parse --short HEAD)
 
 HOSTED_ZONE_ID ?= $(shell aws route53 list-hosted-zones-by-name --dns-name $(BASE_DOMAIN) --query "HostedZones[0].Id" --output text | cut -d'/' -f3)
 COMMIT ?= $(shell git rev-parse --short HEAD)
@@ -62,3 +63,9 @@ node_modules:
 
 infra: .build/evm-keys
 	docker compose --profile infra up -d --remove-orphans
+
+testing: .build/evm-keys
+	COMMIT=$(COMMIT) docker compose --profile testing up -d --remove-orphans
+
+clean-infra:
+	docker compose --profile infra down
