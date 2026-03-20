@@ -114,7 +114,7 @@ pub async fn list_team_posts_handler(
     let (posts, bookmark) = Post::find_by_user_and_status(cli, &team_pk, query_options).await?;
 
     let posts = if let Some(ref cat) = category {
-        posts.into_iter().filter(|p| p.category.as_deref() == Some(cat.as_str())).collect::<Vec<_>>()
+        posts.into_iter().filter(|p| p.categories.iter().any(|c| c == cat.as_str())).collect::<Vec<_>>()
     } else {
         posts
     };
