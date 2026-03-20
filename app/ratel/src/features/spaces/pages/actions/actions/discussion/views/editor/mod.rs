@@ -130,7 +130,7 @@ pub fn DiscussionActionEditorPage(
                         "Content"
                     }
                     textarea {
-                        class: "py-3 px-4 w-full text-sm text-white rounded-lg border resize-y min-h-[300px] bg-neutral-800 light:bg-neutral-100 border-neutral-700 light:border-neutral-300 light:text-neutral-900 placeholder-neutral-500",
+                        class: "py-3 px-4 w-full text-sm text-text-primary rounded-lg border resize-y min-h-[300px] bg-neutral-800 light:bg-neutral-100 border-neutral-700 light:border-neutral-300 placeholder-neutral-500",
                         placeholder: "Write your discussion content...",
                         value: "{html_contents}",
                         oninput: move |e| html_contents.set(e.value()),

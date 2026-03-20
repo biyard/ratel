@@ -147,6 +147,10 @@ html[data-theme="light"] {
   --table-selection-bg: var(--dark, var(--blue-selection))
     var(--light, var(--table-light-selection));
 
+  /* Tiptap editor content colors */
+  --content-base: var(--dark, #ffffff) var(--light, #262626);
+  --content-muted: var(--dark, #999999) var(--light, #737373);
+
   /* ================================
      LEGACY TOKENS (Deprecated - for migration only)
      ================================ */
@@ -277,6 +281,7 @@ html[data-theme="light"] {
   --color-quiz-upload-card-border: var(--dark, #262626) var(--light, #e5e5e5);
   --color-quiz-upload-meta: var(--dark, #8c8c8c) var(--light, #525252);
   --color-quiz-upload-helper: var(--dark, #a3a3a3) var(--light, #525252);
+  --color-quiz-upload-cta-bg: var(--dark, #ffffff) var(--light, #171717);
   --color-quiz-upload-cta-icon: #737373;
   --color-quiz-upload-cta-text: var(--dark, #0a0a0a) var(--light, #ffffff);
   --color-quiz-upload-view-bg: var(--dark, #ffffff) var(--light, #404040);
