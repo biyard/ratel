@@ -18,6 +18,11 @@ translate! {
         ko: "멤버십",
     },
 
+    rewards: {
+        en: "Rewards",
+        ko: "보상",
+    },
+
     sign_in: {
         en: "Sign In",
         ko: "로그인",
@@ -70,6 +75,20 @@ pub fn AppMenu() -> Element {
                         icon: rsx! {
                             i::MembershipIcon {}
                         },
+                    }
+
+                    if let Some(user) = user_ctx().user.as_ref() {
+                        SidebarMenuItem {
+                            Link {
+                                to: format!("/{}/rewards", user.username),
+                                class: "flex gap-2 items-center py-1.5 w-full text-sm rounded-md aria-extended:px-2 sidebar-menu-button hover:bg-accent/10",
+                                "aria-extended": collapsed,
+                                i::RewardsIcon {}
+                                if !collapsed {
+                                    span { "{tr.rewards}" }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -237,9 +256,9 @@ fn ProfileButton(collapsed: bool) -> Element {
                     let profile_url = profile_url.clone();
                     let display_name = display_name.clone();
                     let avatar_class = if collapsed {
-                        "w-8 h-8 rounded-full object-cover"
+                        "w-8 aspect-square rounded-full object-cover"
                     } else {
-                        "w-5 h-5 rounded-full object-cover"
+                        "w-5 aspect-square rounded-full object-cover"
                     };
                     let placeholder_class = if collapsed {
                         "w-8 h-8 bg-neutral-500 rounded-full"

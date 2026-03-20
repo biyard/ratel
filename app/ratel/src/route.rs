@@ -123,13 +123,13 @@ pub enum Route {
 
             #[cfg(feature = "social")]
             #[nest("/:username")]
+                #[route("/rewards")]
+                UserRewards { username: String },
                 #[layout(SocialLayout)]
                     #[route("/")]
                     UserHomeRoot { username: String },
                     #[route("/posts")]
                     UserPosts { username: String },
-                    #[route("/rewards")]
-                    UserRewards { username: String },
                     #[route("/memberships")]
                     UserMemberships { username: String },
                     #[route("/drafts")]
