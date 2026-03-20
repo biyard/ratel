@@ -89,10 +89,13 @@ export async function waitPopup(page, { visible = true }) {
 
 export async function goto(page, url) {
   await page.goto(url);
-  await page.waitForLoadState("networkidle");
-  // Wait WASM to load
+  await page.waitForLoadState("load");
+  // Wait for Dioxus WASM to hydrate — SSR markup may already contain
+  // [data-dioxus-id], so also verify the interpreter is initialised.
   await page.waitForFunction(
-    () => document.querySelector("[data-dioxus-id]") !== null,
+    () =>
+      document.querySelector("[data-dioxus-id]") !== null &&
+      typeof window.interpreter !== "undefined",
   );
 }
 
