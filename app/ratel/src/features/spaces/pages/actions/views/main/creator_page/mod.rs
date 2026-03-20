@@ -1,4 +1,5 @@
 use super::*;
+use dioxus_primitives::{ContentAlign, ContentSide};
 use i18n::CreatorActionPageTranslate;
 
 mod i18n;
@@ -16,7 +17,17 @@ pub fn CreatorActionPage(space_id: ReadSignal<SpacePartition>) -> Element {
 
             div { class: "flex flex-col gap-2.5 mx-auto w-full max-w-[1024px]",
                 div { class: "flex justify-between items-center w-full max-mobile:flex-col max-mobile:items-stretch max-mobile:gap-3",
-                    h3 { {tr.title} }
+                    div { class: "flex items-center gap-2",
+                        h3 { {tr.title} }
+                        Tooltip {
+                            TooltipTrigger {
+                                icons::help_support::Info { width: "16", height: "16", class: "h-4 w-4 [&>path]:stroke-text-secondary [&>circle]:fill-text-secondary cursor-help" }
+                            }
+                            TooltipContent { side: ContentSide::Bottom, align: ContentAlign::Start,
+                                {tr.title_tooltip}
+                            }
+                        }
+                    }
 
                     Button {
                         size: ButtonSize::Medium,

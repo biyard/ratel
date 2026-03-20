@@ -1,4 +1,4 @@
-use crate::common::models::space::SpaceCommon;
+use crate::common::models::space::{SpaceAuthor, SpaceCommon};
 use crate::features::spaces::pages::actions::actions::quiz::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -9,7 +9,7 @@ pub struct RespondQuizRequest {
 #[post(
     "/api/spaces/{space_pk}/quizzes/{quiz_id}/respond",
     role: SpaceUserRole,
-    user: crate::features::auth::User,
+    author: SpaceAuthor,
     space: SpaceCommon
 )]
 pub async fn respond_quiz(
@@ -63,14 +63,14 @@ pub async fn respond_quiz(
     }
 
     let attempts =
-        SpaceQuizAttempt::list_by_quiz_user(cli, &quiz_id, &user.pk, quiz.retry_count as i32)
+        SpaceQuizAttempt::list_by_quiz_user(cli, &quiz_id, &author.pk, quiz.retry_count as i32)
             .await?;
     if attempts.len() as i64 >= quiz.retry_count {
         return Err(Error::BadRequest("No remaining submissions".into()));
     }
 
     let score = calculate_score(&quiz.questions, &correct.answers, &req.answers)?;
-    let attempt = SpaceQuizAttempt::new(quiz_id.clone(), user.pk.clone(), req.answers, score);
+    let attempt = SpaceQuizAttempt::new(quiz_id.clone(), author, req.answers, score);
     attempt.create(cli).await?;
 
     if attempts.is_empty() {
