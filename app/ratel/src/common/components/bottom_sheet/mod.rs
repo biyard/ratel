@@ -29,14 +29,15 @@ pub fn BottomSheet(
     }
 
     rsx! {
+        document::Link { rel: "stylesheet", href: asset!("./style.css") }
         // Backdrop
         div {
-            class: "fixed inset-0 z-40 bg-black/50 transition-opacity",
+            class: "bottom-sheet-backdrop",
             onclick: move |e| on_close.call(e),
         }
         // Panel
         div {
-            class: "fixed bottom-0 left-0 right-0 z-50 flex flex-col gap-4 p-5 bg-background rounded-t-xl border-t border-border animate-slide-up {class}",
+            class: "bottom-sheet-panel {class}",
             {children}
         }
     }
