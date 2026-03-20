@@ -234,6 +234,7 @@ fn ProfileButton(collapsed: bool) -> Element {
     rsx! {
         div { class: "relative",
             SidebarMenuButton {
+                "aria-label": "User Profile",
                 r#as: Callback::new(move |attrs: Vec<Attribute>| {
                     let profile_url = profile_url.clone();
                     let display_name = display_name.clone();
