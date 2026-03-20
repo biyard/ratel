@@ -65,7 +65,7 @@ infra: .build/evm-keys
 	docker compose --profile infra up -d --remove-orphans
 
 testing: .build/evm-keys
-	COMMIT=$(COMMIT) docker compose --profile testing up -d --remove-orphans
+	COMMIT=$(COMMIT) RESET_DB=true docker compose --profile testing up -d --remove-orphans
 
 clean-infra:
 	docker compose --profile infra down
