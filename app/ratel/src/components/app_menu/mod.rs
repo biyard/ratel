@@ -252,9 +252,14 @@ fn ProfileButton(collapsed: bool) -> Element {
                     } else {
                         "w-5 h-5 bg-neutral-500 rounded-full"
                     };
+                    let aria_label = if collapsed {
+                        Some(tr.user_profile.to_string())
+                    } else {
+                        None
+                    };
                     rsx! {
                         button {
-                            "aria-label": "{tr.user_profile}",
+                            "aria-label": aria_label,
                             onclick: move |_| {
                                 open.set(!open());
                             },
