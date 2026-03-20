@@ -1,4 +1,5 @@
 use crate::features::spaces::space_common::*;
+mod mobile_more_panel;
 mod participation_attributes_section;
 mod participation_card;
 mod participation_credential_section;
@@ -11,6 +12,7 @@ mod space_user_login;
 mod space_user_profile;
 
 use crate::common::models::User;
+pub use mobile_more_panel::*;
 pub use participation_attributes_section::*;
 pub use participation_card::*;
 pub use participation_credential_section::*;
@@ -35,6 +37,9 @@ pub fn SpaceNav(
     credential_path: Option<String>,
     #[props(default)] class: String,
 ) -> Element {
+    let mut show_more_panel = use_signal(|| false);
+    let is_logged_in = user.is_some();
+
     rsx! {
         div { class: "flex z-40 flex-col gap-2.5 justify-between pt-2.5 w-full h-full divide-y shrink-0 divide-divider {class} max-tablet:flex-row max-tablet:h-16 max-tablet:items-stretch max-tablet:jstify-around",
             div { class: "flex flex-col gap-2.5 pb-4 w-full",
@@ -54,6 +59,13 @@ pub fn SpaceNav(
                 div { class: "flex flex-col gap-1.5 items-start px-4 pt-2.5 font-bold text-xs/[14px] max-tablet:flex-row max-tablet:items-stretch max-tablet:justify-around max-tablet:p-0",
                     for item in menus.iter() {
                         NavItem { item: item.clone() }
+                    }
+                    // Mobile-only "More" tab
+                    MobileMoreTab {
+                        is_open: show_more_panel(),
+                        onclick: move |_| {
+                            show_more_panel.set(!show_more_panel());
+                        },
                     }
                 }
             }
@@ -79,6 +91,20 @@ pub fn SpaceNav(
                 }
 
                 SpaceThemeToggle {}
+            }
+        }
+
+        // Mobile "More" panel overlay
+        if show_more_panel() {
+            MobileMorePanel {
+                is_logged_in,
+                on_close: move |_| {
+                    show_more_panel.set(false);
+                },
+                on_login: move |_| {
+                    show_more_panel.set(false);
+                    login_handler.call(());
+                },
             }
         }
     }
