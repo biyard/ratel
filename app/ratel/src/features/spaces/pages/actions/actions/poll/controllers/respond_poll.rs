@@ -1,5 +1,6 @@
 use crate::common::models::space::{SpaceAuthor, SpaceCommon};
 use crate::features::spaces::pages::actions::actions::poll::*;
+use crate::features::spaces::pages::actions::models::SpaceAction;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RespondPollRequest {
@@ -24,17 +25,35 @@ pub async fn respond_poll(
 ) -> Result<RespondPollResponse> {
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
+    let space_id = space_pk.clone();
     let space_pk: Partition = space_pk.into();
-    let poll_sk_entity: EntityType = poll_sk.into();
-    if !space.is_active() {
-        return Err(Error::BadRequest("Space is not active".into()));
-    }
+    let poll_sk_entity: EntityType = poll_sk.clone().into();
 
     let poll = SpacePoll::get(cli, &space_pk, Some(poll_sk_entity.clone()))
         .await?
         .ok_or(Error::NotFound("Poll not found".into()))?;
 
-    poll.can_respond(&role)?;
+    let space_action = SpaceAction::get(
+        cli,
+        &CompositePartition(space_id, poll_sk.to_string()),
+        Some(EntityType::SpaceAction),
+    )
+    .await?
+    .ok_or(Error::SpaceActionNotFound)?;
+
+    if !crate::features::spaces::pages::actions::can_execute_space_action(
+        role,
+        space_action.prerequisite,
+        space.status,
+    ) {
+        return Err(Error::BadRequest(
+            "Poll is not available in the current space status".into(),
+        ));
+    }
+
+    if poll.status() != PollStatus::InProgress {
+        return Err(Error::BadRequest("Poll is not in progress".into()));
+    }
 
     if !validate_answers(poll.questions.clone(), req.answers.clone()) {
         return Err(Error::BadRequest("Answers do not match questions".into()));
