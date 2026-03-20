@@ -108,6 +108,14 @@ pub fn ActionCard(action: SpaceActionSummary, space_id: SpacePartition) -> Eleme
                             {status_label}
                         }
                     }
+
+                    if action.prerequisite {
+                        Badge {
+                            color: BadgeColor::Red,
+                            variant: BadgeVariant::Rounded,
+                            {tr.prerequisite}
+                        }
+                    }
                 }
 
                 if let Some(period) = period {
