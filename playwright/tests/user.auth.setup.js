@@ -7,7 +7,7 @@ test("create storage state", async ({ page }) => {
 
   await goto(page, "/");
 
-  await click(page, { role: "button", label: "Sign In" });
+  await click(page, { label: "Sign In" });
   await fill(page, { placeholder: "Enter your email address" }, email);
   await click(page, { text: "Continue" });
   await fill(page, { placeholder: "Enter your password" }, password);

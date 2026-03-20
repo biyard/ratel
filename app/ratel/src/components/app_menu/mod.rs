@@ -113,7 +113,7 @@ pub fn AppMenu() -> Element {
                             r#as: Callback::new(move |attrs: Vec<Attribute>| {
                                 rsx! {
                                     button {
-                                        "aria-label": "Sign In",
+                                        "aria-label": "{tr.sign_in}",
                                         onclick: move |_| {
                                             popup.open(rsx! {
                                                 LoginModal {}
