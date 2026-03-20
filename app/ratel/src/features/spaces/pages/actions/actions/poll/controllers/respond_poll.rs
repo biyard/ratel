@@ -1,4 +1,6 @@
 use crate::common::models::space::{SpaceAuthor, SpaceCommon};
+#[cfg(feature = "server")]
+use crate::features::spaces::space_common::models::space_reward::SpaceReward;
 use crate::features::spaces::pages::actions::actions::poll::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -24,6 +26,8 @@ pub async fn respond_poll(
 ) -> Result<RespondPollResponse> {
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
+    let space_partition = space_pk.clone();
+    let poll_action_id = poll_sk.to_string(); // UUID only, matches SpaceReward action_id
     let space_pk: Partition = space_pk.into();
     let poll_sk_entity: EntityType = poll_sk.into();
     if !space.is_active() {
@@ -92,6 +96,7 @@ pub async fn respond_poll(
             .execute(cli)
             .await?;
     } else {
+        let author_pk = author.pk.clone();
         let answer_record = SpacePollUserAnswer::new(
             space_pk.clone(),
             poll_sk_entity.clone(),
@@ -111,6 +116,41 @@ pub async fn respond_poll(
                 &space_pk, 1,
             );
         crate::transact_write_items!(cli, vec![agg_item]).ok();
+
+        match SpaceReward::get_by_action(
+            cli,
+            space_partition.clone(),
+            poll_action_id.clone(),
+            RewardUserBehavior::RespondPoll,
+        )
+        .await
+        {
+            Ok(space_reward) => {
+                if let Err(e) = SpaceReward::award(
+                    cli,
+                    &space_reward,
+                    author_pk,
+                    Some(space.user_pk.clone()),
+                )
+                .await
+                {
+                    tracing::error!(
+                        space_pk = %space_partition,
+                        action_id = %poll_sk_entity,
+                        error = %e,
+                        "Failed to award poll reward"
+                    );
+                }
+            }
+            Err(e) => {
+                tracing::warn!(
+                    space_pk = %space_partition,
+                    action_id = %poll_sk_entity,
+                    error = %e,
+                    "SpaceReward not found for poll action"
+                );
+            }
+        }
     }
 
     Ok(RespondPollResponse {})

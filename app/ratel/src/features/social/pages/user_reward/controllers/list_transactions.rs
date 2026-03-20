@@ -20,14 +20,6 @@ async fn fetch_transactions(
     Ok(res)
 }
 
-#[get("/api/me/points/transactions?month&bookmark", user: crate::features::auth::User)]
-pub async fn list_point_transactions_handler(
-    month: Option<String>,
-    bookmark: Option<String>,
-) -> Result<ListTransactionsResponse> {
-    fetch_transactions(user.pk.clone(), month, bookmark).await
-}
-
 #[get("/api/users/points/transactions?username&month&bookmark")]
 pub async fn list_user_transactions_handler(
     username: String,

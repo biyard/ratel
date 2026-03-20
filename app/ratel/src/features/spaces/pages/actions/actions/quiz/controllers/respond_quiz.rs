@@ -1,4 +1,6 @@
 use crate::common::models::space::SpaceCommon;
+#[cfg(feature = "server")]
+use crate::features::spaces::space_common::models::space_reward::SpaceReward;
 use crate::features::spaces::pages::actions::actions::quiz::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -21,6 +23,7 @@ pub async fn respond_quiz(
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let space_id = space_pk;
+    let quiz_action_id = quiz_id.to_string(); // UUID only, matches SpaceReward action_id
     let space_pk: Partition = space_id.clone().into();
     let quiz_sk: EntityType = quiz_id.clone().into();
     if !space.is_active() {
@@ -33,7 +36,7 @@ pub async fn respond_quiz(
 
     let space_action = crate::features::spaces::pages::actions::models::SpaceAction::get(
         cli,
-        &CompositePartition(space_id, quiz_id.clone()),
+        &CompositePartition(space_id.clone(), quiz_id.clone()),
         Some(EntityType::SpaceAction),
     )
     .await?
@@ -72,6 +75,41 @@ pub async fn respond_quiz(
             .increase_user_response_count(1)
             .execute(cli)
             .await?;
+
+        match SpaceReward::get_by_action(
+            cli,
+            space_id.clone(),
+            quiz_action_id.clone(),
+            RewardUserBehavior::QuizAnswer,
+        )
+        .await
+        {
+            Ok(space_reward) => {
+                if let Err(e) = SpaceReward::award(
+                    cli,
+                    &space_reward,
+                    user.pk.clone(),
+                    Some(space.user_pk.clone()),
+                )
+                .await
+                {
+                    tracing::error!(
+                        space_pk = %space_id,
+                        action_id = %quiz_sk,
+                        error = %e,
+                        "Failed to award quiz reward"
+                    );
+                }
+            }
+            Err(e) => {
+                tracing::warn!(
+                    space_pk = %space_id,
+                    action_id = %quiz_sk,
+                    error = %e,
+                    "SpaceReward not found for quiz action"
+                );
+            }
+        }
     }
 
     Ok("success".to_string())

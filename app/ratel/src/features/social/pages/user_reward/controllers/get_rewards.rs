@@ -25,11 +25,6 @@ async fn fetch_rewards(
     })
 }
 
-#[get("/api/me/points?month", user: crate::features::auth::User)]
-pub async fn get_rewards_handler(month: Option<String>) -> Result<RewardsResponse> {
-    fetch_rewards(user.pk.clone(), month).await
-}
-
 #[get("/api/users/points?username&month")]
 pub async fn get_user_rewards_handler(
     username: String,
