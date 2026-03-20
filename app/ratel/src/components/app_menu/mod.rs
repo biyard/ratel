@@ -32,6 +32,11 @@ translate! {
         en: "Log Out",
         ko: "로그아웃",
     },
+
+    user_profile: {
+        en: "User Profile",
+        ko: "사용자 프로필",
+    },
 }
 
 #[component]
@@ -234,7 +239,6 @@ fn ProfileButton(collapsed: bool) -> Element {
     rsx! {
         div { class: "relative",
             SidebarMenuButton {
-                "aria-label": "User Profile",
                 r#as: Callback::new(move |attrs: Vec<Attribute>| {
                     let profile_url = profile_url.clone();
                     let display_name = display_name.clone();
@@ -250,6 +254,7 @@ fn ProfileButton(collapsed: bool) -> Element {
                     };
                     rsx! {
                         button {
+                            "aria-label": "{tr.user_profile}",
                             onclick: move |_| {
                                 open.set(!open());
                             },
