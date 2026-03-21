@@ -30,6 +30,7 @@ export default defineConfig({
   use: {
     baseURL: CONFIGS.BASE_URL,
     navigationTimeout: CONFIGS.TIMEOUT,
+    locale: "en-US",
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on",
     video: "on",

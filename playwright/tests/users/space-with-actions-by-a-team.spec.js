@@ -28,11 +28,7 @@ test.describe.serial("Space with actions created by a team", () => {
 
     // Open profile dropdown by clicking the user profile button in the navbar
     // Target the button specifically by its accessible name (img alt + text)
-    const profileTrigger = page.getByRole("button", {
-      name: "User Profile",
-    });
-    await profileTrigger.click();
-    await page.waitForLoadState("networkidle");
+    await click(page, { label: "User Profile" });
 
     // Step 2: Click "Create Team" in the dropdown
     await click(page, { text: "Create Team" });
@@ -254,9 +250,9 @@ test.describe.serial("Space with actions created by a team", () => {
     const textInputs = page.locator('input[type="text"]:visible');
 
     // Fill the question title
-    await textInputs.nth(0).fill(
-      "What is the primary purpose of governance in a DAO?",
-    );
+    await textInputs
+      .nth(0)
+      .fill("What is the primary purpose of governance in a DAO?");
 
     // Edit the default option texts
     await textInputs.nth(1).fill("To centralize power");
@@ -283,9 +279,9 @@ test.describe.serial("Space with actions created by a team", () => {
     // After adding Q2 the text input ordering becomes:
     //   [0] Q1 title, [1-3] Q1 options (3 total),
     //   [4] Q2 title (placeholder "Input"), [5] Q2 option 1, [6] Q2 option 2
-    await textInputs.nth(4).fill(
-      "Which of the following are benefits of decentralized governance?",
-    );
+    await textInputs
+      .nth(4)
+      .fill("Which of the following are benefits of decentralized governance?");
     await textInputs.nth(5).fill("Transparency");
     await textInputs.nth(6).fill("Community participation");
 

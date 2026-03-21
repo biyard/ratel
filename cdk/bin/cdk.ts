@@ -3,8 +3,6 @@ import { RegionalServiceStack } from "../lib/regional-service-stack";
 import { GlobalAccelStack } from "../lib/global-accel-stack";
 import { GlobalTableStack } from "../lib/dynamodb-stack";
 import { DynamoStreamEventStack } from "../lib/dynamo-stream-event";
-import { StaticStack } from "../lib/static-stack";
-import { DaemonStack } from "../lib/daemon-stack";
 import { QdrantStack } from "../lib/qdrant-stack";
 import { RegionalLambdaStack } from "../lib/regional-lambda-stack";
 import { EcsClusterStack } from "../lib/ecs-cluster-stack";
@@ -53,15 +51,15 @@ new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {
   namespace: escStack.namespace,
 });
 
-new DaemonStack(app, `ratel-${env}-daemon-ap-northeast-2`, {
-  env: {
-    account: awsAccount,
-    region: "ap-northeast-2",
-  },
-  commit: process.env.COMMIT!,
-  vpc: escStack.vpc,
-  cluster: escStack.cluster,
-});
+// new DaemonStack(app, `ratel-${env}-daemon-ap-northeast-2`, {
+//   env: {
+//     account: awsAccount,
+//     region: "ap-northeast-2",
+//   },
+//   commit: process.env.COMMIT!,
+//   vpc: escStack.vpc,
+//   cluster: escStack.cluster,
+// });
 
 new QdrantStack(app, `ratel-${env}-qdrant-ap-northeast-2`, {
   env: {
