@@ -851,3 +851,9 @@ pub enum MyEnum {
 ```
 
 Use `let lang = use_language();` in the component, then `{value.translate(&lang())}` in RSX.
+
+## Agent Workflow Rules
+
+### PR Comment Resolver
+
+When the `pr-comment-resolver` agent resolves PR review comments, it must save the review feedback as project-scoped memories so that Claude Code and the `github-issue-resolver` agent can reference and apply those learnings in future work. This prevents the same review feedback from being repeated across PRs.
