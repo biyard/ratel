@@ -2,7 +2,7 @@ use super::*;
 
 #[component]
 pub fn AnonymousSetting() -> Element {
-    let space = use_space();
+    let mut space = use_space();
     let tr: GeneralTranslate = use_translate();
     let mut toast = use_toast();
     let mut loading = use_signal(|| false);
@@ -30,19 +30,22 @@ pub fn AnonymousSetting() -> Element {
                         }
                         loading.set(true);
                         let space_id = space().id;
+                        let next_anonymous = !enable_anonymous;
                         let result = update_space(
                                 space_id,
                                 UpdateSpaceRequest::Anonymous {
-                                    anonymous_participation: !enable_anonymous,
+                                    anonymous_participation: next_anonymous,
                                 },
                             )
                             .await;
                         loading.set(false);
                         match result {
                             Ok(_) => {
+                                space.with_mut(|s| s.anonymous_participation = next_anonymous);
                                 toast.info(tr.anonymous_updated_successfully);
                             }
                             Err(err) => {
+                                space.with_mut(|s| s.anonymous_participation = enable_anonymous);
                                 toast.error(err);
                             }
                         }
