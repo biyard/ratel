@@ -146,7 +146,7 @@ async fn fetch_category_row(
                 .to_post_like_key()
                 .expect("to_post_like_key");
             let liked = likes.iter().any(|like| like.pk == post_like_pk);
-            PostResponse::from((Some(user.clone()), post)).with_like(liked)
+            PostResponse::from(post).with_like(liked)
         })
         .collect();
 
