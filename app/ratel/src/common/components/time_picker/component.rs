@@ -11,6 +11,14 @@ pub fn TimePicker(
     let mut selected_hour = use_signal(move || hour);
     let mut selected_minute = use_signal(move || minute);
 
+    // Sync internal state when props change from parent (e.g., auto-adjusted end time).
+    use_effect(move || {
+        selected_hour.set(hour);
+    });
+    use_effect(move || {
+        selected_minute.set(minute);
+    });
+
     let display = format!("{:02}:{:02}", selected_hour(), selected_minute());
 
     rsx! {
