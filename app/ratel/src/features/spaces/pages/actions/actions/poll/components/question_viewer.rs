@@ -261,7 +261,7 @@ fn SingleChoiceViewer(
                     rsx! {
                         button {
                             class: "relative flex min-h-[88px] w-full items-center overflow-hidden rounded-xl text-left transition-all",
-                            class: if is_selected { "bg-gradient-to-r from-primary/80 to-primary shadow-[0_8px_20px_rgba(0,0,0,0.2)]" } else { "bg-gradient-to-r from-primary/40 to-primary/60 hover:from-primary/50 hover:to-primary/70" },
+                            class: if is_selected { "bg-gradient-to-r from-primary/80 to-primary shadow-[0_8px_20px_rgba(0,0,0,0.2)] ring-2 ring-primary/90" } else { "bg-neutral-800/60 hover:bg-neutral-700/60 light:bg-neutral-100 light:hover:bg-neutral-200" },
                             class: if disabled { "cursor-not-allowed opacity-60" } else { "cursor-pointer" },
                             disabled,
                             onclick: move |_| {
@@ -272,11 +272,24 @@ fn SingleChoiceViewer(
                                         other: None,
                                     })
                             },
-                            div { class: "absolute inset-y-0 left-0 w-[72px] bg-primary" }
+                            if is_selected {
+                                div { class: "absolute inset-y-0 left-0 w-[72px] bg-primary" }
+                            } else {
+                                div { class: "absolute inset-y-0 left-0 w-[72px] bg-neutral-700/40 light:bg-neutral-300/40" }
+                            }
                             div { class: "relative z-10 flex w-full items-center justify-between px-5 py-4",
                                 div { class: "w-10 shrink-0" }
-                                span { class: "text-[20px] font-semibold tracking-[0.2px] text-text-third", "{option}" }
-                                div { class: "w-10 shrink-0" }
+                                span {
+                                    class: if is_selected { "text-[20px] font-semibold tracking-[0.2px] text-text-third" } else { "text-[20px] font-semibold tracking-[0.2px] text-text-primary" },
+                                    "{option}"
+                                }
+                                div { class: "flex w-10 shrink-0 items-center justify-center",
+                                    if is_selected {
+                                        div { class: "flex size-6 items-center justify-center rounded-full bg-white",
+                                            icons::validations::Check { class: "size-4 [&>path]:stroke-primary" }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -315,7 +328,7 @@ fn MultipleChoiceViewer(
                     rsx! {
                         button {
                             class: "relative flex min-h-[88px] w-full items-center overflow-hidden rounded-xl text-left transition-all",
-                            class: if is_selected { "bg-gradient-to-r from-primary/80 to-primary shadow-[0_8px_20px_rgba(0,0,0,0.2)]" } else { "bg-gradient-to-r from-primary/40 to-primary/60 hover:from-primary/50 hover:to-primary/70" },
+                            class: if is_selected { "bg-gradient-to-r from-primary/80 to-primary shadow-[0_8px_20px_rgba(0,0,0,0.2)] ring-2 ring-primary/90" } else { "bg-neutral-800/60 hover:bg-neutral-700/60 light:bg-neutral-100 light:hover:bg-neutral-200" },
                             class: if disabled { "cursor-not-allowed opacity-60" } else { "cursor-pointer" },
                             disabled,
                             onclick: move |_| {
@@ -332,11 +345,24 @@ fn MultipleChoiceViewer(
                                     }
                                     )
                             },
-                            div { class: "absolute inset-y-0 left-0 w-[72px] bg-primary" }
+                            if is_selected {
+                                div { class: "absolute inset-y-0 left-0 w-[72px] bg-primary" }
+                            } else {
+                                div { class: "absolute inset-y-0 left-0 w-[72px] bg-neutral-700/40 light:bg-neutral-300/40" }
+                            }
                             div { class: "relative z-10 flex w-full items-center justify-between px-5 py-4",
                                 div { class: "w-10 shrink-0" }
-                                span { class: "text-[20px] font-semibold tracking-[0.2px] text-text-third", "{option}" }
-                                div { class: "w-10 shrink-0" }
+                                span {
+                                    class: if is_selected { "text-[20px] font-semibold tracking-[0.2px] text-text-third" } else { "text-[20px] font-semibold tracking-[0.2px] text-text-primary" },
+                                    "{option}"
+                                }
+                                div { class: "flex w-10 shrink-0 items-center justify-center",
+                                    if is_selected {
+                                        div { class: "flex size-6 items-center justify-center rounded-full bg-white",
+                                            icons::validations::Check { class: "size-4 [&>path]:stroke-primary" }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -475,9 +501,9 @@ fn CheckboxViewer(
                             },
                             div {
                                 class: "w-4 h-4 rounded border-2 flex items-center justify-center",
-                                class: if is_selected { "border-blue-500 bg-blue-500" } else { "border-neutral-500 light:border-input-box-border" },
+                                class: if is_selected { "border-primary bg-primary" } else { "border-neutral-500 light:border-input-box-border" },
                                 if is_selected {
-                                    span { class: "text-white text-xs", "v" }
+                                    icons::validations::Check { class: "size-3 [&>path]:stroke-white" }
                                 }
                             }
                             span { class: "text-sm text-neutral-300 light:text-text-primary", "{option}" }
