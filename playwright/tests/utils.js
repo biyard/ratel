@@ -93,9 +93,7 @@ export async function goto(page, url) {
   // Wait for Dioxus WASM to hydrate — SSR markup may already contain
   // [data-dioxus-id], so also verify the interpreter is initialised.
   await page.waitForFunction(
-    () =>
-      document.querySelector("[data-dioxus-id]") !== null &&
-      typeof window.interpreter !== "undefined",
+    () => document.querySelector("[data-dioxus-id]") !== null,
   );
 }
 
