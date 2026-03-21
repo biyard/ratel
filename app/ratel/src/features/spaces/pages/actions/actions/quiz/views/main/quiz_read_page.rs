@@ -296,30 +296,30 @@ pub fn QuizReadPage(
                 div { class: "w-full",
                     if !is_in_progress {
                         if now < quiz.started_at {
-                            div { class: "rounded-lg bg-neutral-800 light:bg-neutral-100 p-3 text-sm text-neutral-400 light:text-neutral-600",
+                            div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
                                 {i18n.quiz_not_started}
                             }
                         } else {
-                            div { class: "rounded-lg bg-neutral-800 light:bg-neutral-100 p-3 text-sm text-neutral-400 light:text-neutral-600",
+                            div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
                                 {i18n.quiz_ended}
                             }
                         }
                     }
 
-                    if is_in_progress && !can_execute_action && can_respond {
-                        div { class: "rounded-lg bg-neutral-800 light:bg-neutral-100 p-3 text-sm text-neutral-400 light:text-neutral-600",
+                    if is_in_progress && !can_execute_action {
+                        div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
                             {i18n.no_permission}
                         }
                     }
 
                     if is_in_progress && can_execute_action && has_passed {
-                        div { class: "rounded-lg bg-green-900/30 light:bg-green-50 p-3 text-sm text-green-400 light:text-green-700",
+                        div { class: "rounded-lg bg-banner-success-bg p-3 text-sm text-banner-success-text",
                             {i18n.already_passed}
                         }
                     }
 
                     if is_in_progress && can_execute_action && !has_passed && quiz.attempt_count >= quiz.retry_count && can_respond {
-                        div { class: "rounded-lg bg-neutral-800 light:bg-neutral-100 p-3 text-sm text-neutral-400 light:text-neutral-600",
+                        div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
                             {i18n.no_remaining_attempts}
                         }
                     }
