@@ -15,3 +15,6 @@ pub use respond_poll::*;
 
 mod get_poll_result;
 pub use get_poll_result::*;
+
+mod verify_vote;
+pub use verify_vote::*;

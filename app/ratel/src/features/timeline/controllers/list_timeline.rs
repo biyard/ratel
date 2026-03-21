@@ -99,9 +99,11 @@ async fn fetch_category_row(
         });
     }
 
-    // Batch get the actual posts
+    // Batch get the actual posts (deduplicate keys for BatchGetItem)
+    let mut seen = std::collections::HashSet::new();
     let post_keys: Vec<(Partition, EntityType)> = entries
         .iter()
+        .filter(|entry| seen.insert(entry.post_pk.to_string()))
         .map(|entry| (entry.post_pk.clone(), EntityType::Post))
         .collect();
 
@@ -113,22 +115,24 @@ async fn fetch_category_row(
         .map(|p| (p.pk.to_string(), p))
         .collect();
 
-    // Get like status for the user
+    // Get like status for the user (deduplicate)
+    let mut seen_posts = std::collections::HashSet::new();
     let ordered_posts: Vec<Post> = entries
         .iter()
+        .filter(|entry| seen_posts.insert(entry.post_pk.to_string()))
         .filter_map(|entry| post_map.get(&entry.post_pk.to_string()).cloned())
         .collect();
 
     let likes = if !ordered_posts.is_empty() {
-        PostLike::batch_get(
-            cli,
-            ordered_posts
-                .iter()
-                .map(|post| PostLike::keys(&post.pk, &user.pk))
-                .collect(),
-        )
-        .await
-        .unwrap_or_default()
+        let mut seen_likes = std::collections::HashSet::new();
+        let like_keys: Vec<_> = ordered_posts
+            .iter()
+            .filter(|post| seen_likes.insert(post.pk.to_string()))
+            .map(|post| PostLike::keys(&post.pk, &user.pk))
+            .collect();
+        PostLike::batch_get(cli, like_keys)
+            .await
+            .unwrap_or_default()
     } else {
         vec![]
     };

@@ -64,8 +64,78 @@ pub struct Post {
 
     pub urls: Vec<String>,
 
-    #[serde(default)]
-    pub category: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_categories", alias = "category")]
+    pub categories: Vec<String>,
+}
+
+/// Backward-compatible deserializer: accepts both a single string (old format)
+/// and an array of strings (new format).
+fn deserialize_categories<'de, D>(deserializer: D) -> std::result::Result<Vec<String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    use serde::de;
+
+    struct CategoriesVisitor;
+
+    impl<'de> de::Visitor<'de> for CategoriesVisitor {
+        type Value = Vec<String>;
+
+        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            formatter.write_str("a string or an array of strings")
+        }
+
+        fn visit_str<E>(self, v: &str) -> std::result::Result<Vec<String>, E>
+        where
+            E: de::Error,
+        {
+            if v.is_empty() {
+                Ok(vec![])
+            } else {
+                Ok(vec![v.to_string()])
+            }
+        }
+
+        fn visit_string<E>(self, v: String) -> std::result::Result<Vec<String>, E>
+        where
+            E: de::Error,
+        {
+            if v.is_empty() {
+                Ok(vec![])
+            } else {
+                Ok(vec![v])
+            }
+        }
+
+        fn visit_none<E>(self) -> std::result::Result<Vec<String>, E>
+        where
+            E: de::Error,
+        {
+            Ok(vec![])
+        }
+
+        fn visit_unit<E>(self) -> std::result::Result<Vec<String>, E>
+        where
+            E: de::Error,
+        {
+            Ok(vec![])
+        }
+
+        fn visit_seq<A>(self, mut seq: A) -> std::result::Result<Vec<String>, A::Error>
+        where
+            A: de::SeqAccess<'de>,
+        {
+            let mut result = Vec::new();
+            while let Some(val) = seq.next_element::<String>()? {
+                if !val.is_empty() {
+                    result.push(val);
+                }
+            }
+            Ok(result)
+        }
+    }
+
+    deserializer.deserialize_any(CategoriesVisitor)
 }
 
 #[cfg(feature = "server")]
@@ -117,7 +187,7 @@ impl Post {
             rewards: None,
             urls: vec![],
             space_visibility: None,
-            category: None,
+            categories: vec![],
         }
     }
 

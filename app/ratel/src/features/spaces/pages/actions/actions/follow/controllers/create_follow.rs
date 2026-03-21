@@ -1,16 +1,14 @@
 use crate::common::models::space::SpaceCommon;
-use crate::features::posts::models::Team;
 use crate::features::spaces::pages::actions::actions::follow::models::*;
 use crate::features::spaces::pages::actions::actions::follow::*;
 
 #[post(
     "/api/spaces/{space_pk}/follows",
     role: SpaceUserRole,
-    user: crate::features::auth::User
+    user: crate::features::auth::User,
+    space: SpaceCommon
 )]
 pub async fn create_follow(space_pk: SpacePartition) -> Result<SpaceFollowAction> {
-    use crate::features::auth::{User, UserQueryOption};
-
     SpaceFollowAction::can_edit(&role)?;
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
@@ -28,7 +26,11 @@ pub async fn create_follow(space_pk: SpacePartition) -> Result<SpaceFollowAction
         SpaceActionFollowEntityType::from(follow.sk.clone()).to_string(),
         crate::features::spaces::pages::actions::types::SpaceActionType::Follow,
     );
-    space_action.title = user.username.clone();
+    space_action.title = if space.author_display_name.is_empty() {
+        space.author_username
+    } else {
+        space.author_display_name
+    };
     let items = vec![
         follow.create_transact_write_item(),
         space_action.create_transact_write_item(),

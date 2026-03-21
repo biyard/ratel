@@ -1,0 +1,23 @@
+{
+  "canisters": {
+    "ratel-canister": {
+      "candid": ".build/did/ratel-canister.did",
+      "package": "ratel-canister",
+      "type": "rust",
+      "optimize": "cycles"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "networks": {
+    "stage": { "providers": ["https://icp0.io"], "type": "persistent" },
+    "dev": { "providers": ["http://icp.dev.biyard.co:4943"], "type": "persistent" },
+    "test": { "providers": ["http://icp.dev.biyard.co:4943"], "type": "ephemeral" }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}

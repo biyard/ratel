@@ -123,6 +123,16 @@ pub async fn send_email_code_handler(
     let cli = crate::features::auth::config::get().dynamodb();
     let ses = crate::features::auth::config::get().ses();
 
+    // Check if email is already registered
+    let (existing_users, _) =
+        User::find_by_email(cli, &email, UserQueryOption::builder().limit(1)).await?;
+    if !existing_users.is_empty() {
+        return Err(Error::Duplicate(format!(
+            "Email already registered: {}. Please use Forgot Password instead.",
+            email
+        )));
+    }
+
     let (verification_list, _) = EmailVerification::find_by_email(
         cli,
         &email,

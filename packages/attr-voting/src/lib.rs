@@ -136,4 +136,71 @@ mod tests {
         let decrypted = decrypt_vote(&auth_sk, &encrypted).unwrap();
         assert_eq!(decrypted.choice, "yes");
     }
+
+    #[test]
+    fn test_user_key_serialization_roundtrip() {
+        let authority = VotingAuthority::setup();
+        let voter_attrs = UserAttributes::voter("blind-tag-abc123");
+        let voter_sk = authority.generate_user_key(&voter_attrs).unwrap();
+
+        let json = VotingAuthority::serialize_key(&voter_sk).unwrap();
+        let restored_sk = VotingAuthority::deserialize_key(&json).unwrap();
+
+        let payload = VotePayload {
+            choice: "yes".to_string(),
+            metadata: None,
+        };
+        let encrypted =
+            encrypt_vote(&authority.public_key, "blind-tag-abc123", &payload).unwrap();
+        let decrypted = decrypt_vote(&restored_sk, &encrypted).unwrap();
+        assert_eq!(decrypted.choice, "yes");
+    }
+
+    #[test]
+    fn test_blind_attr_prevents_raw_id_linkage() {
+        let authority = VotingAuthority::setup();
+
+        // Encrypt with a blinded attribute (HMAC-derived tag)
+        let blind_tag = "a7f3b2c1e4d5f6";
+        let payload = VotePayload {
+            choice: "yes".to_string(),
+            metadata: None,
+        };
+        let encrypted = encrypt_vote(&authority.public_key, blind_tag, &payload).unwrap();
+
+        // Key with the matching blind attr can decrypt
+        let voter_attrs = UserAttributes::voter(blind_tag);
+        let voter_sk = authority.generate_user_key(&voter_attrs).unwrap();
+        let decrypted = decrypt_vote(&voter_sk, &encrypted).unwrap();
+        assert_eq!(decrypted.choice, "yes");
+
+        // Key with the raw user ID cannot decrypt
+        let raw_attrs = UserAttributes::voter("alice");
+        let raw_sk = authority.generate_user_key(&raw_attrs).unwrap();
+        assert!(decrypt_vote(&raw_sk, &encrypted).is_err());
+    }
+
+    #[test]
+    fn test_encrypted_vote_from_json_backward_compat() {
+        let authority = VotingAuthority::setup();
+        let auth_sk = authority
+            .generate_user_key(&UserAttributes::authority())
+            .unwrap();
+
+        let payload = VotePayload {
+            choice: "compat".to_string(),
+            metadata: None,
+        };
+        let encrypted = encrypt_vote(&authority.public_key, "compat-tag", &payload).unwrap();
+
+        let wrapped_json = serde_json::to_string(&encrypted).unwrap();
+        let parsed_wrapped = vote::EncryptedVote::from_json(&wrapped_json).unwrap();
+        let wrapped_decrypted = decrypt_vote(&auth_sk, &parsed_wrapped).unwrap();
+        assert_eq!(wrapped_decrypted.choice, "compat");
+
+        let legacy_json = serde_json::to_string(&encrypted.ciphertext).unwrap();
+        let parsed_legacy = vote::EncryptedVote::from_json(&legacy_json).unwrap();
+        let legacy_decrypted = decrypt_vote(&auth_sk, &parsed_legacy).unwrap();
+        assert_eq!(legacy_decrypted.choice, "compat");
+    }
 }
