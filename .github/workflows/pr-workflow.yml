@@ -14,48 +14,48 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  space-stream-worker:
-    runs-on: ubuntu-22.04
-    defaults:
-      run:
-        working-directory: packages/space-stream-worker
+  # space-stream-worker:
+  #   runs-on: ubuntu-22.04
+  #   defaults:
+  #     run:
+  #       working-directory: packages/space-stream-worker
 
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         submodules: recursive
+  #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
-      - name: Restore build cache
-        uses: actions/cache/restore@v4
-        with:
-          key: space-stream-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}-${{ github.run_id }}
-          restore-keys: |
-            space-stream-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
-            space-stream-worker-build-${{ runner.os }}-
-            space-stream-worker-build-
-          path: |
-            packages/space-stream-worker/target
+  #     - name: Restore build cache
+  #       uses: actions/cache/restore@v4
+  #       with:
+  #         key: space-stream-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}-${{ github.run_id }}
+  #         restore-keys: |
+  #           space-stream-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
+  #           space-stream-worker-build-${{ runner.os }}-
+  #           space-stream-worker-build-
+  #         path: |
+  #           packages/space-stream-worker/target
 
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          components: clippy, rustfmt
-          toolchain: stable
-          cache: false
+  #     - uses: actions-rust-lang/setup-rust-toolchain@v1
+  #       with:
+  #         components: clippy, rustfmt
+  #         toolchain: stable
+  #         cache: false
 
-      - name: Build space-stream-worker
-        env:
-          AWS_ACCOUNT_ID: 000000000000
-          AWS_ACCESS_KEY_ID: test
-          AWS_SECRET_ACCESS_KEY: test
-          AWS_REGION: ap-northeast-2
-          ENV: test
-          DOMAIN: dev.ratel.foundation
-          DYNAMO_TABLE_PREFIX: ratel-test
-          DYNAMO_ENDPOINT: http://localhost:4566
-          PRIVATE_BUCKET_NAME: metadata.ratel.foundation
-        run: |
-          cargo build --release
+  #     - name: Build space-stream-worker
+  #       env:
+  #         AWS_ACCOUNT_ID: 000000000000
+  #         AWS_ACCESS_KEY_ID: test
+  #         AWS_SECRET_ACCESS_KEY: test
+  #         AWS_REGION: ap-northeast-2
+  #         ENV: test
+  #         DOMAIN: dev.ratel.foundation
+  #         DYNAMO_TABLE_PREFIX: ratel-test
+  #         DYNAMO_ENDPOINT: http://localhost:4566
+  #         PRIVATE_BUCKET_NAME: metadata.ratel.foundation
+  #       run: |
+  #         cargo build --release
 
   contracts-test:
     runs-on: ubuntu-latest
@@ -80,121 +80,121 @@ jobs:
         run: |
           make test
 
-  survey-worker-lambda:
-    runs-on: ubuntu-22.04
+  # survey-worker-lambda:
+  #   runs-on: ubuntu-22.04
 
-    defaults:
-      run:
-        working-directory: packages/survey-worker
+  #   defaults:
+  #     run:
+  #       working-directory: packages/survey-worker
 
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         submodules: recursive
+  #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
-      - name: Restore build cache
-        uses: actions/cache/restore@v4
-        with:
-          key: survey-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}-${{ github.run_id }}
-          restore-keys: |
-            survey-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
-            survey-worker-build-${{ runner.os }}-
-            survey-worker-build-
-          path: |
-            packages/survey-worker/target
+  #     - name: Restore build cache
+  #       uses: actions/cache/restore@v4
+  #       with:
+  #         key: survey-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}-${{ github.run_id }}
+  #         restore-keys: |
+  #           survey-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
+  #           survey-worker-build-${{ runner.os }}-
+  #           survey-worker-build-
+  #         path: |
+  #           packages/survey-worker/target
 
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          components: clippy, rustfmt
-          toolchain: stable
-          cache: false
+  #     - uses: actions-rust-lang/setup-rust-toolchain@v1
+  #       with:
+  #         components: clippy, rustfmt
+  #         toolchain: stable
+  #         cache: false
 
-      - name: Build survey-worker Lambda
-        env:
-          ENV: test
-          AWS_ACCESS_KEY_ID: test
-          AWS_SECRET_ACCESS_KEY: test
-          AWS_REGION: us-east-1
-          DYNAMO_TABLE_PREFIX: ratel-local
-          DYNAMO_ENDPOINT: http://localhost:4566
-          BUCKET_NAME: metadata.ratel.foundation
-          ASSET_DIR: metadata
-          BUCKET_EXPIRE: 3600
-          S3_REGION: us-east-1
-        run: |
-          cargo build --release
+  #     - name: Build survey-worker Lambda
+  #       env:
+  #         ENV: test
+  #         AWS_ACCESS_KEY_ID: test
+  #         AWS_SECRET_ACCESS_KEY: test
+  #         AWS_REGION: us-east-1
+  #         DYNAMO_TABLE_PREFIX: ratel-local
+  #         DYNAMO_ENDPOINT: http://localhost:4566
+  #         BUCKET_NAME: metadata.ratel.foundation
+  #         ASSET_DIR: metadata
+  #         BUCKET_EXPIRE: 3600
+  #         S3_REGION: us-east-1
+  #       run: |
+  #         cargo build --release
 
-  fetcher:
-    runs-on: ubuntu-latest
+  # fetcher:
+  #   runs-on: ubuntu-latest
 
-    outputs:
-      image: ${{ steps.build.outputs.image }}
+  #   outputs:
+  #     image: ${{ steps.build.outputs.image }}
 
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: recursive
+  #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
-      - name: Restore build cache
-        uses: actions/cache/restore@v4
-        with:
-          key: fetcher-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}-${{ github.run_id }}
-          restore-keys: |
-            fetcher-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
-            fetcher-build-${{ runner.os }}-
-            fetcher-build-
-          path: |
-            packages/fetcher/target
+  #     - name: Restore build cache
+  #       uses: actions/cache/restore@v4
+  #       with:
+  #         key: fetcher-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}-${{ github.run_id }}
+  #         restore-keys: |
+  #           fetcher-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
+  #           fetcher-build-${{ runner.os }}-
+  #           fetcher-build-
+  #         path: |
+  #           packages/fetcher/target
 
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          components: clippy, rustfmt
-          target: wasm32-unknown-unknown
-          toolchain: stable
-          cache: false
+  #     - uses: actions-rust-lang/setup-rust-toolchain@v1
+  #       with:
+  #         components: clippy, rustfmt
+  #         target: wasm32-unknown-unknown
+  #         toolchain: stable
+  #         cache: false
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v3
 
-      - uses: cargo-bins/cargo-binstall@main
-      - name: Install dependencies
-        run: |
-          cargo binstall toml-cli
+  #     - uses: cargo-bins/cargo-binstall@main
+  #     - name: Install dependencies
+  #       run: |
+  #         cargo binstall toml-cli
 
-      - name: Build and cache Docker image
-        id: build
-        env:
-          REGION: ap-northeast-2
-          ACCESS_KEY_ID: test
-          SECRET_ACCESS_KEY: test
-          ENV: dev
-          RUST_LOG: info
-          SERVICE: fetcher
-          DOMAIN: fetcher-api.dev.ratel.foundation
-          AUTH_DOMAIN: dev.ratel.foundation
-          DATABASE_TYPE: postgres
-          BASE_DOMAIN: ratel.foundation
-          REPO_NAME: ratel/fetcher
-          ECR_NAME: fetcher
-          COMMIT: pr-${{ github.sha }}
-          DYNAMO_TABLE_PREFIX: ratel-local
-        run: |
-          npm i -g aws-cdk
-          cd packages/fetcher
-          # Build and tag image
-          make docker.build
+  #     - name: Build and cache Docker image
+  #       id: build
+  #       env:
+  #         REGION: ap-northeast-2
+  #         ACCESS_KEY_ID: test
+  #         SECRET_ACCESS_KEY: test
+  #         ENV: dev
+  #         RUST_LOG: info
+  #         SERVICE: fetcher
+  #         DOMAIN: fetcher-api.dev.ratel.foundation
+  #         AUTH_DOMAIN: dev.ratel.foundation
+  #         DATABASE_TYPE: postgres
+  #         BASE_DOMAIN: ratel.foundation
+  #         REPO_NAME: ratel/fetcher
+  #         ECR_NAME: fetcher
+  #         COMMIT: pr-${{ github.sha }}
+  #         DYNAMO_TABLE_PREFIX: ratel-local
+  #       run: |
+  #         npm i -g aws-cdk
+  #         cd packages/fetcher
+  #         # Build and tag image
+  #         make docker.build
 
-          # Save image to cache
-          docker save $ECR_NAME:$COMMIT | gzip > /tmp/fetcher-image.tar.gz
-          echo "image=$ECR_NAME:$COMMIT" >> $GITHUB_OUTPUT
+  #         # Save image to cache
+  #         docker save $ECR_NAME:$COMMIT | gzip > /tmp/fetcher-image.tar.gz
+  #         echo "image=$ECR_NAME:$COMMIT" >> $GITHUB_OUTPUT
 
-      - name: Upload Docker image artifact
-        uses: actions/upload-artifact@v4
-        with:
-          path: /tmp/fetcher-image.tar.gz
-          key: fetcher-image-${{ github.sha }}
+  #     - name: Upload Docker image artifact
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         path: /tmp/fetcher-image.tar.gz
+  #         key: fetcher-image-${{ github.sha }}
 
   dx-check:
     runs-on: ubuntu-latest
