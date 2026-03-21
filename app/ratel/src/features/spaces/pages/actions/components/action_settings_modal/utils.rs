@@ -1,7 +1,4 @@
 use crate::features::spaces::pages::actions::*;
-use crate::features::spaces::pages::actions::actions::discussion::controllers::{UpdateDiscussionRequest, update_discussion};
-use crate::features::spaces::pages::actions::actions::poll::controllers::{UpdatePollRequest, update_poll};
-use crate::features::spaces::pages::actions::actions::quiz::controllers::{UpdateQuizRequest, update_quiz};
 
 use super::reward_cards::RewardPreviewData;
 
@@ -71,74 +68,19 @@ pub async fn apply_selected_action_dates(
     ended_at: i64,
 ) -> Result<()> {
     for action in actions {
-        match action.action_type {
-            SpaceActionType::Poll => {
-                let entity_type: EntityType = action
-                    .action_id
-                    .parse()
-                    .map_err(|_| Error::BadRequest("Invalid poll action id".to_string()))?;
-                let poll_id: SpacePollEntityType = entity_type
-                    .try_into()
-                    .map_err(|_| Error::BadRequest("Invalid poll action id".to_string()))?;
-
-                update_poll(
-                    space_id.clone(),
-                    poll_id,
-                    UpdatePollRequest::Time {
-                        started_at,
-                        ended_at,
-                    },
-                )
-                .await?;
-            }
-            SpaceActionType::TopicDiscussion => {
-                let entity_type: EntityType = action
-                    .action_id
-                    .parse()
-                    .map_err(|_| Error::BadRequest("Invalid discussion action id".to_string()))?;
-                let discussion_id: SpacePostEntityType = entity_type
-                    .try_into()
-                    .map_err(|_| Error::BadRequest("Invalid discussion action id".to_string()))?;
-
-                update_discussion(
-                    space_id.clone(),
-                    discussion_id,
-                    UpdateDiscussionRequest {
-                        title: None,
-                        html_contents: None,
-                        category_name: None,
-                        started_at: Some(started_at),
-                        ended_at: Some(ended_at),
-                    },
-                )
-                .await?;
-            }
-            SpaceActionType::Quiz => {
-                let entity_type: EntityType = action
-                    .action_id
-                    .parse()
-                    .map_err(|_| Error::BadRequest("Invalid quiz action id".to_string()))?;
-                let quiz_id: SpaceQuizEntityType = entity_type
-                    .try_into()
-                    .map_err(|_| Error::BadRequest("Invalid quiz action id".to_string()))?;
-
-                update_quiz(
-                    space_id.clone(),
-                    quiz_id,
-                    UpdateQuizRequest {
-                        started_at: Some(started_at),
-                        ended_at: Some(ended_at),
-                        ..Default::default()
-                    },
-                )
-                .await?;
-            }
-            SpaceActionType::Follow => {
-                return Err(Error::NotSupported(
-                    "This action type is not supported yet.".to_string(),
-                ));
-            }
+        if !supports_action_settings(&action) {
+            continue;
         }
+
+        update_space_action(
+            space_id.clone(),
+            action.action_id.clone(),
+            UpdateSpaceActionRequest::Time {
+                started_at,
+                ended_at,
+            },
+        )
+        .await?;
     }
 
     Ok(())
