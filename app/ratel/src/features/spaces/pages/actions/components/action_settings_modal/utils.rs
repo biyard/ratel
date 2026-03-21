@@ -1,6 +1,7 @@
 use crate::features::spaces::pages::actions::*;
 use crate::features::spaces::pages::actions::actions::discussion::controllers::{UpdateDiscussionRequest, update_discussion};
 use crate::features::spaces::pages::actions::actions::poll::controllers::{UpdatePollRequest, update_poll};
+use crate::features::spaces::pages::actions::actions::quiz::controllers::{UpdateQuizRequest, update_quiz};
 
 use super::reward_cards::RewardPreviewData;
 
@@ -112,7 +113,27 @@ pub async fn apply_selected_action_dates(
                 )
                 .await?;
             }
-            SpaceActionType::Follow | SpaceActionType::Quiz => {
+            SpaceActionType::Quiz => {
+                let entity_type: EntityType = action
+                    .action_id
+                    .parse()
+                    .map_err(|_| Error::BadRequest("Invalid quiz action id".to_string()))?;
+                let quiz_id: SpaceQuizEntityType = entity_type
+                    .try_into()
+                    .map_err(|_| Error::BadRequest("Invalid quiz action id".to_string()))?;
+
+                update_quiz(
+                    space_id.clone(),
+                    quiz_id,
+                    UpdateQuizRequest {
+                        started_at: Some(started_at),
+                        ended_at: Some(ended_at),
+                        ..Default::default()
+                    },
+                )
+                .await?;
+            }
+            SpaceActionType::Follow => {
                 return Err(Error::NotSupported(
                     "This action type is not supported yet.".to_string(),
                 ));
