@@ -157,6 +157,54 @@ pub(crate) fn panel_attributes(panel: &SpacePanelQuota) -> Vec<PanelAttribute> {
 }
 
 #[cfg(feature = "server")]
+fn is_collective_panel(panel: &SpacePanelQuota) -> bool {
+    panel_attributes(panel)
+        .iter()
+        .all(|attribute| matches!(attribute, PanelAttribute::CollectiveAttribute(_)))
+}
+
+#[cfg(feature = "server")]
+pub(crate) async fn matched_panel_attributes(
+    cli: &aws_sdk_dynamodb::Client,
+    space_pk: &Partition,
+    verified_attributes: &crate::common::models::did::VerifiedAttributes,
+) -> crate::common::Result<Vec<PanelAttribute>> {
+    let panel_quotas = list_panel_quotas(cli, space_pk).await?;
+
+    if panel_quotas.is_empty() {
+        return Ok(vec![]);
+    }
+
+    let age = verified_attributes.age().and_then(|value| u8::try_from(value).ok());
+    let gender = verified_attributes.gender;
+    let has_university = verified_attributes
+        .university
+        .as_ref()
+        .map(|value| !value.is_empty())
+        .unwrap_or(false);
+
+    let (collective_panels, conditional_panels): (Vec<_>, Vec<_>) =
+        panel_quotas.into_iter().partition(is_collective_panel);
+
+    let mut matched_attributes = vec![];
+
+    for panel in collective_panels.iter().filter(|panel| {
+        panel_matches_user(age, gender, has_university, panel)
+    }) {
+        matched_attributes.extend(panel_attributes(panel));
+    }
+
+    if let Some(panel) = conditional_panels
+        .iter()
+        .find(|panel| panel_matches_user(age, gender, has_university, panel))
+    {
+        matched_attributes.extend(panel_attributes(panel));
+    }
+
+    Ok(matched_attributes)
+}
+
+#[cfg(feature = "server")]
 fn panel_requirement_attribute(attribute: &PanelAttribute) -> Option<PanelRequirementAttribute> {
     match attribute {
         PanelAttribute::CollectiveAttribute(CollectiveAttribute::Age)
