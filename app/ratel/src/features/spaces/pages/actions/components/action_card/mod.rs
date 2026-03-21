@@ -93,7 +93,7 @@ pub fn ActionCard(action: SpaceActionSummary, space_id: SpacePartition) -> Eleme
             },
 
             // Top: badges + date
-            div { class: "flex gap-3 justify-between items-center w-full",
+            div { class: "flex w-full items-start justify-between gap-3 max-mobile:flex-col",
                 div { class: "flex gap-2 items-center",
                     Badge {
                         color: type_badge_color,
@@ -108,10 +108,18 @@ pub fn ActionCard(action: SpaceActionSummary, space_id: SpacePartition) -> Eleme
                             {status_label}
                         }
                     }
+
+                    if action.prerequisite {
+                        Badge {
+                            color: BadgeColor::Red,
+                            variant: BadgeVariant::Rounded,
+                            {tr.prerequisite}
+                        }
+                    }
                 }
 
                 if let Some(period) = period {
-                    span { class: "font-medium text-[0.75rem]/[1rem] text-neutral-500",
+                    span { class: "font-medium text-[0.75rem]/[1rem] text-neutral-500 max-mobile:self-end",
                         {period}
                     }
                 }
