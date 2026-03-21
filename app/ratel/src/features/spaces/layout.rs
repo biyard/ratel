@@ -92,8 +92,6 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
         query.invalidate(&space_detail);
     };
 
-    let bottom_nav_menus = menus.clone();
-
     let layout_class = if show_sidebar {
         "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-space-bg text-web-font-primary max-tablet:flex max-tablet:flex-col"
     } else {
