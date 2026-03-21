@@ -37,7 +37,7 @@ export async function click(page, opt) {
   const selected = await getLocator(page, opt);
 
   await selected.click();
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("load");
 
   return selected;
 }
@@ -89,8 +89,9 @@ export async function waitPopup(page, { visible = true }) {
 
 export async function goto(page, url) {
   await page.goto(url);
-  await page.waitForLoadState("networkidle");
-  // Wait WASM to load
+  await page.waitForLoadState("domcontentloaded");
+  // Wait for Dioxus WASM to hydrate — SSR markup may already contain
+  // [data-dioxus-id], so also verify the interpreter is initialised.
   await page.waitForFunction(
     () => document.querySelector("[data-dioxus-id]") !== null,
   );
