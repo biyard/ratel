@@ -260,8 +260,9 @@ fn SingleChoiceViewer(
                     let on_change = on_change.clone();
                     rsx! {
                         button {
-                            class: "relative flex min-h-[88px] w-full items-center overflow-hidden rounded-xl text-left transition-all",
-                            class: if is_selected { "bg-gradient-to-r from-primary/80 to-primary shadow-[0_8px_20px_rgba(0,0,0,0.2)] ring-2 ring-primary/90" } else { "bg-neutral-800/60 hover:bg-neutral-700/60 light:bg-neutral-100 light:hover:bg-neutral-200" },
+                            key: "single-{index}-{opt_idx}",
+                            "aria-selected": is_selected,
+                            class: "group relative flex min-h-[88px] w-full items-center overflow-hidden rounded-xl text-left transition-all bg-option-card-bg hover:bg-option-card-hover-bg aria-selected:bg-gradient-to-r aria-selected:from-primary/80 aria-selected:to-primary aria-selected:shadow-[0_8px_20px_rgba(0,0,0,0.2)] aria-selected:ring-2 aria-selected:ring-primary/90",
                             class: if disabled { "cursor-not-allowed opacity-60" } else { "cursor-pointer" },
                             disabled,
                             onclick: move |_| {
@@ -272,15 +273,11 @@ fn SingleChoiceViewer(
                                         other: None,
                                     })
                             },
-                            if is_selected {
-                                div { class: "absolute inset-y-0 left-0 w-[72px] bg-primary" }
-                            } else {
-                                div { class: "absolute inset-y-0 left-0 w-[72px] bg-neutral-700/40 light:bg-neutral-300/40" }
-                            }
+                            div { class: "absolute inset-y-0 left-0 w-[72px] bg-option-card-accent group-aria-selected:bg-primary" }
                             div { class: "relative z-10 flex w-full items-center justify-between px-5 py-4",
                                 div { class: "w-10 shrink-0" }
                                 span {
-                                    class: if is_selected { "text-[20px] font-semibold tracking-[0.2px] text-text-third" } else { "text-[20px] font-semibold tracking-[0.2px] text-text-primary" },
+                                    class: "text-[20px] font-semibold tracking-[0.2px] text-text-primary group-aria-selected:text-text-third",
                                     "{option}"
                                 }
                                 div { class: "flex w-10 shrink-0 items-center justify-center",
@@ -327,8 +324,9 @@ fn MultipleChoiceViewer(
                     let on_change = on_change.clone();
                     rsx! {
                         button {
-                            class: "relative flex min-h-[88px] w-full items-center overflow-hidden rounded-xl text-left transition-all",
-                            class: if is_selected { "bg-gradient-to-r from-primary/80 to-primary shadow-[0_8px_20px_rgba(0,0,0,0.2)] ring-2 ring-primary/90" } else { "bg-neutral-800/60 hover:bg-neutral-700/60 light:bg-neutral-100 light:hover:bg-neutral-200" },
+                            key: "multi-{index}-{opt_idx}",
+                            "aria-selected": is_selected,
+                            class: "group relative flex min-h-[88px] w-full items-center overflow-hidden rounded-xl text-left transition-all bg-option-card-bg hover:bg-option-card-hover-bg aria-selected:bg-gradient-to-r aria-selected:from-primary/80 aria-selected:to-primary aria-selected:shadow-[0_8px_20px_rgba(0,0,0,0.2)] aria-selected:ring-2 aria-selected:ring-primary/90",
                             class: if disabled { "cursor-not-allowed opacity-60" } else { "cursor-pointer" },
                             disabled,
                             onclick: move |_| {
@@ -345,15 +343,11 @@ fn MultipleChoiceViewer(
                                     }
                                     )
                             },
-                            if is_selected {
-                                div { class: "absolute inset-y-0 left-0 w-[72px] bg-primary" }
-                            } else {
-                                div { class: "absolute inset-y-0 left-0 w-[72px] bg-neutral-700/40 light:bg-neutral-300/40" }
-                            }
+                            div { class: "absolute inset-y-0 left-0 w-[72px] bg-option-card-accent group-aria-selected:bg-primary" }
                             div { class: "relative z-10 flex w-full items-center justify-between px-5 py-4",
                                 div { class: "w-10 shrink-0" }
                                 span {
-                                    class: if is_selected { "text-[20px] font-semibold tracking-[0.2px] text-text-third" } else { "text-[20px] font-semibold tracking-[0.2px] text-text-primary" },
+                                    class: "text-[20px] font-semibold tracking-[0.2px] text-text-primary group-aria-selected:text-text-third",
                                     "{option}"
                                 }
                                 div { class: "flex w-10 shrink-0 items-center justify-center",
@@ -478,8 +472,9 @@ fn CheckboxViewer(
                     let on_change = on_change.clone();
                     rsx! {
                         button {
-                            class: "flex w-full items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
-                            class: if is_selected { "border-blue-500 bg-blue-500/10" } else { "border-neutral-700 hover:border-neutral-500 light:border-input-box-border light:hover:border-input-box-border" },
+                            key: "checkbox-{index}-{opt_idx}",
+                            "aria-selected": is_selected,
+                            class: "group flex w-full items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors border-input-box-border hover:border-border-subtle aria-selected:border-primary aria-selected:bg-primary/10",
                             disabled,
                             onclick: move |_| {
                                 let mut next = selected.clone();
@@ -500,13 +495,12 @@ fn CheckboxViewer(
                                     });
                             },
                             div {
-                                class: "w-4 h-4 rounded border-2 flex items-center justify-center",
-                                class: if is_selected { "border-primary bg-primary" } else { "border-neutral-500 light:border-input-box-border" },
+                                class: "w-4 h-4 rounded border-2 flex items-center justify-center border-foreground-muted group-aria-selected:border-primary group-aria-selected:bg-primary",
                                 if is_selected {
                                     icons::validations::Check { class: "size-3 [&>path]:stroke-white" }
                                 }
                             }
-                            span { class: "text-sm text-neutral-300 light:text-text-primary", "{option}" }
+                            span { class: "text-sm text-foreground-muted group-aria-selected:text-text-primary", "{option}" }
                         }
                     }
                 }
