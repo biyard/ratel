@@ -860,6 +860,12 @@ Use `let lang = use_language();` in the component, then `{value.translate(&lang(
 - **Always add `aria-label`** to icon-only buttons so screen readers can announce their purpose
 - **Use semantic elements** for clickable navigation: use `Link { to: "..." }` (renders `<a>`) instead of `div { onclick: ... }` with `use_navigator().push()`. This provides native keyboard accessibility (tab focus, Enter activation) and correct link semantics without manual `role`, `tabindex`, or keyboard handlers
 
+### Import Conventions
+
+- **Use wildcard re-exports**: Start with `use crate::features::<module>::*;` which brings in common items through the re-export chain (e.g., `crate::common::*` -> `dioxus_translate::*`, etc.)
+- **Only add explicit imports** for items NOT available through the wildcard chain (e.g., `use_infinite_query` from `crate::common::hooks`, `time_ago` from `crate::common::utils::time`, cross-feature handlers)
+- **Do NOT duplicate imports** that are already available via wildcards — check sibling files in the same directory to see which imports are standard
+
 ### Scroll Event Handlers
 
 - **Never spawn unbounded async tasks** from `onscroll` — inertial scrolling fires many events rapidly
