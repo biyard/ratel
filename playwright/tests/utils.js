@@ -88,6 +88,14 @@ export async function waitPopup(page, { visible = true }) {
 }
 
 export async function goto(page, url) {
+  await page.goto(url); 
+   await page.waitForLoadState("domcontentloaded"); 
+   // Wait for Dioxus WASM to hydrate — SSR markup may already contain 
+   // [data-dioxus-id], so also verify the interpreter is initialised. 
+   await page.waitForFunction( 
+     () => document.querySelector("[data-dioxus-id]") !== null, 
+   );
+/*
   await Promise.all([
     page.waitForResponse(
       (resp) =>
@@ -98,6 +106,7 @@ export async function goto(page, url) {
   await page.waitForLoadState("load");
   // It's for waiting for the page to be fully interactive after load, especially for the first load where the wasm is not cached yet.
   await page.waitForTimeout(500);
+*/
 }
 
 export async function getEditor(page) {
