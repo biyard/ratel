@@ -8,7 +8,7 @@ use dioxus_translate::use_language;
 #[component]
 pub fn SpaceTimeline() -> Element {
     let mut v = use_infinite_query(move |bookmark| async move {
-        list_my_spaces_handler(bookmark).await
+        list_my_spaces_handler(bookmark, Some(true)).await
     })?;
 
     let items = v.items();
@@ -21,6 +21,19 @@ pub fn SpaceTimeline() -> Element {
     let mut can_scroll_right = use_signal(|| false);
     let mut scroll_check_pending = use_signal(|| false);
     let mut scroll_dirty = use_signal(|| false);
+
+    // Re-run scroll check when item count changes (e.g., after more_element loads
+    // additional pages), since scrollWidth may change without a scroll event.
+    let item_count = items.len();
+    use_effect(move || {
+        let _ = item_count;
+        spawn(async move {
+            let mut result = document::eval(CHECK_SCROLL_JS);
+            if let Ok(val) = result.recv::<bool>().await {
+                can_scroll_right.set(val);
+            }
+        });
+    });
 
     rsx! {
         section {
