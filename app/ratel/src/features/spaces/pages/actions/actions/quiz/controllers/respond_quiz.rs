@@ -68,7 +68,7 @@ pub async fn respond_quiz(
         SpaceQuizAttempt::list_by_quiz_user(cli, &quiz_id, &author.pk, limit)
             .await?;
     if attempts.len() as i64 >= total_allowed {
-        return Err(Error::BadRequest("No remaining submissions".into()));
+        return Err(Error::BadRequest("No remaining attempts".into()));
     }
 
     let score = calculate_score(&quiz.questions, &correct.answers, &req.answers)?;
