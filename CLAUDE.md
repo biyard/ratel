@@ -1026,6 +1026,27 @@ await page.waitForFunction(
 - **Keep `retries` CI-conditional** — use `retries: process.env.CI ? 2 : 0` so local dev runs give immediate feedback (0 retries) while CI retries flaky tests. Hardcoding `retries: 2` masks flakes locally and slows developer feedback loops
 - **Environment-aware settings** — Playwright config values that differ between local dev and CI (retries, workers, reporters) should always use `process.env.CI` conditionals, not hardcoded values
 
+### In-Page Interactions vs Navigation
+
+- **Do NOT use `waitForLoadState("load")` after non-navigation interactions** — after UI actions like autosave triggers, tab switches, blur events, or clicking options that don't cause a page navigation, `waitForLoadState("load")` resolves immediately and doesn't wait for the save/request. Wait for deterministic UI signals instead (e.g., a "Saved" indicator, specific element appearing)
+- **Avoid `networkidle` for SPA navigation** — in single-page apps, the app may continue fetching data after the `load` event. Use deterministic UI readiness assertions (e.g., `getLocator` for page-specific elements) instead of `networkidle`
+- **Follow `waitForURL()` with hydration check** — when `waitForURL()` triggers navigation, add a `waitForFunction` check for `window.dioxus.send` to match the `goto()` pattern and avoid races on slower environments
+
+### Shared Helpers & Locators
+
+- **Always use shared helpers** (`goto`, `click`, `fill`, `getLocator`) from `tests/utils.js` instead of raw Playwright APIs like `page.getByRole().click()`. Extend helpers if needed rather than mixing raw calls
+- **Avoid raw CSS locators** — don't use `page.locator('label:has(...)')` or `page.locator("#some-id")`. Use semantic selectors via helpers: `testId` > `label` > `role` > `placeholder` > `text`
+- **Avoid `.first()` on order-dependent selectors** — `page.getByRole(...).first()` breaks when DOM order changes. Add stable selectors (`data-testid`, `data-pw`) to the UI and target them specifically
+- **Avoid redundant waits after `click()` helper** — the `click()` helper already calls `waitForLoadState("load")` internally. Adding a manual `page.waitForLoadState("load")` after `click()` is redundant and slows tests
+
+### Resource Cleanup
+
+- **Use `try/finally` for browser contexts** — when manually creating `browser.newContext()`, wrap the test body in `try/finally` to guarantee `context.close()` runs, preventing resource leaks if assertions fail mid-test
+
+### Test Environment Dependencies
+
+- **Document `bypass` feature dependency** — tests that hardcode verification codes (e.g., `000000`) only work when the backend is built with `--features bypass`. Document this requirement clearly in the test file header or guard it behind an environment check to prevent environment-dependent test failures
+
 ### Placeholder/Empty State Styling
 
 - When a UI element has both a normal and a placeholder state (e.g., "untitled" vs actual title), always apply visually distinct styling to the placeholder case (e.g., `text-foreground-muted italic`) rather than using the same primary text style for both
