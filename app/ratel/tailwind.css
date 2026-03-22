@@ -727,6 +727,14 @@ a {
   --color-sp-act-card-bg: var(--dark, #1a1a1a) var(--light, #ffffff);
   --color-sp-act-card-stroke: var(--dark, #404040) var(--light, #e5e5e5);
   --color-sp-act-icon-neutral: #737373;
+
+  /* Quiz result badge colors */
+  --color-sp-act-quiz-pass-bg: var(--dark, rgba(34, 197, 94, 0.2))
+    var(--light, #dcfce7);
+  --color-sp-act-quiz-pass-text: var(--dark, #4ade80) var(--light, #15803d);
+  --color-sp-act-quiz-fail-bg: var(--dark, rgba(239, 68, 68, 0.2))
+    var(--light, #fee2e2);
+  --color-sp-act-quiz-fail-text: var(--dark, #f87171) var(--light, #b91c1c);
 }
 
 /* =============================================================
