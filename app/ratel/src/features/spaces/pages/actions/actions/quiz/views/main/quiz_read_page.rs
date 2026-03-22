@@ -188,7 +188,7 @@ pub fn QuizReadPage(
                 "data-testid": "quiz-read-overview",
                 content_class: "gap-6".to_string(),
                 bottom_left: rsx! {
-                    div { class: "text-sm text-neutral-300 light:text-neutral-700",
+                    div { class: "text-sm text-foreground-muted",
                         "{i18n.remaining_submissions} {remaining_submissions}/{total_allowed}"
                     }
                 },
@@ -247,7 +247,7 @@ pub fn QuizReadPage(
             FullActionLayover {
                 "data-testid": "quiz-read-quiz",
                 bottom_left: rsx! {
-                    div { class: "text-sm text-neutral-300 light:text-neutral-700",
+                    div { class: "text-sm text-foreground-muted",
                         "{i18n.remaining_submissions} {remaining_submissions}/{total_allowed}"
                     }
                 },
