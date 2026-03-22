@@ -29,13 +29,13 @@ pub async fn list_user_drafts_handler(
 
     let items: Vec<PostResponse> = posts
         .into_iter()
-        .map(|post| PostResponse::from((Some(user.clone()), post)))
+        .map(|post| PostResponse::from(post))
         .collect();
 
     Ok(ListItemsResponse { items, bookmark })
 }
 
-#[get("/api/teams/:teamname/drafts?bookmark", user: User)]
+#[get("/api/teams/:teamname/drafts?bookmark", _user: User)]
 pub async fn list_team_drafts_handler(
     teamname: String,
     bookmark: Option<String>,
@@ -62,7 +62,7 @@ pub async fn list_team_drafts_handler(
 
     let items: Vec<PostResponse> = posts
         .into_iter()
-        .map(|post| PostResponse::from((Some(user.clone()), post)))
+        .map(|post| PostResponse::from(post))
         .collect();
 
     Ok(ListItemsResponse { items, bookmark })

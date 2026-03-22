@@ -37,6 +37,11 @@ translate! {
         en: "Log Out",
         ko: "로그아웃",
     },
+
+    user_profile: {
+        en: "User Profile",
+        ko: "사용자 프로필",
+    },
 }
 
 #[component]
@@ -132,6 +137,7 @@ pub fn AppMenu() -> Element {
                             r#as: Callback::new(move |attrs: Vec<Attribute>| {
                                 rsx! {
                                     button {
+                                        "aria-label": "{tr.sign_in}",
                                         onclick: move |_| {
                                             popup.open(rsx! {
                                                 LoginModal {}
@@ -265,8 +271,14 @@ fn ProfileButton(collapsed: bool) -> Element {
                     } else {
                         "w-5 h-5 bg-neutral-500 rounded-full"
                     };
+                    let aria_label = if collapsed {
+                        Some(tr.user_profile.to_string())
+                    } else {
+                        None
+                    };
                     rsx! {
                         button {
+                            "aria-label": aria_label,
                             onclick: move |_| {
                                 open.set(!open());
                             },

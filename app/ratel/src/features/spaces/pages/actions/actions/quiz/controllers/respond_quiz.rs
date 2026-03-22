@@ -11,7 +11,7 @@ pub struct RespondQuizRequest {
 #[post(
     "/api/spaces/{space_pk}/quizzes/{quiz_id}/respond",
     role: SpaceUserRole,
-    user: crate::features::auth::User,
+    author: SpaceAuthor,
     space: SpaceCommon
 )]
 pub async fn respond_quiz(
@@ -19,16 +19,12 @@ pub async fn respond_quiz(
     quiz_id: SpaceQuizEntityType,
     req: RespondQuizRequest,
 ) -> Result<String> {
-    SpaceQuiz::can_respond(&role)?;
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let space_id = space_pk;
     let quiz_action_id = quiz_id.to_string(); // UUID only, matches SpaceReward action_id
     let space_pk: Partition = space_id.clone().into();
     let quiz_sk: EntityType = quiz_id.clone().into();
-    if !space.is_active() {
-        return Err(Error::BadRequest("Space is not active".into()));
-    }
 
     let quiz = SpaceQuiz::get(cli, &space_pk, Some(quiz_sk.clone()))
         .await?
@@ -41,6 +37,16 @@ pub async fn respond_quiz(
     )
     .await?
     .ok_or(Error::SpaceActionNotFound)?;
+
+    if !crate::features::spaces::pages::actions::can_execute_space_action(
+        role,
+        space_action.prerequisite,
+        space.status,
+    ) {
+        return Err(Error::BadRequest(
+            "Quiz is not available in the current space status".into(),
+        ));
+    }
 
     let now = crate::common::utils::time::get_now_timestamp_millis();
     if now < space_action.started_at || now > space_action.ended_at {
@@ -60,14 +66,14 @@ pub async fn respond_quiz(
     }
 
     let attempts =
-        SpaceQuizAttempt::list_by_quiz_user(cli, &quiz_id, &user.pk, quiz.retry_count as i32)
+        SpaceQuizAttempt::list_by_quiz_user(cli, &quiz_id, &author.pk, quiz.retry_count as i32)
             .await?;
     if attempts.len() as i64 >= quiz.retry_count {
         return Err(Error::BadRequest("No remaining submissions".into()));
     }
 
     let score = calculate_score(&quiz.questions, &correct.answers, &req.answers)?;
-    let attempt = SpaceQuizAttempt::new(quiz_id.clone(), user.pk.clone(), req.answers, score);
+    let attempt = SpaceQuizAttempt::new(quiz_id.clone(), author, req.answers, score);
     attempt.create(cli).await?;
 
     if attempts.is_empty() {

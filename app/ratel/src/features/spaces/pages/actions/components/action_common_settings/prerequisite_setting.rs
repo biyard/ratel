@@ -1,4 +1,5 @@
 use super::super::*;
+use dioxus_primitives::{ContentAlign, ContentSide};
 
 #[component]
 pub fn PrerequisiteSetting(
@@ -28,7 +29,9 @@ pub fn PrerequisiteSetting(
                             class: "cursor-help text-web-font-neutral [&>path]:stroke-current [&>circle]:fill-current [&>path]:fill-none",
                         }
                     }
-                    TooltipContent { {tr.prerequisite_tooltip} }
+                    TooltipContent { side: ContentSide::Bottom, align: ContentAlign::Start,
+                        {tr.prerequisite_tooltip}
+                    }
                 }
             }
             Switch {

@@ -1,5 +1,6 @@
 use crate::common::models::space::SpaceCommon;
 use crate::features::spaces::pages::actions::actions::discussion::*;
+use crate::features::spaces::pages::actions::models::SpaceAction;
 
 #[delete("/api/spaces/{space_id}/discussions/{discussion_sk}/comments/{comment_sk}", role: SpaceUserRole, user : crate::features::auth::User, space: SpaceCommon)]
 pub async fn delete_comment(
@@ -11,16 +12,33 @@ pub async fn delete_comment(
 
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
-    if !space.is_active() {
-        return Err(Error::BadRequest("Space is not active".into()));
-    }
     let space_post_id = SpacePostPartition(discussion_sk.0.clone());
     let space_post_pk: Partition = space_post_id.clone().into();
     let discussion_sk_entity: EntityType = discussion_sk.clone().into();
+    let space_action = SpaceAction::get(
+        cli,
+        &CompositePartition(space_id.clone(), discussion_sk.to_string()),
+        Some(EntityType::SpaceAction),
+    )
+    .await?
+    .ok_or(Error::SpaceActionNotFound)?;
+
+    if !crate::features::spaces::pages::actions::can_execute_space_action(
+        role,
+        space_action.prerequisite,
+        space.status,
+    ) {
+        return Err(Error::BadRequest(
+            "Discussion is not available in the current space status".into(),
+        ));
+    }
+
     let post = SpacePost::get(cli, &space_post_pk, Some(discussion_sk_entity))
         .await?
         .ok_or(Error::NotFound("Discussion not found".into()))?;
-    post.can_participate(&role)?;
+    if post.status() != DiscussionStatus::InProgress {
+        return Err(Error::DiscussionNotInProgress);
+    }
     let comment_sk_entity: EntityType = comment_sk.into();
 
     let comment = SpacePostComment::get(cli, &space_post_pk, Some(comment_sk_entity.clone()))

@@ -6,7 +6,7 @@ use crate::features::spaces::pages::actions::actions::poll::components::{
 use crate::features::spaces::pages::actions::actions::quiz::*;
 use crate::features::spaces::pages::actions::components::FullActionLayover;
 use crate::features::spaces::pages::apps::apps::file::components::FileCard;
-use crate::features::spaces::space_common::hooks::use_space;
+use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
 use crate::features::spaces::space_common::types::space_page_actions_quiz_key;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -119,13 +119,15 @@ pub fn QuizReadPage(
 
     let now = crate::common::utils::time::get_now_timestamp_millis();
     let is_in_progress = now >= quiz.started_at && now <= quiz.ended_at;
-    let is_space_active = matches!(
+    let role = use_space_role()();
+    let can_execute_action = crate::features::spaces::pages::actions::can_execute_space_action(
+        role,
+        quiz.space_action.prerequisite,
         space.status,
-        Some(crate::common::SpaceStatus::Started | crate::common::SpaceStatus::InProgress)
     );
     let has_passed = quiz.passed.unwrap_or(false);
     let can_submit = can_respond
-        && is_space_active
+        && can_execute_action
         && is_in_progress
         && !has_passed
         && quiz.attempt_count < quiz.retry_count;
@@ -199,9 +201,7 @@ pub fn QuizReadPage(
                     }
                 },
                 div { class: "w-full",
-                    div { class: "text-[28px]/[34px] font-bold text-text-primary",
-                        "{quiz.title}"
-                    }
+                    div { class: "text-[28px]/[34px] font-bold text-text-primary", "{quiz.title}" }
 
                     div { class: "flex items-center justify-end border-y border-card-border py-4",
                         div { class: "shrink-0 text-[14px] font-light text-text-primary",
@@ -282,11 +282,7 @@ pub fn QuizReadPage(
                     }
                 },
                 div { class: "w-full",
-                    if !is_space_active {
-                        div { class: "rounded-lg bg-neutral-800 p-3 text-sm text-neutral-400",
-                            {i18n.space_not_active}
-                        }
-                    } else if !is_in_progress {
+                    if !is_in_progress {
                         if now < quiz.started_at {
                             div { class: "rounded-lg bg-neutral-800 p-3 text-sm text-neutral-400",
                                 {i18n.quiz_not_started}
@@ -319,7 +315,7 @@ pub fn QuizReadPage(
                                             total: total_questions,
                                             question: question.clone(),
                                             answer,
-                                            disabled: !can_submit,
+                                            disabled: !can_respond || !can_execute_action || !is_in_progress || !can_submit,
                                             on_change: move |next_answer: Answer| {
                                                 let mut next = answers();
                                                 if idx < next.len() {
