@@ -224,7 +224,7 @@ pub fn QuizReadPage(
 
                     if !quiz.description.is_empty() {
                         div {
-                            class: "text-[15px]/[24px] tracking-[0.5px] text-[#D4D4D4] light:text-text-primary",
+                            class: "text-[15px]/[24px] tracking-[0.5px] text-foreground-muted",
                             dangerous_inner_html: quiz.description.clone(),
                         }
                     }
@@ -326,7 +326,7 @@ pub fn QuizReadPage(
                     }
 
                     if quiz.questions.is_empty() {
-                        div { class: "flex items-center justify-center py-10 text-neutral-500 light:text-text-secondary",
+                        div { class: "flex items-center justify-center py-10 text-foreground-muted",
                             {i18n.no_questions}
                         }
                     } else {
