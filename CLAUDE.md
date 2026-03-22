@@ -205,6 +205,11 @@ The `app-shell` package uses these feature flags:
 | `membership` | Membership feature module |
 | `bypass` | Skip authentication for testing |
 
+#### Feature Flag Safety
+
+- **Never bundle security-bypass features into convenience features** — the `bypass` feature (skips auth verification, e.g., accepts `000000` as verification code) must NOT be included in `local-dev` or other convenience feature groups. Keep it opt-in and explicitly enabled only in test/local scripts (e.g., `--features bypass`) to avoid accidentally shipping builds with auth bypass enabled
+- **Security-sensitive features must be explicitly enabled** — features like `bypass` that disable verification checks should require direct `--features bypass` invocation, never be implicitly activated through another feature like `local-dev`
+
 ### JavaScript Interop Pattern
 
 The app interacts with JavaScript via `wasm_bindgen` FFI. Each module registers its JS functions under a namespaced global object `window.ratel.<module>`.
@@ -912,6 +917,7 @@ Use `let lang = use_language();` in the component, then `{value.translate(&lang(
 - **Always use semantic token classes** instead: `text-foreground-muted`, `text-text-primary`, `bg-card-bg`, `bg-background`, `border-border`, etc. (see Design Tokens section in `.claude/rules/figma-design-system.md`)
 - **Do not combine `light:` variant with palette colors** (e.g., `light:text-neutral-600`) — use a single semantic token class that handles both themes automatically
 - Tailwind spacing, sizing, and layout utilities (`gap-4`, `p-5`, `rounded-lg`, `w-full`) are fine to use directly
+
 ## Error Handling Convention
 
 ### Avoid `Error::BadRequest(String)` -- Use Typed Error Variants
@@ -1010,6 +1016,11 @@ await page.waitForFunction(
   { timeout: 10000 }
 );
 ```
+
+### Configuration
+
+- **Keep `retries` CI-conditional** — use `retries: process.env.CI ? 2 : 0` so local dev runs give immediate feedback (0 retries) while CI retries flaky tests. Hardcoding `retries: 2` masks flakes locally and slows developer feedback loops
+- **Environment-aware settings** — Playwright config values that differ between local dev and CI (retries, workers, reporters) should always use `process.env.CI` conditionals, not hardcoded values
 
 ### Placeholder/Empty State Styling
 
