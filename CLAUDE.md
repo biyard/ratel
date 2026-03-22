@@ -906,6 +906,50 @@ Use `let lang = use_language();` in the component, then `{value.translate(&lang(
 - This applies to all arbitrary values: `z-[101]`, `w-[350px]`, `gap-[13px]`, etc.
 - Standard Tailwind scale values don't need brackets: `z-10`, `z-50`, `w-full`, `gap-4`
 
+## Error Handling Convention
+
+### Avoid `Error::BadRequest(String)` -- Use Typed Error Variants
+
+**Do NOT use `Error::BadRequest(String)` for domain-specific errors.** Instead, define a specific error enum with `Translate` derive for user-friendly error handling in the frontend.
+
+**Pattern:** Follow the `SpaceRewardError` / `SpaceActionQuizError` pattern:
+
+1. **Define a domain-specific error enum** in the feature's `types/error.rs`:
+
+```rust
+use crate::common::*;
+pub use thiserror::Error;
+
+#[derive(Debug, Error, Serialize, Deserialize, Translate, Clone)]
+pub enum MyFeatureError {
+    #[error("Descriptive internal message")]
+    #[translate(en = "User-facing English", ko = "사용자용 한국어")]
+    SpecificErrorVariant,
+}
+```
+
+2. **Implement server traits** (`status_code()`, `IntoResponse`, `AsStatusCode`) following the `SpaceRewardError` pattern.
+
+3. **Register in `common::Error`** by adding a `#[from]` variant:
+
+```rust
+#[error("{0}")]
+#[translate(en = "Feature error", ko = "기능 오류가 발생했습니다.")]
+MyFeature(#[from] MyFeatureError),
+```
+
+4. **Add to status code match arms** in both `IntoResponse` and `AsStatusCode` impls.
+
+5. **Use in controllers** via `.into()`:
+
+```rust
+return Err(MyFeatureError::SpecificErrorVariant.into());
+```
+
+**Why:** Typed errors enable automatic i18n translation in the frontend via `toast.error()`, provide better error categorization, and eliminate ambiguous string-based error messages.
+
+**When refactoring existing code:** If you encounter `Error::BadRequest(String)` in code you are modifying, refactor it to use a typed error variant in the same change.
+
 ## Agent Workflow Rules
 
 ### PR Comment Resolver
