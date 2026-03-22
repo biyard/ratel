@@ -1,3 +1,4 @@
+use crate::common::hooks::use_infinite_query;
 use crate::common::utils::time::time_ago;
 use crate::features::social::pages::space::controllers::list_my_spaces::{
     MySpaceResponse, list_my_spaces_handler,
@@ -8,15 +9,11 @@ use dioxus_translate::use_language;
 /// A horizontal row of spaces the user is participating in, displayed on the home timeline.
 #[component]
 pub fn SpaceTimeline() -> Element {
-    let spaces = use_server_future(move || async move { list_my_spaces_handler(None).await })?;
+    let v = use_infinite_query(move |bookmark| async move {
+        list_my_spaces_handler(bookmark).await
+    })?;
 
-    let val = spaces.read();
-    let res = val.as_ref().unwrap();
-
-    let items = match res {
-        Ok(resp) if !resp.items.is_empty() => resp.items.clone(),
-        _ => return rsx! {},
-    };
+    let items = v.items();
 
     // Filter to only active spaces (Open or Ongoing status)
     let active_items: Vec<MySpaceResponse> = items
@@ -36,6 +33,7 @@ pub fn SpaceTimeline() -> Element {
     let lang = use_language();
     let mut can_scroll_right = use_signal(|| false);
     let mut scroll_check_pending = use_signal(|| false);
+    let mut scroll_dirty = use_signal(|| false);
 
     rsx! {
         section {
@@ -61,16 +59,25 @@ pub fn SpaceTimeline() -> Element {
                     },
                     onscroll: {
                         move |_| {
-                            // Throttle: skip if a scroll check is already in-flight to avoid
-                            // spawning excessive async tasks during inertial scrolling.
+                            // Trailing-edge throttle: if a scroll check is already in-flight,
+                            // set a dirty flag so one final check runs after it completes.
                             if scroll_check_pending() {
+                                scroll_dirty.set(true);
                                 return;
                             }
                             scroll_check_pending.set(true);
                             spawn(async move {
-                                let mut result = document::eval(CHECK_SCROLL_JS);
-                                if let Ok(val) = result.recv::<bool>().await {
-                                    can_scroll_right.set(val);
+                                loop {
+                                    scroll_dirty.set(false);
+                                    let mut result = document::eval(CHECK_SCROLL_JS);
+                                    if let Ok(val) = result.recv::<bool>().await {
+                                        can_scroll_right.set(val);
+                                    }
+                                    // If more scroll events arrived while we were checking,
+                                    // run one more check to capture the final scroll position.
+                                    if !scroll_dirty() {
+                                        break;
+                                    }
                                 }
                                 scroll_check_pending.set(false);
                             });
