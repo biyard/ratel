@@ -1,4 +1,5 @@
 import { expect } from "@playwright/test";
+import { CONFIGS } from "./config";
 
 export function wrap(page, project, baseDir) {
   const pageWithCapture = page;
@@ -88,13 +89,16 @@ export async function waitPopup(page, { visible = true }) {
 }
 
 export async function goto(page, url) {
-  await page.goto(url);
-  await page.waitForLoadState("domcontentloaded");
-  // Wait for Dioxus WASM to hydrate — SSR markup may already contain
-  // [data-dioxus-id], so also verify the interpreter is initialised.
-  await page.waitForFunction(
-    () => document.querySelector("[data-dioxus-id]") !== null,
-  );
+  await Promise.all([
+    page.waitForResponse(
+      (resp) =>
+        resp.url().includes("app-shell_bg.wasm") && resp.status() === 200,
+    ),
+    page.goto(url),
+  ]);
+  await page.waitForLoadState("load");
+  // It's for waiting for the Dioxus WASM to hydrate and the interpreter to be initialised.
+  await page.waitForTimeout(500);
 }
 
 export async function getEditor(page) {
