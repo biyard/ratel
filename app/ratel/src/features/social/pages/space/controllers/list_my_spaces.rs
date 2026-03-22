@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use super::super::*;
 use crate::common::models::space::{SpaceCommon, SpaceParticipant};
 
@@ -28,13 +30,16 @@ pub async fn list_my_spaces_handler(
 
     // When active_only is true, keep fetching participant pages server-side
     // until we collect up to `page_limit` active spaces or exhaust all pages.
-    // This avoids the pagination edge case where the first page might contain
-    // only inactive spaces, causing the client to render nothing.
+    // A hard cap on pages scanned prevents unbounded DynamoDB reads for users
+    // with many inactive participations.
+    let max_pages: i32 = 5;
+    let mut pages_scanned: i32 = 0;
     let mut collected_spaces: Vec<SpaceCommon> = Vec::new();
     let mut current_bookmark = bookmark;
     let final_bookmark;
 
     loop {
+        pages_scanned += 1;
         let mut opt = SpaceParticipant::opt().limit(page_limit);
         if let Some(ref bm) = current_bookmark {
             opt = opt.bookmark(bm.clone());
@@ -72,6 +77,12 @@ pub async fn list_my_spaces_handler(
             break;
         }
 
+        // Hard cap: stop scanning after max_pages to bound DynamoDB reads
+        if pages_scanned >= max_pages {
+            final_bookmark = next_bookmark;
+            break;
+        }
+
         current_bookmark = next_bookmark;
     }
 
@@ -87,6 +98,12 @@ pub async fn list_my_spaces_handler(
         crate::features::posts::models::Post::batch_get(cli, post_keys).await?
     };
 
+    // Build a HashMap for O(1) title lookups instead of O(spaces * posts) linear scans
+    let title_map: HashMap<String, String> = posts
+        .into_iter()
+        .map(|p| (p.pk.to_string(), p.title))
+        .collect();
+
     let items: Vec<MySpaceResponse> = collected_spaces
         .into_iter()
         .map(|space| {
@@ -95,12 +112,7 @@ pub async fn list_my_spaces_handler(
                 .clone()
                 .to_post_key()
                 .ok()
-                .and_then(|post_pk| {
-                    posts
-                        .iter()
-                        .find(|p| p.pk == post_pk)
-                        .map(|p| p.title.clone())
-                })
+                .and_then(|post_pk| title_map.get(&post_pk.to_string()).cloned())
                 .unwrap_or_default();
 
             MySpaceResponse {
