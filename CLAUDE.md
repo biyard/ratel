@@ -852,6 +852,59 @@ pub enum MyEnum {
 
 Use `let lang = use_language();` in the component, then `{value.translate(&lang())}` in RSX.
 
+## Dioxus UI Development Guidelines
+
+### Accessibility
+
+- **Always add `alt` attributes** to `img` elements (use descriptive text or `alt: ""` for decorative images)
+- **Always add `aria-label`** to icon-only buttons so screen readers can announce their purpose
+- **Use semantic elements** for clickable navigation: use `Link { to: "..." }` (renders `<a>`) instead of `div { onclick: ... }` with `use_navigator().push()`. This provides native keyboard accessibility (tab focus, Enter activation) and correct link semantics without manual `role`, `tabindex`, or keyboard handlers
+
+### Import Conventions
+
+- **Use wildcard re-exports**: Start with `use crate::features::<module>::*;` which brings in common items through the re-export chain (e.g., `crate::common::*` -> `dioxus_translate::*`, etc.)
+- **Only add explicit imports** for items NOT available through the wildcard chain (e.g., `use_infinite_query` from `crate::common::hooks`, `time_ago` from `crate::common::utils::time`, cross-feature handlers)
+- **Do NOT duplicate imports** that are already available via wildcards — check sibling files in the same directory to see which imports are standard
+
+### Scroll Event Handlers
+
+- **Never spawn unbounded async tasks** from `onscroll` — inertial scrolling fires many events rapidly
+- **Implement trailing-edge throttle**: use a `scroll_check_pending` signal guard to skip events while a check is in-flight, plus a `scroll_dirty` flag so one final check runs after the current one completes. This ensures the final scroll position is always reflected
+
+### Paginated Lists with `use_infinite_query`
+
+- **Prefer `use_infinite_query`** over `use_server_future` for any list that may exceed a single page
+- **Always render `{v.more_element()}`** at the end of the list container — this provides the IntersectionObserver sentinel that triggers loading additional pages
+- **Make `v` mutable** (`let mut v = use_infinite_query(...)`) so `more_element()` can be called
+
+### Dioxus Reactivity in `use_effect`
+
+- `use_effect` only re-runs when it reads reactive signals **inside the closure body**
+- Capturing a plain `usize` or other non-reactive value outside the closure will NOT trigger re-runs
+- To react to item count changes: call `v.items()` inside the effect (which reads from the underlying `Signal`), not `let count = items.len()` captured from outside
+
+### Event Handler Syntax
+
+- In Dioxus RSX, event handlers do NOT need outer brace wrapping. Use `onscroll: move |_| { ... },` directly, not `onscroll: { move |_| { ... } },`
+
+### Server-Side Pagination & Filtering
+
+- **Filter server-side** when possible — client-side filtering after paginated fetch can cause edge cases (e.g., first page contains only filtered-out items, hiding the section even though later pages have valid items)
+- **Add query parameters** (e.g., `active_only: Option<bool>`) instead of changing existing handler semantics, to avoid breaking other callers
+- **Hard-cap server-side loops**: when scanning multiple DynamoDB pages to collect filtered results, add a `max_pages` cap (e.g., 5) to bound reads per request
+- **Preserve bookmark on cap**: when hitting the hard cap, set `bookmark = next_bookmark` (not `None`) so clients can continue scanning from where they left off in subsequent requests
+- **Do NOT use `.take(remaining)` in filtered collection**: when filtering results across DynamoDB pages (e.g., `active_only`), collect all matching items from each page without `.take()` — otherwise valid items from a page may be silently dropped and can never be re-fetched since the bookmark advances past them. Use post-loop `truncate()` only if a hard limit is needed
+
+### Performance Patterns
+
+- **Use `HashMap` for O(1) lookups** instead of linear scans when mapping between collections (e.g., post titles by key)
+- **Avoid redundant `.to_string()` calls** in hot paths — store the result in a local variable when the same conversion is used multiple times (e.g., HashMap key lookup)
+
+### TailwindCSS Syntax
+
+- **Always use bracket syntax for arbitrary values**: write `z-[101]`, not `z-101`. Non-standard values without brackets are silently ignored by TailwindCSS and produce no CSS output
+- This applies to all arbitrary values: `z-[101]`, `w-[350px]`, `gap-[13px]`, etc.
+- Standard Tailwind scale values don't need brackets: `z-10`, `z-50`, `w-full`, `gap-4`
 ## Error Handling Convention
 
 ### Avoid `Error::BadRequest(String)` -- Use Typed Error Variants
