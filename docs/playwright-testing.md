@@ -97,7 +97,7 @@ All interaction helpers are defined in `tests/utils.js`. **Always use these inst
 
 ### `goto(page, path)`
 
-Navigates to `BASE_URL + path` and waits for `networkidle`.
+Navigates to `BASE_URL + path` with `waitUntil: "load"`, then waits for the Dioxus WASM app to hydrate by checking `window.dioxus.send` is available (with a 10s timeout).
 
 ```js
 await goto(page, "/");           // → http://localhost:8000/
@@ -106,7 +106,7 @@ await goto(page, "/spaces");     // → http://localhost:8000/spaces
 
 ### `click(page, opts)`
 
-Finds an element using locator options, asserts it's visible, clicks it, and waits for `networkidle`. Returns the locator.
+Finds an element using locator options, asserts it's visible, clicks it, and waits for `load` state. Returns the locator.
 
 ```js
 await click(page, { role: "button", text: /sign in/i });
@@ -357,7 +357,7 @@ PLAYWRIGHT_ID=my-test-run npx playwright test
 
 - Default timeout is 5000ms. Increase with `PLAYWRIGHT_TIMEOUT` env var.
 - Ensure the app is running at `http://localhost:8000` (or set `PLAYWRIGHT_BASE_URL`).
-- Check that `networkidle` is reachable (no long-polling or WebSocket connections that prevent idle).
+- Check that the Dioxus WASM app is loading correctly (the `goto()` helper waits for `window.dioxus.send` to be available).
 
 ### Auth Setup Fails
 
