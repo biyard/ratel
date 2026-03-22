@@ -903,6 +903,19 @@ return Err(MyFeatureError::SpecificErrorVariant.into());
 
 **When refactoring existing code:** If you encounter `Error::BadRequest(String)` in code you are modifying, refactor it to use a typed error variant in the same change.
 
+## Server-Side Validation for User-Configurable Numeric Values
+
+**Always enforce reasonable server-side upper bounds for user-configurable numeric values** (e.g., `retry_count`, attempt limits, page sizes). Do not rely on frontend-only validation.
+
+**Key rules:**
+
+1. **Define a shared constant** for the upper bound in the feature module (e.g., `pub const MAX_TOTAL_ATTEMPTS: i64 = 100;`) so all controllers use the same limit.
+2. **Validate at the write path** (e.g., `update_quiz`) — reject values exceeding the bound with a typed error variant.
+3. **Clamp at the read path** (e.g., `get_quiz`, `respond_quiz`) — use `.min(MAX_CONSTANT)` instead of `unwrap_or(i32::MAX)` or `unwrap_or(i64::MAX)` as fallbacks. This provides defense-in-depth for legacy data that may have been written before the validation was added.
+4. **Never use `i32::MAX` or `i64::MAX` as default limits** for DynamoDB queries or similar operations — these create unbounded read costs and abuse vectors.
+
+**Why:** User-controlled values can be set to extreme values (e.g., `i64::MAX`), causing integer overflow, unbounded database queries, and excessive read costs. Server-side bounds prevent this regardless of client behavior.
+
 ## Agent Workflow Rules
 
 ### PR Comment Resolver
