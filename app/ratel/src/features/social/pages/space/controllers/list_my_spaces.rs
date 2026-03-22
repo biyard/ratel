@@ -11,6 +11,9 @@ pub struct MySpaceResponse {
     pub author_profile_url: String,
     pub created_at: i64,
     pub visibility: SpaceVisibility,
+    pub status: Option<SpaceStatus>,
+    pub logo: String,
+    pub participants: i64,
 }
 
 #[get("/api/me/spaces?bookmark", user: crate::features::auth::User)]
@@ -74,6 +77,9 @@ pub async fn list_my_spaces_handler(
                 author_profile_url: space.author_profile_url,
                 created_at: space.created_at,
                 visibility: space.visibility,
+                status: space.status,
+                logo: space.logo,
+                participants: space.participants,
             }
         })
         .collect();
