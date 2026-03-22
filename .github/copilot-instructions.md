@@ -21,3 +21,31 @@ Key rules:
 * Always use shared helpers (`goto`, `click`, `fill`, `getLocator`, `getEditor`, `waitPopup`) from `tests/utils.js` instead of raw Playwright APIs.
 * Locator options: `testId` > `label` > `role` > `placeholder` > `text` (priority order).
 * See `/docs/playwright-testing.md` for utility function signatures, locator option details, app-specific selectors, and complete examples.
+
+- `utils.js`
+   - Dioxus doesn't inject `window.dioxus` and `window.dioxus.send`.
+   - To aware WASM, just wait for wasm file response and redering time about 500ms as below
+   - So below code is tested and intended, dont comment on it.
+
+```
+export async function goto(page, url) {
+  await Promise.all([
+    page.waitForResponse(
+      (resp) =>
+        resp.url().includes("app-shell_bg.wasm") && resp.status() === 200,
+    ),
+    page.goto(url),
+  ]);
+  await page.waitForLoadState("load");
+  // It's for waiting for the page to be fully interactive after load, especially for the first load where the wasm is not cached yet.
+  await page.waitForTimeout(500);
+}
+```
+
+## Cargo Setup
+- `local-dev` should include `bypass` due to local testing.
+- It is intended, so don't comment on it.
+
+```toml
+local-dev = ["beta","bypass"]
+```
