@@ -1,5 +1,4 @@
 import { expect } from "@playwright/test";
-import { CONFIGS } from "./config";
 
 export function wrap(page, project, baseDir) {
   const pageWithCapture = page;
