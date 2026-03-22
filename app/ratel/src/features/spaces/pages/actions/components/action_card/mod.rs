@@ -163,7 +163,7 @@ pub fn ActionCard(action: SpaceActionSummary, space_id: SpacePartition) -> Eleme
                     if let Some(result) = quiz_result_label {
                         span {
                             class: "inline-flex items-center px-2.5 font-semibold h-[26px] rounded-[8px] text-[12px]/[18px]",
-                            class: if action.quiz_passed == Some(true) { "bg-green-500/20 text-green-400 light:bg-green-100 light:text-green-700" } else { "bg-red-500/20 text-red-400 light:bg-red-100 light:text-red-700" },
+                            class: if action.quiz_passed == Some(true) { "bg-sp-act-quiz-pass-bg text-sp-act-quiz-pass-text" } else { "bg-sp-act-quiz-fail-bg text-sp-act-quiz-fail-text" },
                             {result}
                         }
                     }
