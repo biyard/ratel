@@ -852,6 +852,47 @@ pub enum MyEnum {
 
 Use `let lang = use_language();` in the component, then `{value.translate(&lang())}` in RSX.
 
+## Dioxus UI Development Guidelines
+
+### Accessibility
+
+- **Always add `alt` attributes** to `img` elements (use descriptive text or `alt: ""` for decorative images)
+- **Always add `aria-label`** to icon-only buttons so screen readers can announce their purpose
+- **Use semantic elements** for clickable navigation: use `Link { to: "..." }` (renders `<a>`) instead of `div { onclick: ... }` with `use_navigator().push()`. This provides native keyboard accessibility (tab focus, Enter activation) and correct link semantics without manual `role`, `tabindex`, or keyboard handlers
+
+### Scroll Event Handlers
+
+- **Never spawn unbounded async tasks** from `onscroll` — inertial scrolling fires many events rapidly
+- **Implement trailing-edge throttle**: use a `scroll_check_pending` signal guard to skip events while a check is in-flight, plus a `scroll_dirty` flag so one final check runs after the current one completes. This ensures the final scroll position is always reflected
+
+### Paginated Lists with `use_infinite_query`
+
+- **Prefer `use_infinite_query`** over `use_server_future` for any list that may exceed a single page
+- **Always render `{v.more_element()}`** at the end of the list container — this provides the IntersectionObserver sentinel that triggers loading additional pages
+- **Make `v` mutable** (`let mut v = use_infinite_query(...)`) so `more_element()` can be called
+
+### Dioxus Reactivity in `use_effect`
+
+- `use_effect` only re-runs when it reads reactive signals **inside the closure body**
+- Capturing a plain `usize` or other non-reactive value outside the closure will NOT trigger re-runs
+- To react to item count changes: call `v.items()` inside the effect (which reads from the underlying `Signal`), not `let count = items.len()` captured from outside
+
+### Event Handler Syntax
+
+- In Dioxus RSX, event handlers do NOT need outer brace wrapping. Use `onscroll: move |_| { ... },` directly, not `onscroll: { move |_| { ... } },`
+
+### Server-Side Pagination & Filtering
+
+- **Filter server-side** when possible — client-side filtering after paginated fetch can cause edge cases (e.g., first page contains only filtered-out items, hiding the section even though later pages have valid items)
+- **Add query parameters** (e.g., `active_only: Option<bool>`) instead of changing existing handler semantics, to avoid breaking other callers
+- **Hard-cap server-side loops**: when scanning multiple DynamoDB pages to collect filtered results, add a `max_pages` cap (e.g., 5) to bound reads per request
+- **Clear bookmark on cap**: when hitting the hard cap, set `bookmark = None` so callers don't mistakenly treat a cap-induced stop as "more pages available"
+- **Bound collection size**: use `.take(remaining)` during collection instead of post-loop `truncate()` to guarantee `items.len() <= page_limit` at the point of insertion
+
+### Performance Patterns
+
+- **Use `HashMap` for O(1) lookups** instead of linear scans when mapping between collections (e.g., post titles by key)
+
 ## Agent Workflow Rules
 
 ### PR Comment Resolver
