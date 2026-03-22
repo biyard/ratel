@@ -151,7 +151,7 @@ membership = []
 social = []
 spaces = []
 spaces_full = ["spaces"]
-local-dev = ["beta","bypass"]
+local-dev = ["beta"]
 beta = []
 futures = ["dep:futures"]
 
