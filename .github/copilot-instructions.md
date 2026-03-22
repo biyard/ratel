@@ -22,30 +22,23 @@ Key rules:
 * Locator options: `testId` > `label` > `role` > `placeholder` > `text` (priority order).
 * See `/docs/playwright-testing.md` for utility function signatures, locator option details, app-specific selectors, and complete examples.
 
-- `utils.js`
-   - Dioxus doesn't inject `window.dioxus` and `window.dioxus.send`.
-   - To aware WASM, just wait for wasm file response and redering time about 500ms as below
-   - So below code is tested and intended, dont comment on it.
+### Navigation & Hydration in `utils.js`
 
-```
+The `goto()` helper uses deterministic hydration detection via `window.dioxus.send`. Do not suggest reverting to `waitForResponse` + `waitForTimeout` patterns — the current approach is intentional and resilient to cached WASM responses.
+
+```js
 export async function goto(page, url) {
-  await Promise.all([
-    page.waitForResponse(
-      (resp) =>
-        resp.url().includes("app-shell_bg.wasm") && resp.status() === 200,
-    ),
-    page.goto(url),
-  ]);
-  await page.waitForLoadState("load");
-  // It's for waiting for the page to be fully interactive after load, especially for the first load where the wasm is not cached yet.
-  await page.waitForTimeout(500);
+  await page.goto(url, { waitUntil: "load" });
+  await page.waitForFunction(
+    () =>
+      typeof window !== "undefined" &&
+      window.dioxus &&
+      typeof window.dioxus.send === "function",
+    { timeout: 10000 },
+  );
 }
 ```
 
-## Cargo Setup
-- `local-dev` should include `bypass` due to local testing.
-- It is intended, so don't comment on it.
+## Feature Flag Safety
 
-```toml
-local-dev = ["beta","bypass"]
-```
+* `bypass` must NOT be bundled into `local-dev` or other convenience feature groups. Keep it opt-in via explicit `--features bypass` only in test/local scripts.
