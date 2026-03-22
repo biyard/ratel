@@ -905,6 +905,13 @@ Use `let lang = use_language();` in the component, then `{value.translate(&lang(
 - **Always use bracket syntax for arbitrary values**: write `z-[101]`, not `z-101`. Non-standard values without brackets are silently ignored by TailwindCSS and produce no CSS output
 - This applies to all arbitrary values: `z-[101]`, `w-[350px]`, `gap-[13px]`, etc.
 - Standard Tailwind scale values don't need brackets: `z-10`, `z-50`, `w-full`, `gap-4`
+
+### TailwindCSS Color Classes
+
+- **Never use Tailwind's built-in color palette classes** (`text-neutral-400`, `text-gray-500`, `bg-slate-800`, `text-zinc-300`, etc.) — these bypass the project's theme system and break dark/light mode consistency
+- **Always use semantic token classes** instead: `text-foreground-muted`, `text-text-primary`, `bg-card-bg`, `bg-background`, `border-border`, etc. (see Design Tokens section in `.claude/rules/figma-design-system.md`)
+- **Do not combine `light:` variant with palette colors** (e.g., `light:text-neutral-600`) — use a single semantic token class that handles both themes automatically
+- Tailwind spacing, sizing, and layout utilities (`gap-4`, `p-5`, `rounded-lg`, `w-full`) are fine to use directly
 ## Error Handling Convention
 
 ### Avoid `Error::BadRequest(String)` -- Use Typed Error Variants
