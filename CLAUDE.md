@@ -886,12 +886,19 @@ Use `let lang = use_language();` in the component, then `{value.translate(&lang(
 - **Filter server-side** when possible — client-side filtering after paginated fetch can cause edge cases (e.g., first page contains only filtered-out items, hiding the section even though later pages have valid items)
 - **Add query parameters** (e.g., `active_only: Option<bool>`) instead of changing existing handler semantics, to avoid breaking other callers
 - **Hard-cap server-side loops**: when scanning multiple DynamoDB pages to collect filtered results, add a `max_pages` cap (e.g., 5) to bound reads per request
-- **Clear bookmark on cap**: when hitting the hard cap, set `bookmark = None` so callers don't mistakenly treat a cap-induced stop as "more pages available"
-- **Bound collection size**: use `.take(remaining)` during collection instead of post-loop `truncate()` to guarantee `items.len() <= page_limit` at the point of insertion
+- **Preserve bookmark on cap**: when hitting the hard cap, *keep* and return the real `next_bookmark` (do **not** clear it to `None`) so clients can continue scanning from where they left off in subsequent requests, even if the current response already contains enough filtered items
+- **Do NOT use `.take(remaining)` in filtered collection**: when filtering results across DynamoDB pages (e.g., `active_only`), collect all matching items from each page without `.take()` — otherwise valid items from a page may be silently dropped and can never be re-fetched since the bookmark advances past them. It is acceptable for the final filtered `items` collection to exceed the original `page_limit`; use post-loop `truncate()` only when you introduce a separate, explicit hard limit that is independent of `page_limit`
 
 ### Performance Patterns
 
 - **Use `HashMap` for O(1) lookups** instead of linear scans when mapping between collections (e.g., post titles by key)
+- **Avoid redundant `.to_string()` calls** in hot paths — store the result in a local variable when the same conversion is used multiple times (e.g., HashMap key lookup)
+
+### TailwindCSS Syntax
+
+- **Always use bracket syntax for arbitrary values**: write `z-[101]`, not `z-101`. Non-standard values without brackets are silently ignored by TailwindCSS and produce no CSS output
+- This applies to all arbitrary values: `z-[101]`, `w-[350px]`, `gap-[13px]`, etc.
+- Standard Tailwind scale values don't need brackets: `z-10`, `z-50`, `w-full`, `gap-4`
 
 ## Agent Workflow Rules
 
