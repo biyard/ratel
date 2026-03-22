@@ -985,7 +985,7 @@ When the `pr-comment-resolver` agent resolves PR review comments, it must save t
 
 ### Documentation Consistency
 
-When updating coding guidelines or conventions in `CLAUDE.md`, also update `.github/copilot-instructions.md` to keep both files consistent. Contradictory guidance between these files causes conflicting review feedback from different AI tools (Claude Code vs GitHub Copilot).
+When updating coding guidelines or conventions in `CLAUDE.md`, also update `.github/copilot-instructions.md` and `docs/playwright-testing.md` (for Playwright-related conventions) to keep all files consistent. Contradictory guidance between these files causes conflicting review feedback from different AI tools (Claude Code vs GitHub Copilot).
 
 ## Playwright Test Guidelines
 
