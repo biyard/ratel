@@ -876,30 +876,25 @@ pub enum MyFeatureError {
 
 2. **Implement server traits** (`status_code()`, `IntoResponse`, `AsStatusCode`) following the `SpaceRewardError` pattern.
 
-3. **Register in `common::Error`** by adding a `#[from]` variant:
+3. **Register in `common::Error`** by adding a `#[from]` variant with `#[translate(from)]`:
 
 ```rust
 #[error("{0}")]
+#[translate(from)]
 MyFeature(#[from] MyFeatureError),
 ```
 
-4. **Add delegation arms in the manual `Translate` impl for `common::Error`** (`app/ratel/src/common/types/error.rs`). The `Error` enum does **not** use `derive(Translate)` — it has a hand-written `impl Translate` that delegates to the inner error's `translate()` for wrapper variants. Add arms for both `En` and `Ko` (if `feature = "ko"`) branches:
+The `#[translate(from)]` attribute tells the `Translate` derive macro to delegate translation to the inner type's `translate()` method instead of using a static string. This ensures `toast.error()` shows the specific inner-error translation (e.g., "No remaining attempts") instead of a generic outer message.
 
-```rust
-Error::MyFeature(e) => e.translate(lang),
-```
+4. **Add to status code match arms** in both `IntoResponse` and `AsStatusCode` impls.
 
-This ensures `toast.error()` shows the specific inner-error translation (e.g., "No remaining attempts") instead of a generic outer message.
-
-5. **Add to status code match arms** in both `IntoResponse` and `AsStatusCode` impls.
-
-6. **Use in controllers** via `.into()`:
+5. **Use in controllers** via `.into()`:
 
 ```rust
 return Err(MyFeatureError::SpecificErrorVariant.into());
 ```
 
-**Why:** Typed errors enable per-variant i18n translation in the frontend via `toast.error()`, provide better error categorization, and eliminate ambiguous string-based error messages. The manual `Translate` impl on `common::Error` delegates to the inner error so that each variant's translation is surfaced correctly.
+**Why:** Typed errors enable per-variant i18n translation in the frontend via `toast.error()`, provide better error categorization, and eliminate ambiguous string-based error messages. The `#[translate(from)]` attribute on wrapper variants delegates to the inner error's `Translate` impl so that each variant's translation is surfaced correctly.
 
 **When refactoring existing code:** If you encounter `Error::BadRequest(String)` in code you are modifying, refactor it to use a typed error variant in the same change.
 
