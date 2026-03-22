@@ -880,19 +880,26 @@ pub enum MyFeatureError {
 
 ```rust
 #[error("{0}")]
-#[translate(en = "Feature error", ko = "기능 오류가 발생했습니다.")]
 MyFeature(#[from] MyFeatureError),
 ```
 
-4. **Add to status code match arms** in both `IntoResponse` and `AsStatusCode` impls.
+4. **Add delegation arms in the manual `Translate` impl for `common::Error`** (`app/ratel/src/common/types/error.rs`). The `Error` enum does **not** use `derive(Translate)` — it has a hand-written `impl Translate` that delegates to the inner error's `translate()` for wrapper variants. Add arms for both `En` and `Ko` (if `feature = "ko"`) branches:
 
-5. **Use in controllers** via `.into()`:
+```rust
+Error::MyFeature(e) => e.translate(lang),
+```
+
+This ensures `toast.error()` shows the specific inner-error translation (e.g., "No remaining attempts") instead of a generic outer message.
+
+5. **Add to status code match arms** in both `IntoResponse` and `AsStatusCode` impls.
+
+6. **Use in controllers** via `.into()`:
 
 ```rust
 return Err(MyFeatureError::SpecificErrorVariant.into());
 ```
 
-**Why:** Typed errors enable automatic i18n translation in the frontend via `toast.error()`, provide better error categorization, and eliminate ambiguous string-based error messages.
+**Why:** Typed errors enable per-variant i18n translation in the frontend via `toast.error()`, provide better error categorization, and eliminate ambiguous string-based error messages. The manual `Translate` impl on `common::Error` delegates to the inner error so that each variant's translation is surfaced correctly.
 
 **When refactoring existing code:** If you encounter `Error::BadRequest(String)` in code you are modifying, refactor it to use a typed error variant in the same change.
 
