@@ -40,14 +40,12 @@ pub async fn respond_quiz(
         space_action.prerequisite,
         space.status,
     ) {
-        return Err(Error::BadRequest(
-            "Quiz is not available in the current space status".into(),
-        ));
+        return Err(SpaceActionQuizError::NotAvailableInCurrentStatus.into());
     }
 
     let now = crate::common::utils::time::get_now_timestamp_millis();
     if now < space_action.started_at || now > space_action.ended_at {
-        return Err(Error::BadRequest("Quiz is not in progress".into()));
+        return Err(SpaceActionQuizError::NotInProgress.into());
     }
 
     let answer_sk = EntityType::SpaceQuizAnswer(quiz_id.to_string());
@@ -59,7 +57,7 @@ pub async fn respond_quiz(
         quiz.questions.clone(),
         req.answers.clone(),
     ) {
-        return Err(Error::BadRequest("Answers do not match questions".into()));
+        return Err(SpaceActionQuizError::AnswersMismatch.into());
     }
 
     let total_allowed = quiz.retry_count.saturating_add(1);
@@ -68,7 +66,7 @@ pub async fn respond_quiz(
         SpaceQuizAttempt::list_by_quiz_user(cli, &quiz_id, &author.pk, limit)
             .await?;
     if attempts.len() as i64 >= total_allowed {
-        return Err(Error::BadRequest("No remaining attempts".into()));
+        return Err(SpaceActionQuizError::NoRemainingAttempts.into());
     }
 
     let score = calculate_score(&quiz.questions, &correct.answers, &req.answers)?;
@@ -91,7 +89,7 @@ fn calculate_score(
     answers: &[Answer],
 ) -> Result<i64> {
     if questions.len() != correct.len() || questions.len() != answers.len() {
-        return Err(Error::BadRequest("Answers do not match questions".into()));
+        return Err(SpaceActionQuizError::AnswersMismatch.into());
     }
 
     let mut score = 0;
