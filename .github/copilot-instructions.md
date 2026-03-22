@@ -22,28 +22,11 @@ Key rules:
 * Locator options: `testId` > `label` > `role` > `placeholder` > `text` (priority order).
 * See `/docs/playwright-testing.md` for utility function signatures, locator option details, app-specific selectors, and complete examples.
 
-### Navigation & Hydration in `utils.js`
-
-The `goto()` helper uses deterministic hydration detection via `window.dioxus.send`. Do not suggest reverting to `waitForResponse` + `waitForTimeout` patterns — the current approach is intentional and resilient to cached WASM responses.
-
-```js
-export async function goto(page, url) {
-  await page.goto(url, { waitUntil: "load" });
-  await page.waitForFunction(
-    () =>
-      typeof window !== "undefined" &&
-      window.dioxus &&
-      typeof window.dioxus.send === "function",
-    { timeout: 10000 },
-  );
-}
-```
 
 ### In-Page Interactions vs Navigation
 
 * Do NOT use `waitForLoadState("load")` after non-navigation interactions (autosave, tab switch, blur). It resolves immediately and doesn't wait for the request. Use deterministic UI signals instead.
 * Avoid `networkidle` for SPA navigation — use deterministic UI readiness assertions (e.g., `getLocator` for page-specific elements).
-* Follow `waitForURL()` with a hydration check (`waitForFunction` for `window.dioxus.send`).
 
 ### Shared Helpers & Locators
 
