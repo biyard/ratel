@@ -51,7 +51,7 @@ pub async fn list_posts_handler(
                 .to_post_like_key()
                 .expect("to_post_like_key");
             let liked = likes.iter().any(|like| like.pk == post_like_pk);
-            PostResponse::from((user.clone(), post)).with_like(liked)
+            PostResponse::from(post).with_like(liked)
         })
         .collect();
 
