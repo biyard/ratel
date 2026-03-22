@@ -78,6 +78,18 @@ translate! {
         en: "Question",
         ko: "질문",
     },
+    no_permission: {
+        en: "You do not have permission to participate in this quiz.",
+        ko: "이 퀴즈에 참여할 권한이 없습니다.",
+    },
+    already_passed: {
+        en: "You have already passed this quiz.",
+        ko: "이미 이 퀴즈를 통과했습니다.",
+    },
+    no_remaining_attempts: {
+        en: "You have no remaining attempts for this quiz.",
+        ko: "남은 참여 횟수가 없습니다.",
+    },
 }
 
 #[component]
@@ -284,13 +296,31 @@ pub fn QuizReadPage(
                 div { class: "w-full",
                     if !is_in_progress {
                         if now < quiz.started_at {
-                            div { class: "rounded-lg bg-neutral-800 p-3 text-sm text-neutral-400",
+                            div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
                                 {i18n.quiz_not_started}
                             }
                         } else {
-                            div { class: "rounded-lg bg-neutral-800 p-3 text-sm text-neutral-400",
+                            div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
                                 {i18n.quiz_ended}
                             }
+                        }
+                    }
+
+                    if is_in_progress && !can_execute_action {
+                        div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
+                            {i18n.no_permission}
+                        }
+                    }
+
+                    if is_in_progress && can_execute_action && has_passed {
+                        div { class: "rounded-lg bg-banner-success-bg p-3 text-sm text-banner-success-text",
+                            {i18n.already_passed}
+                        }
+                    }
+
+                    if is_in_progress && can_execute_action && !has_passed && quiz.attempt_count >= quiz.retry_count && can_respond {
+                        div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
+                            {i18n.no_remaining_attempts}
                         }
                     }
 

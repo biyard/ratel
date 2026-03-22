@@ -55,4 +55,12 @@ translate! {
         en: "Failed to submit response.",
         ko: "응답 제출에 실패했습니다.",
     },
+    no_permission: {
+        en: "You do not have permission to participate in this poll.",
+        ko: "이 투표에 참여할 권한이 없습니다.",
+    },
+    already_responded: {
+        en: "You have already participated in this poll.",
+        ko: "이미 이 투표에 참여했습니다.",
+    },
 }
