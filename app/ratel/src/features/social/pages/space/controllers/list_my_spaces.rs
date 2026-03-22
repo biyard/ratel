@@ -60,7 +60,13 @@ pub async fn list_my_spaces_handler(
         };
 
         if filter_active {
-            collected_spaces.extend(spaces.into_iter().filter(|s| s.is_active()));
+            let remaining = page_limit as usize - collected_spaces.len();
+            collected_spaces.extend(
+                spaces
+                    .into_iter()
+                    .filter(|s| s.is_active())
+                    .take(remaining),
+            );
         } else {
             collected_spaces.extend(spaces);
         }
@@ -88,11 +94,6 @@ pub async fn list_my_spaces_handler(
 
         current_bookmark = next_bookmark;
     }
-
-    // Truncate to page_limit to guarantee consistent page sizes. When
-    // filter_active is true, a full participant page may push collected_spaces
-    // past the limit before the check fires, so we trim the excess here.
-    collected_spaces.truncate(page_limit as usize);
 
     let post_keys: Vec<(Partition, EntityType)> = collected_spaces
         .iter()
