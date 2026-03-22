@@ -353,82 +353,105 @@ test.describe.serial("Space with actions created by a team", () => {
     });
     const page = await context.newPage();
 
-    // Navigate to the published space as anonymous
-    await goto(page, spaceUrl + "/dashboard");
+    try {
+      // Navigate to the published space as anonymous
+      await goto(page, spaceUrl + "/dashboard");
 
-    // Click Sign In on the space sidebar
-    await click(page, { text: "Sign In" });
-    await waitPopup(page, { visible: true });
+      // Click Sign In on the space sidebar
+      await click(page, { text: "Sign In" });
+      await waitPopup(page, { visible: true });
 
-    // Switch to signup modal
-    await click(page, { text: "Create an account" });
+      // Switch to signup modal
+      await click(page, { text: "Create an account" });
 
-    // Fill signup form
-    const signupEmail = `e2e_signup_${Date.now()}@biyard.co`;
-    await fill(page, { placeholder: "Enter your email address" }, signupEmail);
+      // Fill signup form
+      const signupEmail = `e2e_signup_${Date.now()}@biyard.co`;
+      await fill(
+        page,
+        { placeholder: "Enter your email address" },
+        signupEmail,
+      );
 
-    // Send and verify code
-    await click(page, { text: "Send" });
-    await fill(page, { placeholder: "Enter the verification code" }, "000000");
-    await click(page, { text: "Verify" });
+      // Send and verify code (requires bypass feature on the server)
+      await click(page, { text: "Send" });
+      await fill(
+        page,
+        { placeholder: "Enter the verification code" },
+        "000000",
+      );
+      await click(page, { text: "Verify" });
 
-    // Fill password
-    await fill(page, { placeholder: "Enter your password" }, "Test!234");
-    await fill(page, { placeholder: "Re-enter your password" }, "Test!234");
+      // Wait for verification to complete — the "Send" button disappears
+      // once is_valid_email becomes true after async server response
+      await expect(page.getByText("Send", { exact: true })).toBeHidden();
 
-    // Fill display name and username
-    const uniqueId = Date.now().toString();
-    await fill(
-      page,
-      { placeholder: "Enter your display name" },
-      `E2E User ${uniqueId}`,
-    );
-    await fill(page, { placeholder: "Enter your user name" }, `u${uniqueId}`);
+      // Fill password
+      await fill(page, { placeholder: "Enter your password" }, "Test!234");
+      await fill(
+        page,
+        { placeholder: "Re-enter your password" },
+        "Test!234",
+      );
 
-    // Agree to Terms of Service (required checkbox)
-    const tosCheckbox = page
-      .locator('label:has(input[type="checkbox"])')
-      .first();
-    await tosCheckbox.click();
+      // Fill display name and username
+      const uniqueId = Date.now().toString();
+      await fill(
+        page,
+        { placeholder: "Enter your display name" },
+        `E2E User ${uniqueId}`,
+      );
+      await fill(
+        page,
+        { placeholder: "Enter your user name" },
+        `u${uniqueId}`,
+      );
 
-    // Submit signup
-    await click(page, { text: "Finished Sign-up" });
+      // Agree to Terms of Service (required checkbox)
+      await click(page, {
+        label: "[Required] I have read and accept the Terms of Service.",
+      });
 
-    // Wait for signup modal to close
-    await waitPopup(page, { visible: false });
+      // Submit signup
+      await click(page, { text: "Finished Sign-up" });
 
-    // Reload the space page to see participation card as a logged-in viewer
-    await goto(page, spaceUrl + "/dashboard");
+      // Wait for signup modal to close
+      await waitPopup(page, { visible: false });
 
-    // Click Participate button on the participation card
-    await click(page, { text: "Participate" });
+      // Reload the space page to see participation card as a logged-in viewer
+      await goto(page, spaceUrl + "/dashboard");
 
-    // "Required Actions" layover appears with prerequisite actions
-    await getLocator(page, { text: "Required Actions" });
+      // Click Participate button on the participation card
+      await click(page, { text: "Participate" });
 
-    // Click the prerequisite poll action card to navigate to the poll
-    await click(page, { text: "How should the team allocate the Q2 budget?" });
+      // "Required Actions" layover appears with prerequisite actions
+      await getLocator(page, { text: "Required Actions" });
 
-    // Wait for poll page to load
-    await page.waitForURL(/\/actions\/polls\//, {
-      waitUntil: "load",
-    });
+      // Click the prerequisite poll action card to navigate to the poll
+      await click(page, {
+        text: "How should the team allocate the Q2 budget?",
+      });
 
-    // Answer the single choice question by clicking one of the options
-    await click(page, { text: "Invest in R&D" });
+      // Wait for poll page to load
+      await page.waitForURL(/\/actions\/polls\//, {
+        waitUntil: "load",
+      });
 
-    // Submit the poll response
-    await click(page, { text: "Submit" });
-    await page.waitForLoadState("load");
+      // Answer the single choice question by clicking one of the options
+      await click(page, { text: "Invest in R&D" });
 
-    // Navigate back to dashboard to verify participation
-    await goto(page, spaceUrl + "/dashboard");
+      // Submit the poll response
+      await click(page, { text: "Submit" });
+      await page.waitForLoadState("load");
 
-    // Verify user profile shows in the sidebar with Candidate role
-    const userProfile = page.locator("#space-user-profile");
-    await expect(userProfile).toBeVisible();
-    await expect(userProfile).toContainText(`E2E User ${uniqueId}`);
+      // Navigate back to dashboard to verify participation
+      await goto(page, spaceUrl + "/dashboard");
 
-    await context.close();
+      // Verify user profile shows in the sidebar with Candidate role
+      const userProfile = page.locator("#space-user-profile");
+      await expect(userProfile).toBeVisible();
+      await expect(userProfile).toContainText(`E2E User ${uniqueId}`);
+    } finally {
+      await context.close();
+    }
   });
 });
