@@ -148,15 +148,28 @@ pub fn PollContent(
             },
             div { class: "w-full",
                 if poll.status == PollStatus::Finish {
-                    div { class: "rounded-lg bg-neutral-800 p-3 text-sm text-neutral-400",
+                    div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
                         {tr.poll_ended}
                     }
                 }
                 if poll.status == PollStatus::NotStarted {
-                    div { class: "rounded-lg bg-neutral-800 p-3 text-sm text-neutral-400",
+                    div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
                         {tr.poll_not_started}
                     }
                 }
+
+                if is_in_progress && !can_execute_action {
+                    div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
+                        {tr.no_permission}
+                    }
+                }
+
+                if is_in_progress && can_execute_action && has_response && !poll.response_editable && can_respond {
+                    div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
+                        {tr.already_responded}
+                    }
+                }
+
                 if total == 0 {
                     div { class: "flex items-center justify-center py-10 text-neutral-500",
                         {tr.no_questions}
