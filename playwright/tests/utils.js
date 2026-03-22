@@ -88,15 +88,13 @@ export async function waitPopup(page, { visible = true }) {
 }
 
 export async function goto(page, url) {
-  await page.goto(url, { waitUntil: "load" });
-  // Wait for the Dioxus WASM app to hydrate and the interpreter to be initialised.
-  await page.waitForFunction(
-    () =>
-      typeof window !== "undefined" &&
-      window.dioxus &&
-      typeof window.dioxus.send === "function",
-    { timeout: 10000 },
-  );
+   await page.goto(url); 
+   await page.waitForLoadState("domcontentloaded"); 
+   // Wait for Dioxus WASM to hydrate — SSR markup may already contain 
+   // [data-dioxus-id], so also verify the interpreter is initialised. 
+   await page.waitForFunction( 
+     () => document.querySelector("[data-dioxus-id]") !== null, 
+   );
 }
 
 export async function getEditor(page) {
