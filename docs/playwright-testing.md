@@ -390,6 +390,8 @@ PLAYWRIGHT_ID=my-test-run npx playwright test
 10. **Don't add manual waits after `click()` helper** — `click()` already calls `waitForLoadState("load")` internally. Adding another wait is redundant and slows tests.
 11. **Use `try/finally` for browser contexts** — When manually creating `browser.newContext()`, wrap the test body in `try/finally` to guarantee `context.close()` runs.
 12. **Document `bypass` feature dependency** — Tests using hardcoded verification codes (e.g., `000000`) only work with `--features bypass`. Note this requirement in the test file header.
+13. **Use `build-testing` for Playwright Docker images** — The PR workflow must use `make build-testing` (not `make build`) when building Docker images for Playwright tests. `build-testing` includes the `bypass` feature so signup/verification flows with code `"000000"` work. The production `build` target excludes `bypass` for security.
+14. **Wait for async server responses with deterministic UI signals** — After triggering async server calls (e.g., clicking "Verify"), don't rely on `waitForLoadState("load")` which resolves immediately for non-navigation interactions. Wait for a visible UI state change (e.g., `expect(page.getByText("Send", { exact: true })).toBeHidden()`).
 
 ## In-Page Interactions vs Navigation
 

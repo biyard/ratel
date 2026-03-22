@@ -39,7 +39,10 @@ Key rules:
 
 * When using `browser.newContext()`, wrap in `try/finally` to guarantee `context.close()`.
 * Tests using hardcoded verification codes (e.g., `000000`) require `--features bypass` on the backend. Document this dependency clearly.
+* Use `make build-testing` (not `make build`) when building Docker images for Playwright tests. `build-testing` includes the `bypass` feature for signup/verification flows.
+* After async server calls (e.g., clicking "Verify"), wait for deterministic UI signals instead of `waitForLoadState("load")` which resolves immediately for non-navigation interactions.
 
 ## Feature Flag Safety
 
 * `bypass` must NOT be bundled into `local-dev` or other convenience feature groups. Keep it opt-in via explicit `--features bypass` only in test/local scripts.
+* For Playwright CI testing, use the dedicated `build-testing` Makefile target which explicitly includes `bypass`. The production `build` target must never include `bypass`.

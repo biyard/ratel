@@ -1014,6 +1014,8 @@ When updating coding guidelines or conventions in `CLAUDE.md`, also update `.git
 ### Test Environment Dependencies
 
 - **Document `bypass` feature dependency** — tests that hardcode verification codes (e.g., `000000`) only work when the backend is built with `--features bypass`. Document this requirement clearly in the test file header or guard it behind an environment check to prevent environment-dependent test failures
+- **Use `build-testing` for Playwright Docker images** — the PR workflow must use `make build-testing` (not `make build`) when building Docker images for Playwright tests. `build-testing` includes the `bypass` feature so that signup/verification flows with hardcoded code `"000000"` work correctly. The production `build` target intentionally excludes `bypass` for security
+- **Wait for async server responses with deterministic UI signals** — after triggering async server calls (e.g., clicking "Verify" for email verification), do not rely on `waitForLoadState("load")` which resolves immediately for non-navigation interactions. Instead, wait for a visible UI state change that confirms the server response (e.g., `expect(page.getByText("Send", { exact: true })).toBeHidden()` after verification completes)
 
 ### Placeholder/Empty State Styling
 
