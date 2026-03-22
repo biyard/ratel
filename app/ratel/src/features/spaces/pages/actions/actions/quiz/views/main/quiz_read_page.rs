@@ -138,7 +138,7 @@ pub fn QuizReadPage(
         space.status,
     );
     let has_passed = quiz.passed.unwrap_or(false);
-    let total_allowed = quiz.retry_count + 1;
+    let total_allowed = quiz.retry_count.saturating_add(1);
     let can_submit = can_respond
         && can_execute_action
         && is_in_progress

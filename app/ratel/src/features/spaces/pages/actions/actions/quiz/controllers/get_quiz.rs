@@ -35,7 +35,11 @@ pub async fn get_quiz(
     response.space_action = space_action;
 
     if let Some(user) = user.0 {
-        let limit = (response.retry_count + 1) as i32;
+        let limit: i32 = response
+            .retry_count
+            .saturating_add(1)
+            .try_into()
+            .unwrap_or(i32::MAX);
         let attempts = SpaceQuizAttempt::list_by_quiz_user(cli, &quiz_id, &user.pk, limit).await?;
         response.attempt_count = attempts.len() as i64;
         if let Some(latest) = attempts.first() {
