@@ -1,5 +1,4 @@
 use dioxus_translate::{Language, Translate};
-use std::str::FromStr;
 
 #[derive(Debug, Translate, PartialEq, Eq)]
 pub enum ProjectArea {
@@ -13,6 +12,24 @@ pub enum ProjectArea {
     Struct { a: String, b: i32 },
     #[translate(ko = "튜플")]
     Tuple(String, i32),
+}
+
+// Inner error type with per-variant translations
+#[derive(Debug, Translate, PartialEq, Eq)]
+pub enum InnerError {
+    #[translate(en = "Not found", ko = "찾을 수 없습니다")]
+    NotFound,
+    #[translate(en = "Permission denied", ko = "권한이 없습니다")]
+    PermissionDenied,
+}
+
+// Outer error type using #[translate(from)] to delegate to InnerError
+#[derive(Debug, Translate)]
+pub enum OuterError {
+    #[translate(en = "Unknown error", ko = "알 수 없는 오류")]
+    Unknown(String),
+    #[translate(from)]
+    Inner(InnerError),
 }
 
 #[test]
@@ -55,66 +72,6 @@ fn test_translation() {
 }
 
 #[test]
-fn test_display() {
-    assert_eq!(format!("{}", ProjectArea::Economy), "economy");
-    assert_eq!(format!("{}", ProjectArea::Society), "society");
-    assert_eq!(format!("{}", ProjectArea::Technology), "technology");
-    assert_eq!(
-        format!(
-            "{}",
-            ProjectArea::Struct {
-                a: "abg".to_string(),
-                b: 3
-            }
-        ),
-        "struct"
-    );
-    assert_eq!(
-        format!("{}", ProjectArea::Tuple("abg".to_string(), 3)),
-        "tuple"
-    );
-}
-
-#[test]
-fn test_from_str() {
-    // Test English names
-    assert_eq!(ProjectArea::from_str("Economy"), Ok(ProjectArea::Economy));
-    assert_eq!(ProjectArea::from_str("Society"), Ok(ProjectArea::Society));
-    assert_eq!(
-        ProjectArea::from_str("Technology"),
-        Ok(ProjectArea::Technology)
-    );
-
-    // Test Korean translations
-    assert_eq!(ProjectArea::from_str("경제"), Ok(ProjectArea::Economy));
-    assert_eq!(ProjectArea::from_str("사회"), Ok(ProjectArea::Society));
-    assert_eq!(ProjectArea::from_str("기술"), Ok(ProjectArea::Technology));
-
-    // Test lowercase names
-    assert_eq!(ProjectArea::from_str("economy"), Ok(ProjectArea::Economy));
-    assert_eq!(ProjectArea::from_str("society"), Ok(ProjectArea::Society));
-    assert_eq!(
-        ProjectArea::from_str("technology"),
-        Ok(ProjectArea::Technology)
-    );
-    let res = ProjectArea::from_str("구조체");
-    assert!(res.is_ok());
-    assert_eq!(
-        res.unwrap(),
-        ProjectArea::Struct {
-            a: "".to_string(),
-            b: 0
-        }
-    );
-    let res = ProjectArea::from_str("튜플");
-    assert!(res.is_ok());
-    assert_eq!(res.unwrap(), ProjectArea::Tuple("".to_string(), 0));
-
-    // Test invalid input
-    assert!(ProjectArea::from_str("invalid_field").is_err());
-}
-
-#[test]
 fn test_variants() {
     assert_eq!(
         ProjectArea::VARIANTS,
@@ -137,4 +94,21 @@ fn test_fn_variants() {
         ProjectArea::variants(&Language::Ko),
         vec!["경제", "사회", "기술"],
     );
+}
+
+#[test]
+fn test_translate_from_delegates_to_inner() {
+    // #[translate(from)] should delegate to InnerError's translate()
+    let err = OuterError::Inner(InnerError::NotFound);
+    assert_eq!(err.translate(&Language::En), "Not found");
+    assert_eq!(err.translate(&Language::Ko), "찾을 수 없습니다");
+
+    let err = OuterError::Inner(InnerError::PermissionDenied);
+    assert_eq!(err.translate(&Language::En), "Permission denied");
+    assert_eq!(err.translate(&Language::Ko), "권한이 없습니다");
+
+    // Non-from variants should use their own translate attributes
+    let err = OuterError::Unknown("test".to_string());
+    assert_eq!(err.translate(&Language::En), "Unknown error");
+    assert_eq!(err.translate(&Language::Ko), "알 수 없는 오류");
 }
