@@ -60,8 +60,8 @@ pub async fn respond_quiz(
         return Err(SpaceActionQuizError::AnswersMismatch.into());
     }
 
-    let total_allowed = quiz.retry_count.saturating_add(1);
-    let limit: i32 = total_allowed.try_into().unwrap_or(i32::MAX);
+    let total_allowed = quiz.retry_count.saturating_add(1).min(MAX_TOTAL_ATTEMPTS);
+    let limit: i32 = total_allowed as i32;
     let attempts =
         SpaceQuizAttempt::list_by_quiz_user(cli, &quiz_id, &author.pk, limit)
             .await?;

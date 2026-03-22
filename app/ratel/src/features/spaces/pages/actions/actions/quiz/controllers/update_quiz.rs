@@ -89,6 +89,9 @@ pub async fn update_quiz(
         if retry_count < 0 {
             return Err(SpaceActionQuizError::InvalidRetryCount.into());
         }
+        if retry_count.saturating_add(1) > MAX_TOTAL_ATTEMPTS {
+            return Err(SpaceActionQuizError::RetryCountExceedsMax.into());
+        }
         updater = updater.with_retry_count(retry_count);
     }
 

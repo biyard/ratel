@@ -52,6 +52,13 @@ pub enum SpaceActionQuizError {
     )]
     InvalidRetryCount,
 
+    #[error("Retry count exceeds maximum allowed value")]
+    #[translate(
+        en = "Retry count exceeds the maximum allowed value",
+        ko = "재시도 횟수가 최대 허용 값을 초과합니다."
+    )]
+    RetryCountExceedsMax,
+
     #[error("Questions cannot be empty")]
     #[translate(en = "Questions cannot be empty", ko = "질문은 비어있을 수 없습니다.")]
     EmptyQuestions,

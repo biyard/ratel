@@ -38,8 +38,7 @@ pub async fn get_quiz(
         let limit: i32 = response
             .retry_count
             .saturating_add(1)
-            .try_into()
-            .unwrap_or(i32::MAX);
+            .min(MAX_TOTAL_ATTEMPTS) as i32;
         let attempts = SpaceQuizAttempt::list_by_quiz_user(cli, &quiz_id, &user.pk, limit).await?;
         response.attempt_count = attempts.len() as i64;
         if let Some(latest) = attempts.first() {
