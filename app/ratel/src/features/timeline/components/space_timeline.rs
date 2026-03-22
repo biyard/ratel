@@ -47,41 +47,37 @@ pub fn SpaceTimeline() -> Element {
             div { class: "relative",
                 div {
                     class: "flex overflow-x-auto gap-4 pb-2 snap-x snap-mandatory scrollbar-none",
-                    onmounted: {
-                        move |_| {
-                            spawn(async move {
+                    onmounted: move |_| {
+                        spawn(async move {
+                            let mut result = document::eval(CHECK_SCROLL_JS);
+                            if let Ok(val) = result.recv::<bool>().await {
+                                can_scroll_right.set(val);
+                            }
+                        });
+                    },
+                    onscroll: move |_| {
+                        // Trailing-edge throttle: if a scroll check is already in-flight,
+                        // set a dirty flag so one final check runs after it completes.
+                        if scroll_check_pending() {
+                            scroll_dirty.set(true);
+                            return;
+                        }
+                        scroll_check_pending.set(true);
+                        spawn(async move {
+                            loop {
+                                scroll_dirty.set(false);
                                 let mut result = document::eval(CHECK_SCROLL_JS);
                                 if let Ok(val) = result.recv::<bool>().await {
                                     can_scroll_right.set(val);
                                 }
-                            });
-                        }
-                    },
-                    onscroll: {
-                        move |_| {
-                            // Trailing-edge throttle: if a scroll check is already in-flight,
-                            // set a dirty flag so one final check runs after it completes.
-                            if scroll_check_pending() {
-                                scroll_dirty.set(true);
-                                return;
-                            }
-                            scroll_check_pending.set(true);
-                            spawn(async move {
-                                loop {
-                                    scroll_dirty.set(false);
-                                    let mut result = document::eval(CHECK_SCROLL_JS);
-                                    if let Ok(val) = result.recv::<bool>().await {
-                                        can_scroll_right.set(val);
-                                    }
-                                    // If more scroll events arrived while we were checking,
-                                    // run one more check to capture the final scroll position.
-                                    if !scroll_dirty() {
-                                        break;
-                                    }
+                                // If more scroll events arrived while we were checking,
+                                // run one more check to capture the final scroll position.
+                                if !scroll_dirty() {
+                                    break;
                                 }
-                                scroll_check_pending.set(false);
-                            });
-                        }
+                            }
+                            scroll_check_pending.set(false);
+                        });
                     },
                     for space in active_items {
                         {
