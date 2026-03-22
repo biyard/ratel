@@ -46,9 +46,7 @@ pub async fn update_quiz(
         || req.answers.is_some();
 
     if existing.user_response_count > 0 && updates_locked_fields {
-        return Err(Error::BadRequest(
-            "Quiz cannot be edited after responses exist".into(),
-        ));
+        return Err(SpaceActionQuizError::CannotEditAfterResponses.into());
     }
 
     let now = crate::common::utils::time::get_now_timestamp_millis();
@@ -74,12 +72,12 @@ pub async fn update_quiz(
     if req.started_at.is_some() || req.ended_at.is_some() {
         let started_at = req
             .started_at
-            .ok_or(Error::BadRequest("started_at is required".into()))?;
+            .ok_or(Error::SpaceActionQuiz(SpaceActionQuizError::StartedAtRequired))?;
         let ended_at = req
             .ended_at
-            .ok_or(Error::BadRequest("ended_at is required".into()))?;
+            .ok_or(Error::SpaceActionQuiz(SpaceActionQuizError::EndedAtRequired))?;
         if started_at >= ended_at {
-            return Err(Error::BadRequest("Invalid time range".into()));
+            return Err(SpaceActionQuizError::InvalidTimeRange.into());
         }
         action_updater = action_updater
             .with_started_at(started_at)
@@ -89,7 +87,7 @@ pub async fn update_quiz(
 
     if let Some(retry_count) = req.retry_count {
         if retry_count < 0 {
-            return Err(Error::BadRequest("Retry count must be >= 0".into()));
+            return Err(SpaceActionQuizError::InvalidRetryCount.into());
         }
         updater = updater.with_retry_count(retry_count);
     }
@@ -97,15 +95,13 @@ pub async fn update_quiz(
     let mut questions_for_answers = None;
     if let Some(questions) = req.questions {
         if questions.is_empty() {
-            return Err(Error::BadRequest("Questions cannot be empty".into()));
+            return Err(SpaceActionQuizError::EmptyQuestions.into());
         }
         if questions
             .iter()
             .any(|q| !matches!(q, Question::SingleChoice(_) | Question::MultipleChoice(_)))
         {
-            return Err(Error::BadRequest(
-                "Quiz only supports choice questions".into(),
-            ));
+            return Err(SpaceActionQuizError::UnsupportedQuestionType.into());
         }
         updater = updater.with_questions(questions.clone());
         questions_for_answers = Some(questions);
@@ -117,7 +113,7 @@ pub async fn update_quiz(
 
     if let Some(pass_score) = req.pass_score {
         if pass_score < 0 {
-            return Err(Error::BadRequest("Pass score must be >= 0".into()));
+            return Err(SpaceActionQuizError::InvalidPassScore.into());
         }
         updater = updater.with_pass_score(pass_score);
     }
@@ -140,7 +136,7 @@ pub async fn update_quiz(
         let questions = questions_for_answers.unwrap_or_else(|| existing.questions.clone());
 
         if questions.len() != answers.len() {
-            return Err(Error::BadRequest("Answers length mismatch".into()));
+            return Err(SpaceActionQuizError::AnswersLengthMismatch.into());
         }
         for (question, answer) in questions.iter().zip(answers.iter()) {
             validate_quiz_answer(question, answer)?;
@@ -163,7 +159,7 @@ fn validate_quiz_answer(question: &Question, answer: &QuizCorrectAnswer) -> Resu
         (Question::SingleChoice(q), QuizCorrectAnswer::Single { answer }) => {
             if let Some(idx) = answer {
                 if *idx < 0 || (*idx as usize) >= q.options.len() {
-                    return Err(Error::BadRequest("Invalid single answer index".into()));
+                    return Err(SpaceActionQuizError::InvalidSingleAnswerIndex.into());
                 }
             }
             Ok(())
@@ -173,12 +169,10 @@ fn validate_quiz_answer(question: &Question, answer: &QuizCorrectAnswer) -> Resu
                 .iter()
                 .any(|idx| *idx < 0 || (*idx as usize) >= q.options.len())
             {
-                return Err(Error::BadRequest("Invalid multiple answer index".into()));
+                return Err(SpaceActionQuizError::InvalidMultipleAnswerIndex.into());
             }
             Ok(())
         }
-        _ => Err(Error::BadRequest(
-            "Answer type does not match question".into(),
-        )),
+        _ => Err(SpaceActionQuizError::AnswerTypeMismatch.into()),
     }
 }

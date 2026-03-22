@@ -214,6 +214,10 @@ pub enum Error {
     #[translate(en = "Reward error", ko = "리워드 오류가 발생했습니다.")]
     SpaceReward(#[from] SpaceRewardError),
 
+    #[error("{0}")]
+    #[translate(en = "Quiz error", ko = "퀴즈 오류가 발생했습니다.")]
+    SpaceActionQuiz(#[from] crate::features::spaces::pages::actions::actions::quiz::SpaceActionQuizError),
+
     // Post related errors
     #[error("Invalid username")]
     #[translate(
@@ -292,6 +296,7 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             | Error::AlreadyParticipating => StatusCode::BAD_REQUEST,
             Error::NotFound(_) => StatusCode::NOT_FOUND,
             Error::SpaceReward(e) => e.status_code(),
+            Error::SpaceActionQuiz(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
@@ -345,6 +350,7 @@ impl dioxus::fullstack::AsStatusCode for Error {
             | Error::InvalidVerificationCode => StatusCode::BAD_REQUEST,
             Error::NotFound(_) => StatusCode::NOT_FOUND,
             Error::SpaceReward(e) => e.status_code(),
+            Error::SpaceActionQuiz(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
