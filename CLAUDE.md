@@ -989,38 +989,6 @@ When updating coding guidelines or conventions in `CLAUDE.md`, also update `.git
 
 ## Playwright Test Guidelines
 
-### Navigation & Hydration
-
-- **Use `page.goto(url, { waitUntil: "load" })` directly** — do NOT follow with a separate `waitForLoadState("load")` call, as it is redundant
-- **Do NOT wait on specific WASM response status codes** (e.g., `response.status() === 200`) — responses may be cached as 304 or served differently across environments
-- **Do NOT use `Promise.all` with `page.goto()` and `page.waitForResponse()`** — this pattern is flaky because responses may arrive as 304 (cached) and the status check fails silently. Use `page.goto(url, { waitUntil: "load" })` instead
-- **Use deterministic hydration detection** instead of fixed `waitForTimeout()` sleeps:
-  ```js
-  await page.waitForFunction(
-    () => window.dioxus && typeof window.dioxus.send === "function",
-    { timeout: 10000 }
-  );
-  ```
-  This checks that the Dioxus WASM app has fully hydrated before interacting with the page
-
-**Anti-pattern (do NOT use):**
-```js
-// ❌ Flaky: status may be 304, waitForLoadState is redundant after goto
-await Promise.all([
-  page.waitForResponse((r) => r.url().includes(".wasm") && r.status() === 200),
-  page.goto(url),
-]);
-await page.waitForLoadState("load");
-await page.waitForTimeout(500);
-
-// ✅ Correct: deterministic navigation + hydration check
-await page.goto(url, { waitUntil: "load" });
-await page.waitForFunction(
-  () => window.dioxus && typeof window.dioxus.send === "function",
-  { timeout: 10000 }
-);
-```
-
 ### Configuration
 
 - **Keep `retries` CI-conditional** — use `retries: process.env.CI ? 2 : 0` so local dev runs give immediate feedback (0 retries) while CI retries flaky tests. Hardcoding `retries: 2` masks flakes locally and slows developer feedback loops
@@ -1036,7 +1004,7 @@ await page.waitForFunction(
 
 - **Always use shared helpers** (`goto`, `click`, `fill`, `getLocator`) from `tests/utils.js` instead of raw Playwright APIs like `page.getByRole().click()`. Extend helpers if needed rather than mixing raw calls
 - **Avoid raw CSS locators** — don't use `page.locator('label:has(...)')` or `page.locator("#some-id")`. Use semantic selectors via helpers: `testId` > `label` > `role` > `placeholder` > `text`
-- **Avoid `.first()` on order-dependent selectors** — `page.getByRole(...).first()` breaks when DOM order changes. Add stable selectors (`data-testid`, `data-pw`) to the UI and target them specifically
+- **Avoid `.first()` on order-dependent selectors** — `page.getByRole(...).first()` breaks when DOM order changes. Add stable selectors (`data-testid`) to the UI and target them specifically
 - **Avoid redundant waits after `click()` helper** — the `click()` helper already calls `waitForLoadState("load")` internally. Adding a manual `page.waitForLoadState("load")` after `click()` is redundant and slows tests
 
 ### Resource Cleanup
