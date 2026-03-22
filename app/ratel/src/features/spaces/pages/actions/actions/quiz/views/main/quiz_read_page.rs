@@ -138,12 +138,13 @@ pub fn QuizReadPage(
         space.status,
     );
     let has_passed = quiz.passed.unwrap_or(false);
+    let total_allowed = quiz.retry_count.saturating_add(1);
     let can_submit = can_respond
         && can_execute_action
         && is_in_progress
         && !has_passed
-        && quiz.attempt_count < quiz.retry_count;
-    let remaining_submissions = quiz.retry_count.saturating_sub(quiz.attempt_count);
+        && quiz.attempt_count < total_allowed;
+    let remaining_submissions = total_allowed.saturating_sub(quiz.attempt_count);
     let total_questions = quiz.questions.len();
     let current_idx = question_index().min(total_questions.saturating_sub(1));
     let current_question = quiz.questions.get(current_idx).cloned();
@@ -187,8 +188,8 @@ pub fn QuizReadPage(
                 "data-testid": "quiz-read-overview",
                 content_class: "gap-6".to_string(),
                 bottom_left: rsx! {
-                    div { class: "text-sm text-neutral-300 light:text-neutral-700",
-                        "{i18n.remaining_submissions} {remaining_submissions}/{quiz.retry_count}"
+                    div { class: "text-sm text-foreground-muted",
+                        "{i18n.remaining_submissions} {remaining_submissions}/{total_allowed}"
                     }
                 },
                 bottom_right: rsx! {
@@ -223,7 +224,7 @@ pub fn QuizReadPage(
 
                     if !quiz.description.is_empty() {
                         div {
-                            class: "text-[15px]/[24px] tracking-[0.5px] text-[#D4D4D4] light:text-text-primary",
+                            class: "text-[15px]/[24px] tracking-[0.5px] text-foreground-muted",
                             dangerous_inner_html: quiz.description.clone(),
                         }
                     }
@@ -246,8 +247,8 @@ pub fn QuizReadPage(
             FullActionLayover {
                 "data-testid": "quiz-read-quiz",
                 bottom_left: rsx! {
-                    div { class: "text-sm text-neutral-300 light:text-neutral-700",
-                        "{i18n.remaining_submissions} {remaining_submissions}/{quiz.retry_count}"
+                    div { class: "text-sm text-foreground-muted",
+                        "{i18n.remaining_submissions} {remaining_submissions}/{total_allowed}"
                     }
                 },
                 bottom_right: rsx! {
@@ -318,14 +319,14 @@ pub fn QuizReadPage(
                         }
                     }
 
-                    if is_in_progress && can_execute_action && !has_passed && quiz.attempt_count >= quiz.retry_count && can_respond {
+                    if is_in_progress && can_execute_action && !has_passed && quiz.attempt_count >= total_allowed && can_respond {
                         div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
                             {i18n.no_remaining_attempts}
                         }
                     }
 
                     if quiz.questions.is_empty() {
-                        div { class: "flex items-center justify-center py-10 text-neutral-500 light:text-text-secondary",
+                        div { class: "flex items-center justify-center py-10 text-foreground-muted",
                             {i18n.no_questions}
                         }
                     } else {
