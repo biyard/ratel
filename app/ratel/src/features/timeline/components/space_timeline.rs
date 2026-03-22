@@ -2,7 +2,6 @@ use crate::common::hooks::use_infinite_query;
 use crate::common::utils::time::time_ago;
 use crate::features::social::pages::space::controllers::list_my_spaces::list_my_spaces_handler;
 use crate::features::timeline::*;
-use dioxus_translate::use_language;
 
 /// A horizontal row of spaces the user is participating in, displayed on the home timeline.
 #[component]
@@ -24,9 +23,10 @@ pub fn SpaceTimeline() -> Element {
 
     // Re-run scroll check when item count changes (e.g., after more_element loads
     // additional pages), since scrollWidth may change without a scroll event.
-    let item_count = items.len();
+    // Reading `v.items()` inside the effect creates a reactive dependency on the
+    // `accumulated` signal, so it re-runs whenever pages are appended.
     use_effect(move || {
-        let _ = item_count;
+        let _len = v.items().len();
         spawn(async move {
             let mut result = document::eval(CHECK_SCROLL_JS);
             if let Ok(val) = result.recv::<bool>().await {
