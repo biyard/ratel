@@ -33,9 +33,9 @@ pub fn SpaceTimeline() -> Element {
         return rsx! {};
     }
 
-    let nav = use_navigator();
     let lang = use_language();
     let mut can_scroll_right = use_signal(|| false);
+    let mut scroll_check_pending = use_signal(|| false);
 
     rsx! {
         section {
@@ -61,11 +61,18 @@ pub fn SpaceTimeline() -> Element {
                     },
                     onscroll: {
                         move |_| {
+                            // Throttle: skip if a scroll check is already in-flight to avoid
+                            // spawning excessive async tasks during inertial scrolling.
+                            if scroll_check_pending() {
+                                return;
+                            }
+                            scroll_check_pending.set(true);
                             spawn(async move {
                                 let mut result = document::eval(CHECK_SCROLL_JS);
                                 if let Ok(val) = result.recv::<bool>().await {
                                     can_scroll_right.set(val);
                                 }
+                                scroll_check_pending.set(false);
                             });
                         }
                     },
@@ -75,16 +82,10 @@ pub fn SpaceTimeline() -> Element {
                             let href = format!("/spaces/{}", space_id);
                             let status = space.status.clone();
                             rsx! {
-                                div {
+                                Link {
                                     key: "space-{space.space_pk}",
-                                    class: "flex flex-col gap-2.5 pt-5 pb-2.5 border cursor-pointer snap-start shrink-0 w-[340px] max-mobile:w-[280px] rounded-[10px] bg-card-bg-secondary border-card-enable-border hover:bg-card-bg transition-colors",
-                                    onclick: {
-                                        let nav = nav.clone();
-                                        let href = href.clone();
-                                        move |_| {
-                                            nav.push(href.clone());
-                                        }
-                                    },
+                                    class: "flex flex-col gap-2.5 pt-5 pb-2.5 border cursor-pointer snap-start shrink-0 w-[340px] max-mobile:w-[280px] rounded-[10px] bg-card-bg-secondary border-card-enable-border hover:bg-card-bg transition-colors no-underline",
+                                    to: "{href}",
                                     Col { class: "gap-1 px-5 w-full",
                                         if let Some(ref st) = status {
                                             Badge {
@@ -108,6 +109,7 @@ pub fn SpaceTimeline() -> Element {
                                                 img {
                                                     class: "w-5 h-5 rounded-full object-cover",
                                                     src: "{space.author_profile_url}",
+                                                    alt: "{space.author_display_name}",
                                                 }
                                             }
                                             p { class: "text-sm text-foreground-muted",
@@ -132,6 +134,7 @@ pub fn SpaceTimeline() -> Element {
                 if can_scroll_right() {
                     button {
                         class: "absolute right-0 top-1/2 p-1 rounded-full transition-colors -translate-y-1/2 cursor-pointer z-101 hover:bg-accent/20",
+                        aria_label: "Scroll My Spaces right",
                         onclick: move |_| {
                             let _ = document::eval(SCROLL_RIGHT_JS);
                         },
