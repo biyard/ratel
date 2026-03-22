@@ -983,6 +983,7 @@ When the `pr-comment-resolver` agent resolves PR review comments, it must save t
 
 - **Use `page.goto(url, { waitUntil: "load" })` directly** — do NOT follow with a separate `waitForLoadState("load")` call, as it is redundant
 - **Do NOT wait on specific WASM response status codes** (e.g., `response.status() === 200`) — responses may be cached as 304 or served differently across environments
+- **Do NOT use `Promise.all` with `page.goto()` and `page.waitForResponse()`** — this pattern is flaky because responses may arrive as 304 (cached) and the status check fails silently. Use `page.goto(url, { waitUntil: "load" })` instead
 - **Use deterministic hydration detection** instead of fixed `waitForTimeout()` sleeps:
   ```js
   await page.waitForFunction(
@@ -991,6 +992,24 @@ When the `pr-comment-resolver` agent resolves PR review comments, it must save t
   );
   ```
   This checks that the Dioxus WASM app has fully hydrated before interacting with the page
+
+**Anti-pattern (do NOT use):**
+```js
+// ❌ Flaky: status may be 304, waitForLoadState is redundant after goto
+await Promise.all([
+  page.waitForResponse((r) => r.url().includes(".wasm") && r.status() === 200),
+  page.goto(url),
+]);
+await page.waitForLoadState("load");
+await page.waitForTimeout(500);
+
+// ✅ Correct: deterministic navigation + hydration check
+await page.goto(url, { waitUntil: "load" });
+await page.waitForFunction(
+  () => window.dioxus && typeof window.dioxus.send === "function",
+  { timeout: 10000 }
+);
+```
 
 ### Placeholder/Empty State Styling
 
@@ -1001,3 +1020,4 @@ When the `pr-comment-resolver` agent resolves PR review comments, it must save t
 - Status-indicating colors (pass/fail, success/error, active/inactive) **must use semantic tokens**, not raw Tailwind palette colors (e.g., `bg-green-500`, `text-red-400`)
 - Define them in `tailwind.css` with the CSS space toggle pattern (`var(--dark, ...) var(--light, ...)`) and use them in component classes
 - Group them by feature namespace (e.g., `--color-sp-act-quiz-pass-bg`, `--color-sp-act-quiz-fail-text`)
+- **When adding new status badges or indicators**, always define CSS variables first in `tailwind.css`, then use them as Tailwind classes — never use raw palette classes like `bg-green-500/10` or `text-red-400` even with opacity modifiers
