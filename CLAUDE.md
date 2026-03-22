@@ -205,6 +205,11 @@ The `app-shell` package uses these feature flags:
 | `membership` | Membership feature module |
 | `bypass` | Skip authentication for testing |
 
+#### Feature Flag Safety
+
+- **Never bundle security-bypass features into convenience features** — the `bypass` feature (skips auth verification, e.g., accepts `000000` as verification code) must NOT be included in `local-dev` or other convenience feature groups. Keep it opt-in and explicitly enabled only in test/local scripts (e.g., `--features bypass`) to avoid accidentally shipping builds with auth bypass enabled
+- **Security-sensitive features must be explicitly enabled** — features like `bypass` that disable verification checks should require direct `--features bypass` invocation, never be implicitly activated through another feature like `local-dev`
+
 ### JavaScript Interop Pattern
 
 The app interacts with JavaScript via `wasm_bindgen` FFI. Each module registers its JS functions under a namespaced global object `window.ratel.<module>`.
@@ -865,6 +870,7 @@ Use `let lang = use_language();` in the component, then `{value.translate(&lang(
 - **Use wildcard re-exports**: Start with `use crate::features::<module>::*;` which brings in common items through the re-export chain (e.g., `crate::common::*` -> `dioxus_translate::*`, etc.)
 - **Only add explicit imports** for items NOT available through the wildcard chain (e.g., `use_infinite_query` from `crate::common::hooks`, `time_ago` from `crate::common::utils::time`, cross-feature handlers)
 - **Do NOT duplicate imports** that are already available via wildcards — check sibling files in the same directory to see which imports are standard
+- **Always remove unused imports** in files you modify — unused imports cause compiler warnings and clutter the codebase. This applies to both Rust (`use` statements) and JavaScript/TypeScript (`import` statements)
 
 ### Scroll Event Handlers
 
@@ -978,6 +984,10 @@ return Err(MyFeatureError::SpecificErrorVariant.into());
 
 When the `pr-comment-resolver` agent resolves PR review comments, it must save the review feedback as project-scoped memories so that Claude Code and the `github-issue-resolver` agent can reference and apply those learnings in future work. This prevents the same review feedback from being repeated across PRs.
 
+### Documentation Consistency
+
+When updating coding guidelines or conventions in `CLAUDE.md`, also update `.github/copilot-instructions.md` and `docs/playwright-testing.md` (for Playwright-related conventions) to keep all files consistent. Contradictory guidance between these files causes conflicting review feedback from different AI tools (Claude Code vs GitHub Copilot).
+
 ## Playwright Test Guidelines
 
 ### Navigation & Hydration
@@ -996,7 +1006,7 @@ When the `pr-comment-resolver` agent resolves PR review comments, it must save t
 
 **Anti-pattern (do NOT use):**
 ```js
-// ❌ Flaky: status may be 304, waitForLoadState is redundant after goto
+// Bad: status may be 304, waitForLoadState is redundant after goto
 await Promise.all([
   page.waitForResponse((r) => r.url().includes(".wasm") && r.status() === 200),
   page.goto(url),
@@ -1004,7 +1014,7 @@ await Promise.all([
 await page.waitForLoadState("load");
 await page.waitForTimeout(500);
 
-// ✅ Correct: deterministic navigation + hydration check
+// Good: deterministic navigation + hydration check
 await page.goto(url, { waitUntil: "load" });
 await page.waitForFunction(
   () => window.dioxus && typeof window.dioxus.send === "function",
@@ -1012,10 +1022,31 @@ await page.waitForFunction(
 );
 ```
 
-### Configuration Conventions
+### Configuration
 
-- **Retries must be CI-only**: Always use `retries: process.env.CI ? 2 : 0` — never hardcode retries to a non-zero value. Hardcoded retries on local dev runs mask flaky tests and slow feedback loops
-- **Keep implementation and docs aligned**: When changing test infrastructure behavior (e.g., `goto()` wait strategy, retry policy), update `docs/playwright-testing.md` in the same PR to avoid implementation/documentation drift
+- **Keep `retries` CI-conditional** — use `retries: process.env.CI ? 2 : 0` so local dev runs give immediate feedback (0 retries) while CI retries flaky tests. Hardcoding `retries: 2` masks flakes locally and slows developer feedback loops
+- **Environment-aware settings** — Playwright config values that differ between local dev and CI (retries, workers, reporters) should always use `process.env.CI` conditionals, not hardcoded values
+
+### In-Page Interactions vs Navigation
+
+- **Do NOT use `waitForLoadState("load")` after non-navigation interactions** — after UI actions like autosave triggers, tab switches, blur events, or clicking options that don't cause a page navigation, `waitForLoadState("load")` resolves immediately and doesn't wait for the save/request. Wait for deterministic UI signals instead (e.g., a "Saved" indicator, specific element appearing)
+- **Avoid `networkidle` for SPA navigation** — in single-page apps, the app may continue fetching data after the `load` event. Use deterministic UI readiness assertions (e.g., `getLocator` for page-specific elements) instead of `networkidle`
+- **Follow `waitForURL()` with hydration check** — when `waitForURL()` triggers navigation, add a `waitForFunction` check for `window.dioxus.send` to match the `goto()` pattern and avoid races on slower environments
+
+### Shared Helpers & Locators
+
+- **Always use shared helpers** (`goto`, `click`, `fill`, `getLocator`) from `tests/utils.js` instead of raw Playwright APIs like `page.getByRole().click()`. Extend helpers if needed rather than mixing raw calls
+- **Avoid raw CSS locators** — don't use `page.locator('label:has(...)')` or `page.locator("#some-id")`. Use semantic selectors via helpers: `testId` > `label` > `role` > `placeholder` > `text`
+- **Avoid `.first()` on order-dependent selectors** — `page.getByRole(...).first()` breaks when DOM order changes. Add stable selectors (`data-testid`, `data-pw`) to the UI and target them specifically
+- **Avoid redundant waits after `click()` helper** — the `click()` helper already calls `waitForLoadState("load")` internally. Adding a manual `page.waitForLoadState("load")` after `click()` is redundant and slows tests
+
+### Resource Cleanup
+
+- **Use `try/finally` for browser contexts** — when manually creating `browser.newContext()`, wrap the test body in `try/finally` to guarantee `context.close()` runs, preventing resource leaks if assertions fail mid-test
+
+### Test Environment Dependencies
+
+- **Document `bypass` feature dependency** — tests that hardcode verification codes (e.g., `000000`) only work when the backend is built with `--features bypass`. Document this requirement clearly in the test file header or guard it behind an environment check to prevent environment-dependent test failures
 
 ### Placeholder/Empty State Styling
 
