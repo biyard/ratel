@@ -77,14 +77,22 @@ pub async fn list_my_spaces_handler(
             break;
         }
 
-        // Hard cap: stop scanning after max_pages to bound DynamoDB reads
+        // Hard cap: stop scanning after max_pages to bound DynamoDB reads.
+        // We intentionally clear the bookmark here so callers do not treat a
+        // cap-induced stop (which may yield items == [] but bookmark == Some)
+        // as "there are more pages of active spaces".
         if pages_scanned >= max_pages {
-            final_bookmark = next_bookmark;
+            final_bookmark = None;
             break;
         }
 
         current_bookmark = next_bookmark;
     }
+
+    // Truncate to page_limit to guarantee consistent page sizes. When
+    // filter_active is true, a full participant page may push collected_spaces
+    // past the limit before the check fires, so we trim the excess here.
+    collected_spaces.truncate(page_limit as usize);
 
     let post_keys: Vec<(Partition, EntityType)> = collected_spaces
         .iter()
