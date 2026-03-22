@@ -62,9 +62,10 @@ pub async fn respond_quiz(
         return Err(Error::BadRequest("Answers do not match questions".into()));
     }
 
-    let total_allowed = quiz.retry_count + 1;
+    let total_allowed = quiz.retry_count.saturating_add(1);
+    let limit: i32 = total_allowed.try_into().unwrap_or(i32::MAX);
     let attempts =
-        SpaceQuizAttempt::list_by_quiz_user(cli, &quiz_id, &author.pk, total_allowed as i32)
+        SpaceQuizAttempt::list_by_quiz_user(cli, &quiz_id, &author.pk, limit)
             .await?;
     if attempts.len() as i64 >= total_allowed {
         return Err(Error::BadRequest("No remaining submissions".into()));
