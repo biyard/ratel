@@ -60,13 +60,11 @@ pub async fn list_my_spaces_handler(
         };
 
         if filter_active {
-            let remaining = page_limit as usize - collected_spaces.len();
-            collected_spaces.extend(
-                spaces
-                    .into_iter()
-                    .filter(|s| s.is_active())
-                    .take(remaining),
-            );
+            // In active_only mode, include all active spaces from the current page.
+            // This may cause the number of returned items to exceed page_limit,
+            // but it avoids skipping active spaces that appear later in the page
+            // (pagination data loss when final_bookmark advances past them).
+            collected_spaces.extend(spaces.into_iter().filter(|s| s.is_active()));
         } else {
             collected_spaces.extend(spaces);
         }
@@ -84,11 +82,11 @@ pub async fn list_my_spaces_handler(
         }
 
         // Hard cap: stop scanning after max_pages to bound DynamoDB reads.
-        // We intentionally clear the bookmark here so callers do not treat a
-        // cap-induced stop (which may yield items == [] but bookmark == Some)
-        // as "there are more pages of active spaces".
+        // Return the real next_bookmark so callers can continue scanning if
+        // they choose, instead of permanently hiding the section when there
+        // are more active spaces beyond the scan cap.
         if pages_scanned >= max_pages {
-            final_bookmark = None;
+            final_bookmark = next_bookmark;
             break;
         }
 
