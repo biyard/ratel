@@ -912,6 +912,7 @@ Use `let lang = use_language();` in the component, then `{value.translate(&lang(
 - **Always use semantic token classes** instead: `text-foreground-muted`, `text-text-primary`, `bg-card-bg`, `bg-background`, `border-border`, etc. (see Design Tokens section in `.claude/rules/figma-design-system.md`)
 - **Do not combine `light:` variant with palette colors** (e.g., `light:text-neutral-600`) — use a single semantic token class that handles both themes automatically
 - Tailwind spacing, sizing, and layout utilities (`gap-4`, `p-5`, `rounded-lg`, `w-full`) are fine to use directly
+
 ## Error Handling Convention
 
 ### Avoid `Error::BadRequest(String)` -- Use Typed Error Variants
@@ -976,3 +977,59 @@ return Err(MyFeatureError::SpecificErrorVariant.into());
 ### PR Comment Resolver
 
 When the `pr-comment-resolver` agent resolves PR review comments, it must save the review feedback as project-scoped memories so that Claude Code and the `github-issue-resolver` agent can reference and apply those learnings in future work. This prevents the same review feedback from being repeated across PRs.
+
+## Playwright Test Guidelines
+
+### Navigation & Hydration
+
+- **Use `page.goto(url, { waitUntil: "load" })` directly** — do NOT follow with a separate `waitForLoadState("load")` call, as it is redundant
+- **Do NOT wait on specific WASM response status codes** (e.g., `response.status() === 200`) — responses may be cached as 304 or served differently across environments
+- **Do NOT use `Promise.all` with `page.goto()` and `page.waitForResponse()`** — this pattern is flaky because responses may arrive as 304 (cached) and the status check fails silently. Use `page.goto(url, { waitUntil: "load" })` instead
+- **Use deterministic hydration detection** instead of fixed `waitForTimeout()` sleeps:
+  ```js
+  await page.waitForFunction(
+    () => window.dioxus && typeof window.dioxus.send === "function",
+    { timeout: 10000 }
+  );
+  ```
+  This checks that the Dioxus WASM app has fully hydrated before interacting with the page
+
+**Anti-pattern (do NOT use):**
+```js
+// ❌ Flaky: status may be 304, waitForLoadState is redundant after goto
+await Promise.all([
+  page.waitForResponse((r) => r.url().includes(".wasm") && r.status() === 200),
+  page.goto(url),
+]);
+await page.waitForLoadState("load");
+await page.waitForTimeout(500);
+
+// ✅ Correct: deterministic navigation + hydration check
+await page.goto(url, { waitUntil: "load" });
+await page.waitForFunction(
+  () => window.dioxus && typeof window.dioxus.send === "function",
+  { timeout: 10000 }
+);
+```
+
+### Configuration Conventions
+
+- **Retries must be CI-only**: Always use `retries: process.env.CI ? 2 : 0` — never hardcode retries to a non-zero value. Hardcoded retries on local dev runs mask flaky tests and slow feedback loops
+- **Keep implementation and docs aligned**: When changing test infrastructure behavior (e.g., `goto()` wait strategy, retry policy), update `docs/playwright-testing.md` in the same PR to avoid implementation/documentation drift
+
+### Placeholder/Empty State Styling
+
+- When a UI element has both a normal and a placeholder state (e.g., "untitled" vs actual title), always apply visually distinct styling to the placeholder case (e.g., `text-foreground-muted italic`) rather than using the same primary text style for both
+
+### Semantic Tokens for Status Colors
+
+- Status-indicating colors (pass/fail, success/error, active/inactive) **must use semantic tokens**, not raw Tailwind palette colors (e.g., `bg-green-500`, `text-red-400`)
+- Define them in `tailwind.css` with the CSS space toggle pattern (`var(--dark, ...) var(--light, ...)`) and use them in component classes
+- Group them by feature namespace (e.g., `--color-sp-act-quiz-pass-bg`, `--color-sp-act-quiz-fail-text`)
+- **When adding new status badges or indicators**, always define CSS variables first in `tailwind.css`, then use them as Tailwind classes — never use raw palette classes like `bg-green-500/10` or `text-red-400` even with opacity modifiers
+
+## Feature Flag Security
+
+- **Never bundle security-bypass features into general-purpose feature groups**: The `bypass` feature (which disables auth verification, e.g., accepting `000000`) must remain a separate, explicit opt-in flag. Do not include it in composite features like `local-dev` — developers using `--features local-dev` for unrelated dev behavior could accidentally ship builds with auth bypass enabled
+- **Security-sensitive features** (`bypass`, test-only auth overrides, mock credentials) should always require explicit `--features <flag>` activation, never be transitively enabled through other feature groups
+- **When adding new dev-convenience features**, review whether they carry security implications before adding them to composite feature groups
