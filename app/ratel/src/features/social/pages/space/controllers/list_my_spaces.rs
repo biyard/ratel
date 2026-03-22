@@ -119,7 +119,10 @@ pub async fn list_my_spaces_handler(
                 .clone()
                 .to_post_key()
                 .ok()
-                .and_then(|post_pk| title_map.get(&post_pk.to_string()).cloned())
+                .and_then(|post_pk| {
+                    let post_pk_str = post_pk.to_string();
+                    title_map.get(&post_pk_str).cloned()
+                })
                 .unwrap_or_default();
 
             MySpaceResponse {

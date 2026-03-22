@@ -137,7 +137,7 @@ pub fn SpaceTimeline() -> Element {
                 }
                 if can_scroll_right() {
                     button {
-                        class: "absolute right-0 top-1/2 p-1 rounded-full transition-colors -translate-y-1/2 cursor-pointer z-101 hover:bg-accent/20",
+                        class: "absolute right-0 top-1/2 p-1 rounded-full transition-colors -translate-y-1/2 cursor-pointer z-[101] hover:bg-accent/20",
                         aria_label: "Scroll My Spaces right",
                         onclick: move |_| {
                             let _ = document::eval(SCROLL_RIGHT_JS);
