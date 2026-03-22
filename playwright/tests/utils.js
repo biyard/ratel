@@ -1,4 +1,5 @@
 import { expect } from "@playwright/test";
+import { CONFIGS } from "./config";
 
 export function wrap(page, project, baseDir) {
   const pageWithCapture = page;
@@ -88,16 +89,16 @@ export async function waitPopup(page, { visible = true }) {
 }
 
 export async function goto(page, url) {
-  await page.goto(url);
+  await Promise.all([
+    page.waitForResponse(
+      (resp) =>
+        resp.url().includes("app-shell_bg.wasm") && resp.status() === 200,
+    ),
+    page.goto(url),
+  ]);
   await page.waitForLoadState("load");
-  // Wait for the Dioxus WASM app to hydrate and the interpreter to be initialised
-  await page.waitForFunction(
-    () =>
-      typeof window !== "undefined" &&
-      window.dioxus &&
-      typeof window.dioxus.send === "function",
-    { timeout: 10000 },
-  );
+  // It's for waiting for the page to be fully interactive after load, especially for the first load where the wasm is not cached yet.
+  await page.waitForTimeout(500);
 }
 
 export async function getEditor(page) {
