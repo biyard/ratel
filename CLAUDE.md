@@ -976,3 +976,28 @@ return Err(MyFeatureError::SpecificErrorVariant.into());
 ### PR Comment Resolver
 
 When the `pr-comment-resolver` agent resolves PR review comments, it must save the review feedback as project-scoped memories so that Claude Code and the `github-issue-resolver` agent can reference and apply those learnings in future work. This prevents the same review feedback from being repeated across PRs.
+
+## Playwright Test Guidelines
+
+### Navigation & Hydration
+
+- **Use `page.goto(url, { waitUntil: "load" })` directly** — do NOT follow with a separate `waitForLoadState("load")` call, as it is redundant
+- **Do NOT wait on specific WASM response status codes** (e.g., `response.status() === 200`) — responses may be cached as 304 or served differently across environments
+- **Use deterministic hydration detection** instead of fixed `waitForTimeout()` sleeps:
+  ```js
+  await page.waitForFunction(
+    () => window.dioxus && typeof window.dioxus.send === "function",
+    { timeout: 10000 }
+  );
+  ```
+  This checks that the Dioxus WASM app has fully hydrated before interacting with the page
+
+### Placeholder/Empty State Styling
+
+- When a UI element has both a normal and a placeholder state (e.g., "untitled" vs actual title), always apply visually distinct styling to the placeholder case (e.g., `text-foreground-muted italic`) rather than using the same primary text style for both
+
+### Semantic Tokens for Status Colors
+
+- Status-indicating colors (pass/fail, success/error, active/inactive) **must use semantic tokens**, not raw Tailwind palette colors (e.g., `bg-green-500`, `text-red-400`)
+- Define them in `tailwind.css` with the CSS space toggle pattern (`var(--dark, ...) var(--light, ...)`) and use them in component classes
+- Group them by feature namespace (e.g., `--color-sp-act-quiz-pass-bg`, `--color-sp-act-quiz-fail-text`)
