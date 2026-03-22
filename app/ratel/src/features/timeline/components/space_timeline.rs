@@ -1,32 +1,19 @@
 use crate::common::hooks::use_infinite_query;
 use crate::common::utils::time::time_ago;
-use crate::features::social::pages::space::controllers::list_my_spaces::{
-    MySpaceResponse, list_my_spaces_handler,
-};
+use crate::features::social::pages::space::controllers::list_my_spaces::list_my_spaces_handler;
 use crate::features::timeline::*;
 use dioxus_translate::use_language;
 
 /// A horizontal row of spaces the user is participating in, displayed on the home timeline.
 #[component]
 pub fn SpaceTimeline() -> Element {
-    let v = use_infinite_query(move |bookmark| async move {
+    let mut v = use_infinite_query(move |bookmark| async move {
         list_my_spaces_handler(bookmark).await
     })?;
 
     let items = v.items();
 
-    // Filter to only active spaces (Open or Ongoing status)
-    let active_items: Vec<MySpaceResponse> = items
-        .into_iter()
-        .filter(|space| {
-            matches!(
-                space.status,
-                Some(SpaceStatus::InProgress | SpaceStatus::Started)
-            )
-        })
-        .collect();
-
-    if active_items.is_empty() {
+    if items.is_empty() {
         return rsx! {};
     }
 
@@ -79,7 +66,7 @@ pub fn SpaceTimeline() -> Element {
                             scroll_check_pending.set(false);
                         });
                     },
-                    for space in active_items {
+                    for space in items {
                         {
                             let space_id: SpacePartition = space.space_pk.clone().into();
                             let href = format!("/spaces/{}", space_id);
@@ -133,6 +120,7 @@ pub fn SpaceTimeline() -> Element {
                             }
                         }
                     }
+                    {v.more_element()}
                 }
                 if can_scroll_right() {
                     button {
