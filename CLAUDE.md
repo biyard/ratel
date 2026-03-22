@@ -983,6 +983,10 @@ return Err(MyFeatureError::SpecificErrorVariant.into());
 
 When the `pr-comment-resolver` agent resolves PR review comments, it must save the review feedback as project-scoped memories so that Claude Code and the `github-issue-resolver` agent can reference and apply those learnings in future work. This prevents the same review feedback from being repeated across PRs.
 
+### Documentation Consistency
+
+When updating coding guidelines or conventions in `CLAUDE.md`, also update `.github/copilot-instructions.md` to keep both files consistent. Contradictory guidance between these files causes conflicting review feedback from different AI tools (Claude Code vs GitHub Copilot).
+
 ## Playwright Test Guidelines
 
 ### Navigation & Hydration
