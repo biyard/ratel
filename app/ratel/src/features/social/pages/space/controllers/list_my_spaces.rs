@@ -53,8 +53,12 @@ pub async fn list_my_spaces_handler(
         crate::features::posts::models::Post::batch_get(cli, post_keys).await?
     };
 
+    // Filter server-side to only include active spaces (InProgress/Started)
+    // to avoid pagination edge cases where the first page might contain only
+    // inactive spaces, causing the timeline section to be hidden incorrectly.
     let items: Vec<MySpaceResponse> = spaces
         .into_iter()
+        .filter(|space| space.is_active())
         .map(|space| {
             let title = space
                 .pk
