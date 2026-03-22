@@ -21,3 +21,28 @@ Key rules:
 * Always use shared helpers (`goto`, `click`, `fill`, `getLocator`, `getEditor`, `waitPopup`) from `tests/utils.js` instead of raw Playwright APIs.
 * Locator options: `testId` > `label` > `role` > `placeholder` > `text` (priority order).
 * See `/docs/playwright-testing.md` for utility function signatures, locator option details, app-specific selectors, and complete examples.
+
+
+### In-Page Interactions vs Navigation
+
+* Do NOT use `waitForLoadState("load")` after non-navigation interactions (autosave, tab switch, blur). It resolves immediately and doesn't wait for the request. Use deterministic UI signals instead.
+* Avoid `networkidle` for SPA navigation — use deterministic UI readiness assertions (e.g., `getLocator` for page-specific elements).
+
+### Shared Helpers & Locators
+
+* Always use shared helpers (`goto`, `click`, `fill`, `getLocator`) instead of raw Playwright APIs like `page.getByRole().click()`.
+* Avoid raw CSS locators (`page.locator('label:has(...)')`, `page.locator("#id")`). Use semantic selectors via helpers.
+* Avoid `.first()` on order-dependent selectors — add stable `data-testid` or `data-pw` attributes instead.
+* Don't add manual `waitForLoadState("load")` after `click()` helper — it already waits internally.
+
+### Resource Cleanup & Environment
+
+* When using `browser.newContext()`, wrap in `try/finally` to guarantee `context.close()`.
+* Tests using hardcoded verification codes (e.g., `000000`) require `--features bypass` on the backend. Document this dependency clearly.
+* Use `make build-testing` (not `make build`) when building Docker images for Playwright tests. `build-testing` includes the `bypass` feature for signup/verification flows.
+* After async server calls (e.g., clicking "Verify"), wait for deterministic UI signals instead of `waitForLoadState("load")` which resolves immediately for non-navigation interactions.
+
+## Feature Flag Safety
+
+* `bypass` must NOT be bundled into `local-dev` or other convenience feature groups. Keep it opt-in via explicit `--features bypass` only in test/local scripts.
+* For Playwright CI testing, use the dedicated `build-testing` Makefile target which explicitly includes `bypass`. The production `build` target must never include `bypass`.

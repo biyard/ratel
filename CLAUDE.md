@@ -205,6 +205,11 @@ The `app-shell` package uses these feature flags:
 | `membership` | Membership feature module |
 | `bypass` | Skip authentication for testing |
 
+#### Feature Flag Safety
+
+- **Never bundle security-bypass features into convenience features** — the `bypass` feature (skips auth verification, e.g., accepts `000000` as verification code) must NOT be included in `local-dev` or other convenience feature groups. Keep it opt-in and explicitly enabled only in test/local scripts (e.g., `--features bypass`) to avoid accidentally shipping builds with auth bypass enabled
+- **Security-sensitive features must be explicitly enabled** — features like `bypass` that disable verification checks should require direct `--features bypass` invocation, never be implicitly activated through another feature like `local-dev`
+
 ### JavaScript Interop Pattern
 
 The app interacts with JavaScript via `wasm_bindgen` FFI. Each module registers its JS functions under a namespaced global object `window.ratel.<module>`.
@@ -905,6 +910,14 @@ Use `let lang = use_language();` in the component, then `{value.translate(&lang(
 - **Always use bracket syntax for arbitrary values**: write `z-[101]`, not `z-101`. Non-standard values without brackets are silently ignored by TailwindCSS and produce no CSS output
 - This applies to all arbitrary values: `z-[101]`, `w-[350px]`, `gap-[13px]`, etc.
 - Standard Tailwind scale values don't need brackets: `z-10`, `z-50`, `w-full`, `gap-4`
+
+### TailwindCSS Color Classes
+
+- **Never use Tailwind's built-in color palette classes** (`text-neutral-400`, `text-gray-500`, `bg-slate-800`, `text-zinc-300`, etc.) — these bypass the project's theme system and break dark/light mode consistency
+- **Always use semantic token classes** instead: `text-foreground-muted`, `text-text-primary`, `bg-card-bg`, `bg-background`, `border-border`, etc. (see Design Tokens section in `.claude/rules/figma-design-system.md`)
+- **Do not combine `light:` variant with palette colors** (e.g., `light:text-neutral-600`) — use a single semantic token class that handles both themes automatically
+- Tailwind spacing, sizing, and layout utilities (`gap-4`, `p-5`, `rounded-lg`, `w-full`) are fine to use directly
+
 ## Error Handling Convention
 
 ### Avoid `Error::BadRequest(String)` -- Use Typed Error Variants
@@ -969,3 +982,48 @@ return Err(MyFeatureError::SpecificErrorVariant.into());
 ### PR Comment Resolver
 
 When the `pr-comment-resolver` agent resolves PR review comments, it must save the review feedback as project-scoped memories so that Claude Code and the `github-issue-resolver` agent can reference and apply those learnings in future work. This prevents the same review feedback from being repeated across PRs.
+
+### Documentation Consistency
+
+When updating coding guidelines or conventions in `CLAUDE.md`, also update `.github/copilot-instructions.md` and `docs/playwright-testing.md` (for Playwright-related conventions) to keep all files consistent. Contradictory guidance between these files causes conflicting review feedback from different AI tools (Claude Code vs GitHub Copilot).
+
+## Playwright Test Guidelines
+
+### Configuration
+
+- **Keep `retries` CI-conditional** — use `retries: process.env.CI ? 2 : 0` so local dev runs give immediate feedback (0 retries) while CI retries flaky tests. Hardcoding `retries: 2` masks flakes locally and slows developer feedback loops
+- **Environment-aware settings** — Playwright config values that differ between local dev and CI (retries, workers, reporters) should always use `process.env.CI` conditionals, not hardcoded values
+
+### In-Page Interactions vs Navigation
+
+- **Do NOT use `waitForLoadState("load")` after non-navigation interactions** — after UI actions like autosave triggers, tab switches, blur events, or clicking options that don't cause a page navigation, `waitForLoadState("load")` resolves immediately and doesn't wait for the save/request. Wait for deterministic UI signals instead (e.g., a "Saved" indicator, specific element appearing)
+- **Avoid `networkidle` for SPA navigation** — in single-page apps, the app may continue fetching data after the `load` event. Use deterministic UI readiness assertions (e.g., `getLocator` for page-specific elements) instead of `networkidle`
+- **Follow `waitForURL()` with hydration check** — when `waitForURL()` triggers navigation, add a `waitForFunction` check for `window.dioxus.send` to match the `goto()` pattern and avoid races on slower environments
+
+### Shared Helpers & Locators
+
+- **Always use shared helpers** (`goto`, `click`, `fill`, `getLocator`) from `tests/utils.js` instead of raw Playwright APIs like `page.getByRole().click()`. Extend helpers if needed rather than mixing raw calls
+- **Avoid raw CSS locators** — don't use `page.locator('label:has(...)')` or `page.locator("#some-id")`. Use semantic selectors via helpers: `testId` > `label` > `role` > `placeholder` > `text`
+- **Avoid `.first()` on order-dependent selectors** — `page.getByRole(...).first()` breaks when DOM order changes. Add stable selectors (`data-testid`) to the UI and target them specifically
+- **Avoid redundant waits after `click()` helper** — the `click()` helper already calls `waitForLoadState("load")` internally. Adding a manual `page.waitForLoadState("load")` after `click()` is redundant and slows tests
+
+### Resource Cleanup
+
+- **Use `try/finally` for browser contexts** — when manually creating `browser.newContext()`, wrap the test body in `try/finally` to guarantee `context.close()` runs, preventing resource leaks if assertions fail mid-test
+
+### Test Environment Dependencies
+
+- **Document `bypass` feature dependency** — tests that hardcode verification codes (e.g., `000000`) only work when the backend is built with `--features bypass`. Document this requirement clearly in the test file header or guard it behind an environment check to prevent environment-dependent test failures
+- **Use `build-testing` for Playwright Docker images** — the PR workflow must use `make build-testing` (not `make build`) when building Docker images for Playwright tests. `build-testing` includes the `bypass` feature so that signup/verification flows with hardcoded code `"000000"` work correctly. The production `build` target intentionally excludes `bypass` for security
+- **Wait for async server responses with deterministic UI signals** — after triggering async server calls (e.g., clicking "Verify" for email verification), do not rely on `waitForLoadState("load")` which resolves immediately for non-navigation interactions. Instead, wait for a visible UI state change that confirms the server response (e.g., `expect(page.getByText("Send", { exact: true })).toBeHidden()` after verification completes)
+
+### Placeholder/Empty State Styling
+
+- When a UI element has both a normal and a placeholder state (e.g., "untitled" vs actual title), always apply visually distinct styling to the placeholder case (e.g., `text-foreground-muted italic`) rather than using the same primary text style for both
+
+### Semantic Tokens for Status Colors
+
+- Status-indicating colors (pass/fail, success/error, active/inactive) **must use semantic tokens**, not raw Tailwind palette colors (e.g., `bg-green-500`, `text-red-400`)
+- Define them in `tailwind.css` with the CSS space toggle pattern (`var(--dark, ...) var(--light, ...)`) and use them in component classes
+- Group them by feature namespace (e.g., `--color-sp-act-quiz-pass-bg`, `--color-sp-act-quiz-fail-text`)
+- **When adding new status badges or indicators**, always define CSS variables first in `tailwind.css`, then use them as Tailwind classes — never use raw palette classes like `bg-green-500/10` or `text-red-400` even with opacity modifiers
