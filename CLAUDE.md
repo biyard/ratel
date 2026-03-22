@@ -852,6 +852,65 @@ pub enum MyEnum {
 
 Use `let lang = use_language();` in the component, then `{value.translate(&lang())}` in RSX.
 
+## Error Handling Convention
+
+### Avoid `Error::BadRequest(String)` -- Use Typed Error Variants
+
+**Do NOT use `Error::BadRequest(String)` for domain-specific errors.** Instead, define a specific error enum with `Translate` derive for user-friendly error handling in the frontend.
+
+**Pattern:** Follow the `SpaceRewardError` / `SpaceActionQuizError` pattern:
+
+1. **Define a domain-specific error enum** in the feature's `types/error.rs`:
+
+```rust
+use crate::common::*;
+pub use thiserror::Error;
+
+#[derive(Debug, Error, Serialize, Deserialize, Translate, Clone)]
+pub enum MyFeatureError {
+    #[error("Descriptive internal message")]
+    #[translate(en = "User-facing English", ko = "사용자용 한국어")]
+    SpecificErrorVariant,
+}
+```
+
+2. **Implement server traits** (`status_code()`, `IntoResponse`, `AsStatusCode`) following the `SpaceRewardError` pattern.
+
+3. **Register in `common::Error`** by adding a `#[from]` variant with `#[translate(from)]`:
+
+```rust
+#[error("{0}")]
+#[translate(from)]
+MyFeature(#[from] MyFeatureError),
+```
+
+The `#[translate(from)]` attribute tells the `Translate` derive macro to delegate translation to the inner type's `translate()` method instead of using a static string. This ensures `toast.error()` shows the specific inner-error translation (e.g., "No remaining attempts") instead of a generic outer message.
+
+4. **Add to status code match arms** in both `IntoResponse` and `AsStatusCode` impls.
+
+5. **Use in controllers** via `.into()`:
+
+```rust
+return Err(MyFeatureError::SpecificErrorVariant.into());
+```
+
+**Why:** Typed errors enable per-variant i18n translation in the frontend via `toast.error()`, provide better error categorization, and eliminate ambiguous string-based error messages. The `#[translate(from)]` attribute on wrapper variants delegates to the inner error's `Translate` impl so that each variant's translation is surfaced correctly.
+
+**When refactoring existing code:** If you encounter `Error::BadRequest(String)` in code you are modifying, refactor it to use a typed error variant in the same change.
+
+## Server-Side Validation for User-Configurable Numeric Values
+
+**Always enforce reasonable server-side upper bounds for user-configurable numeric values** (e.g., `retry_count`, attempt limits, page sizes). Do not rely on frontend-only validation.
+
+**Key rules:**
+
+1. **Define a shared constant** for the upper bound in the feature module (e.g., `pub const MAX_TOTAL_ATTEMPTS: i64 = 100;`) so all controllers use the same limit.
+2. **Validate at the write path** (e.g., `update_quiz`) — reject values exceeding the bound with a typed error variant.
+3. **Clamp at the read path** (e.g., `get_quiz`, `respond_quiz`) — use `.min(MAX_CONSTANT)` instead of `unwrap_or(i32::MAX)` or `unwrap_or(i64::MAX)` as fallbacks. This provides defense-in-depth for legacy data that may have been written before the validation was added.
+4. **Never use `i32::MAX` or `i64::MAX` as default limits** for DynamoDB queries or similar operations — these create unbounded read costs and abuse vectors.
+
+**Why:** User-controlled values can be set to extreme values (e.g., `i64::MAX`), causing integer overflow, unbounded database queries, and excessive read costs. Server-side bounds prevent this regardless of client behavior.
+
 ## Agent Workflow Rules
 
 ### PR Comment Resolver
