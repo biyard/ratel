@@ -1,41 +1,12 @@
 use super::*;
 use crate::common::components::SpaceCard;
 use crate::common::components::{FileUploader, UploadedFileMeta};
+use crate::common::types::extract_filename_from_url;
 use crate::common::utils::time::time_ago;
 use crate::features::spaces::hooks::use_user;
 use crate::features::spaces::space_common::types::space_page_actions_quiz_key;
 
 const DEFAULT_PROFILE_URL: &str = "https://metadata.ratel.foundation/ratel/default-profile.png";
-
-fn extension_from_name_or_url(name: &str, url: &str) -> FileExtension {
-    let ext = name
-        .rsplit('.')
-        .next()
-        .filter(|ext| *ext != name)
-        .unwrap_or_else(|| {
-            let path = url.split('?').next().unwrap_or(url);
-            path.rsplit('.').next().unwrap_or("")
-        })
-        .to_lowercase();
-    match ext.as_str() {
-        "jpg" | "jpeg" => FileExtension::JPG,
-        "png" => FileExtension::PNG,
-        "pdf" => FileExtension::PDF,
-        "zip" => FileExtension::ZIP,
-        "doc" | "docx" => FileExtension::WORD,
-        "ppt" | "pptx" => FileExtension::PPTX,
-        "xls" | "xlsx" => FileExtension::EXCEL,
-        "mp4" => FileExtension::MP4,
-        "mov" => FileExtension::MOV,
-        "mkv" => FileExtension::MKV,
-        _ => FileExtension::default(),
-    }
-}
-
-fn extract_filename_from_url(url: &str) -> String {
-    let path = url.split('?').next().unwrap_or(url);
-    path.rsplit('/').next().unwrap_or("untitled").to_string()
-}
 
 fn file_icon(ext: &FileExtension) -> Element {
     match ext {
@@ -140,7 +111,7 @@ pub fn UploadTab(can_edit: bool) -> Element {
                             id: uploaded.url.clone(),
                             name: uploaded_name.clone(),
                             size: uploaded.size,
-                            ext: extension_from_name_or_url(&uploaded_name, &uploaded.url),
+                            ext: FileExtension::from_name_or_url(&uploaded_name, &uploaded.url),
                             url: Some(uploaded.url),
                             uploader_name: Some(upload_uploader_name.clone()),
                             uploader_profile_url: Some(upload_uploader_profile_url.clone()),
