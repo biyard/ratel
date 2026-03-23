@@ -117,6 +117,11 @@ impl SpaceCommon {
             Some(SpaceStatus::Started | SpaceStatus::InProgress)
         )
     }
+
+    pub fn is_participation_open(&self) -> bool {
+        matches!(self.status, Some(SpaceStatus::InProgress))
+            || (self.join_anytime && matches!(self.status, Some(SpaceStatus::Started)))
+    }
 }
 
 #[cfg(feature = "server")]

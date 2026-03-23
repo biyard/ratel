@@ -92,6 +92,10 @@ pub enum Error {
     #[translate(en = "Already participating", ko = "이미 참여 중입니다.")]
     AlreadyParticipating,
 
+    #[error("Participation is not open")]
+    #[translate(en = "Participation is only available while the space is open.", ko = "참여는 스페이스가 열려 있는 동안만 가능합니다.")]
+    ParticipationNotOpen,
+
     #[error("not found verification code")]
     #[translate(en = "Verification code not found", ko = "인증 코드를 찾을 수 없습니다.")]
     NotFoundVerificationCode,
@@ -233,7 +237,8 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             | Error::ParticipationBlocked
             | Error::LackOfVerifiedAttributes
             | Error::FullQuota
-            | Error::AlreadyParticipating => StatusCode::BAD_REQUEST,
+            | Error::AlreadyParticipating
+            | Error::ParticipationNotOpen => StatusCode::BAD_REQUEST,
             Error::NotFound(_) => StatusCode::NOT_FOUND,
             Error::SpaceReward(e) => e.status_code(),
             Error::SpaceActionQuiz(e) => e.status_code(),
@@ -282,6 +287,7 @@ impl dioxus::fullstack::AsStatusCode for Error {
             | Error::LackOfVerifiedAttributes
             | Error::FullQuota
             | Error::AlreadyParticipating
+            | Error::ParticipationNotOpen
             | Error::ExceededAttemptEmailVerification
             | Error::ExceededAttemptPhoneVerification
             | Error::SendSmsFailed(_)
