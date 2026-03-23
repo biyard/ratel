@@ -42,6 +42,11 @@ translate! {
         en: "Light",
         ko: "라이트",
     },
+
+    system: {
+        en: "System",
+        ko: "시스템",
+    },
 }
 
 /// "More" tab button shown only on mobile in the bottom navigation bar.
@@ -71,9 +76,11 @@ pub fn MobileMorePanel(
 ) -> Element {
     let tr: MobileMorePanelTranslate = use_translate();
     let mut theme_service = use_theme();
-    let is_dark = match theme_service.current() {
-        Theme::Dark | Theme::System => true,
-        Theme::Light => false,
+    let current_theme = theme_service.current();
+    let next_theme = match current_theme {
+        Theme::Light => Theme::Dark,
+        Theme::Dark => Theme::System,
+        Theme::System => Theme::Light,
     };
     let lang = use_language();
     let current_lang = lang();
@@ -86,15 +93,39 @@ pub fn MobileMorePanel(
                 main_axis_align: MainAxisAlign::Between,
                 cross_axis_align: CrossAxisAlign::Center,
                 span { class: "text-sm font-medium text-foreground", "{tr.theme}" }
-                Switch {
-                    active: is_dark,
-                    on_toggle: move |_| {
-                        if is_dark {
-                            theme_service.set(Theme::Light);
-                        } else {
-                            theme_service.set(Theme::Dark);
-                        }
+                button {
+                    class: "flex gap-1.5 items-center py-1 px-2 text-sm font-medium rounded-md cursor-pointer transition-colors bg-card-bg text-foreground",
+                    onclick: move |_| {
+                        theme_service.set(next_theme);
                     },
+                    match current_theme {
+                        Theme::Dark => rsx! {
+                            Moon {
+                                width: "16",
+                                height: "16",
+                                class: "[&>path]:stroke-current text-web-font-neutral",
+                            }
+                        },
+                        Theme::Light => rsx! {
+                            Sun {
+                                width: "16",
+                                height: "16",
+                                class: "[&>path]:stroke-current [&>circle]:stroke-current text-web-font-neutral",
+                            }
+                        },
+                        Theme::System => rsx! {
+                            SunMoon {
+                                width: "16",
+                                height: "16",
+                                class: "[&>path]:stroke-current text-web-font-neutral",
+                            }
+                        },
+                    }
+                    match current_theme {
+                        Theme::Dark => rsx! { "{tr.dark}" },
+                        Theme::Light => rsx! { "{tr.light}" },
+                        Theme::System => rsx! { "{tr.system}" },
+                    }
                 }
             }
 
