@@ -16,12 +16,14 @@ pub fn PollContent(
 ) -> Element {
     let tr: participant::i18n::PollParticipantTranslate = use_translate();
     let mut query = use_query_store();
+    let mut popup = use_popup();
+    let mut toast = use_toast();
     let mut question_index = use_signal(|| 0usize);
     let key = space_page_actions_poll_key(&space_id(), &poll_id());
 
     let poll_loader = use_query(&key, { move || get_poll(space_id(), poll_id()) })?;
 
-    let poll = poll_loader.read();
+    let poll = poll_loader.read().clone();
     let space = use_space().read().clone();
     let role = use_space_role()();
     let can_execute_action = crate::features::spaces::pages::actions::can_execute_space_action(
@@ -75,25 +77,72 @@ pub fn PollContent(
 
     let show_submit_button = can_respond && (can_submit || can_update);
 
-    let on_submit = {
+    let build_submit_response = {
         let questions = poll.questions.clone();
-        move |_| {
+        move || {
             let questions = questions.clone();
             let mut query = query;
+            let mut toast = toast;
+            move || {
+                let questions = questions.clone();
+                let mut query = query;
+                let mut toast = toast;
 
-            spawn(async move {
-                let answers_map = answers.read().clone();
-                let payload: Vec<Answer> = (0..questions.len())
-                    .map(|i| answers_map.get(&i).cloned().unwrap_or_default())
-                    .collect();
+                spawn(async move {
+                    let answers_map = answers.read().clone();
+                    let payload: Vec<Answer> = (0..questions.len())
+                        .map(|i| answers_map.get(&i).cloned().unwrap_or_default())
+                        .collect();
 
-                let req = RespondPollRequest { answers: payload };
+                    let req = RespondPollRequest { answers: payload };
 
-                if respond_poll(space_id(), poll_id(), req).await.is_ok() {
-                    let keys = space_page_actions_poll_key(&space_id(), &poll_id());
-                    query.invalidate(&keys);
-                }
-            });
+                    match respond_poll(space_id(), poll_id(), req).await {
+                        Ok(_) => {
+                            let keys = space_page_actions_poll_key(&space_id(), &poll_id());
+                            query.invalidate(&keys);
+                            toast.info(tr.submit_success);
+                        }
+                        Err(err) => {
+                            toast.error(err);
+                        }
+                    }
+                });
+            }
+        }
+    };
+    let on_submit = move |_| {
+        if can_submit && !poll.response_editable {
+            let mut popup = popup;
+            let mut cancel_popup = popup;
+            let confirm_submit_response = build_submit_response();
+            popup
+                .open(rsx! {
+                    div { class: "flex w-full justify-end gap-3",
+                        Button {
+                            style: ButtonStyle::Outline,
+                            shape: ButtonShape::Square,
+                            class: "min-w-[120px]",
+                            onclick: move |_| {
+                                cancel_popup.close();
+                            },
+                            {tr.submit_confirm_cancel}
+                        }
+                        Button {
+                            style: ButtonStyle::Primary,
+                            shape: ButtonShape::Square,
+                            class: "min-w-[120px]",
+                            onclick: move |_| {
+                                popup.close();
+                                confirm_submit_response();
+                            },
+                            {tr.submit_confirm_action}
+                        }
+                    }
+                })
+                .with_title(tr.submit_confirm_title)
+                .with_description(tr.submit_confirm_description);
+        } else {
+            build_submit_response()();
         }
     };
 
