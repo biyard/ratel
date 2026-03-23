@@ -185,6 +185,10 @@ html[data-theme="light"] {
   --color-mission-title: var(--role-mission-static);
   --color-btn-hover: var(--accent-hover);
   --color-tab-hover: var(--accent-hover);
+  --color-button-active: var(--dark, #1a1a1a) var(--light, #d4d4d4);
+  --color-button-muted: var(--dark, #282828) var(--light, #e5e5e5);
+  --color-button-muted-hover: var(--dark, #222222) var(--light, #d9d9d9);
+  --color-thumbnail-placeholder-bg: var(--dark, #2a2a2a) var(--light, #f0f0f0);
   --color-web-bg: var(--gray-950);
   --color-copyright: var(--role-copyright-static);
   --color-input: var(--input);

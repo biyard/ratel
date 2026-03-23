@@ -73,16 +73,6 @@ pub fn Home(username: String) -> Element {
 
     let follow_target_pk = initial_status.as_ref().ok().map(|s| s.target_pk.clone());
 
-    let list_btn_class = if view_mode() == HomeViewMode::List {
-        "bg-[#1a1a1a]"
-    } else {
-        "bg-[#282828] hover:bg-[#222222]"
-    };
-    let card_btn_class = if view_mode() == HomeViewMode::Card {
-        "bg-[#1a1a1a]"
-    } else {
-        "bg-[#282828] hover:bg-[#222222]"
-    };
 
     rsx! {
         div { class: "flex flex-col w-full gap-6",
@@ -134,14 +124,16 @@ pub fn Home(username: String) -> Element {
             div { class: "flex items-center justify-between w-full",
                 div { class: "flex overflow-hidden rounded-[10px] w-fit",
                     button {
-                        class: "flex items-center justify-center w-[60px] h-[44px] cursor-pointer transition-colors {list_btn_class}",
+                        class: "flex items-center justify-center w-[60px] h-[44px] cursor-pointer transition-colors bg-button-muted hover:bg-button-muted-hover aria-selected:bg-button-active",
+                        "aria-selected": view_mode() == HomeViewMode::List,
                         onclick: move |_| view_mode.set(HomeViewMode::List),
                         icons::alignments::AlignJustify {
                             class: "w-6 h-6 [&>path]:stroke-icon-primary",
                         }
                     }
                     button {
-                        class: "flex items-center justify-center w-[60px] h-[44px] cursor-pointer transition-colors {card_btn_class}",
+                        class: "flex items-center justify-center w-[60px] h-[44px] cursor-pointer transition-colors bg-button-muted hover:bg-button-muted-hover aria-selected:bg-button-active",
+                        "aria-selected": view_mode() == HomeViewMode::Card,
                         onclick: move |_| view_mode.set(HomeViewMode::Card),
                         lucide_dioxus::LayoutGrid {
                             class: "w-6 h-6 [&>rect]:stroke-icon-primary [&>path]:stroke-icon-primary",
@@ -151,7 +143,7 @@ pub fn Home(username: String) -> Element {
 
                 if is_owner {
                     button {
-                        class: "flex items-center gap-2.5 bg-white hover:bg-neutral-200 text-neutral-900 light:bg-[#404040] light:hover:bg-neutral-700 light:text-white px-5 py-3 h-[44px] rounded-full text-sm font-medium transition-colors cursor-pointer",
+                        class: "flex items-center gap-2.5 bg-btn-secondary-bg hover:bg-btn-secondary-hover-bg text-btn-secondary-text px-5 py-3 h-[44px] rounded-full text-sm font-medium transition-colors cursor-pointer",
                         onclick: move |_| {
                             let nav = nav.clone();
                             async move {
