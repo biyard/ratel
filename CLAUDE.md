@@ -205,6 +205,11 @@ The `app-shell` package uses these feature flags:
 | `membership` | Membership feature module |
 | `bypass` | Skip authentication for testing |
 
+#### Feature Flag Safety
+
+- **Never bundle security-bypass features into convenience features** — the `bypass` feature (skips auth verification, e.g., accepts `000000` as verification code) must NOT be included in `local-dev` or other convenience feature groups. Keep it opt-in and explicitly enabled only in test/local scripts (e.g., `--features bypass`) to avoid accidentally shipping builds with auth bypass enabled
+- **Security-sensitive features must be explicitly enabled** — features like `bypass` that disable verification checks should require direct `--features bypass` invocation, never be implicitly activated through another feature like `local-dev`
+
 ### JavaScript Interop Pattern
 
 The app interacts with JavaScript via `wasm_bindgen` FFI. Each module registers its JS functions under a namespaced global object `window.ratel.<module>`.
@@ -852,8 +857,173 @@ pub enum MyEnum {
 
 Use `let lang = use_language();` in the component, then `{value.translate(&lang())}` in RSX.
 
+## Dioxus UI Development Guidelines
+
+### Accessibility
+
+- **Always add `alt` attributes** to `img` elements (use descriptive text or `alt: ""` for decorative images)
+- **Always add `aria-label`** to icon-only buttons so screen readers can announce their purpose
+- **Use semantic elements** for clickable navigation: use `Link { to: "..." }` (renders `<a>`) instead of `div { onclick: ... }` with `use_navigator().push()`. This provides native keyboard accessibility (tab focus, Enter activation) and correct link semantics without manual `role`, `tabindex`, or keyboard handlers
+
+### Import Conventions
+
+- **Use wildcard re-exports**: Start with `use crate::features::<module>::*;` which brings in common items through the re-export chain (e.g., `crate::common::*` -> `dioxus_translate::*`, etc.)
+- **Only add explicit imports** for items NOT available through the wildcard chain (e.g., `use_infinite_query` from `crate::common::hooks`, `time_ago` from `crate::common::utils::time`, cross-feature handlers)
+- **Do NOT duplicate imports** that are already available via wildcards — check sibling files in the same directory to see which imports are standard
+
+### Scroll Event Handlers
+
+- **Never spawn unbounded async tasks** from `onscroll` — inertial scrolling fires many events rapidly
+- **Implement trailing-edge throttle**: use a `scroll_check_pending` signal guard to skip events while a check is in-flight, plus a `scroll_dirty` flag so one final check runs after the current one completes. This ensures the final scroll position is always reflected
+
+### Paginated Lists with `use_infinite_query`
+
+- **Prefer `use_infinite_query`** over `use_server_future` for any list that may exceed a single page
+- **Always render `{v.more_element()}`** at the end of the list container — this provides the IntersectionObserver sentinel that triggers loading additional pages
+- **Make `v` mutable** (`let mut v = use_infinite_query(...)`) so `more_element()` can be called
+
+### Dioxus Reactivity in `use_effect`
+
+- `use_effect` only re-runs when it reads reactive signals **inside the closure body**
+- Capturing a plain `usize` or other non-reactive value outside the closure will NOT trigger re-runs
+- To react to item count changes: call `v.items()` inside the effect (which reads from the underlying `Signal`), not `let count = items.len()` captured from outside
+
+### Event Handler Syntax
+
+- In Dioxus RSX, event handlers do NOT need outer brace wrapping. Use `onscroll: move |_| { ... },` directly, not `onscroll: { move |_| { ... } },`
+
+### Server-Side Pagination & Filtering
+
+- **Filter server-side** when possible — client-side filtering after paginated fetch can cause edge cases (e.g., first page contains only filtered-out items, hiding the section even though later pages have valid items)
+- **Add query parameters** (e.g., `active_only: Option<bool>`) instead of changing existing handler semantics, to avoid breaking other callers
+- **Hard-cap server-side loops**: when scanning multiple DynamoDB pages to collect filtered results, add a `max_pages` cap (e.g., 5) to bound reads per request
+- **Preserve bookmark on cap**: when hitting the hard cap, set `bookmark = next_bookmark` (not `None`) so clients can continue scanning from where they left off in subsequent requests
+- **Do NOT use `.take(remaining)` in filtered collection**: when filtering results across DynamoDB pages (e.g., `active_only`), collect all matching items from each page without `.take()` — otherwise valid items from a page may be silently dropped and can never be re-fetched since the bookmark advances past them. Use post-loop `truncate()` only if a hard limit is needed
+
+### Performance Patterns
+
+- **Use `HashMap` for O(1) lookups** instead of linear scans when mapping between collections (e.g., post titles by key)
+- **Avoid redundant `.to_string()` calls** in hot paths — store the result in a local variable when the same conversion is used multiple times (e.g., HashMap key lookup)
+
+### TailwindCSS Syntax
+
+- **Always use bracket syntax for arbitrary values**: write `z-[101]`, not `z-101`. Non-standard values without brackets are silently ignored by TailwindCSS and produce no CSS output
+- This applies to all arbitrary values: `z-[101]`, `w-[350px]`, `gap-[13px]`, etc.
+- Standard Tailwind scale values don't need brackets: `z-10`, `z-50`, `w-full`, `gap-4`
+
+### TailwindCSS Color Classes
+
+- **Never use Tailwind's built-in color palette classes** (`text-neutral-400`, `text-gray-500`, `bg-slate-800`, `text-zinc-300`, etc.) — these bypass the project's theme system and break dark/light mode consistency
+- **Always use semantic token classes** instead: `text-foreground-muted`, `text-text-primary`, `bg-card-bg`, `bg-background`, `border-border`, etc. (see Design Tokens section in `.claude/rules/figma-design-system.md`)
+- **Do not combine `light:` variant with palette colors** (e.g., `light:text-neutral-600`) — use a single semantic token class that handles both themes automatically
+- Tailwind spacing, sizing, and layout utilities (`gap-4`, `p-5`, `rounded-lg`, `w-full`) are fine to use directly
+
+## Error Handling Convention
+
+### Avoid `Error::BadRequest(String)` -- Use Typed Error Variants
+
+**Do NOT use `Error::BadRequest(String)` for domain-specific errors.** Instead, define a specific error enum with `Translate` derive for user-friendly error handling in the frontend.
+
+**Pattern:** Follow the `SpaceRewardError` / `SpaceActionQuizError` pattern:
+
+1. **Define a domain-specific error enum** in the feature's `types/error.rs`:
+
+```rust
+use crate::common::*;
+pub use thiserror::Error;
+
+#[derive(Debug, Error, Serialize, Deserialize, Translate, Clone)]
+pub enum MyFeatureError {
+    #[error("Descriptive internal message")]
+    #[translate(en = "User-facing English", ko = "사용자용 한국어")]
+    SpecificErrorVariant,
+}
+```
+
+2. **Implement server traits** (`status_code()`, `IntoResponse`, `AsStatusCode`) following the `SpaceRewardError` pattern.
+
+3. **Register in `common::Error`** by adding a `#[from]` variant with `#[translate(from)]`:
+
+```rust
+#[error("{0}")]
+#[translate(from)]
+MyFeature(#[from] MyFeatureError),
+```
+
+The `#[translate(from)]` attribute tells the `Translate` derive macro to delegate translation to the inner type's `translate()` method instead of using a static string. This ensures `toast.error()` shows the specific inner-error translation (e.g., "No remaining attempts") instead of a generic outer message.
+
+4. **Add to status code match arms** in both `IntoResponse` and `AsStatusCode` impls.
+
+5. **Use in controllers** via `.into()`:
+
+```rust
+return Err(MyFeatureError::SpecificErrorVariant.into());
+```
+
+**Why:** Typed errors enable per-variant i18n translation in the frontend via `toast.error()`, provide better error categorization, and eliminate ambiguous string-based error messages. The `#[translate(from)]` attribute on wrapper variants delegates to the inner error's `Translate` impl so that each variant's translation is surfaced correctly.
+
+**When refactoring existing code:** If you encounter `Error::BadRequest(String)` in code you are modifying, refactor it to use a typed error variant in the same change.
+
+## Server-Side Validation for User-Configurable Numeric Values
+
+**Always enforce reasonable server-side upper bounds for user-configurable numeric values** (e.g., `retry_count`, attempt limits, page sizes). Do not rely on frontend-only validation.
+
+**Key rules:**
+
+1. **Define a shared constant** for the upper bound in the feature module (e.g., `pub const MAX_TOTAL_ATTEMPTS: i64 = 100;`) so all controllers use the same limit.
+2. **Validate at the write path** (e.g., `update_quiz`) — reject values exceeding the bound with a typed error variant.
+3. **Clamp at the read path** (e.g., `get_quiz`, `respond_quiz`) — use `.min(MAX_CONSTANT)` instead of `unwrap_or(i32::MAX)` or `unwrap_or(i64::MAX)` as fallbacks. This provides defense-in-depth for legacy data that may have been written before the validation was added.
+4. **Never use `i32::MAX` or `i64::MAX` as default limits** for DynamoDB queries or similar operations — these create unbounded read costs and abuse vectors.
+
+**Why:** User-controlled values can be set to extreme values (e.g., `i64::MAX`), causing integer overflow, unbounded database queries, and excessive read costs. Server-side bounds prevent this regardless of client behavior.
+
 ## Agent Workflow Rules
 
 ### PR Comment Resolver
 
 When the `pr-comment-resolver` agent resolves PR review comments, it must save the review feedback as project-scoped memories so that Claude Code and the `github-issue-resolver` agent can reference and apply those learnings in future work. This prevents the same review feedback from being repeated across PRs.
+
+### Documentation Consistency
+
+When updating coding guidelines or conventions in `CLAUDE.md`, also update `.github/copilot-instructions.md` and `docs/playwright-testing.md` (for Playwright-related conventions) to keep all files consistent. Contradictory guidance between these files causes conflicting review feedback from different AI tools (Claude Code vs GitHub Copilot).
+
+## Playwright Test Guidelines
+
+### Configuration
+
+- **Keep `retries` CI-conditional** — use `retries: process.env.CI ? 2 : 0` so local dev runs give immediate feedback (0 retries) while CI retries flaky tests. Hardcoding `retries: 2` masks flakes locally and slows developer feedback loops
+- **Environment-aware settings** — Playwright config values that differ between local dev and CI (retries, workers, reporters) should always use `process.env.CI` conditionals, not hardcoded values
+
+### In-Page Interactions vs Navigation
+
+- **Do NOT use `waitForLoadState("load")` after non-navigation interactions** — after UI actions like autosave triggers, tab switches, blur events, or clicking options that don't cause a page navigation, `waitForLoadState("load")` resolves immediately and doesn't wait for the save/request. Wait for deterministic UI signals instead (e.g., a "Saved" indicator, specific element appearing)
+- **Avoid `networkidle` for SPA navigation** — in single-page apps, the app may continue fetching data after the `load` event. Use deterministic UI readiness assertions (e.g., `getLocator` for page-specific elements) instead of `networkidle`
+- **Follow `waitForURL()` with hydration check** — when `waitForURL()` triggers navigation, add a `waitForFunction` check for `window.dioxus.send` to match the `goto()` pattern and avoid races on slower environments
+
+### Shared Helpers & Locators
+
+- **Always use shared helpers** (`goto`, `click`, `fill`, `getLocator`) from `tests/utils.js` instead of raw Playwright APIs like `page.getByRole().click()`. Extend helpers if needed rather than mixing raw calls
+- **Avoid raw CSS locators** — don't use `page.locator('label:has(...)')` or `page.locator("#some-id")`. Use semantic selectors via helpers: `testId` > `label` > `role` > `placeholder` > `text`
+- **Avoid `.first()` on order-dependent selectors** — `page.getByRole(...).first()` breaks when DOM order changes. Add stable selectors (`data-testid`) to the UI and target them specifically
+- **Avoid redundant waits after `click()` helper** — the `click()` helper already calls `waitForLoadState("load")` internally. Adding a manual `page.waitForLoadState("load")` after `click()` is redundant and slows tests
+
+### Resource Cleanup
+
+- **Use `try/finally` for browser contexts** — when manually creating `browser.newContext()`, wrap the test body in `try/finally` to guarantee `context.close()` runs, preventing resource leaks if assertions fail mid-test
+
+### Test Environment Dependencies
+
+- **Document `bypass` feature dependency** — tests that hardcode verification codes (e.g., `000000`) only work when the backend is built with `--features bypass`. Document this requirement clearly in the test file header or guard it behind an environment check to prevent environment-dependent test failures
+- **Use `build-testing` for Playwright Docker images** — the PR workflow must use `make build-testing` (not `make build`) when building Docker images for Playwright tests. `build-testing` includes the `bypass` feature so that signup/verification flows with hardcoded code `"000000"` work correctly. The production `build` target intentionally excludes `bypass` for security
+- **Wait for async server responses with deterministic UI signals** — after triggering async server calls (e.g., clicking "Verify" for email verification), do not rely on `waitForLoadState("load")` which resolves immediately for non-navigation interactions. Instead, wait for a visible UI state change that confirms the server response (e.g., `expect(page.getByText("Send", { exact: true })).toBeHidden()` after verification completes)
+
+### Placeholder/Empty State Styling
+
+- When a UI element has both a normal and a placeholder state (e.g., "untitled" vs actual title), always apply visually distinct styling to the placeholder case (e.g., `text-foreground-muted italic`) rather than using the same primary text style for both
+
+### Semantic Tokens for Status Colors
+
+- Status-indicating colors (pass/fail, success/error, active/inactive) **must use semantic tokens**, not raw Tailwind palette colors (e.g., `bg-green-500`, `text-red-400`)
+- Define them in `tailwind.css` with the CSS space toggle pattern (`var(--dark, ...) var(--light, ...)`) and use them in component classes
+- Group them by feature namespace (e.g., `--color-sp-act-quiz-pass-bg`, `--color-sp-act-quiz-fail-text`)
+- **When adding new status badges or indicators**, always define CSS variables first in `tailwind.css`, then use them as Tailwind classes — never use raw palette classes like `bg-green-500/10` or `text-red-400` even with opacity modifiers

@@ -4,7 +4,7 @@ use crate::features::spaces::pages::actions::actions::poll::components::*;
 use crate::features::spaces::pages::actions::actions::poll::controllers::*;
 use crate::features::spaces::pages::actions::actions::poll::*;
 use crate::features::spaces::pages::actions::components::FullActionLayover;
-use crate::features::spaces::space_common::hooks::use_space;
+use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
 use crate::features::spaces::space_common::types::space_page_actions_poll_key;
 use std::collections::HashMap;
 
@@ -23,9 +23,11 @@ pub fn PollContent(
 
     let poll = poll_loader.read();
     let space = use_space().read().clone();
-    let is_space_active = matches!(
+    let role = use_space_role()();
+    let can_execute_action = crate::features::spaces::pages::actions::can_execute_space_action(
+        role,
+        poll.space_action.prerequisite,
         space.status,
-        Some(crate::common::SpaceStatus::Started | crate::common::SpaceStatus::InProgress)
     );
 
     let mut answers: Signal<HashMap<usize, Answer>> = use_signal(|| {
@@ -53,9 +55,12 @@ pub fn PollContent(
 
     let is_in_progress = poll.status == PollStatus::InProgress;
     let has_response = poll.my_response.is_some();
-    let can_submit = can_respond && is_space_active && is_in_progress && !has_response;
-    let can_update =
-        can_respond && is_space_active && is_in_progress && has_response && poll.response_editable;
+    let can_submit = can_respond && can_execute_action && is_in_progress && !has_response;
+    let can_update = can_respond
+        && can_execute_action
+        && is_in_progress
+        && has_response
+        && poll.response_editable;
     let total = poll.questions.len();
     let current_idx = question_index().min(total.saturating_sub(1));
     let current_question = poll.questions.get(current_idx).cloned();
@@ -143,18 +148,25 @@ pub fn PollContent(
             },
             div { class: "w-full",
                 if poll.status == PollStatus::Finish {
-                    div { class: "rounded-lg bg-neutral-800 p-3 text-sm text-neutral-400",
+                    div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
                         {tr.poll_ended}
                     }
                 }
                 if poll.status == PollStatus::NotStarted {
-                    div { class: "rounded-lg bg-neutral-800 p-3 text-sm text-neutral-400",
+                    div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
                         {tr.poll_not_started}
                     }
                 }
-                if !is_space_active {
-                    div { class: "rounded-lg bg-neutral-800 p-3 text-sm text-neutral-400",
-                        {tr.space_not_active}
+
+                if is_in_progress && !can_execute_action {
+                    div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
+                        {tr.no_permission}
+                    }
+                }
+
+                if is_in_progress && can_execute_action && has_response && !poll.response_editable && can_respond {
+                    div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
+                        {tr.already_responded}
                     }
                 }
 
@@ -181,7 +193,8 @@ pub fn PollContent(
                                         total,
                                         question: question.clone(),
                                         answer: current_answer,
-                                        disabled: !can_respond || !is_space_active || !is_in_progress || (!can_submit && !can_update),
+                                        disabled: !can_respond || !can_execute_action || !is_in_progress
+                                            || (!can_submit && !can_update),
                                         on_change: move |ans: Answer| {
                                             answers.write().insert(idx, ans.clone());
 

@@ -11,6 +11,7 @@ use crate::common::*;
     PartialEq,
     Translate,
 )]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub enum SpaceStatus {
     #[default]
     #[translate(en = "Processing", ko = "집계중")]
