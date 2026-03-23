@@ -9,4 +9,5 @@ extern "C" {
     pub fn load_theme() -> Option<String>;
     pub fn save_theme(theme: &str);
     pub fn apply_theme(theme: &str);
+    pub fn get_applied_theme() -> String;
 }

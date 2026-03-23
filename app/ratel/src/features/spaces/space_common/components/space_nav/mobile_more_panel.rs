@@ -74,8 +74,14 @@ pub fn MobileMorePanel(
     let tr: MobileMorePanelTranslate = use_translate();
     let mut theme_service = use_theme();
     let is_dark = match theme_service.current() {
-        Theme::Dark | Theme::System => true,
+        Theme::Dark => true,
         Theme::Light => false,
+        Theme::System => {
+            #[cfg(not(feature = "server"))]
+            { get_applied_theme() == "dark" }
+            #[cfg(feature = "server")]
+            { true }
+        }
     };
     let lang = use_language();
     let current_lang = lang();
