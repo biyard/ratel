@@ -1,5 +1,6 @@
 use crate::common::chrono::{DateTime, Utc};
 use crate::features::spaces::pages::actions::*;
+use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
 use i18n::ActionCardTranslate;
 
 mod i18n;
@@ -8,6 +9,9 @@ mod i18n;
 pub fn ActionCard(action: SpaceActionSummary, space_id: SpacePartition) -> Element {
     let tr: ActionCardTranslate = use_translate();
     let nav = navigator();
+    let mut toast = use_toast();
+    let space = use_space();
+    let role = use_space_role()();
     let now = crate::common::utils::time::get_now_timestamp_millis();
 
     let period = format_action_period(action.started_at, action.ended_at);
@@ -56,17 +60,40 @@ pub fn ActionCard(action: SpaceActionSummary, space_id: SpacePartition) -> Eleme
     } else {
         action.description.clone()
     };
+    let is_closed = matches!(status, ActionStatus::Closed);
+    let card_class = if is_closed {
+        "flex flex-col w-full text-left border transition-colors cursor-pointer gap-[0.625rem] !rounded-[1rem] !bg-neutral-900 light:!bg-white !p-[0.9375rem] border-neutral-800 light:border-neutral-300 opacity-60"
+    } else {
+        "flex flex-col w-full text-left border transition-colors cursor-pointer gap-[0.625rem] !rounded-[1rem] !bg-neutral-900 light:!bg-white !p-[0.9375rem] border-neutral-800 light:border-neutral-300 light:hover:!bg-neutral-50 hover:!bg-neutral-800"
+    };
     rsx! {
         SpaceCard {
-            class: "flex flex-col w-full text-left border transition-colors cursor-pointer gap-[0.625rem] !rounded-[1rem] !bg-neutral-900 light:!bg-white !p-[0.9375rem] border-neutral-800 light:border-neutral-300 light:hover:!bg-neutral-50 hover:!bg-neutral-800"
-                .to_string(),
-            onclick: move |_| {
-                let url = url.clone();
-                nav.push(url);
+            class: card_class.to_string(),
+            onclick: {
+                move |_| {
+                    if role != SpaceUserRole::Creator {
+                        let enable_action = matches!(status, ActionStatus::Ongoing)
+                            && action.prerequisite;
+
+                        if !enable_action {
+                            let space_status = space().status;
+                            if !matches!(space_status, Some(SpaceStatus::Started)) {
+                                toast.error(crate::common::Error::SpaceNotStarted);
+                                return;
+                            }
+                            if matches!(status, ActionStatus::Closed) {
+                                toast.error(crate::common::Error::ActionEnded);
+                                return;
+                            }
+                        }
+                    }
+                    let url = url.clone();
+                    nav.push(url);
+                }
             },
 
             // Top: badges + date
-            div { class: "flex gap-3 justify-between items-center w-full",
+            div { class: "flex gap-3 justify-between items-start w-full max-mobile:flex-col",
                 div { class: "flex gap-2 items-center",
                     Badge {
                         color: type_badge_color,
@@ -81,10 +108,18 @@ pub fn ActionCard(action: SpaceActionSummary, space_id: SpacePartition) -> Eleme
                             {status_label}
                         }
                     }
+
+                    if action.prerequisite {
+                        Badge {
+                            color: BadgeColor::Red,
+                            variant: BadgeVariant::Rounded,
+                            {tr.prerequisite}
+                        }
+                    }
                 }
 
                 if let Some(period) = period {
-                    span { class: "font-medium text-[0.75rem]/[1rem] text-neutral-500",
+                    span { class: "font-medium text-[0.75rem]/[1rem] text-neutral-500 max-mobile:self-end",
                         {period}
                     }
                 }
@@ -93,7 +128,11 @@ pub fn ActionCard(action: SpaceActionSummary, space_id: SpacePartition) -> Eleme
             // Title
             p {
                 class: "w-full font-semibold text-[1.125rem]/[1.75rem] truncate",
-                class: if action.title.is_empty() { "text-neutral-500 italic" } else { "text-white light:text-neutral-900" },
+                class: if action.title.is_empty() {
+                    "text-foreground-muted italic"
+                } else {
+                    "text-text-primary"
+                },
                 {title}
             }
 
@@ -121,16 +160,16 @@ pub fn ActionCard(action: SpaceActionSummary, space_id: SpacePartition) -> Eleme
             }
 
             if action.action_type == SpaceActionType::Quiz && quiz_score_text.is_some() {
-                div { class: "mt-auto flex w-full justify-end gap-2",
+                div { class: "flex gap-2 justify-end mt-auto w-full",
                     if let Some(result) = quiz_result_label {
                         span {
-                            class: "inline-flex h-[26px] items-center rounded-[8px] px-2.5 text-[12px]/[18px] font-semibold",
-                            class: if action.quiz_passed == Some(true) { "bg-green-500/20 text-green-400 light:bg-green-100 light:text-green-700" } else { "bg-red-500/20 text-red-400 light:bg-red-100 light:text-red-700" },
+                            class: "inline-flex items-center px-2.5 font-semibold h-[26px] rounded-[8px] text-[12px]/[18px]",
+                            class: if action.quiz_passed == Some(true) { "bg-sp-act-quiz-pass-bg text-sp-act-quiz-pass-text" } else { "bg-sp-act-quiz-fail-bg text-sp-act-quiz-fail-text" },
                             {result}
                         }
                     }
                     if let Some(score_text) = quiz_score_text {
-                        span { class: "inline-flex h-[26px] items-center rounded-[8px] bg-primary/20 px-2.5 text-[12px]/[18px] font-semibold text-primary",
+                        span { class: "inline-flex items-center px-2.5 font-semibold h-[26px] rounded-[8px] bg-primary/20 text-[12px]/[18px] text-primary",
                             {score_text}
                         }
                     }

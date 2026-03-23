@@ -27,12 +27,14 @@ pub async fn get_space(space_id: SpacePartition) -> Result<SpaceResponse> {
         false
     };
 
+    let is_participation_open = matches!(space.status, Some(SpaceStatus::InProgress));
+
     let (user_participant, can_participate) = if let Some(ref user) = user {
         let (participant_pk, participant_sk) =
             SpaceParticipant::keys(space.pk.clone(), user.pk.clone());
         let participant =
             SpaceParticipant::get(dynamo, &participant_pk, Some(&participant_sk)).await?;
-        let can_participate = participant.is_none();
+        let can_participate = participant.is_none() && is_participation_open;
         (participant, can_participate)
     } else {
         (None, false)

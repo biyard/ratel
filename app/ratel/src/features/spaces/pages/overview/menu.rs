@@ -1,13 +1,17 @@
 use crate::features::spaces::pages::overview::*;
+use crate::features::spaces::space_common::controllers::SpaceResponse;
 
 pub fn get_nav_item(
-    space_id: SpacePartition,
+    space: &SpaceResponse,
     _role: SpaceUserRole,
 ) -> Option<(Element, SpacePage, NavigationTarget)> {
     Some((
         icon(),
         SpacePage::Overview,
-        Route::SpaceOverviewPage { space_id }.into(),
+        Route::SpaceOverviewPage {
+            space_id: space.id.clone(),
+        }
+        .into(),
     ))
 }
 

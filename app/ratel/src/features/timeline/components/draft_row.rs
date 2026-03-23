@@ -4,7 +4,6 @@ use crate::features::posts::controllers::dto::*;
 use crate::features::posts::controllers::list_user_drafts::list_user_drafts_handler;
 use crate::features::posts::types::*;
 use crate::features::timeline::*;
-use crate::posts::components::CreatePostButton;
 use dioxus_translate::use_language;
 
 /// A horizontal row of the user's draft posts, displayed at the top of the timeline.
@@ -33,7 +32,6 @@ pub fn DraftTimeline() -> Element {
 
             div { class: "flex justify-between items-center px-1 w-full",
                 h2 { class: "flex-1 text-lg font-semibold text-text-primary", "Drafts" }
-                CreatePostButton { class: "w-fit" }
             }
 
             div { class: "relative",

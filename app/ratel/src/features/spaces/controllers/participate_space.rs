@@ -5,8 +5,8 @@ use crate::common::SpaceVisibility;
 use crate::features::posts::models::Post;
 use crate::features::posts::types::TeamGroupPermission;
 use crate::features::spaces::models::{
-    InvitationStatus, SpaceInvitationMember, SpacePanelParticipant, SpacePanelQuota,
-    SpaceParticipant,
+    InvitationStatus, PanelAttribute, SpaceInvitationMember, SpacePanelParticipant,
+    SpacePanelQuota, SpaceParticipant,
 };
 use crate::features::spaces::*;
 
@@ -27,6 +27,11 @@ pub async fn participate_space(space_id: SpacePartition) -> Result<ParticipateSp
     let space =
         SpaceCommon::get(dynamo, &space_pk_partition, Some(&EntityType::SpaceCommon)).await?;
     let space = space.ok_or_else(|| Error::NotFound("Space Not Found".to_string()))?;
+    if space.status != Some(crate::common::SpaceStatus::InProgress) {
+        return Err(Error::BadRequest(
+            "Participation is only available while the space is in progress.".to_string(),
+        ));
+    }
 
     let post_pk = space.pk.clone().to_post_key()?;
     let post = Post::get(dynamo, &post_pk, Some(EntityType::Post)).await?;
@@ -118,6 +123,14 @@ pub async fn participate_space(space_id: SpacePartition) -> Result<ParticipateSp
 }
 
 #[cfg(feature = "server")]
+fn is_collective_panel(panel: &SpacePanelQuota) -> bool {
+    let attrs = crate::features::spaces::controllers::panel_requirements::panel_attributes(panel);
+    attrs
+        .iter()
+        .all(|attr| matches!(attr, PanelAttribute::CollectiveAttribute(_)))
+}
+
+#[cfg(feature = "server")]
 async fn check_if_satisfying_panel_attribute(
     space: &SpaceCommon,
     cli: &aws_sdk_dynamodb::Client,
@@ -142,11 +155,49 @@ async fn check_if_satisfying_panel_attribute(
         .map(|value| !value.is_empty())
         .unwrap_or(false);
 
+    let (collective_panels, conditional_panels): (Vec<_>, Vec<_>) =
+        panel_quota.into_iter().partition(is_collective_panel);
+
+    for q in &collective_panels {
+        if !crate::features::spaces::controllers::panel_requirements::panel_matches_user(
+            age,
+            gender,
+            has_university,
+            q,
+        ) {
+            return Err(Error::LackOfVerifiedAttributes);
+        }
+    }
+
+    if conditional_panels.is_empty() {
+        if space.quota > 0 {
+            if space.remains <= 0 {
+                return Err(Error::FullQuota);
+            }
+            let space_updater =
+                SpaceCommon::updater(space.pk.clone(), EntityType::SpaceCommon).decrease_remains(1);
+
+            let (panel_pk, panel_sk) =
+                SpacePanelParticipant::keys(&space.pk.clone(), &user.pk.clone());
+            let participant =
+                SpacePanelParticipant::get(cli, panel_pk, Some(panel_sk.clone())).await?;
+            if participant.is_none() {
+                let participants = SpacePanelParticipant::new(space.pk.clone(), user.clone());
+                crate::transact_write!(
+                    cli,
+                    participants.create_transact_write_item(),
+                    space_updater.transact_write_item(),
+                )?;
+            }
+        }
+        return Ok(());
+    }
+
     if space.remains <= 0 {
         return Err(Error::FullQuota);
     }
 
-    for q in panel_quota {
+    for q in conditional_panels {
         if q.remains <= 0 {
             continue;
         }

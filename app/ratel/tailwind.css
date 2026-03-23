@@ -313,6 +313,17 @@ html[data-theme="light"] {
   --color-btn-outline-text: var(--color-white);
 
   --color-back-icon: var(--dark, #ffffff) var(--light, #737373);
+
+  /* Banner / status colors */
+  --color-banner-bg: var(--dark, #262626) var(--light, #f5f5f5);
+  --color-banner-text: var(--dark, #a1a1a1) var(--light, #525252);
+  --color-banner-success-bg: var(--dark, rgba(22, 101, 52, 0.3)) var(--light, #f0fdf4);
+  --color-banner-success-text: var(--dark, #4ade80) var(--light, #15803d);
+
+  /* Option card colors (poll/quiz) */
+  --color-option-card-bg: var(--dark, rgba(38, 38, 38, 0.6)) var(--light, #f5f5f5);
+  --color-option-card-hover-bg: var(--dark, rgba(64, 64, 64, 0.6)) var(--light, #e5e5e5);
+  --color-option-card-accent: var(--dark, rgba(64, 64, 64, 0.4)) var(--light, rgba(163, 163, 163, 0.4));
 }
 
 /* ----------------------------
@@ -716,6 +727,14 @@ a {
   --color-sp-act-card-bg: var(--dark, #1a1a1a) var(--light, #ffffff);
   --color-sp-act-card-stroke: var(--dark, #404040) var(--light, #e5e5e5);
   --color-sp-act-icon-neutral: #737373;
+
+  /* Quiz result badge colors */
+  --color-sp-act-quiz-pass-bg: var(--dark, rgba(34, 197, 94, 0.2))
+    var(--light, #dcfce7);
+  --color-sp-act-quiz-pass-text: var(--dark, #4ade80) var(--light, #15803d);
+  --color-sp-act-quiz-fail-bg: var(--dark, rgba(239, 68, 68, 0.2))
+    var(--light, #fee2e2);
+  --color-sp-act-quiz-fail-text: var(--dark, #f87171) var(--light, #b91c1c);
 }
 
 /* =============================================================

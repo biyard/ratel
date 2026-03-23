@@ -32,6 +32,9 @@ pub struct SpacePoll {
     pub total_score: i64,
     #[serde(default)]
     pub total_point: i64,
+
+    #[serde(default)]
+    pub canister_upload_enabled: bool,
 }
 
 #[cfg(feature = "server")]
@@ -58,6 +61,7 @@ impl SpacePoll {
             questions: Vec::new(),
             total_point: 0,
             total_score: 0,
+            canister_upload_enabled: false,
         })
     }
 
@@ -216,6 +220,7 @@ impl TryFrom<Partition> for SpacePoll {
             questions: Vec::new(),
             total_point: 0,
             total_score: 0,
+            canister_upload_enabled: false,
         })
     }
 }

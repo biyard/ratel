@@ -8,7 +8,6 @@ pub mod biyard;
 pub mod dynamodb;
 pub mod icp;
 pub mod qdrant_config;
-
 use super::*;
 
 #[derive(Debug, Clone, Copy)]
@@ -41,8 +40,8 @@ impl ServerConfig {
     pub fn biyard(&self) -> &crate::common::services::BiyardService {
         &biyard::BIYARD_SERVICE
     }
-    pub fn icp_sampling(&self) -> &crate::common::services::icp::IcpSamplingService {
-        &icp::ICP_SAMPLING_SERVICE
+    pub fn canister(&self) -> &crate::common::services::icp::CanisterService {
+        &icp::CANISTER_SERVICE
     }
 }
 

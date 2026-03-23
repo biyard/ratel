@@ -19,6 +19,10 @@ translate! {
         en: "Follow",
         ko: "팔로우"
     },
+    prerequisite: {
+        en: "Pre",
+        ko: "사전"
+    },
     status_draft: {
         en: "Draft",
         ko: "초안"

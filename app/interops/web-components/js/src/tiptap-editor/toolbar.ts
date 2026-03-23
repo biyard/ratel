@@ -31,7 +31,10 @@ function sep(): HTMLElement {
 export function buildToolbar(editor: Editor): HTMLDivElement {
   const toolbar = document.createElement("div");
   toolbar.className =
-    "flex items-center gap-2 p-1 border-b border-[var(--stroke-default,#333)] bg-[var(--surface-raised,#1a1a1a)] overflow-x-auto";
+    "relative z-10 overflow-visible border-b border-[var(--stroke-default,#333)] bg-[var(--surface-raised,#1a1a1a)]";
+
+  const toolbarScroller = document.createElement("div");
+  toolbarScroller.className = "flex items-center gap-2 overflow-x-auto p-1";
 
   // ── Text formatting ────────────────────────────────────────────────
 
@@ -39,27 +42,27 @@ export function buildToolbar(editor: Editor): HTMLDivElement {
   boldBtn.addEventListener("click", () =>
     editor.chain().focus().toggleBold().run(),
   );
-  toolbar.appendChild(boldBtn);
+  toolbarScroller.appendChild(boldBtn);
 
   const italicBtn = btn("<i>I</i>", "Italic (Ctrl+I)");
   italicBtn.addEventListener("click", () =>
     editor.chain().focus().toggleItalic().run(),
   );
-  toolbar.appendChild(italicBtn);
+  toolbarScroller.appendChild(italicBtn);
 
   const underlineBtn = btn("<u>U</u>", "Underline (Ctrl+U)");
   underlineBtn.addEventListener("click", () =>
     editor.chain().focus().toggleUnderline().run(),
   );
-  toolbar.appendChild(underlineBtn);
+  toolbarScroller.appendChild(underlineBtn);
 
   const strikeBtn = btn("<s>S</s>", "Strikethrough");
   strikeBtn.addEventListener("click", () =>
     editor.chain().focus().toggleStrike().run(),
   );
-  toolbar.appendChild(strikeBtn);
+  toolbarScroller.appendChild(strikeBtn);
 
-  toolbar.appendChild(sep());
+  toolbarScroller.appendChild(sep());
 
   // ── Colors ─────────────────────────────────────────────────────────
 
@@ -67,7 +70,7 @@ export function buildToolbar(editor: Editor): HTMLDivElement {
     "tiptap-color-picker",
   ) as TiptapColorPicker;
   textColorPicker.colors = TEXT_COLORS;
-  toolbar.appendChild(textColorPicker);
+  toolbarScroller.appendChild(textColorPicker);
   // Set trigger label/title after mount
   requestAnimationFrame(() => {
     textColorPicker.triggerLabel =
@@ -82,7 +85,7 @@ export function buildToolbar(editor: Editor): HTMLDivElement {
     "tiptap-color-picker",
   ) as TiptapColorPicker;
   highlightPicker.colors = HIGHLIGHT_COLORS;
-  toolbar.appendChild(highlightPicker);
+  toolbarScroller.appendChild(highlightPicker);
   requestAnimationFrame(() => {
     highlightPicker.triggerLabel =
       '<span class="bg-yellow-300 px-1 rounded-sm">A</span>';
@@ -92,7 +95,7 @@ export function buildToolbar(editor: Editor): HTMLDivElement {
     editor.chain().focus().setHighlight({ color: e.detail }).run();
   }) as EventListener);
 
-  toolbar.appendChild(sep());
+  toolbarScroller.appendChild(sep());
 
   // ── Heading ────────────────────────────────────────────────────────
 
@@ -109,9 +112,9 @@ export function buildToolbar(editor: Editor): HTMLDivElement {
         .toggleHeading({ level: parseInt(v) as 1 | 2 | 3 })
         .run();
   }) as EventListener);
-  toolbar.appendChild(headingSelect);
+  toolbarScroller.appendChild(headingSelect);
 
-  toolbar.appendChild(sep());
+  toolbarScroller.appendChild(sep());
 
   // ── Alignment ──────────────────────────────────────────────────────
 
@@ -121,7 +124,7 @@ export function buildToolbar(editor: Editor): HTMLDivElement {
       editor.chain().focus().unsetTextAlign().run();
     else editor.chain().focus().setTextAlign("left").run();
   });
-  toolbar.appendChild(alignLeftBtn);
+  toolbarScroller.appendChild(alignLeftBtn);
 
   const alignCenterBtn = btn("\u2261", "Align Center", "16px");
   alignCenterBtn.addEventListener("click", () => {
@@ -129,7 +132,7 @@ export function buildToolbar(editor: Editor): HTMLDivElement {
       editor.chain().focus().unsetTextAlign().run();
     else editor.chain().focus().setTextAlign("center").run();
   });
-  toolbar.appendChild(alignCenterBtn);
+  toolbarScroller.appendChild(alignCenterBtn);
 
   const alignRightBtn = btn("\u2261", "Align Right", "16px");
   alignRightBtn.addEventListener("click", () => {
@@ -137,9 +140,9 @@ export function buildToolbar(editor: Editor): HTMLDivElement {
       editor.chain().focus().unsetTextAlign().run();
     else editor.chain().focus().setTextAlign("right").run();
   });
-  toolbar.appendChild(alignRightBtn);
+  toolbarScroller.appendChild(alignRightBtn);
 
-  toolbar.appendChild(sep());
+  toolbarScroller.appendChild(sep());
 
   // ── Lists ──────────────────────────────────────────────────────────
 
@@ -147,15 +150,15 @@ export function buildToolbar(editor: Editor): HTMLDivElement {
   bulletBtn.addEventListener("click", () =>
     editor.chain().focus().toggleBulletList().run(),
   );
-  toolbar.appendChild(bulletBtn);
+  toolbarScroller.appendChild(bulletBtn);
 
   const orderedBtn = btn("1.", "Numbered List");
   orderedBtn.addEventListener("click", () =>
     editor.chain().focus().toggleOrderedList().run(),
   );
-  toolbar.appendChild(orderedBtn);
+  toolbarScroller.appendChild(orderedBtn);
 
-  toolbar.appendChild(sep());
+  toolbarScroller.appendChild(sep());
 
   // ── Link ───────────────────────────────────────────────────────────
 
@@ -206,15 +209,15 @@ export function buildToolbar(editor: Editor): HTMLDivElement {
         .run();
     }
   });
-  toolbar.appendChild(linkBtn);
+  toolbarScroller.appendChild(linkBtn);
 
   const unlinkBtn = btn("\u274C", "Remove Link", "10px");
   unlinkBtn.addEventListener("click", () => {
     editor.chain().focus().extendMarkRange("link").unsetMark("link").run();
   });
-  toolbar.appendChild(unlinkBtn);
+  toolbarScroller.appendChild(unlinkBtn);
 
-  toolbar.appendChild(sep());
+  toolbarScroller.appendChild(sep());
 
   // ── Image ──────────────────────────────────────────────────────────
 
@@ -235,10 +238,10 @@ export function buildToolbar(editor: Editor): HTMLDivElement {
     fileInput.value = "";
   });
   imageBtn.addEventListener("click", () => fileInput.click());
-  toolbar.appendChild(imageBtn);
-  toolbar.appendChild(fileInput);
+  toolbarScroller.appendChild(imageBtn);
+  toolbarScroller.appendChild(fileInput);
 
-  toolbar.appendChild(sep());
+  toolbarScroller.appendChild(sep());
 
   // ── Table ──────────────────────────────────────────────────────────
 
@@ -250,7 +253,7 @@ export function buildToolbar(editor: Editor): HTMLDivElement {
       .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
       .run();
   });
-  toolbar.appendChild(tableBtn);
+  toolbarScroller.appendChild(tableBtn);
 
   const tableOps = document.createElement("span");
   tableOps.className = "hidden items-center gap-1";
@@ -271,7 +274,7 @@ export function buildToolbar(editor: Editor): HTMLDivElement {
     b.addEventListener("click", cmd);
     tableOps.appendChild(b);
   }
-  toolbar.appendChild(tableOps);
+  toolbarScroller.appendChild(tableOps);
 
   // ── Active state sync ──────────────────────────────────────────────
 
@@ -307,6 +310,8 @@ export function buildToolbar(editor: Editor): HTMLDivElement {
 
   editor.on("selectionUpdate", updateState);
   editor.on("update", updateState);
+
+  toolbar.appendChild(toolbarScroller);
 
   return toolbar;
 }

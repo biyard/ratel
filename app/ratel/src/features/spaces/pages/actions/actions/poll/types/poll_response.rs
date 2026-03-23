@@ -17,6 +17,9 @@ pub struct PollResponse {
     pub status: PollStatus,
     pub default: bool,
     pub space_action: crate::features::spaces::pages::actions::models::SpaceAction,
+
+    #[serde(default)]
+    pub encrypted_upload_enabled: bool,
 }
 
 #[cfg(feature = "server")]
@@ -37,6 +40,7 @@ impl From<SpacePoll> for PollResponse {
             default: poll.is_default_poll(),
             my_response: None,
             space_action: SpaceAction::default(),
+            encrypted_upload_enabled: poll.canister_upload_enabled,
         }
     }
 }

@@ -12,6 +12,11 @@ DYNAMO_ENDPOINT ?= none
 KAIA_ENDPOINT ?= https://public-en-kairos.node.kaia.io
 BLOCK_EXPLORER_URL ?= https://kairos.kaiascan.io
 WALLETCONNECT_PROJECT_ID ?= "WALLETCONNECT_PROJECT_ID"
+IC_URL ?= http://127.0.0.1:4943
+RATEL_CANISTER_ID ?=
+ICP_IDENTITY_PEM ?=
+VOTER_TAG_SECRET ?= test
+ATTR_VOTING_AUTHORITY_JSON ?=
 RUST_LOG ?= debug
 
 PORT ?= 8080
@@ -43,6 +48,11 @@ BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					FIREBASE_MESSAGING_SENDER_ID=$(FIREBASE_MESSAGING_SENDER_ID) \
 					FIREBASE_APP_ID=$(FIREBASE_APP_ID) \
 					FIREBASE_MEASUREMENT_ID=$(FIREBASE_MEASUREMENT_ID) \
+					IC_URL=$(IC_URL) \
+					RATEL_CANISTER_ID=$(RATEL_CANISTER_ID) \
+					ICP_IDENTITY_PEM=$(ICP_IDENTITY_PEM) \
+					VOTER_TAG_SECRET=$(VOTER_TAG_SECRET) \
+					ATTR_VOTING_AUTHORITY_JSON=$(ATTR_VOTING_AUTHORITY_JSON) \
 
 RUST_FLAG ?=
 
@@ -57,6 +67,9 @@ run:
 
 build:
 	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web --platform web @server --features server --platform server
+
+build-testing:
+	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web --platform web @server --features server,bypass --platform server
 
 build-arm:
 	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web --platform web @server --features server --platform server --target aarch64-unknown-linux-gnu
