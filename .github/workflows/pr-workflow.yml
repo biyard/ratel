@@ -308,7 +308,7 @@ jobs:
           ECR: ratel/app-shell
         run: |
           npm i -D tailwindcss
-          make build
+          make build-testing
           make docker
 
           # Save image for artifact upload
