@@ -1,10 +1,13 @@
-use crate::common::components::FileUploader;
+use crate::common::components::{FileUploader, UploadedFileMeta};
 use crate::features::spaces::pages::apps::apps::file::i18n::SpaceFileTranslate;
 use crate::features::spaces::pages::apps::apps::file::*;
 
-fn guess_extension_from_url(url: &str) -> FileExtension {
-    let path = url.split('?').next().unwrap_or(url);
-    let ext = path.rsplit('.').next().unwrap_or("").to_lowercase();
+fn guess_extension_from_name(name: &str) -> FileExtension {
+    let ext = name
+        .rsplit('.')
+        .next()
+        .unwrap_or("")
+        .to_lowercase();
     match ext.as_str() {
         "jpg" | "jpeg" => FileExtension::JPG,
         "png" => FileExtension::PNG,
@@ -20,11 +23,6 @@ fn guess_extension_from_url(url: &str) -> FileExtension {
     }
 }
 
-fn extract_filename_from_url(url: &str) -> String {
-    let path = url.split('?').next().unwrap_or(url);
-    path.rsplit('/').next().unwrap_or("untitled").to_string()
-}
-
 #[component]
 pub fn FileUploadZone(on_upload: EventHandler<File>) -> Element {
     let tr: SpaceFileTranslate = use_translate();
@@ -33,14 +31,15 @@ pub fn FileUploadZone(on_upload: EventHandler<File>) -> Element {
     rsx! {
         FileUploader {
             accept: "*/*",
-            on_upload_success: move |url: String| {
+            on_upload_success: move |_: String| {},
+            on_upload_meta: move |meta: UploadedFileMeta| {
                 is_loading.set(false);
                 let file = File {
-                    id: url.clone(),
-                    name: extract_filename_from_url(&url),
-                    size: String::new(),
-                    ext: guess_extension_from_url(&url),
-                    url: Some(url),
+                    id: meta.url.clone(),
+                    name: meta.name.clone(),
+                    size: meta.size.clone(),
+                    ext: guess_extension_from_name(&meta.name),
+                    url: Some(meta.url),
                     uploader_name: None,
                     uploader_profile_url: None,
                     uploaded_at: None,
