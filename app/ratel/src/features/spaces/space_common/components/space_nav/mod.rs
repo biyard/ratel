@@ -57,11 +57,8 @@ pub fn SpaceNav(
                 }
 
                 div { class: "flex flex-col gap-1.5 items-start px-4 pt-2.5 font-bold text-xs/[14px] max-tablet:flex-row max-tablet:items-stretch max-tablet:justify-around max-tablet:p-0",
-                    for (idx, item) in menus.iter().enumerate() {
-                        NavItem {
-                            key: "{idx}",
-                            item: item.clone(),
-                        }
+                    for (idx , item) in menus.iter().enumerate() {
+                        NavItem { key: "{idx}", item: item.clone() }
                     }
                     // Mobile-only "More" tab
                     MobileMoreTab {
@@ -146,12 +143,7 @@ fn SpaceThemeToggle() -> Element {
     let is_dark = match theme_service.current() {
         Theme::Dark => true,
         Theme::Light => false,
-        Theme::System => {
-            #[cfg(not(feature = "server"))]
-            { get_applied_theme() == "dark" }
-            #[cfg(feature = "server")]
-            { true }
-        }
+        Theme::System => true, // system default treated as dark
     };
 
     rsx! {
