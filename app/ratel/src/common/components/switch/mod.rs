@@ -19,7 +19,7 @@ pub fn Switch(
 
     #[cfg(debug_assertions)]
     if label.is_empty() {
-        tracing::warn!("Switch: label prop should be provided for accessibility (aria-label)");
+        tracing::debug!("Switch: label prop should be provided for accessibility (aria-label)");
     }
 
     let aria_label = if label.is_empty() { None } else { Some(label) };

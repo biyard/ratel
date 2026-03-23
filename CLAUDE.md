@@ -870,7 +870,7 @@ Use `let lang = use_language();` in the component, then `{value.translate(&lang(
 Switch {
     active: is_enabled(),
     on_toggle: move |_| is_enabled.set(!is_enabled()),
-    label: "Enable join anytime",
+    label: "Enable join anytime".to_string(),
 }
 ```
 
