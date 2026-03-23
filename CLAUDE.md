@@ -918,6 +918,17 @@ Use `let lang = use_language();` in the component, then `{value.translate(&lang(
 - **Do not combine `light:` variant with palette colors** (e.g., `light:text-neutral-600`) — use a single semantic token class that handles both themes automatically
 - Tailwind spacing, sizing, and layout utilities (`gap-4`, `p-5`, `rounded-lg`, `w-full`) are fine to use directly
 
+## Domain Logic Centralization
+
+### Trust Server-Computed Fields in the UI
+
+When the server already computes a derived boolean (e.g., `can_participate`, `is_active`) and returns it in the response, **use that field directly in the UI** instead of re-checking the raw underlying fields client-side.
+
+- **Do:** `if space.can_participate { /* show button */ }`
+- **Don't:** `if space.join_anytime == Some(true) || space.status == SpaceStatus::Scheduled { /* show button */ }` — this duplicates the server logic and will drift when the rule changes
+
+**Why:** The server is the single source of truth for business rules. Re-deriving the same condition client-side creates a second place to maintain and risks inconsistency when the rule evolves (e.g., adding a new condition to "participation open").
+
 ## Error Handling Convention
 
 ### Avoid `Error::BadRequest(String)` -- Use Typed Error Variants
