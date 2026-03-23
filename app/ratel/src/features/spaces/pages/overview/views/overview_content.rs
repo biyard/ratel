@@ -133,9 +133,9 @@ pub fn OverviewContent(
 
                 div { class: "flex flex-wrap justify-between items-center gap-y-2 py-4 border-y border-card-border",
                     div { class: "flex gap-2.5 items-center min-w-0",
-                        div { class: "flex flex-row items-center w-fit gap-[8px]",
+                        div { class: "flex flex-row items-center min-w-0 gap-[8px]",
                             {render_author_avatar(&space.author_profile_url, &space.author_display_name)}
-                            div { class: "min-w-0 font-semibold text-[14px]/[20px] text-text-primary truncate max-w-[120px]",
+                            div { class: "min-w-0 font-semibold text-[14px]/[20px] text-text-primary truncate",
                                 "{space.author_display_name}"
                             }
                         }
@@ -181,12 +181,12 @@ pub fn OverviewContent(
                 }
 
                 if let Some(message) = error() {
-                    div { class: "text-sm text-red-500", "{tr.save_failed}: {message}" }
+                    div { class: "text-sm text-destructive", "{tr.save_failed}: {message}" }
                 }
 
                 SpaceCard { class: "border-none shadow-none !bg-transparent !p-0",
                     TiptapEditor {
-                        class: "w-full h-fit [&>div]:border-0 [&>div]:bg-transparent [&_[data-tiptap-toolbar]]:hidden [&_[contenteditable='true']]:px-0 [&_[contenteditable='true']]:py-0 [&_[contenteditable='true']]:text-[15px]/[24px] [&_[contenteditable='true']]:tracking-[0.5px] [&_[contenteditable='true']]:text-[#D4D4D4]",
+                        class: "w-full h-fit [&>div]:border-0 [&>div]:bg-transparent [&_[data-tiptap-toolbar]]:hidden [&_[contenteditable='true']]:px-0 [&_[contenteditable='true']]:py-0 [&_[contenteditable='true']]:text-[15px]/[24px] [&_[contenteditable='true']]:tracking-[0.5px] [&_[contenteditable='true']]:text-title-text",
                         content: content(),
                         editable: allow_edit,
                         placeholder: tr.placeholder,
