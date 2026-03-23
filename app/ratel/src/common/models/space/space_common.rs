@@ -49,6 +49,9 @@ pub struct SpaceCommon {
     pub anonymous_participation: bool,
 
     #[serde(default)]
+    pub join_anytime: bool,
+
+    #[serde(default)]
     pub logo: String,
 
     #[serde(default)]
