@@ -97,9 +97,4 @@
     letter-spacing: -0.1px;
   }
 
-  .tabs-trigger[data-state="active"] {
-    font-size: 12px;
-    line-height: 16px;
-    letter-spacing: -0.1px;
-  }
 }
