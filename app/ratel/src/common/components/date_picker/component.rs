@@ -243,17 +243,32 @@ fn from_total_minutes(total: i64) -> (Date, u8, u8) {
 }
 
 #[component]
-pub fn DateAndTimePicker(#[props(default)] on_change: EventHandler<DateTimeRange>) -> Element {
+pub fn DateAndTimePicker(
+    #[props(default)] on_change: EventHandler<DateTimeRange>,
+    #[props(default)] initial_started_at: Option<i64>,
+    #[props(default)] initial_ended_at: Option<i64>,
+) -> Element {
     let now = OffsetDateTime::now_utc();
     let next_hour = (now.hour() + 1) % 24;
     let today = now.date();
     let tomorrow = today.saturating_add(1.days());
-    let mut selected_start_date = use_signal(|| Some(today));
-    let mut selected_end_date = use_signal(|| Some(tomorrow));
-    let mut start_hour = use_signal(move || next_hour);
-    let mut start_minute = use_signal(|| 0u8);
-    let mut end_hour = use_signal(move || next_hour);
-    let mut end_minute = use_signal(|| 0u8);
+
+    let (init_start_date, init_start_h, init_start_m) = initial_started_at
+        .and_then(|ms| OffsetDateTime::from_unix_timestamp(ms / 1000).ok())
+        .map(|dt| (dt.date(), dt.hour(), dt.minute()))
+        .unwrap_or((today, next_hour, 0));
+
+    let (init_end_date, init_end_h, init_end_m) = initial_ended_at
+        .and_then(|ms| OffsetDateTime::from_unix_timestamp(ms / 1000).ok())
+        .map(|dt| (dt.date(), dt.hour(), dt.minute()))
+        .unwrap_or((tomorrow, next_hour, 0));
+
+    let mut selected_start_date = use_signal(|| Some(init_start_date));
+    let mut selected_end_date = use_signal(|| Some(init_end_date));
+    let mut start_hour = use_signal(move || init_start_h);
+    let mut start_minute = use_signal(move || init_start_m);
+    let mut end_hour = use_signal(move || init_end_h);
+    let mut end_minute = use_signal(move || init_end_m);
     let format = format_description::parse("[year]-[month]-[day]").unwrap();
 
     let emit = move || {

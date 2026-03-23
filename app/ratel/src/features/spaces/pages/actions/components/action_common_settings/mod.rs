@@ -22,6 +22,8 @@ pub fn ActionCommonSettings(
             div { class: "flex flex-col gap-2.5",
                 p { {tr.date} }
                 DateAndTimePicker {
+                    initial_started_at: Some(action_setting().started_at),
+                    initial_ended_at: Some(action_setting().ended_at),
                     on_change: move |range: DateTimeRange| async move {
                         if let (Some(start_date), Some(end_date)) = (range.start_date, range.end_date) {
                             let started_at = date_time_to_millis(
