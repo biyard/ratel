@@ -26,7 +26,7 @@
 - [ ] 리스트 렌더링 시 `key`를 제공하는가?
 - [ ] 인라인 스타일 대신 Tailwind CSS 클래스를 사용하는가?
 - [ ] 네이밍 규칙을 따르는가? (PascalCase, Modal/Service 접미사 등)
-- [ ] `Switch` 컴포넌트 사용 시 `label` prop을 전달하여 `role="switch"`, `aria-checked`, `aria-label` 속성이 렌더링되는가?
+- [ ] `Switch` 컴포넌트 사용 시 `label` prop을 통해 적절한 `aria-label`(accessible name)이 설정되는가? (`role="switch"`와 `aria-checked`는 label 유무와 상관없이 항상 렌더링됨)
 
 ## 4. 라우트
 
