@@ -12,18 +12,19 @@ pub fn FileUploadZone(on_upload: EventHandler<File>) -> Element {
             accept: "*/*",
             on_upload_success: move |_: String| {},
             on_upload_meta: move |meta: UploadedFileMeta| {
-                let name = if meta.name.trim().is_empty() {
-                    extract_filename_from_url(&meta.url)
+                let UploadedFileMeta { url, name, size } = meta;
+                let name = if name.trim().is_empty() {
+                    extract_filename_from_url(&url)
                 } else {
-                    meta.name
+                    name
                 };
-                let ext = FileExtension::from_name_or_url(&name, &meta.url);
+                let ext = FileExtension::from_name_or_url(&name, &url);
                 let file = File {
-                    id: meta.url.clone(),
+                    id: url.clone(),
                     name,
-                    size: meta.size,
+                    size,
                     ext,
-                    url: Some(meta.url),
+                    url: Some(url),
                     uploader_name: None,
                     uploader_profile_url: None,
                     uploaded_at: None,
