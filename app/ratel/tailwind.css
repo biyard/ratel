@@ -147,6 +147,10 @@ html[data-theme="light"] {
   --table-selection-bg: var(--dark, var(--blue-selection))
     var(--light, var(--table-light-selection));
 
+  /* Switch component */
+  --color-switch-track: var(--dark, var(--gray-700)) var(--light, var(--gray-300));
+  --color-switch-knob: #ffffff;
+
   /* ================================
      LEGACY TOKENS (Deprecated - for migration only)
      ================================ */
@@ -620,6 +624,14 @@ a {
   }
   .bg-accent {
     background-color: var(--accent);
+  }
+
+  /* Switch component */
+  .bg-switch-track {
+    background-color: var(--color-switch-track);
+  }
+  .bg-switch-knob {
+    background-color: var(--color-switch-knob);
   }
 
   /* Border colors */
