@@ -156,7 +156,7 @@ pub fn FeedCard(
 ### Naming
 
 | Type | Convention | Example |
-|------|-----------|---------|
+|------|-----------|--------|
 | Components | PascalCase | `FeedCard`, `SpaceNav` |
 | Pages/Views | PascalCase, optionally suffixed with `Page` | `AdminPage`, `Index` |
 | Modals | Suffixed with `Modal` | `LoginModal`, `SignUpModal` |
@@ -198,6 +198,25 @@ rsx! {
 - Always use Tailwind CSS utility classes for styling.
 - Always provide `key` when rendering lists.
 - Never use inline styles — use Tailwind classes or `data-*` attributes.
+
+### Switch Component Accessibility
+
+The `Switch` component must always have an accessible label. The `role="switch"` and `aria-checked` attributes are rendered regardless of the label, but you must pass the `label` prop so it renders a proper `aria-label` for screen reader support.
+
+```rust
+// Good: always pass label for accessible aria-label
+Switch {
+    active: is_enabled(),
+    on_toggle: move |_| is_enabled.set(!is_enabled()),
+    label: "Enable join anytime".to_string(),
+}
+
+// Bad: omitting label makes Switch lack an accessible name
+Switch {
+    active: is_enabled(),
+    on_toggle: move |_| is_enabled.set(!is_enabled()),
+}
+```
 
 ---
 
@@ -304,6 +323,24 @@ pub fn SpaceLayout(space_id: SpacePartition) -> Element {
 ## 6. Controllers (Server Functions)
 
 Controllers are server functions that act as API endpoints.
+
+### Server-Client Architecture Patterns
+
+**Centralize computed booleans on the server side.** When a computed boolean (like "can the user participate?") depends on multiple model fields, compute it once in the server controller and expose it as a field on the response DTO (e.g., `can_participate: bool` on `GetSpaceResponse`). The client should read the pre-computed field rather than re-deriving the condition from raw model fields.
+
+**Extract reusable conditions into model helper methods.** When the same boolean condition is checked in multiple server-side locations, define it as a method on the model struct rather than duplicating inline logic:
+
+```rust
+#[cfg(feature = "server")]
+impl SpaceCommon {
+    pub fn is_participation_open(&self) -> bool {
+        matches!(self.status, Some(SpaceStatus::InProgress))
+            || (matches!(self.status, Some(SpaceStatus::Started)) && self.join_anytime)
+    }
+}
+```
+
+This keeps business rules DRY and ensures the server remains the single source of truth.
 
 ### Declaration
 
@@ -1090,7 +1127,7 @@ rsx! {
 ### Namespace Convention
 
 | Module | JS Namespace |
-|--------|-------------|
+|--------|--------------|
 | common/theme | `window.ratel.common.theme` |
 | app-shell | `window.ratel.app_shell` |
 | ratel-auth/firebase | `window.ratel.auth.firebase` |
@@ -1330,7 +1367,7 @@ pub fn MyView() -> Element {
 ## Quick Reference
 
 | Concern | Convention |
-|---------|-----------|
+|---------|----------|
 | Component | `#[component] pub fn Name(...) -> Element` |
 | Route enum | `#[derive(Routable)]` + `#[rustfmt::skip]` |
 | Layout | `Outlet::<Route> {}` inside layout |
