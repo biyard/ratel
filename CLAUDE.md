@@ -888,6 +888,13 @@ Use `let lang = use_language();` in the component, then `{value.translate(&lang(
 - Capturing a plain `usize` or other non-reactive value outside the closure will NOT trigger re-runs
 - To react to item count changes: call `v.items()` inside the effect (which reads from the underlying `Signal`), not `let count = items.len()` captured from outside
 
+### Signal Value Reading in RSX
+
+- **Always call `signal()` explicitly** when using a `Signal<T>` value in RSX string interpolation — write `"{my_signal()}"`, not `"{my_signal}"`
+- Formatting a `Signal` handle directly (without `()`) serializes the Signal wrapper, not the inner value, producing incorrect output
+- This applies to all RSX attributes that use string interpolation: `key`, `class`, `id`, `src`, etc.
+- Example: `key: "{input_key()}"` (correct) vs `key: "{input_key}"` (incorrect — formats the Signal handle)
+
 ### Event Handler Syntax
 
 - In Dioxus RSX, event handlers do NOT need outer brace wrapping. Use `onscroll: move |_| { ... },` directly, not `onscroll: { move |_| { ... } },`
