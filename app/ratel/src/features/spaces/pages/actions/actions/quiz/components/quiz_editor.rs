@@ -244,7 +244,6 @@ fn QuizChoiceEditor(
         ChoiceQuestionEditor {
             question: question.clone(),
             is_single,
-            show_allow_other: false,
             selected_options,
             on_save,
             on_change: move |next_question: Question| {

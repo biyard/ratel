@@ -81,7 +81,6 @@ pub fn QuestionTab() -> Element {
                                 question: question.clone(),
                                 answer: None,
                                 disabled: true,
-                                enable_other_option: true,
                                 on_change: move |_| {},
                             }
                         }
