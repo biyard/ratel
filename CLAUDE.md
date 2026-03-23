@@ -869,7 +869,7 @@ Use `let lang = use_language();` in the component, then `{value.translate(&lang(
 ```rust
 Switch {
     active: is_enabled(),
-    on_toggle: move |b| is_enabled.set(b),
+    on_toggle: move |_| is_enabled.set(!is_enabled()),
     label: "Enable join anytime",
 }
 ```
