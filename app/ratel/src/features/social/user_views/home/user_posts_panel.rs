@@ -77,7 +77,7 @@ fn UserPostCard(post: PostResponse) -> Element {
             div { class: "flex flex-col gap-4 py-6 border-b border-separator",
                 div { class: "flex items-center justify-between",
                     if !category.is_empty() {
-                        div { class: "flex items-center border border-[#a1a1a1] rounded-[8px] px-2 py-0.5",
+                        div { class: "flex items-center border border-tag-stroke rounded-[8px] px-2 py-0.5",
                             span { class: "text-[12px] font-bold text-text-primary leading-[14px] tracking-[-0.12px]",
                                 "{category}"
                             }
@@ -122,7 +122,7 @@ fn UserPostCard(post: PostResponse) -> Element {
                         class: "w-full h-[280px] rounded-[24px] object-cover",
                     }
                 } else {
-                    div { class: "w-full h-[280px] rounded-[24px] bg-[#2a2a2a]" }
+                    div { class: "w-full h-[280px] rounded-[24px] bg-thumbnail-placeholder-bg" }
                 }
 
                 div {
@@ -150,7 +150,7 @@ fn UserPostListItem(post: PostResponse) -> Element {
             class: "block",
             div { class: "flex flex-col gap-3 py-5 border-b border-separator",
                 if !category.is_empty() {
-                    div { class: "flex items-center border border-[#a1a1a1] rounded-[8px] px-2 py-0.5 w-fit",
+                    div { class: "flex items-center border border-tag-stroke rounded-[8px] px-2 py-0.5 w-fit",
                         span { class: "text-[12px] font-bold text-text-primary leading-[14px] tracking-[-0.12px]",
                             "{category}"
                         }
