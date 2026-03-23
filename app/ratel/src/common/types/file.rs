@@ -47,18 +47,28 @@ impl FileExtension {
     /// Parse a file extension string (e.g., "pdf", "docx") into a `FileExtension`.
     /// Returns `FileExtension::default()` (JPG) for unrecognised extensions.
     pub fn from_ext_str(ext: &str) -> Self {
-        match ext.to_lowercase().as_str() {
-            "jpg" | "jpeg" => Self::JPG,
-            "png" => Self::PNG,
-            "pdf" => Self::PDF,
-            "zip" => Self::ZIP,
-            "doc" | "docx" => Self::WORD,
-            "ppt" | "pptx" => Self::PPTX,
-            "xls" | "xlsx" => Self::EXCEL,
-            "mp4" => Self::MP4,
-            "mov" => Self::MOV,
-            "mkv" => Self::MKV,
-            _ => Self::default(),
+        if ext.eq_ignore_ascii_case("jpg") || ext.eq_ignore_ascii_case("jpeg") {
+            Self::JPG
+        } else if ext.eq_ignore_ascii_case("png") {
+            Self::PNG
+        } else if ext.eq_ignore_ascii_case("pdf") {
+            Self::PDF
+        } else if ext.eq_ignore_ascii_case("zip") {
+            Self::ZIP
+        } else if ext.eq_ignore_ascii_case("doc") || ext.eq_ignore_ascii_case("docx") {
+            Self::WORD
+        } else if ext.eq_ignore_ascii_case("ppt") || ext.eq_ignore_ascii_case("pptx") {
+            Self::PPTX
+        } else if ext.eq_ignore_ascii_case("xls") || ext.eq_ignore_ascii_case("xlsx") {
+            Self::EXCEL
+        } else if ext.eq_ignore_ascii_case("mp4") {
+            Self::MP4
+        } else if ext.eq_ignore_ascii_case("mov") {
+            Self::MOV
+        } else if ext.eq_ignore_ascii_case("mkv") {
+            Self::MKV
+        } else {
+            Self::default()
         }
     }
 
