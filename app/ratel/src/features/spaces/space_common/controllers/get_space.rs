@@ -27,7 +27,8 @@ pub async fn get_space(space_id: SpacePartition) -> Result<SpaceResponse> {
         false
     };
 
-    let is_participation_open = matches!(space.status, Some(SpaceStatus::InProgress));
+    let is_participation_open = matches!(space.status, Some(SpaceStatus::InProgress))
+        || (space.join_anytime && matches!(space.status, Some(SpaceStatus::Started)));
 
     let (user_participant, can_participate) = if let Some(ref user) = user {
         let (participant_pk, participant_sk) =
@@ -85,6 +86,7 @@ pub async fn get_space(space_id: SpacePartition) -> Result<SpaceResponse> {
         booster: post.booster.unwrap_or_default(),
         files: None,
         anonymous_participation: space.anonymous_participation,
+        join_anytime: space.join_anytime,
         can_participate,
         participated,
         participant_display_name,
@@ -127,6 +129,8 @@ pub struct SpaceResponse {
     pub booster: BoosterType,
     pub files: Option<Vec<File>>,
     pub anonymous_participation: bool,
+    #[serde(default)]
+    pub join_anytime: bool,
     pub can_participate: bool,
     pub participated: bool,
     pub participant_display_name: Option<String>,
