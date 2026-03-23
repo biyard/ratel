@@ -1,27 +1,7 @@
 use crate::common::components::{FileUploader, UploadedFileMeta};
+use crate::common::types::extract_filename_from_url;
 use crate::features::spaces::pages::apps::apps::file::i18n::SpaceFileTranslate;
 use crate::features::spaces::pages::apps::apps::file::*;
-
-fn guess_extension_from_name(name: &str) -> FileExtension {
-    let ext = name
-        .rsplit('.')
-        .next()
-        .unwrap_or("")
-        .to_lowercase();
-    match ext.as_str() {
-        "jpg" | "jpeg" => FileExtension::JPG,
-        "png" => FileExtension::PNG,
-        "pdf" => FileExtension::PDF,
-        "zip" => FileExtension::ZIP,
-        "doc" | "docx" => FileExtension::WORD,
-        "ppt" | "pptx" => FileExtension::PPTX,
-        "xls" | "xlsx" => FileExtension::EXCEL,
-        "mp4" => FileExtension::MP4,
-        "mov" => FileExtension::MOV,
-        "mkv" => FileExtension::MKV,
-        _ => FileExtension::default(),
-    }
-}
 
 #[component]
 pub fn FileUploadZone(on_upload: EventHandler<File>) -> Element {
@@ -34,11 +14,16 @@ pub fn FileUploadZone(on_upload: EventHandler<File>) -> Element {
             on_upload_success: move |_: String| {},
             on_upload_meta: move |meta: UploadedFileMeta| {
                 is_loading.set(false);
+                let name = if meta.name.trim().is_empty() {
+                    extract_filename_from_url(&meta.url)
+                } else {
+                    meta.name.clone()
+                };
                 let file = File {
                     id: meta.url.clone(),
-                    name: meta.name.clone(),
+                    name: name.clone(),
                     size: meta.size.clone(),
-                    ext: guess_extension_from_name(&meta.name),
+                    ext: FileExtension::from_name_or_url(&name, &meta.url),
                     url: Some(meta.url),
                     uploader_name: None,
                     uploader_profile_url: None,
@@ -46,7 +31,11 @@ pub fn FileUploadZone(on_upload: EventHandler<File>) -> Element {
                 };
                 on_upload.call(file);
             },
-            div { class: "relative w-full min-h-[140px] rounded-xl border-2 border-dashed border-separator hover:border-btn-primary-bg transition-colors duration-150 ease-in-out flex items-center justify-center cursor-pointer",
+            label {
+                class: "relative w-full min-h-[140px] rounded-xl border-2 border-dashed border-separator hover:border-btn-primary-bg transition-colors duration-150 ease-in-out flex items-center justify-center cursor-pointer",
+                onclick: move |_| {
+                    is_loading.set(true);
+                },
                 div { class: "flex flex-col items-center gap-2",
                     div { class: "w-10 h-10 rounded-full border border-separator flex items-center justify-center text-card-meta text-2xl leading-none",
                         "+"
