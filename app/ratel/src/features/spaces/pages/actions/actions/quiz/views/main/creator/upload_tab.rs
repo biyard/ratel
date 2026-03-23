@@ -106,12 +106,13 @@ pub fn UploadTab(can_edit: bool) -> Element {
                         } else {
                             uploaded.name.clone()
                         };
+                        let ext = FileExtension::from_name_or_url(&uploaded_name, &uploaded.url);
                         let mut next = files();
                         next.push(File {
                             id: uploaded.url.clone(),
-                            name: uploaded_name.clone(),
+                            name: uploaded_name,
                             size: uploaded.size,
-                            ext: FileExtension::from_name_or_url(&uploaded_name, &uploaded.url),
+                            ext,
                             url: Some(uploaded.url),
                             uploader_name: Some(upload_uploader_name.clone()),
                             uploader_profile_url: Some(upload_uploader_profile_url.clone()),
