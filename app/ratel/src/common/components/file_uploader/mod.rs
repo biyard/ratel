@@ -28,6 +28,10 @@ pub fn FileUploader(
         "cursor-pointer".to_string()
     };
 
+    // Incrementing this key forces the file input element to be recreated,
+    // resetting its value so the same file can be re-selected after deletion.
+    let mut input_key = use_signal(|| 0u32);
+
     let start_upload = {
         let accept = accept.clone();
         let on_upload_success = on_upload_success.clone();
@@ -53,6 +57,8 @@ pub fn FileUploader(
                 return;
             };
             start_upload(file);
+            // Reset the file input so the same file can be uploaded again
+            input_key += 1;
         }
     };
 
@@ -77,6 +83,7 @@ pub fn FileUploader(
             ondragover: on_drag_over,
             ondrop: on_drop,
             input {
+                key: "{input_key()}",
                 class: "hidden",
                 r#type: "file",
                 accept: "{accept}",
