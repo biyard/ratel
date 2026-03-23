@@ -14,11 +14,27 @@ impl ThemeService {
         #[cfg(feature = "server")]
         let saved = Theme::default();
 
-        let svc = Self {
+        #[allow(unused_mut)]
+        let mut svc = Self {
             theme: use_signal(move || saved),
         };
         #[cfg(not(feature = "server"))]
         apply_theme(saved.to_string().as_str());
+
+        // Re-sync the theme signal from localStorage after hydration to fix
+        // SSR/client mismatch where the server defaults to System theme but the
+        // user previously selected a different theme (e.g., Light).
+        #[cfg(not(feature = "server"))]
+        use_effect(move || {
+            let stored: Theme = load_theme()
+                .unwrap_or_default()
+                .parse()
+                .unwrap_or_default();
+            if svc.current() != stored {
+                svc.theme.set(stored);
+                apply_theme(stored.to_string().as_str());
+            }
+        });
 
         use_context_provider(move || svc);
     }
