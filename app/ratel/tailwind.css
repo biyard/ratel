@@ -740,6 +740,11 @@ a {
   --color-sp-act-quiz-fail-bg: var(--dark, rgba(239, 68, 68, 0.2))
     var(--light, #fee2e2);
   --color-sp-act-quiz-fail-text: var(--dark, #f87171) var(--light, #b91c1c);
+
+  /* Space Page Actions - Discussion Editor */
+  --color-discussion-editor-bg: var(--dark, #262626) var(--light, #f5f5f5);
+  --color-discussion-editor-border: var(--dark, #404040) var(--light, #d4d4d4);
+  --color-discussion-editor-placeholder: var(--dark, #737373) var(--light, #a3a3a3);
 }
 
 /* =============================================================

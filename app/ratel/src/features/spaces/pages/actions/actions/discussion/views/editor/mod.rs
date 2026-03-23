@@ -126,11 +126,11 @@ pub fn DiscussionActionEditorPage(
 
                 // Content
                 div { class: "flex flex-col gap-1",
-                    label { class: "text-sm font-medium text-neutral-400 light:text-neutral-600",
+                    label { class: "text-sm font-medium text-foreground-muted",
                         "Content"
                     }
                     textarea {
-                        class: "py-3 px-4 w-full text-sm text-text-primary rounded-lg border resize-y min-h-[300px] bg-neutral-800 light:bg-neutral-100 border-neutral-700 light:border-neutral-300 placeholder-neutral-500",
+                        class: "py-3 px-4 w-full text-sm text-text-primary rounded-lg border resize-y min-h-[300px] bg-discussion-editor-bg border-discussion-editor-border placeholder-discussion-editor-placeholder",
                         placeholder: "Write your discussion content...",
                         value: "{html_contents}",
                         oninput: move |e| html_contents.set(e.value()),
