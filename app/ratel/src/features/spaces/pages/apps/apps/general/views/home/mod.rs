@@ -2,12 +2,14 @@ use super::*;
 
 mod anonymous_setting;
 mod invite_participant;
+mod join_anytime_setting;
 mod space_logo_setting;
 mod space_visibility_setting;
 use invite_participant::*;
 mod administrators;
 use administrators::*;
 use anonymous_setting::*;
+use join_anytime_setting::*;
 use space_logo_setting::*;
 use space_visibility_setting::*;
 
@@ -41,6 +43,8 @@ pub fn SpaceGeneralAppPage(space_id: ReadSignal<SpacePartition>) -> Element {
             InviteParticipant {}
 
             AnonymousSetting {}
+
+            JoinAnytimeSetting {}
 
             Administrators {}
 
