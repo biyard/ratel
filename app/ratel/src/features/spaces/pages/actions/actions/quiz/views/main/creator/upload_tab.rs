@@ -161,7 +161,7 @@ pub fn UploadTab(can_edit: bool) -> Element {
                             }
                         }
                         div { class: "flex flex-col w-full justify-center items-center gap-2.5",
-                            div { class: "inline-flex h-11 min-w-[118px] items-center justify-center gap-2 rounded-full border border-quiz-upload-cta-bg bg-quiz-upload-cta-bg px-5 text-quiz-upload-cta-text transition-colors hover:opacity-90",
+                            div { class: "inline-flex h-11 min-w-[118px] items-center justify-center gap-2 rounded-full border border-quiz-upload-cta-bg bg-quiz-upload-cta-bg px-5 text-quiz-upload-cta-text transition-opacity hover:opacity-90",
                                 icons::upload_download::Upload2 {
                                     width: "20",
                                     height: "20",

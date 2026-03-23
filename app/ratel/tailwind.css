@@ -745,6 +745,28 @@ a {
   --color-discussion-editor-bg: var(--dark, #262626) var(--light, #f5f5f5);
   --color-discussion-editor-border: var(--dark, #404040) var(--light, #d4d4d4);
   --color-discussion-editor-placeholder: var(--dark, #737373) var(--light, #a3a3a3);
+
+  /* Space Page Actions - Action Type Card */
+  --color-action-type-card-bg: var(--dark, #262626) var(--light, #ffffff);
+  --color-action-type-card-border: var(--dark, #404040) var(--light, #d4d4d4);
+  --color-action-type-card-caption: var(--dark, #737373) var(--light, #525252);
+
+  /* Layover */
+  --color-layover-bg: var(--dark, #171717) var(--light, #e5e5e5);
+  --color-layover-close-btn-hover-bg: var(--dark, #262626) var(--light, #d4d4d4);
+
+  /* Space Page Actions - Action Modal */
+  --color-action-modal-bg: var(--dark, #171717) var(--light, #e5e5e5);
+  --color-action-type-icon-stroke: #171717;
+
+  /* Space Page Actions - Action Preview */
+  --color-action-preview-inner-bg: var(--dark, rgba(10, 10, 10, 0.4)) var(--light, #f5f5f5);
+  --color-action-preview-item-bg: var(--dark, rgba(38, 38, 38, 0.5)) var(--light, #fafafa);
+  --color-action-preview-avatar-bg: var(--dark, #525252) var(--light, #d4d4d4);
+  --color-action-preview-option-text: var(--dark, #d4d4d4) var(--light, #404040);
+  --color-action-preview-radio-border: var(--dark, #525252) var(--light, #a3a3a3);
+  --color-action-preview-submit-text: var(--dark, #60a5fa) var(--light, #1d4ed8);
+  --color-action-preview-submit-bg: var(--dark, rgba(37, 99, 235, 0.2)) var(--light, rgba(37, 99, 235, 0.1));
 }
 
 /* =============================================================

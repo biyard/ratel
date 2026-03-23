@@ -33,7 +33,7 @@ pub fn Layover() -> Element {
     };
     let onclose = move |_| layover.close();
     let panel_classes = format!(
-        "absolute top-0 right-0 h-full bg-neutral-900 light:bg-neutral-200 border-l border-neutral-800 light:border-neutral-300 rounded-l-[24px] overflow-hidden transition-transform duration-300 ease-in-out max-tablet:max-w-full max-tablet:rounded-none {} {} shadow-[0_8px_20px_0_rgba(20,26,62,0.25)]",
+        "absolute top-0 right-0 h-full bg-layover-bg border-l border-card-border rounded-l-[24px] overflow-hidden transition-transform duration-300 ease-in-out max-tablet:max-w-full max-tablet:rounded-none {} {} shadow-[0_8px_20px_0_rgba(20,26,62,0.25)]",
         if is_open {
             "translate-x-0"
         } else {
@@ -58,18 +58,18 @@ pub fn Layover() -> Element {
 
                 div { class: "flex flex-col h-full",
                     if !title.is_empty() {
-                        div { class: "flex flex-row gap-5 items-center px-5 h-16 border-b border-neutral-800 light:border-neutral-300 shrink-0",
+                        div { class: "flex flex-row gap-5 items-center px-5 h-16 border-b border-card-border shrink-0",
                             button {
-                                class: "flex justify-center items-center bg-transparent rounded-md transition-colors cursor-pointer size-6 light:hover:bg-neutral-300 hover:bg-neutral-800",
+                                class: "flex justify-center items-center bg-transparent rounded-md transition-colors cursor-pointer size-6 hover:bg-layover-close-btn-hover-bg",
                                 onclick: onclose,
                                 crate::common::icons::validations::Clear {
                                     width: "16",
                                     height: "16",
-                                    class: "[&>path]:stroke-neutral-400 light:[&>path]:stroke-neutral-600",
+                                    class: "[&>path]:stroke-foreground-muted",
                                 }
                             }
 
-                            h4 { class: "font-bold text-white text-[20px]/[24px] tracking-[-0.2px] light:text-neutral-900",
+                            h4 { class: "font-bold text-text-primary text-[20px]/[24px] tracking-[-0.2px]",
                                 {title}
                             }
                         }
