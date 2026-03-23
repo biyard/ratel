@@ -46,16 +46,19 @@ where
 
 impl<Bookmark, I, T> InfiniteQuery<Bookmark, I, T>
 where
-    Bookmark: 'static + Clone + std::fmt::Debug,
+    Bookmark: 'static + Clone + PartialEq + std::fmt::Debug,
     I: 'static + Clone,
     T: Clone,
 {
     pub fn next(&mut self) {
-        debug!(
-            "Next called on InfiniteQuery with bookmark: {:?}",
-            (self.next_bookmark)()
-        );
         let nb = self.next_bookmark.read().clone();
+        debug!("Next called on InfiniteQuery with bookmark: {:?}", nb);
+
+        if self.is_loading() || nb.is_none() || self.bookmark.read().clone() == nb {
+            return;
+        }
+
+        self.loading.set(true);
         self.bookmark.set(nb);
     }
 
@@ -218,13 +221,30 @@ where
         if nb.is_none() {
             return;
         }
-        loading.set(true);
 
         spawn(async move {
             let res = match future(nb.clone()).await {
                 Ok(ret) => {
-                    accumulated.extend(ret.items().clone());
-                    next_bookmark.set(ret.bookmark());
+                    let next = ret.bookmark();
+                    let items = ret.items().clone();
+                    let mut appended = false;
+
+                    accumulated.with_mut(|current| {
+                        for item in items {
+                            if current.iter().any(|existing| existing == &item) {
+                                continue;
+                            }
+
+                            current.push(item);
+                            appended = true;
+                        }
+                    });
+
+                    if !appended {
+                        next_bookmark.set(None);
+                    } else {
+                        next_bookmark.set(next);
+                    }
                 }
                 Err(e) => {
                     debug!(
