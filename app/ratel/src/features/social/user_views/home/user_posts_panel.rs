@@ -68,7 +68,7 @@ fn UserPostCard(post: PostResponse) -> Element {
     let comments = post.comments;
     let thumbnail = post.urls.first().cloned();
     let html_contents = post.html_contents.clone();
-    let category = post.category.clone().unwrap_or_default();
+    let category = post.categories.first().cloned().unwrap_or_default();
 
     rsx! {
         Link {
@@ -142,7 +142,7 @@ fn UserPostListItem(post: PostResponse) -> Element {
     let created_at = post.created_at;
     let likes = post.likes;
     let comments = post.comments;
-    let category = post.category.clone().unwrap_or_default();
+    let category = post.categories.first().cloned().unwrap_or_default();
 
     rsx! {
         Link {
