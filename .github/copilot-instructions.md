@@ -12,6 +12,15 @@ When performing a code review,
   - Flag excessive `!important` overrides (`!bg-*`, `!text-*`) — components should accept a `class` prop instead.
   - Use `max-tablet:` / `max-mobile:` for responsive breakpoints.
 
+## Server-Client Architecture
+
+* **Centralize computed booleans on the server**: When a boolean decision (e.g., "can participate?") depends on multiple model fields, compute it once on the server and expose it as a field on the response DTO. Flag PRs that duplicate the same condition in both server controllers and client layout/view code.
+* **Extract reusable conditions into model helper methods**: When the same boolean condition appears in multiple server-side locations, flag it and suggest extracting it into a method on the model struct (e.g., `SpaceCommon::is_participation_open()`).
+
+## Component Accessibility
+
+* **Switch component must have a `label` prop**: Every `Switch` usage must pass the `label` prop so that the rendered element includes a proper `aria-label` attribute. The `role="switch"` and `aria-checked` attributes are always rendered regardless of the label, but omitting `label` leaves the switch without an accessible name. Flag `Switch` usages that omit `label`.
+
 ## Playwright E2E Tests
 
 When writing Playwright test code under `playwright/`, follow the conventions defined in `/docs/playwright-testing.md`.
