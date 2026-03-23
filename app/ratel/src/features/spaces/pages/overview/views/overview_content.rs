@@ -66,7 +66,7 @@ pub fn OverviewContent(
                                             is_editing.set(true);
                                         }
                                     },
-                                    Edit1 { class: "size-4 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
+                                    Edit1 { class: "size-4 [&>path]:stroke-text-primary [&>path]:fill-transparent" }
                                     "{tr.btn_edit}"
                                 }
                             } else {

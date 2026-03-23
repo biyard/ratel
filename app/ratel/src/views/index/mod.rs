@@ -1,6 +1,6 @@
 use crate::features::posts::components::CreatePostButton;
 use crate::features::timeline::components::{
-    DraftTimeline, FollowingTimeline, PopularTimeline, TeamTimeline,
+    DraftTimeline, FollowingTimeline, PopularTimeline, SpaceTimeline, TeamTimeline,
 };
 use crate::*;
 
@@ -14,6 +14,7 @@ pub fn Index() -> Element {
             div { class: "flex flex-col gap-4 w-full",
                 if user.is_some() {
                     DraftTimeline {}
+                    SpaceTimeline {}
                     FollowingTimeline {}
                     TeamTimeline {}
                 }

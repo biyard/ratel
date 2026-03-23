@@ -11,21 +11,19 @@ pub fn PrerequisiteActionsLayover(
     let mut layover = use_layover();
 
     rsx! {
-        div { class: "flex flex-col h-full w-full bg-neutral-900 light:bg-neutral-200 text-web-font-primary",
+        div { class: "flex flex-col w-full h-full bg-component-bg text-web-font-primary",
             // Header
-            div { class: "flex items-center gap-3 px-5 py-4 border-b border-neutral-800 light:border-neutral-300",
+            div { class: "flex gap-3 items-center py-4 px-5 border-b border-separator",
                 div { class: "flex flex-col gap-1",
-                    h4 { class: "font-bold text-[18px]/[22px] text-white light:text-neutral-900",
-                        {tr.title}
-                    }
-                    p { class: "text-[13px]/[18px] text-neutral-400 light:text-neutral-600",
+                    h4 { class: "font-bold text-[18px]/[22px] text-text-primary", {tr.title} }
+                    p { class: "text-[13px]/[18px] text-foreground-muted",
                         {tr.description}
                     }
                 }
             }
 
             // Action list
-            div { class: "flex flex-col gap-2.5 p-5 overflow-y-auto flex-1",
+            div { class: "flex overflow-y-auto flex-col flex-1 gap-2.5 p-5",
                 for action in actions.iter() {
                     ActionCard {
                         key: "{action.action_id}",
@@ -36,7 +34,7 @@ pub fn PrerequisiteActionsLayover(
             }
 
             // Footer button
-            div { class: "flex items-center justify-end px-5 py-4 border-t border-neutral-800 light:border-neutral-300",
+            div { class: "flex justify-end items-center py-4 px-5 border-t border-separator",
                 Button {
                     style: ButtonStyle::Primary,
                     size: ButtonSize::Small,

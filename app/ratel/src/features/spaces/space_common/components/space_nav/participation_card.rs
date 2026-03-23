@@ -115,7 +115,8 @@ pub fn ParticipationCard(
                 }
 
                 // Now update role — this will unmount ParticipationCard
-                current_role.set(SpaceUserRole::Participant);
+                // Space is InProgress when participation card is shown, so user becomes Candidate
+                current_role.set(SpaceUserRole::Candidate);
                 query.invalidate(&space_detail);
                 query.invalidate(&panel_requirements_key);
                 space.restart();
