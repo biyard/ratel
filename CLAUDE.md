@@ -864,6 +864,15 @@ Use `let lang = use_language();` in the component, then `{value.translate(&lang(
 - **Always add `alt` attributes** to `img` elements (use descriptive text or `alt: ""` for decorative images)
 - **Always add `aria-label`** to icon-only buttons so screen readers can announce their purpose
 - **Use semantic elements** for clickable navigation: use `Link { to: "..." }` (renders `<a>`) instead of `div { onclick: ... }` with `use_navigator().push()`. This provides native keyboard accessibility (tab focus, Enter activation) and correct link semantics without manual `role`, `tabindex`, or keyboard handlers
+- **Always pass the `label` prop to the `Switch` component** so it renders a proper `aria-label` for screen reader support. The `role="switch"` and `aria-checked` attributes are always rendered regardless of the label, but a `Switch` without a `label` lacks an accessible name. Example:
+
+```rust
+Switch {
+    active: is_enabled(),
+    on_toggle: move |_| is_enabled.set(!is_enabled()),
+    label: "Enable join anytime".to_string(),
+}
+```
 
 ### Import Conventions
 
@@ -904,6 +913,38 @@ Use `let lang = use_language();` in the component, then `{value.translate(&lang(
 
 - **Use `HashMap` for O(1) lookups** instead of linear scans when mapping between collections (e.g., post titles by key)
 - **Avoid redundant `.to_string()` calls** in hot paths — store the result in a local variable when the same conversion is used multiple times (e.g., HashMap key lookup)
+
+### Server-Client Architecture Patterns
+
+- **Centralize computed booleans on the server side**: When a computed boolean (like "can the user participate?") depends on multiple model fields, compute it once in the server controller and expose it as a field on the response DTO (e.g., `can_participate: bool` on `GetSpaceResponse`). Do NOT duplicate the same condition check in both server controllers and client layout/view code. The client should read the pre-computed field from the response rather than re-deriving the condition from raw model fields. This eliminates logic duplication and ensures the server remains the single source of truth for business rules.
+
+- **Extract reusable boolean conditions into helper methods on model structs**: When the same boolean condition is checked in multiple server-side locations (e.g., "is participation open based on status and join_anytime?"), define it as a method on the model struct (e.g., `SpaceCommon::is_participation_open(&self) -> bool`) rather than duplicating the inline logic. This keeps business rules DRY and makes them easier to update when requirements change.
+
+```rust
+// Good: helper method on model struct
+#[cfg(feature = "server")]
+impl SpaceCommon {
+    pub fn is_participation_open(&self) -> bool {
+        matches!(self.status, Some(SpaceStatus::InProgress))
+            || (matches!(self.status, Some(SpaceStatus::Started)) && self.join_anytime)
+    }
+}
+
+// Good: use in controller, expose as DTO field
+let can_participate = space.is_participation_open();
+Ok(GetSpaceResponse { can_participate, ..other_fields })
+
+// Good: client reads pre-computed field
+if space.can_participate {
+    rsx! { Button { onclick: move |_| { participate() }, "Join" } }
+}
+```
+
+### Documentation Code Examples
+
+- **Always verify prop names and types match the actual component API** before adding code examples to docs (CLAUDE.md, dioxus-convention.md, etc.). Incorrect prop names (e.g., `checked`/`onchange` instead of `active`/`on_toggle`) produce examples that won't compile when copy-pasted
+- **Always verify model field types in doc examples** — use `matches!(self.status, Some(SpaceStatus::InProgress))` when the field is `Option<SpaceStatus>`, not `self.status == SpaceStatus::InProgress`. Use `self.join_anytime` directly when the field is `bool`, not `self.join_anytime.unwrap_or(false)`
+- **When making accessibility props optional with `#[props(default)]`**, add `#[cfg(debug_assertions)]` debug-level logs (e.g., `tracing::debug!`) to surface missing values during development without breaking existing call sites or causing log noise — avoid `tracing::warn!` which fires on every render and pollutes logs
 
 ### TailwindCSS Syntax
 

@@ -30,6 +30,8 @@ pub struct GetSpaceResponse {
     pub booster: BoosterType,
     pub files: Option<Vec<File>>,
     pub anonymous_participation: bool,
+    #[serde(default)]
+    pub join_anytime: bool,
     pub can_participate: bool,
     pub participated: bool,
     pub participant_display_name: Option<String>,
