@@ -80,6 +80,7 @@ Rules:
 - **Check component props** before implementation — many support variants, sizes, and styling props (e.g., `Card` has `direction`, `main_axis_align`, `cross_axis_align`)
 - **Compose from primitives** — build complex UI by composing these components rather than writing raw divs with Tailwind
 - **Only create new primitives** in `src/common/components/` if no existing component fits the need
+- **Primitive components must also use semantic tokens** — when modifying or creating common components, never use raw Tailwind color palette classes (e.g., `bg-white`, `bg-neutral-700`). Define semantic CSS variables in `tailwind.css` and use utility classes like `bg-switch-knob`, `bg-switch-track`. This applies to all components in `src/common/components/`, not just feature-level code
 
 #### Features (`src/features/`)
 
@@ -864,6 +865,7 @@ Use `let lang = use_language();` in the component, then `{value.translate(&lang(
 - **Always add `alt` attributes** to `img` elements (use descriptive text or `alt: ""` for decorative images)
 - **Always add `aria-label`** to icon-only buttons so screen readers can announce their purpose
 - **Use semantic elements** for clickable navigation: use `Link { to: "..." }` (renders `<a>`) instead of `div { onclick: ... }` with `use_navigator().push()`. This provides native keyboard accessibility (tab focus, Enter activation) and correct link semantics without manual `role`, `tabindex`, or keyboard handlers
+- **Toggle/switch components must have proper ARIA attributes** — any toggle or switch component must render `role="switch"`, `aria-checked` bound to its active state, and accept an optional `label` prop that maps to `aria-label`. When using `Switch` or similar toggles in feature views, always pass a descriptive label (e.g., the translated setting name) so screen readers announce the toggle's purpose
 
 ### Import Conventions
 
@@ -917,6 +919,7 @@ Use `let lang = use_language();` in the component, then `{value.translate(&lang(
 - **Always use semantic token classes** instead: `text-foreground-muted`, `text-text-primary`, `bg-card-bg`, `bg-background`, `border-border`, etc. (see Design Tokens section in `.claude/rules/figma-design-system.md`)
 - **Do not combine `light:` variant with palette colors** (e.g., `light:text-neutral-600`) — use a single semantic token class that handles both themes automatically
 - Tailwind spacing, sizing, and layout utilities (`gap-4`, `p-5`, `rounded-lg`, `w-full`) are fine to use directly
+- **This rule applies to common/primitive components too** — components in `src/common/components/` (e.g., `Switch`, `Button`) must not use raw colors like `bg-white` or `bg-neutral-700`. Define semantic CSS variables (e.g., `--color-switch-knob`, `--color-switch-track`) in `tailwind.css` and use corresponding utility classes
 
 ## Error Handling Convention
 
@@ -976,6 +979,17 @@ return Err(MyFeatureError::SpecificErrorVariant.into());
 4. **Never use `i32::MAX` or `i64::MAX` as default limits** for DynamoDB queries or similar operations — these create unbounded read costs and abuse vectors.
 
 **Why:** User-controlled values can be set to extreme values (e.g., `i64::MAX`), causing integer overflow, unbounded database queries, and excessive read costs. Server-side bounds prevent this regardless of client behavior.
+
+## Client/Server Logic Separation
+
+### Do Not Duplicate Server-Side Logic on the Client
+
+When the server already computes a derived value (e.g., `can_participate`, `is_eligible`), the client should use that server-provided field directly instead of re-implementing the same logic locally. Duplicating conditions across client and server leads to drift when one side is updated but not the other.
+
+**Rules:**
+- **Derive UI state from server-computed fields** — if `GET /api/resource` returns a `can_do_x` boolean, use it directly in the frontend instead of re-checking the underlying conditions (status, flags, timestamps) that the server already evaluated
+- **Centralize business rules into model methods** — when a condition (e.g., "is participation open?") is used in multiple server controllers, extract it into a method on the model (e.g., `SpaceCommon::is_participation_open()`) rather than inlining the same `matches!()` / `if` check in each controller. This ensures all server code paths use the same logic and future changes only need to be made in one place
+- **Client-side layout/display logic is fine** — the client can still decide *what to show* based on server-provided flags (e.g., show/hide a button based on `can_participate` + user role). The rule is about not re-deriving the flag itself
 
 ## Agent Workflow Rules
 
