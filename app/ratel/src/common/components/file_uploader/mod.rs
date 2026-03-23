@@ -83,7 +83,7 @@ pub fn FileUploader(
             ondragover: on_drag_over,
             ondrop: on_drop,
             input {
-                key: "{input_key}",
+                key: "{input_key()}",
                 class: "hidden",
                 r#type: "file",
                 accept: "{accept}",
