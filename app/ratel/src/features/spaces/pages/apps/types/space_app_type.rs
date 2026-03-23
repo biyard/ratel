@@ -47,7 +47,7 @@ impl SpaceAppType {
                 icons::settings::Settings2 {
                     width: "24",
                     height: "24",
-                    class: "text-white [&>path]:fill-black [&>circle]:stroke-black",
+                    class: "text-white [&>path]:fill-black [&>circle]:stroke-black [&>circle]:fill-none",
                 }
             },
             #[cfg(feature = "beta")]
@@ -62,7 +62,7 @@ impl SpaceAppType {
                 icons::file::File {
                     width: "24",
                     height: "24",
-                    class: "text-white [&>path]:stroke-black",
+                    class: "text-white [&>path]:stroke-black [&>path]:fill-none",
                 }
             },
             SpaceAppType::Panels => rsx! {

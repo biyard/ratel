@@ -97,7 +97,7 @@ All interaction helpers are defined in `tests/utils.js`. **Always use these inst
 
 ### `goto(page, path)`
 
-Navigates to `BASE_URL + path` and waits for `networkidle`.
+Navigates to `BASE_URL + path` with `waitUntil: "load"`, then waits for the Dioxus WASM app to hydrate by checking `window.dioxus.send` is available (with a 10s timeout).
 
 ```js
 await goto(page, "/");           // → http://localhost:8000/
@@ -106,7 +106,7 @@ await goto(page, "/spaces");     // → http://localhost:8000/spaces
 
 ### `click(page, opts)`
 
-Finds an element using locator options, asserts it's visible, clicks it, and waits for `networkidle`. Returns the locator.
+Finds an element using locator options, asserts it's visible, clicks it, and waits for `load` state. Returns the locator.
 
 ```js
 await click(page, { role: "button", text: /sign in/i });
@@ -357,7 +357,7 @@ PLAYWRIGHT_ID=my-test-run npx playwright test
 
 - Default timeout is 5000ms. Increase with `PLAYWRIGHT_TIMEOUT` env var.
 - Ensure the app is running at `http://localhost:8000` (or set `PLAYWRIGHT_BASE_URL`).
-- Check that `networkidle` is reachable (no long-polling or WebSocket connections that prevent idle).
+- Check that the Dioxus WASM app is loading correctly (the `goto()` helper waits for `window.dioxus.send` to be available).
 
 ### Auth Setup Fails
 
@@ -385,3 +385,18 @@ PLAYWRIGHT_ID=my-test-run npx playwright test
 5. **Don't use `page.waitForTimeout()`** — Use `waitPopup`, `getLocator`, or Playwright's built-in auto-waiting instead.
 6. **Plain JavaScript** — All test files use `.js`, not TypeScript.
 7. **No `test.describe` needed** — Individual `test()` calls are fine for simple specs.
+8. **Avoid raw CSS locators** — Don't use `page.locator('label:has(...)')` or `page.locator("#some-id")`. Use semantic selectors via helpers: `testId` > `label` > `role` > `placeholder` > `text`.
+9. **Avoid `.first()` on order-dependent selectors** — Add stable `data-testid` or `data-pw` attributes to the UI and target them specifically, instead of relying on DOM order.
+10. **Don't add manual waits after `click()` helper** — `click()` already calls `waitForLoadState("load")` internally. Adding another wait is redundant and slows tests.
+11. **Use `try/finally` for browser contexts** — When manually creating `browser.newContext()`, wrap the test body in `try/finally` to guarantee `context.close()` runs.
+12. **Document `bypass` feature dependency** — Tests using hardcoded verification codes (e.g., `000000`) only work with `--features bypass`. Note this requirement in the test file header.
+13. **Use `build-testing` for Playwright Docker images** — The PR workflow must use `make build-testing` (not `make build`) when building Docker images for Playwright tests. `build-testing` includes the `bypass` feature so signup/verification flows with code `"000000"` work. The production `build` target excludes `bypass` for security.
+14. **Wait for async server responses with deterministic UI signals** — After triggering async server calls (e.g., clicking "Verify"), don't rely on `waitForLoadState("load")` which resolves immediately for non-navigation interactions. Wait for a visible UI state change (e.g., `expect(page.getByText("Send", { exact: true })).toBeHidden()`).
+
+## In-Page Interactions vs Navigation
+
+After UI interactions that do **not** cause a page navigation (e.g., autosave on blur, tab switch, selecting options):
+
+- **Do NOT use `waitForLoadState("load")`** — it resolves immediately since no navigation occurred, so it doesn't actually wait for any request to complete
+- **Use deterministic UI signals** — wait for a "Saved" indicator, a specific element to appear, or a network request to complete
+- **Avoid `networkidle`** — in SPAs, the app may continue fetching after the load event. Use `getLocator` for page-specific elements instead

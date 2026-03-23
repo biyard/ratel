@@ -260,8 +260,9 @@ fn SingleChoiceViewer(
                     let on_change = on_change.clone();
                     rsx! {
                         button {
-                            class: "relative flex min-h-[88px] w-full items-center overflow-hidden rounded-xl text-left transition-all",
-                            class: if is_selected { "bg-gradient-to-r from-primary/80 to-primary shadow-[0_8px_20px_rgba(0,0,0,0.2)]" } else { "bg-gradient-to-r from-primary/40 to-primary/60 hover:from-primary/50 hover:to-primary/70" },
+                            key: "single-{index}-{opt_idx}",
+                            "aria-selected": is_selected,
+                            class: "group relative flex min-h-[88px] w-full items-center overflow-hidden rounded-xl text-left transition-all bg-option-card-bg hover:bg-option-card-hover-bg aria-selected:bg-gradient-to-r aria-selected:from-primary/80 aria-selected:to-primary aria-selected:shadow-[0_8px_20px_rgba(0,0,0,0.2)] aria-selected:ring-2 aria-selected:ring-primary/90",
                             class: if disabled { "cursor-not-allowed opacity-60" } else { "cursor-pointer" },
                             disabled,
                             onclick: move |_| {
@@ -272,11 +273,20 @@ fn SingleChoiceViewer(
                                         other: None,
                                     })
                             },
-                            div { class: "absolute inset-y-0 left-0 w-[72px] bg-primary" }
+                            div { class: "absolute inset-y-0 left-0 w-[72px] bg-option-card-accent group-aria-selected:bg-primary" }
                             div { class: "relative z-10 flex w-full items-center justify-between px-5 py-4",
                                 div { class: "w-10 shrink-0" }
-                                span { class: "text-[20px] font-semibold tracking-[0.2px] text-text-third", "{option}" }
-                                div { class: "w-10 shrink-0" }
+                                span {
+                                    class: "text-[20px] font-semibold tracking-[0.2px] text-text-primary group-aria-selected:text-text-third",
+                                    "{option}"
+                                }
+                                div { class: "flex w-10 shrink-0 items-center justify-center",
+                                    if is_selected {
+                                        div { class: "flex size-6 items-center justify-center rounded-full bg-white",
+                                            icons::validations::Check { class: "size-4 [&>path]:stroke-primary" }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -314,8 +324,9 @@ fn MultipleChoiceViewer(
                     let on_change = on_change.clone();
                     rsx! {
                         button {
-                            class: "relative flex min-h-[88px] w-full items-center overflow-hidden rounded-xl text-left transition-all",
-                            class: if is_selected { "bg-gradient-to-r from-primary/80 to-primary shadow-[0_8px_20px_rgba(0,0,0,0.2)]" } else { "bg-gradient-to-r from-primary/40 to-primary/60 hover:from-primary/50 hover:to-primary/70" },
+                            key: "multi-{index}-{opt_idx}",
+                            "aria-selected": is_selected,
+                            class: "group relative flex min-h-[88px] w-full items-center overflow-hidden rounded-xl text-left transition-all bg-option-card-bg hover:bg-option-card-hover-bg aria-selected:bg-gradient-to-r aria-selected:from-primary/80 aria-selected:to-primary aria-selected:shadow-[0_8px_20px_rgba(0,0,0,0.2)] aria-selected:ring-2 aria-selected:ring-primary/90",
                             class: if disabled { "cursor-not-allowed opacity-60" } else { "cursor-pointer" },
                             disabled,
                             onclick: move |_| {
@@ -332,11 +343,20 @@ fn MultipleChoiceViewer(
                                     }
                                     )
                             },
-                            div { class: "absolute inset-y-0 left-0 w-[72px] bg-primary" }
+                            div { class: "absolute inset-y-0 left-0 w-[72px] bg-option-card-accent group-aria-selected:bg-primary" }
                             div { class: "relative z-10 flex w-full items-center justify-between px-5 py-4",
                                 div { class: "w-10 shrink-0" }
-                                span { class: "text-[20px] font-semibold tracking-[0.2px] text-text-third", "{option}" }
-                                div { class: "w-10 shrink-0" }
+                                span {
+                                    class: "text-[20px] font-semibold tracking-[0.2px] text-text-primary group-aria-selected:text-text-third",
+                                    "{option}"
+                                }
+                                div { class: "flex w-10 shrink-0 items-center justify-center",
+                                    if is_selected {
+                                        div { class: "flex size-6 items-center justify-center rounded-full bg-white",
+                                            icons::validations::Check { class: "size-4 [&>path]:stroke-primary" }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -452,8 +472,9 @@ fn CheckboxViewer(
                     let on_change = on_change.clone();
                     rsx! {
                         button {
-                            class: "flex w-full items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
-                            class: if is_selected { "border-blue-500 bg-blue-500/10" } else { "border-neutral-700 hover:border-neutral-500 light:border-input-box-border light:hover:border-input-box-border" },
+                            key: "checkbox-{index}-{opt_idx}",
+                            "aria-selected": is_selected,
+                            class: "group flex w-full items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors border-input-box-border hover:border-border-subtle aria-selected:border-primary aria-selected:bg-primary/10",
                             disabled,
                             onclick: move |_| {
                                 let mut next = selected.clone();
@@ -474,13 +495,12 @@ fn CheckboxViewer(
                                     });
                             },
                             div {
-                                class: "w-4 h-4 rounded border-2 flex items-center justify-center",
-                                class: if is_selected { "border-blue-500 bg-blue-500" } else { "border-neutral-500 light:border-input-box-border" },
+                                class: "w-4 h-4 rounded border-2 flex items-center justify-center border-foreground-muted group-aria-selected:border-primary group-aria-selected:bg-primary",
                                 if is_selected {
-                                    span { class: "text-white text-xs", "v" }
+                                    icons::validations::Check { class: "size-3 [&>path]:stroke-white" }
                                 }
                             }
-                            span { class: "text-sm text-neutral-300 light:text-text-primary", "{option}" }
+                            span { class: "text-sm text-foreground-muted group-aria-selected:text-text-primary", "{option}" }
                         }
                     }
                 }

@@ -165,6 +165,15 @@ impl Parse for TranslateInput {
 /// This macro extracts `#[translate(ko = "...")]` attributes from the enum variants
 /// and maps them to Korean translations. If no translation is provided, the variant
 /// name is used as the default English translation.
+///
+/// For tuple variants wrapping an inner type that also implements `Translate`,
+/// use `#[translate(from)]` to delegate translation to the inner type:
+///
+/// ```ignore
+/// #[error("{0}")]
+/// #[translate(from)]
+/// SpaceReward(#[from] SpaceRewardError),
+/// ```
 #[proc_macro_derive(Translate, attributes(translate))]
 pub fn translate_derive(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
@@ -215,6 +224,10 @@ pub fn translate_derive(input: TokenStream) -> TokenStream {
         #[cfg(feature = "ko")]
         let ko_translation = Rc::new(RefCell::new(default_str.clone()));
 
+        // Check if this variant has `#[translate(from)]` attribute,
+        // which delegates translation to the inner type's Translate impl
+        let mut is_from = false;
+
         // Process attributes to extract translations
         for attr in &variant.attrs {
             if let Meta::List(ref meta_list) = attr.meta {
@@ -222,6 +235,9 @@ pub fn translate_derive(input: TokenStream) -> TokenStream {
                     let en = Rc::clone(&en_translation);
                     #[cfg(feature = "ko")]
                     let ko = Rc::clone(&ko_translation);
+
+                    let is_from_ref = Rc::new(RefCell::new(false));
+                    let is_from_clone = Rc::clone(&is_from_ref);
 
                     let _ = meta_list.parse_nested_meta(move |nv| {
                         if nv.path.is_ident("en") {
@@ -235,8 +251,16 @@ pub fn translate_derive(input: TokenStream) -> TokenStream {
                             *ko.borrow_mut() = s.value();
                         }
 
+                        if nv.path.is_ident("from") {
+                            *is_from_clone.borrow_mut() = true;
+                        }
+
                         Ok(())
                     });
+
+                    if *is_from_ref.borrow() {
+                        is_from = true;
+                    }
                 }
             }
         }
@@ -248,6 +272,26 @@ pub fn translate_derive(input: TokenStream) -> TokenStream {
             &variant_ident.to_string().to_lowercase(),
             proc_macro2::Span::call_site(),
         );
+
+        // For `#[translate(from)]` variants with a single tuple field,
+        // delegate to the inner type's translate() method
+        if is_from && tuple_len == 1 {
+            let arm_name = quote! {
+                #enum_name::#variant_ident(inner)
+            };
+            en_arms.push(quote! {
+                #arm_name => inner.translate(lang),
+            });
+
+            #[cfg(feature = "ko")]
+            {
+                ko_arms.push(quote! {
+                    #arm_name => inner.translate(lang),
+                });
+            }
+            continue;
+        }
+
         let arm_name = if field_names.len() > 0 {
             quote! {
                 #enum_name::#variant_ident { .. }
@@ -262,55 +306,22 @@ pub fn translate_derive(input: TokenStream) -> TokenStream {
             }
         };
 
-        // let assigner = if field_names.len() > 0 {
-        //     quote! {
-        //         #enum_name::#variant_ident { #(#field_names: Default::default(),)* }
-        //     }
-        // } else if tuple_len > 0 {
-        //     let mut defaults = vec![];
-        //     for _ in 0..tuple_len {
-        //         defaults.push(quote! { Default::default() });
-        //     }
-        //     quote! {
-        //         #enum_name::#variant_ident( #(#defaults,)* )
-        //     }
-        // } else {
-        //     quote! {
-        //         #enum_name::#variant_ident
-        //     }
-        // };
-
         en_arms.push(quote! {
             #arm_name => #en_str,
         });
-
-        // display_arms.push(quote! {
-        //     #arm_name => write!(f, #lower_name),
-        // });
 
         if let Some((_, expr)) = &variant.discriminant {
             let _value = LitStr::new(
                 expr.to_token_stream().to_string().as_str(),
                 proc_macro2::Span::call_site(),
             );
-
-            // from_str_arms.push(quote! {
-            //     #value => Ok(#assigner),
-            // });
         }
-
-        // from_str_arms.push(quote! {
-        //     #en_str | #lower_name => Ok(#assigner),
-        // });
 
         #[cfg(feature = "ko")]
         {
             ko_arms.push(quote! {
                 #arm_name => #ko_str,
             });
-            // from_str_arms.push(quote! {
-            //     #ko_str => Ok(#assigner),
-            // });
         }
     }
 

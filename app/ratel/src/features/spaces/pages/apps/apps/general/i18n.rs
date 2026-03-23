@@ -99,6 +99,18 @@ translate! {
         en: "Anonymous participation setting updated.",
         ko: "익명 참여 설정이 변경되었습니다.",
     },
+    join_anytime_setting: {
+        en: "Join Anytime",
+        ko: "언제든 참여가능",
+    },
+    join_anytime_description: {
+        en: "Allow participants to join even after the space has started.",
+        ko: "스페이스가 시작된 후에도 참가자가 참여할 수 있도록 허용합니다.",
+    },
+    join_anytime_updated_successfully: {
+        en: "Join anytime setting updated.",
+        ko: "언제든 참여가능 설정이 변경되었습니다.",
+    },
     space_visibility: {
         en: "Space Visibility",
         ko: "스페이스 공개 설정",
