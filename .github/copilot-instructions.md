@@ -52,6 +52,12 @@ Key rules:
 * Always `trim_end_matches('/')` before `rsplit('/')` on URLs — trailing slashes produce empty segments that bypass fallback logic (e.g., `extract_filename_from_url` returning `""` instead of `"untitled"`).
 * Filter empty segments after splitting — even after trimming, use `.filter(|s| !s.is_empty())` to handle edge cases like double slashes.
 
+## Performance Patterns
+
+* Use `HashMap` for O(1) lookups instead of linear scans when mapping between collections (e.g., post titles by key).
+* Avoid redundant `.to_string()` calls in hot paths — store the result in a local variable when the same conversion is used multiple times (e.g., HashMap key lookup).
+* Prefer `eq_ignore_ascii_case` over `to_lowercase()` for string matching — `to_lowercase()` allocates a new `String` on every call; `eq_ignore_ascii_case` compares in-place with zero allocation. Use it for case-insensitive matching in `match`-like chains (e.g., file extension detection).
+
 ## Feature Flag Safety
 
 * `bypass` must NOT be bundled into `local-dev` or other convenience feature groups. Keep it opt-in via explicit `--features bypass` only in test/local scripts.
