@@ -24,6 +24,7 @@ pub fn JoinAnytimeSetting() -> Element {
 
                 Switch {
                     active: enable_join_anytime,
+                    label: tr.join_anytime_setting.to_string(),
                     on_toggle: move |_| async move {
                         if loading() {
                             return;

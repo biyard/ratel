@@ -27,8 +27,7 @@ pub async fn get_space(space_id: SpacePartition) -> Result<SpaceResponse> {
         false
     };
 
-    let is_participation_open = matches!(space.status, Some(SpaceStatus::InProgress))
-        || (space.join_anytime && matches!(space.status, Some(SpaceStatus::Started)));
+    let is_participation_open = space.is_participation_open();
 
     let (user_participant, can_participate) = if let Some(ref user) = user {
         let (participant_pk, participant_sk) =
