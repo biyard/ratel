@@ -204,17 +204,17 @@ rsx! {
 The `Switch` component must always have an accessible label. Pass the `label` prop so it renders `role="switch"`, `aria-checked`, and `aria-label` attributes for screen reader support.
 
 ```rust
-// Good: always pass label
+// Good: always pass label for accessible aria-label
 Switch {
-    checked: is_enabled(),
-    onchange: move |b| is_enabled.set(b),
+    active: is_enabled(),
+    on_toggle: move |b| is_enabled.set(b),
     label: "Enable join anytime",
 }
 
-// Bad: omitting label makes Switch inaccessible
+// Bad: omitting label makes Switch lack an accessible name
 Switch {
-    checked: is_enabled(),
-    onchange: move |b| is_enabled.set(b),
+    active: is_enabled(),
+    on_toggle: move |b| is_enabled.set(b),
 }
 ```
 
@@ -525,8 +525,8 @@ onclick: move |_| async move {
 #[cfg(feature = "server")]
 impl SpaceCommon {
     pub fn is_participation_open(&self) -> bool {
-        self.status == SpaceStatus::InProgress
-            || (self.status == SpaceStatus::Started && self.join_anytime.unwrap_or(false))
+        matches!(self.status, Some(SpaceStatus::InProgress))
+            || (matches!(self.status, Some(SpaceStatus::Started)) && self.join_anytime)
     }
 }
 ```

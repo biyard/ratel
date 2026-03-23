@@ -17,6 +17,11 @@ pub fn Switch(
         "absolute left-[2px] top-[2px] w-5 h-5 rounded-full bg-switch-knob transition-transform"
     };
 
+    #[cfg(debug_assertions)]
+    if label.is_empty() {
+        tracing::warn!("Switch: label prop should be provided for accessibility (aria-label)");
+    }
+
     let aria_label = if label.is_empty() { None } else { Some(label) };
 
     rsx! {
