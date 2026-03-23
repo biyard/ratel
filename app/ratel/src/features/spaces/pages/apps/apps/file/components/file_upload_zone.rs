@@ -15,13 +15,14 @@ pub fn FileUploadZone(on_upload: EventHandler<File>) -> Element {
                 let name = if meta.name.trim().is_empty() {
                     extract_filename_from_url(&meta.url)
                 } else {
-                    meta.name.clone()
+                    meta.name
                 };
+                let ext = FileExtension::from_name_or_url(&name, &meta.url);
                 let file = File {
                     id: meta.url.clone(),
-                    name: name.clone(),
-                    size: meta.size.clone(),
-                    ext: FileExtension::from_name_or_url(&name, &meta.url),
+                    name,
+                    size: meta.size,
+                    ext,
                     url: Some(meta.url),
                     uploader_name: None,
                     uploader_profile_url: None,
