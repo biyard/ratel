@@ -915,7 +915,7 @@ Use `let lang = use_language();` in the component, then `{value.translate(&lang(
 - **Use `HashMap` for O(1) lookups** instead of linear scans when mapping between collections (e.g., post titles by key)
 - **Avoid redundant `.to_string()` calls** in hot paths — store the result in a local variable when the same conversion is used multiple times (e.g., HashMap key lookup)
 - **Prefer `eq_ignore_ascii_case` over `to_lowercase()` for string matching** — `to_lowercase()` allocates a new `String` on every call; `eq_ignore_ascii_case` compares in-place with zero allocation. Use it for case-insensitive matching in `match`-like chains (e.g., file extension detection)
-- **Avoid unnecessary `.clone()` on owned values** — when a value will be moved into a struct or closure, compute any derived values (e.g., file extension via `FileExtension::from_filename(&name)`) from a borrow **before** the move, then use the original without `.clone()`. Redundant `.clone()` creates per-call heap allocations that are trivially avoidable by reordering statements
+- **Avoid unnecessary `.clone()` on owned values** — when a value will be moved into a struct or closure, compute any derived values (e.g., file extension via `FileExtension::from_name_or_url(&name, &url)`) from a borrow **before** the move, then use the original without `.clone()`. Redundant `.clone()` creates per-call heap allocations that are trivially avoidable by reordering statements
 
 ### Spelling & Language Consistency
 
