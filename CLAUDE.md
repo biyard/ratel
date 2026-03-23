@@ -868,8 +868,8 @@ Use `let lang = use_language();` in the component, then `{value.translate(&lang(
 
 ```rust
 Switch {
-    checked: is_enabled(),
-    onchange: move |b| is_enabled.set(b),
+    active: is_enabled(),
+    on_toggle: move |b| is_enabled.set(b),
     label: "Enable join anytime",
 }
 ```
@@ -925,8 +925,8 @@ Switch {
 #[cfg(feature = "server")]
 impl SpaceCommon {
     pub fn is_participation_open(&self) -> bool {
-        self.status == SpaceStatus::InProgress
-            || (self.status == SpaceStatus::Started && self.join_anytime.unwrap_or(false))
+        matches!(self.status, Some(SpaceStatus::InProgress))
+            || (matches!(self.status, Some(SpaceStatus::Started)) && self.join_anytime)
     }
 }
 
