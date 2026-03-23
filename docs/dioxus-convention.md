@@ -208,7 +208,7 @@ The `Switch` component must always have an accessible label. The `role="switch"`
 Switch {
     active: is_enabled(),
     on_toggle: move |_| is_enabled.set(!is_enabled()),
-    label: "Enable join anytime",
+    label: "Enable join anytime".to_string(),
 }
 
 // Bad: omitting label makes Switch lack an accessible name
