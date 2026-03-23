@@ -55,6 +55,22 @@ translate! {
         en: "Failed to submit response.",
         ko: "응답 제출에 실패했습니다.",
     },
+    submit_confirm_title: {
+        en: "Submit response",
+        ko: "응답 제출",
+    },
+    submit_confirm_description: {
+        en: "Once submitted, this response cannot be edited. Do you want to submit?",
+        ko: "한번 제출한 응답은 수정이 불가능합니다. 제출하시겠습니까?",
+    },
+    submit_confirm_cancel: {
+        en: "Cancel",
+        ko: "취소",
+    },
+    submit_confirm_action: {
+        en: "Submit",
+        ko: "제출",
+    },
     no_permission: {
         en: "You do not have permission to participate in this poll.",
         ko: "이 투표에 참여할 권한이 없습니다.",

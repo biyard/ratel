@@ -212,7 +212,7 @@ fn QuestionTitle(title: String, description: Option<String>, is_required: Option
             "data-question-title-wrap": true,
             div { class: "flex items-center gap-1",
                 span {
-                    class: "text-lg font-semibold text-white light:text-text-primary",
+                    class: "text-lg font-semibold text-poll-question-title",
                     "data-question-title": true,
                     "{title}"
                 }
@@ -223,7 +223,7 @@ fn QuestionTitle(title: String, description: Option<String>, is_required: Option
             if let Some(desc) = description {
                 if !desc.is_empty() {
                     p {
-                        class: "text-sm text-neutral-400 light:text-text-secondary",
+                        class: "text-sm text-text-primary-muted",
                         "data-question-desc": true,
                         "{desc}"
                     }
@@ -573,12 +573,12 @@ fn LinearScaleViewer(
             is_required: question.is_required,
         }
         div { class: "flex w-full flex-col gap-5 select-none",
-            div { class: "flex w-full items-center justify-between text-sm font-medium text-neutral-400 light:text-text-secondary",
+            div { class: "flex w-full items-center justify-between text-sm font-medium text-text-primary-muted",
                 span { class: "max-w-[40%] truncate", "{question.min_label}" }
                 span { class: "max-w-[40%] truncate text-right", "{question.max_label}" }
             }
-            div { class: "w-full overflow-x-auto no-scrollbar touch-pan-x",
-                div { class: "mx-auto flex w-fit min-w-full items-center justify-center gap-2 px-1 pb-1",
+            div { class: "w-full",
+                div { class: "flex flex-wrap justify-center gap-2 px-1 pb-1",
                     for val in min..=max {
                         {
                             let is_selected = selected == Some(val as i32);
