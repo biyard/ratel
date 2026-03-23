@@ -70,8 +70,8 @@ impl FileExtension {
         if let Some(ext) = std::path::Path::new(name).extension().and_then(|e| e.to_str()) {
             return Self::from_ext_str(ext);
         }
-        // Fall back to URL (strip query string, then extract extension)
-        let path = url.split('?').next().unwrap_or(url);
+        // Fall back to URL (strip query string and trailing slashes, then extract extension)
+        let path = url.split('?').next().unwrap_or(url).trim_end_matches('/');
         if let Some(ext) = std::path::Path::new(path).extension().and_then(|e| e.to_str()) {
             return Self::from_ext_str(ext);
         }

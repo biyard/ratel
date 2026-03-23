@@ -42,6 +42,16 @@ Key rules:
 * Use `make build-testing` (not `make build`) when building Docker images for Playwright tests. `build-testing` includes the `bypass` feature for signup/verification flows.
 * After async server calls (e.g., clicking "Verify"), wait for deterministic UI signals instead of `waitForLoadState("load")` which resolves immediately for non-navigation interactions.
 
+## FileUploader Component
+
+* Do not nest `<label>` inside `FileUploader` children — `FileUploader` already renders a `<label>` wrapper. Using `label` as an inner container creates invalid nested `<label>` HTML that breaks click/drag behavior across browsers. Use `div` or `span` for inner containers instead.
+* Do not introduce UI loading state without a cancel reset path — if there is no callback to detect file picker dialog cancellation (e.g., `oncancel`), omit loading state rather than risk a permanently stuck loading UI. Only add loading indicators when both success and failure/cancel paths reset the state.
+
+## URL Parsing
+
+* Always `trim_end_matches('/')` before `rsplit('/')` on URLs — trailing slashes produce empty segments that bypass fallback logic (e.g., `extract_filename_from_url` returning `""` instead of `"untitled"`).
+* Filter empty segments after splitting — even after trimming, use `.filter(|s| !s.is_empty())` to handle edge cases like double slashes.
+
 ## Feature Flag Safety
 
 * `bypass` must NOT be bundled into `local-dev` or other convenience feature groups. Keep it opt-in via explicit `--features bypass` only in test/local scripts.
