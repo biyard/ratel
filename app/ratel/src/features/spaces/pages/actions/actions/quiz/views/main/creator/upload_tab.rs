@@ -101,19 +101,20 @@ pub fn UploadTab(can_edit: bool) -> Element {
                     accept: ".pdf,.docx,.pptx,.xlsx,.png,.jpg,.jpeg,.mp4,.mov",
                     on_upload_success: move |_url: String| {},
                     on_upload_meta: move |uploaded: UploadedFileMeta| {
-                        let uploaded_name = if uploaded.name.trim().is_empty() {
-                            extract_filename_from_url(&uploaded.url)
+                        let UploadedFileMeta { url, name, size } = uploaded;
+                        let uploaded_name = if name.trim().is_empty() {
+                            extract_filename_from_url(&url)
                         } else {
-                            uploaded.name
+                            name
                         };
-                        let ext = FileExtension::from_name_or_url(&uploaded_name, &uploaded.url);
+                        let ext = FileExtension::from_name_or_url(&uploaded_name, &url);
                         let mut next = files();
                         next.push(File {
-                            id: uploaded.url.clone(),
+                            id: url.clone(),
                             name: uploaded_name,
-                            size: uploaded.size,
+                            size,
                             ext,
-                            url: Some(uploaded.url),
+                            url: Some(url),
                             uploader_name: Some(upload_uploader_name.clone()),
                             uploader_profile_url: Some(upload_uploader_profile_url.clone()),
                             uploaded_at: Some(crate::common::utils::time::now()),
