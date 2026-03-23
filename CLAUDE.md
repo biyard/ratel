@@ -864,6 +864,15 @@ Use `let lang = use_language();` in the component, then `{value.translate(&lang(
 - **Always add `alt` attributes** to `img` elements (use descriptive text or `alt: ""` for decorative images)
 - **Always add `aria-label`** to icon-only buttons so screen readers can announce their purpose
 - **Use semantic elements** for clickable navigation: use `Link { to: "..." }` (renders `<a>`) instead of `div { onclick: ... }` with `use_navigator().push()`. This provides native keyboard accessibility (tab focus, Enter activation) and correct link semantics without manual `role`, `tabindex`, or keyboard handlers
+- **Always pass the `label` prop to the `Switch` component** so it renders proper `role="switch"`, `aria-checked`, and `aria-label` attributes for screen reader support. A `Switch` without a `label` is inaccessible. Example:
+
+```rust
+Switch {
+    checked: is_enabled(),
+    onchange: move |b| is_enabled.set(b),
+    label: "Enable join anytime",
+}
+```
 
 ### Import Conventions
 
@@ -905,6 +914,32 @@ Use `let lang = use_language();` in the component, then `{value.translate(&lang(
 - **Use `HashMap` for O(1) lookups** instead of linear scans when mapping between collections (e.g., post titles by key)
 - **Avoid redundant `.to_string()` calls** in hot paths — store the result in a local variable when the same conversion is used multiple times (e.g., HashMap key lookup)
 
+### Server-Client Architecture Patterns
+
+- **Centralize computed booleans on the server side**: When a computed boolean (like "can the user participate?") depends on multiple model fields, compute it once in the server controller and expose it as a field on the response DTO (e.g., `can_participate: bool` on `GetSpaceResponse`). Do NOT duplicate the same condition check in both server controllers and client layout/view code. The client should read the pre-computed field from the response rather than re-deriving the condition from raw model fields. This eliminates logic duplication and ensures the server remains the single source of truth for business rules.
+
+- **Extract reusable boolean conditions into helper methods on model structs**: When the same boolean condition is checked in multiple server-side locations (e.g., "is participation open based on status and join_anytime?"), define it as a method on the model struct (e.g., `SpaceCommon::is_participation_open(&self) -> bool`) rather than duplicating the inline logic. This keeps business rules DRY and makes them easier to update when requirements change.
+
+```rust
+// Good: helper method on model struct
+#[cfg(feature = "server")]
+impl SpaceCommon {
+    pub fn is_participation_open(&self) -> bool {
+        self.status == SpaceStatus::InProgress
+            || (self.status == SpaceStatus::Started && self.join_anytime.unwrap_or(false))
+    }
+}
+
+// Good: use in controller, expose as DTO field
+let can_participate = space.is_participation_open();
+Ok(GetSpaceResponse { can_participate, ..other_fields })
+
+// Good: client reads pre-computed field
+if space.can_participate {
+    rsx! { Button { onclick: move |_| { participate() }, "Join" } }
+}
+```
+
 ### TailwindCSS Syntax
 
 - **Always use bracket syntax for arbitrary values**: write `z-[101]`, not `z-101`. Non-standard values without brackets are silently ignored by TailwindCSS and produce no CSS output
@@ -917,17 +952,6 @@ Use `let lang = use_language();` in the component, then `{value.translate(&lang(
 - **Always use semantic token classes** instead: `text-foreground-muted`, `text-text-primary`, `bg-card-bg`, `bg-background`, `border-border`, etc. (see Design Tokens section in `.claude/rules/figma-design-system.md`)
 - **Do not combine `light:` variant with palette colors** (e.g., `light:text-neutral-600`) — use a single semantic token class that handles both themes automatically
 - Tailwind spacing, sizing, and layout utilities (`gap-4`, `p-5`, `rounded-lg`, `w-full`) are fine to use directly
-
-## Domain Logic Centralization
-
-### Trust Server-Computed Fields in the UI
-
-When the server already computes a derived boolean (e.g., `can_participate`, `is_active`) and returns it in the response, **use that field directly in the UI** instead of re-checking the raw underlying fields client-side.
-
-- **Do:** `if space.can_participate { /* show button */ }`
-- **Don't:** `if space.join_anytime == Some(true) || space.status == SpaceStatus::Scheduled { /* show button */ }` — this duplicates the server logic and will drift when the rule changes
-
-**Why:** The server is the single source of truth for business rules. Re-deriving the same condition client-side creates a second place to maintain and risks inconsistency when the rule evolves (e.g., adding a new condition to "participation open").
 
 ## Error Handling Convention
 
