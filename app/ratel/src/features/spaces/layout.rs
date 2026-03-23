@@ -58,8 +58,7 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
 
     let mut participate = use_action(participate_space);
 
-    let show_participate = matches!(space.status, Some(crate::common::SpaceStatus::InProgress))
-        && matches!(role, SpaceUserRole::Viewer)
+    let show_participate = matches!(role, SpaceUserRole::Viewer)
         && !space.participated
         && space.can_participate;
 
