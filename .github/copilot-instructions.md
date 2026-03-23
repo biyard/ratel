@@ -12,6 +12,14 @@ When performing a code review,
   - Flag excessive `!important` overrides (`!bg-*`, `!text-*`) — components should accept a `class` prop instead.
   - Use `max-tablet:` / `max-mobile:` for responsive breakpoints.
 
+## Dioxus RSX Conventions
+
+### Signal Value Reading in RSX
+
+* **Always call `signal()` explicitly** when using a `Signal<T>` value in RSX string interpolation — write `"{my_signal()}"`, not `"{my_signal}"`.
+* Formatting a `Signal` handle directly (without `()`) serializes the Signal wrapper, not the inner value, producing incorrect output.
+* This applies to all RSX attributes that use string interpolation: `key`, `class`, `id`, `src`, etc.
+* Example: `key: "{input_key()}"` (correct) vs `key: "{input_key}"` (incorrect — formats the Signal handle).
 ## Server-Client Architecture
 
 * **Centralize computed booleans on the server**: When a boolean decision (e.g., "can participate?") depends on multiple model fields, compute it once on the server and expose it as a field on the response DTO. Flag PRs that duplicate the same condition in both server controllers and client layout/view code.
