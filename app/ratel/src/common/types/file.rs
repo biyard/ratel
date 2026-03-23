@@ -106,3 +106,141 @@ pub fn extract_filename_from_url(url: &str) -> String {
         .unwrap_or("untitled")
         .to_string()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // --- FileExtension::from_ext_str ---
+
+    #[test]
+    fn from_ext_str_case_insensitive() {
+        assert_eq!(FileExtension::from_ext_str("PDF"), FileExtension::PDF);
+        assert_eq!(FileExtension::from_ext_str("pdf"), FileExtension::PDF);
+        assert_eq!(FileExtension::from_ext_str("Pdf"), FileExtension::PDF);
+        assert_eq!(FileExtension::from_ext_str("DOCX"), FileExtension::WORD);
+        assert_eq!(FileExtension::from_ext_str("Xlsx"), FileExtension::EXCEL);
+    }
+
+    #[test]
+    fn from_ext_str_unrecognized_falls_back_to_default() {
+        assert_eq!(FileExtension::from_ext_str("txt"), FileExtension::default());
+        assert_eq!(FileExtension::from_ext_str("rs"), FileExtension::default());
+        assert_eq!(FileExtension::from_ext_str(""), FileExtension::default());
+    }
+
+    // --- FileExtension::from_name_or_url ---
+
+    #[test]
+    fn from_name_or_url_with_extension_in_filename() {
+        assert_eq!(
+            FileExtension::from_name_or_url("document.pdf", "https://example.com/assets/uuid"),
+            FileExtension::PDF,
+        );
+        assert_eq!(
+            FileExtension::from_name_or_url("photo.PNG", "https://example.com/assets/uuid"),
+            FileExtension::PNG,
+        );
+    }
+
+    #[test]
+    fn from_name_or_url_dotless_filename_falls_back_to_url() {
+        assert_eq!(
+            FileExtension::from_name_or_url("readme", "https://example.com/file.pdf"),
+            FileExtension::PDF,
+        );
+    }
+
+    #[test]
+    fn from_name_or_url_dotless_filename_and_extensionless_url() {
+        assert_eq!(
+            FileExtension::from_name_or_url("readme", "https://example.com/assets/uuid"),
+            FileExtension::default(),
+        );
+    }
+
+    #[test]
+    fn from_name_or_url_hidden_file_no_extension() {
+        // .gitignore has no extension per std::path::Path::extension()
+        assert_eq!(
+            FileExtension::from_name_or_url(".gitignore", "https://example.com/assets/uuid"),
+            FileExtension::default(),
+        );
+    }
+
+    #[test]
+    fn from_name_or_url_hidden_file_with_extension() {
+        assert_eq!(
+            FileExtension::from_name_or_url(".config.pdf", "https://example.com/assets/uuid"),
+            FileExtension::PDF,
+        );
+    }
+
+    #[test]
+    fn from_name_or_url_url_with_query_string() {
+        assert_eq!(
+            FileExtension::from_name_or_url("", "https://s3.aws.com/file.pdf?X-Amz-Signature=abc"),
+            FileExtension::PDF,
+        );
+    }
+
+    #[test]
+    fn from_name_or_url_url_with_trailing_slash() {
+        assert_eq!(
+            FileExtension::from_name_or_url("", "https://example.com/file.pdf/"),
+            FileExtension::PDF,
+        );
+    }
+
+    #[test]
+    fn from_name_or_url_empty_name_and_empty_url() {
+        assert_eq!(
+            FileExtension::from_name_or_url("", ""),
+            FileExtension::default(),
+        );
+    }
+
+    // --- extract_filename_from_url ---
+
+    #[test]
+    fn extract_filename_normal_url() {
+        assert_eq!(
+            extract_filename_from_url("https://example.com/assets/document.pdf"),
+            "document.pdf",
+        );
+    }
+
+    #[test]
+    fn extract_filename_url_with_query() {
+        assert_eq!(
+            extract_filename_from_url("https://s3.aws.com/file.pdf?X-Amz-Signature=abc"),
+            "file.pdf",
+        );
+    }
+
+    #[test]
+    fn extract_filename_url_with_trailing_slash() {
+        assert_eq!(
+            extract_filename_from_url("https://example.com/path/"),
+            "path",
+        );
+    }
+
+    #[test]
+    fn extract_filename_empty_url() {
+        assert_eq!(extract_filename_from_url(""), "untitled");
+    }
+
+    #[test]
+    fn extract_filename_root_url() {
+        assert_eq!(
+            extract_filename_from_url("https://example.com/"),
+            "example.com",
+        );
+    }
+
+    #[test]
+    fn extract_filename_just_slashes() {
+        assert_eq!(extract_filename_from_url("///"), "untitled");
+    }
+}

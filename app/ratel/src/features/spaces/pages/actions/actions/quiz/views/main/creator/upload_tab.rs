@@ -104,7 +104,7 @@ pub fn UploadTab(can_edit: bool) -> Element {
                         let uploaded_name = if uploaded.name.trim().is_empty() {
                             extract_filename_from_url(&uploaded.url)
                         } else {
-                            uploaded.name.clone()
+                            uploaded.name
                         };
                         let ext = FileExtension::from_name_or_url(&uploaded_name, &uploaded.url);
                         let mut next = files();
