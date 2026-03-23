@@ -1,6 +1,7 @@
 use super::*;
 use crate::features::auth::hooks::use_user_context;
 use crate::features::auth::{LoginModal, UserContextStoreExt};
+use crate::features::spaces::space_common::controllers::get_user_role;
 use crate::features::spaces::space_common::hooks::use_space_query;
 use crate::features::spaces::space_common::providers::SpaceContextProvider;
 use crate::features::spaces::space_common::types::space_key;
@@ -63,12 +64,12 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
         && space.can_participate;
 
     let mut menus = vec![
-        crate::features::spaces::pages::dashboard::get_nav_item(space_id(), role.clone()),
-        crate::features::spaces::pages::overview::get_nav_item(space_id(), role.clone()),
-        crate::features::spaces::pages::actions::get_nav_item(space_id(), role.clone()),
-        crate::features::spaces::pages::apps::get_nav_item(space_id(), role.clone()),
-        // crate::features::spaces::pages::rewards::get_nav_item(space_id(), role.clone()),
-        // crate::features::spaces::pages::report::get_nav_item(space_id.clone(), role.clone()),
+        crate::features::spaces::pages::dashboard::get_nav_item(&space, role.clone()),
+        crate::features::spaces::pages::overview::get_nav_item(&space, role.clone()),
+        crate::features::spaces::pages::actions::get_nav_item(&space, role.clone()),
+        crate::features::spaces::pages::apps::get_nav_item(&space, role.clone()),
+        // crate::features::spaces::pages::rewards::get_nav_item(&space, role.clone()),
+        // crate::features::spaces::pages::report::get_nav_item(&space, role.clone()),
     ]
     .into_iter()
     .flatten()
@@ -91,8 +92,6 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
         query.invalidate(&space_detail);
     };
 
-    let bottom_nav_menus = menus.clone();
-
     let layout_class = if show_sidebar {
         "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-space-bg text-web-font-primary max-tablet:flex max-tablet:flex-col"
     } else {
@@ -114,8 +113,20 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
                     show_participation_card: show_participate,
                     credential_path,
                     login_handler: move |_| {
+                        let mut space_loader = ctx.space;
+                        let mut role_loader = ctx.role;
+                        let mut current_role = ctx.current_role;
+                        let cb = Callback::new(move |_| {
+                            space_loader.restart();
+                            role_loader.restart();
+                            spawn(async move {
+                                if let Ok(new_role) = get_user_role(space_id()).await {
+                                    current_role.set(new_role);
+                                }
+                            });
+                        });
                         popup.open(rsx! {
-                            LoginModal {}
+                            LoginModal { on_success: cb }
                         }).with_title(tr.title);
                     },
                 }

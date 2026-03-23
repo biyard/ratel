@@ -35,6 +35,10 @@ translate! {
         en: "This poll has not started yet.",
         ko: "이 투표는 아직 시작되지 않았습니다.",
     },
+    space_not_active: {
+        en: "This action is available only when the space is started or in progress.",
+        ko: "이 액션은 스페이스가 시작/진행중 상태일 때만 참여할 수 있습니다.",
+    },
     question_label: {
         en: "Question",
         ko: "질문",
@@ -50,5 +54,13 @@ translate! {
     submit_error: {
         en: "Failed to submit response.",
         ko: "응답 제출에 실패했습니다.",
+    },
+    no_permission: {
+        en: "You do not have permission to participate in this poll.",
+        ko: "이 투표에 참여할 권한이 없습니다.",
+    },
+    already_responded: {
+        en: "You have already participated in this poll.",
+        ko: "이미 이 투표에 참여했습니다.",
     },
 }

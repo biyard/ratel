@@ -2,13 +2,25 @@ use super::*;
 use icons::game::Thunder;
 
 pub fn get_nav_item(
-    space_id: SpacePartition,
-    _role: SpaceUserRole,
+    space: &SpaceResponse,
+    role: SpaceUserRole,
 ) -> Option<(Element, SpacePage, NavigationTarget)> {
+    if role == SpaceUserRole::Viewer
+        && !matches!(
+            space.status,
+            Some(SpaceStatus::Started) | Some(SpaceStatus::Finished)
+        )
+    {
+        return None;
+    }
+
     Some((
         icon(),
         SpacePage::Actions,
-        Route::SpaceActionsPage { space_id }.into(),
+        Route::SpaceActionsPage {
+            space_id: space.id.clone(),
+        }
+        .into(),
     ))
 }
 

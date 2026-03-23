@@ -82,40 +82,45 @@ pub fn ParticipationCard(
             .await
             .is_ok()
             {
-                current_role.set(SpaceUserRole::Participant);
-                query.invalidate(&space_detail);
-                query.invalidate(&panel_requirements_key);
-                space.restart();
-                role.restart();
-
-                // Show prerequisite actions layover if any exist
-                if let Ok(actions) =
+                // Fetch prerequisite actions BEFORE updating role,
+                // because role change unmounts this component
+                let prerequisite_actions = if let Ok(actions) =
                     crate::features::spaces::pages::actions::controllers::list_actions(
                         space_id.clone(),
                     )
                     .await
                 {
-                    let prerequisite_actions: Vec<
+                    let filtered: Vec<
                         crate::features::spaces::pages::actions::types::SpaceActionSummary,
-                    > = actions
-                        .into_iter()
-                        .filter(|a| a.prerequisite)
-                        .collect();
-                    if !prerequisite_actions.is_empty() {
-                        layover
-                            .open(
-                                "space-prerequisite-actions".to_string(),
-                                String::new(),
-                                rsx! {
-                                    PrerequisiteActionsLayover {
-                                        space_id,
-                                        actions: prerequisite_actions,
-                                    }
-                                },
-                            )
-                            .set_size(LayoverSize::Medium);
-                    }
+                    > = actions.into_iter().filter(|a| a.prerequisite).collect();
+                    filtered
+                } else {
+                    vec![]
+                };
+
+                // Show prerequisite actions layover before role change
+                if !prerequisite_actions.is_empty() {
+                    layover
+                        .open(
+                            "space-prerequisite-actions".to_string(),
+                            String::new(),
+                            rsx! {
+                                PrerequisiteActionsLayover {
+                                    space_id,
+                                    actions: prerequisite_actions,
+                                }
+                            },
+                        )
+                        .set_size(LayoverSize::Medium);
                 }
+
+                // Now update role — this will unmount ParticipationCard
+                // Space is InProgress when participation card is shown, so user becomes Candidate
+                current_role.set(SpaceUserRole::Candidate);
+                query.invalidate(&space_detail);
+                query.invalidate(&panel_requirements_key);
+                space.restart();
+                role.restart();
             }
         });
     };

@@ -30,14 +30,13 @@ pub async fn list_posts_handler(
 
     let likes = match (&user, posts.is_empty()) {
         (Some(user), false) => {
-            PostLike::batch_get(
-                cli,
-                posts
-                    .iter()
-                    .map(|post| PostLike::keys(&post.pk, &user.pk))
-                    .collect(),
-            )
-            .await?
+            let mut seen_likes = std::collections::HashSet::new();
+            let like_keys: Vec<_> = posts
+                .iter()
+                .filter(|post| seen_likes.insert(post.pk.to_string()))
+                .map(|post| PostLike::keys(&post.pk, &user.pk))
+                .collect();
+            PostLike::batch_get(cli, like_keys).await?
         }
         _ => vec![],
     };
@@ -52,7 +51,7 @@ pub async fn list_posts_handler(
                 .to_post_like_key()
                 .expect("to_post_like_key");
             let liked = likes.iter().any(|like| like.pk == post_like_pk);
-            PostResponse::from((user.clone(), post)).with_like(liked)
+            PostResponse::from(post).with_like(liked)
         })
         .collect();
 
@@ -89,9 +88,11 @@ async fn fetch_timeline_posts(
         return Ok((vec![], next_bookmark));
     }
 
-    // Batch get the actual posts
+    // Batch get the actual posts (deduplicate keys for BatchGetItem)
+    let mut seen = std::collections::HashSet::new();
     let post_keys: Vec<(Partition, EntityType)> = entries
         .iter()
+        .filter(|entry| seen.insert(entry.post_pk.to_string()))
         .map(|entry| (entry.post_pk.clone(), EntityType::Post))
         .collect();
 
@@ -101,8 +102,10 @@ async fn fetch_timeline_posts(
     let post_map: std::collections::HashMap<String, Post> =
         posts.into_iter().map(|p| (p.pk.to_string(), p)).collect();
 
+    let mut seen_posts = std::collections::HashSet::new();
     let ordered_posts: Vec<Post> = entries
         .iter()
+        .filter(|entry| seen_posts.insert(entry.post_pk.to_string()))
         .filter_map(|entry| post_map.get(&entry.post_pk.to_string()).cloned())
         .collect();
 

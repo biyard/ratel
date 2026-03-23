@@ -36,6 +36,31 @@ pub enum Answer {
     },
 }
 
+impl Answer {
+    pub fn to_option_indices(&self) -> Vec<u32> {
+        match self {
+            Answer::SingleChoice { answer, .. } => {
+                answer.map(|a| vec![a as u32]).unwrap_or_default()
+            }
+            Answer::MultipleChoice { answer, .. } => answer
+                .as_ref()
+                .map(|v| v.iter().map(|&a| a as u32).collect())
+                .unwrap_or_default(),
+            Answer::Checkbox { answer } => answer
+                .as_ref()
+                .map(|v| v.iter().map(|&a| a as u32).collect())
+                .unwrap_or_default(),
+            Answer::Dropdown { answer } => {
+                answer.map(|a| vec![a as u32]).unwrap_or_default()
+            }
+            Answer::LinearScale { answer } => {
+                answer.map(|a| vec![a as u32]).unwrap_or_default()
+            }
+            Answer::ShortAnswer { .. } | Answer::Subjective { .. } => vec![0],
+        }
+    }
+}
+
 impl Default for Answer {
     fn default() -> Self {
         Self::SingleChoice {

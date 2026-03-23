@@ -107,4 +107,14 @@ translate! {
         en: "Discussion Completion",
         ko: "토론 완료",
     },
+
+    quiz_completion: {
+        en: "Quiz Completion",
+        ko: "퀴즈 완료",
+    },
+
+    follow_completion: {
+        en: "Follow Completion",
+        ko: "팔로우 완료",
+    },
 }
