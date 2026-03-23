@@ -201,7 +201,7 @@ rsx! {
 
 ### Switch Component Accessibility
 
-The `Switch` component must always have an accessible label. Pass the `label` prop so it renders `role="switch"`, `aria-checked`, and `aria-label` attributes for screen reader support.
+The `Switch` component must always have an accessible label. The `role="switch"` and `aria-checked` attributes are rendered regardless of the label, but you must pass the `label` prop so it renders a proper `aria-label` for screen reader support.
 
 ```rust
 // Good: always pass label for accessible aria-label

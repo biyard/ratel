@@ -19,7 +19,7 @@ When performing a code review,
 
 ## Component Accessibility
 
-* **Switch component must have a `label` prop**: Every `Switch` usage must pass the `label` prop so that the rendered element includes `role="switch"`, `aria-checked`, and `aria-label` attributes. Flag `Switch` usages that omit `label`.
+* **Switch component must have a `label` prop**: Every `Switch` usage must pass the `label` prop so that the rendered element includes a proper `aria-label` attribute. The `role="switch"` and `aria-checked` attributes are always rendered regardless of the label, but omitting `label` leaves the switch without an accessible name. Flag `Switch` usages that omit `label`.
 
 ## Playwright E2E Tests
 
