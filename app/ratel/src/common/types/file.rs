@@ -45,7 +45,7 @@ pub enum FileExtension {
 
 impl FileExtension {
     /// Parse a file extension string (e.g., "pdf", "docx") into a `FileExtension`.
-    /// Returns `FileExtension::default()` (JPG) for unrecognised extensions.
+    /// Returns `FileExtension::default()` (JPG) for unrecognized extensions.
     pub fn from_ext_str(ext: &str) -> Self {
         if ext.eq_ignore_ascii_case("jpg") || ext.eq_ignore_ascii_case("jpeg") {
             Self::JPG
