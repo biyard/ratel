@@ -207,14 +207,14 @@ The `Switch` component must always have an accessible label. The `role="switch"`
 // Good: always pass label for accessible aria-label
 Switch {
     active: is_enabled(),
-    on_toggle: move |b| is_enabled.set(b),
+    on_toggle: move |_| is_enabled.set(!is_enabled()),
     label: "Enable join anytime",
 }
 
 // Bad: omitting label makes Switch lack an accessible name
 Switch {
     active: is_enabled(),
-    on_toggle: move |b| is_enabled.set(b),
+    on_toggle: move |_| is_enabled.set(!is_enabled()),
 }
 ```
 
