@@ -1,5 +1,14 @@
 use crate::features::spaces::pages::actions::actions::poll::*;
 
+translate! {
+    ChoiceEditorTranslate;
+
+    allow_other: {
+        en: "Allow Other",
+        ko: "기타 허용",
+    },
+}
+
 #[derive(Props, Clone, PartialEq)]
 pub struct ChoiceOptionRowProps {
     pub value: String,
@@ -29,7 +38,7 @@ pub fn ChoiceOptionRow(props: ChoiceOptionRowProps) -> Element {
             {leading}
             Input {
                 variant: InputVariant::Plain,
-                class: "flex-1 w-full h-11 px-3 bg-[#262626] border border-[#737373] rounded-lg text-sm text-neutral-300 placeholder:text-neutral-500 focus:border-[#FCB300] focus-visible:border-[#FCB300] focus-visible:ring-0 light:bg-input-box-bg light:border-input-box-border light:text-text-primary light:placeholder:text-text-secondary",
+                class: "flex-1 w-full h-11 px-3 rounded-lg border bg-choice-editor-field-bg border-choice-editor-field-border text-sm text-choice-editor-field-text placeholder:text-choice-editor-field-placeholder focus:border-primary focus-visible:border-primary focus-visible:ring-0",
                 value: value.clone(),
                 placeholder,
                 oninput: move |evt: Event<FormData>| on_change.call(evt.value()),
@@ -47,7 +56,7 @@ pub fn ChoiceOptionRow(props: ChoiceOptionRowProps) -> Element {
             Button {
                 size: ButtonSize::Icon,
                 style: ButtonStyle::Text,
-                class: "text-neutral-500 hover:text-neutral-300 light:text-text-secondary light:hover:text-text-primary",
+                class: "text-choice-editor-action hover:text-choice-editor-field-text",
                 onclick: move |_| on_remove.call(()),
                 icons::validations::Clear { class: "w-5 h-5 [&>path]:stroke-current" }
             }
@@ -60,10 +69,13 @@ pub fn ChoiceQuestionEditor(
     question: ChoiceQuestion,
     is_single: bool,
     on_change: EventHandler<Question>,
+    #[props(default = true)]
+    show_allow_other: bool,
     #[props(default)] selected_options: Vec<i32>,
     #[props(default)] on_toggle_option: Option<EventHandler<(usize, bool)>>,
     #[props(default)] on_save: Option<EventHandler<()>>,
 ) -> Element {
+    let tr: ChoiceEditorTranslate = use_translate();
     let q = question.clone();
     let title_save = on_save.clone();
     let confirm_save = on_save.clone();
@@ -90,7 +102,7 @@ pub fn ChoiceQuestionEditor(
                                 class: "sr-only peer",
                                 onchange: move |e| on_toggle_option.call((opt_idx, e.checked())),
                             }
-                            div { class: "w-6 h-6 rounded-[4px] border-2 border-[#737373] bg-[#101010] flex items-center justify-center peer-checked:bg-[#FCB300] peer-checked:border-[#FCB300] [&>svg]:opacity-0 peer-checked:[&>svg]:opacity-100 light:border-input-box-border light:bg-input-box-bg",
+                            div { class: "flex w-6 h-6 items-center justify-center rounded-[4px] border-2 border-choice-editor-field-border bg-choice-editor-selector-bg peer-checked:bg-primary peer-checked:border-primary [&>svg]:opacity-0 peer-checked:[&>svg]:opacity-100",
                                 icons::validations::Check { class: "w-5 h-5 [&>path]:stroke-[#0A0A0A]" }
                             }
                         }
@@ -141,7 +153,7 @@ pub fn ChoiceQuestionEditor(
             Button {
                 size: ButtonSize::Small,
                 style: ButtonStyle::Text,
-                class: "text-sm text-neutral-500 justify-start px-0 flex items-center gap-2 w-full text-left light:text-text-secondary",
+                class: "flex w-full items-center justify-start gap-2 px-0 text-left text-sm text-choice-editor-action",
                 onclick: move |_| {
                     let mut next = question.clone();
                     next.options.push(String::new());
@@ -163,7 +175,7 @@ pub fn ChoiceQuestionEditor(
     rsx! {
         Input {
             variant: InputVariant::Plain,
-            class: "w-full h-11 px-3 bg-[#262626] border border-[#737373] rounded-lg text-sm text-neutral-300 placeholder:text-neutral-500 focus:border-[#FCB300] focus-visible:border-[#FCB300] focus-visible:ring-0 light:bg-input-box-bg light:border-input-box-border light:text-text-primary light:placeholder:text-text-secondary",
+            class: "w-full h-11 px-3 rounded-lg border bg-choice-editor-field-bg border-choice-editor-field-border text-sm text-choice-editor-field-text placeholder:text-choice-editor-field-placeholder focus:border-primary focus-visible:border-primary focus-visible:ring-0",
             placeholder: "Input",
             value: q.title.clone(),
             oninput: move |evt: Event<FormData>| {
@@ -191,6 +203,26 @@ pub fn ChoiceQuestionEditor(
                 {row}
             }
             {add_option}
+        }
+        if show_allow_other {
+            div { class: "flex w-full items-center justify-between pt-2",
+                span { class: "text-sm text-choice-editor-action", {tr.allow_other} }
+                Switch {
+                    active: question.allow_other.unwrap_or(false),
+                    on_toggle: move |_| {
+                        let mut next = question.clone();
+                        next.allow_other = Some(!next.allow_other.unwrap_or(false));
+                        if is_single {
+                            on_change.call(Question::SingleChoice(next));
+                        } else {
+                            on_change.call(Question::MultipleChoice(next));
+                        }
+                        if let Some(on_save) = &on_save {
+                            on_save.call(());
+                        }
+                    },
+                }
+            }
         }
     }
 }

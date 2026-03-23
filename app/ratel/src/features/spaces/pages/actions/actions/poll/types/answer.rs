@@ -80,12 +80,16 @@ pub fn validate_answers(questions: Vec<Question>, answers: Vec<Answer>) -> bool 
                 Question::SingleChoice(ChoiceQuestion {
                     is_required,
                     options,
+                    allow_other,
                     ..
                 }),
                 Answer::SingleChoice { answer, other },
             ) => {
-                let _other = other;
-                if is_required.unwrap_or_default() && answer.is_none() {
+                let has_other = other
+                    .as_ref()
+                    .map(|value| !value.trim().is_empty())
+                    .unwrap_or(false);
+                if is_required.unwrap_or_default() && answer.is_none() && !has_other {
                     return false;
                 }
                 if let Some(ans) = answer {
@@ -93,24 +97,34 @@ pub fn validate_answers(questions: Vec<Question>, answers: Vec<Answer>) -> bool 
                         return false;
                     }
                 }
+                if other.is_some() && !allow_other.unwrap_or(false) {
+                    return false;
+                }
             }
             (
                 Question::MultipleChoice(ChoiceQuestion {
                     is_required,
                     options,
+                    allow_other,
                     ..
                 }),
                 Answer::MultipleChoice { answer, other },
             ) => {
-                let _other = other;
                 let answers = answer.unwrap_or_default();
-                if is_required.unwrap_or_default() && answers.is_empty() {
+                let has_other = other
+                    .as_ref()
+                    .map(|value| !value.trim().is_empty())
+                    .unwrap_or(false);
+                if is_required.unwrap_or_default() && answers.is_empty() && !has_other {
                     return false;
                 }
                 for answer in answers {
                     if answer < 0 || answer >= options.len() as i32 {
                         return false;
                     }
+                }
+                if other.is_some() && !allow_other.unwrap_or(false) {
+                    return false;
                 }
             }
             (
