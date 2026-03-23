@@ -244,6 +244,7 @@ pub fn PollContent(
                                         answer: current_answer,
                                         disabled: !can_respond || !can_execute_action || !is_in_progress
                                             || (!can_submit && !can_update),
+                                        enable_other_option: true,
                                         on_change: move |ans: Answer| {
                                             answers.write().insert(idx, ans.clone());
 
