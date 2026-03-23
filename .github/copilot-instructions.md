@@ -58,6 +58,7 @@ Key rules:
 * Avoid redundant `.to_string()` calls in hot paths — store the result in a local variable when the same conversion is used multiple times (e.g., HashMap key lookup).
 * Prefer `eq_ignore_ascii_case` over `to_lowercase()` for string matching — `to_lowercase()` allocates a new `String` on every call; `eq_ignore_ascii_case` compares in-place with zero allocation. Use it for case-insensitive matching in `match`-like chains (e.g., file extension detection).
 * Avoid unnecessary `.clone()` on owned values — when a value will be moved into a struct or closure, compute derived values (e.g., file extension) from a borrow before the move, then use the original without `.clone()`.
+* Destructure structs before partial moves — when a callback receives an owned struct and different fields will be moved at different points, destructure into local variables first (e.g., `let StructName { field1, field2, field3 } = value;`). This makes ownership explicit and avoids partial-move confusion.
 
 ## Spelling & Language Consistency
 
