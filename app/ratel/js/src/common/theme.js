@@ -19,3 +19,7 @@ export function apply_theme(theme) {
 
   window.document.documentElement.setAttribute("data-theme", theme);
 }
+
+export function get_applied_theme() {
+  return window.document.documentElement.getAttribute("data-theme") || "dark";
+}

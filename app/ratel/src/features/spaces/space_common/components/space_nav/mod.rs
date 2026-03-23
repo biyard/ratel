@@ -146,7 +146,12 @@ fn SpaceThemeToggle() -> Element {
     let is_dark = match theme_service.current() {
         Theme::Dark => true,
         Theme::Light => false,
-        Theme::System => true, // system default treated as dark
+        Theme::System => {
+            #[cfg(not(feature = "server"))]
+            { get_applied_theme() == "dark" }
+            #[cfg(feature = "server")]
+            { true }
+        }
     };
 
     rsx! {
