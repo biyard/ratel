@@ -909,10 +909,27 @@ Switch {
 - **Preserve bookmark on cap**: when hitting the hard cap, set `bookmark = next_bookmark` (not `None`) so clients can continue scanning from where they left off in subsequent requests
 - **Do NOT use `.take(remaining)` in filtered collection**: when filtering results across DynamoDB pages (e.g., `active_only`), collect all matching items from each page without `.take()` — otherwise valid items from a page may be silently dropped and can never be re-fetched since the bookmark advances past them. Use post-loop `truncate()` only if a hard limit is needed
 
+### FileUploader Component
+
+- **Do not nest `<label>` inside `FileUploader` children** — `FileUploader` already renders a `<label>` wrapper. Using `label` as an inner container creates invalid nested `<label>` HTML that breaks click/drag behavior across browsers. Use `div` or `span` for inner containers instead
+- **Do not introduce UI loading state without a cancel reset path** — if there is no callback to detect file picker dialog cancellation (e.g., `oncancel`), omit loading state rather than risk a permanently stuck loading UI. Only add loading indicators when both success and failure/cancel paths reset the state
+
+### URL Parsing
+
+- **Always `trim_end_matches('/')` before `rsplit('/')` on URLs** — trailing slashes produce empty segments that bypass fallback logic (e.g., `extract_filename_from_url` returning `""` instead of `"untitled"`)
+- **Filter empty segments after splitting** — even after trimming, use `.filter(|s| !s.is_empty())` to handle edge cases like double slashes
+
 ### Performance Patterns
 
 - **Use `HashMap` for O(1) lookups** instead of linear scans when mapping between collections (e.g., post titles by key)
 - **Avoid redundant `.to_string()` calls** in hot paths — store the result in a local variable when the same conversion is used multiple times (e.g., HashMap key lookup)
+- **Prefer `eq_ignore_ascii_case` over `to_lowercase()` for string matching** — `to_lowercase()` allocates a new `String` on every call; `eq_ignore_ascii_case` compares in-place with zero allocation. Use it for case-insensitive matching in `match`-like chains (e.g., file extension detection)
+- **Avoid unnecessary `.clone()` on owned values** — when a value will be moved into a struct or closure, compute any derived values (e.g., file extension via `FileExtension::from_name_or_url(&name, &url)`) from a borrow **before** the move, then use the original without `.clone()`. Redundant `.clone()` creates per-call heap allocations that are trivially avoidable by reordering statements
+- **Destructure structs before partial moves** — when a callback or closure receives an owned struct (e.g., `UploadedFileMeta`) and different fields will be moved at different points, destructure into local variables first: `let StructName { field1, field2, field3 } = value;`. This makes ownership explicit, avoids partial-move confusion, and ensures all fields are cleanly accessible as independent variables throughout the handler
+
+### Spelling & Language Consistency
+
+- **Use American English spelling** throughout the codebase — e.g., "unrecognized" not "unrecognised", "color" not "colour", "initialize" not "initialise". This applies to doc comments, string literals, error messages, and code identifiers
 
 ### Server-Client Architecture Patterns
 

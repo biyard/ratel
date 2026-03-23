@@ -51,6 +51,28 @@ Key rules:
 * Use `make build-testing` (not `make build`) when building Docker images for Playwright tests. `build-testing` includes the `bypass` feature for signup/verification flows.
 * After async server calls (e.g., clicking "Verify"), wait for deterministic UI signals instead of `waitForLoadState("load")` which resolves immediately for non-navigation interactions.
 
+## FileUploader Component
+
+* Do not nest `<label>` inside `FileUploader` children — `FileUploader` already renders a `<label>` wrapper. Using `label` as an inner container creates invalid nested `<label>` HTML that breaks click/drag behavior across browsers. Use `div` or `span` for inner containers instead.
+* Do not introduce UI loading state without a cancel reset path — if there is no callback to detect file picker dialog cancellation (e.g., `oncancel`), omit loading state rather than risk a permanently stuck loading UI. Only add loading indicators when both success and failure/cancel paths reset the state.
+
+## URL Parsing
+
+* Always `trim_end_matches('/')` before `rsplit('/')` on URLs — trailing slashes produce empty segments that bypass fallback logic (e.g., `extract_filename_from_url` returning `""` instead of `"untitled"`).
+* Filter empty segments after splitting — even after trimming, use `.filter(|s| !s.is_empty())` to handle edge cases like double slashes.
+
+## Performance Patterns
+
+* Use `HashMap` for O(1) lookups instead of linear scans when mapping between collections (e.g., post titles by key).
+* Avoid redundant `.to_string()` calls in hot paths — store the result in a local variable when the same conversion is used multiple times (e.g., HashMap key lookup).
+* Prefer `eq_ignore_ascii_case` over `to_lowercase()` for string matching — `to_lowercase()` allocates a new `String` on every call; `eq_ignore_ascii_case` compares in-place with zero allocation. Use it for case-insensitive matching in `match`-like chains (e.g., file extension detection).
+* Avoid unnecessary `.clone()` on owned values — when a value will be moved into a struct or closure, compute derived values (e.g., file extension) from a borrow before the move, then use the original without `.clone()`.
+* Destructure structs before partial moves — when a callback receives an owned struct and different fields will be moved at different points, destructure into local variables first (e.g., `let StructName { field1, field2, field3 } = value;`). This makes ownership explicit and avoids partial-move confusion.
+
+## Spelling & Language Consistency
+
+* Use American English spelling throughout the codebase — e.g., "unrecognized" not "unrecognised", "color" not "colour", "initialize" not "initialise". Applies to doc comments, string literals, error messages, and identifiers.
+
 ## Feature Flag Safety
 
 * `bypass` must NOT be bundled into `local-dev` or other convenience feature groups. Keep it opt-in via explicit `--features bypass` only in test/local scripts.
