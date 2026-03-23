@@ -82,5 +82,17 @@ impl FileExtension {
 /// Extract a human-readable filename from a URL, falling back to `"untitled"`.
 pub fn extract_filename_from_url(url: &str) -> String {
     let path = url.split('?').next().unwrap_or(url);
-    path.rsplit('/').next().unwrap_or("untitled").to_string()
+    // Trim trailing slashes so URLs like "https://example.com/path/" fall back correctly.
+    let trimmed = path.trim_end_matches('/');
+
+    if trimmed.is_empty() {
+        return "untitled".to_string();
+    }
+
+    trimmed
+        .rsplit('/')
+        .next()
+        .filter(|segment| !segment.is_empty())
+        .unwrap_or("untitled")
+        .to_string()
 }

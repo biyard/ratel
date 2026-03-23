@@ -6,14 +6,12 @@ use crate::features::spaces::pages::apps::apps::file::*;
 #[component]
 pub fn FileUploadZone(on_upload: EventHandler<File>) -> Element {
     let tr: SpaceFileTranslate = use_translate();
-    let mut is_loading = use_signal(|| false);
 
     rsx! {
         FileUploader {
             accept: "*/*",
             on_upload_success: move |_: String| {},
             on_upload_meta: move |meta: UploadedFileMeta| {
-                is_loading.set(false);
                 let name = if meta.name.trim().is_empty() {
                     extract_filename_from_url(&meta.url)
                 } else {
@@ -31,21 +29,14 @@ pub fn FileUploadZone(on_upload: EventHandler<File>) -> Element {
                 };
                 on_upload.call(file);
             },
-            label {
+            div {
                 class: "relative w-full min-h-[140px] rounded-xl border-2 border-dashed border-separator hover:border-btn-primary-bg transition-colors duration-150 ease-in-out flex items-center justify-center cursor-pointer",
-                onclick: move |_| {
-                    is_loading.set(true);
-                },
                 div { class: "flex flex-col items-center gap-2",
                     div { class: "w-10 h-10 rounded-full border border-separator flex items-center justify-center text-card-meta text-2xl leading-none",
                         "+"
                     }
                     p { class: "text-sm text-card-meta font-medium",
-                        if is_loading() {
-                            {tr.uploading}
-                        } else {
-                            {tr.upload}
-                        }
+                        {tr.upload}
                     }
                     p { class: "text-xs text-card-meta", {tr.drag_or_click} }
                 }
