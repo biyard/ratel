@@ -940,6 +940,12 @@ if space.can_participate {
 }
 ```
 
+### Documentation Code Examples
+
+- **Always verify prop names and types match the actual component API** before adding code examples to docs (CLAUDE.md, dioxus-convention.md, etc.). Incorrect prop names (e.g., `checked`/`onchange` instead of `active`/`on_toggle`) produce examples that won't compile when copy-pasted
+- **Always verify model field types in doc examples** — use `matches!(self.status, Some(SpaceStatus::InProgress))` when the field is `Option<SpaceStatus>`, not `self.status == SpaceStatus::InProgress`. Use `self.join_anytime` directly when the field is `bool`, not `self.join_anytime.unwrap_or(false)`
+- **When making accessibility props optional with `#[props(default)]`**, add `#[cfg(debug_assertions)]` warnings (e.g., `tracing::warn!`) to surface missing values during development without breaking existing call sites
+
 ### TailwindCSS Syntax
 
 - **Always use bracket syntax for arbitrary values**: write `z-[101]`, not `z-101`. Non-standard values without brackets are silently ignored by TailwindCSS and produce no CSS output
