@@ -379,24 +379,7 @@ jobs:
 
       - name: Start infrastructure
         run: |
-          attempts=0
-          until [ $attempts -ge 3 ]
-          do
-            if make infra; then
-              exit 0
-            fi
-
-            attempts=$((attempts + 1))
-            echo "make infra failed on attempt ${attempts}"
-            docker compose --profile infra ps || true
-            docker logs --tail 200 ratel-localstack-1 || true
-
-            if [ $attempts -ge 3 ]; then
-              exit 1
-            fi
-
-            sleep 20
-          done
+          make infra
 
       - name: Run tests
         working-directory: app/ratel
