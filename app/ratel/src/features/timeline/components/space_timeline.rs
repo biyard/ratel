@@ -90,16 +90,18 @@ pub fn SpaceTimeline() -> Element {
                                     class: "flex flex-col gap-2.5 pt-5 pb-2.5 border cursor-pointer snap-start shrink-0 w-[340px] max-mobile:w-[280px] rounded-[10px] bg-card-bg-secondary border-card-enable-border hover:bg-card-bg transition-colors no-underline",
                                     to: "{href}",
                                     Col { class: "gap-1 px-5 w-full",
-                                        if let Some(ref st) = status {
-                                            Badge {
-                                                size: BadgeSize::Small,
-                                                variant: BadgeVariant::Rounded,
-                                                color: match st {
-                                                    SpaceStatus::InProgress => BadgeColor::Blue,
-                                                    SpaceStatus::Started => BadgeColor::Green,
-                                                    _ => BadgeColor::Grey,
-                                                },
-                                                {st.translate(&lang())}
+                                        div { class: "min-h-[24px] flex items-center",
+                                            if let Some(ref st) = status {
+                                                Badge {
+                                                    size: BadgeSize::Small,
+                                                    variant: BadgeVariant::Rounded,
+                                                    color: match st {
+                                                        SpaceStatus::InProgress => BadgeColor::Blue,
+                                                        SpaceStatus::Started => BadgeColor::Green,
+                                                        _ => BadgeColor::Grey,
+                                                    },
+                                                    {st.translate(&lang())}
+                                                }
                                             }
                                         }
                                         p { class: "w-full text-base font-semibold text-text-primary truncate line-clamp-1",
@@ -124,7 +126,7 @@ pub fn SpaceTimeline() -> Element {
                                         }
                                     }
                                     div { class: "flex flex-row items-center gap-2 px-5",
-                                        lucide_dioxus::Users { size: 14, class: "[&>path]:stroke-foreground-muted" }
+                                        lucide_dioxus::Users { size: 14, class: "[&>path]:stroke-foreground-muted [&>circle]:stroke-foreground-muted" }
                                         p { class: "text-xs text-foreground-muted",
                                             "{space.participants}"
                                         }
