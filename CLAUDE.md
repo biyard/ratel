@@ -864,7 +864,7 @@ Use `let lang = use_language();` in the component, then `{value.translate(&lang(
 - **Always add `alt` attributes** to `img` elements (use descriptive text or `alt: ""` for decorative images)
 - **Always add `aria-label`** to icon-only buttons so screen readers can announce their purpose
 - **Use semantic elements** for clickable navigation: use `Link { to: "..." }` (renders `<a>`) instead of `div { onclick: ... }` with `use_navigator().push()`. This provides native keyboard accessibility (tab focus, Enter activation) and correct link semantics without manual `role`, `tabindex`, or keyboard handlers
-- **Always pass the `label` prop to the `Switch` component** so it renders proper `role="switch"`, `aria-checked`, and `aria-label` attributes for screen reader support. A `Switch` without a `label` is inaccessible. Example:
+- **Always pass the `label` prop to the `Switch` component** so it renders a proper `aria-label` for screen reader support. The `role="switch"` and `aria-checked` attributes are always rendered regardless of the label, but a `Switch` without a `label` lacks an accessible name. Example:
 
 ```rust
 Switch {
