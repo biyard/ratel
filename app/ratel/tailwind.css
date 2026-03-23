@@ -282,6 +282,10 @@ html[data-theme="light"] {
   --color-quiz-upload-view-bg: var(--dark, #ffffff) var(--light, #404040);
   --color-quiz-upload-view-text: var(--dark, #0a0a0a) var(--light, #ffffff);
 
+  /* Poll question colors */
+  --color-poll-question-title: var(--dark, #ffffff)
+    var(--light, var(--foreground));
+
   /* Panel colors */
   --color-panel-container-bg: var(--dark, #1a1a1a) var(--light, #fafafa);
   --color-panel-title: var(--dark, #ffffff) var(--light, #171717);
@@ -317,13 +321,17 @@ html[data-theme="light"] {
   /* Banner / status colors */
   --color-banner-bg: var(--dark, #262626) var(--light, #f5f5f5);
   --color-banner-text: var(--dark, #a1a1a1) var(--light, #525252);
-  --color-banner-success-bg: var(--dark, rgba(22, 101, 52, 0.3)) var(--light, #f0fdf4);
+  --color-banner-success-bg: var(--dark, rgba(22, 101, 52, 0.3))
+    var(--light, #f0fdf4);
   --color-banner-success-text: var(--dark, #4ade80) var(--light, #15803d);
 
   /* Option card colors (poll/quiz) */
-  --color-option-card-bg: var(--dark, rgba(38, 38, 38, 0.6)) var(--light, #f5f5f5);
-  --color-option-card-hover-bg: var(--dark, rgba(64, 64, 64, 0.6)) var(--light, #e5e5e5);
-  --color-option-card-accent: var(--dark, rgba(64, 64, 64, 0.4)) var(--light, rgba(163, 163, 163, 0.4));
+  --color-option-card-bg: var(--dark, rgba(38, 38, 38, 0.6))
+    var(--light, #f5f5f5);
+  --color-option-card-hover-bg: var(--dark, rgba(64, 64, 64, 0.6))
+    var(--light, #e5e5e5);
+  --color-option-card-accent: var(--dark, rgba(64, 64, 64, 0.4))
+    var(--light, rgba(163, 163, 163, 0.4));
 }
 
 /* ----------------------------
@@ -594,6 +602,10 @@ a {
   .text-text-primary-inverted {
     color: var(--foreground-inverted);
   }
+  .text-poll-question-title {
+    color: var(--color-poll-question-title);
+  }
+
   .text-card-meta {
     color: var(--card-meta);
   }
@@ -715,8 +727,9 @@ a {
   --color-space-bg: var(--dark, #191919) var(--light, #f9f9f9);
   --color-space-body-bg: #1d1d1d;
 
-  --color-space-nav-item-hover: var(--dark, #FCB30005) var(--light, #00000005);
-  --color-space-nav-item-selected: var(--dark, #FCB3000D) var(--light, #0000001A);
+  --color-space-nav-item-hover: var(--dark, #fcb30005) var(--light, #00000005);
+  --color-space-nav-item-selected: var(--dark, #fcb3000d)
+    var(--light, #0000001a);
 }
 
 /* =============================================================
