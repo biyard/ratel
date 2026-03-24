@@ -48,14 +48,16 @@ pub fn InviteParticipant() -> Element {
                             },
                             onconfirm: move |evt: KeyboardEvent| {
                                 evt.stop_propagation();
-                                let Ok(email) = normalize_email_input(&email_input()) else {
+                                let Ok(parsed_emails) = normalize_email_inputs(&email_input()) else {
                                     toast.error(Error::InvalidEmail);
                                     return;
                                 };
                                 invited_emails
                                     .with_mut(|emails| {
-                                        if !emails.iter().any(|v| v == &email) {
-                                            emails.push(email);
+                                        for email in parsed_emails {
+                                            if !emails.iter().any(|v| v == &email) {
+                                                emails.push(email);
+                                            }
                                         }
                                     });
                                 email_input.set(String::new());
@@ -103,12 +105,14 @@ pub fn InviteParticipant() -> Element {
                             let mut emails = invited_emails();
                             let current_input = email_input();
                             if !current_input.trim().is_empty() {
-                                let Ok(email) = normalize_email_input(&current_input) else {
+                                let Ok(parsed_emails) = normalize_email_inputs(&current_input) else {
                                     toast.error(Error::InvalidEmail);
                                     return;
                                 };
-                                if !emails.iter().any(|value| value == &email) {
-                                    emails.push(email);
+                                for email in parsed_emails {
+                                    if !emails.iter().any(|value| value == &email) {
+                                        emails.push(email);
+                                    }
                                 }
                             }
                             if emails.is_empty() {
