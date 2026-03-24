@@ -27,13 +27,15 @@ pub async fn delete_comment(
         role,
         space_action.prerequisite,
         space.status,
+        space.join_anytime,
     ) {
         return Err(Error::BadRequest(
             "Discussion is not available in the current space status".into(),
         ));
     }
 
-    let post = SpacePost::get(cli, &space_post_pk, Some(discussion_sk_entity))
+    let (post_pk, post_sk) = SpacePost::keys(&space_id, &space_post_id);
+    let post = SpacePost::get(cli, &post_pk, Some(post_sk.clone()))
         .await?
         .ok_or(Error::NotFound("Discussion not found".into()))?;
     if post.status() != DiscussionStatus::InProgress {
@@ -52,8 +54,7 @@ pub async fn delete_comment(
     let delete_comment_tx =
         SpacePostComment::delete_transact_write_item(&space_post_pk, &comment_sk_entity);
 
-    let (pk, sk) = SpacePost::keys(&space_id, &space_post_id);
-    let post_tx = SpacePost::updater(&pk, sk)
+    let post_tx = SpacePost::updater(&post_pk, post_sk)
         .decrease_comments(1)
         .transact_write_item();
 

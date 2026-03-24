@@ -69,8 +69,7 @@ pub fn ChoiceQuestionEditor(
     question: ChoiceQuestion,
     is_single: bool,
     on_change: EventHandler<Question>,
-    #[props(default = true)]
-    show_allow_other: bool,
+    #[props(default = true)] show_allow_other: bool,
     #[props(default)] selected_options: Vec<i32>,
     #[props(default)] on_toggle_option: Option<EventHandler<(usize, bool)>>,
     #[props(default)] on_save: Option<EventHandler<()>>,
@@ -101,13 +100,9 @@ pub fn ChoiceQuestionEditor(
                             "data-checked": checked,
                             onclick: move |_| on_toggle_option.call((opt_idx, !checked)),
                             if checked {
-                                icons::validations::Check {
-                                    class: "w-5 h-5 opacity-100 [&>path]:stroke-[#0A0A0A]"
-                                }
+                                icons::validations::Check { class: "w-5 h-5 opacity-100 [&>path]:stroke-[#0A0A0A]" }
                             } else {
-                                icons::validations::Check {
-                                    class: "w-5 h-5 opacity-0 [&>path]:stroke-[#0A0A0A]"
-                                }
+                                icons::validations::Check { class: "w-5 h-5 opacity-0 [&>path]:stroke-[#0A0A0A]" }
                             }
                         }
                     }
@@ -211,7 +206,7 @@ pub fn ChoiceQuestionEditor(
         }
         if show_allow_other {
             div { class: "flex w-full items-center justify-between pt-2",
-                span { class: "text-sm text-choice-editor-action", {tr.allow_other} }
+                span { class: "text-sm text-text-primary", {tr.allow_other} }
                 Switch {
                     active: question.allow_other.unwrap_or(false),
                     on_toggle: move |_| {

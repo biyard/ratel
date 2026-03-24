@@ -39,6 +39,7 @@ pub fn ViewerMain(
         role,
         discussion_response.space_action.prerequisite,
         space.status,
+        space.join_anytime,
     ) && can_participate;
     let can_manage_comments = can_comment;
     let nav = navigator();
