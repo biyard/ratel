@@ -1,7 +1,6 @@
 use super::*;
 use crate::features::spaces::pages::actions::actions::poll::components::QuestionViewer;
 use crate::features::spaces::pages::actions::actions::poll::components::TimeRangeDisplay;
-use crate::features::spaces::space_common::types::space_page_actions_quiz_key;
 
 #[component]
 pub fn QuizTab(can_edit: bool) -> Element {
@@ -98,7 +97,9 @@ pub fn QuizTab(can_edit: bool) -> Element {
                             .as_ref()
                             .and_then(|a| quiz_answer_to_viewer(&question, a));
                         rsx! {
-                            div { class: "rounded-lg border border-neutral-700 bg-neutral-900 p-4 light:border-input-box-border light:bg-input-box-bg",
+                            div {
+                                key: "quiz-view-question-{idx}",
+                                class: "rounded-lg border border-neutral-700 bg-neutral-900 p-4 light:border-input-box-border light:bg-input-box-bg",
                                 QuestionViewer {
                                     index: idx,
                                     total: questions.read().len(),
@@ -125,13 +126,8 @@ fn save_quiz(
     pass_score: Signal<i64>,
     retry_count: Signal<i64>,
     mut toast: ToastService,
-    mut query: QueryStore,
+    _query: QueryStore,
 ) {
-    let answer_key = {
-        let mut k = space_page_actions_quiz_key(&space_id(), &quiz_id());
-        k.push("answers".into());
-        k
-    };
     spawn(async move {
         let req = UpdateQuizRequest {
             questions: Some(questions()),
@@ -145,9 +141,6 @@ fn save_quiz(
             toast.error(err);
             return;
         }
-        let keys = space_page_actions_quiz_key(&space_id(), &quiz_id());
-        query.invalidate(&keys);
-        query.invalidate(&answer_key);
     });
 }
 
