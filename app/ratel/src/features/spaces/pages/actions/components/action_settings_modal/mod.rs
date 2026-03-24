@@ -204,7 +204,7 @@ pub fn ActionSettingsModal(
                     }
                 }
 
-                div { class: "w-full h-px bg-border-separator" }
+                div { class: "w-full border-t border-separator" }
 
                 div { class: "flex flex-col gap-4",
                     div { class: "flex gap-3 justify-between items-center",
@@ -230,7 +230,7 @@ pub fn ActionSettingsModal(
                     }
                 }
 
-                div { class: "w-full h-px bg-border-separator" }
+                div { class: "w-full border-t border-separator" }
 
                 div { class: "flex flex-col gap-4 py-1",
                     div { class: "flex gap-3 justify-between items-center",
