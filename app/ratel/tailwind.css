@@ -717,7 +717,7 @@ a {
   /* Action Settings */
   --color-btn-action-settings-bg: var(--dark, #0a0a0a) var(--light, #ffffff);
   --color-btn-action-settings-text: var(--dark, #ffffff) var(--light, #0a0a0a);
-  --color-btn-action-settings-icon: var(--dark, #ffffff) var(--light, #0a0a0a);
+  --color-btn-action-settings-icon: var(--dark, #0a0a0a) var(--light, #ffffff);
 }
 
 /* ==========================================================================

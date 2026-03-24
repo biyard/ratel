@@ -92,7 +92,7 @@ pub fn VisibilityModal(
                         selected.set(Visibility::Public);
                     },
                     div { class: "flex justify-center items-center w-10 h-10 rounded-full bg-primary/15 shrink-0",
-                        icons::internet_script::Internet { class: "w-5 h-5 [&>path]:stroke-primary [&>circle]:stroke-primary [&>ellipse]:stroke-primary [&>line]:stroke-primary" }
+                        icons::internet_script::Internet { class: "w-5 h-5 [&>path]:stroke-primary [&>path]:fill-none [&>circle]:stroke-primary [&>circle]:fill-none" }
                     }
                     div { class: "flex flex-col gap-0.5 items-start",
                         span { class: "text-sm font-semibold text-text-primary", "{tr.public_label}" }
