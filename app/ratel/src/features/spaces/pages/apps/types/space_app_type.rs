@@ -47,7 +47,7 @@ impl SpaceAppType {
                 icons::settings::Settings2 {
                     width: "24",
                     height: "24",
-                    class: "text-white [&>path]:fill-black [&>circle]:stroke-black [&>circle]:fill-none",
+                    class: "text-white [&>path]:fill-current [&>circle]:stroke-current",
                 }
             },
             #[cfg(feature = "beta")]
@@ -55,21 +55,21 @@ impl SpaceAppType {
                 icons::ratel::Chest {
                     width: "24",
                     height: "24",
-                    class: "text-white [&>path]:fill-none [&>path]:stroke-black",
+                    class: "text-white [&>path]:fill-none [&>path]:stroke-current",
                 }
             },
             SpaceAppType::File => rsx! {
                 icons::file::File {
                     width: "24",
                     height: "24",
-                    class: "text-white [&>path]:stroke-black [&>path]:fill-none",
+                    class: "text-white [&>path]:stroke-current",
                 }
             },
             SpaceAppType::Panels => rsx! {
                 icons::user::UserGroup {
                     width: "24",
                     height: "24",
-                    class: "text-white [&>path]:stroke-black [&>path]:fill-transparent",
+                    class: "text-white [&>path]:stroke-current [&>path]:fill-transparent",
                 }
             },
         }
