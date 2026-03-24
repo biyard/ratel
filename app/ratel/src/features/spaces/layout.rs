@@ -24,6 +24,7 @@ pub fn use_space_layout_ui() -> SpaceLayoutUiContext {
 pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
     let ctx = SpaceContextProvider::init(space_id)?;
 
+    use_context_provider(|| PopupService::new());
     use_context_provider(|| LayoverService::new());
     let sidebar_visible = use_signal(|| true);
     use_context_provider(move || SpaceLayoutUiContext { sidebar_visible });
@@ -58,9 +59,8 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
 
     let mut participate = use_action(participate_space);
 
-    let show_participate = matches!(role, SpaceUserRole::Viewer)
-        && !space.participated
-        && space.can_participate;
+    let show_participate =
+        matches!(role, SpaceUserRole::Viewer) && !space.participated && space.can_participate;
 
     let mut menus = vec![
         crate::features::spaces::pages::dashboard::get_nav_item(&space, role.clone()),
@@ -144,6 +144,7 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
                 }
             }
         }
+        PopupZone {}
         Layover {}
     }
 }
