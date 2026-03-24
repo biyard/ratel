@@ -108,11 +108,8 @@ pub fn ChoiceQuestionEditor(
                                 class: "sr-only pointer-events-none",
                                 onchange: move |_| {},
                             }
-                            div {
-                                class: "flex h-6 w-6 items-center justify-center rounded-[4px] border-2 border-choice-editor-field-border bg-choice-editor-selector-bg group-aria-selected:border-primary group-aria-selected:bg-primary",
-                                icons::validations::Check {
-                                    class: "w-5 h-5 opacity-0 group-aria-selected:opacity-100 [&>path]:stroke-[#0A0A0A]"
-                                }
+                            div { class: "flex h-6 w-6 items-center justify-center rounded-[4px] border-2 border-choice-editor-field-border bg-choice-editor-selector-bg group-aria-selected:border-primary group-aria-selected:bg-primary",
+                                icons::validations::Check { class: "w-4 h-4 opacity-0 group-aria-selected:opacity-100 [&>path]:stroke-[#0A0A0A]" }
                             }
                         }
                     }
