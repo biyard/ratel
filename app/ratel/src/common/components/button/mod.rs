@@ -8,12 +8,14 @@ pub fn Button(
     #[props(default)] shape: ButtonShape,
     #[props(default)] disabled: bool,
     #[props(default)] loading: ReadSignal<bool>,
+    #[props(default)] loading_indicator: String,
     #[props(extends=GlobalAttributes)]
     #[props(extends=button)]
     attributes: Vec<Attribute>,
     onclick: Option<EventHandler<MouseEvent>>,
     children: Element,
 ) -> Element {
+    let loading_indicator = format!("w-auto h-auto grow-0 max-w-4");
     rsx! {
         button {
             class: "{size} {style} {shape} {class}",
@@ -28,7 +30,7 @@ pub fn Button(
             },
             ..attributes,
             if loading() {
-                Spinner {}
+                LoadingIndicator { class: loading_indicator }
             } else {
                 {children}
             }

@@ -285,9 +285,6 @@ fn MemberRow(member: TeamMemberResponse, is_last: bool, on_remove: EventHandler<
     let tr: TeamSettingsTranslate = use_translate();
     let border_class = if is_last { "" } else { "border-b border-border" };
     let mut show_menu = use_signal(|| false);
-    // (top, right) in viewport px for fixed dropdown
-    let mut menu_pos = use_signal(|| (0f64, 0f64));
-    let mut btn_mounted: Signal<Option<std::rc::Rc<MountedData>>> = use_signal(|| None);
 
     let display = if member.display_name.is_empty() {
         member.username.clone()
@@ -327,33 +324,12 @@ fn MemberRow(member: TeamMemberResponse, is_last: bool, on_remove: EventHandler<
 
             // More options
             if !member.is_owner {
-                div { class: "shrink-0",
-                    if show_menu() {
-                        div {
-                            class: "fixed inset-0 z-10",
-                            onclick: move |_| show_menu.set(false),
-                        }
-                    }
+                div { class: "relative shrink-0",
                     button {
-                        class: "flex items-center justify-center w-7 h-7 rounded-md hover:bg-hover transition-colors cursor-pointer relative z-20",
-                        onmounted: move |e| {
-                            btn_mounted.set(Some(e.data()));
-                        },
+                        class: "flex items-center justify-center w-7 h-7 rounded-md hover:bg-hover transition-colors cursor-pointer",
                         onclick: move |e| {
                             e.stop_propagation();
-                            let mounted = btn_mounted.read().clone();
-                            if let Some(mounted) = mounted {
-                                spawn(async move {
-                                    if let Ok(rect) = mounted.get_client_rect().await {
-                                        let bottom = rect.origin.y + rect.size.height;
-                                        let right = rect.origin.x + rect.size.width;
-                                        menu_pos.set((bottom, right));
-                                    }
-                                    show_menu.toggle();
-                                });
-                            } else {
-                                show_menu.toggle();
-                            }
+                            show_menu.toggle();
                         },
                         lucide_dioxus::Ellipsis {
                             class: "w-4 h-4 [&>circle]:fill-text-primary [&>circle]:stroke-none",
@@ -361,8 +337,11 @@ fn MemberRow(member: TeamMemberResponse, is_last: bool, on_remove: EventHandler<
                     }
                     if show_menu() {
                         div {
-                            class: "fixed z-30 w-44 bg-popover border border-border rounded-lg shadow-lg py-1 overflow-hidden",
-                            style: "top: {menu_pos().0 + 4.0}px; right: calc(100vw - {menu_pos().1}px);",
+                            class: "fixed inset-0 z-10",
+                            onclick: move |_| show_menu.set(false),
+                        }
+                        div {
+                            class: "absolute right-0 top-8 z-20 w-44 bg-popover border border-border rounded-lg shadow-lg py-1 overflow-hidden",
                             onclick: move |e| e.stop_propagation(),
                             button {
                                 class: "flex items-center gap-2 w-full px-3 py-2 text-sm text-destructive hover:bg-hover transition-colors text-left",
