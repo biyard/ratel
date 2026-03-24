@@ -145,8 +145,11 @@ pub fn ManagementPage(username: String) -> Element {
             // Header
             div { class: "flex items-center justify-between",
                 h1 { class: "text-xl font-bold text-text-primary", {tr.team_management} }
-                button {
-                    class: "flex items-center gap-2 px-4 py-2 rounded-full bg-btn-primary-bg text-btn-primary-text text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer",
+                Button {
+                    style: ButtonStyle::Primary,
+                    shape: ButtonShape::Rounded,
+                    size: ButtonSize::Small,
+                    class: "flex items-center gap-2".to_string(),
                     onclick: on_add_members_click,
                     lucide_dioxus::UserPlus {
                         class: "w-4 h-4 [&>path]:stroke-btn-primary-text [&>line]:stroke-btn-primary-text",
@@ -229,8 +232,11 @@ pub fn ManagementPage(username: String) -> Element {
             // Pagination
             if total_pages > 1 || can_prev {
                 div { class: "flex items-center justify-center gap-1",
-                    button {
-                        class: "flex items-center justify-center w-8 h-8 rounded-lg transition-colors text-foreground-muted hover:bg-hover disabled:opacity-30 disabled:cursor-not-allowed",
+                    Button {
+                        style: ButtonStyle::Text,
+                        size: ButtonSize::Icon,
+                        shape: ButtonShape::Square,
+                        class: "flex items-center justify-center w-8 h-8 text-foreground-muted disabled:opacity-30 disabled:cursor-not-allowed".to_string(),
                         disabled: !can_prev,
                         onclick: move |_| {
                             if can_prev {
@@ -245,15 +251,14 @@ pub fn ManagementPage(username: String) -> Element {
                     for p in 0..total_pages {
                         {
                             let is_active = p == current_page();
-                            let active_class = if is_active {
-                                "bg-white text-neutral-900 font-semibold"
-                            } else {
-                                "text-foreground-muted hover:bg-hover"
-                            };
                             rsx! {
-                                button {
+                                Button {
                                     key: "{p}",
-                                    class: "flex items-center justify-center w-8 h-8 rounded-lg text-sm transition-colors {active_class}",
+                                    style: ButtonStyle::Text,
+                                    size: ButtonSize::Icon,
+                                    shape: ButtonShape::Square,
+                                    class: "w-8 h-8 text-sm text-foreground-muted aria-selected:bg-btn-secondary-bg aria-selected:text-btn-secondary-text aria-selected:font-semibold".to_string(),
+                                    "aria-selected": is_active,
                                     onclick: move |_| current_page.set(p),
                                     "{p + 1}"
                                 }
@@ -261,8 +266,11 @@ pub fn ManagementPage(username: String) -> Element {
                         }
                     }
 
-                    button {
-                        class: "flex items-center justify-center w-8 h-8 rounded-lg transition-colors text-foreground-muted hover:bg-hover disabled:opacity-30 disabled:cursor-not-allowed",
+                    Button {
+                        style: ButtonStyle::Text,
+                        size: ButtonSize::Icon,
+                        shape: ButtonShape::Square,
+                        class: "flex items-center justify-center w-8 h-8 text-foreground-muted disabled:opacity-30 disabled:cursor-not-allowed".to_string(),
                         disabled: !can_next,
                         onclick: move |_| {
                             if can_next {
@@ -325,9 +333,12 @@ fn MemberRow(member: TeamMemberResponse, is_last: bool, on_remove: EventHandler<
             // More options
             if !member.is_owner {
                 div { class: "relative shrink-0",
-                    button {
-                        class: "flex items-center justify-center w-7 h-7 rounded-md hover:bg-hover transition-colors cursor-pointer",
-                        onclick: move |e| {
+                    Button {
+                        style: ButtonStyle::Text,
+                        size: ButtonSize::Icon,
+                        shape: ButtonShape::Square,
+                        class: "flex items-center justify-center w-7 h-7 !rounded-md".to_string(),
+                        onclick: move |e: MouseEvent| {
                             e.stop_propagation();
                             show_menu.toggle();
                         },
@@ -343,8 +354,11 @@ fn MemberRow(member: TeamMemberResponse, is_last: bool, on_remove: EventHandler<
                         div {
                             class: "absolute right-0 top-8 z-20 w-44 bg-popover border border-border rounded-lg shadow-lg py-1 overflow-hidden",
                             onclick: move |e| e.stop_propagation(),
-                            button {
-                                class: "flex items-center gap-2 w-full px-3 py-2 text-sm text-destructive hover:bg-hover transition-colors text-left",
+                            Button {
+                                style: ButtonStyle::Text,
+                                size: ButtonSize::Small,
+                                shape: ButtonShape::Square,
+                                class: "flex items-center gap-2 w-full text-destructive justify-start".to_string(),
                                 onclick: move |_| {
                                     show_menu.set(false);
                                     on_remove.call(());
