@@ -4,6 +4,7 @@ use crate::common::types::{FeedPartition, Partition, SpacePartition};
 use crate::features::posts::models::Post;
 use crate::features::posts::types::{BoosterType, SpaceType};
 use crate::features::spaces::space_common::*;
+use crate::features::spaces::space_common::{InvitationStatus, SpaceInvitationMember};
 
 #[get("/api/spaces/{space_id}", user: OptionalUser)]
 pub async fn get_space(space_id: SpacePartition) -> Result<SpaceResponse> {
@@ -34,7 +35,19 @@ pub async fn get_space(space_id: SpacePartition) -> Result<SpaceResponse> {
             SpaceParticipant::keys(space.pk.clone(), user.pk.clone());
         let participant =
             SpaceParticipant::get(dynamo, &participant_pk, Some(&participant_sk)).await?;
-        let can_participate = participant.is_none() && is_participation_open;
+        let invited = if space.visibility != SpaceVisibility::Public {
+            let (invitation_pk, invitation_sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
+            let invitation =
+                SpaceInvitationMember::get(dynamo, &invitation_pk, Some(&invitation_sk)).await?;
+
+            matches!(
+                invitation.as_ref().map(|member| member.status),
+                Some(InvitationStatus::Invited) | Some(InvitationStatus::Accepted)
+            )
+        } else {
+            true
+        };
+        let can_participate = participant.is_none() && is_participation_open && invited;
         (participant, can_participate)
     } else {
         (None, false)

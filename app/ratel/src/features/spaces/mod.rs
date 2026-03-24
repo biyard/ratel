@@ -9,6 +9,7 @@ pub mod pages;
 mod space_common;
 
 pub use layout::SpaceLayout;
+pub use models::{InvitationStatus, SpaceInvitationMember};
 
 use crate::*;
 use hooks::*;
