@@ -21,7 +21,7 @@ pub fn CreatorActionPage(space_id: ReadSignal<SpacePartition>) -> Element {
                         h3 { {tr.title} }
                         Tooltip {
                             TooltipTrigger {
-                                icons::help_support::Info { width: "16", height: "16", class: "h-4 w-4 [&>path]:stroke-text-secondary [&>circle]:fill-text-secondary cursor-help" }
+                                icons::help_support::Info { width: "16", height: "16", class: "h-4 w-4 [&>path]:stroke-text-secondary [&>path]:fill-none cursor-help" }
                             }
                             TooltipContent { side: ContentSide::Bottom, align: ContentAlign::Start,
                                 {tr.title_tooltip}
@@ -55,7 +55,7 @@ pub fn CreatorActionPage(space_id: ReadSignal<SpacePartition>) -> Element {
                             icons::settings::Settings2 {
                                 width: "16",
                                 height: "16",
-                                class: "[&>path]:fill-web-font-ab-bk [&>circle]:stroke-web-font-ab-bk [&>circle]:fill-none",
+                                class: "[&>path]:fill-web-btn-secondary-icon [&>circle]:stroke-web-btn-secondary-icon [&>circle]:fill-none",
                             }
                             span { {tr.button_settings_label} }
                         }
