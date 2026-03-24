@@ -15,12 +15,29 @@ use space_visibility_setting::*;
 
 const DEFAULT_PROFILE_IMAGE: &str = "https://metadata.ratel.foundation/ratel/default-profile.png";
 
-fn normalize_email_input(raw: &str) -> Result<String> {
-    let email = raw.trim().to_ascii_lowercase();
-    if email.is_empty() || !email.contains('@') {
+fn normalize_email_inputs(raw: &str) -> Result<Vec<String>> {
+    let emails: Vec<String> = raw
+        .split(',')
+        .map(|value| value.trim().to_ascii_lowercase())
+        .filter(|value| !value.is_empty())
+        .collect();
+
+    if emails.is_empty() {
         return Err(Error::InvalidEmail);
     }
-    Ok(email)
+
+    let mut normalized = Vec::new();
+    for email in emails {
+        if !email.contains('@') {
+            return Err(Error::InvalidEmail);
+        }
+
+        if !normalized.iter().any(|value| value == &email) {
+            normalized.push(email);
+        }
+    }
+
+    Ok(normalized)
 }
 
 #[component]
