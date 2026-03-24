@@ -43,6 +43,7 @@
 
 .time-picker-icon circle,
 .time-picker-icon path {
+    fill: none;
     stroke: var(--secondary-color-4);
 }
 

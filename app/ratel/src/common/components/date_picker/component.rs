@@ -189,9 +189,9 @@ pub fn TimezonePicker(#[props(default)] on_change: EventHandler<Timezone>) -> El
     });
 
     rsx! {
-        div { class: "timezone-picker @max-sm:w-full",
+        div { class: "timezone-picker @max-mobile:w-full",
             Select::<Option<Timezone>> {
-                class: "@max-sm:w-full",
+                class: "@max-mobile:w-full",
                 placeholder: "Timezone",
                 default_value: Some(local_tz),
                 on_value_change: move |v: Option<Option<Timezone>>| {
@@ -200,7 +200,7 @@ pub fn TimezonePicker(#[props(default)] on_change: EventHandler<Timezone>) -> El
                     }
                 },
                 SelectTrigger {
-                    class: "@max-sm:w-full",
+                    class: "@max-mobile:w-full",
                     aria_label: "Select Timezone",
                     min_width: "7rem",
                     SelectValue {}
@@ -362,8 +362,8 @@ pub fn DateAndTimePicker(
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
         div { class: "flex items-center w-full @container",
-            div { class: "flex flex-row gap-4 items-center w-full @max-sm:flex-col",
-                div { class: "flex flex-row flex-1 gap-4 items-center min-w-0 @max-sm:flex-col @max-sm:w-full",
+            div { class: "flex flex-row gap-4 items-center w-full @max-mobile:flex-col",
+                div { class: "flex flex-row flex-1 gap-4 items-center min-w-0 @max-mobile:flex-col @max-mobile:w-full",
                     DatePicker {
                         selected_date: selected_start_date(),
                         on_value_change: move |v| {
@@ -389,7 +389,7 @@ pub fn DateAndTimePicker(
 
                 div { class: "h-[0.5px] w-[15px] bg-text-secondary max-tablet:hidden" }
 
-                div { class: "flex flex-row flex-1 gap-4 items-center min-w-0 @max-sm:flex-col @max-sm:w-full",
+                div { class: "flex flex-row flex-1 gap-4 items-center min-w-0 @max-mobile:flex-col @max-mobile:w-full",
                     DatePicker {
                         selected_date: selected_end_date(),
                         on_value_change: move |v| {
@@ -418,7 +418,7 @@ pub fn DateAndTimePicker(
 #[component]
 pub fn DatePicker(props: DatePickerProps) -> Element {
     rsx! {
-        div { class: "flex flex-1 min-w-0 @max-sm:w-full",
+        div { class: "flex flex-1 min-w-0 @max-mobile:w-full",
             date_picker::DatePicker {
                 class: "flex-1 w-full date-picker",
                 on_value_change: props.on_value_change,
@@ -467,15 +467,15 @@ pub fn DateRangePicker(props: DateRangePickerProps) -> Element {
 pub fn DatePickerInput(#[props(default)] date: String) -> Element {
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
-        div { class: "flex-1 w-full grow date-picker-group @max-sm:w-full",
+        div { class: "flex-1 w-full grow date-picker-group @max-mobile:w-full",
             DatePickerPopoverTrigger {
-                div { class: "flex flex-row justify-between items-center w-full min-w-0 h-8 rounded-[8px] @max-sm:w-full",
+                div { class: "flex flex-row justify-between items-center w-full min-w-0 h-8 rounded-[8px] @max-mobile:w-full",
                     span { class: "grow", {date} }
 
                     icons::calendar::CalendarToday {
                         width: "20",
                         height: "20",
-                        class: "border-[0px] shrink-0 text-web-font-primary [&>path]:stroke-current",
+                        class: "border-[0px] shrink-0 text-icon-primary [&>path]:stroke-current [&>path]:fill-none [&>rect]:fill-none [&>rect]:stroke-current",
                     }
                 }
             }
