@@ -29,6 +29,9 @@ pub enum UpdateSpaceRequest {
     Anonymous {
         anonymous_participation: bool,
     },
+    JoinAnytime {
+        join_anytime: bool,
+    },
     ChangeVisibility {
         change_visibility: bool,
     },
@@ -57,6 +60,8 @@ pub struct UpdateSpaceResponse {
     pub visibility: SpaceVisibility,
     pub content: String,
     pub anonymous_participation: bool,
+    #[serde(default)]
+    pub join_anytime: bool,
     pub quota: i64,
     pub remains: i64,
     #[serde(default)]
@@ -76,6 +81,7 @@ impl From<SpaceCommon> for UpdateSpaceResponse {
             visibility: s.visibility,
             content: s.content,
             anonymous_participation: s.anonymous_participation,
+            join_anytime: s.join_anytime,
             quota: s.quota,
             remains: s.remains,
             logo: s.logo,
@@ -199,6 +205,11 @@ pub async fn update_space(
             su = su.with_anonymous_participation(anonymous_participation);
 
             updated_space.anonymous_participation = anonymous_participation;
+        }
+        UpdateSpaceRequest::JoinAnytime { join_anytime } => {
+            su = su.with_join_anytime(join_anytime);
+
+            updated_space.join_anytime = join_anytime;
         }
         UpdateSpaceRequest::ChangeVisibility { .. } => {
             tracing::error!("ChangeVisibility is deprecated");

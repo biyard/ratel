@@ -189,9 +189,9 @@ pub fn TimezonePicker(#[props(default)] on_change: EventHandler<Timezone>) -> El
     });
 
     rsx! {
-        div { class: "timezone-picker @max-sm:w-full",
+        div { class: "timezone-picker @max-mobile:w-full",
             Select::<Option<Timezone>> {
-                class: "@max-sm:w-full",
+                class: "@max-mobile:w-full",
                 placeholder: "Timezone",
                 default_value: Some(local_tz),
                 on_value_change: move |v: Option<Option<Timezone>>| {
@@ -200,7 +200,7 @@ pub fn TimezonePicker(#[props(default)] on_change: EventHandler<Timezone>) -> El
                     }
                 },
                 SelectTrigger {
-                    class: "@max-sm:w-full",
+                    class: "@max-mobile:w-full",
                     aria_label: "Select Timezone",
                     min_width: "7rem",
                     SelectValue {}
@@ -243,17 +243,89 @@ fn from_total_minutes(total: i64) -> (Date, u8, u8) {
 }
 
 #[component]
-pub fn DateAndTimePicker(#[props(default)] on_change: EventHandler<DateTimeRange>) -> Element {
+pub fn DateAndTimePicker(
+    #[props(default)] on_change: EventHandler<DateTimeRange>,
+    #[props(default)] initial_started_at: Option<i64>,
+    #[props(default)] initial_ended_at: Option<i64>,
+) -> Element {
     let now = OffsetDateTime::now_utc();
     let next_hour = (now.hour() + 1) % 24;
     let today = now.date();
     let tomorrow = today.saturating_add(1.days());
-    let mut selected_start_date = use_signal(|| Some(today));
-    let mut selected_end_date = use_signal(|| Some(tomorrow));
-    let mut start_hour = use_signal(move || next_hour);
-    let mut start_minute = use_signal(|| 0u8);
-    let mut end_hour = use_signal(move || next_hour);
-    let mut end_minute = use_signal(|| 0u8);
+
+    let start_dt_opt = initial_started_at
+        .and_then(|ms| OffsetDateTime::from_unix_timestamp(ms / 1000).ok());
+    let end_dt_opt = initial_ended_at
+        .and_then(|ms| OffsetDateTime::from_unix_timestamp(ms / 1000).ok());
+
+    let (
+        init_start_date,
+        init_start_h,
+        init_start_m,
+        init_end_date,
+        init_end_h,
+        init_end_m,
+    ) = match (start_dt_opt, end_dt_opt) {
+        (Some(start_dt), Some(end_dt)) => {
+            // If the provided end is before start, clamp end to be start + 1 day.
+            let clamped_end = if end_dt >= start_dt {
+                end_dt
+            } else {
+                start_dt + 1.days()
+            };
+
+            (
+                start_dt.date(),
+                start_dt.hour(),
+                start_dt.minute(),
+                clamped_end.date(),
+                clamped_end.hour(),
+                clamped_end.minute(),
+            )
+        }
+        (Some(start_dt), None) => {
+            // Derive end from start when only start is provided.
+            let end_dt = start_dt + 1.days();
+            (
+                start_dt.date(),
+                start_dt.hour(),
+                start_dt.minute(),
+                end_dt.date(),
+                end_dt.hour(),
+                end_dt.minute(),
+            )
+        }
+        (None, Some(end_dt)) => {
+            // Derive start from end when only end is provided.
+            let start_dt = end_dt - 1.days();
+            (
+                start_dt.date(),
+                start_dt.hour(),
+                start_dt.minute(),
+                end_dt.date(),
+                end_dt.hour(),
+                end_dt.minute(),
+            )
+        }
+        (None, None) => {
+            // Preserve existing defaults when neither side is provided.
+            (
+                today,
+                next_hour,
+                0,
+                tomorrow,
+                next_hour,
+                0,
+            )
+        }
+    };
+
+    let mut selected_start_date = use_signal(|| Some(init_start_date));
+    let mut selected_end_date = use_signal(|| Some(init_end_date));
+    let mut start_hour = use_signal(move || init_start_h);
+    let mut start_minute = use_signal(move || init_start_m);
+    let mut end_hour = use_signal(move || init_end_h);
+    let mut end_minute = use_signal(move || init_end_m);
     let format = format_description::parse("[year]-[month]-[day]").unwrap();
 
     let emit = move || {
@@ -290,8 +362,8 @@ pub fn DateAndTimePicker(#[props(default)] on_change: EventHandler<DateTimeRange
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
         div { class: "flex items-center w-full @container",
-            div { class: "flex flex-row gap-4 items-center w-full @max-sm:flex-col",
-                div { class: "flex flex-row flex-1 gap-4 items-center min-w-0 @max-sm:flex-col @max-sm:w-full",
+            div { class: "flex flex-row gap-4 items-center w-full @max-mobile:flex-col",
+                div { class: "flex flex-row flex-1 gap-4 items-center min-w-0 @max-mobile:flex-col @max-mobile:w-full",
                     DatePicker {
                         selected_date: selected_start_date(),
                         on_value_change: move |v| {
@@ -317,7 +389,7 @@ pub fn DateAndTimePicker(#[props(default)] on_change: EventHandler<DateTimeRange
 
                 div { class: "h-[0.5px] w-[15px] bg-text-secondary max-tablet:hidden" }
 
-                div { class: "flex flex-row flex-1 gap-4 items-center min-w-0 @max-sm:flex-col @max-sm:w-full",
+                div { class: "flex flex-row flex-1 gap-4 items-center min-w-0 @max-mobile:flex-col @max-mobile:w-full",
                     DatePicker {
                         selected_date: selected_end_date(),
                         on_value_change: move |v| {
@@ -346,7 +418,7 @@ pub fn DateAndTimePicker(#[props(default)] on_change: EventHandler<DateTimeRange
 #[component]
 pub fn DatePicker(props: DatePickerProps) -> Element {
     rsx! {
-        div { class: "flex flex-1 min-w-0 @max-sm:w-full",
+        div { class: "flex flex-1 min-w-0 @max-mobile:w-full",
             date_picker::DatePicker {
                 class: "flex-1 w-full date-picker",
                 on_value_change: props.on_value_change,
@@ -395,15 +467,15 @@ pub fn DateRangePicker(props: DateRangePickerProps) -> Element {
 pub fn DatePickerInput(#[props(default)] date: String) -> Element {
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
-        div { class: "flex-1 w-full grow date-picker-group @max-sm:w-full",
+        div { class: "flex-1 w-full grow date-picker-group @max-mobile:w-full",
             DatePickerPopoverTrigger {
-                div { class: "flex flex-row justify-between items-center w-full min-w-0 h-8 rounded-[8px] @max-sm:w-full",
+                div { class: "flex flex-row justify-between items-center w-full min-w-0 h-8 rounded-[8px] @max-mobile:w-full",
                     span { class: "grow", {date} }
 
                     icons::calendar::CalendarToday {
                         width: "20",
                         height: "20",
-                        class: "border-[0px] shrink-0 text-web-font-primary [&>path]:stroke-current",
+                        class: "border-[0px] shrink-0 text-icon-primary [&>path]:stroke-current [&>path]:fill-none [&>rect]:fill-none [&>rect]:stroke-current",
                     }
                 }
             }

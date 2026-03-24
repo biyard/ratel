@@ -1,4 +1,5 @@
 use super::*;
+use dioxus_primitives::{ContentAlign, ContentSide};
 mod question_tab;
 
 use question_tab::*;
@@ -9,7 +10,7 @@ pub fn PollCreatorPage(
     poll_id: ReadSignal<SpacePollEntityType>,
 ) -> Element {
     let tr: CreatorTranslate = use_translate();
-    let ctx = Context::init(space_id, poll_id)?;
+    let mut ctx = Context::init(space_id, poll_id)?;
 
     rsx! {
         div { class: "flex flex-col gap-4 w-full",
@@ -52,6 +53,48 @@ pub fn PollCreatorPage(
                         },
                     }
 
+                    // Response Editable toggle
+                    Card { class: "mt-4",
+                        div { class: "flex justify-between items-center self-stretch border-b border-separator",
+                            div { class: "flex gap-1 items-center",
+                                p { class: "font-semibold font-raleway text-[15px]/[18px] tracking-[-0.16px] text-web-font-primary",
+                                    {tr.response_editable_title}
+                                }
+                                Tooltip {
+                                    TooltipTrigger {
+                                        icons::help_support::Info {
+                                            width: "14",
+                                            height: "14",
+                                            class: "cursor-help text-web-font-neutral [&>path]:stroke-current [&>circle]:fill-current [&>path]:fill-none",
+                                        }
+                                    }
+                                    TooltipContent {
+                                        side: ContentSide::Bottom,
+                                        align: ContentAlign::Start,
+                                        p { class: "w-72", {tr.response_editable_desc} }
+                                    }
+                                }
+                            }
+
+                            Switch {
+                                active: ctx.poll().response_editable && !ctx.poll().encrypted_upload_enabled,
+                                disabled: ctx.poll().encrypted_upload_enabled,
+                                on_toggle: move |_| async move {
+                                    let enabled = !ctx.poll().response_editable;
+                                    let _ = update_poll(
+                                            space_id(),
+                                            poll_id(),
+                                            UpdatePollRequest::ResponseEditable {
+                                                response_editable: enabled,
+                                            },
+                                        )
+                                        .await;
+                                    ctx.poll.restart();
+                                },
+                            }
+                        }
+                    }
+
                     // Encrypted Upload toggle
                     Card { class: "mt-4",
                         div { class: "flex justify-between items-center self-stretch py-4 px-5 border-b border-separator",
@@ -75,6 +118,7 @@ pub fn PollCreatorPage(
                                             },
                                         )
                                         .await;
+                                    ctx.poll.restart();
                                 },
                             }
                         }
@@ -117,5 +161,20 @@ translate! {
     encrypted_upload_desc: {
         en: "Encrypt vote results and store on-chain for transparency. Once enabled, responses cannot be edited after submission.",
         ko: "투표 결과를 암호화하여 온체인에 저장합니다. 활성화하면 제출 후 응답을 수정할 수 없습니다.",
+    }
+
+    response_editable_title: {
+        en: "Allow Response Editing",
+        ko: "응답 수정 허용",
+    }
+
+    response_editable_desc: {
+        en: "Participants can modify their submitted responses while the poll is in progress.",
+        ko: "투표 진행 중 참여자가 제출한 응답을 수정할 수 있습니다.",
+    }
+
+    response_editable_tooltip: {
+        en: "When enabled, participants can go back and change their answers after submitting. Disabled automatically when Encrypted Upload is on.",
+        ko: "활성화하면 참여자가 제출 후에도 응답을 다시 수정할 수 있습니다. 암호화 업로드가 켜져 있으면 자동으로 비활성화됩니다.",
     }
 }

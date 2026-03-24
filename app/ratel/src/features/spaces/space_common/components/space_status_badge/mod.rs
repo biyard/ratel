@@ -12,6 +12,8 @@ pub fn SpaceStatusBadge(status: SpaceStatus) -> Element {
     };
 
     rsx! {
-        Badge { color, variant: BadgeVariant::Rounded, {status.translate(&lang())} }
+        div { class: "shrink-0 whitespace-nowrap",
+            Badge { color, variant: BadgeVariant::Rounded, {status.translate(&lang())} }
+        }
     }
 }
