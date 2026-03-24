@@ -50,13 +50,6 @@ pub fn has_answer_for_question(question: &Question, answer: Option<&Answer>) -> 
         (
             Question::MultipleChoice(_),
             Some(Answer::MultipleChoice {
-                answer: Some(selected),
-                ..
-            }),
-        ) => !selected.is_empty(),
-        (
-            Question::SingleChoice(_),
-            Some(Answer::SingleChoice {
                 other: Some(value),
                 ..
             }),
@@ -64,6 +57,13 @@ pub fn has_answer_for_question(question: &Question, answer: Option<&Answer>) -> 
         (
             Question::MultipleChoice(_),
             Some(Answer::MultipleChoice {
+                answer: Some(selected),
+                ..
+            }),
+        ) => !selected.is_empty(),
+        (
+            Question::SingleChoice(_),
+            Some(Answer::SingleChoice {
                 other: Some(value),
                 ..
             }),
@@ -435,6 +435,7 @@ fn MultipleChoiceViewer(
                     let is_selected = selected.contains(&(opt_idx as i32));
                     let opt_idx = opt_idx as i32;
                     let selected = selected.clone();
+                    let other_value_for_option_click = other_value.clone();
                     let on_change = on_change.clone();
                     rsx! {
                         button {
@@ -453,7 +454,11 @@ fn MultipleChoiceViewer(
                                 on_change
                                     .call(Answer::MultipleChoice {
                                         answer: Some(next),
-                                        other: None,
+                                        other: if other_value_for_option_click.trim().is_empty() {
+                                            None
+                                        } else {
+                                            Some(other_value_for_option_click.clone())
+                                        },
                                     }
                                     )
                             },

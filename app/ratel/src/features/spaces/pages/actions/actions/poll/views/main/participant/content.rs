@@ -30,6 +30,7 @@ pub fn PollContent(
         role,
         poll.space_action.prerequisite,
         space.status,
+        space.join_anytime,
     );
 
     let mut answers: Signal<HashMap<usize, Answer>> = use_signal(|| {

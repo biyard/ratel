@@ -39,6 +39,7 @@ pub async fn respond_quiz(
         role,
         space_action.prerequisite,
         space.status,
+        space.join_anytime,
     ) {
         return Err(SpaceActionQuizError::NotAvailableInCurrentStatus.into());
     }

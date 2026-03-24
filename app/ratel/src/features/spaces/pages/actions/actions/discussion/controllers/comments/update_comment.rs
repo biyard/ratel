@@ -30,22 +30,26 @@ pub async fn update_comment(
         role,
         space_action.prerequisite,
         space.status,
+        space.join_anytime,
     ) {
         return Err(Error::BadRequest(
             "Discussion is not available in the current space status".into(),
         ));
     }
 
-    let space_post_pk = match &discussion_sk_entity {
-        EntityType::SpacePost(id) => Partition::SpacePost(id.clone()),
+    let space_post_id = match &discussion_sk_entity {
+        EntityType::SpacePost(id) => SpacePostPartition(id.clone()),
         _ => return Err(Error::BadRequest("Invalid discussion id".into())),
     };
-    let post = SpacePost::get(cli, &space_post_pk, Some(discussion_sk_entity.clone()))
+    let (post_pk, post_sk) = SpacePost::keys(&space_id, &space_post_id);
+    let post = SpacePost::get(cli, &post_pk, Some(post_sk))
         .await?
         .ok_or(Error::NotFound("Discussion not found".into()))?;
     if post.status() != DiscussionStatus::InProgress {
         return Err(Error::DiscussionNotInProgress);
     }
+
+    let space_post_pk: Partition = space_post_id.into();
 
     let comment_sk_entity: EntityType = comment_sk.into();
 
