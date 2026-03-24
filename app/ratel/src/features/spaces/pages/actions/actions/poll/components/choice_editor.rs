@@ -95,15 +95,19 @@ pub fn ChoiceQuestionEditor(
                 rsx! {
                     div { class: "flex items-center gap-2.5",
                         icons::security::DialPad { class: "w-6 h-6 [&>path]:stroke-[#737373]" }
-                        label { class: "flex items-center cursor-pointer",
-                            input {
-                                r#type: "checkbox",
-                                checked,
-                                class: "sr-only peer",
-                                onchange: move |e| on_toggle_option.call((opt_idx, e.checked())),
-                            }
-                            div { class: "flex w-6 h-6 items-center justify-center rounded-[4px] border-2 border-choice-editor-field-border bg-choice-editor-selector-bg peer-checked:bg-primary peer-checked:border-primary [&>svg]:opacity-0 peer-checked:[&>svg]:opacity-100",
-                                icons::validations::Check { class: "w-5 h-5 [&>path]:stroke-[#0A0A0A]" }
+                        button {
+                            r#type: "button",
+                            class: "flex h-6 w-6 items-center justify-center rounded-[4px] border-2 border-choice-editor-field-border bg-choice-editor-selector-bg data-[checked=true]:border-primary data-[checked=true]:bg-primary",
+                            "data-checked": checked,
+                            onclick: move |_| on_toggle_option.call((opt_idx, !checked)),
+                            if checked {
+                                icons::validations::Check {
+                                    class: "w-5 h-5 opacity-100 [&>path]:stroke-[#0A0A0A]"
+                                }
+                            } else {
+                                icons::validations::Check {
+                                    class: "w-5 h-5 opacity-0 [&>path]:stroke-[#0A0A0A]"
+                                }
                             }
                         }
                     }
@@ -116,6 +120,7 @@ pub fn ChoiceQuestionEditor(
 
             rsx! {
                 ChoiceOptionRow {
+                    key: "choice-option-{opt_idx}",
                     value: option.clone(),
                     placeholder: format!("Option {}", opt_idx + 1),
                     leading,
