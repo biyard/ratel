@@ -3,7 +3,7 @@ use i18n::CreateActionModalTranslate;
 mod i18n;
 
 #[component]
-pub fn CreateActionModal(space_id: ReadSignal<SpacePartition>) -> Element {
+pub fn CreateActionModal(space_id: SpacePartition) -> Element {
     let tr: CreateActionModalTranslate = use_translate();
     let nav = navigator();
     let mut layover = use_layover();
@@ -20,26 +20,32 @@ pub fn CreateActionModal(space_id: ReadSignal<SpacePartition>) -> Element {
         }
     };
 
-    let create_action = move |_| async move {
-        let selected = selected_type();
-        if selected.is_none() {
-            return;
-        }
+    let create_action = {
+        let space_id = space_id.clone();
+        move |_| {
+            let space_id = space_id.clone();
+            async move {
+                let selected = selected_type();
+                if selected.is_none() {
+                    return;
+                }
 
-        let selected = selected.unwrap();
-        if is_creating() {
-            return;
-        }
-        is_creating.set(true);
-        match selected.create(space_id()).await {
-            Ok(url) => {
-                is_creating.set(false);
-                nav.push(url);
-                layover.close();
-            }
-            Err(err) => {
-                error!("Failed to create action: {:?}", err);
-                is_creating.set(false);
+                let selected = selected.unwrap();
+                if is_creating() {
+                    return;
+                }
+                is_creating.set(true);
+                match selected.create(space_id).await {
+                    Ok(url) => {
+                        is_creating.set(false);
+                        nav.push(url);
+                        layover.close();
+                    }
+                    Err(err) => {
+                        error!("Failed to create action: {:?}", err);
+                        is_creating.set(false);
+                    }
+                }
             }
         }
     };
