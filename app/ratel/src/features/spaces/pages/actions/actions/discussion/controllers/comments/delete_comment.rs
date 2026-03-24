@@ -29,9 +29,7 @@ pub async fn delete_comment(
         space.status,
         space.join_anytime,
     ) {
-        return Err(Error::BadRequest(
-            "Discussion is not available in the current space status".into(),
-        ));
+        return Err(SpaceActionDiscussionError::NotAvailableInCurrentStatus.into());
     }
 
     let (post_pk, post_sk) = SpacePost::keys(&space_id, &space_post_id);

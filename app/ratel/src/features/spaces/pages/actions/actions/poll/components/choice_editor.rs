@@ -95,7 +95,8 @@ pub fn ChoiceQuestionEditor(
                     div { class: "flex items-center gap-2.5",
                         icons::security::DialPad { class: "w-6 h-6 [&>path]:stroke-[#737373]" }
                         label {
-                            class: "flex items-center cursor-pointer",
+                            class: "group flex items-center cursor-pointer",
+                            "aria-selected": checked,
                             onclick: move |evt| {
                                 evt.prevent_default();
                                 on_toggle_option.call((opt_idx, !checked));
@@ -108,12 +109,9 @@ pub fn ChoiceQuestionEditor(
                                 onchange: move |_| {},
                             }
                             div {
-                                class: "flex h-6 w-6 items-center justify-center rounded-[4px] border-2 border-choice-editor-field-border bg-choice-editor-selector-bg",
-                                class: if checked { "border-primary bg-primary" } else { "" },
-                                if checked {
-                                    icons::validations::Check { class: "w-5 h-5 opacity-100 [&>path]:stroke-[#0A0A0A]" }
-                                } else {
-                                    icons::validations::Check { class: "w-5 h-5 opacity-0 [&>path]:stroke-[#0A0A0A]" }
+                                class: "flex h-6 w-6 items-center justify-center rounded-[4px] border-2 border-choice-editor-field-border bg-choice-editor-selector-bg group-aria-selected:border-primary group-aria-selected:bg-primary",
+                                icons::validations::Check {
+                                    class: "w-5 h-5 opacity-0 group-aria-selected:opacity-100 [&>path]:stroke-[#0A0A0A]"
                                 }
                             }
                         }

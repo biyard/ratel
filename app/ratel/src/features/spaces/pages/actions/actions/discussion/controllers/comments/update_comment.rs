@@ -32,9 +32,7 @@ pub async fn update_comment(
         space.status,
         space.join_anytime,
     ) {
-        return Err(Error::BadRequest(
-            "Discussion is not available in the current space status".into(),
-        ));
+        return Err(SpaceActionDiscussionError::NotAvailableInCurrentStatus.into());
     }
 
     let space_post_id = match &discussion_sk_entity {
