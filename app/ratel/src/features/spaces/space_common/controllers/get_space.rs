@@ -4,7 +4,6 @@ use crate::common::types::{FeedPartition, Partition, SpacePartition};
 use crate::features::posts::models::Post;
 use crate::features::posts::types::{BoosterType, SpaceType};
 use crate::features::spaces::space_common::*;
-use crate::features::spaces::space_common::{InvitationStatus, SpaceInvitationMember};
 
 #[get("/api/spaces/{space_id}", user: OptionalUser)]
 pub async fn get_space(space_id: SpacePartition) -> Result<SpaceResponse> {

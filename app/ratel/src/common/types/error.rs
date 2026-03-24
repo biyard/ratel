@@ -177,6 +177,12 @@ pub enum Error {
     #[translate(from)]
     SpaceActionQuiz(#[from] crate::features::spaces::pages::actions::actions::quiz::SpaceActionQuizError),
 
+    #[error("{0}")]
+    #[translate(from)]
+    SpaceActionDiscussion(
+        #[from] crate::features::spaces::pages::actions::actions::discussion::SpaceActionDiscussionError,
+    ),
+
     // Post related errors
     #[error("Invalid username")]
     #[translate(en = "Invalid username. Check URL.", ko = "유효하지 않은 사용자 이름입니다. URL을 확인해주세요.")]
@@ -242,6 +248,7 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             Error::NotFound(_) => StatusCode::NOT_FOUND,
             Error::SpaceReward(e) => e.status_code(),
             Error::SpaceActionQuiz(e) => e.status_code(),
+            Error::SpaceActionDiscussion(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
@@ -297,6 +304,7 @@ impl dioxus::fullstack::AsStatusCode for Error {
             Error::NotFound(_) => StatusCode::NOT_FOUND,
             Error::SpaceReward(e) => e.status_code(),
             Error::SpaceActionQuiz(e) => e.status_code(),
+            Error::SpaceActionDiscussion(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

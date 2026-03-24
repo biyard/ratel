@@ -18,7 +18,7 @@ pub fn QuizTab(can_edit: bool) -> Element {
     rsx! {
         div { class: "flex w-full flex-col gap-6",
             div { class: "flex flex-col gap-1",
-                label { class: "text-sm font-medium text-neutral-400 light:text-text-secondary",
+                label { class: "text-sm font-medium text-quiz-tab-label",
                     "{tr.survey_time_label}"
                 }
                 TimeRangeDisplay {
@@ -27,7 +27,7 @@ pub fn QuizTab(can_edit: bool) -> Element {
                 }
             }
             div { class: "flex flex-col gap-1",
-                label { class: "text-sm font-medium text-neutral-400 light:text-text-secondary",
+                label { class: "text-sm font-medium text-quiz-tab-label",
                     "{tr.pass_score_label}"
                 }
                 Input {
@@ -51,7 +51,7 @@ pub fn QuizTab(can_edit: bool) -> Element {
                 }
             }
             div { class: "flex flex-col gap-1",
-                label { class: "text-sm font-medium text-neutral-400 light:text-text-secondary",
+                label { class: "text-sm font-medium text-quiz-tab-label",
                     "{tr.retry_label}"
                 }
                 Input {
@@ -85,7 +85,7 @@ pub fn QuizTab(can_edit: bool) -> Element {
                 }
             } else {
                 if questions.read().is_empty() {
-                    div { class: "flex justify-center items-center py-10 text-neutral-500 light:text-text-secondary",
+                    div { class: "flex justify-center items-center py-10 text-quiz-tab-empty",
                         "{tr.no_questions}"
                     }
                 }
@@ -99,7 +99,7 @@ pub fn QuizTab(can_edit: bool) -> Element {
                         rsx! {
                             div {
                                 key: "quiz-view-question-{idx}",
-                                class: "rounded-lg border border-neutral-700 bg-neutral-900 p-4 light:border-input-box-border light:bg-input-box-bg",
+                                class: "rounded-lg border border-quiz-tab-preview-border bg-quiz-tab-preview-bg p-4",
                                 QuestionViewer {
                                     index: idx,
                                     total: questions.read().len(),
