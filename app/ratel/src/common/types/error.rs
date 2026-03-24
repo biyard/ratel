@@ -60,6 +60,10 @@ pub enum Error {
     #[translate(en = "Not found", ko = "찾을 수 없습니다.")]
     NotFound(String),
 
+    #[error("Invitation not found")]
+    #[translate(en = "Invitation not found", ko = "초대 항목을 찾을 수 없습니다.")]
+    InvitationNotFound,
+
     #[error("User has no permission")]
     #[translate(en = "No permission", ko = "권한이 없습니다.")]
     NoPermission,
@@ -177,6 +181,12 @@ pub enum Error {
     #[translate(from)]
     SpaceActionQuiz(#[from] crate::features::spaces::pages::actions::actions::quiz::SpaceActionQuizError),
 
+    #[error("{0}")]
+    #[translate(from)]
+    SpaceActionDiscussion(
+        #[from] crate::features::spaces::pages::actions::actions::discussion::SpaceActionDiscussionError,
+    ),
+
     // Post related errors
     #[error("Invalid username")]
     #[translate(en = "Invalid username. Check URL.", ko = "유효하지 않은 사용자 이름입니다. URL을 확인해주세요.")]
@@ -239,9 +249,10 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             | Error::FullQuota
             | Error::AlreadyParticipating
             | Error::ParticipationNotOpen => StatusCode::BAD_REQUEST,
-            Error::NotFound(_) => StatusCode::NOT_FOUND,
+            Error::NotFound(_) | Error::InvitationNotFound => StatusCode::NOT_FOUND,
             Error::SpaceReward(e) => e.status_code(),
             Error::SpaceActionQuiz(e) => e.status_code(),
+            Error::SpaceActionDiscussion(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
@@ -294,9 +305,10 @@ impl dioxus::fullstack::AsStatusCode for Error {
             | Error::NotFoundVerificationCode
             | Error::ExpiredVerification
             | Error::InvalidVerificationCode => StatusCode::BAD_REQUEST,
-            Error::NotFound(_) => StatusCode::NOT_FOUND,
+            Error::NotFound(_) | Error::InvitationNotFound => StatusCode::NOT_FOUND,
             Error::SpaceReward(e) => e.status_code(),
             Error::SpaceActionQuiz(e) => e.status_code(),
+            Error::SpaceActionDiscussion(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

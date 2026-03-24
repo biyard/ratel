@@ -15,12 +15,29 @@ use space_visibility_setting::*;
 
 const DEFAULT_PROFILE_IMAGE: &str = "https://metadata.ratel.foundation/ratel/default-profile.png";
 
-fn normalize_email_input(raw: &str) -> Result<String> {
-    let email = raw.trim().to_ascii_lowercase();
-    if email.is_empty() || !email.contains('@') {
+fn normalize_email_inputs(raw: &str) -> Result<Vec<String>> {
+    let emails: Vec<String> = raw
+        .split(',')
+        .map(|value| value.trim().to_ascii_lowercase())
+        .filter(|value| !value.is_empty())
+        .collect();
+
+    if emails.is_empty() {
         return Err(Error::InvalidEmail);
     }
-    Ok(email)
+
+    let mut normalized = Vec::new();
+    for email in emails {
+        if !email.contains('@') {
+            return Err(Error::InvalidEmail);
+        }
+
+        if !normalized.iter().any(|value| value == &email) {
+            normalized.push(email);
+        }
+    }
+
+    Ok(normalized)
 }
 
 #[component]
@@ -32,7 +49,7 @@ pub fn SpaceGeneralAppPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let mut loading = use_signal(|| false);
 
     rsx! {
-        div { class: "flex overflow-visible flex-col gap-5 self-start pb-6 w-full min-w-0 shrink-0 max-w-[1024px] max-tablet:gap-4 text-web-font-primary",
+        div { class: "flex overflow-visible flex-col gap-5 self-start pb-6 min-w-0 shrink-0 w-full max-tablet:gap-4 text-web-font-primary",
             h3 { class: "font-bold font-raleway text-[24px]/[28px] tracking-[-0.24px] text-web-font-primary",
                 {tr.space_setting}
             }

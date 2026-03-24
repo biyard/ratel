@@ -69,8 +69,7 @@ pub fn ChoiceQuestionEditor(
     question: ChoiceQuestion,
     is_single: bool,
     on_change: EventHandler<Question>,
-    #[props(default = true)]
-    show_allow_other: bool,
+    #[props(default = true)] show_allow_other: bool,
     #[props(default)] selected_options: Vec<i32>,
     #[props(default)] on_toggle_option: Option<EventHandler<(usize, bool)>>,
     #[props(default)] on_save: Option<EventHandler<()>>,
@@ -95,15 +94,22 @@ pub fn ChoiceQuestionEditor(
                 rsx! {
                     div { class: "flex items-center gap-2.5",
                         icons::security::DialPad { class: "w-6 h-6 [&>path]:stroke-[#737373]" }
-                        label { class: "flex items-center cursor-pointer",
+                        label {
+                            class: "group flex items-center cursor-pointer",
+                            "aria-selected": checked,
+                            onclick: move |evt| {
+                                evt.prevent_default();
+                                on_toggle_option.call((opt_idx, !checked));
+                            },
                             input {
                                 r#type: "checkbox",
                                 checked,
-                                class: "sr-only peer",
-                                onchange: move |e| on_toggle_option.call((opt_idx, e.checked())),
+                                tabindex: "-1",
+                                class: "sr-only pointer-events-none",
+                                onchange: move |_| {},
                             }
-                            div { class: "flex w-6 h-6 items-center justify-center rounded-[4px] border-2 border-choice-editor-field-border bg-choice-editor-selector-bg peer-checked:bg-primary peer-checked:border-primary [&>svg]:opacity-0 peer-checked:[&>svg]:opacity-100",
-                                icons::validations::Check { class: "w-5 h-5 [&>path]:stroke-[#0A0A0A]" }
+                            div { class: "flex h-6 w-6 items-center justify-center rounded-[4px] border-2 border-choice-editor-field-border bg-choice-editor-selector-bg group-aria-selected:border-primary group-aria-selected:bg-primary",
+                                icons::validations::Check { class: "w-4 h-4 opacity-0 group-aria-selected:opacity-100 [&>path]:stroke-[#0A0A0A]" }
                             }
                         }
                     }
@@ -116,6 +122,7 @@ pub fn ChoiceQuestionEditor(
 
             rsx! {
                 ChoiceOptionRow {
+                    key: "choice-option-{opt_idx}",
                     value: option.clone(),
                     placeholder: format!("Option {}", opt_idx + 1),
                     leading,
@@ -206,7 +213,7 @@ pub fn ChoiceQuestionEditor(
         }
         if show_allow_other {
             div { class: "flex w-full items-center justify-between pt-2",
-                span { class: "text-sm text-choice-editor-action", {tr.allow_other} }
+                span { class: "text-sm text-text-primary", {tr.allow_other} }
                 Switch {
                     active: question.allow_other.unwrap_or(false),
                     on_toggle: move |_| {

@@ -1,4 +1,5 @@
 use crate::features::spaces::space_common::*;
+use crate::features::spaces::space_common::providers::use_space_context;
 
 translate! {
     SpaceEndModalTranslate;
@@ -23,14 +24,14 @@ translate! {
 
 #[component]
 pub fn SpaceEndModal(
-    space_id: ReadSignal<SpacePartition>,
-    #[props(default)] on_ended: Option<EventHandler<()>>,
+    space_id: SpacePartition,
     #[props(default)] on_close: Option<EventHandler<()>>,
 ) -> Element {
     let tr: SpaceEndModalTranslate = use_translate();
     let mut popup = use_popup();
     let mut toast = use_toast();
     let mut is_ending = use_signal(|| false);
+    let mut ctx = use_space_context();
 
     let on_cancel = move |_| {
         if let Some(handler) = on_close.as_ref() {
@@ -49,20 +50,19 @@ pub fn SpaceEndModal(
         let mut is_ending = is_ending;
         let mut popup = popup;
         let mut toast = toast;
-        let on_ended = on_ended.clone();
+        let space_id = space_id.clone();
+        let mut ctx = ctx;
 
         spawn(async move {
             let res = update_space(
-                space_id(),
+                space_id,
                 controllers::UpdateSpaceRequest::Finish { finished: true },
             )
             .await;
 
             match res {
                 Ok(_) => {
-                    if let Some(handler) = on_ended {
-                        handler.call(());
-                    }
+                    ctx.space.restart();
                     popup.close();
                 }
                 Err(err) => {
