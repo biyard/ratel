@@ -256,14 +256,14 @@ fn InvitationMemberRow(
             icons::ratel::CheckIcon {
                 width: "16",
                 height: "16",
-                class: "w-4 h-4 text-green-600",
+                class: "w-4 h-4 text-icon-success",
             }
         },
         InvitationStatus::Declined => rsx! {
             icons::ratel::XMarkIcon {
                 width: "16",
                 height: "16",
-                class: "w-4 h-4 text-red-500",
+                class: "w-4 h-4 text-icon-error",
             }
         },
 

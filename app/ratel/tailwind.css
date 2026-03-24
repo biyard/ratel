@@ -721,6 +721,8 @@ a {
 @theme static {
   --color-icon-primary: #737373;
   --color-icon-secondary: var(--dark, #ffffff) var(--light, #262626);
+  --color-icon-success: var(--dark, #16a34a) var(--light, #16a34a);
+  --color-icon-error: var(--dark, #ef4444) var(--light, #ef4444);
 }
 
 /* ==========================================================================
@@ -827,6 +829,14 @@ h3 {
   /* Icon Colors */
   .text-icon-primary {
     color: var(--color-icon-primary);
+  }
+
+  .text-icon-success {
+    color: var(--color-icon-success);
+  }
+
+  .text-icon-error {
+    color: var(--color-icon-error);
   }
 
   /* Space Dashboard Fonts */
