@@ -5,10 +5,10 @@ use crate::common::SpaceVisibility;
 use crate::features::posts::models::Post;
 use crate::features::posts::types::TeamGroupPermission;
 use crate::features::spaces::models::{
-    InvitationStatus, PanelAttribute, SpaceInvitationMember, SpacePanelParticipant,
-    SpacePanelQuota, SpaceParticipant,
+    PanelAttribute, SpacePanelParticipant, SpacePanelQuota, SpaceParticipant,
 };
 use crate::features::spaces::*;
+use crate::spaces::{InvitationStatus, SpaceInvitationMember};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct ParticipateSpaceResponse {
