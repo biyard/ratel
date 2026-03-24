@@ -718,9 +718,9 @@ a {
     var(--light, #cacaca);
   --color-btn-outline-disable-text: var(--dark, #8e8e8e) var(--light, #848484);
 
-  /* Action Settings */
-  --color-btn-action-settings-bg: var(--dark, #0a0a0a) var(--light, #ffffff);
-  --color-btn-action-settings-text: var(--dark, #ffffff) var(--light, #0a0a0a);
+  /* Action Settings (dark: white bg / black text+icon, light: black bg / white text+icon) */
+  --color-btn-action-settings-bg: var(--dark, #ffffff) var(--light, #0a0a0a);
+  --color-btn-action-settings-text: var(--dark, #0a0a0a) var(--light, #ffffff);
   --color-btn-action-settings-icon: var(--dark, #0a0a0a) var(--light, #ffffff);
 }
 
