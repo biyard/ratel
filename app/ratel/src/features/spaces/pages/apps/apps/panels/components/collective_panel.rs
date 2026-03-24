@@ -118,7 +118,7 @@ pub fn CollectivePanel(
                                 icons::help_support::Info {
                                     width: "16",
                                     height: "16",
-                                    class: "h-4 w-4 [&>path]:stroke-text-secondary [&>circle]:fill-text-secondary cursor-help",
+                                    class: "h-4 w-4 [&>path]:stroke-text-secondary [&>path]:fill-none [&>circle]:stroke-text-secondary [&>circle]:fill-none cursor-pointer",
                                 }
                             }
                             TooltipContent {
@@ -138,7 +138,11 @@ pub fn CollectivePanel(
                                 onclick: move |_| {
                                     show_menu.set(!show_menu());
                                 },
-                                icons::validations::Add { width: "16", height: "16", class: "h-4 w-4 [&>path]:stroke-current" }
+                                icons::validations::Add {
+                                    width: "16",
+                                    height: "16",
+                                    class: "h-4 w-4 [&>path]:stroke-current",
+                                }
                             }
                             if show_menu() {
                                 div { class: "absolute right-0 top-10 z-10 flex flex-col gap-1 p-2 min-w-[120px] rounded-lg border border-input-box-border bg-popover shadow-lg",
