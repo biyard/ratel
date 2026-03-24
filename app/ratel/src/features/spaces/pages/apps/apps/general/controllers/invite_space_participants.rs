@@ -151,7 +151,7 @@ pub async fn invite_space_participants(
             .ok_or_else(|| Error::BadRequest(format!("Invalid email: {}", raw_email)))?;
 
         if !seen.insert(email.clone()) {
-            return Err(Error::BadRequest(format!("Duplicate email: {}", email)));
+            continue;
         }
 
         let (users, _) =
@@ -167,7 +167,7 @@ pub async fn invite_space_participants(
             .await?
             .is_some()
         {
-            return Err(Error::BadRequest(format!("Already participant: {}", email)));
+            continue;
         }
 
         let (invitation_pk, invitation_sk) =
@@ -179,7 +179,7 @@ pub async fn invite_space_participants(
                 existing_invitation.status,
                 InvitationStatus::Pending | InvitationStatus::Invited
             ) {
-                return Err(Error::BadRequest(format!("Already invited: {}", email)));
+                continue;
             }
         }
 
