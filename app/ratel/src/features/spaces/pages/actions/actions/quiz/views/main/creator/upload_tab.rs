@@ -127,14 +127,14 @@ pub fn UploadTab(can_edit: bool) -> Element {
                             icons::ratel::Cloud {
                                 width: "64",
                                 height: "64",
-                                class: "text-quiz-upload-meta [&>path]:stroke-current",
+                                class: "text-quiz-upload-meta [&>path]:stroke-current [&>path]:fill-none",
                             }
                             div { class: "text-[15px]/[18px] font-bold text-text-primary",
                                 {tr.upload_drop_title}
                             }
                         }
                         div { class: "flex flex-col w-full justify-center items-center gap-2.5",
-                            div { class: "inline-flex h-11 min-w-[118px] items-center justify-center gap-2 rounded-full border border-white bg-white px-5 text-quiz-upload-cta-text transition-colors hover:bg-white/90",
+                            div { class: "inline-flex h-11 min-w-[118px] items-center justify-center gap-2 rounded-full border border-quiz-upload-cta-bg bg-quiz-upload-cta-bg px-5 text-quiz-upload-cta-text transition-opacity hover:opacity-90",
                                 icons::upload_download::Upload2 {
                                     width: "20",
                                     height: "20",

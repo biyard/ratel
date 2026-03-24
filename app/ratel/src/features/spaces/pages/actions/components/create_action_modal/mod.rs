@@ -46,7 +46,7 @@ pub fn CreateActionModal(space_id: ReadSignal<SpacePartition>) -> Element {
 
     rsx! {
 
-        div { class: "flex flex-col flex-1 min-h-0 bg-neutral-900 light:bg-neutral-200",
+        div { class: "flex flex-col flex-1 min-h-0 bg-action-modal-bg",
             // Scrollable content area
             div { class: "flex overflow-y-auto flex-col gap-5 p-[1.875rem] grow",
                 // 2x2 grid of action type options
@@ -61,7 +61,7 @@ pub fn CreateActionModal(space_id: ReadSignal<SpacePartition>) -> Element {
                             icons::file::File {
                                 width: "22",
                                 height: "22",
-                                class: "[&>path]:fill-none [&>path]:stroke-neutral-900",
+                                class: "[&>path]:fill-none [&>path]:stroke-action-type-icon-stroke",
                             }
                         },
                     }
@@ -75,7 +75,7 @@ pub fn CreateActionModal(space_id: ReadSignal<SpacePartition>) -> Element {
                             icons::validations::Check {
                                 width: "22",
                                 height: "22",
-                                class: "[&>path]:fill-none [&>path]:stroke-neutral-900",
+                                class: "[&>path]:fill-none [&>path]:stroke-action-type-icon-stroke",
                             }
                         },
                     }
@@ -89,7 +89,7 @@ pub fn CreateActionModal(space_id: ReadSignal<SpacePartition>) -> Element {
                             icons::chat::Discuss {
                                 width: "22",
                                 height: "22",
-                                class: "[&>path]:fill-none [&>path]:stroke-neutral-900",
+                                class: "[&>path]:fill-none [&>path]:stroke-action-type-icon-stroke",
                             }
                         },
                     }
@@ -103,7 +103,7 @@ pub fn CreateActionModal(space_id: ReadSignal<SpacePartition>) -> Element {
                             icons::user::UserGroup {
                                 width: "22",
                                 height: "22",
-                                class: "[&>path]:fill-none [&>path]:stroke-neutral-900",
+                                class: "[&>path]:fill-none [&>path]:stroke-action-type-icon-stroke",
                             }
                         },
                     }
@@ -115,16 +115,16 @@ pub fn CreateActionModal(space_id: ReadSignal<SpacePartition>) -> Element {
             }
 
             // Bottom bar
-            div { class: "flex gap-5 justify-end items-center px-5 border-t h-[5.25rem] border-neutral-800 light:border-neutral-300 shrink-0",
+            div { class: "flex gap-5 justify-end items-center px-5 border-t h-[5.25rem] border-card-border shrink-0",
                 Button {
-                    class: "hover:opacity-80 !px-5 !py-3 !text-[0.875rem]/[1rem] !font-bold !text-white light:!text-neutral-900"
+                    class: "hover:opacity-80 !px-5 !py-3 !text-[0.875rem]/[1rem] !font-bold !text-text-primary"
                         .to_string(),
                     style: ButtonStyle::Text,
                     onclick: close_layover,
                     {tr.back}
                 }
                 Button {
-                    class: "hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed !px-5 !py-3 !rounded-[0.625rem] !text-[0.875rem]/[1rem] !font-bold !bg-yellow-400 light:!bg-yellow-500 !text-neutral-900"
+                    class: "hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed !px-5 !py-3 !rounded-[0.625rem] !text-[0.875rem]/[1rem] !font-bold !bg-btn-primary-bg !text-btn-primary-text"
                         .to_string(),
                     style: ButtonStyle::Text,
                     shape: ButtonShape::Square,
@@ -159,13 +159,13 @@ fn ActionPreview(selected: Option<SpaceActionType>, tr: CreateActionModalTransla
         None => {
             return rsx! {
                 SpaceCard {
-                    class: "flex flex-col gap-5 border border-neutral-700 light:border-neutral-300 !bg-neutral-800 light:!bg-white !rounded-[0.75rem] !p-4"
+                    class: "flex flex-col gap-5 border border-action-type-card-border !bg-action-type-card-bg !rounded-[0.75rem] !p-4"
                         .to_string(),
-                    p { class: "font-medium text-white text-[1.0625rem]/[1.25rem] light:text-neutral-900",
+                    p { class: "font-medium text-text-primary text-[1.0625rem]/[1.25rem]",
                         {tr.preview_title}
                     }
-                    div { class: "flex justify-center items-center w-full border h-[14.875rem] rounded-[0.75rem] border-neutral-700 light:border-neutral-300 bg-neutral-950/40 light:bg-neutral-100",
-                        p { class: "text-[0.875rem]/[1.25rem] text-neutral-500 light:text-neutral-400",
+                    div { class: "flex justify-center items-center w-full border h-[14.875rem] rounded-[0.75rem] border-action-type-card-border bg-action-preview-inner-bg",
+                        p { class: "text-[0.875rem]/[1.25rem] text-foreground-muted",
                             {tr.preview_empty}
                         }
                     }
@@ -176,12 +176,12 @@ fn ActionPreview(selected: Option<SpaceActionType>, tr: CreateActionModalTransla
 
     rsx! {
         SpaceCard {
-            class: "flex flex-col gap-3 border border-yellow-400/30 !bg-neutral-800 light:!bg-white !rounded-[0.75rem] !p-4"
+            class: "flex flex-col gap-3 border border-yellow-400/30 !bg-action-type-card-bg !rounded-[0.75rem] !p-4"
                 .to_string(),
-            p { class: "font-medium text-white text-[1.0625rem]/[1.25rem] light:text-neutral-900",
+            p { class: "font-medium text-text-primary text-[1.0625rem]/[1.25rem]",
                 {tr.preview_title}
             }
-            div { class: "flex flex-col gap-3 p-4 w-full border opacity-90 pointer-events-none rounded-[0.75rem] border-neutral-700 light:border-neutral-300 bg-neutral-950/40 light:bg-neutral-100",
+            div { class: "flex flex-col gap-3 p-4 w-full border opacity-90 pointer-events-none rounded-[0.75rem] border-action-type-card-border bg-action-preview-inner-bg",
                 {content}
             }
         }
@@ -193,26 +193,26 @@ fn ActionPreview(selected: Option<SpaceActionType>, tr: CreateActionModalTransla
 fn PollPreview() -> Element {
     rsx! {
         div { class: "flex flex-col gap-3 w-full",
-            div { class: "flex gap-2 items-center text-xs text-neutral-500",
+            div { class: "flex gap-2 items-center text-xs text-foreground-muted",
                 span { "Mar 12, 2026 00:00" }
                 span { "~" }
                 span { "Mar 19, 2026 00:00" }
             }
-            div { class: "p-3 rounded-lg border border-neutral-700 light:border-neutral-300",
-                div { class: "mb-2 text-xs text-neutral-500", "1 / 2" }
-                p { class: "mb-2 text-sm font-medium text-white light:text-neutral-900",
+            div { class: "p-3 rounded-lg border border-action-type-card-border",
+                div { class: "mb-2 text-xs text-foreground-muted", "1 / 2" }
+                p { class: "mb-2 text-sm font-medium text-text-primary",
                     "Which proposal do you support?"
                 }
                 div { class: "flex flex-col gap-1.5",
                     for option in ["Proposal A", "Proposal B", "Proposal C"] {
-                        label { class: "flex gap-2 items-center text-sm text-neutral-300 light:text-neutral-700",
-                            div { class: "rounded-full border-2 size-4 border-neutral-600 light:border-neutral-400" }
+                        label { class: "flex gap-2 items-center text-sm text-action-preview-option-text",
+                            div { class: "rounded-full border-2 size-4 border-action-preview-radio-border" }
                             "{option}"
                         }
                     }
                 }
             }
-            div { class: "py-2 text-sm font-medium text-center text-blue-400 rounded-lg bg-blue-600/20",
+            div { class: "py-2 text-sm font-medium text-center text-action-preview-submit-text rounded-lg bg-action-preview-submit-bg",
                 "Submit"
             }
         }
@@ -225,31 +225,31 @@ fn QuizPreview() -> Element {
     rsx! {
         div { class: "flex flex-col gap-3 w-full",
             div { class: "flex justify-between items-center",
-                div { class: "flex gap-2 items-center text-xs text-neutral-500",
+                div { class: "flex gap-2 items-center text-xs text-foreground-muted",
                     span { "Mar 12, 2026 00:00" }
                     span { "~" }
                     span { "Mar 19, 2026 00:00" }
                 }
             }
-            div { class: "flex gap-2 items-center text-xs text-neutral-400",
+            div { class: "flex gap-2 items-center text-xs text-foreground-muted",
                 span { class: "font-medium", "Remaining submissions:" }
                 span { "3" }
             }
-            div { class: "p-3 rounded-lg border border-neutral-700 light:border-neutral-300",
-                div { class: "mb-2 text-xs text-neutral-500", "1 / 3" }
-                p { class: "mb-2 text-sm font-medium text-white light:text-neutral-900",
+            div { class: "p-3 rounded-lg border border-action-type-card-border",
+                div { class: "mb-2 text-xs text-foreground-muted", "1 / 3" }
+                p { class: "mb-2 text-sm font-medium text-text-primary",
                     "What is the governance threshold?"
                 }
                 div { class: "flex flex-col gap-1.5",
                     for (i , option) in ["51%", "67%", "75%", "90%"].iter().enumerate() {
-                        label { class: "flex gap-2 items-center text-sm text-neutral-300 light:text-neutral-700",
+                        label { class: "flex gap-2 items-center text-sm text-action-preview-option-text",
                             div {
                                 class: format!(
                                     "size-4 rounded-full border-2 {}",
                                     if i == 1 {
                                         "border-yellow-400 bg-yellow-400/30"
                                     } else {
-                                        "border-neutral-600 light:border-neutral-400"
+                                        "border-action-preview-radio-border"
                                     },
                                 ),
                             }
@@ -267,30 +267,30 @@ fn QuizPreview() -> Element {
 fn DiscussionPreview() -> Element {
     rsx! {
         div { class: "flex flex-col gap-3 w-full",
-            h3 { class: "text-base font-bold text-white light:text-neutral-900",
+            h3 { class: "text-base font-bold text-text-primary",
                 "Should we increase the staking reward?"
             }
-            div { class: "flex gap-2 items-center text-xs text-neutral-500",
-                div { class: "rounded-full size-5 bg-neutral-600 light:bg-neutral-300" }
+            div { class: "flex gap-2 items-center text-xs text-foreground-muted",
+                div { class: "rounded-full size-5 bg-action-preview-avatar-bg" }
                 span { class: "font-medium", "alice.eth" }
             }
-            p { class: "text-sm text-neutral-400 light:text-neutral-600 line-clamp-2",
+            p { class: "text-sm text-foreground-muted line-clamp-2",
                 "I propose we increase the staking reward from 5% to 8% to incentivize long-term holders and strengthen network security..."
             }
-            hr { class: "border-neutral-700 light:border-neutral-300" }
-            p { class: "text-sm font-bold text-white light:text-neutral-900", "Comments (2)" }
+            hr { class: "border-action-type-card-border" }
+            p { class: "text-sm font-bold text-text-primary", "Comments (2)" }
             div { class: "flex flex-col gap-2",
-                div { class: "p-2 rounded-lg border border-neutral-700 light:border-neutral-300 bg-neutral-800/50 light:bg-neutral-50",
+                div { class: "p-2 rounded-lg border border-action-type-card-border bg-action-preview-item-bg",
                     div { class: "flex gap-2 items-center mb-1 text-xs",
-                        div { class: "rounded-full size-4 bg-neutral-600 light:bg-neutral-300" }
-                        span { class: "font-medium text-white light:text-neutral-900",
+                        div { class: "rounded-full size-4 bg-action-preview-avatar-bg" }
+                        span { class: "font-medium text-text-primary",
                             "bob.eth"
                         }
                     }
-                    p { class: "text-xs text-neutral-400 light:text-neutral-600",
+                    p { class: "text-xs text-foreground-muted",
                         "I agree, higher rewards will attract more stakers."
                     }
-                    div { class: "flex gap-3 items-center mt-1 text-xs text-neutral-500",
+                    div { class: "flex gap-3 items-center mt-1 text-xs text-foreground-muted",
                         span { "♡ 3" }
                         span { "Reply (1)" }
                     }
@@ -305,16 +305,16 @@ fn DiscussionPreview() -> Element {
 fn FollowPreview() -> Element {
     rsx! {
         div { class: "flex flex-col gap-3 w-full",
-            p { class: "text-sm font-bold text-white light:text-neutral-900", "Followers" }
+            p { class: "text-sm font-bold text-text-primary", "Followers" }
             div { class: "flex flex-col gap-2",
                 for (name , handle) in [("Alice", "@alice.eth"), ("Bob", "@bob.eth"), ("Charlie", "@charlie.eth")] {
-                    div { class: "flex gap-3 items-center p-2 rounded-lg border border-neutral-700 light:border-neutral-300 bg-neutral-800/50 light:bg-neutral-50",
-                        div { class: "rounded-full size-8 bg-neutral-600 light:bg-neutral-300" }
+                    div { class: "flex gap-3 items-center p-2 rounded-lg border border-action-type-card-border bg-action-preview-item-bg",
+                        div { class: "rounded-full size-8 bg-action-preview-avatar-bg" }
                         div { class: "flex flex-col",
-                            span { class: "text-sm font-medium text-white light:text-neutral-900",
+                            span { class: "text-sm font-medium text-text-primary",
                                 "{name}"
                             }
-                            span { class: "text-xs text-neutral-500", "{handle}" }
+                            span { class: "text-xs text-foreground-muted", "{handle}" }
                         }
                     }
                 }
@@ -339,7 +339,7 @@ fn ActionTypeOption(
                 if selected {
                     "border-yellow-400 !bg-yellow-400/5"
                 } else {
-                    "border-neutral-700 light:border-neutral-300 !bg-neutral-800 light:!bg-white"
+                    "border-action-type-card-border !bg-action-type-card-bg"
                 },
                 if disabled {
                     "opacity-40 cursor-not-allowed"
@@ -355,16 +355,16 @@ fn ActionTypeOption(
             },
             "aria-disabled": disabled.to_string(),
 
-            div { class: "flex justify-center items-center bg-white rounded-[0.625rem] size-11 light:bg-white shrink-0",
+            div { class: "flex justify-center items-center bg-white rounded-[0.625rem] size-11 shrink-0",
                 {icon}
 
             }
 
             div { class: "flex flex-col gap-1 items-start",
-                p { class: "font-bold text-white text-[1.0625rem]/[1.25rem] light:text-neutral-900",
+                p { class: "font-bold text-text-primary text-[1.0625rem]/[1.25rem]",
                     {title}
                 }
-                p { class: "font-semibold text-[0.8125rem]/[1rem] text-neutral-500 light:text-neutral-600",
+                p { class: "font-semibold text-[0.8125rem]/[1rem] text-action-type-card-caption",
                     {caption}
                 }
             }
