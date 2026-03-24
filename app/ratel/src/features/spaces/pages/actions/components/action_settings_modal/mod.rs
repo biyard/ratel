@@ -119,7 +119,7 @@ pub fn ActionSettingsModal(
 
     rsx! {
         div { class: "flex justify-end w-full h-full text-web-font-primary",
-            div { class: "flex flex-col gap-5 py-6 px-6 w-full h-full shrink-0 overflow-y-auto bg-neutral-950 max-tablet:px-5 max-tablet:py-5 max-mobile:min-h-full max-mobile:gap-4 max-mobile:px-4 max-mobile:py-4",
+            div { class: "flex flex-col gap-5 py-6 px-6 w-full h-full shrink-0 overflow-y-auto bg-web-card-bg max-tablet:px-5 max-tablet:py-5 max-mobile:min-h-full max-mobile:gap-4 max-mobile:px-4 max-mobile:py-4",
                 div { class: "flex gap-3 items-center max-mobile:gap-2.5",
                     Button {
                         size: ButtonSize::Icon,
