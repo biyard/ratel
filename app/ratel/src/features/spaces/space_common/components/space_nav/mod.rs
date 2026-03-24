@@ -57,11 +57,8 @@ pub fn SpaceNav(
                 }
 
                 div { class: "flex flex-col gap-1.5 items-start px-4 pt-2.5 font-bold text-xs/[14px] max-tablet:flex-row max-tablet:items-stretch max-tablet:justify-around max-tablet:p-0",
-                    for (idx, item) in menus.iter().enumerate() {
-                        NavItem {
-                            key: "{idx}",
-                            item: item.clone(),
-                        }
+                    for (idx , item) in menus.iter().enumerate() {
+                        NavItem { key: "{idx}", item: item.clone() }
                     }
                     // Mobile-only "More" tab
                     MobileMoreTab {
@@ -143,34 +140,42 @@ pub struct SpaceNavItem {
 #[component]
 fn SpaceThemeToggle() -> Element {
     let mut theme_service = use_theme();
-    let is_dark = match theme_service.current() {
-        Theme::Dark => true,
-        Theme::Light => false,
-        Theme::System => true, // system default treated as dark
+    let current = theme_service.current();
+
+    let next = match current {
+        Theme::Light => Theme::Dark,
+        Theme::Dark => Theme::System,
+        Theme::System => Theme::Light,
     };
 
     rsx! {
         button {
             class: "flex justify-center items-center p-1.5 rounded-lg transition-colors cursor-pointer hover:bg-space-nav-item-hover",
             onclick: move |_| {
-                if is_dark {
-                    theme_service.set(Theme::Light);
-                } else {
-                    theme_service.set(Theme::Dark);
-                }
+                theme_service.set(next);
             },
-            if is_dark {
-                Moon {
-                    width: "18",
-                    height: "18",
-                    class: "[&>path]:stroke-current text-web-font-neutral",
-                }
-            } else {
-                Sun {
-                    width: "18",
-                    height: "18",
-                    class: "[&>path]:stroke-current [&>circle]:stroke-current text-web-font-neutral",
-                }
+            match current {
+                Theme::Dark => rsx! {
+                    Moon {
+                        width: "18",
+                        height: "18",
+                        class: "[&>path]:stroke-current text-web-font-neutral",
+                    }
+                },
+                Theme::Light => rsx! {
+                    Sun {
+                        width: "18",
+                        height: "18",
+                        class: "[&>path]:stroke-current [&>circle]:stroke-current text-web-font-neutral",
+                    }
+                },
+                Theme::System => rsx! {
+                    SunMoon {
+                        width: "18",
+                        height: "18",
+                        class: "[&>path]:stroke-current text-web-font-neutral",
+                    }
+                },
             }
         }
     }

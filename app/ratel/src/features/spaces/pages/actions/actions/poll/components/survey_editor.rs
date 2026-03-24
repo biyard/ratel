@@ -76,7 +76,7 @@ pub fn SurveyEditor(props: SurveyEditorProps) -> Element {
                     },
                 }
             }
-
+        
         }
     }
 }
@@ -219,8 +219,8 @@ fn QuestionTypeSelector(on_add: EventHandler<Question>) -> Element {
                                 image_url: None,
                                 min_value: 1,
                                 max_value: 5,
-                                min_label: "Low".to_string(),
-                                max_label: "High".to_string(),
+                                min_label: "Min".to_string(),
+                                max_label: "Max".to_string(),
                                 is_required: Some(false),
                             }),
                         );
@@ -447,36 +447,169 @@ fn LinearScaleQuestionEditor(
     on_change: EventHandler<Question>,
     #[props(default)] on_save: Option<EventHandler<()>>,
 ) -> Element {
-    let q = question.clone();
-    let min_val = question.min_value;
-    let max_val = question.max_value;
-    let blur_save = on_save.clone();
-    let confirm_save = on_save.clone();
+    let mut draft = use_signal(|| question.clone());
+    use_effect(use_reactive((&question,), move |(next_question,)| {
+        draft.set(next_question.clone());
+    }));
+
+    let current = draft();
+    let title_blur_save = on_save.clone();
+    let title_confirm_save = on_save.clone();
+    let min_change_save = on_save.clone();
+    let max_change_save = on_save.clone();
+    let min_label_blur_save = on_save.clone();
+    let min_label_confirm_save = on_save.clone();
+    let max_label_blur_save = on_save.clone();
+    let max_label_confirm_save = on_save.clone();
+
+    let min_options = [0_i64, 1];
+    let max_options = 2_i64..=10;
+
     rsx! {
         crate::common::components::Input {
-            variant: crate::common::components::InputVariant::Plain,
-            class: "p-2 w-full text-white bg-transparent border-b outline-none focus:border-blue-500 border-neutral-600 placeholder-neutral-500",
+            class: "w-full",
             placeholder: "Question title",
-            value: "{q.title}",
+            value: "{current.title}",
             oninput: move |evt: Event<FormData>| {
-                let mut next = q.clone();
+                let mut next = draft();
                 next.title = evt.value().to_string();
+                draft.set(next.clone());
                 on_change.call(Question::LinearScale(next));
             },
             onblur: move |_| {
-                if let Some(on_save) = &blur_save {
+                if let Some(on_save) = &title_blur_save {
                     on_save.call(());
                 }
             },
             onconfirm: move |_| {
-                if let Some(on_save) = &confirm_save {
+                if let Some(on_save) = &title_confirm_save {
                     on_save.call(());
                 }
             },
         }
-        div { class: "flex gap-4 items-center text-sm text-neutral-400",
-            span { "Min: {min_val}" }
-            span { "Max: {max_val}" }
+        div { class: "flex flex-wrap gap-3 items-center text-sm text-neutral-400",
+            div { class: "flex gap-2 items-center",
+                crate::common::components::Select::<i64> {
+                    placeholder: "Min",
+                    value: Some(current.min_value),
+                    on_value_change: move |value: Option<i64>| {
+                        let Some(selected) = value else {
+                            return;
+                        };
+                        let mut next = draft();
+                        next.min_value = selected;
+                        if next.max_value <= next.min_value {
+                            next.max_value = (selected + 1).clamp(2, 10);
+                        }
+                        draft.set(next.clone());
+                        on_change.call(Question::LinearScale(next));
+                        if let Some(on_save) = &min_change_save {
+                            on_save.call(());
+                        }
+                    },
+                    SelectTrigger { min_width: "4.5rem", aria_label: "Select min value", SelectValue {} }
+                    SelectList { aria_label: "Select min value",
+                        SelectGroup {
+                            for (idx , value) in min_options.into_iter().enumerate() {
+                                SelectOption::<i64> {
+                                    index: idx,
+                                    value,
+                                    text_value: "{value}",
+                                    "{value}"
+                                    SelectItemIndicator {}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            span { class: "text-neutral-500", "~" }
+
+            div { class: "flex gap-2 items-center",
+                crate::common::components::Select::<i64> {
+                    placeholder: "Max",
+                    value: Some(current.max_value),
+                    on_value_change: move |value: Option<i64>| {
+                        let Some(selected) = value else {
+                            return;
+                        };
+                        let mut next = draft();
+                        next.max_value = selected.max(next.min_value + 1);
+                        draft.set(next.clone());
+                        on_change.call(Question::LinearScale(next));
+                        if let Some(on_save) = &max_change_save {
+                            on_save.call(());
+                        }
+                    },
+                    SelectTrigger { min_width: "4.5rem", aria_label: "Select max value", SelectValue {} }
+                    SelectList { aria_label: "Select max value",
+                        SelectGroup {
+                            for (idx , value) in max_options.clone().enumerate() {
+                                SelectOption::<i64> {
+                                    index: idx,
+                                    value,
+                                    text_value: "{value}",
+                                    "{value}"
+                                    SelectItemIndicator {}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        div { class: "flex flex-col gap-3 w-full",
+            div { class: "grid grid-cols-[48px_1fr] gap-3 items-center w-full",
+                span { class: "text-sm font-medium text-neutral-400 text-center", "{current.min_value}" }
+                crate::common::components::Input {
+                    class: "w-full",
+                    placeholder: "Label (optional)",
+                    value: "{current.min_label}",
+                    oninput: move |evt: Event<FormData>| {
+                        let mut next = draft();
+                        next.min_label = evt.value().to_string();
+                        draft.set(next.clone());
+                        on_change.call(Question::LinearScale(next));
+                    },
+                    onblur: move |_| {
+                        if let Some(on_save) = &min_label_blur_save {
+                            on_save.call(());
+                        }
+                    },
+                    onconfirm: move |_| {
+                        if let Some(on_save) = &min_label_confirm_save {
+                            on_save.call(());
+                        }
+                    },
+                }
+            }
+
+            div { class: "grid grid-cols-[48px_1fr] gap-3 items-center w-full",
+                span { class: "text-sm font-medium text-neutral-400 text-center", "{current.max_value}" }
+                crate::common::components::Input {
+                    class: "w-full",
+                    placeholder: "Label (optional)",
+                    value: "{current.max_label}",
+                    oninput: move |evt: Event<FormData>| {
+                        let mut next = draft();
+                        next.max_label = evt.value().to_string();
+                        draft.set(next.clone());
+                        on_change.call(Question::LinearScale(next));
+                    },
+                    onblur: move |_| {
+                        if let Some(on_save) = &max_label_blur_save {
+                            on_save.call(());
+                        }
+                    },
+                    onconfirm: move |_| {
+                        if let Some(on_save) = &max_label_confirm_save {
+                            on_save.call(());
+                        }
+                    },
+                }
+            }
         }
     }
 }
