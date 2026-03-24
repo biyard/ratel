@@ -21,7 +21,7 @@ pub async fn delete_space_invitation(
 
     SpaceInvitationMember::get(dynamo, &pk, Some(&sk))
         .await?
-        .ok_or_else(|| Error::NotFound("Invitation not found".to_string()))?;
+        .ok_or(Error::InvitationNotFound)?;
 
     SpaceInvitationMember::delete(dynamo, &pk, Some(sk)).await?;
 

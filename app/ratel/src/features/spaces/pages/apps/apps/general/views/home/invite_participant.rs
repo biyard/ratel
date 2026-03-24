@@ -210,10 +210,9 @@ fn InviteEmailChip(value: String, on_remove: EventHandler<MouseEvent>) -> Elemen
             span { class: "font-medium leading-6 font-raleway text-[15px] tracking-[0.5px] text-btn-primary-text",
                 "{value}"
             }
-            Button {
-                class: "rounded-full disabled:opacity-50 size-5 !p-0 hover:!bg-transparent",
-                size: ButtonSize::Icon,
-                style: ButtonStyle::Text,
+            button {
+                r#type: "button",
+                class: "flex items-center justify-center rounded-full size-5 p-0 bg-transparent disabled:opacity-50 hover:bg-transparent",
                 onclick: move |evt| on_remove.call(evt),
                 icons::ratel::XMarkIcon {
                     width: "12",
@@ -260,11 +259,7 @@ fn InvitationMemberRow(
             }
         },
         InvitationStatus::Declined => rsx! {
-            icons::ratel::XMarkIcon {
-                width: "16",
-                height: "16",
-                class: "w-4 h-4 text-icon-error",
-            }
+            icons::ratel::XMarkIcon { width: "16", height: "16", class: "w-4 h-4 text-icon-error" }
         },
 
         InvitationStatus::Pending | InvitationStatus::Invited => rsx! {},
@@ -276,6 +271,7 @@ fn InvitationMemberRow(
                 img {
                     class: "object-cover rounded-full size-8 shrink-0",
                     src: if item.profile_url.is_empty() { DEFAULT_PROFILE_IMAGE.to_string() } else { item.profile_url.clone() },
+                    alt: item.display_name,
                 }
                 div { class: "flex flex-col min-w-0",
                     p { class: "truncate text-[14px] font-medium text-web-font-primary",
@@ -294,10 +290,10 @@ fn InvitationMemberRow(
             }
 
             div { class: "flex relative justify-center items-center h-full max-tablet:self-end",
-                Button {
-                    size: ButtonSize::Icon,
-                    style: ButtonStyle::Text,
-                    class: "flex justify-center items-center rounded-full size-8 !p-0",
+                button {
+                    r#type: "button",
+                    class: "flex justify-center items-center rounded-full size-8 p-0 bg-transparent text-text-primary hover:bg-hover disabled:bg-transparent disabled:text-text-secondary",
+                    "aria-label": "{tr.invitation_actions}",
                     onclick: move |_| {
                         show_action_menu.set(!show_action_menu());
                     },
@@ -306,9 +302,9 @@ fn InvitationMemberRow(
 
                 if show_action_menu() {
                     div { class: "absolute top-9 right-0 z-10 min-w-[120px] rounded-[10px] border border-separator bg-card shadow-lg",
-                        Button {
-                            style: ButtonStyle::Text,
-                            class: "justify-start w-full !px-3 !py-2 text-[14px] !text-web-error hover:!bg-card/80",
+                        button {
+                            r#type: "button",
+                            class: "flex w-full justify-start px-3 py-2 text-[14px] font-medium text-web-error hover:bg-card/80 disabled:text-text-secondary disabled:hover:bg-transparent",
                             disabled: deleting(),
                             onclick: move |_| {
                                 let user_id = user_id.clone();

@@ -60,6 +60,10 @@ pub enum Error {
     #[translate(en = "Not found", ko = "찾을 수 없습니다.")]
     NotFound(String),
 
+    #[error("Invitation not found")]
+    #[translate(en = "Invitation not found", ko = "초대 항목을 찾을 수 없습니다.")]
+    InvitationNotFound,
+
     #[error("User has no permission")]
     #[translate(en = "No permission", ko = "권한이 없습니다.")]
     NoPermission,
@@ -245,7 +249,7 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             | Error::FullQuota
             | Error::AlreadyParticipating
             | Error::ParticipationNotOpen => StatusCode::BAD_REQUEST,
-            Error::NotFound(_) => StatusCode::NOT_FOUND,
+            Error::NotFound(_) | Error::InvitationNotFound => StatusCode::NOT_FOUND,
             Error::SpaceReward(e) => e.status_code(),
             Error::SpaceActionQuiz(e) => e.status_code(),
             Error::SpaceActionDiscussion(e) => e.status_code(),
@@ -301,7 +305,7 @@ impl dioxus::fullstack::AsStatusCode for Error {
             | Error::NotFoundVerificationCode
             | Error::ExpiredVerification
             | Error::InvalidVerificationCode => StatusCode::BAD_REQUEST,
-            Error::NotFound(_) => StatusCode::NOT_FOUND,
+            Error::NotFound(_) | Error::InvitationNotFound => StatusCode::NOT_FOUND,
             Error::SpaceReward(e) => e.status_code(),
             Error::SpaceActionQuiz(e) => e.status_code(),
             Error::SpaceActionDiscussion(e) => e.status_code(),

@@ -7,7 +7,6 @@ pub fn QuizTab(can_edit: bool) -> Element {
     let ctx = use_space_quiz_context();
     let tr: QuizCreatorTranslate = use_translate();
     let toast = use_toast();
-    let mut query = use_query_store();
     let space_id = ctx.space_id;
     let quiz_id = ctx.quiz_id;
     let mut questions = ctx.questions;
@@ -43,10 +42,10 @@ pub fn QuizTab(can_edit: bool) -> Element {
                         }
                     },
                     onblur: move |_| {
-                        save_quiz(space_id, quiz_id, questions, answers, pass_score, retry_count, toast, query);
+                        save_quiz(space_id, quiz_id, questions, answers, pass_score, retry_count, toast);
                     },
                     onconfirm: move |_| {
-                        save_quiz(space_id, quiz_id, questions, answers, pass_score, retry_count, toast, query);
+                        save_quiz(space_id, quiz_id, questions, answers, pass_score, retry_count, toast);
                     },
                 }
             }
@@ -67,10 +66,10 @@ pub fn QuizTab(can_edit: bool) -> Element {
                         }
                     },
                     onblur: move |_| {
-                        save_quiz(space_id, quiz_id, questions, answers, pass_score, retry_count, toast, query);
+                        save_quiz(space_id, quiz_id, questions, answers, pass_score, retry_count, toast);
                     },
                     onconfirm: move |_| {
-                        save_quiz(space_id, quiz_id, questions, answers, pass_score, retry_count, toast, query);
+                        save_quiz(space_id, quiz_id, questions, answers, pass_score, retry_count, toast);
                     },
                 }
             }
@@ -80,7 +79,7 @@ pub fn QuizTab(can_edit: bool) -> Element {
                     questions,
                     answers,
                     on_save: move |_| {
-                        save_quiz(space_id, quiz_id, questions, answers, pass_score, retry_count, toast, query);
+                        save_quiz(space_id, quiz_id, questions, answers, pass_score, retry_count, toast);
                     },
                 }
             } else {
@@ -126,7 +125,6 @@ fn save_quiz(
     pass_score: Signal<i64>,
     retry_count: Signal<i64>,
     mut toast: ToastService,
-    _query: QueryStore,
 ) {
     spawn(async move {
         let req = UpdateQuizRequest {
