@@ -136,6 +136,7 @@ pub fn QuizReadPage(
         role,
         quiz.space_action.prerequisite,
         space.status,
+        space.join_anytime,
     );
     let has_passed = quiz.passed.unwrap_or(false);
     let total_allowed = quiz.retry_count.saturating_add(1);

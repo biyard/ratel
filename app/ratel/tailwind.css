@@ -287,6 +287,10 @@ html[data-theme="light"] {
   /* Quiz colors */
   --color-quiz-overview-label: #8c8c8c;
   --color-quiz-overview-counter: #6b6b6b;
+  --color-quiz-tab-label: var(--dark, #a3a3a3) var(--light, #262626);
+  --color-quiz-tab-empty: var(--dark, #737373) var(--light, #262626);
+  --color-quiz-tab-preview-bg: var(--dark, #171717) var(--light, #fafafa);
+  --color-quiz-tab-preview-border: var(--dark, #404040) var(--light, #e5e5e5);
   --color-quiz-editor-bg: var(--dark, #101010) var(--light, #f5f5f5);
   --color-quiz-editor-border: var(--dark, #525252) var(--light, #a3a3a3);
   --color-quiz-editor-toolbar-border: var(--dark, #262626) var(--light, #e5e5e5);
@@ -736,6 +740,8 @@ a {
 @theme static {
   --color-icon-primary: #737373;
   --color-icon-secondary: var(--dark, #ffffff) var(--light, #262626);
+  --color-icon-success: var(--dark, #16a34a) var(--light, #16a34a);
+  --color-icon-error: var(--dark, #ef4444) var(--light, #ef4444);
 }
 
 /* ==========================================================================
@@ -869,6 +875,14 @@ h3 {
   /* Icon Colors */
   .text-icon-primary {
     color: var(--color-icon-primary);
+  }
+
+  .text-icon-success {
+    color: var(--color-icon-success);
+  }
+
+  .text-icon-error {
+    color: var(--color-icon-error);
   }
 
   /* Space Dashboard Fonts */
