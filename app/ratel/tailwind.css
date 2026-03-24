@@ -193,9 +193,6 @@ html[data-theme="light"] {
   --color-button-muted: var(--dark, #282828) var(--light, #e5e5e5);
   --color-button-muted-hover: var(--dark, #222222) var(--light, #d9d9d9);
   --color-thumbnail-placeholder-bg: var(--dark, #2a2a2a) var(--light, #f0f0f0);
-  --color-web-btn-secondary-icon: var(--dark, #ffffff) var(--light, #0a0a0a);
-  --color-web-btn-action-settings-bg: var(--dark, #0a0a0a) var(--light, #ffffff);
-  --color-web-btn-action-settings-text: var(--dark, #ffffff) var(--light, #0a0a0a);
   --color-web-bg: var(--gray-950);
   --color-copyright: var(--role-copyright-static);
   --color-input: var(--input);
@@ -716,6 +713,11 @@ a {
   --color-btn-outline-disable-outline: var(--dark, #8e8e8e)
     var(--light, #cacaca);
   --color-btn-outline-disable-text: var(--dark, #8e8e8e) var(--light, #848484);
+
+  /* Action Settings */
+  --color-btn-action-settings-bg: var(--dark, #0a0a0a) var(--light, #ffffff);
+  --color-btn-action-settings-text: var(--dark, #ffffff) var(--light, #0a0a0a);
+  --color-btn-action-settings-icon: var(--dark, #ffffff) var(--light, #0a0a0a);
 }
 
 /* ==========================================================================

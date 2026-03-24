@@ -180,7 +180,7 @@ pub fn ActionSettingsModal(
                     }
 
                     if is_add_menu_open() && !available_actions.is_empty() {
-                        div { class: "flex overflow-hidden overflow-y-auto absolute left-0 top-full z-10 flex-col mt-2 w-full border border-yellow-400 rounded-[10px] bg-popover shadow-[0_8px_20px_0_rgba(20,26,62,0.25)] max-mobile:max-h-56",
+                        div { class: "flex overflow-hidden overflow-y-auto absolute left-0 top-full z-10 flex-col mt-2 w-full border border-primary rounded-[10px] bg-popover shadow-[0_8px_20px_0_rgba(20,26,62,0.25)] max-mobile:max-h-56",
                             for action in available_actions.iter() {
                                 Button {
                                     key: "{action.action_id}",

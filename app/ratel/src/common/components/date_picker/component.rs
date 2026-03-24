@@ -475,7 +475,7 @@ pub fn DatePickerInput(#[props(default)] date: String) -> Element {
                     icons::calendar::CalendarToday {
                         width: "20",
                         height: "20",
-                        class: "border-[0px] shrink-0 text-icon-primary [&>path]:stroke-current [&>path]:fill-none [&>rect]:fill-none [&>rect]:stroke-current",
+                        class: "border-[0px] shrink-0 text-icon-primary [&>path]:stroke-current [&>path]:fill-none [&>rect]:fill-current",
                     }
                 }
             }
