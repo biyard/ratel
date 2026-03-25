@@ -16,18 +16,27 @@ pub struct SpaceQuizAttempt {
 
     pub answers: Vec<Answer>,
     pub score: i64,
+    #[serde(default)]
+    pub user_pk: Option<Partition>,
+    #[serde(default)]
+    pub display_name: Option<String>,
+    #[serde(default)]
+    pub profile_url: Option<String>,
+    #[serde(default)]
+    pub username: Option<String>,
 }
 
 #[cfg(feature = "server")]
 impl SpaceQuizAttempt {
     pub fn new(
         quiz_id: SpaceQuizEntityType,
-        user_pk: Partition,
+        author: crate::common::models::space::SpaceAuthor,
         answers: Vec<Answer>,
         score: i64,
     ) -> Self {
         let created_at = get_now_timestamp_millis();
         let attempt_id = uuid::Uuid::now_v7().to_string();
+        let user_pk = author.pk;
         let (pk, sk) = Self::keys(&user_pk, &quiz_id, &attempt_id);
         let quiz_user = Self::quiz_user_key(&quiz_id, &user_pk);
 
@@ -38,6 +47,10 @@ impl SpaceQuizAttempt {
             quiz_user,
             answers,
             score,
+            user_pk: Some(user_pk),
+            display_name: Some(author.display_name),
+            profile_url: Some(author.profile_url),
+            username: Some(author.username),
         }
     }
 

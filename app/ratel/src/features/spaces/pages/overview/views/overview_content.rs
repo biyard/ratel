@@ -49,8 +49,8 @@ pub fn OverviewContent(
     rsx! {
         div { class: "flex justify-center px-4 pt-5 mx-auto w-full",
             div { class: "flex flex-col gap-5 w-full max-w-desktop",
-                div { class: "flex gap-2.5 justify-between items-center",
-                    h1 { class: "flex-1 font-bold text-[28px]/[32px] text-text-primary",
+                div { class: "flex gap-2.5 justify-between items-start",
+                    h1 { class: "flex-1 font-bold text-[28px]/[32px] max-mobile:text-xl text-text-primary",
                         "{space.title}"
                     }
                     div { class: "flex gap-2 items-center",
@@ -66,7 +66,7 @@ pub fn OverviewContent(
                                             is_editing.set(true);
                                         }
                                     },
-                                    Edit1 { class: "size-4 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
+                                    Edit1 { class: "size-4 [&>path]:stroke-text-primary [&>path]:fill-transparent" }
                                     "{tr.btn_edit}"
                                 }
                             } else {
@@ -131,11 +131,11 @@ pub fn OverviewContent(
                     }
                 }
 
-                div { class: "flex justify-between items-center py-4 border-y border-card-border",
+                div { class: "flex flex-wrap justify-between items-center gap-y-2 py-4 border-y border-card-border",
                     div { class: "flex gap-2.5 items-center min-w-0",
-                        div { class: "flex flex-row items-center w-fit gap-[8px]",
+                        div { class: "flex flex-row items-center min-w-0 gap-[8px]",
                             {render_author_avatar(&space.author_profile_url, &space.author_display_name)}
-                            div { class: "min-w-0 font-semibold text-[14px]/[20px] text-text-primary",
+                            div { class: "min-w-0 font-semibold text-[14px]/[20px] text-text-primary truncate",
                                 "{space.author_display_name}"
                             }
                         }
@@ -143,7 +143,7 @@ pub fn OverviewContent(
                             "{time_ago(space.created_at)}"
                         }
                     }
-                    div { class: "flex gap-5 items-center",
+                    div { class: "flex gap-5 items-center shrink-0",
                         Button {
                             size: ButtonSize::Inline,
                             style: ButtonStyle::Text,
@@ -181,12 +181,12 @@ pub fn OverviewContent(
                 }
 
                 if let Some(message) = error() {
-                    div { class: "text-sm text-red-500", "{tr.save_failed}: {message}" }
+                    div { class: "text-sm text-destructive", "{tr.save_failed}: {message}" }
                 }
 
                 SpaceCard { class: "border-none shadow-none !bg-transparent !p-0",
                     TiptapEditor {
-                        class: "w-full h-fit [&>div]:border-0 [&>div]:bg-transparent [&_[data-tiptap-toolbar]]:hidden [&_[contenteditable='true']]:px-0 [&_[contenteditable='true']]:py-0 [&_[contenteditable='true']]:text-[15px]/[24px] [&_[contenteditable='true']]:tracking-[0.5px] [&_[contenteditable='true']]:text-[#D4D4D4]",
+                        class: "w-full h-fit [&>div]:border-0 [&>div]:bg-transparent [&_[data-tiptap-toolbar]]:hidden [&_[contenteditable='true']]:px-0 [&_[contenteditable='true']]:py-0 [&_[contenteditable='true']]:text-[15px]/[24px] [&_[contenteditable='true']]:tracking-[0.5px] [&_[contenteditable='true']]:text-title-text",
                         content: content(),
                         editable: allow_edit,
                         placeholder: tr.placeholder,

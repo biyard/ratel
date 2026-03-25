@@ -1,4 +1,5 @@
 use super::super::*;
+use dioxus_primitives::{ContentAlign, ContentSide};
 
 #[cfg(feature = "membership")]
 use crate::features::auth::hooks::use_user_membership;
@@ -64,8 +65,8 @@ pub fn RewardSetting(
                                             class: "cursor-help text-web-font-neutral [&>path]:stroke-current [&>circle]:fill-current [&>path]:fill-none",
                                         }
                                     }
-                                    TooltipContent {
-                                        p { class: "w-100", {tr.reward_setting_tooltip} }
+                                    TooltipContent { side: ContentSide::Bottom, align: ContentAlign::Start,
+                                        {tr.reward_setting_tooltip}
                                     }
                                 }
                             }
@@ -155,7 +156,11 @@ pub fn RewardSetting(
                                                         class: "cursor-help text-web-font-neutral [&>path]:stroke-current [&>circle]:fill-current [&>path]:fill-none",
                                                     }
                                                 }
-                                                TooltipContent { {tr.max_credits_tooltip} }
+                                                TooltipContent {
+                                                    side: ContentSide::Bottom,
+                                                    align: ContentAlign::Start,
+                                                    {tr.max_credits_tooltip}
+                                                }
                                             }
                                         }
                                         p { class: "font-semibold text-web-font-neutral font-raleway text-[15px]/[18px] tracking-[-0.16px]",

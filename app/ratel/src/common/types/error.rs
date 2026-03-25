@@ -25,10 +25,7 @@ pub enum Error {
     Unauthorized(String),
 
     #[error("Internal server error: {0}")]
-    #[translate(
-        en = "Internal server error",
-        ko = "서버 내부 오류가 발생하였습니다. 잠시 후 다시 시도해주세요."
-    )]
+    #[translate(en = "Internal server error", ko = "서버 내부 오류가 발생하였습니다. 잠시 후 다시 시도해주세요.")]
     InternalServerError(String),
 
     #[error("Bookmark is invalid")]
@@ -42,10 +39,7 @@ pub enum Error {
     #[cfg(feature = "server")]
     #[serde(skip)]
     #[error("AWS error: {0}")]
-    #[translate(
-        en = "Internal server error",
-        ko = "서버 내부 오류가 발생하였습니다. 잠시 후 다시 시도해주세요."
-    )]
+    #[translate(en = "Internal server error", ko = "서버 내부 오류가 발생하였습니다. 잠시 후 다시 시도해주세요.")]
     Aws(#[from] crate::common::utils::aws::error::AwsError),
 
     #[cfg(feature = "server")]
@@ -66,22 +60,20 @@ pub enum Error {
     #[translate(en = "Not found", ko = "찾을 수 없습니다.")]
     NotFound(String),
 
+    #[error("Invitation not found")]
+    #[translate(en = "Invitation not found", ko = "초대 항목을 찾을 수 없습니다.")]
+    InvitationNotFound,
+
     #[error("User has no permission")]
     #[translate(en = "No permission", ko = "권한이 없습니다.")]
     NoPermission,
 
     #[error("Exceeded maximum attempt for email verification")]
-    #[translate(
-        en = "Exceeded maximum attempt for email verification",
-        ko = "이메일 인증 최대 시도 횟수를 초과했습니다."
-    )]
+    #[translate(en = "Exceeded maximum attempt for email verification", ko = "이메일 인증 최대 시도 횟수를 초과했습니다.")]
     ExceededAttemptEmailVerification,
 
     #[error("Exceeded maximum attempt for phone verification")]
-    #[translate(
-        en = "Exceeded maximum attempt for phone verification",
-        ko = "전화 인증 최대 시도 횟수를 초과했습니다."
-    )]
+    #[translate(en = "Exceeded maximum attempt for phone verification", ko = "전화 인증 최대 시도 횟수를 초과했습니다.")]
     ExceededAttemptPhoneVerification,
 
     #[error("Send SMS Failed: {0}")]
@@ -104,40 +96,29 @@ pub enum Error {
     #[translate(en = "Already participating", ko = "이미 참여 중입니다.")]
     AlreadyParticipating,
 
+    #[error("Participation is not open")]
+    #[translate(en = "Participation is only available while the space is open.", ko = "참여는 스페이스가 열려 있는 동안만 가능합니다.")]
+    ParticipationNotOpen,
+
     #[error("not found verification code")]
-    #[translate(
-        en = "Verification code not found",
-        ko = "인증 코드를 찾을 수 없습니다."
-    )]
+    #[translate(en = "Verification code not found", ko = "인증 코드를 찾을 수 없습니다.")]
     NotFoundVerificationCode,
     #[error("verification code is expired")]
-    #[translate(
-        en = "Verification code is expired",
-        ko = "인증 코드가 만료되었습니다."
-    )]
+    #[translate(en = "Verification code is expired", ko = "인증 코드가 만료되었습니다.")]
     ExpiredVerification,
     #[error("invalid verification code")]
-    #[translate(
-        en = "Invalid verification code",
-        ko = "인증 코드가 유효하지 않습니다."
-    )]
+    #[translate(en = "Invalid verification code", ko = "인증 코드가 유효하지 않습니다.")]
     InvalidVerificationCode,
 
     #[error("not found space")]
     #[translate(en = "Not found space", ko = "스페이스를 찾을 수 없습니다.")]
     SpaceNotFound,
     #[error("not found author")]
-    #[translate(
-        en = "Not found space author",
-        ko = "스페이스 작성자를 찾을 수 없습니다."
-    )]
+    #[translate(en = "Not found space author", ko = "스페이스 작성자를 찾을 수 없습니다.")]
     InvalidSpaceAuthor,
 
     #[error("discussion is not in progress")]
-    #[translate(
-        en = "Discussion is not in progress",
-        ko = "토론이 진행중 상태가 아닙니다."
-    )]
+    #[translate(en = "Discussion is not in progress", ko = "토론이 진행중 상태가 아닙니다.")]
     DiscussionNotInProgress,
 
     #[error("space post ended")]
@@ -145,32 +126,20 @@ pub enum Error {
     SpacePostEnded,
 
     #[error("space post contents is too short")]
-    #[translate(
-        ko = "스페이스 게시글의 내용은 10자 이상이어야 합니다.",
-        en = "Space post contents must be at least 10 characters long."
-    )]
+    #[translate(en = "Space post contents must be at least 10 characters long.", ko = "스페이스 게시글의 내용은 10자 이상이어야 합니다.")]
     ValidationTooShortContents,
 
     // DAO-related
     #[error("At least 3 admins must be selected")]
-    #[translate(
-        en = "At least 3 admins must be selected",
-        ko = "최소 3명의 관리자를 선택해야 합니다."
-    )]
+    #[translate(en = "At least 3 admins must be selected", ko = "최소 3명의 관리자를 선택해야 합니다.")]
     InsufficientAdmins,
 
     #[error("Transaction cancelled: You rejected the transaction")]
-    #[translate(
-        en = "Transaction cancelled: You rejected the transaction",
-        ko = "트랜잭션 취소: 트랜잭션을 거부했습니다."
-    )]
+    #[translate(en = "Transaction cancelled: You rejected the transaction", ko = "트랜잭션 취소: 트랜잭션을 거부했습니다.")]
     TransactionRejected,
 
     #[error("MetaMask not installed")]
-    #[translate(
-        en = "MetaMask not installed. Please install MetaMask to continue",
-        ko = "MetaMask가 설치되어 있지 않습니다. 계속하려면 MetaMask를 설치하세요."
-    )]
+    #[translate(en = "MetaMask not installed. Please install MetaMask to continue", ko = "MetaMask가 설치되어 있지 않습니다. 계속하려면 MetaMask를 설치하세요.")]
     MetamaskNotInstalled,
 
     #[error("Wallet error: {0}")]
@@ -179,10 +148,7 @@ pub enum Error {
 
     // Membership-related
     #[error("Membership response missing")]
-    #[translate(
-        en = "Membership response missing",
-        ko = "멤버십 응답이 누락되었습니다."
-    )]
+    #[translate(en = "Membership response missing", ko = "멤버십 응답이 누락되었습니다.")]
     MembershipResponseMissing,
 
     #[error("Failed to change membership")]
@@ -191,10 +157,7 @@ pub enum Error {
 
     // Credential-related
     #[error("Invalid verification code input")]
-    #[translate(
-        en = "Invalid verification code",
-        ko = "인증 코드가 유효하지 않습니다."
-    )]
+    #[translate(en = "Invalid verification code", ko = "인증 코드가 유효하지 않습니다.")]
     InvalidCodeInput,
 
     #[error("Failed to response quiz")]
@@ -211,46 +174,41 @@ pub enum Error {
     PortOneInicisInvalidIdentity,
 
     #[error("{0}")]
-    #[translate(en = "Reward error", ko = "리워드 오류가 발생했습니다.")]
+    #[translate(from)]
     SpaceReward(#[from] SpaceRewardError),
+
+    #[error("{0}")]
+    #[translate(from)]
+    SpaceActionQuiz(#[from] crate::features::spaces::pages::actions::actions::quiz::SpaceActionQuizError),
+
+    #[error("{0}")]
+    #[translate(from)]
+    SpaceActionDiscussion(
+        #[from] crate::features::spaces::pages::actions::actions::discussion::SpaceActionDiscussionError,
+    ),
 
     // Post related errors
     #[error("Invalid username")]
-    #[translate(
-        en = "Invalid username. Check URL.",
-        ko = "유효하지 않은 사용자 이름입니다. URL을 확인해주세요."
-    )]
+    #[translate(en = "Invalid username. Check URL.", ko = "유효하지 않은 사용자 이름입니다. URL을 확인해주세요.")]
     PostInvalidUsername,
 
     #[error("Web function")]
-    #[translate(
-        en = "This function is only available on web.",
-        ko = "이 기능은 웹에서만 사용할 수 있습니다."
-    )]
+    #[translate(en = "This function is only available on web.", ko = "이 기능은 웹에서만 사용할 수 있습니다.")]
     OnlyWebFunction,
     #[error("Invalid email")]
     #[translate(en = "Invalid email", ko = "유효하지 않은 이메일입니다.")]
     InvalidEmail,
 
     #[error("invalid space action")]
-    #[translate(
-        en = "Please delete and re-create the action",
-        ko = "액션을 삭제하고 다시 만들어주세요."
-    )]
+    #[translate(en = "Please delete and re-create the action", ko = "액션을 삭제하고 다시 만들어주세요.")]
     SpaceActionNotFound,
 
     #[error("Space is not started")]
-    #[translate(
-        en = "Space is not started yet",
-        ko = "스페이스가 아직 시작되지 않았습니다."
-    )]
+    #[translate(en = "Space is not started yet", ko = "스페이스가 아직 시작되지 않았습니다.")]
     SpaceNotStarted,
 
     #[error("Action has ended")]
-    #[translate(
-        en = "This action has ended",
-        ko = "이 액션은 종료되었습니다."
-    )]
+    #[translate(en = "This action has ended", ko = "이 액션은 종료되었습니다.")]
     ActionEnded,
 }
 
@@ -289,9 +247,12 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             | Error::ParticipationBlocked
             | Error::LackOfVerifiedAttributes
             | Error::FullQuota
-            | Error::AlreadyParticipating => StatusCode::BAD_REQUEST,
-            Error::NotFound(_) => StatusCode::NOT_FOUND,
+            | Error::AlreadyParticipating
+            | Error::ParticipationNotOpen => StatusCode::BAD_REQUEST,
+            Error::NotFound(_) | Error::InvitationNotFound => StatusCode::NOT_FOUND,
             Error::SpaceReward(e) => e.status_code(),
+            Error::SpaceActionQuiz(e) => e.status_code(),
+            Error::SpaceActionDiscussion(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
@@ -337,14 +298,17 @@ impl dioxus::fullstack::AsStatusCode for Error {
             | Error::LackOfVerifiedAttributes
             | Error::FullQuota
             | Error::AlreadyParticipating
+            | Error::ParticipationNotOpen
             | Error::ExceededAttemptEmailVerification
             | Error::ExceededAttemptPhoneVerification
             | Error::SendSmsFailed(_)
             | Error::NotFoundVerificationCode
             | Error::ExpiredVerification
             | Error::InvalidVerificationCode => StatusCode::BAD_REQUEST,
-            Error::NotFound(_) => StatusCode::NOT_FOUND,
+            Error::NotFound(_) | Error::InvitationNotFound => StatusCode::NOT_FOUND,
             Error::SpaceReward(e) => e.status_code(),
+            Error::SpaceActionQuiz(e) => e.status_code(),
+            Error::SpaceActionDiscussion(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

@@ -242,4 +242,9 @@ translate! {
         en: "Member",
         ko: "멤버",
     },
+
+    failed_remove_member: {
+        en: "Failed to remove member. Please try again.",
+        ko: "멤버 제거에 실패했습니다. 다시 시도해주세요.",
+    },
 }

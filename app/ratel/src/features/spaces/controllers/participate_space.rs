@@ -5,10 +5,10 @@ use crate::common::SpaceVisibility;
 use crate::features::posts::models::Post;
 use crate::features::posts::types::TeamGroupPermission;
 use crate::features::spaces::models::{
-    InvitationStatus, PanelAttribute, SpaceInvitationMember, SpacePanelParticipant,
-    SpacePanelQuota, SpaceParticipant,
+    PanelAttribute, SpacePanelParticipant, SpacePanelQuota, SpaceParticipant,
 };
 use crate::features::spaces::*;
+use crate::spaces::{InvitationStatus, SpaceInvitationMember};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct ParticipateSpaceResponse {
@@ -27,10 +27,8 @@ pub async fn participate_space(space_id: SpacePartition) -> Result<ParticipateSp
     let space =
         SpaceCommon::get(dynamo, &space_pk_partition, Some(&EntityType::SpaceCommon)).await?;
     let space = space.ok_or_else(|| Error::NotFound("Space Not Found".to_string()))?;
-    if space.status != Some(crate::common::SpaceStatus::InProgress) {
-        return Err(Error::BadRequest(
-            "Participation is only available while the space is in progress.".to_string(),
-        ));
+    if !space.is_participation_open() {
+        return Err(Error::ParticipationNotOpen);
     }
 
     let post_pk = space.pk.clone().to_post_key()?;
@@ -40,12 +38,22 @@ pub async fn participate_space(space_id: SpacePartition) -> Result<ParticipateSp
     let user: Option<User> = user.into();
     let user = user.ok_or(Error::NoSessionFound)?;
 
+    let invitation_allowed = if space.visibility != SpaceVisibility::Public {
+        let (pk, sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
+        let member = SpaceInvitationMember::get(dynamo, &pk, Some(&sk)).await?;
+        matches!(
+            member.as_ref().map(|member| member.status),
+            Some(InvitationStatus::Invited) | Some(InvitationStatus::Accepted)
+        )
+    } else {
+        false
+    };
+
     let permissions = post.get_permissions(dynamo, Some(user.clone())).await?;
-    if !permissions.contains(TeamGroupPermission::SpaceRead) {
+    if !invitation_allowed && !permissions.contains(TeamGroupPermission::SpaceRead) {
         return Err(Error::NoPermission);
     }
 
-    let (pk, sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
     #[cfg(feature = "server")]
     check_if_satisfying_panel_attribute(&space, dynamo, &user).await?;
 
@@ -57,6 +65,7 @@ pub async fn participate_space(space_id: SpacePartition) -> Result<ParticipateSp
     }
 
     if space.visibility != SpaceVisibility::Public {
+        let (pk, sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
         let member = SpaceInvitationMember::get(dynamo, &pk, Some(&sk)).await?;
         let Some(member) = member else {
             return Err(Error::NoPermission);

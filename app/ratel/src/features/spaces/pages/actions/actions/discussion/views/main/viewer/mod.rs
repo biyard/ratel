@@ -32,15 +32,15 @@ pub fn ViewerMain(
     let current_user_pk = user.read().as_ref().map(|u| u.pk.to_string());
     let ctx = use_discussion_context();
     let space = use_space().read().clone();
-    let discussion = ctx.discussion().post;
-    let is_space_active = matches!(
-        space.status,
-        Some(crate::common::SpaceStatus::Started | crate::common::SpaceStatus::InProgress)
-    );
+    let discussion_response = ctx.discussion();
+    let discussion = discussion_response.post;
     let can_participate = discussion.status() == DiscussionStatus::InProgress;
-    let can_comment = matches!(role, SpaceUserRole::Creator | SpaceUserRole::Participant)
-        && is_space_active
-        && can_participate;
+    let can_comment = crate::features::spaces::pages::actions::can_execute_space_action(
+        role,
+        discussion_response.space_action.prerequisite,
+        space.status,
+        space.join_anytime,
+    ) && can_participate;
     let can_manage_comments = can_comment;
     let nav = navigator();
 
