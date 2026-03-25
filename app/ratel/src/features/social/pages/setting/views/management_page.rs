@@ -27,13 +27,23 @@ pub fn ManagementPage(username: String) -> Element {
     }))?;
 
     let ctx = ctx_resource.read();
-    let Ok(ctx) = ctx.as_ref() else {
-        return rsx! { div { class: "text-foreground-muted text-sm p-4", "Loading..." } };
+    let ctx = match ctx.as_ref() {
+        Ok(ctx) => ctx.clone(),
+        Err(_) => {
+            return rsx! {
+                div { class: "flex flex-col gap-2 p-4",
+                    span { class: "text-sm font-semibold text-text-primary", {tr.no_permission_title} }
+                    span { class: "text-sm text-foreground-muted", {tr.no_permission_description} }
+                }
+            };
+        }
     };
 
     let team_pk = ctx.team_pk.clone();
 
     let mut refresh = use_signal(|| 0u64);
+    let mut error_msg = use_signal(|| Option::<String>::None);
+    let failed_remove_member = tr.failed_remove_member.to_string();
 
     // Load groups for invite modal
     let group_resource = use_loader(use_reactive((&team_pk,), move |(team_pk,)| {
@@ -135,13 +145,23 @@ pub fn ManagementPage(username: String) -> Element {
             // Header
             div { class: "flex items-center justify-between",
                 h1 { class: "text-xl font-bold text-text-primary", {tr.team_management} }
-                button {
-                    class: "flex items-center gap-2 px-4 py-2 rounded-full bg-btn-primary-bg text-btn-primary-text text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer",
+                Button {
+                    style: ButtonStyle::Primary,
+                    shape: ButtonShape::Rounded,
+                    size: ButtonSize::Small,
+                    class: "flex items-center gap-2".to_string(),
                     onclick: on_add_members_click,
                     lucide_dioxus::UserPlus {
                         class: "w-4 h-4 [&>path]:stroke-btn-primary-text [&>line]:stroke-btn-primary-text",
                     }
                     {tr.add_members}
+                }
+            }
+
+            // Error message
+            if let Some(msg) = error_msg() {
+                div { class: "px-4 py-3 rounded-[10px] border border-destructive bg-destructive/10 text-sm text-destructive",
+                    "{msg}"
                 }
             }
 
@@ -161,6 +181,7 @@ pub fn ManagementPage(username: String) -> Element {
                         let member = member.clone();
                         let team_pk = team_pk.clone();
                         let mut refresh = refresh.clone();
+                        let failed_remove_member = failed_remove_member.clone();
                         rsx! {
                             MemberRow {
                                 key: "{member.user_id}",
@@ -170,18 +191,30 @@ pub fn ManagementPage(username: String) -> Element {
                                     let member = member.clone();
                                     let team_pk = team_pk.clone();
                                     let mut refresh = refresh.clone();
+                                    let mut error_msg = error_msg.clone();
+                                    let failed_msg = failed_remove_member.clone();
                                     spawn(async move {
+                                        let mut failed = false;
                                         for group in &member.groups {
-                                            let _ = remove_member_handler(
+                                            if remove_member_handler(
                                                 team_pk.clone(),
                                                 group.group_id.clone(),
                                                 RemoveMemberRequest {
                                                     user_pks: vec![member.user_id.clone()],
                                                 },
                                             )
-                                            .await;
+                                            .await
+                                            .is_err()
+                                            {
+                                                failed = true;
+                                            }
                                         }
-                                        refresh.set(refresh() + 1);
+                                        if failed {
+                                            error_msg.set(Some(failed_msg));
+                                        } else {
+                                            error_msg.set(None);
+                                            refresh.set(refresh() + 1);
+                                        }
                                     });
                                 },
                             }
@@ -199,8 +232,11 @@ pub fn ManagementPage(username: String) -> Element {
             // Pagination
             if total_pages > 1 || can_prev {
                 div { class: "flex items-center justify-center gap-1",
-                    button {
-                        class: "flex items-center justify-center w-8 h-8 rounded-lg transition-colors text-foreground-muted hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed",
+                    Button {
+                        style: ButtonStyle::Text,
+                        size: ButtonSize::Icon,
+                        shape: ButtonShape::Square,
+                        class: "flex items-center justify-center w-8 h-8 text-foreground-muted disabled:opacity-30 disabled:cursor-not-allowed".to_string(),
                         disabled: !can_prev,
                         onclick: move |_| {
                             if can_prev {
@@ -215,15 +251,14 @@ pub fn ManagementPage(username: String) -> Element {
                     for p in 0..total_pages {
                         {
                             let is_active = p == current_page();
-                            let active_class = if is_active {
-                                "bg-white text-neutral-900 font-semibold"
-                            } else {
-                                "text-foreground-muted hover:bg-white/5"
-                            };
                             rsx! {
-                                button {
+                                Button {
                                     key: "{p}",
-                                    class: "flex items-center justify-center w-8 h-8 rounded-lg text-sm transition-colors {active_class}",
+                                    style: ButtonStyle::Text,
+                                    size: ButtonSize::Icon,
+                                    shape: ButtonShape::Square,
+                                    class: "w-8 h-8 text-sm text-foreground-muted aria-selected:bg-btn-secondary-bg aria-selected:text-btn-secondary-text aria-selected:font-semibold".to_string(),
+                                    "aria-selected": is_active,
                                     onclick: move |_| current_page.set(p),
                                     "{p + 1}"
                                 }
@@ -231,8 +266,11 @@ pub fn ManagementPage(username: String) -> Element {
                         }
                     }
 
-                    button {
-                        class: "flex items-center justify-center w-8 h-8 rounded-lg transition-colors text-foreground-muted hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed",
+                    Button {
+                        style: ButtonStyle::Text,
+                        size: ButtonSize::Icon,
+                        shape: ButtonShape::Square,
+                        class: "flex items-center justify-center w-8 h-8 text-foreground-muted disabled:opacity-30 disabled:cursor-not-allowed".to_string(),
                         disabled: !can_next,
                         onclick: move |_| {
                             if can_next {
@@ -255,8 +293,6 @@ fn MemberRow(member: TeamMemberResponse, is_last: bool, on_remove: EventHandler<
     let tr: TeamSettingsTranslate = use_translate();
     let border_class = if is_last { "" } else { "border-b border-border" };
     let mut show_menu = use_signal(|| false);
-    // (top, right) in viewport px for fixed dropdown
-    let mut menu_pos = use_signal(|| (0f64, 0f64));
 
     let display = if member.display_name.is_empty() {
         member.username.clone()
@@ -296,25 +332,13 @@ fn MemberRow(member: TeamMemberResponse, is_last: bool, on_remove: EventHandler<
 
             // More options
             if !member.is_owner {
-                div { class: "shrink-0",
-                    if show_menu() {
-                        div {
-                            class: "fixed inset-0 z-10",
-                            onclick: move |_| show_menu.set(false),
-                        }
-                    }
-                    button {
-                        class: "flex items-center justify-center w-7 h-7 rounded-md hover:bg-white/10 transition-colors cursor-pointer relative z-20",
-                        onmounted: move |e| {
-                            spawn(async move {
-                                if let Ok(rect) = e.get_client_rect().await {
-                                    let bottom = rect.origin.y + rect.size.height;
-                                    let right = rect.origin.x + rect.size.width;
-                                    menu_pos.set((bottom, right));
-                                }
-                            });
-                        },
-                        onclick: move |e| {
+                div { class: "relative shrink-0",
+                    Button {
+                        style: ButtonStyle::Text,
+                        size: ButtonSize::Icon,
+                        shape: ButtonShape::Square,
+                        class: "flex items-center justify-center w-7 h-7 !rounded-md".to_string(),
+                        onclick: move |e: MouseEvent| {
                             e.stop_propagation();
                             show_menu.toggle();
                         },
@@ -324,11 +348,17 @@ fn MemberRow(member: TeamMemberResponse, is_last: bool, on_remove: EventHandler<
                     }
                     if show_menu() {
                         div {
-                            class: "fixed z-30 w-44 bg-popover border border-border rounded-lg shadow-lg py-1 overflow-hidden",
-                            style: "top: {menu_pos().0 + 4.0}px; right: calc(100vw - {menu_pos().1}px);",
+                            class: "fixed inset-0 z-10",
+                            onclick: move |_| show_menu.set(false),
+                        }
+                        div {
+                            class: "absolute right-0 top-8 z-20 w-44 bg-popover border border-border rounded-lg shadow-lg py-1 overflow-hidden",
                             onclick: move |e| e.stop_propagation(),
-                            button {
-                                class: "flex items-center gap-2 w-full px-3 py-2 text-sm text-destructive hover:bg-white/10 transition-colors text-left",
+                            Button {
+                                style: ButtonStyle::Text,
+                                size: ButtonSize::Small,
+                                shape: ButtonShape::Square,
+                                class: "flex items-center gap-2 w-full text-destructive justify-start".to_string(),
                                 onclick: move |_| {
                                     show_menu.set(false);
                                     on_remove.call(());

@@ -49,6 +49,9 @@ pub struct SpaceCommon {
     pub anonymous_participation: bool,
 
     #[serde(default)]
+    pub join_anytime: bool,
+
+    #[serde(default)]
     pub logo: String,
 
     #[serde(default)]
@@ -113,6 +116,11 @@ impl SpaceCommon {
             self.status,
             Some(SpaceStatus::Started | SpaceStatus::InProgress)
         )
+    }
+
+    pub fn is_participation_open(&self) -> bool {
+        matches!(self.status, Some(SpaceStatus::InProgress))
+            || (self.join_anytime && matches!(self.status, Some(SpaceStatus::Started)))
     }
 }
 

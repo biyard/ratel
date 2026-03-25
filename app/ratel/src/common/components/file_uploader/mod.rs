@@ -53,6 +53,23 @@ pub fn FileUploader(
                 return;
             };
             start_upload(file);
+            // Reset the file input's value directly via the browser API so the
+            // same file can be re-selected after deletion. The previous `key`-based
+            // approach relied on Dioxus recreating the DOM element when `key` changes,
+            // but Dioxus only guarantees that behavior for list items in `for` loops.
+            #[cfg(feature = "web")]
+            {
+                use dioxus::web::WebEventExt;
+                use wasm_bindgen::JsCast;
+                if let Some(web_event) = evt.try_as_web_event() {
+                    if let Some(input) = web_event
+                        .target()
+                        .and_then(|t| t.dyn_into::<web_sys::HtmlInputElement>().ok())
+                    {
+                        input.set_value("");
+                    }
+                }
+            }
         }
     };
 

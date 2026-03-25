@@ -11,15 +11,10 @@ pub fn FullActionLayover(
     attributes: Vec<Attribute>,
     children: Element,
 ) -> Element {
-    let mut hidden_once = use_signal(|| false);
     let layout_ui = use_space_layout_ui();
     let sidebar_visible = layout_ui.sidebar_visible;
 
     use_effect(move || {
-        if hidden_once() {
-            return;
-        }
-        hidden_once.set(true);
         let mut sidebar_visible = sidebar_visible;
         sidebar_visible.set(false);
     });
