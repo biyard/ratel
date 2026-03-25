@@ -10,7 +10,7 @@ pub fn exchange_preview_card(
     estimated_tokens: f64,
 ) -> Element {
     rsx! {
-        div { class: "border-t border-[var(--web\\/card\\/stroke2,#262626)] pt-10",
+        div { class: "border-t border-card-border pt-10",
             div { class: "flex flex-col items-center gap-5 w-full",
                 // Exchange row: Points → Tokens
                 div { class: "flex items-start justify-between w-full",
@@ -48,7 +48,7 @@ pub fn exchange_preview_card(
                     div { class: "flex flex-col items-end gap-0.5",
                         div { class: "flex items-center gap-1",
                             span { class: "text-[15px] font-medium text-foreground-muted tracking-[0.5px]",
-                                "{format_tokens(estimated_tokens)}{rewards.token_symbol}"
+                                "{format_tokens(estimated_tokens)} {rewards.token_symbol}"
                             }
                             div { class: "w-5 h-5 rounded-full bg-primary" }
                         }

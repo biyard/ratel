@@ -44,7 +44,6 @@ pub fn PointsBarChart(
     let year: i32 = month.get(..4).and_then(|s| s.parse().ok()).unwrap_or(2025);
     let mon: u32 = month.get(5..7).and_then(|s| s.parse().ok()).unwrap_or(1);
 
-    let first_day = chrono::NaiveDate::from_ymd_opt(year, mon, 1).unwrap_or_default();
     let last_day = if mon == 12 {
         chrono::NaiveDate::from_ymd_opt(year + 1, 1, 1)
     } else {
@@ -77,7 +76,7 @@ pub fn PointsBarChart(
     let current_period = period.read().clone();
 
     rsx! {
-        div { class: "border-t border-[var(--web\\/card\\/stroke2,#262626)] py-10",
+        div { class: "border-t border-card-border py-10",
             div { class: "flex flex-col gap-3 items-center w-full",
                 // Period selector tabs
                 div { class: "relative w-full",
@@ -199,11 +198,7 @@ fn aggregate_by_week(
                 total += tx.amount.abs();
             }
         }
-        let label = if *start == 1 {
-            format!("1-{}", end)
-        } else {
-            format!("-{}", end)
-        };
+        let label = format!("{}-{}", start, end);
         result.push(ChartBar {
             label,
             points: total,
