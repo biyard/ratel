@@ -166,10 +166,15 @@ pub async fn respond_poll(
         return Err(Error::BadRequest("Response editing not allowed".into()));
     }
 
-    if poll.canister_upload_enabled {
+    let env = crate::common::config::Environment::default();
+    if poll.canister_upload_enabled && env != crate::common::config::Environment::Production {
         let now = crate::common::utils::time::get_now_timestamp_millis();
         use crate::features::spaces::pages::actions::services::vote_crypto::VOTE_CRYPTO_SERVICE;
-        let crypto = &*VOTE_CRYPTO_SERVICE;
+        let crypto = VOTE_CRYPTO_SERVICE
+            .as_ref()
+            .ok_or(Error::InternalServerError(
+                "Encrypted voting is not configured (VOTER_TAG_SECRET / ATTR_VOTING_AUTHORITY_JSON missing)".into(),
+            ))?;
         let metadata = PollMetadata {
             poll_sk: poll_sk_entity.to_string(),
             submitted_at_ms: now,

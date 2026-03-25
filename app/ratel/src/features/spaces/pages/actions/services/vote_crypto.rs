@@ -1,17 +1,31 @@
 use crate::common::types::{EntityType, Error, Partition};
 use dioxus::fullstack::Lazy;
-use dioxus::prelude::ServerFnError;
 
-pub static VOTE_CRYPTO_SERVICE: Lazy<VoteCryptoService> = Lazy::new(|| async move {
-    let voter_tag_secret = std::env::var("VOTER_TAG_SECRET")
-        .map_err(|_| ServerFnError::new("VOTER_TAG_SECRET not configured"))?;
-    let authority_json = std::env::var("ATTR_VOTING_AUTHORITY_JSON")
-        .map_err(|_| ServerFnError::new("ATTR_VOTING_AUTHORITY_JSON not configured"))?;
+pub static VOTE_CRYPTO_SERVICE: Lazy<Option<VoteCryptoService>> = Lazy::new(|| async move {
+    let voter_tag_secret = match std::env::var("VOTER_TAG_SECRET") {
+        Ok(v) if !v.is_empty() => v,
+        _ => {
+            tracing::warn!("VOTER_TAG_SECRET not configured — encrypted voting disabled");
+            return dioxus::Ok(None);
+        }
+    };
+    let authority_json = match std::env::var("ATTR_VOTING_AUTHORITY_JSON") {
+        Ok(v) if !v.is_empty() => v,
+        _ => {
+            tracing::warn!(
+                "ATTR_VOTING_AUTHORITY_JSON not configured — encrypted voting disabled"
+            );
+            return dioxus::Ok(None);
+        }
+    };
 
-    dioxus::Ok(
-        VoteCryptoService::new(&voter_tag_secret, &authority_json)
-            .map_err(|e| ServerFnError::new(format!("VoteCrypto init error: {}", e)))?,
-    )
+    match VoteCryptoService::new(&voter_tag_secret, &authority_json) {
+        Ok(svc) => dioxus::Ok(Some(svc)),
+        Err(e) => {
+            tracing::error!("VoteCrypto init failed: {} — encrypted voting disabled", e);
+            dioxus::Ok(None)
+        }
+    }
 });
 use attr_voting::{
     authority::VotingAuthority,

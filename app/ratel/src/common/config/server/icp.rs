@@ -13,16 +13,15 @@ pub static CANISTER_SERVICE: Lazy<CanisterService> = Lazy::new(|| async move {
         tracing::warn!("RATEL_CANISTER_ID not set at runtime, using: {}", fallback);
         fallback.to_string()
     });
-
     let identity = if let Ok(path) = std::env::var("ICP_IDENTITY_PEM_PATH") {
         Some(
-            ic_agent::identity::BasicIdentity::from_pem_file(path.trim())
+            ic_agent::identity::Secp256k1Identity::from_pem_file(path.trim())
                 .map_err(|e| ServerFnError::new(format!("IC identity load error: {}", e)))?,
         )
     } else if let Ok(pem) = std::env::var("ICP_IDENTITY_PEM") {
         let normalized = pem.replace("\\n", "\n");
         Some(
-            ic_agent::identity::BasicIdentity::from_pem(normalized.as_bytes())
+            ic_agent::identity::Secp256k1Identity::from_pem(normalized.as_bytes())
                 .map_err(|e| ServerFnError::new(format!("IC identity parse error: {}", e)))?,
         )
     } else {

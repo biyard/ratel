@@ -248,10 +248,11 @@ jobs:
 
           WALLETCONNECT_PROJECT_ID: ${{ secrets.WALLETCONNECT_PROJECT_ID }}
 
-          RATEL_CANISTER_ID: ${{ secrets.DEV_RATEL_CANISTER_ID }}
+          RATEL_CANISTER_ID: lz3um-vp777-77777-aaaba-cai
           IC_URL: https://icp.dev.biyard.co
-          VOTER_TAG_SECRET: ${{ secrets.VOTER_TAG_SECRET }}
-          ATTR_VOTING_AUTHORITY_JSON: ${{ secrets.ATTR_VOTING_AUTHORITY_JSON }}
+          ICP_IDENTITY_PEM: ${{ secrets.DEV_ICP_IDENTITY_PEM }}
+          VOTER_TAG_SECRET: ${{ secrets.DEV_VOTER_TAG_SECRET }}
+          ATTR_VOTING_AUTHORITY_JSON: ${{ secrets.DEV_ATTR_VOTING_AUTHORITY_JSON }}
         run: |
           npm i -D tailwindcss
           rm -rf ../../target/dx
