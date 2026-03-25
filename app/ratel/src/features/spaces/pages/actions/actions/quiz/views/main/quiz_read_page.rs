@@ -6,7 +6,7 @@ use crate::features::spaces::pages::actions::actions::poll::components::{
 use crate::features::spaces::pages::actions::actions::quiz::*;
 use crate::features::spaces::pages::actions::components::FullActionLayover;
 use crate::features::spaces::pages::apps::apps::file::components::FileCard;
-use crate::features::spaces::space_common::hooks::use_space;
+use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
 use crate::features::spaces::space_common::types::space_page_actions_quiz_key;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -78,6 +78,18 @@ translate! {
         en: "Question",
         ko: "질문",
     },
+    no_permission: {
+        en: "You do not have permission to participate in this quiz.",
+        ko: "이 퀴즈에 참여할 권한이 없습니다.",
+    },
+    already_passed: {
+        en: "You have already passed this quiz.",
+        ko: "이미 이 퀴즈를 통과했습니다.",
+    },
+    no_remaining_attempts: {
+        en: "You have no remaining attempts for this quiz.",
+        ko: "남은 참여 횟수가 없습니다.",
+    },
 }
 
 #[component]
@@ -119,17 +131,21 @@ pub fn QuizReadPage(
 
     let now = crate::common::utils::time::get_now_timestamp_millis();
     let is_in_progress = now >= quiz.started_at && now <= quiz.ended_at;
-    let is_space_active = matches!(
+    let role = use_space_role()();
+    let can_execute_action = crate::features::spaces::pages::actions::can_execute_space_action(
+        role,
+        quiz.space_action.prerequisite,
         space.status,
-        Some(crate::common::SpaceStatus::Started | crate::common::SpaceStatus::InProgress)
+        space.join_anytime,
     );
     let has_passed = quiz.passed.unwrap_or(false);
+    let total_allowed = quiz.retry_count.saturating_add(1);
     let can_submit = can_respond
-        && is_space_active
+        && can_execute_action
         && is_in_progress
         && !has_passed
-        && quiz.attempt_count < quiz.retry_count;
-    let remaining_submissions = quiz.retry_count.saturating_sub(quiz.attempt_count);
+        && quiz.attempt_count < total_allowed;
+    let remaining_submissions = total_allowed.saturating_sub(quiz.attempt_count);
     let total_questions = quiz.questions.len();
     let current_idx = question_index().min(total_questions.saturating_sub(1));
     let current_question = quiz.questions.get(current_idx).cloned();
@@ -173,8 +189,8 @@ pub fn QuizReadPage(
                 "data-testid": "quiz-read-overview",
                 content_class: "gap-6".to_string(),
                 bottom_left: rsx! {
-                    div { class: "text-sm text-neutral-300 light:text-neutral-700",
-                        "{i18n.remaining_submissions} {remaining_submissions}/{quiz.retry_count}"
+                    div { class: "text-sm text-foreground-muted",
+                        "{i18n.remaining_submissions} {remaining_submissions}/{total_allowed}"
                     }
                 },
                 bottom_right: rsx! {
@@ -199,9 +215,7 @@ pub fn QuizReadPage(
                     }
                 },
                 div { class: "w-full",
-                    div { class: "text-[28px]/[34px] font-bold text-text-primary",
-                        "{quiz.title}"
-                    }
+                    div { class: "text-[28px]/[34px] font-bold text-text-primary", "{quiz.title}" }
 
                     div { class: "flex items-center justify-end border-y border-card-border py-4",
                         div { class: "shrink-0 text-[14px] font-light text-text-primary",
@@ -211,7 +225,7 @@ pub fn QuizReadPage(
 
                     if !quiz.description.is_empty() {
                         div {
-                            class: "text-[15px]/[24px] tracking-[0.5px] text-[#D4D4D4] light:text-text-primary",
+                            class: "text-[15px]/[24px] tracking-[0.5px] text-foreground-muted",
                             dangerous_inner_html: quiz.description.clone(),
                         }
                     }
@@ -234,8 +248,8 @@ pub fn QuizReadPage(
             FullActionLayover {
                 "data-testid": "quiz-read-quiz",
                 bottom_left: rsx! {
-                    div { class: "text-sm text-neutral-300 light:text-neutral-700",
-                        "{i18n.remaining_submissions} {remaining_submissions}/{quiz.retry_count}"
+                    div { class: "text-sm text-foreground-muted",
+                        "{i18n.remaining_submissions} {remaining_submissions}/{total_allowed}"
                     }
                 },
                 bottom_right: rsx! {
@@ -282,24 +296,38 @@ pub fn QuizReadPage(
                     }
                 },
                 div { class: "w-full",
-                    if !is_space_active {
-                        div { class: "rounded-lg bg-neutral-800 p-3 text-sm text-neutral-400",
-                            {i18n.space_not_active}
-                        }
-                    } else if !is_in_progress {
+                    if !is_in_progress {
                         if now < quiz.started_at {
-                            div { class: "rounded-lg bg-neutral-800 p-3 text-sm text-neutral-400",
+                            div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
                                 {i18n.quiz_not_started}
                             }
                         } else {
-                            div { class: "rounded-lg bg-neutral-800 p-3 text-sm text-neutral-400",
+                            div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
                                 {i18n.quiz_ended}
                             }
                         }
                     }
 
+                    if is_in_progress && !can_execute_action {
+                        div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
+                            {i18n.no_permission}
+                        }
+                    }
+
+                    if is_in_progress && can_execute_action && has_passed {
+                        div { class: "rounded-lg bg-banner-success-bg p-3 text-sm text-banner-success-text",
+                            {i18n.already_passed}
+                        }
+                    }
+
+                    if is_in_progress && can_execute_action && !has_passed && quiz.attempt_count >= total_allowed && can_respond {
+                        div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
+                            {i18n.no_remaining_attempts}
+                        }
+                    }
+
                     if quiz.questions.is_empty() {
-                        div { class: "flex items-center justify-center py-10 text-neutral-500 light:text-text-secondary",
+                        div { class: "flex items-center justify-center py-10 text-foreground-muted",
                             {i18n.no_questions}
                         }
                     } else {
@@ -319,7 +347,7 @@ pub fn QuizReadPage(
                                             total: total_questions,
                                             question: question.clone(),
                                             answer,
-                                            disabled: !can_submit,
+                                            disabled: !can_respond || !can_execute_action || !is_in_progress || !can_submit,
                                             on_change: move |next_answer: Answer| {
                                                 let mut next = answers();
                                                 if idx < next.len() {

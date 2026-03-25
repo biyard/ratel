@@ -1,5 +1,5 @@
-import { test } from "@playwright/test";
-import { click, fill, goto, getLocator, getEditor } from "../utils";
+import { test, expect } from "@playwright/test";
+import { click, fill, goto, getLocator, getEditor, waitPopup } from "../utils";
 
 // This test covers the full flow:
 // 1. Create a team via the profile dropdown
@@ -28,11 +28,7 @@ test.describe.serial("Space with actions created by a team", () => {
 
     // Open profile dropdown by clicking the user profile button in the navbar
     // Target the button specifically by its accessible name (img alt + text)
-    const profileTrigger = page.getByRole("button", {
-      name: "User Profile",
-    });
-    await profileTrigger.click();
-    await page.waitForLoadState("networkidle");
+    await click(page, { label: "User Profile" });
 
     // Step 2: Click "Create Team" in the dropdown
     await click(page, { text: "Create Team" });
@@ -56,7 +52,7 @@ test.describe.serial("Space with actions created by a team", () => {
     // Wait for navigation to the team home page
     // Routes use /{username}/home (no /teams/ prefix)
     await page.waitForURL(new RegExp(`/${teamUsername}/home`), {
-      waitUntil: "networkidle",
+      waitUntil: "load",
     });
 
     // Step 4: Create a post via the Create button on the team home page
@@ -64,7 +60,7 @@ test.describe.serial("Space with actions created by a team", () => {
 
     // Wait for post edit page to load
     await page.waitForURL(/\/posts\/.*\/edit/, {
-      waitUntil: "networkidle",
+      waitUntil: "load",
     });
 
     // Step 6: Fill in the post
@@ -81,7 +77,7 @@ test.describe.serial("Space with actions created by a team", () => {
 
     // Wait for navigation to the space dashboard
     await page.waitForURL(/\/spaces\/[a-z0-9-]+\/dashboard/, {
-      waitUntil: "networkidle",
+      waitUntil: "load",
     });
     await getLocator(page, { text: "Dashboard" });
 
@@ -109,7 +105,7 @@ test.describe.serial("Space with actions created by a team", () => {
 
     // Wait for discussion creator page
     await page.waitForURL(/\/actions\/discussions\//, {
-      waitUntil: "networkidle",
+      waitUntil: "load",
     });
 
     // Fill discussion fields on the creator page
@@ -153,7 +149,7 @@ test.describe.serial("Space with actions created by a team", () => {
 
     // Wait for poll creator page
     await page.waitForURL(/\/actions\/polls\//, {
-      waitUntil: "networkidle",
+      waitUntil: "load",
     });
 
     // Fill poll title
@@ -165,7 +161,7 @@ test.describe.serial("Space with actions created by a team", () => {
 
     // Trigger blur to save title
     await page.keyboard.press("Tab");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     // --- Add a Single Choice question on the Questions tab (default tab) ---
     await click(page, { testId: "poll-add-question" });
@@ -179,22 +175,22 @@ test.describe.serial("Space with actions created by a team", () => {
 
     // Add a third option
     await page.getByRole("button", { name: "Add Option" }).first().click();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
     await textInputs.nth(3).fill("Save for reserves");
 
     // Trigger blur to save question
     await page.keyboard.press("Tab");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     // --- Switch to the Settings tab and enable Prerequisite ---
     await page.getByRole("tab", { name: "Settings" }).click();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     // The Prerequisite row: paragraph "Prerequisite" is inside a div,
     // and the Switch button is a sibling of that div. Go up two levels to the Card.
     const prerequisiteCard = page.locator("text=Prerequisite").locator("../..");
     await prerequisiteCard.locator("button").click();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("Create a quiz action in the space", async ({ page }) => {
@@ -215,7 +211,7 @@ test.describe.serial("Space with actions created by a team", () => {
 
     // Wait for quiz creator page
     await page.waitForURL(/\/actions\/quizzes\//, {
-      waitUntil: "networkidle",
+      waitUntil: "load",
     });
 
     // Fill quiz title on the Overview tab (default tab)
@@ -237,7 +233,7 @@ test.describe.serial("Space with actions created by a team", () => {
     // Switch to the Quiz tab to add questions.
     // Use role="tab" to avoid ambiguity with the "Quiz" page heading.
     await page.getByRole("tab", { name: "Quiz" }).click();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     // --- Add first question (Single Choice) ---
     await click(page, { testId: "quiz-add-question" });
@@ -254,9 +250,9 @@ test.describe.serial("Space with actions created by a team", () => {
     const textInputs = page.locator('input[type="text"]:visible');
 
     // Fill the question title
-    await textInputs.nth(0).fill(
-      "What is the primary purpose of governance in a DAO?",
-    );
+    await textInputs
+      .nth(0)
+      .fill("What is the primary purpose of governance in a DAO?");
 
     // Edit the default option texts
     await textInputs.nth(1).fill("To centralize power");
@@ -264,7 +260,7 @@ test.describe.serial("Space with actions created by a team", () => {
 
     // Add a third option via the "Add Option" button
     await page.getByRole("button", { name: "Add Option" }).first().click();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     // The new option appears as text input index 3
     await textInputs.nth(3).fill("To maximize profits only");
@@ -274,7 +270,7 @@ test.describe.serial("Space with actions created by a team", () => {
     // Each option row has a <label> wrapping a hidden checkbox.
     const checkboxLabels = page.locator('label:has(input[type="checkbox"])');
     await checkboxLabels.nth(1).click();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     // --- Add second question (Multiple Choice) ---
     await click(page, { testId: "quiz-add-question" });
@@ -283,15 +279,15 @@ test.describe.serial("Space with actions created by a team", () => {
     // After adding Q2 the text input ordering becomes:
     //   [0] Q1 title, [1-3] Q1 options (3 total),
     //   [4] Q2 title (placeholder "Input"), [5] Q2 option 1, [6] Q2 option 2
-    await textInputs.nth(4).fill(
-      "Which of the following are benefits of decentralized governance?",
-    );
+    await textInputs
+      .nth(4)
+      .fill("Which of the following are benefits of decentralized governance?");
     await textInputs.nth(5).fill("Transparency");
     await textInputs.nth(6).fill("Community participation");
 
     // Add a third option for question 2 (use the second "Add Option" button)
     await page.getByRole("button", { name: "Add Option" }).nth(1).click();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     // New option is text input index 7
     await textInputs.nth(7).fill("Single point of failure");
@@ -305,7 +301,7 @@ test.describe.serial("Space with actions created by a team", () => {
 
     // Trigger save by pressing Tab to blur the last active element
     await page.keyboard.press("Tab");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("Create a follow action in the space", async ({ page }) => {
@@ -328,7 +324,7 @@ test.describe.serial("Space with actions created by a team", () => {
 
     // Wait for follow creator page
     await page.waitForURL(/\/actions\/follows\//, {
-      waitUntil: "networkidle",
+      waitUntil: "load",
     });
 
     // Verify creator sees the General tab with follower settings
@@ -346,5 +342,116 @@ test.describe.serial("Space with actions created by a team", () => {
 
     // Confirm the visibility selection
     await click(page, { label: "Confirm visibility selection" });
+  });
+
+  test("Signup as a new user and participate in the space", async ({
+    browser,
+  }) => {
+    // Create a fresh anonymous context (no session cookies)
+    const context = await browser.newContext({
+      storageState: { cookies: [], origins: [] },
+    });
+    const page = await context.newPage();
+
+    try {
+      // Navigate to the published space as anonymous
+      await goto(page, spaceUrl + "/dashboard");
+
+      // Click Sign In on the space sidebar
+      await click(page, { text: "Sign In" });
+      await waitPopup(page, { visible: true });
+
+      // Switch to signup modal
+      await click(page, { text: "Create an account" });
+
+      // Fill signup form
+      const signupEmail = `e2e_signup_${Date.now()}@biyard.co`;
+      await fill(
+        page,
+        { placeholder: "Enter your email address" },
+        signupEmail,
+      );
+
+      // Send and verify code (requires bypass feature on the server)
+      await click(page, { text: "Send" });
+      await fill(
+        page,
+        { placeholder: "Enter the verification code" },
+        "000000",
+      );
+      await click(page, { text: "Verify" });
+
+      // Wait for verification to complete — the "Send" button disappears
+      // once is_valid_email becomes true after async server response
+      await expect(page.getByText("Send", { exact: true })).toBeHidden();
+
+      // Fill password
+      await fill(page, { placeholder: "Enter your password" }, "Test!234");
+      await fill(
+        page,
+        { placeholder: "Re-enter your password" },
+        "Test!234",
+      );
+
+      // Fill display name and username
+      const uniqueId = Date.now().toString();
+      await fill(
+        page,
+        { placeholder: "Enter your display name" },
+        `E2E User ${uniqueId}`,
+      );
+      await fill(
+        page,
+        { placeholder: "Enter your user name" },
+        `u${uniqueId}`,
+      );
+
+      // Agree to Terms of Service (required checkbox)
+      await click(page, {
+        label: "[Required] I have read and accept the Terms of Service.",
+      });
+
+      // Submit signup
+      await click(page, { text: "Finished Sign-up" });
+
+      // Wait for signup modal to close
+      await waitPopup(page, { visible: false });
+
+      // Reload the space page to see participation card as a logged-in viewer
+      await goto(page, spaceUrl + "/dashboard");
+
+      // Click Participate button on the participation card
+      await click(page, { text: "Participate" });
+
+      // "Required Actions" layover appears with prerequisite actions
+      await getLocator(page, { text: "Required Actions" });
+
+      // Click the prerequisite poll action card to navigate to the poll
+      await click(page, {
+        text: "How should the team allocate the Q2 budget?",
+      });
+
+      // Wait for poll page to load
+      await page.waitForURL(/\/actions\/polls\//, {
+        waitUntil: "load",
+      });
+
+      // Answer the single choice question by clicking one of the options
+      await click(page, { text: "Invest in R&D" });
+
+      // Submit the poll response
+      await click(page, { text: "Submit" });
+      await page.waitForLoadState("load");
+
+      // Navigate back to dashboard to verify participation
+      await goto(page, spaceUrl + "/dashboard");
+
+      // Verify user profile shows in the sidebar with Candidate role
+      const userProfile = page.locator("#space-user-profile");
+      await expect(userProfile).toBeVisible();
+      await expect(userProfile).toContainText(`E2E User ${uniqueId}`);
+    } finally {
+      await context.close();
+    }
   });
 });

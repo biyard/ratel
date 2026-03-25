@@ -1,3 +1,4 @@
+mod access;
 pub mod actions;
 pub mod components;
 pub mod controllers;
@@ -13,6 +14,7 @@ use controllers::*;
 use models::*;
 use types::*;
 
+pub use access::*;
 pub use menu::*;
 pub use views::*;
 

@@ -119,7 +119,7 @@ pub fn ActionSettingsModal(
 
     rsx! {
         div { class: "flex justify-end w-full h-full text-web-font-primary",
-            div { class: "flex flex-col gap-5 py-6 px-6 w-full h-full shrink-0 overflow-y-auto bg-neutral-950 max-tablet:px-5 max-tablet:py-5 max-mobile:min-h-full max-mobile:gap-4 max-mobile:px-4 max-mobile:py-4",
+            div { class: "flex flex-col gap-5 py-6 px-6 w-full h-full shrink-0 overflow-y-auto bg-background max-tablet:px-5 max-tablet:py-5 max-mobile:min-h-full max-mobile:gap-4 max-mobile:px-4 max-mobile:py-4",
                 div { class: "flex gap-3 items-center max-mobile:gap-2.5",
                     Button {
                         size: ButtonSize::Icon,
@@ -162,7 +162,7 @@ pub fn ActionSettingsModal(
                         size: ButtonSize::Medium,
                         style: ButtonStyle::Text,
                         shape: ButtonShape::Square,
-                        class: if available_actions.is_empty() { "flex h-11 w-full items-center gap-2.5 rounded-[10px] bg-neutral-800 py-2.5 pr-5 pl-2.5 text-left hover:bg-neutral-800 cursor-not-allowed opacity-50" } else { "flex h-11 w-full items-center gap-2.5 rounded-[10px] bg-neutral-800 py-2.5 pr-5 pl-2.5 text-left hover:bg-neutral-800" },
+                        class: if available_actions.is_empty() { "flex h-11 w-full items-center gap-2.5 rounded-[10px] bg-button-muted py-2.5 pr-5 pl-2.5 text-left hover:bg-button-muted cursor-not-allowed opacity-50" } else { "flex h-11 w-full items-center gap-2.5 rounded-[10px] bg-button-muted py-2.5 pr-5 pl-2.5 text-left hover:bg-button-muted" },
                         disabled: available_actions.is_empty(),
                         onclick: move |_| is_add_menu_open.set(!is_add_menu_open()),
                         icons::validations::Add {
@@ -180,14 +180,14 @@ pub fn ActionSettingsModal(
                     }
 
                     if is_add_menu_open() && !available_actions.is_empty() {
-                        div { class: "flex overflow-hidden overflow-y-auto absolute left-0 top-full z-10 flex-col mt-2 w-full border border-yellow-400 rounded-[10px] bg-neutral-800 shadow-[0_8px_20px_0_rgba(20,26,62,0.25)] max-mobile:max-h-56",
+                        div { class: "flex overflow-hidden overflow-y-auto absolute left-0 top-full z-10 flex-col mt-2 w-full border border-primary rounded-[10px] bg-popover shadow-[0_8px_20px_0_rgba(20,26,62,0.25)] max-mobile:max-h-56",
                             for action in available_actions.iter() {
                                 Button {
                                     key: "{action.action_id}",
                                     size: ButtonSize::Medium,
                                     style: ButtonStyle::Text,
                                     shape: ButtonShape::Square,
-                                    class: "flex justify-start items-start py-2.5 px-3 w-full font-medium text-left whitespace-normal break-words rounded-none min-h-11 font-raleway text-[15px]/[18px] text-web-font-primary hover:bg-neutral-900",
+                                    class: "flex justify-start items-start py-2.5 px-3 w-full font-medium text-left whitespace-normal break-words rounded-none min-h-11 font-raleway text-[15px]/[18px] text-web-font-primary hover:bg-button-muted-hover",
                                     onclick: {
                                         let action_id = action.action_id.clone();
                                         let mut selected_action_ids = selected_action_ids;
@@ -204,7 +204,7 @@ pub fn ActionSettingsModal(
                     }
                 }
 
-                div { class: "w-full h-px bg-neutral-800" }
+                div { class: "w-full border-t border-separator" }
 
                 div { class: "flex flex-col gap-4",
                     div { class: "flex gap-3 justify-between items-center",
@@ -212,7 +212,7 @@ pub fn ActionSettingsModal(
                             icons::calendar::CalendarToday {
                                 width: "20",
                                 height: "20",
-                                class: "[&>path]:stroke-current",
+                                class: "[&>path]:stroke-current [&>path]:fill-none [&>rect]:fill-current",
                             }
                             span { class: "font-bold font-raleway text-[17px]/[20px] tracking-[-0.18px] max-mobile:text-[15px]/[18px]",
                                 {tr.date}
@@ -230,7 +230,7 @@ pub fn ActionSettingsModal(
                     }
                 }
 
-                div { class: "w-full h-px bg-neutral-800" }
+                div { class: "w-full border-t border-separator" }
 
                 div { class: "flex flex-col gap-4 py-1",
                     div { class: "flex gap-3 justify-between items-center",
@@ -238,7 +238,7 @@ pub fn ActionSettingsModal(
                             icons::shopping::Gift {
                                 width: "20",
                                 height: "20",
-                                class: "[&>path]:stroke-current",
+                                class: "[&>path]:stroke-current [&>path]:fill-none [&>rect]:stroke-current [&>rect]:fill-none",
                             }
                             span { class: "font-bold font-raleway text-[17px]/[20px] tracking-[-0.18px] max-mobile:text-[15px]/[18px]",
                                 {tr.rewards}

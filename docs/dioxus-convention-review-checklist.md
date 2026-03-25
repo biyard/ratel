@@ -26,6 +26,7 @@
 - [ ] 리스트 렌더링 시 `key`를 제공하는가?
 - [ ] 인라인 스타일 대신 Tailwind CSS 클래스를 사용하는가?
 - [ ] 네이밍 규칙을 따르는가? (PascalCase, Modal/Service 접미사 등)
+- [ ] `Switch` 컴포넌트 사용 시 `label` prop을 통해 적절한 `aria-label`(accessible name)이 설정되는가? (`role="switch"`와 `aria-checked`는 label 유무와 상관없이 항상 렌더링됨)
 
 ## 4. 라우트
 
@@ -53,6 +54,11 @@
 - [ ] 반복되는 추출 로직이 있다면 `FromRequestParts`를 구현한 별도 타입으로 분리했는가?
 - [ ] `FromRequestParts` 구현 시 `parts.extensions`에 캐싱하는가? (중복 DB 조회 방지)
 - [ ] `FromRequestParts` 구현이 `#[cfg(feature = "server")]`로 게이트되어 있는가?
+
+### 서버-클라이언트 아키텍처 패턴
+
+- [ ] 여러 모델 필드에 의존하는 계산된 불리언(예: "참여 가능 여부")이 서버 컨트롤러에서 한 번만 계산되어 응답 DTO 필드로 노출되는가? (클라이언트에서 동일한 조건을 중복 검사하지 않는가?)
+- [ ] 동일한 불리언 조건이 여러 서버 위치에서 사용될 때 모델 구조체의 헬퍼 메서드(예: `SpaceCommon::is_participation_open()`)로 추출되어 있는가?
 
 ## 7. 모델 (DynamoEntity)
 
