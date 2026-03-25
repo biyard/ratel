@@ -1,6 +1,6 @@
 use super::components::*;
-use crate::common::use_query;
 use crate::common::attribute::age_to_band;
+use crate::common::use_query;
 use crate::common::utils::time::get_now_timestamp_millis;
 use crate::features::spaces::pages::actions::actions::poll::controllers::{
     get_poll, get_poll_result, PollResultResponse, PollResultSummary,
@@ -112,12 +112,7 @@ pub fn SpaceAnalyzeDetailPage(
                         let panels = panels_for_download.clone();
                         let result = result_for_download.clone();
                         let tr_for_excel = tr_for_excel.clone();
-                        let excel_data = build_excel_data(
-                            &poll,
-                            &panels,
-                            &result,
-                            &tr_for_excel,
-                        );
+                        let excel_data = build_excel_data(&poll, &panels, &result, &tr_for_excel);
                         let mut toast = toast;
                         let download_started_text = download_started_text.clone();
                         spawn(async move {
@@ -288,13 +283,7 @@ fn render_question_card(
 fn filter_dom_suffix(filter_key: &str) -> String {
     filter_key
         .chars()
-        .map(|ch| {
-            if ch.is_ascii_alphanumeric() {
-                ch
-            } else {
-                '-'
-            }
-        })
+        .map(|ch| if ch.is_ascii_alphanumeric() { ch } else { '-' })
         .collect()
 }
 
@@ -595,10 +584,6 @@ fn build_other_choice_stat(
     }
 
     let count: i64 = other_answers.values().copied().sum();
-    if count <= 0 {
-        return None.into_iter();
-    }
-
     Some(build_choice_stat(
         &(index + 1).to_string(),
         count,
