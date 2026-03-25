@@ -13,14 +13,12 @@ pub async fn list_discussions(
 
     let (posts, next_bookmark) = if let Some(category_name) = category {
         let opt = SpacePost::opt_with_bookmark(bookmark)
-            .sk(EntityType::SpacePost(String::default()).to_string())
             .scan_index_forward(false)
             .limit(20);
         let pk = format!("{}#{}", space_pk, category_name);
         SpacePost::find_by_category(cli, pk, opt).await?
     } else {
         let opt = SpacePost::opt_with_bookmark(bookmark)
-            .sk(EntityType::SpacePost(String::default()).to_string())
             .scan_index_forward(false)
             .limit(20);
         SpacePost::find_by_space_ordered(cli, space_pk, opt).await?
