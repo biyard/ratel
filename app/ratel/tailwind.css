@@ -287,6 +287,10 @@ html[data-theme="light"] {
   /* Quiz colors */
   --color-quiz-overview-label: #8c8c8c;
   --color-quiz-overview-counter: #6b6b6b;
+  --color-quiz-tab-label: var(--dark, #a3a3a3) var(--light, #262626);
+  --color-quiz-tab-empty: var(--dark, #737373) var(--light, #262626);
+  --color-quiz-tab-preview-bg: var(--dark, #171717) var(--light, #fafafa);
+  --color-quiz-tab-preview-border: var(--dark, #404040) var(--light, #e5e5e5);
   --color-quiz-editor-bg: var(--dark, #101010) var(--light, #f5f5f5);
   --color-quiz-editor-border: var(--dark, #525252) var(--light, #a3a3a3);
   --color-quiz-editor-toolbar-border: var(--dark, #262626) var(--light, #e5e5e5);
@@ -713,6 +717,12 @@ a {
   --color-btn-outline-disable-outline: var(--dark, #8e8e8e)
     var(--light, #cacaca);
   --color-btn-outline-disable-text: var(--dark, #8e8e8e) var(--light, #848484);
+
+  /* Action Settings */
+  --color-btn-action-settings-bg: var(--dark, #0a0a0a) var(--light, #ffffff);
+  --color-btn-action-settings-text: var(--dark, #ffffff) var(--light, #0a0a0a);
+  --color-btn-action-settings-icon: var(--dark, #ffffff) var(--light, #0a0a0a);
+  --color-btn-analyze-view-bg: var(--dark, #fcb300) var(--light, #d4d4d4);
 }
 
 /* ==========================================================================
@@ -731,6 +741,8 @@ a {
 @theme static {
   --color-icon-primary: #737373;
   --color-icon-secondary: var(--dark, #ffffff) var(--light, #262626);
+  --color-icon-success: var(--dark, #16a34a) var(--light, #16a34a);
+  --color-icon-error: var(--dark, #ef4444) var(--light, #ef4444);
 }
 
 /* ==========================================================================
@@ -866,6 +878,14 @@ h3 {
     color: var(--color-icon-primary);
   }
 
+  .text-icon-success {
+    color: var(--color-icon-success);
+  }
+
+  .text-icon-error {
+    color: var(--color-icon-error);
+  }
+
   /* Space Dashboard Fonts */
   .sp-dash-font-inter {
     font-family: var(--font-inter);
@@ -911,6 +931,16 @@ h3 {
 
 body {
   @apply overflow-hidden;
+}
+
+/* Mobile Safari: use dynamic viewport height to account for address bar */
+@supports (height: 100dvh) {
+  .h-screen {
+    height: 100dvh !important;
+  }
+  .min-h-screen {
+    min-height: 100dvh !important;
+  }
 }
 
 .scrollbar-none {

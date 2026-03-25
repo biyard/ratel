@@ -21,9 +21,15 @@ pub fn CreatorActionPage(space_id: ReadSignal<SpacePartition>) -> Element {
                         h3 { {tr.title} }
                         Tooltip {
                             TooltipTrigger {
-                                icons::help_support::Info { width: "16", height: "16", class: "h-4 w-4 [&>path]:stroke-text-secondary [&>circle]:fill-text-secondary cursor-help" }
+                                icons::help_support::Info {
+                                    width: "16",
+                                    height: "16",
+                                    class: "h-4 w-4 [&>path]:stroke-text-secondary [&>path]:fill-none [&>circle]:stroke-text-secondary [&>circle]:fill-current cursor-pointer",
+                                }
                             }
-                            TooltipContent { side: ContentSide::Bottom, align: ContentAlign::Start,
+                            TooltipContent {
+                                side: ContentSide::Bottom,
+                                align: ContentAlign::Start,
                                 {tr.title_tooltip}
                             }
                         }
@@ -33,7 +39,7 @@ pub fn CreatorActionPage(space_id: ReadSignal<SpacePartition>) -> Element {
                         size: ButtonSize::Medium,
                         style: ButtonStyle::Secondary,
                         shape: ButtonShape::Square,
-                        class: "inline-flex border-transparent hover:border-transparent font-raleway max-mobile:w-full hover:bg-web-btn-bg",
+                        class: "inline-flex border-transparent hover:border-transparent font-raleway max-mobile:w-full bg-btn-action-settings-bg text-btn-action-settings-text hover:bg-button-muted-hover",
                         onclick: move |_| {
                             layover
                                 .open(
@@ -55,7 +61,7 @@ pub fn CreatorActionPage(space_id: ReadSignal<SpacePartition>) -> Element {
                             icons::settings::Settings2 {
                                 width: "16",
                                 height: "16",
-                                class: "[&>path]:fill-web-font-ab-bk [&>circle]:stroke-web-font-ab-bk [&>circle]:fill-none",
+                                class: "[&>path]:fill-btn-action-settings-icon [&>circle]:stroke-btn-action-settings-icon [&>circle]:fill-none",
                             }
                             span { {tr.button_settings_label} }
                         }
