@@ -6,6 +6,18 @@ function getContainer(containerId) {
   return document.getElementById(String(containerId));
 }
 
+function measureChartWidth(container, fallback = 640) {
+  if (!container) return fallback;
+  const parentWidth =
+    container.parentElement?.getBoundingClientRect?.().width ||
+    container.parentElement?.clientWidth ||
+    0;
+  const ownWidth =
+    container.getBoundingClientRect?.().width || container.clientWidth || 0;
+  const measured = Math.max(ownWidth, parentWidth);
+  return measured > 0 ? measured : fallback;
+}
+
 function normalizeEntries(entries = []) {
   return entries.map((entry) => ({
     label: String(entry.label || ""),
@@ -17,7 +29,7 @@ function normalizeEntries(entries = []) {
 
 function nonZeroEntries(entries = []) {
   return normalizeEntries(entries).filter(
-    (entry) => entry.count > 0 || entry.percentage > 0,
+    (entry) => entry.count > 0 || entry.percentage > 0
   );
 }
 
@@ -56,70 +68,111 @@ function renderBarChart(req = {}) {
 
   container.innerHTML = "";
 
-  const width = Math.max(container.clientWidth || 640, 320);
-  const rowHeight = 28;
-  const topPadding = 0;
-  const height = topPadding + entries.length * rowHeight;
-  const labelWidth = 32;
-  const gap = 10;
-  const valueWidth = 84;
-  const barWidth = Math.max(120, width - labelWidth - valueWidth - gap * 2);
+  const width = measureChartWidth(container, 0);
+  if (!width) {
+    requestAnimationFrame(() => renderBarChart(req));
+    return true;
+  }
+  const isMobile = width < 480;
 
-  const svg = d3
+  const root = d3
     .select(container)
-    .append("svg")
-    .attr("width", "100%")
-    .attr("height", height)
-    .attr("viewBox", `0 0 ${width} ${height}`)
+    .append("div")
+    .style("display", "flex")
+    .style("flex-direction", "column")
+    .style("gap", isMobile ? "10px" : "12px")
+    .style("width", "100%")
     .attr("role", "img")
     .attr("aria-label", "Survey response bar chart");
 
-  const x = d3.scaleLinear().domain([0, 100]).range([0, barWidth]);
-
-  const row = svg
-    .selectAll("g.chart-row")
+  const rows = root
+    .selectAll("div.chart-row")
     .data(entries)
     .enter()
-    .append("g")
+    .append("div")
     .attr("class", "chart-row")
-    .attr("transform", (_, index) => `translate(0, ${topPadding + index * rowHeight})`);
+    .style("display", "flex")
+    .style("flex-direction", "column")
+    .style("gap", isMobile ? "6px" : "0");
 
-  row
-    .append("text")
-    .attr("x", 0)
-    .attr("y", 16)
-    .attr("fill", "var(--foreground-muted)")
-    .attr("font-size", 13)
-    .attr("font-weight", 500)
-    .text((entry) => truncateLabel(entry.label));
+  if (isMobile) {
+    const meta = rows
+      .append("div")
+      .style("display", "flex")
+      .style("align-items", "center")
+      .style("justify-content", "space-between")
+      .style("gap", "12px");
 
-  row
-    .append("text")
-    .attr("x", width)
-    .attr("y", 16)
-    .attr("text-anchor", "end")
-    .attr("fill", "var(--foreground-muted)")
-    .attr("font-size", 13)
-    .attr("font-weight", 400)
-    .text((entry) => `${entry.count} (${entry.percentage.toFixed(1)}%)`);
+    meta
+      .append("div")
+      .style("color", "var(--foreground-muted)")
+      .style("font-size", "12px")
+      .style("font-weight", "500")
+      .style("white-space", "nowrap")
+      .text((entry) => truncateLabel(entry.label, 24));
 
-  row
-    .append("rect")
-    .attr("x", labelWidth + gap)
-    .attr("y", 4)
-    .attr("width", barWidth)
-    .attr("height", 10)
-    .attr("rx", 4)
-    .attr("fill", "var(--border-separator)");
+    meta
+      .append("div")
+      .style("color", "var(--foreground-muted)")
+      .style("font-size", "12px")
+      .style("font-weight", "400")
+      .style("white-space", "nowrap")
+      .text((entry) => `${entry.count} (${entry.percentage.toFixed(1)}%)`);
 
-  row
-    .append("rect")
-    .attr("x", labelWidth + gap)
-    .attr("y", 4)
-    .attr("width", (entry) => x(Math.max(0, Math.min(100, entry.percentage))))
-    .attr("height", 10)
-    .attr("rx", 4)
-    .attr("fill", (entry) => entry.color);
+    const track = rows
+      .append("div")
+      .style("width", "100%")
+      .style("height", "12px")
+      .style("border-radius", "4px")
+      .style("background", "var(--border-separator)")
+      .style("overflow", "hidden");
+
+    track
+      .append("div")
+      .style("height", "100%")
+      .style("border-radius", "4px")
+      .style("width", (entry) => `${Math.max(0, Math.min(100, entry.percentage))}%`)
+      .style("background", (entry) => entry.color);
+  } else {
+    const meta = rows
+      .append("div")
+      .style("display", "grid")
+      .style("grid-template-columns", "40px minmax(0, 1fr) 92px")
+      .style("align-items", "center")
+      .style("gap", "12px");
+
+    meta
+      .append("div")
+      .style("color", "var(--foreground-muted)")
+      .style("font-size", "13px")
+      .style("font-weight", "500")
+      .style("white-space", "nowrap")
+      .text((entry) => truncateLabel(entry.label));
+
+    const track = meta
+      .append("div")
+      .style("width", "100%")
+      .style("height", "10px")
+      .style("border-radius", "4px")
+      .style("background", "var(--border-separator)")
+      .style("overflow", "hidden");
+
+    track
+      .append("div")
+      .style("height", "100%")
+      .style("border-radius", "4px")
+      .style("width", (entry) => `${Math.max(0, Math.min(100, entry.percentage))}%`)
+      .style("background", (entry) => entry.color);
+
+    meta
+      .append("div")
+      .style("color", "var(--foreground-muted)")
+      .style("font-size", "13px")
+      .style("font-weight", "400")
+      .style("white-space", "nowrap")
+      .style("text-align", "right")
+      .text((entry) => `${entry.count} (${entry.percentage.toFixed(1)}%)`);
+  }
 
   return true;
 }
@@ -136,7 +189,13 @@ function renderPieChart(req = {}) {
 
   container.innerHTML = "";
 
-  const size = 190;
+  const measuredWidth = measureChartWidth(container, 0);
+  if (!measuredWidth) {
+    requestAnimationFrame(() => renderPieChart(req));
+    return true;
+  }
+
+  const size = Math.min(190, Math.max(160, measuredWidth));
   const radius = size / 2 - 8;
   const innerRadius = 0;
 
@@ -151,7 +210,9 @@ function renderPieChart(req = {}) {
     .style("display", "block")
     .style("margin", "0 auto");
 
-  const chart = svg.append("g").attr("transform", `translate(${size / 2}, ${size / 2})`);
+  const chart = svg
+    .append("g")
+    .attr("transform", `translate(${size / 2}, ${size / 2})`);
 
   const pie = d3
     .pie()
@@ -159,7 +220,10 @@ function renderPieChart(req = {}) {
     .value((entry) => entry.count);
 
   const arc = d3.arc().innerRadius(innerRadius).outerRadius(radius);
-  const labelArc = d3.arc().innerRadius(radius * 0.5).outerRadius(radius * 0.5);
+  const labelArc = d3
+    .arc()
+    .innerRadius(radius * 0.5)
+    .outerRadius(radius * 0.5);
   const pieData = pie(entries);
 
   chart

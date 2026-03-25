@@ -79,7 +79,7 @@ pub fn ObjectiveQuestionSummary(
                 }
             }
 
-            div { class: "flex flex-col gap-2",
+            div { class: "flex w-full min-w-0 flex-col gap-3",
                 BarChart { chart_id: bar_chart_id, entries: answers.clone() }
                 PieChart { chart_id: pie_chart_id, entries: answers }
             }
