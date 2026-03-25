@@ -1,8 +1,8 @@
 use crate::common::models::space::{SpaceAuthor, SpaceCommon};
-#[cfg(feature = "server")]
-use crate::features::spaces::space_common::models::space_reward::SpaceReward;
 use crate::features::spaces::pages::actions::actions::poll::*;
 use crate::features::spaces::pages::actions::models::SpaceAction;
+#[cfg(feature = "server")]
+use crate::features::spaces::space_common::models::space_reward::SpaceReward;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RespondPollRequest {
@@ -60,7 +60,9 @@ fn respondent_from_panel_attributes(
     attributes: &[crate::features::spaces::models::PanelAttribute],
     verified_attributes: &crate::common::models::did::VerifiedAttributes,
 ) -> Option<RespondentAttr> {
-    use crate::features::spaces::models::{CollectiveAttribute, PanelAttribute, VerifiableAttribute};
+    use crate::features::spaces::models::{
+        CollectiveAttribute, PanelAttribute, VerifiableAttribute,
+    };
 
     let mut respondent = RespondentAttr::default();
 
@@ -102,15 +104,17 @@ async fn get_respondent_from_panels(
     user_pk: &Partition,
 ) -> Result<Option<RespondentAttr>> {
     let (pk, sk) = crate::common::models::did::VerifiedAttributes::keys(user_pk);
-    let verified_attributes = crate::common::models::did::VerifiedAttributes::get(cli, pk, Some(sk))
-        .await?
-        .unwrap_or_default();
-    let matched_attributes = crate::features::spaces::controllers::panel_requirements::matched_panel_attributes(
-        cli,
-        space_pk,
-        &verified_attributes,
-    )
-    .await?;
+    let verified_attributes =
+        crate::common::models::did::VerifiedAttributes::get(cli, pk, Some(sk))
+            .await?
+            .unwrap_or_default();
+    let matched_attributes =
+        crate::features::spaces::controllers::panel_requirements::matched_panel_attributes(
+            cli,
+            space_pk,
+            &verified_attributes,
+        )
+        .await?;
 
     Ok(respondent_from_panel_attributes(
         &matched_attributes,
@@ -118,7 +122,7 @@ async fn get_respondent_from_panels(
     ))
 }
 
-#[post("/api/spaces/{space_pk}/polls/{poll_sk}/respond", role: SpaceUserRole, author: SpaceAuthor, space: SpaceCommon)]
+#[post("/api/spaces/{space_pk}/polls/{poll_sk}/respond", role: SpaceUserRole, author: SpaceAuthor, space: SpaceCommon, user: crate::features::auth::User)]
 pub async fn respond_poll(
     space_pk: SpacePartition,
     poll_sk: SpacePollEntityType,
@@ -246,13 +250,8 @@ pub async fn respond_poll(
         .await
         {
             Ok(space_reward) => {
-                if let Err(e) = SpaceReward::award(
-                    cli,
-                    &space_reward,
-                    author_pk,
-                    Some(space.user_pk.clone()),
-                )
-                .await
+                if let Err(e) =
+                    SpaceReward::award(cli, &space_reward, user.pk, Some(author_pk)).await
                 {
                     tracing::error!(
                         space_pk = %space_partition,
