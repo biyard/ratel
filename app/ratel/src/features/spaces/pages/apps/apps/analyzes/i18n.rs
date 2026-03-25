@@ -7,6 +7,14 @@ translate! {
         en: "Poll Analyze",
         ko: "설문 분석",
     },
+    poll_section_title: {
+        en: "Poll Analyze",
+        ko: "설문 분석",
+    },
+    discussion_section_title: {
+        en: "Discussion Analyze",
+        ko: "토론 분석",
+    },
     sample_survey: {
         en: "Sample Survey",
         ko: "사전 조사",
@@ -30,6 +38,18 @@ translate! {
     no_polls: {
         en: "No polls",
         ko: "설문이 없습니다",
+    },
+    no_discussions: {
+        en: "No discussions",
+        ko: "토론이 없습니다",
+    },
+    to_be_continue: {
+        en: "To Be Continue",
+        ko: "To Be Continue",
+    },
+    untitled_discussion: {
+        en: "Untitled Discussion",
+        ko: "제목 없는 토론",
     },
     back_to_list: {
         en: "Back to Polls",
