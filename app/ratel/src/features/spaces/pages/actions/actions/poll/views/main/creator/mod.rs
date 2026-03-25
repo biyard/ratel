@@ -69,6 +69,12 @@ fn EncryptedUploadSetting(
     let mut toast = crate::common::use_toast();
     let ctx = use_space_poll_context();
     let mut enabled = use_signal(move || ctx.poll().encrypted_upload_enabled);
+    let is_prod = crate::common::config::Environment::default()
+        == crate::common::config::Environment::Production;
+
+    if is_prod {
+        return rsx! {};
+    }
 
     rsx! {
         Card {
