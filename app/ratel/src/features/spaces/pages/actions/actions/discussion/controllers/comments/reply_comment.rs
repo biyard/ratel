@@ -74,7 +74,7 @@ pub async fn reply_comment(
     match SpaceReward::get_by_action(
         cli,
         space_id.clone(),
-        discussion_action_id.clone(),
+        discussion_sk.to_string(),
         RewardUserBehavior::DiscussionComment,
     )
     .await

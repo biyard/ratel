@@ -1,4 +1,4 @@
-use crate::common::models::space::SpaceCommon;
+use crate::common::models::space::{SpaceAuthor, SpaceCommon};
 #[cfg(feature = "server")]
 use crate::features::spaces::space_common::models::space_reward::SpaceReward;
 use crate::features::spaces::pages::actions::actions::quiz::*;
@@ -95,7 +95,7 @@ pub async fn respond_quiz(
                 if let Err(e) = SpaceReward::award(
                     cli,
                     &space_reward,
-                    user.pk.clone(),
+                    author.pk.clone(),
                     Some(space.user_pk.clone()),
                 )
                 .await
