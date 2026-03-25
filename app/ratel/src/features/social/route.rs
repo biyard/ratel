@@ -95,9 +95,8 @@ define_owner_only_page!(UserSpaces, SpacePage);
 
 #[component]
 pub fn UserHomeRoot(username: String) -> Element {
-    let _ = username;
     rsx! {
-        UserViewHome {}
+        UserViewHome { username }
     }
 }
 
