@@ -7,6 +7,7 @@ use crate::features::spaces::pages::apps::models::SpaceApp;
 #[cfg_attr(feature = "server", derive(aide::OperationIo, schemars::JsonSchema))]
 pub struct AnalyzePollItem {
     pub poll_id: SpacePollEntityType,
+    pub title: String,
     pub questions_count: usize,
     pub default: bool,
 }
@@ -32,10 +33,14 @@ pub async fn list_analyze_polls(
     let (polls, bookmark) = SpacePoll::query(cli, space_pk, opt).await?;
     let items = polls
         .into_iter()
-        .map(|poll| AnalyzePollItem {
-            poll_id: SpacePollEntityType::from(poll.sk.clone()),
-            questions_count: poll.questions.len(),
-            default: poll.is_default_poll(),
+        .map(|poll| {
+            let default = poll.is_default_poll();
+            AnalyzePollItem {
+                poll_id: SpacePollEntityType::from(poll.sk.clone()),
+                title: poll.title,
+                questions_count: poll.questions.len(),
+                default,
+            }
         })
         .collect();
 
