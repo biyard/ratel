@@ -17,6 +17,8 @@ use crate::features::spaces::pages::apps::apps::rewards::views::HomePage as Spac
 
 // Space Apps
 #[cfg(feature = "spaces")]
+use crate::features::spaces::pages::apps::apps::analyzes::SpaceAnalyzeDetailPage;
+#[cfg(feature = "spaces")]
 use crate::features::spaces::pages::apps::apps::analyzes::SpaceAnalyzesAppPage;
 #[cfg(feature = "spaces")]
 use crate::features::spaces::pages::apps::apps::file::SpaceFileAppPage;
@@ -217,6 +219,10 @@ pub enum Route {
                         #[cfg_attr(feature="spaces", route("/analyzes"))]
                         #[cfg(feature = "spaces")]
                         SpaceAnalyzesAppPage { space_id: SpacePartition },
+
+                        #[cfg_attr(feature="spaces", route("/analyzes/:poll_id"))]
+                        #[cfg(feature = "spaces")]
+                        SpaceAnalyzeDetailPage { space_id: SpacePartition, poll_id: SpacePollEntityType },
 
                         #[cfg_attr(feature="spaces", route("/panels"))]
                         #[cfg(feature = "spaces")]

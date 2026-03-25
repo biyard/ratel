@@ -1,3 +1,7 @@
+mod analyze;
+
+pub use analyze::*;
+
 use crate::common::hooks::use_infinite_query;
 use crate::features::spaces::pages::apps::apps::analyzes::*;
 use crate::features::spaces::space_common::hooks::use_space_role;
@@ -31,11 +35,7 @@ pub fn SpaceAnalyzesAppPage(space_id: ReadSignal<SpacePartition>) -> Element {
                         if poll.questions_count > 0 {
                             {
                                 let poll_id = poll.poll_id.clone();
-                                let label = if poll.default {
-                                    tr.sample_survey.to_string()
-                                } else {
-                                    tr.final_survey.to_string()
-                                };
+                                let title = poll.title.clone();
                                 let questions = tr.questions.to_string();
                                 rsx! {
                                     Card { class: "w-full flex flex-row items-center justify-between".to_string(),
@@ -43,13 +43,18 @@ pub fn SpaceAnalyzesAppPage(space_id: ReadSignal<SpacePartition>) -> Element {
                                             div { class: "text-[12px] font-semibold leading-[20px] text-neutral-300",
                                                 "{poll.questions_count} {questions}"
                                             }
-                                            div { class: "text-base font-medium leading-[20px] text-text-primary", {label} }
+                                            div { class: "text-base font-medium leading-[20px] text-text-primary", {title} }
                                         }
                                         div { class: "flex shrink-0 gap-2",
                                             Button {
                                                 class: "min-w-[120px] whitespace-nowrap light:bg-neutral-300",
                                                 shape: ButtonShape::Square,
-                                                onclick: move |_| {},
+                                                onclick: move |_| {
+                                                    nav.push(Route::SpaceAnalyzeDetailPage {
+                                                        space_id: space_id(),
+                                                        poll_id: poll_id.clone(),
+                                                    });
+                                                },
                                                 {tr.view_analyze}
                                             }
                                         }
