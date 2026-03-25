@@ -1,4 +1,5 @@
 use crate::features::spaces::space_common::*;
+use crate::features::spaces::space_common::providers::use_space_context;
 
 translate! {
     SpaceStartModalTranslate;
@@ -23,14 +24,14 @@ translate! {
 
 #[component]
 pub fn SpaceStartModal(
-    space_id: ReadSignal<SpacePartition>,
-    #[props(default)] on_started: Option<EventHandler<()>>,
+    space_id: SpacePartition,
     #[props(default)] on_close: Option<EventHandler<()>>,
 ) -> Element {
     let tr: SpaceStartModalTranslate = use_translate();
     let mut popup = use_popup();
     let mut toast = use_toast();
     let mut is_starting = use_signal(|| false);
+    let mut ctx = use_space_context();
 
     let on_cancel = move |_| {
         if let Some(handler) = on_close.as_ref() {
@@ -49,20 +50,19 @@ pub fn SpaceStartModal(
         let mut is_starting = is_starting;
         let mut popup = popup;
         let mut toast = toast;
-        let on_started = on_started.clone();
+        let space_id = space_id.clone();
+        let mut ctx = ctx;
 
         spawn(async move {
             let res = update_space(
-                space_id(),
+                space_id,
                 controllers::UpdateSpaceRequest::Start { start: true },
             )
             .await;
 
             match res {
                 Ok(_) => {
-                    if let Some(handler) = on_started {
-                        handler.call(());
-                    }
+                    ctx.space.restart();
                     popup.close();
                 }
                 Err(err) => {

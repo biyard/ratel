@@ -78,18 +78,18 @@ pub fn DiscussionActionEditorPage(
             // Header
             div { class: "flex justify-between items-center",
                 button {
-                    class: "flex gap-2 items-center text-sm transition-colors hover:text-white text-neutral-400 light:text-neutral-600 light:hover:text-neutral-900",
+                    class: "flex gap-2 items-center text-sm transition-colors text-foreground-muted hover:text-text-primary",
                     onclick: on_back,
                     "← Back"
                 }
                 div { class: "flex gap-2",
                     button {
-                        class: "py-2 px-4 text-sm font-bold text-red-500 rounded-lg border border-red-500 transition-colors hover:bg-red-500/10",
+                        class: "py-2 px-4 text-sm font-bold text-destructive rounded-lg border border-destructive transition-colors hover:bg-destructive/10",
                         onclick: on_delete,
                         "Delete"
                     }
                     button {
-                        class: "py-2 px-4 text-sm font-bold bg-yellow-400 rounded-lg transition-opacity hover:opacity-90 light:bg-yellow-500 text-neutral-900",
+                        class: "py-2 px-4 text-sm font-bold bg-btn-primary-bg rounded-lg transition-colors hover:bg-btn-primary-hover-bg text-btn-primary-text",
                         onclick: on_save,
                         "Save"
                     }
@@ -100,11 +100,11 @@ pub fn DiscussionActionEditorPage(
             div { class: "flex flex-col gap-4",
                 // Title
                 div { class: "flex flex-col gap-1",
-                    label { class: "text-sm font-medium text-neutral-400 light:text-neutral-600",
+                    label { class: "text-sm font-medium text-foreground-muted",
                         "Title"
                     }
                     input {
-                        class: "py-3 px-4 w-full text-base text-white rounded-lg border bg-neutral-800 light:bg-neutral-100 border-neutral-700 light:border-neutral-300 light:text-neutral-900 placeholder-neutral-500",
+                        class: "py-3 px-4 w-full text-base text-text-primary rounded-lg border bg-discussion-editor-bg border-discussion-editor-border placeholder-discussion-editor-placeholder",
                         placeholder: "Enter discussion title...",
                         value: "{title}",
                         oninput: move |e| title.set(e.value()),
@@ -113,7 +113,7 @@ pub fn DiscussionActionEditorPage(
 
                 // Category
                 div { class: "flex flex-col gap-1",
-                    label { class: "text-sm font-medium text-neutral-400 light:text-neutral-600",
+                    label { class: "text-sm font-medium text-foreground-muted",
                         "Category"
                     }
                     input {
@@ -126,11 +126,11 @@ pub fn DiscussionActionEditorPage(
 
                 // Content
                 div { class: "flex flex-col gap-1",
-                    label { class: "text-sm font-medium text-neutral-400 light:text-neutral-600",
+                    label { class: "text-sm font-medium text-foreground-muted",
                         "Content"
                     }
                     textarea {
-                        class: "py-3 px-4 w-full text-sm text-white rounded-lg border resize-y min-h-[300px] bg-neutral-800 light:bg-neutral-100 border-neutral-700 light:border-neutral-300 light:text-neutral-900 placeholder-neutral-500",
+                        class: "py-3 px-4 w-full text-sm text-text-primary rounded-lg border resize-y min-h-[300px] bg-discussion-editor-bg border-discussion-editor-border placeholder-discussion-editor-placeholder",
                         placeholder: "Write your discussion content...",
                         value: "{html_contents}",
                         oninput: move |e| html_contents.set(e.value()),

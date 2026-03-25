@@ -1,5 +1,5 @@
-use crate::features::spaces::pages::dashboard::*;
 use crate::features::spaces::pages::dashboard::i18n::DashboardTranslate;
+use crate::features::spaces::pages::dashboard::*;
 
 #[component]
 pub fn RankingTable(data: RankingTableData) -> Element {
@@ -36,7 +36,7 @@ pub fn RankingTable(data: RankingTableData) -> Element {
                         icons::help_support::Info {
                             width: "20",
                             height: "20",
-                            class: "w-5 h-5 [&>path]:fill-none text-icon-primary [&>path]:stroke-current [&>circle]:fill-current",
+                            class: "h-5 w-5 [&>path]:stroke-text-secondary [&>path]:fill-none [&>circle]:stroke-text-secondary [&>circle]:fill-none cursor-pointer",
                         }
                         div { class: "ml-auto shrink-0",
                             icons::ratel::Sorter { width: "20", height: "20" }
@@ -49,7 +49,7 @@ pub fn RankingTable(data: RankingTableData) -> Element {
                         icons::help_support::Info {
                             width: "20",
                             height: "20",
-                            class: "w-5 h-5 [&>path]:fill-none text-icon-primary [&>path]:stroke-current [&>circle]:fill-current",
+                            class: "h-5 w-5 [&>path]:stroke-text-secondary [&>path]:fill-none [&>circle]:stroke-text-secondary [&>circle]:fill-current cursor-pointer",
                         }
                         div { class: "ml-auto shrink-0",
                             icons::ratel::Sorter { width: "20", height: "20" }

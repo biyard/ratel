@@ -40,7 +40,7 @@ pub fn SpaceTop(
     let is_published = ctx.space().publish_state == SpacePublishState::Published;
     let is_in_progress = ctx.space().status == Some(SpaceStatus::InProgress);
     let is_started = ctx.space().status == Some(SpaceStatus::Started);
-    let space_id = use_signal(|| ctx.space().id);
+    let space_id = ctx.space().id;
     let space_logo = {
         let logo = ctx.space().logo.clone();
         if logo.is_empty() {
@@ -86,7 +86,7 @@ pub fn SpaceTop(
                         onclick: move |_| {
                             ctx.toggle_role();
                         },
-                        Eye { class: "w-4 h-4 [&>path]:stroke-icon-secondary [&>circle]:stroke-icon-secondary max-tablet:w-5 max-tablet:h-5 max-tablet:[&>path]:stroke-icon-primary max-tablet:[&>circle]:stroke-icon-primary" }
+                        Eye { class: "w-4 h-4 [&>path]:fill-icon-secondary [&>path]:stroke-icon-secondary [&>circle]:stroke-icon-secondary max-tablet:w-5 max-tablet:h-5 max-tablet:[&>path]:fill-icon-primary max-tablet:[&>path]:stroke-icon-primary max-tablet:[&>circle]:stroke-icon-primary" }
                         p { class: "max-tablet:hidden",
                             if can_preview {
                                 {tr.preview}
@@ -128,12 +128,10 @@ pub fn SpaceTop(
                             shape: ButtonShape::Square,
                             class: "max-tablet:py-1 max-tablet:px-2 max-tablet:text-xs",
                             onclick: move |_| {
+                                let space_id = space_id.clone();
                                 popup.open(rsx! {
                                     SpaceStartModal {
                                         space_id,
-                                        on_started: move |_| {
-                                            ctx.space.restart();
-                                        },
                                     }
                                 });
                             },
@@ -144,12 +142,10 @@ pub fn SpaceTop(
                             shape: ButtonShape::Square,
                             class: "max-tablet:py-1 max-tablet:px-2 max-tablet:text-xs",
                             onclick: move |_| {
+                                let space_id = space_id.clone();
                                 popup.open(rsx! {
                                     SpaceEndModal {
                                         space_id,
-                                        on_ended: move |_| {
-                                            ctx.space.restart();
-                                        },
                                     }
                                 });
                             },
