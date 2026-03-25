@@ -69,6 +69,12 @@ pub async fn update_poll(
         UpdatePollRequest::CanisterUploadEnabled {
             canister_upload_enabled,
         } => {
+            let env = crate::common::config::Environment::default();
+            if env == crate::common::config::Environment::Production {
+                return Err(Error::BadRequest(
+                    "Canister upload is not available in production".into(),
+                ));
+            }
             poll_updater = poll_updater.with_canister_upload_enabled(canister_upload_enabled);
             // When enabling encrypted upload, force response_editable to false
             // because encrypted votes cannot be edited after submission.
