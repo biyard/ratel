@@ -933,6 +933,16 @@ body {
   @apply overflow-hidden;
 }
 
+/* Mobile Safari: use dynamic viewport height to account for address bar */
+@supports (height: 100dvh) {
+  .h-screen {
+    height: 100dvh !important;
+  }
+  .min-h-screen {
+    min-height: 100dvh !important;
+  }
+}
+
 .scrollbar-none {
   scrollbar-width: none;
 }
