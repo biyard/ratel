@@ -1,7 +1,7 @@
 use crate::common::models::space::{SpaceAuthor, SpaceCommon};
+use crate::features::spaces::pages::actions::actions::quiz::*;
 #[cfg(feature = "server")]
 use crate::features::spaces::space_common::models::space_reward::SpaceReward;
-use crate::features::spaces::pages::actions::actions::quiz::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RespondQuizRequest {
@@ -12,13 +12,14 @@ pub struct RespondQuizRequest {
     "/api/spaces/{space_pk}/quizzes/{quiz_id}/respond",
     role: SpaceUserRole,
     author: SpaceAuthor,
+    user: crate::features::auth::User,
     space: SpaceCommon
 )]
 pub async fn respond_quiz(
     space_pk: SpacePartition,
     quiz_id: SpaceQuizEntityType,
     req: RespondQuizRequest,
-) -> Result<String> {
+) -> Result<()> {
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let space_id = space_pk;
@@ -66,13 +67,11 @@ pub async fn respond_quiz(
 
     let total_allowed = quiz.retry_count.saturating_add(1).min(MAX_TOTAL_ATTEMPTS);
     let limit: i32 = total_allowed as i32;
-    let attempts =
-        SpaceQuizAttempt::list_by_quiz_user(cli, &quiz_id, &author.pk, limit)
-            .await?;
+    let attempts = SpaceQuizAttempt::list_by_quiz_user(cli, &quiz_id, &author.pk, limit).await?;
     if attempts.len() as i64 >= total_allowed {
         return Err(SpaceActionQuizError::NoRemainingAttempts.into());
     }
-
+    let author_pk = author.pk.clone();
     let score = calculate_score(&quiz.questions, &correct.answers, &req.answers)?;
     let attempt = SpaceQuizAttempt::new(quiz_id.clone(), author, req.answers, score);
     attempt.create(cli).await?;
@@ -92,13 +91,8 @@ pub async fn respond_quiz(
         .await
         {
             Ok(space_reward) => {
-                if let Err(e) = SpaceReward::award(
-                    cli,
-                    &space_reward,
-                    author.pk.clone(),
-                    Some(space.user_pk.clone()),
-                )
-                .await
+                if let Err(e) =
+                    SpaceReward::award(cli, &space_reward, user.pk, Some(author_pk)).await
                 {
                     tracing::error!(
                         space_pk = %space_id,
@@ -118,8 +112,7 @@ pub async fn respond_quiz(
             }
         }
     }
-
-    Ok("success".to_string())
+    Ok(())
 }
 
 fn calculate_score(

@@ -1,15 +1,15 @@
 use crate::common::models::space::{SpaceAuthor, SpaceCommon};
-#[cfg(feature = "server")]
-use crate::features::spaces::space_common::models::space_reward::SpaceReward;
 use crate::features::spaces::pages::actions::actions::discussion::*;
 use crate::features::spaces::pages::actions::models::SpaceAction;
+#[cfg(feature = "server")]
+use crate::features::spaces::space_common::models::space_reward::SpaceReward;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AddCommentRequest {
     pub content: String,
 }
 
-#[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments", role: SpaceUserRole, author: SpaceAuthor, space: SpaceCommon)]
+#[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments", role: SpaceUserRole, author: SpaceAuthor, space: SpaceCommon, user: crate::features::auth::User )]
 pub async fn add_comment(
     space_id: SpacePartition,
     discussion_sk: SpacePostEntityType,
@@ -70,14 +70,7 @@ pub async fn add_comment(
     .await
     {
         Ok(space_reward) => {
-            if let Err(e) = SpaceReward::award(
-                cli,
-                &space_reward,
-                author_pk,
-                Some(space.user_pk.clone()),
-            )
-            .await
-            {
+            if let Err(e) = SpaceReward::award(cli, &space_reward, user.pk, Some(author_pk)).await {
                 tracing::error!(
                     space_pk = %space_id,
                     action_id = %discussion_sk_entity,
