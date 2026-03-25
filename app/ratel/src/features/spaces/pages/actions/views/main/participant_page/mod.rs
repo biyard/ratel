@@ -23,7 +23,7 @@ pub fn ParticipantPage(space_id: ReadSignal<SpacePartition>) -> Element {
                             icons::help_support::Info {
                                 width: "16",
                                 height: "16",
-                                class: "h-4 w-4 [&>path]:stroke-text-secondary [&>path]:fill-none [&>circle]:stroke-text-secondary [&>circle]:fill-none cursor-pointer",
+                                class: "h-4 w-4 [&>path]:stroke-text-secondary [&>path]:fill-none [&>circle]:stroke-text-secondary [&>circle]:fill-current cursor-pointer",
                             }
                         }
                         TooltipContent {

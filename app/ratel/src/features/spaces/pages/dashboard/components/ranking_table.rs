@@ -49,7 +49,7 @@ pub fn RankingTable(data: RankingTableData) -> Element {
                         icons::help_support::Info {
                             width: "20",
                             height: "20",
-                            class: "h-5 w-5 [&>path]:stroke-text-secondary [&>path]:fill-none [&>circle]:stroke-text-secondary [&>circle]:fill-none cursor-pointer",
+                            class: "h-5 w-5 [&>path]:stroke-text-secondary [&>path]:fill-none [&>circle]:stroke-text-secondary [&>circle]:fill-current cursor-pointer",
                         }
                         div { class: "ml-auto shrink-0",
                             icons::ratel::Sorter { width: "20", height: "20" }
