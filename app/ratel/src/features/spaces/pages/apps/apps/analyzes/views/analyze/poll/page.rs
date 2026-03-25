@@ -50,7 +50,6 @@ pub fn SpaceAnalyzeDetailPage(
 ) -> Element {
     let tr: SpaceAnalyzesAppTranslate = use_translate();
     let role = use_space_role()();
-    let navigator = use_navigator();
     let mut toast = use_toast();
 
     if role != SpaceUserRole::Creator {
@@ -77,8 +76,6 @@ pub fn SpaceAnalyzeDetailPage(
     let filter_values = build_filter_value_options(&result, &active_group, &tr);
     let active_value = active_filter_value(&filter_values, &selected_filter_value());
     let active_filter_key = compose_filter_key(&active_group, &active_value);
-    let active_filter_label =
-        selected_filter_label(&tr, &active_group, &active_value, &filter_values);
     let active_summaries = select_summaries(&result, &active_filter_key);
     let response_count = active_summaries
         .first()
@@ -323,7 +320,7 @@ fn build_filter_group_options(
 fn build_filter_value_options(
     result: &PollResultResponse,
     group: &str,
-    _tr: &SpaceAnalyzesAppTranslate,
+    tr: &SpaceAnalyzesAppTranslate,
 ) -> Vec<AnalyzeFilterOption> {
     let mut values = match group {
         "gender" => result
@@ -331,7 +328,7 @@ fn build_filter_value_options(
             .keys()
             .cloned()
             .map(|key| AnalyzeFilterOption {
-                label: humanize_group_value(&key),
+                label: humanize_group_value(&key, tr),
                 key,
             })
             .collect::<Vec<_>>(),
@@ -349,7 +346,7 @@ fn build_filter_value_options(
             .keys()
             .cloned()
             .map(|key| AnalyzeFilterOption {
-                label: humanize_group_value(&key),
+                label: humanize_group_value(&key, tr),
                 key,
             })
             .collect::<Vec<_>>(),
@@ -383,32 +380,6 @@ fn compose_filter_key(group: &str, value: &str) -> String {
     } else {
         format!("{group}:{value}")
     }
-}
-
-fn selected_filter_label(
-    tr: &SpaceAnalyzesAppTranslate,
-    group: &str,
-    value: &str,
-    options: &[AnalyzeFilterOption],
-) -> String {
-    if group == "overall" {
-        return tr.filter_all.to_string();
-    }
-
-    let prefix = match group {
-        "gender" => tr.filter_gender.to_string(),
-        "age" => tr.filter_age.to_string(),
-        "school" => tr.filter_school.to_string(),
-        _ => tr.filter_label.to_string(),
-    };
-
-    let value_label = options
-        .iter()
-        .find(|option| option.key == value)
-        .map(|option| option.label.clone())
-        .unwrap_or_else(|| value.to_string());
-
-    format!("{prefix}: {value_label}")
 }
 
 fn select_summaries(result: &PollResultResponse, key: &str) -> Vec<PollResultSummary> {
@@ -636,11 +607,11 @@ fn format_period(started_at: i64, ended_at: i64) -> String {
     format!("{} - {}", start.format("%Y.%m.%d"), end.format("%Y.%m.%d"))
 }
 
-fn humanize_group_value(value: &str) -> String {
+fn humanize_group_value(value: &str, tr: &SpaceAnalyzesAppTranslate) -> String {
     match value {
-        "male" => "Male".to_string(),
-        "female" => "Female".to_string(),
-        "UNKNOWN" => "Unknown".to_string(),
+        "male" => tr.gender_male.to_string(),
+        "female" => tr.gender_female.to_string(),
+        "UNKNOWN" => tr.gender_unknown.to_string(),
         _ => value.to_string(),
     }
 }
@@ -672,7 +643,7 @@ fn build_excel_data(
     tr: &SpaceAnalyzesAppTranslate,
 ) -> AnalyzeExcelData {
     let export_attributes = build_export_attributes(panels);
-    let user_rows = build_response_rows(result);
+    let user_rows = build_response_rows(result, tr);
     let question_count = poll.questions.len();
 
     let mut col = 0usize;
@@ -899,7 +870,10 @@ fn build_export_attributes(panels: &[SpacePanelQuotaResponse]) -> AnalyzeExportA
     attributes
 }
 
-fn build_response_rows(result: &PollResultResponse) -> Vec<AnalyzeResponseRow> {
+fn build_response_rows(
+    result: &PollResultResponse,
+    tr: &SpaceAnalyzesAppTranslate,
+) -> Vec<AnalyzeResponseRow> {
     use std::collections::HashMap;
 
     let mut final_by_user: HashMap<String, SpacePollUserAnswer> = HashMap::new();
@@ -921,6 +895,7 @@ fn build_response_rows(result: &PollResultResponse) -> Vec<AnalyzeResponseRow> {
             user_order.push(user.clone());
         }
     }
+    user_order.sort();
 
     user_order
         .into_iter()
@@ -939,7 +914,7 @@ fn build_response_rows(result: &PollResultResponse) -> Vec<AnalyzeResponseRow> {
                     .respondent
                     .as_ref()
                     .and_then(|respondent| respondent.gender.as_ref())
-                    .map(|gender| humanize_group_value(&gender.to_string()))
+                    .map(|gender| humanize_group_value(&gender.to_string(), tr))
                     .unwrap_or_default(),
                 age: meta
                     .respondent
@@ -1006,50 +981,6 @@ fn push_excel_block(
 
 fn user_key_from_pk(pk: &str) -> String {
     pk.split("#USER#").nth(1).unwrap_or(pk).to_string()
-}
-
-fn response_matches_filter(response: &SpacePollUserAnswer, filter_key: &str) -> bool {
-    if filter_key == "overall" {
-        return true;
-    }
-
-    let Some(respondent) = response.respondent.as_ref() else {
-        return false;
-    };
-
-    if let Some(gender) = filter_key.strip_prefix("gender:") {
-        return respondent
-            .gender
-            .as_ref()
-            .map(|value| value.to_string() == gender)
-            .unwrap_or(false);
-    }
-
-    if let Some(age) = filter_key.strip_prefix("age:") {
-        return respondent
-            .age
-            .as_ref()
-            .map(|value| age_to_band(value).label() == age)
-            .unwrap_or(false);
-    }
-
-    if let Some(school) = filter_key.strip_prefix("school:") {
-        let school_value = respondent
-            .school
-            .as_ref()
-            .map(|value| {
-                let trimmed = value.trim();
-                if trimmed.is_empty() {
-                    "UNKNOWN".to_string()
-                } else {
-                    trimmed.to_string()
-                }
-            })
-            .unwrap_or_else(|| "UNKNOWN".to_string());
-        return school_value == school;
-    }
-
-    true
 }
 
 fn to_answer_display(question: &Question, answer: Option<&Answer>) -> String {

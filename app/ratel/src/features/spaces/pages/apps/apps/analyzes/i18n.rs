@@ -103,6 +103,18 @@ translate! {
         en: "School",
         ko: "학교",
     },
+    gender_male: {
+        en: "Male",
+        ko: "남성",
+    },
+    gender_female: {
+        en: "Female",
+        ko: "여성",
+    },
+    gender_unknown: {
+        en: "Unknown",
+        ko: "알 수 없음",
+    },
     total_questions: {
         en: "Questions",
         ko: "문항 수",
