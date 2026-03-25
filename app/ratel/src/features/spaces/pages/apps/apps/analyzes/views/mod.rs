@@ -60,7 +60,7 @@ pub fn SpaceAnalyzesAppPage(space_id: ReadSignal<SpacePartition>) -> Element {
                                 }
                                 div { class: "flex shrink-0 gap-2",
                                     Button {
-                                        class: "min-w-[120px] whitespace-nowrap light:bg-neutral-300",
+                                        class: "min-w-[120px] whitespace-nowrap bg-btn-analyze-view-bg",
                                         shape: ButtonShape::Square,
                                         onclick: move |_| {
                                             nav.push(Route::SpaceAnalyzeDiscussionPage {
@@ -118,7 +118,7 @@ pub fn SpaceAnalyzesAppPage(space_id: ReadSignal<SpacePartition>) -> Element {
                                         }
                                         div { class: "flex shrink-0 gap-2",
                                             Button {
-                                                class: "min-w-[120px] whitespace-nowrap light:bg-neutral-300",
+                                                class: "min-w-[120px] whitespace-nowrap bg-btn-analyze-view-bg",
                                                 shape: ButtonShape::Square,
                                                 onclick: move |_| {
                                                     nav.push(Route::SpaceAnalyzeDetailPage {
