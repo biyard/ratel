@@ -1,4 +1,3 @@
-mod components;
-mod page;
+mod poll;
 
-pub use page::*;
+pub use poll::*;

@@ -220,7 +220,7 @@ pub enum Route {
                         #[cfg(feature = "spaces")]
                         SpaceAnalyzesAppPage { space_id: SpacePartition },
 
-                        #[cfg_attr(feature="spaces", route("/analyzes/:poll_id"))]
+                        #[cfg_attr(feature="spaces", route("/analyzes/poll/:poll_id"))]
                         #[cfg(feature = "spaces")]
                         SpaceAnalyzeDetailPage { space_id: SpacePartition, poll_id: SpacePollEntityType },
 
