@@ -81,7 +81,10 @@ pub async fn respond_quiz(
             .increase_user_response_count(1)
             .execute(cli)
             .await?;
+    }
 
+    let already_passed = attempts.iter().any(|a| a.score >= quiz.pass_score);
+    if score >= quiz.pass_score && !already_passed {
         match SpaceReward::get_by_action(
             cli,
             space_id.clone(),
