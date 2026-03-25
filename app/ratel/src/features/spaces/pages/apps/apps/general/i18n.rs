@@ -47,6 +47,42 @@ translate! {
         en: "Failed to invite participants",
         ko: "참가자 초대에 실패했습니다",
     },
+    invited_accounts: {
+        en: "Invited Accounts",
+        ko: "초대된 계정",
+    },
+    participant_name: {
+        en: "Participant",
+        ko: "참가자",
+    },
+    invitation_email: {
+        en: "Email",
+        ko: "이메일",
+    },
+    invitation_status: {
+        en: "Status",
+        ko: "상태",
+    },
+    invitation_actions: {
+        en: "Actions",
+        ko: "관리",
+    },
+    invitation_delete: {
+        en: "Delete",
+        ko: "삭제하기",
+    },
+    invitation_deleted_successfully: {
+        en: "Invitation deleted successfully.",
+        ko: "초대 항목을 삭제했습니다.",
+    },
+    no_invited_accounts: {
+        en: "No invited accounts yet.",
+        ko: "아직 초대한 계정이 없습니다.",
+    },
+    loading_invitations: {
+        en: "Loading invitations...",
+        ko: "초대 목록 불러오는 중...",
+    },
     administrator: {
         en: "Administrator",
         ko: "관리자",
@@ -98,6 +134,18 @@ translate! {
     anonymous_updated_successfully: {
         en: "Anonymous participation setting updated.",
         ko: "익명 참여 설정이 변경되었습니다.",
+    },
+    join_anytime_setting: {
+        en: "Join Anytime",
+        ko: "언제든 참여가능",
+    },
+    join_anytime_description: {
+        en: "Allow participants to join even after the space has started.",
+        ko: "스페이스가 시작된 후에도 참가자가 참여할 수 있도록 허용합니다.",
+    },
+    join_anytime_updated_successfully: {
+        en: "Join anytime setting updated.",
+        ko: "언제든 참여가능 설정이 변경되었습니다.",
     },
     space_visibility: {
         en: "Space Visibility",

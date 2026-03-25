@@ -31,6 +31,7 @@ pub async fn add_comment(
         role,
         space_action.prerequisite,
         space.status,
+        space.join_anytime,
     ) {
         return Err(Error::BadRequest(
             "Discussion is not available in the current space status".into(),

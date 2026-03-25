@@ -56,14 +56,14 @@ pub fn TeamHeader(
                         if logged_in {
                             if is_following {
                                 button {
-                                    class: "px-4 py-1 rounded-full border border-border text-sm font-semibold text-foreground-muted hover:bg-white/5 transition-colors disabled:opacity-50",
+                                    class: "px-4 py-1 rounded-full border border-border text-sm font-semibold text-foreground-muted hover:bg-hover transition-colors disabled:opacity-50",
                                     disabled: processing,
                                     onclick: move |_| on_unfollow.call(()),
                                     "Unfollow"
                                 }
                             } else {
                                 button {
-                                    class: "px-4 py-1 rounded-full border border-border text-sm font-semibold text-text-primary hover:bg-white/5 transition-colors disabled:opacity-50",
+                                    class: "px-4 py-1 rounded-full border border-border text-sm font-semibold text-text-primary hover:bg-hover transition-colors disabled:opacity-50",
                                     disabled: processing,
                                     onclick: move |_| on_follow.call(()),
                                     "Follow"

@@ -148,6 +148,7 @@ pub async fn respond_poll(
         role,
         space_action.prerequisite,
         space.status,
+        space.join_anytime,
     ) {
         return Err(Error::BadRequest(
             "Poll is not available in the current space status".into(),

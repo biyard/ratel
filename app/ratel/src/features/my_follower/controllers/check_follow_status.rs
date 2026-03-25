@@ -1,4 +1,5 @@
 use crate::common::models::auth::UserFollow;
+use crate::features::auth::OptionalUser;
 use crate::features::my_follower::*;
 #[cfg(feature = "server")]
 use crate::features::posts::models::Team;
@@ -15,22 +16,26 @@ pub struct FollowStatusResponse {
     pub is_following: bool,
 }
 
-#[get("/api/my-follower/status?target_username", user: crate::features::auth::User)]
+#[get("/api/my-follower/status?target_username", user: OptionalUser)]
 pub async fn check_follow_status_handler(
     target_username: String,
 ) -> Result<FollowStatusResponse> {
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
+    let user: Option<crate::features::auth::User> = user.into();
 
-    // Try user lookup first
-    let user_lookup = crate::features::auth::User::find_by_username(
+    // Try user lookup first; only swallow NotFound, propagate real errors
+    let user_lookup = match crate::features::auth::User::find_by_username(
         cli,
         &target_username,
         Default::default(),
     )
     .await
-    .ok()
-    .and_then(|(users, _)| users.into_iter().find(|u| u.username == target_username));
+    {
+        Ok((users, _)) => users.into_iter().find(|u| u.username == target_username),
+        Err(Error::NotFound(_)) => None,
+        Err(e) => return Err(e),
+    };
 
     let (target_pk, display_name, profile_url, description, followers_count, followings_count) =
         if let Some(u) = user_lookup {
@@ -47,10 +52,14 @@ pub async fn check_follow_status_handler(
             (team.pk, team.display_name, team.profile_url, team.description, team.followers, 0i64)
         };
 
-    let (follower_pk, follower_sk) = UserFollow::follower_keys(&target_pk, &user.pk);
-    let is_following = UserFollow::get(cli, follower_pk, Some(follower_sk))
-        .await?
-        .is_some();
+    let is_following = if let Some(ref user) = user {
+        let (follower_pk, follower_sk) = UserFollow::follower_keys(&target_pk, &user.pk);
+        UserFollow::get(cli, follower_pk, Some(follower_sk))
+            .await?
+            .is_some()
+    } else {
+        false
+    };
 
     Ok(FollowStatusResponse {
         target_pk,

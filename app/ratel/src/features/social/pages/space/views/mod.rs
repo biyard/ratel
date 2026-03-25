@@ -5,7 +5,7 @@ use dioxus::prelude::*;
 #[component]
 pub fn Home(username: String) -> Element {
     let mut v =
-        use_infinite_query(move |bookmark| async move { list_my_spaces_handler(bookmark).await })?;
+        use_infinite_query(move |bookmark| async move { list_my_spaces_handler(bookmark, None).await })?;
     let items = v.items();
 
     if items.is_empty() {

@@ -276,6 +276,7 @@ where
         use crate::common::models::auth::User;
         use crate::common::models::space::{SpaceCommon, SpaceParticipant};
         use crate::common::types::{CompositePartition, EntityType};
+        use crate::features::spaces::{InvitationStatus, SpaceInvitationMember};
         tracing::debug!("extracting space from request parts. Path: {:?}", parts.uri);
 
         if let Some(space_role) = parts.extensions.get::<SpaceUserRole>() {
@@ -355,6 +356,23 @@ where
             };
             parts.extensions.insert(role);
             return Ok(role);
+        }
+
+        if !public_space {
+            let (invitation_pk, invitation_sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
+            let invitation =
+                SpaceInvitationMember::get(cli, &invitation_pk, Some(&invitation_sk))
+                    .await
+                    .ok()
+                    .flatten();
+
+            if matches!(
+                invitation.as_ref().map(|member| member.status),
+                Some(InvitationStatus::Invited) | Some(InvitationStatus::Accepted)
+            ) {
+                parts.extensions.insert(SpaceUserRole::Viewer);
+                return Ok(SpaceUserRole::Viewer);
+            }
         }
 
         // For public spaces, unauthenticated users are Viewers (handled above),

@@ -23,9 +23,9 @@ pub fn TimePicker(
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
-        div { class: "time-picker @max-sm:w-full",
+        div { class: "time-picker @max-mobile:w-full",
             div {
-                class: "time-picker-trigger @max-sm:w-full",
+                class: "time-picker-trigger @max-mobile:w-full",
                 onclick: move |e| {
                     e.stop_propagation();
                     is_open.toggle();
