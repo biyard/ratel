@@ -55,7 +55,7 @@ pub async fn list_dashboard_data_handler(
         .collect();
 
     if !reward_items.is_empty() {
-        let total_points: i64 = rewards.iter().map(|r| r.total_points).sum();
+        let total_points: i64 = rewards.iter().map(|r| r.get_amount()).sum();
 
         components.push(DashboardComponentData::InfoCard(InfoCardData {
             icon: DashboardIcon::Rewards,

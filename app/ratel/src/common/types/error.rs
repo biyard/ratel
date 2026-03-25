@@ -187,6 +187,10 @@ pub enum Error {
         #[from] crate::features::spaces::pages::actions::actions::discussion::SpaceActionDiscussionError,
     ),
 
+    #[error("{0}")]
+    #[translate(from)]
+    ExchangePoints(#[from] crate::features::social::pages::user_reward::controllers::ExchangePointsError),
+
     // Post related errors
     #[error("Invalid username")]
     #[translate(en = "Invalid username. Check URL.", ko = "유효하지 않은 사용자 이름입니다. URL을 확인해주세요.")]
@@ -253,6 +257,7 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             Error::SpaceReward(e) => e.status_code(),
             Error::SpaceActionQuiz(e) => e.status_code(),
             Error::SpaceActionDiscussion(e) => e.status_code(),
+            Error::ExchangePoints(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
@@ -309,6 +314,7 @@ impl dioxus::fullstack::AsStatusCode for Error {
             Error::SpaceReward(e) => e.status_code(),
             Error::SpaceActionQuiz(e) => e.status_code(),
             Error::SpaceActionDiscussion(e) => e.status_code(),
+            Error::ExchangePoints(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

@@ -29,7 +29,7 @@ pub fn transaction_item(
     rsx! {
         div {
             key: "{transaction.created_at}-{idx}",
-            class: "rounded border border-[var(--web\\/card\\/stroke2,#262626)] p-5",
+            class: "rounded border border-card-border p-5",
             div { class: "flex items-end justify-between w-full",
                 div { class: "flex flex-col gap-0.5",
                     div { class: "flex items-center gap-2.5",

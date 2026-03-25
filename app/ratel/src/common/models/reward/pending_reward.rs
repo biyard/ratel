@@ -29,7 +29,7 @@ impl PendingReward {
         let now = get_now_timestamp_millis();
         Self {
             pk: "PENDING_REWARD".to_string(),
-            sk: format!("PENDING_REWARD#{}", now),
+            sk: format!("PENDING_REWARD#{}#{}#{}", now, target_pk, reward_key),
             created_at: now,
             target_pk: target_pk.to_string(),
             owner_pk: owner_pk.map(|p| p.to_string()).unwrap_or_default(),

@@ -1,3 +1,4 @@
+use super::error::ExchangePointsError;
 use super::super::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -28,9 +29,7 @@ pub async fn exchange_points_handler(body: ExchangeRequest) -> Result<ExchangeRe
         .await?;
 
     if balance.balance <= 0 {
-        return Err(Error::BadRequest(
-            "No points available to exchange".to_string(),
-        ));
+        return Err(ExchangePointsError::NoPointsAvailable.into());
     }
 
     let amount = balance.balance;
@@ -45,9 +44,7 @@ pub async fn exchange_points_handler(body: ExchangeRequest) -> Result<ExchangeRe
     };
 
     if estimated_tokens <= 0 {
-        return Err(Error::BadRequest(
-            "Estimated token amount is zero".to_string(),
-        ));
+        return Err(ExchangePointsError::EstimatedTokensZero.into());
     }
 
     // Exchange points (deduct)
