@@ -1,7 +1,7 @@
 use super::super::dto::*;
 use super::super::*;
 
-use crate::features::posts::models::{TeamGroup, TeamOwner};
+use crate::features::posts::models::TeamGroup;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use std::collections::{HashMap, HashSet};
 
@@ -30,8 +30,6 @@ pub async fn list_members_handler(
             "You don't have permission to view members.".to_string(),
         ));
     }
-
-    let team_owner = TeamOwner::get(cli, &team_pk, Some(&EntityType::TeamOwner)).await?;
 
     let page_limit = limit.unwrap_or(50).min(100);
     let mut query_options = crate::features::auth::UserTeamGroupQueryOption::builder().limit(page_limit);
@@ -127,28 +125,8 @@ pub async fn list_members_handler(
         }
     }
 
-    if let Some(owner) = team_owner {
-        let owner_pk_str = owner.user_pk.to_string();
-        let owner_entry =
-            members_map
-                .entry(owner_pk_str.clone())
-                .or_insert_with(|| TeamMemberResponse {
-                    user_id: owner_pk_str.clone(),
-                    username: owner.username.clone(),
-                    display_name: owner.display_name.clone(),
-                    profile_url: owner.profile_url.clone(),
-                    groups: Vec::new(),
-                    is_owner: true,
-                });
-        owner_entry.is_owner = true;
-    }
-
     let mut members: Vec<TeamMemberResponse> = members_map.into_values().collect();
-    members.sort_by(|a, b| match (a.is_owner, b.is_owner) {
-        (true, false) => std::cmp::Ordering::Less,
-        (false, true) => std::cmp::Ordering::Greater,
-        _ => a.username.cmp(&b.username),
-    });
+    members.sort_by(|a, b| a.username.cmp(&b.username));
 
     Ok(ListItemsResponse {
         items: members,

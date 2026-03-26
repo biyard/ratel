@@ -7,10 +7,20 @@ pub struct RemovePayload {
     pub group_id: String,
 }
 
+#[derive(Clone)]
+pub struct ChangeGroupPayload {
+    pub member_id: String,
+    pub from_group_id: String,
+    pub to_group_id: String,
+}
+
 pub fn render_member(
     member: TeamMemberResponse,
+    all_groups: Vec<(String, String)>,
     on_remove_from_group: EventHandler<RemovePayload>,
+    on_change_group: EventHandler<ChangeGroupPayload>,
     removing: Signal<Option<String>>,
+    changing: Signal<Option<String>>,
 ) -> Element {
     let member_id = member.user_id.clone();
     let profile_url = member.profile_url.clone();
@@ -22,26 +32,59 @@ pub fn render_member(
         .filter(|group| !is_blocked_text(&group.group_name))
         .map({
             let on_remove_from_group = on_remove_from_group.clone();
+            let on_change_group = on_change_group.clone();
             let removing = removing.clone();
+            let changing = changing.clone();
             let member_id = member_id.clone();
+            let all_groups = all_groups.clone();
             move |group| {
-                let key = format!("{}-{}", member_id, group.group_id);
-                let is_removing = removing().as_ref() == Some(&key);
-                let payload = RemovePayload {
+                let remove_key = format!("{}-{}", member_id, group.group_id);
+                let change_key = format!("{}-{}", member_id, group.group_id);
+                let is_removing = removing().as_ref() == Some(&remove_key);
+                let is_changing = changing().as_ref() == Some(&change_key);
+                let is_busy = is_removing || is_changing;
+
+                let remove_payload = RemovePayload {
                     member_id: member_id.clone(),
                     group_id: group.group_id.clone(),
                 };
+
+                let from_group_id = group.group_id.clone();
+                let member_id_for_change = member_id.clone();
+                let on_change_group = on_change_group.clone();
+                let all_groups = all_groups.clone();
 
                 rsx! {
                     div {
                         key: "{group.group_id}",
                         class: "flex flex-row w-fit h-fit items-center gap-1 px-[8px] py-[4px] border border-neutral-800 bg-black light:bg-neutral-600 light:border-transparent rounded-lg font-medium text-sm text-white",
-                        span { {group.group_name} }
+                        if !is_owner && all_groups.len() > 1 {
+                            select {
+                                class: "bg-transparent text-sm font-medium text-white border-none outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed",
+                                disabled: is_busy,
+                                value: "{group.group_id}",
+                                onchange: move |e| {
+                                    let to_group_id = e.value();
+                                    if to_group_id != from_group_id {
+                                        on_change_group.call(ChangeGroupPayload {
+                                            member_id: member_id_for_change.clone(),
+                                            from_group_id: from_group_id.clone(),
+                                            to_group_id,
+                                        });
+                                    }
+                                },
+                                for (gid, gname) in all_groups.iter() {
+                                    option { value: "{gid}", "{gname}" }
+                                }
+                            }
+                        } else {
+                            span { {group.group_name} }
+                        }
                         if !is_owner {
                             button {
                                 class: "ml-1 hover:bg-neutral-700 rounded-full p-0.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
-                                onclick: move |_| on_remove_from_group.call(payload.clone()),
-                                disabled: is_removing,
+                                onclick: move |_| on_remove_from_group.call(remove_payload.clone()),
+                                disabled: is_busy,
                                 title: "Remove from group",
                                 span { class: "text-xs leading-none", "×" }
                             }
