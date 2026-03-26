@@ -98,8 +98,9 @@ pub fn ManagementPage(username: String) -> Element {
     let mut current_page = use_signal(|| 0usize); // 0-indexed
 
     let member_resource = use_loader(use_reactive(
-        (&team_pk, &current_page, &refresh),
-        move |(team_pk, page, _refresh)| {
+        (&team_pk, &current_page),
+        move |(team_pk, page)| {
+            let _ = refresh();
             let cursor = page_cursors.read().get(page()).cloned().flatten();
             async move {
                 Ok::<_, super::super::Error>(
