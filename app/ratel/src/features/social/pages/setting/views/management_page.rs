@@ -3,8 +3,10 @@ use crate::features::social::pages::member::controllers::{
 };
 use crate::features::social::pages::member::dto::TeamMemberResponse;
 use crate::features::social::pages::group::components::{InviteMemberModal, InviteResult};
-use crate::features::social::pages::group::controllers::{list_groups_handler, remove_member_handler};
-use crate::features::social::pages::group::dto::RemoveMemberRequest;
+use crate::features::social::pages::group::controllers::{
+    add_member_handler, list_groups_handler, remove_member_handler,
+};
+use crate::features::social::pages::group::dto::{AddMemberRequest, RemoveMemberRequest};
 use crate::features::social::pages::setting::i18n::TeamSettingsTranslate;
 use crate::features::social::*;
 use crate::common::hooks::use_infinite_query;
@@ -46,8 +48,9 @@ pub fn ManagementPage(username: String) -> Element {
     let mut refresh = use_signal(|| 0u64);
     let mut error_msg = use_signal(|| Option::<String>::None);
     let failed_remove_member = tr.failed_remove_member.to_string();
+    let failed_change_group = tr.failed_change_group.to_string();
 
-    // Load groups for invite modal
+    // Load groups for invite modal and change group feature
     let group_resource = use_loader(use_reactive((&team_pk,), move |(team_pk,)| {
         let _ = refresh();
         async move {
@@ -66,6 +69,11 @@ pub fn ManagementPage(username: String) -> Element {
             Err(_) => vec![],
         }
     };
+
+    let all_groups: Vec<(String, String)> = groups
+        .iter()
+        .map(|g| (g.id.clone(), g.name.clone()))
+        .collect();
 
     // Members infinite scroll query
     let team_pk_signal = use_signal(|| team_pk.clone());
@@ -156,18 +164,20 @@ pub fn ManagementPage(username: String) -> Element {
                         {
                             let is_last = idx == members.len() - 1;
                             let member = member.clone();
-                            let team_pk = team_pk.clone();
-                            let failed_remove_member = failed_remove_member.clone();
+                            let failed_remove = failed_remove_member.clone();
+                            let failed_change = failed_change_group.clone();
+                            let all_groups = all_groups.clone();
                             rsx! {
                                 MemberRow {
                                     key: "{member.user_id}",
                                     member: member.clone(),
                                     is_last,
+                                    all_groups,
                                     on_remove: move |_| {
                                         let member = member.clone();
-                                        let team_pk = team_pk.clone();
+                                        let team_pk = team_pk_signal();
                                         let mut error_msg = error_msg.clone();
-                                        let failed_msg = failed_remove_member.clone();
+                                        let failed_msg = failed_remove.clone();
                                         spawn(async move {
                                             let mut failed = false;
                                             for group in &member.groups {
@@ -192,6 +202,43 @@ pub fn ManagementPage(username: String) -> Element {
                                             }
                                         });
                                     },
+                                    on_change_group: move |(member_id, from_group_id, to_group_id): (String, String, String)| {
+                                        let team_pk = team_pk_signal();
+                                        let mut error_msg = error_msg.clone();
+                                        let failed_msg = failed_change.clone();
+                                        spawn(async move {
+                                            let remove_ok = remove_member_handler(
+                                                team_pk.clone(),
+                                                from_group_id,
+                                                RemoveMemberRequest {
+                                                    user_pks: vec![member_id.clone()],
+                                                },
+                                            )
+                                            .await
+                                            .is_ok();
+
+                                            if remove_ok {
+                                                let add_ok = add_member_handler(
+                                                    team_pk,
+                                                    to_group_id,
+                                                    AddMemberRequest {
+                                                        user_pks: vec![member_id],
+                                                    },
+                                                )
+                                                .await
+                                                .is_ok();
+
+                                                if add_ok {
+                                                    error_msg.set(None);
+                                                    refresh.set(refresh() + 1);
+                                                } else {
+                                                    error_msg.set(Some(failed_msg));
+                                                }
+                                            } else {
+                                                error_msg.set(Some(failed_msg));
+                                            }
+                                        });
+                                    },
                                 }
                             }
                         }
@@ -213,10 +260,21 @@ pub fn ManagementPage(username: String) -> Element {
 }
 
 #[component]
-fn MemberRow(member: TeamMemberResponse, is_last: bool, on_remove: EventHandler<()>) -> Element {
+fn MemberRow(
+    member: TeamMemberResponse,
+    is_last: bool,
+    all_groups: Vec<(String, String)>,
+    on_remove: EventHandler<()>,
+    on_change_group: EventHandler<(String, String, String)>,
+) -> Element {
     let tr: TeamSettingsTranslate = use_translate();
     let border_class = if is_last { "" } else { "border-b border-border" };
     let mut show_menu = use_signal(|| false);
+    let mut show_change_group = use_signal(|| false);
+
+    let first_group_id = member.groups.first().map(|g| g.group_id.clone()).unwrap_or_default();
+    let mut from_group_id = use_signal(|| first_group_id);
+    let mut to_group_id = use_signal(|| String::new());
 
     let display = if member.display_name.is_empty() {
         member.username.clone()
@@ -224,87 +282,181 @@ fn MemberRow(member: TeamMemberResponse, is_last: bool, on_remove: EventHandler<
         member.display_name.clone()
     };
 
+    let has_groups = !member.groups.is_empty();
+    let can_change_group = has_groups && all_groups.len() > 1;
+
     rsx! {
-        div { class: "relative flex items-center gap-3 px-4 py-3 {border_class}",
-            // Avatar
-            if !member.profile_url.is_empty() {
-                img {
-                    src: "{member.profile_url}",
-                    alt: "{display}",
-                    class: "w-9 h-9 rounded-full object-cover shrink-0",
-                }
-            } else {
-                div { class: "w-9 h-9 rounded-full bg-neutral-600 shrink-0 flex items-center justify-center",
-                    span { class: "text-xs font-semibold text-white",
-                        "{display.chars().next().unwrap_or('?').to_uppercase()}"
+        div { class: "flex flex-col {border_class}",
+            // Main row
+            div { class: "relative flex items-center gap-3 px-4 py-3",
+                // Avatar
+                if !member.profile_url.is_empty() {
+                    img {
+                        src: "{member.profile_url}",
+                        alt: "{display}",
+                        class: "w-9 h-9 rounded-full object-cover shrink-0",
                     }
-                }
-            }
-
-            // Name + username
-            div { class: "flex flex-col min-w-0 flex-1",
-                span { class: "text-sm font-semibold text-text-primary truncate", "{display}" }
-                span { class: "text-xs text-foreground-muted truncate", "@{member.username}" }
-            }
-
-            // Role
-            if member.is_owner {
-                span { class: "text-sm text-foreground-muted shrink-0", {tr.owner} }
-            } else {
-                span { class: "text-sm text-foreground-muted shrink-0",
-                    {
-                        if member.groups.is_empty() {
-                            tr.member_role.to_string()
-                        } else {
-                            member.groups.iter().map(|g| g.group_name.as_str()).collect::<Vec<_>>().join(", ")
+                } else {
+                    div { class: "w-9 h-9 rounded-full bg-neutral-600 shrink-0 flex items-center justify-center",
+                        span { class: "text-xs font-semibold text-white",
+                            "{display.chars().next().unwrap_or('?').to_uppercase()}"
                         }
                     }
                 }
-            }
 
-            // More options
-            if !member.is_owner {
-                div { class: "relative shrink-0",
-                    Button {
-                        style: ButtonStyle::Text,
-                        size: ButtonSize::Icon,
-                        shape: ButtonShape::Square,
-                        class: "flex items-center justify-center w-7 h-7 !rounded-md".to_string(),
-                        onclick: move |e: MouseEvent| {
-                            e.stop_propagation();
-                            show_menu.toggle();
-                        },
-                        lucide_dioxus::Ellipsis {
-                            class: "w-4 h-4 [&>circle]:fill-text-primary [&>circle]:stroke-none",
-                        }
-                    }
-                    if show_menu() {
-                        div {
-                            class: "fixed inset-0 z-10",
-                            onclick: move |_| show_menu.set(false),
-                        }
-                        div {
-                            class: "absolute right-0 top-8 z-20 w-44 bg-popover border border-border rounded-lg shadow-lg py-1 overflow-hidden",
-                            onclick: move |e| e.stop_propagation(),
-                            Button {
-                                style: ButtonStyle::Text,
-                                size: ButtonSize::Small,
-                                shape: ButtonShape::Square,
-                                class: "flex items-center gap-2 w-full text-destructive justify-start".to_string(),
-                                onclick: move |_| {
-                                    show_menu.set(false);
-                                    on_remove.call(());
-                                },
-                                lucide_dioxus::UserMinus {
-                                    class: "w-4 h-4 [&>path]:stroke-destructive [&>line]:stroke-destructive",
-                                }
-                                {tr.remove_from_team}
+                // Name + username
+                div { class: "flex flex-col min-w-0 flex-1",
+                    span { class: "text-sm font-semibold text-text-primary truncate", "{display}" }
+                    span { class: "text-xs text-foreground-muted truncate", "@{member.username}" }
+                }
+
+                // Role
+                if member.is_owner {
+                    span { class: "text-sm text-foreground-muted shrink-0", {tr.owner} }
+                } else {
+                    span { class: "text-sm text-foreground-muted shrink-0",
+                        {
+                            if member.groups.is_empty() {
+                                tr.member_role.to_string()
+                            } else {
+                                member.groups.iter().map(|g| g.group_name.as_str()).collect::<Vec<_>>().join(", ")
                             }
                         }
                     }
                 }
-            } else {
-                div { class: "w-7 shrink-0" }
+
+                // More options
+                if !member.is_owner {
+                    div { class: "relative shrink-0",
+                        Button {
+                            style: ButtonStyle::Text,
+                            size: ButtonSize::Icon,
+                            shape: ButtonShape::Square,
+                            class: "flex items-center justify-center w-7 h-7 !rounded-md".to_string(),
+                            onclick: move |e: MouseEvent| {
+                                e.stop_propagation();
+                                show_menu.toggle();
+                                show_change_group.set(false);
+                            },
+                            lucide_dioxus::Ellipsis {
+                                class: "w-4 h-4 [&>circle]:fill-text-primary [&>circle]:stroke-none",
+                            }
+                        }
+                        if show_menu() {
+                            div {
+                                class: "fixed inset-0 z-10",
+                                onclick: move |_| show_menu.set(false),
+                            }
+                            div {
+                                class: if is_last { "absolute right-0 bottom-8 z-20 w-44 bg-popover border border-border rounded-lg shadow-lg py-1 overflow-hidden" } else { "absolute right-0 top-8 z-20 w-44 bg-popover border border-border rounded-lg shadow-lg py-1 overflow-hidden" },
+                                onclick: move |e| e.stop_propagation(),
+                                if can_change_group {
+                                    Button {
+                                        style: ButtonStyle::Text,
+                                        size: ButtonSize::Small,
+                                        shape: ButtonShape::Square,
+                                        class: "flex items-center gap-2 w-full justify-start".to_string(),
+                                        onclick: move |_| {
+                                            show_menu.set(false);
+                                            show_change_group.set(true);
+                                        },
+                                        lucide_dioxus::ArrowLeftRight {
+                                            class: "w-4 h-4 [&>path]:stroke-text-primary [&>polyline]:stroke-text-primary",
+                                        }
+                                        {tr.change_group}
+                                    }
+                                }
+                                Button {
+                                    style: ButtonStyle::Text,
+                                    size: ButtonSize::Small,
+                                    shape: ButtonShape::Square,
+                                    class: "flex items-center gap-2 w-full text-destructive justify-start".to_string(),
+                                    onclick: move |_| {
+                                        show_menu.set(false);
+                                        on_remove.call(());
+                                    },
+                                    lucide_dioxus::UserMinus {
+                                        class: "w-4 h-4 [&>path]:stroke-destructive [&>line]:stroke-destructive",
+                                    }
+                                    {tr.remove_from_team}
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    div { class: "w-7 shrink-0" }
+                }
+            }
+
+            // Change group panel
+            if show_change_group() {
+                div { class: "flex flex-col gap-3 px-4 pb-3",
+                    div { class: "flex flex-col gap-2",
+                        // From group (only show select if member has multiple groups)
+                        if member.groups.len() > 1 {
+                            div { class: "flex flex-col gap-1",
+                                span { class: "text-xs font-semibold text-foreground-muted", {tr.from_group} }
+                                select {
+                                    class: "w-full px-3 py-2 rounded-[8px] border border-input-box-border bg-input-box-bg text-text-primary text-sm",
+                                    value: from_group_id(),
+                                    onchange: move |e| from_group_id.set(e.value()),
+                                    for group in member.groups.iter() {
+                                        option { value: "{group.group_id}", "{group.group_name}" }
+                                    }
+                                }
+                            }
+                        }
+
+                        // To group
+                        div { class: "flex flex-col gap-1",
+                            span { class: "text-xs font-semibold text-foreground-muted", {tr.to_group} }
+                            select {
+                                class: "w-full px-3 py-2 rounded-[8px] border border-input-box-border bg-input-box-bg text-text-primary text-sm",
+                                onchange: move |e| to_group_id.set(e.value()),
+                                option { value: "", disabled: true, selected: to_group_id().is_empty(), "—" }
+                                for (gid, gname) in all_groups.iter() {
+                                    if *gid != from_group_id() {
+                                        option { value: "{gid}", "{gname}" }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Action buttons
+                    div { class: "flex gap-2",
+                        Button {
+                            style: ButtonStyle::Primary,
+                            shape: ButtonShape::Square,
+                            size: ButtonSize::Small,
+                            disabled: to_group_id().is_empty(),
+                            onclick: move |_| {
+                                let to = to_group_id();
+                                if to.is_empty() {
+                                    return;
+                                }
+                                on_change_group.call((
+                                    member.user_id.clone(),
+                                    from_group_id(),
+                                    to,
+                                ));
+                                show_change_group.set(false);
+                                to_group_id.set(String::new());
+                            },
+                            {tr.apply}
+                        }
+                        Button {
+                            style: ButtonStyle::Outline,
+                            shape: ButtonShape::Square,
+                            size: ButtonSize::Small,
+                            onclick: move |_| {
+                                show_change_group.set(false);
+                                to_group_id.set(String::new());
+                            },
+                            {tr.cancel}
+                        }
+                    }
+                }
             }
         }
     }
