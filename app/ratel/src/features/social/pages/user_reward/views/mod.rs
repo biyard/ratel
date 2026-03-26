@@ -1,85 +1,39 @@
 use super::components::{exchange_preview_card, points_summary_card, transaction_list};
-use super::controllers::{get_rewards_handler, list_point_transactions_handler};
+use super::controllers::{get_user_rewards_handler, list_user_transactions_handler};
 use super::dto::RewardsResponse;
-use crate::common::services::PointTransactionResponse;
 use super::*;
+use crate::common::services::PointTransactionResponse;
 use dioxus::prelude::*;
 
 #[component]
-pub fn Home(username: String) -> Element {
+pub fn Home(username: ReadSignal<String>) -> Element {
     let tr: RewardsPageTranslate = use_translate();
 
-    let rewards_resource =
-        use_server_future(move || async move { get_rewards_handler(None).await })?;
-    let transactions_resource =
-        use_server_future(
-            move || async move { list_point_transactions_handler(None, None).await },
-        )?;
+    let rewards_resource = use_loader(use_reactive((&username,), |(name,)| async move {
+        get_user_rewards_handler(name(), None).await
+    }))?;
 
-    let rewards_state = rewards_resource.value();
-    let transactions_state = transactions_resource.value();
+    let transactions_resource =
+        use_loader(use_reactive((&username,), |(name,)| async move {
+            list_user_transactions_handler(name(), None, None).await
+        }))?;
+
+    let rewards: RewardsResponse = rewards_resource.read().clone();
+    let initial_transactions = transactions_resource.read().clone();
 
     let mut transactions = use_signal(Vec::<PointTransactionResponse>::new);
     let mut next_bookmark = use_signal(|| Option::<String>::None);
     let mut transactions_loaded = use_signal(|| false);
-    let mut transactions_error = use_signal(|| false);
     let mut is_fetching_next = use_signal(|| false);
 
-    {
-        let transactions_state = transactions_state.clone();
-        let mut transactions = transactions.clone();
-        let mut next_bookmark = next_bookmark.clone();
-        let mut transactions_loaded = transactions_loaded.clone();
-        let mut transactions_error = transactions_error.clone();
-
-        use_effect(move || {
-            if *transactions_loaded.read() {
-                return;
-            }
-
-            let transaction_state = transactions_state.read();
-
-            let Some(state) = transaction_state.as_ref() else {
-                return;
-            };
-
-            match state {
-                Ok(data) => {
-                    transactions.set(data.items.clone());
-                    next_bookmark.set(data.bookmark.clone());
-                }
-                Err(_) => {
-                    transactions_error.set(true);
-                }
-            }
-
-            transactions_loaded.set(true);
-        });
-    }
-
-    if rewards_state.read().is_none() {
-        return rsx! {
-            div { class: "w-full max-w-desktop mx-auto px-4 py-8",
-                div { class: "text-center text-text-primary", "{tr.loading}" }
-            }
-        };
-    }
-
-    let rewards = match rewards_state.read().as_ref() {
-        Some(Ok(data)) => data.clone(),
-        Some(Err(err)) => {
-            return rsx! {
-                div { class: "w-full max-w-desktop mx-auto px-4 py-8",
-                    div { class: "bg-card-bg border border-card-border rounded-lg p-8",
-                        div { class: "text-center text-destructive text-text-primary",
-                            "{tr.error}: {err}"
-                        }
-                    }
-                }
-            };
+    use_effect(move || {
+        if *transactions_loaded.read() {
+            return;
         }
-        None => RewardsResponse::default(),
-    };
+        transactions.set(initial_transactions.items.clone());
+        next_bookmark.set(initial_transactions.bookmark.clone());
+        transactions_loaded.set(true);
+    });
 
     let estimated_tokens = if rewards.total_points > 0 {
         ((rewards.points as f64 / rewards.total_points as f64)
@@ -90,47 +44,38 @@ pub fn Home(username: String) -> Element {
     };
 
     let has_next = next_bookmark.read().is_some();
-    let is_loading_transactions = !*transactions_loaded.read();
     let is_fetching_next_value = *is_fetching_next.read();
-    let transactions_error_value = *transactions_error.read();
     let month = rewards.month.clone();
 
-    let on_load_more = {
-        let mut transactions = transactions.clone();
-        let mut next_bookmark = next_bookmark.clone();
-        let mut is_fetching_next = is_fetching_next.clone();
-        let month = month.clone();
-
-        move |_| {
-            let month = month.clone();
-            if *is_fetching_next.read() {
-                return;
-            }
-
-            let Some(bookmark) = next_bookmark.read().clone() else {
-                return;
-            };
-
-            is_fetching_next.set(true);
-            spawn(async move {
-                let result = list_point_transactions_handler(Some(month), Some(bookmark)).await;
-                if let Ok(data) = result {
-                    let mut updated = {
-                        let current = transactions.read();
-                        current.clone()
-                    };
-                    updated.extend(data.items);
-                    transactions.set(updated);
-                    next_bookmark.set(data.bookmark);
-                }
-                is_fetching_next.set(false);
-            });
+    let on_load_more = move |_| {
+        if *is_fetching_next.read() {
+            return;
         }
+
+        let Some(bookmark) = next_bookmark.read().clone() else {
+            return;
+        };
+
+        let month = month.clone();
+        let name = username();
+        is_fetching_next.set(true);
+        spawn(async move {
+            let result =
+                list_user_transactions_handler(name, Some(month), Some(bookmark)).await;
+            if let Ok(data) = result {
+                let mut updated = transactions.read().clone();
+                updated.extend(data.items);
+                transactions.set(updated);
+                next_bookmark.set(data.bookmark);
+            }
+            is_fetching_next.set(false);
+        });
     };
 
     rsx! {
         div { class: "w-full max-w-desktop mx-auto px-4 py-6",
             {points_summary_card(&tr, &rewards, estimated_tokens)}
+
             {exchange_preview_card(&tr, &rewards, estimated_tokens)}
 
             div { class: "mt-6",
@@ -138,12 +83,12 @@ pub fn Home(username: String) -> Element {
                     transaction_list(
                         &tr,
                         transactions.read().as_slice(),
-                        is_loading_transactions,
-                        transactions_error_value,
+                        false,
+                        false,
                     )
                 }
 
-                if has_next && !transactions_error_value {
+                if has_next {
                     button {
                         class: "mt-4 py-3 text-center text-sm font-medium text-text-primary hover:text-white transition-colors disabled:opacity-50",
                         onclick: on_load_more,
@@ -160,17 +105,17 @@ pub fn Home(username: String) -> Element {
     }
 }
 
-fn format_points(points: i64) -> String {
+pub fn format_points(points: i64) -> String {
     format_with_commas(points, None)
 }
 
-fn format_tokens(tokens: f64) -> String {
+pub fn format_tokens(tokens: f64) -> String {
     let formatted = format!("{:.2}", tokens);
     let trimmed = formatted.trim_end_matches('0').trim_end_matches('.');
     format_with_commas_str(trimmed)
 }
 
-fn format_with_commas(value: i64, suffix: Option<&str>) -> String {
+pub fn format_with_commas(value: i64, suffix: Option<&str>) -> String {
     let sign = if value < 0 { "-" } else { "" };
     let digits = value.abs().to_string();
     let mut out = String::new();
@@ -188,7 +133,7 @@ fn format_with_commas(value: i64, suffix: Option<&str>) -> String {
     }
 }
 
-fn format_with_commas_str(value: &str) -> String {
+pub fn format_with_commas_str(value: &str) -> String {
     let (sign, raw) = if let Some(stripped) = value.strip_prefix('-') {
         ("-", stripped)
     } else {

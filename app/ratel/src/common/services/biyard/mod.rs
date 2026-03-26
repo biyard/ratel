@@ -46,6 +46,21 @@ pub struct TransactPointResponse {
 }
 
 pub type AwardPointResponse = TransactPointResponse;
+pub type ExchangePointResponse = TransactPointResponse;
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct TokenBalanceResponse {
+    pub project_id: String,
+    pub meta_user_id: String,
+    pub balance: i64,
+    pub created_at: i64,
+    pub updated_at: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct MintTokenRequest {
+    pub amount: i64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct PointTransactionResponse {
@@ -168,6 +183,93 @@ impl BiyardService {
             .into_iter()
             .next()
             .ok_or_else(|| Error::Unknown("Biyard API returned empty response".to_string()))
+    }
+
+    pub async fn exchange_points(
+        &self,
+        user_pk: Partition,
+        amount: i64,
+        month: String,
+    ) -> Result<ExchangePointResponse> {
+        let path = format!("{}/v1/projects/{}/points", self.base_url, self.project_id);
+        let body = vec![TransactPointRequest {
+            tx_type: "Exchange".to_string(),
+            to: None,
+            from: Some(Self::convert_user_id(&user_pk)?),
+            amount,
+            description: Some("Point-to-Token Exchange".to_string()),
+            month: Some(month),
+        }];
+
+        let res = self
+            .cli
+            .post(&path)
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| Error::Unknown(e.to_string()))?;
+
+        if !res.status().is_success() {
+            let status = res.status();
+            let text = res.text().await.unwrap_or_default();
+            return Err(Error::BadRequest(format!(
+                "Biyard API error ({}): {}",
+                status, text
+            )));
+        }
+
+        let responses: Vec<TransactPointResponse> = res
+            .json()
+            .await
+            .map_err(|e| Error::Unknown(e.to_string()))?;
+        responses
+            .into_iter()
+            .next()
+            .ok_or_else(|| Error::Unknown("Biyard API returned empty response".to_string()))
+    }
+
+    pub async fn get_token_balance(
+        &self,
+        user_pk: Partition,
+    ) -> Result<TokenBalanceResponse> {
+        let user_id = Self::convert_user_id(&user_pk)?;
+        let path = format!(
+            "{}/v1/projects/{}/tokens/balances/{}",
+            self.base_url, self.project_id, user_id
+        );
+        self.get_json(path).await
+    }
+
+    pub async fn mint_tokens(
+        &self,
+        user_pk: Partition,
+        amount: i64,
+    ) -> Result<TokenBalanceResponse> {
+        let user_id = Self::convert_user_id(&user_pk)?;
+        let path = format!(
+            "{}/v1/projects/{}/tokens/mint/{}",
+            self.base_url, self.project_id, user_id
+        );
+        let body = MintTokenRequest { amount };
+
+        let res = self
+            .cli
+            .post(&path)
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| Error::Unknown(e.to_string()))?;
+
+        if !res.status().is_success() {
+            let status = res.status();
+            let text = res.text().await.unwrap_or_default();
+            return Err(Error::BadRequest(format!(
+                "Biyard API error ({}): {}",
+                status, text
+            )));
+        }
+
+        res.json().await.map_err(|e| Error::Unknown(e.to_string()))
     }
 
     fn convert_user_id(user_pk: &Partition) -> Result<String> {
