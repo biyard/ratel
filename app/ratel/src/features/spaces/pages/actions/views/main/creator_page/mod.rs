@@ -39,7 +39,7 @@ pub fn CreatorActionPage(space_id: ReadSignal<SpacePartition>) -> Element {
                         size: ButtonSize::Medium,
                         style: ButtonStyle::Secondary,
                         shape: ButtonShape::Square,
-                        class: "inline-flex border-action-type-card-border hover:border-action-type-card-border font-raleway max-mobile:w-full bg-action-type-card-bg text-btn-action-settings-text hover:opacity-90",
+                        class: "inline-flex border-action-type-card-border hover:border-action-type-card-border font-raleway max-mobile:w-full bg-action-type-card-bg hover:bg-action-type-card-bg text-btn-action-settings-text hover:text-btn-action-settings-text hover:opacity-90",
                         onclick: move |_| {
                             layover
                                 .open(
