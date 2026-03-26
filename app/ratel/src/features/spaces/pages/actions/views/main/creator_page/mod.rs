@@ -39,7 +39,7 @@ pub fn CreatorActionPage(space_id: ReadSignal<SpacePartition>) -> Element {
                         size: ButtonSize::Medium,
                         style: ButtonStyle::Secondary,
                         shape: ButtonShape::Square,
-                        class: "inline-flex border-transparent hover:border-transparent font-raleway max-mobile:w-full bg-btn-action-settings-bg text-btn-action-settings-text hover:opacity-90",
+                        class: "inline-flex border-action-type-card-border hover:border-action-type-card-border font-raleway max-mobile:w-full bg-action-type-card-bg text-btn-action-settings-text hover:opacity-90",
                         onclick: move |_| {
                             layover
                                 .open(
@@ -61,7 +61,7 @@ pub fn CreatorActionPage(space_id: ReadSignal<SpacePartition>) -> Element {
                             icons::settings::Settings2 {
                                 width: "16",
                                 height: "16",
-                                class: "[&>path]:fill-btn-action-settings-icon [&>circle]:stroke-btn-action-settings-icon [&>circle]:fill-none",
+                                class: "[&>path]:fill-current [&>circle]:stroke-current [&>circle]:fill-none",
                             }
                             span { {tr.button_settings_label} }
                         }
