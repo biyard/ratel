@@ -31,11 +31,6 @@ pub fn InviteMemberModal(
 
     let groups = groups;
 
-    let current_group_id = groups
-        .get(group_index())
-        .map(|g| g.id.clone())
-        .unwrap_or_default();
-
     let on_search = {
         let selected_users = selected_users.clone();
         let is_searching = is_searching.clone();
@@ -93,13 +88,16 @@ pub fn InviteMemberModal(
         let mut message = message.clone();
         let selected_users = selected_users.clone();
         let team_pk = team_pk.clone();
-        let group_id = current_group_id.clone();
         let on_invited = on_invited.clone();
         let on_close = on_close.clone();
         let failed_invite = tr.failed_invite.to_string();
+        let groups_for_invite = groups.clone();
         move |_| {
             let team_pk = team_pk.clone();
-            let group_id = group_id.clone();
+            let group_id = groups_for_invite
+                .get(group_index())
+                .map(|g| g.id.clone())
+                .unwrap_or_default();
             let on_invited = on_invited.clone();
             let on_close = on_close.clone();
             let failed_invite = failed_invite.clone();
@@ -152,7 +150,7 @@ pub fn InviteMemberModal(
                             group_index.set(next);
                         }
                     },
-                    for (idx , group) in groups.iter().enumerate() {
+                    for (idx, group) in groups.iter().enumerate() {
                         option { value: idx, "{group.name}" }
                     }
                 }
@@ -161,20 +159,15 @@ pub fn InviteMemberModal(
             div { class: "flex flex-col w-full",
                 div { class: "font-bold text-[15px]/[28px] text-modal-label-text", {tr.email_label} }
                 div { class: "mt-2.5",
-                    input {
-                        class: "w-full px-4 py-2 rounded-[8px] border border-input-box-border bg-input-box-bg text-text-primary",
+                    Input {
                         value: search_value(),
                         placeholder: tr.email_hint,
-                        oninput: move |e| search_value.set(e.value()),
-                        onkeydown: move |e| {
-                            if e.key() == dioxus::prelude::Key::Enter {
-                                on_search();
-                            }
-                        },
+                        oninput: move |e: FormEvent| search_value.set(e.value()),
+                        onconfirm: move |_| on_search(),
                     }
                 }
                 if is_searching() {
-                    div { class: "text-sm text-gray-400 mt-2", {tr.searching} }
+                    div { class: "text-sm text-foreground-muted mt-2", {tr.searching} }
                 }
             }
 
@@ -203,7 +196,6 @@ pub fn InviteMemberModal(
                             }
                         }
                     }
-                
                 }
             }
 
@@ -212,8 +204,12 @@ pub fn InviteMemberModal(
             }
 
             div { class: "flex flex-col w-full",
-                button {
-                    class: if selected_users().is_empty() || is_submitting() { "cursor-not-allowed bg-neutral-500 flex flex-row w-full justify-center items-center my-[15px] py-[15px] rounded-lg font-bold text-[#000203] text-base" } else { "cursor-pointer bg-primary flex flex-row w-full justify-center items-center my-[15px] py-[15px] rounded-lg font-bold text-[#000203] text-base" },
+                Button {
+                    style: ButtonStyle::Primary,
+                    shape: ButtonShape::Square,
+                    class: "w-full my-[15px] py-[15px]",
+                    disabled: selected_users().is_empty(),
+                    loading: is_submitting,
                     onclick: on_invite,
                     {tr.send}
                 }
