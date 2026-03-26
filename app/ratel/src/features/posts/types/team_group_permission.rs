@@ -70,6 +70,15 @@ impl TeamGroupPermissions {
             TeamGroupPermission::SpaceRead,
         ])
     }
+
+    pub fn member() -> Self {
+        Self(vec![
+            TeamGroupPermission::PostRead,
+            TeamGroupPermission::PostWrite,
+            TeamGroupPermission::SpaceRead,
+            TeamGroupPermission::SpaceWrite,
+        ])
+    }
 }
 
 impl std::ops::BitOr for TeamGroupPermissions {
