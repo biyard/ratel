@@ -51,7 +51,7 @@ pub fn SpaceVisibilitySetting() -> Element {
                                 }
                             }
                         },
-                        icons::internet_script::Internet { class: "w-5 h-5 [&>path]:stroke-primary [&>path]:fill-none [&>circle]:stroke-primary [&>circle]:fill-none" }
+                        icons::internet_script::Internet { class: "w-5 h-5 [&>path]:stroke-primary [&>path]:fill-none [&>circle]:stroke-primary [&>circle]:fill-none [&>ellipse]:stroke-primary [&>ellipse]:fill-none" }
                     }
 
                     VisibilityOptionCard {
