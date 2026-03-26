@@ -324,7 +324,15 @@ fn MemberRow(member: TeamMemberResponse, is_last: bool, on_remove: EventHandler<
             if member.is_owner {
                 span { class: "text-sm text-foreground-muted shrink-0", {tr.owner} }
             } else {
-                span { class: "text-sm text-foreground-muted shrink-0", {tr.member_role} }
+                span { class: "text-sm text-foreground-muted shrink-0",
+                    {
+                        if member.groups.is_empty() {
+                            tr.member_role.to_string()
+                        } else {
+                            member.groups.iter().map(|g| g.group_name.as_str()).collect::<Vec<_>>().join(", ")
+                        }
+                    }
+                }
             }
 
             // More options
