@@ -73,13 +73,13 @@ pub fn DraftTimeline() -> Element {
                             rsx! {
                                 div {
                                     key: "draft-{post.pk}",
-                                    class: "flex flex-col gap-2.5 pt-5 pb-2.5 border cursor-pointer snap-start shrink-0 w-[340px] max-mobile:w-[280px] rounded-[10px] bg-card-bg-secondary border-card-enable-border",
+                                    class: "flex flex-col gap-2.5 pt-5 pb-5 border cursor-pointer snap-start shrink-0 w-[360px] max-mobile:w-[280px] rounded-[10px] bg-card-bg-secondary border-card-enable-border",
                                     onclick: move |_| {
                                         let nav = nav.clone();
                                         let post_pk: FeedPartition = post_pk.clone().into();
                                         nav.push(format!("/posts/{post_pk}/edit"));
                                     },
-                                    Col { class: "gap-1 px-5 w-full",
+                                    Col { class: "gap-4 px-5 w-full",
                                         Badge {
                                             size: BadgeSize::Small,
                                             variant: BadgeVariant::Rounded,
@@ -90,24 +90,39 @@ pub fn DraftTimeline() -> Element {
                                             "{post.title}"
                                         }
                                     }
-                                    div { class: "flex flex-row justify-between items-center px-5",
-                                        UserBadge {
-                                            profile_url: post.author_profile_url.clone(),
-                                            name: post.author_display_name.clone(),
-                                            author_type: post.author_type,
-                                        }
-                                        p { class: "text-sm font-light align-middle text-foreground-muted",
-                                            "{time_ago(post.updated_at)}"
-                                        }
-                                    }
-                                    div { class: "px-5 line-clamp-3",
+
+                                    div { class: " line-clamp-3",
                                         FeedContents {
                                             contents: post.html_contents.chars().take(200).collect::<String>(),
                                             urls: post.urls.clone(),
                                         }
                                     }
+
+                                    div { class: "flex flex-row justify-between items-center px-5",
+                                        p { class: "text-sm font-light align-middle text-foreground-muted",
+                                            "{time_ago(post.updated_at)}"
+                                        }
+                                    }
+                                  
                                 }
                             }
+                        }
+                    }
+                }
+                div { class: "absolute left-0 top-1/2 flex gap-1 -translate-y-1/2",
+                    button {
+                        class: "p-1 rounded-full transition-colors cursor-pointer z-101 hover:bg-accent/20 disabled:opacity-50 disabled:cursor-not-allowed",
+                        onclick: move |_| {
+                            let _ = document::eval(
+                                r#"
+                                    const el = document.querySelector('[aria-label="Drafts section"] .scrollbar-none');
+                                    if (el) el.scrollBy({ left: -340, behavior: 'smooth' });
+                                "#,
+                            );
+                        },
+                        lucide_dioxus::ChevronLeft {
+                            size: 20,
+                            class: "transition-colors [&>path]:stroke-foreground-muted hover:[&>path]:stroke-text-primary",
                         }
                     }
                 }
