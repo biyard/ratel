@@ -46,7 +46,7 @@ pub fn ViewerMain(
 
     rsx! {
         FullActionLayover {
-            content_class: "gap-5".to_string(),
+            content_class: "gap-5 overflow-y-visible".to_string(),
             bottom_right: rsx! {
                 Button {
                     style: ButtonStyle::Outline,

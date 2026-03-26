@@ -1,3 +1,5 @@
+use crate::common::utils::format::format_with_commas;
+use crate::common::types::RewardUserBehavior;
 use crate::features::spaces::pages::dashboard::i18n::DashboardTranslate;
 use crate::features::spaces::pages::dashboard::*;
 
@@ -153,7 +155,7 @@ pub fn DashboardCard(
                     class: "flex flex-col gap-2.5".to_string(),
                     CardHeader {
                         icon: data.icon.clone(),
-                        main_value: format!("{}", data.total_points),
+                        main_value: format_with_commas(data.total_points),
                         main_label: tr.points_available.to_string(),
                     }
                     InfoCardContent { data, tr }
@@ -534,15 +536,28 @@ fn InfoCardContent(data: InfoCardData, tr: DashboardTranslate) -> Element {
         };
     }
 
+    let lang = use_language();
+
     rsx! {
         div { class: "flex flex-1 min-h-[120px] max-mobile:min-h-[96px] flex-col justify-end gap-2 mt-4 max-mobile:mt-2 pr-1 overflow-y-auto",
             for item in data.items.iter() {
-                div { class: "flex items-center justify-between gap-2 text-text-primary",
-                    span { class: "min-w-0 truncate text-xs leading-4 font-medium font-raleway",
-                        "{item.label}"
-                    }
-                    span { class: "shrink-0 text-xs leading-4 font-semibold font-inter",
-                        "{item.value}"
+                {
+                    let display_label = if let Some(desc) = &item.description {
+                        desc.clone()
+                    } else {
+                        item.label.parse::<RewardUserBehavior>()
+                            .map(|b| b.translate(&lang()).to_string())
+                            .unwrap_or_else(|_| item.label.clone())
+                    };
+                    rsx! {
+                        div { class: "flex items-center justify-between gap-2 text-text-primary",
+                            span { class: "min-w-0 truncate text-xs leading-4 font-medium font-raleway",
+                                "{display_label}"
+                            }
+                            span { class: "shrink-0 text-xs leading-4 font-semibold font-inter",
+                                "{item.value}"
+                            }
+                        }
                     }
                 }
             }

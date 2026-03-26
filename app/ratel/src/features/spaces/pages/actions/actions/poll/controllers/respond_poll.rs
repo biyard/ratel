@@ -1,6 +1,8 @@
 use crate::common::models::space::{SpaceAuthor, SpaceCommon};
 use crate::features::spaces::pages::actions::actions::poll::*;
 use crate::features::spaces::pages::actions::models::SpaceAction;
+#[cfg(feature = "server")]
+use crate::features::spaces::space_common::models::space_reward::SpaceReward;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RespondPollRequest {
@@ -58,7 +60,9 @@ fn respondent_from_panel_attributes(
     attributes: &[crate::features::spaces::models::PanelAttribute],
     verified_attributes: &crate::common::models::did::VerifiedAttributes,
 ) -> Option<RespondentAttr> {
-    use crate::features::spaces::models::{CollectiveAttribute, PanelAttribute, VerifiableAttribute};
+    use crate::features::spaces::models::{
+        CollectiveAttribute, PanelAttribute, VerifiableAttribute,
+    };
 
     let mut respondent = RespondentAttr::default();
 
@@ -100,15 +104,17 @@ async fn get_respondent_from_panels(
     user_pk: &Partition,
 ) -> Result<Option<RespondentAttr>> {
     let (pk, sk) = crate::common::models::did::VerifiedAttributes::keys(user_pk);
-    let verified_attributes = crate::common::models::did::VerifiedAttributes::get(cli, pk, Some(sk))
-        .await?
-        .unwrap_or_default();
-    let matched_attributes = crate::features::spaces::controllers::panel_requirements::matched_panel_attributes(
-        cli,
-        space_pk,
-        &verified_attributes,
-    )
-    .await?;
+    let verified_attributes =
+        crate::common::models::did::VerifiedAttributes::get(cli, pk, Some(sk))
+            .await?
+            .unwrap_or_default();
+    let matched_attributes =
+        crate::features::spaces::controllers::panel_requirements::matched_panel_attributes(
+            cli,
+            space_pk,
+            &verified_attributes,
+        )
+        .await?;
 
     Ok(respondent_from_panel_attributes(
         &matched_attributes,
@@ -116,7 +122,7 @@ async fn get_respondent_from_panels(
     ))
 }
 
-#[post("/api/spaces/{space_pk}/polls/{poll_sk}/respond", role: SpaceUserRole, author: SpaceAuthor, space: SpaceCommon)]
+#[post("/api/spaces/{space_pk}/polls/{poll_sk}/respond", role: SpaceUserRole, author: SpaceAuthor, space: SpaceCommon, user: crate::features::auth::User)]
 pub async fn respond_poll(
     space_pk: SpacePartition,
     poll_sk: SpacePollEntityType,
@@ -124,6 +130,8 @@ pub async fn respond_poll(
 ) -> Result<RespondPollResponse> {
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
+    let space_partition = space_pk.clone();
+    let poll_action_id = poll_sk.to_string(); // UUID only, matches SpaceReward action_id
     let space_id = space_pk.clone();
     let space_pk: Partition = space_pk.into();
     let poll_sk_entity: EntityType = poll_sk.clone().into();
@@ -166,10 +174,15 @@ pub async fn respond_poll(
         return Err(Error::BadRequest("Response editing not allowed".into()));
     }
 
-    if poll.canister_upload_enabled {
+    let env = crate::common::config::Environment::default();
+    if poll.canister_upload_enabled && env != crate::common::config::Environment::Production {
         let now = crate::common::utils::time::get_now_timestamp_millis();
         use crate::features::spaces::pages::actions::services::vote_crypto::VOTE_CRYPTO_SERVICE;
-        let crypto = &*VOTE_CRYPTO_SERVICE;
+        let crypto = VOTE_CRYPTO_SERVICE
+            .as_ref()
+            .ok_or(Error::InternalServerError(
+                "Encrypted voting is not configured (VOTER_TAG_SECRET / ATTR_VOTING_AUTHORITY_JSON missing)".into(),
+            ))?;
         let metadata = PollMetadata {
             poll_sk: poll_sk_entity.to_string(),
             submitted_at_ms: now,
@@ -211,6 +224,7 @@ pub async fn respond_poll(
             .execute(cli)
             .await?;
     } else {
+        let author_pk = author.pk.clone();
         let respondent = get_respondent_from_panels(cli, &space_pk, &author.pk).await?;
         let answer_record = SpacePollUserAnswer::new(
             space_pk.clone(),
@@ -231,6 +245,36 @@ pub async fn respond_poll(
                 &space_pk, 1,
             );
         crate::transact_write_items!(cli, vec![agg_item]).ok();
+
+        match SpaceReward::get_by_action(
+            cli,
+            space_partition.clone(),
+            poll_action_id.clone(),
+            RewardUserBehavior::RespondPoll,
+        )
+        .await
+        {
+            Ok(space_reward) => {
+                if let Err(e) =
+                    SpaceReward::award(cli, &space_reward, user.pk, Some(author_pk)).await
+                {
+                    tracing::error!(
+                        space_pk = %space_partition,
+                        action_id = %poll_sk_entity,
+                        error = %e,
+                        "Failed to award poll reward"
+                    );
+                }
+            }
+            Err(e) => {
+                tracing::warn!(
+                    space_pk = %space_partition,
+                    action_id = %poll_sk_entity,
+                    error = %e,
+                    "SpaceReward not found for poll action"
+                );
+            }
+        }
     }
 
     Ok(RespondPollResponse {})

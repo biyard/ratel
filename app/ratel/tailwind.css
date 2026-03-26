@@ -718,10 +718,11 @@ a {
     var(--light, #cacaca);
   --color-btn-outline-disable-text: var(--dark, #8e8e8e) var(--light, #848484);
 
-  /* Action Settings (dark: white bg / black text+icon, light: black bg / white text+icon) */
-  --color-btn-action-settings-bg: var(--dark, #ffffff) var(--light, #0a0a0a);
-  --color-btn-action-settings-text: var(--dark, #0a0a0a) var(--light, #ffffff);
-  --color-btn-action-settings-icon: var(--dark, #0a0a0a) var(--light, #ffffff);
+  /* Action Settings */
+  --color-btn-action-settings-bg: var(--dark, #0a0a0a) var(--light, #ffffff);
+  --color-btn-action-settings-text: var(--dark, #ffffff) var(--light, #0a0a0a);
+  --color-btn-action-settings-icon: var(--dark, #ffffff) var(--light, #0a0a0a);
+  --color-btn-analyze-view-bg: var(--dark, #fcb300) var(--light, #d4d4d4);
 }
 
 /* ==========================================================================
@@ -930,6 +931,16 @@ h3 {
 
 body {
   @apply overflow-hidden;
+}
+
+/* Mobile Safari: use dynamic viewport height to account for address bar */
+@supports (height: 100dvh) {
+  .h-screen {
+    height: 100dvh !important;
+  }
+  .min-h-screen {
+    min-height: 100dvh !important;
+  }
 }
 
 .scrollbar-none {
