@@ -1,4 +1,3 @@
-use crate::features::posts::components::CreatePostButton;
 use crate::features::timeline::components::{
     DraftTimeline, FollowingTimeline, PopularTimeline, SpaceTimeline, TeamTimeline,
 };
@@ -19,11 +18,6 @@ pub fn Index() -> Element {
                     TeamTimeline {}
                 }
                 PopularTimeline {}
-            }
-            if user.is_some() {
-                div { class: "fixed bottom-6 right-6 z-50",
-                    CreatePostButton { class: "w-fit" }
-                }
             }
         }
     }
