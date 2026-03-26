@@ -1,3 +1,4 @@
+use crate::common::utils::format::format_with_commas;
 use crate::common::SpacePartition;
 use dioxus::prelude::*;
 
@@ -49,13 +50,18 @@ pub async fn list_dashboard_data_handler(
     let reward_items: Vec<InfoCardItem> = rewards
         .iter()
         .map(|r| InfoCardItem {
-            label: r.description.clone(),
-            value: format!("{}", r.get_amount()),
+            label: r.behavior.to_string(),
+            description: if r.description.is_empty() {
+                None
+            } else {
+                Some(r.description.clone())
+            },
+            value: format_with_commas(r.get_amount()),
         })
         .collect();
 
     if !reward_items.is_empty() {
-        let total_points: i64 = rewards.iter().map(|r| r.total_points).sum();
+        let total_points: i64 = rewards.iter().map(|r| r.get_amount()).sum();
 
         components.push(DashboardComponentData::InfoCard(InfoCardData {
             icon: DashboardIcon::Rewards,
