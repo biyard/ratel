@@ -74,7 +74,7 @@ pub fn SpaceTop(
                     onclick: move |_| {
                         nav.push("/");
                     },
-                    Home1 { class: "w-4 h-4 [&>path]:stroke-icon-primary max-tablet:w-9 max-tablet:h-5" }
+                    Home1 { class: "w-4 h-4 [&>path]:fill-none [&>path]:stroke-icon-primary max-tablet:w-9 max-tablet:h-5" }
                     p { class: "max-tablet:hidden", {tr.go_home} }
                 }
 
