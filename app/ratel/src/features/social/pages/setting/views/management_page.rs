@@ -118,13 +118,10 @@ pub fn ManagementPage(username: String) -> Element {
     };
 
     // Store next page cursor when it arrives
-    {
+    if let Some(ref bm) = next_bookmark {
         let page = current_page();
-        let mut cursors = page_cursors.write();
-        if let Some(ref bm) = next_bookmark {
-            if cursors.len() <= page + 1 {
-                cursors.push(Some(bm.clone()));
-            }
+        if page_cursors.read().len() <= page + 1 {
+            page_cursors.write().push(Some(bm.clone()));
         }
     }
 
