@@ -159,15 +159,30 @@ impl SpaceCommon {
     }
 
     pub async fn is_space_admin(&self, cli: &aws_sdk_dynamodb::Client, user: &User) -> bool {
-        if matches!(&self.user_pk, Partition::User(_)) {
-            &self.user_pk == &user.pk
-        } else if matches!(&self.user_pk, Partition::Team(_)) {
-            Team::has_permission(cli, &self.user_pk, &user.pk, TeamGroupPermission::TeamAdmin)
+        // Direct owner check
+        if matches!(&self.user_pk, Partition::User(_)) && &self.user_pk == &user.pk {
+            return true;
+        }
+
+        // Team admin check
+        if matches!(&self.user_pk, Partition::Team(_))
+            && Team::has_permission(cli, &self.user_pk, &user.pk, TeamGroupPermission::TeamAdmin)
                 .await
                 .unwrap_or(false)
-        } else {
-            false
+        {
+            return true;
         }
+
+        // Explicit Space Admin check
+        super::SpaceAdmin::get(
+            cli,
+            &self.pk,
+            Some(&EntityType::SpaceAdmin(user.pk.to_string())),
+        )
+        .await
+        .ok()
+        .flatten()
+        .is_some()
     }
 }
 
