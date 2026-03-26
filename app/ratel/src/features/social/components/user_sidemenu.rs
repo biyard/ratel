@@ -297,6 +297,14 @@ fn OtherUserSidemenu(username: String) -> Element {
                                 icons::edit::EditContent { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
                             },
                         }
+
+                        crate::common::SideMenuLink {
+                            to: format!("/{username}/rewards"),
+                            label: tr.rewards,
+                            icon: rsx! {
+                                icons::game::Trophy { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
+                            },
+                        }
                     }
                 }
             }
@@ -313,6 +321,14 @@ fn OtherUserSidemenu(username: String) -> Element {
                             label: tr.posts,
                             icon: rsx! {
                                 icons::edit::EditContent { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
+                            },
+                        }
+
+                        crate::common::SideMenuLink {
+                            to: format!("/{username}/rewards"),
+                            label: tr.rewards,
+                            icon: rsx! {
+                                icons::game::Trophy { class: "w-6 h-6 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
                             },
                         }
                     }
