@@ -52,7 +52,7 @@ export async function fill(page, opt, value) {
 
 export async function getLocator(
   page,
-  { placeholder, text, role, label, testId },
+  { placeholder, text, role, label, testId }
 ) {
   let selected;
 
@@ -88,13 +88,13 @@ export async function waitPopup(page, { visible = true }) {
 }
 
 export async function goto(page, url) {
-   await page.goto(url); 
-   await page.waitForLoadState("domcontentloaded"); 
-   // Wait for Dioxus WASM to hydrate — SSR markup may already contain 
-   // [data-dioxus-id], so also verify the interpreter is initialised. 
-   await page.waitForFunction( 
-     () => document.querySelector("[data-dioxus-id]") !== null, 
-   );
+  await page.goto(url);
+  await page.waitForLoadState("domcontentloaded");
+  // Wait for Dioxus WASM to hydrate — SSR markup may already contain
+  // [data-dioxus-id], so also verify the interpreter is initialised.
+  await page.waitForFunction(
+    () => document.querySelector("[data-dioxus-id]") !== null
+  );
 }
 
 export async function getEditor(page) {
