@@ -74,9 +74,7 @@ impl TeamGroupPermissions {
     pub fn member() -> Self {
         Self(vec![
             TeamGroupPermission::PostRead,
-            TeamGroupPermission::PostWrite,
             TeamGroupPermission::SpaceRead,
-            TeamGroupPermission::SpaceWrite,
         ])
     }
 }
