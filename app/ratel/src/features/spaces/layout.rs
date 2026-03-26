@@ -58,6 +58,7 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: SpaceLayoutTranslate = use_translate();
 
     let mut participate = use_action(participate_space);
+    let is_mobile = use_is_mobile();
 
     let show_participate =
         matches!(role, SpaceUserRole::Viewer) && !space.participated && space.can_participate;
@@ -139,8 +140,8 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
                         on_participant,
                     }
                 }
-                if show_participate {
-                    div { class: "hidden max-tablet:block px-3 pt-2 max-mobile:px-2",
+                if show_participate && is_mobile() {
+                    div { class: "px-3 pt-2 max-mobile:px-2",
                         ParticipationCard {
                             space_id: space_id(),
                             credential_path: credential_path.clone(),
