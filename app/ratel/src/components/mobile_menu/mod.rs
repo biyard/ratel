@@ -1,57 +1,24 @@
-use crate::*;
+use crate::common::components::sidebar::*;
 use crate::features::auth::LoginModal;
+use crate::features::posts::controllers::create_post::create_post_handler;
+use crate::*;
 
 translate! {
-    MobileMenuTranslate;
-
-    my_posts: {
-        en: "My Posts",
-        ko: "내 게시글",
-    },
-
-    drafts: {
-        en: "Drafts",
-        ko: "임시글",
-    },
-
-    my_spaces: {
-        en: "My Spaces",
-        ko: "내 스페이스",
-    },
-
-    credentials: {
-        en: "Credentials",
-        ko: "자격 증명",
-    },
-
-    settings: {
-        en: "Settings",
-        ko: "설정",
-    },
-
-    user: {
-        en: "User",
-        ko: "사용자",
-    },
-
-    teams: {
-        en: "Teams",
-        ko: "팀",
-    },
-
-    create_team: {
-        en: "Create Team",
-        ko: "팀 생성",
-    },
-
-    logout: {
-        en: "Log Out",
-        ko: "로그아웃",
-    },
+    MobileBottomNavTranslate;
 
     home: {
         en: "Home",
         ko: "홈",
+    },
+
+    more: {
+        en: "More",
+        ko: "더보기",
+    },
+
+    create_post: {
+        en: "Create Post",
+        ko: "글쓰기",
     },
 
     sign_in: {
@@ -63,195 +30,216 @@ translate! {
         en: "Join the Movement",
         ko: "참여하기",
     },
+
+    theme: {
+        en: "Theme",
+        ko: "테마",
+    },
+
+    language: {
+        en: "Language",
+        ko: "언어",
+    },
 }
 
+/// Home icon for the bottom nav (inline SVG to avoid name collision with component `Home`).
 #[component]
-pub fn MobileSideMenu(is_open: Signal<bool>) -> Element {
-    let tr: MobileMenuTranslate = use_translate();
-    let user_ctx = crate::features::auth::hooks::use_user_context();
-    let team_ctx = use_team_context();
-    let mut popup = use_popup();
+fn BottomNavHomeIcon() -> Element {
+    rsx! {
+        svg {
+            width: "22",
+            height: "22",
+            view_box: "0 0 24 24",
+            fill: "none",
+            xmlns: "http://www.w3.org/2000/svg",
+            class: "[&>path]:stroke-foreground-muted",
+            path {
+                d: "M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8",
+                stroke: "currentColor",
+                stroke_width: "2",
+                stroke_linecap: "round",
+                stroke_linejoin: "round",
+            }
+            path {
+                d: "M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",
+                stroke: "currentColor",
+                stroke_width: "2",
+                stroke_linecap: "round",
+                stroke_linejoin: "round",
+            }
+        }
+    }
+}
+
+/// Create Post button for the mobile bottom nav bar.
+#[component]
+fn MobileCreatePostButton(label: String) -> Element {
     let nav = use_navigator();
 
-    if !is_open() {
-        return rsx! {};
-    }
-
-    let logged_in = user_ctx().is_logged_in();
-
-    if !logged_in {
-        // Unauthenticated menu
-        return rsx! {
-            div { class: "hidden fixed left-0 z-50 w-screen top-[var(--header-height)] h-[calc(100vh-var(--header-height))] bg-bg max-tablet:block",
-                div { class: "flex overflow-y-auto flex-col gap-6 py-6 px-4 w-full h-full",
-                    Link {
-                        class: "py-2.5 px-3 w-full text-base rounded-md text-c-secondary hover:bg-hover",
-                        to: "/",
-                        onclick: move |_| {
-                            is_open.set(false);
-                        },
-                        "{tr.home}"
-                    }
-
-                    div { class: "h-px bg-divider" }
-
-                    button {
-                        class: "py-2.5 px-3 w-full text-base text-left rounded-md cursor-pointer text-c-secondary hover:bg-hover",
-                        onclick: move |_| {
-                            is_open.set(false);
-                            popup.open(rsx! {
-                                LoginModal {}
-                            })
-                            .with_title(tr.join_the_movement);
-                        },
-                        "{tr.sign_in}"
+    rsx! {
+        button {
+            class: "flex justify-center items-center w-12 h-12 rounded-full cursor-pointer bg-primary -mt-4 shadow-lg",
+            "aria-label": "{label}",
+            "data-testid": "mobile-create-post-btn",
+            onclick: move |_| {
+                let nav = nav.clone();
+                async move {
+                    match create_post_handler(None).await {
+                        Ok(resp) => {
+                            let post_pk: FeedPartition = resp.post_pk.into();
+                            nav.push(format!("/posts/{post_pk}/edit"));
+                        }
+                        Err(e) => {
+                            dioxus::logger::tracing::error!("Failed to create post: {:?}", e);
+                        }
                     }
                 }
+            },
+            lucide_dioxus::Plus {
+                size: 24,
+                class: "[&>path]:stroke-background",
             }
-        };
+        }
     }
+}
 
-    let user = user_ctx().user.clone().unwrap_or_default();
-    let username = user.username.clone();
-    let teams = team_ctx.teams.read().clone();
+/// More menu panel for unauthenticated users (theme, language, sign in).
+#[component]
+fn MoreMenuPanel(show: Signal<bool>) -> Element {
+    let tr: MobileBottomNavTranslate = use_translate();
+    let mut popup = use_popup();
+    let lang = use_language();
+    let mut theme_service = use_theme();
+    let current_theme = theme_service.current();
+
+    let next_theme = match current_theme {
+        Theme::Light => Theme::Dark,
+        Theme::Dark => Theme::System,
+        Theme::System => Theme::Light,
+    };
 
     rsx! {
-        div { class: "hidden fixed left-0 z-50 w-screen top-[var(--header-height)] h-[calc(100vh-var(--header-height))] bg-bg max-tablet:block",
-            div { class: "flex overflow-y-auto flex-col gap-6 py-6 px-4 w-full h-full",
-                // User navigation links
-                div { class: "flex flex-col gap-2",
-                    Link {
-                        class: "py-2.5 px-3 w-full text-base rounded-md text-c-secondary hover:bg-hover",
-                        to: format!("/{}/posts", username),
-                        onclick: move |_| {
-                            is_open.set(false);
-                        },
-                        "{tr.my_posts}"
+        // Backdrop
+        div {
+            class: "fixed inset-0 z-[998] md:hidden",
+            onclick: move |_| show.set(false),
+        }
+
+        // Menu panel
+        div {
+            class: "fixed bottom-14 left-0 z-[999] w-full border-t md:hidden border-separator bg-background",
+            "data-testid": "mobile-more-panel",
+
+            div { class: "flex flex-col py-2",
+                // Theme toggle
+                button {
+                    class: "flex gap-3 items-center py-3 px-4 w-full cursor-pointer hover:bg-hover",
+                    onclick: move |_| {
+                        theme_service.set(next_theme);
+                        show.set(false);
+                    },
+                    {current_theme.icon()}
+                    span { class: "text-sm text-foreground", "{tr.theme}: {current_theme.label()}" }
+                }
+
+                // Language toggle
+                button {
+                    class: "flex gap-3 items-center py-3 px-4 w-full cursor-pointer hover:bg-hover",
+                    onclick: move |_| {
+                        lang().switch();
+                        show.set(false);
+                    },
+                    lucide_dioxus::Globe {
+                        size: 20,
+                        class: "[&>path]:stroke-icon-primary [&>circle]:stroke-icon-primary [&>line]:stroke-icon-primary",
                     }
-                    Link {
-                        class: "py-2.5 px-3 w-full text-base rounded-md text-c-secondary hover:bg-hover",
-                        to: format!("/{}/drafts", username),
-                        onclick: move |_| {
-                            is_open.set(false);
-                        },
-                        "{tr.drafts}"
-                    }
-                    Link {
-                        class: "py-2.5 px-3 w-full text-base rounded-md text-c-secondary hover:bg-hover",
-                        to: format!("/{}/spaces", username),
-                        onclick: move |_| {
-                            is_open.set(false);
-                        },
-                        "{tr.my_spaces}"
-                    }
-                    Link {
-                        class: "py-2.5 px-3 w-full text-base rounded-md text-c-secondary hover:bg-hover",
-                        to: format!("/{}/credentials", username),
-                        onclick: move |_| {
-                            is_open.set(false);
-                        },
-                        "{tr.credentials}"
-                    }
-                    Link {
-                        class: "py-2.5 px-3 w-full text-base rounded-md text-c-secondary hover:bg-hover",
-                        to: format!("/{}/settings", username),
-                        onclick: move |_| {
-                            is_open.set(false);
-                        },
-                        "{tr.settings}"
+                    span { class: "text-sm text-foreground uppercase",
+                        "{tr.language}: {lang}"
                     }
                 }
 
                 // Divider
-                div { class: "h-px bg-divider" }
+                div { class: "mx-4 my-1 h-px bg-separator" }
 
-                // User profile section
-                div { class: "flex flex-col gap-3",
-                    div { class: "px-2 text-xs text-c-secondary", "{tr.user}" }
-                    Link {
-                        class: "flex gap-3 items-center py-2.5 px-3 rounded-md hover:bg-hover",
-                        to: "/",
-                        onclick: move |_| {
-                            is_open.set(false);
-                        },
-                        if !user.profile_url.is_empty() {
-                            img {
-                                src: "{user.profile_url}",
-                                alt: "{user.display_name}",
-                                class: "object-cover object-top w-8 h-8 rounded-full",
-                            }
-                        } else {
-                            div { class: "w-8 h-8 rounded-full bg-neutral-600" }
-                        }
-                        span { class: "text-base text-c-secondary", "{user.display_name}" }
+                // Sign In
+                button {
+                    class: "flex gap-3 items-center py-3 px-4 w-full cursor-pointer hover:bg-hover",
+                    "data-testid": "mobile-sign-in-btn",
+                    onclick: move |_| {
+                        show.set(false);
+                        popup.open(rsx! {
+                            LoginModal {}
+                        })
+                        .with_title(tr.join_the_movement);
+                    },
+                    lucide_dioxus::LogIn {
+                        size: 20,
+                        class: "[&>path]:stroke-icon-primary [&>line]:stroke-icon-primary [&>polyline]:stroke-icon-primary",
                     }
-                }
-
-                // Teams section
-                if !teams.is_empty() {
-                    div { class: "h-px bg-divider" }
-
-                    div { class: "flex flex-col gap-3",
-                        div { class: "px-2 text-xs text-c-secondary", "{tr.teams}" }
-                        div { class: "flex flex-col gap-2",
-                            for team in teams.iter() {
-                                Link {
-                                    class: "flex gap-3 items-center py-2.5 px-3 rounded-md hover:bg-hover",
-                                    to: format!("/teams/{}", team.username),
-                                    onclick: move |_| {
-                                        is_open.set(false);
-                                    },
-                                    if !team.profile_url.is_empty() {
-                                        img {
-                                            src: "{team.profile_url}",
-                                            alt: "{team.nickname}",
-                                            class: "object-cover object-top w-8 h-8 rounded-full",
-                                        }
-                                    } else {
-                                        div { class: "w-8 h-8 rounded-full bg-neutral-600" }
-                                    }
-                                    span { class: "text-base text-c-secondary", "{team.nickname}" }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Divider
-                div { class: "h-px bg-divider" }
-
-                // Actions
-                div { class: "flex flex-col gap-2",
-                    button {
-                        class: "py-2.5 px-3 w-full text-base text-left rounded-md cursor-pointer text-c-secondary hover:bg-hover",
-                        onclick: move |_| {
-                            is_open.set(false);
-                            popup.open(rsx! {
-                                TeamCreationPopup {}
-                            }).with_title(tr.create_team);
-                        },
-                        "{tr.create_team}"
-                    }
-
-                    button {
-                        class: "py-2.5 px-3 w-full text-base text-left rounded-md cursor-pointer text-c-secondary hover:bg-hover",
-                        onclick: move |_| {
-                            is_open.set(false);
-                            spawn(async move {
-                                let _ = crate::features::auth::controllers::logout_handler().await;
-                                nav.push("/");
-                                #[cfg(target_arch = "wasm32")]
-                                {
-                                    if let Some(window) = web_sys::window() {
-                                        let _ = window.location().reload();
-                                    }
-                                }
-                            });
-                        },
-                        "{tr.logout}"
-                    }
+                    span { class: "text-sm text-foreground", "{tr.sign_in}" }
                 }
             }
+        }
+    }
+}
+
+/// A fixed bottom navigation bar shown only on mobile screens (< 768px).
+///
+/// - Not logged in: Home, More (opens a popup with theme, language, login)
+/// - Logged in: Home, Create Post (+), More (opens sidebar sheet)
+#[component]
+pub fn MobileBottomNav() -> Element {
+    let tr: MobileBottomNavTranslate = use_translate();
+    let user_ctx = crate::features::auth::hooks::use_user_context();
+    let ctx = use_sidebar();
+    let logged_in = user_ctx().is_logged_in();
+    let mut show_more_menu = use_signal(|| false);
+
+    rsx! {
+        // Bottom navigation bar - only visible on mobile (< md breakpoint = 768px)
+        nav {
+            class: "fixed bottom-0 left-0 z-50 w-full border-t md:hidden border-separator bg-background",
+            "data-testid": "mobile-bottom-nav",
+            "aria-label": "Mobile navigation",
+            div { class: "flex justify-around items-center h-14",
+                // Home button
+                Link {
+                    to: "/",
+                    class: "flex flex-col gap-0.5 items-center py-1.5 px-3",
+                    "aria-label": "{tr.home}",
+                    BottomNavHomeIcon {}
+                    span { class: "text-[10px] text-foreground-muted", "{tr.home}" }
+                }
+
+                // Create Post button (only for logged-in users)
+                if logged_in {
+                    MobileCreatePostButton { label: tr.create_post.to_string() }
+                }
+
+                // More button
+                button {
+                    class: "flex flex-col gap-0.5 items-center py-1.5 px-3 cursor-pointer",
+                    "aria-label": "{tr.more}",
+                    "data-testid": "mobile-more-btn",
+                    onclick: move |_| {
+                        if logged_in {
+                            ctx.set_open_mobile(true);
+                        } else {
+                            show_more_menu.set(!show_more_menu());
+                        }
+                    },
+                    lucide_dioxus::Menu {
+                        size: 22,
+                        class: "[&>path]:stroke-foreground-muted [&>line]:stroke-foreground-muted",
+                    }
+                    span { class: "text-[10px] text-foreground-muted", "{tr.more}" }
+                }
+            }
+        }
+
+        // More menu overlay for non-logged-in users
+        if !logged_in && show_more_menu() {
+            MoreMenuPanel { show: show_more_menu }
         }
     }
 }
