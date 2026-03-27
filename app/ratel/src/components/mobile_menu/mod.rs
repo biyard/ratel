@@ -122,19 +122,17 @@ fn MoreMenuPanel(show: Signal<bool>) -> Element {
 
     rsx! {
         // Backdrop
-        div {
+        button {
             class: "fixed inset-0 z-[998] md:hidden",
             "data-testid": "mobile-more-backdrop",
-            role: "button",
-            tabindex: "0",
+            r#type: "button",
             "aria-label": "Close menu",
             onclick: move |_| show.set(false),
         }
 
         // Menu panel
         div {
-            class: "fixed left-0 z-[999] w-full border-t md:hidden border-separator bg-background",
-            style: "bottom: calc(3.5rem + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom);",
+            class: "fixed left-0 z-[999] w-full border-t md:hidden border-separator bg-background bottom-[calc(theme(spacing.14)+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)]",
             "data-testid": "mobile-more-panel",
 
             div { class: "flex flex-col py-2",
@@ -205,8 +203,7 @@ pub fn MobileBottomNav() -> Element {
     rsx! {
         // Bottom navigation bar - only visible on mobile (< md breakpoint = 768px)
         nav {
-            class: "fixed bottom-0 left-0 z-50 w-full border-t md:hidden border-separator bg-background",
-            style: "padding-bottom: env(safe-area-inset-bottom);",
+            class: "fixed bottom-0 left-0 z-50 w-full border-t md:hidden border-separator bg-background pb-[env(safe-area-inset-bottom)]",
             "data-testid": "mobile-bottom-nav",
             "aria-label": "Mobile navigation",
             div { class: "flex justify-around items-center h-14",

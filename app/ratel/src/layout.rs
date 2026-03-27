@@ -34,7 +34,7 @@ pub fn AppLayout() -> Element {
                 div { class: "fixed top-0 right-0 z-40 w-10 h-full bg-linear-to-l to-transparent pointer-events-none from-bg backdrop-blur-sm mask-[linear-gradient(to_left,black,transparent)]" }
                 // Add bottom padding on mobile so content is not hidden behind the bottom nav.
                 // Uses safe-area-inset-bottom for iPhone home indicator. Reset to 0 at md+.
-                div { class: "pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:pb-0",
+                div { class: "pb-[calc(theme(spacing.14)+env(safe-area-inset-bottom))] md:pb-0",
                     Outlet::<Route> {}
                 }
             }
