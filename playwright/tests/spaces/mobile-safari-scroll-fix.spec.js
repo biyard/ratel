@@ -169,7 +169,6 @@ test.describe("Mobile Safari address bar scroll fix (#1274)", () => {
         return {
           overflow: computed.overflow,
           overflowY: computed.overflowY,
-          height: computed.height,
           minHeight: computed.minHeight,
         };
       });
@@ -179,17 +178,31 @@ test.describe("Mobile Safari address bar scroll fix (#1274)", () => {
       expect(styles.overflow).not.toBe("hidden");
       expect(styles.overflowY).not.toBe("hidden");
 
-      // The container should NOT have a fixed height of exactly the viewport
-      // height (h-screen becomes h-auto on mobile via max-tablet:!h-auto).
-      // With h-auto, the computed height should reflect content size, not the
-      // viewport height (667px). If it equals the viewport height exactly,
-      // h-screen/100dvh is still in effect and the fix is not working.
-      const heightPx = parseFloat(styles.height);
-      expect(heightPx).not.toBe(MOBILE_VIEWPORT.height);
-
       // Since min-h-screen is set, minHeight should be a non-zero value.
       const minHeightPx = parseFloat(styles.minHeight);
       expect(minHeightPx).toBeGreaterThan(0);
+
+      // Instead of relying on exact height comparison with the viewport
+      // (which can legitimately match due to min-h-screen), verify that
+      // the document actually scrolls on mobile. This ensures that the body
+      // and layout container are not effectively fixed to the viewport.
+      const { canScroll, scrolled } = await page.evaluate(() => {
+        const scrollHeight =
+          document.documentElement.scrollHeight || document.body.scrollHeight;
+        const innerHeight = window.innerHeight;
+        const canScroll = scrollHeight > innerHeight;
+
+        window.scrollTo(0, 0);
+        const initialY = window.scrollY;
+        window.scrollBy(0, 100);
+        const afterY = window.scrollY;
+        const scrolled = afterY > initialY;
+
+        return { canScroll, scrolled };
+      });
+
+      expect(canScroll).toBe(true);
+      expect(scrolled).toBe(true);
     } finally {
       await context.close();
     }
