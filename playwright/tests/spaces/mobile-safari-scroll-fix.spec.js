@@ -180,7 +180,13 @@ test.describe("Mobile Safari address bar scroll fix (#1274)", () => {
       expect(styles.overflowY).not.toBe("hidden");
 
       // The container should NOT have a fixed height of exactly the viewport
-      // height (h-screen becomes h-auto on mobile via max-tablet:h-auto).
+      // height (h-screen becomes h-auto on mobile via max-tablet:!h-auto).
+      // With h-auto, the computed height should reflect content size, not the
+      // viewport height (667px). If it equals the viewport height exactly,
+      // h-screen/100dvh is still in effect and the fix is not working.
+      const heightPx = parseFloat(styles.height);
+      expect(heightPx).not.toBe(MOBILE_VIEWPORT.height);
+
       // Since min-h-screen is set, minHeight should be a non-zero value.
       const minHeightPx = parseFloat(styles.minHeight);
       expect(minHeightPx).toBeGreaterThan(0);
