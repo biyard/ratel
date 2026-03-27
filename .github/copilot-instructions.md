@@ -81,6 +81,11 @@ Key rules:
 
 * Use American English spelling throughout the codebase — e.g., "unrecognized" not "unrecognised", "color" not "colour", "initialize" not "initialise". Applies to doc comments, string literals, error messages, and identifiers.
 
+## Primary Actions in Conditional Sections
+
+* **Never nest primary action buttons (e.g., "Create Post") inside conditionally rendered sections** — if a section (e.g., draft timeline) is hidden when its list is empty, any primary action button placed inside that section will also disappear. Keep primary action buttons outside conditional blocks so they remain visible regardless of content state.
+* **Separate the action trigger from the content display** — the button that creates new items should always be accessible, even when the list of existing items is empty. Place it in a persistent container above or alongside the conditional section.
+
 ## Feature Flag Safety
 
 * `bypass` must NOT be bundled into `local-dev` or other convenience feature groups. Keep it opt-in via explicit `--features bypass` only in test/local scripts.
