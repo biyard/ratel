@@ -209,7 +209,7 @@ pub fn ManagementPage(username: String) -> Element {
                                         spawn(async move {
                                             let remove_ok = remove_member_handler(
                                                 team_pk.clone(),
-                                                from_group_id,
+                                                from_group_id.clone(),
                                                 RemoveMemberRequest {
                                                     user_pks: vec![member_id.clone()],
                                                 },
@@ -219,10 +219,10 @@ pub fn ManagementPage(username: String) -> Element {
 
                                             if remove_ok {
                                                 let add_ok = add_member_handler(
-                                                    team_pk,
+                                                    team_pk.clone(),
                                                     to_group_id,
                                                     AddMemberRequest {
-                                                        user_pks: vec![member_id],
+                                                        user_pks: vec![member_id.clone()],
                                                     },
                                                 )
                                                 .await
@@ -232,6 +232,15 @@ pub fn ManagementPage(username: String) -> Element {
                                                     error_msg.set(None);
                                                     refresh.set(refresh() + 1);
                                                 } else {
+                                                    // Rollback: re-add to the original group
+                                                    let _ = add_member_handler(
+                                                        team_pk,
+                                                        from_group_id,
+                                                        AddMemberRequest {
+                                                            user_pks: vec![member_id],
+                                                        },
+                                                    )
+                                                    .await;
                                                     error_msg.set(Some(failed_msg));
                                                 }
                                             } else {
@@ -356,9 +365,16 @@ fn MemberRow(
                                         size: ButtonSize::Small,
                                         shape: ButtonShape::Square,
                                         class: "flex items-center gap-2 w-full justify-start".to_string(),
-                                        onclick: move |_| {
-                                            show_menu.set(false);
-                                            show_change_group.set(true);
+                                        onclick: {
+                                            let first_group_id = member.groups.first().map(|g| g.group_id.clone()).unwrap_or_default();
+                                            move |_| {
+                                                show_menu.set(false);
+                                                // Re-sync from_group_id to the current first group in case
+                                                // member.groups changed after a refresh (signal persists for
+                                                // keyed components and won't update automatically from props).
+                                                from_group_id.set(first_group_id.clone());
+                                                show_change_group.set(true);
+                                            }
                                         },
                                         lucide_dioxus::ArrowLeftRight {
                                             class: "w-4 h-4 [&>path]:stroke-text-primary [&>polyline]:stroke-text-primary",
@@ -412,12 +428,11 @@ fn MemberRow(
                             span { class: "text-xs font-semibold text-foreground-muted", {tr.to_group} }
                             select {
                                 class: "w-full px-3 py-2 rounded-[8px] border border-input-box-border bg-input-box-bg text-text-primary text-sm",
+                                value: to_group_id(),
                                 onchange: move |e| to_group_id.set(e.value()),
-                                option { value: "", disabled: true, selected: to_group_id().is_empty(), "—" }
-                                for (gid, gname) in all_groups.iter() {
-                                    if *gid != from_group_id() {
-                                        option { value: "{gid}", "{gname}" }
-                                    }
+                                option { value: "", disabled: true, "—" }
+                                for (gid, gname) in all_groups.iter().filter(|(gid, _)| *gid != from_group_id()) {
+                                    option { key: "{gid}", value: "{gid}", "{gname}" }
                                 }
                             }
                         }

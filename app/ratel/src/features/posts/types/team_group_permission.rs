@@ -72,10 +72,7 @@ impl TeamGroupPermissions {
     }
 
     pub fn member() -> Self {
-        Self(vec![
-            TeamGroupPermission::PostRead,
-            TeamGroupPermission::SpaceRead,
-        ])
+        Self::read()
     }
 }
 

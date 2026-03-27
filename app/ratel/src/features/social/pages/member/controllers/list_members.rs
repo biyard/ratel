@@ -1,7 +1,7 @@
 use super::super::dto::*;
 use super::super::*;
 
-use crate::features::posts::models::TeamGroup;
+use crate::features::posts::models::{TeamGroup, TeamOwner};
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use std::collections::{HashMap, HashSet};
 
@@ -31,6 +31,7 @@ pub async fn list_members_handler(
         ));
     }
 
+    let is_first_page = bookmark.is_none();
     let page_limit = limit.unwrap_or(50).min(100);
     let mut query_options = crate::features::auth::UserTeamGroupQueryOption::builder().limit(page_limit);
     if let Some(bookmark) = bookmark {
@@ -125,8 +126,32 @@ pub async fn list_members_handler(
         }
     }
 
+    // Extract owner from map (removes from regular pagination to avoid cross-page duplication).
+    // On page 1, pin owner to the top. On subsequent pages, skip entirely.
+    let owner_member = if let Ok(Some(team_owner)) = TeamOwner::get(cli, &team_pk, Some(&EntityType::TeamOwner)).await {
+        let owner_pk_str = team_owner.user_pk.to_string();
+        let mut entry = members_map.remove(&owner_pk_str).unwrap_or_else(|| TeamMemberResponse {
+            user_id: owner_pk_str,
+            username: team_owner.username.clone(),
+            display_name: team_owner.display_name.clone(),
+            profile_url: team_owner.profile_url.clone(),
+            groups: Vec::new(),
+            is_owner: true,
+        });
+        entry.is_owner = true;
+        Some(entry)
+    } else {
+        None
+    };
+
     let mut members: Vec<TeamMemberResponse> = members_map.into_values().collect();
     members.sort_by(|a, b| a.username.cmp(&b.username));
+
+    if is_first_page {
+        if let Some(owner) = owner_member {
+            members.insert(0, owner);
+        }
+    }
 
     Ok(ListItemsResponse {
         items: members,
