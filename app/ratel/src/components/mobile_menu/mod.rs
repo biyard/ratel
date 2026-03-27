@@ -75,6 +75,7 @@ fn BottomNavHomeIcon() -> Element {
 #[component]
 fn MobileCreatePostButton(label: String) -> Element {
     let nav = use_navigator();
+    let mut toast = use_toast();
 
     rsx! {
         button {
@@ -91,6 +92,7 @@ fn MobileCreatePostButton(label: String) -> Element {
                         }
                         Err(e) => {
                             dioxus::logger::tracing::error!("Failed to create post: {:?}", e);
+                            toast.error(e);
                         }
                     }
                 }
