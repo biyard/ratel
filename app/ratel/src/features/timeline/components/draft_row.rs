@@ -1,5 +1,5 @@
 use crate::common::utils::time::time_ago;
-use crate::features::posts::components::{CreatePostButton, FeedContents, UserBadge};
+use crate::features::posts::components::{FeedContents, UserBadge};
 use crate::features::posts::controllers::dto::*;
 use crate::features::posts::controllers::list_user_drafts::list_user_drafts_handler;
 use crate::features::posts::types::*;
@@ -8,31 +8,11 @@ use dioxus_translate::use_language;
 
 /// A horizontal row of the user's draft posts, displayed at the top of the timeline.
 ///
-/// The component is split into `DraftTimeline` (always-visible header) and
-/// `DraftTimelineCards` (suspense-driven draft cards) so that the Create Post button
-/// is never hidden by the `use_server_future` suspension. The `?` operator on
-/// `use_server_future` suspends only the inner `DraftTimelineCards` component while
-/// loading, keeping the header with the Create Post button always visible.
+/// Fetches drafts and renders the entire section only when drafts exist.
+/// When there are no drafts, returns nothing — the `CreatePostButton` is rendered
+/// independently in parent views so it remains visible regardless.
 #[component]
 pub fn DraftTimeline() -> Element {
-    rsx! {
-        section { class: "flex flex-col gap-3 w-full", aria_label: "Drafts section",
-            div { class: "flex justify-between items-center px-1 w-full",
-                h2 { class: "flex-1 text-lg font-semibold text-text-primary", "Drafts" }
-                CreatePostButton { class: "w-fit" }
-            }
-            DraftTimelineCards {}
-        }
-    }
-}
-
-/// Inner component that fetches and renders draft cards.
-///
-/// Uses `use_server_future(...)?` which suspends during loading -- this is safe because
-/// the Create Post button lives in the parent `DraftTimeline` component and is always
-/// visible regardless of this component's suspension state.
-#[component]
-fn DraftTimelineCards() -> Element {
     let drafts = use_server_future(move || async move {
         let result = list_user_drafts_handler(None).await;
         if let Err(ref e) = result {
@@ -67,8 +47,10 @@ fn DraftTimelineCards() -> Element {
     "#;
 
     rsx! {
-        div { class: "relative",
-            div {
+        section { class: "flex flex-col gap-3 w-full", aria_label: "Drafts section",
+            h2 { class: "px-1 text-lg font-semibold text-text-primary", "Drafts" }
+            div { class: "relative",
+                div {
                 class: "flex overflow-x-auto gap-4 pb-2 snap-x snap-mandatory scrollbar-none",
                 onmounted: move |_| {
                     let js = scroll_check_js;
@@ -148,6 +130,7 @@ fn DraftTimelineCards() -> Element {
                         class: "transition-colors [&>path]:stroke-foreground-muted hover:[&>path]:stroke-text-primary",
                     }
                 }
+            }
             }
         }
     }
