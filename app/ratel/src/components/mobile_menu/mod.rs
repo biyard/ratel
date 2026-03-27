@@ -210,6 +210,9 @@ pub fn MobileBottomNav() -> Element {
                     to: "/",
                     class: "flex flex-col gap-0.5 items-center py-1.5 px-3",
                     "aria-label": "{tr.home}",
+                    onclick: move |_| {
+                        show_more_menu.set(false);
+                    },
                     BottomNavHomeIcon {}
                     span { class: "text-[10px] text-foreground-muted", "{tr.home}" }
                 }
