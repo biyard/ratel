@@ -95,6 +95,26 @@ translate! {
         en: "Failed to load administrator",
         ko: "관리자 정보를 불러오지 못했습니다",
     },
+    add_admin: {
+        en: "Add Admin",
+        ko: "관리자 추가",
+    },
+    remove_admin: {
+        en: "Remove",
+        ko: "삭제",
+    },
+    owner: {
+        en: "Owner",
+        ko: "소유자",
+    },
+    admin: {
+        en: "Admin",
+        ko: "관리자",
+    },
+    enter_username: {
+        en: "Enter username",
+        ko: "사용자명을 입력하세요",
+    },
     delete_space: {
         en: "Delete Space",
         ko: "스페이스 삭제",

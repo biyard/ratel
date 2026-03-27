@@ -367,8 +367,35 @@ impl FromRequestParts<AppState> for Permissions {
             _ => Permissions::empty(),
         };
 
-        let combined_permissions =
-            entity_permissions + participant_permissions + resource.viewer_permissions();
+        // Check if requester is an explicit Space Admin
+        let space_admin_permissions = if let Some(space) = parts.extensions.get::<SpaceCommon>() {
+            if let Some(ref user) = requester {
+                use crate::features::spaces::models::SpaceAdmin;
+                if SpaceAdmin::get(
+                    &state.dynamo.client,
+                    &space.pk,
+                    Some(&EntityType::SpaceAdmin(user.pk.to_string())),
+                )
+                .await
+                .ok()
+                .flatten()
+                .is_some()
+                {
+                    Permissions::all()
+                } else {
+                    Permissions::empty()
+                }
+            } else {
+                Permissions::empty()
+            }
+        } else {
+            Permissions::empty()
+        };
+
+        let combined_permissions = entity_permissions
+            + participant_permissions
+            + resource.viewer_permissions()
+            + space_admin_permissions;
         parts.extensions.insert(combined_permissions);
 
         Ok(combined_permissions)

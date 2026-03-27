@@ -3,6 +3,9 @@ use aws_sdk_dynamodb::types::TransactWriteItem;
 
 use super::*;
 
+#[cfg(feature = "server")]
+use crate::features::membership::models::{Membership, UserMembership};
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum UpdateSpaceActionRequest {
@@ -29,45 +32,8 @@ pub async fn update_space_action(
 
     match req {
         UpdateSpaceActionRequest::Credits { credits } => {
-            let behavior = space_action.space_action_type.to_behavior();
-
-            if credits > 0 {
-                let (point, period, condition) = get_or_create_reward(cli, &behavior).await?;
-                let total_points = (credits as i64 * point) as u64;
-
-                space_action.credits = credits;
-                space_action.total_points = total_points;
-
-                let items = vec![
-                    upsert_space_reward_item(
-                        &space_id, &action_id, credits, &behavior, point, period, condition, now,
-                    ),
-                    update_action_credits_item(&pk, credits, total_points, now),
-                ];
-                crate::transact_write_items!(cli, items).map_err(|e| {
-                    Error::InternalServerError(format!("Failed to execute transaction: {e:?}"))
-                })?;
-            } else {
-                let existing = SpaceReward::get_by_action(
-                    cli,
-                    space_id.clone(),
-                    action_id.clone(),
-                    behavior.clone(),
-                )
-                .await;
-
-                space_action.credits = 0;
-                space_action.total_points = 0;
-
-                let mut items = vec![];
-                if let Ok(ref reward) = existing {
-                    items.push(delete_reward_item(reward));
-                }
-                items.push(update_action_credits_item(&pk, 0, 0, now));
-                crate::transact_write_items!(cli, items).map_err(|e| {
-                    Error::InternalServerError(format!("Failed to execute transaction: {e:?}"))
-                })?;
-            }
+            update_credits(cli, &user, &space_id, &action_id, &pk, credits, &mut space_action, now)
+                .await?;
         }
         UpdateSpaceActionRequest::Time {
             started_at,
@@ -103,6 +69,138 @@ pub async fn update_space_action(
 
     space_action.updated_at = now;
     Ok(space_action)
+}
+
+#[cfg(feature = "server")]
+async fn update_credits(
+    cli: &aws_sdk_dynamodb::Client,
+    user: &crate::features::auth::User,
+    space_id: &SpacePartition,
+    action_id: &str,
+    pk: &CompositePartition<SpacePartition, String>,
+    credits: u64,
+    space_action: &mut SpaceAction,
+    now: i64,
+) -> Result<()> {
+    let behavior = space_action.space_action_type.to_behavior();
+
+    if credits > 0 {
+        set_credits(cli, user, space_id, action_id, pk, credits, space_action, &behavior, now)
+            .await
+    } else {
+        remove_credits(cli, user, space_id, action_id, pk, space_action, &behavior, now).await
+    }
+}
+
+/// Set or update reward credits: validate membership limits, deduct delta, upsert reward.
+#[cfg(feature = "server")]
+async fn set_credits(
+    cli: &aws_sdk_dynamodb::Client,
+    user: &crate::features::auth::User,
+    space_id: &SpacePartition,
+    action_id: &str,
+    pk: &CompositePartition<SpacePartition, String>,
+    credits: u64,
+    space_action: &mut SpaceAction,
+    behavior: &RewardUserBehavior,
+    now: i64,
+) -> Result<()> {
+    let mut user_membership =
+        UserMembership::get(cli, user.pk.clone(), Some(EntityType::UserMembership))
+            .await
+            .map_err(|e| {
+                Error::InternalServerError(format!("Failed to get user membership: {e:?}"))
+            })?
+            .ok_or(SpaceRewardError::CreditsExceedBalance)?;
+
+    // Validate max_credits_per_space
+    let membership_pk: Partition = user_membership.membership_pk.clone().into();
+    let membership = Membership::get(cli, membership_pk, Some(EntityType::Membership))
+        .await
+        .map_err(|e| Error::InternalServerError(format!("Failed to get membership: {e:?}")))?;
+    let max_per_space = membership.as_ref().map_or(0, |m| m.max_credits_per_space);
+    if max_per_space > 0 && credits as i64 > max_per_space {
+        return Err(SpaceRewardError::CreditsExceedMaxPerSpace.into());
+    }
+
+    // Calculate credit delta (positive = deduct, negative = refund)
+    let old_credits = space_action.credits as i64;
+    let credit_delta = credits as i64 - old_credits;
+
+    user_membership.use_credits(credit_delta)?;
+
+    let (point, period, condition) = get_or_create_reward(cli, behavior).await?;
+    let total_points = (credits as i64 * point) as u64;
+
+    space_action.credits = credits;
+    space_action.total_points = total_points;
+
+    let items = vec![
+        UserMembership::updater(&user_membership.pk, &user_membership.sk)
+            .decrease_remaining_credits(credit_delta)
+            .with_updated_at(now)
+            .transact_write_item(),
+        upsert_space_reward_item(space_id, action_id, credits, behavior, point, period, condition, now),
+        update_action_credits_item(pk, credits, total_points, now),
+    ];
+    crate::transact_write_items!(cli, items)
+        .map_err(|e| Error::InternalServerError(format!("Failed to execute transaction: {e:?}")))?;
+
+    Ok(())
+}
+
+/// Remove reward and refund credits back to user membership.
+#[cfg(feature = "server")]
+async fn remove_credits(
+    cli: &aws_sdk_dynamodb::Client,
+    user: &crate::features::auth::User,
+    space_id: &SpacePartition,
+    action_id: &str,
+    pk: &CompositePartition<SpacePartition, String>,
+    space_action: &mut SpaceAction,
+    behavior: &RewardUserBehavior,
+    now: i64,
+) -> Result<()> {
+    let existing = SpaceReward::get_by_action(
+        cli,
+        space_id.clone(),
+        action_id.to_string(),
+        behavior.clone(),
+    )
+    .await;
+
+    space_action.credits = 0;
+    space_action.total_points = 0;
+
+    let mut items = vec![];
+
+    if let Ok(ref reward) = existing {
+        if reward.credits > 0 {
+            if let Some(ref um) =
+                UserMembership::get(cli, user.pk.clone(), Some(EntityType::UserMembership))
+                    .await
+                    .map_err(|e| {
+                        Error::InternalServerError(format!(
+                            "Failed to get user membership: {e:?}"
+                        ))
+                    })?
+            {
+                items.push(
+                    UserMembership::updater(&um.pk, &um.sk)
+                        .increase_remaining_credits(reward.credits)
+                        .with_updated_at(now)
+                        .transact_write_item(),
+                );
+            }
+        }
+        items.push(delete_reward_item(reward));
+    }
+
+    items.push(update_action_credits_item(pk, 0, 0, now));
+    crate::transact_write_items!(cli, items)
+        .map_err(|e| Error::InternalServerError(format!("Failed to execute transaction: {e:?}")))?;
+
+    Ok(())
 }
 
 #[cfg(feature = "server")]
