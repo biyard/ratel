@@ -40,6 +40,16 @@ translate! {
         en: "Language",
         ko: "언어",
     },
+
+    close_menu: {
+        en: "Close menu",
+        ko: "메뉴 닫기",
+    },
+
+    mobile_navigation: {
+        en: "Mobile navigation",
+        ko: "모바일 내비게이션",
+    },
 }
 
 /// Home icon for the bottom nav (inline SVG to avoid name collision with component `Home`).
@@ -126,7 +136,7 @@ fn MoreMenuPanel(show: Signal<bool>) -> Element {
             class: "fixed inset-0 z-[998] md:hidden",
             "data-testid": "mobile-more-backdrop",
             r#type: "button",
-            "aria-label": "Close menu",
+            "aria-label": "{tr.close_menu}",
             onclick: move |_| show.set(false),
         }
 
@@ -205,7 +215,7 @@ pub fn MobileBottomNav() -> Element {
         nav {
             class: "fixed bottom-0 left-0 z-50 w-full border-t md:hidden border-separator bg-background pb-[env(safe-area-inset-bottom)]",
             "data-testid": "mobile-bottom-nav",
-            "aria-label": "Mobile navigation",
+            "aria-label": "{tr.mobile_navigation}",
             div { class: "flex justify-around items-center h-14",
                 // Home button
                 Link {
