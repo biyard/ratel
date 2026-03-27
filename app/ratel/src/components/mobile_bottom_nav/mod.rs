@@ -133,7 +133,7 @@ fn MoreMenuPanel(show: Signal<bool>) -> Element {
     rsx! {
         // Backdrop
         button {
-            class: "fixed inset-0 z-[998] tablet:hidden",
+            class: "fixed inset-0 z-[998] hidden max-tablet:block",
             "data-testid": "mobile-more-backdrop",
             r#type: "button",
             "aria-label": "{tr.close_menu}",
@@ -142,13 +142,14 @@ fn MoreMenuPanel(show: Signal<bool>) -> Element {
 
         // Menu panel
         div {
-            class: "fixed left-0 z-[999] w-full border-t tablet:hidden border-separator bg-background bottom-[calc(theme(spacing.14)+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)]",
+            class: "fixed left-0 z-[999] w-full border-t hidden max-tablet:block border-separator bg-background bottom-[calc(theme(spacing.14)+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)]",
             "data-testid": "mobile-more-panel",
 
             div { class: "flex flex-col py-2",
                 // Theme toggle
                 button {
                     class: "flex gap-3 items-center py-3 px-4 w-full cursor-pointer hover:bg-hover",
+                    "data-testid": "mobile-more-theme-row",
                     onclick: move |_| {
                         theme_service.set(next_theme);
                         show.set(false);
@@ -160,6 +161,7 @@ fn MoreMenuPanel(show: Signal<bool>) -> Element {
                 // Language toggle
                 button {
                     class: "flex gap-3 items-center py-3 px-4 w-full cursor-pointer hover:bg-hover",
+                    "data-testid": "mobile-more-language-row",
                     onclick: move |_| {
                         lang().switch();
                         show.set(false);
@@ -213,7 +215,7 @@ pub fn MobileBottomNav() -> Element {
     rsx! {
         // Bottom navigation bar - only visible on mobile (< tablet breakpoint)
         nav {
-            class: "fixed bottom-0 left-0 z-50 w-full border-t tablet:hidden border-separator bg-background pb-[env(safe-area-inset-bottom)]",
+            class: "fixed bottom-0 left-0 z-50 w-full border-t hidden max-tablet:block border-separator bg-background pb-[env(safe-area-inset-bottom)]",
             "data-testid": "mobile-bottom-nav",
             "aria-label": "{tr.mobile_navigation}",
             div { class: "flex justify-around items-center h-14",
