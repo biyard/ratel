@@ -95,25 +95,40 @@ pub fn AdminPage(username: String, team_pk: TeamPartition) -> Element {
             let mut changing = changing.clone();
             let mut refresh = refresh.clone();
             spawn(async move {
-                let remove_result = remove_member_handler(
+                let remove_ok = remove_member_handler(
                     team_pk.clone(),
-                    payload.from_group_id,
+                    payload.from_group_id.clone(),
                     RemoveMemberRequest {
                         user_pks: vec![payload.member_id.clone()],
                     },
                 )
-                .await;
+                .await
+                .is_ok();
 
-                if remove_result.is_ok() {
-                    let _ = add_member_handler(
-                        team_pk,
+                if remove_ok {
+                    let add_ok = add_member_handler(
+                        team_pk.clone(),
                         payload.to_group_id,
                         AddMemberRequest {
-                            user_pks: vec![payload.member_id],
+                            user_pks: vec![payload.member_id.clone()],
                         },
                     )
-                    .await;
-                    refresh.set(refresh() + 1);
+                    .await
+                    .is_ok();
+
+                    if add_ok {
+                        refresh.set(refresh() + 1);
+                    } else {
+                        // Rollback: re-add to the original group
+                        let _ = add_member_handler(
+                            team_pk,
+                            payload.from_group_id,
+                            AddMemberRequest {
+                                user_pks: vec![payload.member_id],
+                            },
+                        )
+                        .await;
+                    }
                 }
                 changing.set(None);
             });

@@ -57,10 +57,10 @@ pub fn render_member(
                 rsx! {
                     div {
                         key: "{group.group_id}",
-                        class: "flex flex-row w-fit h-fit items-center gap-1 px-[8px] py-[4px] border border-neutral-800 bg-black light:bg-neutral-600 light:border-transparent rounded-lg font-medium text-sm text-white",
+                        class: "flex flex-row w-fit h-fit items-center gap-1 px-[8px] py-[4px] border border-border bg-card-bg rounded-lg font-medium text-sm text-text-primary",
                         if !is_owner && all_groups.len() > 1 {
                             select {
-                                class: "bg-transparent text-sm font-medium text-white border-none outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed",
+                                class: "bg-transparent text-sm font-medium text-text-primary border-none outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed",
                                 disabled: is_busy,
                                 value: "{group.group_id}",
                                 onchange: move |e| {
@@ -82,7 +82,7 @@ pub fn render_member(
                         }
                         if !is_owner {
                             button {
-                                class: "ml-1 hover:bg-neutral-700 rounded-full p-0.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
+                                class: "ml-1 hover:bg-background rounded-full p-0.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
                                 onclick: move |_| on_remove_from_group.call(remove_payload.clone()),
                                 disabled: is_busy,
                                 title: "Remove from group",
