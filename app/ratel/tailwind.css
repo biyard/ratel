@@ -930,7 +930,7 @@ h3 {
 }
 
 body {
-  @apply overflow-hidden;
+  @apply overflow-hidden max-tablet:overflow-auto;
 }
 
 /* Mobile Safari: use dynamic viewport height to account for address bar */
