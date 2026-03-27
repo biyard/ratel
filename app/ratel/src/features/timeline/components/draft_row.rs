@@ -12,17 +12,20 @@ use dioxus_translate::use_language;
 /// there are existing drafts.
 #[component]
 pub fn DraftTimeline() -> Element {
-    let drafts = use_server_future(move || async move { list_user_drafts_handler(None).await })?;
+    let drafts = use_server_future(move || async move {
+        let result = list_user_drafts_handler(None).await;
+        if let Err(ref e) = result {
+            tracing::error!("Failed to load drafts: {:?}", e);
+        }
+        result
+    })?;
 
     let val = drafts.read();
     let res = val.as_ref().unwrap();
 
     let items = match res {
         Ok(resp) => resp.items.clone(),
-        Err(e) => {
-            tracing::error!("Failed to load drafts: {:?}", e);
-            vec![]
-        }
+        Err(_) => vec![],
     };
 
     let has_drafts = !items.is_empty();
