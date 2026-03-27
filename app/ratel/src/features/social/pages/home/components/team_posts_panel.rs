@@ -16,17 +16,17 @@ pub fn TeamPostsPanel(username: String, view_mode: HomeViewMode, selected_catego
             match list_team_posts_handler(username, category, bookmark.clone()).await {
                 Ok(result) => Ok(result),
                 Err(e) => {
-                    if bookmark.is_none() {
-                        // Initial page load (SSR or web): fall back to empty list to avoid unwrap panics in use_infinite_query
-                        tracing::warn!(
-                            "list_team_posts_handler failed on initial load, falling back to empty list: {e}"
-                        );
-                        Ok(Default::default())
-                    } else {
-                        // For subsequent pages, propagate the error instead of hiding it
-                        tracing::error!("list_team_posts_handler failed: {e}");
-                        Err(e)
+                    #[cfg(feature = "server")]
+                    {
+                        if bookmark.is_none() {
+                            // Initial SSR load on server: fall back to empty to avoid unwrap/serialization issues
+                            tracing::warn!("list_team_posts_handler failed on initial SSR load, falling back to empty list: {e}");
+                            return Ok(Default::default());
+                        }
                     }
+                    // On web (and on server for non-initial pages), propagate the error instead of hiding it
+                    tracing::error!("list_team_posts_handler failed: {e}");
+                    Err(e)
                 }
             }
         }
