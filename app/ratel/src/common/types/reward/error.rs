@@ -54,6 +54,20 @@ pub enum SpaceRewardError {
     #[error("Reward already exists")]
     #[translate(en = "Reward already exists", ko = "리워드가 이미 존재합니다.")]
     RewardAlreadyExists,
+
+    #[error("Credits exceed remaining balance")]
+    #[translate(
+        en = "Requested credits exceed your remaining balance",
+        ko = "요청한 크레딧이 잔여 크레딧을 초과합니다."
+    )]
+    CreditsExceedBalance,
+
+    #[error("Credits exceed max per space")]
+    #[translate(
+        en = "Requested credits exceed the maximum allowed per space",
+        ko = "요청한 크레딧이 스페이스당 최대 허용 크레딧을 초과합니다."
+    )]
+    CreditsExceedMaxPerSpace,
 }
 
 #[cfg(feature = "server")]
