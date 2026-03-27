@@ -13,7 +13,7 @@ pub fn Index() -> Element {
         div { class: "relative flex overflow-x-hidden gap-5 justify-between py-3 pl-2 mx-auto w-full min-h-screen max-tablet:px-2.5",
             div { class: "flex flex-col gap-4 w-full",
                 if user.is_some() {
-                    CreatePostButton { class: "w-fit" }
+                    CreatePostButton { class: "w-fit self-end" }
                     DraftTimeline {}
                     SpaceTimeline {}
                     FollowingTimeline {}

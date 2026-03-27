@@ -21,7 +21,7 @@ pub fn TimelineFeed() -> Element {
             if feed_response.categories.is_empty() {
                 rsx! {
                     div { class: "flex flex-col gap-8 w-full",
-                        CreatePostButton { class: "w-fit" }
+                        CreatePostButton { class: "w-fit self-end" }
                         DraftTimeline {}
                         div { class: "flex flex-col items-center justify-center py-20 text-center text-text-secondary",
                             p { class: "text-lg font-medium",
@@ -36,7 +36,7 @@ pub fn TimelineFeed() -> Element {
             } else {
                 rsx! {
                     div { class: "flex flex-col gap-8 w-full",
-                        CreatePostButton { class: "w-fit" }
+                        CreatePostButton { class: "w-fit self-end" }
                         DraftTimeline {}
                         for row in feed_response.categories.iter() {
                             TimelineRow {
