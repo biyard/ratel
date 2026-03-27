@@ -8,8 +8,13 @@ use dioxus_translate::use_language;
 
 /// A horizontal row of the user's draft posts, displayed at the top of the timeline.
 /// The header row (with "Drafts" heading and Create Post button) always renders so the
-/// Create Post button is always accessible. The scrollable draft cards only render when
-/// there are existing drafts.
+/// Create Post button is always accessible even while drafts are loading. The scrollable
+/// draft cards only render when there are existing drafts.
+///
+/// NOTE: We intentionally avoid `use_server_future(...)?` here because the `?` operator
+/// suspends the entire component while loading, hiding the Create Post button until the
+/// server future resolves. Instead, we handle the `Option` state manually so the header
+/// is always visible.
 #[component]
 pub fn DraftTimeline() -> Element {
     let drafts = use_server_future(move || async move {
@@ -18,14 +23,12 @@ pub fn DraftTimeline() -> Element {
             tracing::error!("Failed to load drafts: {:?}", e);
         }
         result
-    })?;
+    });
 
-    let val = drafts.read();
-    let res = val.as_ref().unwrap();
-
-    let items = match res {
-        Ok(resp) => resp.items.clone(),
-        Err(_) => vec![],
+    let items = match &*drafts.read() {
+        Some(Ok(resp)) => resp.items.clone(),
+        Some(Err(_)) => vec![],
+        None => vec![], // Still loading
     };
 
     let has_drafts = !items.is_empty();
