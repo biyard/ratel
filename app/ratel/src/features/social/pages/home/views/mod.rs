@@ -77,7 +77,20 @@ pub fn Home(username: String) -> Element {
                 .await
                 .map_err(|e| {
                     tracing::error!("check_follow_status failed: {e}");
-                    crate::common::Error::InternalServerError(String::new())
+                    #[cfg(feature = "server")]
+                    {
+                        use crate::common::Error;
+                        match e {
+                            Error::Aws(_) | Error::Session(_) => {
+                                Error::InternalServerError(String::new())
+                            }
+                            other => other,
+                        }
+                    }
+                    #[cfg(not(feature = "server"))]
+                    {
+                        e
+                    }
                 })
         }
     })?;
