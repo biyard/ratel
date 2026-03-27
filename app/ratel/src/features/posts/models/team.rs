@@ -216,24 +216,29 @@ impl Team {
 #[cfg(feature = "server")]
 fn extract_team_identifier(parts: &Parts) -> Result<String> {
     let path = parts.uri.path().trim_matches('/');
-    let segments: Vec<&str> = path.split('/').collect();
+    let segments: Vec<&str> = path.split('/').filter(|s| !s.is_empty()).collect();
 
     // Pattern 1: /api/teams/:team_id/... (client-side API call)
-    for i in 0..segments.len() {
-        if segments[i] == "teams" {
+    // Require the preceding segment to be "api" to avoid colliding with
+    // SSR routes for a team whose username happens to be "teams".
+    for i in 1..segments.len() {
+        if segments[i] == "teams" && segments[i - 1] == "api" {
             if let Some(&value) = segments.get(i + 1) {
-                if !value.is_empty() {
-                    return Ok(value.to_string());
-                }
+                return Ok(value.to_string());
             }
         }
     }
 
-    // Pattern 2: /:username/... (SSR page URL, e.g. /newteam/settings)
-    if let Some(&first) = segments.first() {
-        if !first.is_empty() {
-            return Ok(first.to_string());
+    // Pattern 2: /teams/:username/... (SSR page URL, e.g. /teams/myteam/settings)
+    if segments.first().copied() == Some("teams") {
+        if let Some(&username) = segments.get(1) {
+            return Ok(username.to_string());
         }
+    }
+
+    // Pattern 3: /:username/... (fallback SSR)
+    if let Some(&first) = segments.first() {
+        return Ok(first.to_string());
     }
 
     Err(Error::BadRequest(

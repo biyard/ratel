@@ -75,7 +75,10 @@ pub fn Home(username: String) -> Element {
         async move {
             check_follow_status_handler(name)
                 .await
-                .map_err(|e| crate::common::Error::InternalServerError(e.to_string()))
+                .map_err(|e| {
+                    tracing::error!("check_follow_status failed: {e}");
+                    crate::common::Error::InternalServerError(String::new())
+                })
         }
     })?;
 

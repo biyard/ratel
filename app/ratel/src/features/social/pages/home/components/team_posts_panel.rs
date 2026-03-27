@@ -13,9 +13,18 @@ pub fn TeamPostsPanel(username: String, view_mode: HomeViewMode, selected_catego
         let username = username_signal();
         let category = category_signal();
         async move {
-            match list_team_posts_handler(username, category, bookmark).await {
+            match list_team_posts_handler(username, category, bookmark.clone()).await {
                 Ok(result) => Ok(result),
-                Err(_) => Ok(Default::default()),
+                Err(e) => {
+                    if bookmark.is_none() {
+                        // Initial SSR load: fall back to empty to avoid unwrap panic
+                        Ok(Default::default())
+                    } else {
+                        // Pagination: propagate the error to avoid silently ending the list
+                        tracing::error!("list_team_posts_handler failed: {e}");
+                        Err(e)
+                    }
+                }
             }
         }
     })?;
