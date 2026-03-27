@@ -141,6 +141,18 @@ async function signUpAndParticipate(browser, user, spaceUrl) {
   }
 }
 
+async function openSpaceAppSettings(page, spaceUrl, appType) {
+  await goto(page, spaceUrl + "/apps");
+
+  const installButton = page.getByTestId(`install-app-${appType}`);
+  if (await installButton.isVisible().catch(() => false)) {
+    await installButton.click();
+    await expect(page.getByTestId(`configure-app-${appType}`)).toBeVisible();
+  }
+
+  await click(page, { testId: `configure-app-${appType}` });
+}
+
 // ─── Test suite ─────────────────────────────────────────────────────────────
 
 test.describe.serial("Space governance scenario", () => {
@@ -321,31 +333,40 @@ test.describe.serial("Space governance scenario", () => {
         "This quiz verifies understanding of the governance framework."
     );
 
+    await page.getByRole("tab", { name: "Upload" }).click();
+    await page.waitForLoadState("load");
+
     // Attach 3 dummy study material files
     const dummyPdf = {
       name: "study-material-1.pdf",
       mimeType: "application/pdf",
       buffer: Buffer.from("%PDF-1.4 dummy content"),
     };
-    const fileInputs = page.locator('input[type="file"]');
+    const fileInputs = page.locator('input[type="file"][accept*=".pdf"]');
     if ((await fileInputs.count()) > 0) {
-      await fileInputs.nth(0).setInputFiles(dummyPdf);
-      await page.waitForLoadState("load");
-    }
-    if ((await fileInputs.count()) > 1) {
-      await fileInputs
-        .nth(1)
-        .setInputFiles({ ...dummyPdf, name: "study-material-2.pdf" });
-      await page.waitForLoadState("load");
-    }
-    if ((await fileInputs.count()) > 2) {
-      await fileInputs
-        .nth(2)
-        .setInputFiles({ ...dummyPdf, name: "study-material-3.pdf" });
-      await page.waitForLoadState("load");
-    }
+      const uploader = fileInputs.first();
 
-    await click(page, { text: "Save" });
+      await uploader.setInputFiles(dummyPdf);
+      await expect(
+        page.getByText("study-material-1.pdf", { exact: true })
+      ).toBeVisible();
+
+      await uploader.setInputFiles({
+        ...dummyPdf,
+        name: "study-material-2.pdf",
+      });
+      await expect(
+        page.getByText("study-material-2.pdf", { exact: true })
+      ).toBeVisible();
+
+      await uploader.setInputFiles({
+        ...dummyPdf,
+        name: "study-material-3.pdf",
+      });
+      await expect(
+        page.getByText("study-material-3.pdf", { exact: true })
+      ).toBeVisible();
+    }
 
     // Setting tab: 2x boost reward
     await page.getByRole("tab", { name: "Setting" }).click();
@@ -558,7 +579,8 @@ test.describe.serial("Space governance scenario", () => {
   test("Creator1: Configure space settings — anonymous ON", async ({
     page,
   }) => {
-    await goto(page, spaceUrl + "/apps/general");
+    await openSpaceAppSettings(page, spaceUrl, "general");
+    await page.waitForURL(/\/apps\/general$/, { waitUntil: "load" });
 
     const anonymousSwitch = page.locator("text=Anonymous").locator("../..");
     await anonymousSwitch.locator("button[role='switch']").click();
@@ -570,7 +592,8 @@ test.describe.serial("Space governance scenario", () => {
   test("Creator1: Configure panel — age + gender, collective type", async ({
     page,
   }) => {
-    await goto(page, spaceUrl + "/apps/panels");
+    await openSpaceAppSettings(page, spaceUrl, "panels");
+    await page.waitForURL(/\/apps\/panels$/, { waitUntil: "load" });
 
     const attributeGroups = page
       .getByText("Attribute groups", { exact: true })
