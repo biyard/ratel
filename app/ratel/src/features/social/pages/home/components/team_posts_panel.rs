@@ -12,7 +12,12 @@ pub fn TeamPostsPanel(username: String, view_mode: HomeViewMode, selected_catego
     let mut v = use_infinite_query(move |bookmark| {
         let username = username_signal();
         let category = category_signal();
-        async move { list_team_posts_handler(username, category, bookmark).await }
+        async move {
+            match list_team_posts_handler(username, category, bookmark).await {
+                Ok(result) => Ok(result),
+                Err(_) => Ok(Default::default()),
+            }
+        }
     })?;
 
     let mut v_clone = v.clone();
