@@ -21,6 +21,7 @@ pub fn SpaceTimeline() -> Element {
         return rsx! {};
     }
 
+    let mut can_scroll_left = use_signal(|| false);
     let mut can_scroll_right = use_signal(|| false);
     let mut scroll_check_pending = use_signal(|| false);
     let mut scroll_dirty = use_signal(|| false);
@@ -29,8 +30,9 @@ pub fn SpaceTimeline() -> Element {
         let _len = v.items().len();
         spawn(async move {
             let mut result = document::eval(CHECK_SCROLL_JS);
-            if let Ok(val) = result.recv::<bool>().await {
-                can_scroll_right.set(val);
+            if let Ok(val) = result.recv::<Vec<bool>>().await {
+                can_scroll_left.set(val[0]);
+                can_scroll_right.set(val[1]);
             }
         });
     });
@@ -50,8 +52,9 @@ pub fn SpaceTimeline() -> Element {
                     onmounted: move |_| {
                         spawn(async move {
                             let mut result = document::eval(CHECK_SCROLL_JS);
-                            if let Ok(val) = result.recv::<bool>().await {
-                                can_scroll_right.set(val);
+                            if let Ok(val) = result.recv::<Vec<bool>>().await {
+                                can_scroll_left.set(val[0]);
+                                can_scroll_right.set(val[1]);
                             }
                         });
                     },
@@ -65,8 +68,9 @@ pub fn SpaceTimeline() -> Element {
                             loop {
                                 scroll_dirty.set(false);
                                 let mut result = document::eval(CHECK_SCROLL_JS);
-                                if let Ok(val) = result.recv::<bool>().await {
-                                    can_scroll_right.set(val);
+                                if let Ok(val) = result.recv::<Vec<bool>>().await {
+                                    can_scroll_left.set(val[0]);
+                                    can_scroll_right.set(val[1]);
                                 }
                                 if !scroll_dirty() {
                                     break;
@@ -90,6 +94,19 @@ pub fn SpaceTimeline() -> Element {
                         }
                     }
                     {v.more_element()}
+                }
+                if can_scroll_left() {
+                    button {
+                        class: "absolute left-0 top-1/2 p-1 rounded-full transition-colors -translate-y-1/2 cursor-pointer z-[101] hover:bg-accent/20",
+                        aria_label: "Scroll My Spaces left",
+                        onclick: move |_| {
+                            let _ = document::eval(SCROLL_LEFT_JS);
+                        },
+                        lucide_dioxus::ChevronLeft {
+                            size: 20,
+                            class: "transition-colors [&>path]:stroke-foreground-muted hover:[&>path]:stroke-text-primary",
+                        }
+                    }
                 }
                 if can_scroll_right() {
                     button {
@@ -138,10 +155,15 @@ fn space_to_post(space: MySpaceResponse) -> PostResponse {
 const CHECK_SCROLL_JS: &str = r#"
     const el = document.querySelector('[aria-label="My Spaces section"] .scrollbar-none');
     if (el) {
-        dioxus.send(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+        dioxus.send([el.scrollLeft > 0, el.scrollLeft + el.clientWidth < el.scrollWidth - 1]);
     } else {
-        dioxus.send(false);
+        dioxus.send([false, false]);
     }
+"#;
+
+const SCROLL_LEFT_JS: &str = r#"
+    const el = document.querySelector('[aria-label="My Spaces section"] .scrollbar-none');
+    if (el) el.scrollBy({ left: -340, behavior: 'smooth' });
 "#;
 
 const SCROLL_RIGHT_JS: &str = r#"
