@@ -67,10 +67,16 @@ pub fn Home(username: String) -> Element {
         .unwrap_or_default();
 
     // Follow status — use_server_future so target_pk is available when button renders
+    // map_err converts non-serializable Error::Aws / Error::Session variants to
+    // Error::InternalServerError so Dioxus SSR transport can serialize the result.
     let username_for_status = username.clone();
     let follow_status = use_server_future(move || {
         let name = username_for_status.clone();
-        async move { check_follow_status_handler(name).await }
+        async move {
+            check_follow_status_handler(name)
+                .await
+                .map_err(|e| crate::common::Error::InternalServerError(e.to_string()))
+        }
     })?;
 
     let follow_status_val = follow_status.read();

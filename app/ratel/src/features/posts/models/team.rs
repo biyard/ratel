@@ -215,13 +215,24 @@ impl Team {
 
 #[cfg(feature = "server")]
 fn extract_team_identifier(parts: &Parts) -> Result<String> {
-    let mut segments = parts.uri.path().trim_matches('/').split('/');
-    while let Some(seg) = segments.next() {
-        if seg == "teams" {
-            if let Some(value) = segments.next() {
-                return Ok(value.to_string());
+    let path = parts.uri.path().trim_matches('/');
+    let segments: Vec<&str> = path.split('/').collect();
+
+    // Pattern 1: /api/teams/:team_id/... (client-side API call)
+    for i in 0..segments.len() {
+        if segments[i] == "teams" {
+            if let Some(&value) = segments.get(i + 1) {
+                if !value.is_empty() {
+                    return Ok(value.to_string());
+                }
             }
-            break;
+        }
+    }
+
+    // Pattern 2: /:username/... (SSR page URL, e.g. /newteam/settings)
+    if let Some(&first) = segments.first() {
+        if !first.is_empty() {
+            return Ok(first.to_string());
         }
     }
 
