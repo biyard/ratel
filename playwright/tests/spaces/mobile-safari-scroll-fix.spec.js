@@ -48,9 +48,10 @@ async function resolveSpaceDashboardUrl(page) {
     return envUrl;
   }
 
-  // 2. Fallback: scan the home feed for a /spaces/ link. We use
-  //    page.getByRole directly here because getLocator awaits visibility
-  //    of a single element, and we need to iterate over all matching links.
+  // 2. Fallback: scan the home feed for a /spaces/ link using a role-based
+  //    selector. We use page.getByRole directly here because getLocator
+  //    awaits visibility of a single element, and we need to iterate over
+  //    all matching links.
   const links = page.getByRole("link");
   const count = await links.count();
 
