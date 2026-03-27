@@ -74,8 +74,6 @@ jobs:
           key: app-shell-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             app-shell-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
-            app-shell-build-${{ runner.os }}-
-            app-shell-build-
           path: |
             target
 
