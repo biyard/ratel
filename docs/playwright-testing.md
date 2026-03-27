@@ -20,6 +20,11 @@ playwright/
     users/                        # Authenticated user test specs
       post.spec.js                # Example: post creation test
       *.spec.js                   # New test files go here
+    spaces/                       # Space-related test specs
+      *.spec.js
+    components/                   # Component-level test specs (manage own auth context)
+      mobile-bottom-nav.spec.js   # Mobile bottom navigation tests
+      *.spec.js                   # New component tests go here
 ```
 
 ## Configuration
@@ -50,9 +55,10 @@ Key settings:
 | Project | testMatch | Description |
 |---------|-----------|-------------|
 | `auth-setup` | `**/*.auth.setup.js` | Runs first; logs in and saves `user.json` |
-| `Individual user tests` | `tests/users/**/*.spec.js` | Depends on `auth-setup`; uses saved `user.json` storageState |
+| `Individual user tests` | `tests/users/**/*.spec.js`, `tests/spaces/**/*.spec.js` | Depends on `auth-setup`; uses saved `user.json` storageState |
+| `Component tests` | `tests/components/**/*.spec.js` | Depends on `auth-setup`; no project-level storageState (tests manage their own contexts) |
 
-Authenticated tests run on Desktop Chrome at **1440x950** viewport.
+Authenticated tests run on Desktop Chrome at **1440x950** viewport. Component tests run on Desktop Chrome without a forced viewport or storageState, allowing each test to configure its own browser context (e.g., mobile viewport, unauthenticated state).
 
 ## Authentication Flow
 
@@ -190,10 +196,15 @@ The `text` option in `role` supports both strings and RegExp (e.g., `/sign in/i`
 
 ### Step 1: Create a file
 
-Add a new `.spec.js` file under `playwright/tests/users/`:
+Add a new `.spec.js` file under the appropriate directory:
+
+- **`playwright/tests/users/`** — Authenticated user tests (auto-loaded `user.json` storageState)
+- **`playwright/tests/spaces/`** — Space-related tests (auto-loaded `user.json` storageState)
+- **`playwright/tests/components/`** — Component tests that manage their own auth context (no project-level storageState)
 
 ```
-playwright/tests/users/my-feature.spec.js
+playwright/tests/users/my-feature.spec.js       # authenticated test
+playwright/tests/components/my-component.spec.js  # component test with custom context
 ```
 
 ### Step 2: Write the test
