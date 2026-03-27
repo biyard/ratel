@@ -120,6 +120,8 @@ pub struct InfoCardData {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct InfoCardItem {
     pub label: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
     pub value: String,
 }
 

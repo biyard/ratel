@@ -56,7 +56,7 @@ pub fn MobileMoreTab(is_open: bool, onclick: EventHandler<MouseEvent>) -> Elemen
 
     rsx! {
         button {
-            class: "hidden max-tablet:flex flex-1 flex-col gap-0.5 items-center py-2 px-1 text-sm font-medium rounded-sm cursor-pointer text-text hover:bg-space-nav-item-hover",
+            class: "hidden max-tablet:flex flex-1 flex-col gap-0.5 items-center py-2 max-tablet:py-0 px-1 text-sm font-medium rounded-sm cursor-pointer text-text hover:bg-space-nav-item-hover",
             "aria-selected": is_open,
             onclick: move |e| onclick.call(e),
             div { class: "h-6 w-6 flex items-center justify-center",
