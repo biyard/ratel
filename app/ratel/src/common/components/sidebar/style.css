@@ -474,9 +474,44 @@
   font-weight: 500;
 }
 
+.app-menu-footer-button[data-sidebar="menu-button"] {
+  padding: 0.5rem;
+  height: 2.5rem;
+  min-height: 2.5rem;
+}
+
+.app-menu-footer-button[data-sidebar="menu-button"] svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.sidebar-desktop[data-collapsible="icon"] .app-menu-footer-button[data-sidebar="menu-button"] {
+  width: 2.5rem;
+  min-width: 2.5rem;
+  height: 2.5rem;
+  min-height: 2.5rem;
+  padding: 0.5rem;
+}
+
+.sidebar-header .sidebar-menu-button,
+.sidebar-content .sidebar-menu-button {
+  height: 2.5rem;
+  min-height: 2.5rem;
+}
+
+.sidebar-desktop[data-collapsible="icon"] .sidebar-header .sidebar-menu-button:hover,
+.sidebar-desktop[data-collapsible="icon"] .sidebar-header .sidebar-menu-button:active,
+.sidebar-desktop[data-collapsible="icon"] .sidebar-content .sidebar-menu-button:hover,
+.sidebar-desktop[data-collapsible="icon"] .sidebar-content .sidebar-menu-button:active,
+.sidebar-desktop[data-collapsible="icon"] .app-menu-footer-button[data-sidebar="menu-button"]:hover,
+.sidebar-desktop[data-collapsible="icon"] .app-menu-footer-button[data-sidebar="menu-button"]:active,
+.sidebar-desktop[data-collapsible="icon"] .app-menu-footer-button[data-sidebar="menu-button"][data-active="true"] {
+  background: transparent;
+}
+
 .sidebar-menu-button[data-sidebar="menu-button"] svg {
-  width: 1rem;
-  height: 1rem;
+  width: 1.25rem;
+  height: 1.25rem;
   flex-shrink: 0;
 }
 
@@ -518,9 +553,9 @@
 }
 
 .sidebar-desktop[data-collapsible="icon"] .sidebar-menu-button[data-sidebar="menu-button"] {
-  width: 2rem;
-  height: 2rem;
-  padding: 0.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0.625rem;
 }
 
 .sidebar-desktop[data-collapsible="icon"] .sidebar-menu-button[data-sidebar="menu-button"][data-size="lg"] {
