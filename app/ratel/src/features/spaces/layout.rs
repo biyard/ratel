@@ -100,7 +100,7 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
 
     rsx! {
         SeoMeta { title: space.title.clone(), description: space.description() }
-        div { class: "{layout_class}",
+        div { class: "{layout_class}", "data-testid": "space-layout-container",
             if show_sidebar {
                 SpaceNav {
                     class: "max-tablet:order-1",
@@ -131,7 +131,7 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
                     },
                 }
             }
-            div { class: "flex overflow-x-hidden flex-col min-w-0 min-h-0 max-tablet:flex-1 max-tablet:order-0 max-tablet:min-h-auto",
+            div { class: "flex overflow-x-hidden flex-col min-w-0 min-h-0 max-tablet:flex-1 max-tablet:order-0 max-tablet:min-h-[auto]",
                 if show_sidebar {
                     SpaceTop {
                         labels,
