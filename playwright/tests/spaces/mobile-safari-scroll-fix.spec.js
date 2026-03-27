@@ -16,8 +16,9 @@ import { goto, getLocator } from "../utils.js";
  *
  * The "max-tablet" breakpoint is max-width: 899px (tablet breakpoint is 900px).
  *
- * This test does NOT require authentication for body-level checks.
- * Space-specific layout tests use the saved storageState from auth-setup.
+ * All tests use the default page fixture (which inherits baseURL and
+ * storageState from the Playwright config) and dynamically resize the
+ * viewport via page.setViewportSize().
  *
  * NOTE: Requires backend built with --features bypass for auth flows.
  *
@@ -92,241 +93,188 @@ async function resolveSpaceDashboardUrl(page) {
 }
 
 test.describe("Mobile Safari address bar scroll fix (#1274)", () => {
-  test("body has overflow:auto on mobile viewport", async ({ browser }) => {
-    const context = await browser.newContext({
-      viewport: MOBILE_VIEWPORT,
+  test("body has overflow:auto on mobile viewport", async ({ page }) => {
+    await page.setViewportSize(MOBILE_VIEWPORT);
+    await goto(page, "/");
+
+    // Verify the body element has overflow: auto (not hidden) on mobile
+    const bodyOverflow = await page.evaluate(() => {
+      return window.getComputedStyle(document.body).overflow;
     });
-    const page = await context.newPage();
 
-    try {
-      await goto(page, "/");
-
-      // Verify the body element has overflow: auto (not hidden) on mobile
-      const bodyOverflow = await page.evaluate(() => {
-        return window.getComputedStyle(document.body).overflow;
-      });
-
-      // On mobile (< 900px), the Tailwind class "max-tablet:overflow-auto"
-      // should override "overflow-hidden", resulting in overflow: auto
-      expect(bodyOverflow).toBe("auto");
-    } finally {
-      await context.close();
-    }
+    // On mobile (< 900px), the Tailwind class "max-tablet:overflow-auto"
+    // should override "overflow-hidden", resulting in overflow: auto
+    expect(bodyOverflow).toBe("auto");
   });
 
-  test("body has overflow:hidden on desktop viewport", async ({ browser }) => {
-    const context = await browser.newContext({
-      viewport: DESKTOP_VIEWPORT,
+  test("body has overflow:hidden on desktop viewport", async ({ page }) => {
+    await page.setViewportSize(DESKTOP_VIEWPORT);
+    await goto(page, "/");
+
+    // Verify the body element retains overflow: hidden on desktop
+    const bodyOverflow = await page.evaluate(() => {
+      return window.getComputedStyle(document.body).overflow;
     });
-    const page = await context.newPage();
 
-    try {
-      await goto(page, "/");
-
-      // Verify the body element retains overflow: hidden on desktop
-      const bodyOverflow = await page.evaluate(() => {
-        return window.getComputedStyle(document.body).overflow;
-      });
-
-      expect(bodyOverflow).toBe("hidden");
-    } finally {
-      await context.close();
-    }
+    expect(bodyOverflow).toBe("hidden");
   });
 
   test("space layout container allows scrolling on mobile viewport", async ({
-    browser,
+    page,
   }) => {
-    const context = await browser.newContext({
-      viewport: MOBILE_VIEWPORT,
-      // Reuse auth storage state so the space page renders fully
-      storageState: "user.json",
-    });
-    const page = await context.newPage();
+    await page.setViewportSize(MOBILE_VIEWPORT);
+    await goto(page, "/");
 
-    try {
-      await goto(page, "/");
+    const spaceUrl = await resolveSpaceDashboardUrl(page);
 
-      const spaceUrl = await resolveSpaceDashboardUrl(page);
-
-      if (!spaceUrl) {
-        test.skip(
-          true,
-          "No space available -- set PLAYWRIGHT_TEST_SPACE_URL env var for deterministic CI runs"
-        );
-        return;
-      }
-
-      await goto(page, spaceUrl);
-
-      // Identify the space layout container via a stable data-testid attribute.
-      const layoutContainer = await getLocator(page, {
-        testId: "space-layout-container",
-      });
-
-      const styles = await layoutContainer.evaluate((el) => {
-        const computed = window.getComputedStyle(el);
-        return {
-          overflow: computed.overflow,
-          overflowY: computed.overflowY,
-          minHeight: computed.minHeight,
-        };
-      });
-
-      // On mobile, the layout container should NOT have overflow: hidden.
-      // The max-tablet:overflow-visible class makes it "visible".
-      expect(styles.overflow).not.toBe("hidden");
-      expect(styles.overflowY).not.toBe("hidden");
-
-      // Since min-h-screen is set, minHeight should be a non-zero value.
-      const minHeightPx = parseFloat(styles.minHeight);
-      expect(minHeightPx).toBeGreaterThan(0);
-
-      // Verify that native document scrolling works on mobile by injecting
-      // a temporary spacer element that guarantees the page overflows the
-      // viewport. This makes the assertion deterministic regardless of
-      // actual page content (which may or may not overflow on its own).
-      const scrolled = await page.evaluate(() => {
-        // Inject a spacer that is taller than the viewport to force overflow
-        const spacer = document.createElement("div");
-        spacer.id = "__test_spacer__";
-        spacer.style.height = `${window.innerHeight * 2}px`;
-        document.body.appendChild(spacer);
-
-        // Attempt to scroll
-        window.scrollTo(0, 0);
-        const initialY = window.scrollY;
-        window.scrollBy(0, 100);
-        const afterY = window.scrollY;
-
-        // Clean up the injected spacer
-        spacer.remove();
-
-        return afterY > initialY;
-      });
-
-      expect(scrolled).toBe(true);
-    } finally {
-      await context.close();
+    if (!spaceUrl) {
+      test.skip(
+        true,
+        "No space available -- set PLAYWRIGHT_TEST_SPACE_URL env var for deterministic CI runs"
+      );
+      return;
     }
+
+    await goto(page, spaceUrl);
+
+    // Identify the space layout container via a stable data-testid attribute.
+    const layoutContainer = await getLocator(page, {
+      testId: "space-layout-container",
+    });
+
+    const styles = await layoutContainer.evaluate((el) => {
+      const computed = window.getComputedStyle(el);
+      return {
+        overflow: computed.overflow,
+        overflowY: computed.overflowY,
+        minHeight: computed.minHeight,
+      };
+    });
+
+    // On mobile, the layout container should NOT have overflow: hidden.
+    // The max-tablet:overflow-visible class makes it "visible".
+    expect(styles.overflow).not.toBe("hidden");
+    expect(styles.overflowY).not.toBe("hidden");
+
+    // Since min-h-screen is set, minHeight should be a non-zero value.
+    const minHeightPx = parseFloat(styles.minHeight);
+    expect(minHeightPx).toBeGreaterThan(0);
+
+    // Verify that native document scrolling works on mobile by injecting
+    // a temporary spacer element that guarantees the page overflows the
+    // viewport. This makes the assertion deterministic regardless of
+    // actual page content (which may or may not overflow on its own).
+    const scrolled = await page.evaluate(() => {
+      // Inject a spacer that is taller than the viewport to force overflow
+      const spacer = document.createElement("div");
+      spacer.id = "__test_spacer__";
+      spacer.style.height = `${window.innerHeight * 2}px`;
+      document.body.appendChild(spacer);
+
+      // Attempt to scroll
+      window.scrollTo(0, 0);
+      const initialY = window.scrollY;
+      window.scrollBy(0, 100);
+      const afterY = window.scrollY;
+
+      // Clean up the injected spacer
+      spacer.remove();
+
+      return afterY > initialY;
+    });
+
+    expect(scrolled).toBe(true);
   });
 
   test("space bottom nav has position:sticky on mobile viewport", async ({
-    browser,
+    page,
   }) => {
-    const context = await browser.newContext({
-      viewport: MOBILE_VIEWPORT,
-      storageState: "user.json",
-    });
-    const page = await context.newPage();
+    await page.setViewportSize(MOBILE_VIEWPORT);
+    await goto(page, "/");
 
-    try {
-      await goto(page, "/");
+    const spaceUrl = await resolveSpaceDashboardUrl(page);
 
-      const spaceUrl = await resolveSpaceDashboardUrl(page);
-
-      if (!spaceUrl) {
-        test.skip(
-          true,
-          "No space available -- set PLAYWRIGHT_TEST_SPACE_URL env var for deterministic CI runs"
-        );
-        return;
-      }
-
-      await goto(page, spaceUrl);
-
-      // Identify SpaceNav via stable data-testid for reliable targeting.
-      const navBar = await getLocator(page, { testId: "space-nav-root" });
-
-      const position = await navBar.evaluate((el) => {
-        return window.getComputedStyle(el).position;
-      });
-
-      expect(position).toBe("sticky");
-
-      // Verify bottom: 0px for the sticky positioning
-      const bottom = await navBar.evaluate((el) => {
-        return window.getComputedStyle(el).bottom;
-      });
-
-      expect(bottom).toBe("0px");
-    } finally {
-      await context.close();
+    if (!spaceUrl) {
+      test.skip(
+        true,
+        "No space available -- set PLAYWRIGHT_TEST_SPACE_URL env var for deterministic CI runs"
+      );
+      return;
     }
+
+    await goto(page, spaceUrl);
+
+    // Identify SpaceNav via stable data-testid for reliable targeting.
+    const navBar = await getLocator(page, { testId: "space-nav-root" });
+
+    const position = await navBar.evaluate((el) => {
+      return window.getComputedStyle(el).position;
+    });
+
+    expect(position).toBe("sticky");
+
+    // Verify bottom: 0px for the sticky positioning
+    const bottom = await navBar.evaluate((el) => {
+      return window.getComputedStyle(el).bottom;
+    });
+
+    expect(bottom).toBe("0px");
   });
 
   test("page is scrollable on mobile viewport when content overflows", async ({
-    browser,
+    page,
   }) => {
-    const context = await browser.newContext({
-      viewport: MOBILE_VIEWPORT,
-      storageState: "user.json",
+    await page.setViewportSize(MOBILE_VIEWPORT);
+    await goto(page, "/");
+
+    // On mobile, the body has overflow: auto, so the document should be
+    // scrollable when content exceeds the viewport height.
+    const scrollInfo = await page.evaluate(() => {
+      return {
+        scrollHeight: document.documentElement.scrollHeight,
+        innerHeight: window.innerHeight,
+        bodyOverflow: window.getComputedStyle(document.body).overflow,
+      };
     });
-    const page = await context.newPage();
 
-    try {
-      await goto(page, "/");
+    // The body must have overflow: auto to allow scrolling
+    expect(scrollInfo.bodyOverflow).toBe("auto");
 
-      // On mobile, the body has overflow: auto, so the document should be
-      // scrollable when content exceeds the viewport height.
-      const scrollInfo = await page.evaluate(() => {
-        return {
-          scrollHeight: document.documentElement.scrollHeight,
-          innerHeight: window.innerHeight,
-          bodyOverflow: window.getComputedStyle(document.body).overflow,
-        };
-      });
-
-      // The body must have overflow: auto to allow scrolling
-      expect(scrollInfo.bodyOverflow).toBe("auto");
-
-      // scrollHeight should be at least as large as the viewport
-      // (content may or may not overflow depending on data, but the
-      // overflow property must allow it)
-      expect(scrollInfo.scrollHeight).toBeGreaterThanOrEqual(
-        scrollInfo.innerHeight
-      );
-    } finally {
-      await context.close();
-    }
+    // scrollHeight should be at least as large as the viewport
+    // (content may or may not overflow depending on data, but the
+    // overflow property must allow it)
+    expect(scrollInfo.scrollHeight).toBeGreaterThanOrEqual(
+      scrollInfo.innerHeight
+    );
   });
 
   test("space bottom nav is NOT sticky on desktop viewport", async ({
-    browser,
+    page,
   }) => {
-    const context = await browser.newContext({
-      viewport: DESKTOP_VIEWPORT,
-      storageState: "user.json",
-    });
-    const page = await context.newPage();
+    await page.setViewportSize(DESKTOP_VIEWPORT);
+    await goto(page, "/");
 
-    try {
-      await goto(page, "/");
+    const spaceUrl = await resolveSpaceDashboardUrl(page);
 
-      const spaceUrl = await resolveSpaceDashboardUrl(page);
-
-      if (!spaceUrl) {
-        test.skip(
-          true,
-          "No space available -- set PLAYWRIGHT_TEST_SPACE_URL env var for deterministic CI runs"
-        );
-        return;
-      }
-
-      await goto(page, spaceUrl);
-
-      // Identify SpaceNav via stable data-testid for reliable targeting.
-      const navBar = await getLocator(page, { testId: "space-nav-root" });
-
-      const position = await navBar.evaluate((el) => {
-        return window.getComputedStyle(el).position;
-      });
-
-      // On desktop (>= 900px), "max-tablet:sticky" does NOT apply,
-      // so position should be the default (static or relative).
-      expect(position).not.toBe("sticky");
-    } finally {
-      await context.close();
+    if (!spaceUrl) {
+      test.skip(
+        true,
+        "No space available -- set PLAYWRIGHT_TEST_SPACE_URL env var for deterministic CI runs"
+      );
+      return;
     }
+
+    await goto(page, spaceUrl);
+
+    // Identify SpaceNav via stable data-testid for reliable targeting.
+    const navBar = await getLocator(page, { testId: "space-nav-root" });
+
+    const position = await navBar.evaluate((el) => {
+      return window.getComputedStyle(el).position;
+    });
+
+    // On desktop (>= 900px), "max-tablet:sticky" does NOT apply,
+    // so position should be the default (static or relative).
+    expect(position).not.toBe("sticky");
   });
 });
