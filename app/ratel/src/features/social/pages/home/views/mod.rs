@@ -80,7 +80,7 @@ pub fn Home(username: String) -> Element {
                         use crate::common::Error;
                         match e {
                             Error::Aws(_) | Error::Session(_) => {
-                                Error::InternalServerError(String::new())
+                                Error::InternalServerError("check_follow_status_handler".to_string())
                             }
                             other => other,
                         }
