@@ -88,7 +88,7 @@ pub fn TimelineRow(row: TimelineCategoryRow) -> Element {
                 }
                 div { class: "absolute top-0 right-0 w-12 h-full bg-gradient-to-l from-bg to-transparent pointer-events-none z-100" }
                 button {
-                    class: "absolute top-1/2 right-0 -translate-y-1/2 z-101 p-1 rounded-full cursor-pointer hover:bg-accent/20 transition-colors",
+                    class: "absolute top-1/2 right-0 -translate-y-1/2 z-[101] p-1 rounded-full cursor-pointer hover:bg-accent/20 transition-colors",
                     onclick: {
                         let aria = display_name.to_string();
                         move |_| {

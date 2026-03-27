@@ -7,8 +7,9 @@ use crate::features::timeline::*;
 use dioxus_translate::use_language;
 
 /// A horizontal row of the user's draft posts, displayed at the top of the timeline.
-/// The Create Post button is always shown regardless of whether there are existing drafts.
-/// When drafts are empty, the draft timeline (header + cards) is hidden but the button remains visible.
+/// The header row (with "Drafts" heading and Create Post button) always renders so the
+/// Create Post button is always accessible. The scrollable draft cards only render when
+/// there are existing drafts.
 #[component]
 pub fn DraftTimeline() -> Element {
     let drafts = use_server_future(move || async move { list_user_drafts_handler(None).await })?;
@@ -18,7 +19,10 @@ pub fn DraftTimeline() -> Element {
 
     let items = match res {
         Ok(resp) => resp.items.clone(),
-        Err(_) => vec![],
+        Err(e) => {
+            tracing::error!("Failed to load drafts: {:?}", e);
+            vec![]
+        }
     };
 
     let has_drafts = !items.is_empty();
@@ -27,16 +31,13 @@ pub fn DraftTimeline() -> Element {
     let mut can_scroll_right = use_signal(|| false);
 
     rsx! {
-        div { class: "flex justify-end items-center px-1 w-full",
-            CreatePostButton { class: "w-fit" }
-        }
+        section { class: "flex flex-col gap-3 w-full", aria_label: "Drafts section",
+            div { class: "flex justify-between items-center px-1 w-full",
+                h2 { class: "flex-1 text-lg font-semibold text-text-primary", "Drafts" }
+                CreatePostButton { class: "w-fit" }
+            }
 
-        if has_drafts {
-            section { class: "flex flex-col gap-3 w-full", aria_label: "Drafts section",
-
-                div { class: "flex justify-between items-center px-1 w-full",
-                    h2 { class: "flex-1 text-lg font-semibold text-text-primary", "Drafts" }
-                }
+            if has_drafts {
                 div { class: "relative",
                     div {
                         class: "flex overflow-x-auto gap-4 pb-2 snap-x snap-mandatory scrollbar-none",
