@@ -1,12 +1,11 @@
 #![allow(unused)]
-pub mod components;
 pub mod config;
 pub mod controllers;
 pub mod hooks;
-pub mod layout;
-pub mod models;
 #[cfg(not(feature = "server"))]
 pub mod interop;
+pub mod layout;
+pub mod models;
 #[cfg(not(feature = "server"))]
 pub mod web;
 

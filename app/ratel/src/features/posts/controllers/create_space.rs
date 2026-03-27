@@ -31,7 +31,7 @@ pub async fn create_space_handler(req: CreateSpaceRequest) -> Result<CreateSpace
 
     let space = SpaceCommon::new(
         req.post_id.clone(),
-        user.pk.clone().into(),
+        post.user_pk.clone(),
         post.author_display_name.clone(),
         post.author_profile_url.clone(),
         post.author_username.clone(),
