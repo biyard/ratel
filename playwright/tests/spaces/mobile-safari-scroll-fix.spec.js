@@ -20,6 +20,11 @@ import { goto, getLocator } from "../utils.js";
  * Space-specific layout tests use the saved storageState from auth-setup.
  *
  * NOTE: Requires backend built with --features bypass for auth flows.
+ *
+ * Environment variables:
+ *   PLAYWRIGHT_TEST_SPACE_URL - A known space dashboard URL (e.g., "/spaces/SPACE%23abc123/dashboard").
+ *     When set, space-specific tests navigate directly to this URL instead of
+ *     scanning the home feed. This makes tests deterministic in CI.
  */
 
 // Mobile viewport matching iPhone SE / small mobile
@@ -28,16 +33,31 @@ const MOBILE_VIEWPORT = { width: 375, height: 667 };
 const DESKTOP_VIEWPORT = { width: 1440, height: 950 };
 
 /**
- * Navigate to a space dashboard page by finding a space link on the home feed.
- * Uses role-based selectors to find links containing /spaces/ in their href.
- * Returns the space dashboard URL or null if no space is available.
+ * Resolve a space dashboard URL for testing.
+ *
+ * Priority:
+ *   1. PLAYWRIGHT_TEST_SPACE_URL env var (deterministic, preferred for CI)
+ *   2. Scan the home feed for a link containing /spaces/ (fallback for local dev)
+ *
+ * @returns {Promise<string|null>} A space dashboard URL or null if none found.
  */
-async function findSpaceDashboardUrl(page) {
+async function resolveSpaceDashboardUrl(page) {
+  // 1. Prefer deterministic env var
+  const envUrl = process.env.PLAYWRIGHT_TEST_SPACE_URL;
+  if (envUrl) {
+    return envUrl;
+  }
+
+  // 2. Fallback: scan the home feed for a /spaces/ link using getLocator
+  //    with role-based selector. We use page.getByRole directly here
+  //    because getLocator awaits visibility of a single element, and we
+  //    need to iterate over all matching links.
   const links = page.getByRole("link");
   const count = await links.count();
 
   for (let i = 0; i < count; i++) {
-    const href = await links.nth(i).getAttribute("href");
+    const link = links.nth(i);
+    const href = await link.getAttribute("href");
     if (href && href.includes("/spaces/")) {
       const match = href.match(/\/spaces\/[^/]+/);
       return match ? match[0] + "/dashboard" : null;
@@ -103,46 +123,43 @@ test.describe("Mobile Safari address bar scroll fix (#1274)", () => {
     try {
       await goto(page, "/");
 
-      const spaceUrl = await findSpaceDashboardUrl(page);
+      const spaceUrl = await resolveSpaceDashboardUrl(page);
 
       if (!spaceUrl) {
         test.skip(
           true,
-          "No space available in the test environment for layout checks"
+          "No space available -- set PLAYWRIGHT_TEST_SPACE_URL env var for deterministic CI runs"
         );
         return;
       }
 
       await goto(page, spaceUrl);
 
-      // layout with the grid/flex classes. We now identify it via a stable
-      // data-testid attribute instead of a style class selector.
-      const layoutContainer = page.getByTestId("space-layout-container");
+      // Identify the space layout container via a stable data-testid attribute.
+      const layoutContainer = await getLocator(page, {
+        testId: "space-layout-container",
+      });
 
-      if (
-        await layoutContainer.isVisible({ timeout: 5000 }).catch(() => false)
-      ) {
-        const styles = await layoutContainer.evaluate((el) => {
-          const computed = window.getComputedStyle(el);
-          return {
-            overflow: computed.overflow,
-            overflowY: computed.overflowY,
-            height: computed.height,
-            minHeight: computed.minHeight,
-          };
-        });
+      const styles = await layoutContainer.evaluate((el) => {
+        const computed = window.getComputedStyle(el);
+        return {
+          overflow: computed.overflow,
+          overflowY: computed.overflowY,
+          height: computed.height,
+          minHeight: computed.minHeight,
+        };
+      });
 
-        // On mobile, the layout container should NOT have overflow: hidden.
-        // The max-tablet:overflow-visible class makes it "visible".
-        expect(styles.overflow).not.toBe("hidden");
-        expect(styles.overflowY).not.toBe("hidden");
+      // On mobile, the layout container should NOT have overflow: hidden.
+      // The max-tablet:overflow-visible class makes it "visible".
+      expect(styles.overflow).not.toBe("hidden");
+      expect(styles.overflowY).not.toBe("hidden");
 
-        // The container should NOT have a fixed height of exactly the viewport
-        // height (h-screen becomes h-auto on mobile via max-tablet:h-auto).
-        // Since min-h-screen is set, minHeight should be a non-zero value.
-        const minHeightPx = parseFloat(styles.minHeight);
-        expect(minHeightPx).toBeGreaterThan(0);
-      }
+      // The container should NOT have a fixed height of exactly the viewport
+      // height (h-screen becomes h-auto on mobile via max-tablet:h-auto).
+      // Since min-h-screen is set, minHeight should be a non-zero value.
+      const minHeightPx = parseFloat(styles.minHeight);
+      expect(minHeightPx).toBeGreaterThan(0);
     } finally {
       await context.close();
     }
@@ -160,37 +177,33 @@ test.describe("Mobile Safari address bar scroll fix (#1274)", () => {
     try {
       await goto(page, "/");
 
-      const spaceUrl = await findSpaceDashboardUrl(page);
+      const spaceUrl = await resolveSpaceDashboardUrl(page);
 
       if (!spaceUrl) {
         test.skip(
           true,
-          "No space available in the test environment for nav checks"
+          "No space available -- set PLAYWRIGHT_TEST_SPACE_URL env var for deterministic CI runs"
         );
         return;
       }
 
       await goto(page, spaceUrl);
 
-      // The SpaceNav component renders a root element with max-tablet:sticky.
-      // On mobile, this should compute to position: sticky.
-      // We identify it via the SpaceNav root data-testid for a stable selector.
-      const navBar = page.getByTestId("space-nav-root");
+      // Identify SpaceNav via stable data-testid for reliable targeting.
+      const navBar = await getLocator(page, { testId: "space-nav-root" });
 
-      if (await navBar.isVisible({ timeout: 5000 }).catch(() => false)) {
-        const position = await navBar.evaluate((el) => {
-          return window.getComputedStyle(el).position;
-        });
+      const position = await navBar.evaluate((el) => {
+        return window.getComputedStyle(el).position;
+      });
 
-        expect(position).toBe("sticky");
+      expect(position).toBe("sticky");
 
-        // Verify bottom: 0px for the sticky positioning
-        const bottom = await navBar.evaluate((el) => {
-          return window.getComputedStyle(el).bottom;
-        });
+      // Verify bottom: 0px for the sticky positioning
+      const bottom = await navBar.evaluate((el) => {
+        return window.getComputedStyle(el).bottom;
+      });
 
-        expect(bottom).toBe("0px");
-      }
+      expect(bottom).toBe("0px");
     } finally {
       await context.close();
     }
@@ -244,31 +257,28 @@ test.describe("Mobile Safari address bar scroll fix (#1274)", () => {
     try {
       await goto(page, "/");
 
-      const spaceUrl = await findSpaceDashboardUrl(page);
+      const spaceUrl = await resolveSpaceDashboardUrl(page);
 
       if (!spaceUrl) {
         test.skip(
           true,
-          "No space available in the test environment for desktop nav checks"
+          "No space available -- set PLAYWRIGHT_TEST_SPACE_URL env var for deterministic CI runs"
         );
         return;
       }
 
       await goto(page, spaceUrl);
 
-      // On desktop, the SpaceNav should NOT be sticky -- it should be
-      // part of the normal grid layout (no position override).
-      const navBar = page.getByTestId("space-nav-root");
+      // Identify SpaceNav via stable data-testid for reliable targeting.
+      const navBar = await getLocator(page, { testId: "space-nav-root" });
 
-      if (await navBar.isVisible({ timeout: 5000 }).catch(() => false)) {
-        const position = await navBar.evaluate((el) => {
-          return window.getComputedStyle(el).position;
-        });
+      const position = await navBar.evaluate((el) => {
+        return window.getComputedStyle(el).position;
+      });
 
-        // On desktop (>= 900px), "max-tablet:sticky" does NOT apply,
-        // so position should be the default (static or relative).
-        expect(position).not.toBe("sticky");
-      }
+      // On desktop (>= 900px), "max-tablet:sticky" does NOT apply,
+      // so position should be the default (static or relative).
+      expect(position).not.toBe("sticky");
     } finally {
       await context.close();
     }
