@@ -46,7 +46,7 @@ export default defineConfig({
     },
     {
       name: "Individual user tests",
-      testMatch: ["tests/users/**/*.spec.js", "tests/spaces/**/*.spec.js", "tests/components/**/*.spec.js"],
+      testMatch: ["tests/users/**/*.spec.js", "tests/spaces/**/*.spec.js"],
       dependencies: ["auth-setup"],
       use: {
         ...devices["Desktop Chrome"],
@@ -56,6 +56,15 @@ export default defineConfig({
         },
         // This will be loaded in the beforeEach of authenticated tests
         storageState: "user.json",
+      },
+    },
+    // Component tests manage their own browser contexts and auth state
+    {
+      name: "Component tests",
+      testMatch: ["tests/components/**/*.spec.js"],
+      dependencies: ["auth-setup"],
+      use: {
+        ...devices["Desktop Chrome"],
       },
     },
   ],
