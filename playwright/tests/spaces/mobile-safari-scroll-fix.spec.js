@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { goto, getLocator } from "../utils.js";
 
 /**
  * Mobile Safari Address Bar Scroll Fix (Issue #1274)
@@ -17,12 +18,34 @@ import { test, expect } from "@playwright/test";
  *
  * This test does NOT require authentication for body-level checks.
  * Space-specific layout tests use the saved storageState from auth-setup.
+ *
+ * NOTE: Requires backend built with --features bypass for auth flows.
  */
 
 // Mobile viewport matching iPhone SE / small mobile
 const MOBILE_VIEWPORT = { width: 375, height: 667 };
 // Desktop viewport matching the default test config
 const DESKTOP_VIEWPORT = { width: 1440, height: 950 };
+
+/**
+ * Navigate to a space dashboard page by finding a space link on the home feed.
+ * Uses role-based selectors to find links containing /spaces/ in their href.
+ * Returns the space dashboard URL or null if no space is available.
+ */
+async function findSpaceDashboardUrl(page) {
+  const links = page.getByRole("link");
+  const count = await links.count();
+
+  for (let i = 0; i < count; i++) {
+    const href = await links.nth(i).getAttribute("href");
+    if (href && href.includes("/spaces/")) {
+      const match = href.match(/\/spaces\/[^/]+/);
+      return match ? match[0] + "/dashboard" : null;
+    }
+  }
+
+  return null;
+}
 
 test.describe("Mobile Safari address bar scroll fix (#1274)", () => {
   test("body has overflow:auto on mobile viewport", async ({ browser }) => {
@@ -32,8 +55,7 @@ test.describe("Mobile Safari address bar scroll fix (#1274)", () => {
     const page = await context.newPage();
 
     try {
-      await page.goto("/");
-      await page.waitForLoadState("domcontentloaded");
+      await goto(page, "/");
 
       // Verify the body element has overflow: auto (not hidden) on mobile
       const bodyOverflow = await page.evaluate(() => {
@@ -55,8 +77,7 @@ test.describe("Mobile Safari address bar scroll fix (#1274)", () => {
     const page = await context.newPage();
 
     try {
-      await page.goto("/");
-      await page.waitForLoadState("domcontentloaded");
+      await goto(page, "/");
 
       // Verify the body element retains overflow: hidden on desktop
       const bodyOverflow = await page.evaluate(() => {
@@ -80,23 +101,11 @@ test.describe("Mobile Safari address bar scroll fix (#1274)", () => {
     const page = await context.newPage();
 
     try {
-      // Navigate to home first to find a space link
-      await page.goto("/");
-      await page.waitForLoadState("domcontentloaded");
+      await goto(page, "/");
 
-      // Try to find a space card link on the home feed
-      const spaceLink = page.locator('a[href*="/spaces/"]').first();
-      let spaceUrl;
-
-      if (await spaceLink.isVisible({ timeout: 5000 }).catch(() => false)) {
-        const href = await spaceLink.getAttribute("href");
-        // Extract the space base URL (e.g., /spaces/some-id)
-        const match = href.match(/\/spaces\/[^/]+/);
-        spaceUrl = match ? match[0] + "/dashboard" : null;
-      }
+      const spaceUrl = await findSpaceDashboardUrl(page);
 
       if (!spaceUrl) {
-        // No space found on home page; skip space-specific checks.
         test.skip(
           true,
           "No space available in the test environment for layout checks"
@@ -104,17 +113,11 @@ test.describe("Mobile Safari address bar scroll fix (#1274)", () => {
         return;
       }
 
-      await page.goto(spaceUrl);
-      await page.waitForLoadState("domcontentloaded");
-      // Wait for Dioxus hydration
-      await page.waitForFunction(
-        () => document.querySelector("[data-dioxus-id]") !== null
-      );
+      await goto(page, spaceUrl);
 
-      // The space layout container is the outermost div inside the space
-      // layout with the grid/flex classes. We identify it by its
-      // characteristic class pattern: "bg-space-bg".
-      const layoutContainer = page.locator("div.bg-space-bg").first();
+      // layout with the grid/flex classes. We now identify it via a stable
+      // data-testid attribute instead of a style class selector.
+      const layoutContainer = page.getByTestId("space-layout-container");
 
       if (
         await layoutContainer.isVisible({ timeout: 5000 }).catch(() => false)
@@ -155,18 +158,9 @@ test.describe("Mobile Safari address bar scroll fix (#1274)", () => {
     const page = await context.newPage();
 
     try {
-      await page.goto("/");
-      await page.waitForLoadState("domcontentloaded");
+      await goto(page, "/");
 
-      // Find a space link from the home page
-      const spaceLink = page.locator('a[href*="/spaces/"]').first();
-      let spaceUrl;
-
-      if (await spaceLink.isVisible({ timeout: 5000 }).catch(() => false)) {
-        const href = await spaceLink.getAttribute("href");
-        const match = href.match(/\/spaces\/[^/]+/);
-        spaceUrl = match ? match[0] + "/dashboard" : null;
-      }
+      const spaceUrl = await findSpaceDashboardUrl(page);
 
       if (!spaceUrl) {
         test.skip(
@@ -176,16 +170,12 @@ test.describe("Mobile Safari address bar scroll fix (#1274)", () => {
         return;
       }
 
-      await page.goto(spaceUrl);
-      await page.waitForLoadState("domcontentloaded");
-      await page.waitForFunction(
-        () => document.querySelector("[data-dioxus-id]") !== null
-      );
+      await goto(page, spaceUrl);
 
-      // The SpaceNav component renders a div with the class "max-tablet:sticky".
+      // The SpaceNav component renders a root element with max-tablet:sticky.
       // On mobile, this should compute to position: sticky.
-      // We identify it by the "divide-divider" class which is unique to SpaceNav.
-      const navBar = page.locator("div.divide-divider").first();
+      // We identify it via the SpaceNav root data-testid for a stable selector.
+      const navBar = page.getByTestId("space-nav-root");
 
       if (await navBar.isVisible({ timeout: 5000 }).catch(() => false)) {
         const position = await navBar.evaluate((el) => {
@@ -216,11 +206,7 @@ test.describe("Mobile Safari address bar scroll fix (#1274)", () => {
     const page = await context.newPage();
 
     try {
-      await page.goto("/");
-      await page.waitForLoadState("domcontentloaded");
-      await page.waitForFunction(
-        () => document.querySelector("[data-dioxus-id]") !== null
-      );
+      await goto(page, "/");
 
       // On mobile, the body has overflow: auto, so the document should be
       // scrollable when content exceeds the viewport height.
@@ -256,17 +242,9 @@ test.describe("Mobile Safari address bar scroll fix (#1274)", () => {
     const page = await context.newPage();
 
     try {
-      await page.goto("/");
-      await page.waitForLoadState("domcontentloaded");
+      await goto(page, "/");
 
-      const spaceLink = page.locator('a[href*="/spaces/"]').first();
-      let spaceUrl;
-
-      if (await spaceLink.isVisible({ timeout: 5000 }).catch(() => false)) {
-        const href = await spaceLink.getAttribute("href");
-        const match = href.match(/\/spaces\/[^/]+/);
-        spaceUrl = match ? match[0] + "/dashboard" : null;
-      }
+      const spaceUrl = await findSpaceDashboardUrl(page);
 
       if (!spaceUrl) {
         test.skip(
@@ -276,15 +254,11 @@ test.describe("Mobile Safari address bar scroll fix (#1274)", () => {
         return;
       }
 
-      await page.goto(spaceUrl);
-      await page.waitForLoadState("domcontentloaded");
-      await page.waitForFunction(
-        () => document.querySelector("[data-dioxus-id]") !== null
-      );
+      await goto(page, spaceUrl);
 
       // On desktop, the SpaceNav should NOT be sticky -- it should be
       // part of the normal grid layout (no position override).
-      const navBar = page.locator("div.divide-divider").first();
+      const navBar = page.getByTestId("space-nav-root");
 
       if (await navBar.isVisible({ timeout: 5000 }).catch(() => false)) {
         const position = await navBar.evaluate((el) => {

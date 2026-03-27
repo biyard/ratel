@@ -933,10 +933,15 @@ body {
   @apply overflow-hidden max-tablet:overflow-auto;
 }
 
-/* Mobile Safari: use dynamic viewport height to account for address bar */
+/* Mobile Safari: use dynamic viewport height to account for address bar.
+   h-screen override is scoped to tablet+ (>=900px) because on mobile (<900px)
+   h-screen is overridden to h-auto so the document can scroll natively
+   (address bar collapse fix, #1274). min-h-screen applies on all viewports. */
 @supports (height: 100dvh) {
-  .h-screen {
-    height: 100dvh !important;
+  @media (min-width: 900px) {
+    .h-screen {
+      height: 100dvh !important;
+    }
   }
   .min-h-screen {
     min-height: 100dvh !important;
