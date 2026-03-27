@@ -1,7 +1,7 @@
+use crate::*;
 use crate::common::components::sidebar::*;
 use crate::features::auth::LoginModal;
 use crate::features::posts::controllers::create_post::create_post_handler;
-use crate::*;
 
 translate! {
     MobileBottomNavTranslate;

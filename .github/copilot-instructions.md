@@ -34,7 +34,7 @@ When performing a code review,
 When writing Playwright test code under `playwright/`, follow the conventions defined in `/docs/playwright-testing.md`.
 
 Key rules:
-* Test files go in `playwright/tests/users/*.spec.js` (plain JavaScript, not TypeScript).
+* Test files go in `playwright/tests/users/*.spec.js` (authenticated user tests), `playwright/tests/spaces/*.spec.js` (space tests), or `playwright/tests/components/*.spec.js` (component tests that manage their own auth context). All plain JavaScript, not TypeScript.
 * Always use shared helpers (`goto`, `click`, `fill`, `getLocator`, `getEditor`, `waitPopup`) from `tests/utils.js` instead of raw Playwright APIs.
 * Locator options: `testId` > `label` > `role` > `placeholder` > `text` (priority order).
 * See `/docs/playwright-testing.md` for utility function signatures, locator option details, app-specific selectors, and complete examples.
