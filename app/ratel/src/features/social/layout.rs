@@ -34,7 +34,7 @@ pub fn SocialLayout(username: String) -> Element {
 
     rsx! {
         div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-team-bg text-text-primary",
-            div { class: "hidden tablet:flex",
+            div { class: "hidden tablet:flex h-screen overflow-hidden",
                 TeamSidemenu { key: "{username}", username: username.clone(), logged_in }
             }
             div { class: "flex flex-col min-w-0 min-h-0",
@@ -177,7 +177,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                 }
 
                 // Category section
-                div { class: "flex overflow-y-auto flex-col flex-1 px-3 pb-4",
+                div { class: "flex overflow-y-auto flex-col flex-1 min-h-0 px-3 pb-4",
                     span { class: "px-2 pb-2 text-xs font-semibold tracking-wider uppercase text-foreground-muted",
                         "Category"
                     }
@@ -420,4 +420,5 @@ translate! {
         en: "Log out",
         ko: "로그아웃",
     },
+
 }
