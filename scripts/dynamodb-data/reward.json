@@ -9,9 +9,9 @@
           "pk": { "S": "REWARD" },
           "point": { "N": "10000" },
           "period": { "S": "Once" },
-          "action": { "S": "Poll" },
+          "action": { "S": "SPACE_POLL" },
           "condition": { "S": "None" },
-          "gsi1_pk": { "S": "ACTION#POLL" },
+          "gsi1_pk": { "S": "ACTION#SPACE_POLL" },
           "gsi1_sk": { "S": "1764227900883722" }
         }
       }

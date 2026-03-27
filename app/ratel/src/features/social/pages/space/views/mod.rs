@@ -52,6 +52,11 @@ fn SpaceCard(space: MySpaceResponse) -> Element {
                 div { class: "flex gap-3 items-center",
                     div { class: "flex flex-col gap-2",
                         div { class: "text-base font-semibold text-text-primary", "{space.title}" }
+                        if !space.description.is_empty() {
+                            p { class: "text-sm text-text-secondary line-clamp-2 break-words",
+                                "{space.description}"
+                            }
+                        }
                         div { class: "flex flex-row items-center gap-2",
                             if !space.author_profile_url.is_empty() {
                                 img {
