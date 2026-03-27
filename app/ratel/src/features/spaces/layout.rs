@@ -93,9 +93,9 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
     };
 
     let layout_class = if show_sidebar {
-        "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-space-bg text-web-font-primary max-tablet:flex max-tablet:flex-col max-tablet:overflow-visible max-tablet:h-auto max-tablet:min-h-screen"
+        "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-space-bg text-web-font-primary max-tablet:flex max-tablet:flex-col max-tablet:overflow-visible max-tablet:!h-auto max-tablet:min-h-screen"
     } else {
-        "grid overflow-hidden grid-cols-1 w-full h-screen bg-space-bg text-web-font-primary max-tablet:flex max-tablet:flex-col max-tablet:overflow-visible max-tablet:h-auto max-tablet:min-h-screen"
+        "grid overflow-hidden grid-cols-1 w-full h-screen bg-space-bg text-web-font-primary max-tablet:flex max-tablet:flex-col max-tablet:overflow-visible max-tablet:!h-auto max-tablet:min-h-screen"
     };
 
     rsx! {
