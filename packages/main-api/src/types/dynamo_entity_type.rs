@@ -68,6 +68,7 @@ pub enum EntityType {
     SpaceIncentiveScore(String),
     SpaceIncentiveToken(String),
     SpaceParticipant,
+    SpaceAdmin(String), // SPACE_ADMIN#{user_pk}
     SpaceInvitation,
     SpaceTemplate(String),          // template name
     SpaceEmailVerification(String), //email

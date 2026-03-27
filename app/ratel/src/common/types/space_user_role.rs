@@ -329,6 +329,20 @@ where
             }
         }
 
+        {
+            use crate::common::models::space::SpaceAdmin;
+
+            let space_admin_sk = EntityType::SpaceAdmin(user.pk.to_string());
+            let space_admin = SpaceAdmin::get(cli, &space.pk, Some(&space_admin_sk))
+                .await
+                .ok()
+                .flatten();
+            if space_admin.is_some() {
+                parts.extensions.insert(SpaceUserRole::Creator);
+                return Ok(SpaceUserRole::Creator);
+            }
+        }
+
         // Check participant
         let participant = SpaceParticipant::get(
             cli,
@@ -360,11 +374,10 @@ where
 
         if !public_space {
             let (invitation_pk, invitation_sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
-            let invitation =
-                SpaceInvitationMember::get(cli, &invitation_pk, Some(&invitation_sk))
-                    .await
-                    .ok()
-                    .flatten();
+            let invitation = SpaceInvitationMember::get(cli, &invitation_pk, Some(&invitation_sk))
+                .await
+                .ok()
+                .flatten();
 
             if matches!(
                 invitation.as_ref().map(|member| member.status),

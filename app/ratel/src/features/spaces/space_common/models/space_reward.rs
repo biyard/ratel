@@ -223,6 +223,9 @@ impl SpaceReward {
         {
             Ok(user_res) => {
                 if let Some(ref owner) = owner_pk {
+                    if *owner == target_pk {
+                        return Ok(user_reward);
+                    }
                     if let Err(e) = biyard
                         .award_points(
                             owner.clone(),
