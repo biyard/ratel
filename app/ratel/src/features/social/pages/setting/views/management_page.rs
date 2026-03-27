@@ -433,7 +433,7 @@ fn MemberRow(
                                 value: to_group_id(),
                                 onchange: move |e| to_group_id.set(e.value()),
                                 option { value: "", disabled: true, "—" }
-                                for (gid, gname) in all_groups.iter().filter(|(gid, _)| *gid != from_group_id()) {
+                                for (gid, gname) in { let from = from_group_id(); all_groups.iter().filter(move |(gid, _)| gid.as_str() != from.as_str()) } {
                                     option { key: "{gid}", value: "{gid}", "{gname}" }
                                 }
                             }
