@@ -58,6 +58,7 @@ pub fn CreateActionModal(space_id: SpacePartition) -> Element {
                 // 2x2 grid of action type options
                 div { class: "grid grid-cols-2 gap-2.5",
                     ActionTypeOption {
+                        test_id: "action-type-quiz".to_string(),
                         selected: selected_type() == Some(SpaceActionType::Quiz),
                         disabled: false,
                         onclick: move |_| selected_type.set(Some(SpaceActionType::Quiz)),
@@ -72,6 +73,7 @@ pub fn CreateActionModal(space_id: SpacePartition) -> Element {
                         },
                     }
                     ActionTypeOption {
+                        test_id: "action-type-poll".to_string(),
                         selected: selected_type() == Some(SpaceActionType::Poll),
                         disabled: false,
                         onclick: move |_| selected_type.set(Some(SpaceActionType::Poll)),
@@ -86,6 +88,7 @@ pub fn CreateActionModal(space_id: SpacePartition) -> Element {
                         },
                     }
                     ActionTypeOption {
+                        test_id: "action-type-discussion".to_string(),
                         selected: selected_type() == Some(SpaceActionType::TopicDiscussion),
                         disabled: false,
                         onclick: move |_| selected_type.set(Some(SpaceActionType::TopicDiscussion)),
@@ -100,6 +103,7 @@ pub fn CreateActionModal(space_id: SpacePartition) -> Element {
                         },
                     }
                     ActionTypeOption {
+                        test_id: "action-type-follow".to_string(),
                         selected: selected_type() == Some(SpaceActionType::Follow),
                         disabled: false,
                         onclick: move |_| selected_type.set(Some(SpaceActionType::Follow)),
@@ -331,6 +335,7 @@ fn FollowPreview() -> Element {
 
 #[component]
 fn ActionTypeOption(
+    test_id: String,
     selected: bool,
     disabled: bool,
     onclick: EventHandler<MouseEvent>,
@@ -340,6 +345,7 @@ fn ActionTypeOption(
 ) -> Element {
     rsx! {
         SpaceCard {
+            "data-testid": "{test_id}",
             class: format!(
                 "flex items-center gap-2.5 text-left !p-2.5 !rounded-[0.75rem] border transition-opacity {} {}",
                 if selected {

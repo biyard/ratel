@@ -47,7 +47,7 @@ test.describe.serial("Space with lots actions", () => {
     // open create action modal
     await click(page, { text: "Select Action Type" });
     // select Discussion
-    await click(page, { text: "Discussion" });
+    await click(page, { testId: "action-type-discussion" });
     // hide FAB that overlaps modal buttons
     await page.evaluate(() => {
       const fab = document.querySelector('[class*="fixed right-4 bottom-4"]');
@@ -88,7 +88,7 @@ test.describe.serial("Space with lots actions", () => {
     // open create action modal
     await click(page, { text: "Select Action Type" });
     // select Poll (Quiz is default, so click Poll)
-    await click(page, { text: "Poll" });
+    await click(page, { testId: "action-type-poll" });
     // hide FAB that overlaps modal buttons
     await page.evaluate(() => {
       const fab = document.querySelector('[class*="fixed right-4 bottom-4"]');
@@ -155,7 +155,7 @@ test.describe.serial("Space with lots actions", () => {
     // open create action modal
     await click(page, { text: "Select Action Type" });
     // select Follow (Quiz is default, so click Follow)
-    await click(page, { text: "Follow" });
+    await click(page, { testId: "action-type-follow" });
     // hide FAB that overlaps modal buttons
     await page.evaluate(() => {
       const fab = document.querySelector('[class*="fixed right-4 bottom-4"]');
