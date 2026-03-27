@@ -39,25 +39,27 @@ pub fn RewardSetting(
     let available_credits = 0u64;
 
     #[cfg(feature = "membership")]
-    let initial_remaining_credits = use_signal(move || {
+    let initial_remaining_credits = use_memo(move || {
         membership
             .as_ref()
             .map_or(0, |m| m.remaining_credits.max(0) as u64)
     });
     #[cfg(not(feature = "membership"))]
-    let initial_remaining_credits = use_signal(|| 0u64);
+    let initial_remaining_credits = use_memo(|| 0u64);
 
     let boost_multiplier = credits();
     let total_reward = credits() * 10_000;
 
+    let mut last_synced = use_signal(move || saved_credits());
     use_effect(move || {
         let latest_saved_credits = saved_credits();
-        if credits() != latest_saved_credits {
+        if last_synced() != latest_saved_credits {
+            last_synced.set(latest_saved_credits);
             credits.set(latest_saved_credits);
-        }
-        let should_enable = latest_saved_credits > 0;
-        if enable_reward() != should_enable {
-            enable_reward.set(should_enable);
+            let should_enable = latest_saved_credits > 0;
+            if enable_reward() != should_enable {
+                enable_reward.set(should_enable);
+            }
         }
     });
 

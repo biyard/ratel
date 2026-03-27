@@ -10,9 +10,8 @@ use crate::features::social::pages::user_reward::RewardsPageTranslate;
 use dioxus::prelude::*;
 
 #[component]
-pub fn AdminPage(team_pk: TeamPartition, team_name: String) -> Element {
+pub fn AdminPage(team_pk: TeamPartition) -> Element {
     let tr: RewardsPageTranslate = use_translate();
-    let _ = &team_name;
 
     let rewards_resource = use_loader(use_reactive((&team_pk,), |(team_pk,)| async move {
         Ok::<_, super::super::Error>(
