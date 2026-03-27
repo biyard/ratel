@@ -6,12 +6,12 @@ use crate::features::auth::hooks::use_user_membership;
 
 #[component]
 pub fn RewardSetting(
-    space_action: ReadSignal<SpaceAction>,
+    saved_credits: ReadSignal<u64>,
     #[props(default)] on_change: EventHandler<u64>,
 ) -> Element {
     let tr: RewardSettingTranslate = use_translate();
-    let mut enable_reward = use_signal(move || space_action().credits > 0);
-    let mut credits = use_signal(move || space_action().credits);
+    let mut enable_reward = use_signal(move || saved_credits() > 0);
+    let mut credits = use_signal(move || saved_credits());
 
     #[cfg(feature = "membership")]
     let membership = use_user_membership();
@@ -31,14 +31,37 @@ pub fn RewardSetting(
     let max_credits = 0u64;
 
     #[cfg(feature = "membership")]
-    let remaining_credits = membership
+    let available_credits = membership
         .as_ref()
-        .map_or(0, |m| m.remaining_credits as u64);
+        .map_or(0, |m| m.remaining_credits.max(0) as u64)
+        .saturating_add(saved_credits());
     #[cfg(not(feature = "membership"))]
-    let remaining_credits = 0u64;
+    let available_credits = 0u64;
+
+    #[cfg(feature = "membership")]
+    let initial_remaining_credits = use_memo(move || {
+        membership
+            .as_ref()
+            .map_or(0, |m| m.remaining_credits.max(0) as u64)
+    });
+    #[cfg(not(feature = "membership"))]
+    let initial_remaining_credits = use_memo(|| 0u64);
 
     let boost_multiplier = credits();
     let total_reward = credits() * 10_000;
+
+    let mut last_synced = use_signal(move || saved_credits());
+    use_effect(move || {
+        let latest_saved_credits = saved_credits();
+        if last_synced() != latest_saved_credits {
+            last_synced.set(latest_saved_credits);
+            credits.set(latest_saved_credits);
+            let should_enable = latest_saved_credits > 0;
+            if enable_reward() != should_enable {
+                enable_reward.set(should_enable);
+            }
+        }
+    });
 
     let label_class =
         "font-semibold font-raleway text-[13px]/[16px] tracking-[-0.14px] text-web-font-neutral";
@@ -139,9 +162,9 @@ pub fn RewardSetting(
                                         oninput: move |evt: FormEvent| {
                                             let val = evt.value().parse::<u64>().unwrap_or(0);
                                             let limit = if max_credits > 0 {
-                                                val.min(max_credits).min(remaining_credits)
+                                                val.min(max_credits).min(available_credits)
                                             } else {
-                                                val.min(remaining_credits)
+                                                val.min(available_credits)
                                             };
                                             credits.set(limit);
                                             on_change.call(limit);
@@ -175,7 +198,7 @@ pub fn RewardSetting(
                                 div { class: "flex gap-3 justify-between items-center w-full",
                                     p { class: label_class, {tr.remaining_credits} }
                                     p { class: "font-semibold text-green-500 font-raleway text-[15px]/[18px] tracking-[-0.16px]",
-                                        {format_number(remaining_credits)}
+                                        {format_number(initial_remaining_credits())}
                                     }
                                 }
                             }
