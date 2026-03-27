@@ -1,13 +1,15 @@
 use crate::common::models::space::{SpaceAuthor, SpaceCommon};
 use crate::features::spaces::pages::actions::actions::discussion::*;
 use crate::features::spaces::pages::actions::models::SpaceAction;
+#[cfg(feature = "server")]
+use crate::features::spaces::space_common::models::space_reward::SpaceReward;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AddCommentRequest {
     pub content: String,
 }
 
-#[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments", role: SpaceUserRole, author: SpaceAuthor, space: SpaceCommon)]
+#[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments", role: SpaceUserRole, author: SpaceAuthor, space: SpaceCommon, user: crate::features::auth::User )]
 pub async fn add_comment(
     space_id: SpacePartition,
     discussion_sk: SpacePostEntityType,
@@ -48,15 +50,44 @@ pub async fn add_comment(
         return Err(Error::DiscussionNotInProgress);
     }
 
+    let author_pk = author.pk.clone();
     let comment =
         SpacePost::comment(cli, space_id.clone(), space_post_id, req.content, &author).await?;
 
-    let space_pk: Partition = space_id.into();
+    let space_pk: Partition = space_id.clone().into();
     let agg_item =
         crate::features::spaces::space_common::models::aggregate::DashboardAggregate::inc_comments(
             &space_pk, 1,
         );
     crate::transact_write_items!(cli, vec![agg_item]).ok();
+
+    match SpaceReward::get_by_action(
+        cli,
+        space_id.clone(),
+        discussion_sk.to_string(),
+        RewardUserBehavior::DiscussionComment,
+    )
+    .await
+    {
+        Ok(space_reward) => {
+            if let Err(e) = SpaceReward::award(cli, &space_reward, user.pk, Some(author_pk)).await {
+                tracing::error!(
+                    space_pk = %space_id,
+                    action_id = %discussion_sk_entity,
+                    error = %e,
+                    "Failed to award discussion comment reward"
+                );
+            }
+        }
+        Err(e) => {
+            tracing::warn!(
+                space_pk = %space_id,
+                action_id = %discussion_sk_entity,
+                error = %e,
+                "SpaceReward not found for discussion action"
+            );
+        }
+    }
 
     Ok(comment.into())
 }
