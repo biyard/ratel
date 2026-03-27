@@ -1,14 +1,18 @@
-use super::super::components::{exchange_preview_card, points_summary_card, transaction_list};
 use super::super::controllers::{get_team_rewards_handler, list_team_point_transactions_handler};
 use super::super::dto::TeamRewardsResponse;
-use super::TeamRewardsTranslate;
 use super::super::*;
 use crate::common::services::PointTransactionResponse;
+use crate::features::social::pages::user_reward::components::{
+    exchange_preview_card, points_summary_card, transaction_list,
+};
+use crate::features::social::pages::user_reward::dto::RewardsResponse;
+use crate::features::social::pages::user_reward::RewardsPageTranslate;
 use dioxus::prelude::*;
 
 #[component]
 pub fn AdminPage(team_pk: TeamPartition, team_name: String) -> Element {
-    let tr: TeamRewardsTranslate = use_translate();
+    let tr: RewardsPageTranslate = use_translate();
+    let _ = &team_name;
 
     let rewards_resource = use_loader(use_reactive((&team_pk,), |(team_pk,)| async move {
         Ok::<_, super::super::Error>(
@@ -75,8 +79,17 @@ pub fn AdminPage(team_pk: TeamPartition, team_name: String) -> Element {
         }
     };
 
+    let rewards = RewardsResponse {
+        project_name: rewards.project_name,
+        token_symbol: rewards.token_symbol,
+        month: rewards.month,
+        total_points: rewards.total_points,
+        points: rewards.team_points,
+        monthly_token_supply: rewards.monthly_token_supply,
+    };
+
     let estimated_tokens = if rewards.total_points > 0 {
-        ((rewards.team_points as f64 / rewards.total_points as f64)
+        ((rewards.points as f64 / rewards.total_points as f64)
             * rewards.monthly_token_supply as f64)
             .round()
     } else {
@@ -135,7 +148,7 @@ pub fn AdminPage(team_pk: TeamPartition, team_name: String) -> Element {
     rsx! {
         div { class: "w-full max-w-desktop mx-auto px-4 py-6",
             {points_summary_card(&tr, &rewards, estimated_tokens)}
-            {exchange_preview_card(&tr, &team_name, &rewards, estimated_tokens)}
+            {exchange_preview_card(&tr, &rewards, estimated_tokens)}
 
             div { class: "mt-6",
                 {
