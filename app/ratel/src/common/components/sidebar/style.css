@@ -499,13 +499,13 @@
   min-height: 2.5rem;
 }
 
-.sidebar-desktop[data-collapsible="icon"] .sidebar-header .sidebar-menu-button:hover,
-.sidebar-desktop[data-collapsible="icon"] .sidebar-header .sidebar-menu-button:active,
-.sidebar-desktop[data-collapsible="icon"] .sidebar-content .sidebar-menu-button:hover,
-.sidebar-desktop[data-collapsible="icon"] .sidebar-content .sidebar-menu-button:active,
-.sidebar-desktop[data-collapsible="icon"] .app-menu-footer-button[data-sidebar="menu-button"]:hover,
-.sidebar-desktop[data-collapsible="icon"] .app-menu-footer-button[data-sidebar="menu-button"]:active,
-.sidebar-desktop[data-collapsible="icon"] .app-menu-footer-button[data-sidebar="menu-button"][data-active="true"] {
+.sidebar-desktop[data-collapsible="icon"][data-state="collapsed"] .sidebar-header .sidebar-menu-button:hover,
+.sidebar-desktop[data-collapsible="icon"][data-state="collapsed"] .sidebar-header .sidebar-menu-button:active,
+.sidebar-desktop[data-collapsible="icon"][data-state="collapsed"] .sidebar-content .sidebar-menu-button:hover,
+.sidebar-desktop[data-collapsible="icon"][data-state="collapsed"] .sidebar-content .sidebar-menu-button:active,
+.sidebar-desktop[data-collapsible="icon"][data-state="collapsed"] .app-menu-footer-button[data-sidebar="menu-button"]:hover,
+.sidebar-desktop[data-collapsible="icon"][data-state="collapsed"] .app-menu-footer-button[data-sidebar="menu-button"]:active,
+.sidebar-desktop[data-collapsible="icon"][data-state="collapsed"] .app-menu-footer-button[data-sidebar="menu-button"][data-active="true"] {
   background: transparent;
 }
 
