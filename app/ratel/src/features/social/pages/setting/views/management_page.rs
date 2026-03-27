@@ -306,8 +306,8 @@ fn MemberRow(
                         class: "w-9 h-9 rounded-full object-cover shrink-0",
                     }
                 } else {
-                    div { class: "w-9 h-9 rounded-full bg-neutral-600 shrink-0 flex items-center justify-center",
-                        span { class: "text-xs font-semibold text-white",
+                    div { class: "w-9 h-9 rounded-full bg-profile-bg shrink-0 flex items-center justify-center",
+                        span { class: "text-xs font-semibold text-text-primary",
                             "{display.chars().next().unwrap_or('?').to_uppercase()}"
                         }
                     }
@@ -346,6 +346,7 @@ fn MemberRow(
                                 e.stop_propagation();
                                 show_menu.toggle();
                                 show_change_group.set(false);
+                                to_group_id.set(String::new());
                             },
                             lucide_dioxus::Ellipsis {
                                 class: "w-4 h-4 [&>circle]:fill-text-primary [&>circle]:stroke-none",
@@ -373,6 +374,7 @@ fn MemberRow(
                                                 // member.groups changed after a refresh (signal persists for
                                                 // keyed components and won't update automatically from props).
                                                 from_group_id.set(first_group_id.clone());
+                                                to_group_id.set(String::new());
                                                 show_change_group.set(true);
                                             }
                                         },
