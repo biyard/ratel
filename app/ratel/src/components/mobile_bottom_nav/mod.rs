@@ -242,7 +242,7 @@ pub fn MobileBottomNav() -> Element {
                     "data-testid": "mobile-more-btn",
                     onclick: move |_| {
                         if logged_in {
-                            ctx.set_open_mobile(true);
+                            ctx.toggle();
                         } else {
                             show_more_menu.set(!show_more_menu());
                         }
