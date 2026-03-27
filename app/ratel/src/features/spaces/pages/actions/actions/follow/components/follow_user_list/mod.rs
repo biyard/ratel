@@ -1,9 +1,7 @@
 use crate::features::spaces::pages::actions::actions::follow::controllers::delete_follow_user;
 use crate::features::spaces::pages::actions::actions::follow::controllers::list_follow_users::FollowUserItem;
 use crate::features::spaces::pages::actions::actions::follow::*;
-use crate::common::use_toast;
-use crate::features::my_follower::controllers::{follow_user, unfollow_user};
-mod i18n;
+pub mod i18n;
 use i18n::FollowUserListTranslate;
 
 #[component]
@@ -12,10 +10,11 @@ pub fn FollowUserList(
     users: Vec<FollowUserItem>,
     can_delete: bool,
     on_refresh: EventHandler<()>,
+    on_follow: EventHandler<Partition>,
+    on_unfollow: EventHandler<Partition>,
     more_element: Element,
 ) -> Element {
     let tr: FollowUserListTranslate = use_translate();
-    let mut toast = use_toast();
     let list_empty = use_memo({
         let users = users.clone();
         move || users.is_empty()
@@ -43,36 +42,13 @@ pub fn FollowUserList(
                             let on_refresh = on_refresh.clone();
                             let on_toggle_subscribe = {
                                 let user_pk = user_pk.clone();
-                                let on_refresh = on_refresh.clone();
-                                let mut toast = toast;
+                                let on_follow = on_follow.clone();
+                                let on_unfollow = on_unfollow.clone();
                                 move |_| {
-                                    let user_pk = user_pk.clone();
-                                    let on_refresh = on_refresh.clone();
-                                    let mut toast = toast;
                                     if subscribed {
-                                        spawn(async move {
-                                            match unfollow_user(user_pk).await {
-                                                Ok(_) => {
-                                                    toast.info(tr.unsubscribed_toast.to_string());
-                                                    on_refresh.call(());
-                                                }
-                                                Err(err) => {
-                                                    toast.error(err);
-                                                }
-                                            }
-                                        });
+                                        on_unfollow.call(user_pk.clone());
                                     } else {
-                                        spawn(async move {
-                                            match follow_user(user_pk).await {
-                                                Ok(_) => {
-                                                    toast.info(tr.subscribed_toast.to_string());
-                                                    on_refresh.call(());
-                                                }
-                                                Err(err) => {
-                                                    toast.error(err);
-                                                }
-                                            }
-                                        });
+                                        on_follow.call(user_pk.clone());
                                     }
                                 }
                             };

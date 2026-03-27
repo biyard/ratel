@@ -224,7 +224,6 @@ pub async fn respond_poll(
             .execute(cli)
             .await?;
     } else {
-        let author_pk = author.pk.clone();
         let respondent = get_respondent_from_panels(cli, &space_pk, &author.pk).await?;
         let answer_record = SpacePollUserAnswer::new(
             space_pk.clone(),
@@ -256,7 +255,8 @@ pub async fn respond_poll(
         {
             Ok(space_reward) => {
                 if let Err(e) =
-                    SpaceReward::award(cli, &space_reward, user.pk, Some(author_pk)).await
+                    SpaceReward::award(cli, &space_reward, user.pk, Some(space.user_pk.clone()))
+                        .await
                 {
                     tracing::error!(
                         space_pk = %space_partition,

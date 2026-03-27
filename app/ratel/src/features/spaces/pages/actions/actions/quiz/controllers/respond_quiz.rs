@@ -71,7 +71,6 @@ pub async fn respond_quiz(
     if attempts.len() as i64 >= total_allowed {
         return Err(SpaceActionQuizError::NoRemainingAttempts.into());
     }
-    let author_pk = author.pk.clone();
     let score = calculate_score(&quiz.questions, &correct.answers, &req.answers)?;
     let attempt = SpaceQuizAttempt::new(quiz_id.clone(), author, req.answers, score);
     attempt.create(cli).await?;
@@ -95,7 +94,8 @@ pub async fn respond_quiz(
         {
             Ok(space_reward) => {
                 if let Err(e) =
-                    SpaceReward::award(cli, &space_reward, user.pk, Some(author_pk)).await
+                    SpaceReward::award(cli, &space_reward, user.pk, Some(space.user_pk.clone()))
+                        .await
                 {
                     tracing::error!(
                         space_pk = %space_id,
