@@ -53,9 +53,7 @@ test.describe(
         await expect(bottomNav).toBeVisible();
 
         // Home link should be present inside the nav
-        await expect(
-          bottomNav.getByText("Home", { exact: true })
-        ).toBeVisible();
+        await getLocator(page, { testId: "mobile-home-link" });
 
         // More button should be present
         await getLocator(page, { testId: "mobile-more-btn" });
@@ -186,7 +184,7 @@ test.describe(
         await expect(bottomNav).toBeVisible();
 
         // Home link
-        await expect(bottomNav.getByText("Home", { exact: true })).toBeVisible();
+        await getLocator(page, { testId: "mobile-home-link" });
 
         // More button
         await getLocator(page, { testId: "mobile-more-btn" });
