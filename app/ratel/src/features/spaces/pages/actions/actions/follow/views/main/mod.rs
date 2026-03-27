@@ -17,7 +17,7 @@ pub fn FollowActionPage(space_id: SpacePartition, follow_id: SpaceActionFollowEn
             FollowCreatorPage { space_id, follow_id }
         },
         _ => rsx! {
-            FollowViewerPage { space_id }
+            FollowViewerPage { space_id, follow_id }
         },
     }
 }
