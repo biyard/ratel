@@ -122,6 +122,7 @@ fn MoreMenuPanel(show: Signal<bool>) -> Element {
         // Backdrop
         div {
             class: "fixed inset-0 z-[998] md:hidden",
+            "data-testid": "mobile-more-backdrop",
             onclick: move |_| show.set(false),
         }
 
@@ -154,7 +155,7 @@ fn MoreMenuPanel(show: Signal<bool>) -> Element {
                         class: "[&>path]:stroke-icon-primary [&>circle]:stroke-icon-primary [&>line]:stroke-icon-primary",
                     }
                     span { class: "text-sm text-foreground uppercase",
-                        "{tr.language}: {lang}"
+                        "{tr.language}: {lang()}"
                     }
                 }
 
