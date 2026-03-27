@@ -108,7 +108,10 @@ pub fn SpaceAppsPage(space_id: ReadSignal<SpacePartition>) -> Element {
                                             style: ButtonStyle::Primary,
                                             shape: ButtonShape::Square,
                                             disabled: is_progress,
-                                            "data-testid": "setting-panels-app",
+                                            "data-testid": format!(
+                                                "configure-app-{}",
+                                                app_type.to_string().to_lowercase()
+                                            ),
                                             onclick: move |_| {
                                                 let settings_path = app_type.settings_path(space_id());
                                                 navigator.push(settings_path);
@@ -143,7 +146,10 @@ pub fn SpaceAppsPage(space_id: ReadSignal<SpacePartition>) -> Element {
                                                 style: ButtonStyle::Primary,
                                                 shape: ButtonShape::Square,
                                                 disabled: in_progress().is_some(),
-                                                "data-testid": "install-panels-app",
+                                                "data-testid": format!(
+                                                    "install-app-{}",
+                                                    app_type.to_string().to_lowercase()
+                                                ),
                                                 onclick: move |_| handle_toggle_app(app_type, false),
                                                 if is_progress {
                                                     {tr.installing}
