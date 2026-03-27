@@ -38,8 +38,8 @@ pub fn render_member(
             let member_id = member_id.clone();
             let all_groups = all_groups.clone();
             move |group| {
-                let remove_key = format!("{}-{}", member_id, group.group_id);
-                let change_key = format!("{}-{}", member_id, group.group_id);
+                let remove_key = format!("remove:{}-{}", member_id, group.group_id);
+                let change_key = format!("change:{}-{}", member_id, group.group_id);
                 let is_removing = removing().as_ref() == Some(&remove_key);
                 let is_changing = changing().as_ref() == Some(&change_key);
                 let is_busy = is_removing || is_changing;
@@ -61,6 +61,7 @@ pub fn render_member(
                         if !is_owner && all_groups.len() > 1 {
                             select {
                                 class: "bg-transparent text-sm font-medium text-text-primary border-none outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed",
+                                aria_label: "Change group for {group.group_name}",
                                 disabled: is_busy,
                                 value: "{group.group_id}",
                                 onchange: move |e| {
