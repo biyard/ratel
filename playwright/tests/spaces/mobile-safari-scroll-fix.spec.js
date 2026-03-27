@@ -48,20 +48,43 @@ async function resolveSpaceDashboardUrl(page) {
     return envUrl;
   }
 
-  // 2. Fallback: scan the home feed for a /spaces/ link using getLocator
-  //    with role-based selector. We use page.getByRole directly here
-  //    because getLocator awaits visibility of a single element, and we
-  //    need to iterate over all matching links.
+  // 2. Fallback: scan the home feed for a /spaces/ link. We use
+  //    page.getByRole directly here because getLocator awaits visibility
+  //    of a single element, and we need to iterate over all matching links.
   const links = page.getByRole("link");
   const count = await links.count();
 
   for (let i = 0; i < count; i++) {
     const link = links.nth(i);
     const href = await link.getAttribute("href");
-    if (href && href.includes("/spaces/")) {
-      const match = href.match(/\/spaces\/[^/]+/);
-      return match ? match[0] + "/dashboard" : null;
+
+    if (!href || !href.startsWith("/spaces/")) {
+      continue;
     }
+
+    // Prefer links that already point at a space dashboard route:
+    //   /spaces/<id>/dashboard[?...][#...]
+    const dashboardMatch = href.match(
+      /^\/spaces\/([^/]+)\/dashboard(?:[?#].*)?$/
+    );
+    if (dashboardMatch) {
+      return dashboardMatch[0];
+    }
+
+    // Fallback: extract the first segment after /spaces/ and construct
+    // a dashboard URL, but skip known non-space routes like /spaces/new
+    // or /spaces/search which would produce invalid URLs.
+    const idMatch = href.match(/^\/spaces\/([^/]+)(?:\/|$)/);
+    if (!idMatch) {
+      continue;
+    }
+
+    const spaceId = idMatch[1];
+    if (spaceId === "new" || spaceId === "search") {
+      continue;
+    }
+
+    return `/spaces/${spaceId}/dashboard`;
   }
 
   return null;
