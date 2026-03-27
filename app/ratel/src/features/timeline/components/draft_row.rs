@@ -7,16 +7,26 @@ use crate::features::timeline::*;
 use dioxus_translate::use_language;
 
 /// A horizontal row of the user's draft posts, displayed at the top of the timeline.
+///
+/// Fetches drafts and renders the entire section only when drafts exist.
+/// When there are no drafts, returns nothing — the `CreatePostButton` is rendered
+/// independently in parent views so it remains visible regardless.
 #[component]
 pub fn DraftTimeline() -> Element {
-    let drafts = use_server_future(move || async move { list_user_drafts_handler(None).await })?;
+    let drafts = use_server_future(move || async move {
+        let result = list_user_drafts_handler(None).await;
+        if let Err(ref e) = result {
+            tracing::error!("Failed to load drafts: {:?}", e);
+        }
+        result
+    })?;
 
     let val = drafts.read();
     let res = val.as_ref().unwrap();
 
     let items = match res {
         Ok(resp) => resp.items.clone(),
-        Err(_) => return rsx! {},
+        Err(_) => vec![],
     };
 
     if items.is_empty() {
@@ -30,11 +40,7 @@ pub fn DraftTimeline() -> Element {
 
     rsx! {
         section { class: "flex flex-col gap-3 w-full", aria_label: "Drafts section",
-
-            div { class: "flex justify-between items-center px-1 w-full",
-                h2 { class: "flex-1 text-lg font-semibold text-text-primary", "Drafts" }
-            }
-
+            h2 { class: "px-1 text-lg font-semibold text-text-primary", "Drafts" }
             div { class: "relative",
                 div {
                     class: "flex overflow-x-auto gap-4 pb-2 snap-x snap-mandatory scrollbar-none",
