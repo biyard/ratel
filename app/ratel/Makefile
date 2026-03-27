@@ -32,6 +32,7 @@ ATTR_VOTING_AUTHORITY_JSON ?=
 RUST_LOG ?= debug
 
 PORT ?= 8080
+RUN_FEATURES ?= local-dev
 
 REPOSITORY ?= ratel/app-shell
 ECR ?= $(shell aws ecr describe-repositories --repository-names $(REPOSITORY)  --query "repositories[0].repositoryUri" --output text)
@@ -74,7 +75,7 @@ test:
 	$(BUILD_ENV) CARGO_TARGET_DIR=./test-build-target cargo test --features server,bypass --tests
 
 run:
-	$(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web --features local-dev
+	$(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web --features $(RUN_FEATURES)
 
 
 build:

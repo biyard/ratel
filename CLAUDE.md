@@ -1086,6 +1086,11 @@ When updating coding guidelines or conventions in `CLAUDE.md`, also update `.git
 
 - When a UI element has both a normal and a placeholder state (e.g., "untitled" vs actual title), always apply visually distinct styling to the placeholder case (e.g., `text-foreground-muted italic`) rather than using the same primary text style for both
 
+### Primary Actions in Conditional Sections
+
+- **Never nest primary action buttons (e.g., "Create Post") inside conditionally rendered sections** — if a section (e.g., draft timeline) is hidden when its list is empty, any primary action button placed inside that section will also disappear. Keep primary action buttons outside conditional blocks so they remain visible regardless of content state
+- **Separate the action trigger from the content display** — the button that creates new items should always be accessible, even when the list of existing items is empty. Place it in a persistent container above or alongside the conditional section
+
 ### Semantic Tokens for Status Colors
 
 - Status-indicating colors (pass/fail, success/error, active/inactive) **must use semantic tokens**, not raw Tailwind palette colors (e.g., `bg-green-500`, `text-red-400`)
