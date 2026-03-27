@@ -93,9 +93,9 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
     };
 
     let layout_class = if show_sidebar {
-        "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-space-bg text-web-font-primary max-tablet:flex max-tablet:flex-col"
+        "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-space-bg text-web-font-primary max-tablet:flex max-tablet:flex-col max-tablet:overflow-visible max-tablet:h-auto max-tablet:min-h-screen"
     } else {
-        "grid overflow-hidden grid-cols-1 w-full h-screen bg-space-bg text-web-font-primary max-tablet:flex max-tablet:flex-col"
+        "grid overflow-hidden grid-cols-1 w-full h-screen bg-space-bg text-web-font-primary max-tablet:flex max-tablet:flex-col max-tablet:overflow-visible max-tablet:h-auto max-tablet:min-h-screen"
     };
 
     rsx! {
@@ -131,7 +131,7 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
                     },
                 }
             }
-            div { class: "flex overflow-x-hidden flex-col min-w-0 min-h-0 max-tablet:flex-1 max-tablet:order-0",
+            div { class: "flex overflow-x-hidden flex-col min-w-0 min-h-0 max-tablet:flex-1 max-tablet:order-0 max-tablet:min-h-auto",
                 if show_sidebar {
                     SpaceTop {
                         labels,
@@ -165,7 +165,7 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
                         }
                     }
                 }
-                div { class: "flex overflow-auto flex-1 p-5 w-full bg-background rounded-tl-[10px] max-tablet:rounded-tl-none max-tablet:p-3 max-mobile:p-2",
+                div { class: "flex overflow-auto flex-1 p-5 w-full bg-background rounded-tl-[10px] max-tablet:rounded-tl-none max-tablet:p-3 max-mobile:p-2 max-tablet:overflow-visible",
                     SuspenseBoundary { Outlet::<Route> {} }
                 }
             }
