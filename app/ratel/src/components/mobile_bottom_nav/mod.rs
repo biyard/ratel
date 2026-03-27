@@ -89,7 +89,7 @@ fn MobileCreatePostButton(label: String) -> Element {
 
     rsx! {
         button {
-            class: "flex justify-center items-center w-12 h-12 rounded-full cursor-pointer bg-primary -mt-4 shadow-lg",
+            class: "flex justify-center items-center w-12 h-12 rounded-full cursor-pointer bg-primary shadow-lg",
             "aria-label": "{label}",
             "data-testid": "mobile-create-post-btn",
             onclick: move |_| {
@@ -133,7 +133,7 @@ fn MoreMenuPanel(show: Signal<bool>) -> Element {
     rsx! {
         // Backdrop
         button {
-            class: "fixed inset-0 z-[998] md:hidden",
+            class: "fixed inset-0 z-[998] tablet:hidden",
             "data-testid": "mobile-more-backdrop",
             r#type: "button",
             "aria-label": "{tr.close_menu}",
@@ -142,7 +142,7 @@ fn MoreMenuPanel(show: Signal<bool>) -> Element {
 
         // Menu panel
         div {
-            class: "fixed left-0 z-[999] w-full border-t md:hidden border-separator bg-background bottom-[calc(theme(spacing.14)+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)]",
+            class: "fixed left-0 z-[999] w-full border-t tablet:hidden border-separator bg-background bottom-[calc(theme(spacing.14)+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)]",
             "data-testid": "mobile-more-panel",
 
             div { class: "flex flex-col py-2",
@@ -198,7 +198,7 @@ fn MoreMenuPanel(show: Signal<bool>) -> Element {
     }
 }
 
-/// A fixed bottom navigation bar shown only on mobile screens (< 768px).
+/// A fixed bottom navigation bar shown only on mobile screens (< tablet breakpoint).
 ///
 /// - Not logged in: Home, More (opens a popup with theme, language, login)
 /// - Logged in: Home, Create Post (+), More (opens sidebar sheet)
@@ -211,9 +211,9 @@ pub fn MobileBottomNav() -> Element {
     let mut show_more_menu = use_signal(|| false);
 
     rsx! {
-        // Bottom navigation bar - only visible on mobile (< md breakpoint = 768px)
+        // Bottom navigation bar - only visible on mobile (< tablet breakpoint)
         nav {
-            class: "fixed bottom-0 left-0 z-50 w-full border-t md:hidden border-separator bg-background pb-[env(safe-area-inset-bottom)]",
+            class: "fixed bottom-0 left-0 z-50 w-full border-t tablet:hidden border-separator bg-background pb-[env(safe-area-inset-bottom)]",
             "data-testid": "mobile-bottom-nav",
             "aria-label": "{tr.mobile_navigation}",
             div { class: "flex justify-around items-center h-14",
