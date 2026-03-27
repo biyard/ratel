@@ -98,9 +98,8 @@ test.describe(
         await expect(morePanel).toBeVisible();
 
         // Panel should contain Theme, Language, and Sign In items
-        await expect(morePanel.getByText(/Theme/)).toBeVisible();
-        await expect(morePanel.getByText(/Language/)).toBeVisible();
-
+        await getLocator(page, { testId: "mobile-more-theme-row" });
+        await getLocator(page, { testId: "mobile-more-language-row" });
         await getLocator(page, { testId: "mobile-sign-in-btn" });
       } finally {
         await context.close();
