@@ -230,14 +230,23 @@ fn extract_team_identifier(parts: &Parts) -> Result<String> {
     }
 
     // Pattern 2: /teams/:username/... (SSR page URL, e.g. /teams/myteam/settings)
+    // If the path is exactly "/teams" (no username segment), return an error
+    // instead of falling through to Pattern 3 which would return "teams" as identifier.
     if segments.first().copied() == Some("teams") {
-        if let Some(&username) = segments.get(1) {
-            return Ok(username.to_string());
-        }
+        return match segments.get(1) {
+            Some(&username) => Ok(username.to_string()),
+            None => Err(Error::BadRequest("Missing team identifier in path".to_string())),
+        };
     }
 
     // Pattern 3: /:username/... (fallback SSR)
     if let Some(&first) = segments.first() {
+        // Guard: do not treat reserved route prefixes as team identifiers.
+        if first.eq_ignore_ascii_case("api") || first.eq_ignore_ascii_case("teams") {
+            return Err(Error::BadRequest(
+                "Invalid team path: missing team identifier".to_string(),
+            ));
+        }
         return Ok(first.to_string());
     }
 
