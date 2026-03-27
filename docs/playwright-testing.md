@@ -58,7 +58,7 @@ Key settings:
 | `Individual user tests` | `tests/users/**/*.spec.js`, `tests/spaces/**/*.spec.js` | Depends on `auth-setup`; uses saved `user.json` storageState |
 | `Component tests` | `tests/components/**/*.spec.js` | Depends on `auth-setup`; no project-level storageState (tests manage their own contexts) |
 
-Authenticated tests run on Desktop Chrome at **1440x950** viewport. Component tests run on Desktop Chrome without a forced viewport or storageState, allowing each test to configure its own browser context (e.g., mobile viewport, unauthenticated state).
+Authenticated tests run on Desktop Chrome at a fixed **1440x950** viewport. Component tests also use the Desktop Chrome device defaults (including its default viewport) but do not set a project-level storageState; each test creates its own `browser.newContext()` and can override the viewport (e.g., mobile 375x667) or authentication state as needed.
 
 ## Authentication Flow
 
