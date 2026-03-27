@@ -48,11 +48,13 @@ pub fn SpaceNav(
                     class: "mx-4 mt-5 mb-2.5 w-25 max-tablet:hidden",
                 }
 
-                if show_participation_card {
-                    ParticipationCard {
-                        space_id,
-                        credential_path,
-                        on_login: login_handler,
+                div { class: "max-tablet:hidden",
+                    if show_participation_card {
+                        ParticipationCard {
+                            space_id,
+                            credential_path,
+                            on_login: login_handler,
+                        }
                     }
                 }
 

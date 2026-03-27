@@ -9,6 +9,7 @@ pub struct MySpaceResponse {
     pub space_pk: Partition,
     pub post_pk: Partition,
     pub title: String,
+    pub description: String,
     pub author_display_name: String,
     pub author_profile_url: String,
     pub created_at: i64,
@@ -107,28 +108,39 @@ pub async fn list_my_spaces_handler(
 
     // Build a HashMap for O(1) title lookups instead of O(spaces * posts) linear scans
     let title_map: HashMap<String, String> = posts
+        .iter()
+        .map(|p| (p.pk.to_string(), p.title.clone()))
+        .collect();
+    let description_map: HashMap<String, String> = posts
         .into_iter()
-        .map(|p| (p.pk.to_string(), p.title))
+        .map(|p| (p.pk.to_string(), extract_description(&p.html_contents)))
         .collect();
 
     let items: Vec<MySpaceResponse> = collected_spaces
         .into_iter()
         .map(|space| {
-            let title = space
-                .pk
+            let post_pk = space.pk.clone().to_post_key().ok();
+            let title = post_pk
                 .clone()
-                .to_post_key()
-                .ok()
                 .and_then(|post_pk| {
                     let post_pk_str = post_pk.to_string();
                     title_map.get(&post_pk_str).cloned()
                 })
                 .unwrap_or_default();
+            let description = if !space.content.is_empty() {
+                extract_description(&space.content)
+            } else {
+                post_pk
+                    .as_ref()
+                    .and_then(|post_pk| description_map.get(&post_pk.to_string()).cloned())
+                    .unwrap_or_default()
+            };
 
             MySpaceResponse {
                 space_pk: space.pk.clone(),
                 post_pk: space.post_pk,
                 title,
+                description,
                 author_display_name: space.author_display_name,
                 author_profile_url: space.author_profile_url,
                 created_at: space.created_at,
@@ -144,4 +156,18 @@ pub async fn list_my_spaces_handler(
         items,
         bookmark: final_bookmark,
     })
+}
+
+fn extract_description(html: &str) -> String {
+    let re_img = regex::Regex::new(r"<img[^>]*>").unwrap();
+    let without_images = re_img.replace_all(html, "");
+
+    let re_tags = regex::Regex::new(r"<[^>]+>").unwrap();
+    let without_tags = re_tags.replace_all(&without_images, "");
+
+    let re_urls = regex::Regex::new(r"https?://[^\s]+").unwrap();
+    let without_urls = re_urls.replace_all(&without_tags, "");
+
+    let re_whitespace = regex::Regex::new(r"\s+").unwrap();
+    re_whitespace.replace_all(&without_urls, " ").trim().to_string()
 }

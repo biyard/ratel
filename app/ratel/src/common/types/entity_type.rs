@@ -70,6 +70,7 @@ pub enum EntityType {
     SpaceDao,
     SpaceDaoSample(String),
     SpaceParticipant,
+    SpaceAdmin(String), // SPACE_ADMIN#{user_pk}
     SpaceInvitation,
     SpaceTemplate(String),          // template name
     SpaceEmailVerification(String), //email

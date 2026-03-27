@@ -175,6 +175,10 @@ pub enum Error {
 
     #[error("{0}")]
     #[translate(from)]
+    Follow(#[from] crate::features::my_follower::types::FollowError),
+
+    #[error("{0}")]
+    #[translate(from)]
     SpaceReward(#[from] SpaceRewardError),
 
     #[error("{0}")]
@@ -254,6 +258,7 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             | Error::AlreadyParticipating
             | Error::ParticipationNotOpen => StatusCode::BAD_REQUEST,
             Error::NotFound(_) | Error::InvitationNotFound => StatusCode::NOT_FOUND,
+            Error::Follow(e) => e.status_code(),
             Error::SpaceReward(e) => e.status_code(),
             Error::SpaceActionQuiz(e) => e.status_code(),
             Error::SpaceActionDiscussion(e) => e.status_code(),
@@ -311,6 +316,7 @@ impl dioxus::fullstack::AsStatusCode for Error {
             | Error::ExpiredVerification
             | Error::InvalidVerificationCode => StatusCode::BAD_REQUEST,
             Error::NotFound(_) | Error::InvitationNotFound => StatusCode::NOT_FOUND,
+            Error::Follow(e) => e.status_code(),
             Error::SpaceReward(e) => e.status_code(),
             Error::SpaceActionQuiz(e) => e.status_code(),
             Error::SpaceActionDiscussion(e) => e.status_code(),

@@ -169,6 +169,19 @@ impl UserMembership {
     pub fn with_purchase_id(self, _purchase_id: CompositePartition) -> Self {
         self
     }
+
+    /// Use credits from this membership (validates and deducts locally).
+    /// Must be followed by a DB updater in a transaction to persist.
+    pub fn use_credits(&mut self, amount: i64) -> Result<()> {
+        if self.remaining_credits < amount {
+            return Err(SpaceRewardError::CreditsExceedBalance.into());
+        }
+
+        self.remaining_credits -= amount;
+        self.updated_at = crate::common::utils::time::get_now_timestamp_millis();
+
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
