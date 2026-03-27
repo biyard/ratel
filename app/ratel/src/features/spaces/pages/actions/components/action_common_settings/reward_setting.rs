@@ -138,9 +138,13 @@ pub fn RewardSetting(
                                         value: "{credits()}",
                                         oninput: move |evt: FormEvent| {
                                             let val = evt.value().parse::<u64>().unwrap_or(0);
-                                            let clamped = if max_credits > 0 { val.min(max_credits) } else { val };
-                                            credits.set(clamped);
-                                            on_change.call(clamped);
+                                            let limit = if max_credits > 0 {
+                                                val.min(max_credits).min(remaining_credits)
+                                            } else {
+                                                val.min(remaining_credits)
+                                            };
+                                            credits.set(limit);
+                                            on_change.call(limit);
                                         },
                                     }
                                 }
