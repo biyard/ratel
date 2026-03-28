@@ -104,10 +104,14 @@ export async function waitPopup(page, { visible = true }) {
 export async function goto(page, url) {
   await page.goto(url);
   await page.waitForLoadState("domcontentloaded");
-  // Wait for Dioxus WASM to hydrate — SSR markup may already contain
-  // [data-dioxus-id], so also verify the interpreter is initialised.
+  // Wait for Dioxus WASM to hydrate — SSR markup already contains
+  // [data-dioxus-id], so also verify the interpreter is initialised
+  // by checking that window.dioxus.send exists (WASM fully loaded).
   await page.waitForFunction(
-    () => document.querySelector("[data-dioxus-id]") !== null
+    () =>
+      document.querySelector("[data-dioxus-id]") !== null &&
+      typeof window.dioxus !== "undefined" &&
+      typeof window.dioxus.send === "function"
   );
 }
 
