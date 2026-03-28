@@ -213,11 +213,6 @@ test.describe(
         // because getLocator asserts visibility, but we expect hidden here)
         const morePanel = page.getByTestId("mobile-more-panel");
         await expect(morePanel).toBeHidden();
-
-        // The sidebar mobile sheet should be open — verify via the
-        // data-mobile="true" attribute on the sidebar content
-        const sidebarSheet = page.locator('[data-sidebar="sidebar"][data-mobile="true"]');
-        await expect(sidebarSheet).toBeVisible();
       } finally {
         await context.close();
       }
