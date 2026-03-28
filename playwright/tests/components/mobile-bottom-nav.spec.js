@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { goto, click, getLocator, waitPopup } from "../utils";
+import { CONFIGS } from "../config";
 
 /**
  * MobileBottomNav Component — E2E Tests
@@ -40,6 +41,7 @@ test.describe(
   () => {
     test("should display the bottom nav bar on the home page", async ({ browser }) => {
       const context = await browser.newContext({
+        baseURL: CONFIGS.BASE_URL,
         viewport: MOBILE_VIEWPORT,
         storageState: { cookies: [], origins: [] },
       });
@@ -64,6 +66,7 @@ test.describe(
 
     test("should NOT show the create post button when logged out", async ({ browser }) => {
       const context = await browser.newContext({
+        baseURL: CONFIGS.BASE_URL,
         viewport: MOBILE_VIEWPORT,
         storageState: { cookies: [], origins: [] },
       });
@@ -82,6 +85,7 @@ test.describe(
 
     test("should open the more menu panel when tapping More", async ({ browser }) => {
       const context = await browser.newContext({
+        baseURL: CONFIGS.BASE_URL,
         viewport: MOBILE_VIEWPORT,
         storageState: { cookies: [], origins: [] },
       });
@@ -108,6 +112,7 @@ test.describe(
 
     test("should close the more menu panel when tapping the backdrop", async ({ browser }) => {
       const context = await browser.newContext({
+        baseURL: CONFIGS.BASE_URL,
         viewport: MOBILE_VIEWPORT,
         storageState: { cookies: [], origins: [] },
       });
@@ -133,6 +138,7 @@ test.describe(
 
     test("should open login modal when tapping Sign In in the more menu", async ({ browser }) => {
       const context = await browser.newContext({
+        baseURL: CONFIGS.BASE_URL,
         viewport: MOBILE_VIEWPORT,
         storageState: { cookies: [], origins: [] },
       });
@@ -170,6 +176,7 @@ test.describe(
   () => {
     test("should display the bottom nav bar with create post button", async ({ browser }) => {
       const context = await browser.newContext({
+        baseURL: CONFIGS.BASE_URL,
         viewport: MOBILE_VIEWPORT,
         storageState: "user.json",
       });
@@ -197,6 +204,7 @@ test.describe(
 
     test("should NOT show the unauthenticated more menu panel when tapping More", async ({ browser }) => {
       const context = await browser.newContext({
+        baseURL: CONFIGS.BASE_URL,
         viewport: MOBILE_VIEWPORT,
         storageState: "user.json",
       });
@@ -220,6 +228,7 @@ test.describe(
 
     test("should navigate to post editor when tapping create post button", async ({ browser }) => {
       const context = await browser.newContext({
+        baseURL: CONFIGS.BASE_URL,
         viewport: MOBILE_VIEWPORT,
         storageState: "user.json",
       });
@@ -249,6 +258,7 @@ test.describe(
   () => {
     test("should NOT display the bottom nav bar on desktop", async ({ browser }) => {
       const context = await browser.newContext({
+        baseURL: CONFIGS.BASE_URL,
         viewport: DESKTOP_VIEWPORT,
         storageState: { cookies: [], origins: [] },
       });
