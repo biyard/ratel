@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { goto, click, getLocator, waitPopup } from "../utils";
+import { goto, click, clickNoNav, getLocator, waitPopup } from "../utils";
 import { CONFIGS } from "../config";
 
 /**
@@ -215,10 +215,9 @@ test.describe(
 
         // For logged-in users, tapping More opens the sidebar sheet, not the
         // unauthenticated more menu panel.
-        // Use raw click instead of click() helper to avoid waitForLoadState("load")
+        // Use clickNoNav() instead of click() to avoid waitForLoadState("load")
         // which can hang when the sidebar sheet triggers server-side data fetching.
-        const moreBtn = await getLocator(page, { testId: "mobile-more-btn" });
-        await moreBtn.click();
+        await clickNoNav(page, { testId: "mobile-more-btn" });
 
         // The unauthenticated more panel should NOT appear (use raw locator
         // because getLocator asserts visibility, but we expect hidden here)

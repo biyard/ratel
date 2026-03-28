@@ -42,6 +42,20 @@ export async function click(page, opt) {
   return selected;
 }
 
+/**
+ * Click an element without waiting for navigation (`waitForLoadState("load")`).
+ * Use this for non-navigation UI interactions (e.g., opening a sidebar sheet,
+ * toggling a panel) where `waitForLoadState` would resolve immediately or hang
+ * because no page navigation occurs.
+ */
+export async function clickNoNav(page, opt) {
+  const selected = await getLocator(page, opt);
+
+  await selected.click();
+
+  return selected;
+}
+
 export async function fill(page, opt, value) {
   const selected = await getLocator(page, opt);
 
