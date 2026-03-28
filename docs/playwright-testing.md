@@ -103,7 +103,7 @@ All interaction helpers are defined in `tests/utils.js`. **Always use these inst
 
 ### `goto(page, path)`
 
-Navigates to `BASE_URL + path` with `waitUntil: "load"`, then waits for the Dioxus WASM app to hydrate by checking `window.dioxus.send` is available (with a 10s timeout).
+Navigates to `BASE_URL + path` with `waitUntil: "load"`, then waits for the Dioxus WASM app to hydrate by checking for `[data-dioxus-id]` elements in the DOM.
 
 ```js
 await goto(page, "/");           // → http://localhost:8000/
@@ -377,7 +377,7 @@ PLAYWRIGHT_ID=my-test-run npx playwright test
 
 - Default timeout is 5000ms. Increase with `PLAYWRIGHT_TIMEOUT` env var.
 - Ensure the app is running at `http://localhost:8000` (or set `PLAYWRIGHT_BASE_URL`).
-- Check that the Dioxus WASM app is loading correctly (the `goto()` helper waits for `window.dioxus.send` to be available).
+- Check that the Dioxus WASM app is loading correctly (the `goto()` helper waits for `[data-dioxus-id]` elements to be present).
 
 ### Auth Setup Fails
 
