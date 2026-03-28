@@ -21,6 +21,11 @@ translate! {
         ko: "글쓰기",
     },
 
+    create_post_mobile: {
+        en: "New post",
+        ko: "새 글",
+    },
+
     sign_in: {
         en: "Sign In",
         ko: "로그인",
@@ -234,7 +239,7 @@ pub fn MobileBottomNav() -> Element {
 
                 // Create Post button (only for logged-in users)
                 if logged_in {
-                    MobileCreatePostButton { label: tr.create_post.to_string() }
+                    MobileCreatePostButton { label: tr.create_post_mobile.to_string() }
                 }
 
                 // More button
