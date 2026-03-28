@@ -11,7 +11,7 @@ import { goto, click, getLocator, waitPopup } from "../utils";
  *     panel with Theme toggle, Language toggle, and Sign In button.
  *   - Logged in: Bottom nav shows Home, a highlighted "+" Create Post button,
  *     and More. Tapping More opens the sidebar sheet.
- *   - Desktop (>= tablet breakpoint): Bottom nav is hidden (tablet:hidden).
+ *   - Desktop (>= tablet breakpoint): Bottom nav is hidden (hidden max-tablet:block, mobile-only).
  *
  * Test IDs used:
  *   - mobile-bottom-nav       — The bottom navigation bar container
