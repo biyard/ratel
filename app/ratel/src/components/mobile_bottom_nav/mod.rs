@@ -249,7 +249,14 @@ pub fn MobileBottomNav() -> Element {
                     "data-testid": "mobile-more-btn",
                     onclick: move |_| {
                         if logged_in {
-                            ctx.toggle();
+                            // Always open the mobile sidebar sheet directly.
+                            // MobileBottomNav is only visible below the tablet
+                            // breakpoint (max-tablet:block), so we bypass
+                            // ctx.toggle() whose is_mobile check uses the
+                            // Sidebar MOBILE_BREAKPOINT (768px). This avoids a
+                            // mismatch in the 768-899px range where toggle()
+                            // would perform a desktop collapse instead.
+                            ctx.set_open_mobile(true);
                         } else {
                             show_more_menu.set(!show_more_menu());
                         }
