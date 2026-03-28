@@ -147,7 +147,7 @@ fn MoreMenuPanel(show: Signal<bool>) -> Element {
 
         // Menu panel
         div {
-            class: "fixed left-0 z-999 w-full border-t hidden max-tablet:block border-separator bg-background bottom-[calc(theme(spacing.14)+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)]",
+            class: "fixed left-0 z-999 w-full border-t hidden max-tablet:block border-separator bg-background bottom-[calc(var(--mobile-bottom-nav-height)+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)]",
             "data-testid": "mobile-more-panel",
 
             div { class: "flex flex-col py-2",
@@ -249,14 +249,16 @@ pub fn MobileBottomNav() -> Element {
                     "data-testid": "mobile-more-btn",
                     onclick: move |_| {
                         if logged_in {
-                            // Always open the mobile sidebar sheet directly.
-                            // MobileBottomNav is only visible below the tablet
-                            // breakpoint (max-tablet:block), so we bypass
-                            // ctx.toggle() whose is_mobile check uses the
-                            // Sidebar MOBILE_BREAKPOINT (768px). This avoids a
-                            // mismatch in the 768-899px range where toggle()
-                            // would perform a desktop collapse instead.
-                            ctx.set_open_mobile(true);
+                            // For true mobile widths (Sidebar::is_mobile() == true),
+                            // open the mobile sidebar sheet. Otherwise (tablet/desktop),
+                            // toggle the desktop sidebar. This avoids the 768-899px
+                            // range where open_mobile has no effect because only the
+                            // desktop sidebar is rendered.
+                            if (ctx.is_mobile)() {
+                                ctx.set_open_mobile(true);
+                            } else {
+                                ctx.toggle();
+                            }
                         } else {
                             show_more_menu.set(!show_more_menu());
                         }

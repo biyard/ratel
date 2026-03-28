@@ -120,6 +120,15 @@ await click(page, { text: "Continue" });
 await click(page, { label: "Create Post" });
 ```
 
+### `clickNoNav(page, opts)`
+
+Like `click()`, but skips `waitForLoadState("load")` after clicking. Use this for non-navigation UI interactions (e.g., opening a sidebar sheet, toggling a panel) where `waitForLoadState` would resolve immediately or hang because no page navigation occurs.
+
+```js
+await clickNoNav(page, { testId: "mobile-more-btn" });  // opens sidebar sheet, no navigation
+await clickNoNav(page, { testId: "toggle-panel" });       // toggles a panel
+```
+
 ### `fill(page, opts, value)`
 
 Finds an element using locator options, asserts it's visible, and fills it with the given value. Returns the locator.
