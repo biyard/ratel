@@ -58,14 +58,16 @@ export default defineConfig({
         storageState: "user.json",
       },
     },
-    // Component tests manage their own browser contexts and auth state
+    // Component tests manage their own browser contexts and auth state.
+    // NOTE: These tests create their own browser contexts via browser.newContext().
+    // Device/viewport/userAgent options from project `use` are NOT applied to
+    // manual contexts, so any desired device options must be passed explicitly
+    // when calling browser.newContext().
     {
       name: "Component tests",
       testMatch: ["tests/components/**/*.spec.js"],
       dependencies: ["auth-setup"],
-      use: {
-        ...devices["Desktop Chrome"],
-      },
+      use: {},
     },
   ],
 
