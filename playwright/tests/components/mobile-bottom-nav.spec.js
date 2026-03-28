@@ -213,6 +213,12 @@ test.describe(
       try {
         await goto(page, "/");
 
+        // Wait for the create-post button to confirm user context has resolved
+        // (it's only rendered when logged_in is true). Without this guard, the
+        // More button click can race ahead of hydration and trigger the
+        // unauthenticated code path.
+        await expect(page.getByTestId("mobile-create-post-btn")).toBeVisible();
+
         // For logged-in users, tapping More opens the sidebar sheet, not the
         // unauthenticated more menu panel.
         // Use clickNoNav() instead of click() to avoid waitForLoadState("load")
