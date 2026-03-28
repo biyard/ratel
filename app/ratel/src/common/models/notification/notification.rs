@@ -1,0 +1,29 @@
+use crate::common::*;
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, DynamoEntity)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct Notification {
+    pub pk: Partition,
+    pub sk: EntityType,
+
+    pub created_at: i64,
+    pub status: EventStatus,
+
+    pub data: NotificationData,
+}
+
+#[cfg(feature = "server")]
+impl Notification {
+    pub fn new(data: NotificationData) -> Self {
+        let uid = uuid::Uuid::new_v4().to_string();
+        let now = crate::common::utils::time::get_now_timestamp_millis();
+
+        Self {
+            pk: Partition::Notification(uid.clone()),
+            sk: EntityType::Notification(uid),
+            created_at: now,
+            status: EventStatus::Requested,
+            data,
+        }
+    }
+}

@@ -1,8 +1,8 @@
 use crate::features::spaces::space_common::*;
 #[cfg(feature = "server")]
-use crate::common::models::space::SpaceCommon;
+use crate::common::models::notification::Notification;
 #[cfg(feature = "server")]
-use crate::common::utils::aws::SesClient;
+use crate::common::models::space::SpaceCommon;
 #[cfg(feature = "server")]
 use crate::common::utils::time::get_now_timestamp;
 
@@ -163,7 +163,7 @@ impl SpaceEmailVerification {
         let mut s = String::new();
         for (i, ch) in squashed.chars().enumerate() {
             if i >= max_chars {
-                s.push('…');
+                s.push('\u{2026}');
                 break;
             }
             s.push(ch);
@@ -171,9 +171,10 @@ impl SpaceEmailVerification {
         s
     }
 
+    /// Send invitation emails by creating Notification documents.
+    /// DynamoDB Streams will trigger a Lambda function to actually send the emails.
     pub async fn send_invitation_emails(
         cli: &aws_sdk_dynamodb::Client,
-        ses: &SesClient,
         user_emails: Vec<String>,
         space: &SpaceCommon,
         title: String,
@@ -192,27 +193,16 @@ impl SpaceEmailVerification {
 
         let cta_url = format!("https://ratel.foundation/spaces/SPACE%23{}", space_id);
 
-        let recipients: Vec<(String, Option<serde_json::Value>)> = user_emails
-            .into_iter()
-            .map(|email| {
-                let data = serde_json::json!({
-                    "space_title": title,
-                    "space_desc": Self::html_excerpt_ellipsis(&space.content, 160),
-                    "author_profile": space.author_profile_url,
-                    "author_display_name": space.author_username,
-                    "author_username": space.author_display_name,
-                    "cta_url": cta_url,
-                });
-                (email, Some(data))
-            })
-            .collect();
-
-        if let Err(e) = ses
-            .send_bulk_with_template("email_verification", &recipients)
-            .await
-        {
-            tracing::error!("Failed to send invitation emails: {:?}", e);
-        }
+        let notification = Notification::new(NotificationData::SendSpaceInvitation {
+            emails: user_emails,
+            space_title: title,
+            space_content: Self::html_excerpt_ellipsis(&space.content, 160),
+            author_profile_url: space.author_profile_url.clone(),
+            author_username: space.author_username.clone(),
+            author_display_name: space.author_display_name.clone(),
+            cta_url,
+        });
+        notification.create(cli).await?;
 
         Ok(())
     }

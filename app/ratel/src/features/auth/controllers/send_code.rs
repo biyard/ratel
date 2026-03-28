@@ -116,12 +116,11 @@ pub async fn send_phone_code_handler(phone: String) -> Result<SendCodeResponse> 
 pub async fn send_email_code_handler(
     email: String,
 ) -> Result<SendCodeResponse> {
+    use crate::common::models::notification::Notification;
     use crate::features::auth::constants::{ATTEMPT_BLOCK_TIME, EXPIRATION_TIME, MAX_ATTEMPT_COUNT};
-    use crate::features::auth::types::email_operation::EmailOperation;
     use crate::features::auth::utils::generate_random_code;
 
     let cli = crate::features::auth::config::get().dynamodb();
-    let ses = crate::features::auth::config::get().ses();
 
     // Check if email is already registered
     let (existing_users, _) =
@@ -174,31 +173,13 @@ pub async fn send_email_code_handler(
         }
     };
 
-    let user_email = email.clone();
-    let display_name = user_email.clone();
-
-    let mut chars = value.chars();
-    let code_1 = chars.next().map(|c| c.to_string()).unwrap_or_default();
-    let code_2 = chars.next().map(|c| c.to_string()).unwrap_or_default();
-    let code_3 = chars.next().map(|c| c.to_string()).unwrap_or_default();
-    let code_4 = chars.next().map(|c| c.to_string()).unwrap_or_default();
-    let code_5 = chars.next().map(|c| c.to_string()).unwrap_or_default();
-    let code_6 = chars.next().map(|c| c.to_string()).unwrap_or_default();
-
-    let email_template = EmailTemplate {
-        targets: vec![user_email.clone()],
-        operation: EmailOperation::SignupSecurityCode {
-            display_name,
-            code_1,
-            code_2,
-            code_3,
-            code_4,
-            code_5,
-            code_6,
-        },
-    };
-
-    email_template.send_email(ses).await?;
+    // Create a Notification document instead of directly calling SES.
+    // DynamoDB Streams will trigger a Lambda function to send the email.
+    let notification = Notification::new(NotificationData::SendVerificationCode {
+        code: value,
+        email: email.clone(),
+    });
+    notification.create(cli).await?;
 
     Ok(SendCodeResponse { expired_at })
 }
