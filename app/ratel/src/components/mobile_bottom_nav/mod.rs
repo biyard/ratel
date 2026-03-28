@@ -138,7 +138,7 @@ fn MoreMenuPanel(show: Signal<bool>) -> Element {
     rsx! {
         // Backdrop
         button {
-            class: "fixed inset-0 z-[998] hidden max-tablet:block",
+            class: "fixed inset-0 z-998 hidden max-tablet:block",
             "data-testid": "mobile-more-backdrop",
             r#type: "button",
             "aria-label": "{tr.close_menu}",
@@ -147,7 +147,7 @@ fn MoreMenuPanel(show: Signal<bool>) -> Element {
 
         // Menu panel
         div {
-            class: "fixed left-0 z-[999] w-full border-t hidden max-tablet:block border-separator bg-background bottom-[calc(theme(spacing.14)+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)]",
+            class: "fixed left-0 z-999 w-full border-t hidden max-tablet:block border-separator bg-background bottom-[calc(theme(spacing.14)+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)]",
             "data-testid": "mobile-more-panel",
 
             div { class: "flex flex-col py-2",
