@@ -1063,7 +1063,7 @@ When updating coding guidelines or conventions in `CLAUDE.md`, also update `.git
 
 - **Do NOT use `waitForLoadState("load")` after non-navigation interactions** — after UI actions like autosave triggers, tab switches, blur events, or clicking options that don't cause a page navigation, `waitForLoadState("load")` resolves immediately and doesn't wait for the save/request. Wait for deterministic UI signals instead (e.g., a "Saved" indicator, specific element appearing)
 - **Avoid `networkidle` for SPA navigation** — in single-page apps, the app may continue fetching data after the `load` event. Use deterministic UI readiness assertions (e.g., `getLocator` for page-specific elements) instead of `networkidle`
-- **Follow `waitForURL()` with hydration check** — when `waitForURL()` triggers navigation, add a `waitForFunction` check for `window.dioxus.send` to match the `goto()` pattern and avoid races on slower environments
+- **Follow `waitForURL()` with hydration check** — when `waitForURL()` triggers navigation, add a `waitForFunction` check for `[data-dioxus-id]` to match the `goto()` pattern and avoid races on slower environments. NOTE: In Dioxus 0.7, `dioxus` is only a local binding inside `document::eval()` — do NOT check `window.dioxus.send` (it does not exist as a global)
 
 ### Shared Helpers & Locators
 

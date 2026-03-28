@@ -105,13 +105,14 @@ export async function goto(page, url) {
   await page.goto(url);
   await page.waitForLoadState("domcontentloaded");
   // Wait for Dioxus WASM to hydrate — SSR markup already contains
-  // [data-dioxus-id], so also verify the interpreter is initialised
-  // by checking that window.dioxus.send exists (WASM fully loaded).
+  // [data-dioxus-id], so also verify the interpreter is initialised.
+  // NOTE: In Dioxus 0.7, `dioxus` is only available as a local binding
+  // inside document::eval() contexts, NOT as `window.dioxus`. Checking
+  // `window.dioxus.send` would hang forever. Instead we check for the
+  // presence of hydrated DOM elements and rely on Playwright's built-in
+  // action retries for any remaining hydration delay.
   await page.waitForFunction(
-    () =>
-      document.querySelector("[data-dioxus-id]") !== null &&
-      typeof window.dioxus !== "undefined" &&
-      typeof window.dioxus.send === "function"
+    () => document.querySelector("[data-dioxus-id]") !== null
   );
 }
 
