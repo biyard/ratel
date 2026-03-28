@@ -215,7 +215,10 @@ test.describe(
 
         // For logged-in users, tapping More opens the sidebar sheet, not the
         // unauthenticated more menu panel.
-        await click(page, { testId: "mobile-more-btn" });
+        // Use raw click instead of click() helper to avoid waitForLoadState("load")
+        // which can hang when the sidebar sheet triggers server-side data fetching.
+        const moreBtn = await getLocator(page, { testId: "mobile-more-btn" });
+        await moreBtn.click();
 
         // The unauthenticated more panel should NOT appear (use raw locator
         // because getLocator asserts visibility, but we expect hidden here)
