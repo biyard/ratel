@@ -100,7 +100,6 @@ pub async fn update_space(
 
     let conf = ServerConfig::default();
     let dynamo = conf.dynamodb();
-    let ses = conf.ses();
 
     let space_pk: Partition = space_id.into();
 
@@ -248,8 +247,7 @@ pub async fn update_space(
             .await?
             .ok_or_else(|| Error::InternalServerError("Failed to get post".to_string()))?;
 
-        let ses = conf.ses();
-        SpaceInvitationMember::send_email(dynamo, ses, &updated_space, post.title).await?;
+        SpaceInvitationMember::send_email(dynamo, &updated_space, post.title).await?;
     }
 
     Ok(UpdateSpaceResponse::from(updated_space))

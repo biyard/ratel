@@ -2,6 +2,8 @@ mod auth;
 mod composite_partition;
 mod entity_type;
 mod error;
+mod event_status;
+mod notification_data;
 mod oauth_provider;
 mod partition;
 
@@ -14,6 +16,8 @@ pub use auth::*;
 pub use composite_partition::*;
 pub use entity_type::*;
 pub use error::*;
+pub use event_status::*;
+pub use notification_data::*;
 pub use oauth_provider::*;
 pub use partition::*;
 pub use reward::*;
