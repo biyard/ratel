@@ -280,89 +280,13 @@ async fn handle_notification_send(
     detail: serde_json::Value,
 ) -> Result<(), lambda_runtime::Error> {
     use crate::common::models::notification::Notification;
-    use crate::common::types::NotificationData;
-    use crate::features::auth::models::EmailTemplate;
-    use crate::features::auth::types::email_operation::EmailOperation;
 
     let notification: Notification = DetailType::parse_detail(&detail)?;
 
-    tracing::info!(
-        "Notification send: pk={}, status={:?}, data={:?}",
-        notification.pk,
-        notification.status,
-        notification.data
-    );
-
-    let cfg = crate::common::CommonConfig::default();
-    let cli = cfg.dynamodb();
-    let ses = cfg.ses();
-
-    match &notification.data {
-        NotificationData::SendVerificationCode { code, email } => {
-            let chars: Vec<char> = code.chars().collect();
-            let operation = EmailOperation::SignupSecurityCode {
-                display_name: email.clone(),
-                code_1: chars.first().map(|c| c.to_string()).unwrap_or_default(),
-                code_2: chars.get(1).map(|c| c.to_string()).unwrap_or_default(),
-                code_3: chars.get(2).map(|c| c.to_string()).unwrap_or_default(),
-                code_4: chars.get(3).map(|c| c.to_string()).unwrap_or_default(),
-                code_5: chars.get(4).map(|c| c.to_string()).unwrap_or_default(),
-                code_6: chars.get(5).map(|c| c.to_string()).unwrap_or_default(),
-            };
-
-            let template = EmailTemplate {
-                targets: vec![email.clone()],
-                operation,
-            };
-            template.send_email(ses).await.map_err(|e| {
-                tracing::error!("Failed to send verification email: {}", e);
-                lambda_runtime::Error::from(format!("Failed to send verification email: {}", e))
-            })?;
-        }
-        NotificationData::SendSpaceInvitation {
-            emails,
-            space_title,
-            space_content,
-            author_profile_url,
-            author_username,
-            author_display_name,
-            cta_url,
-        } => {
-            let operation = EmailOperation::SpaceInviteVerification {
-                space_title: space_title.clone(),
-                space_desc: space_content.clone(),
-                author_profile: author_profile_url.clone(),
-                author_display_name: author_display_name.clone(),
-                author_username: author_username.clone(),
-                cta_url: cta_url.clone(),
-            };
-
-            let template = EmailTemplate {
-                targets: emails.clone(),
-                operation,
-            };
-            template.send_email(ses).await.map_err(|e| {
-                tracing::error!("Failed to send space invitation email: {}", e);
-                lambda_runtime::Error::from(format!(
-                    "Failed to send space invitation email: {}",
-                    e
-                ))
-            })?;
-        }
-        NotificationData::None => {
-            tracing::warn!("Received notification with no data, skipping");
-        }
-    }
-
-    // Update notification status to Completed
-    Notification::updater(notification.pk.clone(), notification.sk.clone())
-        .with_status(crate::common::types::EventStatus::Completed)
-        .execute(cli)
-        .await
-        .map_err(|e| {
-            tracing::error!("Failed to update notification status: {}", e);
-            lambda_runtime::Error::from(format!("Failed to update notification status: {}", e))
-        })?;
+    notification.process().await.map_err(|e| {
+        tracing::error!("Notification processing failed: {}", e);
+        lambda_runtime::Error::from(format!("Notification processing failed: {}", e))
+    })?;
 
     Ok(())
 }
