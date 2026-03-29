@@ -248,6 +248,43 @@ test.describe("Mobile Safari address bar scroll fix (#1274)", () => {
     );
   });
 
+  test("space top bar has position:sticky on mobile viewport", async ({
+    page,
+  }) => {
+    await page.setViewportSize(MOBILE_VIEWPORT);
+    await goto(page, "/");
+
+    const spaceUrl = await resolveSpaceDashboardUrl(page);
+
+    if (!spaceUrl) {
+      test.skip(
+        true,
+        "No space available -- set PLAYWRIGHT_TEST_SPACE_URL env var for deterministic CI runs"
+      );
+      return;
+    }
+
+    await goto(page, spaceUrl);
+
+    // Identify SpaceTop wrapper via stable data-testid for reliable targeting.
+    const spaceTopWrapper = await getLocator(page, {
+      testId: "space-top-wrapper",
+    });
+
+    const position = await spaceTopWrapper.evaluate((el) => {
+      return window.getComputedStyle(el).position;
+    });
+
+    expect(position).toBe("sticky");
+
+    // Verify top: 0px for the sticky positioning
+    const top = await spaceTopWrapper.evaluate((el) => {
+      return window.getComputedStyle(el).top;
+    });
+
+    expect(top).toBe("0px");
+  });
+
   test("space bottom nav is NOT sticky on desktop viewport", async ({
     page,
   }) => {
