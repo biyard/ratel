@@ -41,7 +41,9 @@ pub fn SpaceNav(
     let is_logged_in = user.is_some();
 
     rsx! {
-        div { class: "flex z-40 flex-col gap-2.5 justify-between pt-2.5 w-full h-full divide-y shrink-0 divide-divider {class} max-tablet:flex-row max-tablet:h-16 max-tablet:items-stretch max-tablet:justify-around",
+        div {
+            class: "flex z-40 flex-col gap-2.5 justify-between pt-2.5 w-full h-full divide-y shrink-0 divide-divider {class} max-tablet:flex-row max-tablet:h-16 max-tablet:items-stretch max-tablet:justify-around max-tablet:sticky max-tablet:bottom-0 max-tablet:bg-space-bg",
+            "data-testid": "space-nav-root",
             div { class: "flex flex-col gap-2.5 pb-4 w-full",
                 img {
                     src: "{logo}",
