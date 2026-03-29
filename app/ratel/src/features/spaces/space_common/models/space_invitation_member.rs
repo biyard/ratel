@@ -4,8 +4,6 @@ use crate::common::models::space::SpaceCommon;
 #[cfg(feature = "server")]
 use crate::common::models::User;
 #[cfg(feature = "server")]
-use crate::common::utils::aws::SesClient;
-#[cfg(feature = "server")]
 use crate::common::utils::time::get_now_timestamp_millis;
 
 use super::SpaceEmailVerification;
@@ -128,7 +126,6 @@ impl SpaceInvitationMember {
 
     pub async fn send_email(
         ddb: &aws_sdk_dynamodb::Client,
-        ses: &SesClient,
         space: &SpaceCommon,
         title: String,
     ) -> Result<()> {
@@ -154,7 +151,7 @@ impl SpaceInvitationMember {
         futures::future::try_join_all(updates).await?;
 
         if !emails.is_empty() {
-            SpaceEmailVerification::send_invitation_emails(ddb, ses, emails, space, title).await?;
+            SpaceEmailVerification::send_invitation_emails(ddb, emails, space, title).await?;
         }
 
         Ok(())
