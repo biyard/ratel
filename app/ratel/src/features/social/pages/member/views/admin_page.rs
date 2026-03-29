@@ -53,7 +53,7 @@ pub fn AdminPage(username: String, team_pk: TeamPartition) -> Element {
         let mut removing = removing.clone();
         let mut refresh = refresh.clone();
         move |payload: RemovePayload| {
-            let key = format!("{}-{}", payload.member_id, payload.group_id);
+            let key = format!("remove:{}-{}", payload.member_id, payload.group_id);
             if removing().as_ref() == Some(&key) {
                 return;
             }
@@ -85,7 +85,7 @@ pub fn AdminPage(username: String, team_pk: TeamPartition) -> Element {
         let mut changing = changing.clone();
         let mut refresh = refresh.clone();
         move |payload: ChangeGroupPayload| {
-            let key = format!("{}-{}", payload.member_id, payload.from_group_id);
+            let key = format!("change:{}-{}", payload.member_id, payload.from_group_id);
             if changing().as_ref() == Some(&key) {
                 return;
             }
