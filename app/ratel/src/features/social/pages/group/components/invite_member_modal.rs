@@ -139,7 +139,7 @@ pub fn InviteMemberModal(
     };
 
     rsx! {
-        div { class: "flex flex-col w-tablet min-h-[400px] max-w-tablet min-w-[400px] max-mobile:w-full! max-mobile:max-w-full! gap-5",
+        div { class: "flex flex-col w-tablet min-h-[400px] max-w-[calc(100vw-90px)] min-w-[400px] max-mobile:w-full! max-mobile:max-w-full! max-mobile:min-w-0! gap-5",
             div { class: "flex flex-col w-full gap-[10px]",
                 div { class: "font-bold text-[15px]/[28px] text-modal-label-text", {tr.select_group} }
                 select {
