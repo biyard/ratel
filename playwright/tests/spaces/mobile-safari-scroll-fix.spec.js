@@ -13,6 +13,7 @@ import { goto, getLocator } from "../utils.js";
  *   1. tailwind.css: body { overflow-hidden } -> body { overflow-hidden max-tablet:overflow-auto }
  *   2. spaces/layout.rs: layout container gets max-tablet:overflow-visible, max-tablet:h-auto, max-tablet:min-h-screen
  *   3. space_nav/mod.rs: bottom nav gets max-tablet:sticky, max-tablet:bottom-0, max-tablet:bg-space-bg
+ *   4. layout.rs: SpaceTop wrapper gets max-tablet:fixed (not sticky) for proper mobile Safari behavior
  *
  * The "max-tablet" breakpoint is max-width: 899px (tablet breakpoint is 900px).
  *
@@ -248,7 +249,7 @@ test.describe("Mobile Safari address bar scroll fix (#1274)", () => {
     );
   });
 
-  test("space top bar has position:sticky on mobile viewport", async ({
+  test("space top bar has position:fixed on mobile viewport", async ({
     page,
   }) => {
     await page.setViewportSize(MOBILE_VIEWPORT);
@@ -275,9 +276,9 @@ test.describe("Mobile Safari address bar scroll fix (#1274)", () => {
       return window.getComputedStyle(el).position;
     });
 
-    expect(position).toBe("sticky");
+    expect(position).toBe("fixed");
 
-    // Verify top: 0px for the sticky positioning
+    // Verify top: 0px for the fixed positioning
     const top = await spaceTopWrapper.evaluate((el) => {
       return window.getComputedStyle(el).top;
     });

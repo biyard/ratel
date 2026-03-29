@@ -131,9 +131,9 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
                     },
                 }
             }
-            div { class: "flex overflow-x-hidden flex-col min-w-0 min-h-0 max-tablet:flex-1 max-tablet:order-0 max-tablet:min-h-[auto]",
+            div { class: "flex overflow-x-hidden flex-col min-w-0 min-h-0 max-tablet:flex-1 max-tablet:order-0 max-tablet:min-h-[auto] max-tablet:pt-16",
                 if show_sidebar {
-                    div { class: "max-tablet:sticky max-tablet:top-0 max-tablet:z-50 max-tablet:bg-space-bg", "data-testid": "space-top-wrapper",
+                    div { class: "max-tablet:w-full max-tablet:fixed max-tablet:top-0 max-tablet:z-50 max-tablet:bg-space-bg", "data-testid": "space-top-wrapper",
                         SpaceTop {
                             labels,
                             space_status,
