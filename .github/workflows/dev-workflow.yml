@@ -166,7 +166,7 @@ jobs:
 
       - name: Install Dioxus-cli
         run: |
-          cargo binstall dioxus-cli --force
+          cargo binstall dioxus-cli@0.7.3 --force
 
       - name: Setup pnpm
         run: |

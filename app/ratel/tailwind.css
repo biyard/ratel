@@ -447,6 +447,7 @@ a {
 
 :root {
   --header-height: 88px;
+  --mobile-bottom-nav-height: theme(spacing.14);
 }
 
 @media (max-width: 500px) {
