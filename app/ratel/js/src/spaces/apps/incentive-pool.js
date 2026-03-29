@@ -1,5 +1,3 @@
-import { ethers } from "ethers";
-
 const KAIA_TESTNET_CHAIN_ID = "0x3e9"; // 1001
 const KAIA_MAINNET_CHAIN_ID = "0x2019"; // 8217
 
@@ -29,6 +27,15 @@ const KAIA_NETWORKS = {
 };
 
 let artifactCache = null;
+let ethersCache = null;
+
+async function getEthers() {
+  if (!ethersCache) {
+    const mod = await import("ethers");
+    ethersCache = mod.ethers || mod;
+  }
+  return ethersCache;
+}
 
 function parseEnvNetwork(env) {
   const value = String(env || "").toLowerCase();
@@ -126,6 +133,8 @@ async function loadSpaceIncentiveArtifact() {
 }
 
 async function deploySpaceIncentive(params = {}) {
+  const ethers = await getEthers();
+
   const env = String(params.env || "local");
   const networkName = parseEnvNetwork(env);
   const ethereum = await getEthereum();

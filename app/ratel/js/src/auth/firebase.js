@@ -1,34 +1,49 @@
-import { initializeApp } from "firebase/app";
-import {
-  GoogleAuthProvider,
-  getAuth,
-  signInWithPopup,
-  signOut,
-} from "firebase/auth";
-
+let firebaseConf = null;
 let app;
 let auth;
 let provider;
 let initialized = false;
+let initPromise = null;
 
-export function init_firebase(conf) {
-  try {
-    app = initializeApp(conf);
+async function ensureFirebase() {
+  if (initialized) return;
+  if (initPromise) {
+    await initPromise;
+    return;
+  }
+  if (!firebaseConf) {
+    throw new Error("Firebase config not set. Call init_firebase first.");
+  }
+
+  initPromise = (async () => {
+    const { initializeApp } = await import("firebase/app");
+    const { GoogleAuthProvider, getAuth } = await import("firebase/auth");
+    app = initializeApp(firebaseConf);
     auth = getAuth(app);
     provider = new GoogleAuthProvider();
-
     initialized = true;
-  } catch (e) {
-    console.error("Firebase initialization failed:", e);
-  }
+  })();
+
+  await initPromise;
+}
+
+// Synchronous — just saves config. Firebase SDK loaded lazily on first signIn.
+export function init_firebase(conf) {
+  firebaseConf = conf;
 }
 
 export async function signIn() {
-  if (!initialized) {
-    console.error("Firebase initialization failed:");
+  try {
+    await ensureFirebase();
+  } catch (e) {
+    console.error("Firebase initialization failed:", e);
+    return;
   }
 
   try {
+    const { signInWithPopup, GoogleAuthProvider } = await import(
+      "firebase/auth"
+    );
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
     const credential = GoogleAuthProvider.credentialFromResult(result);

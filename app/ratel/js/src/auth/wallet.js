@@ -1,7 +1,3 @@
-import { SignClient } from "@walletconnect/sign-client";
-import { createAppKit } from "@reown/appkit";
-import { mainnet, kaia } from "@reown/appkit/networks";
-
 let config = null;
 let client = null;
 let appKit = null;
@@ -31,6 +27,10 @@ async function getClient() {
 
   if (!initPromise) {
     initPromise = (async () => {
+      const { SignClient } = await import("@walletconnect/sign-client");
+      const { createAppKit } = await import("@reown/appkit");
+      const { mainnet, kaia } = await import("@reown/appkit/networks");
+
       client = await SignClient.init({
         projectId: config.projectId,
         metadata: config.metadata,

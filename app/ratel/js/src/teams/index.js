@@ -1,8 +1,17 @@
-import { ethers } from "ethers";
 import TeamDaoArtifact from "./TeamDao.json";
 
 const KAIA_TESTNET_CHAIN_ID = "0x3e9"; // 1001
 const KAIA_MAINNET_CHAIN_ID = "0x2019"; // 8217
+
+let ethersCache = null;
+
+async function getEthers() {
+  if (!ethersCache) {
+    const mod = await import("ethers");
+    ethersCache = mod.ethers || mod;
+  }
+  return ethersCache;
+}
 
 class KaiaWalletError extends Error {
   constructor(code, message) {
@@ -112,6 +121,7 @@ async function ensureKaiaNetwork(network, rpcUrl, explorerUrl) {
 }
 
 async function getKaiaSigner(network, rpcUrl, explorerUrl) {
+  const ethers = await getEthers();
   const { ethereum } = await ensureKaiaNetwork(network, rpcUrl, explorerUrl);
 
   let accounts = [];
@@ -147,6 +157,7 @@ async function createDAO(admins, network, rpcUrl, explorerUrl) {
     throw new Error("At least 3 admins are required to create a DAO");
   }
 
+  const ethers = await getEthers();
   const { signer } = await getKaiaSigner(network, rpcUrl, explorerUrl);
 
   const TeamDAO = new ethers.ContractFactory(

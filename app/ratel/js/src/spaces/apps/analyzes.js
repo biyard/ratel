@@ -1,5 +1,11 @@
-import * as d3 from "d3";
-import * as XLSX from "xlsx";
+let d3Cache = null;
+
+async function getD3() {
+  if (!d3Cache) {
+    d3Cache = await import("d3");
+  }
+  return d3Cache;
+}
 
 function getContainer(containerId) {
   if (!containerId) return null;
@@ -35,10 +41,11 @@ function nonZeroEntries(entries = []) {
 
 function truncateLabel(label, maxLength = 16) {
   if (label.length <= maxLength) return label;
-  return `${label.slice(0, maxLength - 1)}…`;
+  return `${label.slice(0, maxLength - 1)}\u2026`;
 }
 
-function renderEmptyState(container, minHeight = 180) {
+async function renderEmptyState(container, minHeight = 180) {
+  const d3 = await getD3();
   container.innerHTML = "";
   const empty = d3
     .select(container)
@@ -56,13 +63,13 @@ function renderEmptyState(container, minHeight = 180) {
   empty.text("No Data");
 }
 
-function renderBarChart(req = {}) {
+async function renderBarChart(req = {}) {
   const container = getContainer(req.container_id);
   if (!container) return false;
 
   const entries = normalizeEntries(req.entries);
   if (entries.length === 0) {
-    renderEmptyState(container, 220);
+    await renderEmptyState(container, 220);
     return true;
   }
 
@@ -74,6 +81,8 @@ function renderBarChart(req = {}) {
     return true;
   }
   const isMobile = width < 480;
+
+  const d3 = await getD3();
 
   const root = d3
     .select(container)
@@ -177,7 +186,7 @@ function renderBarChart(req = {}) {
   return true;
 }
 
-function renderPieChart(req = {}) {
+async function renderPieChart(req = {}) {
   const container = getContainer(req.container_id);
   if (!container) return false;
 
@@ -194,6 +203,8 @@ function renderPieChart(req = {}) {
     requestAnimationFrame(() => renderPieChart(req));
     return true;
   }
+
+  const d3 = await getD3();
 
   const size = Math.min(190, Math.max(160, measuredWidth));
   const radius = size / 2 - 8;
@@ -266,12 +277,14 @@ function renderPieChart(req = {}) {
 }
 
 async function downloadExcel(req = {}) {
+  const XLSX = await import("xlsx");
+
   const fileName = String(req.file_name || "poll-analysis.xlsx");
   const sheetName = String(req.sheet_name || "Responses");
   const rows =
     Array.isArray(req.rows) && req.rows.length > 0
       ? req.rows
-      : [["ID", "조사구분", "유형", "질문지"]];
+      : [["ID", "\uc870\uc0ac\uad6c\ubd84", "\uc720\ud615", "\uc9c8\ubb38\uc9c0"]];
   const merges = Array.isArray(req.merges) ? req.merges : [];
 
   const worksheet = XLSX.utils.aoa_to_sheet(rows);
