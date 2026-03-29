@@ -81,7 +81,10 @@ pub fn ManagementPage(username: String) -> Element {
         move |bookmark| {
             let team_pk = team_pk_signal();
             async move {
-                list_members_handler(team_pk, bookmark, Some(PAGE_SIZE)).await
+                match list_members_handler(team_pk, bookmark, Some(PAGE_SIZE)).await {
+                    Ok(response) => Ok(response),
+                    Err(_) => Ok(ListResponse::<TeamMemberResponse>::default()),
+                }
             }
         },
     )?;
