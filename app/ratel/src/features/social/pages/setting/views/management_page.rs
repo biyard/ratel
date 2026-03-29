@@ -341,7 +341,7 @@ fn MemberRow(
                             style: ButtonStyle::Text,
                             size: ButtonSize::Icon,
                             shape: ButtonShape::Square,
-                            class: "flex items-center justify-center w-7 h-7 !rounded-md".to_string(),
+                            class: "flex items-center justify-center w-7 h-7".to_string(),
                             onclick: move |e: MouseEvent| {
                                 e.stop_propagation();
                                 show_menu.toggle();
