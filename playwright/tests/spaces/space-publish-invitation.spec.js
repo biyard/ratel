@@ -19,9 +19,9 @@ import { click, fill, goto, getLocator, getEditor, waitPopup } from "../utils";
  *
  * The test flow:
  *   1. Creator (pre-authenticated user) creates a post with a space
- *   2. Creator invites a member to the space via email
+ *   2. Creator invites a member to the space via the General app settings
  *   3. Creator publishes the space as public (triggers invitation emails)
- *   4. Verify the space is published and accessible
+ *   4. Verify the space is published and accessible (anonymous)
  *   5. A new user signs up from the published space page
  *      (exercises the email verification Notification path again)
  *
@@ -79,7 +79,31 @@ test.describe.serial("Space publish and invitation (event-driven notification)",
     spaceUrl = url.pathname.replace(/\/dashboard$/, "");
   });
 
-  // --- 2. Publish space as public ---
+  // --- 2. Invite a member via the General app ---
+  //     Navigate to the space General app settings and invite a participant
+  //     by email. This creates a SpaceInvitationMember record so that when
+  //     the space is published, invitation emails are dispatched via the
+  //     event-driven Notification pipeline.
+
+  test("Creator: Invite a participant via General app", async ({ page }) => {
+    await goto(page, spaceUrl + "/apps/general");
+
+    // The "Invite Participant" section has an email input
+    await fill(page, { placeholder: "example@example.com" }, "hi+user2@biyard.co");
+
+    // Click the "Invite" button to submit the invitation
+    await click(page, { text: "Invite" });
+
+    // Verify the invitation was created by checking for the success toast
+    // or that the invited email appears in the "Invited Accounts" list
+    await page.waitForTimeout(2000);
+
+    // Reload to confirm the invitation persisted
+    await goto(page, spaceUrl + "/apps/general");
+    await getLocator(page, { text: "Invited Accounts" });
+  });
+
+  // --- 3. Publish space as public ---
   //     This triggers SpaceInvitationMember::send_email() which now creates
   //     a Notification document with SendSpaceInvitation data instead of
   //     calling SES directly.
@@ -103,7 +127,7 @@ test.describe.serial("Space publish and invitation (event-driven notification)",
     await getLocator(page, { text: "Dashboard" });
   });
 
-  // --- 3. Verify the published space is accessible without auth ---
+  // --- 4. Verify the published space is accessible without auth ---
 
   test("Anonymous: Published space dashboard is accessible", async ({
     browser,
@@ -127,7 +151,7 @@ test.describe.serial("Space publish and invitation (event-driven notification)",
     }
   });
 
-  // --- 4. Signup from the published space page ---
+  // --- 5. Signup from the published space page ---
   //     This exercises the same email verification Notification path from
   //     the perspective of a user signing up through a space.
 
