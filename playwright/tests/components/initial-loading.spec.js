@@ -173,8 +173,8 @@ test.describe("Scenario: Initial loading — lazy module availability", () => {
       await goto(page, "/");
 
       // Firebase functions should be registered on window.ratel.auth.firebase
-      // They are available immediately as functions, but internally lazy-load
-      // the Firebase SDK on first call
+      // Firebase SDK is loaded eagerly (static imports) to ensure sign-in
+      // reliability, while other large libraries remain lazy-loaded
       const firebaseFns = await page.evaluate(() => {
         const fb = window.ratel?.auth?.firebase;
         if (!fb) return null;
