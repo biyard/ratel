@@ -15,7 +15,7 @@ pub struct Notification {
 #[cfg(feature = "server")]
 impl Notification {
     pub fn new(data: NotificationData) -> Self {
-        let uid = uuid::Uuid::new_v4().to_string();
+        let uid = uuid::Uuid::new_v7(uuid::Timestamp::now(uuid::NoContext)).to_string();
         let now = crate::common::utils::time::get_now_timestamp_millis();
 
         Self {
