@@ -115,6 +115,7 @@ pub enum DetailType {
     TimelineUpdate,
     PopularPostUpdate,
     PopularSpaceUpdate,
+    NotificationSend,
     #[serde(other)]
     Unknown,
 }
@@ -156,6 +157,9 @@ async fn event_bridge_handler(
         }
         DetailType::PopularSpaceUpdate => {
             handle_popular_space_update(envelope.detail).await?;
+        }
+        DetailType::NotificationSend => {
+            handle_notification_send(envelope.detail).await?;
         }
         DetailType::Unknown => {
             tracing::warn!(
@@ -266,6 +270,22 @@ async fn handle_popular_space_update(
     .map_err(|e| {
         tracing::error!("Popular space fan-out failed: {}", e);
         lambda_runtime::Error::from(format!("Popular space fan-out failed: {}", e))
+    })?;
+
+    Ok(())
+}
+
+#[cfg(feature = "lambda")]
+async fn handle_notification_send(
+    detail: serde_json::Value,
+) -> Result<(), lambda_runtime::Error> {
+    use crate::common::models::notification::Notification;
+
+    let notification: Notification = DetailType::parse_detail(&detail)?;
+
+    notification.process().await.map_err(|e| {
+        tracing::error!("Notification processing failed: {}", e);
+        lambda_runtime::Error::from(format!("Notification processing failed: {}", e))
     })?;
 
     Ok(())

@@ -14,6 +14,14 @@ pub enum EmailOperation {
         code_5: String,
         code_6: String,
     },
+    SpaceInviteVerification {
+        space_title: String,
+        space_desc: String,
+        author_profile: String,
+        author_display_name: String,
+        author_username: String,
+        cta_url: String,
+    },
 }
 
 impl Default for EmailOperation {
@@ -34,6 +42,7 @@ impl EmailOperation {
     pub fn template_name(&self) -> &'static str {
         match self {
             EmailOperation::SignupSecurityCode { .. } => "signup_code",
+            EmailOperation::SpaceInviteVerification { .. } => "email_verification",
         }
     }
 }
