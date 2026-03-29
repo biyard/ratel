@@ -160,7 +160,7 @@ pub async fn update_post_handler(post_id: FeedPartition, req: UpdatePostRequest)
         crate::features::posts::services::index_post_async(conf.qdrant(), conf.bedrock_embeddings(), &post).await;
 
         #[cfg(feature = "local-dev")]
-        {
+        if post.space_pk.is_none() {
             let _ = crate::features::timeline::services::fan_out_timeline_entries(
                 cli,
                 &post.pk,

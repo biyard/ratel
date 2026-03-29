@@ -187,6 +187,15 @@ async fn handle_timeline_update(
         post.created_at
     );
 
+    // Space posts should only be distributed via PopularSpaceUpdate (participants > 5)
+    if post.space_pk.is_some() {
+        tracing::info!(
+            "Skipping follower fan-out for space post: {}",
+            post.pk
+        );
+        return Ok(());
+    }
+
     let cfg = crate::common::CommonConfig::default();
     let cli = cfg.dynamodb();
 

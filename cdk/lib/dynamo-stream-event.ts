@@ -78,6 +78,7 @@ export class DynamoStreamEventStack extends Stack {
                   NewImage: {
                     sk: { S: [{ prefix: "POST" }] },
                     status: { S: ["PUBLISHED"] },
+                    space_pk: [{ exists: false }],
                   },
                 },
               }),
