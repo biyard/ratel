@@ -16,7 +16,6 @@ pub struct InviteResult {
 pub fn InviteMemberModal(
     team_pk: TeamPartition,
     username: String,
-    groups: Vec<TeamGroupResponse>,
     on_close: EventHandler<()>,
     on_invited: EventHandler<InviteResult>,
 ) -> Element {
@@ -29,7 +28,10 @@ pub fn InviteMemberModal(
     let mut is_submitting = use_signal(|| false);
     let mut message = use_signal(|| Option::<String>::None);
 
-    let groups = groups;
+    let groups = vec![
+        (tr.group_admin.to_string(), "admin".to_string()),
+        (tr.group_member.to_string(), "member".to_string()),
+    ];
 
     let on_search = {
         let selected_users = selected_users.clone();
@@ -96,7 +98,7 @@ pub fn InviteMemberModal(
             let team_pk = team_pk.clone();
             let group_id = groups_for_invite
                 .get(group_index())
-                .map(|g| g.id.clone())
+                .map(|(_, id)| id.clone())
                 .unwrap_or_default();
             let on_invited = on_invited.clone();
             let on_close = on_close.clone();
@@ -150,8 +152,8 @@ pub fn InviteMemberModal(
                             group_index.set(next);
                         }
                     },
-                    for (idx, group) in groups.iter().enumerate() {
-                        option { value: idx, "{group.name}" }
+                    for (idx, (name, _id)) in groups.iter().enumerate() {
+                        option { value: idx, "{name}" }
                     }
                 }
             }

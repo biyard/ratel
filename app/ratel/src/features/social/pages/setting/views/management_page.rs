@@ -1,20 +1,18 @@
+use crate::common::hooks::use_infinite_query;
+use crate::common::ListResponse;
+use crate::features::social::pages::group::components::{InviteMemberModal, InviteResult};
+use crate::features::social::pages::group::controllers::remove_member_handler;
+use crate::features::social::pages::group::dto::RemoveMemberRequest;
 use crate::features::social::pages::member::controllers::{
     get_team_member_permission_handler, list_members_handler,
 };
 use crate::features::social::pages::member::dto::TeamMemberResponse;
-use crate::features::social::pages::group::components::{InviteMemberModal, InviteResult};
-use crate::features::social::pages::group::controllers::{
-    add_member_handler, list_groups_handler, remove_member_handler,
-};
-use crate::features::social::pages::group::dto::{AddMemberRequest, RemoveMemberRequest};
 use crate::features::social::pages::setting::i18n::TeamSettingsTranslate;
 use crate::features::social::*;
-use crate::common::hooks::use_infinite_query;
-use crate::common::ListResponse;
 use dioxus::prelude::*;
 use dioxus_primitives::scroll_area::ScrollDirection;
 
-const PAGE_SIZE: i32 = 9;
+const PAGE_SIZE: i32 = 10;
 
 #[component]
 pub fn ManagementPage(username: String) -> Element {
@@ -48,46 +46,21 @@ pub fn ManagementPage(username: String) -> Element {
     let mut refresh = use_signal(|| 0u64);
     let mut error_msg = use_signal(|| Option::<String>::None);
     let failed_remove_member = tr.failed_remove_member.to_string();
-    let failed_change_group = tr.failed_change_group.to_string();
-
-    // Load groups for invite modal and change group feature
-    let group_resource = use_loader(use_reactive((&team_pk,), move |(team_pk,)| {
-        let _ = refresh();
-        async move {
-            Ok::<_, super::super::Error>(
-                list_groups_handler(team_pk, None)
-                    .await
-                    .map_err(|e| e.to_string()),
-            )
-        }
-    }))?;
-
-    let groups = {
-        let data = group_resource.read();
-        match data.as_ref() {
-            Ok(list) => list.items.clone(),
-            Err(_) => vec![],
-        }
-    };
-
-    let all_groups: Vec<(String, String)> = groups
-        .iter()
-        .map(|g| (g.id.clone(), g.name.clone()))
-        .collect();
 
     // Members infinite scroll query
     let team_pk_signal = use_signal(|| team_pk.clone());
-    let mut members_query = use_infinite_query::<String, TeamMemberResponse, ListResponse<TeamMemberResponse>, _>(
-        move |bookmark| {
-            let team_pk = team_pk_signal();
-            async move {
-                match list_members_handler(team_pk, bookmark, Some(PAGE_SIZE)).await {
-                    Ok(response) => Ok(response),
-                    Err(_) => Ok(ListResponse::<TeamMemberResponse>::default()),
+    let mut members_query =
+        use_infinite_query::<String, TeamMemberResponse, ListResponse<TeamMemberResponse>, _>(
+            move |bookmark| {
+                let team_pk = team_pk_signal();
+                async move {
+                    match list_members_handler(team_pk, bookmark, Some(PAGE_SIZE)).await {
+                        Ok(response) => Ok(response),
+                        Err(_) => Ok(ListResponse::<TeamMemberResponse>::default()),
+                    }
                 }
-            }
-        },
-    )?;
+            },
+        )?;
 
     // Restart query when members are added/removed (skip initial render where refresh == 0)
     use_effect(move || {
@@ -103,9 +76,13 @@ pub fn ManagementPage(username: String) -> Element {
         let mut popup = popup;
         let team_pk = team_pk.clone();
         let username = username.clone();
-        let groups = groups.clone();
         move |_| {
-            let on_close = { let mut popup = popup; move |_| { popup.close(); } };
+            let on_close = {
+                let mut popup = popup;
+                move |_| {
+                    popup.close();
+                }
+            };
             let on_invited = {
                 move |result: InviteResult| {
                     if result.total_added > 0 {
@@ -117,7 +94,6 @@ pub fn ManagementPage(username: String) -> Element {
                 InviteMemberModal {
                     team_pk: team_pk.clone(),
                     username: username.clone(),
-                    groups: groups.clone(),
                     on_close,
                     on_invited,
                 }
@@ -168,14 +144,11 @@ pub fn ManagementPage(username: String) -> Element {
                             let is_last = idx == members.len() - 1;
                             let member = member.clone();
                             let failed_remove = failed_remove_member.clone();
-                            let failed_change = failed_change_group.clone();
-                            let all_groups = all_groups.clone();
                             rsx! {
                                 MemberRow {
                                     key: "{member.user_id}",
                                     member: member.clone(),
                                     is_last,
-                                    all_groups,
                                     on_remove: move |_| {
                                         let member = member.clone();
                                         let team_pk = team_pk_signal();
@@ -205,52 +178,6 @@ pub fn ManagementPage(username: String) -> Element {
                                             }
                                         });
                                     },
-                                    on_change_group: move |(member_id, from_group_id, to_group_id): (String, String, String)| {
-                                        let team_pk = team_pk_signal();
-                                        let mut error_msg = error_msg.clone();
-                                        let failed_msg = failed_change.clone();
-                                        spawn(async move {
-                                            let remove_ok = remove_member_handler(
-                                                team_pk.clone(),
-                                                from_group_id.clone(),
-                                                RemoveMemberRequest {
-                                                    user_pks: vec![member_id.clone()],
-                                                },
-                                            )
-                                            .await
-                                            .is_ok();
-
-                                            if remove_ok {
-                                                let add_ok = add_member_handler(
-                                                    team_pk.clone(),
-                                                    to_group_id,
-                                                    AddMemberRequest {
-                                                        user_pks: vec![member_id.clone()],
-                                                    },
-                                                )
-                                                .await
-                                                .is_ok();
-
-                                                if add_ok {
-                                                    error_msg.set(None);
-                                                    refresh.set(refresh() + 1);
-                                                } else {
-                                                    // Rollback: re-add to the original group
-                                                    let _ = add_member_handler(
-                                                        team_pk,
-                                                        from_group_id,
-                                                        AddMemberRequest {
-                                                            user_pks: vec![member_id],
-                                                        },
-                                                    )
-                                                    .await;
-                                                    error_msg.set(Some(failed_msg));
-                                                }
-                                            } else {
-                                                error_msg.set(Some(failed_msg));
-                                            }
-                                        });
-                                    },
                                 }
                             }
                         }
@@ -272,21 +199,14 @@ pub fn ManagementPage(username: String) -> Element {
 }
 
 #[component]
-fn MemberRow(
-    member: TeamMemberResponse,
-    is_last: bool,
-    all_groups: Vec<(String, String)>,
-    on_remove: EventHandler<()>,
-    on_change_group: EventHandler<(String, String, String)>,
-) -> Element {
+fn MemberRow(member: TeamMemberResponse, is_last: bool, on_remove: EventHandler<()>) -> Element {
     let tr: TeamSettingsTranslate = use_translate();
-    let border_class = if is_last { "" } else { "border-b border-border" };
+    let border_class = if is_last {
+        ""
+    } else {
+        "border-b border-border"
+    };
     let mut show_menu = use_signal(|| false);
-    let mut show_change_group = use_signal(|| false);
-
-    let first_group_id = member.groups.first().map(|g| g.group_id.clone()).unwrap_or_default();
-    let mut from_group_id = use_signal(|| first_group_id);
-    let mut to_group_id = use_signal(|| String::new());
 
     let display = if member.display_name.is_empty() {
         member.username.clone()
@@ -294,12 +214,8 @@ fn MemberRow(
         member.display_name.clone()
     };
 
-    let has_groups = !member.groups.is_empty();
-    let can_change_group = has_groups && all_groups.len() > 1;
-
     rsx! {
         div { class: "flex flex-col {border_class}",
-            // Main row
             div { class: "relative flex items-center gap-3 px-4 py-3",
                 // Avatar
                 if !member.profile_url.is_empty() {
@@ -331,7 +247,13 @@ fn MemberRow(
                             if member.groups.is_empty() {
                                 tr.member_role.to_string()
                             } else {
-                                member.groups.iter().map(|g| g.group_name.as_str()).collect::<Vec<_>>().join(", ")
+                                member.groups.iter().map(|g| {
+                                    if g.group_id == "admin" || g.group_name.eq_ignore_ascii_case("admin") {
+                                        tr.admin_role.to_string()
+                                    } else {
+                                        tr.member_role.to_string()
+                                    }
+                                }).collect::<Vec<String>>().join(", ")
                             }
                         }
                     }
@@ -348,8 +270,6 @@ fn MemberRow(
                             onclick: move |e: MouseEvent| {
                                 e.stop_propagation();
                                 show_menu.toggle();
-                                show_change_group.set(false);
-                                to_group_id.set(String::new());
                             },
                             lucide_dioxus::Ellipsis {
                                 class: "w-4 h-4 [&>circle]:fill-text-primary [&>circle]:stroke-none",
@@ -363,30 +283,6 @@ fn MemberRow(
                             div {
                                 class: if is_last { "absolute right-0 bottom-8 z-20 w-44 bg-popover border border-border rounded-lg shadow-lg py-1 overflow-hidden" } else { "absolute right-0 top-8 z-20 w-44 bg-popover border border-border rounded-lg shadow-lg py-1 overflow-hidden" },
                                 onclick: move |e| e.stop_propagation(),
-                                if can_change_group {
-                                    Button {
-                                        style: ButtonStyle::Text,
-                                        size: ButtonSize::Small,
-                                        shape: ButtonShape::Square,
-                                        class: "flex items-center gap-2 w-full justify-start".to_string(),
-                                        onclick: {
-                                            let first_group_id = member.groups.first().map(|g| g.group_id.clone()).unwrap_or_default();
-                                            move |_| {
-                                                show_menu.set(false);
-                                                // Re-sync from_group_id to the current first group in case
-                                                // member.groups changed after a refresh (signal persists for
-                                                // keyed components and won't update automatically from props).
-                                                from_group_id.set(first_group_id.clone());
-                                                to_group_id.set(String::new());
-                                                show_change_group.set(true);
-                                            }
-                                        },
-                                        lucide_dioxus::ArrowLeftRight {
-                                            class: "w-4 h-4 [&>path]:stroke-text-primary [&>polyline]:stroke-text-primary",
-                                        }
-                                        {tr.change_group}
-                                    }
-                                }
                                 Button {
                                     style: ButtonStyle::Text,
                                     size: ButtonSize::Small,
@@ -406,76 +302,6 @@ fn MemberRow(
                     }
                 } else {
                     div { class: "w-7 shrink-0" }
-                }
-            }
-
-            // Change group panel
-            if show_change_group() {
-                div { class: "flex flex-col gap-3 px-4 pb-3",
-                    div { class: "flex flex-col gap-2",
-                        // From group (only show select if member has multiple groups)
-                        if member.groups.len() > 1 {
-                            div { class: "flex flex-col gap-1",
-                                span { class: "text-xs font-semibold text-foreground-muted", {tr.from_group} }
-                                select {
-                                    class: "w-full px-3 py-2 rounded-[8px] border border-input-box-border bg-input-box-bg text-text-primary text-sm",
-                                    value: from_group_id(),
-                                    onchange: move |e| from_group_id.set(e.value()),
-                                    for group in member.groups.iter() {
-                                        option { value: "{group.group_id}", "{group.group_name}" }
-                                    }
-                                }
-                            }
-                        }
-
-                        // To group
-                        div { class: "flex flex-col gap-1",
-                            span { class: "text-xs font-semibold text-foreground-muted", {tr.to_group} }
-                            select {
-                                class: "w-full px-3 py-2 rounded-[8px] border border-input-box-border bg-input-box-bg text-text-primary text-sm",
-                                value: to_group_id(),
-                                onchange: move |e| to_group_id.set(e.value()),
-                                option { value: "", disabled: true, "—" }
-                                for (gid, gname) in { let from = from_group_id(); all_groups.iter().filter(move |(gid, _)| gid.as_str() != from.as_str()) } {
-                                    option { key: "{gid}", value: "{gid}", "{gname}" }
-                                }
-                            }
-                        }
-                    }
-
-                    // Action buttons
-                    div { class: "flex gap-2",
-                        Button {
-                            style: ButtonStyle::Primary,
-                            shape: ButtonShape::Square,
-                            size: ButtonSize::Small,
-                            disabled: to_group_id().is_empty(),
-                            onclick: move |_| {
-                                let to = to_group_id();
-                                if to.is_empty() {
-                                    return;
-                                }
-                                on_change_group.call((
-                                    member.user_id.clone(),
-                                    from_group_id(),
-                                    to,
-                                ));
-                                show_change_group.set(false);
-                                to_group_id.set(String::new());
-                            },
-                            {tr.apply}
-                        }
-                        Button {
-                            style: ButtonStyle::Outline,
-                            shape: ButtonShape::Square,
-                            size: ButtonSize::Small,
-                            onclick: move |_| {
-                                show_change_group.set(false);
-                                to_group_id.set(String::new());
-                            },
-                            {tr.cancel}
-                        }
-                    }
                 }
             }
         }

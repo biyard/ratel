@@ -243,6 +243,11 @@ translate! {
         ko: "멤버",
     },
 
+    admin_role: {
+        en: "Admin",
+        ko: "관리자",
+    },
+
     failed_remove_member: {
         en: "Failed to remove member. Please try again.",
         ko: "멤버 제거에 실패했습니다. 다시 시도해주세요.",

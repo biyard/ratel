@@ -28,6 +28,16 @@ translate! {
         ko: "그룹 선택",
     },
 
+    group_admin: {
+        en: "Admin",
+        ko: "관리자",
+    },
+
+    group_member: {
+        en: "Member",
+        ko: "멤버",
+    },
+
     email_label: {
         en: "Email, Username, or Phone Number",
         ko: "이메일, 이름, 또는 핸드폰 번호",

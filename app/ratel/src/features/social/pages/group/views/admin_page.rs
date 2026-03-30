@@ -38,7 +38,6 @@ pub fn AdminPage(username: String, team_pk: TeamPartition, permissions: i64) -> 
         let mut popup = popup;
         let team_pk = team_pk.clone();
         let username = username.clone();
-        let groups = groups.clone();
         let can_edit_group = can_edit_group;
         let mut refresh = refresh.clone();
         move |_evt: MouseEvent| {
@@ -63,7 +62,6 @@ pub fn AdminPage(username: String, team_pk: TeamPartition, permissions: i64) -> 
                 InviteMemberModal {
                     team_pk: team_pk.clone(),
                     username: username.clone(),
-                    groups: groups.clone(),
                     on_close,
                     on_invited,
                 }
