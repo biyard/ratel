@@ -23,6 +23,11 @@ translate! {
         ko: "보상",
     },
 
+    teams: {
+        en: "Teams",
+        ko: "팀",
+    },
+
     sign_in: {
         en: "Sign In",
         ko: "로그인",
@@ -51,9 +56,13 @@ pub fn AppMenu() -> Element {
     let mut popup = use_popup();
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let ctx = use_sidebar();
-    let collapsed = (ctx.state)() == SidebarState::Collapsed;
+    let is_mobile = (ctx.is_mobile)();
+    // On mobile, always show labels (expanded mode) since the Sheet has full width
+    let collapsed = !is_mobile && (ctx.state)() == SidebarState::Collapsed;
 
     let logged_in = user_ctx().is_logged_in();
+    let team_ctx = use_team_context();
+    let teams = team_ctx.teams.read().clone();
 
     rsx! {
         SidebarHeader { class: "flex justify-between items-center p-4",
@@ -97,6 +106,57 @@ pub fn AppMenu() -> Element {
                     }
                 }
             }
+
+            // On mobile, show team list inline below nav items with separator
+            if is_mobile && logged_in {
+                SidebarSeparator {}
+                SidebarGroup {
+                    SidebarGroupLabel { class: "text-xs text-foreground-muted px-2",
+                        "{tr.teams}"
+                    }
+                    SidebarMenu {
+                        if let Some(user) = user_ctx().user.as_ref() {
+                            SidebarMenuItem {
+                                Link {
+                                    to: format!("/{}", user.username),
+                                    class: "flex gap-2 items-center py-1.5 w-full text-sm rounded-md sidebar-menu-button hover:bg-accent/10",
+                                    "data-testid": "mobile-sidebar-user-link",
+                                    if !user.profile_url.is_empty() {
+                                        img {
+                                            src: "{user.profile_url}",
+                                            alt: "{user.display_name}",
+                                            class: "object-cover w-5 h-5 rounded-full",
+                                        }
+                                    } else {
+                                        div { class: "w-5 h-5 rounded-full bg-foreground-muted" }
+                                    }
+                                    span { class: "truncate", "{user.display_name}" }
+                                }
+                            }
+                        }
+
+                        for team in teams.iter() {
+                            SidebarMenuItem {
+                                Link {
+                                    to: format!("/{}/home", team.username),
+                                    class: "flex gap-2 items-center py-1.5 w-full text-sm rounded-md sidebar-menu-button hover:bg-accent/10",
+                                    "data-testid": "mobile-sidebar-team-link",
+                                    if !team.profile_url.is_empty() {
+                                        img {
+                                            src: "{team.profile_url}",
+                                            alt: "{team.nickname}",
+                                            class: "object-cover w-5 h-5 rounded-full",
+                                        }
+                                    } else {
+                                        div { class: "w-5 h-5 rounded-full bg-foreground-muted" }
+                                    }
+                                    span { class: "truncate", "{team.nickname}" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         SidebarFooter { class: "px-2 pb-4",
@@ -130,7 +190,7 @@ pub fn AppMenu() -> Element {
                 // Profile or Sign In
                 if logged_in {
                     SidebarMenuItem {
-                        ProfileButton { collapsed }
+                        ProfileButton { collapsed, is_mobile }
                     }
                 } else {
                     SidebarMenuItem {
@@ -157,32 +217,34 @@ pub fn AppMenu() -> Element {
                     }
                 }
 
-                // Expand/Collapse toggle
-                SidebarMenuItem {
-                    SidebarMenuButton {
-                        class: "app-menu-footer-button",
-                        r#as: Callback::new(move |attrs: Vec<Attribute>| {
-                            rsx! {
-                                button {
-                                    onclick: move |_| {
-                                        ctx.toggle();
-                                    },
-                                    ..attrs,
-                                    if collapsed {
-                                        lucide_dioxus::PanelLeftOpen {
-                                            size: 20,
-                                            class: "[&>path]:stroke-icon-primary [&>rect]:stroke-icon-primary",
+                // Expand/Collapse toggle (hide on mobile since sidebar is a Sheet)
+                if !is_mobile {
+                    SidebarMenuItem {
+                        SidebarMenuButton {
+                            class: "app-menu-footer-button",
+                            r#as: Callback::new(move |attrs: Vec<Attribute>| {
+                                rsx! {
+                                    button {
+                                        onclick: move |_| {
+                                            ctx.toggle();
+                                        },
+                                        ..attrs,
+                                        if collapsed {
+                                            lucide_dioxus::PanelLeftOpen {
+                                                size: 20,
+                                                class: "[&>path]:stroke-icon-primary [&>rect]:stroke-icon-primary",
+                                            }
+                                        } else {
+                                            lucide_dioxus::PanelLeftClose {
+                                                size: 20,
+                                                class: "[&>path]:stroke-icon-primary [&>rect]:stroke-icon-primary",
+                                            }
+                                            span { "Collapse" }
                                         }
-                                    } else {
-                                        lucide_dioxus::PanelLeftClose {
-                                            size: 20,
-                                            class: "[&>path]:stroke-icon-primary [&>rect]:stroke-icon-primary",
-                                        }
-                                        span { "Collapse" }
                                     }
                                 }
-                            }
-                        }),
+                            }),
+                        }
                     }
                 }
             }
@@ -241,8 +303,9 @@ fn ThemeToggleButton(collapsed: bool) -> Element {
 }
 
 /// Profile button rendered as a SidebarMenuButton — avatar only when collapsed, with dropdown.
+/// On mobile, the team list is shown inline in the sidebar content instead of in the dropdown.
 #[component]
-fn ProfileButton(collapsed: bool) -> Element {
+fn ProfileButton(collapsed: bool, is_mobile: bool) -> Element {
     let tr: AppMenuTranslate = use_translate();
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let team_ctx = use_team_context();
@@ -258,6 +321,13 @@ fn ProfileButton(collapsed: bool) -> Element {
     let profile_url = user.profile_url.clone();
     let display_name = user.display_name.clone();
     let teams = team_ctx.teams.read().clone();
+
+    // On mobile, position dropdown above the button; on desktop, to the right
+    let dropdown_class = if is_mobile {
+        "absolute bottom-full left-0 p-2 mb-2 rounded-lg border w-full border-divider bg-bg z-999"
+    } else {
+        "absolute bottom-0 left-full p-2 ml-2 rounded-lg border w-[220px] border-divider bg-bg z-999"
+    };
 
     rsx! {
         div { class: "relative",
@@ -284,6 +354,7 @@ fn ProfileButton(collapsed: bool) -> Element {
                     rsx! {
                         button {
                             "aria-label": aria_label,
+                            "data-testid": "sidebar-profile-btn",
                             onclick: move |_| {
                                 open.set(!open());
                             },
@@ -307,8 +378,8 @@ fn ProfileButton(collapsed: bool) -> Element {
                     onclick: move |_| open.set(false),
                 }
 
-                div { class: "absolute bottom-0 left-full p-2 ml-2 rounded-lg border w-[220px] border-divider bg-bg z-999",
-                    // User
+                div { class: "{dropdown_class}",
+                    // User profile link
                     Link {
                         class: "flex gap-2 items-center py-1.5 px-2 w-full rounded-md cursor-pointer hover:bg-hover",
                         to: "/",
@@ -320,27 +391,29 @@ fn ProfileButton(collapsed: bool) -> Element {
                                 class: "object-cover w-5 h-5 rounded-full",
                             }
                         } else {
-                            div { class: "w-5 h-5 rounded-full bg-neutral-600" }
+                            div { class: "w-5 h-5 rounded-full bg-foreground-muted" }
                         }
                         span { class: "text-sm truncate", "{user.display_name}" }
                     }
 
-                    // Teams
-                    for team in teams.iter() {
-                        Link {
-                            class: "flex gap-2 items-center py-1.5 px-2 w-full rounded-md cursor-pointer hover:bg-hover",
-                            to: format!("/{}/home", team.username),
-                            onclick: move |_| open.set(false),
-                            if !team.profile_url.is_empty() {
-                                img {
-                                    src: "{team.profile_url}",
-                                    alt: "{team.nickname}",
-                                    class: "object-cover w-5 h-5 rounded-full",
+                    // Teams (only in desktop dropdown; on mobile they are inline in sidebar)
+                    if !is_mobile {
+                        for team in teams.iter() {
+                            Link {
+                                class: "flex gap-2 items-center py-1.5 px-2 w-full rounded-md cursor-pointer hover:bg-hover",
+                                to: format!("/{}/home", team.username),
+                                onclick: move |_| open.set(false),
+                                if !team.profile_url.is_empty() {
+                                    img {
+                                        src: "{team.profile_url}",
+                                        alt: "{team.nickname}",
+                                        class: "object-cover w-5 h-5 rounded-full",
+                                    }
+                                } else {
+                                    div { class: "w-5 h-5 rounded-full bg-foreground-muted" }
                                 }
-                            } else {
-                                div { class: "w-5 h-5 rounded-full bg-neutral-600" }
+                                span { class: "text-sm truncate", "{team.nickname}" }
                             }
-                            span { class: "text-sm truncate", "{team.nickname}" }
                         }
                     }
 
@@ -361,6 +434,7 @@ fn ProfileButton(collapsed: bool) -> Element {
                     // Logout
                     button {
                         class: "py-1.5 px-2 w-full text-sm text-left rounded-md cursor-pointer hover:bg-hover",
+                        "data-testid": "sidebar-logout-btn",
                         onclick: move |_| {
                             open.set(false);
                             spawn(async move {
