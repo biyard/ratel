@@ -249,16 +249,10 @@ pub fn MobileBottomNav() -> Element {
                     "data-testid": "mobile-more-btn",
                     onclick: move |_| {
                         if logged_in {
-                            // For true mobile widths (Sidebar::is_mobile() == true),
-                            // open the mobile sidebar sheet. Otherwise (tablet/desktop),
-                            // toggle the desktop sidebar. This avoids the 768-899px
-                            // range where open_mobile has no effect because only the
-                            // desktop sidebar is rendered.
-                            if (ctx.is_mobile)() {
-                                ctx.set_open_mobile(true);
-                            } else {
-                                ctx.toggle();
-                            }
+                            // MobileBottomNav is only visible on mobile (CSS max-tablet:block),
+                            // so always open the mobile sidebar sheet. This avoids a race
+                            // condition where the async is_mobile JS signal hasn't resolved yet.
+                            ctx.set_open_mobile(true);
                         } else {
                             show_more_menu.set(!show_more_menu());
                         }

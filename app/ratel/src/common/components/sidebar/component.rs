@@ -281,7 +281,7 @@ pub fn Sidebar(
         };
     }
 
-    if is_mobile() {
+    if is_mobile() || open_mobile() {
         let sheet_side = match side {
             SidebarSide::Left => SheetSide::Left,
             SidebarSide::Right => SheetSide::Right,
