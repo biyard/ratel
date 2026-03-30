@@ -289,7 +289,6 @@ pub fn Sidebar(
 
         return rsx! {
             div {
-                "data-testid": "mobile-sidebar-sheet",
                 "data-mobile": "true",
                 Sheet {
                     open: open_mobile(),
@@ -297,6 +296,7 @@ pub fn Sidebar(
                     SheetContent {
                         side: sheet_side,
                         class: "sidebar-sheet",
+                        "data-testid": "mobile-sidebar-sheet",
                         "data-sidebar": "sidebar",
                         "data-slot": "sidebar",
                         "data-mobile": "true",
