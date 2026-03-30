@@ -53,7 +53,7 @@ use crate::features::admin::{AdminLayout, AdminMainPage};
 
 use crate::features::posts::{Index as PostIndex, PostDetail, PostEdit};
 
-use crate::views::Index;
+use crate::views::{Index, PrivacyPolicyPage, TermsOfServicePage};
 use layout::AppLayout;
 use membership::Home as MembershipHome;
 use root_layout::RootLayout;
@@ -105,6 +105,12 @@ pub enum Route {
         #[layout(AppLayout)]
             #[route("/")]
             Index { },
+
+            #[route("/privacy")]
+            PrivacyPolicyPage { },
+
+            #[route("/terms")]
+            TermsOfServicePage { },
 
             #[cfg_attr(feature="membership", route("/membership"))]
             #[cfg(feature="membership")]

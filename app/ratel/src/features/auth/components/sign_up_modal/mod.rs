@@ -463,10 +463,18 @@ pub fn SignupModal(
 
                 // Footer
                 div { class: "flex flex-row gap-2.5 justify-center items-center w-full",
-                    div { class: "font-medium cursor-pointer text-neutral-400 text-xs/3.5",
+                    a {
+                        class: "font-medium cursor-pointer text-neutral-400 text-xs/3.5",
+                        href: "/privacy",
+                        target: "_blank",
+                        rel: "noopener noreferrer",
                         {tr.privacy_policy}
                     }
-                    div { class: "font-medium cursor-pointer text-neutral-400 text-xs/3.5",
+                    a {
+                        class: "font-medium cursor-pointer text-neutral-400 text-xs/3.5",
+                        href: "/terms",
+                        target: "_blank",
+                        rel: "noopener noreferrer",
                         {tr.terms_of_service}
                     }
                 }

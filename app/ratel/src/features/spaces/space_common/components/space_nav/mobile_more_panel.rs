@@ -178,14 +178,14 @@ pub fn MobileMorePanel(
             Col { class: "gap-2",
                 a {
                     class: "text-xs text-foreground-muted hover:text-foreground cursor-pointer",
-                    href: "https://ratel.foundation/privacy",
+                    href: "/privacy",
                     target: "_blank",
                     rel: "noopener noreferrer",
                     "{tr.privacy_policy}"
                 }
                 a {
                     class: "text-xs text-foreground-muted hover:text-foreground cursor-pointer",
-                    href: "https://ratel.foundation/terms",
+                    href: "/terms",
                     target: "_blank",
                     rel: "noopener noreferrer",
                     "{tr.terms_of_service}"
