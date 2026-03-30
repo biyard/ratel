@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { click, goto, getLocator, fill, waitPopup, clickNoNav } from "../utils";
+import { click, goto, waitPopup } from "../utils";
 
 // This test verifies that after deleting a team, the Team Selector
 // immediately reflects the removal without requiring a page refresh.
@@ -37,10 +37,10 @@ test.describe.serial("Team deletion updates Team Selector (#1318)", () => {
       waitUntil: "load",
     });
 
-    // Step 4: Verify team appears in Team Selector on the sidebar
-    // The team selector trigger button shows the current team/user name
-    // Open the selector to verify the team is listed
-    await expect(page.getByText(teamNickname)).toBeVisible();
+    // Step 4: Verify team appears on the team home page heading
+    await expect(
+      page.getByRole("heading", { name: teamNickname })
+    ).toBeVisible();
 
     // Step 5: Navigate to team settings
     await goto(page, `/${teamUsername}/settings`);
