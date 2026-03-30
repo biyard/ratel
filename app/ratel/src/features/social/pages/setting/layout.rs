@@ -114,6 +114,7 @@ fn SettingsSidemenu(username: String) -> Element {
     let team_home_route = Route::TeamHome { username: username.clone() }.to_string();
     let settings_route = Route::TeamSetting { username: username.clone() }.to_string();
     let management_route = Route::TeamSettingMember { username: username.clone() }.to_string();
+    let subscription_route = Route::TeamSettingSubscription { username: username.clone() }.to_string();
 
     rsx! {
         div { class: "flex flex-col w-full h-full overflow-hidden",
@@ -147,6 +148,12 @@ fn SettingsSidemenu(username: String) -> Element {
                 SettingNavItem {
                     label: tr.team_management.to_string(),
                     route: management_route,
+                }
+                if is_admin {
+                    SettingNavItem {
+                        label: tr.subscription.to_string(),
+                        route: subscription_route,
+                    }
                 }
             }
 

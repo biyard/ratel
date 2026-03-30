@@ -253,28 +253,8 @@ translate! {
         ko: "멤버 제거에 실패했습니다. 다시 시도해주세요.",
     },
 
-    change_group: {
-        en: "Change group",
-        ko: "그룹 변경",
-    },
-
-    from_group: {
-        en: "From",
-        ko: "현재 그룹",
-    },
-
-    to_group: {
-        en: "To",
-        ko: "이동할 그룹",
-    },
-
-    apply: {
-        en: "Apply",
-        ko: "적용",
-    },
-
-    failed_change_group: {
-        en: "Failed to change group. Please try again.",
-        ko: "그룹 변경에 실패했습니다. 다시 시도해주세요.",
+    subscription: {
+        en: "Subscription",
+        ko: "구독",
     },
 }
