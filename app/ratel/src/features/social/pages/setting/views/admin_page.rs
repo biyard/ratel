@@ -116,7 +116,7 @@ pub fn AdminPage(username: String, team: TeamResponse) -> Element {
                         let result = delete_team_handler(username.clone()).await;
                         popup.close();
                         if result.is_ok() {
-                            team_ctx.remove_team_by_username(&username);
+                            team_ctx.teams.restart();
                             navigator.push("/");
                         } else if let Err(err) = result {
                             error!("Delete team failed: {}", err);

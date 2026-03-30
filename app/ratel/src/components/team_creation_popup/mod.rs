@@ -1,5 +1,4 @@
 use crate::*;
-use crate::features::posts::types::TeamGroupPermissions;
 
 #[component]
 pub fn TeamCreationPopup() -> Element {
@@ -42,53 +41,8 @@ pub fn TeamCreationPopup() -> Element {
                     };
 
                     match create_team_handler(req).await {
-                        Ok(response) => {
-                            let permissions: Vec<u8> = TeamGroupPermissions::all()
-                                .0
-                                .into_iter()
-                                .map(|p| p as u8)
-                                .collect();
-                            let mut teams = team_ctx.teams.read().clone();
-                            if let Some(existing) =
-                                teams.iter_mut().find(|team| team.username == username)
-                                .iter_mut()
-                                .find(|team| team.username == username)
-                            {
-                                existing.nickname = nickname.clone();
-                                existing.profile_url = profile_url.clone();
-                                existing.description = description.clone();
-                                existing.permissions = permissions.clone();
-                                if existing.pk.is_empty() {
-                                    existing.pk = response.team_pk.clone();
-                                }
-                            } else {
-                                teams
-                                    .push(crate::common::contexts::TeamItem {
-                                        pk: response.team_pk.clone(),
-                                        nickname: nickname.clone(),
-                                        username: username.clone(),
-                                        profile_url: profile_url.clone(),
-                                        user_type: UserType::Team,
-                                        permissions: permissions.clone(),
-                                        description: description.clone(),
-                                    });
-                            }
-                            let selected_index = teams
-                                .iter()
-                                .position(|team| team.username == username);
-                            team_ctx.set_teams(teams);
-                            if let Some(idx) = selected_index {
-                                team_ctx.set_selected_index(idx);
-                            }
-                            if let Ok(teams) = get_user_teams_handler().await {
-                                let selected_index = teams
-                                    .iter()
-                                    .position(|team| team.username == username);
-                                team_ctx.set_teams(teams);
-                                if let Some(idx) = selected_index {
-                                    team_ctx.set_selected_index(idx);
-                                }
-                            }
+                        Ok(_response) => {
+                            team_ctx.teams.restart();
                             popup.close();
                             nav.push(format!("/{}/home", username));
                         }

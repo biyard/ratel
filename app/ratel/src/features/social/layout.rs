@@ -10,27 +10,12 @@ use crate::features::social::*;
 /// Always renders TeamSidemenu with categories sidebar.
 #[component]
 pub fn SocialLayout(username: String) -> Element {
-    crate::common::contexts::TeamContext::init();
+    crate::common::contexts::TeamContext::init()?;
     let user_ctx = crate::features::auth::hooks::use_user_context();
-    let mut team_ctx = crate::common::contexts::use_team_context();
     let logged_in = user_ctx().user.is_some();
 
     // Provide selected category context shared with child routes
     use_context_provider(|| Signal::new(Option::<String>::None));
-
-    let _teams_loader = use_resource(move || async move {
-        let user = user_ctx().user.clone();
-        if user.is_some() {
-            match crate::get_user_teams_handler().await {
-                Ok(teams) => {
-                    team_ctx.set_teams(teams);
-                }
-                Err(e) => {
-                    debug!("Failed to load teams: {:?}", e);
-                }
-            }
-        }
-    });
 
     rsx! {
         div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-team-bg text-text-primary",
@@ -99,7 +84,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
 
     let data = resource.read();
     let fallback_team = {
-        let teams = team_ctx.teams.read();
+        let teams = (team_ctx.teams)();
         teams.iter().find(|team| team.username == username).cloned()
     };
 
@@ -317,9 +302,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
         Ok(team) => {
             if !team.pk.is_empty() && !team.username.is_empty() {
                 let permissions_vec = {
-                    let from_ctx = team_ctx
-                        .teams
-                        .read()
+                    let from_ctx = (team_ctx.teams)()
                         .iter()
                         .find(|item| item.username == username)
                         .map(|item| item.permissions.clone())
@@ -338,7 +321,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                 };
 
                 let profile_url = team.profile_url.clone().unwrap_or_default();
-                let mut teams = team_ctx.teams.read().clone();
+                let mut teams = (team_ctx.teams)();
                 if !teams.iter().any(|item| item.username == team.username) {
                     teams.push(crate::common::contexts::TeamItem {
                         pk: team.pk.clone(),
@@ -364,7 +347,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                 } else {
                     team.nickname.clone()
                 };
-                let teams = team_ctx.teams.read().clone();
+                let teams = (team_ctx.teams)();
                 render_menu(
                     team.profile_url.clone(),
                     selected_label,
@@ -383,7 +366,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                 } else {
                     team.nickname.clone()
                 };
-                let teams = team_ctx.teams.read().clone();
+                let teams = (team_ctx.teams)();
                 render_menu(
                     team.profile_url.clone(),
                     selected_label,

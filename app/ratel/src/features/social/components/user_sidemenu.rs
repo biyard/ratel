@@ -90,7 +90,7 @@ fn SelfSidemenu(username: String) -> Element {
     let mut popup = use_popup();
     let nav = use_navigator();
     let user = user_ctx().user.clone().unwrap_or_default();
-    let teams = team_ctx.teams.read().clone();
+    let teams = (team_ctx.teams)();
 
     rsx! {
         crate::common::SideMenuContainer {

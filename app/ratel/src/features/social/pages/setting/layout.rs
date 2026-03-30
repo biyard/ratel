@@ -15,23 +15,7 @@ pub struct SettingsSaveContext {
 
 #[component]
 pub fn TeamSettingLayout(username: String) -> Element {
-    crate::common::contexts::TeamContext::init();
-    let user_ctx = crate::features::auth::hooks::use_user_context();
-    let mut team_ctx = crate::common::contexts::use_team_context();
-
-    let _teams_loader = use_resource(move || async move {
-        let user = user_ctx().user.clone();
-        if user.is_some() {
-            match crate::get_user_teams_handler().await {
-                Ok(teams) => {
-                    team_ctx.set_teams(teams);
-                }
-                Err(e) => {
-                    debug!("TeamSettingLayout: failed to load teams: {:?}", e);
-                }
-            }
-        }
-    });
+    crate::common::contexts::TeamContext::init()?;
 
     // Provide save context so child pages can hook into the header Save button
     let mut save_ctx = use_context_provider(|| SettingsSaveContext {
@@ -82,7 +66,7 @@ fn SettingsSidemenu(username: String) -> Element {
     let tr: TeamSettingsTranslate = use_translate();
 
     let team_item = {
-        let teams = team_ctx.teams.read();
+        let teams = (team_ctx.teams)();
         teams.iter().find(|t| t.username == username).cloned()
     };
 

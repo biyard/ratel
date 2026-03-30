@@ -28,7 +28,7 @@ pub fn Home(username: String) -> Element {
     let logged_in = user_ctx().user.is_some();
 
     let team_item = {
-        let teams = team_ctx.teams.read();
+        let teams = (team_ctx.teams)();
         teams.iter().find(|team| team.username == username).cloned()
     };
 

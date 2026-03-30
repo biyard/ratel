@@ -257,7 +257,7 @@ fn ProfileButton(collapsed: bool) -> Element {
 
     let profile_url = user.profile_url.clone();
     let display_name = user.display_name.clone();
-    let teams = team_ctx.teams.read().clone();
+    let teams = (team_ctx.teams)();
 
     rsx! {
         div { class: "relative",

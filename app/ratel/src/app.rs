@@ -14,7 +14,7 @@ pub fn App() -> Element {
     ToastService::init();
     ThemeService::init();
     let _ = crate::features::auth::Context::init()?;
-    crate::common::contexts::TeamContext::init();
+    crate::common::contexts::TeamContext::init()?;
     let conf = config::get();
     let env = conf.common.env;
     use_context_provider(QueryStore::new);
