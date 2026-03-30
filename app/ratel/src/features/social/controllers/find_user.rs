@@ -2,7 +2,7 @@ use crate::features::social::controllers::dto::UserResponse;
 use crate::features::social::*;
 use crate::features::auth::*;
 
-#[get("/api/users/find?username", _user: OptionalUser)]
+#[get("/api/users/profile?username", _user: OptionalUser)]
 pub async fn find_user_by_username_handler(username: String) -> Result<UserResponse> {
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
