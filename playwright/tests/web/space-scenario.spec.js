@@ -227,6 +227,9 @@ test.describe.serial("Space governance scenario", () => {
     await page.waitForURL(new RegExp(`/${teamUsername}/home`), {
       waitUntil: "load",
     });
+    await page.waitForFunction(
+      () => document.querySelector("[data-dioxus-id]") !== null
+    );
 
     // Step 4: Create a post via the Create button on the team home page
     await click(page, { text: "Create" });
