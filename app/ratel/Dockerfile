@@ -14,4 +14,4 @@ COPY . .
 
 EXPOSE 8080
 
-CMD ["./server"]
+CMD ["./app-shell"]

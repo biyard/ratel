@@ -230,7 +230,7 @@ jobs:
 
       - name: Install Dioxus-cli
         run: |
-          cargo binstall dioxus-cli@0.7.4 --force
+          cargo binstall dioxus-cli@0.7.3 --force
 
       - name: Building test
         id: build
@@ -283,7 +283,7 @@ jobs:
 
       - name: Install Dioxus-cli
         run: |
-          cargo binstall dioxus-cli@0.7.4 --force
+          cargo binstall dioxus-cli@0.7.3 --force
 
       - name: Setup pnpm
         run: |
@@ -368,7 +368,7 @@ jobs:
 
       - name: Install Dioxus-cli
         run: |
-          cargo binstall dioxus-cli@0.7.4 --force
+          cargo binstall dioxus-cli@0.7.3 --force
 
       - name: Setup pnpm
         run: |
