@@ -46,6 +46,12 @@ test.describe.serial("Team deletion updates Team Selector (#1318)", () => {
     await goto(page, `/${teamUsername}/settings`);
 
     // Step 6: Click "Delete team" button
+    // The settings page uses nested use_loader calls (TeamContext + settings data).
+    // SSR may not resolve the inner suspension, so the client fetches after hydration.
+    // Wait with a longer timeout for the admin page content to appear.
+    await expect(
+      page.getByText("Delete team", { exact: true })
+    ).toBeVisible({ timeout: 30000 });
     await click(page, { text: "Delete team" });
 
     // Step 7: Confirm deletion in the popup

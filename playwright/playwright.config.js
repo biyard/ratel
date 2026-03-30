@@ -46,7 +46,7 @@ export default defineConfig({
     },
     {
       name: "Individual user tests",
-      testMatch: ["tests/users/**/*.spec.js", "tests/spaces/**/*.spec.js"],
+      testMatch: ["tests/users/**/*.spec.js", "tests/spaces/**/*.spec.js", "tests/teams/**/*.spec.js"],
       dependencies: ["auth-setup"],
       use: {
         ...devices["Desktop Chrome"],
