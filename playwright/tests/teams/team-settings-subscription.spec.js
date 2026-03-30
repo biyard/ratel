@@ -62,7 +62,7 @@ test.describe.serial(
 
       // Verify the settings page loaded by checking a unique nav item
       await expect(page).toHaveURL(new RegExp(`/${teamUsername}/settings`));
-      await getLocator(page, { text: "General Settings" });
+      await getLocator(page, { text: "General settings" });
     });
 
     test("should click the Subscription tab and load the subscription page", async ({
@@ -72,7 +72,7 @@ test.describe.serial(
       await goto(page, `/${teamUsername}/settings`);
 
       // Verify we are on the settings page
-      await getLocator(page, { text: "General Settings" });
+      await getLocator(page, { text: "General settings" });
 
       // The Subscription nav item is visible only for admins.
       // Since the user created the team, they are the admin.
