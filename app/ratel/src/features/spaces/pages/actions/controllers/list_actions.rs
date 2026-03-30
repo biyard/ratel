@@ -16,12 +16,14 @@ use crate::features::spaces::pages::actions::actions::quiz::{SpaceQuiz, SpaceQui
 #[cfg(feature = "server")]
 use std::collections::HashSet;
 
-#[get("/api/spaces/{space_pk}/actions", role: SpaceUserRole, user: OptionalUser)]
+#[get("/api/spaces/{space_pk}/actions", role: SpaceUserRole, user: OptionalUser, space: SpaceCommon)]
 pub async fn list_actions(space_pk: SpacePartition) -> Result<Vec<SpaceActionSummary>> {
     let cli = crate::features::spaces::pages::actions::config::get()
         .common
         .dynamodb();
     let space_pk: Partition = space_pk.into();
+    let space_status = space.status.clone();
+    let join_anytime = space.join_anytime;
 
     let (space_actions, _) = SpaceAction::find_by_space(cli, &space_pk, SpaceAction::opt())
         .await
@@ -80,14 +82,13 @@ pub async fn list_actions(space_pk: SpacePartition) -> Result<Vec<SpaceActionSum
         }
     }
 
-    // Filter out actions that haven't started yet (for non-creators)
+    // Creators can preview upcoming actions. Other roles only see actions after start time.
     let now = crate::common::utils::time::get_now_timestamp_millis();
+    actions.retain(|action| is_visible_for_role(&role, action.started_at, now));
+
     if !matches!(role, SpaceUserRole::Creator) {
         actions.retain(|action| {
-            action
-                .started_at
-                .map(|started_at| now >= started_at)
-                .unwrap_or(false)
+            is_visible_for_space_status(space_status.clone(), action.prerequisite)
         });
     }
 
@@ -104,22 +105,12 @@ pub async fn list_actions(space_pk: SpacePartition) -> Result<Vec<SpaceActionSum
                 .filter(|a| a.prerequisite)
                 .all(|a| a.user_participated);
 
-            if !all_pre_actions_done {
-                // Check if we should still show all actions based on space settings
-                let space = SpaceCommon::get(cli, &space_pk, Some(EntityType::SpaceCommon)).await?;
-                let show_all = if let Some(space) = space {
-                    // Join Anytime OFF + space InProgress → show all
-                    !space.join_anytime
-                        && (matches!(space.status, Some(SpaceStatus::Started))
-                            || matches!(space.status, Some(SpaceStatus::Finished)))
-                } else {
-                    false
-                };
-
-                if !show_all {
-                    // Only show pre-actions
-                    actions.retain(|a| a.prerequisite);
-                }
+            if should_only_show_prerequisite_actions(
+                space_status,
+                join_anytime,
+                all_pre_actions_done,
+            ) {
+                actions.retain(|a| a.prerequisite);
             }
         }
     }
@@ -253,4 +244,34 @@ async fn has_completed_follow_action(
     })?;
 
     Ok(follows.len() == deduped_targets.len())
+}
+
+fn is_visible_for_role(role: &SpaceUserRole, started_at: Option<i64>, now: i64) -> bool {
+    matches!(role, SpaceUserRole::Creator)
+        || started_at
+            .map(|started_at| now >= started_at)
+            .unwrap_or(false)
+}
+
+fn is_visible_for_space_status(status: Option<SpaceStatus>, prerequisite: bool) -> bool {
+    match status {
+        Some(SpaceStatus::Started) | Some(SpaceStatus::Finished) => true,
+        Some(SpaceStatus::InProgress) => prerequisite,
+        _ => false,
+    }
+}
+
+fn should_only_show_prerequisite_actions(
+    status: Option<SpaceStatus>,
+    join_anytime: bool,
+    all_pre_actions_done: bool,
+) -> bool {
+    if all_pre_actions_done {
+        return false;
+    }
+
+    match status {
+        Some(SpaceStatus::Started) | Some(SpaceStatus::Finished) => join_anytime,
+        _ => true,
+    }
 }
