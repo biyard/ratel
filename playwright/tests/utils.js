@@ -95,9 +95,9 @@ export async function getLocator(
 
 export async function waitPopup(page, { visible = true }) {
   if (visible) {
-    await expect(page.locator(".backdrop-blur-\\[10px\\]")).toBeVisible();
+    await expect(page.getByTestId("popup-overlay")).toBeVisible();
   } else {
-    await expect(page.locator(".backdrop-blur-\\[10px\\]")).toBeHidden();
+    await expect(page.getByTestId("popup-overlay")).toBeHidden();
   }
 }
 

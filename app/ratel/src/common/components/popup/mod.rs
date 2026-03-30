@@ -31,6 +31,7 @@ pub fn PopupZone() -> Element {
 
     rsx! {
         div {
+            "data-testid": "popup-overlay",
             class: "flex fixed top-0 left-0 justify-center items-center w-screen h-screen bg-popup-background backdrop-blur-[10px] z-[101] bg-no-s",
             onclick: move |_| {
                 if backdrop_closable {
