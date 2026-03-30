@@ -38,6 +38,7 @@ pub fn SignupModal(
     let mut terms_error = use_signal(|| String::new());
     let mut error_message: Signal<Option<String>> = use_signal(|| None);
     let mut popup = use_popup();
+    let navigator = use_navigator();
     let mut user_ctx = use_user_context();
 
     let is_valid_email_format = |email: &str| -> bool {
@@ -463,10 +464,20 @@ pub fn SignupModal(
 
                 // Footer
                 div { class: "flex flex-row gap-2.5 justify-center items-center w-full",
-                    div { class: "font-medium cursor-pointer text-neutral-400 text-xs/3.5",
+                    button {
+                        class: "font-medium cursor-pointer text-neutral-400 text-xs/3.5 bg-transparent border-none p-0",
+                        onclick: move |_| {
+                            popup.close();
+                            navigator.push("/privacy");
+                        },
                         {tr.privacy_policy}
                     }
-                    div { class: "font-medium cursor-pointer text-neutral-400 text-xs/3.5",
+                    button {
+                        class: "font-medium cursor-pointer text-neutral-400 text-xs/3.5 bg-transparent border-none p-0",
+                        onclick: move |_| {
+                            popup.close();
+                            navigator.push("/terms");
+                        },
                         {tr.terms_of_service}
                     }
                 }
