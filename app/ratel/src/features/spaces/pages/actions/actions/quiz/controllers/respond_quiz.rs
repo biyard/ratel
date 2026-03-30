@@ -1,5 +1,7 @@
 use crate::common::models::space::{SpaceAuthor, SpaceCommon};
 use crate::features::spaces::pages::actions::actions::quiz::*;
+#[cfg(feature = "server")]
+use crate::features::spaces::space_common::models::space_reward::SpaceReward;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RespondQuizRequest {
@@ -10,16 +12,18 @@ pub struct RespondQuizRequest {
     "/api/spaces/{space_pk}/quizzes/{quiz_id}/respond",
     role: SpaceUserRole,
     author: SpaceAuthor,
+    user: crate::features::auth::User,
     space: SpaceCommon
 )]
 pub async fn respond_quiz(
     space_pk: SpacePartition,
     quiz_id: SpaceQuizEntityType,
     req: RespondQuizRequest,
-) -> Result<String> {
+) -> Result<()> {
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let space_id = space_pk;
+    let quiz_action_id = quiz_id.to_string(); // UUID only, matches SpaceReward action_id
     let space_pk: Partition = space_id.clone().into();
     let quiz_sk: EntityType = quiz_id.clone().into();
 
@@ -29,7 +33,7 @@ pub async fn respond_quiz(
 
     let space_action = crate::features::spaces::pages::actions::models::SpaceAction::get(
         cli,
-        &CompositePartition(space_id, quiz_id.clone()),
+        &CompositePartition(space_id.clone(), quiz_id.clone()),
         Some(EntityType::SpaceAction),
     )
     .await?
@@ -39,6 +43,7 @@ pub async fn respond_quiz(
         role,
         space_action.prerequisite,
         space.status,
+        space.join_anytime,
     ) {
         return Err(SpaceActionQuizError::NotAvailableInCurrentStatus.into());
     }
@@ -62,13 +67,10 @@ pub async fn respond_quiz(
 
     let total_allowed = quiz.retry_count.saturating_add(1).min(MAX_TOTAL_ATTEMPTS);
     let limit: i32 = total_allowed as i32;
-    let attempts =
-        SpaceQuizAttempt::list_by_quiz_user(cli, &quiz_id, &author.pk, limit)
-            .await?;
+    let attempts = SpaceQuizAttempt::list_by_quiz_user(cli, &quiz_id, &author.pk, limit).await?;
     if attempts.len() as i64 >= total_allowed {
         return Err(SpaceActionQuizError::NoRemainingAttempts.into());
     }
-
     let score = calculate_score(&quiz.questions, &correct.answers, &req.answers)?;
     let attempt = SpaceQuizAttempt::new(quiz_id.clone(), author, req.answers, score);
     attempt.create(cli).await?;
@@ -80,7 +82,40 @@ pub async fn respond_quiz(
             .await?;
     }
 
-    Ok("success".to_string())
+    let already_passed = attempts.iter().any(|a| a.score >= quiz.pass_score);
+    if score >= quiz.pass_score && !already_passed {
+        match SpaceReward::get_by_action(
+            cli,
+            space_id.clone(),
+            quiz_action_id.clone(),
+            RewardUserBehavior::QuizAnswer,
+        )
+        .await
+        {
+            Ok(space_reward) => {
+                if let Err(e) =
+                    SpaceReward::award(cli, &space_reward, user.pk, Some(space.user_pk.clone()))
+                        .await
+                {
+                    tracing::error!(
+                        space_pk = %space_id,
+                        action_id = %quiz_sk,
+                        error = %e,
+                        "Failed to award quiz reward"
+                    );
+                }
+            }
+            Err(e) => {
+                tracing::warn!(
+                    space_pk = %space_id,
+                    action_id = %quiz_sk,
+                    error = %e,
+                    "SpaceReward not found for quiz action"
+                );
+            }
+        }
+    }
+    Ok(())
 }
 
 fn calculate_score(

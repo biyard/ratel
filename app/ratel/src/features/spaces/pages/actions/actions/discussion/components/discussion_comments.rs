@@ -17,6 +17,8 @@ translate! {
     complete_edit: { en: "Save", ko: "수정 완료" },
     write_reply: { en: "Write a reply...", ko: "답글을 입력하세요..." },
     responses: { en: "responses", ko: "응답" },
+    show_more: { en: "More", ko: "더보기" },
+    show_less: { en: "Close", ko: "접기" },
 }
 
 fn to_millis(ts: i64) -> i64 {
@@ -25,6 +27,10 @@ fn to_millis(ts: i64) -> i64 {
     } else {
         ts
     }
+}
+
+fn should_collapse_text(content: &str) -> bool {
+    content.chars().count() > 320 || content.lines().count() > 6
 }
 
 #[component]
@@ -134,6 +140,57 @@ pub fn DiscussionComments(
 }
 
 #[component]
+fn CollapsibleCommentBody(
+    content: String,
+    #[props(default = 6)] collapsed_lines: usize,
+) -> Element {
+    let tr: DiscussionCommentsTranslate = use_translate();
+    let mut expanded = use_signal(|| false);
+    let collapsible = should_collapse_text(&content);
+
+    let collapsed_height_class = if collapsed_lines <= 4 {
+        "max-h-20"
+    } else {
+        "max-h-32"
+    };
+
+    let body_class = if collapsible && !expanded() {
+        format!(
+            "overflow-hidden whitespace-pre-wrap break-words text-sm text-text-primary {collapsed_height_class}"
+        )
+    } else {
+        "whitespace-pre-wrap break-words text-sm text-text-primary".to_string()
+    };
+
+    rsx! {
+        div { class: "flex flex-col items-start gap-2 w-full",
+            div { class: "w-full",
+                p { class: "{body_class}", {content} }
+            }
+            if collapsible && !expanded() {
+                div { class: "-mt-5 h-5 w-full bg-gradient-to-t from-card via-card/80 to-transparent" }
+                div { class: "flex w-full justify-center -mt-1",
+                    button {
+                        class: "inline-flex items-center justify-center px-0 text-xs font-medium text-primary hover:text-primary",
+                        onclick: move |_| expanded.set(true),
+                        "{tr.show_more}"
+                    }
+                }
+            }
+            if collapsible && expanded() {
+                div { class: "flex w-full justify-center",
+                    button {
+                        class: "inline-flex items-center justify-center px-0 text-xs font-medium text-primary hover:text-primary",
+                        onclick: move |_| expanded.toggle(),
+                        "{tr.show_less}"
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[component]
 fn CommentItem(
     space_id: ReadSignal<SpacePartition>,
     discussion_id: ReadSignal<SpacePostEntityType>,
@@ -199,9 +256,7 @@ fn CommentItem(
                             style: ButtonStyle::Text,
                             class: "text-text-secondary hover:text-text-primary".to_string(),
                             onclick: move |_| show_action_menu.set(!show_action_menu()),
-                            crate::common::icons::validations::Extra {
-                                class: "size-4 [&>circle]:fill-current"
-                            }
+                            crate::common::icons::validations::Extra { class: "size-4 [&>circle]:fill-current" }
                         }
                         if show_action_menu() {
                             div { class: "absolute right-0 top-8 z-10 min-w-[110px] rounded-md bg-card p-1 shadow-lg",
@@ -285,7 +340,7 @@ fn CommentItem(
                     }
                 }
             } else {
-                p { class: "text-sm text-text-primary", {comment.content.clone()} }
+                CollapsibleCommentBody { content: comment.content.clone() }
             }
             div { class: "flex items-center justify-between text-xs text-text-secondary",
                 Button {
@@ -428,9 +483,7 @@ fn ReplyItem(
                             style: ButtonStyle::Text,
                             class: "text-text-secondary hover:text-text-primary".to_string(),
                             onclick: move |_| show_action_menu.set(!show_action_menu()),
-                            crate::common::icons::validations::Extra {
-                                class: "size-4 [&>circle]:fill-current"
-                            }
+                            crate::common::icons::validations::Extra { class: "size-4 [&>circle]:fill-current" }
                         }
                         if show_action_menu() {
                             div { class: "absolute right-0 top-8 z-10 min-w-[110px] rounded-md bg-card p-1 shadow-lg",
@@ -515,7 +568,7 @@ fn ReplyItem(
                     }
                 }
             } else {
-                p { class: "text-sm text-text-primary", {reply.content.clone()} }
+                CollapsibleCommentBody { content: reply.content.clone(), collapsed_lines: 4 }
             }
             div { class: "flex justify-end pt-1",
                 LikeButton {

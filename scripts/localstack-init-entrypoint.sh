@@ -38,6 +38,19 @@ TIMESTAMP=$(date +%s%3N)
 # Membership
 aws --endpoint-url=$ENDPOINT dynamodb batch-write-item --request-items file://scripts/dynamodb-data/membership.json
 
+# Playwright test overrides for LocalStack only.
+# Keep production/default membership definitions unchanged outside this seed path.
+aws --endpoint-url=$ENDPOINT dynamodb update-item \
+  --table-name ratel-local-main \
+  --key '{
+    "pk": {"S": "MEMBERSHIP#PRO"},
+    "sk": {"S": "MEMBERSHIP"}
+  }' \
+  --update-expression "SET max_credits_per_space = :max" \
+  --expression-attribute-values '{
+    ":max": {"N": "-1"}
+  }'
+
 # Reward
 aws --endpoint-url=$ENDPOINT dynamodb batch-write-item --request-items file://scripts/dynamodb-data/reward.json
 
@@ -249,8 +262,8 @@ aws --endpoint-url=$ENDPOINT dynamodb put-item \
     "expired_at": {"N": "'${EXPIRED_AT}'"},
     "membership_pk": {"S": "MEMBERSHIP#PRO"},
     "status": {"S": "Active"},
-    "total_credits": {"N": "40"},
-    "remaining_credits": {"N": "40"},
+    "total_credits": {"N": "100"},
+    "remaining_credits": {"N": "100"},
     "auto_renew": {"BOOL": true},
     "gsi1_pk": {"S": "UM#MEMBERSHIP#PRO"},
     "gsi1_sk": {"S": "TS#'${TIMESTAMP}'"}

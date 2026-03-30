@@ -112,11 +112,13 @@ fn FeedBody(post: PostResponse, on_edit: Option<EventHandler<MouseEvent>>) -> El
     } = post;
 
     rsx! {
-        div { class: "flex flex-col gap-2.5 pt-5 pb-2.5",
-            div { class: "flex flex-row justify-between px-5",
-                div { class: "flex flex-row gap-2.5 justify-start items-center",
+        div { class: "flex flex-col pt-5 pb-5",
+            div { class: "flex min-h-8 flex-row justify-between px-5",
+                div { class: "flex h-8 flex-row items-center",
                     if space_pk.is_some() {
                         SpaceTag {}
+                    } else {
+                        div { class: "h-8" }
                     }
                 }
                 if on_edit.is_some() {
@@ -129,10 +131,11 @@ fn FeedBody(post: PostResponse, on_edit: Option<EventHandler<MouseEvent>>) -> El
                     }
                 }
             }
-            h2 { class: "px-5 w-full font-bold align-middle line-clamp-2 text-xl/[25px] tracking-[0.5px] text-text-primary",
+            h2 { class: "mt-2 px-5 w-full truncate font-bold align-middle text-xl/[25px] tracking-[0.5px] text-text-primary",
                 {title}
             }
-            div { class: "flex flex-row justify-between items-center px-5",
+            FeedContents { contents: html_contents, urls }
+            div { class: "mt-4 flex flex-row justify-between items-center px-5",
                 UserBadge {
                     profile_url: author_profile_url,
                     name: author_display_name,
@@ -142,8 +145,6 @@ fn FeedBody(post: PostResponse, on_edit: Option<EventHandler<MouseEvent>>) -> El
                     {time_ago(created_at)}
                 }
             }
-            div { class: "flex flex-row justify-between px-5" }
-            FeedContents { contents: html_contents, urls }
         }
     }
 }
@@ -151,10 +152,10 @@ fn FeedBody(post: PostResponse, on_edit: Option<EventHandler<MouseEvent>>) -> El
 #[component]
 pub fn FeedContents(contents: String, urls: Vec<String>) -> Element {
     rsx! {
-        div { class: "px-5 mt-2.5 break-all text-desc-text",
+        div { class: "px-5 mt-2 break-all text-desc-text",
             div {
-                class: "border-none",
-                style: "min-height: 50px; max-height: 200px; overflow: hidden;",
+                class: "border-none truncate whitespace-nowrap",
+                style: "min-height: 22px; max-height: 22px; overflow: hidden;",
                 dangerous_inner_html: contents,
             }
         }
@@ -248,7 +249,7 @@ pub fn UserBadge(
 fn SpaceTag() -> Element {
     rsx! {
         span { class: "flex flex-row gap-1 justify-start items-center px-2 rounded-sm border border-label-color-border bg-label-color-bg",
-            icons::home::Palace { class: "w-3.5 h-3.5 [&>path]:stroke-label-color-text [&_g>path:nth-child(n+2)]:stroke-label-color-text" }
+            icons::home::Palace { class: "w-3.5 h-3.5 [&>path]:stroke-label-color-text [&>path]:fill-transparent [&_g>path:nth-child(n+2)]:stroke-label-color-text [&_g>path]:fill-transparent" }
             div { class: "font-semibold text-xs/[25px] text-label-color-text", "SPACE" }
         }
     }

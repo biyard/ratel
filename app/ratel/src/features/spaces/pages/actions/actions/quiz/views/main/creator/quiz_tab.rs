@@ -1,14 +1,12 @@
 use super::*;
 use crate::features::spaces::pages::actions::actions::poll::components::QuestionViewer;
 use crate::features::spaces::pages::actions::actions::poll::components::TimeRangeDisplay;
-use crate::features::spaces::space_common::types::space_page_actions_quiz_key;
 
 #[component]
 pub fn QuizTab(can_edit: bool) -> Element {
     let ctx = use_space_quiz_context();
     let tr: QuizCreatorTranslate = use_translate();
     let toast = use_toast();
-    let mut query = use_query_store();
     let space_id = ctx.space_id;
     let quiz_id = ctx.quiz_id;
     let mut questions = ctx.questions;
@@ -19,7 +17,7 @@ pub fn QuizTab(can_edit: bool) -> Element {
     rsx! {
         div { class: "flex w-full flex-col gap-6",
             div { class: "flex flex-col gap-1",
-                label { class: "text-sm font-medium text-neutral-400 light:text-text-secondary",
+                label { class: "text-sm font-medium text-quiz-tab-label",
                     "{tr.survey_time_label}"
                 }
                 TimeRangeDisplay {
@@ -28,7 +26,7 @@ pub fn QuizTab(can_edit: bool) -> Element {
                 }
             }
             div { class: "flex flex-col gap-1",
-                label { class: "text-sm font-medium text-neutral-400 light:text-text-secondary",
+                label { class: "text-sm font-medium text-quiz-tab-label",
                     "{tr.pass_score_label}"
                 }
                 Input {
@@ -44,15 +42,15 @@ pub fn QuizTab(can_edit: bool) -> Element {
                         }
                     },
                     onblur: move |_| {
-                        save_quiz(space_id, quiz_id, questions, answers, pass_score, retry_count, toast, query);
+                        save_quiz(space_id, quiz_id, questions, answers, pass_score, retry_count, toast);
                     },
                     onconfirm: move |_| {
-                        save_quiz(space_id, quiz_id, questions, answers, pass_score, retry_count, toast, query);
+                        save_quiz(space_id, quiz_id, questions, answers, pass_score, retry_count, toast);
                     },
                 }
             }
             div { class: "flex flex-col gap-1",
-                label { class: "text-sm font-medium text-neutral-400 light:text-text-secondary",
+                label { class: "text-sm font-medium text-quiz-tab-label",
                     "{tr.retry_label}"
                 }
                 Input {
@@ -68,10 +66,10 @@ pub fn QuizTab(can_edit: bool) -> Element {
                         }
                     },
                     onblur: move |_| {
-                        save_quiz(space_id, quiz_id, questions, answers, pass_score, retry_count, toast, query);
+                        save_quiz(space_id, quiz_id, questions, answers, pass_score, retry_count, toast);
                     },
                     onconfirm: move |_| {
-                        save_quiz(space_id, quiz_id, questions, answers, pass_score, retry_count, toast, query);
+                        save_quiz(space_id, quiz_id, questions, answers, pass_score, retry_count, toast);
                     },
                 }
             }
@@ -81,12 +79,12 @@ pub fn QuizTab(can_edit: bool) -> Element {
                     questions,
                     answers,
                     on_save: move |_| {
-                        save_quiz(space_id, quiz_id, questions, answers, pass_score, retry_count, toast, query);
+                        save_quiz(space_id, quiz_id, questions, answers, pass_score, retry_count, toast);
                     },
                 }
             } else {
                 if questions.read().is_empty() {
-                    div { class: "flex justify-center items-center py-10 text-neutral-500 light:text-text-secondary",
+                    div { class: "flex justify-center items-center py-10 text-quiz-tab-empty",
                         "{tr.no_questions}"
                     }
                 }
@@ -98,7 +96,9 @@ pub fn QuizTab(can_edit: bool) -> Element {
                             .as_ref()
                             .and_then(|a| quiz_answer_to_viewer(&question, a));
                         rsx! {
-                            div { class: "rounded-lg border border-neutral-700 bg-neutral-900 p-4 light:border-input-box-border light:bg-input-box-bg",
+                            div {
+                                key: "quiz-view-question-{idx}",
+                                class: "rounded-lg border border-quiz-tab-preview-border bg-quiz-tab-preview-bg p-4",
                                 QuestionViewer {
                                     index: idx,
                                     total: questions.read().len(),
@@ -125,13 +125,7 @@ fn save_quiz(
     pass_score: Signal<i64>,
     retry_count: Signal<i64>,
     mut toast: ToastService,
-    mut query: QueryStore,
 ) {
-    let answer_key = {
-        let mut k = space_page_actions_quiz_key(&space_id(), &quiz_id());
-        k.push("answers".into());
-        k
-    };
     spawn(async move {
         let req = UpdateQuizRequest {
             questions: Some(questions()),
@@ -145,9 +139,6 @@ fn save_quiz(
             toast.error(err);
             return;
         }
-        let keys = space_page_actions_quiz_key(&space_id(), &quiz_id());
-        query.invalidate(&keys);
-        query.invalidate(&answer_key);
     });
 }
 
