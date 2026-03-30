@@ -5,6 +5,7 @@ use super::super::layout::SettingsSaveContext;
 use super::super::*;
 use dioxus::prelude::*;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
+use crate::common::contexts::use_team_context;
 
 fn format_last_saved(ts_millis: i64) -> String {
     if ts_millis == 0 {
@@ -23,6 +24,7 @@ pub fn AdminPage(username: String, team: TeamResponse) -> Element {
     let tr: TeamSettingsTranslate = use_translate();
     let mut popup = use_popup();
     let navigator = use_navigator();
+    let mut team_ctx = use_team_context();
 
     let mut save_ctx = use_context::<SettingsSaveContext>();
     let mut is_saving = save_ctx.is_saving;
@@ -104,14 +106,17 @@ pub fn AdminPage(username: String, team: TeamResponse) -> Element {
                 let mut popup = popup;
                 let username = username.clone();
                 let navigator = navigator.clone();
+                let mut team_ctx = team_ctx;
                 move |_evt: MouseEvent| {
                     let mut popup = popup;
                     let username = username.clone();
                     let navigator = navigator.clone();
+                    let mut team_ctx = team_ctx;
                     spawn(async move {
-                        let result = delete_team_handler(username).await;
+                        let result = delete_team_handler(username.clone()).await;
                         popup.close();
                         if result.is_ok() {
+                            team_ctx.remove_team_by_username(&username);
                             navigator.push("/");
                         } else if let Err(err) = result {
                             error!("Delete team failed: {}", err);

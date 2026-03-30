@@ -44,6 +44,18 @@ impl TeamContext {
     pub fn set_selected_index(&mut self, index: usize) {
         self.selected_index.set(index);
     }
+
+    pub fn remove_team_by_username(&mut self, username: &str) {
+        let mut teams = self.teams.write();
+        let idx = *self.selected_index.read();
+        if let Some(pos) = teams.iter().position(|t| t.username == username) {
+            teams.remove(pos);
+            if idx >= teams.len() && !teams.is_empty() {
+                drop(teams);
+                self.selected_index.set(0);
+            }
+        }
+    }
 }
 
 pub fn use_team_context() -> TeamContext {
