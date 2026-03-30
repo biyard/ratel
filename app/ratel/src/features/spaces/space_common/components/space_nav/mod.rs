@@ -78,7 +78,7 @@ pub fn SpaceNav(
                 main_axis_align: MainAxisAlign::Between,
                 cross_axis_align: CrossAxisAlign::Center,
 
-                if let Some(user) = user {
+                if let Some(ref user) = user {
                     SpaceUserProfile {
                         image: anonymous_user_profile
                             .as_ref()
@@ -100,15 +100,35 @@ pub fn SpaceNav(
 
         // Mobile "More" panel overlay
         if show_more_panel() {
-            MobileMorePanel {
-                is_logged_in,
-                on_close: move |_| {
-                    show_more_panel.set(false);
-                },
-                on_login: move |_| {
-                    show_more_panel.set(false);
-                    login_handler.call(());
-                },
+            {
+                let (mobile_image, mobile_name) = if let Some(ref user) = user {
+                    let image = anonymous_user_profile
+                        .as_ref()
+                        .map(|(image, _)| image.clone())
+                        .unwrap_or_else(|| user.profile_url.clone());
+                    let name = anonymous_user_profile
+                        .as_ref()
+                        .map(|(_, name)| name.clone())
+                        .unwrap_or_else(|| user.display_name.clone());
+                    (image, name)
+                } else {
+                    (String::new(), String::new())
+                };
+                rsx! {
+                    MobileMorePanel {
+                        is_logged_in,
+                        user_image: mobile_image,
+                        user_display_name: mobile_name,
+                        user_role: role,
+                        on_close: move |_| {
+                            show_more_panel.set(false);
+                        },
+                        on_login: move |_| {
+                            show_more_panel.set(false);
+                            login_handler.call(());
+                        },
+                    }
+                }
             }
         }
     }
