@@ -16,6 +16,9 @@ prepare:
 clean:
 	rm -rf build
 
+local.run:
+	cd ./$(TARGET) && make local.run
+
 ec2.clean:
 	ssh -i $(SSH_KEY_PATH) ubuntu@$(EC2_AGENT_PUBLIC_IP) "rm -rf ~/data && mkdir ~/data"
 
