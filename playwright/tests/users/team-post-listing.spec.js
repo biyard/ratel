@@ -52,8 +52,9 @@ test.describe.serial("Team post listing (issue-1311)", () => {
     await editor.fill(postContents);
 
     // Step 4: Publish the post
-    await click(page, { text: "Publish" });
-    await page.waitForLoadState("load");
+    await click(page, { text: "Publish" }); // opens VisibilityModal
+    await click(page, { label: "Confirm visibility selection" }); // confirm publish
+    await page.waitForURL(/\/posts\//, { waitUntil: "load" });
 
     // Step 5: Navigate back to team home
     await goto(page, `/${teamUsername}/home`);
