@@ -1,5 +1,5 @@
 use crate::common::{
-    models::reward::{UserReward, UserRewardHistory},
+    models::reward::{PendingReward, UserReward, UserRewardHistory},
     types::*,
     utils::time::get_now_timestamp_millis,
     *,
@@ -110,6 +110,7 @@ impl SpaceReward {
         cli: &aws_sdk_dynamodb::Client,
         space_reward: &SpaceReward,
         target_pk: Partition,
+        owner_pk: Option<Partition>,
     ) -> crate::common::Result<UserReward> {
         let now = get_now_timestamp_millis();
         let space_pk = space_reward.pk.clone();
@@ -148,6 +149,8 @@ impl SpaceReward {
                 }
             }
         }
+
+        let amount = space_reward.get_amount();
 
         let user_reward = if let Some(mut user_reward) = user_reward {
             txs.push(
@@ -203,6 +206,64 @@ impl SpaceReward {
             return Err(Error::Unknown(format!(
                 "failed to write reward transaction: {err}"
             )));
+        }
+
+        // Award points via Biyard service (best-effort, after DB tx committed)
+        let cfg = crate::common::CommonConfig::default();
+        let biyard = cfg.biyard();
+
+        match biyard
+            .award_points(
+                target_pk.clone(),
+                amount,
+                space_reward.description.clone(),
+                None,
+            )
+            .await
+        {
+            Ok(user_res) => {
+                if let Some(ref owner) = owner_pk {
+                    if *owner == target_pk {
+                        return Ok(user_reward);
+                    }
+                    if let Err(e) = biyard
+                        .award_points(
+                            owner.clone(),
+                            amount * 10 / 100,
+                            space_reward.description.clone(),
+                            Some(user_res.month.clone()),
+                        )
+                        .await
+                    {
+                        tracing::error!(
+                            owner_pk = %owner,
+                            amount = amount * 10 / 100,
+                            reward_key = %space_reward.sk,
+                            error = %e,
+                            "Failed to award owner points via Biyard"
+                        );
+                    }
+                }
+            }
+            Err(e) => {
+                tracing::error!(
+                    target_pk = %target_pk,
+                    amount = amount,
+                    reward_key = %space_reward.sk,
+                    error = %e,
+                    "Failed to award points via Biyard"
+                );
+                let _ = PendingReward::new(
+                    &target_pk,
+                    &space_pk,
+                    &space_reward.sk.to_string(),
+                    amount,
+                    &space_reward.description,
+                    owner_pk.as_ref(),
+                )
+                .create(cli)
+                .await;
+            }
         }
 
         Ok(user_reward)

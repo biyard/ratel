@@ -29,6 +29,9 @@ pub enum UpdateSpaceRequest {
     Anonymous {
         anonymous_participation: bool,
     },
+    JoinAnytime {
+        join_anytime: bool,
+    },
     ChangeVisibility {
         change_visibility: bool,
     },
@@ -57,6 +60,8 @@ pub struct UpdateSpaceResponse {
     pub visibility: SpaceVisibility,
     pub content: String,
     pub anonymous_participation: bool,
+    #[serde(default)]
+    pub join_anytime: bool,
     pub quota: i64,
     pub remains: i64,
     #[serde(default)]
@@ -76,6 +81,7 @@ impl From<SpaceCommon> for UpdateSpaceResponse {
             visibility: s.visibility,
             content: s.content,
             anonymous_participation: s.anonymous_participation,
+            join_anytime: s.join_anytime,
             quota: s.quota,
             remains: s.remains,
             logo: s.logo,
@@ -94,7 +100,6 @@ pub async fn update_space(
 
     let conf = ServerConfig::default();
     let dynamo = conf.dynamodb();
-    let ses = conf.ses();
 
     let space_pk: Partition = space_id.into();
 
@@ -200,6 +205,11 @@ pub async fn update_space(
 
             updated_space.anonymous_participation = anonymous_participation;
         }
+        UpdateSpaceRequest::JoinAnytime { join_anytime } => {
+            su = su.with_join_anytime(join_anytime);
+
+            updated_space.join_anytime = join_anytime;
+        }
         UpdateSpaceRequest::ChangeVisibility { .. } => {
             tracing::error!("ChangeVisibility is deprecated");
             return Err(Error::InternalServerError(
@@ -237,8 +247,7 @@ pub async fn update_space(
             .await?
             .ok_or_else(|| Error::InternalServerError("Failed to get post".to_string()))?;
 
-        let ses = conf.ses();
-        SpaceInvitationMember::send_email(dynamo, ses, &updated_space, post.title).await?;
+        SpaceInvitationMember::send_email(dynamo, &updated_space, post.title).await?;
     }
 
     Ok(UpdateSpaceResponse::from(updated_space))

@@ -864,6 +864,15 @@ Use `let lang = use_language();` in the component, then `{value.translate(&lang(
 - **Always add `alt` attributes** to `img` elements (use descriptive text or `alt: ""` for decorative images)
 - **Always add `aria-label`** to icon-only buttons so screen readers can announce their purpose
 - **Use semantic elements** for clickable navigation: use `Link { to: "..." }` (renders `<a>`) instead of `div { onclick: ... }` with `use_navigator().push()`. This provides native keyboard accessibility (tab focus, Enter activation) and correct link semantics without manual `role`, `tabindex`, or keyboard handlers
+- **Always pass the `label` prop to the `Switch` component** so it renders a proper `aria-label` for screen reader support. The `role="switch"` and `aria-checked` attributes are always rendered regardless of the label, but a `Switch` without a `label` lacks an accessible name. Example:
+
+```rust
+Switch {
+    active: is_enabled(),
+    on_toggle: move |_| is_enabled.set(!is_enabled()),
+    label: "Enable join anytime".to_string(),
+}
+```
 
 ### Import Conventions
 
@@ -888,6 +897,13 @@ Use `let lang = use_language();` in the component, then `{value.translate(&lang(
 - Capturing a plain `usize` or other non-reactive value outside the closure will NOT trigger re-runs
 - To react to item count changes: call `v.items()` inside the effect (which reads from the underlying `Signal`), not `let count = items.len()` captured from outside
 
+### Signal Value Reading in RSX
+
+- **Always call `signal()` explicitly** when using a `Signal<T>` value in RSX string interpolation — write `"{my_signal()}"`, not `"{my_signal}"`
+- Formatting a `Signal` handle directly (without `()`) serializes the Signal wrapper, not the inner value, producing incorrect output
+- This applies to all RSX attributes that use string interpolation: `key`, `class`, `id`, `src`, etc.
+- Example: `key: "{input_key()}"` (correct) vs `key: "{input_key}"` (incorrect — formats the Signal handle)
+
 ### Event Handler Syntax
 
 - In Dioxus RSX, event handlers do NOT need outer brace wrapping. Use `onscroll: move |_| { ... },` directly, not `onscroll: { move |_| { ... } },`
@@ -900,10 +916,59 @@ Use `let lang = use_language();` in the component, then `{value.translate(&lang(
 - **Preserve bookmark on cap**: when hitting the hard cap, set `bookmark = next_bookmark` (not `None`) so clients can continue scanning from where they left off in subsequent requests
 - **Do NOT use `.take(remaining)` in filtered collection**: when filtering results across DynamoDB pages (e.g., `active_only`), collect all matching items from each page without `.take()` — otherwise valid items from a page may be silently dropped and can never be re-fetched since the bookmark advances past them. Use post-loop `truncate()` only if a hard limit is needed
 
+### FileUploader Component
+
+- **Do not nest `<label>` inside `FileUploader` children** — `FileUploader` already renders a `<label>` wrapper. Using `label` as an inner container creates invalid nested `<label>` HTML that breaks click/drag behavior across browsers. Use `div` or `span` for inner containers instead
+- **Do not introduce UI loading state without a cancel reset path** — if there is no callback to detect file picker dialog cancellation (e.g., `oncancel`), omit loading state rather than risk a permanently stuck loading UI. Only add loading indicators when both success and failure/cancel paths reset the state
+
+### URL Parsing
+
+- **Always `trim_end_matches('/')` before `rsplit('/')` on URLs** — trailing slashes produce empty segments that bypass fallback logic (e.g., `extract_filename_from_url` returning `""` instead of `"untitled"`)
+- **Filter empty segments after splitting** — even after trimming, use `.filter(|s| !s.is_empty())` to handle edge cases like double slashes
+
 ### Performance Patterns
 
 - **Use `HashMap` for O(1) lookups** instead of linear scans when mapping between collections (e.g., post titles by key)
 - **Avoid redundant `.to_string()` calls** in hot paths — store the result in a local variable when the same conversion is used multiple times (e.g., HashMap key lookup)
+- **Prefer `eq_ignore_ascii_case` over `to_lowercase()` for string matching** — `to_lowercase()` allocates a new `String` on every call; `eq_ignore_ascii_case` compares in-place with zero allocation. Use it for case-insensitive matching in `match`-like chains (e.g., file extension detection)
+- **Avoid unnecessary `.clone()` on owned values** — when a value will be moved into a struct or closure, compute any derived values (e.g., file extension via `FileExtension::from_name_or_url(&name, &url)`) from a borrow **before** the move, then use the original without `.clone()`. Redundant `.clone()` creates per-call heap allocations that are trivially avoidable by reordering statements
+- **Destructure structs before partial moves** — when a callback or closure receives an owned struct (e.g., `UploadedFileMeta`) and different fields will be moved at different points, destructure into local variables first: `let StructName { field1, field2, field3 } = value;`. This makes ownership explicit, avoids partial-move confusion, and ensures all fields are cleanly accessible as independent variables throughout the handler
+
+### Spelling & Language Consistency
+
+- **Use American English spelling** throughout the codebase — e.g., "unrecognized" not "unrecognised", "color" not "colour", "initialize" not "initialise". This applies to doc comments, string literals, error messages, and code identifiers
+
+### Server-Client Architecture Patterns
+
+- **Centralize computed booleans on the server side**: When a computed boolean (like "can the user participate?") depends on multiple model fields, compute it once in the server controller and expose it as a field on the response DTO (e.g., `can_participate: bool` on `GetSpaceResponse`). Do NOT duplicate the same condition check in both server controllers and client layout/view code. The client should read the pre-computed field from the response rather than re-deriving the condition from raw model fields. This eliminates logic duplication and ensures the server remains the single source of truth for business rules.
+
+- **Extract reusable boolean conditions into helper methods on model structs**: When the same boolean condition is checked in multiple server-side locations (e.g., "is participation open based on status and join_anytime?"), define it as a method on the model struct (e.g., `SpaceCommon::is_participation_open(&self) -> bool`) rather than duplicating the inline logic. This keeps business rules DRY and makes them easier to update when requirements change.
+
+```rust
+// Good: helper method on model struct
+#[cfg(feature = "server")]
+impl SpaceCommon {
+    pub fn is_participation_open(&self) -> bool {
+        matches!(self.status, Some(SpaceStatus::InProgress))
+            || (matches!(self.status, Some(SpaceStatus::Started)) && self.join_anytime)
+    }
+}
+
+// Good: use in controller, expose as DTO field
+let can_participate = space.is_participation_open();
+Ok(GetSpaceResponse { can_participate, ..other_fields })
+
+// Good: client reads pre-computed field
+if space.can_participate {
+    rsx! { Button { onclick: move |_| { participate() }, "Join" } }
+}
+```
+
+### Documentation Code Examples
+
+- **Always verify prop names and types match the actual component API** before adding code examples to docs (CLAUDE.md, dioxus-convention.md, etc.). Incorrect prop names (e.g., `checked`/`onchange` instead of `active`/`on_toggle`) produce examples that won't compile when copy-pasted
+- **Always verify model field types in doc examples** — use `matches!(self.status, Some(SpaceStatus::InProgress))` when the field is `Option<SpaceStatus>`, not `self.status == SpaceStatus::InProgress`. Use `self.join_anytime` directly when the field is `bool`, not `self.join_anytime.unwrap_or(false)`
+- **When making accessibility props optional with `#[props(default)]`**, add `#[cfg(debug_assertions)]` debug-level logs (e.g., `tracing::debug!`) to surface missing values during development without breaking existing call sites or causing log noise — avoid `tracing::warn!` which fires on every render and pollutes logs
 
 ### TailwindCSS Syntax
 
@@ -998,7 +1063,7 @@ When updating coding guidelines or conventions in `CLAUDE.md`, also update `.git
 
 - **Do NOT use `waitForLoadState("load")` after non-navigation interactions** — after UI actions like autosave triggers, tab switches, blur events, or clicking options that don't cause a page navigation, `waitForLoadState("load")` resolves immediately and doesn't wait for the save/request. Wait for deterministic UI signals instead (e.g., a "Saved" indicator, specific element appearing)
 - **Avoid `networkidle` for SPA navigation** — in single-page apps, the app may continue fetching data after the `load` event. Use deterministic UI readiness assertions (e.g., `getLocator` for page-specific elements) instead of `networkidle`
-- **Follow `waitForURL()` with hydration check** — when `waitForURL()` triggers navigation, add a `waitForFunction` check for `window.dioxus.send` to match the `goto()` pattern and avoid races on slower environments
+- **Follow `waitForURL()` with hydration check** — when `waitForURL()` triggers navigation, add a `waitForFunction` check for `[data-dioxus-id]` to match the `goto()` pattern and avoid races on slower environments. NOTE: In Dioxus 0.7, `dioxus` is only a local binding inside `document::eval()` — do NOT check `window.dioxus.send` (it does not exist as a global)
 
 ### Shared Helpers & Locators
 
@@ -1020,6 +1085,11 @@ When updating coding guidelines or conventions in `CLAUDE.md`, also update `.git
 ### Placeholder/Empty State Styling
 
 - When a UI element has both a normal and a placeholder state (e.g., "untitled" vs actual title), always apply visually distinct styling to the placeholder case (e.g., `text-foreground-muted italic`) rather than using the same primary text style for both
+
+### Primary Actions in Conditional Sections
+
+- **Never nest primary action buttons (e.g., "Create Post") inside conditionally rendered sections** — if a section (e.g., draft timeline) is hidden when its list is empty, any primary action button placed inside that section will also disappear. Keep primary action buttons outside conditional blocks so they remain visible regardless of content state
+- **Separate the action trigger from the content display** — the button that creates new items should always be accessible, even when the list of existing items is empty. Place it in a persistent container above or alongside the conditional section
 
 ### Semantic Tokens for Status Colors
 

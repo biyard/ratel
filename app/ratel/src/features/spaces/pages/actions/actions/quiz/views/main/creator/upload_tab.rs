@@ -1,41 +1,12 @@
 use super::*;
 use crate::common::components::SpaceCard;
 use crate::common::components::{FileUploader, UploadedFileMeta};
+use crate::common::types::extract_filename_from_url;
 use crate::common::utils::time::time_ago;
 use crate::features::spaces::hooks::use_user;
 use crate::features::spaces::space_common::types::space_page_actions_quiz_key;
 
 const DEFAULT_PROFILE_URL: &str = "https://metadata.ratel.foundation/ratel/default-profile.png";
-
-fn extension_from_name_or_url(name: &str, url: &str) -> FileExtension {
-    let ext = name
-        .rsplit('.')
-        .next()
-        .filter(|ext| *ext != name)
-        .unwrap_or_else(|| {
-            let path = url.split('?').next().unwrap_or(url);
-            path.rsplit('.').next().unwrap_or("")
-        })
-        .to_lowercase();
-    match ext.as_str() {
-        "jpg" | "jpeg" => FileExtension::JPG,
-        "png" => FileExtension::PNG,
-        "pdf" => FileExtension::PDF,
-        "zip" => FileExtension::ZIP,
-        "doc" | "docx" => FileExtension::WORD,
-        "ppt" | "pptx" => FileExtension::PPTX,
-        "xls" | "xlsx" => FileExtension::EXCEL,
-        "mp4" => FileExtension::MP4,
-        "mov" => FileExtension::MOV,
-        "mkv" => FileExtension::MKV,
-        _ => FileExtension::default(),
-    }
-}
-
-fn extract_filename_from_url(url: &str) -> String {
-    let path = url.split('?').next().unwrap_or(url);
-    path.rsplit('/').next().unwrap_or("untitled").to_string()
-}
 
 fn file_icon(ext: &FileExtension) -> Element {
     match ext {
@@ -130,18 +101,20 @@ pub fn UploadTab(can_edit: bool) -> Element {
                     accept: ".pdf,.docx,.pptx,.xlsx,.png,.jpg,.jpeg,.mp4,.mov",
                     on_upload_success: move |_url: String| {},
                     on_upload_meta: move |uploaded: UploadedFileMeta| {
-                        let uploaded_name = if uploaded.name.trim().is_empty() {
-                            extract_filename_from_url(&uploaded.url)
+                        let UploadedFileMeta { url, name, size } = uploaded;
+                        let uploaded_name = if name.trim().is_empty() {
+                            extract_filename_from_url(&url)
                         } else {
-                            uploaded.name.clone()
+                            name
                         };
+                        let ext = FileExtension::from_name_or_url(&uploaded_name, &url);
                         let mut next = files();
                         next.push(File {
-                            id: uploaded.url.clone(),
-                            name: uploaded_name.clone(),
-                            size: uploaded.size,
-                            ext: extension_from_name_or_url(&uploaded_name, &uploaded.url),
-                            url: Some(uploaded.url),
+                            id: url.clone(),
+                            name: uploaded_name,
+                            size,
+                            ext,
+                            url: Some(url),
                             uploader_name: Some(upload_uploader_name.clone()),
                             uploader_profile_url: Some(upload_uploader_profile_url.clone()),
                             uploaded_at: Some(crate::common::utils::time::now()),
@@ -154,14 +127,14 @@ pub fn UploadTab(can_edit: bool) -> Element {
                             icons::ratel::Cloud {
                                 width: "64",
                                 height: "64",
-                                class: "text-quiz-upload-meta [&>path]:stroke-current",
+                                class: "text-quiz-upload-meta [&>path]:stroke-current [&>path]:fill-none",
                             }
                             div { class: "text-[15px]/[18px] font-bold text-text-primary",
                                 {tr.upload_drop_title}
                             }
                         }
                         div { class: "flex flex-col w-full justify-center items-center gap-2.5",
-                            div { class: "inline-flex h-11 min-w-[118px] items-center justify-center gap-2 rounded-full border border-white bg-white px-5 text-quiz-upload-cta-text transition-colors hover:bg-white/90",
+                            div { class: "inline-flex h-11 min-w-[118px] items-center justify-center gap-2 rounded-full border border-quiz-upload-cta-bg bg-quiz-upload-cta-bg px-5 text-quiz-upload-cta-text transition-opacity hover:opacity-90",
                                 icons::upload_download::Upload2 {
                                     width: "20",
                                     height: "20",

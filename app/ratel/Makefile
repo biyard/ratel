@@ -12,14 +12,27 @@ DYNAMO_ENDPOINT ?= none
 KAIA_ENDPOINT ?= https://public-en-kairos.node.kaia.io
 BLOCK_EXPLORER_URL ?= https://kairos.kaiascan.io
 WALLETCONNECT_PROJECT_ID ?= "WALLETCONNECT_PROJECT_ID"
-IC_URL ?= http://127.0.0.1:4943
-RATEL_CANISTER_ID ?=
+
+DFX_JSON ?= ../../packages/ratel-canister/dfx.json
+CANISTER_IDS_JSON ?= ../../packages/ratel-canister/canister_ids.json
+
+ifeq ($(ENV),prod)
+IC_NETWORK ?= ic
+IC_URL ?= https://ic0.app
 ICP_IDENTITY_PEM ?=
+else
+IC_NETWORK ?= dev
+IC_URL ?= $(shell jq -r '.networks.$(IC_NETWORK).providers[0] // empty' $(DFX_JSON) 2>/dev/null)
+ICP_IDENTITY_PEM ?= $(shell cat ~/.config/dfx/identity/default/identity.pem 2>/dev/null | tr '\n' '|' | sed 's/|/\\n/g')
+endif
+RATEL_CANISTER_ID ?= $(shell jq -r '.["ratel-canister"].$(IC_NETWORK) // empty' $(CANISTER_IDS_JSON) 2>/dev/null)
 VOTER_TAG_SECRET ?= test
+# cargo run -p attr-voting --bin attr-voting-keygen
 ATTR_VOTING_AUTHORITY_JSON ?=
 RUST_LOG ?= debug
 
 PORT ?= 8080
+RUN_FEATURES ?= local-dev
 
 REPOSITORY ?= ratel/app-shell
 ECR ?= $(shell aws ecr describe-repositories --repository-names $(REPOSITORY)  --query "repositories[0].repositoryUri" --output text)
@@ -50,9 +63,9 @@ BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					FIREBASE_MEASUREMENT_ID=$(FIREBASE_MEASUREMENT_ID) \
 					IC_URL=$(IC_URL) \
 					RATEL_CANISTER_ID=$(RATEL_CANISTER_ID) \
-					ICP_IDENTITY_PEM=$(ICP_IDENTITY_PEM) \
-					VOTER_TAG_SECRET=$(VOTER_TAG_SECRET) \
-					ATTR_VOTING_AUTHORITY_JSON=$(ATTR_VOTING_AUTHORITY_JSON) \
+					ICP_IDENTITY_PEM='$(ICP_IDENTITY_PEM)' \
+					VOTER_TAG_SECRET='$(VOTER_TAG_SECRET)' \
+					ATTR_VOTING_AUTHORITY_JSON='$(ATTR_VOTING_AUTHORITY_JSON)' \
 
 RUST_FLAG ?=
 
@@ -62,7 +75,7 @@ test:
 	$(BUILD_ENV) CARGO_TARGET_DIR=./test-build-target cargo test --features server,bypass --tests
 
 run:
-	$(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web --features local-dev
+	$(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web --features $(RUN_FEATURES)
 
 
 build:

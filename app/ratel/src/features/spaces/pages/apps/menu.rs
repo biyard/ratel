@@ -13,7 +13,7 @@ pub fn get_nav_item(
             icons::layouts::Apps {
                 width: "20",
                 height: "20",
-                class: "text-icon-primary [&>path]:stroke-current",
+                class: "text-icon-primary [&>path]:fill-none [&>path]:stroke-current",
             }
         },
         SpacePage::Apps,
