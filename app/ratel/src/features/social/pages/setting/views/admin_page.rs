@@ -42,6 +42,7 @@ pub fn AdminPage(username: ReadSignal<String>, team: TeamResponse) -> Element {
     // Translation strings captured before use_effect
     let validation_nickname_required = tr.validation_nickname_required;
     let failed_update_team = tr.failed_update_team;
+    let mut toast = use_toast();
 
     // Wire header Save button → execute save
     use_effect(move || {
@@ -93,12 +94,14 @@ pub fn AdminPage(username: ReadSignal<String>, team: TeamResponse) -> Element {
             popup.close();
         };
         let on_confirm = move |_evt: MouseEvent| async move {
-            let result = delete_team_handler(username()).await;
-            if result.is_ok() {
-                team_ctx.teams.restart();
-                navigator.push("/");
-            } else if let Err(err) = result {
-                error!("Delete team failed: {}", err);
+            match delete_team_handler(username()).await {
+                Ok(_response) => {
+                    team_ctx.teams.restart();
+                    navigator.push(Route::Index {});
+                }
+                Err(e) => {
+                    toast.error(e);
+                }
             }
             popup.close();
         };
