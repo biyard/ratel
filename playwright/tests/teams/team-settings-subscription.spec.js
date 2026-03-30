@@ -193,7 +193,7 @@ test.describe.serial(
       // The SettingNavItem renders a Link with the label text.
       // Verify the "Subscription" nav item is present in the sidebar.
       const sidebar = page.locator(".hidden.tablet\\:flex");
-      const subscriptionLink = sidebar.getByText("Subscription");
+      const subscriptionLink = sidebar.getByText("Subscription", { exact: true });
       await expect(subscriptionLink).toBeVisible();
     });
   },
