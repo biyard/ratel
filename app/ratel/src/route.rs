@@ -79,6 +79,8 @@ use crate::features::social::pages::setting::layout::TeamSettingLayout;
 use crate::features::social::pages::setting::Home as TeamSetting;
 #[cfg(feature = "social")]
 use crate::features::social::pages::setting::ManagementPage as TeamSettingMember;
+#[cfg(feature = "social")]
+use crate::features::social::pages::setting::SubscriptionPage as TeamSettingSubscription;
 
 // User pages
 #[cfg(feature = "social")]
@@ -162,6 +164,8 @@ pub enum Route {
                     TeamSetting { username: String },
                     #[route("/settings/members")]
                     TeamSettingMember { username: String },
+                    #[route("/settings/subscription")]
+                    TeamSettingSubscription { username: String },
                 #[end_layout]
             #[end_nest]
         #[end_layout]
