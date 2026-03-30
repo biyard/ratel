@@ -1,7 +1,7 @@
 use super::super::dto::*;
 use super::super::*;
 
-use crate::features::posts::models::{TeamGroup, TeamOwner};
+use crate::features::posts::models::TeamOwner;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use std::collections::{HashMap, HashSet};
 
@@ -40,26 +40,6 @@ pub async fn list_members_handler(
 
     let (all_user_team_groups, next_bookmark) =
         crate::features::auth::UserTeamGroup::find_by_team_pk(cli, team_pk.clone(), query_options).await?;
-
-    let (team_groups, _) = TeamGroup::query(
-        cli,
-        team_pk.clone(),
-        TeamGroup::opt()
-            .limit(100)
-            .sk(EntityType::TeamGroup(String::default()).to_string()),
-    )
-    .await?;
-
-    let group_map: HashMap<String, TeamGroup> = team_groups
-        .into_iter()
-        .map(|group| {
-            let key = match &group.sk {
-                EntityType::TeamGroup(uuid) => format!("TEAM_GROUP#{}", uuid),
-                _ => group.sk.to_string(),
-            };
-            (key, group)
-        })
-        .collect();
 
     let user_keys: Vec<_> = {
         let mut seen = HashSet::new();
@@ -111,19 +91,21 @@ pub async fn list_members_handler(
                 is_owner: false,
             });
 
-        if let Some(group) = group_map.get(&group_sk_string) {
-            let group_id = if let EntityType::TeamGroup(uuid) = &group.sk {
-                uuid.clone()
-            } else {
-                group.sk.to_string()
-            };
-
-            entry.groups.push(MemberGroup {
-                group_id,
-                group_name: group.name.clone(),
-                description: group.description.clone(),
-            });
-        }
+        let perms: TeamGroupPermissions = utg.team_group_permissions.into();
+        let role_name = if perms.contains(TeamGroupPermission::TeamAdmin) {
+            "Admin"
+        } else {
+            "Member"
+        };
+        let group_id = group_sk_string
+            .strip_prefix("TEAM_GROUP#")
+            .unwrap_or(&group_sk_string)
+            .to_string();
+        entry.groups.push(MemberGroup {
+            group_id,
+            group_name: role_name.to_string(),
+            description: String::new(),
+        });
     }
 
     // On page 1, fetch owner, pin to top, and remove from regular list to avoid duplication.
