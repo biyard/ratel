@@ -44,11 +44,12 @@ pub async fn list_team_drafts_handler(
     let cli = conf.dynamodb();
     tracing::debug!("list_user_drafts_handler: bookmark = {:?}", bookmark);
 
-    let opt = Team::opt().limit(1);
+    let gsi2_sk_prefix = Team::compose_gsi2_sk(String::default());
+    let opt = Team::opt().limit(1).sk(gsi2_sk_prefix);
     let (teams, _): (Vec<Team>, _) = Team::find_by_username_prefix(cli, &teamname, opt).await?;
     let team = teams
         .into_iter()
-        .next()
+        .find(|t| t.username == teamname)
         .ok_or(Error::NotFound(format!("Team not found: {}", teamname)))?;
     let team_pk = team.pk;
 
