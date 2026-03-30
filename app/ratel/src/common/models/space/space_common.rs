@@ -49,6 +49,9 @@ pub struct SpaceCommon {
     pub anonymous_participation: bool,
 
     #[serde(default)]
+    pub join_anytime: bool,
+
+    #[serde(default)]
     pub logo: String,
 
     #[serde(default)]
@@ -67,14 +70,13 @@ fn max_quota() -> i64 {
 impl SpaceCommon {
     pub fn new(
         post_id: FeedPartition,
-        user_id: UserPartition,
+        user_pk: Partition,
         author_display_name: String,
         author_profile_url: String,
         author_username: String,
     ) -> Self {
         let now = get_now_timestamp_millis();
         let post_pk: Partition = post_id.into();
-        let user_pk: Partition = user_id.into();
 
         Self {
             pk: post_pk
@@ -113,6 +115,11 @@ impl SpaceCommon {
             self.status,
             Some(SpaceStatus::Started | SpaceStatus::InProgress)
         )
+    }
+
+    pub fn is_participation_open(&self) -> bool {
+        matches!(self.status, Some(SpaceStatus::InProgress))
+            || (self.join_anytime && matches!(self.status, Some(SpaceStatus::Started)))
     }
 }
 

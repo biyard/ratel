@@ -141,6 +141,15 @@ pub fn KrIcon(
 }
 
 #[component]
+pub fn RewardsIcon() -> Element {
+    rsx! {
+        icons::game::Trophy {
+            class: "size-6 transition-all [&>path]:stroke-menu-text group-hover:[&>path]:stroke-menu-text/80 [&>path]:fill-transparent",
+        }
+    }
+}
+
+#[component]
 pub fn SignInIcon() -> Element {
     rsx! {
         svg {

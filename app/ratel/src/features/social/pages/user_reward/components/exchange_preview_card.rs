@@ -1,4 +1,8 @@
-use super::super::{dto::RewardsResponse, views::RewardsPageTranslate, *};
+use super::super::{
+    dto::RewardsResponse,
+    views::{format_points, format_tokens, RewardsPageTranslate},
+    *,
+};
 
 pub fn exchange_preview_card(
     tr: &RewardsPageTranslate,
@@ -6,115 +10,65 @@ pub fn exchange_preview_card(
     estimated_tokens: f64,
 ) -> Element {
     rsx! {
-        div { class: "border-t border-bg pt-10",
-            div { class: "flex flex-col items-center gap-5 p-4 rounded-lg bg-card-bg border border-card-border",
-                div { class: "flex items-center justify-between gap-4 w-full",
+        div { class: "border-t border-card-border pt-10",
+            div { class: "flex flex-col items-center gap-5 w-full",
+                // Exchange row: Points → Tokens
+                div { class: "flex items-start justify-between w-full",
+                    // Left: Points
                     div { class: "flex flex-col gap-0.5",
                         div { class: "flex items-center gap-1",
                             div { class: "w-5 h-5 rounded-full bg-primary" }
-                            span { class: "text-[15px] font-medium text-white",
+                            span { class: "text-[15px] font-medium text-text-primary tracking-[0.5px]",
                                 "{format_points(rewards.points)} P"
                             }
                         }
-                        div { class: "flex items-start gap-1 flex-col",
-                            span { class: "text-xs font-semibold text-text-primary",
+                        div { class: "flex items-center gap-1",
+                            span { class: "text-sm font-semibold text-foreground-muted tracking-[0.5px]",
                                 "{tr.exchange_from}"
                             }
-                            span { class: "text-xs font-semibold text-text-primary",
+                            div { class: "w-5 h-5 rounded-full bg-foreground-muted" }
+                            span { class: "text-sm font-semibold text-text-primary tracking-[0.5px]",
                                 "{rewards.project_name} {tr.point}"
                             }
                         }
                     }
 
-                    div { class: "flex items-center justify-center",
-                        icons::arrows::ArrowRight {
-                            width: "24",
-                            height: "24",
-                            class: "text-primary [&>path]:stroke-primary",
+                    // Center: Exchange icon
+                    div { class: "flex items-center justify-center self-stretch w-14",
+                        div { class: "bg-[var(--web\\/card\\/bg2,#262626)] rounded-xl p-2.5",
+                            icons::arrows::CrossoverArrowsRight {
+                                width: "24",
+                                height: "24",
+                                class: "[&>path]:stroke-icon-primary",
+                            }
                         }
                     }
 
+                    // Right: Tokens
                     div { class: "flex flex-col items-end gap-0.5",
                         div { class: "flex items-center gap-1",
-                            span { class: "text-[15px] font-medium text-text-primary",
+                            span { class: "text-[15px] font-medium text-foreground-muted tracking-[0.5px]",
                                 "{format_tokens(estimated_tokens)} {rewards.token_symbol}"
                             }
                             div { class: "w-5 h-5 rounded-full bg-primary" }
                         }
-                        div { class: "flex items-end gap-1 flex-col",
-                            span { class: "text-xs font-semibold text-text-primary",
+                        div { class: "flex items-center gap-1",
+                            span { class: "text-sm font-semibold text-foreground-muted tracking-[0.5px]",
                                 "{tr.exchange_to}"
                             }
-                            span { class: "text-xs font-semibold text-text-primary",
+                            div { class: "w-5 h-5 rounded-full bg-foreground-muted" }
+                            span { class: "text-sm font-semibold text-text-primary tracking-[0.5px]",
                                 "{rewards.project_name} {tr.token}"
                             }
                         }
                     }
                 }
 
-                p { class: "text-xs font-medium text-text-primary text-center",
+                // Swap message
+                p { class: "text-xs font-medium text-foreground-muted text-center",
                     "{tr.swap_available_message}"
                 }
             }
         }
-    }
-}
-
-fn format_points(points: i64) -> String {
-    format_with_commas(points, None)
-}
-
-fn format_with_commas(value: i64, suffix: Option<&str>) -> String {
-    let sign = if value < 0 { "-" } else { "" };
-    let digits = value.abs().to_string();
-    let mut out = String::new();
-    for (idx, ch) in digits.chars().rev().enumerate() {
-        if idx > 0 && idx % 3 == 0 {
-            out.push(',');
-        }
-        out.push(ch);
-    }
-    let formatted: String = out.chars().rev().collect();
-    if let Some(suffix) = suffix {
-        format!("{}{}{}", sign, formatted, suffix)
-    } else {
-        format!("{}{}", sign, formatted)
-    }
-}
-
-fn format_tokens(tokens: f64) -> String {
-    let formatted = format!("{:.2}", tokens);
-    let trimmed = formatted.trim_end_matches('0').trim_end_matches('.');
-    format_with_commas_str(trimmed)
-}
-
-fn format_with_commas_str(value: &str) -> String {
-    let (sign, raw) = if let Some(stripped) = value.strip_prefix('-') {
-        ("-", stripped)
-    } else {
-        ("", value)
-    };
-
-    let mut parts = raw.split('.');
-    let int_part = parts.next().unwrap_or("");
-    let frac_part = parts.next();
-
-    let mut out = String::new();
-    for (idx, ch) in int_part.chars().rev().enumerate() {
-        if idx > 0 && idx % 3 == 0 {
-            out.push(',');
-        }
-        out.push(ch);
-    }
-    let int_formatted: String = out.chars().rev().collect();
-
-    if let Some(frac) = frac_part {
-        if frac.is_empty() {
-            format!("{}{}", sign, int_formatted)
-        } else {
-            format!("{}{}.{}", sign, int_formatted, frac)
-        }
-    } else {
-        format!("{}{}", sign, int_formatted)
     }
 }

@@ -31,7 +31,6 @@ pub fn Home(username: String) -> Element {
                 rsx! {
                     AdminPage {
                         team_pk: ctx.team_pk.clone(),
-                        team_name: ctx.team_name.clone(),
                     }
                 }
             } else {

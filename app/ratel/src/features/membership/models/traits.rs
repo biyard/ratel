@@ -207,3 +207,80 @@ impl MembershipEntity for UserMembership {
         self.upsert_transact_write_item()
     }
 }
+
+impl MembershipEntity for crate::features::membership::models::TeamMembership {
+    fn owner_pk(&self) -> Partition {
+        self.pk.clone()
+    }
+
+    fn membership_pk(&self) -> &MembershipPartition {
+        &self.membership_pk
+    }
+
+    fn set_membership_pk(&mut self, pk: MembershipPartition) {
+        self.membership_pk = pk;
+    }
+
+    fn next_membership(&self) -> Option<&MembershipPartition> {
+        self.next_membership.as_ref()
+    }
+
+    fn set_next_membership(&mut self, pk: Option<MembershipPartition>) {
+        self.next_membership = pk;
+    }
+
+    fn expired_at(&self) -> i64 {
+        self.expired_at
+    }
+
+    fn set_updated_at(&mut self, timestamp: i64) {
+        self.updated_at = timestamp;
+    }
+
+    fn calculate_remaining_duration_days(&self) -> i32 {
+        self.calculate_remaining_duration_days()
+    }
+
+    fn upsert_transact_write_item(&self) -> TransactWriteItem {
+        self.upsert_transact_write_item()
+    }
+}
+
+#[async_trait::async_trait]
+impl PaymentEntity for crate::features::membership::models::TeamPayment {
+    type Purchase = crate::features::membership::models::TeamPurchase;
+
+    async fn purchase(
+        &self,
+        portone: &PortOne,
+        tx_type: TransactionType,
+        amount: i64,
+        currency: Currency,
+    ) -> Result<Self::Purchase> {
+        self.purchase(portone, tx_type, amount, currency).await
+    }
+
+    async fn schedule_next_membership_purchase(
+        &self,
+        portone: &PortOne,
+        tx_type: TransactionType,
+        amount: i64,
+        currency: Currency,
+        scheduled_at: String,
+    ) -> Result<Self::Purchase> {
+        self.schedule_next_membership_purchase(portone, tx_type, amount, currency, scheduled_at)
+            .await
+    }
+
+    async fn cancel_scheduled_payments(
+        &self,
+        cli: &aws_sdk_dynamodb::Client,
+        portone: &PortOne,
+    ) -> Result<()> {
+        self.cancel_scheduled_payments(cli, portone).await
+    }
+
+    fn upsert_transact_write_item(&self) -> TransactWriteItem {
+        self.upsert_transact_write_item()
+    }
+}

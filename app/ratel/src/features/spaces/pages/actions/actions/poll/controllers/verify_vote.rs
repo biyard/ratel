@@ -24,7 +24,11 @@ pub async fn verify_vote(
         .ok_or(Error::NotFound("No vote found for this user".into()))?;
 
     use crate::features::spaces::pages::actions::services::vote_crypto::VOTE_CRYPTO_SERVICE;
-    let crypto = &*VOTE_CRYPTO_SERVICE;
+    let crypto = VOTE_CRYPTO_SERVICE
+        .as_ref()
+        .ok_or(Error::InternalServerError(
+            "Encrypted voting is not configured".into(),
+        ))?;
     let voter_tag = crypto.build_voter_tag(&poll_sk_entity, &author.pk)?;
 
     let canister = common_config.canister();

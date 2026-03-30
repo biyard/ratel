@@ -20,7 +20,7 @@ impl CanisterService {
     pub async fn new(
         ic_url: &str,
         canister_id: &str,
-        identity: Option<ic_agent::identity::BasicIdentity>,
+        identity: Option<ic_agent::identity::Secp256k1Identity>,
     ) -> Result<Self> {
         let mut builder = Agent::builder().with_url(ic_url);
 
@@ -34,7 +34,7 @@ impl CanisterService {
             .build()
             .map_err(|e| Error::InternalServerError(format!("IC agent error: {}", e)))?;
 
-        if ic_url.contains("localhost") || ic_url.contains("127.0.0.1") {
+        if !ic_url.contains("ic0.app") {
             agent
                 .fetch_root_key()
                 .await

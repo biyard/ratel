@@ -8,7 +8,7 @@ pub async fn follow_user(target_pk: Partition) -> Result<()> {
     let cli = common_config.dynamodb();
 
     if target_pk == user.pk {
-        return Err(Error::BadRequest("Cannot follow yourself".into()));
+        return Err(crate::features::my_follower::types::FollowError::CannotFollowSelf.into());
     }
 
     let (follower_pk, follower_sk) = UserFollow::follower_keys(&target_pk, &user.pk);

@@ -15,6 +15,14 @@ translate! {
         en: "Write your answer...",
         ko: "답변을 입력하세요...",
     },
+    other_option: {
+        en: "Other",
+        ko: "기타",
+    },
+    other_placeholder: {
+        en: "Write your answer...",
+        ko: "응답을 입력하세요...",
+    },
 }
 
 pub fn should_auto_next(question: &Question, answer: &Answer) -> bool {
@@ -42,10 +50,24 @@ pub fn has_answer_for_question(question: &Question, answer: Option<&Answer>) -> 
         (
             Question::MultipleChoice(_),
             Some(Answer::MultipleChoice {
+                other: Some(value),
+                ..
+            }),
+        ) => !value.trim().is_empty(),
+        (
+            Question::MultipleChoice(_),
+            Some(Answer::MultipleChoice {
                 answer: Some(selected),
                 ..
             }),
         ) => !selected.is_empty(),
+        (
+            Question::SingleChoice(_),
+            Some(Answer::SingleChoice {
+                other: Some(value),
+                ..
+            }),
+        ) => !value.trim().is_empty(),
         (
             Question::ShortAnswer(_),
             Some(Answer::ShortAnswer {
@@ -78,6 +100,8 @@ pub struct QuestionViewerProps {
     pub answer: Option<Answer>,
     pub disabled: bool,
     pub on_change: EventHandler<Answer>,
+    #[props(default = false)]
+    pub enable_other_option: bool,
     #[props(default)]
     pub on_prev: Option<EventHandler<MouseEvent>>,
     #[props(default)]
@@ -95,6 +119,7 @@ pub fn QuestionViewer(props: QuestionViewerProps) -> Element {
         answer,
         disabled,
         on_change,
+        enable_other_option,
         on_prev,
         on_next,
         next_disabled,
@@ -110,6 +135,7 @@ pub fn QuestionViewer(props: QuestionViewerProps) -> Element {
                         question: q,
                         answer: answer.clone(),
                         disabled,
+                        enable_other_option,
                         on_change,
                     }
                 },
@@ -119,6 +145,7 @@ pub fn QuestionViewer(props: QuestionViewerProps) -> Element {
                         question: q,
                         answer: answer.clone(),
                         disabled,
+                        enable_other_option,
                         on_change,
                     }
                 },
@@ -212,7 +239,7 @@ fn QuestionTitle(title: String, description: Option<String>, is_required: Option
             "data-question-title-wrap": true,
             div { class: "flex items-center gap-1",
                 span {
-                    class: "text-lg font-semibold text-white light:text-text-primary",
+                    class: "text-lg font-semibold text-poll-question-title",
                     "data-question-title": true,
                     "{title}"
                 }
@@ -223,7 +250,7 @@ fn QuestionTitle(title: String, description: Option<String>, is_required: Option
             if let Some(desc) = description {
                 if !desc.is_empty() {
                     p {
-                        class: "text-sm text-neutral-400 light:text-text-secondary",
+                        class: "text-sm text-text-primary-muted",
                         "data-question-desc": true,
                         "{desc}"
                     }
@@ -239,12 +266,27 @@ fn SingleChoiceViewer(
     question: ChoiceQuestion,
     answer: Option<Answer>,
     disabled: bool,
+    enable_other_option: bool,
     on_change: EventHandler<Answer>,
 ) -> Element {
+    let tr: QuestionViewerTranslate = use_translate();
     let selected = match &answer {
         Some(Answer::SingleChoice { answer, .. }) => *answer,
         _ => None,
     };
+    let other_value = match &answer {
+        Some(Answer::SingleChoice { other: Some(other), .. }) => other.clone(),
+        _ => String::new(),
+    };
+    let other_value_for_row_click = other_value.clone();
+    let other_value_for_focus = other_value.clone();
+    let other_selected = matches!(
+        &answer,
+        Some(Answer::SingleChoice {
+            other: Some(_),
+            ..
+        })
+    );
 
     rsx! {
         QuestionTitle {
@@ -293,6 +335,59 @@ fn SingleChoiceViewer(
                 }
             }
         }
+        if enable_other_option && question.allow_other.unwrap_or(false) {
+            div {
+                "aria-selected": other_selected,
+                class: "group relative flex min-h-[88px] w-full items-center overflow-hidden rounded-xl text-left transition-all bg-option-card-bg hover:bg-option-card-hover-bg aria-selected:bg-gradient-to-r aria-selected:from-primary/80 aria-selected:to-primary aria-selected:shadow-[0_8px_20px_rgba(0,0,0,0.2)]",
+                class: if disabled { "cursor-not-allowed opacity-60" } else { "cursor-pointer" },
+                onclick: move |_| {
+                    if disabled {
+                        return;
+                    }
+
+                    on_change.call(Answer::SingleChoice {
+                        answer: None,
+                        other: Some(other_value_for_row_click.clone()),
+                    });
+                },
+                div { class: "absolute inset-y-0 left-0 w-[72px] bg-option-card-accent group-aria-selected:bg-primary" }
+                    div { class: "relative z-10 flex w-full items-center px-5 py-4",
+                        div { class: "w-[64px] shrink-0" }
+                        div { class: "flex-1 pr-4",
+                        crate::common::components::Input {
+                            variant: crate::common::components::InputVariant::Plain,
+                                class: "h-11 w-full appearance-none border-0 bg-transparent px-0 text-left text-[18px] text-text-primary shadow-none outline-none ring-0 placeholder:text-text-primary-muted focus:border-transparent focus:outline-none focus:ring-0 focus-visible:border-transparent focus-visible:outline-none focus-visible:ring-0",
+                            placeholder: if other_selected {
+                                tr.other_placeholder
+                            } else {
+                                ""
+                            },
+                            value: other_value.clone(),
+                            disabled,
+                            onfocus: move |_| {
+                                on_change.call(Answer::SingleChoice {
+                                    answer: None,
+                                    other: Some(other_value_for_focus.clone()),
+                                });
+                            },
+                            oninput: move |evt: Event<FormData>| {
+                                on_change.call(Answer::SingleChoice {
+                                    answer: None,
+                                    other: Some(evt.value().to_string()),
+                                });
+                            },
+                        }
+                        }
+                        div { class: "flex w-10 shrink-0 items-center justify-center",
+                        if other_selected {
+                            div { class: "flex size-6 items-center justify-center rounded-full bg-white",
+                                icons::validations::Check { class: "size-4 [&>path]:stroke-primary" }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -302,12 +397,31 @@ fn MultipleChoiceViewer(
     question: ChoiceQuestion,
     answer: Option<Answer>,
     disabled: bool,
+    enable_other_option: bool,
     on_change: EventHandler<Answer>,
 ) -> Element {
+    let tr: QuestionViewerTranslate = use_translate();
     let selected: Vec<i32> = match &answer {
         Some(Answer::MultipleChoice { answer, .. }) => answer.clone().unwrap_or_default(),
         _ => vec![],
     };
+    let other_value = match &answer {
+        Some(Answer::MultipleChoice { other: Some(other), .. }) => other.clone(),
+        _ => String::new(),
+    };
+    let selected_for_row_click = selected.clone();
+    let selected_for_focus = selected.clone();
+    let selected_for_input = selected.clone();
+    let selected_for_clear = selected.clone();
+    let other_value_for_row_click = other_value.clone();
+    let other_value_for_focus = other_value.clone();
+    let other_selected = matches!(
+        &answer,
+        Some(Answer::MultipleChoice {
+            other: Some(_),
+            ..
+        })
+    );
 
     rsx! {
         QuestionTitle {
@@ -321,6 +435,7 @@ fn MultipleChoiceViewer(
                     let is_selected = selected.contains(&(opt_idx as i32));
                     let opt_idx = opt_idx as i32;
                     let selected = selected.clone();
+                    let other_value_for_option_click = other_value.clone();
                     let on_change = on_change.clone();
                     rsx! {
                         button {
@@ -339,7 +454,11 @@ fn MultipleChoiceViewer(
                                 on_change
                                     .call(Answer::MultipleChoice {
                                         answer: Some(next),
-                                        other: None,
+                                        other: if other_value_for_option_click.trim().is_empty() {
+                                            None
+                                        } else {
+                                            Some(other_value_for_option_click.clone())
+                                        },
                                     }
                                     )
                             },
@@ -357,6 +476,63 @@ fn MultipleChoiceViewer(
                                         }
                                     }
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if enable_other_option && question.allow_other.unwrap_or(false) {
+            div {
+                "aria-selected": other_selected,
+                class: "group relative flex min-h-[88px] w-full items-center overflow-hidden rounded-xl text-left transition-all bg-option-card-bg hover:bg-option-card-hover-bg aria-selected:bg-gradient-to-r aria-selected:from-primary/80 aria-selected:to-primary aria-selected:shadow-[0_8px_20px_rgba(0,0,0,0.2)]",
+                class: if disabled { "cursor-not-allowed opacity-60" } else { "cursor-pointer" },
+                onclick: move |_| {
+                    if disabled {
+                        return;
+                    }
+
+                    on_change.call(Answer::MultipleChoice {
+                        answer: Some(selected_for_row_click.clone()),
+                        other: if other_selected {
+                            None
+                        } else {
+                            Some(other_value_for_row_click.clone())
+                        },
+                    });
+                },
+                div { class: "absolute inset-y-0 left-0 w-[72px] bg-option-card-accent group-aria-selected:bg-primary" }
+                div { class: "relative z-10 flex w-full items-center px-5 py-4",
+                    div { class: "w-[64px] shrink-0" }
+                    div { class: "flex-1 pr-4",
+                        crate::common::components::Input {
+                            variant: crate::common::components::InputVariant::Plain,
+                            class: "h-11 w-full appearance-none border-0 bg-transparent px-0 text-left text-[18px] text-text-primary shadow-none outline-none ring-0 placeholder:text-text-primary-muted focus:border-transparent focus:outline-none focus:ring-0 focus-visible:border-transparent focus-visible:outline-none focus-visible:ring-0",
+                            placeholder: if other_selected {
+                                tr.other_placeholder
+                            } else {
+                                ""
+                            },
+                            value: other_value.clone(),
+                            disabled,
+                            onfocus: move |_| {
+                                on_change.call(Answer::MultipleChoice {
+                                    answer: Some(selected_for_focus.clone()),
+                                    other: Some(other_value_for_focus.clone()),
+                                });
+                            },
+                            oninput: move |evt: Event<FormData>| {
+                                on_change.call(Answer::MultipleChoice {
+                                    answer: Some(selected_for_input.clone()),
+                                    other: Some(evt.value().to_string()),
+                                });
+                            },
+                        }
+                    }
+                    div { class: "flex w-10 shrink-0 items-center justify-center",
+                        if other_selected {
+                            div { class: "flex size-6 items-center justify-center rounded-full bg-white",
+                                icons::validations::Check { class: "size-4 [&>path]:stroke-primary" }
                             }
                         }
                     }
@@ -573,12 +749,12 @@ fn LinearScaleViewer(
             is_required: question.is_required,
         }
         div { class: "flex w-full flex-col gap-5 select-none",
-            div { class: "flex w-full items-center justify-between text-sm font-medium text-neutral-400 light:text-text-secondary",
+            div { class: "flex w-full items-center justify-between text-sm font-medium text-text-primary-muted",
                 span { class: "max-w-[40%] truncate", "{question.min_label}" }
                 span { class: "max-w-[40%] truncate text-right", "{question.max_label}" }
             }
-            div { class: "w-full overflow-x-auto no-scrollbar touch-pan-x",
-                div { class: "mx-auto flex w-fit min-w-full items-center justify-center gap-2 px-1 pb-1",
+            div { class: "w-full",
+                div { class: "flex flex-wrap justify-center gap-2 px-1 pb-1",
                     for val in min..=max {
                         {
                             let is_selected = selected == Some(val as i32);

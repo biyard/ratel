@@ -17,6 +17,12 @@ use crate::features::spaces::pages::apps::apps::rewards::views::HomePage as Spac
 
 // Space Apps
 #[cfg(feature = "spaces")]
+use crate::features::spaces::pages::apps::apps::analyzes::SpaceAnalyzeDetailPage;
+#[cfg(feature = "spaces")]
+use crate::features::spaces::pages::apps::apps::analyzes::SpaceAnalyzeDiscussionPage;
+#[cfg(feature = "spaces")]
+use crate::features::spaces::pages::apps::apps::analyzes::SpaceAnalyzesAppPage;
+#[cfg(feature = "spaces")]
 use crate::features::spaces::pages::apps::apps::file::SpaceFileAppPage;
 #[cfg(feature = "spaces")]
 use crate::features::spaces::pages::apps::apps::general::SpaceGeneralAppPage;
@@ -73,6 +79,8 @@ use crate::features::social::pages::setting::layout::TeamSettingLayout;
 use crate::features::social::pages::setting::Home as TeamSetting;
 #[cfg(feature = "social")]
 use crate::features::social::pages::setting::ManagementPage as TeamSettingMember;
+#[cfg(feature = "social")]
+use crate::features::social::pages::setting::SubscriptionPage as TeamSettingSubscription;
 
 // User pages
 #[cfg(feature = "social")]
@@ -123,13 +131,13 @@ pub enum Route {
 
             #[cfg(feature = "social")]
             #[nest("/:username")]
+                #[route("/rewards")]
+                UserRewards { username: String },
                 #[layout(SocialLayout)]
                     #[route("/")]
                     UserHomeRoot { username: String },
                     #[route("/posts")]
                     UserPosts { username: String },
-                    #[route("/rewards")]
-                    UserRewards { username: String },
                     #[route("/memberships")]
                     UserMemberships { username: String },
                     #[route("/drafts")]
@@ -156,6 +164,8 @@ pub enum Route {
                     TeamSetting { username: String },
                     #[route("/settings/members")]
                     TeamSettingMember { username: String },
+                    #[route("/settings/subscription")]
+                    TeamSettingSubscription { username: String },
                 #[end_layout]
             #[end_nest]
         #[end_layout]
@@ -211,6 +221,18 @@ pub enum Route {
                         #[cfg_attr(feature="spaces", route("/files"))]
                         #[cfg(feature = "spaces")]
                         SpaceFileAppPage { space_id: SpacePartition },
+
+                        #[cfg_attr(feature="spaces", route("/analyzes"))]
+                        #[cfg(feature = "spaces")]
+                        SpaceAnalyzesAppPage { space_id: SpacePartition },
+
+                        #[cfg_attr(feature="spaces", route("/analyzes/poll/:poll_id"))]
+                        #[cfg(feature = "spaces")]
+                        SpaceAnalyzeDetailPage { space_id: SpacePartition, poll_id: SpacePollEntityType },
+
+                        #[cfg_attr(feature="spaces", route("/analyzes/discussion/:discussion_id"))]
+                        #[cfg(feature = "spaces")]
+                        SpaceAnalyzeDiscussionPage { space_id: SpacePartition, discussion_id: SpacePostEntityType },
 
                         #[cfg_attr(feature="spaces", route("/panels"))]
                         #[cfg(feature = "spaces")]

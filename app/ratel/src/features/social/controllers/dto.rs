@@ -2,6 +2,29 @@ use crate::features::social::*;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct UserResponse {
+    pub pk: String,
+    pub username: String,
+    pub display_name: String,
+    pub profile_url: String,
+    pub description: String,
+}
+
+#[cfg(feature = "server")]
+impl From<crate::features::auth::User> for UserResponse {
+    fn from(user: crate::features::auth::User) -> Self {
+        Self {
+            pk: user.pk.to_string(),
+            username: user.username,
+            display_name: user.display_name,
+            profile_url: user.profile_url,
+            description: user.description,
+        }
+    }
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct TeamResponse {
     pub pk: String,
     pub created_at: i64,
