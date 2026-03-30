@@ -332,8 +332,10 @@ fn ActionTypeOption(
     caption: String,
     icon: Element,
 ) -> Element {
+    let testid = format!("action-type-{}", title.to_lowercase().replace(' ', "-"));
     rsx! {
         SpaceCard {
+            "data-testid": "{testid}",
             class: format!(
                 "flex items-center gap-2.5 text-left !p-2.5 !rounded-[0.75rem] border transition-opacity {} {}",
                 if selected {

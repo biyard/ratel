@@ -12,8 +12,11 @@ pub fn AttributeButton(
         "h-9 !px-3 border-input-box-border !bg-input-box-bg !text-text-primary"
     };
 
+    let testid = format!("attr-btn-{}", label.to_lowercase());
+
     rsx! {
         Button {
+            "data-testid": "{testid}",
             size: ButtonSize::Small,
             style: ButtonStyle::Outline,
             shape: ButtonShape::Square,
