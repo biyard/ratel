@@ -223,6 +223,33 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                     }
                 }
 
+                // ADMIN section — visible only to team admins/editors
+                if can_team_edit {
+                    div { class: "flex flex-col px-3 pb-4 shrink-0",
+                        span { class: "px-2 pb-2 text-xs font-semibold tracking-wider uppercase text-foreground-muted",
+                            "{tr.admin}"
+                        }
+                        {
+                            let is_draft_active = matches!(current_route, Route::TeamDraft { .. });
+                            let draft_class = if is_draft_active {
+                                "bg-hover text-text-primary"
+                            } else {
+                                "text-foreground-muted hover:bg-hover hover:text-text-primary"
+                            };
+                            rsx! {
+                                Link {
+                                    to: Route::TeamDraft { username: username.clone() },
+                                    class: "flex gap-2.5 items-center py-2 px-2 w-full text-sm font-medium text-left rounded-lg transition-colors {draft_class}",
+                                    lucide_dioxus::FileText {
+                                        class: "w-4 h-4 [&>path]:stroke-current [&>polyline]:stroke-current [&>line]:stroke-current shrink-0",
+                                    }
+                                    span { "{tr.drafts}" }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Bottom: user info + settings (logged-in only)
                 if logged_in {
                     {
@@ -404,6 +431,16 @@ translate! {
     back_to_page: {
         en: "Back to page",
         ko: "페이지로 돌아가기",
+    },
+
+    admin: {
+        en: "Admin",
+        ko: "관리",
+    },
+
+    drafts: {
+        en: "Draft",
+        ko: "초안",
     },
 
     rewards: {
