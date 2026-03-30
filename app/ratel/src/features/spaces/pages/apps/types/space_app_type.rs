@@ -9,6 +9,8 @@ pub enum SpaceAppType {
     General,
     #[translate(en = "File", ko = "파일")]
     File,
+    #[translate(en = "Analyzes", ko = "분석")]
+    Analyzes,
     #[translate(en = "Panels", ko = "패널")]
     Panels,
     #[cfg(feature = "beta")]
@@ -25,6 +27,7 @@ impl SpaceAppType {
         match self {
             SpaceAppType::General => Route::SpaceGeneralAppPage { space_id },
             SpaceAppType::File => Route::SpaceFileAppPage { space_id },
+            SpaceAppType::Analyzes => Route::SpaceAnalyzesAppPage { space_id },
             SpaceAppType::Panels => Route::SpacePanelsAppPage { space_id },
             #[cfg(feature = "beta")]
             SpaceAppType::IncentivePool => Route::SpaceIncentivePoolAppPage { space_id },
@@ -34,6 +37,7 @@ impl SpaceAppType {
     pub fn class(&self) -> &'static str {
         match self {
             SpaceAppType::General => "bg-green-500",
+            SpaceAppType::Analyzes => "bg-cyan-500",
             #[cfg(feature = "beta")]
             SpaceAppType::IncentivePool => "bg-amber-500",
             SpaceAppType::File => "bg-violet-500",
@@ -47,7 +51,14 @@ impl SpaceAppType {
                 icons::settings::Settings2 {
                     width: "24",
                     height: "24",
-                    class: "text-white [&>path]:fill-black [&>circle]:stroke-black [&>circle]:fill-none",
+                    class: "text-white [&>path]:fill-current [&>circle]:stroke-current [&>circle]:fill-none",
+                }
+            },
+            SpaceAppType::Analyzes => rsx! {
+                icons::layouts::Apps {
+                    width: "24",
+                    height: "24",
+                    class: "text-white [&>path]:stroke-black",
                 }
             },
             #[cfg(feature = "beta")]
@@ -55,21 +66,21 @@ impl SpaceAppType {
                 icons::ratel::Chest {
                     width: "24",
                     height: "24",
-                    class: "text-white [&>path]:fill-none [&>path]:stroke-black",
+                    class: "text-white [&>path]:fill-none [&>path]:stroke-current",
                 }
             },
             SpaceAppType::File => rsx! {
                 icons::file::File {
                     width: "24",
                     height: "24",
-                    class: "text-white [&>path]:stroke-black [&>path]:fill-none",
+                    class: "text-white [&>path]:stroke-current [&>path]:fill-none",
                 }
             },
             SpaceAppType::Panels => rsx! {
                 icons::user::UserGroup {
                     width: "24",
                     height: "24",
-                    class: "text-white [&>path]:stroke-black [&>path]:fill-transparent",
+                    class: "text-white [&>path]:stroke-current [&>path]:fill-transparent",
                 }
             },
         }
@@ -82,6 +93,7 @@ impl SpaceAppType {
             #[cfg(feature = "beta")]
             SpaceAppType::IncentivePool => tr.app_description_incentive_pool,
             SpaceAppType::File => tr.app_description_file,
+            SpaceAppType::Analyzes => tr.app_description_analyzes,
             SpaceAppType::Panels => tr.app_description_panels,
             SpaceAppType::General => tr.app_description_general,
         }
@@ -107,5 +119,9 @@ translate! {
     app_description_general: {
         en: "Settings (Admin)",
         ko: "설정(관리자)",
+    },
+    app_description_analyzes: {
+        en: "Check out the poll results.",
+        ko: "설문조사 결과를 확인하세요.",
     },
 }

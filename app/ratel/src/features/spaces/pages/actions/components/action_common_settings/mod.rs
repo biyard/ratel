@@ -16,12 +16,19 @@ pub fn ActionCommonSettings(
 ) -> Element {
     let tr: ActionCommonSettingsTranslate = use_translate();
     let mut toast = crate::common::use_toast();
+    let mut current_credits = use_signal(move || action_setting().credits);
+    let setting = action_setting();
+
+    #[cfg(feature = "membership")]
+    let mut auth_ctx = use_context::<crate::features::auth::context::Context>();
 
     rsx! {
         div { class: "flex flex-col gap-5 w-full",
             div { class: "flex flex-col gap-2.5",
                 p { {tr.date} }
                 DateAndTimePicker {
+                    initial_started_at: Some(setting.started_at),
+                    initial_ended_at: Some(setting.ended_at),
                     on_change: move |range: DateTimeRange| async move {
                         if let (Some(start_date), Some(end_date)) = (range.start_date, range.end_date) {
                             let started_at = date_time_to_millis(
@@ -60,13 +67,24 @@ pub fn ActionCommonSettings(
             }
 
             RewardSetting {
-                space_action: action_setting,
+                saved_credits: current_credits,
                 on_change: move |credits: u64| async move {
+                    let previous_credits = current_credits();
                     let req = UpdateSpaceActionRequest::Credits {
                         credits,
                     };
                     match update_space_action(space_id(), action_id(), req).await {
                         Ok(_) => {
+                            let delta = credits as i64 - previous_credits as i64;
+                            current_credits.set(credits);
+                            #[cfg(feature = "membership")]
+                            {
+                                let mut user_ctx = auth_ctx.user_context.write();
+                                if let Some(membership) = user_ctx.membership.as_mut() {
+                                    membership.remaining_credits =
+                                        (membership.remaining_credits - delta).max(0);
+                                }
+                            }
                             toast.info(tr.reward_updated.to_string());
                             on_credit_change.call(credits);
                         }

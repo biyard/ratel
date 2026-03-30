@@ -9,7 +9,7 @@ pub fn Select<T: Clone + PartialEq + 'static>(props: SelectProps<T>) -> Element 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
         select::Select {
-            class: "select @max-sm:w-full",
+            class: "select @max-mobile:w-full",
             value: props.value,
             default_value: props.default_value,
             on_value_change: props.on_value_change,
@@ -28,12 +28,12 @@ pub fn Select<T: Clone + PartialEq + 'static>(props: SelectProps<T>) -> Element 
 pub fn SelectTrigger(props: SelectTriggerProps) -> Element {
     rsx! {
         select::SelectTrigger {
-            class: "select-trigger @max-sm:w-full",
+            class: "select-trigger @max-mobile:w-full",
             attributes: props.attributes,
-            div { class: "hidden @max-sm:w-full @max-sm:flex @max-sm:justify-center @max-sm:items-center",
+            div { class: "hidden @max-mobile:w-full @max-mobile:flex @max-mobile:justify-center @max-mobile:items-center",
                 {props.children.clone()}
             }
-            div { class: "@max-sm:hidden", {props.children} }
+            div { class: "@max-mobile:hidden", {props.children} }
 
             svg {
                 class: "select-expand-icon",
@@ -48,7 +48,7 @@ pub fn SelectTrigger(props: SelectTriggerProps) -> Element {
 #[component]
 pub fn SelectValue(props: SelectValueProps) -> Element {
     rsx! {
-        select::SelectValue { class: "@max-sm:text-center", attributes: props.attributes }
+        select::SelectValue { class: "@max-mobile:text-center", attributes: props.attributes }
     }
 }
 

@@ -60,6 +60,10 @@ pub enum Error {
     #[translate(en = "Not found", ko = "찾을 수 없습니다.")]
     NotFound(String),
 
+    #[error("Invitation not found")]
+    #[translate(en = "Invitation not found", ko = "초대 항목을 찾을 수 없습니다.")]
+    InvitationNotFound,
+
     #[error("User has no permission")]
     #[translate(en = "No permission", ko = "권한이 없습니다.")]
     NoPermission,
@@ -91,6 +95,10 @@ pub enum Error {
     #[error("User is already participating in the space")]
     #[translate(en = "Already participating", ko = "이미 참여 중입니다.")]
     AlreadyParticipating,
+
+    #[error("Participation is not open")]
+    #[translate(en = "Participation is only available while the space is open.", ko = "참여는 스페이스가 열려 있는 동안만 가능합니다.")]
+    ParticipationNotOpen,
 
     #[error("not found verification code")]
     #[translate(en = "Verification code not found", ko = "인증 코드를 찾을 수 없습니다.")]
@@ -167,11 +175,25 @@ pub enum Error {
 
     #[error("{0}")]
     #[translate(from)]
+    Follow(#[from] crate::features::my_follower::types::FollowError),
+
+    #[error("{0}")]
+    #[translate(from)]
     SpaceReward(#[from] SpaceRewardError),
 
     #[error("{0}")]
     #[translate(from)]
     SpaceActionQuiz(#[from] crate::features::spaces::pages::actions::actions::quiz::SpaceActionQuizError),
+
+    #[error("{0}")]
+    #[translate(from)]
+    SpaceActionDiscussion(
+        #[from] crate::features::spaces::pages::actions::actions::discussion::SpaceActionDiscussionError,
+    ),
+
+    #[error("{0}")]
+    #[translate(from)]
+    ExchangePoints(#[from] crate::features::social::pages::user_reward::controllers::ExchangePointsError),
 
     // Post related errors
     #[error("Invalid username")]
@@ -233,10 +255,14 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             | Error::ParticipationBlocked
             | Error::LackOfVerifiedAttributes
             | Error::FullQuota
-            | Error::AlreadyParticipating => StatusCode::BAD_REQUEST,
-            Error::NotFound(_) => StatusCode::NOT_FOUND,
+            | Error::AlreadyParticipating
+            | Error::ParticipationNotOpen => StatusCode::BAD_REQUEST,
+            Error::NotFound(_) | Error::InvitationNotFound => StatusCode::NOT_FOUND,
+            Error::Follow(e) => e.status_code(),
             Error::SpaceReward(e) => e.status_code(),
             Error::SpaceActionQuiz(e) => e.status_code(),
+            Error::SpaceActionDiscussion(e) => e.status_code(),
+            Error::ExchangePoints(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
@@ -282,15 +308,19 @@ impl dioxus::fullstack::AsStatusCode for Error {
             | Error::LackOfVerifiedAttributes
             | Error::FullQuota
             | Error::AlreadyParticipating
+            | Error::ParticipationNotOpen
             | Error::ExceededAttemptEmailVerification
             | Error::ExceededAttemptPhoneVerification
             | Error::SendSmsFailed(_)
             | Error::NotFoundVerificationCode
             | Error::ExpiredVerification
             | Error::InvalidVerificationCode => StatusCode::BAD_REQUEST,
-            Error::NotFound(_) => StatusCode::NOT_FOUND,
+            Error::NotFound(_) | Error::InvitationNotFound => StatusCode::NOT_FOUND,
+            Error::Follow(e) => e.status_code(),
             Error::SpaceReward(e) => e.status_code(),
             Error::SpaceActionQuiz(e) => e.status_code(),
+            Error::SpaceActionDiscussion(e) => e.status_code(),
+            Error::ExchangePoints(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

@@ -20,6 +20,11 @@ playwright/
     users/                        # Authenticated user test specs
       post.spec.js                # Example: post creation test
       *.spec.js                   # New test files go here
+    spaces/                       # Space-related test specs
+      *.spec.js
+    components/                   # Component-level test specs (manage own auth context)
+      mobile-bottom-nav.spec.js   # Mobile bottom navigation tests
+      *.spec.js                   # New component tests go here
 ```
 
 ## Configuration
@@ -50,9 +55,10 @@ Key settings:
 | Project | testMatch | Description |
 |---------|-----------|-------------|
 | `auth-setup` | `**/*.auth.setup.js` | Runs first; logs in and saves `user.json` |
-| `Individual user tests` | `tests/users/**/*.spec.js` | Depends on `auth-setup`; uses saved `user.json` storageState |
+| `Individual user tests` | `tests/users/**/*.spec.js`, `tests/spaces/**/*.spec.js` | Depends on `auth-setup`; uses saved `user.json` storageState |
+| `Component tests` | `tests/components/**/*.spec.js` | Depends on `auth-setup`; no project-level device or storageState (tests manage their own contexts via `browser.newContext()`) |
 
-Authenticated tests run on Desktop Chrome at **1440x950** viewport.
+Authenticated tests run on Desktop Chrome at a fixed **1440x950** viewport. Component tests have **no project-level device or viewport settings**; each test creates its own `browser.newContext()` with explicit viewport (e.g., mobile 375x667) and authentication state. Project-level `use` options are not applied to manual `browser.newContext()` calls, so tests must pass all desired options (viewport, storageState, userAgent, etc.) directly.
 
 ## Authentication Flow
 
@@ -97,7 +103,7 @@ All interaction helpers are defined in `tests/utils.js`. **Always use these inst
 
 ### `goto(page, path)`
 
-Navigates to `BASE_URL + path` with `waitUntil: "load"`, then waits for the Dioxus WASM app to hydrate by checking `window.dioxus.send` is available (with a 10s timeout).
+Navigates to `BASE_URL + path` with `waitUntil: "load"`, then waits for the Dioxus WASM app to hydrate by checking for `[data-dioxus-id]` elements in the DOM.
 
 ```js
 await goto(page, "/");           // → http://localhost:8000/
@@ -112,6 +118,15 @@ Finds an element using locator options, asserts it's visible, clicks it, and wai
 await click(page, { role: "button", text: /sign in/i });
 await click(page, { text: "Continue" });
 await click(page, { label: "Create Post" });
+```
+
+### `clickNoNav(page, opts)`
+
+Like `click()`, but skips `waitForLoadState("load")` after clicking. Use this for non-navigation UI interactions (e.g., opening a sidebar sheet, toggling a panel) where `waitForLoadState` would resolve immediately or hang because no page navigation occurs.
+
+```js
+await clickNoNav(page, { testId: "mobile-more-btn" });  // opens sidebar sheet, no navigation
+await clickNoNav(page, { testId: "toggle-panel" });       // toggles a panel
 ```
 
 ### `fill(page, opts, value)`
@@ -190,10 +205,15 @@ The `text` option in `role` supports both strings and RegExp (e.g., `/sign in/i`
 
 ### Step 1: Create a file
 
-Add a new `.spec.js` file under `playwright/tests/users/`:
+Add a new `.spec.js` file under the appropriate directory:
+
+- **`playwright/tests/users/`** — Authenticated user tests (auto-loaded `user.json` storageState)
+- **`playwright/tests/spaces/`** — Space-related tests (auto-loaded `user.json` storageState)
+- **`playwright/tests/components/`** — Component tests that manage their own auth context (no project-level storageState)
 
 ```
-playwright/tests/users/my-feature.spec.js
+playwright/tests/users/my-feature.spec.js       # authenticated test
+playwright/tests/components/my-component.spec.js  # component test with custom context
 ```
 
 ### Step 2: Write the test
@@ -357,7 +377,7 @@ PLAYWRIGHT_ID=my-test-run npx playwright test
 
 - Default timeout is 5000ms. Increase with `PLAYWRIGHT_TIMEOUT` env var.
 - Ensure the app is running at `http://localhost:8000` (or set `PLAYWRIGHT_BASE_URL`).
-- Check that the Dioxus WASM app is loading correctly (the `goto()` helper waits for `window.dioxus.send` to be available).
+- Check that the Dioxus WASM app is loading correctly (the `goto()` helper waits for `[data-dioxus-id]` elements to be present).
 
 ### Auth Setup Fails
 

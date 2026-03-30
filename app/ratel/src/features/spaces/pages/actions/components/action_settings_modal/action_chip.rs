@@ -3,12 +3,12 @@ use crate::features::spaces::pages::actions::*;
 #[component]
 pub fn ActionSettingsActionChip(label: String, on_remove: EventHandler<MouseEvent>) -> Element {
     rsx! {
-        div { class: "flex min-h-11 w-full items-start justify-between gap-2.5 rounded-[10px] bg-neutral-800 p-2.5",
+        div { class: "flex min-h-11 w-full items-start justify-between gap-2.5 rounded-[10px] bg-button-muted p-2.5",
             div { class: "flex min-w-0 items-start gap-2.5",
                 icons::game::Thunder {
                     width: "18",
                     height: "18",
-                    class: "shrink-0 text-web-font-primary [&>path]:stroke-current",
+                    class: "shrink-0 text-web-font-primary [&>path]:stroke-current [&>path]:fill-none",
                 }
                 span { class: "whitespace-normal break-words font-bold font-raleway text-[14px]/[16px] text-web-font-primary",
                     {label}

@@ -31,7 +31,9 @@ pub fn QuizEditor(props: QuizEditorProps) -> Element {
                     let row_save = on_save.clone();
                     let delete_save = on_save.clone();
                     rsx! {
-                        Card { class: "flex flex-col gap-3",
+                        Card {
+                            key: "quiz-editor-question-{idx}",
+                            class: "flex flex-col gap-3",
                             div { class: "flex justify-between items-center",
                                 span { class: "text-sm text-neutral-400", "Question {idx + 1}" }
                             }
@@ -244,6 +246,7 @@ fn QuizChoiceEditor(
         ChoiceQuestionEditor {
             question: question.clone(),
             is_single,
+            show_allow_other: false,
             selected_options,
             on_save,
             on_change: move |next_question: Question| {

@@ -39,13 +39,14 @@ pub fn ViewerMain(
         role,
         discussion_response.space_action.prerequisite,
         space.status,
+        space.join_anytime,
     ) && can_participate;
     let can_manage_comments = can_comment;
     let nav = navigator();
 
     rsx! {
         FullActionLayover {
-            content_class: "gap-5".to_string(),
+            content_class: "gap-5 overflow-y-visible".to_string(),
             bottom_right: rsx! {
                 Button {
                     style: ButtonStyle::Outline,

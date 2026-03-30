@@ -58,6 +58,20 @@ export default defineConfig({
         storageState: "user.json",
       },
     },
+    // Component tests manage their own browser contexts and auth state.
+    // NOTE: These tests create their own browser contexts via browser.newContext().
+    // Project-level `use` options (device/viewport/userAgent, baseURL, etc.) are
+    // NOT applied to manually created contexts, so any required context options
+    // must be passed explicitly when calling browser.newContext().
+    // In this repo, the shared `goto()` helper forwards relative paths directly
+    // to page.goto(), so component tests that use relative URLs must include
+    // baseURL in the browser.newContext() options.
+    {
+      name: "Component tests",
+      testMatch: ["tests/components/**/*.spec.js"],
+      dependencies: ["auth-setup"],
+      use: {},
+    },
   ],
 
   /* Run your local dev server before starting the tests */
