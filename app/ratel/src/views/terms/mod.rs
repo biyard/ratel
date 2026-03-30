@@ -203,10 +203,12 @@ pub fn TermsOfServicePage() -> Element {
 
     rsx! {
         div { class: "w-full min-h-screen bg-bg text-text-primary",
-            div { class: "px-4 py-12 mx-auto w-full max-w-4xl",
+            div { class: "px-4 py-12 mx-auto w-full max-w-desktop",
                 div { class: "flex flex-col gap-8",
                     div { class: "text-center",
-                        h1 { class: "mb-4 text-3xl font-bold text-text-primary md:text-4xl", "{data.title}" }
+                        h1 { class: "mb-4 text-3xl font-bold text-text-primary md:text-4xl",
+                            "{data.title}"
+                        }
                         p { class: "text-sm text-muted-foreground md:text-base",
                             "{data.last_updated}: {data.effective_date}"
                         }
@@ -236,9 +238,7 @@ pub fn TermsOfServicePage() -> Element {
                                     span { class: "font-semibold", "{data.company_name}" }
                                 }
                                 p { class: "text-text-primary",
-                                    span { class: "font-semibold",
-                                        "{data.contact.email_label}: "
-                                    }
+                                    span { class: "font-semibold", "{data.contact.email_label}: " }
                                     a {
                                         class: "text-primary hover:underline",
                                         href: mailto_href,
@@ -246,9 +246,7 @@ pub fn TermsOfServicePage() -> Element {
                                     }
                                 }
                                 p { class: "text-text-primary",
-                                    span { class: "font-semibold",
-                                        "{data.contact.address_label}: "
-                                    }
+                                    span { class: "font-semibold", "{data.contact.address_label}: " }
                                     "{data.address}"
                                 }
                             }
@@ -256,9 +254,7 @@ pub fn TermsOfServicePage() -> Element {
                     }
 
                     div { class: "pt-8 mt-12 border-t border-divider",
-                        p { class: "text-sm text-center text-muted-foreground",
-                            {copyright}
-                        }
+                        p { class: "text-sm text-center text-muted-foreground", {copyright} }
                     }
                 }
             }
