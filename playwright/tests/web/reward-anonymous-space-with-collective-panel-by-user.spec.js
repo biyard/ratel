@@ -388,10 +388,10 @@ test.describe
     try {
       await goto(page, spaceUrl + "/apps");
 
-      // The Panels app card has a "Setting" button with data-testid="setting-panels-app".
+      // The Panels app card has a "Setting" button with data-testid="configure-app-panels".
       // But Panels might need to be installed first if not default.
       // Check if Panels is in "Available Apps" or "Installed Apps".
-      const installButton = page.locator('[data-testid="install-panels-app"]');
+      const installButton = page.locator('[data-testid="install-app-panels"]');
       if ((await installButton.count()) > 0) {
         // Panels app needs to be installed first
         await installButton.click();
@@ -401,20 +401,20 @@ test.describe
       }
 
       // Now click Settings on the Panels app card
-      const settingButton = page.locator('[data-testid="setting-panels-app"]');
+      const settingButton = page.locator('[data-testid="configure-app-panels"]');
       // There may be multiple "Setting" buttons — the Panels one should be visible
       // after install. Find the one associated with Panels.
       // Each AppCard renders the Setting button. We need the Panels one.
       // The cards show app names. Find "Panels" text and its sibling Setting button.
       const panelsCard = page.locator("text=Panels").locator("../..");
       const panelsSettingBtn = panelsCard.locator(
-        '[data-testid="setting-panels-app"]',
+        '[data-testid="configure-app-panels"]',
       );
 
       if ((await panelsSettingBtn.count()) > 0) {
         await panelsSettingBtn.click();
       } else {
-        // Fallback: click any setting-panels-app button
+        // Fallback: click any configure-app-panels button
         await settingButton.first().click();
       }
 

@@ -208,15 +208,15 @@ test.describe.serial("Space governance scenario", () => {
 
     // Step 3: Fill in team creation form
     // Team Name (nickname)
-    const nicknameInput = page.locator('[data-pw="team-nickname-input"]');
+    const nicknameInput = page.locator('[data-testid="team-nickname-input"]');
     await nicknameInput.fill(teamNickname);
 
     // Team ID (username)
-    const usernameInput = page.locator('[data-pw="team-username-input"]');
+    const usernameInput = page.locator('[data-testid="team-username-input"]');
     await usernameInput.fill(teamUsername);
 
     // Team description
-    const descInput = page.locator('[data-pw="team-description-input"]');
+    const descInput = page.locator('[data-testid="team-description-input"]');
     await descInput.fill("E2E test team for space actions");
 
     // Click Create button to submit the form
