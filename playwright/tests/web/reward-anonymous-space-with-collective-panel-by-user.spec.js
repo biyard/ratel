@@ -570,7 +570,7 @@ test.describe
         // User sees attribute requirements — click to improve credential
         await click(page, { text: "Improve My Credential" });
         // Should see "Match Required Attributes" verification page
-        await getLocator(page, { text: "Match Required Attributes" });
+        await getLocator(page, { role: "heading", text: "Match Required Attributes" });
       } else if (hasMatchAttributes) {
         // Already on the verification page
         await getLocator(page, { text: "Choose a verification method" });
