@@ -27,6 +27,9 @@ export default defineConfig({
   reporter: [["html", { open: "never", host: "0.0.0.0" }]],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   timeout: CONFIGS.TIMEOUT,
+  expect: {
+    timeout: process.env.CI ? 10000 : 5000,
+  },
   use: {
     baseURL: CONFIGS.BASE_URL,
     navigationTimeout: CONFIGS.TIMEOUT,
