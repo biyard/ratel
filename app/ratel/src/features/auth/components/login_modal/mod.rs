@@ -171,7 +171,10 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                 loading.set(false);
                 popup.close();
                 popup.open(rsx! {
-                    SignupModal { initial_wallet_address: Some(connect_result.address), on_success }
+                    SignupModal {
+                        initial_wallet_address: Some(connect_result.address),
+                        on_success,
+                    }
                 });
                 return;
             }
@@ -268,11 +271,7 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                     crate::common::components::LoadingIndicator { class: "size-8" }
                 }
             }
-            img {
-                src: RATEL_LOGO,
-                alt: "Ratel",
-                class: "h-10 object-contain",
-            }
+            img { src: RATEL_LOGO, alt: "Ratel", class: "h-10 object-contain" }
 
             div { class: "flex flex-col gap-4 w-full",
                 div { class: "flex flex-row gap-1 justify-start items-center w-full text-sm",
@@ -398,10 +397,18 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                 }
             }
             div { class: "flex flex-row gap-2.5 justify-center items-center w-full",
-                div { class: "font-medium cursor-pointer text-neutral-400 text-xs/3.5",
+                a {
+                    class: "font-medium cursor-pointer text-neutral-400 text-xs/3.5",
+                    href: "/privacy",
+                    target: "_blank",
+                    rel: "noopener noreferrer",
                     {tr.privacy_policy}
                 }
-                div { class: "font-medium cursor-pointer text-neutral-400 text-xs/3.5",
+                a {
+                    class: "font-medium cursor-pointer text-neutral-400 text-xs/3.5",
+                    href: "/terms",
+                    target: "_blank",
+                    rel: "noopener noreferrer",
                     {tr.terms_of_service}
                 }
             }
