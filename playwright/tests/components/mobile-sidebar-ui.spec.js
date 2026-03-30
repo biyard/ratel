@@ -40,6 +40,12 @@ const MOBILE_VIEWPORT = { width: 375, height: 667 };
  * handle the case where the first click fires before Dioxus has fully
  * attached event handlers during hydration.
  *
+ * The data-testid="mobile-sidebar-sheet" is on the outer wrapper div
+ * (outside the Sheet dialog), so it appears in the DOM immediately when
+ * the mobile branch renders. The Sheet content inside has a one-frame
+ * rendering delay (use_animated_open), so individual test assertions
+ * should use their own timeouts to wait for visible content.
+ *
  * @returns {import("@playwright/test").Locator} The sidebar sheet locator.
  */
 async function openMobileSidebar(page) {
@@ -49,14 +55,16 @@ async function openMobileSidebar(page) {
 
   const sidebarSheet = page.getByTestId("mobile-sidebar-sheet");
 
-  // Give Dioxus a short window to process the click and render the Sheet.
-  // If the sheet doesn't appear, retry the click once — the first click may
-  // have fired before hydration finished attaching event handlers.
+  // Wait for the wrapper div to be in the DOM. The wrapper is outside the
+  // Sheet's conditional rendering, so it appears immediately when the mobile
+  // branch activates. Use toBeAttached (DOM presence) rather than toBeVisible
+  // because the wrapper may have zero dimensions until the Sheet's dialog
+  // overlay renders its content.
   try {
-    await expect(sidebarSheet).toBeVisible({ timeout: 3000 });
+    await expect(sidebarSheet).toBeAttached({ timeout: 3000 });
   } catch {
     await moreBtn.click({ force: true });
-    await expect(sidebarSheet).toBeVisible();
+    await expect(sidebarSheet).toBeAttached();
   }
 
   return sidebarSheet;
@@ -110,6 +118,9 @@ test.describe(
 
         // Open mobile sidebar
         const sidebarSheet = await openMobileSidebar(page);
+
+        // Wait for sidebar content to render before checking absence
+        await expect(sidebarSheet.getByText("Home", { exact: true })).toBeVisible();
 
         // The Collapse/Expand button should not be present on mobile
         const collapseBtn = sidebarSheet.getByText("Collapse", { exact: true });

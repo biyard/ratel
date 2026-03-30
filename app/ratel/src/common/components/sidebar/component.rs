@@ -290,6 +290,7 @@ pub fn Sidebar(
         return rsx! {
             div {
                 "data-mobile": "true",
+                "data-testid": "mobile-sidebar-sheet",
                 Sheet {
                     open: open_mobile(),
                     on_open_change: move |v| ctx.set_open_mobile(v),
@@ -303,11 +304,7 @@ pub fn Sidebar(
                             SheetTitle { "Sidebar" }
                             SheetDescription { "Displays the mobile sidebar." }
                         }
-                        div {
-                            class: "sidebar-mobile-inner",
-                            "data-testid": "mobile-sidebar-sheet",
-                            {children}
-                        }
+                        div { class: "sidebar-mobile-inner", {children} }
                     }
                 }
             }
