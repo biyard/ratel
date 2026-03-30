@@ -386,7 +386,7 @@ PLAYWRIGHT_ID=my-test-run npx playwright test
 6. **Plain JavaScript** — All test files use `.js`, not TypeScript.
 7. **No `test.describe` needed** — Individual `test()` calls are fine for simple specs.
 8. **Avoid raw CSS locators** — Don't use `page.locator('label:has(...)')` or `page.locator("#some-id")`. Use semantic selectors via helpers: `testId` > `label` > `role` > `placeholder` > `text`.
-9. **Avoid `.first()` on order-dependent selectors** — Add stable `data-testid` or `data-pw` attributes to the UI and target them specifically, instead of relying on DOM order.
+9. **Avoid `.first()` on order-dependent selectors** — Add stable `data-testid` or `data-testid` attributes to the UI and target them specifically, instead of relying on DOM order.
 10. **Don't add manual waits after `click()` helper** — `click()` already calls `waitForLoadState("load")` internally. Adding another wait is redundant and slows tests.
 11. **Use `try/finally` for browser contexts** — When manually creating `browser.newContext()`, wrap the test body in `try/finally` to guarantee `context.close()` runs.
 12. **Document `bypass` feature dependency** — Tests using hardcoded verification codes (e.g., `000000`) only work with `--features bypass`. Note this requirement in the test file header.

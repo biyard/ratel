@@ -62,3 +62,4 @@ user.json
 /playwright/.auth/
 
 .playwright-mcp
+/playwright/admin1.json
