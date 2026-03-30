@@ -1,8 +1,8 @@
 use dioxus::fullstack::{Loader, Loading};
-use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::common::types::UserType;
+use crate::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct TeamItem {
@@ -17,7 +17,17 @@ pub struct TeamItem {
     pub description: String,
 }
 
-#[derive(Clone, Copy)]
+impl TeamItem {
+    pub fn label(&self) -> &str {
+        if self.nickname.is_empty() {
+            &self.username
+        } else {
+            &self.nickname
+        }
+    }
+}
+
+#[derive(Clone, Copy, DioxusController)]
 pub struct TeamContext {
     pub teams: Loader<Vec<TeamItem>>,
     pub selected_index: Signal<usize>,

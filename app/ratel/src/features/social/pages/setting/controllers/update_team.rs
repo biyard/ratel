@@ -1,12 +1,12 @@
-use super::dto::{TeamResponse, UpdateTeamRequest};
 use super::super::*;
+use super::dto::{TeamResponse, UpdateTeamRequest};
 
 use crate::features::posts::models::Team;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 
-#[patch("/api/teams/:username/settings", user: crate::features::auth::User, team: Team, permissions: TeamGroupPermissions)]
+#[patch("/api/teams/:username/settings", team: Team, permissions: TeamGroupPermissions)]
 pub async fn update_team_handler(
-    username: String,
+    #[allow(unused_variables)] username: String,
     body: UpdateTeamRequest,
 ) -> Result<TeamResponse> {
     let conf = super::super::config::get();

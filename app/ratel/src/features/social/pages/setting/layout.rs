@@ -1,7 +1,7 @@
-use crate::features::social::*;
-use crate::features::social::pages::setting::i18n::TeamSettingsTranslate;
-use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use crate::common::*;
+use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
+use crate::features::social::pages::setting::i18n::TeamSettingsTranslate;
+use crate::features::social::*;
 
 /// Context shared between the settings layout header and child pages.
 /// Child pages (e.g. AdminPage) increment `save_trigger` to be notified
@@ -33,7 +33,7 @@ pub fn TeamSettingLayout(username: String) -> Element {
             }
             div { class: "flex flex-col min-w-0 min-h-0 bg-background rounded-tl-[10px]",
                 // Top header bar
-                div { class: "flex items-center justify-between shrink-0 px-6 py-4 border-b border-border",
+                div { class: "flex justify-between items-center py-4 px-6 border-b shrink-0 border-border",
                     span { class: "text-base font-bold text-text-primary", "Settings" }
                     if is_general_settings {
                         Button {
@@ -48,10 +48,8 @@ pub fn TeamSettingLayout(username: String) -> Element {
                     }
                 }
                 // Scrollable content, centered
-                div { class: "flex overflow-auto flex-1 justify-center px-6 py-8",
-                    div { class: "w-full max-w-2xl",
-                        Outlet::<Route> {}
-                    }
+                div { class: "flex overflow-auto flex-1 justify-center py-8 px-6",
+                    div { class: "w-full max-w-2xl", Outlet::<Route> {} }
                 }
             }
         }
@@ -70,7 +68,7 @@ fn SettingsSidemenu(username: String) -> Element {
         teams.iter().find(|t| t.username == username).cloned()
     };
 
-    let (team_display, team_profile, permissions_val) = match &team_item {
+    let (team_display, _team_profile, permissions_val) = match &team_item {
         Some(t) => {
             let mut mask = 0i64;
             for v in &t.permissions {
@@ -95,20 +93,27 @@ fn SettingsSidemenu(username: String) -> Element {
 
     let user_display = user.display_name.clone();
     let user_profile = user.profile_url.clone();
-    let team_home_route = Route::TeamHome { username: username.clone() }.to_string();
-    let settings_route = Route::TeamSetting { username: username.clone() }.to_string();
-    let management_route = Route::TeamSettingMember { username: username.clone() }.to_string();
+    let team_home_route = Route::TeamHome {
+        username: username.clone(),
+    }
+    .to_string();
+    let settings_route = Route::TeamSetting {
+        username: username.clone(),
+    }
+    .to_string();
+    let management_route = Route::TeamSettingMember {
+        username: username.clone(),
+    }
+    .to_string();
 
     rsx! {
-        div { class: "flex flex-col w-full h-full overflow-hidden",
+        div { class: "flex overflow-hidden flex-col w-full h-full",
             // Back to page
             div { class: "px-4 pt-4 pb-2 shrink-0",
                 Link {
                     to: "{team_home_route}",
-                    class: "flex items-center gap-1.5 text-sm text-foreground-muted hover:text-text-primary transition-colors",
-                    lucide_dioxus::ChevronLeft {
-                        class: "w-4 h-4 [&>polyline]:stroke-current shrink-0",
-                    }
+                    class: "flex gap-1.5 items-center text-sm transition-colors text-foreground-muted hover:text-text-primary",
+                    lucide_dioxus::ChevronLeft { class: "w-4 h-4 [&>polyline]:stroke-current shrink-0" }
                     "{tr.back_to_page}"
                 }
             }
@@ -119,11 +124,11 @@ fn SettingsSidemenu(username: String) -> Element {
                 }
             }
 
-            div { class: "px-5 py-3 shrink-0",
+            div { class: "py-3 px-5 shrink-0",
                 span { class: "text-base font-bold text-text-primary", "{tr.settings}" }
             }
 
-            div { class: "flex flex-col flex-1 overflow-y-auto px-3 pb-4 gap-0.5",
+            div { class: "flex overflow-y-auto flex-col flex-1 gap-0.5 px-3 pb-4",
                 SettingNavItem {
                     label: tr.general_settings.to_string(),
                     route: settings_route,
@@ -134,19 +139,21 @@ fn SettingsSidemenu(username: String) -> Element {
                 }
             }
 
-            div { class: "shrink-0 border-t border-separator px-3 py-3",
-                div { class: "flex items-center gap-3 px-2 py-2 rounded-lg",
+            div { class: "py-3 px-3 border-t shrink-0 border-separator",
+                div { class: "flex gap-3 items-center py-2 px-2 rounded-lg",
                     if !user_profile.is_empty() {
                         img {
                             src: "{user_profile}",
                             alt: "{user_display}",
-                            class: "w-9 h-9 rounded-full object-cover shrink-0",
+                            class: "object-cover w-9 h-9 rounded-full shrink-0",
                         }
                     } else {
                         div { class: "w-9 h-9 rounded-full bg-neutral-600 shrink-0" }
                     }
-                    div { class: "flex flex-col min-w-0 flex-1",
-                        span { class: "text-sm font-semibold text-text-primary truncate", "{user_display}" }
+                    div { class: "flex flex-col flex-1 min-w-0",
+                        span { class: "text-sm font-semibold text-text-primary truncate",
+                            "{user_display}"
+                        }
                         span { class: "text-xs text-foreground-muted", "{user_role}" }
                     }
                 }
@@ -168,7 +175,7 @@ fn SettingNavItem(label: String, route: String) -> Element {
     rsx! {
         Link {
             to: "{route}",
-            class: "flex items-center gap-2 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {active_class}",
+            class: "flex gap-2 items-center py-2.5 px-3 w-full text-sm font-medium rounded-lg transition-colors {active_class}",
             "{label}"
         }
     }

@@ -74,9 +74,13 @@ pub fn UserSidemenu(username: String) -> Element {
     let is_self = user.username == username;
 
     if is_self {
-        rsx! { SelfSidemenu { username } }
+        rsx! {
+            SelfSidemenu { username }
+        }
     } else {
-        rsx! { OtherUserSidemenu { username } }
+        rsx! {
+            OtherUserSidemenu { username }
+        }
     }
 }
 
@@ -86,47 +90,17 @@ fn SelfSidemenu(username: String) -> Element {
     let tr: UserSidemenuTranslate = use_translate();
 
     let user_ctx = crate::features::auth::hooks::use_user_context();
-    let mut team_ctx = crate::common::contexts::use_team_context();
-    let mut popup = use_popup();
-    let nav = use_navigator();
     let user = user_ctx().user.clone().unwrap_or_default();
-    let teams = (team_ctx.teams)();
 
     rsx! {
         crate::common::SideMenuContainer {
             crate::common::SideMenuProfileCard {
-                crate::common::TeamSelector {
-                    selected_label: user.display_name.clone(),
-                    user_display_name: user.display_name.clone(),
-                    user_profile_url: user.profile_url.clone(),
-                    user_href: format!("/{}", user.username),
-                    teams: teams.clone(),
-                    team_href_prefix: "".to_string(),
-                    team_href_suffix: "/home".to_string(),
-                    on_select_team: move |idx| {
-                        team_ctx.set_selected_index(idx);
-                    },
-                    on_create_team: move |title| {
-                        popup.open(rsx! {
-                            TeamCreationPopup {}
-                        });
-                        popup.with_title(title);
-                    },
-                    on_logout: move |_| {
-                        spawn(async move {
-                            let _ = crate::features::auth::controllers::logout_handler().await;
-                            nav.push("/");
-                            #[cfg(target_arch = "wasm32")]
-                            {
-                                if let Some(window) = web_sys::window() {
-                                    let _ = window.location().reload();
-                                }
-                            }
-                        });
-                    }
-                }
+                crate::common::TeamSelector {}
 
-                ProfileImage { url: user.profile_url.clone(), name: user.display_name.clone() }
+                ProfileImage {
+                    url: user.profile_url.clone(),
+                    name: user.display_name.clone(),
+                }
 
                 div { class: "font-medium text-text-primary", "{user.display_name}" }
 
@@ -216,9 +190,8 @@ fn OtherUserSidemenu(username: String) -> Element {
     let val = status_resource.read();
     let initial = val.as_ref().unwrap();
 
-    let mut is_following = use_signal(move || {
-        initial.as_ref().map(|s| s.is_following).unwrap_or(false)
-    });
+    let mut is_following =
+        use_signal(move || initial.as_ref().map(|s| s.is_following).unwrap_or(false));
     let mut followers_count = use_signal(move || {
         initial
             .as_ref()
@@ -239,16 +212,12 @@ fn OtherUserSidemenu(username: String) -> Element {
                             name: status.target_display_name.clone(),
                         }
 
-                        div { class: "font-medium text-text-primary",
-                            "{status.target_display_name}"
-                        }
+                        div { class: "font-medium text-text-primary", "{status.target_display_name}" }
 
                         div { class: "text-xs text-text-secondary", "@{username}" }
 
                         if !status.target_description.is_empty() {
-                            div { class: "text-xs text-text-primary",
-                                "{status.target_description}"
-                            }
+                            div { class: "text-xs text-text-primary", "{status.target_description}" }
                         }
 
                         FollowCounts {
@@ -346,7 +315,7 @@ fn ProfileImage(url: String, name: String) -> Element {
                 img {
                     src: "{url}",
                     alt: "{name}",
-                    class: "w-20 h-20 rounded-full border-2 object-cover object-top",
+                    class: "object-cover object-top w-20 h-20 rounded-full border-2",
                 }
             } else {
                 div { class: "w-20 h-20 rounded-full border border-neutral-500 bg-neutral-500" }
@@ -361,13 +330,13 @@ fn FollowCounts(followers: i64, followings: i64) -> Element {
     rsx! {
         div { class: "flex gap-4 text-sm",
             Link {
-                class: "flex gap-1 hover:text-text-primary transition-colors",
+                class: "flex gap-1 transition-colors hover:text-text-primary",
                 to: "/my-follower",
                 span { class: "font-semibold text-text-primary", "{followers}" }
                 span { class: "text-text-primary", "{tr.followers}" }
             }
             Link {
-                class: "flex gap-1 hover:text-text-primary transition-colors",
+                class: "flex gap-1 transition-colors hover:text-text-primary",
                 to: "/my-follower",
                 span { class: "font-semibold text-text-primary", "{followings}" }
                 span { class: "text-text-primary", "{tr.following}" }
@@ -396,7 +365,11 @@ fn FollowToggleButton(
         )
     };
 
-    let disabled_class = if processing { " opacity-50 cursor-not-allowed" } else { "" };
+    let disabled_class = if processing {
+        " opacity-50 cursor-not-allowed"
+    } else {
+        ""
+    };
 
     rsx! {
         button {
