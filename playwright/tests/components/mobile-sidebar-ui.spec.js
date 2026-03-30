@@ -19,6 +19,7 @@ import { CONFIGS } from "../config";
  *   - mobile-bottom-nav          — The bottom navigation bar container
  *   - mobile-more-btn            — The "More" button to open sidebar
  *   - mobile-create-post-btn     — Create post button (confirms auth state)
+ *   - mobile-sidebar-sheet       — The sidebar content wrapper inside the Sheet dialog
  *   - mobile-sidebar-user-link   — User profile link in inline team section
  *   - mobile-sidebar-team-link   — Team link(s) in inline team section
  *   - sidebar-profile-btn        — Profile button in sidebar footer
@@ -30,6 +31,36 @@ import { CONFIGS } from "../config";
  */
 
 const MOBILE_VIEWPORT = { width: 375, height: 667 };
+
+/**
+ * Opens the mobile sidebar sheet by clicking the More button.
+ * Uses force:true to bypass DOM-stability checks (post-hydration effects
+ * like is_mobile detection can keep mutating the DOM). Retries the click
+ * once if the sidebar sheet does not appear within a short window, to
+ * handle the case where the first click fires before Dioxus has fully
+ * attached event handlers during hydration.
+ *
+ * @returns {import("@playwright/test").Locator} The sidebar sheet locator.
+ */
+async function openMobileSidebar(page) {
+  const moreBtn = page.getByTestId("mobile-more-btn");
+  await expect(moreBtn).toBeVisible();
+  await moreBtn.click({ force: true });
+
+  const sidebarSheet = page.getByTestId("mobile-sidebar-sheet");
+
+  // Give Dioxus a short window to process the click and render the Sheet.
+  // If the sheet doesn't appear, retry the click once — the first click may
+  // have fired before hydration finished attaching event handlers.
+  try {
+    await expect(sidebarSheet).toBeVisible({ timeout: 3000 });
+  } catch {
+    await moreBtn.click({ force: true });
+    await expect(sidebarSheet).toBeVisible();
+  }
+
+  return sidebarSheet;
+}
 
 // ---------------------------------------------------------------------------
 // Scenario 1: Authenticated mobile user — sidebar labels
@@ -53,13 +84,7 @@ test.describe(
         await expect(page.getByTestId("mobile-create-post-btn")).toBeVisible();
 
         // Open the mobile sidebar sheet via More button
-        const moreBtn = page.getByTestId("mobile-more-btn");
-        await expect(moreBtn).toBeVisible();
-        await moreBtn.click({ force: true });
-
-        // Wait for the sidebar sheet to appear (data-testid on wrapper div outside dialog)
-        const sidebarSheet = page.getByTestId("mobile-sidebar-sheet");
-        await expect(sidebarSheet).toBeVisible();
+        const sidebarSheet = await openMobileSidebar(page);
 
         // Navigation labels should be visible (not icon-only collapsed mode)
         await expect(sidebarSheet.getByText("Home", { exact: true })).toBeVisible();
@@ -84,12 +109,7 @@ test.describe(
         await expect(page.getByTestId("mobile-create-post-btn")).toBeVisible();
 
         // Open mobile sidebar
-        const moreBtn = page.getByTestId("mobile-more-btn");
-        await expect(moreBtn).toBeVisible();
-        await moreBtn.click({ force: true });
-
-        const sidebarSheet = page.getByTestId("mobile-sidebar-sheet");
-        await expect(sidebarSheet).toBeVisible();
+        const sidebarSheet = await openMobileSidebar(page);
 
         // The Collapse/Expand button should not be present on mobile
         const collapseBtn = sidebarSheet.getByText("Collapse", { exact: true });
@@ -123,12 +143,7 @@ test.describe(
         await expect(page.getByTestId("mobile-create-post-btn")).toBeVisible();
 
         // Open mobile sidebar
-        const moreBtn = page.getByTestId("mobile-more-btn");
-        await expect(moreBtn).toBeVisible();
-        await moreBtn.click({ force: true });
-
-        const sidebarSheet = page.getByTestId("mobile-sidebar-sheet");
-        await expect(sidebarSheet).toBeVisible();
+        const sidebarSheet = await openMobileSidebar(page);
 
         // The "Teams" section header should be visible
         await expect(sidebarSheet.getByText("Teams", { exact: true })).toBeVisible();
@@ -156,12 +171,7 @@ test.describe(
         await expect(page.getByTestId("mobile-create-post-btn")).toBeVisible();
 
         // Open mobile sidebar
-        const moreBtn = page.getByTestId("mobile-more-btn");
-        await expect(moreBtn).toBeVisible();
-        await moreBtn.click({ force: true });
-
-        const sidebarSheet = page.getByTestId("mobile-sidebar-sheet");
-        await expect(sidebarSheet).toBeVisible();
+        const sidebarSheet = await openMobileSidebar(page);
 
         // Click profile button to open dropdown
         const profileBtn = sidebarSheet.getByTestId("sidebar-profile-btn");

@@ -296,7 +296,6 @@ pub fn Sidebar(
                     SheetContent {
                         side: sheet_side,
                         class: "sidebar-sheet",
-                        "data-testid": "mobile-sidebar-sheet",
                         "data-sidebar": "sidebar",
                         "data-slot": "sidebar",
                         "data-mobile": "true",
@@ -304,7 +303,11 @@ pub fn Sidebar(
                             SheetTitle { "Sidebar" }
                             SheetDescription { "Displays the mobile sidebar." }
                         }
-                        div { class: "sidebar-mobile-inner", {children} }
+                        div {
+                            class: "sidebar-mobile-inner",
+                            "data-testid": "mobile-sidebar-sheet",
+                            {children}
+                        }
                     }
                 }
             }
