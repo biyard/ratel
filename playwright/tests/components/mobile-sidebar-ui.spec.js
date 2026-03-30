@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { goto, click, clickNoNav, getLocator } from "../utils";
+import { goto } from "../utils";
 import { CONFIGS } from "../config";
 
 /**
@@ -57,8 +57,8 @@ test.describe(
         await expect(moreBtn).toBeVisible();
         await moreBtn.click({ force: true });
 
-        // Wait for the sidebar sheet to appear (data-mobile="true" is set on mobile sidebar)
-        const sidebarSheet = page.locator('[data-mobile="true"]');
+        // Wait for the sidebar sheet to appear (data-testid on wrapper div outside dialog)
+        const sidebarSheet = page.getByTestId("mobile-sidebar-sheet");
         await expect(sidebarSheet).toBeVisible();
 
         // Navigation labels should be visible (not icon-only collapsed mode)
@@ -88,7 +88,7 @@ test.describe(
         await expect(moreBtn).toBeVisible();
         await moreBtn.click({ force: true });
 
-        const sidebarSheet = page.locator('[data-mobile="true"]');
+        const sidebarSheet = page.getByTestId("mobile-sidebar-sheet");
         await expect(sidebarSheet).toBeVisible();
 
         // The Collapse/Expand button should not be present on mobile
@@ -127,7 +127,7 @@ test.describe(
         await expect(moreBtn).toBeVisible();
         await moreBtn.click({ force: true });
 
-        const sidebarSheet = page.locator('[data-mobile="true"]');
+        const sidebarSheet = page.getByTestId("mobile-sidebar-sheet");
         await expect(sidebarSheet).toBeVisible();
 
         // The "Teams" section header should be visible
@@ -160,7 +160,7 @@ test.describe(
         await expect(moreBtn).toBeVisible();
         await moreBtn.click({ force: true });
 
-        const sidebarSheet = page.locator('[data-mobile="true"]');
+        const sidebarSheet = page.getByTestId("mobile-sidebar-sheet");
         await expect(sidebarSheet).toBeVisible();
 
         // Click profile button to open dropdown

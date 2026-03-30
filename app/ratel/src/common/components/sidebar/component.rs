@@ -288,20 +288,24 @@ pub fn Sidebar(
         };
 
         return rsx! {
-            Sheet {
-                open: open_mobile(),
-                on_open_change: move |v| ctx.set_open_mobile(v),
-                SheetContent {
-                    side: sheet_side,
-                    class: "sidebar-sheet",
-                    "data-sidebar": "sidebar",
-                    "data-slot": "sidebar",
-                    "data-mobile": "true",
-                    SheetHeader { class: "sr-only",
-                        SheetTitle { "Sidebar" }
-                        SheetDescription { "Displays the mobile sidebar." }
+            div {
+                "data-testid": "mobile-sidebar-sheet",
+                "data-mobile": "true",
+                Sheet {
+                    open: open_mobile(),
+                    on_open_change: move |v| ctx.set_open_mobile(v),
+                    SheetContent {
+                        side: sheet_side,
+                        class: "sidebar-sheet",
+                        "data-sidebar": "sidebar",
+                        "data-slot": "sidebar",
+                        "data-mobile": "true",
+                        SheetHeader { class: "sr-only",
+                            SheetTitle { "Sidebar" }
+                            SheetDescription { "Displays the mobile sidebar." }
+                        }
+                        div { class: "sidebar-mobile-inner", {children} }
                     }
-                    div { class: "sidebar-mobile-inner", {children} }
                 }
             }
         };
