@@ -112,7 +112,7 @@ pub fn DraftTimeline() -> Element {
                                         nav.push(format!("/posts/{post_pk}/edit"));
                                     },
                                     button {
-                                        class: "absolute top-2 right-2 p-1.5 rounded-full cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity z-[10] hover:bg-destructive/10",
+                                        class: "absolute top-2 right-2 p-1.5 rounded-full cursor-pointer opacity-60 group-hover:opacity-100 transition-opacity z-[10] hover:bg-destructive/10",
                                         aria_label: "Delete draft",
                                         onclick: move |e: MouseEvent| {
                                             e.stop_propagation();
@@ -150,7 +150,7 @@ pub fn DraftTimeline() -> Element {
                                         icons::edit::Delete2 {
                                             width: "18",
                                             height: "18",
-                                            class: "[&>path]:stroke-foreground-muted hover:[&>path]:stroke-destructive [&>path]:fill-transparent",
+                                            class: "[&>path]:stroke-icon-primary hover:[&>path]:stroke-destructive [&>path]:fill-transparent",
                                         }
                                     }
                                     Col { class: "gap-2 px-5 w-full",
