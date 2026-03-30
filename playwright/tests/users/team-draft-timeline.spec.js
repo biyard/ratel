@@ -94,9 +94,9 @@ test.describe.serial("Team draft timeline on team home page", () => {
         "It should appear in the team draft timeline section on the team home page."
     );
 
-    // Trigger autosave by pressing Tab to blur the editor
-    await page.keyboard.press("Tab");
-    await page.waitForLoadState("load");
+    // Wait for autosave to complete — the editor debounces saves by 3 seconds,
+    // then shows "All changes saved" when the server responds successfully.
+    await expect(page.getByText("All changes saved")).toBeVisible({ timeout: 15000 });
 
     // Verify we are on the post edit page
     await expect(page).toHaveURL(/\/posts\/.*\/edit/);
