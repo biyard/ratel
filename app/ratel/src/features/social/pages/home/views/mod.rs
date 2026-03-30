@@ -1,12 +1,14 @@
 use crate::common::*;
-use crate::features::social::pages::home::components::*;
-use crate::features::social::pages::home::HomeViewMode;
-use crate::features::social::Route;
-use crate::features::social::controllers::find_team::find_team_handler;
+use crate::features::my_follower::controllers::{
+    check_follow_status_handler, follow_user, unfollow_user,
+};
 use crate::features::posts::controllers::create_post::create_post_handler;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use crate::features::posts::*;
-use crate::features::my_follower::controllers::{check_follow_status_handler, follow_user, unfollow_user};
+use crate::features::social::controllers::find_team::find_team_handler;
+use crate::features::social::pages::home::components::*;
+use crate::features::social::pages::home::HomeViewMode;
+use crate::features::social::Route;
 use dioxus::prelude::*;
 
 translate! {
@@ -61,7 +63,9 @@ pub fn Home(username: String) -> Element {
     let team_detail = use_resource(use_reactive((&username,), |(name,)| async move {
         find_team_handler(name).await.ok()
     }));
-    let thumbnail_url = team_detail.read().as_ref()
+    let thumbnail_url = team_detail
+        .read()
+        .as_ref()
         .and_then(|opt| opt.as_ref())
         .and_then(|t| t.thumbnail_url.clone())
         .unwrap_or_default();
@@ -77,15 +81,19 @@ pub fn Home(username: String) -> Element {
     let initial_status = follow_status_val.as_ref().unwrap();
 
     let mut is_following = use_signal(move || {
-        initial_status.as_ref().map(|s| s.is_following).unwrap_or(false)
+        initial_status
+            .as_ref()
+            .map(|s| s.is_following)
+            .unwrap_or(false)
     });
     let mut processing = use_signal(|| false);
 
     let follow_target_pk = initial_status.as_ref().ok().map(|s| s.target_pk.clone());
 
-    let settings_route = Route::TeamSetting { username: username.clone() }.to_string();
-
-    let selected_category = use_context::<Signal<Option<String>>>();
+    let settings_route = Route::TeamSetting {
+        username: username.clone(),
+    }
+    .to_string();
 
     let list_btn_class = if view_mode() == HomeViewMode::List {
         "bg-[#1a1a1a]"
@@ -99,7 +107,7 @@ pub fn Home(username: String) -> Element {
     };
 
     rsx! {
-        div { class: "flex flex-col w-full gap-6",
+        div { class: "flex flex-col gap-6 w-full",
             TeamHeader {
                 display_name,
                 profile_url,
@@ -145,46 +153,42 @@ pub fn Home(username: String) -> Element {
             }
 
             // View mode toggle + Create button
-            div { class: "flex items-center justify-between w-full",
-            div { class: "flex overflow-hidden rounded-[10px] w-fit",
-                button {
-                    class: "flex items-center justify-center w-[60px] h-[44px] cursor-pointer transition-colors {list_btn_class}",
-                    onclick: move |_| view_mode.set(HomeViewMode::List),
-                    icons::alignments::AlignJustify {
-                        class: "w-6 h-6 [&>path]:stroke-icon-primary",
+            div { class: "flex justify-between items-center w-full",
+                div { class: "flex overflow-hidden rounded-[10px] w-fit",
+                    button {
+                        class: "flex justify-center items-center transition-colors cursor-pointer w-[60px] h-[44px] {list_btn_class}",
+                        onclick: move |_| view_mode.set(HomeViewMode::List),
+                        icons::alignments::AlignJustify { class: "w-6 h-6 [&>path]:stroke-icon-primary" }
+                    }
+                    button {
+                        class: "flex justify-center items-center transition-colors cursor-pointer w-[60px] h-[44px] {card_btn_class}",
+                        onclick: move |_| view_mode.set(HomeViewMode::Card),
+                        lucide_dioxus::LayoutGrid { class: "w-6 h-6 [&>rect]:stroke-icon-primary [&>path]:stroke-icon-primary" }
                     }
                 }
-                button {
-                    class: "flex items-center justify-center w-[60px] h-[44px] cursor-pointer transition-colors {card_btn_class}",
-                    onclick: move |_| view_mode.set(HomeViewMode::Card),
-                    lucide_dioxus::LayoutGrid {
-                        class: "w-6 h-6 [&>rect]:stroke-icon-primary [&>path]:stroke-icon-primary",
-                    }
-                }
-            }
 
-            // Create button
-            button {
-                class: "flex items-center gap-2.5 bg-white hover:bg-neutral-200 text-neutral-900 light:bg-[#404040] light:hover:bg-neutral-700 light:text-white px-5 py-3 h-[44px] rounded-full text-sm font-medium transition-colors cursor-pointer",
-                onclick: move |_| {
-                    let team_pk = team_pk_str.clone();
-                    let nav = nav.clone();
-                    async move {
-                        let team_id = team_pk.map(|pk| pk.parse().unwrap_or_default());
-                        match create_post_handler(team_id).await {
-                            Ok(resp) => {
-                                let post_pk: FeedPartition = resp.post_pk.into();
-                                nav.push(format!("/posts/{post_pk}/edit"));
-                            }
-                            Err(e) => {
-                                debug!("Failed to create post: {:?}", e);
+                // Create button
+                button {
+                    class: "flex gap-2.5 items-center py-3 px-5 text-sm font-medium bg-white rounded-full transition-colors cursor-pointer text-neutral-900 light:bg-[#404040] light:hover:bg-neutral-700 light:text-white h-[44px] hover:bg-neutral-200",
+                    onclick: move |_| {
+                        let team_pk = team_pk_str.clone();
+                        let nav = nav.clone();
+                        async move {
+                            let team_id = team_pk.map(|pk| pk.parse().unwrap_or_default());
+                            match create_post_handler(team_id).await {
+                                Ok(resp) => {
+                                    let post_pk: FeedPartition = resp.post_pk.into();
+                                    nav.push(format!("/posts/{post_pk}/edit"));
+                                }
+                                Err(e) => {
+                                    debug!("Failed to create post: {:?}", e);
+                                }
                             }
                         }
-                    }
-                },
-                icons::edit::Edit1 { class: "w-4 h-4 [&>path]:stroke-neutral-900 light:[&>path]:stroke-white" }
-                span { "{tr.create}" }
-            }
+                    },
+                    icons::edit::Edit1 { class: "w-4 h-4 [&>path]:stroke-neutral-900 light:[&>path]:stroke-white" }
+                    span { "{tr.create}" }
+                }
             } // end flex items-center justify-between
 
             // Posts
@@ -192,7 +196,6 @@ pub fn Home(username: String) -> Element {
                 key: "posts-{username}",
                 username: username.clone(),
                 view_mode: view_mode(),
-                selected_category: selected_category(),
             }
         }
     }
