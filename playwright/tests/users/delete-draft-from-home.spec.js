@@ -47,8 +47,11 @@ test.describe.serial("Delete draft from home page", () => {
     // Trigger autosave by blurring the editor
     await page.keyboard.press("Tab");
 
-    // Wait briefly for autosave to complete
-    await page.waitForTimeout(2000);
+    // Wait for autosave to complete — the editor has a 3-second debounce
+    // before saving, so wait for the deterministic "All changes saved" indicator
+    await expect(page.getByText("All changes saved")).toBeVisible({
+      timeout: 10000,
+    });
   });
 
   // ─── 2. Verify draft appears on home page ──────────────────────────────────
