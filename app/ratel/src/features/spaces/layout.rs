@@ -98,6 +98,12 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
         "grid overflow-hidden grid-cols-1 w-full h-screen bg-space-bg text-web-font-primary max-tablet:flex max-tablet:flex-col max-tablet:overflow-visible max-tablet:!h-auto max-tablet:min-h-screen"
     };
 
+    let content_class = if show_sidebar {
+        "flex overflow-x-hidden flex-col min-w-0 min-h-0 max-tablet:flex-1 max-tablet:order-0 max-tablet:min-h-[auto] max-tablet:pt-16"
+    } else {
+        "flex overflow-x-hidden flex-col min-w-0 min-h-0 max-tablet:flex-1 max-tablet:order-0 max-tablet:min-h-[auto]"
+    };
+
     rsx! {
         SeoMeta { title: space.title.clone(), description: space.description() }
         div { class: "{layout_class}", "data-testid": "space-layout-container",
@@ -131,7 +137,7 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
                     },
                 }
             }
-            div { class: "flex overflow-x-hidden flex-col min-w-0 min-h-0 max-tablet:flex-1 max-tablet:order-0 max-tablet:min-h-[auto] max-tablet:pt-16",
+            div { class: "{content_class}",
                 if show_sidebar {
                     div { class: "max-tablet:w-full max-tablet:fixed max-tablet:top-0 max-tablet:z-50 max-tablet:bg-space-bg", "data-testid": "space-top-wrapper",
                         SpaceTop {
