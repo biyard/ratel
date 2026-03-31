@@ -333,6 +333,7 @@ test.describe
       await page.waitForLoadState("load");
 
       // Build accessible name for tomorrow (e.g., "Tuesday, March 31, 2026")
+      const today = new Date();
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       const tomorrowLabel = tomorrow.toLocaleDateString("en-US", {
@@ -348,6 +349,13 @@ test.describe
       });
       await showCalendarButtons.first().click();
       await page.waitForLoadState("load");
+
+      // If tomorrow is in a different month, navigate the calendar forward
+      // so the target date appears as data-month="current".
+      if (tomorrow.getMonth() !== today.getMonth()) {
+        await page.locator(".calendar-nav-next").click();
+        await page.waitForLoadState("load");
+      }
 
       // Click tomorrow's day in the calendar using its accessible name.
       // Filter by data-month="current" to avoid ambiguity at month boundaries
@@ -371,6 +379,12 @@ test.describe
       // Open the end date calendar popover (second "Show Calendar" button)
       await showCalendarButtons.nth(1).click();
       await page.waitForLoadState("load");
+
+      // If end date is in a different month, navigate the calendar forward
+      if (dayAfter.getMonth() !== today.getMonth()) {
+        await page.locator(".calendar-nav-next").click();
+        await page.waitForLoadState("load");
+      }
 
       // Click the end date in the calendar (filter by data-month="current")
       await page
