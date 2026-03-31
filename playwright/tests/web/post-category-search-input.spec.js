@@ -92,13 +92,19 @@ test.describe.serial("Post category SearchInput", () => {
       testId: "category-search-input",
     });
 
-    // First tag should already be present from previous test (via autosave)
-    // Type a second category with trailing comma
     const inputField = searchInput.getByTestId("search-input-field");
+
+    // Categories are not auto-saved (only title/content auto-save),
+    // so re-add the first category in this session before adding the second.
+    await inputField.fill(categoryA);
+    await inputField.press("Enter");
+    const tags = searchInput.getByTestId("search-input-tag");
+    await expect(tags).toHaveCount(1);
+
+    // Type a second category with trailing comma
     await inputField.fill(categoryB + ",");
 
-    // Wait for the tag to appear
-    const tags = searchInput.getByTestId("search-input-tag");
+    // Wait for both tags to appear
     await expect(tags).toHaveCount(2);
     await expect(searchInput).toContainText(categoryA);
     await expect(searchInput).toContainText(categoryB);
@@ -115,11 +121,16 @@ test.describe.serial("Post category SearchInput", () => {
       testId: "category-search-input",
     });
 
+    // Categories are not auto-saved, so add one in this session
+    const inputField = searchInput.getByTestId("search-input-field");
+    await inputField.fill(categoryA);
+    await inputField.press("Enter");
+
     const tags = searchInput.getByTestId("search-input-tag");
-    const count = await tags.count();
-    expect(count).toBeGreaterThanOrEqual(1);
+    await expect(tags).toHaveCount(1);
 
     // Each tag should have an X (remove) button
+    const count = await tags.count();
     for (let i = 0; i < count; i++) {
       const removeBtn = tags.nth(i).getByTestId("search-input-tag-remove");
       await expect(removeBtn).toBeVisible();
@@ -135,16 +146,19 @@ test.describe.serial("Post category SearchInput", () => {
       testId: "category-search-input",
     });
 
-    // Get the initial tag count
+    // Categories are not auto-saved, so add one in this session
+    const inputField = searchInput.getByTestId("search-input-field");
+    await inputField.fill(categoryA);
+    await inputField.press("Enter");
+
     const tags = searchInput.getByTestId("search-input-tag");
-    const initialCount = await tags.count();
-    expect(initialCount).toBeGreaterThanOrEqual(1);
+    await expect(tags).toHaveCount(1);
 
     // Click the X button on the first tag
     const firstRemoveBtn = tags.first().getByTestId("search-input-tag-remove");
     await firstRemoveBtn.click();
 
-    // Verify the tag count decreased
-    await expect(tags).toHaveCount(initialCount - 1);
+    // Verify the tag is removed
+    await expect(tags).toHaveCount(0);
   });
 });
