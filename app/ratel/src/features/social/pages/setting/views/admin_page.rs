@@ -48,10 +48,6 @@ pub fn AdminPage(username: String, team: TeamResponse) -> Element {
     let mut nickname = use_signal(|| team_state().nickname.clone());
     let mut html_contents = use_signal(|| team_state().html_contents.clone());
 
-    // TODO: implement allow_invite and allow_create_space functionality
-    let mut allow_invite = use_signal(|| team_state().allow_invite);
-    let mut allow_create_space = use_signal(|| team_state().allow_create_space);
-
     // Translation strings captured before use_effect
     let validation_nickname_required = tr.validation_nickname_required;
     let success_update_team = tr.success_update_team;
@@ -89,8 +85,6 @@ pub fn AdminPage(username: String, team: TeamResponse) -> Element {
                     profile_url: Some(profile_url()),
                     dao_address: None,
                     thumbnail_url: Some(thumbnail_url()),
-                    allow_invite: Some(allow_invite()),
-                    allow_create_space: Some(allow_create_space()),
                 },
             )
             .await;
@@ -221,36 +215,6 @@ pub fn AdminPage(username: String, team: TeamResponse) -> Element {
                     }
                 }
             }
-
-            // TODO: implement allow_invite and allow_create_space functionality
-            // div { class: "flex flex-col gap-4",
-            //     label { class: "flex items-start gap-3 cursor-pointer",
-            //         input {
-            //             r#type: "checkbox",
-            //             checked: allow_invite(),
-            //             onchange: move |e: FormEvent| allow_invite.set(e.checked()),
-            //             class: "w-4 h-4 mt-0.5 cursor-pointer accent-primary shrink-0",
-            //         }
-            //         div { class: "flex flex-col gap-0.5",
-            //             span { class: "text-sm font-medium text-text-primary", "{tr.allow_invite}" }
-            //             span { class: "text-xs text-foreground-muted", "{tr.allow_invite_description}" }
-            //         }
-            //     }
-            //     label { class: "flex items-start gap-3 cursor-pointer",
-            //         input {
-            //             r#type: "checkbox",
-            //             checked: allow_create_space(),
-            //             onchange: move |e: FormEvent| allow_create_space.set(e.checked()),
-            //             class: "w-4 h-4 mt-0.5 cursor-pointer accent-primary shrink-0",
-            //         }
-            //         div { class: "flex flex-col gap-0.5",
-            //             span { class: "text-sm font-medium text-text-primary", "{tr.allow_create_space}" }
-            //             span { class: "text-xs text-foreground-muted",
-            //                 "{tr.allow_create_space_description}"
-            //             }
-            //         }
-            //     }
-            // }
 
             if let Some(msg) = message() {
                 div { class: "text-sm text-destructive", "{msg}" }
