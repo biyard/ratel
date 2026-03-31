@@ -101,6 +101,7 @@ pub fn SpaceAppsPage(space_id: ReadSignal<SpacePartition>) -> Element {
                                             }
                                         }
                                     });
+                                let setting_testid = format!("setting-{}-app", format!("{app_type:?}").to_lowercase());
                                 rsx! {
                                     AppCard { app_type, header_action,
                                         Button {
@@ -139,6 +140,7 @@ pub fn SpaceAppsPage(space_id: ReadSignal<SpacePartition>) -> Element {
                                         None => false,
                                     };
 
+                                    let install_testid = format!("install-{}-app", format!("{app_type:?}").to_lowercase());
                                     rsx! {
                                         AppCard { app_type,
                                             Button {

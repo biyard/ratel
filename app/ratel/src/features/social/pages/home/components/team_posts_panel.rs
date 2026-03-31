@@ -1,12 +1,17 @@
+use super::super::HomeViewMode;
 use crate::common::hooks::use_infinite_query;
 use crate::common::*;
 use crate::features::posts::controllers::dto::PostResponse;
+use crate::features::posts::controllers::like_post::like_post_handler;
 use crate::features::posts::controllers::list_user_posts::list_team_posts_handler;
 use dioxus::prelude::*;
-use super::super::HomeViewMode;
 
 #[component]
-pub fn TeamPostsPanel(username: String, view_mode: HomeViewMode, selected_category: Option<String>) -> Element {
+pub fn TeamPostsPanel(
+    username: String,
+    view_mode: HomeViewMode,
+    selected_category: Option<String>,
+) -> Element {
     let mut username_signal = use_signal(|| username.clone());
     let mut category_signal = use_signal(|| selected_category.clone());
     let mut v = use_infinite_query(move |bookmark| {
@@ -33,14 +38,17 @@ pub fn TeamPostsPanel(username: String, view_mode: HomeViewMode, selected_catego
     })?;
 
     let mut v_clone = v.clone();
-    use_effect(use_reactive((&username, &selected_category), move |(name, cat)| {
-        let changed = *username_signal.peek() != name || *category_signal.peek() != cat;
-        if changed {
-            username_signal.set(name);
-            category_signal.set(cat);
-            v_clone.restart();
-        }
-    }));
+    use_effect(use_reactive(
+        (&username, &selected_category),
+        move |(name, cat)| {
+            let changed = *username_signal.peek() != name || *category_signal.peek() != cat;
+            if changed {
+                username_signal.set(name);
+                category_signal.set(cat);
+                v_clone.restart();
+            }
+        },
+    ));
 
     let items = v.items();
 
@@ -57,7 +65,7 @@ pub fn TeamPostsPanel(username: String, view_mode: HomeViewMode, selected_catego
             {
                 match view_mode {
                     HomeViewMode::Card => rsx! {
-                        div { class: "grid grid-cols-2 gap-10",
+                        div { class: "grid grid-cols-2 items-stretch gap-10",
                             for post in items {
                                 TeamPostCard { key: "card-{post.pk}", post: post.clone() }
                             }
@@ -85,85 +93,78 @@ pub fn TeamPostsPanel(username: String, view_mode: HomeViewMode, selected_catego
 #[component]
 fn TeamPostCard(post: PostResponse) -> Element {
     let post_url = post.url();
+    let post_pk = post.pk.clone();
+    let nav = use_navigator();
     let title = post.title.clone();
     let created_at = post.created_at;
-    let likes = post.likes;
     let comments = post.comments;
     let thumbnail = post.urls.first().cloned();
     let html_contents = post.html_contents.clone();
     let post_categories = post.categories.clone();
+    let mut optimistic_liked = use_signal(|| post.liked);
+    let mut optimistic_likes = use_signal(|| post.likes);
+    let mut is_like_processing = use_signal(|| false);
 
     rsx! {
-        Link {
-            to: "{post_url}",
-            class: "block",
-            div { class: "flex flex-col gap-4 py-6 border-b border-separator",
-                // Header row: tag + actions
-                div { class: "flex items-center justify-between",
-                    // Category badges
+        div {
+            class: "block h-full cursor-pointer",
+            onclick: move |_| {
+                nav.push(post_url.clone());
+            },
+            div { class: "flex h-full flex-col gap-4 border-b border-[#262626] py-6",
+                div { class: "flex min-h-[25px] items-start",
                     if !post_categories.is_empty() {
-                        div { class: "flex items-center gap-1 flex-wrap",
+                        div { class: "flex min-w-0 items-center gap-2 flex-wrap",
                             for cat in post_categories.iter() {
                                 div {
                                     key: "{cat}",
-                                    class: "flex items-center border border-border rounded-[8px] px-2 py-0.5",
-                                    span { class: "text-[12px] font-bold text-text-primary leading-[14px] tracking-[-0.12px]",
+                                    class: "flex h-[25px] items-center justify-center rounded-[8px] border border-[#A1A1A1] px-2 py-[3px]",
+                                    span { class: "font-bold font-raleway text-[12px]/[14px] tracking-[-0.12px] text-text-primary",
                                         "{cat}"
                                     }
                                 }
                             }
                         }
                     } else {
-                        div {}
-                    }
-                    // Action icons
-                    div { class: "flex items-center gap-2",
-                        icons::edit::Edit1 {
-                            class: "w-5 h-5 [&>path]:stroke-icon-primary cursor-pointer",
-                        }
+                        div { class: "h-[25px]" }
                     }
                 }
 
-                // Title
-                h2 { class: "text-[20px] font-bold text-text-primary tracking-[0.5px] leading-[25px] line-clamp-2",
+                h2 { class: "font-bold font-raleway text-[20px]/[25px] tracking-[0.5px] text-text-primary line-clamp-1",
                     "{title}"
                 }
 
-                // Date + counts
                 div { class: "flex items-center justify-between",
-                    span { class: "text-[15px] text-foreground-muted leading-[22px]",
+                    span { class: "font-inter text-[15px]/[22px] text-[#8C8C8C]",
                         {format_post_date(created_at)}
                     }
-                    div { class: "flex items-center gap-2.5",
-                        div { class: "flex items-center gap-1",
-                            icons::emoji::ThumbsUp {
-                                class: "w-5 h-5 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
-                            }
-                            span { class: "text-[15px] font-medium text-text-primary", "{likes}" }
+                    div { class: "flex items-center gap-[10px]",
+                        LikeStatButton {
+                            post_pk: post_pk.clone(),
+                            liked: optimistic_liked,
+                            likes: optimistic_likes,
+                            is_processing: is_like_processing,
+                            list_variant: false,
                         }
-                        div { class: "flex items-center gap-1",
-                            icons::chat::SquareChat {
-                                class: "w-5 h-5 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
+                        div { class: "flex items-center gap-[5px]",
+                            icons::chat::SquareChat { class: "size-5 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
+                            span { class: "font-inter text-[15px]/[18px] font-medium text-text-primary",
+                                "{comments}"
                             }
-                            span { class: "text-[15px] font-medium text-text-primary", "{comments}" }
                         }
                     }
                 }
 
-                // Thumbnail
                 if let Some(thumb_url) = thumbnail {
                     img {
                         src: "{thumb_url}",
-                        class: "w-full h-[280px] rounded-[24px] object-cover",
+                        class: "h-[280px] w-full shrink-0 rounded-[24px] object-cover",
                     }
-                } else {
-                    div { class: "w-full h-[280px] rounded-[24px] bg-[#2a2a2a]" }
                 }
 
-                // Description (truncated)
                 div {
-                    class: "text-[15px] text-foreground leading-[22px]",
-                    style: "overflow: hidden; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;",
+                    class: "min-h-0 flex-1 overflow-hidden font-raleway text-[15px]/[22px] text-[#D4D4D4]",
+                    style: "display: -webkit-box; -webkit-line-clamp: 12; -webkit-box-orient: vertical;",
                     dangerous_inner_html: html_contents,
                 }
             }
@@ -176,54 +177,62 @@ fn TeamPostCard(post: PostResponse) -> Element {
 #[component]
 fn TeamPostListItem(post: PostResponse) -> Element {
     let post_url = post.url();
+    let post_pk = post.pk.clone();
+    let nav = use_navigator();
     let title = post.title.clone();
     let created_at = post.created_at;
-    let likes = post.likes;
     let comments = post.comments;
     let post_categories = post.categories.clone();
+    let mut optimistic_liked = use_signal(|| post.liked);
+    let mut optimistic_likes = use_signal(|| post.likes);
+    let mut is_like_processing = use_signal(|| false);
 
     rsx! {
-        Link {
-            to: "{post_url}",
-            class: "block",
-            div { class: "flex flex-col gap-3 py-5 border-b border-separator",
-                // Category badges
-                if !post_categories.is_empty() {
-                    div { class: "flex items-center gap-1 flex-wrap",
-                        for cat in post_categories.iter() {
-                            div {
-                                key: "{cat}",
-                                class: "flex items-center border border-border rounded-[8px] px-2 py-0.5 w-fit",
-                                span { class: "text-[12px] font-bold text-text-primary leading-[14px] tracking-[-0.12px]",
-                                    "{cat}"
+        div {
+            class: "block w-full cursor-pointer",
+            onclick: move |_| {
+                nav.push(post_url.clone());
+            },
+            div { class: "flex w-full flex-col border-b border-[#262626] py-6",
+                div { class: "flex items-start justify-between gap-6",
+                    if !post_categories.is_empty() {
+                        div { class: "flex min-w-0 items-center gap-2 flex-wrap",
+                            for cat in post_categories.iter() {
+                                div {
+                                    key: "{cat}",
+                                    class: "flex h-[25px] items-center justify-center rounded-[8px] border border-[#A1A1A1] px-2 py-[3px]",
+                                    span { class: "font-bold font-raleway text-[12px]/[14px] tracking-[-0.12px] text-text-primary",
+                                        "{cat}"
+                                    }
                                 }
                             }
                         }
+                    } else {
+                        div {}
                     }
                 }
 
-                // Title
-                h2 { class: "text-[20px] font-bold text-text-primary tracking-[0.5px] leading-[25px] line-clamp-2",
+                h2 { class: "font-bold font-raleway text-[26px]/[30px] text-text-primary line-clamp-2 mb-2.5",
                     "{title}"
                 }
 
-                // Date + counts
-                div { class: "flex items-center justify-between",
-                    span { class: "text-[15px] text-foreground-muted leading-[22px]",
+                div { class: "flex items-center justify-between gap-4 max-mobile:flex-col max-mobile:items-start",
+                    span { class: "font-inter text-[15px]/[22px] text-[#8C8C8C]",
                         {format_post_date(created_at)}
                     }
-                    div { class: "flex items-center gap-2.5",
-                        div { class: "flex items-center gap-1",
-                            icons::emoji::ThumbsUp {
-                                class: "w-5 h-5 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
-                            }
-                            span { class: "text-[15px] font-medium text-text-primary", "{likes}" }
+                    div { class: "flex shrink-0 items-center gap-6",
+                        LikeStatButton {
+                            post_pk: post_pk.clone(),
+                            liked: optimistic_liked,
+                            likes: optimistic_likes,
+                            is_processing: is_like_processing,
+                            list_variant: true,
                         }
-                        div { class: "flex items-center gap-1",
-                            icons::chat::SquareChat {
-                                class: "w-5 h-5 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
+                        div { class: "flex items-center gap-1.25",
+                            icons::chat::SquareChat { class: "size-5 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
+                            span { class: "font-inter text-[15px]/[18px] font-medium text-text-primary",
+                                "{comments}"
                             }
-                            span { class: "text-[15px] font-medium text-text-primary", "{comments}" }
                         }
                     }
                 }
@@ -232,10 +241,77 @@ fn TeamPostListItem(post: PostResponse) -> Element {
     }
 }
 
+#[component]
+fn LikeStatButton(
+    post_pk: FeedPartition,
+    liked: Signal<bool>,
+    likes: Signal<i64>,
+    is_processing: Signal<bool>,
+    list_variant: bool,
+) -> Element {
+    let button_class = if list_variant {
+        "flex items-center gap-1.25 disabled:opacity-50"
+    } else {
+        "flex items-center gap-1 disabled:opacity-50"
+    };
+    let text_class = if list_variant {
+        "font-inter text-[15px]/[18px] font-medium text-text-primary"
+    } else {
+        "text-[15px] font-medium text-text-primary"
+    };
+
+    rsx! {
+        button {
+            class: "{button_class}",
+            disabled: is_processing(),
+            onclick: move |e| {
+                e.stop_propagation();
+                e.prevent_default();
+
+                if is_processing() {
+                    return;
+                }
+
+                let next_liked = !liked();
+                let previous_liked = liked();
+                let previous_likes = likes();
+                let delta: i64 = if next_liked { 1 } else { -1 };
+
+                liked.set(next_liked);
+                likes.set((previous_likes + delta).max(0));
+                is_processing.set(true);
+
+                let post_pk = post_pk.clone();
+                spawn(async move {
+                    if like_post_handler(post_pk, next_liked).await.is_err() {
+                        liked.set(previous_liked);
+                        likes.set(previous_likes);
+                    }
+                    is_processing.set(false);
+                });
+            },
+            if liked() {
+                if list_variant {
+                    icons::emoji::ThumbsUp { class: "size-5 [&>path]:fill-primary [&>path]:stroke-primary" }
+                } else {
+                    icons::emoji::ThumbsUp { class: "w-5 h-5 [&>path]:fill-primary [&>path]:stroke-primary" }
+                }
+            } else {
+                if list_variant {
+                    icons::emoji::ThumbsUp { class: "size-5 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
+                } else {
+                    icons::emoji::ThumbsUp { class: "w-5 h-5 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
+                }
+            }
+            span { class: "{text_class}", "{likes()}" }
+        }
+    }
+}
+
 fn format_post_date(timestamp_ms: i64) -> String {
     use chrono::{TimeZone, Utc};
     match Utc.timestamp_millis_opt(timestamp_ms).single() {
-        Some(dt) => dt.format("%b %-d. %Y").to_string(),
+        Some(dt) => dt.format("%b %-d, %Y").to_string(),
         None => String::new(),
     }
 }

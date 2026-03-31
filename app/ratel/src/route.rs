@@ -53,7 +53,7 @@ use crate::features::admin::{AdminLayout, AdminMainPage};
 
 use crate::features::posts::{Index as PostIndex, PostDetail, PostEdit};
 
-use crate::views::Index;
+use crate::views::{Index, PrivacyPolicyPage, TermsOfServicePage};
 use layout::AppLayout;
 use membership::Home as MembershipHome;
 use root_layout::RootLayout;
@@ -79,6 +79,8 @@ use crate::features::social::pages::setting::layout::TeamSettingLayout;
 use crate::features::social::pages::setting::Home as TeamSetting;
 #[cfg(feature = "social")]
 use crate::features::social::pages::setting::ManagementPage as TeamSettingMember;
+#[cfg(feature = "social")]
+use crate::features::social::pages::setting::SubscriptionPage as TeamSettingSubscription;
 
 // User pages
 #[cfg(feature = "social")]
@@ -105,6 +107,12 @@ pub enum Route {
         #[layout(AppLayout)]
             #[route("/")]
             Index { },
+
+            #[route("/privacy")]
+            PrivacyPolicyPage { },
+
+            #[route("/terms")]
+            TermsOfServicePage { },
 
             #[cfg_attr(feature="membership", route("/membership"))]
             #[cfg(feature="membership")]
@@ -162,6 +170,8 @@ pub enum Route {
                     TeamSetting { username: String },
                     #[route("/settings/members")]
                     TeamSettingMember { username: String },
+                    #[route("/settings/subscription")]
+                    TeamSettingSubscription { username: String },
                 #[end_layout]
             #[end_nest]
         #[end_layout]
