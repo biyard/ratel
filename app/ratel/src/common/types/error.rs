@@ -325,3 +325,10 @@ impl dioxus::fullstack::AsStatusCode for Error {
         }
     }
 }
+
+#[cfg(feature = "lambda")]
+impl From<Error> for lambda_runtime::Error {
+    fn from(e: Error) -> Self {
+        lambda_runtime::Error::from(e.to_string())
+    }
+}
