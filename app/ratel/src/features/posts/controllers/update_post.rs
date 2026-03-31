@@ -161,16 +161,11 @@ pub async fn update_post_handler(post_id: FeedPartition, req: UpdatePostRequest)
 
         #[cfg(feature = "local-dev")]
         {
-            let _ = crate::features::timeline::services::fan_out_timeline_entries(
-                cli,
-                &post.pk,
-                &post.user_pk,
-                post.updated_at,
-            )
-            .await
-            .map_err(|e| {
-                tracing::error!("local-dev timeline fan-out failed: {}", e);
-            });
+            let _ = crate::features::timeline::services::fan_out_timeline_entries(post.clone())
+                .await
+                .map_err(|e| {
+                    tracing::error!("local-dev timeline fan-out failed: {}", e);
+                });
         }
     }
 

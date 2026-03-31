@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
 use crate::common::models::auth::UserFollow;
+use crate::features::posts::models::Post;
 use crate::features::timeline::*;
 use crate::features::timeline::models::{TimelineEntry, TimelineReason};
 
@@ -10,12 +11,19 @@ use crate::features::timeline::models::{TimelineEntry, TimelineReason};
 /// 1. **Follower fan-out** — delivers to all followers of the author + the author themselves
 /// 2. **Team member fan-out** — if the author is a Team, delivers to all team members
 /// 3. Deduplicates across strategies so each user gets at most one entry
-pub async fn fan_out_timeline_entries(
-    cli: &aws_sdk_dynamodb::Client,
-    post_pk: &Partition,
-    author_pk: &Partition,
-    created_at: i64,
-) -> Result<()> {
+pub async fn fan_out_timeline_entries(post: Post) -> Result<()> {
+    tracing::info!(
+        "Timeline update: post_pk={}, author_pk={}, created_at={}",
+        post.pk,
+        post.user_pk,
+        post.created_at
+    );
+
+    let cfg = crate::common::CommonConfig::default();
+    let cli = cfg.dynamodb();
+    let post_pk = &post.pk;
+    let author_pk = &post.user_pk;
+    let created_at = post.created_at;
     let mut seen = HashSet::new();
     let mut entries: Vec<(Partition, TimelineReason)> = Vec::new();
 
@@ -44,12 +52,24 @@ pub async fn fan_out_timeline_entries(
 ///
 /// Called asynchronously when a post crosses popularity thresholds (likes, comments).
 /// Delivers to followers-of-followers (2nd degree) who don't already have the entry.
-pub async fn fan_out_popular_post(
-    cli: &aws_sdk_dynamodb::Client,
-    post_pk: &Partition,
-    author_pk: &Partition,
-    created_at: i64,
-) -> Result<()> {
+pub async fn fan_out_popular_post(post: Post) -> Result<()> {
+    if !is_popular(post.likes, post.comments, post.shares) {
+        return Ok(());
+    }
+
+    tracing::info!(
+        "Popular post fan-out: post_pk={}, likes={}, comments={}, shares={}",
+        post.pk,
+        post.likes,
+        post.comments,
+        post.shares
+    );
+
+    let cfg = crate::common::CommonConfig::default();
+    let cli = cfg.dynamodb();
+    let post_pk = &post.pk;
+    let author_pk = &post.user_pk;
+    let created_at = post.created_at;
     let mut seen = HashSet::new();
     let mut entries: Vec<(Partition, TimelineReason)> = Vec::new();
 
@@ -95,13 +115,24 @@ pub async fn fan_out_popular_post(
 /// Called asynchronously when a space crosses the popularity threshold (>5 participants).
 /// Delivers the space's associated post to followers of the space author and their
 /// 2nd-degree network who don't already have the entry.
-pub async fn fan_out_popular_space(
-    cli: &aws_sdk_dynamodb::Client,
-    space_pk: &Partition,
-    post_pk: &Partition,
-    author_pk: &Partition,
-    created_at: i64,
-) -> Result<()> {
+pub async fn fan_out_popular_space(space: crate::common::models::space::SpaceCommon) -> Result<()> {
+    if !is_popular_space(space.participants) {
+        return Ok(());
+    }
+
+    tracing::info!(
+        "Popular space fan-out: space_pk={}, participants={}",
+        space.pk,
+        space.participants
+    );
+
+    let cfg = crate::common::CommonConfig::default();
+    let cli = cfg.dynamodb();
+    let space_pk = &space.pk;
+    let post_pk = &space.post_pk;
+    let author_pk = &space.user_pk;
+    let created_at = space.created_at;
+
     let mut seen = HashSet::new();
     let mut entries: Vec<(Partition, TimelineReason)> = Vec::new();
 
