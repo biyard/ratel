@@ -14,6 +14,7 @@ pub fn PrerequisiteSetting(
 
     rsx! {
         Card {
+            "data-testid": "prerequisite-setting",
             direction: CardDirection::Row,
             main_axis_align: MainAxisAlign::Between,
             cross_axis_align: CrossAxisAlign::Center,
