@@ -287,32 +287,44 @@ pub fn Sidebar(
             SidebarSide::Right => SheetSide::Right,
         };
 
-        return rsx! {
-            div {
-                "data-mobile": "true",
-                "data-testid": "mobile-sidebar-sheet",
-                Sheet {
-                    open: open_mobile(),
-                    on_open_change: move |v| ctx.set_open_mobile(v),
-                    SheetContent {
-                        side: sheet_side,
-                        class: "sidebar-sheet",
-                        "data-sidebar": "sidebar",
-                        "data-slot": "sidebar",
-                        "data-mobile": "true",
-                        SheetHeader { class: "sr-only",
-                            SheetTitle { "Sidebar" }
-                            SheetDescription { "Displays the mobile sidebar." }
-                        }
-                        div {
-                            class: "sidebar-mobile-inner",
-                            "data-testid": "mobile-sidebar-content",
-                            {children}
+        // Only mount the Sheet when open_mobile is true. The dioxus-primitives
+        // Dialog uses `use_animated_open` which starts with show_in_dom=false
+        // and sets it to true via use_effect. Mounting the Sheet with open=false
+        // then immediately transitioning to open=true can race with the close
+        // animation task, causing content to never render. By only mounting when
+        // open, the Sheet always starts with open=true — no race.
+        if open_mobile() {
+            return rsx! {
+                div {
+                    "data-mobile": "true",
+                    "data-testid": "mobile-sidebar-sheet",
+                    Sheet {
+                        open: true,
+                        on_open_change: move |v| ctx.set_open_mobile(v),
+                        SheetContent {
+                            side: sheet_side,
+                            class: "sidebar-sheet",
+                            "data-sidebar": "sidebar",
+                            "data-slot": "sidebar",
+                            "data-mobile": "true",
+                            SheetHeader { class: "sr-only",
+                                SheetTitle { "Sidebar" }
+                                SheetDescription { "Displays the mobile sidebar." }
+                            }
+                            div {
+                                class: "sidebar-mobile-inner",
+                                "data-testid": "mobile-sidebar-content",
+                                {children}
+                            }
                         }
                     }
                 }
-            }
-        };
+            };
+        }
+
+        // Mobile but sidebar closed — render nothing for the sidebar slot.
+        // The desktop sidebar is hidden via CSS at mobile breakpoints.
+        return rsx! {};
     }
 
     let collapsible_str = if state() == SidebarState::Collapsed {

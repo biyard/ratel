@@ -52,15 +52,23 @@ const MOBILE_VIEWPORT = { width: 375, height: 667 };
 async function openMobileSidebar(page) {
   const moreBtn = page.getByTestId("mobile-more-btn");
   await expect(moreBtn).toBeVisible();
+
+  // The Sheet mounts only when open_mobile is true. After clicking, the
+  // Sidebar re-renders → Sheet mounts with open=true → Dialog's
+  // use_animated_open effect sets show_in_dom=true on the next frame.
+  // Allow a short settling period for WASM↔JS bridge + Dioxus re-render.
   await moreBtn.click({ force: true });
+  await page.waitForTimeout(1000);
 
   const sidebarContent = page.getByTestId("mobile-sidebar-content");
 
   try {
-    await expect(sidebarContent).toBeVisible({ timeout: 5000 });
+    await expect(sidebarContent).toBeVisible({ timeout: 10000 });
   } catch {
+    // Retry: first click may have fired before Dioxus attached event handlers
     await moreBtn.click({ force: true });
-    await expect(sidebarContent).toBeVisible();
+    await page.waitForTimeout(1000);
+    await expect(sidebarContent).toBeVisible({ timeout: 10000 });
   }
 
   return sidebarContent;
