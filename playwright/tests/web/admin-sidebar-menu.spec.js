@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { click, fill, goto, getLocator, waitPopup } from "../utils";
+import { click, fill, goto, waitPopup } from "../utils";
 
 /**
  * Admin Sidebar Menu — Issue #1333
@@ -68,7 +68,11 @@ test.describe.serial("Admin sidebar menu for SystemAdmin users (#1333)", () => {
 
     try {
       await goto(page, "/");
-      await getLocator(page, { text: "Admin" });
+      // User context loads asynchronously after WASM hydration;
+      // use a longer timeout so the admin menu has time to appear.
+      await expect(
+        page.getByText("Admin", { exact: true }),
+      ).toBeVisible({ timeout: 30000 });
     } finally {
       await context.close();
     }
@@ -88,6 +92,10 @@ test.describe.serial("Admin sidebar menu for SystemAdmin users (#1333)", () => {
 
     try {
       await goto(page, "/");
+      // Wait for user context to load before clicking
+      await expect(
+        page.getByText("Admin", { exact: true }),
+      ).toBeVisible({ timeout: 30000 });
       await click(page, { text: "Admin" });
       await expect(page).toHaveURL(/\/admin/);
     } finally {
@@ -109,10 +117,9 @@ test.describe.serial("Admin sidebar menu for SystemAdmin users (#1333)", () => {
 
     try {
       await goto(page, "/admin");
-      await page.waitForFunction(
-        () => document.querySelector("[data-dioxus-id]") !== null,
-      );
-      await getLocator(page, { text: "Reward Management" });
+      await expect(
+        page.getByText("Reward Management", { exact: true }),
+      ).toBeVisible({ timeout: 30000 });
     } finally {
       await context.close();
     }
