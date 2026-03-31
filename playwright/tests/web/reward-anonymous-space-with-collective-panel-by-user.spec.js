@@ -349,8 +349,13 @@ test.describe
       await showCalendarButtons.first().click();
       await page.waitForLoadState("load");
 
-      // Click tomorrow's day in the calendar using its accessible name
-      await page.getByRole("button", { name: tomorrowLabel }).click();
+      // Click tomorrow's day in the calendar using its accessible name.
+      // Filter by data-month="current" to avoid ambiguity at month boundaries
+      // where the same date can appear in both "next" month preview and "current" month.
+      await page
+        .getByRole("button", { name: tomorrowLabel })
+        .and(page.locator('[data-month="current"]'))
+        .click();
       await page.waitForLoadState("load");
 
       // Build accessible name for day after tomorrow (end date)
@@ -367,8 +372,11 @@ test.describe
       await showCalendarButtons.nth(1).click();
       await page.waitForLoadState("load");
 
-      // Click the end date in the calendar
-      await page.getByRole("button", { name: dayAfterLabel }).click();
+      // Click the end date in the calendar (filter by data-month="current")
+      await page
+        .getByRole("button", { name: dayAfterLabel })
+        .and(page.locator('[data-month="current"]'))
+        .click();
       await page.waitForLoadState("load");
     } finally {
       await context.close();

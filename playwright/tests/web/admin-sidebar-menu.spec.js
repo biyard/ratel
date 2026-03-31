@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { click, goto, getLocator } from "../utils";
+import { click, fill, goto, getLocator, waitPopup } from "../utils";
 
 /**
  * Admin Sidebar Menu — Issue #1333
@@ -8,10 +8,10 @@ import { click, goto, getLocator } from "../utils";
  * from the sidebar menu.
  *
  * User:
- *   - hi+user1@biyard.co (pre-authenticated via user.json, SystemAdmin)
+ *   - admin@ratel.foundation (UserType::Admin, user_type=98)
  *
  * Flow:
- *   1. Load home page (authenticated)
+ *   1. Login as admin user and save storage state
  *   2. Verify the "Admin" menu item is visible in the sidebar
  *   3. Click the Admin link and verify navigation to /admin
  *   4. Verify the admin page renders with "Reward Management" content
@@ -20,48 +20,101 @@ import { click, goto, getLocator } from "../utils";
  */
 
 test.describe.serial("Admin sidebar menu for SystemAdmin users (#1333)", () => {
-  // --- 1. Load the home page ---
+  const adminEmail = "admin@ratel.foundation";
+  const adminPassword = "admin!234";
 
-  test("should load the home page as authenticated user", async ({ page }) => {
-    await goto(page, "/");
-    await expect(page).toHaveURL("/");
+  // --- 1. Login as admin user ---
 
-    // Verify user is logged in — profile button should be visible
-    await getLocator(page, { label: "User Profile" });
+  test("should login as admin user", async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: { cookies: [], origins: [] },
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const page = await context.newPage();
+
+    try {
+      await goto(page, "/");
+      await click(page, { label: "Sign In" });
+      await fill(
+        page,
+        { placeholder: "Enter your email address" },
+        adminEmail,
+      );
+      await click(page, { text: "Continue" });
+      await fill(
+        page,
+        { placeholder: "Enter your password" },
+        adminPassword,
+      );
+      await click(page, { text: "Continue" });
+      await waitPopup(page, { visible: false });
+
+      await context.storageState({ path: "admin-system.json" });
+    } finally {
+      await context.close();
+    }
   });
 
   // --- 2. Verify Admin menu item is visible ---
 
-  test("should show Admin menu item in sidebar", async ({ page }) => {
-    await goto(page, "/");
+  test("should show Admin menu item in sidebar", async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: "admin-system.json",
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const page = await context.newPage();
 
-    // The Admin menu link should be visible in the sidebar for admin users
-    await getLocator(page, { text: "Admin" });
+    try {
+      await goto(page, "/");
+      await getLocator(page, { text: "Admin" });
+    } finally {
+      await context.close();
+    }
   });
 
   // --- 3. Navigate to admin page ---
 
   test("should navigate to /admin when clicking Admin menu", async ({
-    page,
+    browser,
   }) => {
-    await goto(page, "/");
+    const context = await browser.newContext({
+      storageState: "admin-system.json",
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const page = await context.newPage();
 
-    await click(page, { text: "Admin" });
-
-    await expect(page).toHaveURL(/\/admin/);
+    try {
+      await goto(page, "/");
+      await click(page, { text: "Admin" });
+      await expect(page).toHaveURL(/\/admin/);
+    } finally {
+      await context.close();
+    }
   });
 
   // --- 4. Verify admin page content ---
 
-  test("should render the admin Reward Management page", async ({ page }) => {
-    await goto(page, "/admin");
+  test("should render the admin Reward Management page", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      storageState: "admin-system.json",
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const page = await context.newPage();
 
-    // Wait for Dioxus hydration
-    await page.waitForFunction(
-      () => document.querySelector("[data-dioxus-id]") !== null,
-    );
-
-    // The admin page should display the Reward Management section
-    await getLocator(page, { text: "Reward Management" });
+    try {
+      await goto(page, "/admin");
+      await page.waitForFunction(
+        () => document.querySelector("[data-dioxus-id]") !== null,
+      );
+      await getLocator(page, { text: "Reward Management" });
+    } finally {
+      await context.close();
+    }
   });
 });
