@@ -447,6 +447,7 @@ a {
 
 :root {
   --header-height: 88px;
+  --mobile-bottom-nav-height: theme(spacing.14);
 }
 
 @media (max-width: 500px) {
@@ -930,10 +931,14 @@ h3 {
 }
 
 body {
-  @apply overflow-hidden;
+  @apply overflow-hidden max-tablet:overflow-auto;
 }
 
-/* Mobile Safari: use dynamic viewport height to account for address bar */
+/* Mobile Safari: use dynamic viewport height to account for address bar.
+   Both h-screen and min-h-screen get the 100dvh override globally so that
+   components like full-screen popups still size correctly on mobile Safari.
+   The Space layout (#1274) uses max-tablet:!h-auto to override h-screen
+   specifically for its container, allowing native document scroll. */
 @supports (height: 100dvh) {
   .h-screen {
     height: 100dvh !important;

@@ -88,6 +88,11 @@ translate! {
         ko: "팀 삭제에 실패했습니다",
     },
 
+    success_update_team: {
+        en: "Team settings saved successfully",
+        ko: "팀 설정이 저장되었습니다",
+    },
+
     failed_update_team: {
         en: "Failed to update team",
         ko: "팀 업데이트에 실패했습니다",
@@ -246,5 +251,10 @@ translate! {
     failed_remove_member: {
         en: "Failed to remove member. Please try again.",
         ko: "멤버 제거에 실패했습니다. 다시 시도해주세요.",
+    },
+
+    subscription: {
+        en: "Subscription",
+        ko: "구독",
     },
 }

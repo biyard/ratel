@@ -50,7 +50,6 @@ pub async fn add_comment(
         return Err(Error::DiscussionNotInProgress);
     }
 
-    let author_pk = author.pk.clone();
     let comment =
         SpacePost::comment(cli, space_id.clone(), space_post_id, req.content, &author).await?;
 
@@ -67,10 +66,12 @@ pub async fn add_comment(
         discussion_sk.to_string(),
         RewardUserBehavior::DiscussionComment,
     )
-    .await
+        .await
     {
         Ok(space_reward) => {
-            if let Err(e) = SpaceReward::award(cli, &space_reward, user.pk, Some(author_pk)).await {
+            if let Err(e) =
+                SpaceReward::award(cli, &space_reward, user.pk, Some(space.user_pk.clone())).await
+            {
                 tracing::error!(
                     space_pk = %space_id,
                     action_id = %discussion_sk_entity,

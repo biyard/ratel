@@ -204,5 +204,54 @@ export class DynamoStreamEventStack extends Stack {
       },
       targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
     });
+
+    // ── Pipe 4: Notification Insert → NotificationSend ─────────────
+    // Triggers when a new Notification entity is inserted
+    new pipes.CfnPipe(this, "NotificationPipe", {
+      name: `ratel-${stage}-notification-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["INSERT"],
+                dynamodb: {
+                  NewImage: {
+                    pk: { S: [{ prefix: "NOTIFICATION#" }] },
+                    sk: { S: [{ prefix: "NOTIFICATION#" }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "NotificationSend",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    // ── Rule: Route NotificationSend events to app-shell Lambda ────
+    new events.Rule(this, "NotificationSendRule", {
+      eventBus,
+      description:
+        "Route notification events to app-shell for email/SMS delivery",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["NotificationSend"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
   }
 }

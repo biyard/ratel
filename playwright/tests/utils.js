@@ -42,6 +42,20 @@ export async function click(page, opt) {
   return selected;
 }
 
+/**
+ * Click an element without waiting for navigation (`waitForLoadState("load")`).
+ * Use this for non-navigation UI interactions (e.g., opening a sidebar sheet,
+ * toggling a panel) where `waitForLoadState` would resolve immediately or hang
+ * because no page navigation occurs.
+ */
+export async function clickNoNav(page, opt) {
+  const selected = await getLocator(page, opt);
+
+  await selected.click();
+
+  return selected;
+}
+
 export async function fill(page, opt, value) {
   const selected = await getLocator(page, opt);
 
@@ -52,7 +66,7 @@ export async function fill(page, opt, value) {
 
 export async function getLocator(
   page,
-  { placeholder, text, role, label, testId },
+  { placeholder, text, role, label, testId }
 ) {
   let selected;
 
@@ -71,7 +85,7 @@ export async function getLocator(
   } else if (text) {
     selected = page.getByText(text, { exact: true });
   } else {
-    throw new Error("Either text, label, or data-pw must be provided");
+    throw new Error("Either text, label, or data-testid must be provided");
   }
 
   await expect(selected).toBeVisible();
@@ -88,13 +102,27 @@ export async function waitPopup(page, { visible = true }) {
 }
 
 export async function goto(page, url) {
-   await page.goto(url); 
-   await page.waitForLoadState("domcontentloaded"); 
-   // Wait for Dioxus WASM to hydrate — SSR markup may already contain 
-   // [data-dioxus-id], so also verify the interpreter is initialised. 
-   await page.waitForFunction( 
-     () => document.querySelector("[data-dioxus-id]") !== null, 
-   );
+  await Promise.all([
+    page.waitForResponse(
+      (response) =>
+        response.url().includes("app-shell") &&
+        response.url().endsWith(".wasm") &&
+        response.status() === 200,
+    ),
+    page.goto(url),
+  ]);
+  await page.waitForLoadState("domcontentloaded");
+  await page.waitForTimeout(200);
+  // Wait for Dioxus WASM to hydrate — SSR markup already contains
+  // [data-dioxus-id], so also verify the interpreter is initialised.
+  // NOTE: In Dioxus 0.7, `dioxus` is only available as a local binding
+  // inside document::eval() contexts, NOT as `window.dioxus`. Checking
+  // `window.dioxus.send` would hang forever. Instead we check for the
+  // presence of hydrated DOM elements and rely on Playwright's built-in
+  // action retries for any remaining hydration delay.
+  await page.waitForFunction(
+    () => document.querySelector("[data-dioxus-id]") !== null
+  );
 }
 
 export async function getEditor(page) {

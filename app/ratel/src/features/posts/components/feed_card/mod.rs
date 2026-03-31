@@ -112,7 +112,7 @@ fn FeedBody(post: PostResponse, on_edit: Option<EventHandler<MouseEvent>>) -> El
     } = post;
 
     rsx! {
-        div { class: "flex flex-col gap-2.5 pt-5 pb-2.5",
+        div { class: "flex flex-col pt-5 pb-5",
             div { class: "flex min-h-8 flex-row justify-between px-5",
                 div { class: "flex h-8 flex-row items-center",
                     if space_pk.is_some() {
@@ -131,10 +131,11 @@ fn FeedBody(post: PostResponse, on_edit: Option<EventHandler<MouseEvent>>) -> El
                     }
                 }
             }
-            h2 { class: "px-5 w-full truncate font-bold align-middle text-xl/[25px] tracking-[0.5px] text-text-primary",
+            h2 { class: "mt-2 px-5 w-full truncate font-bold align-middle text-xl/[25px] tracking-[0.5px] text-text-primary",
                 {title}
             }
-            div { class: "flex flex-row justify-between items-center px-5",
+            FeedContents { contents: html_contents, urls }
+            div { class: "mt-4 flex flex-row justify-between items-center px-5",
                 UserBadge {
                     profile_url: author_profile_url,
                     name: author_display_name,
@@ -144,8 +145,6 @@ fn FeedBody(post: PostResponse, on_edit: Option<EventHandler<MouseEvent>>) -> El
                     {time_ago(created_at)}
                 }
             }
-            div { class: "flex flex-row justify-between px-5" }
-            FeedContents { contents: html_contents, urls }
         }
     }
 }
@@ -153,7 +152,7 @@ fn FeedBody(post: PostResponse, on_edit: Option<EventHandler<MouseEvent>>) -> El
 #[component]
 pub fn FeedContents(contents: String, urls: Vec<String>) -> Element {
     rsx! {
-        div { class: "px-5 mt-2.5 break-all text-desc-text",
+        div { class: "px-5 mt-2 break-all text-desc-text",
             div {
                 class: "border-none truncate whitespace-nowrap",
                 style: "min-height: 22px; max-height: 22px; overflow: hidden;",

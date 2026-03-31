@@ -230,7 +230,7 @@ jobs:
 
       - name: Install Dioxus-cli
         run: |
-          cargo binstall dioxus-cli --force
+          cargo binstall dioxus-cli@0.7.3 --force
 
       - name: Building test
         id: build
@@ -256,8 +256,6 @@ jobs:
           key: app-shell-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}-${{ github.run_id }}
           restore-keys: |
             app-shell-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
-            app-shell-build-${{ runner.os }}-
-            app-shell-build-
           path: |
             target
 
@@ -285,7 +283,7 @@ jobs:
 
       - name: Install Dioxus-cli
         run: |
-          cargo binstall dioxus-cli --force
+          cargo binstall dioxus-cli@0.7.3 --force
 
       - name: Setup pnpm
         run: |
@@ -370,7 +368,7 @@ jobs:
 
       - name: Install Dioxus-cli
         run: |
-          cargo binstall dioxus-cli --force
+          cargo binstall dioxus-cli@0.7.3 --force
 
       - name: Setup pnpm
         run: |
