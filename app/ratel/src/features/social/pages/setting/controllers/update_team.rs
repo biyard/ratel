@@ -47,15 +47,6 @@ pub async fn update_team_handler(
         updater = updater.with_thumbnail_url(thumbnail_url.clone());
         team.thumbnail_url = Some(thumbnail_url);
     }
-    if let Some(allow_invite) = body.allow_invite {
-        updater = updater.with_allow_invite(allow_invite);
-        team.allow_invite = allow_invite;
-    }
-    if let Some(allow_create_space) = body.allow_create_space {
-        updater = updater.with_allow_create_space(allow_create_space);
-        team.allow_create_space = allow_create_space;
-    }
-
     let now = chrono::Utc::now().timestamp_millis();
     updater = updater.with_updated_at(now);
     team.updated_at = now;
