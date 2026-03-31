@@ -35,7 +35,7 @@ pub fn TeamCreationPopup() -> Element {
                     Ok(_response) => {
                         team_ctx.teams.restart();
                         popup.close();
-                        nav.push(Route::UserHomeRoot { username });
+                        nav.push(Route::TeamHome { username });
                     }
                     Err(e) => {
                         error_msg.set(Some(format!("{}", e.translate(&lang))));
