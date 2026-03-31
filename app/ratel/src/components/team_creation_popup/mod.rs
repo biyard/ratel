@@ -33,19 +33,6 @@ pub fn TeamCreationPopup() -> Element {
                 };
                 match create_team_handler(req).await {
                     Ok(response) => {
-                        let teams = team_ctx
-                            .teams()
-                            .push(TeamItem {
-                                pk: response.team_pk,
-                                username: username.clone(),
-                                nickname: nickname.clone(),
-                                profile_url: profile_url.clone(),
-                                user_type: crate::common::types::UserType::Team,
-                                permissions: crate::features::posts::types::TeamGroupPermissions::all()
-                                    .into(),
-                                description: description.clone(),
-                            });
-
                         team_ctx
                             .teams
                             .with_mut(|teams| {
