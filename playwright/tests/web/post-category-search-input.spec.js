@@ -37,8 +37,8 @@ test.describe.serial("Post category SearchInput", () => {
   test("Create a draft post for category testing", async ({ page }) => {
     await goto(page, "/");
 
-    // Click Create to start a new post
-    await click(page, { text: "Create" });
+    // Click Create Post to start a new post
+    await click(page, { text: "Create Post" });
 
     // Wait for post edit page
     await page.waitForURL(/\/posts\/.*\/edit/, { waitUntil: "load" });
