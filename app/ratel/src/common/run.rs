@@ -150,16 +150,24 @@ async fn event_bridge_handler(
 
     match envelope.detail_type {
         DetailType::TimelineUpdate => {
-            handle_timeline_update(envelope.detail).await?;
+            let post: crate::features::posts::models::Post =
+                DetailType::parse_detail(&envelope.detail)?;
+            crate::features::timeline::services::handle_timeline_event(post).await?;
         }
         DetailType::PopularPostUpdate => {
-            handle_popular_post_update(envelope.detail).await?;
+            let post: crate::features::posts::models::Post =
+                DetailType::parse_detail(&envelope.detail)?;
+            crate::features::timeline::services::handle_popular_post_event(post).await?;
         }
         DetailType::PopularSpaceUpdate => {
-            handle_popular_space_update(envelope.detail).await?;
+            let space: crate::common::models::space::SpaceCommon =
+                DetailType::parse_detail(&envelope.detail)?;
+            crate::features::timeline::services::handle_popular_space_event(space).await?;
         }
         DetailType::NotificationSend => {
-            handle_notification_send(envelope.detail).await?;
+            let notification: crate::common::models::notification::Notification =
+                DetailType::parse_detail(&envelope.detail)?;
+            notification.process().await?;
         }
         DetailType::Unknown => {
             tracing::warn!(
@@ -168,125 +176,6 @@ async fn event_bridge_handler(
             );
         }
     }
-
-    Ok(())
-}
-
-#[cfg(feature = "lambda")]
-async fn handle_timeline_update(
-    detail: serde_json::Value,
-) -> Result<(), lambda_runtime::Error> {
-    use crate::features::posts::models::Post;
-
-    let post: Post = DetailType::parse_detail(&detail)?;
-
-    tracing::info!(
-        "Timeline update: post_pk={}, author_pk={}, created_at={}",
-        post.pk,
-        post.user_pk,
-        post.created_at
-    );
-
-    let cfg = crate::common::CommonConfig::default();
-    let cli = cfg.dynamodb();
-
-    crate::features::timeline::services::fan_out_timeline_entries(
-        cli,
-        &post.pk,
-        &post.user_pk,
-        post.created_at,
-    )
-    .await
-    .map_err(|e| {
-        tracing::error!("Timeline fan-out failed: {}", e);
-        lambda_runtime::Error::from(format!("Timeline fan-out failed: {}", e))
-    })?;
-
-    Ok(())
-}
-
-#[cfg(feature = "lambda")]
-async fn handle_popular_post_update(
-    detail: serde_json::Value,
-) -> Result<(), lambda_runtime::Error> {
-    use crate::features::posts::models::Post;
-
-    let post: Post = DetailType::parse_detail(&detail)?;
-
-    if !crate::features::timeline::services::is_popular(post.likes, post.comments, post.shares) {
-        return Ok(());
-    }
-
-    tracing::info!(
-        "Popular post fan-out: post_pk={}, likes={}, comments={}, shares={}",
-        post.pk,
-        post.likes,
-        post.comments,
-        post.shares
-    );
-
-    let cfg = crate::common::CommonConfig::default();
-    let cli = cfg.dynamodb();
-
-    crate::features::timeline::services::fan_out_popular_post(cli, &post.pk, &post.user_pk, post.created_at)
-        .await
-        .map_err(|e| {
-            tracing::error!("Popular post fan-out failed: {}", e);
-            lambda_runtime::Error::from(format!("Popular post fan-out failed: {}", e))
-        })?;
-
-    Ok(())
-}
-
-#[cfg(feature = "lambda")]
-async fn handle_popular_space_update(
-    detail: serde_json::Value,
-) -> Result<(), lambda_runtime::Error> {
-    use crate::common::models::space::SpaceCommon;
-
-    let space: SpaceCommon = DetailType::parse_detail(&detail)?;
-
-    if !crate::features::timeline::services::is_popular_space(space.participants) {
-        return Ok(());
-    }
-
-    tracing::info!(
-        "Popular space fan-out: space_pk={}, participants={}",
-        space.pk,
-        space.participants
-    );
-
-    let cfg = crate::common::CommonConfig::default();
-    let cli = cfg.dynamodb();
-
-    crate::features::timeline::services::fan_out_popular_space(
-        cli,
-        &space.pk,
-        &space.post_pk,
-        &space.user_pk,
-        space.created_at,
-    )
-    .await
-    .map_err(|e| {
-        tracing::error!("Popular space fan-out failed: {}", e);
-        lambda_runtime::Error::from(format!("Popular space fan-out failed: {}", e))
-    })?;
-
-    Ok(())
-}
-
-#[cfg(feature = "lambda")]
-async fn handle_notification_send(
-    detail: serde_json::Value,
-) -> Result<(), lambda_runtime::Error> {
-    use crate::common::models::notification::Notification;
-
-    let notification: Notification = DetailType::parse_detail(&detail)?;
-
-    notification.process().await.map_err(|e| {
-        tracing::error!("Notification processing failed: {}", e);
-        lambda_runtime::Error::from(format!("Notification processing failed: {}", e))
-    })?;
 
     Ok(())
 }
