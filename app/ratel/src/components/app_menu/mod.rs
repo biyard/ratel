@@ -101,13 +101,17 @@ pub fn AppMenu() -> Element {
                         }
 
                         if user.user_type == UserType::Admin {
-                            NavMenuItem {
-                                href: Route::AdminMainPage {},
-                                label: tr.admin,
-                                collapsed,
-                                icon: rsx! {
+                            SidebarMenuItem {
+                                Link {
+                                    to: Route::AdminMainPage {},
+                                    class: "flex gap-2 items-center py-1.5 w-full text-sm rounded-md aria-extended:px-0 aria-extended:justify-center sidebar-menu-button hover:bg-accent/10 [&>svg]:w-5 [&>svg]:h-5",
+                                    "aria-extended": collapsed,
+                                    "data-testid": "admin-menu",
                                     i::AdminIcon {}
-                                },
+                                    if !collapsed {
+                                        span { "{tr.admin}" }
+                                    }
+                                }
                             }
                         }
                     }

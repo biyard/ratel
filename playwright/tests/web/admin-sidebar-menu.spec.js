@@ -13,7 +13,7 @@ import { click, fill, goto, waitPopup } from "../utils";
  *
  * Flow:
  *   1. Log in as the pre-seeded admin user
- *   2. Verify the "Admin" menu item is visible in the sidebar
+ *   2. Verify the "admin-menu" test-id element is visible in the sidebar
  *   3. Click the Admin link and verify navigation to /admin
  *   4. Verify the admin page renders with "Reward Management" content
  *
@@ -60,10 +60,10 @@ test.describe.serial("Admin sidebar menu for SystemAdmin users (#1333)", () => {
     const { context, page } = await loginAsAdmin(browser);
 
     try {
-      // User context is set synchronously during login;
-      // the Admin menu should appear once the sidebar re-renders.
+      // The sidebar starts collapsed (default_open: false), so text labels
+      // are hidden. Use data-testid which is always present on the link.
       await expect(
-        page.getByText("Admin", { exact: true }),
+        page.getByTestId("admin-menu"),
       ).toBeVisible({ timeout: 30000 });
     } finally {
       await context.close();
@@ -79,9 +79,10 @@ test.describe.serial("Admin sidebar menu for SystemAdmin users (#1333)", () => {
 
     try {
       await expect(
-        page.getByText("Admin", { exact: true }),
+        page.getByTestId("admin-menu"),
       ).toBeVisible({ timeout: 30000 });
-      await click(page, { text: "Admin" });
+      await page.getByTestId("admin-menu").click();
+      await page.waitForLoadState("load");
       await expect(page).toHaveURL(/\/admin/);
     } finally {
       await context.close();
@@ -97,9 +98,10 @@ test.describe.serial("Admin sidebar menu for SystemAdmin users (#1333)", () => {
 
     try {
       await expect(
-        page.getByText("Admin", { exact: true }),
+        page.getByTestId("admin-menu"),
       ).toBeVisible({ timeout: 30000 });
-      await click(page, { text: "Admin" });
+      await page.getByTestId("admin-menu").click();
+      await page.waitForLoadState("load");
       await expect(page).toHaveURL(/\/admin/);
       await expect(
         page.getByText("Reward Management", { exact: true }),
