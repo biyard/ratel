@@ -30,7 +30,6 @@ impl TeamItem {
 #[derive(Clone, Copy, DioxusController)]
 pub struct TeamContext {
     pub teams: Loader<Vec<TeamItem>>,
-    pub selected_index: Signal<usize>,
 }
 
 impl TeamContext {
@@ -41,23 +40,10 @@ impl TeamContext {
                 .or_else(|_| Ok::<_, crate::Error>(Vec::new()))
         })?;
 
-        let ctx = Self {
-            teams,
-            selected_index: use_signal(|| 0),
-        };
+        let ctx = Self { teams };
         use_context_provider(move || ctx);
 
         Ok(ctx)
-    }
-
-    pub fn selected_team(&self) -> Option<TeamItem> {
-        let teams = (self.teams)();
-        let idx = *self.selected_index.read();
-        teams.get(idx).cloned()
-    }
-
-    pub fn set_selected_index(&mut self, index: usize) {
-        self.selected_index.set(index);
     }
 }
 

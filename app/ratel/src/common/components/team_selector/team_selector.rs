@@ -4,8 +4,7 @@ use crate::*;
 pub fn TeamSelector() -> Element {
     let tr: TeamSelectorTranslate = use_translate();
     let mut open = use_signal(|| false);
-    let mut team_ctx = use_team_context();
-    let teams = team_ctx.teams();
+    let team_ctx = use_team_context();
     let mut popup = use_popup();
     let nav = use_navigator();
 
@@ -67,16 +66,15 @@ pub fn TeamSelector() -> Element {
                         }
 
                         // Team entries
-                        for (idx , team) in teams.iter().enumerate() {
+                        for team in team_ctx.teams.iter() {
                             Link {
+                                id: team.pk.clone(),
                                 class: "flex gap-2 items-center py-2 px-2 w-full rounded-md cursor-pointer hover:bg-hover",
                                 to: Route::UserHomeRoot {
                                     username: team.username.clone(),
                                 },
                                 onclick: move |_| {
                                     open.set(false);
-
-                                    team_ctx.set_selected_index(idx);
                                 },
                                 if !team.profile_url.is_empty() {
                                     img {

@@ -16,7 +16,7 @@ pub struct CreateTeamResponse {
     pub team_pk: String,
 }
 
-#[post("/api/teams/list", session: Extension<tower_sessions::Session>)]
+#[get("/api/teams", session: Extension<tower_sessions::Session>)]
 pub async fn get_user_teams_handler() -> crate::Result<Vec<TeamItem>> {
     let Extension(session) = session;
     let user_pk: String = session
@@ -42,17 +42,21 @@ pub async fn get_user_teams_handler() -> crate::Result<Vec<TeamItem>> {
             (Vec::new(), String::new())
         } else {
             let team_pk: crate::common::types::Partition = team_pk.parse().unwrap_or_default();
-            let perms =
-                crate::features::posts::models::Team::get_permissions_by_team_pk(cli, &team_pk, &user_pk)
-                    .await
-                    .unwrap_or_else(|_| crate::features::posts::types::TeamGroupPermissions::empty());
-            let description =
-                crate::features::posts::models::Team::get(cli, &team_pk, Some(crate::common::types::EntityType::Team))
-                    .await
-                    .ok()
-                    .flatten()
-                    .map(|team| team.description)
-                    .unwrap_or_default();
+            let perms = crate::features::posts::models::Team::get_permissions_by_team_pk(
+                cli, &team_pk, &user_pk,
+            )
+            .await
+            .unwrap_or_else(|_| crate::features::posts::types::TeamGroupPermissions::empty());
+            let description = crate::features::posts::models::Team::get(
+                cli,
+                &team_pk,
+                Some(crate::common::types::EntityType::Team),
+            )
+            .await
+            .ok()
+            .flatten()
+            .map(|team| team.description)
+            .unwrap_or_default();
             (perms.0.into_iter().map(|p| p as u8).collect(), description)
         };
 
@@ -70,7 +74,7 @@ pub async fn get_user_teams_handler() -> crate::Result<Vec<TeamItem>> {
     Ok(items)
 }
 
-#[post("/api/teams/create", session: Extension<tower_sessions::Session>)]
+#[post("/api/teams", session: Extension<tower_sessions::Session>)]
 pub async fn create_team_handler(body: CreateTeamRequest) -> crate::Result<CreateTeamResponse> {
     let Extension(session) = session;
     let user_pk: String = session

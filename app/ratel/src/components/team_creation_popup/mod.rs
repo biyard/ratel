@@ -32,8 +32,36 @@ pub fn TeamCreationPopup() -> Element {
                     description: description.clone(),
                 };
                 match create_team_handler(req).await {
-                    Ok(_response) => {
-                        team_ctx.teams.restart();
+                    Ok(response) => {
+                        let teams = team_ctx
+                            .teams()
+                            .push(TeamItem {
+                                pk: response.team_pk,
+                                username: username.clone(),
+                                nickname: nickname.clone(),
+                                profile_url: profile_url.clone(),
+                                user_type: crate::common::types::UserType::Team,
+                                permissions: crate::features::posts::types::TeamGroupPermissions::all()
+                                    .into(),
+                                description: description.clone(),
+                            });
+
+                        team_ctx
+                            .teams
+                            .with_mut(|teams| {
+                                teams
+                                    .push(TeamItem {
+                                        pk: response.team_pk,
+                                        username: username.clone(),
+                                        nickname: nickname.clone(),
+                                        profile_url: profile_url.clone(),
+                                        user_type: crate::common::types::UserType::Team,
+                                        permissions: crate::features::posts::types::TeamGroupPermissions::all()
+                                            .into(),
+                                        description: description.clone(),
+                                    });
+                            });
+                        debug!("Team created: {:?}", team_ctx.teams());
                         popup.close();
                         nav.push(Route::TeamHome { username });
                     }

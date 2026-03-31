@@ -111,7 +111,11 @@ pub fn AdminPage(username: ReadSignal<String>, team: TeamResponse) -> Element {
         let on_confirm = move |_evt: MouseEvent| async move {
             match delete_team_handler(username()).await {
                 Ok(_response) => {
-                    team_ctx.teams.restart();
+                    team_ctx.teams.with_mut(|teams| {
+                        teams.retain(|t| t.username != username());
+                    });
+
+                    debug!("Team delete: {:?}", team_ctx.teams());
                     navigator.push(Route::Index {});
                 }
                 Err(e) => {
@@ -145,7 +149,7 @@ pub fn AdminPage(username: ReadSignal<String>, team: TeamResponse) -> Element {
                             class: "object-cover w-full h-40 cursor-pointer rounded-[10px]",
                         }
                     } else {
-                        div { class: "w-full h-40 rounded-[10px] border-2 border-dashed border-border bg-card-bg flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-white/5 transition-colors",
+                        div { class: "flex flex-col gap-2 justify-center items-center w-full h-40 border-2 border-dashed transition-colors cursor-pointer rounded-[10px] border-border bg-card-bg hover:bg-white/5",
                             lucide_dioxus::ImagePlus { class: "w-6 h-6 [&>path]:stroke-foreground-muted [&>line]:stroke-foreground-muted [&>polyline]:stroke-foreground-muted [&>circle]:stroke-foreground-muted" }
                             span { class: "text-sm text-foreground-muted", "{tr.upload_banner}" }
                         }
@@ -164,10 +168,10 @@ pub fn AdminPage(username: ReadSignal<String>, team: TeamResponse) -> Element {
                         img {
                             src: "{profile_url()}",
                             alt: "Team Logo",
-                            class: "w-20 h-20 rounded-[10px] object-cover cursor-pointer",
+                            class: "object-cover w-20 h-20 cursor-pointer rounded-[10px]",
                         }
                     } else {
-                        div { class: "w-20 h-20 rounded-[10px] bg-card-bg flex flex-col items-center justify-center gap-1 cursor-pointer hover:bg-white/5 transition-colors",
+                        div { class: "flex flex-col gap-1 justify-center items-center w-20 h-20 transition-colors cursor-pointer rounded-[10px] bg-card-bg hover:bg-white/5",
                             lucide_dioxus::ImagePlus { class: "w-5 h-5 [&>path]:stroke-foreground-muted [&>line]:stroke-foreground-muted [&>polyline]:stroke-foreground-muted [&>circle]:stroke-foreground-muted" }
                         }
                     }

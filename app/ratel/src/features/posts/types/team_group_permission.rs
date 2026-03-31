@@ -59,6 +59,12 @@ impl TeamGroupPermissions {
     }
 }
 
+impl Into<Vec<u8>> for TeamGroupPermissions {
+    fn into(self) -> Vec<u8> {
+        self.0.into_iter().map(|p| p as u8).collect()
+    }
+}
+
 impl TeamGroupPermissions {
     pub fn empty() -> Self {
         Self(vec![])
