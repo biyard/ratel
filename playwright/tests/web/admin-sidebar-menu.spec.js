@@ -29,24 +29,35 @@ async function promoteToAdmin(email) {
     process.env.DYNAMO_ENDPOINT || "http://localhost:4566";
   const tableName = "ratel-local-main";
 
-  // Query GSI3 to find user by email
-  const queryResp = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-amz-json-1.0",
-      "X-Amz-Target": "DynamoDB_20120810.Query",
-    },
-    body: JSON.stringify({
-      TableName: tableName,
-      IndexName: "gsi3",
-      KeyConditionExpression: "gsi3_pk = :email",
-      ExpressionAttributeValues: {
-        ":email": { S: `EMAIL#${email}` },
+  // Query GSI3 to find user by email, with retries for GSI propagation delay
+  let queryResult;
+  const maxRetries = 10;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const queryResp = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-amz-json-1.0",
+        "X-Amz-Target": "DynamoDB_20120810.Query",
       },
-    }),
-  });
+      body: JSON.stringify({
+        TableName: tableName,
+        IndexName: "gsi3",
+        KeyConditionExpression: "gsi3_pk = :email",
+        ExpressionAttributeValues: {
+          ":email": { S: `EMAIL#${email}` },
+        },
+      }),
+    });
 
-  const queryResult = await queryResp.json();
+    queryResult = await queryResp.json();
+    if (queryResult.Items && queryResult.Items.length > 0) {
+      break;
+    }
+    if (attempt < maxRetries - 1) {
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+  }
+
   if (!queryResult.Items || queryResult.Items.length === 0) {
     throw new Error(`User with email ${email} not found in DynamoDB`);
   }
