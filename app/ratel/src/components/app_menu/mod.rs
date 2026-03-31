@@ -71,7 +71,7 @@ pub fn AppMenu() -> Element {
             SidebarGroup {
                 SidebarMenu {
                     NavMenuItem {
-                        href: "/",
+                        href: Route::Index {},
                         label: tr.home,
                         collapsed,
                         icon: rsx! {
@@ -79,7 +79,7 @@ pub fn AppMenu() -> Element {
                         },
                     }
                     NavMenuItem {
-                        href: "/membership",
+                        href: Route::MembershipHome {},
                         label: tr.membership,
                         collapsed,
                         icon: rsx! {
@@ -102,7 +102,7 @@ pub fn AppMenu() -> Element {
 
                         if user.user_type == UserType::Admin {
                             NavMenuItem {
-                                href: "/admin",
+                                href: Route::AdminMainPage {},
                                 label: tr.admin,
                                 collapsed,
                                 icon: rsx! {
@@ -207,7 +207,7 @@ pub fn AppMenu() -> Element {
 }
 
 #[component]
-fn NavMenuItem(href: &'static str, label: &'static str, collapsed: bool, icon: Element) -> Element {
+fn NavMenuItem(href: Route, label: &'static str, collapsed: bool, icon: Element) -> Element {
     rsx! {
         SidebarMenuItem {
             Link {
