@@ -2,11 +2,11 @@ use crate::features::membership::models::MembershipTier;
 use crate::features::membership::*;
 
 #[cfg(feature = "server")]
+use crate::features::auth::utils::uuid::sorted_uuid;
+#[cfg(feature = "server")]
 use crate::features::membership::models::PurchaseEntity;
 #[cfg(feature = "server")]
 use crate::features::membership::services::portone::PortOne;
-#[cfg(feature = "server")]
-use crate::features::auth::utils::uuid::sorted_uuid;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
@@ -161,6 +161,8 @@ pub struct UserPayment {
     pub customer_id: String,
     pub name: String,
     pub birth_date: String,
+    #[serde(default)]
+    pub masked_card_number: Option<String>,
 }
 
 #[cfg(feature = "server")]
@@ -198,6 +200,15 @@ impl UserPayment {
                 birth_or_business_registration_number,
                 password_two_digits,
             } = card_info.ok_or_else(|| Error::BadRequest("Card info required".to_string()))?;
+
+            // Store masked card number before passing to Portone
+            let digits: String = card_number.chars().filter(|c| c.is_ascii_digit()).collect();
+            let last4 = if digits.len() >= 4 {
+                &digits[digits.len() - 4..]
+            } else {
+                "****"
+            };
+            user_payment.masked_card_number = Some(format!("****-****-****-{last4}"));
 
             let res = portone
                 .get_billing_key(
@@ -364,7 +375,6 @@ impl TeamPurchase {
             status: PurchaseStatus::Success,
         }
     }
-
 }
 
 impl From<TeamPurchase> for PaymentReceipt {
@@ -554,5 +564,3 @@ impl TeamPayment {
         Ok(())
     }
 }
-
-
