@@ -6,7 +6,7 @@ use crate::features::membership::components::*;
 #[component]
 pub fn MembershipCard(
     membership: MembershipPlanItem,
-    variant: &'static str,
+    variant: String,
     on_click: EventHandler<()>,
 ) -> Element {
     if variant == "horizontal" {

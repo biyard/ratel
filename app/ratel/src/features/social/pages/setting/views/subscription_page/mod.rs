@@ -54,12 +54,16 @@ pub fn SubscriptionPage(username: String) -> Element {
     let lang = use_language();
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let mut popup = use_popup();
+    #[allow(unused_variables)]
     let toast = use_toast();
 
+    #[cfg(not(feature = "server"))]
     let is_ko = matches!(lang(), Language::Ko);
+    #[cfg(not(feature = "server"))]
     let portone_store_id = option_env!("PORTONE_STORE_ID")
         .unwrap_or_default()
         .to_string();
+    #[cfg(not(feature = "server"))]
     let portone_channel_key = option_env!("PORTONE_INICIS_CHANNEL_KEY")
         .unwrap_or_default()
         .to_string();
@@ -80,12 +84,14 @@ pub fn SubscriptionPage(username: String) -> Element {
                         membership: membership.clone(),
                         variant: if idx + 1 == memberships_len { "horizontal" } else { "vertical" },
                         on_click: {
+                            #[cfg(not(feature = "server"))]
                             let portone_store_id = portone_store_id.clone();
+                            #[cfg(not(feature = "server"))]
                             let portone_channel_key = portone_channel_key.clone();
+                            #[cfg(not(feature = "server"))]
                             let username = username.clone();
                             move |_| {
                                 let membership_for_action = membership.clone();
-                                let username = username.clone();
                                 if !user_ctx().is_logged_in() {
                                     popup.open(rsx! {
                                         LoginModal {}

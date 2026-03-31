@@ -75,7 +75,7 @@ pub fn MembershipPlan() -> Element {
                     MembershipCard {
                         key: "{membership.name}",
                         membership: membership.clone(),
-                        variant: {if idx + 1 == memberships_len { "horizontal" } else { "vertical" }},
+                        variant: if idx + 1 == memberships_len { "horizontal" } else { "vertical" },
                         on_click: {
                             let portone_store_id = portone_store_id.clone();
                             let portone_channel_key = portone_channel_key.clone();
