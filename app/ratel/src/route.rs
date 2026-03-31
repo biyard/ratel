@@ -141,6 +141,8 @@ pub enum Route {
             #[nest("/:username")]
                 #[route("/rewards")]
                 UserRewards { username: String },
+                #[route("/settings")]
+                UserSettingPage { username: String },
                 #[layout(SocialLayout)]
                     #[route("/")]
                     UserHomeRoot { username: String },
@@ -168,11 +170,11 @@ pub enum Route {
                     TeamReward { username: String },
                 #[end_layout]
                 #[layout(TeamSettingLayout)]
-                    #[route("/settings")]
+                    #[route("/team-settings")]
                     TeamSetting { username: String },
-                    #[route("/settings/members")]
+                    #[route("/team-settings/members")]
                     TeamSettingMember { username: String },
-                    #[route("/settings/subscription")]
+                    #[route("/team-settings/subscription")]
                     TeamSettingSubscription { username: String },
                 #[end_layout]
             #[end_nest]

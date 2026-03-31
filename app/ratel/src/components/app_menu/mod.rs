@@ -114,6 +114,21 @@ pub fn AppMenu() -> Element {
                                 }
                             }
                         }
+
+                        SidebarMenuItem {
+                            Link {
+                                to: format!("/{}/settings", user.username),
+                                class: "flex gap-2 items-center py-1.5 w-full text-sm rounded-md aria-extended:px-0 aria-extended:justify-center sidebar-menu-button hover:bg-accent/10 [&>svg]:w-5 [&>svg]:h-5",
+                                "aria-extended": collapsed,
+                                lucide_dioxus::Settings {
+                                    size: 20,
+                                    class: "[&>path]:stroke-icon-primary [&>line]:stroke-icon-primary [&>circle]:stroke-icon-primary",
+                                }
+                                if !collapsed {
+                                    span { "Settings" }
+                                }
+                            }
+                        }
                     }
                 }
             }
