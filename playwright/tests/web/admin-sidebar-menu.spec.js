@@ -11,13 +11,71 @@ import { click, fill, goto, waitPopup } from "../utils";
  *   - admin@ratel.foundation (UserType::Admin, user_type=98)
  *
  * Flow:
- *   1. Login as admin user and save storage state
+ *   1. Login as admin user, promote to admin via DynamoDB, save storage state
  *   2. Verify the "Admin" menu item is visible in the sidebar
  *   3. Click the Admin link and verify navigation to /admin
  *   4. Verify the admin page renders with "Reward Management" content
  *
  * NOTE: Requires backend built with `--features bypass`.
  */
+
+/**
+ * Promote a user to SystemAdmin (user_type=98) by directly updating
+ * the DynamoDB record in LocalStack. This ensures the user has admin
+ * privileges regardless of how the login flow creates/updates users.
+ */
+async function promoteToAdmin(email) {
+  const endpoint =
+    process.env.DYNAMO_ENDPOINT || "http://localhost:4566";
+  const tableName = "ratel-local-main";
+
+  // Query GSI3 to find user by email
+  const queryResp = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-amz-json-1.0",
+      "X-Amz-Target": "DynamoDB_20120810.Query",
+    },
+    body: JSON.stringify({
+      TableName: tableName,
+      IndexName: "gsi3",
+      KeyConditionExpression: "gsi3_pk = :email",
+      ExpressionAttributeValues: {
+        ":email": { S: `EMAIL#${email}` },
+      },
+    }),
+  });
+
+  const queryResult = await queryResp.json();
+  if (!queryResult.Items || queryResult.Items.length === 0) {
+    throw new Error(`User with email ${email} not found in DynamoDB`);
+  }
+
+  const user = queryResult.Items[0];
+  const pk = user.pk.S;
+  const sk = user.sk.S;
+
+  // Update user_type to Admin (98) and GSI4 partition key for consistency
+  await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-amz-json-1.0",
+      "X-Amz-Target": "DynamoDB_20120810.UpdateItem",
+    },
+    body: JSON.stringify({
+      TableName: tableName,
+      Key: {
+        pk: { S: pk },
+        sk: { S: sk },
+      },
+      UpdateExpression: "SET user_type = :ut, gsi4_pk = :gsi4pk",
+      ExpressionAttributeValues: {
+        ":ut": { N: "98" },
+        ":gsi4pk": { S: "USER_TYPE#98" },
+      },
+    }),
+  });
+}
 
 test.describe.serial("Admin sidebar menu for SystemAdmin users (#1333)", () => {
   const adminEmail = "admin@ratel.foundation";
@@ -49,6 +107,9 @@ test.describe.serial("Admin sidebar menu for SystemAdmin users (#1333)", () => {
       );
       await click(page, { text: "Continue" });
       await waitPopup(page, { visible: false });
+
+      // Ensure the user is promoted to admin in DynamoDB
+      await promoteToAdmin(adminEmail);
 
       await context.storageState({ path: "admin-system.json" });
     } finally {
