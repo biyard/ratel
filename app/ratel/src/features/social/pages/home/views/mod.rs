@@ -152,6 +152,13 @@ pub fn Home(username: String) -> Element {
                 },
             }
 
+            // Team drafts — shown only to creators so they can find and edit their drafts
+            if is_creator {
+                SuspenseBoundary {
+                    TeamDraftTimeline { username: username.clone() }
+                }
+            }
+
             // View mode toggle + Create button
             div { class: "flex justify-between items-center w-full",
                 div { class: "flex overflow-hidden rounded-[10px] w-fit",

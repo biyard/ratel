@@ -3,7 +3,6 @@ use super::super::controllers::TeamResponse;
 use super::super::controllers::{delete_team_handler, update_team_handler, UpdateTeamRequest};
 use super::super::layout::SettingsSaveContext;
 use super::super::*;
-use crate::common::contexts::use_team_context;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use dioxus::prelude::*;
 
@@ -12,10 +11,22 @@ fn format_last_saved(ts_millis: i64) -> String {
         return String::new();
     }
     use chrono::{TimeZone, Utc};
-    let dt = Utc.timestamp_millis_opt(ts_millis).single();
-    match dt {
-        Some(dt) => dt.format("%Y-%m-%d %H:%M UTC").to_string(),
-        None => String::new(),
+    let dt = match Utc.timestamp_millis_opt(ts_millis).single() {
+        Some(dt) => dt,
+        None => return String::new(),
+    };
+
+    #[cfg(not(feature = "server"))]
+    {
+        // Get browser's local timezone offset (minutes) and apply it
+        let offset_minutes = js_sys::Date::new_0().get_timezone_offset() as i64;
+        let local_dt = dt - chrono::Duration::minutes(offset_minutes);
+        local_dt.format("%Y-%m-%d %H:%M").to_string()
+    }
+
+    #[cfg(feature = "server")]
+    {
+        dt.format("%Y-%m-%d %H:%M UTC").to_string()
     }
 }
 
@@ -26,7 +37,8 @@ pub fn AdminPage(username: ReadSignal<String>, team: TeamResponse) -> Element {
     let navigator = use_navigator();
     let mut team_ctx = use_team_context();
 
-    let save_ctx = use_context::<SettingsSaveContext>();
+    let mut toast = use_toast();
+    let mut save_ctx = use_context::<SettingsSaveContext>();
     let mut is_saving = save_ctx.is_saving;
 
     let mut team_state = use_signal(|| team);
@@ -41,8 +53,8 @@ pub fn AdminPage(username: ReadSignal<String>, team: TeamResponse) -> Element {
 
     // Translation strings captured before use_effect
     let validation_nickname_required = tr.validation_nickname_required;
+    let success_update_team = tr.success_update_team;
     let failed_update_team = tr.failed_update_team;
-    let mut toast = use_toast();
 
     // Wire header Save button → execute save
     use_effect(move || {
@@ -50,6 +62,8 @@ pub fn AdminPage(username: ReadSignal<String>, team: TeamResponse) -> Element {
         if trigger == 0 {
             return;
         }
+        // Reset trigger immediately to prevent re-firing on other signal changes
+        save_ctx.save_trigger.set(0);
         let display_name = nickname().trim().to_string();
         let description = html_contents().trim().to_string();
         let username = username();
@@ -81,6 +95,7 @@ pub fn AdminPage(username: ReadSignal<String>, team: TeamResponse) -> Element {
             match result {
                 Ok(updated) => {
                     team_state.set(updated);
+                    toast.info(success_update_team.to_string());
                 }
                 Err(err) => {
                     message.set(Some(format!("{}: {}", failed_update_team, err)));
@@ -130,7 +145,7 @@ pub fn AdminPage(username: ReadSignal<String>, team: TeamResponse) -> Element {
                             class: "object-cover w-full h-40 cursor-pointer rounded-[10px]",
                         }
                     } else {
-                        div { class: "flex flex-col gap-2 justify-center items-center w-full h-40 border-2 border-dashed transition-colors cursor-pointer rounded-[10px] border-border bg-card-bg hover:bg-white/5",
+                        div { class: "w-full h-40 rounded-[10px] border-2 border-dashed border-border bg-card-bg flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-white/5 transition-colors",
                             lucide_dioxus::ImagePlus { class: "w-6 h-6 [&>path]:stroke-foreground-muted [&>line]:stroke-foreground-muted [&>polyline]:stroke-foreground-muted [&>circle]:stroke-foreground-muted" }
                             span { class: "text-sm text-foreground-muted", "{tr.upload_banner}" }
                         }
@@ -149,10 +164,10 @@ pub fn AdminPage(username: ReadSignal<String>, team: TeamResponse) -> Element {
                         img {
                             src: "{profile_url()}",
                             alt: "Team Logo",
-                            class: "object-cover w-20 h-20 border-4 border-black cursor-pointer rounded-[10px]",
+                            class: "w-20 h-20 rounded-[10px] object-cover cursor-pointer",
                         }
                     } else {
-                        div { class: "flex flex-col gap-1 justify-center items-center w-20 h-20 border-4 border-black transition-colors cursor-pointer rounded-[10px] bg-card-bg hover:bg-white/5",
+                        div { class: "w-20 h-20 rounded-[10px] bg-card-bg flex flex-col items-center justify-center gap-1 cursor-pointer hover:bg-white/5 transition-colors",
                             lucide_dioxus::ImagePlus { class: "w-5 h-5 [&>path]:stroke-foreground-muted [&>line]:stroke-foreground-muted [&>polyline]:stroke-foreground-muted [&>circle]:stroke-foreground-muted" }
                         }
                     }
@@ -160,29 +175,15 @@ pub fn AdminPage(username: ReadSignal<String>, team: TeamResponse) -> Element {
                 span { class: "text-xs text-foreground-muted", "{tr.team_logo_hint}" }
             }
 
-            // Team name + Change name
+            // Team name
             div { class: "flex flex-col gap-3",
                 label { class: "text-sm font-semibold text-text-primary", "{tr.team_name}" }
-                div { class: "flex gap-3 items-center",
-                    div { class: "flex-1",
-                        Input {
-                            variant: InputVariant::Default,
-                            r#type: InputType::Text,
-                            placeholder: tr.display_name_hint.to_string(),
-                            value: nickname(),
-                            oninput: move |e: FormEvent| nickname.set(e.value()),
-                        }
-                    }
-                    Button {
-                        size: ButtonSize::Medium,
-                        style: ButtonStyle::Secondary,
-                        shape: ButtonShape::Square,
-                        onclick: move |_| {},
-                        div { class: "flex gap-2 items-center",
-                            lucide_dioxus::SquarePen { class: "w-4 h-4" }
-                            "{tr.change_name}"
-                        }
-                    }
+                Input {
+                    variant: InputVariant::Default,
+                    r#type: InputType::Text,
+                    placeholder: tr.display_name_hint.to_string(),
+                    value: nickname(),
+                    oninput: move |e: FormEvent| nickname.set(e.value()),
                 }
             }
 
