@@ -33,24 +33,25 @@ pub fn TeamCreationPopup() -> Element {
                 };
                 match create_team_handler(req).await {
                     Ok(response) => {
+                        let nav_username = username.clone();
                         team_ctx
                             .teams
-                            .with_mut(|teams| {
+                            .with_mut(move |teams| {
                                 teams
                                     .push(TeamItem {
                                         pk: response.team_pk,
-                                        username: username.clone(),
-                                        nickname: nickname.clone(),
-                                        profile_url: profile_url.clone(),
+                                        username,
+                                        nickname,
+                                        profile_url,
                                         user_type: crate::common::types::UserType::Team,
                                         permissions: crate::features::posts::types::TeamGroupPermissions::all()
                                             .into(),
-                                        description: description.clone(),
+                                        description,
                                     });
                             });
                         debug!("Team created: {:?}", team_ctx.teams());
                         popup.close();
-                        nav.push(Route::TeamHome { username });
+                        nav.push(Route::TeamHome { username: nav_username });
                     }
                     Err(e) => {
                         error_msg.set(Some(format!("{}", e.translate(&lang))));
