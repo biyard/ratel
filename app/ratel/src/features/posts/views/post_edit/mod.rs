@@ -1,7 +1,4 @@
-use crate::common::components::{
-    Badge, BadgeColor, BadgeSize, BadgeVariant, ButtonShape, ButtonSize, ButtonStyle, InputVariant,
-    TiptapEditor,
-};
+use crate::common::components::TiptapEditor;
 use crate::common::hooks::use_infinite_query;
 use crate::features::posts::components::VisibilityModal;
 use crate::features::posts::controllers::get_post::get_post_handler;
@@ -116,8 +113,6 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
 
     // Category state - multiple categories
     let mut categories = use_signal(move || initial_categories.clone());
-    let mut category_input = use_signal(|| "".to_string());
-    let mut show_category_dropdown = use_signal(|| false);
     let mut is_creating_category = use_signal(|| false);
 
     let categories_query = use_infinite_query(move |bookmark| list_categories_handler(bookmark))?;
@@ -352,173 +347,53 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                     }
                 }
 
-                // Multi-category tag input
-                div {
-                    class: "relative w-full",
-                    onfocusout: move |_| {
-                        spawn(async move {
-                            crate::common::utils::time::sleep(std::time::Duration::from_millis(150))
-                                .await;
-                            show_category_dropdown.set(false);
-                        });
-                    },
-
-                    // Selected category badges
-                    if !categories().is_empty() {
-                        div { class: "flex flex-wrap gap-2 mb-2",
-                            for cat in categories().iter().cloned() {
-                                div {
-                                    key: "{cat}",
-                                    class: "cursor-pointer",
-                                    "data-testid": "category-badge",
-                                    onclick: {
-                                        let cat = cat.clone();
-                                        move |_| {
-                                            let mut current = categories();
-                                            current.retain(|c| c != &cat);
-                                            categories.set(current);
-                                        }
-                                    },
-                                    Badge {
-                                        color: BadgeColor::Blue,
-                                        size: BadgeSize::Small,
-                                        variant: BadgeVariant::Rounded,
-                                        class: "flex items-center gap-1",
-                                        span { "{cat}" }
-                                        span { class: "ml-1 text-[10px] opacity-60", "\u{2715}" }
-                                    }
-                                }
-                            }
+                // Multi-category tag input using SearchInput
+                SearchInput {
+                    tags: categories(),
+                    suggestions: all_categories(),
+                    placeholder: tr.category_placeholder,
+                    create_label: tr.create_category,
+                    creating: is_creating_category(),
+                    data_testid: Some("category-search-input".to_string()),
+                    on_add: move |tag: String| {
+                        let mut current = categories();
+                        let lower = tag.to_lowercase();
+                        if !current.iter().any(|c| c.to_lowercase() == lower) {
+                            current.push(tag);
+                            categories.set(current);
                         }
-                    }
-
-                    Input {
-                        class: "w-full",
-                        variant: InputVariant::Default,
-                        placeholder: tr.category_placeholder,
-                        value: category_input,
-                        "data-testid": "category-input",
-                        oninput: move |e: Event<FormData>| {
-                            let val = e.value();
-                            // If user types a comma, add the text before comma as a category
-                            if val.ends_with(',') {
-                                let trimmed = val.trim_end_matches(',').trim().to_string();
-                                if !trimmed.is_empty() {
+                    },
+                    on_remove: move |tag: String| {
+                        let mut current = categories();
+                        current.retain(|c| c != &tag);
+                        categories.set(current);
+                    },
+                    on_create_new: move |new_cat: String| {
+                        is_creating_category.set(true);
+                        let mut cats_query = categories_query.clone();
+                        spawn(async move {
+                            match create_category_handler(CreateCategoryRequest {
+                                    name: new_cat,
+                                })
+                                .await
+                            {
+                                Ok(cat) => {
+                                    let name = cat.name;
                                     let mut current = categories();
-                                    let lower = trimmed.to_lowercase();
+                                    let lower = name.to_lowercase();
                                     if !current.iter().any(|c| c.to_lowercase() == lower) {
-                                        current.push(trimmed);
+                                        current.push(name);
                                         categories.set(current);
                                     }
-                                    category_input.set("".to_string());
+                                    cats_query.restart();
                                 }
-                                show_category_dropdown.set(false);
-                            } else {
-                                category_input.set(val);
-                                show_category_dropdown.set(true);
-                            }
-                        },
-                        onconfirm: move |_| {
-                            let trimmed = category_input().trim().to_string();
-                            if !trimmed.is_empty() {
-                                let mut current = categories();
-                                let lower = trimmed.to_lowercase();
-                                if !current.iter().any(|c| c.to_lowercase() == lower) {
-                                    current.push(trimmed);
-                                    categories.set(current);
-                                }
-                                category_input.set("".to_string());
-                            }
-                            show_category_dropdown.set(false);
-                        },
-                        onkeydown: move |e: KeyboardEvent| {
-                            if e.key() == Key::Backspace && category_input().is_empty() {
-                                // Remove last category on Backspace when input is empty
-                                let mut current = categories();
-                                if !current.is_empty() {
-                                    current.pop();
-                                    categories.set(current);
+                                Err(e) => {
+                                    toast.error(e);
                                 }
                             }
-                        },
-                    }
-
-                    if show_category_dropdown() && !category_input().trim().is_empty() {
-                        div { class: "overflow-y-auto absolute z-20 mt-2 w-full max-h-60 rounded-md border shadow-md bg-card border-post-input-border",
-
-                            for cat in all_categories()
-                                .iter()
-                                .filter(|c| {
-                                    c.to_lowercase().contains(&category_input().to_lowercase())
-                                        && !categories().iter().any(|sel| sel.to_lowercase() == c.to_lowercase())
-                                })
-                                .cloned()
-                            {
-                                div {
-                                    key: "{cat}",
-                                    class: "py-2 px-3 text-sm cursor-pointer text-text-primary hover:bg-muted",
-                                    onclick: {
-                                        let cat = cat.clone();
-                                        move |_| {
-                                            let mut current = categories();
-                                            let lower = cat.to_lowercase();
-                                            if !current.iter().any(|c| c.to_lowercase() == lower) {
-                                                current.push(cat.clone());
-                                                categories.set(current);
-                                            }
-                                            category_input.set("".to_string());
-                                            show_category_dropdown.set(false);
-                                        }
-                                    },
-                                    "{cat}"
-                                }
-                            }
-
-                            if !category_input().trim().is_empty()
-                                && !all_categories()
-                                    .iter()
-                                    .any(|c| c.to_lowercase() == category_input().trim().to_lowercase())
-                            {
-                                Button {
-                                    class: "py-2 px-3 w-full text-sm text-primary",
-                                    style: ButtonStyle::Text,
-                                    shape: ButtonShape::Square,
-                                    loading: is_creating_category(),
-                                    onclick: move |_| {
-                                        is_creating_category.set(true);
-
-                                        let new_cat = category_input();
-                                        let mut cats_query = categories_query.clone();
-                                        spawn(async move {
-                                            match create_category_handler(CreateCategoryRequest {
-                                                    name: new_cat,
-                                                })
-                                                .await
-                                            {
-                                                Ok(cat) => {
-                                                    let name = cat.name;
-                                                    let mut current = categories();
-                                                    let lower = name.to_lowercase();
-                                                    if !current.iter().any(|c| c.to_lowercase() == lower) {
-                                                        current.push(name);
-                                                        categories.set(current);
-                                                    }
-                                                    category_input.set("".to_string());
-                                                    cats_query.restart();
-                                                    show_category_dropdown.set(false);
-                                                }
-                                                Err(e) => {
-                                                    toast.error(e);
-                                                }
-                                            }
-                                            is_creating_category.set(false);
-                                        });
-                                    },
-                                    "{tr.create_category} \"{category_input()}\""
-                                }
-                            }
-                        }
-                    }
+                            is_creating_category.set(false);
+                        });
+                    },
                 }
 
                 // TiptapEditor
