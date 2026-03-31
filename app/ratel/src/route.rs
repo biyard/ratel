@@ -130,10 +130,12 @@ pub enum Route {
             #[route("/my-follower")]
             MyFollowerPage { },
 
-            #[layout(AdminLayout)]
-                #[route("/")]
-                AdminMainPage {},
-            #[end_layout]
+            #[nest("/admin")]
+                #[layout(AdminLayout)]
+                    #[route("/")]
+                    AdminMainPage {},
+                #[end_layout]
+            #[end_nest]
 
             #[cfg(feature = "social")]
             #[nest("/:username")]

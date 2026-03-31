@@ -23,6 +23,11 @@ translate! {
         ko: "보상",
     },
 
+    admin: {
+        en: "Admin",
+        ko: "관리자",
+    },
+
     sign_in: {
         en: "Sign In",
         ko: "로그인",
@@ -92,6 +97,17 @@ pub fn AppMenu() -> Element {
                                 if !collapsed {
                                     span { "{tr.rewards}" }
                                 }
+                            }
+                        }
+
+                        if user.user_type == UserType::Admin {
+                            NavMenuItem {
+                                href: "/admin",
+                                label: tr.admin,
+                                collapsed,
+                                icon: rsx! {
+                                    i::AdminIcon {}
+                                },
                             }
                         }
                     }
