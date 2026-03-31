@@ -7,7 +7,6 @@ use crate::features::posts::controllers::create_post::create_post_handler;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use crate::features::posts::*;
 use crate::features::my_follower::controllers::{check_follow_status_handler, follow_user, unfollow_user};
-use dioxus::prelude::*;
 
 translate! {
     HomeTranslate;
@@ -99,7 +98,7 @@ pub fn Home(username: String) -> Element {
     };
 
     rsx! {
-        div { class: "flex flex-col w-full gap-6",
+        div { class: "flex flex-col w-full min-w-0 gap-6 overflow-x-hidden",
             TeamHeader {
                 display_name,
                 profile_url,
@@ -142,6 +141,13 @@ pub fn Home(username: String) -> Element {
                         });
                     }
                 },
+            }
+
+            // Team drafts — shown only to creators so they can find and edit their drafts
+            if is_creator {
+                SuspenseBoundary {
+                    TeamDraftTimeline { username: username.clone() }
+                }
             }
 
             // View mode toggle + Create button

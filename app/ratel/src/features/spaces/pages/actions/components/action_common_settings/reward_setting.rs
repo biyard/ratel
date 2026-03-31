@@ -94,15 +94,17 @@ pub fn RewardSetting(
                                 }
                             }
                             if is_paid {
-                                Switch {
-                                    active: enable_reward(),
-                                    on_toggle: move |_| {
-                                        let new_enabled = !enable_reward();
-                                        enable_reward.set(new_enabled);
-                                        let new_credits = if new_enabled { 1 } else { 0 };
-                                        credits.set(new_credits);
-                                        on_change.call(new_credits);
-                                    },
+                                div { "data-testid": "reward-setting-toggle",
+                                    Switch {
+                                        active: enable_reward(),
+                                        on_toggle: move |_| {
+                                            let new_enabled = !enable_reward();
+                                            enable_reward.set(new_enabled);
+                                            let new_credits = if new_enabled { 1 } else { 0 };
+                                            credits.set(new_credits);
+                                            on_change.call(new_credits);
+                                        },
+                                    }
                                 }
                             } else {
                                 UnlockButton {}
@@ -157,6 +159,7 @@ pub fn RewardSetting(
                                     p { class: label_class, {tr.credit_usage} }
                                     Input {
                                         r#type: InputType::Number,
+                                        "data-testid": "reward-credit-input",
                                         class: "font-semibold text-right !w-[150px] font-raleway text-[15px]/[18px] tracking-[-0.16px]",
                                         value: "{credits()}",
                                         oninput: move |evt: FormEvent| {

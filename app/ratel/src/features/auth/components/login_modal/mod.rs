@@ -29,6 +29,7 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
     #[allow(unused_mut)]
     let mut wallet_step = use_signal(|| WalletStep::None);
     let mut popup = use_popup();
+    let navigator = use_navigator();
     let mut user_ctx = use_user_context();
 
     let handle_open_signup = move |_| {
@@ -171,7 +172,10 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                 loading.set(false);
                 popup.close();
                 popup.open(rsx! {
-                    SignupModal { initial_wallet_address: Some(connect_result.address), on_success }
+                    SignupModal {
+                        initial_wallet_address: Some(connect_result.address),
+                        on_success,
+                    }
                 });
                 return;
             }
@@ -268,11 +272,7 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                     crate::common::components::LoadingIndicator { class: "size-8" }
                 }
             }
-            img {
-                src: RATEL_LOGO,
-                alt: "Ratel",
-                class: "h-10 object-contain",
-            }
+            img { src: RATEL_LOGO, alt: "Ratel", class: "h-10 object-contain" }
 
             div { class: "flex flex-col gap-4 w-full",
                 div { class: "flex flex-row gap-1 justify-start items-center w-full text-sm",
@@ -398,10 +398,20 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                 }
             }
             div { class: "flex flex-row gap-2.5 justify-center items-center w-full",
-                div { class: "font-medium cursor-pointer text-neutral-400 text-xs/3.5",
+                button {
+                    class: "font-medium cursor-pointer text-neutral-400 text-xs/3.5 bg-transparent border-none p-0",
+                    onclick: move |_| {
+                        popup.close();
+                        navigator.push("/privacy");
+                    },
                     {tr.privacy_policy}
                 }
-                div { class: "font-medium cursor-pointer text-neutral-400 text-xs/3.5",
+                button {
+                    class: "font-medium cursor-pointer text-neutral-400 text-xs/3.5 bg-transparent border-none p-0",
+                    onclick: move |_| {
+                        popup.close();
+                        navigator.push("/terms");
+                    },
                     {tr.terms_of_service}
                 }
             }
