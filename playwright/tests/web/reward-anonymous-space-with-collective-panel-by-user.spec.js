@@ -349,8 +349,14 @@ test.describe
       await showCalendarButtons.first().click();
       await page.waitForLoadState("load");
 
-      // Click tomorrow's day in the calendar using its accessible name
-      await page.getByRole("button", { name: tomorrowLabel }).click();
+      // Click tomorrow's day in the calendar using its accessible name.
+      // Use .first() to avoid strict mode violation when the date appears
+      // in multiple month sections of the calendar grid (e.g. at month
+      // boundaries where the day shows in both "current" and "next").
+      await page
+        .getByRole("button", { name: tomorrowLabel })
+        .first()
+        .click();
       await page.waitForLoadState("load");
 
       // Build accessible name for day after tomorrow (end date)
@@ -367,8 +373,12 @@ test.describe
       await showCalendarButtons.nth(1).click();
       await page.waitForLoadState("load");
 
-      // Click the end date in the calendar
-      await page.getByRole("button", { name: dayAfterLabel }).click();
+      // Click the end date in the calendar — use .first() to handle
+      // month boundaries where the date may appear in multiple sections.
+      await page
+        .getByRole("button", { name: dayAfterLabel })
+        .first()
+        .click();
       await page.waitForLoadState("load");
     } finally {
       await context.close();

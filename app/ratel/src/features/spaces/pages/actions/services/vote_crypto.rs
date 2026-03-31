@@ -2,19 +2,17 @@ use crate::common::types::{EntityType, Error, Partition};
 use dioxus::fullstack::Lazy;
 
 pub static VOTE_CRYPTO_SERVICE: Lazy<Option<VoteCryptoService>> = Lazy::new(|| async move {
-    let voter_tag_secret = match std::env::var("VOTER_TAG_SECRET") {
-        Ok(v) if !v.is_empty() => v,
+    let voter_tag_secret = match option_env!("VOTER_TAG_SECRET") {
+        Some(v) if !v.is_empty() => v.to_string(),
         _ => {
             tracing::warn!("VOTER_TAG_SECRET not configured — encrypted voting disabled");
             return dioxus::Ok(None);
         }
     };
-    let authority_json = match std::env::var("ATTR_VOTING_AUTHORITY_JSON") {
-        Ok(v) if !v.is_empty() => v,
+    let authority_json = match option_env!("ATTR_VOTING_AUTHORITY_JSON") {
+        Some(v) if !v.is_empty() => v.to_string(),
         _ => {
-            tracing::warn!(
-                "ATTR_VOTING_AUTHORITY_JSON not configured — encrypted voting disabled"
-            );
+            tracing::warn!("ATTR_VOTING_AUTHORITY_JSON not configured — encrypted voting disabled");
             return dioxus::Ok(None);
         }
     };
@@ -124,8 +122,10 @@ impl VoteCryptoService {
         use sha2::Digest;
         let computed_hash = hex::encode(sha2::Sha256::digest(ciphertext_blob));
 
-        let ciphertext = attr_voting::vote::EncryptedVote::from_json(&ciphertext_json)
-            .map_err(|e| Error::InternalServerError(format!("Ciphertext deserialize error: {}", e)))?;
+        let ciphertext =
+            attr_voting::vote::EncryptedVote::from_json(&ciphertext_json).map_err(|e| {
+                Error::InternalServerError(format!("Ciphertext deserialize error: {}", e))
+            })?;
 
         let sk = VotingAuthority::deserialize_key(&voter_sk_json)
             .map_err(|e| Error::InternalServerError(format!("SK deserialize error: {}", e)))?;
