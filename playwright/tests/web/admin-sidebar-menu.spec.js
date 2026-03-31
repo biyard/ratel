@@ -8,10 +8,10 @@ import { click, fill, goto, waitPopup } from "../utils";
  * from the sidebar menu.
  *
  * User:
- *   - admin@ratel.foundation (UserType::Admin, user_type=98)
+ *   - e2e_admin_<uniqueId>@ratel.foundation (UserType::Admin, user_type=98)
  *
  * Flow:
- *   1. Login as admin user, promote to admin via DynamoDB, save storage state
+ *   1. Sign up a new user, promote to admin via DynamoDB, save storage state
  *   2. Verify the "Admin" menu item is visible in the sidebar
  *   3. Click the Admin link and verify navigation to /admin
  *   4. Verify the admin page renders with "Reward Management" content
@@ -78,12 +78,15 @@ async function promoteToAdmin(email) {
 }
 
 test.describe.serial("Admin sidebar menu for SystemAdmin users (#1333)", () => {
-  const adminEmail = "admin@ratel.foundation";
-  const adminPassword = "admin!234";
+  const uniqueId = `${Date.now()}${Math.random().toString(36).slice(2, 6)}`;
+  const adminEmail = `e2e_admin_${uniqueId}@ratel.foundation`;
+  const adminPassword = "Admin!234";
+  const adminUsername = `adm${uniqueId}`;
+  const adminDisplayName = `Admin ${uniqueId}`;
 
-  // --- 1. Login as admin user ---
+  // --- 1. Sign up as admin user ---
 
-  test("should login as admin user", async ({ browser }) => {
+  test("should sign up as admin user", async ({ browser }) => {
     const context = await browser.newContext({
       storageState: { cookies: [], origins: [] },
       viewport: { width: 1440, height: 950 },
@@ -94,18 +97,57 @@ test.describe.serial("Admin sidebar menu for SystemAdmin users (#1333)", () => {
     try {
       await goto(page, "/");
       await click(page, { label: "Sign In" });
+      await waitPopup(page, { visible: true });
+
+      // Switch to signup form
+      await click(page, { text: "Create an account" });
+
+      // Enter email and send verification code
       await fill(
         page,
         { placeholder: "Enter your email address" },
         adminEmail,
       );
-      await click(page, { text: "Continue" });
+      await click(page, { text: "Send" });
+
+      // Enter bypass verification code
+      await fill(
+        page,
+        { placeholder: "Enter the verification code" },
+        "000000",
+      );
+      await click(page, { text: "Verify" });
+      await expect(page.getByText("Send", { exact: true })).toBeHidden({
+        timeout: 10000,
+      });
+
+      // Fill signup details
       await fill(
         page,
         { placeholder: "Enter your password" },
         adminPassword,
       );
-      await click(page, { text: "Continue" });
+      await fill(
+        page,
+        { placeholder: "Re-enter your password" },
+        adminPassword,
+      );
+      await fill(
+        page,
+        { placeholder: "Enter your display name" },
+        adminDisplayName,
+      );
+      await fill(
+        page,
+        { placeholder: "Enter your user name" },
+        adminUsername,
+      );
+
+      // Agree to ToS and submit
+      await click(page, {
+        label: "[Required] I have read and accept the Terms of Service.",
+      });
+      await click(page, { text: "Finished Sign-up" });
       await waitPopup(page, { visible: false });
 
       // Ensure the user is promoted to admin in DynamoDB

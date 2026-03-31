@@ -384,8 +384,11 @@ test.describe
       await showCalendarButtons.nth(1).click();
       await page.waitForLoadState("load");
 
-      // If end date is in a different month, navigate the calendar forward
-      if (dayAfter.getMonth() !== today.getMonth()) {
+      // If end date is in a different month than the start date (tomorrow),
+      // navigate the calendar forward. The end date calendar opens to the
+      // auto-adjusted end date's month (same as tomorrow's month after
+      // duration preservation), so compare against tomorrow, not today.
+      if (dayAfter.getMonth() !== tomorrow.getMonth()) {
         await page.locator(".calendar-nav-next").click();
         await page.waitForLoadState("load");
       }
