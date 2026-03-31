@@ -43,7 +43,7 @@ test.describe.serial("Team deletion updates Team Selector (#1318)", () => {
     ).toBeVisible();
 
     // Step 5: Navigate to team settings
-    await goto(page, `/${teamUsername}/settings`);
+    await goto(page, `/${teamUsername}/team-settings`);
 
     // Step 6: Click "Delete team" button
     // The settings page uses nested use_loader calls (TeamContext + settings data).
