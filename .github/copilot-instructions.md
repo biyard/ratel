@@ -49,7 +49,7 @@ Key rules:
 
 * Always use shared helpers (`goto`, `click`, `fill`, `getLocator`) instead of raw Playwright APIs like `page.getByRole().click()`.
 * Avoid raw CSS locators (`page.locator('label:has(...)')`, `page.locator("#id")`). Use semantic selectors via helpers.
-* Avoid `.first()` on order-dependent selectors — add stable `data-testid` or `data-pw` attributes instead.
+* Avoid `.first()` on order-dependent selectors — add stable `data-testid` attributes instead.
 * Don't add manual `waitForLoadState("load")` after `click()` helper — it already waits internally.
 
 ### Resource Cleanup & Environment
