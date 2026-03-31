@@ -150,19 +150,13 @@ async fn event_bridge_handler(
 
     match envelope.detail_type {
         DetailType::TimelineUpdate => {
-            let post: crate::features::posts::models::Post =
-                DetailType::parse_detail(&envelope.detail)?;
-            crate::features::timeline::services::handle_timeline_event(post).await?;
+            crate::features::timeline::services::fan_out_timeline_entries(DetailType::parse_detail(&envelope.detail)?).await?;
         }
         DetailType::PopularPostUpdate => {
-            let post: crate::features::posts::models::Post =
-                DetailType::parse_detail(&envelope.detail)?;
-            crate::features::timeline::services::handle_popular_post_event(post).await?;
+            crate::features::timeline::services::fan_out_popular_post(DetailType::parse_detail(&envelope.detail)?).await?;
         }
         DetailType::PopularSpaceUpdate => {
-            let space: crate::common::models::space::SpaceCommon =
-                DetailType::parse_detail(&envelope.detail)?;
-            crate::features::timeline::services::handle_popular_space_event(space).await?;
+            crate::features::timeline::services::fan_out_popular_space(DetailType::parse_detail(&envelope.detail)?).await?;
         }
         DetailType::NotificationSend => {
             let notification: crate::common::models::notification::Notification =
