@@ -304,7 +304,11 @@ pub fn Sidebar(
                             SheetTitle { "Sidebar" }
                             SheetDescription { "Displays the mobile sidebar." }
                         }
-                        div { class: "sidebar-mobile-inner", {children} }
+                        div {
+                            class: "sidebar-mobile-inner",
+                            "data-testid": "mobile-sidebar-content",
+                            {children}
+                        }
                     }
                 }
             }

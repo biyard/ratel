@@ -19,7 +19,7 @@ import { CONFIGS } from "../config";
  *   - mobile-bottom-nav          — The bottom navigation bar container
  *   - mobile-more-btn            — The "More" button to open sidebar
  *   - mobile-create-post-btn     — Create post button (confirms auth state)
- *   - mobile-sidebar-sheet       — The sidebar content wrapper inside the Sheet dialog
+ *   - mobile-sidebar-content     — The inner content wrapper inside the Sheet dialog
  *   - mobile-sidebar-user-link   — User profile link in inline team section
  *   - mobile-sidebar-team-link   — Team link(s) in inline team section
  *   - sidebar-profile-btn        — Profile button in sidebar footer
@@ -33,41 +33,37 @@ import { CONFIGS } from "../config";
 const MOBILE_VIEWPORT = { width: 375, height: 667 };
 
 /**
- * Opens the mobile sidebar sheet by clicking the More button.
+ * Opens the mobile sidebar sheet by clicking the More button and waits
+ * for the inner content to be visible.
+ *
+ * The Sheet's dialog overlay and its content have a one-frame rendering
+ * delay (use_animated_open), so we wait for the `mobile-sidebar-content`
+ * testid (on the sidebar-mobile-inner div inside the Sheet) to be visible
+ * rather than just checking the outer wrapper for DOM attachment.
+ *
  * Uses force:true to bypass DOM-stability checks (post-hydration effects
  * like is_mobile detection can keep mutating the DOM). Retries the click
- * once if the sidebar sheet does not appear within a short window, to
- * handle the case where the first click fires before Dioxus has fully
- * attached event handlers during hydration.
+ * once if the content does not appear within a short window, to handle
+ * the case where the first click fires before Dioxus has fully attached
+ * event handlers during hydration.
  *
- * The data-testid="mobile-sidebar-sheet" is on the outer wrapper div
- * (outside the Sheet dialog), so it appears in the DOM immediately when
- * the mobile branch renders. The Sheet content inside has a one-frame
- * rendering delay (use_animated_open), so individual test assertions
- * should use their own timeouts to wait for visible content.
- *
- * @returns {import("@playwright/test").Locator} The sidebar sheet locator.
+ * @returns {import("@playwright/test").Locator} The sidebar content locator.
  */
 async function openMobileSidebar(page) {
   const moreBtn = page.getByTestId("mobile-more-btn");
   await expect(moreBtn).toBeVisible();
   await moreBtn.click({ force: true });
 
-  const sidebarSheet = page.getByTestId("mobile-sidebar-sheet");
+  const sidebarContent = page.getByTestId("mobile-sidebar-content");
 
-  // Wait for the wrapper div to be in the DOM. The wrapper is outside the
-  // Sheet's conditional rendering, so it appears immediately when the mobile
-  // branch activates. Use toBeAttached (DOM presence) rather than toBeVisible
-  // because the wrapper may have zero dimensions until the Sheet's dialog
-  // overlay renders its content.
   try {
-    await expect(sidebarSheet).toBeAttached({ timeout: 3000 });
+    await expect(sidebarContent).toBeVisible({ timeout: 5000 });
   } catch {
     await moreBtn.click({ force: true });
-    await expect(sidebarSheet).toBeAttached();
+    await expect(sidebarContent).toBeVisible();
   }
 
-  return sidebarSheet;
+  return sidebarContent;
 }
 
 // ---------------------------------------------------------------------------
@@ -92,11 +88,11 @@ test.describe(
         await expect(page.getByTestId("mobile-create-post-btn")).toBeVisible();
 
         // Open the mobile sidebar sheet via More button
-        const sidebarSheet = await openMobileSidebar(page);
+        const sidebarContent = await openMobileSidebar(page);
 
         // Navigation labels should be visible (not icon-only collapsed mode)
-        await expect(sidebarSheet.getByText("Home", { exact: true })).toBeVisible();
-        await expect(sidebarSheet.getByText("Membership", { exact: true })).toBeVisible();
+        await expect(sidebarContent.getByText("Home", { exact: true })).toBeVisible();
+        await expect(sidebarContent.getByText("Membership", { exact: true })).toBeVisible();
       } finally {
         await context.close();
       }
@@ -117,13 +113,13 @@ test.describe(
         await expect(page.getByTestId("mobile-create-post-btn")).toBeVisible();
 
         // Open mobile sidebar
-        const sidebarSheet = await openMobileSidebar(page);
+        const sidebarContent = await openMobileSidebar(page);
 
         // Wait for sidebar content to render before checking absence
-        await expect(sidebarSheet.getByText("Home", { exact: true })).toBeVisible();
+        await expect(sidebarContent.getByText("Home", { exact: true })).toBeVisible();
 
         // The Collapse/Expand button should not be present on mobile
-        const collapseBtn = sidebarSheet.getByText("Collapse", { exact: true });
+        const collapseBtn = sidebarContent.getByText("Collapse", { exact: true });
         await expect(collapseBtn).toBeHidden();
       } finally {
         await context.close();
@@ -154,13 +150,13 @@ test.describe(
         await expect(page.getByTestId("mobile-create-post-btn")).toBeVisible();
 
         // Open mobile sidebar
-        const sidebarSheet = await openMobileSidebar(page);
+        const sidebarContent = await openMobileSidebar(page);
 
         // The "Teams" section header should be visible
-        await expect(sidebarSheet.getByText("Teams", { exact: true })).toBeVisible();
+        await expect(sidebarContent.getByText("Teams", { exact: true })).toBeVisible();
 
         // The user profile link should be visible in the inline team section
-        const userLink = sidebarSheet.getByTestId("mobile-sidebar-user-link");
+        const userLink = sidebarContent.getByTestId("mobile-sidebar-user-link");
         await expect(userLink).toBeVisible();
       } finally {
         await context.close();
@@ -182,19 +178,21 @@ test.describe(
         await expect(page.getByTestId("mobile-create-post-btn")).toBeVisible();
 
         // Open mobile sidebar
-        const sidebarSheet = await openMobileSidebar(page);
+        const sidebarContent = await openMobileSidebar(page);
 
         // Click profile button to open dropdown
-        const profileBtn = sidebarSheet.getByTestId("sidebar-profile-btn");
+        const profileBtn = sidebarContent.getByTestId("sidebar-profile-btn");
         await expect(profileBtn).toBeVisible();
         await profileBtn.click();
 
-        // The dropdown should contain logout button
-        const logoutBtn = sidebarSheet.getByTestId("sidebar-logout-btn");
+        // The dropdown should contain logout button — it renders outside the
+        // sidebar-mobile-inner div (in the ProfileButton's relative wrapper),
+        // so search the full page rather than scoping to sidebarContent.
+        const logoutBtn = page.getByTestId("sidebar-logout-btn");
         await expect(logoutBtn).toBeVisible();
 
         // The dropdown should contain "Create Team" option
-        await expect(sidebarSheet.getByText("Create Team", { exact: true })).toBeVisible();
+        await expect(page.getByText("Create Team", { exact: true })).toBeVisible();
       } finally {
         await context.close();
       }
