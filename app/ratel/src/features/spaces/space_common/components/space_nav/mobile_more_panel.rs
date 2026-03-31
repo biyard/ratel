@@ -56,7 +56,7 @@ pub fn MobileMoreTab(is_open: bool, onclick: EventHandler<MouseEvent>) -> Elemen
 
     rsx! {
         button {
-            class: "hidden max-tablet:flex flex-1 flex-col gap-0.5 items-center py-2 px-1 text-sm font-medium rounded-sm cursor-pointer text-text hover:bg-space-nav-item-hover",
+            class: "hidden max-tablet:flex flex-1 flex-col gap-0.5 items-center py-2 max-tablet:py-0 px-1 text-sm font-medium rounded-sm cursor-pointer text-text hover:bg-space-nav-item-hover",
             "aria-selected": is_open,
             onclick: move |e| onclick.call(e),
             div { class: "h-6 w-6 flex items-center justify-center",
@@ -71,6 +71,9 @@ pub fn MobileMoreTab(is_open: bool, onclick: EventHandler<MouseEvent>) -> Elemen
 #[component]
 pub fn MobileMorePanel(
     is_logged_in: bool,
+    #[props(default)] user_image: String,
+    #[props(default)] user_display_name: String,
+    #[props(default)] user_role: SpaceUserRole,
     on_close: EventHandler<MouseEvent>,
     on_login: EventHandler<()>,
 ) -> Element {
@@ -87,6 +90,23 @@ pub fn MobileMorePanel(
 
     rsx! {
         BottomSheet { open: true, on_close: move |e| on_close.call(e),
+            if is_logged_in && !user_display_name.is_empty() {
+                Row {
+                    class: "w-full gap-2.5",
+                    cross_axis_align: CrossAxisAlign::Center,
+                    img {
+                        src: "{user_image}",
+                        alt: "{user_display_name}",
+                        class: "object-cover w-10 h-10 rounded-full shrink-0",
+                    }
+                    Col { class: "gap-0.5",
+                        span { class: "text-sm font-medium text-foreground", "{user_display_name}" }
+                        span { class: "text-xs text-foreground-muted", {user_role.translate(&current_lang)} }
+                    }
+                }
+
+                Separator {}
+            }
             // Theme row
             Row {
                 class: "w-full",
@@ -176,18 +196,14 @@ pub fn MobileMorePanel(
 
             // Privacy & Terms links
             Col { class: "gap-2",
-                a {
-                    class: "text-xs text-foreground-muted hover:text-foreground cursor-pointer",
-                    href: "https://ratel.foundation/privacy",
-                    target: "_blank",
-                    rel: "noopener noreferrer",
+                Link {
+                    class: "text-xs text-foreground-muted hover:text-foreground cursor-pointer no-underline",
+                    to: "/privacy",
                     "{tr.privacy_policy}"
                 }
-                a {
-                    class: "text-xs text-foreground-muted hover:text-foreground cursor-pointer",
-                    href: "https://ratel.foundation/terms",
-                    target: "_blank",
-                    rel: "noopener noreferrer",
+                Link {
+                    class: "text-xs text-foreground-muted hover:text-foreground cursor-pointer no-underline",
+                    to: "/terms",
                     "{tr.terms_of_service}"
                 }
             }

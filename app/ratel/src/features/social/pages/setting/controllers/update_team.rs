@@ -56,6 +56,9 @@ pub async fn update_team_handler(
         team.allow_create_space = allow_create_space;
     }
 
+    let now = chrono::Utc::now().timestamp_millis();
+    updater = updater.with_updated_at(now);
+    team.updated_at = now;
     updater.execute(cli).await?;
 
     if need_update_user_team {

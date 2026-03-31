@@ -53,7 +53,6 @@ pub async fn reply_comment(
 
     let comment_sk_entity: EntityType = comment_sk.into();
 
-    let author_pk = author.pk.clone();
     let comment = SpacePostComment::reply(
         cli,
         space_id.clone(),
@@ -81,7 +80,8 @@ pub async fn reply_comment(
     {
         Ok(space_reward) => {
             if let Err(e) =
-                SpaceReward::award(cli, &space_reward, user.pk.clone(), Some(author_pk)).await
+                SpaceReward::award(cli, &space_reward, user.pk.clone(), Some(space.user_pk.clone()))
+                    .await
             {
                 tracing::error!(
                     space_pk = %space_id,

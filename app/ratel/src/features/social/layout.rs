@@ -34,7 +34,7 @@ pub fn SocialLayout(username: String) -> Element {
 
     rsx! {
         div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-team-bg text-text-primary",
-            div { class: "hidden tablet:flex",
+            div { class: "hidden tablet:flex h-screen overflow-hidden",
                 TeamSidemenu { key: "{username}", username: username.clone(), logged_in }
             }
             div { class: "flex flex-col min-w-0 min-h-0",
@@ -73,6 +73,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let team_ctx = crate::common::contexts::use_team_context();
     let nav = use_navigator();
+    let current_route = use_route::<Route>();
     let user = user_ctx().user.clone().unwrap_or_default();
 
     // Selected category context (shared with child routes)
@@ -106,6 +107,11 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                        display_name: String,
                        permissions_vec: Vec<u8>,
                        _teams: Vec<crate::common::contexts::TeamItem>| {
+        let team_home_route = Route::TeamHome {
+            username: username.clone(),
+        }
+        .to_string();
+        let is_reward_page = matches!(current_route, Route::TeamReward { .. });
         let mut mask = 0i64;
         for value in &permissions_vec {
             mask |= 1i64 << (*value as i32);
@@ -124,6 +130,18 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
 
         rsx! {
             div { class: "flex overflow-hidden flex-col w-full h-full",
+                if is_reward_page {
+                    div { class: "px-4 pt-4 pb-2 shrink-0",
+                        Link {
+                            to: "{team_home_route}",
+                            class: "flex items-center gap-1.5 text-sm text-foreground-muted hover:text-text-primary transition-colors",
+                            lucide_dioxus::ChevronLeft {
+                                class: "w-4 h-4 [&>polyline]:stroke-current shrink-0",
+                            }
+                            "{tr.back_to_page}"
+                        }
+                    }
+                }
                 // Header: avatar + name
                 div { class: "flex justify-between items-center py-4 px-4 shrink-0",
                     div { class: "flex gap-3 items-center min-w-0",
@@ -159,7 +177,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                 }
 
                 // Category section
-                div { class: "flex overflow-y-auto flex-col flex-1 px-3 pb-4",
+                div { class: "flex overflow-y-auto flex-col flex-1 min-h-0 px-3 pb-4",
                     span { class: "px-2 pb-2 text-xs font-semibold tracking-wider uppercase text-foreground-muted",
                         "Category"
                     }
@@ -199,6 +217,33 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                                     onclick: move |_| selected_category.set(Some(cat_name2.clone())),
                                     span { class: "text-base font-bold text-foreground-muted", "#" }
                                     span { "{cat_name}" }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // ADMIN section — visible only to team admins/editors
+                if can_team_edit {
+                    div { class: "flex flex-col px-3 pb-4 shrink-0",
+                        span { class: "px-2 pb-2 text-xs font-semibold tracking-wider uppercase text-foreground-muted",
+                            "{tr.admin}"
+                        }
+                        {
+                            let is_draft_active = matches!(current_route, Route::TeamDraft { .. });
+                            let draft_class = if is_draft_active {
+                                "bg-hover text-text-primary"
+                            } else {
+                                "text-foreground-muted hover:bg-hover hover:text-text-primary"
+                            };
+                            rsx! {
+                                Link {
+                                    to: Route::TeamDraft { username: username.clone() },
+                                    class: "flex gap-2.5 items-center py-2 px-2 w-full text-sm font-medium text-left rounded-lg transition-colors {draft_class}",
+                                    lucide_dioxus::FileText {
+                                        class: "w-4 h-4 [&>path]:stroke-current [&>polyline]:stroke-current [&>line]:stroke-current shrink-0",
+                                    }
+                                    span { "{tr.drafts}" }
                                 }
                             }
                         }
@@ -247,6 +292,16 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                                     div {
                                         class: "overflow-hidden absolute right-3 left-3 bottom-full z-30 py-1 mb-1 rounded-lg border shadow-lg bg-popover border-border",
                                         onclick: move |e| e.stop_propagation(),
+                                        Link {
+                                            to: Route::TeamReward { username: username.clone() },
+                                            class: "flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-hover transition-colors w-full text-left",
+                                            onclick: move |_| show_user_menu.set(false),
+                                            "data-pw": "team-reward-menu-link",
+                                            icons::game::Trophy {
+                                                class: "w-[15px] h-[15px] [&>path]:stroke-text-primary [&>path]:fill-transparent shrink-0",
+                                            }
+                                            {tr.rewards}
+                                        }
                                         Link {
                                             to: Route::TeamSetting { username: username.clone() },
                                             class: "flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-hover transition-colors w-full text-left",
@@ -373,6 +428,26 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
 translate! {
     TeamMenuTranslate;
 
+    back_to_page: {
+        en: "Back to page",
+        ko: "페이지로 돌아가기",
+    },
+
+    admin: {
+        en: "Admin",
+        ko: "관리",
+    },
+
+    drafts: {
+        en: "Draft",
+        ko: "초안",
+    },
+
+    rewards: {
+        en: "Rewards",
+        ko: "리워드",
+    },
+
     settings: {
         en: "Settings",
         ko: "설정",
@@ -382,4 +457,5 @@ translate! {
         en: "Log out",
         ko: "로그아웃",
     },
+
 }

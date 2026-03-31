@@ -34,7 +34,7 @@ When performing a code review,
 When writing Playwright test code under `playwright/`, follow the conventions defined in `/docs/playwright-testing.md`.
 
 Key rules:
-* Test files go in `playwright/tests/users/*.spec.js` (plain JavaScript, not TypeScript).
+* Test files go in `playwright/tests/users/*.spec.js` (authenticated user tests), `playwright/tests/spaces/*.spec.js` (space tests), or `playwright/tests/components/*.spec.js` (component tests that manage their own auth context). All plain JavaScript, not TypeScript.
 * Always use shared helpers (`goto`, `click`, `fill`, `getLocator`, `getEditor`, `waitPopup`) from `tests/utils.js` instead of raw Playwright APIs.
 * Locator options: `testId` > `label` > `role` > `placeholder` > `text` (priority order).
 * See `/docs/playwright-testing.md` for utility function signatures, locator option details, app-specific selectors, and complete examples.
@@ -49,7 +49,7 @@ Key rules:
 
 * Always use shared helpers (`goto`, `click`, `fill`, `getLocator`) instead of raw Playwright APIs like `page.getByRole().click()`.
 * Avoid raw CSS locators (`page.locator('label:has(...)')`, `page.locator("#id")`). Use semantic selectors via helpers.
-* Avoid `.first()` on order-dependent selectors — add stable `data-testid` or `data-pw` attributes instead.
+* Avoid `.first()` on order-dependent selectors — add stable `data-testid` attributes instead.
 * Don't add manual `waitForLoadState("load")` after `click()` helper — it already waits internally.
 
 ### Resource Cleanup & Environment
@@ -80,6 +80,11 @@ Key rules:
 ## Spelling & Language Consistency
 
 * Use American English spelling throughout the codebase — e.g., "unrecognized" not "unrecognised", "color" not "colour", "initialize" not "initialise". Applies to doc comments, string literals, error messages, and identifiers.
+
+## Primary Actions in Conditional Sections
+
+* **Never nest primary action buttons (e.g., "Create Post") inside conditionally rendered sections** — if a section (e.g., draft timeline) is hidden when its list is empty, any primary action button placed inside that section will also disappear. Keep primary action buttons outside conditional blocks so they remain visible regardless of content state.
+* **Separate the action trigger from the content display** — the button that creates new items should always be accessible, even when the list of existing items is empty. Place it in a persistent container above or alongside the conditional section.
 
 ## Feature Flag Safety
 

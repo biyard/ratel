@@ -24,7 +24,8 @@ pub async fn check_follow_status_handler(
     let cli = common_config.dynamodb();
     let user: Option<crate::features::auth::User> = user.into();
 
-    // Try user lookup first; only swallow NotFound, propagate real errors
+    // Try user lookup first; treat any lookup failure as "no user found"
+    // (Error::Aws is not Serialize and would cause an SSR panic if propagated)
     let user_lookup = match crate::features::auth::User::find_by_username(
         cli,
         &target_username,
@@ -33,8 +34,7 @@ pub async fn check_follow_status_handler(
     .await
     {
         Ok((users, _)) => users.into_iter().find(|u| u.username == target_username),
-        Err(Error::NotFound(_)) => None,
-        Err(e) => return Err(e),
+        Err(_) => None,
     };
 
     let (target_pk, display_name, profile_url, description, followers_count, followings_count) =

@@ -169,6 +169,19 @@ impl UserMembership {
     pub fn with_purchase_id(self, _purchase_id: CompositePartition) -> Self {
         self
     }
+
+    /// Use credits from this membership (validates and deducts locally).
+    /// Must be followed by a DB updater in a transaction to persist.
+    pub fn use_credits(&mut self, amount: i64) -> Result<()> {
+        if self.remaining_credits < amount {
+            return Err(SpaceRewardError::CreditsExceedBalance.into());
+        }
+
+        self.remaining_credits -= amount;
+        self.updated_at = crate::common::utils::time::get_now_timestamp_millis();
+
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
@@ -229,6 +242,114 @@ impl From<UserMembership> for UserMembershipResponse {
             remaining_credits: user_membership.remaining_credits,
             max_credits_per_space: 0,
             next_membership: user_membership.next_membership,
+        }
+    }
+}
+
+// ── Team Membership ──────────────────────────────────────────────────
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct TeamMembership {
+    pub pk: Partition,
+
+    #[dynamo(prefix = "TS", index = "gsi1", sk)]
+    pub sk: EntityType,
+
+    pub created_at: i64,
+    pub updated_at: i64,
+    pub expired_at: i64,
+
+    #[dynamo(prefix = "TM", name = "find_by_membership", index = "gsi1", pk)]
+    pub membership_pk: MembershipPartition,
+    pub status: MembershipStatus,
+
+    pub total_credits: i64,
+    pub remaining_credits: i64,
+
+    pub auto_renew: bool,
+    pub next_membership: Option<MembershipPartition>,
+}
+
+impl TeamMembership {
+    pub fn new(
+        team_pk: TeamPartition,
+        membership_pk: MembershipPartition,
+        duration_days: i32,
+        credits: i64,
+    ) -> Result<Self> {
+        let created_at = crate::common::utils::time::now();
+        let expired_at = if duration_days <= 0 {
+            i64::MAX
+        } else {
+            created_at + (duration_days as i64) * (24 * 60 * 60 * 1_000)
+        };
+
+        Ok(Self {
+            pk: team_pk.into(),
+            sk: EntityType::TeamMembership,
+            membership_pk,
+            created_at,
+            updated_at: created_at,
+            expired_at,
+            total_credits: credits,
+            remaining_credits: credits,
+            auto_renew: true,
+            status: MembershipStatus::Active,
+            next_membership: None,
+        })
+    }
+
+    pub fn is_infinite(&self) -> bool {
+        self.expired_at == i64::MAX
+    }
+
+    pub fn day_unit(&self) -> i64 {
+        24 * 60 * 60 * 1_000
+    }
+
+    pub fn calculate_remaining_duration_days(&self) -> i32 {
+        if self.is_infinite() {
+            return -1;
+        }
+
+        let now = crate::common::utils::time::now();
+        if self.expired_at <= now {
+            return 0;
+        }
+
+        let remaining_millis = self.expired_at - now;
+        let remaining_days = remaining_millis / self.day_unit();
+        remaining_days as i32
+    }
+
+    pub fn with_purchase_id(self, _purchase_id: CompositePartition) -> Self {
+        self
+    }
+
+
+}
+
+#[derive(Debug, Clone, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct TeamMembershipResponse {
+    pub tier: MembershipPartition,
+    pub expired_at: i64,
+    pub total_credits: i64,
+    pub remaining_credits: i64,
+    pub max_credits_per_space: i64,
+    pub next_membership: Option<MembershipPartition>,
+}
+
+impl From<TeamMembership> for TeamMembershipResponse {
+    fn from(team_membership: TeamMembership) -> Self {
+        Self {
+            tier: team_membership.membership_pk,
+            expired_at: team_membership.expired_at,
+            total_credits: team_membership.total_credits,
+            remaining_credits: team_membership.remaining_credits,
+            max_credits_per_space: 0,
+            next_membership: team_membership.next_membership,
         }
     }
 }
