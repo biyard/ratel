@@ -48,7 +48,7 @@ pub fn TeamPostsPanel(
             {
                 match view_mode {
                     HomeViewMode::Card => rsx! {
-                        div { class: "grid grid-cols-2 items-stretch gap-10",
+                        div { class: "grid grid-cols-2 max-mobile:grid-cols-1 items-stretch gap-10 max-tablet:gap-4",
                             for post in items {
                                 TeamPostCard { key: "card-{post.pk}", post: post.clone() }
                             }

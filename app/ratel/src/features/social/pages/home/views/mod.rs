@@ -107,7 +107,7 @@ pub fn Home(username: String) -> Element {
     };
 
     rsx! {
-        div { class: "flex flex-col gap-6 w-full",
+        div { class: "flex flex-col w-full min-w-0 gap-6 overflow-x-hidden",
             TeamHeader {
                 display_name,
                 profile_url,
