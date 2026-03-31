@@ -8,10 +8,11 @@ import { click, fill, goto, waitPopup } from "../utils";
  * from the sidebar menu.
  *
  * User:
- *   - e2e_admin_<uniqueId>@ratel.foundation (UserType::Admin, user_type=98)
+ *   - admin@ratel.foundation (UserType::Admin, user_type=98)
+ *     Pre-seeded by LocalStack init script.
  *
  * Flow:
- *   1. Sign up a new user, promote to admin via DynamoDB, save storage state
+ *   1. Log in as the pre-seeded admin user, save storage state
  *   2. Verify the "Admin" menu item is visible in the sidebar
  *   3. Click the Admin link and verify navigation to /admin
  *   4. Verify the admin page renders with "Reward Management" content
@@ -19,85 +20,13 @@ import { click, fill, goto, waitPopup } from "../utils";
  * NOTE: Requires backend built with `--features bypass`.
  */
 
-/**
- * Promote a user to SystemAdmin (user_type=98) by directly updating
- * the DynamoDB record in LocalStack. This ensures the user has admin
- * privileges regardless of how the login flow creates/updates users.
- */
-async function promoteToAdmin(email) {
-  const endpoint =
-    process.env.DYNAMO_ENDPOINT || "http://localhost:4566";
-  const tableName = "ratel-local-main";
-
-  // Query GSI3 to find user by email, with retries for GSI propagation delay
-  let queryResult;
-  const maxRetries = 10;
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    const queryResp = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-amz-json-1.0",
-        "X-Amz-Target": "DynamoDB_20120810.Query",
-      },
-      body: JSON.stringify({
-        TableName: tableName,
-        IndexName: "gsi3",
-        KeyConditionExpression: "gsi3_pk = :email",
-        ExpressionAttributeValues: {
-          ":email": { S: `EMAIL#${email}` },
-        },
-      }),
-    });
-
-    queryResult = await queryResp.json();
-    if (queryResult.Items && queryResult.Items.length > 0) {
-      break;
-    }
-    if (attempt < maxRetries - 1) {
-      await new Promise((r) => setTimeout(r, 2000));
-    }
-  }
-
-  if (!queryResult.Items || queryResult.Items.length === 0) {
-    throw new Error(`User with email ${email} not found in DynamoDB`);
-  }
-
-  const user = queryResult.Items[0];
-  const pk = user.pk.S;
-  const sk = user.sk.S;
-
-  // Update user_type to Admin (98) and GSI4 partition key for consistency
-  await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-amz-json-1.0",
-      "X-Amz-Target": "DynamoDB_20120810.UpdateItem",
-    },
-    body: JSON.stringify({
-      TableName: tableName,
-      Key: {
-        pk: { S: pk },
-        sk: { S: sk },
-      },
-      UpdateExpression: "SET user_type = :ut, gsi4_pk = :gsi4pk",
-      ExpressionAttributeValues: {
-        ":ut": { N: "98" },
-        ":gsi4pk": { S: "USER_TYPE#98" },
-      },
-    }),
-  });
-}
-
 test.describe.serial("Admin sidebar menu for SystemAdmin users (#1333)", () => {
-  const uniqueId = `${Date.now()}${Math.random().toString(36).slice(2, 6)}`;
-  const adminEmail = `e2e_admin_${uniqueId}@ratel.foundation`;
-  const adminPassword = "Admin!234";
-  const adminUsername = `adm${uniqueId}`;
-  const adminDisplayName = `Admin ${uniqueId}`;
+  const adminEmail = "admin@ratel.foundation";
+  const adminPassword = "admin!234";
 
-  // --- 1. Sign up as admin user ---
+  // --- 1. Log in as admin user ---
 
-  test("should sign up as admin user", async ({ browser }) => {
+  test("should log in as admin user", async ({ browser }) => {
     const context = await browser.newContext({
       storageState: { cookies: [], origins: [] },
       viewport: { width: 1440, height: 950 },
@@ -108,61 +37,19 @@ test.describe.serial("Admin sidebar menu for SystemAdmin users (#1333)", () => {
     try {
       await goto(page, "/");
       await click(page, { label: "Sign In" });
-      await waitPopup(page, { visible: true });
-
-      // Switch to signup form
-      await click(page, { text: "Create an account" });
-
-      // Enter email and send verification code
       await fill(
         page,
         { placeholder: "Enter your email address" },
         adminEmail,
       );
-      await click(page, { text: "Send" });
-
-      // Enter bypass verification code
-      await fill(
-        page,
-        { placeholder: "Enter the verification code" },
-        "000000",
-      );
-      await click(page, { text: "Verify" });
-      await expect(page.getByText("Send", { exact: true })).toBeHidden({
-        timeout: 10000,
-      });
-
-      // Fill signup details
+      await click(page, { text: "Continue" });
       await fill(
         page,
         { placeholder: "Enter your password" },
         adminPassword,
       );
-      await fill(
-        page,
-        { placeholder: "Re-enter your password" },
-        adminPassword,
-      );
-      await fill(
-        page,
-        { placeholder: "Enter your display name" },
-        adminDisplayName,
-      );
-      await fill(
-        page,
-        { placeholder: "Enter your user name" },
-        adminUsername,
-      );
-
-      // Agree to ToS and submit
-      await click(page, {
-        label: "[Required] I have read and accept the Terms of Service.",
-      });
-      await click(page, { text: "Finished Sign-up" });
+      await click(page, { text: "Continue" });
       await waitPopup(page, { visible: false });
-
-      // Ensure the user is promoted to admin in DynamoDB
-      await promoteToAdmin(adminEmail);
 
       await context.storageState({ path: "admin-system.json" });
     } finally {
