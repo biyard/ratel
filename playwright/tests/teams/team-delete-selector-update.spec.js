@@ -20,13 +20,13 @@ test.describe.serial("Team deletion updates Team Selector (#1318)", () => {
     await click(page, { text: "Create Team" });
 
     // Step 3: Fill in team creation form
-    const nicknameInput = page.locator('[data-pw="team-nickname-input"]');
+    const nicknameInput = page.locator('[data-testid="team-nickname-input"]');
     await nicknameInput.fill(teamNickname);
 
-    const usernameInput = page.locator('[data-pw="team-username-input"]');
+    const usernameInput = page.locator('[data-testid="team-username-input"]');
     await usernameInput.fill(teamUsername);
 
-    const descInput = page.locator('[data-pw="team-description-input"]');
+    const descInput = page.locator('[data-testid="team-description-input"]');
     await descInput.fill("E2E test team for deletion verification");
 
     // Submit the form

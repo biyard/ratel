@@ -367,8 +367,11 @@ test.describe
       await showCalendarButtons.nth(1).click();
       await page.waitForLoadState("load");
 
-      // Click the end date in the calendar
-      await page.getByRole("button", { name: dayAfterLabel }).click();
+      // Click the end date in the calendar (use data-month="current" to avoid
+      // strict-mode violation when the same date appears in adjacent month grids)
+      await page
+        .locator(`button[data-month="current"][aria-label="${dayAfterLabel}"]`)
+        .click();
       await page.waitForLoadState("load");
     } finally {
       await context.close();
