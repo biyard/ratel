@@ -85,7 +85,7 @@ export async function getLocator(
   } else if (text) {
     selected = page.getByText(text, { exact: true });
   } else {
-    throw new Error("Either text, label, or data-pw must be provided");
+    throw new Error("Either text, label, or data-testid must be provided");
   }
 
   await expect(selected).toBeVisible();
@@ -102,8 +102,17 @@ export async function waitPopup(page, { visible = true }) {
 }
 
 export async function goto(page, url) {
-  await page.goto(url);
+  await Promise.all([
+    page.waitForResponse(
+      (response) =>
+        response.url().includes("app-shell") &&
+        response.url().endsWith(".wasm") &&
+        response.status() === 200,
+    ),
+    page.goto(url),
+  ]);
   await page.waitForLoadState("domcontentloaded");
+  await page.waitForTimeout(200);
   // Wait for Dioxus WASM to hydrate — SSR markup already contains
   // [data-dioxus-id], so also verify the interpreter is initialised.
   // NOTE: In Dioxus 0.7, `dioxus` is only available as a local binding

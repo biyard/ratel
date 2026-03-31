@@ -35,15 +35,15 @@ test.describe.serial("Space with actions created by a team", () => {
 
     // Step 3: Fill in team creation form
     // Team Name (nickname)
-    const nicknameInput = page.locator('[data-pw="team-nickname-input"]');
+    const nicknameInput = page.locator('[data-testid="team-nickname-input"]');
     await nicknameInput.fill(teamNickname);
 
     // Team ID (username)
-    const usernameInput = page.locator('[data-pw="team-username-input"]');
+    const usernameInput = page.locator('[data-testid="team-username-input"]');
     await usernameInput.fill(teamUsername);
 
     // Team description
-    const descInput = page.locator('[data-pw="team-description-input"]');
+    const descInput = page.locator('[data-testid="team-description-input"]');
     await descInput.fill("E2E test team for space actions");
 
     // Click Create button to submit the form
@@ -92,7 +92,7 @@ test.describe.serial("Space with actions created by a team", () => {
     await click(page, { text: "Select Action Type" });
 
     // Select Discussion type
-    await click(page, { text: "Discussion" });
+    await click(page, { testId: "action-type-discussion" });
 
     // Hide FAB that may overlap modal buttons
     await page.evaluate(() => {
@@ -136,7 +136,7 @@ test.describe.serial("Space with actions created by a team", () => {
     await click(page, { text: "Select Action Type" });
 
     // Select Poll type (Quiz is default, so explicitly click Poll)
-    await click(page, { text: "Poll" });
+    await click(page, { testId: "action-type-poll" });
 
     // Hide FAB that may overlap modal buttons
     await page.evaluate(() => {
@@ -311,7 +311,7 @@ test.describe.serial("Space with actions created by a team", () => {
     await click(page, { text: "Select Action Type" });
 
     // Select Follow type (Quiz is default, so explicitly click Follow)
-    await click(page, { text: "Follow" });
+    await click(page, { testId: "action-type-follow" });
 
     // Hide FAB that may overlap modal buttons
     await page.evaluate(() => {
@@ -387,11 +387,7 @@ test.describe.serial("Space with actions created by a team", () => {
 
       // Fill password
       await fill(page, { placeholder: "Enter your password" }, "Test!234");
-      await fill(
-        page,
-        { placeholder: "Re-enter your password" },
-        "Test!234",
-      );
+      await fill(page, { placeholder: "Re-enter your password" }, "Test!234");
 
       // Fill display name and username
       const uniqueId = Date.now().toString();
@@ -400,11 +396,7 @@ test.describe.serial("Space with actions created by a team", () => {
         { placeholder: "Enter your display name" },
         `E2E User ${uniqueId}`,
       );
-      await fill(
-        page,
-        { placeholder: "Enter your user name" },
-        `u${uniqueId}`,
-      );
+      await fill(page, { placeholder: "Enter your user name" }, `u${uniqueId}`);
 
       // Agree to Terms of Service (required checkbox)
       await click(page, {

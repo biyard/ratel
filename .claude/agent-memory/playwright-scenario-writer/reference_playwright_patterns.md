@@ -27,7 +27,7 @@ type: reference
 ### Team Creation
 - Profile dropdown trigger: `page.getByRole("button", { name: "User Profile" })` -- DO NOT use text "User1" as it matches many post card elements
 - "Create Team" button in dropdown (text match)
-- Team form fields: `[data-pw="team-nickname-input"]`, `[data-pw="team-username-input"]`, `[data-pw="team-description-input"]`
+- Team form fields: `[data-testid="team-nickname-input"]`, `[data-testid="team-username-input"]`, `[data-testid="team-description-input"]`
 - Team navigates to `/teams/{username}/home` after creation
 
 ### Team Sidemenu
