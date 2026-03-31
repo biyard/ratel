@@ -119,6 +119,8 @@ pub enum Route {
             CredentialPage { username: String },
             #[route("/spaces")]
             UserSpaces { username: String },
+            #[route("/settings")]
+            UserSettings { username: String },
         #[end_layout]
         #[layout(SocialLayout)]
             #[route("/home")]
@@ -135,9 +137,9 @@ pub enum Route {
             TeamReward { username: String },
         #[end_layout]
         #[layout(TeamSettingLayout)]
-            #[route("/settings")]
+            #[route("/team-settings")]
             TeamSetting { username: String },
-            #[route("/settings/members")]
+            #[route("/team-settings/members")]
             TeamSettingMember { username: String },
         #[end_layout]
     #[end_nest]

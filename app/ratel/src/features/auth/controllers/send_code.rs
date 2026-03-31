@@ -45,28 +45,28 @@ async fn send_password_reset_email_code_handler(email: String) -> Result<SendCod
     let (users, _) = User::find_by_email(cli, &email, UserQueryOption::builder().limit(1)).await?;
 
     if users.is_empty() {
-        tracing::debug!(
-            "Skipping password reset verification email for non-registered email"
-        );
+        tracing::debug!("Skipping password reset verification email for non-registered email");
         return Ok(SendCodeResponse {
             expired_at: crate::common::utils::time::get_now_timestamp() + EXPIRATION_TIME as i64,
         });
     }
 
-    send_email_code_handler(email).await
+    // Skip the duplicate email check since password reset requires an existing account
+    send_email_code(email).await
 }
 
 #[cfg(feature = "server")]
 pub async fn send_phone_code_handler(phone: String) -> Result<SendCodeResponse> {
-    use crate::features::auth::constants::{ATTEMPT_BLOCK_TIME, EXPIRATION_TIME, MAX_ATTEMPT_COUNT};
+    use crate::features::auth::constants::{
+        ATTEMPT_BLOCK_TIME, EXPIRATION_TIME, MAX_ATTEMPT_COUNT,
+    };
     use crate::features::auth::utils::generate_random_numeric_code;
 
     let cli = crate::features::auth::config::get().dynamodb();
     let sns = crate::features::auth::config::get().sns();
 
     let (verification_list, _) =
-        PhoneVerification::find_by_phone(cli, &phone, PhoneVerification::opt_one())
-            .await?;
+        PhoneVerification::find_by_phone(cli, &phone, PhoneVerification::opt_one()).await?;
 
     let PhoneVerification {
         value, expired_at, ..
@@ -77,7 +77,8 @@ pub async fn send_phone_code_handler(phone: String) -> Result<SendCodeResponse> 
         verification_list[0].clone()
     } else if !verification_list.is_empty()
         && verification_list[0].attempt_count >= MAX_ATTEMPT_COUNT
-        && verification_list[0].expired_at < (crate::common::utils::time::get_now_timestamp() - ATTEMPT_BLOCK_TIME)
+        && verification_list[0].expired_at
+            < (crate::common::utils::time::get_now_timestamp() - ATTEMPT_BLOCK_TIME)
     {
         return Err(Error::ExceededAttemptPhoneVerification);
     } else {
@@ -113,16 +114,10 @@ pub async fn send_phone_code_handler(phone: String) -> Result<SendCodeResponse> 
 }
 
 #[cfg(feature = "server")]
-pub async fn send_email_code_handler(
-    email: String,
-) -> Result<SendCodeResponse> {
-    use crate::common::models::notification::Notification;
-    use crate::features::auth::constants::{ATTEMPT_BLOCK_TIME, EXPIRATION_TIME, MAX_ATTEMPT_COUNT};
-    use crate::features::auth::utils::generate_random_code;
-
+pub async fn send_email_code_handler(email: String) -> Result<SendCodeResponse> {
     let cli = crate::features::auth::config::get().dynamodb();
 
-    // Check if email is already registered
+    // Check if email is already registered (signup only)
     let (existing_users, _) =
         User::find_by_email(cli, &email, UserQueryOption::builder().limit(1)).await?;
     if !existing_users.is_empty() {
@@ -131,6 +126,22 @@ pub async fn send_email_code_handler(
             email
         )));
     }
+
+    send_email_code(email).await
+}
+
+/// Sends an email verification code without checking for existing accounts.
+/// Used by both signup (via send_email_code_handler with duplicate check)
+/// and password reset (via send_password_reset_email_code_handler).
+#[cfg(feature = "server")]
+async fn send_email_code(email: String) -> Result<SendCodeResponse> {
+    use crate::common::models::notification::Notification;
+    use crate::features::auth::constants::{
+        ATTEMPT_BLOCK_TIME, EXPIRATION_TIME, MAX_ATTEMPT_COUNT,
+    };
+    use crate::features::auth::utils::generate_random_code;
+
+    let cli = crate::features::auth::config::get().dynamodb();
 
     let (verification_list, _) = EmailVerification::find_by_email(
         cli,
@@ -148,7 +159,8 @@ pub async fn send_email_code_handler(
         verification_list[0].clone()
     } else if !verification_list.is_empty()
         && verification_list[0].attempt_count >= MAX_ATTEMPT_COUNT
-        && verification_list[0].expired_at < (crate::common::utils::time::get_now_timestamp() - ATTEMPT_BLOCK_TIME)
+        && verification_list[0].expired_at
+            < (crate::common::utils::time::get_now_timestamp() - ATTEMPT_BLOCK_TIME)
     {
         return Err(Error::ExceededAttemptEmailVerification);
     } else {
