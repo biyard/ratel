@@ -246,7 +246,7 @@ jobs:
 
           WALLETCONNECT_PROJECT_ID: ${{ secrets.WALLETCONNECT_PROJECT_ID }}
 
-          RATEL_CANISTER_ID: lz3um-vp777-77777-aaaba-cai
+          RATEL_CANISTER_ID: lqy7q-dh777-77777-aaaaq-cai
           IC_URL: https://icp.dev.biyard.co
           ICP_IDENTITY_PEM: ${{ secrets.DEV_ICP_IDENTITY_PEM }}
           VOTER_TAG_SECRET: ${{ secrets.DEV_VOTER_TAG_SECRET }}

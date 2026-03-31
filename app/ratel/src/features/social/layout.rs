@@ -37,8 +37,8 @@ pub fn SocialLayout(username: String) -> Element {
             div { class: "hidden tablet:flex h-screen overflow-hidden",
                 TeamSidemenu { key: "{username}", username: username.clone(), logged_in }
             }
-            div { class: "flex flex-col min-w-0 min-h-0",
-                div { class: "flex overflow-auto flex-1 p-5 w-full bg-background rounded-tl-[10px]",
+            div { class: "flex flex-col min-w-0 min-h-0 overflow-hidden",
+                div { class: "flex overflow-auto flex-1 p-5 w-full bg-background rounded-tl-[10px] max-tablet:p-3 max-mobile:p-2",
                     Outlet::<Route> {}
                 }
             }
