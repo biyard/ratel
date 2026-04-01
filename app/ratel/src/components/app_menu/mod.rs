@@ -156,15 +156,26 @@ pub fn AppMenu() -> Element {
                                     class: "flex gap-2 items-center py-1.5 w-full text-sm rounded-md sidebar-menu-button hover:bg-accent/10",
                                     "data-testid": "mobile-sidebar-user-link",
                                     if !user.profile_url.is_empty() {
-                                        img {
-                                            src: "{user.profile_url}",
-                                            alt: "{user.display_name}",
-                                            class: "object-cover w-5 h-5 rounded-full",
+                                        {
+                                            let alt = if user.display_name.is_empty() { &user.username } else { &user.display_name };
+                                            rsx! {
+                                                img {
+                                                    src: "{user.profile_url}",
+                                                    alt: "{alt}",
+                                                    class: "object-cover w-5 h-5 rounded-full",
+                                                }
+                                            }
                                         }
                                     } else {
                                         div { class: "w-5 h-5 rounded-full bg-foreground-muted" }
                                     }
-                                    span { class: "truncate", "{user.display_name}" }
+                                    span { class: "truncate",
+                                        if !user.display_name.is_empty() {
+                                            "{user.display_name}"
+                                        } else {
+                                            "{user.username}"
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -177,15 +188,26 @@ pub fn AppMenu() -> Element {
                                     class: "flex gap-2 items-center py-1.5 w-full text-sm rounded-md sidebar-menu-button hover:bg-accent/10",
                                     "data-testid": "mobile-sidebar-team-link",
                                     if !team.profile_url.is_empty() {
-                                        img {
-                                            src: "{team.profile_url}",
-                                            alt: "{team.nickname}",
-                                            class: "object-cover w-5 h-5 rounded-full",
+                                        {
+                                            let alt = if team.nickname.is_empty() { &team.username } else { &team.nickname };
+                                            rsx! {
+                                                img {
+                                                    src: "{team.profile_url}",
+                                                    alt: "{alt}",
+                                                    class: "object-cover w-5 h-5 rounded-full",
+                                                }
+                                            }
                                         }
                                     } else {
                                         div { class: "w-5 h-5 rounded-full bg-foreground-muted" }
                                     }
-                                    span { class: "truncate", "{team.nickname}" }
+                                    span { class: "truncate",
+                                        if !team.nickname.is_empty() {
+                                            "{team.nickname}"
+                                        } else {
+                                            "{team.username}"
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -444,15 +466,26 @@ fn ProfileButton(collapsed: bool, is_mobile: bool) -> Element {
                                 to: format!("/{}/home", team.username),
                                 onclick: move |_| open.set(false),
                                 if !team.profile_url.is_empty() {
-                                    img {
-                                        src: "{team.profile_url}",
-                                        alt: "{team.nickname}",
-                                        class: "object-cover w-5 h-5 rounded-full",
+                                    {
+                                        let alt = if team.nickname.is_empty() { &team.username } else { &team.nickname };
+                                        rsx! {
+                                            img {
+                                                src: "{team.profile_url}",
+                                                alt: "{alt}",
+                                                class: "object-cover w-5 h-5 rounded-full",
+                                            }
+                                        }
                                     }
                                 } else {
                                     div { class: "w-5 h-5 rounded-full bg-foreground-muted" }
                                 }
-                                span { class: "text-sm truncate", "{team.nickname}" }
+                                span { class: "text-sm truncate",
+                                    if !team.nickname.is_empty() {
+                                        "{team.nickname}"
+                                    } else {
+                                        "{team.username}"
+                                    }
+                                }
                             }
                         }
                     }
