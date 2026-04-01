@@ -166,8 +166,10 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                 // Auth buttons (guest only)
                 if !logged_in {
                     div { class: "flex flex-col gap-2 px-4 pb-4 shrink-0",
-                        button {
-                            class: "flex justify-center items-center py-2.5 w-full text-sm font-semibold rounded-full transition-opacity hover:opacity-90 bg-primary text-[#000000]",
+                        Button {
+                            style: ButtonStyle::Primary,
+                            shape: ButtonShape::Rounded,
+                            class: "w-full",
                             onclick: move |_| {
                                 popup.open(rsx! {
                                     SignupModal {}
@@ -175,8 +177,10 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                             },
                             "{tr.sign_up}"
                         }
-                        button {
-                            class: "flex justify-center items-center py-2.5 w-full text-sm font-semibold rounded-full border transition-colors border-border text-text-primary hover:bg-hover",
+                        Button {
+                            style: ButtonStyle::Outline,
+                            shape: ButtonShape::Rounded,
+                            class: "w-full",
                             onclick: move |_| {
                                 popup.open(rsx! {
                                     LoginModal {}
