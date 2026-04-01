@@ -16,9 +16,17 @@ pub fn App() -> Element {
 
     // Signal to Playwright that WASM hydration is complete.
     // Must be declared before any `?` (Suspense) to ensure it runs.
+    // Uses js_sys::Reflect::set directly instead of document::eval to
+    // avoid Dioxus's async JS channel which may not execute reliably in CI.
     #[cfg(not(feature = "server"))]
     use_effect(|| {
-        document::eval("window.__dioxus_hydrated = true;");
+        if let Some(window) = web_sys::window() {
+            let _ = js_sys::Reflect::set(
+                &window,
+                &wasm_bindgen::JsValue::from_str("__dioxus_hydrated"),
+                &wasm_bindgen::JsValue::TRUE,
+            );
+        }
     });
 
     let _ = crate::features::auth::Context::init()?;
