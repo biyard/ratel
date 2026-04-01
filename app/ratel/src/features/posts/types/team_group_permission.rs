@@ -76,6 +76,10 @@ impl TeamGroupPermissions {
             TeamGroupPermission::SpaceRead,
         ])
     }
+
+    pub fn member() -> Self {
+        Self::read()
+    }
 }
 
 impl std::ops::BitOr for TeamGroupPermissions {

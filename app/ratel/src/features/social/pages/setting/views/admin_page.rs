@@ -48,8 +48,6 @@ pub fn AdminPage(username: ReadSignal<String>, team: TeamResponse) -> Element {
     let mut profile_url = use_signal(|| team_state().profile_url.clone().unwrap_or_default());
     let mut nickname = use_signal(|| team_state().nickname.clone());
     let mut html_contents = use_signal(|| team_state().html_contents.clone());
-    let mut allow_invite = use_signal(|| team_state().allow_invite);
-    let mut allow_create_space = use_signal(|| team_state().allow_create_space);
 
     // Translation strings captured before use_effect
     let validation_nickname_required = tr.validation_nickname_required;
@@ -85,8 +83,6 @@ pub fn AdminPage(username: ReadSignal<String>, team: TeamResponse) -> Element {
                     profile_url: Some(profile_url()),
                     dao_address: None,
                     thumbnail_url: Some(thumbnail_url()),
-                    allow_invite: Some(allow_invite()),
-                    allow_create_space: Some(allow_create_space()),
                 },
             )
             .await;
@@ -201,41 +197,11 @@ pub fn AdminPage(username: ReadSignal<String>, team: TeamResponse) -> Element {
                     placeholder: tr.team_description_hint.to_string(),
                     value: html_contents(),
                     oninput: move |e: FormEvent| html_contents.set(e.value()),
-                    class: "w-full resize-y min-h-[120px]",
+                    class: "w-full min-h-[120px] resize-y rounded-lg border border-input-box-border bg-input-box-bg px-3 py-2 text-sm text-text-primary placeholder:text-foreground-muted focus:outline-none focus:border-ring",
                 }
                 if !last_saved.is_empty() {
                     div { class: "flex justify-end",
                         span { class: "text-xs text-foreground-muted", "{tr.last_saved_at} {last_saved}" }
-                    }
-                }
-            }
-
-            // Checkboxes
-            div { class: "flex flex-col gap-4",
-                label { class: "flex gap-3 items-start cursor-pointer",
-                    input {
-                        r#type: "checkbox",
-                        checked: allow_invite(),
-                        onchange: move |e: FormEvent| allow_invite.set(e.checked()),
-                        class: "mt-0.5 w-4 h-4 cursor-pointer accent-primary shrink-0",
-                    }
-                    div { class: "flex flex-col gap-0.5",
-                        span { class: "text-sm font-medium text-text-primary", "{tr.allow_invite}" }
-                        span { class: "text-xs text-foreground-muted", "{tr.allow_invite_description}" }
-                    }
-                }
-                label { class: "flex gap-3 items-start cursor-pointer",
-                    input {
-                        r#type: "checkbox",
-                        checked: allow_create_space(),
-                        onchange: move |e: FormEvent| allow_create_space.set(e.checked()),
-                        class: "mt-0.5 w-4 h-4 cursor-pointer accent-primary shrink-0",
-                    }
-                    div { class: "flex flex-col gap-0.5",
-                        span { class: "text-sm font-medium text-text-primary", "{tr.allow_create_space}" }
-                        span { class: "text-xs text-foreground-muted",
-                            "{tr.allow_create_space_description}"
-                        }
                     }
                 }
             }

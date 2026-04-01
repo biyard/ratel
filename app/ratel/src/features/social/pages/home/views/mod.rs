@@ -10,7 +10,6 @@ use crate::features::social::pages::home::components::*;
 use crate::features::social::pages::home::HomeViewMode;
 use crate::features::social::Route;
 
-
 translate! {
     HomeTranslate;
 
@@ -74,7 +73,12 @@ pub fn Home(username: String) -> Element {
     let username_for_status = username.clone();
     let follow_status = use_server_future(move || {
         let name = username_for_status.clone();
-        async move { check_follow_status_handler(name).await }
+        async move {
+            check_follow_status_handler(name).await.map_err(|e| {
+                tracing::error!("check_follow_status failed: {e}");
+                e
+            })
+        }
     })?;
 
     let follow_status_val = follow_status.read();
@@ -175,9 +179,12 @@ pub fn Home(username: String) -> Element {
                     }
                 }
 
-                // Create button
-                button {
-                    class: "flex gap-2.5 items-center py-3 px-5 text-sm font-medium bg-white rounded-full transition-colors cursor-pointer text-neutral-900 light:bg-[#404040] light:hover:bg-neutral-700 light:text-white h-[44px] hover:bg-neutral-200",
+            // Create button — only visible to admins/editors
+            if is_creator {
+                Button {
+                    style: ButtonStyle::Primary,
+                    shape: ButtonShape::Rounded,
+                    class: "flex flex-row items-center gap-2",
                     onclick: move |_| {
                         let team_pk = team_pk_str.clone();
                         let nav = nav.clone();
@@ -194,9 +201,10 @@ pub fn Home(username: String) -> Element {
                             }
                         }
                     },
-                    icons::edit::Edit1 { class: "w-4 h-4 [&>path]:stroke-neutral-900 light:[&>path]:stroke-white" }
-                    span { "{tr.create}" }
+                    icons::edit::Edit1 { class: "w-4 h-4 [&>path]:stroke-btn-primary-text [&>path]:fill-none" }
+                    "{tr.create}"
                 }
+            }
             } // end flex items-center justify-between
 
             // Posts
