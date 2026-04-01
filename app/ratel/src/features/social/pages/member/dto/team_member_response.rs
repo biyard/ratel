@@ -1,4 +1,3 @@
-use super::MemberGroup;
 use super::super::*;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
@@ -8,6 +7,6 @@ pub struct TeamMemberResponse {
     pub username: String,
     pub display_name: String,
     pub profile_url: String,
-    pub groups: Vec<MemberGroup>,
+    pub role: String, // "Admin" | "Member"
     pub is_owner: bool,
 }

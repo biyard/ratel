@@ -169,27 +169,31 @@ pub fn Home(username: String) -> Element {
                 }
             }
 
-            // Create button
-            button {
-                class: "flex items-center gap-2.5 bg-white hover:bg-neutral-200 text-neutral-900 light:bg-[#404040] light:hover:bg-neutral-700 light:text-white px-5 py-3 h-[44px] rounded-full text-sm font-medium transition-colors cursor-pointer",
-                onclick: move |_| {
-                    let team_pk = team_pk_str.clone();
-                    let nav = nav.clone();
-                    async move {
-                        let team_id = team_pk.map(|pk| pk.parse().unwrap_or_default());
-                        match create_post_handler(team_id).await {
-                            Ok(resp) => {
-                                let post_pk: FeedPartition = resp.post_pk.into();
-                                nav.push(format!("/posts/{post_pk}/edit"));
-                            }
-                            Err(e) => {
-                                debug!("Failed to create post: {:?}", e);
+            // Create button — only visible to admins/editors
+            if is_creator {
+                Button {
+                    style: ButtonStyle::Primary,
+                    shape: ButtonShape::Rounded,
+                    class: "flex flex-row items-center gap-2",
+                    onclick: move |_| {
+                        let team_pk = team_pk_str.clone();
+                        let nav = nav.clone();
+                        async move {
+                            let team_id = team_pk.map(|pk| pk.parse().unwrap_or_default());
+                            match create_post_handler(team_id).await {
+                                Ok(resp) => {
+                                    let post_pk: FeedPartition = resp.post_pk.into();
+                                    nav.push(format!("/posts/{post_pk}/edit"));
+                                }
+                                Err(e) => {
+                                    debug!("Failed to create post: {:?}", e);
+                                }
                             }
                         }
-                    }
-                },
-                icons::edit::Edit1 { class: "w-4 h-4 [&>path]:stroke-neutral-900 light:[&>path]:stroke-white" }
-                span { "{tr.create}" }
+                    },
+                    icons::edit::Edit1 { class: "w-4 h-4 [&>path]:stroke-btn-primary-text [&>path]:fill-none" }
+                    "{tr.create}"
+                }
             }
             } // end flex items-center justify-between
 

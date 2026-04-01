@@ -16,7 +16,7 @@ pub async fn list_members_handler(
     let team_pk: Partition = team_pk.into();
 
     let user: Option<crate::features::auth::User> = user.into();
-    let Some(user) = user else {
+    let Some(_user) = user else {
         return Err(Error::Unauthorized(
             "You don't have permission to view members.".to_string(),
         ));
@@ -70,15 +70,13 @@ pub async fn list_members_handler(
     for utg in all_user_team_groups {
         let user_pk_str = utg.pk.to_string();
 
-        let group_sk_string = if let EntityType::UserTeamGroup(inner) = &utg.sk {
-            inner.clone()
-        } else {
-            continue;
-        };
-
         let Some(user) = user_map.get(&user_pk_str) else {
             continue;
         };
+
+        let perms: TeamGroupPermissions = utg.team_group_permissions.into();
+        let is_admin = perms.contains(TeamGroupPermission::TeamAdmin);
+        let role = if is_admin { "Admin" } else { "Member" };
 
         let entry = members_map
             .entry(user_pk_str.clone())
@@ -87,30 +85,16 @@ pub async fn list_members_handler(
                 username: user.username.clone(),
                 display_name: user.display_name.clone(),
                 profile_url: user.profile_url.clone(),
-                groups: Vec::new(),
+                role: role.to_string(),
                 is_owner: false,
             });
 
-        let perms: TeamGroupPermissions = utg.team_group_permissions.into();
-        let role_name = if perms.contains(TeamGroupPermission::TeamAdmin) {
-            "Admin"
-        } else {
-            "Member"
-        };
-        let group_id = group_sk_string
-            .strip_prefix("TEAM_GROUP#")
-            .unwrap_or(&group_sk_string)
-            .to_string();
-        entry.groups.push(MemberGroup {
-            group_id,
-            group_name: role_name.to_string(),
-            description: String::new(),
-        });
+        // Admin wins if user has multiple groups
+        if is_admin {
+            entry.role = "Admin".to_string();
+        }
     }
 
-    // On page 1, fetch owner, pin to top, and remove from regular list to avoid duplication.
-    // On subsequent pages, skip the DynamoDB read entirely.
-    // Propagate Err (real DynamoDB/transport failures); treat None as a team without an owner.
     let owner_member = if is_first_page {
         match TeamOwner::get(cli, &team_pk, Some(&EntityType::TeamOwner)).await? {
             Some(team_owner) => {
@@ -120,7 +104,7 @@ pub async fn list_members_handler(
                     username: team_owner.username.clone(),
                     display_name: team_owner.display_name.clone(),
                     profile_url: team_owner.profile_url.clone(),
-                    groups: Vec::new(),
+                    role: "Admin".to_string(),
                     is_owner: true,
                 });
                 entry.is_owner = true;

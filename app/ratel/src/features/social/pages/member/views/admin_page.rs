@@ -1,9 +1,8 @@
 use super::super::components::*;
-use super::super::controllers::list_members_handler;
+use super::super::controllers::{list_members_handler, remove_team_member_handler};
+use super::super::dto::RemoveMemberRequest;
 use super::super::*;
 use dioxus::prelude::*;
-use crate::features::social::pages::group::controllers::remove_member_handler;
-use crate::features::social::pages::group::dto::RemoveMemberRequest;
 
 #[component]
 pub fn AdminPage(username: String, team_pk: TeamPartition) -> Element {
@@ -29,24 +28,23 @@ pub fn AdminPage(username: String, team_pk: TeamPartition) -> Element {
 
     let mut removing = use_signal(|| Option::<String>::None);
 
-    let on_remove_from_group: EventHandler<RemovePayload> = Callback::new({
+    let on_remove: EventHandler<RemovePayload> = Callback::new({
         let team_pk = team_pk.clone();
         let mut removing = removing.clone();
         let mut refresh = refresh.clone();
         move |payload: RemovePayload| {
-            let key = format!("remove:{}-{}", payload.member_id, payload.group_id);
+            let key = format!("remove:{}", payload.member_id);
             if removing().as_ref() == Some(&key) {
                 return;
             }
-            removing.set(Some(key.clone()));
+            removing.set(Some(key));
 
             let team_pk = team_pk.clone();
             let mut removing = removing.clone();
             let mut refresh = refresh.clone();
             spawn(async move {
-                let result = remove_member_handler(
+                let result = remove_team_member_handler(
                     team_pk,
-                    payload.group_id,
                     RemoveMemberRequest {
                         user_pks: vec![payload.member_id],
                     },
@@ -67,15 +65,9 @@ pub fn AdminPage(username: String, team_pk: TeamPartition) -> Element {
             !is_blocked_text(&member.display_name) && !is_blocked_text(&member.username)
         })
         .map({
-            let on_remove_from_group = on_remove_from_group.clone();
+            let on_remove = on_remove.clone();
             let removing = removing.clone();
-            move |member| {
-                render_member(
-                    member,
-                    on_remove_from_group.clone(),
-                    removing.clone(),
-                )
-            }
+            move |member| render_member(member, on_remove.clone(), removing.clone())
         });
 
     rsx! {
