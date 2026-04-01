@@ -6,7 +6,7 @@ use crate::features::posts::*;
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct PostCommentResponse {
     pub pk: FeedPartition,
-    pub sk: PostCommentEntityType,
+    pub sk: PostCommentTargetEntityType,
 
     pub updated_at: i64,
 
@@ -16,7 +16,7 @@ pub struct PostCommentResponse {
     pub reports: i64,
     pub replies: u64,
 
-    pub parent_comment_sk: Option<PostCommentEntityType>,
+    pub parent_comment_sk: Option<PostCommentTargetEntityType>,
 
     pub author_pk: Partition,
     pub author_display_name: String,
