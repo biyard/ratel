@@ -1,12 +1,14 @@
 use crate::common::*;
-use crate::features::social::pages::home::components::*;
-use crate::features::social::pages::home::HomeViewMode;
-use crate::features::social::Route;
-use crate::features::social::controllers::find_team::find_team_handler;
+use crate::features::my_follower::controllers::{
+    check_follow_status_handler, follow_user, unfollow_user,
+};
 use crate::features::posts::controllers::create_post::create_post_handler;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use crate::features::posts::*;
-use crate::features::my_follower::controllers::{check_follow_status_handler, follow_user, unfollow_user};
+use crate::features::social::controllers::find_team::find_team_handler;
+use crate::features::social::pages::home::components::*;
+use crate::features::social::pages::home::HomeViewMode;
+use crate::features::social::Route;
 
 translate! {
     HomeTranslate;
@@ -60,7 +62,9 @@ pub fn Home(username: String) -> Element {
     let team_detail = use_resource(use_reactive((&username,), |(name,)| async move {
         find_team_handler(name).await.ok()
     }));
-    let thumbnail_url = team_detail.read().as_ref()
+    let thumbnail_url = team_detail
+        .read()
+        .as_ref()
         .and_then(|opt| opt.as_ref())
         .and_then(|t| t.thumbnail_url.clone())
         .unwrap_or_default();
@@ -69,20 +73,31 @@ pub fn Home(username: String) -> Element {
     let username_for_status = username.clone();
     let follow_status = use_server_future(move || {
         let name = username_for_status.clone();
-        async move { check_follow_status_handler(name).await }
+        async move {
+            check_follow_status_handler(name).await.map_err(|e| {
+                tracing::error!("check_follow_status failed: {e}");
+                e
+            })
+        }
     })?;
 
     let follow_status_val = follow_status.read();
     let initial_status = follow_status_val.as_ref().unwrap();
 
     let mut is_following = use_signal(move || {
-        initial_status.as_ref().map(|s| s.is_following).unwrap_or(false)
+        initial_status
+            .as_ref()
+            .map(|s| s.is_following)
+            .unwrap_or(false)
     });
     let mut processing = use_signal(|| false);
 
     let follow_target_pk = initial_status.as_ref().ok().map(|s| s.target_pk.clone());
 
-    let settings_route = Route::TeamSetting { username: username.clone() }.to_string();
+    let settings_route = Route::TeamSetting {
+        username: username.clone(),
+    }
+    .to_string();
 
     let selected_category = use_context::<Signal<Option<String>>>();
 
