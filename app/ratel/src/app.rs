@@ -15,11 +15,13 @@ pub fn App() -> Element {
     ThemeService::init();
 
     // Signal to Playwright that WASM hydration is complete.
-    // Must be declared before any `?` (Suspense) to ensure it runs.
-    // Uses js_sys::Reflect::set directly instead of document::eval to
-    // avoid Dioxus's async JS channel which may not execute reliably in CI.
+    // This runs as inline code (not use_effect) because use_effect only
+    // fires after a successful render — if the component suspends at the
+    // `?` below, use_effect would never fire and the flag would never be set.
+    // Inline code executes every time the component function is invoked,
+    // even when the component will subsequently suspend.
     #[cfg(not(feature = "server"))]
-    use_effect(|| {
+    {
         if let Some(window) = web_sys::window() {
             let _ = js_sys::Reflect::set(
                 &window,
@@ -27,7 +29,7 @@ pub fn App() -> Element {
                 &wasm_bindgen::JsValue::TRUE,
             );
         }
-    });
+    }
 
     let _ = crate::features::auth::Context::init()?;
     crate::common::contexts::TeamContext::init();
