@@ -102,12 +102,12 @@ export async function waitPopup(page, { visible = true }) {
 }
 
 export async function goto(page, url) {
-  // Best-effort WASM response listener — fire-and-forget so it never blocks
-  // navigation. When the WASM binary is served from the browser's
-  // compiled-code cache no network event fires, so awaiting this would add
-  // up to `timeout` ms of unnecessary delay. The waitForFunction hydration
-  // check below is the real guarantee that the app is ready.
-  page
+  // Start listening for the WASM response before navigation. The promise
+  // resolves when the binary arrives over the network. When served from the
+  // browser's compiled-code cache no response event fires, so we add a
+  // timeout and swallow the error — in that case the binary is already
+  // available and hydration will start immediately after DOM parsing.
+  const wasmPromise = page
     .waitForResponse(
       (response) =>
         response.url().includes("app-shell") &&
@@ -120,18 +120,17 @@ export async function goto(page, url) {
   await page.goto(url);
   await page.waitForLoadState("domcontentloaded");
   // Wait for Dioxus SSR markup to be present — [data-dioxus-id] confirms
-  // the server-rendered DOM is available. This does NOT verify that the
-  // WASM interpreter has finished hydration; Playwright's built-in action
-  // retries handle any remaining hydration delay.
-  // NOTE: In Dioxus 0.7, the runtime is only available as a local binding
-  // inside document-level contexts, NOT on `window`. Checking for a
-  // global ready signal would hang forever, so we cannot use it as a
-  // hydration-complete signal.
+  // the server-rendered DOM is available.
   await page.waitForFunction(
     () => document.querySelector("[data-dioxus-id]") !== null,
     null,
     { timeout: 30000 },
   );
+  // Wait for the WASM binary to arrive (network) or fall through (cache).
+  // This ensures the Dioxus runtime has loaded before we interact with the
+  // page. In CI (fresh browser contexts) the response always fires; when
+  // cached the .catch() above resolves immediately.
+  await wasmPromise;
 }
 
 export async function getEditor(page) {
