@@ -35,6 +35,13 @@ pub fn App() -> Element {
         "collective intelligence".to_string(),
     ];
 
+    // Signal Playwright (and other test tools) that WASM hydration is complete.
+    // use_effect only runs client-side after mount, so this flag reliably
+    // indicates that event handlers are attached and the app is interactive.
+    use_effect(|| {
+        let _ = document::eval("window.__dioxus_hydrated = true;");
+    });
+
     rsx! {
         document::Link { rel: "icon", href: crate::common::assets::FAVICON }
         document::Link { rel: "stylesheet", href: MAIN_CSS }
