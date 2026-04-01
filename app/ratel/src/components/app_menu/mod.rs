@@ -446,15 +446,26 @@ fn ProfileButton(collapsed: bool, is_mobile: bool) -> Element {
                         to: "/",
                         onclick: move |_| open.set(false),
                         if !user.profile_url.is_empty() {
-                            img {
-                                src: "{user.profile_url}",
-                                alt: "{user.display_name}",
-                                class: "object-cover w-5 h-5 rounded-full",
+                            {
+                                let alt = if user.display_name.is_empty() { &user.username } else { &user.display_name };
+                                rsx! {
+                                    img {
+                                        src: "{user.profile_url}",
+                                        alt: "{alt}",
+                                        class: "object-cover w-5 h-5 rounded-full",
+                                    }
+                                }
                             }
                         } else {
                             div { class: "w-5 h-5 rounded-full bg-foreground-muted" }
                         }
-                        span { class: "text-sm truncate", "{user.display_name}" }
+                        span { class: "text-sm truncate",
+                            if !user.display_name.is_empty() {
+                                "{user.display_name}"
+                            } else {
+                                "{user.username}"
+                            }
+                        }
                     }
 
                     // Teams (only in desktop dropdown; on mobile they are inline in sidebar)

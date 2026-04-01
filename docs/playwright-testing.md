@@ -113,7 +113,7 @@ All interaction helpers are defined in `tests/utils.js`. **Always use these inst
 
 ### `goto(page, path)`
 
-Navigates to `BASE_URL + path` with `waitUntil: "load"`, then waits for the Dioxus WASM app to hydrate by checking for `[data-dioxus-id]` elements in the DOM.
+Navigates to `BASE_URL + path` with `waitUntil: "load"`, then waits for the server-rendered Dioxus DOM to be present by checking for `[data-dioxus-id]` elements. It does not guarantee that hydration is fully complete; remaining hydration is handled by Playwright's built-in auto-waiting on subsequent interactions.
 
 ```js
 await goto(page, "/");           // → http://localhost:8080/
