@@ -8,6 +8,7 @@ pub struct LikePostResponse {
     pub like: bool,
 }
 
+#[mcp_tool(name = "like_post", description = "Like or unlike a post.")]
 #[post("/api/posts/:post_id/like", user: User)]
 pub async fn like_post_handler(post_id: FeedPartition, like: bool) -> Result<LikePostResponse> {
     let conf = crate::features::posts::config::get();

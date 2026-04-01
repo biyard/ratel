@@ -1085,6 +1085,7 @@ dependencies = [
  "ratel-canister",
  "regex",
  "reqwest 0.12.28",
+ "rmcp",
  "schemars 1.0.4",
  "serde",
  "serde-wasm-bindgen",
