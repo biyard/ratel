@@ -44,6 +44,10 @@ export interface RegionalServiceStackProps extends StackProps {
   cluster?: ecs.ICluster;
   vpc?: ec2.IVpc;
   namespace?: sd.PrivateDnsNamespace;
+
+  icUrl?: string;
+  ratelCanisterId?: string;
+  icpIdentityPem?: string;
 }
 
 export class RegionalServiceStack extends Stack {
@@ -118,6 +122,13 @@ export class RegionalServiceStack extends Stack {
           GOOGLE_APPLICATION_CREDENTIALS: ".gcp/firebase-service-account.json",
           IP: "0.0.0.0",
           PORT: "8080",
+          ...(props.icUrl ? { IC_URL: props.icUrl } : {}),
+          ...(props.ratelCanisterId
+            ? { RATEL_CANISTER_ID: props.ratelCanisterId }
+            : {}),
+          ...(props.icpIdentityPem
+            ? { ICP_IDENTITY_PEM: props.icpIdentityPem }
+            : {}),
         },
       });
 
@@ -187,6 +198,13 @@ export class RegionalServiceStack extends Stack {
           DISABLE_ANSI: "true",
           NO_COLOR: "true",
           GOOGLE_APPLICATION_CREDENTIALS: ".gcp/firebase-service-account.json",
+          ...(props.icUrl ? { IC_URL: props.icUrl } : {}),
+          ...(props.ratelCanisterId
+            ? { RATEL_CANISTER_ID: props.ratelCanisterId }
+            : {}),
+          ...(props.icpIdentityPem
+            ? { ICP_IDENTITY_PEM: props.icpIdentityPem }
+            : {}),
         },
         memorySize: 128,
         timeout: cdk.Duration.seconds(30),
