@@ -331,3 +331,8 @@ impl dioxus::fullstack::AsStatusCode for Error {
         }
     }
 }
+
+// Note: From<Error> for lambda_runtime::Error (= Box<dyn std::error::Error + Send + Sync>)
+// is provided by the blanket impl in std, since Error implements std::error::Error + Send + Sync.
+// This preserves the full error source chain for Lambda debugging, unlike the previous
+// to_string()-based conversion.
