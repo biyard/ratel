@@ -362,7 +362,7 @@ pub fn Sidebar(
                                     let shift = e.modifiers().shift();
                                     spawn(async move {
                                         let direction = if shift { "backward" } else { "forward" };
-                                        _ = document::eval(&format!(
+                                        let _ = document::eval(&format!(
                                             r#"
                                             (function() {{
                                                 const dialog = document.querySelector('[role="dialog"][data-mobile="true"]');
