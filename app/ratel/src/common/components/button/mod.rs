@@ -33,7 +33,7 @@ pub fn Button(
             },
             ..attributes,
             if loading() {
-                LoadingIndicator { class: loading_class }
+                LoadingIndicator { class: loading_class, max_width: "32px" }
             } else {
                 {children}
             }

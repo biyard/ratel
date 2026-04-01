@@ -7,4 +7,5 @@ pub struct FoundUserResponse {
     pub nickname: String,
     pub username: String,
     pub profile_url: String,
+    pub description: String,
 }
