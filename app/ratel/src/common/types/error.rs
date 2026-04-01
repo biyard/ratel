@@ -284,6 +284,31 @@ impl From<serde_dynamo::Error> for Error {
     }
 }
 
+#[cfg(feature = "server")]
+impl From<Error> for rmcp::ErrorData {
+    fn from(e: Error) -> Self {
+        match &e {
+            Error::UnauthorizedAccess
+            | Error::NoSessionFound
+            | Error::Unauthorized(_) => {
+                rmcp::ErrorData::invalid_request(e.to_string(), None)
+            }
+            Error::NotFound(_)
+            | Error::InvitationNotFound
+            | Error::SpaceNotFound => {
+                rmcp::ErrorData::invalid_params(e.to_string(), None)
+            }
+            Error::BadRequest(_)
+            | Error::Duplicate(_)
+            | Error::NoPermission
+            | Error::InvalidPartitionKey(_) => {
+                rmcp::ErrorData::invalid_params(e.to_string(), None)
+            }
+            _ => rmcp::ErrorData::internal_error(e.to_string(), None),
+        }
+    }
+}
+
 impl From<ServerFnError> for Error {
     fn from(e: ServerFnError) -> Self {
         Error::Unknown(format!("Server function error: {}", e))
