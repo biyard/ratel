@@ -355,7 +355,11 @@ fn ProfileButton(collapsed: bool, is_mobile: bool) -> Element {
 
     let profile_url = user.profile_url.clone();
     let display_name = user.display_name.clone();
-    let teams = team_ctx.teams.read().clone();
+    let teams = if is_mobile {
+        Vec::new()
+    } else {
+        team_ctx.teams.read().clone()
+    };
 
     // On mobile, position dropdown above the button; on desktop, to the right
     let dropdown_class = if is_mobile {

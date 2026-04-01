@@ -99,9 +99,14 @@ pub struct SidebarCtx {
 }
 
 impl SidebarCtx {
-    /// Toggle the sidebar open/closed state
+    /// Toggle the sidebar open/closed state.
+    ///
+    /// Uses `is_mobile_active()` (which considers both `is_mobile` and
+    /// `open_mobile`) so that when the mobile Sheet is open but the async
+    /// JS `is_mobile` eval hasn't resolved yet, the toggle still correctly
+    /// closes the mobile Sheet instead of toggling the desktop open state.
     pub fn toggle(&self) {
-        if (self.is_mobile)() {
+        if self.is_mobile_active() {
             let current = (self.open_mobile)();
             let mut open_mobile = self.open_mobile;
             open_mobile.set(!current);
