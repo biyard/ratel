@@ -83,7 +83,7 @@ pub fn MembershipPurchaseModal(
             div { class: "flex flex-col gap-5",
                 // Membership Summary
                 Card {
-                    div { class: "flex justify-between items-center",
+                    div { class: "flex justify-between items-center w-full",
                         div { class: "flex flex-col gap-1",
                             h4 { class: "text-lg font-semibold text-text-primary",
                                 {tier_label(membership, &tr)}
