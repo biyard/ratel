@@ -102,15 +102,23 @@ export async function waitPopup(page, { visible = true }) {
 }
 
 export async function goto(page, url) {
-  await Promise.all([
-    page.waitForResponse(
+  // waitForResponse may never fire in manually-created browser contexts
+  // (e.g., component tests using browser.newContext()) because the WASM
+  // response can be served from the browser's compiled-code cache without
+  // emitting a network event. Add a timeout with catch so goto() doesn't
+  // hang indefinitely — the waitForFunction hydration check below is the
+  // real guarantee that the app is ready.
+  const wasmLoaded = page
+    .waitForResponse(
       (response) =>
         response.url().includes("app-shell") &&
         response.url().endsWith(".wasm") &&
         response.status() === 200,
-    ),
-    page.goto(url),
-  ]);
+      { timeout: 15000 },
+    )
+    .catch(() => {});
+
+  await Promise.all([wasmLoaded, page.goto(url)]);
   await page.waitForLoadState("domcontentloaded");
   await page.waitForTimeout(200);
   // Wait for Dioxus WASM to hydrate — SSR markup already contains
@@ -121,7 +129,9 @@ export async function goto(page, url) {
   // presence of hydrated DOM elements and rely on Playwright's built-in
   // action retries for any remaining hydration delay.
   await page.waitForFunction(
-    () => document.querySelector("[data-dioxus-id]") !== null
+    () => document.querySelector("[data-dioxus-id]") !== null,
+    null,
+    { timeout: 30000 },
   );
 }
 
