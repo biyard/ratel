@@ -175,7 +175,7 @@ test.describe(
         await expect(page.getByTestId("mobile-create-post-btn")).toBeVisible();
 
         // Open mobile sidebar
-        const sidebarContent = await openMobileSidebar(page);
+        await openMobileSidebar(page);
 
         // Click profile button to open dropdown using the shared helper
         // for consistent visibility checks and waiting behavior
@@ -183,7 +183,7 @@ test.describe(
 
         // The dropdown should contain logout button — it renders outside the
         // sidebar-mobile-inner div (in the ProfileButton's relative wrapper),
-        // so search the full page rather than scoping to sidebarContent.
+        // so search the full page rather than scoping to the sidebar.
         const logoutBtn = page.getByTestId("sidebar-logout-btn");
         await expect(logoutBtn).toBeVisible();
 
