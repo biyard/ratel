@@ -129,7 +129,14 @@ impl SidebarCtx {
     /// to avoid the race where `open_mobile` is set to `true` before the
     /// async `is_mobile` JS eval has resolved (initial value is `false`).
     pub fn is_mobile_active(&self) -> bool {
-        (self.is_mobile)() || (self.open_mobile)()
+        // Read both signals into locals first to guarantee both subscriptions
+        // are maintained. Rust's `||` short-circuits: if `is_mobile()` were
+        // called directly and was `true`, `open_mobile()` would never execute,
+        // dropping its Dioxus subscription. Then setting `open_mobile(true)`
+        // later would NOT trigger a re-render for callers of this method.
+        let mobile = (self.is_mobile)();
+        let open_m = (self.open_mobile)();
+        mobile || open_m
     }
 }
 
@@ -334,7 +341,13 @@ pub fn Sidebar(
                             aria_modal: "true",
                             aria_label: "Sidebar",
                             tabindex: "0",
-                            autofocus: "true",
+                            // Use onmounted to programmatically focus the div —
+                            // HTML autofocus is unreliable on non-form elements.
+                            onmounted: move |e: MountedEvent| {
+                                spawn(async move {
+                                    let _ = e.set_focus(true).await;
+                                });
+                            },
                             onclick: move |e| {
                                 e.stop_propagation();
                             },
