@@ -1,8 +1,6 @@
 use crate::common::hooks::use_infinite_query;
 use crate::common::ListResponse;
-use crate::features::social::pages::group::components::{InviteMemberModal, InviteResult};
-use crate::features::social::pages::group::controllers::remove_member_handler;
-use crate::features::social::pages::group::dto::RemoveMemberRequest;
+use crate::features::social::pages::member::components::{InviteMemberModal, InviteResult};
 use crate::features::social::pages::member::controllers::{
     get_team_member_permission_handler, list_members_handler,
 };
@@ -155,22 +153,14 @@ pub fn ManagementPage(username: String) -> Element {
                                         let mut error_msg = error_msg.clone();
                                         let failed_msg = failed_remove.clone();
                                         spawn(async move {
-                                            let mut failed = false;
-                                            for group in &member.groups {
-                                                if remove_member_handler(
-                                                    team_pk.clone(),
-                                                    group.group_id.clone(),
-                                                    RemoveMemberRequest {
-                                                        user_pks: vec![member.user_id.clone()],
-                                                    },
-                                                )
-                                                .await
-                                                .is_err()
-                                                {
-                                                    failed = true;
-                                                }
-                                            }
-                                            if failed {
+                                            let result = crate::features::social::pages::member::controllers::remove_team_member_handler(
+                                                team_pk.clone(),
+                                                crate::features::social::pages::member::dto::RemoveMemberRequest {
+                                                    user_pks: vec![member.user_id.clone()],
+                                                },
+                                            )
+                                            .await;
+                                            if result.is_err() {
                                                 error_msg.set(Some(failed_msg));
                                             } else {
                                                 error_msg.set(None);
@@ -244,16 +234,10 @@ fn MemberRow(member: TeamMemberResponse, is_last: bool, on_remove: EventHandler<
                 } else {
                     span { class: "text-sm text-foreground-muted shrink-0",
                         {
-                            if member.groups.is_empty() {
-                                tr.member_role.to_string()
+                            if member.role.eq_ignore_ascii_case("admin") {
+                                tr.admin_role.to_string()
                             } else {
-                                member.groups.iter().map(|g| {
-                                    if g.group_id == "admin" || g.group_name.eq_ignore_ascii_case("admin") {
-                                        tr.admin_role.to_string()
-                                    } else {
-                                        tr.member_role.to_string()
-                                    }
-                                }).collect::<Vec<String>>().join(", ")
+                                tr.member_role.to_string()
                             }
                         }
                     }

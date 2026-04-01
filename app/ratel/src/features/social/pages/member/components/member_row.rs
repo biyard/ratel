@@ -4,54 +4,20 @@ use super::super::*;
 #[derive(Clone)]
 pub struct RemovePayload {
     pub member_id: String,
-    pub group_id: String,
 }
 
 pub fn render_member(
     member: TeamMemberResponse,
-    on_remove_from_group: EventHandler<RemovePayload>,
+    on_remove: EventHandler<RemovePayload>,
     removing: Signal<Option<String>>,
 ) -> Element {
     let member_id = member.user_id.clone();
     let profile_url = member.profile_url.clone();
     let is_owner = member.is_owner;
+    let role = member.role.clone();
 
-    let group_chips = member
-        .groups
-        .into_iter()
-        .filter(|group| !is_blocked_text(&group.group_name))
-        .map({
-            let on_remove_from_group = on_remove_from_group.clone();
-            let removing = removing.clone();
-            let member_id = member_id.clone();
-            move |group: MemberGroup| {
-                let remove_key = format!("remove:{}-{}", member_id, group.group_id);
-                let is_removing = removing().as_ref() == Some(&remove_key);
-                let is_busy = is_removing;
-
-                let remove_payload = RemovePayload {
-                    member_id: member_id.clone(),
-                    group_id: group.group_id.clone(),
-                };
-
-                rsx! {
-                    div {
-                        key: "{group.group_id}",
-                        class: "flex flex-row w-fit h-fit items-center gap-1 px-[8px] py-[4px] border border-border bg-card-bg rounded-lg font-medium text-sm text-text-primary",
-                        span { {group.group_name} }
-                        if !is_owner {
-                            button {
-                                class: "ml-1 hover:bg-background rounded-full p-0.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
-                                onclick: move |_| on_remove_from_group.call(remove_payload.clone()),
-                                disabled: is_busy,
-                                title: "Remove from group",
-                                span { class: "text-xs leading-none", "×" }
-                            }
-                        }
-                    }
-                }
-            }
-        });
+    let remove_key = format!("remove:{}", member_id);
+    let is_removing = removing().as_ref() == Some(&remove_key);
 
     let avatar = if is_empty_or_test(&profile_url) {
         rsx! {
@@ -69,6 +35,12 @@ pub fn render_member(
         }
     };
 
+    let role_class = if role == "Admin" {
+        "bg-primary/10 text-primary border-primary/20"
+    } else {
+        "bg-card-bg text-text-primary border-border"
+    };
+
     rsx! {
         div {
             key: "{member_id}",
@@ -78,15 +50,24 @@ pub fn render_member(
                 div { class: "flex flex-col justify-between items-start flex-1 min-w-0",
                     div { class: "font-bold text-text-primary text-base/[20px]", {member.username} }
                     div { class: "font-semibold text-desc-text text-sm/[20px]", {member.display_name} }
-                    if member.is_owner {
+                    if is_owner {
                         div { class: "text-xs text-blue-500 font-medium", "Team owner" }
                     }
                 }
-            }
-
-            div { class: "flex flex-wrap w-full justify-start items-center gap-[10px]",
-                for chip in group_chips {
-                    {chip}
+                div { class: "flex flex-row items-center gap-2 ml-auto",
+                    div {
+                        class: "flex items-center px-[8px] py-[4px] border rounded-lg font-medium text-sm {role_class}",
+                        "{role}"
+                    }
+                    if !is_owner {
+                        Button {
+                            style: ButtonStyle::Text,
+                            size: ButtonSize::Icon,
+                            disabled: is_removing,
+                            onclick: move |_| on_remove.call(RemovePayload { member_id: member_id.clone() }),
+                            lucide_dioxus::X { class: "w-4 h-4 [&>path]:stroke-foreground-muted" }
+                        }
+                    }
                 }
             }
         }

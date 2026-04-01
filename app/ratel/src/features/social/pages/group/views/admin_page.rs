@@ -1,7 +1,8 @@
 use super::super::*;
 use dioxus::prelude::*;
 
-use super::super::components::{CreateGroupModal, InviteMemberModal, InviteResult, ListGroups};
+use super::super::components::{CreateGroupModal, ListGroups};
+use crate::features::social::pages::member::components::{InviteMemberModal, InviteResult};
 use super::super::controllers::{create_group_handler, delete_group_handler, list_groups_handler};
 use super::super::dto::*;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
@@ -53,6 +54,7 @@ pub fn AdminPage(username: String, team_pk: TeamPartition, permissions: i64) -> 
             let on_invited = {
                 let mut refresh = refresh.clone();
                 move |result: InviteResult| {
+                    let _ = result.role;
                     if result.total_added > 0 {
                         refresh.set(refresh() + 1);
                     }
