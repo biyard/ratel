@@ -5,17 +5,19 @@ import { click, fill, goto, waitPopup } from "../utils";
  * Admin Sidebar Menu — Issue #1333
  *
  * Verifies that SystemAdmin users can see and navigate to the Admin panel
- * from the sidebar menu.
+ * from the sidebar menu, and that non-admin users cannot see it.
  *
  * User:
  *   - admin@ratel.foundation (UserType::Admin, user_type=98)
  *     Pre-seeded by LocalStack init script.
+ *   - hi+user1@biyard.co (regular user, via user.json storage state)
  *
  * Flow:
  *   1. Log in as the pre-seeded admin user
  *   2. Verify the "admin-menu" test-id element is visible in the sidebar
  *   3. Click the Admin link and verify navigation to /admin
  *   4. Verify the admin page renders with "Reward Management" content
+ *   5. Verify non-admin users do NOT see the admin menu
  *
  * NOTE: Requires backend built with `--features bypass`.
  */
@@ -78,11 +80,7 @@ test.describe.serial("Admin sidebar menu for SystemAdmin users (#1333)", () => {
     const { context, page } = await loginAsAdmin(browser);
 
     try {
-      await expect(
-        page.getByTestId("admin-menu"),
-      ).toBeVisible({ timeout: 30000 });
-      await page.getByTestId("admin-menu").click();
-      await page.waitForLoadState("load");
+      await click(page, { testId: "admin-menu" });
       await expect(page).toHaveURL(/\/admin/);
     } finally {
       await context.close();
@@ -97,11 +95,7 @@ test.describe.serial("Admin sidebar menu for SystemAdmin users (#1333)", () => {
     const { context, page } = await loginAsAdmin(browser);
 
     try {
-      await expect(
-        page.getByTestId("admin-menu"),
-      ).toBeVisible({ timeout: 30000 });
-      await page.getByTestId("admin-menu").click();
-      await page.waitForLoadState("load");
+      await click(page, { testId: "admin-menu" });
       await expect(page).toHaveURL(/\/admin/);
       await expect(
         page.getByText("Reward Management", { exact: true }),
@@ -109,5 +103,18 @@ test.describe.serial("Admin sidebar menu for SystemAdmin users (#1333)", () => {
     } finally {
       await context.close();
     }
+  });
+
+  // --- 4. Non-admin user should NOT see the Admin menu ---
+
+  test("should NOT show Admin menu item for non-admin users", async ({
+    page,
+  }) => {
+    // The `page` fixture uses the default user.json storage state
+    // (hi+user1@biyard.co), which is a regular non-admin user.
+    await goto(page, "/");
+    await expect(
+      page.getByTestId("admin-menu"),
+    ).toBeHidden({ timeout: 10000 });
   });
 });

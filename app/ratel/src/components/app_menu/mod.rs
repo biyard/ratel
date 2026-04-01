@@ -78,14 +78,7 @@ pub fn AppMenu() -> Element {
                             i::HomeIcon {}
                         },
                     }
-                    NavMenuItem {
-                        href: Route::MembershipHome {},
-                        label: tr.membership,
-                        collapsed,
-                        icon: rsx! {
-                            i::MembershipIcon {}
-                        },
-                    }
+                    MembershipMenuItem { label: tr.membership, collapsed }
 
                     if let Some(user) = user_ctx().user.as_ref() {
                         SidebarMenuItem {
@@ -438,4 +431,25 @@ fn LanguageIcon() -> Element {
             }
         }
     }
+}
+
+#[cfg(feature = "membership")]
+#[component]
+fn MembershipMenuItem(label: &'static str, collapsed: bool) -> Element {
+    rsx! {
+        NavMenuItem {
+            href: Route::MembershipHome {},
+            label,
+            collapsed,
+            icon: rsx! {
+                i::MembershipIcon {}
+            },
+        }
+    }
+}
+
+#[cfg(not(feature = "membership"))]
+#[component]
+fn MembershipMenuItem(label: &'static str, collapsed: bool) -> Element {
+    rsx! {}
 }
