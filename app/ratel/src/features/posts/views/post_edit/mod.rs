@@ -108,7 +108,9 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
     let mut content = use_signal(move || html_contents.clone());
     let mut status = use_signal(|| EditorStatus::Idle);
 
-    let mut last_saved = use_signal(move || (title(), content()));
+    let initial_categories_for_signal = initial_categories.clone();
+    let mut last_saved =
+        use_signal(move || (title(), content(), initial_categories_for_signal.clone()));
     let mut skip_creating_space = use_signal(move || !has_existing_space);
 
     // Category state - multiple categories
@@ -128,10 +130,14 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
     // Auto-save: debounce by tracking an edit version counter.
     // Each edit increments save_version. use_effect fires on change,
     // waits 3 seconds, and only saves if no newer edits occurred.
-    let mut save_version = use_signal(|| 0u64);
+    let save_version = use_signal(|| 0u64);
     let v = post_id.clone();
     use_effect(move || {
         let ver = save_version();
+        let current_title = title();
+        let current_content = content();
+        let current_cats = categories();
+        let saved = last_saved();
         if ver == 0 {
             return;
         }
@@ -144,11 +150,12 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                 return;
             }
 
-            let current_title = title();
-            let current_content = content();
-            let (saved_title, saved_content) = last_saved();
+            let (saved_title, saved_content, saved_categories) = saved;
 
-            if current_title == saved_title && current_content == saved_content {
+            if current_title == saved_title
+                && current_content == saved_content
+                && current_cats == saved_categories
+            {
                 return;
             }
 
@@ -158,6 +165,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                 UpdatePostRequest::Writing {
                     title: current_title.clone(),
                     content: current_content.clone(),
+                    categories: Some(current_cats.clone()),
                 },
             )
             .await
@@ -167,7 +175,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                     html_contents,
                     ..
                 }) => {
-                    last_saved.set((title, html_contents));
+                    last_saved.set((title, html_contents, current_cats));
                     status.set(EditorStatus::Saved);
                 }
                 Err(e) => {
@@ -191,7 +199,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                     image_urls: None,
                     publish: true,
                     visibility: Some(visibility),
-                    categories: Some(categories()).filter(|c| !c.is_empty()),
+                    categories: Some(categories()),
                 },
             )
             .await
@@ -225,7 +233,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                     image_urls: None,
                     publish: false,
                     visibility: None,
-                    categories: Some(categories()).filter(|c| !c.is_empty()),
+                    categories: Some(categories()),
                 },
             )
             .await;
@@ -315,7 +323,6 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                     }
                 }
 
-
                 if status() == EditorStatus::Saving {
                     div { class: "flex gap-2 justify-center items-center mt-4 text-sm text-text-tertiary",
                         div { class: "w-4 h-4 rounded-full border-2 animate-spin border-text-tertiary border-t-transparent" }
@@ -336,9 +343,15 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                         oninput: move |e: Event<FormData>| {
                             let val = e.value();
                             if val.chars().count() <= TITLE_MAX_LENGTH {
-                                title.set(val);
-                                status.set(EditorStatus::Unsaved);
-                                save_version += 1;
+                                title.set(val.clone());
+                                mark_post_unsaved(
+                                    &val,
+                                    &content(),
+                                    &categories(),
+                                    last_saved,
+                                    status,
+                                    save_version,
+                                );
                             }
                         },
                     }
@@ -360,13 +373,29 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                         let lower = tag.to_lowercase();
                         if !current.iter().any(|c| c.to_lowercase() == lower) {
                             current.push(tag);
-                            categories.set(current);
+                            categories.set(current.clone());
+                            mark_post_unsaved(
+                                &title(),
+                                &content(),
+                                &current,
+                                last_saved,
+                                status,
+                                save_version,
+                            );
                         }
                     },
                     on_remove: move |tag: String| {
                         let mut current = categories();
                         current.retain(|c| c != &tag);
-                        categories.set(current);
+                        categories.set(current.clone());
+                        mark_post_unsaved(
+                            &title(),
+                            &content(),
+                            &current,
+                            last_saved,
+                            status,
+                            save_version,
+                        );
                     },
                     on_create_new: move |new_cat: String| {
                         is_creating_category.set(true);
@@ -383,7 +412,15 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                                     let lower = name.to_lowercase();
                                     if !current.iter().any(|c| c.to_lowercase() == lower) {
                                         current.push(name);
-                                        categories.set(current);
+                                        categories.set(current.clone());
+                                        mark_post_unsaved(
+                                            &title(),
+                                            &content(),
+                                            &current,
+                                            last_saved,
+                                            status,
+                                            save_version,
+                                        );
                                     }
                                     cats_query.restart();
                                 }
@@ -403,9 +440,15 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                     editable: true,
                     placeholder: tr.content_placeholder,
                     on_content_change: move |html: String| {
-                        content.set(html);
-                        status.set(EditorStatus::Unsaved);
-                        save_version += 1;
+                        content.set(html.clone());
+                        mark_post_unsaved(
+                            &title(),
+                            &html,
+                            &categories(),
+                            last_saved,
+                            status,
+                            save_version,
+                        );
                     },
                 }
                 if status() != EditorStatus::Idle {
@@ -427,7 +470,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                         }
                     }
                 }
-
+            
             }
         }
     }
@@ -445,4 +488,24 @@ fn strip_html_tags(html: &str) -> String {
         }
     }
     result
+}
+
+fn mark_post_unsaved(
+    current_title: &str,
+    current_content: &str,
+    current_categories: &[String],
+    last_saved: Signal<(String, String, Vec<String>)>,
+    mut status: Signal<EditorStatus>,
+    mut save_version: Signal<u64>,
+) {
+    let (saved_title, saved_content, saved_categories) = last_saved();
+    if current_title == saved_title
+        && current_content == saved_content
+        && current_categories == saved_categories
+    {
+        status.set(EditorStatus::Saved);
+    } else {
+        status.set(EditorStatus::Unsaved);
+        *save_version.write() += 1;
+    }
 }
