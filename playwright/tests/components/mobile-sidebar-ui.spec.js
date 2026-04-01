@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { goto, clickNoNav } from "../utils";
+import { goto } from "../utils";
 import { CONFIGS } from "../config";
 
 /**
@@ -36,15 +36,18 @@ const MOBILE_VIEWPORT = { width: 375, height: 667 };
  * Opens the mobile sidebar sheet by clicking the More button and waits
  * for the inner content to be visible.
  *
- * Uses the shared `clickNoNav` helper for consistent visibility checks
- * and waiting behavior. Retries the click once if the content does not
- * appear, to handle the case where the first click fires before Dioxus
- * has attached handlers.
+ * Uses force:true to bypass Playwright's DOM-stability retry loop —
+ * post-hydration effects (e.g. sidebar is_mobile detection) can keep
+ * mutating the DOM, causing .click() to retry until test timeout.
+ * Retries the click once if the content does not appear, to handle the
+ * case where the first click fires before Dioxus has attached handlers.
  *
  * @returns {import("@playwright/test").Locator} The sidebar content locator.
  */
 async function openMobileSidebar(page) {
-  await clickNoNav(page, { testId: "mobile-more-btn" });
+  const moreBtn = page.getByTestId("mobile-more-btn");
+  await expect(moreBtn).toBeVisible();
+  await moreBtn.click({ force: true });
 
   const sidebarContent = page.getByTestId("mobile-sidebar-content");
 
@@ -52,7 +55,7 @@ async function openMobileSidebar(page) {
     await expect(sidebarContent).toBeVisible({ timeout: 10000 });
   } catch {
     // Retry: first click may have fired before Dioxus attached event handlers
-    await clickNoNav(page, { testId: "mobile-more-btn" });
+    await moreBtn.click({ force: true });
     await expect(sidebarContent).toBeVisible({ timeout: 10000 });
   }
 
@@ -177,9 +180,12 @@ test.describe(
         // Open mobile sidebar
         await openMobileSidebar(page);
 
-        // Click profile button to open dropdown using the shared helper
-        // for consistent visibility checks and waiting behavior
-        await clickNoNav(page, { testId: "sidebar-profile-btn" });
+        // Click profile button to open dropdown.
+        // Use force:true to bypass DOM-stability retry loop (same reason
+        // as the More button — is_mobile signal keeps mutating the DOM).
+        const profileBtn = page.getByTestId("sidebar-profile-btn");
+        await expect(profileBtn).toBeVisible();
+        await profileBtn.click({ force: true });
 
         // The dropdown should contain logout button — it renders outside the
         // sidebar-mobile-inner div (in the ProfileButton's relative wrapper),
