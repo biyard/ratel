@@ -475,13 +475,20 @@ fn SubscriptionCard() -> Element {
                         }
                     }
                 }
-                Row { main_axis_align: MainAxisAlign::Between,
-                    span { class: "text-sm text-foreground-muted", "Credits" }
-                    span { class: "text-sm text-text-primary", "{remaining} / {total}" }
-                }
-                Row { main_axis_align: MainAxisAlign::Between,
-                    span { class: "text-sm text-foreground-muted", "Expires" }
-                    span { class: "text-sm text-text-primary", "{expiry_text}" }
+                if !is_free {
+                    Row { main_axis_align: MainAxisAlign::Between,
+                        span { class: "text-sm text-foreground-muted", "Credits" }
+                        span { class: "text-sm text-text-primary", "{remaining} / {total}" }
+                    }
+                    Row { main_axis_align: MainAxisAlign::Between,
+                        span { class: "text-sm text-foreground-muted", "Expires" }
+                        span { class: "text-sm text-text-primary", "{expiry_text}" }
+                    }
+                } else {
+                    Row { main_axis_align: MainAxisAlign::Between,
+                        span { class: "text-sm text-foreground-muted", "Credits" }
+                        span { class: "text-sm text-text-primary", "0 / {total}" }
+                    }
                 }
                 if !is_free {
                     if let Some(ref masked) = billing.masked_card_number {
