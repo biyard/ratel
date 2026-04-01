@@ -288,6 +288,10 @@ test.describe
   });
 
   test("Create a final poll scheduled one day later", async ({ browser }) => {
+    // Month-boundary calendar navigation (e.g., March 31 → April 1) adds
+    // extra steps that can push total execution past the default 60s timeout.
+    test.setTimeout(120000);
+
     const context = await browser.newContext({
       storageState: "admin1.json",
       viewport: { width: 1440, height: 950 },
