@@ -352,25 +352,23 @@ test.describe
       });
       await showCalendarButtons.first().click();
       // Wait for the calendar popover to render by ensuring tomorrow's date
-      // button in the current month grid is visible before clicking it
-      await expect(
-        page
-          .getByRole("button", { name: tomorrowLabel })
-          .and(page.locator('[data-month="current"]'))
-      ).toBeVisible({ timeout: 5000 });
+      // button in the current month grid is visible before clicking it.
+      // NOTE: data-month="current" is an attribute on the calendar day button
+      // element itself (.calendar-grid-cell), not on a container. Therefore
+      // .and() (intersection) is the correct combinator here — it matches the
+      // single button satisfying both the role/name AND the data attribute.
+      const startDateBtn = page
+        .locator('[data-month="current"]')
+        .getByRole("button", { name: tomorrowLabel });
+      await expect(startDateBtn).toBeVisible({ timeout: 5000 });
 
       // Click tomorrow's day in the calendar using its accessible name.
-      // Use data-month="current" to disambiguate when the same date appears
-      // in both the current and next/prev month overflow grids (e.g., at
+      // data-month="current" disambiguates when the same date appears in
+      // both the current and next/prev month overflow grids (e.g., at
       // month boundaries like March 31 → April 1).
-      await page
-        .getByRole("button", { name: tomorrowLabel })
-        .and(page.locator('[data-month="current"]'))
-        .click();
+      await startDateBtn.click();
       // Wait for the calendar popover to close after selecting the date
-      await expect(
-        page.getByRole("button", { name: tomorrowLabel }).and(page.locator('[data-month="current"]'))
-      ).toBeHidden({ timeout: 5000 });
+      await expect(startDateBtn).toBeHidden({ timeout: 5000 });
 
       // Build accessible name for day after tomorrow (end date)
       const dayAfter = new Date();
@@ -384,23 +382,20 @@ test.describe
 
       // Open the end date calendar popover (second "Show Calendar" button)
       await showCalendarButtons.nth(1).click();
-      // Wait for the end date calendar popover to render
-      await expect(
-        page
-          .getByRole("button", { name: dayAfterLabel })
-          .and(page.locator('[data-month="current"]'))
-      ).toBeVisible({ timeout: 5000 });
+      // Wait for the end date calendar popover to render.
+      // NOTE: data-month="current" is on the button element itself, so we
+      // scope the role locator under the [data-month] selector to target
+      // only the day button in the current month grid.
+      const endDateBtn = page
+        .locator('[data-month="current"]')
+        .getByRole("button", { name: dayAfterLabel });
+      await expect(endDateBtn).toBeVisible({ timeout: 5000 });
 
-      // Click the end date in the calendar (use data-month="current" to
-      // avoid strict mode violation when the date appears in two month grids)
-      await page
-        .getByRole("button", { name: dayAfterLabel })
-        .and(page.locator('[data-month="current"]'))
-        .click();
+      // Click the end date in the calendar (data-month="current" avoids
+      // strict mode violation when the date appears in two month grids)
+      await endDateBtn.click();
       // Wait for the calendar popover to close after selecting the end date
-      await expect(
-        page.getByRole("button", { name: dayAfterLabel }).and(page.locator('[data-month="current"]'))
-      ).toBeHidden({ timeout: 5000 });
+      await expect(endDateBtn).toBeHidden({ timeout: 5000 });
     } finally {
       await context.close();
     }

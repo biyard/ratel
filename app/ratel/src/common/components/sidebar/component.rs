@@ -307,12 +307,18 @@ pub fn Sidebar(
             SidebarSide::Right => SheetSide::Right,
         };
 
-        // Only mount the Sheet when open_mobile is true. The dioxus-primitives
-        // Dialog uses `use_animated_open` which starts with show_in_dom=false
-        // and sets it to true via use_effect. Mounting the Sheet with open=false
-        // then immediately transitioning to open=true can race with the close
-        // animation task, causing content to never render. By only mounting when
-        // open, the Sheet always starts with open=true — no race.
+        // Only mount the Sheet when open_mobile is true. This is an intentional
+        // trade-off: close animations cannot run because the Sheet is unmounted
+        // when open_mobile transitions to false. However, keeping the Sheet
+        // permanently mounted and driving it via a signal causes a race in
+        // dioxus-primitives' `use_animated_open`: it starts with show_in_dom=false
+        // and sets it to true via use_effect. Mounting with open=false then
+        // flipping to open=true races with the close animation task, causing
+        // content to never render. By only mounting when open, the Sheet always
+        // starts with open=true — no race.
+        //
+        // TODO: Revisit once dioxus-primitives supports a stable open/close
+        // lifecycle that does not rely on use_animated_open's initial state.
         if open_m {
             return rsx! {
                 div {

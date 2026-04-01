@@ -35,9 +35,19 @@ Exports a `CONFIGS` object used across all tests:
 
 | Constant | Env Variable | Default | Description |
 |----------|-------------|---------|-------------|
-| `TIMEOUT` | `PLAYWRIGHT_TIMEOUT` | `5000` | Global timeout (ms) for locator waits and test timeout |
-| `BASE_URL` | `PLAYWRIGHT_BASE_URL` | `http://localhost:8000` | Base URL of the Dioxus app |
+| `TIMEOUT` | `PLAYWRIGHT_TIMEOUT` | `30000` | Global timeout (ms) for test-level and navigation timeouts |
+| `BASE_URL` | `PLAYWRIGHT_BASE_URL` | `http://localhost:8080` | Base URL of the Dioxus app |
 | `ID` | `PLAYWRIGHT_ID` | `Date.now()` | Unique ID for test isolation |
+
+**Timeout hierarchy:**
+
+| Timeout | Value | Controls |
+|---------|-------|----------|
+| `test.timeout` (`CONFIGS.TIMEOUT`) | 30s | Maximum time a single test can run |
+| `navigationTimeout` (`CONFIGS.TIMEOUT`) | 30s | Maximum time for `page.goto()`, `page.waitForURL()`, etc. |
+| `expect.timeout` | 5s local / 10s CI | Maximum time for `expect(locator)` assertions (e.g., `toBeVisible()`) |
+
+`CONFIGS.TIMEOUT` controls test-level and navigation timeouts. The `expect.timeout` is configured separately in `playwright.config.js` and is intentionally shorter — assertions should resolve quickly while tests and navigations get more headroom. Helpers like `getLocator()` rely on `expect`'s default timeout for visibility checks.
 
 ### `playwright.config.js`
 
@@ -120,13 +130,16 @@ await click(page, { text: "Continue" });
 await click(page, { label: "Create Post" });
 ```
 
-### `clickNoNav(page, opts)`
+### `clickNoNav(page, opts, clickOptions?)`
 
 Like `click()`, but skips `waitForLoadState("load")` after clicking. Use this for non-navigation UI interactions (e.g., opening a sidebar sheet, toggling a panel) where `waitForLoadState` would resolve immediately or hang because no page navigation occurs.
+
+The optional third parameter `clickOptions` is forwarded directly to Playwright's `locator.click(options)`. Use it when you need click modifiers like `{ force: true }` to bypass DOM-stability retry loops (e.g., when post-hydration effects keep mutating the DOM).
 
 ```js
 await clickNoNav(page, { testId: "mobile-more-btn" });  // opens sidebar sheet, no navigation
 await clickNoNav(page, { testId: "toggle-panel" });       // toggles a panel
+await clickNoNav(page, { testId: "mobile-more-btn" }, { force: true });  // force-click, bypassing DOM stability checks
 ```
 
 ### `fill(page, opts, value)`
