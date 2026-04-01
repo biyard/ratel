@@ -337,7 +337,6 @@ test.describe
       await page.waitForLoadState("load");
 
       // Build accessible name for tomorrow (e.g., "Tuesday, March 31, 2026")
-      const today = new Date();
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       const tomorrowLabel = tomorrow.toLocaleDateString("en-US", {
@@ -354,19 +353,13 @@ test.describe
       await showCalendarButtons.first().click();
       await page.waitForLoadState("load");
 
-      // If tomorrow is in a different month, navigate the calendar forward
-      // so the target date appears as data-month="current".
-      if (tomorrow.getMonth() !== today.getMonth()) {
-        await page.locator(".calendar-nav-next").click();
-        await page.waitForLoadState("load");
-      }
-
       // Click tomorrow's day in the calendar using its accessible name.
-      // Filter by data-month="current" to avoid ambiguity at month boundaries
-      // where the same date can appear in both "next" month preview and "current" month.
+      // Use .first() to avoid strict mode violation when the date appears
+      // in multiple month sections of the calendar grid (e.g. at month
+      // boundaries where the day shows in both "current" and "next").
       await page
         .getByRole("button", { name: tomorrowLabel })
-        .and(page.locator('[data-month="current"]'))
+        .first()
         .click();
       await page.waitForLoadState("load");
 
@@ -384,19 +377,11 @@ test.describe
       await showCalendarButtons.nth(1).click();
       await page.waitForLoadState("load");
 
-      // If end date is in a different month than the start date (tomorrow),
-      // navigate the calendar forward. The end date calendar opens to the
-      // auto-adjusted end date's month (same as tomorrow's month after
-      // duration preservation), so compare against tomorrow, not today.
-      if (dayAfter.getMonth() !== tomorrow.getMonth()) {
-        await page.locator(".calendar-nav-next").click();
-        await page.waitForLoadState("load");
-      }
-
-      // Click the end date in the calendar (filter by data-month="current")
+      // Click the end date in the calendar — use .first() to handle
+      // month boundaries where the date may appear in multiple sections.
       await page
         .getByRole("button", { name: dayAfterLabel })
-        .and(page.locator('[data-month="current"]'))
+        .first()
         .click();
       await page.waitForLoadState("load");
     } finally {
