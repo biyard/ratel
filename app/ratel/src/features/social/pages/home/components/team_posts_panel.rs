@@ -49,8 +49,12 @@ pub fn TeamPostsPanel(
                 match view_mode {
                     HomeViewMode::Card => rsx! {
                         div { class: "grid grid-cols-2 max-mobile:grid-cols-1 items-stretch gap-10 max-tablet:gap-4",
-                            for post in items {
-                                TeamPostCard { key: "card-{post.pk}", post: post.clone() }
+                            for (idx, post) in items.iter().cloned().enumerate() {
+                                TeamPostCard {
+                                    key: "card-{post.pk}",
+                                    post,
+                                    full_width: items.len() % 2 == 1 && idx == items.len() - 1,
+                                }
                             }
                         }
                     },
@@ -74,7 +78,7 @@ pub fn TeamPostsPanel(
 // --- Card view item ---
 
 #[component]
-fn TeamPostCard(post: PostResponse) -> Element {
+fn TeamPostCard(post: PostResponse, #[props(default = false)] full_width: bool) -> Element {
     let post_url = post.url();
     let post_pk = post.pk.clone();
     let nav = use_navigator();
@@ -90,7 +94,11 @@ fn TeamPostCard(post: PostResponse) -> Element {
 
     rsx! {
         div {
-            class: "block h-full cursor-pointer",
+            class: if full_width {
+                "col-span-2 max-mobile:col-span-1 block h-full cursor-pointer"
+            } else {
+                "block h-full cursor-pointer"
+            },
             onclick: move |_| {
                 nav.push(post_url.clone());
             },

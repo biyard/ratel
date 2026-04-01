@@ -69,7 +69,7 @@ pub fn FollowUserInvite(space_id: SpacePartition, on_refresh: EventHandler<()>) 
             }
             div { class: "flex flex-col gap-5 items-start self-stretch p-5 bg-card max-mobile:p-4",
                 div { class: "flex items-start w-full gap-[10px] max-tablet:flex-col",
-                    div { class: "flex flex-col flex-1 gap-2 justify-center items-start",
+                    div { class: "flex flex-col flex-1 gap-2 justify-center items-start w-full",
                         p { class: "font-semibold sp-dash-font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-font-primary",
                             {tr.identifier_label}
                         }

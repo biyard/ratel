@@ -195,6 +195,10 @@ pub enum Error {
     #[translate(from)]
     ExchangePoints(#[from] crate::features::social::pages::user_reward::controllers::ExchangePointsError),
 
+    #[error("{0}")]
+    #[translate(from)]
+    Member(#[from] crate::features::social::pages::member::types::MemberError),
+
     // Post related errors
     #[error("Invalid username")]
     #[translate(en = "Invalid username. Check URL.", ko = "유효하지 않은 사용자 이름입니다. URL을 확인해주세요.")]
@@ -263,6 +267,7 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             Error::SpaceActionQuiz(e) => e.status_code(),
             Error::SpaceActionDiscussion(e) => e.status_code(),
             Error::ExchangePoints(e) => e.status_code(),
+            Error::Member(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
@@ -321,7 +326,13 @@ impl dioxus::fullstack::AsStatusCode for Error {
             Error::SpaceActionQuiz(e) => e.status_code(),
             Error::SpaceActionDiscussion(e) => e.status_code(),
             Error::ExchangePoints(e) => e.status_code(),
+            Error::Member(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }
+
+// Note: From<Error> for lambda_runtime::Error (= Box<dyn std::error::Error + Send + Sync>)
+// is provided by the blanket impl in std, since Error implements std::error::Error + Send + Sync.
+// This preserves the full error source chain for Lambda debugging, unlike the previous
+// to_string()-based conversion.

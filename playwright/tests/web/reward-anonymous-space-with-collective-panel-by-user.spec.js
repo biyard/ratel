@@ -377,8 +377,9 @@ test.describe
       await showCalendarButtons.nth(1).click();
       await page.waitForLoadState("load");
 
-      // Click the end date in the calendar — use .first() to handle
-      // month boundaries where the date may appear in multiple sections.
+      // Click the end date in the calendar using its accessible name.
+      // Use .first() to avoid strict mode violation when the date appears
+      // in multiple month sections of the calendar grid.
       await page
         .getByRole("button", { name: dayAfterLabel })
         .first()
