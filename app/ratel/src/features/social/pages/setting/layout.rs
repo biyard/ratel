@@ -146,7 +146,7 @@ fn SettingsSidemenu(username: String) -> Element {
                     route: settings_route,
                 }
                 SettingNavItem {
-                    label: "Team management".to_string(),
+                    label: tr.team_management.to_string(),
                     route: management_route,
                 }
                 if is_admin {

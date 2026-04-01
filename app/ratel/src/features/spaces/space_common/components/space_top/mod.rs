@@ -1,5 +1,5 @@
 use crate::common::{
-    icons::{edit::Eye, home::Home1},
+    icons::{edit::{Eye, EyeOff}, home::Home1},
     models::space::SpaceCommon,
 };
 
@@ -86,7 +86,11 @@ pub fn SpaceTop(
                         onclick: move |_| {
                             ctx.toggle_role();
                         },
-                        Eye { class: "w-4 h-4 [&>path]:fill-icon-secondary [&>path]:stroke-icon-secondary [&>circle]:stroke-icon-secondary max-tablet:w-5 max-tablet:h-5 max-tablet:[&>path]:fill-icon-primary max-tablet:[&>path]:stroke-icon-primary max-tablet:[&>circle]:stroke-icon-primary" }
+                        if can_preview {
+                            Eye { class: "w-4 h-4 [&>path]:fill-icon-secondary [&>path]:stroke-icon-secondary [&>circle]:stroke-icon-secondary max-tablet:w-5 max-tablet:h-5 max-tablet:[&>path]:fill-icon-primary max-tablet:[&>path]:stroke-icon-primary max-tablet:[&>circle]:stroke-icon-primary" }
+                        } else {
+                            EyeOff { class: "w-4 h-4 [&>path]:stroke-icon-secondary [&>line]:stroke-icon-secondary max-tablet:w-5 max-tablet:h-5 max-tablet:[&>path]:stroke-icon-primary max-tablet:[&>line]:stroke-icon-primary" }
+                        }
                         p { class: "max-tablet:hidden",
                             if can_preview {
                                 {tr.preview}

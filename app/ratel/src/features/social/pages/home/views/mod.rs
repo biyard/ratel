@@ -1,12 +1,14 @@
 use crate::common::*;
-use crate::features::social::pages::home::components::*;
-use crate::features::social::pages::home::HomeViewMode;
-use crate::features::social::Route;
-use crate::features::social::controllers::find_team::find_team_handler;
+use crate::features::my_follower::controllers::{
+    check_follow_status_handler, follow_user, unfollow_user,
+};
 use crate::features::posts::controllers::create_post::create_post_handler;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use crate::features::posts::*;
-use crate::features::my_follower::controllers::{check_follow_status_handler, follow_user, unfollow_user};
+use crate::features::social::controllers::find_team::find_team_handler;
+use crate::features::social::pages::home::components::*;
+use crate::features::social::pages::home::HomeViewMode;
+use crate::features::social::Route;
 
 translate! {
     HomeTranslate;
@@ -60,7 +62,9 @@ pub fn Home(username: String) -> Element {
     let team_detail = use_resource(use_reactive((&username,), |(name,)| async move {
         find_team_handler(name).await.ok()
     }));
-    let thumbnail_url = team_detail.read().as_ref()
+    let thumbnail_url = team_detail
+        .read()
+        .as_ref()
         .and_then(|opt| opt.as_ref())
         .and_then(|t| t.thumbnail_url.clone())
         .unwrap_or_default();
@@ -69,20 +73,31 @@ pub fn Home(username: String) -> Element {
     let username_for_status = username.clone();
     let follow_status = use_server_future(move || {
         let name = username_for_status.clone();
-        async move { check_follow_status_handler(name).await }
+        async move {
+            check_follow_status_handler(name).await.map_err(|e| {
+                tracing::error!("check_follow_status failed: {e}");
+                e
+            })
+        }
     })?;
 
     let follow_status_val = follow_status.read();
     let initial_status = follow_status_val.as_ref().unwrap();
 
     let mut is_following = use_signal(move || {
-        initial_status.as_ref().map(|s| s.is_following).unwrap_or(false)
+        initial_status
+            .as_ref()
+            .map(|s| s.is_following)
+            .unwrap_or(false)
     });
     let mut processing = use_signal(|| false);
 
     let follow_target_pk = initial_status.as_ref().ok().map(|s| s.target_pk.clone());
 
-    let settings_route = Route::TeamSetting { username: username.clone() }.to_string();
+    let settings_route = Route::TeamSetting {
+        username: username.clone(),
+    }
+    .to_string();
 
     let selected_category = use_context::<Signal<Option<String>>>();
 
@@ -169,27 +184,31 @@ pub fn Home(username: String) -> Element {
                 }
             }
 
-            // Create button
-            button {
-                class: "flex items-center gap-2.5 bg-white hover:bg-neutral-200 text-neutral-900 light:bg-[#404040] light:hover:bg-neutral-700 light:text-white px-5 py-3 h-[44px] rounded-full text-sm font-medium transition-colors cursor-pointer",
-                onclick: move |_| {
-                    let team_pk = team_pk_str.clone();
-                    let nav = nav.clone();
-                    async move {
-                        let team_id = team_pk.map(|pk| pk.parse().unwrap_or_default());
-                        match create_post_handler(team_id).await {
-                            Ok(resp) => {
-                                let post_pk: FeedPartition = resp.post_pk.into();
-                                nav.push(format!("/posts/{post_pk}/edit"));
-                            }
-                            Err(e) => {
-                                debug!("Failed to create post: {:?}", e);
+            // Create button — only visible to admins/editors
+            if is_creator {
+                Button {
+                    style: ButtonStyle::Primary,
+                    shape: ButtonShape::Rounded,
+                    class: "flex flex-row items-center gap-2",
+                    onclick: move |_| {
+                        let team_pk = team_pk_str.clone();
+                        let nav = nav.clone();
+                        async move {
+                            let team_id = team_pk.map(|pk| pk.parse().unwrap_or_default());
+                            match create_post_handler(team_id).await {
+                                Ok(resp) => {
+                                    let post_pk: FeedPartition = resp.post_pk.into();
+                                    nav.push(format!("/posts/{post_pk}/edit"));
+                                }
+                                Err(e) => {
+                                    debug!("Failed to create post: {:?}", e);
+                                }
                             }
                         }
-                    }
-                },
-                icons::edit::Edit1 { class: "w-4 h-4 [&>path]:stroke-neutral-900 light:[&>path]:stroke-white" }
-                span { "{tr.create}" }
+                    },
+                    icons::edit::Edit1 { class: "w-4 h-4 [&>path]:stroke-btn-primary-text [&>path]:fill-none" }
+                    "{tr.create}"
+                }
             }
             } // end flex items-center justify-between
 

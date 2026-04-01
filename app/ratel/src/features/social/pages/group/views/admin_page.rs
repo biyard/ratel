@@ -1,7 +1,8 @@
 use super::super::*;
 use dioxus::prelude::*;
 
-use super::super::components::{CreateGroupModal, InviteMemberModal, InviteResult, ListGroups};
+use super::super::components::{CreateGroupModal, ListGroups};
+use crate::features::social::pages::member::components::{InviteMemberModal, InviteResult};
 use super::super::controllers::{create_group_handler, delete_group_handler, list_groups_handler};
 use super::super::dto::*;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
@@ -38,7 +39,6 @@ pub fn AdminPage(username: String, team_pk: TeamPartition, permissions: i64) -> 
         let mut popup = popup;
         let team_pk = team_pk.clone();
         let username = username.clone();
-        let groups = groups.clone();
         let can_edit_group = can_edit_group;
         let mut refresh = refresh.clone();
         move |_evt: MouseEvent| {
@@ -54,6 +54,7 @@ pub fn AdminPage(username: String, team_pk: TeamPartition, permissions: i64) -> 
             let on_invited = {
                 let mut refresh = refresh.clone();
                 move |result: InviteResult| {
+                    let _ = result.role;
                     if result.total_added > 0 {
                         refresh.set(refresh() + 1);
                     }
@@ -63,7 +64,6 @@ pub fn AdminPage(username: String, team_pk: TeamPartition, permissions: i64) -> 
                 InviteMemberModal {
                     team_pk: team_pk.clone(),
                     username: username.clone(),
-                    groups: groups.clone(),
                     on_close,
                     on_invited,
                 }

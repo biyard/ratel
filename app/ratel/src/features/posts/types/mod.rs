@@ -1,5 +1,8 @@
 pub mod author;
 pub mod booster_type;
+pub mod post_comment_target;
+
+pub use post_comment_target::*;
 pub mod post_status;
 pub mod post_type;
 pub mod space_publish_state;
