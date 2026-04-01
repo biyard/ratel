@@ -1,4 +1,4 @@
-use super::super::dto::{AddTeamMemberRequest, AddTeamMemberResponse};
+use super::super::dto::{AddTeamMemberRequest, AddTeamMemberResponse, TeamRole};
 use super::super::*;
 
 use crate::features::posts::models::Team;
@@ -21,9 +21,9 @@ pub async fn add_team_member_handler(
         return Err(Error::UnauthorizedAccess);
     }
 
-    let group_permissions: i64 = match body.role.as_str() {
-        "admin" => TeamGroupPermissions::all().into(),
-        _ => TeamGroupPermissions::member().into(),
+    let group_permissions: i64 = match body.role {
+        TeamRole::Admin => TeamGroupPermissions::all().into(),
+        TeamRole::Member => TeamGroupPermissions::member().into(),
     };
 
     let mut success_count = 0i64;
@@ -59,7 +59,7 @@ pub async fn add_team_member_handler(
             .await?;
         }
 
-        let team_group_sk = EntityType::TeamGroup(body.role.clone());
+        let team_group_sk = EntityType::TeamGroup(body.role.to_string());
         let user_team_group_sk = EntityType::UserTeamGroup(team_group_sk.to_string());
         if crate::features::auth::UserTeamGroup::get(cli, &user.pk, Some(&user_team_group_sk))
             .await?

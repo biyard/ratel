@@ -76,7 +76,7 @@ pub async fn list_members_handler(
 
         let perms: TeamGroupPermissions = utg.team_group_permissions.into();
         let is_admin = perms.contains(TeamGroupPermission::TeamAdmin);
-        let role = if is_admin { "Admin" } else { "Member" };
+        let role = if is_admin { TeamRole::Admin } else { TeamRole::Member };
 
         let entry = members_map
             .entry(user_pk_str.clone())
@@ -85,13 +85,13 @@ pub async fn list_members_handler(
                 username: user.username.clone(),
                 display_name: user.display_name.clone(),
                 profile_url: user.profile_url.clone(),
-                role: role.to_string(),
+                role,
                 is_owner: false,
             });
 
         // Admin wins if user has multiple groups
         if is_admin {
-            entry.role = "Admin".to_string();
+            entry.role = TeamRole::Admin;
         }
     }
 
@@ -104,7 +104,7 @@ pub async fn list_members_handler(
                     username: team_owner.username.clone(),
                     display_name: team_owner.display_name.clone(),
                     profile_url: team_owner.profile_url.clone(),
-                    role: "Admin".to_string(),
+                    role: TeamRole::Admin,
                     is_owner: true,
                 });
                 entry.is_owner = true;

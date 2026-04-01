@@ -4,7 +4,7 @@ use crate::features::social::pages::member::components::{InviteMemberModal, Invi
 use crate::features::social::pages::member::controllers::{
     get_team_member_permission_handler, list_members_handler,
 };
-use crate::features::social::pages::member::dto::TeamMemberResponse;
+use crate::features::social::pages::member::dto::{TeamMemberResponse, TeamRole};
 use crate::features::social::pages::setting::i18n::TeamSettingsTranslate;
 use crate::features::social::*;
 use dioxus::prelude::*;
@@ -234,7 +234,7 @@ fn MemberRow(member: TeamMemberResponse, is_last: bool, on_remove: EventHandler<
                 } else {
                     span { class: "text-sm text-foreground-muted shrink-0",
                         {
-                            if member.role.eq_ignore_ascii_case("admin") {
+                            if member.role == TeamRole::Admin {
                                 tr.admin_role.to_string()
                             } else {
                                 tr.member_role.to_string()
