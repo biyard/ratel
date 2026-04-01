@@ -11,7 +11,7 @@ pub enum FindUserQueryType {
     PhoneNumber,
 }
 
-#[get("/api/users/find?user_type&value", user: crate::features::auth::OptionalUser)]
+#[get("/api/users/find?user_type&value", _user: crate::features::auth::OptionalUser)]
 pub async fn find_user_handler(
     user_type: FindUserQueryType,
     value: String,
