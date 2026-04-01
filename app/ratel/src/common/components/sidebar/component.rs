@@ -333,8 +333,16 @@ pub fn Sidebar(
                             role: "dialog",
                             aria_modal: "true",
                             aria_label: "Sidebar",
+                            tabindex: "0",
+                            autofocus: "true",
                             onclick: move |e| {
                                 e.stop_propagation();
+                            },
+                            onkeydown: move |e| {
+                                if e.key() == Key::Escape {
+                                    e.stop_propagation();
+                                    ctx.set_open_mobile(false);
+                                }
                             },
                             div {
                                 class: "sidebar-mobile-inner",

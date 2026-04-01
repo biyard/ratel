@@ -4,7 +4,7 @@ This document provides comprehensive instructions for writing and maintaining Pl
 
 ## Overview
 
-Playwright tests verify the Dioxus fullstack app (served at `http://localhost:8000`) through browser automation. Tests are written in plain JavaScript and use a shared utility layer for consistent element interaction. All authenticated tests depend on a global auth setup that logs in once and saves browser storage state.
+Playwright tests verify the Dioxus fullstack app (served at `http://localhost:8080`) through browser automation. Tests are written in plain JavaScript and use a shared utility layer for consistent element interaction. All authenticated tests depend on a global auth setup that logs in once and saves browser storage state.
 
 ## Directory Structure
 
@@ -47,7 +47,7 @@ Exports a `CONFIGS` object used across all tests:
 | `navigationTimeout` (`CONFIGS.TIMEOUT`) | 30s | Maximum time for `page.goto()`, `page.waitForURL()`, etc. |
 | `expect.timeout` | 5s local / 10s CI | Maximum time for `expect(locator)` assertions (e.g., `toBeVisible()`) |
 
-`CONFIGS.TIMEOUT` controls test-level and navigation timeouts. The `expect.timeout` is configured separately in `playwright.config.js` and is intentionally shorter — assertions should resolve quickly while tests and navigations get more headroom. Helpers like `getLocator()` rely on `expect`'s default timeout for visibility checks.
+`CONFIGS.TIMEOUT` controls test-level and navigation timeouts. The `expect.timeout` is configured separately in `playwright.config.js` and is intentionally shorter — assertions should resolve quickly while tests and navigations get more headroom. Helpers like `getLocator()` perform visibility checks using the configured assertion timeout; see the `getLocator()` section below for details.
 
 ### `playwright.config.js`
 
@@ -116,8 +116,8 @@ All interaction helpers are defined in `tests/utils.js`. **Always use these inst
 Navigates to `BASE_URL + path` with `waitUntil: "load"`, then waits for the Dioxus WASM app to hydrate by checking for `[data-dioxus-id]` elements in the DOM.
 
 ```js
-await goto(page, "/");           // → http://localhost:8000/
-await goto(page, "/spaces");     // → http://localhost:8000/spaces
+await goto(page, "/");           // → http://localhost:8080/
+await goto(page, "/spaces");     // → http://localhost:8080/spaces
 ```
 
 ### `click(page, opts)`
@@ -153,7 +153,7 @@ await fill(page, { placeholder: "Title" }, "My Post Title");
 
 ### `getLocator(page, opts)`
 
-Finds an element using locator options, asserts it's visible (with `CONFIGS.TIMEOUT`), and returns the locator. Use this for visibility assertions.
+Finds an element using locator options, asserts it's visible (using the configured `expect.timeout` from `playwright.config.js`), and returns the locator. Use this for visibility assertions.
 
 ```js
 // Assert that "Publish" button is visible
@@ -388,8 +388,8 @@ PLAYWRIGHT_ID=my-test-run npx playwright test
 
 ### Test Times Out
 
-- Default timeout is 5000ms. Increase with `PLAYWRIGHT_TIMEOUT` env var.
-- Ensure the app is running at `http://localhost:8000` (or set `PLAYWRIGHT_BASE_URL`).
+- Default test timeout is 30000ms (30s). Increase with `PLAYWRIGHT_TIMEOUT` env var.
+- Ensure the app is running at `http://localhost:8080` (or set `PLAYWRIGHT_BASE_URL`).
 - Check that the Dioxus WASM app is loading correctly (the `goto()` helper waits for `[data-dioxus-id]` elements to be present).
 
 ### Auth Setup Fails
@@ -401,7 +401,7 @@ PLAYWRIGHT_ID=my-test-run npx playwright test
 ### Element Not Found
 
 - Use `npx playwright test --debug` to step through and inspect the DOM.
-- Verify the locator matches by checking the app in a browser at `http://localhost:8000`.
+- Verify the locator matches by checking the app in a browser at `http://localhost:8080`.
 - Ensure you're using the correct locator option (`testId`, `label`, `role`, `placeholder`, `text`).
 
 ### Stale `user.json`
