@@ -1,7 +1,7 @@
+use crate::features::auth::User;
 use crate::features::posts::models::*;
 use crate::features::posts::types::*;
 use crate::features::posts::*;
-use crate::features::auth::User;
 
 #[cfg(feature = "server")]
 use crate::features::posts::utils::validator::{validate_content, validate_title};
@@ -24,6 +24,7 @@ pub enum UpdatePostRequest {
     Writing {
         title: String,
         content: String,
+        categories: Option<Vec<String>>,
     },
     Image {
         images: Vec<String>,
@@ -61,14 +62,22 @@ pub async fn update_post_handler(post_id: FeedPartition, req: UpdatePostRequest)
     post.updated_at = now;
 
     let transacts = match req {
-        UpdatePostRequest::Writing { title, content } => {
+        UpdatePostRequest::Writing {
+            title,
+            content,
+            categories,
+        } => {
             post.title = title.clone();
             post.html_contents = content.clone();
+            if let Some(ref cats) = categories {
+                post.categories = cats.clone();
+            }
 
-            vec![updater
-                .with_title(title)
-                .with_html_contents(content)
-                .transact_write_item()]
+            let mut updater = updater.with_title(title).with_html_contents(content);
+            if let Some(cats) = categories {
+                updater = updater.with_categories(cats);
+            }
+            vec![updater.transact_write_item()]
         }
         UpdatePostRequest::Image { images } => {
             post.urls = images.clone();
@@ -157,7 +166,12 @@ pub async fn update_post_handler(post_id: FeedPartition, req: UpdatePostRequest)
     crate::transact_write_items!(cli, transacts)?;
 
     if post.status == PostStatus::Published {
-        crate::features::posts::services::index_post_async(conf.qdrant(), conf.bedrock_embeddings(), &post).await;
+        crate::features::posts::services::index_post_async(
+            conf.qdrant(),
+            conf.bedrock_embeddings(),
+            &post,
+        )
+        .await;
 
         #[cfg(feature = "local-dev")]
         {

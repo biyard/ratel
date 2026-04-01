@@ -1,4 +1,5 @@
 use crate::features::posts::models::*;
+use crate::features::posts::types::PostCommentTargetEntityType;
 use crate::features::posts::*;
 use crate::features::auth::User;
 
@@ -11,7 +12,7 @@ pub struct LikeCommentResponse {
 #[post("/api/posts/:post_id/comments/:comment_id/like", user: User)]
 pub async fn like_comment_handler(
     post_id: FeedPartition,
-    comment_id: PostCommentEntityType,
+    comment_id: PostCommentTargetEntityType,
     liked: bool,
 ) -> Result<LikeCommentResponse> {
     let conf = crate::features::posts::config::get();

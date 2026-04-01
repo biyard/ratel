@@ -165,18 +165,32 @@ pub fn OverviewTab() -> Element {
             }
 
             // Category input
-            div { class: "flex flex-col gap-2 w-full",
-                span { class: "font-bold text-[15px]/[18px] tracking-[-0.16px] text-text-primary",
-                    {tr.category_label}
-                }
-                Input {
-                    class: "w-full bg-transparent".to_string(),
-                    placeholder: tr.category_placeholder,
-                    value: category_name(),
-                    oninput: move |evt: Event<FormData>| {
-                        category_name.set(evt.value());
-                        mark_changed();
-                    },
+            {
+                let categories_res = use_server_future(move || list_categories(space_id()))?;
+                let available_categories = categories_res.read().as_ref()
+                    .and_then(|r| r.as_ref().ok())
+                    .cloned()
+                    .unwrap_or_default();
+
+                rsx! {
+                    div { class: "flex flex-col gap-2 w-full",
+                        span { class: "font-bold text-[15px]/[18px] tracking-[-0.16px] text-text-primary",
+                            {tr.category_label}
+                        }
+                        SearchInput {
+                            tags: if category_name().is_empty() { vec![] } else { vec![category_name()] },
+                            suggestions: available_categories,
+                            placeholder: tr.category_placeholder,
+                            on_add: move |tag: String| {
+                                category_name.set(tag);
+                                mark_changed();
+                            },
+                            on_remove: move |_tag: String| {
+                                category_name.set(String::new());
+                                mark_changed();
+                            },
+                        }
+                    }
                 }
             }
 
