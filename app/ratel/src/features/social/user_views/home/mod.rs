@@ -6,7 +6,7 @@ use crate::features::social::pages::home::components::TeamHeader;
 use crate::features::posts::controllers::create_post::create_post_handler;
 use crate::features::posts::*;
 use crate::features::my_follower::controllers::{check_follow_status_handler, follow_user, unfollow_user};
-use crate::features::social::controllers::find_user::find_user_by_username_handler;
+use crate::features::social::controllers::{find_user_handler, FindUserQueryType};
 use dioxus::prelude::*;
 
 #[derive(Clone, Copy, PartialEq, Default)]
@@ -41,14 +41,14 @@ pub fn Home(username: String) -> Element {
 
     // Load user profile
     let user_detail = use_resource(use_reactive((&username,), |(name,)| async move {
-        find_user_by_username_handler(name).await.ok()
+        find_user_handler(FindUserQueryType::Username, name).await.ok()
     }));
 
     let (display_name, profile_url, description) = {
         let detail = user_detail.read();
         match detail.as_ref().and_then(|opt| opt.as_ref()) {
             Some(u) => (
-                if u.display_name.is_empty() { u.username.clone() } else { u.display_name.clone() },
+                if u.nickname.is_empty() { u.username.clone() } else { u.nickname.clone() },
                 u.profile_url.clone(),
                 u.description.clone(),
             ),

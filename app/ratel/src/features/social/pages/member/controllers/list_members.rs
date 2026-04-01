@@ -1,7 +1,7 @@
 use super::super::dto::*;
 use super::super::*;
 
-use crate::features::posts::models::{TeamGroup, TeamOwner};
+use crate::features::posts::models::TeamOwner;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use std::collections::{HashMap, HashSet};
 
@@ -16,23 +16,18 @@ pub async fn list_members_handler(
     let team_pk: Partition = team_pk.into();
 
     let user: Option<crate::features::auth::User> = user.into();
-    let Some(user) = user else {
-        return Err(Error::Unauthorized(
-            "You don't have permission to view members.".to_string(),
-        ));
+    let Some(_user) = user else {
+        return Err(Error::NoPermission);
     };
 
     let can_view = permissions.contains(TeamGroupPermission::TeamAdmin)
         || permissions.contains(TeamGroupPermission::TeamEdit)
         || permissions.contains(TeamGroupPermission::GroupEdit);
     if !can_view {
-        return Err(Error::Unauthorized(
-            "You don't have permission to view members.".to_string(),
-        ));
+        return Err(Error::NoPermission);
     }
 
-    let team_owner = TeamOwner::get(cli, &team_pk, Some(&EntityType::TeamOwner)).await?;
-
+    let is_first_page = bookmark.is_none();
     let page_limit = limit.unwrap_or(50).min(100);
     let mut query_options = crate::features::auth::UserTeamGroupQueryOption::builder().limit(page_limit);
     if let Some(bookmark) = bookmark {
@@ -41,26 +36,6 @@ pub async fn list_members_handler(
 
     let (all_user_team_groups, next_bookmark) =
         crate::features::auth::UserTeamGroup::find_by_team_pk(cli, team_pk.clone(), query_options).await?;
-
-    let (team_groups, _) = TeamGroup::query(
-        cli,
-        team_pk.clone(),
-        TeamGroup::opt()
-            .limit(100)
-            .sk(EntityType::TeamGroup(String::default()).to_string()),
-    )
-    .await?;
-
-    let group_map: HashMap<String, TeamGroup> = team_groups
-        .into_iter()
-        .map(|group| {
-            let key = match &group.sk {
-                EntityType::TeamGroup(uuid) => format!("TEAM_GROUP#{}", uuid),
-                _ => group.sk.to_string(),
-            };
-            (key, group)
-        })
-        .collect();
 
     let user_keys: Vec<_> = {
         let mut seen = HashSet::new();
@@ -91,15 +66,13 @@ pub async fn list_members_handler(
     for utg in all_user_team_groups {
         let user_pk_str = utg.pk.to_string();
 
-        let group_sk_string = if let EntityType::UserTeamGroup(inner) = &utg.sk {
-            inner.clone()
-        } else {
-            continue;
-        };
-
         let Some(user) = user_map.get(&user_pk_str) else {
             continue;
         };
+
+        let perms: TeamGroupPermissions = utg.team_group_permissions.into();
+        let is_admin = perms.contains(TeamGroupPermission::TeamAdmin);
+        let role = if is_admin { TeamRole::Admin } else { TeamRole::Member };
 
         let entry = members_map
             .entry(user_pk_str.clone())
@@ -108,47 +81,43 @@ pub async fn list_members_handler(
                 username: user.username.clone(),
                 display_name: user.display_name.clone(),
                 profile_url: user.profile_url.clone(),
-                groups: Vec::new(),
+                role,
                 is_owner: false,
             });
 
-        if let Some(group) = group_map.get(&group_sk_string) {
-            let group_id = if let EntityType::TeamGroup(uuid) = &group.sk {
-                uuid.clone()
-            } else {
-                group.sk.to_string()
-            };
-
-            entry.groups.push(MemberGroup {
-                group_id,
-                group_name: group.name.clone(),
-                description: group.description.clone(),
-            });
+        // Admin wins if user has multiple groups
+        if is_admin {
+            entry.role = TeamRole::Admin;
         }
     }
 
-    if let Some(owner) = team_owner {
-        let owner_pk_str = owner.user_pk.to_string();
-        let owner_entry =
-            members_map
-                .entry(owner_pk_str.clone())
-                .or_insert_with(|| TeamMemberResponse {
-                    user_id: owner_pk_str.clone(),
-                    username: owner.username.clone(),
-                    display_name: owner.display_name.clone(),
-                    profile_url: owner.profile_url.clone(),
-                    groups: Vec::new(),
+    let owner_member = if is_first_page {
+        match TeamOwner::get(cli, &team_pk, Some(&EntityType::TeamOwner)).await? {
+            Some(team_owner) => {
+                let owner_pk_str = team_owner.user_pk.to_string();
+                let mut entry = members_map.remove(&owner_pk_str).unwrap_or_else(|| TeamMemberResponse {
+                    user_id: owner_pk_str,
+                    username: team_owner.username.clone(),
+                    display_name: team_owner.display_name.clone(),
+                    profile_url: team_owner.profile_url.clone(),
+                    role: TeamRole::Admin,
                     is_owner: true,
                 });
-        owner_entry.is_owner = true;
-    }
+                entry.is_owner = true;
+                Some(entry)
+            }
+            None => None,
+        }
+    } else {
+        None
+    };
 
     let mut members: Vec<TeamMemberResponse> = members_map.into_values().collect();
-    members.sort_by(|a, b| match (a.is_owner, b.is_owner) {
-        (true, false) => std::cmp::Ordering::Less,
-        (false, true) => std::cmp::Ordering::Greater,
-        _ => a.username.cmp(&b.username),
-    });
+    members.sort_by(|a, b| a.username.cmp(&b.username));
+
+    if let Some(owner) = owner_member {
+        members.insert(0, owner);
+    }
 
     Ok(ListItemsResponse {
         items: members,

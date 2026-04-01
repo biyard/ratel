@@ -3,7 +3,11 @@ pub mod components;
 pub mod config;
 pub mod controllers;
 pub mod dto;
+pub mod i18n;
+pub use i18n::*;
 pub mod hooks;
+pub mod types;
+pub use types::*;
 pub mod layout;
 pub mod models;
 #[cfg(not(feature = "server"))]

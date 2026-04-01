@@ -47,8 +47,6 @@ pub struct UpdateTeamRequest {
     pub profile_url: Option<String>,
     pub dao_address: Option<String>,
     pub thumbnail_url: Option<String>,
-    pub allow_invite: Option<bool>,
-    pub allow_create_space: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

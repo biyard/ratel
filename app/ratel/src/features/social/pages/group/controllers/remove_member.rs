@@ -1,7 +1,7 @@
 use super::super::dto::{RemoveMemberRequest, RemoveMemberResponse};
 use super::super::*;
 
-use crate::features::posts::models::{Team, TeamGroup};
+use crate::features::posts::models::Team;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 
 #[delete("/api/teams/:team_pk/groups/:group_sk/member", user: crate::features::auth::User, team: Team, permissions: TeamGroupPermissions)]
@@ -22,13 +22,8 @@ pub async fn remove_member_handler(
         ));
     }
 
-    let team_group = TeamGroup::get(
-        cli,
-        &team_pk,
-        Some(EntityType::TeamGroup(group_sk.clone())),
-    )
-    .await?
-    .ok_or(Error::NotFound("Team group not found".into()))?;
+    let user_team_group_sk =
+        EntityType::UserTeamGroup(EntityType::TeamGroup(group_sk.clone()).to_string());
 
     let mut success_count = 0;
     let mut failed_pks = vec![];
@@ -43,11 +38,11 @@ pub async fn remove_member_handler(
         crate::features::auth::UserTeamGroup::delete(
             cli,
             &user.pk,
-            Some(EntityType::UserTeamGroup(team_group.sk.to_string())),
+            Some(user_team_group_sk.clone()),
         )
         .await?;
 
-        let opt = crate::features::auth::UserTeamGroup::opt()
+        let opt = crate::features::auth::UserTeamGroupQueryOption::builder()
             .sk(user.pk.to_string())
             .limit(1);
         let (user_team_groups, _) =
@@ -62,13 +57,6 @@ pub async fn remove_member_handler(
         }
 
         success_count += 1;
-    }
-
-    if success_count > 0 {
-        TeamGroup::updater(team_group.pk, team_group.sk)
-            .decrease_members(success_count)
-            .execute(cli)
-            .await?;
     }
 
     Ok(RemoveMemberResponse {

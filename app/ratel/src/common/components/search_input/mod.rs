@@ -44,6 +44,7 @@ pub fn SearchInput(
 ) -> Element {
     let mut input_value = use_signal(|| String::new());
     let mut show_dropdown = use_signal(|| false);
+    let mut is_composing = use_signal(|| false);
 
     let filtered_suggestions: Vec<String> = suggestions
         .iter()
@@ -81,31 +82,29 @@ pub fn SearchInput(
             div {
                 class: "flex flex-wrap gap-2 items-center px-3 py-2 w-full min-h-[44px] rounded-[10px] border bg-input-box-bg border-input-box-border focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[1px] transition-[color,box-shadow]",
 
-                // Render selected tags as badges inside the container
+                // Render selected tags as pill-shaped chips
                 for tag in tags.iter().cloned() {
                     div {
                         key: "{tag}",
-                        class: "flex items-center",
+                        class: "flex gap-1.5 items-center py-1 pr-1.5 pl-2.5 rounded-full border bg-primary/15 border-primary/30",
                         "data-testid": "search-input-tag",
-                        Badge {
-                            color: BadgeColor::Blue,
-                            size: BadgeSize::Small,
-                            variant: BadgeVariant::Rounded,
-                            class: "flex items-center gap-1 cursor-default",
-                            span { "{tag}" }
-                            span {
-                                class: "ml-1 cursor-pointer opacity-60 hover:opacity-100",
-                                "data-testid": "search-input-tag-remove",
-                                onclick: {
-                                    let tag = tag.clone();
-                                    move |e: MouseEvent| {
-                                        e.stop_propagation();
-                                        if let Some(ref on_remove) = on_remove {
-                                            on_remove.call(tag.clone());
-                                        }
+                        span { class: "text-xs font-semibold text-primary", "{tag}" }
+                        button {
+                            class: "flex justify-center items-center w-4 h-4 rounded-full transition-colors cursor-pointer bg-primary/20 hover:bg-primary/40",
+                            "data-testid": "search-input-tag-remove",
+                            onclick: {
+                                let tag = tag.clone();
+                                move |e: MouseEvent| {
+                                    e.stop_propagation();
+                                    if let Some(ref on_remove) = on_remove {
+                                        on_remove.call(tag.clone());
                                     }
-                                },
-                                "\u{2715}"
+                                }
+                            },
+                            icons::ratel::XMarkIcon {
+                                width: "10",
+                                height: "10",
+                                class: "w-2.5 h-2.5 [&>path]:stroke-primary",
                             }
                         }
                     }
@@ -133,7 +132,16 @@ pub fn SearchInput(
                             show_dropdown.set(true);
                         }
                     },
+                    oncompositionstart: move |_| {
+                        is_composing.set(true);
+                    },
+                    oncompositionend: move |_| {
+                        is_composing.set(false);
+                    },
                     onkeydown: move |e: KeyboardEvent| {
+                        if is_composing() {
+                            return;
+                        }
                         if e.key() == Key::Enter {
                             let trimmed = input_value().trim().to_string();
                             if !trimmed.is_empty() {
