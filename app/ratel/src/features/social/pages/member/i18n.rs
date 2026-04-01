@@ -47,4 +47,37 @@ translate! {
         en: "Failed to invite members",
         ko: "멤버 초대에 실패했습니다",
     },
+
+    already_added: {
+        en: "is already added",
+        ko: "이(가) 이미 추가되었습니다",
+    },
+}
+
+translate! {
+    MemberRowTranslate;
+
+    team_owner: {
+        en: "Team owner",
+        ko: "팀 소유자",
+    },
+}
+
+translate! {
+    ViewerPageTranslate;
+
+    no_permission: {
+        en: "No permission",
+        ko: "권한 없음",
+    },
+
+    no_permission_desc: {
+        en: "You don't have permission to manage team members.",
+        ko: "팀 멤버를 관리할 권한이 없습니다.",
+    },
+
+    team_prefix: {
+        en: "team:",
+        ko: "팀:",
+    },
 }

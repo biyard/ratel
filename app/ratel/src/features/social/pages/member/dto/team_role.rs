@@ -1,11 +1,13 @@
 use super::super::*;
 
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, Translate)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 #[serde(rename_all = "lowercase")]
 pub enum TeamRole {
+    #[translate(en = "Admin", ko = "관리자")]
     Admin,
     #[default]
+    #[translate(en = "Member", ko = "멤버")]
     Member,
 }
 
