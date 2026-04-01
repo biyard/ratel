@@ -18,7 +18,6 @@ pub fn SocialLayout(username: String) -> Element {
 
     // Provide selected category context shared with child routes
     use_context_provider(|| Signal::new(Option::<String>::None));
-    use_context_provider(|| PopupService::new());
 
     let _teams_loader = use_resource(move || async move {
         let user = user_ctx().user.clone();
@@ -45,7 +44,7 @@ pub fn SocialLayout(username: String) -> Element {
                 }
             }
         }
-        PopupZone {}
+
     }
 }
 
