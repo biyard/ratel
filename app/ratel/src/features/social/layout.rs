@@ -1,4 +1,5 @@
 use crate::common::*;
+use crate::features::auth::{LoginModal, SignupModal};
 use crate::features::posts::controllers::dto::CategoryResponse;
 use crate::features::posts::controllers::list_categories::list_categories_handler;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
@@ -17,6 +18,7 @@ pub fn SocialLayout(username: String) -> Element {
 
     // Provide selected category context shared with child routes
     use_context_provider(|| Signal::new(Option::<String>::None));
+    use_context_provider(|| PopupService::new());
 
     let _teams_loader = use_resource(move || async move {
         let user = user_ctx().user.clone();
@@ -43,6 +45,7 @@ pub fn SocialLayout(username: String) -> Element {
                 }
             }
         }
+        PopupZone {}
     }
 }
 
@@ -65,7 +68,6 @@ pub fn UserLayout(username: String) -> Element {
         }
     }
 }
-
 
 #[component]
 fn TeamSidemenu(username: String, logged_in: bool) -> Element {
@@ -96,6 +98,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
 
     // Hook must be at top level - not inside conditionals
     let mut show_user_menu = use_signal(|| false);
+    let mut popup = use_popup();
 
     let data = resource.read();
     let fallback_team = {
@@ -163,15 +166,23 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                 // Auth buttons (guest only)
                 if !logged_in {
                     div { class: "flex flex-col gap-2 px-4 pb-4 shrink-0",
-                        Link {
-                            to: "/auth/",
+                        button {
                             class: "flex justify-center items-center py-2.5 w-full text-sm font-semibold rounded-full transition-opacity hover:opacity-90 bg-primary text-[#000000]",
-                            "Sign up"
+                            onclick: move |_| {
+                                popup.open(rsx! {
+                                    SignupModal {}
+                                });
+                            },
+                            "{tr.sign_up}"
                         }
-                        Link {
-                            to: "/auth/",
+                        button {
                             class: "flex justify-center items-center py-2.5 w-full text-sm font-semibold rounded-full border transition-colors border-border text-text-primary hover:bg-hover",
-                            "Log in"
+                            onclick: move |_| {
+                                popup.open(rsx! {
+                                    LoginModal {}
+                                });
+                            },
+                            "{tr.log_in}"
                         }
                     }
                 }
@@ -226,9 +237,6 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                 // ADMIN section — visible only to team admins/editors
                 if can_team_edit {
                     div { class: "flex flex-col px-3 pb-4 shrink-0",
-                        span { class: "px-2 pb-2 text-xs font-semibold tracking-wider uppercase text-foreground-muted",
-                            "{tr.admin}"
-                        }
                         {
                             let is_draft_active = matches!(current_route, Route::TeamDraft { .. });
                             let draft_class = if is_draft_active {
@@ -428,14 +436,19 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
 translate! {
     TeamMenuTranslate;
 
+    sign_up: {
+        en: "Sign up",
+        ko: "회원가입",
+    },
+
+    log_in: {
+        en: "Log in",
+        ko: "로그인",
+    },
+
     back_to_page: {
         en: "Back to page",
         ko: "페이지로 돌아가기",
-    },
-
-    admin: {
-        en: "Admin",
-        ko: "관리",
     },
 
     drafts: {
