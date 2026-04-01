@@ -1,0 +1,75 @@
+use std::collections::HashSet;
+
+use crate::features::timeline::*;
+use crate::features::timeline::models::TimelineReason;
+
+use super::common::{collect_follower_pks, collect_followers_with_reason, write_timeline_entries};
+
+/// Fan out a popular space to a broader audience.
+///
+/// Called asynchronously when a space crosses the popularity threshold (>5 participants).
+/// Delivers the space's associated post to followers of the space author and their
+/// 2nd-degree network who don't already have the entry.
+pub async fn fan_out_popular_space(space: crate::common::models::space::SpaceCommon) -> Result<()> {
+    if !is_popular_space(space.participants) {
+        return Ok(());
+    }
+
+    tracing::info!(
+        "Popular space fan-out: space_pk={}, participants={}",
+        space.pk,
+        space.participants
+    );
+
+    let cfg = crate::common::CommonConfig::default();
+    let cli = cfg.dynamodb();
+    let space_pk = &space.pk;
+    let post_pk = &space.post_pk;
+    let author_pk = &space.user_pk;
+    let created_at = space.created_at;
+
+    let mut seen = HashSet::new();
+    let mut entries: Vec<(Partition, TimelineReason)> = Vec::new();
+
+    // Collect direct followers first (to mark as seen -- they already have it)
+    seen.insert(author_pk.to_string());
+    collect_follower_pks(cli, author_pk, &mut seen).await?;
+
+    // For each direct follower, collect their followers (2nd-degree)
+    let direct_followers = seen.clone();
+    for follower_pk_str in &direct_followers {
+        if follower_pk_str == &author_pk.to_string() {
+            continue;
+        }
+        let follower_pk: Partition = match follower_pk_str.parse() {
+            Ok(pk) => pk,
+            Err(_) => continue,
+        };
+        collect_followers_with_reason(
+            cli,
+            &follower_pk,
+            &mut seen,
+            &mut entries,
+            TimelineReason::PopularSpace,
+        )
+        .await?;
+    }
+
+    if entries.is_empty() {
+        return Ok(());
+    }
+
+    tracing::info!(
+        "fan_out_popular_space: writing {} timeline entries for popular space {} (post {})",
+        entries.len(),
+        space_pk,
+        post_pk
+    );
+
+    write_timeline_entries(cli, post_pk, author_pk, created_at, &entries).await
+}
+
+/// Returns true if a space meets the popularity threshold for broader distribution.
+pub fn is_popular_space(participants: i64) -> bool {
+    participants > 5
+}
