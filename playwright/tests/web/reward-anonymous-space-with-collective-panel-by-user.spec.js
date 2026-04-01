@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { click, fill, goto, getLocator, getEditor, waitPopup } from "../utils";
 
 // This test requires the backend to be built with --features bypass
@@ -361,7 +361,10 @@ test.describe
         .getByRole("button", { name: tomorrowLabel })
         .and(page.locator('[data-month="current"]'))
         .click();
-      await page.waitForLoadState("load");
+      // Wait for the calendar popover to close after selecting the date
+      await expect(
+        page.getByRole("button", { name: tomorrowLabel }).and(page.locator('[data-month="current"]'))
+      ).toBeHidden({ timeout: 5000 });
 
       // Build accessible name for day after tomorrow (end date)
       const dayAfter = new Date();
@@ -383,7 +386,10 @@ test.describe
         .getByRole("button", { name: dayAfterLabel })
         .and(page.locator('[data-month="current"]'))
         .click();
-      await page.waitForLoadState("load");
+      // Wait for the calendar popover to close after selecting the end date
+      await expect(
+        page.getByRole("button", { name: dayAfterLabel }).and(page.locator('[data-month="current"]'))
+      ).toBeHidden({ timeout: 5000 });
     } finally {
       await context.close();
     }

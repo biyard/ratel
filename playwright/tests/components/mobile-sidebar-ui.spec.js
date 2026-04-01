@@ -177,7 +177,7 @@ test.describe(
         // Click profile button to open dropdown
         const profileBtn = sidebarContent.getByTestId("sidebar-profile-btn");
         await expect(profileBtn).toBeVisible();
-        await profileBtn.click();
+        await clickNoNav(page, { testId: "sidebar-profile-btn" });
 
         // The dropdown should contain logout button — it renders outside the
         // sidebar-mobile-inner div (in the ProfileButton's relative wrapper),

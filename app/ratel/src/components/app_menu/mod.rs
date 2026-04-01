@@ -67,7 +67,11 @@ pub fn AppMenu() -> Element {
 
     let logged_in = user_ctx().is_logged_in();
     let team_ctx = use_team_context();
-    let teams = team_ctx.teams.read().clone();
+    let teams = if is_mobile && logged_in {
+        team_ctx.teams.read().clone()
+    } else {
+        Vec::new()
+    };
 
     rsx! {
         SidebarHeader { class: "flex justify-between items-center p-4",
