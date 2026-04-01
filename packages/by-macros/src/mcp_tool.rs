@@ -98,8 +98,15 @@ fn parse_route_attr(attr: &syn::Attribute) -> Option<RouteAttrInfo> {
             Ok(result)
         };
 
-        if let Ok(pairs) = syn::parse::Parser::parse2(parser, tokens) {
-            extractors = pairs;
+        match syn::parse::Parser::parse2(parser, tokens) {
+            Ok(pairs) => {
+                extractors = pairs;
+            }
+            Err(err) => {
+                // Surface a clear diagnostic when a recognized route attribute
+                // cannot be parsed, instead of silently ignoring the error.
+                panic!("failed to parse route attribute `{}`: {}", name, err);
+            }
         }
     }
 
@@ -179,9 +186,14 @@ pub fn mcp_tool_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
     let extractor_names: Vec<_> = extractor_params.iter().map(|(name, _)| name).collect();
     let fn_param_names: Vec<_> = fn_params
         .iter()
-        .filter_map(|p| match &*p.pat {
-            Pat::Ident(pat_ident) => Some(&pat_ident.ident),
-            _ => None,
+        .map(|p| match &*p.pat {
+            Pat::Ident(pat_ident) => &pat_ident.ident,
+            other => panic!(
+                "#[mcp_tool]: unsupported parameter pattern `{}`. \
+                 Only simple identifier patterns are supported (e.g., `name: Type`). \
+                 Destructuring patterns and wildcards are not supported.",
+                quote! { #other }
+            ),
         })
         .collect();
 

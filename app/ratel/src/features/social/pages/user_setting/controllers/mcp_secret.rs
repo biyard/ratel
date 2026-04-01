@@ -48,11 +48,15 @@ pub async fn regenerate_mcp_secret_handler() -> Result<McpSecretResponse> {
         .await?;
     }
 
-    // Create a new secret
-    let new_secret = crate::common::models::McpClientSecret::new(user.pk.clone());
+    // Create a new secret (returns entity with hash + raw token for user)
+    let (new_secret, raw_token) = crate::common::models::McpClientSecret::new(user.pk.clone());
     new_secret.create(cli).await?;
 
+    // Invalidate any cached MCP service for the old secret
+    #[cfg(feature = "server")]
+    crate::common::mcp::invalidate_user_services(&user.pk).await;
+
     Ok(McpSecretResponse {
-        secret: Some(new_secret.secret),
+        secret: Some(raw_token),
     })
 }

@@ -218,6 +218,10 @@ pub enum Error {
     #[error("Action has ended")]
     #[translate(en = "This action has ended", ko = "이 액션은 종료되었습니다.")]
     ActionEnded,
+
+    #[error("{0}")]
+    #[translate(from)]
+    McpServer(#[from] McpServerError),
 }
 
 impl From<std::convert::Infallible> for Error {
@@ -263,6 +267,7 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             Error::SpaceActionQuiz(e) => e.status_code(),
             Error::SpaceActionDiscussion(e) => e.status_code(),
             Error::ExchangePoints(e) => e.status_code(),
+            Error::McpServer(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
@@ -301,10 +306,17 @@ impl From<Error> for rmcp::ErrorData {
             Error::BadRequest(_)
             | Error::Duplicate(_)
             | Error::NoPermission
-            | Error::InvalidPartitionKey(_) => {
+            | Error::InvalidPartitionKey(_)
+            | Error::McpServer(_) => {
                 rmcp::ErrorData::invalid_params(e.to_string(), None)
             }
-            _ => rmcp::ErrorData::internal_error(e.to_string(), None),
+            _ => {
+                tracing::error!("MCP internal error: {e}");
+                rmcp::ErrorData::internal_error(
+                    "An internal server error occurred.".to_string(),
+                    None,
+                )
+            }
         }
     }
 }
@@ -346,6 +358,7 @@ impl dioxus::fullstack::AsStatusCode for Error {
             Error::SpaceActionQuiz(e) => e.status_code(),
             Error::SpaceActionDiscussion(e) => e.status_code(),
             Error::ExchangePoints(e) => e.status_code(),
+            Error::McpServer(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

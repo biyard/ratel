@@ -689,11 +689,18 @@ fn McpServerCard() -> Element {
         });
     };
 
-    let mcp_url = secret_value.as_ref().map(|s| {
-        let origin = web_sys::window()
-            .and_then(|w| w.location().origin().ok())
-            .unwrap_or_default();
-        format!("{origin}/mcp/{s}")
+    let mcp_url = secret_value.as_ref().map(|_s| {
+        #[cfg(not(feature = "server"))]
+        {
+            let origin = web_sys::window()
+                .and_then(|w| w.location().origin().ok())
+                .unwrap_or_default();
+            format!("{origin}/mcp")
+        }
+        #[cfg(feature = "server")]
+        {
+            String::from("/mcp")
+        }
     });
 
     let on_copy = {
@@ -706,13 +713,24 @@ fn McpServerCard() -> Element {
                     spawn(async move {
                         if let Some(window) = web_sys::window() {
                             let clipboard = window.navigator().clipboard();
-                            let _ = wasm_bindgen_futures::JsFuture::from(
+                            match wasm_bindgen_futures::JsFuture::from(
                                 clipboard.write_text(&url),
                             )
-                            .await;
-                            copied.set(true);
-                            gloo_timers::future::TimeoutFuture::new(2000).await;
-                            copied.set(false);
+                            .await
+                            {
+                                Ok(_) => {
+                                    copied.set(true);
+                                    gloo_timers::future::TimeoutFuture::new(2000).await;
+                                    copied.set(false);
+                                }
+                                Err(_) => {
+                                    mcp_message.set(Some((
+                                        "Failed to copy to clipboard. Please copy it manually."
+                                            .to_string(),
+                                        false,
+                                    )));
+                                }
+                            }
                         }
                     });
                 }

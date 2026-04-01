@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use dioxus::server::axum::{self, extract::Path, Router};
+use dioxus::server::axum::{self, Router};
 use rmcp::{
     handler::server::{tool::ToolRouter, wrapper::Parameters},
     model::{
@@ -55,10 +55,13 @@ pub trait IntoMcpResult {
 impl<T: serde::Serialize> IntoMcpResult for crate::common::Result<T> {
     fn into_mcp(self) -> McpResult {
         match self {
-            Ok(data) => {
-                let json = serde_json::to_string(&data).unwrap_or_default();
-                Ok(CallToolResult::success(vec![Content::text(json)]))
-            }
+            Ok(data) => match serde_json::to_string(&data) {
+                Ok(json) => Ok(CallToolResult::success(vec![Content::text(json)])),
+                Err(err) => Err(ErrorData::internal_error(
+                    format!("failed to serialize MCP response payload: {err}"),
+                    None,
+                )),
+            },
             Err(e) => Err(e.into()),
         }
     }
@@ -274,7 +277,17 @@ impl RatelMcpServer {
         description = "Update a post (publish, edit, change visibility)."
     )]
     async fn update_post(&self, Parameters(req): Parameters<UpdatePostMcpRequest>) -> McpResult {
-        let visibility = req.visibility.map(|v| v.parse().unwrap_or_default());
+        let visibility = req
+            .visibility
+            .map(|v| {
+                v.parse().map_err(|_| {
+                    ErrorData::invalid_params(
+                        format!("Invalid visibility value: '{}'. Expected 'Public' or 'Private'.", v),
+                        None,
+                    )
+                })
+            })
+            .transpose()?;
         let update_req = UpdatePostRequest::Publish {
             title: req.title,
             content: req.content,
@@ -678,7 +691,7 @@ async fn update_space_impl(
     let cli = conf.dynamodb();
     let space = require_space_creator(cli, user, space_id.clone()).await?;
     let req: UpdateSpaceRequest = serde_json::from_value(update)
-        .map_err(|e| crate::common::Error::BadRequest(format!("Invalid update data: {e}")))?;
+        .map_err(|_| crate::common::McpServerError::InvalidUpdateData)?;
 
     let space_pk: Partition = space_id.into();
     let now = chrono::Utc::now().timestamp_millis();
@@ -693,9 +706,7 @@ async fn update_space_impl(
         } => {
             let post_pk = space_pk.clone().to_post_key()?;
             if !publish {
-                return Err(crate::common::Error::BadRequest(
-                    "it does not support unpublished now".into(),
-                ));
+                return Err(crate::common::McpServerError::UnpublishNotSupported.into());
             }
             su = su
                 .with_publish_state(crate::common::SpacePublishState::Published)
@@ -733,28 +744,20 @@ async fn update_space_impl(
         }
         UpdateSpaceRequest::Start { start } => {
             if updated_space.status != Some(crate::common::SpaceStatus::InProgress) {
-                return Err(crate::common::Error::BadRequest(
-                    "Start is not available for the current status.".into(),
-                ));
+                return Err(crate::common::McpServerError::StartNotAvailable.into());
             }
             if !start {
-                return Err(crate::common::Error::BadRequest(
-                    "it does not support start now".into(),
-                ));
+                return Err(crate::common::McpServerError::CannotUndoStart.into());
             }
             su = su.with_status(crate::common::SpaceStatus::Started);
             updated_space.status = Some(crate::common::SpaceStatus::Started);
         }
         UpdateSpaceRequest::Finish { finished } => {
             if updated_space.status != Some(crate::common::SpaceStatus::Started) {
-                return Err(crate::common::Error::BadRequest(
-                    "Finish is not available for the current status.".into(),
-                ));
+                return Err(crate::common::McpServerError::FinishNotAvailable.into());
             }
             if !finished {
-                return Err(crate::common::Error::BadRequest(
-                    "it does not support finish now".into(),
-                ));
+                return Err(crate::common::McpServerError::CannotUndoFinish.into());
             }
             su = su.with_status(crate::common::SpaceStatus::Finished);
             updated_space.status = Some(crate::common::SpaceStatus::Finished);
@@ -770,9 +773,7 @@ async fn update_space_impl(
             updated_space.join_anytime = join_anytime;
         }
         UpdateSpaceRequest::ChangeVisibility { .. } => {
-            return Err(crate::common::Error::InternalServerError(
-                "ChangeVisibility is deprecated".to_string(),
-            ));
+            return Err(crate::common::McpServerError::DeprecatedOperation.into());
         }
         UpdateSpaceRequest::Logo { logo } => {
             su = su.with_logo(logo.clone());
@@ -781,9 +782,7 @@ async fn update_space_impl(
         UpdateSpaceRequest::Quota { quotas } => {
             let remains = updated_space.remains + (quotas - updated_space.quota);
             if remains < 0 {
-                return Err(crate::common::Error::BadRequest(
-                    "Invalid panel quota".into(),
-                ));
+                return Err(crate::common::McpServerError::InvalidPanelQuota.into());
             }
             su = su.with_quota(quotas).with_remains(remains);
             updated_space.quota = quotas;
@@ -890,7 +889,7 @@ async fn update_poll_impl(
 
     use crate::features::spaces::pages::actions::actions::poll::controllers::UpdatePollRequest;
     let req: UpdatePollRequest = serde_json::from_value(update)
-        .map_err(|e| crate::common::Error::BadRequest(format!("Invalid poll update: {e}")))?;
+        .map_err(|_| crate::common::McpServerError::InvalidUpdateData)?;
 
     let space_pk: Partition = space_id.clone().into();
     let poll_sk_type: SpacePollEntityType = poll_id.into();
@@ -916,9 +915,7 @@ async fn update_poll_impl(
             ended_at,
         } => {
             if started_at >= ended_at {
-                return Err(crate::common::Error::BadRequest(
-                    "Invalid time range".into(),
-                ));
+                return Err(crate::common::McpServerError::InvalidTimeRange.into());
             }
             poll_updater = poll_updater
                 .with_started_at(started_at)
@@ -926,9 +923,7 @@ async fn update_poll_impl(
         }
         UpdatePollRequest::Question { questions } => {
             if questions.is_empty() {
-                return Err(crate::common::Error::BadRequest(
-                    "Questions cannot be empty".into(),
-                ));
+                return Err(crate::common::McpServerError::EmptyQuestions.into());
             }
             let description = questions
                 .first()
@@ -1043,7 +1038,7 @@ async fn update_quiz_impl(
 
     use crate::features::spaces::pages::actions::actions::quiz::controllers::update_quiz::UpdateQuizRequest;
     let req: UpdateQuizRequest = serde_json::from_value(update)
-        .map_err(|e| crate::common::Error::BadRequest(format!("Invalid quiz update: {e}")))?;
+        .map_err(|_| crate::common::McpServerError::InvalidUpdateData)?;
 
     let space_pk: Partition = space_id.clone().into();
     let quiz_sk_type: SpaceQuizEntityType = quiz_id.clone().into();
@@ -1070,12 +1065,12 @@ async fn update_quiz_impl(
         should_update_action = true;
     }
     if req.started_at.is_some() || req.ended_at.is_some() {
-        let started_at = req.started_at.ok_or_else(|| {
-            crate::common::Error::BadRequest("started_at required when setting time".into())
-        })?;
-        let ended_at = req.ended_at.ok_or_else(|| {
-            crate::common::Error::BadRequest("ended_at required when setting time".into())
-        })?;
+        let started_at = req
+            .started_at
+            .ok_or(crate::common::McpServerError::RequiredFieldMissing)?;
+        let ended_at = req
+            .ended_at
+            .ok_or(crate::common::McpServerError::RequiredFieldMissing)?;
         if started_at >= ended_at {
             return Err(crate::common::Error::BadRequest(
                 "Invalid time range".into(),
@@ -1177,9 +1172,8 @@ async fn update_discussion_impl(
     let _space = require_space_creator(cli, user, space_id.clone()).await?;
 
     use crate::features::spaces::pages::actions::actions::discussion::controllers::UpdateDiscussionRequest;
-    let req: UpdateDiscussionRequest = serde_json::from_value(update).map_err(|e| {
-        crate::common::Error::BadRequest(format!("Invalid discussion update: {e}"))
-    })?;
+    let req: UpdateDiscussionRequest = serde_json::from_value(update)
+        .map_err(|_| crate::common::McpServerError::InvalidUpdateData)?;
 
     let space_pk: Partition = space_id.clone().into();
     let discussion_sk_type: SpacePostEntityType = discussion_id.into();
@@ -1442,18 +1436,36 @@ async fn list_teams_impl(user: &User) -> crate::common::Result<Vec<McpTeamItem>>
 
 type McpService = StreamableHttpService<RatelMcpServer, LocalSessionManager>;
 
-/// Global cache of MCP services keyed by client_secret.
+/// Maximum number of cached MCP services to prevent unbounded memory growth.
+const MAX_MCP_CACHE_SIZE: usize = 1000;
+
+/// TTL for cached MCP services (1 hour in seconds).
+const MCP_CACHE_TTL_SECS: i64 = 3600;
+
+/// Cached MCP service entry with creation timestamp for TTL eviction.
+#[derive(Clone)]
+struct CachedMcpService {
+    service: McpService,
+    created_at: i64,
+    user_pk: crate::common::types::Partition,
+}
+
+/// Global cache of MCP services keyed by hashed client_secret.
 /// Each secret gets a persistent service so MCP sessions survive across requests.
-static MCP_SERVICES: std::sync::LazyLock<RwLock<HashMap<String, McpService>>> =
+/// Entries are evicted after `MCP_CACHE_TTL_SECS` or when the cache exceeds
+/// `MAX_MCP_CACHE_SIZE`.
+static MCP_SERVICES: std::sync::LazyLock<RwLock<HashMap<String, CachedMcpService>>> =
     std::sync::LazyLock::new(|| RwLock::new(HashMap::new()));
 
 /// Resolve a user from the client secret stored in DynamoDB.
+/// The incoming `client_secret` is the raw token; we hash it before lookup.
 async fn resolve_user(client_secret: &str) -> Option<User> {
     let conf = ServerConfig::default();
     let cli = conf.dynamodb();
 
+    let hashed = McpClientSecret::hash_secret(client_secret);
     let opt = McpClientSecret::opt().limit(1);
-    let (secrets, _) = McpClientSecret::find_by_secret(cli, client_secret, opt)
+    let (secrets, _) = McpClientSecret::find_by_secret(cli, &hashed, opt)
         .await
         .ok()?;
 
@@ -1463,19 +1475,25 @@ async fn resolve_user(client_secret: &str) -> Option<User> {
         .ok()?
 }
 
-/// Get or create a cached MCP service for the given client_secret.
+/// Get or create a cached MCP service for the given raw client_secret.
 async fn get_or_create_service(client_secret: &str) -> Option<McpService> {
-    // Fast path: check if service already exists
+    let hashed_key = McpClientSecret::hash_secret(client_secret);
+    let now = chrono::Utc::now().timestamp();
+
+    // Fast path: check if a non-expired service already exists
     {
         let cache = MCP_SERVICES.read().await;
-        if let Some(service) = cache.get(client_secret) {
-            return Some(service.clone());
+        if let Some(entry) = cache.get(&hashed_key) {
+            if now - entry.created_at < MCP_CACHE_TTL_SECS {
+                return Some(entry.service.clone());
+            }
         }
     }
 
     // Slow path: resolve user and create service
     let user = resolve_user(client_secret).await?;
 
+    let user_pk = user.pk.clone();
     let service = StreamableHttpService::new(
         move || RatelMcpServer::new(user.clone()),
         Arc::new(LocalSessionManager::default()),
@@ -1483,20 +1501,66 @@ async fn get_or_create_service(client_secret: &str) -> Option<McpService> {
     );
 
     let mut cache = MCP_SERVICES.write().await;
-    cache.insert(client_secret.to_string(), service.clone());
+
+    // Evict expired entries
+    cache.retain(|_, entry| now - entry.created_at < MCP_CACHE_TTL_SECS);
+
+    // Evict oldest entries if cache is at capacity
+    while cache.len() >= MAX_MCP_CACHE_SIZE {
+        if let Some(oldest_key) = cache
+            .iter()
+            .min_by_key(|(_, entry)| entry.created_at)
+            .map(|(k, _)| k.clone())
+        {
+            cache.remove(&oldest_key);
+        } else {
+            break;
+        }
+    }
+
+    cache.insert(
+        hashed_key,
+        CachedMcpService {
+            service: service.clone(),
+            created_at: now,
+            user_pk,
+        },
+    );
     Some(service)
 }
 
+/// Invalidate all cached MCP services for a given user partition key.
+/// Called when a user regenerates their secret.
+pub async fn invalidate_user_services(user_pk: &crate::common::types::Partition) {
+    let mut cache = MCP_SERVICES.write().await;
+    cache.retain(|_, entry| &entry.user_pk != user_pk);
+}
+
 /// Build the axum router for the MCP endpoint.
-/// The MCP service is mounted at `/mcp/{client_secret}`.
+/// The client secret must be sent via the `Authorization: Bearer <token>` header.
 pub fn mcp_router() -> Router {
-    Router::new().route("/mcp/{client_secret}", axum::routing::any(mcp_handler))
+    Router::new().route("/mcp", axum::routing::any(mcp_handler))
 }
 
 async fn mcp_handler(
-    Path(client_secret): Path<String>,
     request: axum::http::Request<axum::body::Body>,
 ) -> axum::response::Response {
+    let client_secret = request
+        .headers()
+        .get("authorization")
+        .and_then(|v| v.to_str().ok())
+        .and_then(|v| v.strip_prefix("Bearer "))
+        .map(|s| s.to_string());
+
+    let Some(client_secret) = client_secret else {
+        return axum::response::Response::builder()
+            .status(401)
+            .body(axum::body::Body::from(
+                "Missing or invalid Authorization header. Expected: Bearer <token>",
+            ))
+            .unwrap();
+    };
+
     let Some(service) = get_or_create_service(&client_secret).await else {
         return axum::response::Response::builder()
             .status(401)
