@@ -10,7 +10,6 @@ use crate::features::social::*;
 /// Always renders TeamSidemenu with categories sidebar.
 #[component]
 pub fn SocialLayout(username: String) -> Element {
-    crate::common::contexts::TeamContext::init()?;
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let logged_in = user_ctx().user.is_some();
 

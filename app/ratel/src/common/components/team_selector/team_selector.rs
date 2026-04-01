@@ -11,6 +11,30 @@ pub fn TeamSelector() -> Element {
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let user = user_ctx().user.clone().unwrap_or_default();
 
+    // Derive the trigger label from the current route so the selector
+    // reflects the active context (user profile vs a specific team).
+    let current_route = use_route::<Route>();
+    let selector_label = {
+        let teams = (team_ctx.teams)();
+        match &current_route {
+            Route::TeamHome { username } |
+            Route::TeamDraft { username } |
+            Route::TeamGroup { username } |
+            Route::TeamDao { username } |
+            Route::TeamMember { username } |
+            Route::TeamReward { username } |
+            Route::TeamSetting { username } |
+            Route::TeamSettingMember { username } |
+            Route::TeamSettingSubscription { username } => {
+                teams.iter()
+                    .find(|t| &t.username == username)
+                    .map(|t| t.label().to_string())
+                    .unwrap_or_else(|| user.display_name.clone())
+            }
+            _ => user.display_name.clone(),
+        }
+    };
+
     rsx! {
         div { class: "relative",
             // Trigger button - shows current user/team name with chevron
@@ -19,7 +43,7 @@ pub fn TeamSelector() -> Element {
                 onclick: move |_| {
                     open.set(!open());
                 },
-                span { class: "font-bold text-[18px] text-text-primary truncate", "{user.display_name}" }
+                span { class: "font-bold text-[18px] text-text-primary truncate", "{selector_label}" }
                 icons::arrows::ChevronDown {
                     width: "16",
                     height: "16",
@@ -66,11 +90,11 @@ pub fn TeamSelector() -> Element {
                         }
 
                         // Team entries
-                        for team in team_ctx.teams.iter() {
+                        for team in (team_ctx.teams)().iter() {
                             Link {
-                                id: team.pk.clone(),
+                                key: "{team.pk}",
                                 class: "flex gap-2 items-center py-2 px-2 w-full rounded-md cursor-pointer hover:bg-hover",
-                                to: Route::UserHomeRoot {
+                                to: Route::TeamHome {
                                     username: team.username.clone(),
                                 },
                                 onclick: move |_| {

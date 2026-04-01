@@ -90,6 +90,7 @@ pub fn Home(username: String) -> Element {
 
     let follow_target_pk = initial_status.as_ref().ok().map(|s| s.target_pk.clone());
 
+    let selected_category = use_context::<Signal<Option<String>>>();
     let settings_route = Route::TeamSetting {
         username: username.clone(),
     }
@@ -203,6 +204,7 @@ pub fn Home(username: String) -> Element {
                 key: "posts-{username}",
                 username: username.clone(),
                 view_mode: view_mode(),
+                selected_category: selected_category(),
             }
         }
     }

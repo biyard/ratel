@@ -15,8 +15,6 @@ pub struct SettingsSaveContext {
 
 #[component]
 pub fn TeamSettingLayout(username: String) -> Element {
-    crate::common::contexts::TeamContext::init()?;
-
     // Provide save context so child pages can hook into the header Save button
     let mut save_ctx = use_context_provider(|| SettingsSaveContext {
         save_trigger: Signal::new(0u64),

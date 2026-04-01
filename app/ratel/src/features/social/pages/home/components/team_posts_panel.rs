@@ -16,8 +16,8 @@ pub fn TeamPostsPanel(
     let mut category_signal = use_signal(|| selected_category.clone());
     let mut v = use_infinite_query(move |bookmark| {
         let username = username_signal();
-        // FIXME: It should reflect selected category.
-        async move { list_team_posts_handler(username, None, bookmark).await }
+        let category = category_signal();
+        async move { list_team_posts_handler(username, category, bookmark).await }
     })?;
 
     let mut v_clone = v.clone();

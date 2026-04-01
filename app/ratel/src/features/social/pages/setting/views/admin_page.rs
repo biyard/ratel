@@ -108,21 +108,24 @@ pub fn AdminPage(username: ReadSignal<String>, team: TeamResponse) -> Element {
         let on_cancel = move |_evt: MouseEvent| {
             popup.close();
         };
-        let on_confirm = move |_evt: MouseEvent| async move {
-            match delete_team_handler(username()).await {
-                Ok(_response) => {
-                    team_ctx.teams.with_mut(|teams| {
-                        teams.retain(|t| t.username != username());
-                    });
+        let on_confirm = move |_evt: MouseEvent| {
+            spawn(async move {
+                match delete_team_handler(username()).await {
+                    Ok(_response) => {
+                        team_ctx.teams.with_mut(|teams| {
+                            teams.retain(|t| t.username != username());
+                        });
 
-                    debug!("Team delete: {:?}", team_ctx.teams());
-                    navigator.push(Route::Index {});
+                        debug!("Team delete: {:?}", (team_ctx.teams)());
+                        popup.close();
+                        navigator.push(Route::Index {});
+                    }
+                    Err(e) => {
+                        toast.error(e);
+                        popup.close();
+                    }
                 }
-                Err(e) => {
-                    toast.error(e);
-                }
-            }
-            popup.close();
+            });
         };
         popup.open(rsx! {
             DeleteTeamPopup { on_confirm, on_cancel }

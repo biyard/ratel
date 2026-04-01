@@ -49,7 +49,7 @@ pub fn TeamCreationPopup() -> Element {
                                         description,
                                     });
                             });
-                        debug!("Team created: {:?}", team_ctx.teams());
+                        debug!("Team created: {:?}", (team_ctx.teams)());
                         popup.close();
                         nav.push(Route::TeamHome { username: nav_username });
                     }

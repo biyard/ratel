@@ -2,8 +2,6 @@ use crate::*;
 
 #[component]
 pub fn AppLayout() -> Element {
-    TeamContext::init()?;
-
     rsx! {
         SidebarProvider { default_open: false, class: "flex flex-row w-full min-h-screen",
             Sidebar {

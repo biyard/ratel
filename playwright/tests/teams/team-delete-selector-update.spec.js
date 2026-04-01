@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { click, goto, waitPopup } from "../utils";
+import { click, fill, goto, getLocator, waitPopup } from "../utils";
 
 // This test verifies that after deleting a team, the Team Selector
 // immediately reflects the removal without requiring a page refresh.
@@ -19,15 +19,14 @@ test.describe.serial("Team deletion updates Team Selector (#1318)", () => {
     // Step 2: Click "Create Team"
     await click(page, { text: "Create Team" });
 
-    // Step 3: Fill in team creation form
-    const nicknameInput = page.locator('[data-testid="team-nickname-input"]');
-    await nicknameInput.fill(teamNickname);
-
-    const usernameInput = page.locator('[data-testid="team-username-input"]');
-    await usernameInput.fill(teamUsername);
-
-    const descInput = page.locator('[data-testid="team-description-input"]');
-    await descInput.fill("E2E test team for deletion verification");
+    // Step 3: Fill in team creation form using shared helpers
+    await fill(page, { testId: "team-nickname-input" }, teamNickname);
+    await fill(page, { testId: "team-username-input" }, teamUsername);
+    await fill(
+      page,
+      { testId: "team-description-input" },
+      "E2E test team for deletion verification"
+    );
 
     // Submit the form
     await click(page, { text: "Create" });
@@ -61,8 +60,17 @@ test.describe.serial("Team deletion updates Team Selector (#1318)", () => {
     // Step 8: Wait for navigation to home page after deletion
     await page.waitForURL("/", { waitUntil: "load" });
 
-    // Step 9: Verify the deleted team is NOT in the Team Selector
-    // The team nickname should no longer appear anywhere on the page
-    await expect(page.getByText(teamNickname)).toBeHidden();
+    // Step 9: Open the Team Selector and verify the deleted team entry is absent.
+    // Checking inside the selector is more robust than asserting globally on the page.
+    const teamSelector = page.locator('[data-testid="team-selector"]');
+    if (await teamSelector.isVisible()) {
+      await teamSelector.click();
+      await expect(
+        teamSelector.getByText(teamNickname, { exact: true })
+      ).toBeHidden();
+    } else {
+      // Fallback: assert the nickname is not visible anywhere
+      await expect(page.getByText(teamNickname)).toBeHidden();
+    }
   });
 });
