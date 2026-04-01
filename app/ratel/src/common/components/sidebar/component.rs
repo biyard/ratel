@@ -356,6 +356,34 @@ pub fn Sidebar(
                                     e.stop_propagation();
                                     ctx.set_open_mobile(false);
                                 }
+                                // Focus trap: cycle Tab/Shift+Tab within the dialog
+                                if e.key() == Key::Tab {
+                                    e.prevent_default();
+                                    let shift = e.modifiers().shift();
+                                    spawn(async move {
+                                        let direction = if shift { "backward" } else { "forward" };
+                                        _ = document::eval(&format!(
+                                            r#"
+                                            (function() {{
+                                                const dialog = document.querySelector('[role="dialog"][data-mobile="true"]');
+                                                if (!dialog) return;
+                                                const focusable = Array.from(dialog.querySelectorAll(
+                                                    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+                                                )).filter(el => el.offsetParent !== null);
+                                                if (focusable.length === 0) return;
+                                                const current = document.activeElement;
+                                                let idx = focusable.indexOf(current);
+                                                if ("{direction}" === "backward") {{
+                                                    idx = idx <= 0 ? focusable.length - 1 : idx - 1;
+                                                }} else {{
+                                                    idx = idx >= focusable.length - 1 ? 0 : idx + 1;
+                                                }}
+                                                focusable[idx].focus();
+                                            }})();
+                                            "#
+                                        ));
+                                    });
+                                }
                             },
                             div {
                                 class: "sidebar-mobile-inner",
