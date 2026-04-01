@@ -207,7 +207,7 @@ pub fn AdminPage(username: String, team: TeamResponse) -> Element {
                     placeholder: tr.team_description_hint.to_string(),
                     value: html_contents(),
                     oninput: move |e: FormEvent| html_contents.set(e.value()),
-                    class: "w-full min-h-[120px] resize-y",
+                    class: "w-full min-h-[120px] resize-y rounded-lg border border-input-box-border bg-input-box-bg px-3 py-2 text-sm text-text-primary placeholder:text-foreground-muted focus:outline-none focus:border-ring",
                 }
                 if !last_saved.is_empty() {
                     div { class: "flex justify-end",
