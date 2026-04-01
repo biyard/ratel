@@ -17,6 +17,7 @@ pub struct CreateSpaceResponse {
     pub space_id: SpacePartition,
 }
 
+#[mcp_tool(name = "create_space", description = "Create a space on an existing post.")]
 #[post("/api/spaces/create", user: User)]
 pub async fn create_space_handler(req: CreateSpaceRequest) -> Result<CreateSpaceResponse> {
     let conf = crate::features::posts::config::get();

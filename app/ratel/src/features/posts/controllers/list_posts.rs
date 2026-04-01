@@ -7,6 +7,7 @@ use crate::features::posts::*;
 #[cfg(feature = "server")]
 use crate::features::timeline::models::TimelineEntry;
 
+#[mcp_tool(name = "list_posts", description = "List posts from the feed.")]
 #[get("/api/posts?bookmark", user: OptionalUser)]
 pub async fn list_posts_handler(
     bookmark: Option<String>,

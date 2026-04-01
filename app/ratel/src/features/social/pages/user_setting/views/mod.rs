@@ -1,6 +1,7 @@
 use super::controllers::{
-    change_password_handler, get_user_detail_handler, update_profile_handler,
-    ChangePasswordRequest, UpdateProfileRequest,
+    change_password_handler, get_mcp_secret_handler, get_user_detail_handler,
+    regenerate_mcp_secret_handler, update_profile_handler, ChangePasswordRequest,
+    UpdateProfileRequest,
 };
 use super::Result as AppResult;
 use super::*;
@@ -67,6 +68,16 @@ translate! {
     saving_card: { en: "Saving...", ko: "저장 중..." },
     card_updated: { en: "Card updated successfully.", ko: "카드가 업데이트되었습니다." },
     login_required: { en: "Please log in to access settings.", ko: "설정에 접근하려면 로그인해주세요." },
+
+    mcp_server: { en: "MCP Server", ko: "MCP 서버" },
+    mcp_description: { en: "Connect your Ratel account to AI assistants like Claude Desktop using the Model Context Protocol.", ko: "Model Context Protocol을 사용하여 Claude Desktop과 같은 AI 어시스턴트에 Ratel 계정을 연결하세요." },
+    mcp_server_url: { en: "Server URL", ko: "서버 URL" },
+    mcp_generate: { en: "Generate Secret", ko: "시크릿 생성" },
+    mcp_regenerate: { en: "Regenerate", ko: "재생성" },
+    mcp_generating: { en: "Generating...", ko: "생성 중..." },
+    mcp_copied: { en: "Copied to clipboard!", ko: "클립보드에 복사되었습니다!" },
+    mcp_copy: { en: "Copy", ko: "복사" },
+    mcp_not_generated: { en: "No secret generated yet. Click Generate to create one.", ko: "아직 시크릿이 생성되지 않았습니다. 생성 버튼을 클릭하세요." },
 }
 
 #[component]
@@ -241,6 +252,9 @@ pub fn Home(username: String) -> Element {
 
             // Card 3: Subscription & Billing
             Card { variant: CardVariant::Outlined, class: "p-6", SubscriptionCard {} }
+
+            // Card 4: MCP Server
+            Card { variant: CardVariant::Outlined, class: "p-6", McpServerCard {} }
         }
     }
 }
@@ -647,6 +661,136 @@ fn format_js_error(err: wasm_bindgen::JsValue) -> String {
             }
         }
         "Unknown error".to_string()
+    }
+}
+
+#[component]
+fn McpServerCard() -> Element {
+    let tr: UserSettingsTranslate = use_translate();
+    let mut mcp_secret =
+        use_server_future(move || async move { get_mcp_secret_handler().await })?;
+    let mcp_data = mcp_secret.read();
+
+    let secret_value = mcp_data
+        .as_ref()
+        .and_then(|r| r.as_ref().ok())
+        .and_then(|resp| resp.secret.clone());
+
+    let mut generating = use_signal(|| false);
+    let mut copied = use_signal(|| false);
+    let mut mcp_message = use_signal(|| Option::<(String, bool)>::None);
+
+    let on_generate = move |_: MouseEvent| {
+        spawn(async move {
+            generating.set(true);
+            mcp_message.set(None);
+            match regenerate_mcp_secret_handler().await {
+                Ok(_) => {
+                    mcp_secret.restart();
+                }
+                Err(e) => {
+                    mcp_message.set(Some((format!("{e}"), false)));
+                }
+            }
+            generating.set(false);
+        });
+    };
+
+    let mcp_url = secret_value.as_ref().map(|_s| {
+        #[cfg(not(feature = "server"))]
+        {
+            let origin = web_sys::window()
+                .and_then(|w| w.location().origin().ok())
+                .unwrap_or_default();
+            format!("{origin}/mcp")
+        }
+        #[cfg(feature = "server")]
+        {
+            String::from("/mcp")
+        }
+    });
+
+    let on_copy = {
+        let mcp_url = mcp_url.clone();
+        move |_: MouseEvent| {
+            if let Some(ref url) = mcp_url {
+                #[cfg(not(feature = "server"))]
+                {
+                    let url = url.clone();
+                    spawn(async move {
+                        if let Some(window) = web_sys::window() {
+                            let clipboard = window.navigator().clipboard();
+                            match wasm_bindgen_futures::JsFuture::from(
+                                clipboard.write_text(&url),
+                            )
+                            .await
+                            {
+                                Ok(_) => {
+                                    copied.set(true);
+                                    gloo_timers::future::TimeoutFuture::new(2000).await;
+                                    copied.set(false);
+                                }
+                                Err(_) => {
+                                    mcp_message.set(Some((
+                                        "Failed to copy to clipboard. Please copy it manually."
+                                            .to_string(),
+                                        false,
+                                    )));
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+        }
+    };
+
+    rsx! {
+        div { class: "flex flex-col gap-5 w-full",
+            h2 { class: "text-lg font-bold text-text-primary", {tr.mcp_server} }
+            p { class: "text-sm text-foreground-muted", {tr.mcp_description} }
+
+            if let Some(ref url) = mcp_url {
+                SettingsRow { label: tr.mcp_server_url.to_string(),
+                    div { class: "flex gap-2 items-center",
+                        Input { value: url.clone(), disabled: true }
+                        Button {
+                            style: ButtonStyle::Secondary,
+                            size: ButtonSize::Small,
+                            onclick: on_copy,
+                            if copied() {
+                                {tr.mcp_copied}
+                            } else {
+                                {tr.mcp_copy}
+                            }
+                        }
+                    }
+                }
+            } else {
+                p { class: "text-sm text-foreground-muted italic", {tr.mcp_not_generated} }
+            }
+
+            if let Some((msg, is_success)) = mcp_message() {
+                div { class: if is_success { "text-sm text-banner-success-text" } else { "text-sm text-destructive" },
+                    "{msg}"
+                }
+            }
+
+            div { class: "flex justify-end",
+                Button {
+                    style: if secret_value.is_some() { ButtonStyle::Secondary } else { ButtonStyle::Primary },
+                    disabled: generating(),
+                    onclick: on_generate,
+                    if generating() {
+                        {tr.mcp_generating}
+                    } else if secret_value.is_some() {
+                        {tr.mcp_regenerate}
+                    } else {
+                        {tr.mcp_generate}
+                    }
+                }
+            }
+        }
     }
 }
 
