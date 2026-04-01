@@ -64,7 +64,7 @@ pub fn InviteMemberModal(
                         if !exists {
                             selected_users.write().push(user);
                         } else {
-                            message.set(Some(format!("{} is already added", user.nickname)));
+                            message.set(Some(format!("{} {}", user.nickname, tr.already_added)));
                         }
                     }
                     Err(_) => {
@@ -154,7 +154,7 @@ pub fn InviteMemberModal(
                 div { class: "flex flex-wrap gap-1",
                     for user in selected_users.read().clone() {
                         div { class: "flex flex-row w-fit gap-1 justify-start items-center bg-primary rounded-[100px] px-[12px] py-[2px]",
-                            div { class: "font-medium text-neutral-900 text-[15px]/[24px]",
+                            div { class: "font-medium text-btn-primary-text text-[15px]/[24px]",
                                 {user.nickname}
                             }
                             div {
@@ -166,7 +166,7 @@ pub fn InviteMemberModal(
                                 validations::Clear {
                                     width: "24",
                                     height: "24",
-                                    class: "w-6 h-6 cursor-pointer [&>path]:stroke-neutral-800",
+                                    class: "w-6 h-6 cursor-pointer [&>path]:stroke-btn-primary-text",
                                 }
                             }
                         }

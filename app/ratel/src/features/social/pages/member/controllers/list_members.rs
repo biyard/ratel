@@ -17,18 +17,14 @@ pub async fn list_members_handler(
 
     let user: Option<crate::features::auth::User> = user.into();
     let Some(_user) = user else {
-        return Err(Error::Unauthorized(
-            "You don't have permission to view members.".to_string(),
-        ));
+        return Err(Error::NoPermission);
     };
 
     let can_view = permissions.contains(TeamGroupPermission::TeamAdmin)
         || permissions.contains(TeamGroupPermission::TeamEdit)
         || permissions.contains(TeamGroupPermission::GroupEdit);
     if !can_view {
-        return Err(Error::Unauthorized(
-            "You don't have permission to view members.".to_string(),
-        ));
+        return Err(Error::NoPermission);
     }
 
     let is_first_page = bookmark.is_none();

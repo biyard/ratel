@@ -17,9 +17,7 @@ pub async fn remove_team_member_handler(
         || permissions.contains(TeamGroupPermission::TeamEdit)
         || permissions.contains(TeamGroupPermission::GroupEdit);
     if !can_edit {
-        return Err(Error::Unauthorized(
-            "You don't have permission to remove members.".to_string(),
-        ));
+        return Err(Error::NoPermission);
     }
 
     let mut success_count = 0i64;
