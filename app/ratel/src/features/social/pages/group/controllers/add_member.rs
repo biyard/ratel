@@ -1,7 +1,7 @@
 use super::super::dto::{AddMemberRequest, AddMemberResponse};
 use super::super::*;
 
-use crate::features::posts::models::{Team, TeamGroup};
+use crate::features::posts::models::Team;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use std::collections::HashSet;
 
@@ -23,13 +23,10 @@ pub async fn add_member_handler(
         ));
     }
 
-    let team_group = TeamGroup::get(
-        cli,
-        &team_pk,
-        Some(EntityType::TeamGroup(group_sk.clone())),
-    )
-    .await?
-    .ok_or(Error::NotFound("Team group not found".into()))?;
+    let group_permissions: i64 = match group_sk.as_str() {
+        "admin" => TeamGroupPermissions::all().into(),
+        _ => TeamGroupPermissions::member().into(),
+    };
 
     let mut success_count = 0;
     let mut failed_pks = vec![];
@@ -63,7 +60,9 @@ pub async fn add_member_handler(
             .await?;
         }
 
-        let user_team_group_sk = EntityType::UserTeamGroup(team_group.sk.to_string());
+        let user_team_group_sk = EntityType::UserTeamGroup(
+            EntityType::TeamGroup(group_sk.clone()).to_string(),
+        );
         let existing_user_team_group =
             crate::features::auth::UserTeamGroup::get(cli, &user.pk, Some(&user_team_group_sk)).await?;
         if existing_user_team_group.is_some() {
@@ -72,20 +71,13 @@ pub async fn add_member_handler(
 
         crate::features::auth::UserTeamGroup::new(
             user.pk.clone(),
-            team_group.sk.clone(),
-            team_group.permissions,
+            EntityType::TeamGroup(group_sk.clone()),
+            group_permissions,
             team.pk.clone(),
         )
         .create(cli)
         .await?;
         success_count += 1;
-    }
-
-    if success_count > 0 {
-        TeamGroup::updater(team_group.pk, team_group.sk)
-            .increase_members(success_count)
-            .execute(cli)
-            .await?;
     }
 
     Ok(AddMemberResponse {

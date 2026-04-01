@@ -97,11 +97,18 @@ impl Team {
 
         let team_owner = TeamOwner::new(team.pk.clone(), user.clone());
 
-        let team_group = TeamGroup::new(
+        let admin_group = TeamGroup::new(
             team.pk.clone(),
             "Admin".to_string(),
             "Administrators group with all permissions".to_string(),
             TeamGroupPermissions::all(),
+        );
+
+        let member_group = TeamGroup::new(
+            team.pk.clone(),
+            "Member".to_string(),
+            "Default group for team members".to_string(),
+            TeamGroupPermissions::member(),
         );
 
         let user_pk = user.pk.clone();
@@ -109,8 +116,8 @@ impl Team {
 
         let user_team_group = crate::features::auth::UserTeamGroup::new(
             user_pk.clone(),
-            team_group.sk.clone(),
-            team_group.permissions,
+            admin_group.sk.clone(),
+            admin_group.permissions,
             team_pk.clone(),
         );
         let user_team = crate::features::auth::UserTeam::new(
@@ -126,7 +133,8 @@ impl Team {
             .set_transact_items(Some(vec![
                 team.create_transact_write_item(),
                 team_owner.create_transact_write_item(),
-                team_group.create_transact_write_item(),
+                admin_group.create_transact_write_item(),
+                member_group.create_transact_write_item(),
                 user_team_group.create_transact_write_item(),
                 user_team.create_transact_write_item(),
             ]))
