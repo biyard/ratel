@@ -28,6 +28,11 @@ translate! {
         ko: "응답",
     },
 
+    comments_title: {
+        en: "Comments",
+        ko: "댓글",
+    },
+
     share_your_thoughts: {
         en: "Share your thoughts...",
         ko: "당신의 생각을 공유해주세요...",

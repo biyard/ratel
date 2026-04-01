@@ -112,15 +112,30 @@ pub fn DiscussionActionEditorPage(
                 }
 
                 // Category
-                div { class: "flex flex-col gap-1",
-                    label { class: "text-sm font-medium text-foreground-muted",
-                        "Category"
-                    }
-                    input {
-                        class: "py-3 px-4 w-full text-sm text-white rounded-lg border bg-neutral-800 light:bg-neutral-100 border-neutral-700 light:border-neutral-300 light:text-neutral-900 placeholder-neutral-500",
-                        placeholder: "Enter category (optional)...",
-                        value: "{category_name}",
-                        oninput: move |e| category_name.set(e.value()),
+                {
+                    let categories_res = use_server_future(move || list_categories(space_id.clone()))?;
+                    let available_categories = categories_res.read().as_ref()
+                        .and_then(|r| r.as_ref().ok())
+                        .cloned()
+                        .unwrap_or_default();
+
+                    rsx! {
+                        div { class: "flex flex-col gap-1",
+                            label { class: "text-sm font-medium text-foreground-muted",
+                                "Category"
+                            }
+                            SearchInput {
+                                tags: if category_name().is_empty() { vec![] } else { vec![category_name()] },
+                                suggestions: available_categories,
+                                placeholder: "Select category (optional)...",
+                                on_add: move |tag: String| {
+                                    category_name.set(tag);
+                                },
+                                on_remove: move |_tag: String| {
+                                    category_name.set(String::new());
+                                },
+                            }
+                        }
                     }
                 }
 
