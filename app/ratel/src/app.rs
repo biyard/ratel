@@ -19,12 +19,6 @@ pub fn App() -> Element {
     let env = conf.common.env;
     use_context_provider(QueryStore::new);
 
-    // Signal that Dioxus has hydrated — Playwright's goto() waits for this
-    // before interacting with the page.
-    use_effect(|| {
-        let _ = document::eval("window.__dioxus_hydrated = true");
-    });
-
     let keywords = vec![
         "ratel".to_string(),
         "knowledge platform".to_string(),
