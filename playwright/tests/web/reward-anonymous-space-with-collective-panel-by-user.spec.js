@@ -354,12 +354,12 @@ test.describe
       // Wait for the calendar popover to render by ensuring tomorrow's date
       // button in the current month grid is visible before clicking it.
       // NOTE: data-month="current" is an attribute on the calendar day button
-      // element itself (.calendar-grid-cell), not on a container. Therefore
-      // .and() (intersection) is the correct combinator here — it matches the
-      // single button satisfying both the role/name AND the data attribute.
+      // element itself (.calendar-grid-cell), not on a container. Use .and()
+      // (intersection) to match the single element satisfying both role/name
+      // AND the data attribute — chaining would search descendants instead.
       const startDateBtn = page
-        .locator('[data-month="current"]')
-        .getByRole("button", { name: tomorrowLabel });
+        .getByRole("button", { name: tomorrowLabel })
+        .and(page.locator('[data-month="current"]'));
       await expect(startDateBtn).toBeVisible({ timeout: 5000 });
 
       // Click tomorrow's day in the calendar using its accessible name.
@@ -383,12 +383,12 @@ test.describe
       // Open the end date calendar popover (second "Show Calendar" button)
       await showCalendarButtons.nth(1).click();
       // Wait for the end date calendar popover to render.
-      // NOTE: data-month="current" is on the button element itself, so we
-      // scope the role locator under the [data-month] selector to target
-      // only the day button in the current month grid.
+      // NOTE: data-month="current" is on the button element itself. Use
+      // .and() intersection to target the day button in the current month
+      // grid — chaining (.locator().getByRole()) would search descendants.
       const endDateBtn = page
-        .locator('[data-month="current"]')
-        .getByRole("button", { name: dayAfterLabel });
+        .getByRole("button", { name: dayAfterLabel })
+        .and(page.locator('[data-month="current"]'));
       await expect(endDateBtn).toBeVisible({ timeout: 5000 });
 
       // Click the end date in the calendar (data-month="current" avoids

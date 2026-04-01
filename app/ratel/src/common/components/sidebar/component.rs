@@ -1,8 +1,5 @@
 use crate::components::button::{Button, ButtonStyle};
 use crate::components::separator::Separator;
-use crate::components::sheet::{
-    Sheet, SheetContent, SheetDescription, SheetHeader, SheetSide, SheetTitle,
-};
 use crate::components::tooltip::{Tooltip, TooltipContent, TooltipTrigger};
 use dioxus::core::use_drop;
 use dioxus::prelude::*;
@@ -302,41 +299,43 @@ pub fn Sidebar(
     let mobile = is_mobile();
     let open_m = open_mobile();
     if mobile || open_m {
-        let sheet_side = match side {
-            SidebarSide::Left => SheetSide::Left,
-            SidebarSide::Right => SheetSide::Right,
-        };
-
-        // Only mount the Sheet when open_mobile is true. This is an intentional
-        // trade-off: close animations cannot run because the Sheet is unmounted
-        // when open_mobile transitions to false. However, keeping the Sheet
-        // permanently mounted and driving it via a signal causes a race in
-        // dioxus-primitives' `use_animated_open`: it starts with show_in_dom=false
-        // and sets it to true via use_effect. Mounting with open=false then
-        // flipping to open=true races with the close animation task, causing
-        // content to never render. By only mounting when open, the Sheet always
-        // starts with open=true — no race.
-        //
-        // TODO: Revisit once dioxus-primitives supports a stable open/close
-        // lifecycle that does not rely on use_animated_open's initial state.
+        // Render the mobile sidebar directly instead of using Sheet/DialogRoot.
+        // dioxus-primitives' DialogRoot gates children behind `use_animated_open`
+        // which starts with show_in_dom=false and relies on use_effect to flip it.
+        // This causes the content to never appear in certain hydration scenarios.
+        // By rendering directly, we avoid the animation gate entirely.
         if open_m {
+            let side_attr = match side {
+                SidebarSide::Left => "left",
+                SidebarSide::Right => "right",
+            };
             return rsx! {
+                // Load sheet CSS for overlay/panel styling
+                document::Link { rel: "stylesheet", href: asset!("../sheet/style.css") }
                 div {
                     "data-mobile": "true",
                     "data-testid": "mobile-sidebar-sheet",
-                    Sheet {
-                        open: true,
-                        on_open_change: move |v| ctx.set_open_mobile(v),
-                        SheetContent {
-                            side: sheet_side,
-                            class: "sidebar-sheet",
+                    // Overlay + sidebar content (parent-child for CSS animations)
+                    div {
+                        class: "sheet-root",
+                        "data-state": "open",
+                        "data-slot": "sheet-root",
+                        onclick: move |_| {
+                            ctx.set_open_mobile(false);
+                        },
+                        // Sidebar content panel
+                        div {
+                            class: "sheet sidebar-sheet",
+                            "data-side": side_attr,
                             "data-sidebar": "sidebar",
                             "data-slot": "sidebar",
                             "data-mobile": "true",
-                            SheetHeader { class: "sr-only",
-                                SheetTitle { "Sidebar" }
-                                SheetDescription { "Displays the mobile sidebar." }
-                            }
+                            role: "dialog",
+                            aria_modal: "true",
+                            aria_label: "Sidebar",
+                            onclick: move |e| {
+                                e.stop_propagation();
+                            },
                             div {
                                 class: "sidebar-mobile-inner",
                                 "data-testid": "mobile-sidebar-content",
