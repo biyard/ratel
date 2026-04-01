@@ -148,28 +148,40 @@ async fn event_bridge_handler(
         "Received EventBridge event"
     );
 
-    match envelope.detail_type {
+    let result = match envelope.detail_type {
         DetailType::TimelineUpdate => {
-            crate::features::timeline::services::fan_out_timeline_entries(DetailType::parse_detail(&envelope.detail)?).await?;
+            crate::features::timeline::services::fan_out_timeline_entries(DetailType::parse_detail(&envelope.detail)?).await
         }
         DetailType::PopularPostUpdate => {
-            crate::features::timeline::services::fan_out_popular_post(DetailType::parse_detail(&envelope.detail)?).await?;
+            crate::features::timeline::services::fan_out_popular_post(DetailType::parse_detail(&envelope.detail)?).await
         }
         DetailType::PopularSpaceUpdate => {
-            crate::features::timeline::services::fan_out_popular_space(DetailType::parse_detail(&envelope.detail)?).await?;
+            crate::features::timeline::services::fan_out_popular_space(DetailType::parse_detail(&envelope.detail)?).await
         }
         DetailType::NotificationSend => {
             let notification: crate::common::models::notification::Notification =
                 DetailType::parse_detail(&envelope.detail)?;
-            notification.process().await?;
+            notification.process().await
         }
         DetailType::Unknown => {
             tracing::warn!(
                 "Unhandled EventBridge event: source={}",
                 envelope.source,
             );
+            Ok(())
         }
+    };
+
+    if let Err(ref e) = result {
+        tracing::error!(
+            detail_type = ?envelope.detail_type,
+            source = %envelope.source,
+            error = %e,
+            "EventBridge handler failed"
+        );
     }
+
+    result.map_err(lambda_runtime::Error::from)?;
 
     Ok(())
 }

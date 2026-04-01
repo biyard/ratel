@@ -32,15 +32,18 @@ pub async fn fan_out_popular_post(post: Post) -> Result<()> {
     let mut entries: Vec<(Partition, TimelineReason)> = Vec::new();
 
     // Collect direct followers first (to mark as seen -- they already have it)
-    seen.insert(author_pk.to_string());
+    let author_pk_str = author_pk.to_string();
+    seen.insert(author_pk_str.clone());
     collect_follower_pks(cli, author_pk, &mut seen).await?;
 
     // For each direct follower, collect their followers (2nd-degree)
-    let direct_followers = seen.clone();
+    // Build a stable list of direct follower PKs to iterate over, avoiding a full HashSet clone.
+    let direct_followers: Vec<String> = seen
+        .iter()
+        .filter(|pk| *pk != &author_pk_str)
+        .cloned()
+        .collect();
     for follower_pk_str in &direct_followers {
-        if follower_pk_str == &author_pk.to_string() {
-            continue;
-        }
         let follower_pk: Partition = match follower_pk_str.parse() {
             Ok(pk) => pk,
             Err(_) => continue,
