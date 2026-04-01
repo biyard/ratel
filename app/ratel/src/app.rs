@@ -13,6 +13,14 @@ pub fn App() -> Element {
     use_context_provider(|| PopupService::new());
     ToastService::init();
     ThemeService::init();
+
+    // Signal to Playwright that WASM hydration is complete.
+    // Must be declared before any `?` (Suspense) to ensure it runs.
+    #[cfg(not(feature = "server"))]
+    use_effect(|| {
+        document::eval("window.__dioxus_hydrated = true;");
+    });
+
     let _ = crate::features::auth::Context::init()?;
     crate::common::contexts::TeamContext::init();
     let conf = config::get();

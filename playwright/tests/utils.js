@@ -102,27 +102,14 @@ export async function waitPopup(page, { visible = true }) {
 }
 
 export async function goto(page, url) {
-  await Promise.all([
-    page.waitForResponse(
-      (response) =>
-        response.url().includes("app-shell") &&
-        response.url().endsWith(".wasm") &&
-        response.status() === 200,
-    ),
-    page.goto(url),
-  ]);
+  await page.goto(url);
   await page.waitForLoadState("domcontentloaded");
-  await page.waitForTimeout(200);
-  // Wait for Dioxus WASM to hydrate — SSR markup already contains
-  // [data-dioxus-id], so also verify the interpreter is initialised.
-  // NOTE: In Dioxus 0.7, `dioxus` is only available as a local binding
-  // inside document::eval() contexts, NOT as `window.dioxus`. Checking
-  // `window.dioxus.send` would hang forever. Instead we check for the
-  // presence of hydrated DOM elements and rely on Playwright's built-in
-  // action retries for any remaining hydration delay.
-  await page.waitForFunction(
-    () => document.querySelector("[data-dioxus-id]") !== null
-  );
+  // Wait for Dioxus WASM to hydrate. SSR markup already contains
+  // [data-dioxus-id], so that check is insufficient. Instead, the App
+  // component sets window.__dioxus_hydrated = true via a use_effect +
+  // document::eval after the first client-side render, which only
+  // happens once WASM has compiled, initialised, and hydrated the DOM.
+  await page.waitForFunction(() => window.__dioxus_hydrated === true);
 }
 
 export async function getEditor(page) {
