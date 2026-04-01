@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { goto } from "../utils";
+import { goto, clickNoNav } from "../utils";
 import { CONFIGS } from "../config";
 
 /**
@@ -45,9 +45,7 @@ const MOBILE_VIEWPORT = { width: 375, height: 667 };
  * @returns {import("@playwright/test").Locator} The sidebar content locator.
  */
 async function openMobileSidebar(page) {
-  const moreBtn = page.getByTestId("mobile-more-btn");
-  await expect(moreBtn).toBeVisible();
-  await moreBtn.click({ force: true });
+  await clickNoNav(page, { testId: "mobile-more-btn" }, { force: true });
 
   const sidebarContent = page.getByTestId("mobile-sidebar-content");
 
@@ -55,7 +53,7 @@ async function openMobileSidebar(page) {
     await expect(sidebarContent).toBeVisible({ timeout: 10000 });
   } catch {
     // Retry: first click may have fired before Dioxus attached event handlers
-    await moreBtn.click({ force: true });
+    await clickNoNav(page, { testId: "mobile-more-btn" }, { force: true });
     await expect(sidebarContent).toBeVisible({ timeout: 10000 });
   }
 
@@ -183,9 +181,7 @@ test.describe(
         // Click profile button to open dropdown.
         // Use force:true to bypass DOM-stability retry loop (same reason
         // as the More button — is_mobile signal keeps mutating the DOM).
-        const profileBtn = page.getByTestId("sidebar-profile-btn");
-        await expect(profileBtn).toBeVisible();
-        await profileBtn.click({ force: true });
+        await clickNoNav(page, { testId: "sidebar-profile-btn" }, { force: true });
 
         // The dropdown should contain logout button — it renders outside the
         // sidebar-mobile-inner div (in the ProfileButton's relative wrapper),

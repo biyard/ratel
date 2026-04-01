@@ -48,10 +48,10 @@ export async function click(page, opt) {
  * toggling a panel) where `waitForLoadState` would resolve immediately or hang
  * because no page navigation occurs.
  */
-export async function clickNoNav(page, opt) {
+export async function clickNoNav(page, opt, clickOptions = {}) {
   const selected = await getLocator(page, opt);
 
-  await selected.click();
+  await selected.click(clickOptions);
 
   return selected;
 }
