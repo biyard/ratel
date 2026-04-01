@@ -223,14 +223,28 @@ impl Team {
 
 #[cfg(feature = "server")]
 fn extract_team_identifier(parts: &Parts) -> Result<String> {
-    let mut segments = parts.uri.path().trim_matches('/').split('/');
-    while let Some(seg) = segments.next() {
-        if seg == "teams" {
-            if let Some(value) = segments.next() {
+    let path = parts.uri.path().trim_matches('/');
+    let segments: Vec<&str> = path.split('/').filter(|s| !s.is_empty()).collect();
+
+    // Pattern 1: /api/teams/:team_id/... (client-side API call)
+    // Require the preceding segment to be "api" to avoid colliding with
+    // SSR routes for a team whose username happens to be "teams".
+    for i in 1..segments.len() {
+        if segments[i] == "teams" && segments[i - 1] == "api" {
+            if let Some(&value) = segments.get(i + 1) {
                 return Ok(value.to_string());
             }
-            break;
         }
+    }
+
+    // /:username/... (SSR page URL)
+    if let Some(&first) = segments.first() {
+        if first.eq_ignore_ascii_case("api") {
+            return Err(Error::BadRequest(
+                "Invalid team path: missing team identifier".to_string(),
+            ));
+        }
+        return Ok(first.to_string());
     }
 
     Err(Error::BadRequest(
