@@ -83,7 +83,7 @@ aws-credential-types = { version = "1.2.6", optional = true }
 strum = { version = "0.27.2", features = ["derive"] }
 js-sys = "0.3"
 tracing-wasm = "0.2.1"
-dioxus-cli-config = "0.7.3"
+dioxus-cli-config = "0.7.4"
 tracing-subscriber = { workspace = true }
 getrandom = { version = "0.4", features = ["wasm_js"], optional = true }
 lambda_http = { version = "1.0.2", optional = true }
