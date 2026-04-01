@@ -281,7 +281,13 @@ pub fn Sidebar(
         };
     }
 
-    if is_mobile() || open_mobile() {
+    // Read both signals unconditionally to maintain Dioxus subscriptions.
+    // Rust's `||` short-circuits: if `is_mobile()` is true, `open_mobile()`
+    // would not be called, dropping its subscription. Then setting
+    // `open_mobile(true)` later would NOT trigger a re-render.
+    let mobile = is_mobile();
+    let open_m = open_mobile();
+    if mobile || open_m {
         let sheet_side = match side {
             SidebarSide::Left => SheetSide::Left,
             SidebarSide::Right => SheetSide::Right,
@@ -293,7 +299,7 @@ pub fn Sidebar(
         // then immediately transitioning to open=true can race with the close
         // animation task, causing content to never render. By only mounting when
         // open, the Sheet always starts with open=true — no race.
-        if open_mobile() {
+        if open_m {
             return rsx! {
                 div {
                     "data-mobile": "true",
