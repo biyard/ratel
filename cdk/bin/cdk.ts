@@ -49,6 +49,9 @@ new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {
   vpc: escStack.vpc,
   cluster: escStack.cluster,
   namespace: escStack.namespace,
+  icUrl: process.env.IC_URL,
+  ratelCanisterId: process.env.RATEL_CANISTER_ID,
+  icpIdentityPem: process.env.ICP_IDENTITY_PEM,
 });
 
 // new DaemonStack(app, `ratel-${env}-daemon-ap-northeast-2`, {
