@@ -102,35 +102,14 @@ export async function waitPopup(page, { visible = true }) {
 }
 
 export async function goto(page, url) {
-  // Start listening for the WASM response before navigation. The promise
-  // resolves when the binary arrives over the network. When served from the
-  // browser's compiled-code cache no response event fires, so we add a
-  // timeout and swallow the error — in that case the binary is already
-  // available and hydration will start immediately after DOM parsing.
-  const wasmPromise = page
-    .waitForResponse(
-      (response) =>
-        response.url().includes("app-shell") &&
-        response.url().endsWith(".wasm") &&
-        response.status() === 200,
-      { timeout: 15000 },
-    )
-    .catch(() => {});
-
   await page.goto(url);
   await page.waitForLoadState("domcontentloaded");
-  // Wait for Dioxus SSR markup to be present — [data-dioxus-id] confirms
-  // the server-rendered DOM is available.
-  await page.waitForFunction(
-    () => document.querySelector("[data-dioxus-id]") !== null,
-    null,
-    { timeout: 30000 },
-  );
-  // Wait for the WASM binary to arrive (network) or fall through (cache).
-  // This ensures the Dioxus runtime has loaded before we interact with the
-  // page. In CI (fresh browser contexts) the response always fires; when
-  // cached the .catch() above resolves immediately.
-  await wasmPromise;
+  // Wait for Dioxus to fully hydrate — the App component sets this flag
+  // via document::eval after mounting on the client.  This guarantees
+  // event handlers are attached before Playwright interacts with the page.
+  await page.waitForFunction(() => window.__dioxus_hydrated === true, null, {
+    timeout: 30000,
+  });
 }
 
 export async function getEditor(page) {
