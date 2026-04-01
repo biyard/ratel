@@ -116,9 +116,9 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
       interval: 10s
-      timeout: 5s
-      retries: 20
-      start_period: 30s
+      timeout: 10s
+      retries: 30
+      start_period: 60s
     volumes:
       - ./.build/localstack-data:/var/lib/localstack
     networks:
