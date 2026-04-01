@@ -102,13 +102,12 @@ export async function waitPopup(page, { visible = true }) {
 }
 
 export async function goto(page, url) {
-  // waitForResponse may never fire in manually-created browser contexts
-  // (e.g., component tests using browser.newContext()) because the WASM
-  // response can be served from the browser's compiled-code cache without
-  // emitting a network event. Add a timeout with catch so goto() doesn't
-  // hang indefinitely — the waitForFunction hydration check below is the
-  // real guarantee that the app is ready.
-  const wasmLoaded = page
+  // Best-effort WASM response listener — fire-and-forget so it never blocks
+  // navigation. When the WASM binary is served from the browser's
+  // compiled-code cache no network event fires, so awaiting this would add
+  // up to `timeout` ms of unnecessary delay. The waitForFunction hydration
+  // check below is the real guarantee that the app is ready.
+  page
     .waitForResponse(
       (response) =>
         response.url().includes("app-shell") &&
@@ -118,9 +117,8 @@ export async function goto(page, url) {
     )
     .catch(() => {});
 
-  await Promise.all([wasmLoaded, page.goto(url)]);
+  await page.goto(url);
   await page.waitForLoadState("domcontentloaded");
-  await page.waitForTimeout(200);
   // Wait for Dioxus WASM to hydrate — SSR markup already contains
   // [data-dioxus-id], so also verify the interpreter is initialised.
   // NOTE: In Dioxus 0.7, `dioxus` is only available as a local binding
