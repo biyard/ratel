@@ -120,6 +120,15 @@ impl SidebarCtx {
     pub fn open(&self) -> bool {
         self.open.cloned()
     }
+
+    /// Whether the sidebar is currently rendering as mobile.
+    ///
+    /// Uses **both** `is_mobile` (from JS resize detection) and `open_mobile`
+    /// to avoid the race where `open_mobile` is set to `true` before the
+    /// async `is_mobile` JS eval has resolved (initial value is `false`).
+    pub fn is_mobile_active(&self) -> bool {
+        (self.is_mobile)() || (self.open_mobile)()
+    }
 }
 
 pub fn use_sidebar() -> SidebarCtx {

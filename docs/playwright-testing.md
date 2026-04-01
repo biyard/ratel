@@ -162,7 +162,7 @@ await editor.fill("Post body content here.");
 
 ### `waitPopup(page, { visible })`
 
-Waits for the popup overlay to appear or disappear. The overlay is identified by the CSS class `.backdrop-blur-[10px]`.
+Waits for the popup overlay to appear or disappear. The overlay is identified by `data-testid="popup-overlay"`.
 
 - `{ visible: true }` — waits for popup to appear (default)
 - `{ visible: false }` — waits for popup to close (removed from DOM)
@@ -172,7 +172,7 @@ await waitPopup(page, { visible: true });   // popup opened
 await waitPopup(page, { visible: false });  // popup closed
 ```
 
-**How popups work in Ratel:** The Dioxus `PopupZone` component renders a full-screen overlay `div` with `backdrop-blur-[10px]` and `z-[101]`. When `popup.close()` is called, the internal signal is set to `None` and the entire overlay is **removed from the DOM** (not hidden with CSS).
+**How popups work in Ratel:** The Dioxus `PopupZone` component renders a full-screen overlay `div` with `data-testid="popup-overlay"` and `z-[101]`. When `popup.close()` is called, the internal signal is set to `None` and the entire overlay is **removed from the DOM** (not hidden with CSS).
 
 ### `wrap(page, project, baseDir)`
 
@@ -383,7 +383,7 @@ PLAYWRIGHT_ID=my-test-run npx playwright test
 
 - Verify the test user credentials in `user.auth.setup.js` match a real account.
 - Ensure the login modal elements haven't changed (check `data-testid` and placeholder values).
-- Check that the popup overlay class `backdrop-blur-[10px]` is still used.
+- Check that the popup overlay `data-testid="popup-overlay"` is present on the overlay element.
 
 ### Element Not Found
 
@@ -401,7 +401,7 @@ PLAYWRIGHT_ID=my-test-run npx playwright test
 1. **Always use utility helpers** — `goto`, `click`, `fill`, `getLocator` instead of raw Playwright APIs. This keeps tests consistent and handles waits automatically.
 2. **One assertion per test** — Keep tests focused on a single behavior for clear failure messages.
 3. **Use `getLocator` for assertions** — It internally calls `toBeVisible()` with the configured timeout.
-4. **Prefer `label` and `testId`** — These are stable selectors. Avoid CSS class selectors except for `waitPopup`.
+4. **Prefer `label` and `testId`** — These are stable selectors. Avoid CSS class selectors.
 5. **Don't use `page.waitForTimeout()`** — Use `waitPopup`, `getLocator`, or Playwright's built-in auto-waiting instead.
 6. **Plain JavaScript** — All test files use `.js`, not TypeScript.
 7. **No `test.describe` needed** — Individual `test()` calls are fine for simple specs.

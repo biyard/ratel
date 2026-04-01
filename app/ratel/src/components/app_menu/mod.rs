@@ -61,7 +61,9 @@ pub fn AppMenu() -> Element {
     let mut popup = use_popup();
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let ctx = use_sidebar();
-    let is_mobile = (ctx.is_mobile)();
+    // Use is_mobile_active() which also considers open_mobile, avoiding the
+    // race where the Sheet opens before the async JS is_mobile eval resolves.
+    let is_mobile = ctx.is_mobile_active();
     // On mobile, always show labels (expanded mode) since the Sheet has full width
     let collapsed = !is_mobile && (ctx.state)() == SidebarState::Collapsed;
 

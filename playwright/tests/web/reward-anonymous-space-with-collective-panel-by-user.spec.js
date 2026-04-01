@@ -351,7 +351,13 @@ test.describe
         name: "Show Calendar",
       });
       await showCalendarButtons.first().click();
-      await page.waitForLoadState("load");
+      // Wait for the calendar popover to render by ensuring tomorrow's date
+      // button in the current month grid is visible before clicking it
+      await expect(
+        page
+          .getByRole("button", { name: tomorrowLabel })
+          .and(page.locator('[data-month="current"]'))
+      ).toBeVisible({ timeout: 5000 });
 
       // Click tomorrow's day in the calendar using its accessible name.
       // Use data-month="current" to disambiguate when the same date appears
@@ -378,7 +384,12 @@ test.describe
 
       // Open the end date calendar popover (second "Show Calendar" button)
       await showCalendarButtons.nth(1).click();
-      await page.waitForLoadState("load");
+      // Wait for the end date calendar popover to render
+      await expect(
+        page
+          .getByRole("button", { name: dayAfterLabel })
+          .and(page.locator('[data-month="current"]'))
+      ).toBeVisible({ timeout: 5000 });
 
       // Click the end date in the calendar (use data-month="current" to
       // avoid strict mode violation when the date appears in two month grids)
