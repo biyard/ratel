@@ -35,10 +35,9 @@ pub fn render_member(
         }
     };
 
-    let role_class = if role == "Admin" {
-        "bg-primary/10 text-primary border-primary/20"
-    } else {
-        "bg-card-bg text-text-primary border-border"
+    let role_class = match role {
+        TeamRole::Admin => "bg-primary/10 text-primary border-primary/20",
+        TeamRole::Member => "bg-card-bg text-text-primary border-border",
     };
 
     rsx! {

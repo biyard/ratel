@@ -1,12 +1,12 @@
 use super::super::controllers::{add_team_member_handler, find_user_handler, FindUserQueryType};
-use super::super::dto::{AddTeamMemberRequest, FoundUserResponse};
+use super::super::dto::{AddTeamMemberRequest, FoundUserResponse, TeamRole};
 use super::super::*;
 
 use icons::validations;
 
 #[derive(Clone)]
 pub struct InviteResult {
-    pub role: String,
+    pub role: TeamRole,
     pub total_added: i64,
     pub failed_pks: Vec<String>,
 }
@@ -32,8 +32,8 @@ pub fn InviteMemberModal(
     let failed_invite = use_signal(|| tr.failed_invite.to_string());
 
     let roles = vec![
-        (tr.group_admin.to_string(), "admin".to_string()),
-        (tr.group_member.to_string(), "member".to_string()),
+        (tr.group_admin.to_string(), TeamRole::Admin),
+        (tr.group_member.to_string(), TeamRole::Member),
     ];
     let roles_for_invite = roles.clone();
 
@@ -79,8 +79,8 @@ pub fn InviteMemberModal(
     let on_invite = move |_| {
         let role = roles_for_invite
             .get(role_index())
-            .map(|(_, id)| id.clone())
-            .unwrap_or_else(|| "member".to_string());
+            .map(|(_, id): &(String, TeamRole)| id.clone())
+            .unwrap_or(TeamRole::Member);
 
         if selected_users.read().is_empty() {
             message.set(Some(failed_invite()));
