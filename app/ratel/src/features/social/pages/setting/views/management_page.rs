@@ -42,7 +42,7 @@ pub fn ManagementPage(username: String) -> Element {
     let team_pk = ctx.team_pk.clone();
 
     let mut refresh = use_signal(|| 0u64);
-    let mut error_msg = use_signal(|| Option::<String>::None);
+    let error_msg = use_signal(|| Option::<String>::None);
     let failed_remove_member = tr.failed_remove_member.to_string();
 
     // Members infinite scroll query
