@@ -45,28 +45,24 @@ pub async fn add_team_member_handler(
         let user_team_sk = EntityType::UserTeam(team.pk.to_string());
         if crate::features::auth::UserTeam::get(cli, &user.pk, Some(&user_team_sk))
             .await?
-            .is_none()
-        {
-            crate::features::auth::UserTeam::new(
-                user.pk.clone(),
-                team.pk.clone(),
-                team.display_name.clone(),
-                team.profile_url.clone(),
-                team.username.clone(),
-                team.dao_address.clone(),
-            )
-            .create(cli)
-            .await?;
-        }
-
-        let team_group_sk = EntityType::TeamGroup(body.role.to_string());
-        let user_team_group_sk = EntityType::UserTeamGroup(team_group_sk.to_string());
-        if crate::features::auth::UserTeamGroup::get(cli, &user.pk, Some(&user_team_group_sk))
-            .await?
             .is_some()
         {
             continue;
         }
+
+        crate::features::auth::UserTeam::new(
+            user.pk.clone(),
+            team.pk.clone(),
+            team.display_name.clone(),
+            team.profile_url.clone(),
+            team.username.clone(),
+            team.dao_address.clone(),
+        )
+        .create(cli)
+        .await?;
+
+        let team_group_sk = EntityType::TeamGroup(body.role.to_string());
+        let user_team_group_sk = EntityType::UserTeamGroup(team_group_sk.to_string());
 
         crate::features::auth::UserTeamGroup::new(
             user.pk.clone(),
