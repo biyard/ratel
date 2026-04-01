@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { goto } from "../utils";
+import { goto, clickNoNav } from "../utils";
 import { CONFIGS } from "../config";
 
 /**
@@ -36,29 +36,16 @@ const MOBILE_VIEWPORT = { width: 375, height: 667 };
  * Opens the mobile sidebar sheet by clicking the More button and waits
  * for the inner content to be visible.
  *
- * The Sheet's dialog overlay and its content have a one-frame rendering
- * delay (use_animated_open), so we wait for the `mobile-sidebar-content`
- * testid (on the sidebar-mobile-inner div inside the Sheet) to be visible
- * rather than just checking the outer wrapper for DOM attachment.
- *
- * Uses force:true to bypass DOM-stability checks (post-hydration effects
- * like is_mobile detection can keep mutating the DOM). Retries the click
- * once if the content does not appear within a short window, to handle
- * the case where the first click fires before Dioxus has fully attached
- * event handlers during hydration.
+ * Uses the shared `clickNoNav` helper (no navigation occurs) and waits
+ * for the `mobile-sidebar-content` test ID to become visible instead of
+ * relying on fixed `waitForTimeout` delays.  Retries the click once if
+ * the content does not appear, to handle the case where the first click
+ * fires before Dioxus has fully attached event handlers during hydration.
  *
  * @returns {import("@playwright/test").Locator} The sidebar content locator.
  */
 async function openMobileSidebar(page) {
-  const moreBtn = page.getByTestId("mobile-more-btn");
-  await expect(moreBtn).toBeVisible();
-
-  // The Sheet mounts only when open_mobile is true. After clicking, the
-  // Sidebar re-renders → Sheet mounts with open=true → Dialog's
-  // use_animated_open effect sets show_in_dom=true on the next frame.
-  // Allow a short settling period for WASM↔JS bridge + Dioxus re-render.
-  await moreBtn.click({ force: true });
-  await page.waitForTimeout(1000);
+  await clickNoNav(page, { testId: "mobile-more-btn" });
 
   const sidebarContent = page.getByTestId("mobile-sidebar-content");
 
@@ -66,8 +53,7 @@ async function openMobileSidebar(page) {
     await expect(sidebarContent).toBeVisible({ timeout: 10000 });
   } catch {
     // Retry: first click may have fired before Dioxus attached event handlers
-    await moreBtn.click({ force: true });
-    await page.waitForTimeout(1000);
+    await clickNoNav(page, { testId: "mobile-more-btn" });
     await expect(sidebarContent).toBeVisible({ timeout: 10000 });
   }
 
@@ -201,6 +187,15 @@ test.describe(
 
         // The dropdown should contain "Create Team" option
         await expect(page.getByText("Create Team", { exact: true })).toBeVisible();
+
+        // The dropdown should NOT contain any team items — on mobile, team
+        // links are rendered inline in the sidebar content with testid
+        // "mobile-sidebar-team-link". Scope check to the dropdown container
+        // (parent of the logout button) so we don't count the inline ones.
+        const profileDropdown = logoutBtn.locator("..");
+        await expect(
+          profileDropdown.getByTestId("mobile-sidebar-team-link")
+        ).toHaveCount(0);
       } finally {
         await context.close();
       }

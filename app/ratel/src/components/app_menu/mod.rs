@@ -151,6 +151,7 @@ pub fn AppMenu() -> Element {
 
                         for team in teams.iter() {
                             SidebarMenuItem {
+                                key: "{team.username}",
                                 Link {
                                     to: format!("/{}/home", team.username),
                                     class: "flex gap-2 items-center py-1.5 w-full text-sm rounded-md sidebar-menu-button hover:bg-accent/10",
@@ -414,6 +415,7 @@ fn ProfileButton(collapsed: bool, is_mobile: bool) -> Element {
                     if !is_mobile {
                         for team in teams.iter() {
                             Link {
+                                key: "{team.username}",
                                 class: "flex gap-2 items-center py-1.5 px-2 w-full rounded-md cursor-pointer hover:bg-hover",
                                 to: format!("/{}/home", team.username),
                                 onclick: move |_| open.set(false),
