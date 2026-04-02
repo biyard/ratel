@@ -218,7 +218,7 @@ pub fn MobileBottomNav() -> Element {
     let mut show_more_menu = use_signal(|| false);
 
     rsx! {
-        // Bottom navigation bar - only visible on mobile (< tablet breakpoint)
+        // Bottom navigation bar - only visible below the tablet breakpoint (max-tablet:block)
         nav {
             class: "fixed bottom-0 left-0 z-50 w-full border-t hidden max-tablet:block border-separator bg-background pb-[env(safe-area-inset-bottom)]",
             "data-testid": "mobile-bottom-nav",
@@ -249,9 +249,10 @@ pub fn MobileBottomNav() -> Element {
                     "data-testid": "mobile-more-btn",
                     onclick: move |_| {
                         if logged_in {
-                            // MobileBottomNav is only visible on mobile (CSS max-tablet:block),
-                            // so always open the mobile sidebar sheet. This avoids a race
-                            // condition where the async is_mobile JS signal hasn't resolved yet.
+                            // MobileBottomNav is only visible below the tablet breakpoint
+                            // (CSS max-tablet:block, i.e. < 900px), so always open the
+                            // mobile sidebar sheet. This avoids a race condition where the
+                            // async is_mobile JS signal hasn't resolved yet.
                             ctx.set_open_mobile(true);
                         } else {
                             show_more_menu.set(!show_more_menu());

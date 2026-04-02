@@ -105,10 +105,11 @@ export async function goto(page, url) {
   await page.goto(url);
   await page.waitForLoadState("domcontentloaded");
   // Wait for Dioxus WASM to hydrate. SSR markup already contains
-  // [data-dioxus-id], so that check is insufficient. Instead, the App
-  // component sets window.__dioxus_hydrated = true via a use_effect +
-  // document::eval after the first client-side render, which only
-  // happens once WASM has compiled, initialised, and hydrated the DOM.
+  // [data-dioxus-id], so that check is insufficient. The App component
+  // sets window.__dioxus_hydrated = true via inline js_sys::Reflect::set
+  // after Context::init() has resolved (i.e. after the auth loader
+  // completes), so this flag indicates both WASM execution and initial
+  // data readiness.
   await page.waitForFunction(() => window.__dioxus_hydrated === true);
 }
 

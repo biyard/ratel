@@ -14,12 +14,13 @@ pub fn App() -> Element {
     ToastService::init();
     ThemeService::init();
 
+    let _ = crate::features::auth::Context::init()?;
+
     // Signal to Playwright that WASM hydration is complete.
-    // This runs as inline code (not use_effect) because use_effect only
-    // fires after a successful render — if the component suspends at the
-    // `?` below, use_effect would never fire and the flag would never be set.
-    // Inline code executes every time the component function is invoked,
-    // even when the component will subsequently suspend.
+    // Placed after Context::init() so the flag is only set once the auth
+    // context (which uses `use_loader(...)?` and can suspend) has resolved.
+    // This way Playwright's `goto()` — which waits on `__dioxus_hydrated` —
+    // will not proceed while the app is still suspended/loading.
     #[cfg(not(feature = "server"))]
     {
         if let Some(window) = web_sys::window() {
@@ -30,8 +31,6 @@ pub fn App() -> Element {
             );
         }
     }
-
-    let _ = crate::features::auth::Context::init()?;
     crate::common::contexts::TeamContext::init();
     let conf = config::get();
     let env = conf.common.env;

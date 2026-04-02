@@ -376,7 +376,11 @@ fn ProfileButton(collapsed: bool, is_mobile: bool) -> Element {
     };
 
     let profile_url = user.profile_url.clone();
-    let display_name = user.display_name.clone();
+    let display_name = if user.display_name.is_empty() {
+        user.username.clone()
+    } else {
+        user.display_name.clone()
+    };
     let teams = if is_mobile {
         Vec::new()
     } else {
