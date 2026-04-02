@@ -8,25 +8,21 @@ mod viewer_page;
 use admin_page::*;
 pub use management_page::ManagementPage;
 pub use subscription_page::SubscriptionPage;
-use viewer_page::*;
+pub use viewer_page::*;
 
 use super::controllers::get_team_settings_handler;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 
 #[component]
 pub fn Home(username: String) -> Element {
-    let resource = use_loader(use_reactive((&username,), |(name,)| async move {
-        Ok::<_, super::Error>(
-            get_team_settings_handler(name)
-                .await
-                .map_err(|e| e.to_string()),
-        )
+    let resource = use_server_future(use_reactive((&username,), |(name,)| async move {
+        get_team_settings_handler(name).await
     }))?;
 
-    let data = resource.read();
+    let binding = resource.read();
 
-    match data.as_ref() {
-        Ok(team) => {
+    match binding.as_ref() {
+        Some(Ok(team)) => {
             let permissions: TeamGroupPermissions = team.permissions.unwrap_or(0).into();
             let can_edit = permissions.contains(TeamGroupPermission::TeamEdit)
                 || permissions.contains(TeamGroupPermission::TeamAdmin);
@@ -41,7 +37,7 @@ pub fn Home(username: String) -> Element {
                 }
             }
         }
-        Err(_) => rsx! {
+        _ => rsx! {
             ViewerPage { username }
         },
     }
