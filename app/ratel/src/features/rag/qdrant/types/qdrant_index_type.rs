@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 pub enum QdrantIndexType {
     Reply,
     Material,
+    Post,
 }
 
 impl std::fmt::Display for QdrantIndexType {
@@ -13,6 +14,7 @@ impl std::fmt::Display for QdrantIndexType {
         match self {
             QdrantIndexType::Reply => write!(f, "reply"),
             QdrantIndexType::Material => write!(f, "material"),
+            QdrantIndexType::Post => write!(f, "post"),
         }
     }
 }
