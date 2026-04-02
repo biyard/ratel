@@ -8,6 +8,7 @@ pub mod post;
 pub mod reward;
 pub mod setting;
 pub mod space;
+pub mod team_membership;
 pub mod user_draft;
 pub mod user_membership;
 pub mod user_reward;
