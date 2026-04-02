@@ -74,25 +74,23 @@ fn UserPostCard(post: PostResponse) -> Element {
         Link {
             to: "{post_url}",
             class: "block",
-            div { class: "flex flex-col gap-4 py-6 border-b border-separator",
-                div { class: "flex items-center justify-between",
-                    if !category.is_empty() {
+            div { class: "flex flex-col gap-5 py-6 border-b border-separator",
+                if !category.is_empty() {
+                    div { class: "flex items-center justify-between",
                         div { class: "flex items-center border border-tag-stroke rounded-[8px] px-2 py-0.5",
                             span { class: "text-[12px] font-bold text-text-primary leading-[14px] tracking-[-0.12px]",
                                 "{category}"
                             }
                         }
-                    } else {
-                        div {}
-                    }
-                    div { class: "flex items-center gap-2",
-                        icons::edit::Edit1 {
-                            class: "w-5 h-5 [&>path]:stroke-icon-primary cursor-pointer",
+                        div { class: "flex items-center gap-2",
+                            icons::edit::Edit1 {
+                                class: "w-5 h-5 [&>path]:stroke-icon-primary cursor-pointer",
+                            }
                         }
                     }
                 }
 
-                h2 { class: "text-[20px] font-bold text-text-primary tracking-[0.5px] leading-[25px] line-clamp-2 mt-2",
+                h2 { class: "text-[20px] font-bold text-text-primary tracking-[0.5px] leading-[25px] line-clamp-2",
                     "{title}"
                 }
 
@@ -143,6 +141,11 @@ fn UserPostListItem(post: PostResponse) -> Element {
     let likes = post.likes;
     let comments = post.comments;
     let category = post.categories.first().cloned().unwrap_or_default();
+    let title_class = if category.is_empty() {
+        "text-[20px] font-bold text-text-primary tracking-[0.5px] leading-[25px] line-clamp-2"
+    } else {
+        "text-[20px] font-bold text-text-primary tracking-[0.5px] leading-[25px] line-clamp-2 mt-2"
+    };
 
     rsx! {
         Link {
@@ -157,7 +160,7 @@ fn UserPostListItem(post: PostResponse) -> Element {
                     }
                 }
 
-                h2 { class: "text-[20px] font-bold text-text-primary tracking-[0.5px] leading-[25px] line-clamp-2 mt-4",
+                h2 { class: "{title_class}",
                     "{title}"
                 }
 
