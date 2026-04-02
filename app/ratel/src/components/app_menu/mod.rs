@@ -447,7 +447,7 @@ fn ProfileButton(collapsed: bool, is_mobile: bool) -> Element {
                     // User profile link
                     Link {
                         class: "flex gap-2 items-center py-1.5 px-2 w-full rounded-md cursor-pointer hover:bg-hover",
-                        to: "/",
+                        to: format!("/{}", user.username),
                         onclick: move |_| open.set(false),
                         if !user.profile_url.is_empty() {
                             {
