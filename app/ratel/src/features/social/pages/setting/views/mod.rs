@@ -1,3 +1,4 @@
+use crate::route::Route;
 use dioxus::prelude::*;
 
 mod admin_page;
@@ -15,17 +16,16 @@ use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 
 #[component]
 pub fn Home(username: String) -> Element {
-    let resource = use_loader(use_reactive((&username,), |(name,)| async move {
-        Ok::<_, super::Error>(
-            get_team_settings_handler(name)
-                .await
-                .map_err(|e| e.to_string()),
-        )
+    let nav = use_navigator();
+
+    let resource = use_server_future(use_reactive((&username,), |(name,)| async move {
+        get_team_settings_handler(name).await
     }))?;
 
-    let data = resource.read();
+    let binding = resource.read();
+    let data = binding.as_ref().unwrap();
 
-    match data.as_ref() {
+    match data {
         Ok(team) => {
             let permissions: TeamGroupPermissions = team.permissions.unwrap_or(0).into();
             let can_edit = permissions.contains(TeamGroupPermission::TeamEdit)
@@ -36,6 +36,7 @@ pub fn Home(username: String) -> Element {
                     AdminPage { username, team: team.clone() }
                 }
             } else {
+                // Members and non-members see "no permission" for general settings
                 rsx! {
                     ViewerPage { username }
                 }
