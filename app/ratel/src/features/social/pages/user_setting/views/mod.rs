@@ -79,6 +79,7 @@ translate! {
     mcp_copied: { en: "Copied to clipboard!", ko: "클립보드에 복사되었습니다!" },
     mcp_copy: { en: "Copy", ko: "복사" },
     mcp_not_generated: { en: "No secret generated yet. Click Generate to create one.", ko: "아직 시크릿이 생성되지 않았습니다. 생성 버튼을 클릭하세요." },
+    mcp_secret_exists: { en: "A secret has been generated. Click Regenerate to get a new URL. The token is only shown once after generation.", ko: "시크릿이 생성되어 있습니다. 재생성 버튼을 클릭하면 새 URL을 받을 수 있습니다. 토큰은 생성 직후에만 표시됩니다." },
 }
 
 #[component]
@@ -668,9 +669,11 @@ fn format_js_error(err: wasm_bindgen::JsValue) -> String {
 #[component]
 fn McpServerCard() -> Element {
     let tr: UserSettingsTranslate = use_translate();
-    let mut mcp_secret = use_loader(move || async move { get_mcp_secret_handler().await })?;
-    let secret_value = mcp_secret().secret;
+    let mut mcp_status = use_loader(move || async move { get_mcp_secret_handler().await })?;
+    let has_secret = mcp_status().has_secret;
 
+    // Holds the raw token only right after generation (not persisted across reloads)
+    let mut raw_token = use_signal(|| Option::<String>::None);
     let mut generating = use_signal(|| false);
     let mut copied = use_signal(|| false);
     let mut mcp_message = use_signal(|| Option::<(String, bool)>::None);
@@ -681,8 +684,9 @@ fn McpServerCard() -> Element {
             generating.set(true);
             mcp_message.set(None);
             match regenerate_mcp_secret_handler().await {
-                Ok(_) => {
-                    mcp_secret.restart();
+                Ok(resp) => {
+                    raw_token.set(resp.secret);
+                    mcp_status.restart();
                 }
                 Err(e) => {
                     mcp_message.set(Some((format!("{e}"), false)));
@@ -692,11 +696,7 @@ fn McpServerCard() -> Element {
         });
     };
 
-    let mcp_url = if let Some(secret_value) = secret_value.clone() {
-        Some(format!("{origin}/mcp/{secret_value}"))
-    } else {
-        None
-    };
+    let mcp_url = raw_token().map(|token| format!("{origin}/mcp/{token}"));
 
     let on_copy = {
         let mcp_url = mcp_url.clone();
@@ -737,6 +737,7 @@ fn McpServerCard() -> Element {
             p { class: "text-sm text-foreground-muted", {tr.mcp_description} }
 
             if let Some(ref url) = mcp_url {
+                // Just generated — show the full URL with copy button
                 SettingsRow { label: tr.mcp_server_url.to_string(),
                     div { class: "flex gap-2 items-center",
                         Input { value: url.clone(), disabled: true }
@@ -752,7 +753,11 @@ fn McpServerCard() -> Element {
                         }
                     }
                 }
+            } else if has_secret {
+                // Secret exists but raw token is no longer available
+                p { class: "text-sm italic text-foreground-muted", {tr.mcp_secret_exists} }
             } else {
+                // No secret generated yet
                 p { class: "text-sm italic text-foreground-muted", {tr.mcp_not_generated} }
             }
 
@@ -764,12 +769,12 @@ fn McpServerCard() -> Element {
 
             div { class: "flex justify-end",
                 Button {
-                    style: if secret_value.is_some() { ButtonStyle::Secondary } else { ButtonStyle::Primary },
+                    style: if has_secret { ButtonStyle::Secondary } else { ButtonStyle::Primary },
                     disabled: generating(),
                     onclick: on_generate,
                     if generating() {
                         {tr.mcp_generating}
-                    } else if secret_value.is_some() {
+                    } else if has_secret {
                         {tr.mcp_regenerate}
                     } else {
                         {tr.mcp_generate}
