@@ -61,7 +61,7 @@ pub fn RewardSetting(
                                     }
                                 }
                             }
-                            if is_paid {
+                            if is_paid && available_credits > 0 {
                                 div { "data-testid": "reward-setting-toggle",
                                     Switch {
                                         active: enable_reward(),
@@ -304,3 +304,4 @@ translate! {
         ko: "잠금 해제",
     },
 }
+

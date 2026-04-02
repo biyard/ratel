@@ -9,6 +9,7 @@ mod history;
 mod identify;
 mod identify_team;
 mod update_team_billing_card;
+mod team_history;
 
 use super::*;
 pub use get_billing_info::*;
@@ -23,6 +24,7 @@ pub use history::*;
 pub use identify::*;
 pub use identify_team::*;
 pub use update_team_billing_card::*;
+pub use team_history::*;
 
 #[cfg(feature = "server")]
 pub(crate) fn mask_card_number(card_number: &str) -> String {
