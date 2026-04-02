@@ -5,6 +5,10 @@ pub enum MemberError {
     #[error("User not found")]
     #[translate(en = "User not found", ko = "사용자를 찾을 수 없습니다.")]
     UserNotFound,
+
+    #[error("Too many invitations")]
+    #[translate(en = "You can invite up to 100 members at once.", ko = "한번에 최대 100명까지 초대할 수 있습니다.")]
+    TooManyInvitations,
 }
 
 #[cfg(feature = "server")]
@@ -13,6 +17,7 @@ impl MemberError {
         use bdk::prelude::axum::http::StatusCode;
         match self {
             MemberError::UserNotFound => StatusCode::NOT_FOUND,
+            MemberError::TooManyInvitations => StatusCode::BAD_REQUEST,
         }
     }
 }
