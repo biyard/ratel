@@ -121,7 +121,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
         let permissions: TeamGroupPermissions = mask.into();
         let is_admin = permissions.contains(TeamGroupPermission::TeamAdmin);
         let can_team_edit = is_admin || permissions.contains(TeamGroupPermission::TeamEdit);
-        let is_team_member = can_team_edit || permissions.contains(TeamGroupPermission::PostRead);
+        let is_team_member = mask != 0;
 
         let user_role = if is_admin || can_team_edit {
             "Creator"

@@ -16,6 +16,21 @@ pub struct TeamItem {
     pub description: String,
 }
 
+impl TeamItem {
+    pub fn permission_mask(&self) -> i64 {
+        let mut mask = 0i64;
+        for v in &self.permissions {
+            mask |= 1i64 << (*v as i32);
+        }
+        mask
+    }
+
+    pub fn has_permission(&self, permission: crate::features::posts::types::TeamGroupPermission) -> bool {
+        let permissions: crate::features::posts::types::TeamGroupPermissions = self.permission_mask().into();
+        permissions.contains(permission)
+    }
+}
+
 #[derive(Clone, Copy)]
 pub struct TeamContext {
     pub teams: Signal<Vec<TeamItem>>,
