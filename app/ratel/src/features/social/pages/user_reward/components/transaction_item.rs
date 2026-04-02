@@ -51,14 +51,8 @@ pub fn transaction_item(
                         }
                     }
                 }
-                div { class: "flex items-center gap-1",
-                    span { class: "text-sm font-medium text-foreground-muted tracking-[0.5px]",
-                        "{time_ago_label}"
-                    }
-                    lucide_dioxus::ExternalLink {
-                        size: 18,
-                        class: "[&>path]:stroke-foreground-muted [&>polyline]:stroke-foreground-muted [&>line]:stroke-foreground-muted",
-                    }
+                span { class: "text-sm font-medium text-foreground-muted tracking-[0.5px]",
+                    "{time_ago_label}"
                 }
             }
         }
