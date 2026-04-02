@@ -12,25 +12,37 @@ use qdrant_client::qdrant::{
     UpsertPointsBuilder, VectorParamsBuilder,
 };
 use std::collections::HashMap;
-use std::sync::RwLock;
+use std::sync::atomic::{AtomicBool, Ordering};
 
-static ENSURED_COLLECTIONS: RwLock<Vec<String>> = RwLock::new(Vec::new());
+static COLLECTION_ENSURED: AtomicBool = AtomicBool::new(false);
 
-/// Ensure a Qdrant collection exists, creating it with cosine/1024 if missing.
-pub async fn ensure_collection(client: &qdrant_client::Qdrant, collection: &str) -> Result<()> {
-    {
-        let guard = ENSURED_COLLECTIONS.read().unwrap();
-        if guard.iter().any(|c| c == collection) {
-            return Ok(());
-        }
+/// Single Qdrant collection name, matching the DynamoDB table convention:
+/// `{DYNAMO_TABLE_PREFIX}-main`
+pub fn collection_name() -> String {
+    let cfg = crate::common::CommonConfig::default();
+    format!("{}-main", cfg.qdrant.prefix)
+}
+
+/// Tenant ID derived from the table prefix.
+pub fn tenant_id() -> String {
+    let cfg = crate::common::CommonConfig::default();
+    cfg.qdrant.prefix.to_string()
+}
+
+/// Ensure the single Qdrant collection exists, creating it with cosine/1024 if missing.
+pub async fn ensure_collection(client: &qdrant_client::Qdrant) -> Result<()> {
+    if COLLECTION_ENSURED.load(Ordering::Relaxed) {
+        return Ok(());
     }
 
-    if !client.collection_exists(collection).await.map_err(|e| {
+    let name = collection_name();
+
+    if !client.collection_exists(&name).await.map_err(|e| {
         Error::InternalServerError(format!("Qdrant collection_exists failed: {e}"))
     })? {
         client
             .create_collection(
-                CreateCollectionBuilder::new(collection)
+                CreateCollectionBuilder::new(&name)
                     .vectors_config(VectorParamsBuilder::new(1024, Distance::Cosine)),
             )
             .await
@@ -39,25 +51,20 @@ pub async fn ensure_collection(client: &qdrant_client::Qdrant, collection: &str)
             })?;
     }
 
-    {
-        let mut guard = ENSURED_COLLECTIONS.write().unwrap();
-        if !guard.iter().any(|c| c == collection) {
-            guard.push(collection.to_string());
-        }
-    }
+    COLLECTION_ENSURED.store(true, Ordering::Relaxed);
     Ok(())
 }
 
-/// Upsert a single point into a Qdrant collection.
+/// Upsert a single point into the shared Qdrant collection.
 pub async fn upsert_point(
     client: &qdrant_client::Qdrant,
-    collection: &str,
     point_id: &str,
     vector: Vec<f32>,
     payload: serde_json::Map<String, serde_json::Value>,
 ) -> Result<()> {
-    ensure_collection(client, collection).await?;
+    ensure_collection(client).await?;
 
+    let collection = collection_name();
     let qdrant_payload: HashMap<String, qdrant_client::qdrant::Value> = payload
         .into_iter()
         .map(|(k, v)| (k, json_to_qdrant_value(v)))
@@ -73,14 +80,14 @@ pub async fn upsert_point(
     Ok(())
 }
 
-/// Delete a single point from a Qdrant collection by ID.
+/// Delete a single point from the shared Qdrant collection by ID.
 pub async fn delete_point(
     client: &qdrant_client::Qdrant,
-    collection: &str,
     point_id: &str,
 ) -> Result<()> {
-    ensure_collection(client, collection).await?;
+    ensure_collection(client).await?;
 
+    let collection = collection_name();
     client
         .delete_points(
             DeletePointsBuilder::new(collection).points(PointsIdsList {
@@ -91,18 +98,6 @@ pub async fn delete_point(
         .map_err(|e| Error::InternalServerError(format!("Qdrant delete_points failed: {e}")))?;
 
     Ok(())
-}
-
-/// Get collection name for global posts.
-pub fn posts_collection() -> String {
-    let cfg = crate::common::CommonConfig::default();
-    format!("{}-posts", cfg.qdrant.prefix)
-}
-
-/// Get collection name for a discussion's AI moderator data.
-pub fn discussion_collection(space_id: &str, discussion_sk: &str) -> String {
-    let cfg = crate::common::CommonConfig::default();
-    format!("{}-aimod-{}-{}", cfg.qdrant.prefix, space_id, discussion_sk)
 }
 
 fn json_to_qdrant_value(v: serde_json::Value) -> qdrant_client::qdrant::Value {
