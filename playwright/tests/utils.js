@@ -104,12 +104,12 @@ export async function waitPopup(page, { visible = true }) {
 export async function goto(page, url) {
   await page.goto(url);
   await page.waitForLoadState("domcontentloaded");
-  // Wait for Dioxus WASM to hydrate. SSR markup already contains
-  // [data-dioxus-id], so that check is insufficient. The App component
-  // sets window.__dioxus_hydrated = true via inline js_sys::Reflect::set
-  // after Context::init() has resolved (i.e. after the auth loader
-  // completes), so this flag indicates both WASM execution and initial
-  // data readiness.
+  // Wait for Dioxus WASM to load. The run.rs launch() function sets
+  // window.__dioxus_hydrated = true before dioxus::launch(), so this
+  // flag confirms the WASM binary is executing. Hydration (event handler
+  // attachment) follows immediately after — Playwright's built-in
+  // visibility/actionability checks in click()/fill() handle any
+  // remaining race with hydration.
   await page.waitForFunction(() => window.__dioxus_hydrated === true);
 }
 

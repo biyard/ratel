@@ -16,21 +16,6 @@ pub fn App() -> Element {
 
     let _ = crate::features::auth::Context::init()?;
 
-    // Signal to Playwright that WASM hydration is complete.
-    // Placed after Context::init() so the flag is only set once the auth
-    // context (which uses `use_loader(...)?` and can suspend) has resolved.
-    // This way Playwright's `goto()` — which waits on `__dioxus_hydrated` —
-    // will not proceed while the app is still suspended/loading.
-    #[cfg(not(feature = "server"))]
-    {
-        if let Some(window) = web_sys::window() {
-            let _ = js_sys::Reflect::set(
-                &window,
-                &wasm_bindgen::JsValue::from_str("__dioxus_hydrated"),
-                &wasm_bindgen::JsValue::TRUE,
-            );
-        }
-    }
     crate::common::contexts::TeamContext::init();
     let conf = config::get();
     let env = conf.common.env;
