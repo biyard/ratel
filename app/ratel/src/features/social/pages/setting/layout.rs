@@ -18,7 +18,6 @@ pub fn TeamSettingLayout(username: String) -> Element {
     crate::common::contexts::TeamContext::init();
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let mut team_ctx = crate::common::contexts::use_team_context();
-
     let _teams_loader = use_resource(move || async move {
         let user = user_ctx().user.clone();
         if user.is_some() {
@@ -42,6 +41,15 @@ pub fn TeamSettingLayout(username: String) -> Element {
     let current_route = use_route::<Route>();
     let is_general_settings = matches!(current_route, Route::TeamSetting { .. });
 
+    // Check if user has edit permission (for showing Save button)
+    let can_edit = {
+        let teams = team_ctx.teams.read();
+        teams.iter().find(|t| t.username == username).map_or(false, |t| {
+            t.has_permission(TeamGroupPermission::TeamAdmin)
+                || t.has_permission(TeamGroupPermission::TeamEdit)
+        })
+    };
+
     rsx! {
         div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-team-bg text-text-primary",
             div { class: "hidden tablet:flex",
@@ -51,7 +59,7 @@ pub fn TeamSettingLayout(username: String) -> Element {
                 // Top header bar
                 div { class: "flex items-center justify-between shrink-0 px-6 py-4 border-b border-border",
                     span { class: "text-base font-bold text-text-primary", "Settings" }
-                    if is_general_settings {
+                    if is_general_settings && can_edit {
                         Button {
                             size: ButtonSize::Medium,
                             style: ButtonStyle::Primary,
@@ -100,7 +108,6 @@ fn SettingsSidemenu(username: String) -> Element {
     let permissions: TeamGroupPermissions = permissions_val.into();
     let is_admin = permissions.contains(TeamGroupPermission::TeamAdmin);
     let can_edit = is_admin || permissions.contains(TeamGroupPermission::TeamEdit);
-
     let user_role = if is_admin {
         "Creator"
     } else if can_edit {
@@ -141,9 +148,11 @@ fn SettingsSidemenu(username: String) -> Element {
             }
 
             div { class: "flex flex-col flex-1 overflow-y-auto px-3 pb-4 gap-0.5",
-                SettingNavItem {
-                    label: tr.general_settings.to_string(),
-                    route: settings_route,
+                if can_edit {
+                    SettingNavItem {
+                        label: tr.general_settings.to_string(),
+                        route: settings_route,
+                    }
                 }
                 SettingNavItem {
                     label: tr.team_management.to_string(),

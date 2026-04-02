@@ -48,6 +48,20 @@ fn enterprise_contact() {
 
 #[component]
 pub fn SubscriptionPage(username: String) -> Element {
+    // Only admins can access subscription page — use team context (already loaded by layout)
+    let team_ctx = crate::common::contexts::use_team_context();
+    let is_admin = {
+        let teams = team_ctx.teams.read();
+        teams.iter().find(|t| t.username == username).map_or(false, |t| {
+            t.has_permission(crate::features::posts::types::TeamGroupPermission::TeamAdmin)
+        })
+    };
+    if !is_admin {
+        return rsx! {
+            super::ViewerPage { username }
+        };
+    }
+
     let lang = use_language();
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let mut popup = use_popup();

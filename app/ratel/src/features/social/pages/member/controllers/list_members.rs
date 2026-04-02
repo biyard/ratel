@@ -20,10 +20,8 @@ pub async fn list_members_handler(
         return Err(Error::NoPermission);
     };
 
-    let can_view = permissions.contains(TeamGroupPermission::TeamAdmin)
-        || permissions.contains(TeamGroupPermission::TeamEdit)
-        || permissions.contains(TeamGroupPermission::GroupEdit);
-    if !can_view {
+    // Only team members (users with any permission) can view the member list
+    if permissions.0.is_empty() {
         return Err(Error::NoPermission);
     }
 
