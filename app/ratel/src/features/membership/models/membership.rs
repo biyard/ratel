@@ -327,7 +327,16 @@ impl TeamMembership {
         self
     }
 
+    pub fn use_credits(&mut self, amount: i64) -> Result<()> {
+        if self.remaining_credits < amount {
+            return Err(SpaceRewardError::CreditsExceedBalance.into());
+        }
 
+        self.remaining_credits -= amount;
+        self.updated_at = crate::common::utils::time::get_now_timestamp_millis();
+
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, Default, PartialEq, serde::Serialize, serde::Deserialize)]
