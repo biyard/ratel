@@ -2,6 +2,7 @@ use crate::common::*;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use crate::features::social::pages::setting::i18n::TeamSettingsTranslate;
 use crate::features::social::*;
+use super::SettingsSaveContext;
 
 #[component]
 pub fn TeamSettingLayout(username: String) -> Element {
