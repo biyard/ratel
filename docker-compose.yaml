@@ -192,7 +192,7 @@ services:
     image: amazonlinux:2023
     environment:
       ENDPOINT: http://qdrant:6333
-      COLLECTION: ratel-local-posts
+      COLLECTION: ratel-local-main
     depends_on:
       qdrant:
         condition: service_healthy

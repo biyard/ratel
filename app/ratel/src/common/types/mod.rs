@@ -12,6 +12,7 @@ mod reward;
 mod space;
 mod space_page;
 mod space_user_role;
+mod user_or_team;
 
 pub use auth::*;
 pub use composite_partition::*;
@@ -26,6 +27,7 @@ pub use reward::*;
 pub use space::*;
 pub use space_page::*;
 pub use space_user_role::*;
+pub use user_or_team::*;
 
 mod list_response;
 pub use list_response::ListResponse;

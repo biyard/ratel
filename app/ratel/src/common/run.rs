@@ -30,11 +30,19 @@ fn serve(app: fn() -> Element) {
     let app = dioxus_router.layer(session_layer);
 
     #[cfg(not(feature = "lambda"))]
-    dioxus::serve(move || {
-        let app = app.clone();
+    {
+        #[cfg(feature = "local-dev")]
+        {
+            tracing::info!("Starting local-dev DynamoDB Stream poller");
+            crate::common::stream_poller::spawn_stream_poller();
+        }
 
-        async move { Ok(app) }
-    });
+        dioxus::serve(move || {
+            let app = app.clone();
+
+            async move { Ok(app) }
+        });
+    }
 
     #[cfg(feature = "lambda")]
     {
@@ -117,6 +125,10 @@ pub enum DetailType {
     PopularPostUpdate,
     PopularSpaceUpdate,
     NotificationSend,
+    PostVectorIndex,
+    PostVectorDelete,
+    AiModeratorReplyCheck,
+    AiModeratorReplyIndex,
     #[serde(other)]
     Unknown,
 }
@@ -163,6 +175,26 @@ async fn event_bridge_handler(
             let notification: crate::common::models::notification::Notification =
                 DetailType::parse_detail(&envelope.detail)?;
             notification.process().await
+        }
+        DetailType::PostVectorIndex => {
+            let post: crate::features::posts::models::Post =
+                DetailType::parse_detail(&envelope.detail)?;
+            crate::features::rag::qdrant::indexers::post_indexer::index_post(post).await
+        }
+        DetailType::PostVectorDelete => {
+            let post: crate::features::posts::models::Post =
+                DetailType::parse_detail(&envelope.detail)?;
+            crate::features::rag::qdrant::indexers::post_indexer::delete_post_index(post).await
+        }
+        DetailType::AiModeratorReplyCheck => {
+            let post: crate::features::spaces::pages::actions::actions::discussion::SpacePost =
+                DetailType::parse_detail(&envelope.detail)?;
+            crate::features::ai_moderator::services::event_handler::handle_ai_moderator_event(post).await
+        }
+        DetailType::AiModeratorReplyIndex => {
+            let comment: crate::features::spaces::pages::actions::actions::discussion::SpacePostComment =
+                DetailType::parse_detail(&envelope.detail)?;
+            crate::features::rag::qdrant::indexers::reply_indexer::index_reply(comment).await
         }
         DetailType::Unknown => {
             tracing::warn!(

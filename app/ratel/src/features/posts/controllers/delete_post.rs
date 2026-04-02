@@ -35,9 +35,7 @@ pub async fn delete_post_handler(post_id: FeedPartition, force: Option<bool>) ->
 
     let post = Post::delete(cli, post_pk, Some(EntityType::Post)).await?;
 
-    if post.status == PostStatus::Published {
-        crate::features::posts::services::delete_post_vector_async(conf.qdrant(), &post.pk);
-    }
+    // Qdrant vector deletion is handled by DynamoStream → PostVectorDelete event
 
     Ok(post)
 }
