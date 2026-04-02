@@ -24,6 +24,15 @@ pub fn ActionCommonSettings(
     #[cfg(feature = "membership")]
     let current_space = space();
     #[cfg(feature = "membership")]
+    let user_ctx = crate::features::auth::hooks::use_user_context();
+    #[cfg(feature = "membership")]
+    let personal_username = user_ctx
+        .read()
+        .user
+        .as_ref()
+        .map(|u| u.username.clone())
+        .unwrap_or_default();
+    #[cfg(feature = "membership")]
     let owner_username = current_space.author_username.clone();
     #[cfg(feature = "membership")]
     let team_detail =
@@ -32,11 +41,6 @@ pub fn ActionCommonSettings(
         }))?;
     #[cfg(feature = "membership")]
     let team_detail_read = team_detail.read();
-    #[cfg(feature = "membership")]
-    let team_detail_error = team_detail_read
-        .as_ref()
-        .and_then(|r| r.as_ref().err())
-        .map(|e| format!("{e:?}"));
     #[cfg(feature = "membership")]
     let team_detail = team_detail_read
         .as_ref()
@@ -55,13 +59,7 @@ pub fn ActionCommonSettings(
     let upgrade_route = if is_team_space {
         format!("/{}/team-settings/subscription", team_username)
     } else {
-        let username = crate::features::auth::hooks::use_user_context()
-            .read()
-            .user
-            .as_ref()
-            .map(|u| u.username.clone())
-            .unwrap_or_default();
-        format!("/{username}/memberships")
+        format!("/{personal_username}/memberships")
     };
     #[cfg(feature = "membership")]
     let user_membership = crate::features::auth::hooks::use_user_membership();
@@ -82,11 +80,6 @@ pub fn ActionCommonSettings(
     ))?;
     #[cfg(feature = "membership")]
     let team_membership_read = team_membership.read();
-    #[cfg(feature = "membership")]
-    let team_membership_error = team_membership_read
-        .as_ref()
-        .and_then(|r| r.as_ref().err())
-        .map(|e| format!("{e:?}"));
     #[cfg(feature = "membership")]
     let team_membership = team_membership_read
         .as_ref()

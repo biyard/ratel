@@ -57,7 +57,7 @@ pub async fn change_membership_handler(
                         .ok_or_else(|| Error::NotFound("Membership not found".to_string()))?;
 
                 if current_membership.tier == req.membership {
-                    return Err(Error::BadRequest("Membership already active".to_string()));
+                    return Err(Error::MembershipAlreadyActive);
                 }
 
                 let user_id: UserPartition = user_membership.pk.clone().into();
@@ -112,7 +112,7 @@ pub async fn change_membership_handler(
             }
             None => {
                 if req.membership == MembershipTier::Free {
-                    return Err(Error::BadRequest("Membership already active".to_string()));
+                    return Err(Error::MembershipAlreadyActive);
                 }
 
                 let new_membership =

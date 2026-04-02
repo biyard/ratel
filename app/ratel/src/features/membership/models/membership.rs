@@ -178,7 +178,6 @@ impl UserMembership {
         }
 
         self.remaining_credits -= amount;
-        self.updated_at = crate::common::utils::time::get_now_timestamp_millis();
 
         Ok(())
     }
@@ -333,7 +332,6 @@ impl TeamMembership {
         }
 
         self.remaining_credits -= amount;
-        self.updated_at = crate::common::utils::time::get_now_timestamp_millis();
 
         Ok(())
     }
