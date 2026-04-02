@@ -16,10 +16,16 @@ if [ "${RESET_DB}" = "true" ]; then
     aws --endpoint-url=$ENDPOINT dynamodb wait table-not-exists --table-name ratel-local-main 2>/dev/null || true
 fi
 
-echo 'Creating ratel-local table with GSIs...'
+echo 'Creating ratel-local table with GSIs and DynamoDB Streams...'
 aws --endpoint-url=$ENDPOINT dynamodb create-table --cli-input-json file:///scripts/dynamodb-schema.json 2>/dev/null || \
   echo 'ratel-local-main table already exists, skipping creation'
-echo 'ratel-local-main table and GSIs ready'
+
+# Verify stream is enabled (update if table existed without streams)
+aws --endpoint-url=$ENDPOINT dynamodb update-table \
+  --table-name ratel-local-main \
+  --stream-specification StreamEnabled=true,StreamViewType=NEW_AND_OLD_IMAGES 2>/dev/null || true
+
+echo 'ratel-local-main table and GSIs ready (streams enabled: NEW_AND_OLD_IMAGES)'
 
 echo 'Waiting for LocalStack to be ready...'
 until aws --endpoint-url=$ENDPOINT sqs list-queues >/dev/null 2>&1; do
