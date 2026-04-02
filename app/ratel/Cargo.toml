@@ -99,6 +99,12 @@ ratel-canister = { path = "../../packages/ratel-canister", default-features = fa
 attr-voting = { path = "../../packages/attr-voting", optional = true }
 mimetype-detector = "0.3.6"
 lambda_runtime = { version = "1.1.1", optional = true }
+rmcp = { version = "0.7.0", git = "https://github.com/modelcontextprotocol/rust-sdk", features = [
+    "server",
+    "transport-streamable-http-server",
+    "transport-worker",
+    "macros",
+], optional = true }
 
 
 [features]
@@ -143,6 +149,7 @@ server = [
   "url",
   "uuid",
   "validator",
+  "rmcp",
 ]
 
 lambda = ["lambda_http", "lambda_runtime", "server"]
@@ -151,7 +158,7 @@ membership = []
 social = []
 spaces = []
 spaces_full = ["spaces"]
-local-dev = ["beta"]
+local-dev = ["beta","bypass"]
 beta = []
 futures = ["dep:futures"]
 

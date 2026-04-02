@@ -112,11 +112,10 @@ pub fn FollowUserList(
                                                 {tr.subscribe}
                                             }
                                         }
-                                        if can_delete {
+                                        if can_delete && !is_creator {
                                             Button {
                                                 class: "min-w-[90px]",
                                                 style: ButtonStyle::Outline,
-                                                disabled: is_creator,
                                                 onclick: on_delete,
                                                 {tr.remove}
                                             }

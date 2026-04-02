@@ -377,7 +377,11 @@ jobs:
 
       - name: Start infrastructure
         run: |
-          make infra
+          docker compose --profile infra up -d localstack qdrant
+          echo "Waiting for LocalStack to be healthy..."
+          timeout 120 bash -c 'until curl -sf http://localhost:4566/_localstack/health > /dev/null 2>&1; do sleep 5; done'
+          echo "LocalStack is healthy, starting remaining services..."
+          docker compose --profile infra up -d --remove-orphans
 
       - name: Run tests
         working-directory: app/ratel
@@ -421,11 +425,6 @@ jobs:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
-
       - name: Download Docker image artifact
         uses: actions/download-artifact@v4
         with:
@@ -444,7 +443,11 @@ jobs:
           COMMIT: pr-${{ github.sha }}
           RESET_DB: "true"
         run: |
-          docker-compose --profile testing up -d
+          docker compose --profile testing up -d localstack qdrant
+          echo "Waiting for LocalStack to be healthy..."
+          timeout 120 bash -c 'until curl -sf http://localhost:4566/_localstack/health > /dev/null 2>&1; do sleep 5; done'
+          echo "LocalStack is healthy, starting remaining services..."
+          docker compose --profile testing up -d
 
       - name: Wait for services to be ready
         run: |
@@ -469,9 +472,9 @@ jobs:
           if [ $elapsed -ge $timeout ]; then
             echo "❌ App Shell failed to respond with 200 status within ${timeout}s"
             echo "🔍 Checking Docker services status:"
-            docker-compose -f docker-compose.yaml ps
+            docker compose ps
             echo "🔍 App Shell logs:"
-            docker-compose -f docker-compose.yaml logs app-shell-testing
+            docker compose logs app-shell-testing
             exit 1
           fi
 

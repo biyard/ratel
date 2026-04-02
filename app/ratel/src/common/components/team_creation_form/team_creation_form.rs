@@ -98,33 +98,36 @@ pub fn TeamCreationForm(
     };
 
     rsx! {
-        div { class: "w-100 max-tablet:w-full flex flex-col gap-10 items-center",
+        div { class: "flex flex-col gap-10 items-center w-100 max-tablet:w-full",
             FileUploader {
                 on_upload_success: move |url| {
                     profile_url.set(url);
                 },
-                class: Some("group relative flex items-center justify-center size-40 max-mobile:size-20 mx-auto".to_string()),
+                class: Some(
+                    "group relative flex items-center justify-center size-40 max-mobile:size-20 mx-auto"
+                        .to_string(),
+                ),
                 accept: Some("image/*".to_string()),
                 img {
                     src: "{preview_url}",
                     alt: "logo",
-                    class: "w-40 h-40 rounded-full object-cover cursor-pointer relative group max-mobile:size-20",
+                    class: "object-cover relative w-40 h-40 rounded-full cursor-pointer group max-mobile:size-20",
                 }
-                div { class: "absolute w-40 h-40 inset-0 bg-component-bg/50 flex items-center justify-center text-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white font-semibold",
+                div { class: "flex absolute inset-0 justify-center items-center w-40 h-40 font-semibold text-center text-white rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-component-bg/50",
                     "{tr.upload_logo}"
                 }
             }
 
             div { class: "flex flex-col gap-2.5 w-full",
                 input {
-                    class: "w-full px-3 py-2 rounded-lg border border-divider bg-bg text-sm text-text-primary outline-none focus:border-primary placeholder:text-c-secondary",
+                    class: "py-2 px-3 w-full text-sm rounded-lg border outline-none border-divider bg-bg text-text-primary placeholder:text-c-secondary focus:border-primary",
                     r#type: "text",
                     placeholder: "{tr.team_display_name}",
                     value: "{nickname}",
                     oninput: move |e| {
                         nickname.set(e.value());
                     },
-                    "data-pw": "team-nickname-input",
+                    "data-testid": "team-nickname-input",
                 }
                 div { class: "flex flex-col gap-0.25",
                     div { class: "relative",
@@ -132,14 +135,14 @@ pub fn TeamCreationForm(
                             "@"
                         }
                         input {
-                            class: "w-full pl-8 pr-3 py-2 rounded-lg border border-divider bg-bg text-sm text-text-primary outline-none focus:border-primary placeholder:text-c-secondary",
+                            class: "py-2 pr-3 pl-8 w-full text-sm rounded-lg border outline-none border-divider bg-bg text-text-primary placeholder:text-c-secondary focus:border-primary",
                             r#type: "text",
                             placeholder: "{tr.team_id} (ex. ratel)",
                             value: "{username}",
                             oninput: move |e| {
                                 username.set(e.value().to_lowercase());
                             },
-                            "data-pw": "team-username-input",
+                            "data-testid": "team-username-input",
                             aria_invalid: username_validation().0 == false,
                         }
                     }
@@ -154,22 +157,22 @@ pub fn TeamCreationForm(
                     }
                 }
                 textarea {
-                    class: "w-full px-3 py-2 rounded-lg border border-divider bg-bg text-sm text-text-primary outline-none focus:border-primary resize-none placeholder:text-c-secondary",
+                    class: "py-2 px-3 w-full text-sm rounded-lg border outline-none resize-none border-divider bg-bg text-text-primary placeholder:text-c-secondary focus:border-primary",
                     rows: "3",
                     placeholder: "{tr.team_description}",
                     value: "{description}",
                     oninput: move |e| {
                         description.set(e.value());
                     },
-                    "data-pw": "team-description-input",
+                    "data-testid": "team-description-input",
                 }
             }
 
             if let Some(err) = error_message {
-                p { class: "text-xs text-red-500 text-center", "{err}" }
+                p { class: "text-xs text-center text-red-500", "{err}" }
             }
 
-            div { class: "w-full grid grid-cols-2 gap-2.5",
+            div { class: "grid grid-cols-2 gap-2.5 w-full",
                 Button {
                     style: ButtonStyle::Secondary,
                     class: "w-full",
@@ -193,12 +196,13 @@ pub fn TeamCreationForm(
                         } else {
                             profile_url.read().clone()
                         };
-                        on_submit.call(TeamCreationPayload {
-                            profile_url: profile_val,
-                            username: username.read().clone(),
-                            nickname: nickname.read().clone(),
-                            description: description.read().clone(),
-                        });
+                        on_submit
+                            .call(TeamCreationPayload {
+                                profile_url: profile_val,
+                                username: username.read().clone(),
+                                nickname: nickname.read().clone(),
+                                description: description.read().clone(),
+                            });
                     },
                     "{tr.create}"
                 }

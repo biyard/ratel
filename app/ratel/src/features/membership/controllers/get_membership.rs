@@ -1,8 +1,10 @@
 use super::*;
-use crate::features::membership::*;
-use crate::features::membership::controllers::normalize_error;
-use crate::features::membership::models::{Membership, MembershipTier, UserMembership, UserMembershipResponse};
 use crate::features::auth::User;
+use crate::features::membership::controllers::normalize_error;
+use crate::features::membership::models::{
+    Membership, MembershipTier, UserMembership, UserMembershipResponse,
+};
+use crate::features::membership::*;
 
 #[get("/v3/me/memberships", user: User)]
 pub async fn get_membership_handler() -> Result<UserMembershipResponse> {

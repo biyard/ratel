@@ -12,7 +12,6 @@ mod remove_member_request;
 mod remove_member_response;
 mod delete_group_response;
 mod team_group_permission_context;
-mod found_user_response;
 
 pub use team_group_response::*;
 pub use create_group_request::*;
@@ -24,4 +23,3 @@ pub use remove_member_request::*;
 pub use remove_member_response::*;
 pub use delete_group_response::*;
 pub use team_group_permission_context::*;
-pub use found_user_response::*;

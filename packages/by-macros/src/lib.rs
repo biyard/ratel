@@ -6,6 +6,7 @@ mod api_model_struct;
 mod dynamo_entity;
 mod dynamo_enum;
 mod enum_prop;
+mod mcp_tool;
 pub(crate) mod parse_queryable_fields;
 #[cfg(feature = "server")]
 mod query_builder_functions;
@@ -330,6 +331,29 @@ pub fn derive_dioxus_controller(input: TokenStream) -> TokenStream {
     save_file(struct_name.to_string().as_str(), &expanded.to_string());
 
     expanded.into()
+}
+
+/// Marks a Dioxus server function handler as an MCP tool.
+///
+/// This macro extracts the function body into a `{name}_mcp_impl` function that can be
+/// called directly from the MCP server, while keeping the original handler intact for
+/// the `#[post]`/`#[get]` macro to process.
+///
+/// # Usage
+///
+/// ```rust,ignore
+/// #[mcp_tool(name = "create_post", description = "Create and publish a new post.")]
+/// #[post("/api/posts", user: User)]
+/// pub async fn create_post_handler(team_id: Option<TeamPartition>) -> Result<CreatePostResponse> {
+///     // body is extracted into create_post_handler_mcp_impl(user, team_id)
+/// }
+/// ```
+///
+/// The generated `create_post_handler_mcp_impl` has the extracted params (e.g., `user: User`)
+/// as explicit arguments, so the MCP server can call it with `self.user`.
+#[proc_macro_attribute]
+pub fn mcp_tool(attr: TokenStream, item: TokenStream) -> TokenStream {
+    mcp_tool::mcp_tool_impl(attr.into(), item.into()).into()
 }
 
 pub(crate) fn save_file(st_name: &str, output: &str) {

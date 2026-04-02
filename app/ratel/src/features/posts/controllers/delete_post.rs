@@ -3,6 +3,7 @@ use crate::features::posts::types::*;
 use crate::features::posts::*;
 use crate::features::auth::User;
 
+#[mcp_tool(name = "delete_post", description = "Delete a post by ID.")]
 #[delete("/api/posts/:post_id", user: User)]
 pub async fn delete_post_handler(post_id: FeedPartition, force: Option<bool>) -> Result<Post> {
     let conf = crate::features::posts::config::get();

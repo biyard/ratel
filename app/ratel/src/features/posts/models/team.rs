@@ -1,9 +1,9 @@
-use crate::features::posts::types::*;
-use crate::features::posts::*;
 #[cfg(feature = "server")]
 use crate::features::auth::OptionalUser;
 #[cfg(feature = "server")]
 use crate::features::auth::UserTeamGroup;
+use crate::features::posts::types::*;
+use crate::features::posts::*;
 
 #[cfg(feature = "server")]
 use super::{TeamGroup, TeamOwner};
@@ -97,11 +97,18 @@ impl Team {
 
         let team_owner = TeamOwner::new(team.pk.clone(), user.clone());
 
-        let team_group = TeamGroup::new(
+        let admin_group = TeamGroup::new(
             team.pk.clone(),
             "Admin".to_string(),
             "Administrators group with all permissions".to_string(),
             TeamGroupPermissions::all(),
+        );
+
+        let member_group = TeamGroup::new(
+            team.pk.clone(),
+            "Member".to_string(),
+            "Default group for team members".to_string(),
+            TeamGroupPermissions::member(),
         );
 
         let user_pk = user.pk.clone();
@@ -109,8 +116,8 @@ impl Team {
 
         let user_team_group = crate::features::auth::UserTeamGroup::new(
             user_pk.clone(),
-            team_group.sk.clone(),
-            team_group.permissions,
+            admin_group.sk.clone(),
+            admin_group.permissions,
             team_pk.clone(),
         );
         let user_team = crate::features::auth::UserTeam::new(
@@ -126,7 +133,8 @@ impl Team {
             .set_transact_items(Some(vec![
                 team.create_transact_write_item(),
                 team_owner.create_transact_write_item(),
-                team_group.create_transact_write_item(),
+                admin_group.create_transact_write_item(),
+                member_group.create_transact_write_item(),
                 user_team_group.create_transact_write_item(),
                 user_team.create_transact_write_item(),
             ]))
@@ -215,14 +223,29 @@ impl Team {
 
 #[cfg(feature = "server")]
 fn extract_team_identifier(parts: &Parts) -> Result<String> {
-    let mut segments = parts.uri.path().trim_matches('/').split('/');
-    while let Some(seg) = segments.next() {
-        if seg == "teams" {
-            if let Some(value) = segments.next() {
+    let path = parts.uri.path().trim_matches('/');
+    let segments: Vec<&str> = path.split('/').filter(|s| !s.is_empty()).collect();
+
+    // Pattern 1: /api/teams/:team_id/... (client-side API call)
+    // Pattern 2: /v3/teams/:team_id/... (membership/payment API call)
+    // Require the preceding segment to be "api" or "v3" to avoid colliding with
+    // SSR routes for a team whose username happens to be "teams".
+    for i in 1..segments.len() {
+        if segments[i] == "teams" && matches!(segments[i - 1], "api" | "v3") {
+            if let Some(&value) = segments.get(i + 1) {
                 return Ok(value.to_string());
             }
-            break;
         }
+    }
+
+    // /:username/... (SSR page URL)
+    if let Some(&first) = segments.first() {
+        if first.eq_ignore_ascii_case("api") {
+            return Err(Error::BadRequest(
+                "Invalid team path: missing team identifier".to_string(),
+            ));
+        }
+        return Ok(first.to_string());
     }
 
     Err(Error::BadRequest(

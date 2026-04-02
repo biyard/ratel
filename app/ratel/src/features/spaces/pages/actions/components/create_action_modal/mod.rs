@@ -343,6 +343,7 @@ fn ActionTypeOption(
     caption: String,
     icon: Element,
 ) -> Element {
+    let testid = format!("action-type-{}", title.to_lowercase().replace(' ', "-"));
     rsx! {
         SpaceCard {
             "data-testid": "{test_id}",

@@ -23,6 +23,11 @@ translate! {
         ko: "보상",
     },
 
+    admin: {
+        en: "Admin",
+        ko: "관리자",
+    },
+
     sign_in: {
         en: "Sign In",
         ko: "로그인",
@@ -66,21 +71,14 @@ pub fn AppMenu() -> Element {
             SidebarGroup {
                 SidebarMenu {
                     NavMenuItem {
-                        href: "/",
+                        href: Route::Index {},
                         label: tr.home,
                         collapsed,
                         icon: rsx! {
                             i::HomeIcon {}
                         },
                     }
-                    NavMenuItem {
-                        href: "/membership",
-                        label: tr.membership,
-                        collapsed,
-                        icon: rsx! {
-                            i::MembershipIcon {}
-                        },
-                    }
+                    MembershipMenuItem { label: tr.membership, collapsed }
 
                     if let Some(user) = user_ctx().user.as_ref() {
                         SidebarMenuItem {
@@ -91,6 +89,36 @@ pub fn AppMenu() -> Element {
                                 i::RewardsIcon {}
                                 if !collapsed {
                                     span { "{tr.rewards}" }
+                                }
+                            }
+                        }
+
+                        if user.user_type == UserType::Admin {
+                            SidebarMenuItem {
+                                Link {
+                                    to: Route::AdminMainPage {},
+                                    class: "flex gap-2 items-center py-1.5 w-full text-sm rounded-md aria-extended:px-0 aria-extended:justify-center sidebar-menu-button hover:bg-accent/10 [&>svg]:w-5 [&>svg]:h-5",
+                                    "aria-extended": collapsed,
+                                    "data-testid": "admin-menu",
+                                    i::AdminIcon {}
+                                    if !collapsed {
+                                        span { "{tr.admin}" }
+                                    }
+                                }
+                            }
+                        }
+
+                        SidebarMenuItem {
+                            Link {
+                                to: format!("/{}/settings", user.username),
+                                class: "flex gap-2 items-center py-1.5 w-full text-sm rounded-md aria-extended:px-0 aria-extended:justify-center sidebar-menu-button hover:bg-accent/10 [&>svg]:w-5 [&>svg]:h-5",
+                                "aria-extended": collapsed,
+                                lucide_dioxus::Settings {
+                                    size: 20,
+                                    class: "[&>path]:stroke-icon-primary [&>line]:stroke-icon-primary [&>circle]:stroke-icon-primary",
+                                }
+                                if !collapsed {
+                                    span { "Settings" }
                                 }
                             }
                         }
@@ -191,7 +219,7 @@ pub fn AppMenu() -> Element {
 }
 
 #[component]
-fn NavMenuItem(href: &'static str, label: &'static str, collapsed: bool, icon: Element) -> Element {
+fn NavMenuItem(href: Route, label: &'static str, collapsed: bool, icon: Element) -> Element {
     rsx! {
         SidebarMenuItem {
             Link {
@@ -248,7 +276,6 @@ fn ProfileButton(collapsed: bool) -> Element {
     let team_ctx = use_team_context();
     let mut open = use_signal(|| false);
     let mut popup = use_popup();
-    let nav = use_navigator();
 
     let user = user_ctx().user.clone();
     let Some(user) = user else {
@@ -365,7 +392,6 @@ fn ProfileButton(collapsed: bool) -> Element {
                             open.set(false);
                             spawn(async move {
                                 let _ = crate::features::auth::controllers::logout_handler().await;
-                                nav.push("/");
                                 #[cfg(target_arch = "wasm32")]
                                 {
                                     if let Some(window) = web_sys::window() {
@@ -403,4 +429,25 @@ fn LanguageIcon() -> Element {
             }
         }
     }
+}
+
+#[cfg(feature = "membership")]
+#[component]
+fn MembershipMenuItem(label: &'static str, collapsed: bool) -> Element {
+    rsx! {
+        NavMenuItem {
+            href: Route::MembershipHome {},
+            label,
+            collapsed,
+            icon: rsx! {
+                i::MembershipIcon {}
+            },
+        }
+    }
+}
+
+#[cfg(not(feature = "membership"))]
+#[component]
+fn MembershipMenuItem(label: &'static str, collapsed: bool) -> Element {
+    rsx! {}
 }
