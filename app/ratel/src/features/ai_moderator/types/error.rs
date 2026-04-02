@@ -16,7 +16,7 @@ pub enum AiModeratorError {
     PremiumRequired,
 
     #[error("Material limit reached")]
-    #[translate(en = "Maximum number of reference materials reached (10)", ko = "참고 자료 최대 개수(10)에 도달했습니다")]
+    #[translate(en = "Maximum number of reference materials reached", ko = "참고 자료 최대 개수에 도달했습니다")]
     MaterialLimitReached,
 
     #[error("Material not found")]

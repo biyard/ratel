@@ -1,6 +1,6 @@
 use crate::features::ai_moderator::*;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MaterialResponse {
     pub material_id: String,
     pub file_name: String,
@@ -8,20 +8,27 @@ pub struct MaterialResponse {
     pub created_at: i64,
 }
 
-#[get("/api/spaces/{space_id}/discussions/{discussion_sk}/ai-moderator/materials", _role: SpaceUserRole)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+pub struct MaterialListResponse {
+    pub items: Vec<MaterialResponse>,
+}
+
+#[get("/api/spaces/{space_id}/discussions/{discussion_id}/ai-moderator/materials", role: SpaceUserRole)]
 pub async fn list_materials(
     space_id: SpacePartition,
-    discussion_sk: String,
-) -> Result<Vec<MaterialResponse>> {
+    discussion_id: SpaceDiscussionEntityType,
+) -> Result<MaterialListResponse> {
+    role.is_creator()?;
+
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
-    let pk = CompositePartition(space_id, discussion_sk);
+    let pk = CompositePartition(space_id, discussion_id.to_string());
 
     let opt = AiModeratorMaterial::opt()
         .sk(EntityType::AiModeratorMaterial(String::default()).to_string());
     let (materials, _) = AiModeratorMaterial::query(cli, &pk, opt).await?;
 
-    Ok(materials
+    let items = materials
         .into_iter()
         .map(|m| {
             let material_id = match &m.sk {
@@ -35,5 +42,7 @@ pub async fn list_materials(
                 created_at: m.created_at,
             }
         })
-        .collect())
+        .collect();
+
+    Ok(MaterialListResponse { items })
 }

@@ -8,8 +8,15 @@ use crate::common::{Error, Result};
 use crate::features::ai_moderator::models::*;
 use crate::common::types::*;
 
-const MODEL_ID: &str = "anthropic.claude-sonnet-4-20250514";
+const DEFAULT_MODEL_ID: &str = "anthropic.claude-sonnet-4-20250514";
 const MAX_OUTPUT_TOKENS: i32 = 1024;
+const MAX_PROMPT_CHARS: usize = 50_000;
+const MAX_MATERIALS: usize = 5;
+const MAX_REPLIES: usize = 50;
+
+fn model_id() -> String {
+    std::env::var("AI_MODERATOR_MODEL_ID").unwrap_or_else(|_| DEFAULT_MODEL_ID.to_string())
+}
 
 pub async fn should_moderate(
     cli: &aws_sdk_dynamodb::Client,
@@ -47,22 +54,24 @@ pub async fn generate_moderation_reply(
     ];
 
     if !config.guidelines.is_empty() {
-        prompt_parts.push(format!(
-            "\n## Moderation Guidelines\n{}",
-            config.guidelines
-        ));
+        let guidelines = truncate_str(&config.guidelines, 5_000);
+        prompt_parts.push(format!("\n## Moderation Guidelines\n{}", guidelines));
     }
 
-    if !material_context.is_empty() {
+    let limited_materials: Vec<_> = material_context.into_iter().take(MAX_MATERIALS).collect();
+    if !limited_materials.is_empty() {
         prompt_parts.push("\n## Reference Materials".to_string());
-        for (i, material) in material_context.iter().enumerate() {
-            prompt_parts.push(format!("### Material {}\n{}", i + 1, material));
+        for (i, material) in limited_materials.iter().enumerate() {
+            let truncated = truncate_str(material, 5_000);
+            prompt_parts.push(format!("### Material {}\n{}", i + 1, truncated));
         }
     }
 
+    let limited_replies: Vec<_> = recent_replies.into_iter().take(MAX_REPLIES).collect();
     prompt_parts.push("\n## Recent Discussion Replies".to_string());
-    for (i, reply) in recent_replies.iter().enumerate() {
-        prompt_parts.push(format!("{}. {}", i + 1, reply));
+    for (i, reply) in limited_replies.iter().enumerate() {
+        let truncated = truncate_str(reply, 1_000);
+        prompt_parts.push(format!("{}. {}", i + 1, truncated));
     }
 
     prompt_parts.push(
@@ -70,7 +79,10 @@ pub async fn generate_moderation_reply(
             .to_string(),
     );
 
-    let full_prompt = prompt_parts.join("\n");
+    let mut full_prompt = prompt_parts.join("\n");
+    if full_prompt.len() > MAX_PROMPT_CHARS {
+        full_prompt = full_prompt[..MAX_PROMPT_CHARS].to_string();
+    }
 
     let message = Message::builder()
         .role(ConversationRole::User)
@@ -80,7 +92,7 @@ pub async fn generate_moderation_reply(
 
     let response = client
         .converse()
-        .model_id(MODEL_ID)
+        .model_id(model_id())
         .inference_config(
             InferenceConfiguration::builder()
                 .max_tokens(MAX_OUTPUT_TOKENS)
@@ -107,4 +119,16 @@ pub async fn generate_moderation_reply(
     }
 
     Ok(text)
+}
+
+fn truncate_str(s: &str, max_chars: usize) -> &str {
+    if s.len() <= max_chars {
+        s
+    } else {
+        let mut end = max_chars;
+        while end > 0 && !s.is_char_boundary(end) {
+            end -= 1;
+        }
+        &s[..end]
+    }
 }

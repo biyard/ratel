@@ -1,24 +1,14 @@
 use crate::common::*;
 
-#[cfg(feature = "membership")]
-use crate::features::auth::hooks::use_user_membership;
-
 #[component]
 pub fn PremiumSwitch(
     active: bool,
     on_toggle: EventHandler<MouseEvent>,
-    #[props(default)] label: String,
+    label: String,
     #[props(default)] disabled: bool,
 ) -> Element {
-    #[cfg(feature = "membership")]
-    let membership = use_user_membership();
-    #[cfg(not(feature = "membership"))]
-    let membership: Option<()> = None;
-
-    #[cfg(feature = "membership")]
+    let membership = crate::features::auth::hooks::use_user_membership();
     let is_paid = membership.as_ref().map_or(false, |m| m.is_paid());
-    #[cfg(not(feature = "membership"))]
-    let is_paid = false;
 
     rsx! {
         if is_paid {
@@ -50,6 +40,7 @@ fn PremiumUnlockButton() -> Element {
 
     rsx! {
         button {
+            r#type: "button",
             class: "inline-flex gap-1.5 items-center py-1.5 px-3 text-xs font-semibold rounded-full transition-all bg-primary/10 text-primary hover:bg-primary/20",
             onclick: move |_| {
                 let username = username.clone();

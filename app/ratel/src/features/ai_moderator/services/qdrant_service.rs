@@ -1,5 +1,5 @@
 use crate::common::utils::aws::{BedrockEmbeddingsClient, QdrantClient};
-use crate::common::{Error, Result};
+use crate::common::Result;
 
 fn collection_name(space_id: &str, discussion_sk: &str) -> String {
     let prefix =

@@ -4,23 +4,16 @@ use crate::features::ai_moderator::controllers::*;
 #[component]
 pub fn MaterialList(
     space_id: ReadSignal<SpacePartition>,
-    discussion_sk: String,
+    discussion_sk: ReadSignal<SpaceDiscussionEntityType>,
 ) -> Element {
     let tr: MaterialListTranslate = use_translate();
     let mut toast = use_toast();
-    let disc_sk = discussion_sk.clone();
 
-    let mut materials = use_server_future(move || {
-        let disc_sk = disc_sk.clone();
-        async move { list_materials(space_id(), disc_sk).await }
+    let mut materials = use_loader(move || {
+        async move { list_materials(space_id(), discussion_sk()).await }
     })?;
 
-    let items = materials
-        .read()
-        .as_ref()
-        .and_then(|r| r.as_ref().ok())
-        .cloned()
-        .unwrap_or_default();
+    let items = materials().items;
 
     rsx! {
         div { class: "flex flex-col gap-3 w-full",
@@ -30,25 +23,18 @@ pub fn MaterialList(
 
             FileUploader {
                 accept: ".pdf".to_string(),
-                on_upload_meta: {
-                    let discussion_sk = discussion_sk.clone();
-                    move |meta: UploadedFileMeta| {
-                        let space_id = space_id();
-                        let discussion_sk = discussion_sk.clone();
-                        spawn(async move {
-                            let req = UploadMaterialRequest {
-                                file_name: meta.name,
-                                file_url: meta.url,
-                            };
-                            match upload_material(space_id, discussion_sk, req).await {
-                                Ok(_) => {
-                                    materials.restart();
-                                }
-                                Err(e) => {
-                                    toast.error(e);
-                                }
-                            }
-                        });
+                on_upload_meta: move |meta: UploadedFileMeta| async move {
+                    let req = UploadMaterialRequest {
+                        file_name: meta.name,
+                        file_url: meta.url,
+                    };
+                    match upload_material(space_id(), discussion_sk(), req).await {
+                        Ok(_) => {
+                            materials.restart();
+                        }
+                        Err(e) => {
+                            toast.error(e);
+                        }
                     }
                 },
                 on_upload_success: move |_url: String| {},
@@ -70,7 +56,6 @@ pub fn MaterialList(
                         {
                             let material_id = item.material_id.clone();
                             let file_name = item.file_name.clone();
-                            let discussion_sk = discussion_sk.clone();
                             rsx! {
                                 div {
                                     key: "{material_id}",
@@ -85,16 +70,14 @@ pub fn MaterialList(
                                         }
                                     }
                                     button {
+                                        r#type: "button",
                                         class: "shrink-0 p-1 rounded transition-colors hover:bg-destructive/10",
                                         onclick: {
                                             let material_id = material_id.clone();
-                                            let discussion_sk = discussion_sk.clone();
                                             move |_| {
                                                 let material_id = material_id.clone();
-                                                let space_id = space_id();
-                                                let discussion_sk = discussion_sk.clone();
                                                 spawn(async move {
-                                                    match delete_material(space_id, discussion_sk, material_id).await {
+                                                    match delete_material(space_id(), discussion_sk(), material_id).await {
                                                         Ok(_) => {
                                                             materials.restart();
                                                         }

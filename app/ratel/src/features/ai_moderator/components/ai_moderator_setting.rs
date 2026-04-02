@@ -7,15 +7,13 @@ use super::MaterialList;
 #[component]
 pub fn AiModeratorSetting(
     space_id: ReadSignal<SpacePartition>,
-    discussion_sk: String,
+    discussion_id: ReadSignal<SpaceDiscussionEntityType>,
 ) -> Element {
     let tr: AiModeratorSettingTranslate = use_translate();
     let mut toast = use_toast();
-    let disc_sk = discussion_sk.clone();
 
     let config_res = use_server_future(move || {
-        let disc_sk = disc_sk.clone();
-        async move { get_ai_moderator_config(space_id(), disc_sk).await }
+        async move { get_ai_moderator_config(space_id(), discussion_id()).await }
     })?;
 
     let config = config_res
@@ -61,41 +59,35 @@ pub fn AiModeratorSetting(
     });
 
     // Debounced autosave (3 seconds after last change)
-    use_effect({
-        let discussion_sk = discussion_sk.clone();
-        move || {
-            let version = save_version();
-            if version == 0 {
+    use_effect(move || {
+        let version = save_version();
+        if version == 0 {
+            return;
+        }
+        let discussion_id = discussion_id();
+        spawn(async move {
+            crate::common::utils::time::sleep(std::time::Duration::from_secs(3)).await;
+            if save_version() != version {
                 return;
             }
-            let discussion_sk = discussion_sk.clone();
-            spawn(async move {
-                crate::common::utils::time::sleep(std::time::Duration::from_secs(3)).await;
-                if save_version() != version {
-                    return;
+            let req = UpdateAiModeratorConfigRequest {
+                enabled: enabled(),
+                reply_interval: reply_interval(),
+                guidelines: guidelines(),
+            };
+            match update_ai_moderator_config(space_id(), discussion_id, req).await {
+                Ok(_) => {
+                    toast.info(tr.config_saved.to_string());
                 }
-                let req = UpdateAiModeratorConfigRequest {
-                    enabled: enabled(),
-                    reply_interval: reply_interval(),
-                    guidelines: guidelines(),
-                };
-                match update_ai_moderator_config(space_id(), discussion_sk, req).await {
-                    Ok(_) => {
-                        toast.info(tr.config_saved.to_string());
-                    }
-                    Err(e) => {
-                        toast.error(e);
-                    }
+                Err(e) => {
+                    toast.error(e);
                 }
-            });
-        }
+            }
+        });
     });
 
     let label_class =
         "font-semibold font-raleway text-[13px]/[16px] tracking-[-0.14px] text-web-font-neutral";
-
-    let toggle_disc_sk = discussion_sk.clone();
-    let material_disc_sk = discussion_sk.clone();
 
     rsx! {
         Collapsible { open: enabled(),
@@ -129,33 +121,29 @@ pub fn AiModeratorSetting(
                             div { "data-testid": "ai-moderator-toggle",
                                 PremiumSwitch {
                                     active: enabled(),
-                                    on_toggle: {
-                                        let discussion_sk = toggle_disc_sk.clone();
-                                        move |_| {
-                                            let new_enabled = !enabled();
-                                            enabled.set(new_enabled);
-                                            let discussion_sk = discussion_sk.clone();
-                                            spawn(async move {
-                                                let req = UpdateAiModeratorConfigRequest {
-                                                    enabled: new_enabled,
-                                                    reply_interval: reply_interval(),
-                                                    guidelines: guidelines(),
-                                                };
-                                                match update_ai_moderator_config(
-                                                    space_id(),
-                                                    discussion_sk,
-                                                    req,
-                                                )
-                                                .await
-                                                {
-                                                    Ok(_) => {
-                                                        toast.info(tr.config_saved.to_string());
-                                                    }
-                                                    Err(e) => {
-                                                        toast.error(e);
-                                                    }
-                                                }
-                                            });
+                                    label: tr.enable_ai_moderator.to_string(),
+                                    on_toggle: move |_| async move {
+                                        let new_enabled = !enabled();
+                                        enabled.set(new_enabled);
+                                        let discussion_id = discussion_id();
+                                        let req = UpdateAiModeratorConfigRequest {
+                                            enabled: new_enabled,
+                                            reply_interval: reply_interval(),
+                                            guidelines: guidelines(),
+                                        };
+                                        match update_ai_moderator_config(
+                                            space_id(),
+                                            discussion_id,
+                                            req,
+                                        )
+                                        .await
+                                        {
+                                            Ok(_) => {
+                                                toast.info(tr.config_saved.to_string());
+                                            }
+                                            Err(e) => {
+                                                toast.error(e);
+                                            }
                                         }
                                     },
                                 }
@@ -205,7 +193,7 @@ pub fn AiModeratorSetting(
                     // Reference Materials
                     MaterialList {
                         space_id,
-                        discussion_sk: material_disc_sk.clone(),
+                        discussion_sk: discussion_id,
                     }
 
                     // Info notice
@@ -240,6 +228,7 @@ translate! {
         en: "Enable an AI moderator to automatically summarize and respond to discussion replies at set intervals.",
         ko: "AI 중재자를 활성화하면 설정된 간격마다 자동으로 토론 답변을 요약하고 응답합니다.",
     },
+    enable_ai_moderator: { en: "Enable AI Moderator", ko: "AI 중재자 활성화" },
     reply_interval_label: { en: "Reply Interval", ko: "답변 간격" },
     reply_interval_suffix: { en: "replies between each AI response", ko: "개의 답변마다 AI 응답" },
     guidelines_label: { en: "Moderation Guidelines", ko: "중재 가이드라인" },
