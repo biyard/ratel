@@ -31,11 +31,18 @@ pub fn ManagementPage(username: String) -> Element {
                 || permissions.contains(TeamGroupPermission::GroupEdit);
             (ctx.team_pk.clone(), can)
         }
-        _ => {
+        Some(Err(_)) => {
             return rsx! {
                 div { class: "flex flex-col gap-2 p-4",
                     span { class: "text-sm font-semibold text-text-primary", {tr.no_permission_title} }
                     span { class: "text-sm text-foreground-muted", {tr.no_permission_description} }
+                }
+            };
+        }
+        None => {
+            return rsx! {
+                div { class: "flex justify-center items-center w-full py-10",
+                    crate::common::components::LoadingIndicator {}
                 }
             };
         }

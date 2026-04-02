@@ -45,13 +45,8 @@ pub fn TeamSettingLayout(username: String) -> Element {
     let can_edit = {
         let teams = team_ctx.teams.read();
         teams.iter().find(|t| t.username == username).map_or(false, |t| {
-            let mut mask = 0i64;
-            for v in &t.permissions {
-                mask |= 1i64 << (*v as i32);
-            }
-            let permissions: TeamGroupPermissions = mask.into();
-            permissions.contains(TeamGroupPermission::TeamAdmin)
-                || permissions.contains(TeamGroupPermission::TeamEdit)
+            t.has_permission(TeamGroupPermission::TeamAdmin)
+                || t.has_permission(TeamGroupPermission::TeamEdit)
         })
     };
 
