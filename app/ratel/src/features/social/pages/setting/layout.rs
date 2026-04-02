@@ -41,6 +41,20 @@ pub fn TeamSettingLayout(username: String) -> Element {
     let current_route = use_route::<Route>();
     let is_general_settings = matches!(current_route, Route::TeamSetting { .. });
 
+    // Check if user has edit permission (for showing Save button)
+    let can_edit = {
+        let teams = team_ctx.teams.read();
+        teams.iter().find(|t| t.username == username).map_or(false, |t| {
+            let mut mask = 0i64;
+            for v in &t.permissions {
+                mask |= 1i64 << (*v as i32);
+            }
+            let permissions: TeamGroupPermissions = mask.into();
+            permissions.contains(TeamGroupPermission::TeamAdmin)
+                || permissions.contains(TeamGroupPermission::TeamEdit)
+        })
+    };
+
     rsx! {
         div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-team-bg text-text-primary",
             div { class: "hidden tablet:flex",
@@ -50,7 +64,7 @@ pub fn TeamSettingLayout(username: String) -> Element {
                 // Top header bar
                 div { class: "flex items-center justify-between shrink-0 px-6 py-4 border-b border-border",
                     span { class: "text-base font-bold text-text-primary", "Settings" }
-                    if is_general_settings {
+                    if is_general_settings && can_edit {
                         Button {
                             size: ButtonSize::Medium,
                             style: ButtonStyle::Primary,
