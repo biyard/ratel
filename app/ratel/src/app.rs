@@ -14,11 +14,10 @@ pub fn App() -> Element {
     ToastService::init();
     ThemeService::init();
 
-    let _ = crate::features::auth::Context::init()?;
-
     // Signal to Playwright that the app has fully hydrated and event handlers
-    // are attached. This runs only after Context::init() resolves (no longer
-    // suspended), so the flag guarantees the UI is interactive.
+    // are attached. Must be registered BEFORE any `?` early-return (suspension)
+    // to maintain consistent hook ordering. The effect only fires after the
+    // component renders successfully past the suspension point.
     #[cfg(not(feature = "server"))]
     use_effect(|| {
         if let Some(window) = web_sys::window() {
@@ -29,6 +28,8 @@ pub fn App() -> Element {
             );
         }
     });
+
+    let _ = crate::features::auth::Context::init()?;
 
     crate::common::contexts::TeamContext::init();
     let conf = config::get();
