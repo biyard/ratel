@@ -1,9 +1,9 @@
+use super::HomeViewMode;
 use crate::common::hooks::use_infinite_query;
 use crate::common::*;
 use crate::features::posts::controllers::dto::PostResponse;
 use crate::features::posts::controllers::list_user_posts::list_user_posts_handler;
 use dioxus::prelude::*;
-use super::HomeViewMode;
 
 #[component]
 pub fn UserPostsPanel(username: String, view_mode: HomeViewMode) -> Element {
@@ -92,7 +92,7 @@ fn UserPostCard(post: PostResponse) -> Element {
                     }
                 }
 
-                h2 { class: "text-[20px] font-bold text-text-primary tracking-[0.5px] leading-[25px] line-clamp-2",
+                h2 { class: "text-[20px] font-bold text-text-primary tracking-[0.5px] leading-[25px] line-clamp-2 mt-2",
                     "{title}"
                 }
 
@@ -157,7 +157,7 @@ fn UserPostListItem(post: PostResponse) -> Element {
                     }
                 }
 
-                h2 { class: "text-[20px] font-bold text-text-primary tracking-[0.5px] leading-[25px] line-clamp-2",
+                h2 { class: "text-[20px] font-bold text-text-primary tracking-[0.5px] leading-[25px] line-clamp-2 mt-4",
                     "{title}"
                 }
 
