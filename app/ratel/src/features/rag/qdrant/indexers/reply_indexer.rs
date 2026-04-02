@@ -11,7 +11,7 @@ pub async fn index_reply(comment: SpacePostComment) -> Result<()> {
     let tenant_id = super::tenant_id();
     let payload = ReplyPayload::from_comment(&comment, tenant_id);
 
-    if payload.space_id.is_empty() || payload.discussion_id.is_empty() {
+    if payload.space_id.0.is_empty() || payload.discussion_id.is_empty() {
         tracing::warn!(
             comment_id = %payload.comment_id,
             "Skipping Qdrant index: missing space_id or discussion_id"
