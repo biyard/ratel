@@ -242,4 +242,94 @@ translate! {
         en: "Subscription",
         ko: "구독",
     },
+
+    subscription_billing: {
+        en: "Subscription & Billing",
+        ko: "구독 및 결제",
+    },
+
+    current_plan: {
+        en: "Current Plan",
+        ko: "현재 플랜",
+    },
+
+    credits: {
+        en: "Credits",
+        ko: "크레딧",
+    },
+
+    expires: {
+        en: "Expires",
+        ko: "만료일",
+    },
+
+    unlimited: {
+        en: "Unlimited",
+        ko: "무제한",
+    },
+
+    change_plan: {
+        en: "Change Plan",
+        ko: "플랜 변경",
+    },
+
+    card: {
+        en: "Card",
+        ko: "카드",
+    },
+
+    card_holder: {
+        en: "Card Holder",
+        ko: "카드 소유자",
+    },
+
+    change_card: {
+        en: "Change Card",
+        ko: "카드 변경",
+    },
+
+    add_card: {
+        en: "Add Card",
+        ko: "카드 추가",
+    },
+
+    card_number: {
+        en: "Card Number",
+        ko: "카드 번호",
+    },
+
+    expiry_month: {
+        en: "Expiry Month",
+        ko: "만료 월",
+    },
+
+    expiry_year: {
+        en: "Expiry Year",
+        ko: "만료 연도",
+    },
+
+    birth_date: {
+        en: "Birth Date (YYMMDD)",
+        ko: "생년월일 (YYMMDD)",
+    },
+
+    card_password_label: {
+        en: "Card Password (first 2 digits)",
+        ko: "카드 비밀번호 (앞 2자리)",
+    },
+
+    save_card: {
+        en: "Save Card",
+        ko: "카드 저장",
+    },
+
+    saving_card: {
+        en: "Saving...",
+        ko: "저장 중...",
+    },
+
+    card_updated: {
+        en: "Card updated successfully.",
+        ko: "카드가 업데이트되었습니다.",
+    },
 }
