@@ -16,6 +16,7 @@ pub struct ServerConfig {
     pub log_level: LogLevel,
 
     pub aws: aws_config::AwsConfig,
+    pub qdrant: qdrant_config::QdrantConfig,
 }
 
 impl ServerConfig {
@@ -55,6 +56,7 @@ impl Default for ServerConfig {
                     env: Default::default(),
                     log_level: Default::default(),
                     aws: Default::default(),
+                    qdrant: Default::default(),
                 };
 
                 CONFIG = Some(obj);
