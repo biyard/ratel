@@ -1,9 +1,9 @@
-use crate::features::posts::types::*;
-use crate::features::posts::*;
 #[cfg(feature = "server")]
 use crate::features::auth::OptionalUser;
 #[cfg(feature = "server")]
 use crate::features::auth::UserTeamGroup;
+use crate::features::posts::types::*;
+use crate::features::posts::*;
 
 #[cfg(feature = "server")]
 use super::{TeamGroup, TeamOwner};
@@ -227,10 +227,11 @@ fn extract_team_identifier(parts: &Parts) -> Result<String> {
     let segments: Vec<&str> = path.split('/').filter(|s| !s.is_empty()).collect();
 
     // Pattern 1: /api/teams/:team_id/... (client-side API call)
-    // Require the preceding segment to be "api" to avoid colliding with
+    // Pattern 2: /v3/teams/:team_id/... (membership/payment API call)
+    // Require the preceding segment to be "api" or "v3" to avoid colliding with
     // SSR routes for a team whose username happens to be "teams".
     for i in 1..segments.len() {
-        if segments[i] == "teams" && segments[i - 1] == "api" {
+        if segments[i] == "teams" && matches!(segments[i - 1], "api" | "v3") {
             if let Some(&value) = segments.get(i + 1) {
                 return Ok(value.to_string());
             }
