@@ -113,7 +113,7 @@ All interaction helpers are defined in `tests/utils.js`. **Always use these inst
 
 ### `goto(page, path)`
 
-Navigates to `BASE_URL + path` with `waitUntil: "load"`, then waits for the server-rendered Dioxus DOM to be present by checking for `[data-dioxus-id]` elements. It does not guarantee that hydration is fully complete; remaining hydration is handled by Playwright's built-in auto-waiting on subsequent interactions.
+Navigates to `BASE_URL + path` with `waitUntil: "load"`, then waits for `window.__dioxus_hydrated` to be set. The `App` component sets this flag via a `use_effect` that fires after the first successful client-side render past the suspension point. This is a coarse readiness signal confirming the WASM bundle has loaded and the component tree has rendered, but it does not guarantee every async hook has resolved; remaining hydration is handled by Playwright's built-in auto-waiting on subsequent interactions.
 
 ```js
 await goto(page, "/");           // → http://localhost:8080/
@@ -390,7 +390,7 @@ PLAYWRIGHT_ID=my-test-run npx playwright test
 
 - Default test timeout is 30000ms (30s). Increase with `PLAYWRIGHT_TIMEOUT` env var.
 - Ensure the app is running at `http://localhost:8080` (or set `PLAYWRIGHT_BASE_URL`).
-- Check that the Dioxus WASM app is loading correctly (the `goto()` helper waits for `window.__dioxus_hydrated` which is set in `App`'s `use_effect` after `Context::init()` resolves).
+- Check that the Dioxus WASM app is loading correctly (the `goto()` helper waits for `window.__dioxus_hydrated` which is set in `App`'s `use_effect` after the first successful client-side render).
 
 ### Auth Setup Fails
 

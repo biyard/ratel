@@ -18,7 +18,9 @@ pub fn App() -> Element {
     // are attached. Must be registered BEFORE any `?` early-return (suspension)
     // to maintain consistent hook ordering. The effect only fires after the
     // component renders successfully past the suspension point.
-    #[cfg(not(feature = "server"))]
+    // Gated on wasm32 (not just `not(server)`) because web_sys/js_sys/wasm_bindgen
+    // are unavailable on non-web client targets (desktop, mobile).
+    #[cfg(target_arch = "wasm32")]
     use_effect(|| {
         if let Some(window) = web_sys::window() {
             let _ = js_sys::Reflect::set(

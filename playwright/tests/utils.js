@@ -103,11 +103,13 @@ export async function waitPopup(page, { visible = true }) {
 
 export async function goto(page, url) {
   await page.goto(url);
-  await page.waitForLoadState("domcontentloaded");
-  // Wait for Dioxus WASM hydration to complete. The App component sets
-  // window.__dioxus_hydrated = true in a use_effect after Context::init()
-  // resolves, guaranteeing that event handlers are attached and the UI is
-  // interactive before Playwright proceeds.
+  // Wait for the Dioxus WASM app to be ready on the client. The App
+  // component sets window.__dioxus_hydrated = true via a use_effect
+  // (registered before the Context::init() suspension point) that fires
+  // after the first successful client-side render. This is a coarse
+  // readiness signal — it confirms the WASM bundle has loaded and the
+  // component tree has rendered past suspension, but does not guarantee
+  // every async hook has resolved.
   await page.waitForFunction(() => window.__dioxus_hydrated === true);
 }
 
