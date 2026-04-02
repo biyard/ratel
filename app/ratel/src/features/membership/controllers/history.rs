@@ -1,6 +1,6 @@
 use super::*;
 use crate::features::auth::User;
-use crate::features::membership::models::{TransactionType, UserPurchase};
+use crate::features::membership::models::{TransactionType, UserPurchase, TeamPurchase};
 use crate::features::membership::*;
 use serde::{Deserialize, Serialize};
 
@@ -16,6 +16,18 @@ pub struct PurchaseHistoryItem {
 
 impl From<UserPurchase> for PurchaseHistoryItem {
     fn from(purchase: UserPurchase) -> Self {
+        Self {
+            tx_type: purchase.tx_type,
+            amount: purchase.amount,
+            payment_id: purchase.payment_id,
+            tx_id: purchase.tx_id,
+            created_at: purchase.created_at,
+        }
+    }
+}
+
+impl From<TeamPurchase> for PurchaseHistoryItem {
+    fn from(purchase: TeamPurchase) -> Self {
         Self {
             tx_type: purchase.tx_type,
             amount: purchase.amount,

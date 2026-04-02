@@ -57,7 +57,7 @@ pub fn ActionCommonSettings(
     let is_team_space = is_team_author || team_detail.is_some();
     #[cfg(feature = "membership")]
     let upgrade_route = if is_team_space {
-        format!("/{}/team-settings/subscription", team_username)
+        format!("/{}/team-memberships", team_username)
     } else {
         format!("/{personal_username}/memberships")
     };
