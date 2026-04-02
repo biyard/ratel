@@ -13,6 +13,7 @@ pub struct GetMeResponse {
     pub membership: Option<UserMembershipResponse>,
 }
 
+#[mcp_tool(name = "get_me", description = "Get current user info and membership details.")]
 #[get("/api/auth/me", user: OptionalUser)]
 pub async fn get_me_handler() -> Result<GetMeResponse> {
     let user: Option<User> = user.into();

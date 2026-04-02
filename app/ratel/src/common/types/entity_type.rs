@@ -197,6 +197,9 @@ pub enum EntityType {
     Category(String), // CATEGORY#${name}
 
     TimelineEntry(String), // TIMELINE_ENTRY#${timestamp}#${post_pk_inner}
+
+    // MCP
+    McpClientSecret,
 }
 
 impl TryInto<Partition> for EntityType {
