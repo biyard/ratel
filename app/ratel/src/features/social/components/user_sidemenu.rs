@@ -88,7 +88,6 @@ fn SelfSidemenu(username: String) -> Element {
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let mut team_ctx = crate::common::contexts::use_team_context();
     let mut popup = use_popup();
-    let nav = use_navigator();
     let user = user_ctx().user.clone().unwrap_or_default();
     let teams = team_ctx.teams.read().clone();
 
@@ -115,7 +114,6 @@ fn SelfSidemenu(username: String) -> Element {
                     on_logout: move |_| {
                         spawn(async move {
                             let _ = crate::features::auth::controllers::logout_handler().await;
-                            nav.push("/");
                             #[cfg(target_arch = "wasm32")]
                             {
                                 if let Some(window) = web_sys::window() {

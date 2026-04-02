@@ -276,7 +276,6 @@ fn ProfileButton(collapsed: bool) -> Element {
     let team_ctx = use_team_context();
     let mut open = use_signal(|| false);
     let mut popup = use_popup();
-    let nav = use_navigator();
 
     let user = user_ctx().user.clone();
     let Some(user) = user else {
@@ -393,7 +392,6 @@ fn ProfileButton(collapsed: bool) -> Element {
                             open.set(false);
                             spawn(async move {
                                 let _ = crate::features::auth::controllers::logout_handler().await;
-                                nav.push("/");
                                 #[cfg(target_arch = "wasm32")]
                                 {
                                     if let Some(window) = web_sys::window() {
