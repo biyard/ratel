@@ -21,19 +21,8 @@ pub async fn upload_material(
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
 
-    // Server-side premium enforcement
-    let membership = crate::features::membership::models::UserMembership::get(
-        cli,
-        user.pk.clone(),
-        Some(EntityType::UserMembership),
-    )
-    .await?;
-    let is_paid = membership
-        .as_ref()
-        .map_or(false, |m| !m.membership_pk.0.contains("Free"));
-    if !is_paid {
-        return Err(AiModeratorError::PremiumRequired.into());
-    }
+    super::require_premium(cli, &user).await?;
+
     let pk = CompositePartition(space_id.clone(), discussion_id.to_string());
 
     let opt = AiModeratorMaterial::opt()
