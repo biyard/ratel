@@ -3,7 +3,7 @@ use crate::features::ai_moderator::*;
 #[derive(Debug, Default, Clone, Serialize, Deserialize, DynamoEntity, PartialEq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct AiModeratorConfig {
-    pub pk: Partition,
+    pub pk: CompositePartition<SpacePartition, String>,
     pub sk: EntityType,
     pub enabled: bool,
     pub reply_interval: i64,
@@ -14,10 +14,10 @@ pub struct AiModeratorConfig {
 
 #[cfg(feature = "server")]
 impl AiModeratorConfig {
-    pub fn new(space_pk: SpacePartition) -> Self {
+    pub fn new(space_id: SpacePartition, discussion_sk: String) -> Self {
         let now = crate::common::utils::time::get_now_timestamp_millis();
         Self {
-            pk: space_pk.into(),
+            pk: CompositePartition(space_id, discussion_sk),
             sk: EntityType::AiModeratorConfig,
             enabled: false,
             reply_interval: 5,
