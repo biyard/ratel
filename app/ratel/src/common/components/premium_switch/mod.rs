@@ -1,4 +1,5 @@
 use crate::common::*;
+use crate::features::auth::hooks::use_user_membership;
 
 #[component]
 pub fn PremiumSwitch(
@@ -7,7 +8,7 @@ pub fn PremiumSwitch(
     label: String,
     #[props(default)] disabled: bool,
 ) -> Element {
-    let membership = crate::features::auth::hooks::use_user_membership();
+    let membership = use_user_membership();
     let is_paid = membership.as_ref().map_or(false, |m| m.is_paid());
 
     rsx! {

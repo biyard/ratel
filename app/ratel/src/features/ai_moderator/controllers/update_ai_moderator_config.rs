@@ -18,13 +18,14 @@ pub async fn update_ai_moderator_config(
 ) -> Result<AiModeratorConfigResponse> {
     role.is_creator()?;
 
+    let common_config = crate::common::CommonConfig::default();
+    let cli = common_config.dynamodb();
+
+    super::require_premium(cli, &user).await?;
+
     if req.reply_interval < 1 {
         return Err(AiModeratorError::InvalidReplyInterval.into());
     }
-
-    let common_config = crate::common::CommonConfig::default();
-    let cli = common_config.dynamodb();
-    super::require_premium(cli, &user).await?;
 
     let pk = CompositePartition(space_id.clone(), discussion_id.to_string());
     let now = crate::common::utils::time::get_now_timestamp_millis();
