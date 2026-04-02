@@ -7,6 +7,7 @@ use crate::features::social::pages::member::controllers::{
 use crate::features::social::pages::member::dto::{TeamMemberResponse, TeamRole};
 use crate::features::social::pages::setting::i18n::TeamSettingsTranslate;
 use crate::features::social::*;
+use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use dioxus::prelude::*;
 use dioxus_primitives::scroll_area::ScrollDirection;
 
@@ -18,18 +19,19 @@ pub fn ManagementPage(username: String) -> Element {
     use_context_provider(|| PopupService::new());
     let mut popup = use_popup();
 
-    let ctx_resource = use_loader(use_reactive((&username,), |(name,)| async move {
-        Ok::<_, super::super::Error>(
-            get_team_member_permission_handler(name)
-                .await
-                .map_err(|e| e.to_string()),
-        )
+    let perm_res = use_server_future(use_reactive((&username,), |(name,)| async move {
+        get_team_member_permission_handler(name).await
     }))?;
 
-    let ctx = ctx_resource.read();
-    let ctx = match ctx.as_ref() {
-        Ok(ctx) => ctx.clone(),
-        Err(_) => {
+    let (team_pk, can_manage) = match &*perm_res.read() {
+        Some(Ok(ctx)) => {
+            let permissions: TeamGroupPermissions = ctx.permissions.into();
+            let can = permissions.contains(TeamGroupPermission::TeamAdmin)
+                || permissions.contains(TeamGroupPermission::TeamEdit)
+                || permissions.contains(TeamGroupPermission::GroupEdit);
+            (ctx.team_pk.clone(), can)
+        }
+        _ => {
             return rsx! {
                 div { class: "flex flex-col gap-2 p-4",
                     span { class: "text-sm font-semibold text-text-primary", {tr.no_permission_title} }
@@ -38,8 +40,6 @@ pub fn ManagementPage(username: String) -> Element {
             };
         }
     };
-
-    let team_pk = ctx.team_pk.clone();
 
     let mut refresh = use_signal(|| 0u64);
     let mut error_msg = use_signal(|| Option::<String>::None);
@@ -104,16 +104,18 @@ pub fn ManagementPage(username: String) -> Element {
             // Header
             div { class: "flex items-center justify-between",
                 h1 { class: "text-xl font-bold text-text-primary", {tr.team_management} }
-                Button {
-                    style: ButtonStyle::Primary,
-                    shape: ButtonShape::Rounded,
-                    size: ButtonSize::Small,
-                    class: "flex items-center gap-2".to_string(),
-                    onclick: on_add_members_click,
-                    lucide_dioxus::UserPlus {
-                        class: "w-4 h-4 [&>path]:stroke-btn-primary-text [&>line]:stroke-btn-primary-text",
+                if can_manage {
+                    Button {
+                        style: ButtonStyle::Primary,
+                        shape: ButtonShape::Rounded,
+                        size: ButtonSize::Small,
+                        class: "flex items-center gap-2".to_string(),
+                        onclick: on_add_members_click,
+                        lucide_dioxus::UserPlus {
+                            class: "w-4 h-4 [&>path]:stroke-btn-primary-text [&>line]:stroke-btn-primary-text",
+                        }
+                        {tr.add_members}
                     }
-                    {tr.add_members}
                 }
             }
 
@@ -147,6 +149,7 @@ pub fn ManagementPage(username: String) -> Element {
                                     key: "{member.user_id}",
                                     member: member.clone(),
                                     is_last,
+                                    can_manage,
                                     on_remove: move |_| {
                                         let member = member.clone();
                                         let team_pk = team_pk_signal();
@@ -189,7 +192,7 @@ pub fn ManagementPage(username: String) -> Element {
 }
 
 #[component]
-fn MemberRow(member: TeamMemberResponse, is_last: bool, on_remove: EventHandler<()>) -> Element {
+fn MemberRow(member: TeamMemberResponse, is_last: bool, can_manage: bool, on_remove: EventHandler<()>) -> Element {
     let tr: TeamSettingsTranslate = use_translate();
     let border_class = if is_last {
         ""
@@ -243,8 +246,8 @@ fn MemberRow(member: TeamMemberResponse, is_last: bool, on_remove: EventHandler<
                     }
                 }
 
-                // More options
-                if !member.is_owner {
+                // More options (only for users with manage permission)
+                if can_manage && !member.is_owner {
                     div { class: "relative shrink-0",
                         Button {
                             style: ButtonStyle::Text,
