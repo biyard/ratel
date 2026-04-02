@@ -102,7 +102,7 @@ fn TeamPostCard(post: PostResponse, #[props(default = false)] full_width: bool) 
             onclick: move |_| {
                 nav.push(post_url.clone());
             },
-            div { class: "flex h-full flex-col gap-4 border-b border-[#262626] py-6",
+            div { class: "flex h-full flex-col gap-4 border-b border-white light:border-black py-3",
                 div { class: "flex min-h-[25px] items-start",
                     if !post_categories.is_empty() {
                         div { class: "flex min-w-0 items-center gap-2 flex-wrap",
