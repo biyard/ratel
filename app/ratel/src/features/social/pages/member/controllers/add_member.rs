@@ -12,7 +12,10 @@ pub async fn add_team_member_handler(
 ) -> Result<AddTeamMemberResponse> {
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
-    let _team_pk: Partition = team_pk.into();
+
+    if body.user_pks.len() > 100 {
+        return Err(MemberError::TooManyInvitations.into());
+    }
 
     let can_edit = permissions.contains(TeamGroupPermission::TeamAdmin)
         || permissions.contains(TeamGroupPermission::TeamEdit)
@@ -63,25 +66,33 @@ pub async fn add_team_member_handler(
         }
     }
 
-    // Batch-fetch existing UserTeam memberships to skip already-members.
+    let team_group_sk = EntityType::TeamGroup(body.role.to_string());
+    let user_team_sk = EntityType::UserTeam(team.pk.to_string());
+    let user_team_group_sk = EntityType::UserTeamGroup(team_group_sk.to_string());
+
+    // Batch-fetch existing UserTeam memberships.
     let membership_keys: Vec<(Partition, EntityType)> = found_users
         .iter()
-        .map(|u| (u.pk.clone(), EntityType::UserTeam(team.pk.to_string())))
+        .map(|u| (u.pk.clone(), user_team_sk.clone()))
         .collect();
     let existing_memberships =
         crate::features::auth::UserTeam::batch_get(cli, membership_keys).await?;
-    let already_member_pks: HashSet<String> = existing_memberships
-        .iter()
-        .map(|ut| ut.pk.to_string())
-        .collect();
 
-    // Collect users who need to be added.
+    // Batch-fetch existing UserTeamGroup records for users who already have UserTeam.
+    // Only skip users who have BOTH — UserTeam-only means a broken state that needs repair.
+    let group_keys: Vec<(Partition, EntityType)> = existing_memberships
+        .iter()
+        .map(|ut| (ut.pk.clone(), user_team_group_sk.clone()))
+        .collect();
+    let existing_groups = crate::features::auth::UserTeamGroup::batch_get(cli, group_keys).await?;
+    let already_member_pks: HashSet<String> =
+        existing_groups.iter().map(|ug| ug.pk.to_string()).collect();
+
+    // Collect users who need to be added (including broken-state repair).
     let new_members: Vec<_> = found_users
         .into_iter()
         .filter(|u| !already_member_pks.contains(&u.pk.to_string()))
         .collect();
-
-    let team_group_sk = EntityType::TeamGroup(body.role.to_string());
     let success_count = new_members.len() as i64;
 
     // Build 2 write items per user (UserTeam + UserTeamGroup).
@@ -111,7 +122,9 @@ pub async fn add_team_member_handler(
         })
         .collect();
 
-    // transact_write_all_items! auto-chunks into batches of 100 and propagates errors via ?.
+    // transact_write_all_items! chunks into batches of 100 items.
+    // Each user produces 2 items (UserTeam + UserTeamGroup), so each transaction
+    // covers at most 50 users. Atomicity is guaranteed per chunk, not across all chunks.
     crate::transact_write_all_items!(cli, transact_items);
 
     Ok(AddTeamMemberResponse {
