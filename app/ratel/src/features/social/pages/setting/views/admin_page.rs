@@ -1,10 +1,10 @@
 use super::super::components::DeleteTeamPopup;
 use super::super::controllers::TeamResponse;
-use super::super::controllers::{UpdateTeamRequest, delete_team_handler, update_team_handler};
+use super::super::controllers::{delete_team_handler, update_team_handler, UpdateTeamRequest};
 use super::super::*;
 use crate::features::membership::controllers::{
-    UpdateBillingCardRequest, get_team_billing_info_handler, get_team_membership_handler,
-    update_team_billing_card_handler,
+    get_team_billing_info_handler, get_team_membership_handler, update_team_billing_card_handler,
+    UpdateBillingCardRequest,
 };
 use crate::features::membership::models::CardInfo;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
@@ -209,7 +209,9 @@ pub fn AdminPage(username: String, team: TeamResponse) -> Element {
                         }
                         if !last_saved.is_empty() {
                             div { class: "flex justify-end",
-                                span { class: "text-xs text-foreground-muted", "{tr.last_saved_at} {last_saved}" }
+                                span { class: "text-xs text-foreground-muted",
+                                    "{tr.last_saved_at} {last_saved}"
+                                }
                             }
                         }
 
@@ -230,8 +232,10 @@ pub fn AdminPage(username: String, team: TeamResponse) -> Element {
                 }
             }
 
-            Card { variant: CardVariant::Outlined, class: "p-6",
-                TeamSubscriptionCard { username: username.clone() }
+            if delete_team_permission {
+                Card { variant: CardVariant::Outlined, class: "p-6",
+                    TeamSubscriptionCard { username: username.clone() }
+                }
             }
 
             // Delete team — bottom right
@@ -284,8 +288,8 @@ fn TeamSubscriptionCard(username: String) -> Element {
     let membership_data = membership.read();
     let billing_data = billing_info.read();
 
-    let (tier_label, remaining, total, expired_at, is_free) =
-        if let Some(Ok(m)) = membership_data.as_ref() {
+    let (tier_label, remaining, total, expired_at, is_free) = match membership_data.as_ref() {
+        Some(Ok(m)) => {
             let tier = m.tier.0.replace("MEMBERSHIP#", "");
             let free = tier.eq_ignore_ascii_case("free");
             (
@@ -295,9 +299,16 @@ fn TeamSubscriptionCard(username: String) -> Element {
                 m.expired_at,
                 free,
             )
-        } else {
-            ("Free".to_string(), 0, 0, 0, true)
-        };
+        }
+        Some(Err(_)) => ("Free".to_string(), 0, 0, 0, true),
+        None => {
+            return rsx! {
+                div { class: "flex justify-center items-center w-full py-6",
+                    crate::common::components::LoadingIndicator {}
+                }
+            };
+        }
+    };
 
     let billing = billing_data
         .as_ref()
@@ -393,7 +404,7 @@ fn TeamSubscriptionCard(username: String) -> Element {
                             "{tier_label}"
                         }
                         Link {
-                            to: format!("/{username}/settings/subscription"),
+                            to: format!("/{username}/team-settings/subscription"),
                             class: "text-xs text-primary hover:underline no-underline",
                             "{tr.change_plan}"
                         }

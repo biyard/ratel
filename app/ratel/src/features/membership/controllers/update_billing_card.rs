@@ -16,14 +16,7 @@ pub struct UpdateBillingCardRequest {
 }
 
 #[cfg(feature = "server")]
-fn mask_card_number(card_number: &str) -> String {
-    let digits: String = card_number.chars().filter(|c| c.is_ascii_digit()).collect();
-    if digits.len() < 4 {
-        return "****".to_string();
-    }
-    let last4 = &digits[digits.len() - 4..];
-    format!("****-****-****-{last4}")
-}
+use super::mask_card_number;
 
 #[post("/v3/me/billing", user: User)]
 pub async fn update_billing_card_handler(
