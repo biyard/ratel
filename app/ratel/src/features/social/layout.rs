@@ -121,6 +121,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
         let permissions: TeamGroupPermissions = mask.into();
         let is_admin = permissions.contains(TeamGroupPermission::TeamAdmin);
         let can_team_edit = is_admin || permissions.contains(TeamGroupPermission::TeamEdit);
+        let is_team_member = mask != 0;
 
         let user_role = if is_admin || can_team_edit {
             "Creator"
@@ -303,24 +304,32 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                                     div {
                                         class: "overflow-hidden absolute right-3 left-3 bottom-full z-30 py-1 mb-1 rounded-lg border shadow-lg bg-popover border-border",
                                         onclick: move |e| e.stop_propagation(),
-                                        Link {
-                                            to: Route::TeamReward { username: username.clone() },
-                                            class: "flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-hover transition-colors w-full text-left",
-                                            onclick: move |_| show_user_menu.set(false),
-                                            "data-pw": "team-reward-menu-link",
-                                            icons::game::Trophy {
-                                                class: "w-[15px] h-[15px] [&>path]:stroke-text-primary [&>path]:fill-transparent shrink-0",
+                                        if can_team_edit {
+                                            Link {
+                                                to: Route::TeamReward { username: username.clone() },
+                                                class: "flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-hover transition-colors w-full text-left",
+                                                onclick: move |_| show_user_menu.set(false),
+                                                "data-pw": "team-reward-menu-link",
+                                                icons::game::Trophy {
+                                                    class: "w-[15px] h-[15px] [&>path]:stroke-text-primary [&>path]:fill-transparent shrink-0",
+                                                }
+                                                {tr.rewards}
                                             }
-                                            {tr.rewards}
                                         }
-                                        Link {
-                                            to: Route::TeamSetting { username: username.clone() },
-                                            class: "flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-hover transition-colors w-full text-left",
-                                            onclick: move |_| show_user_menu.set(false),
-                                            lucide_dioxus::Settings {
-                                                class: "w-[15px] h-[15px] [&>path]:stroke-text-primary [&>line]:stroke-text-primary [&>polyline]:stroke-text-primary [&>circle]:stroke-text-primary shrink-0",
+                                        if is_team_member {
+                                            Link {
+                                                to: if can_team_edit {
+                                                    Route::TeamSetting { username: username.clone() }
+                                                } else {
+                                                    Route::TeamSettingMember { username: username.clone() }
+                                                },
+                                                class: "flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-hover transition-colors w-full text-left",
+                                                onclick: move |_| show_user_menu.set(false),
+                                                lucide_dioxus::Settings {
+                                                    class: "w-[15px] h-[15px] [&>path]:stroke-text-primary [&>line]:stroke-text-primary [&>polyline]:stroke-text-primary [&>circle]:stroke-text-primary shrink-0",
+                                                }
+                                                {tr.settings}
                                             }
-                                            {tr.settings}
                                         }
                                         button {
                                             class: "flex gap-2 items-center py-2 px-3 w-full text-sm text-left transition-colors text-destructive hover:bg-hover",
