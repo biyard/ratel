@@ -118,17 +118,19 @@ pub fn ActionCommonSettings(
     #[cfg(feature = "membership")]
     let mut remaining_credits = use_signal(move || base_remaining_credits);
     #[cfg(feature = "membership")]
-    let mut last_loaded_remaining_credits = use_signal(move || base_remaining_credits);
+    let mut auth_ctx = use_context::<crate::features::auth::context::Context>();
     #[cfg(feature = "membership")]
     use_effect(move || {
-        if last_loaded_remaining_credits() != base_remaining_credits {
-            last_loaded_remaining_credits.set(base_remaining_credits);
-            remaining_credits.set(base_remaining_credits);
+        if !is_team_space {
+            let new_credits = auth_ctx
+                .user_context
+                .read()
+                .membership
+                .as_ref()
+                .map_or(0, |m| m.remaining_credits.max(0) as u64);
+            remaining_credits.set(new_credits);
         }
     });
-
-    #[cfg(feature = "membership")]
-    let mut auth_ctx = use_context::<crate::features::auth::context::Context>();
     #[cfg(not(feature = "membership"))]
     let base_is_paid = false;
     #[cfg(not(feature = "membership"))]
