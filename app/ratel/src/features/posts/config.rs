@@ -26,7 +26,7 @@ impl Config {
         self.common.ses()
     }
 
-    pub fn qdrant(&self) -> &crate::common::utils::aws::QdrantClient {
+    pub fn qdrant(&self) -> &qdrant_client::Qdrant {
         self.common.qdrant()
     }
 

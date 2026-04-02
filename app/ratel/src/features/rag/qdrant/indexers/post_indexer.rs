@@ -1,14 +1,13 @@
-use crate::common::{Result, Error};
+use crate::common::Result;
 use crate::common::types::Partition;
 use crate::features::posts::models::Post;
 use crate::features::posts::types::PostStatus;
 use crate::features::rag::qdrant::payloads::PostPayload;
 use crate::features::rag::qdrant::types::{QdrantIndexType, QdrantPayload};
 
+use super::{posts_collection, upsert_point, delete_point};
+
 /// Index a published Post into the global posts Qdrant collection.
-///
-/// Called from DynamoStream when a Post is modified with status=PUBLISHED.
-/// Acquires QdrantClient and BedrockEmbeddingsClient from common config.
 pub async fn index_post(post: Post) -> Result<()> {
     if post.status != PostStatus::Published {
         return Ok(());
@@ -17,6 +16,7 @@ pub async fn index_post(post: Post) -> Result<()> {
     let config = crate::common::CommonConfig::default();
     let bedrock = config.bedrock_embeddings();
     let qdrant = config.qdrant();
+    let collection = posts_collection();
 
     let plain_text = crate::features::posts::utils::extract_plain_text(&post.html_contents);
     let embedding_input = format!("{} {}", post.title, plain_text).trim().to_string();
@@ -44,20 +44,17 @@ pub async fn index_post(post: Post) -> Result<()> {
         plain_text_preview,
     };
 
-    qdrant
-        .upsert_point(point_id, vector, payload.into_payload())
-        .await
+    upsert_point(qdrant, &collection, &point_id, vector, payload.into_payload()).await
 }
 
 /// Delete a Post's vector from the global posts Qdrant collection.
-///
-/// Called from DynamoStream when a published Post is deleted.
 pub async fn delete_post_index(post: Post) -> Result<()> {
     let config = crate::common::CommonConfig::default();
     let qdrant = config.qdrant();
+    let collection = posts_collection();
 
     let point_id = partition_to_uuid_string(&post.pk);
-    qdrant.delete_point(point_id).await
+    delete_point(qdrant, &collection, &point_id).await
 }
 
 fn partition_to_uuid_string(pk: &Partition) -> String {

@@ -69,8 +69,7 @@ pub fn spawn_stream_poller() {
                                 .await
                             {
                                 if let Some(iterator) = iter_output.shard_iterator() {
-                                    shard_iterators
-                                        .insert(shard_id.clone(), iterator.to_string());
+                                    shard_iterators.insert(shard_id.clone(), iterator.to_string());
                                 }
                             }
                         }
@@ -97,10 +96,8 @@ pub fn spawn_stream_poller() {
                     Ok(output) => {
                         // Process records
                         for record in output.records() {
-                            let event_name = record
-                                .event_name()
-                                .map(|e| e.as_str())
-                                .unwrap_or("UNKNOWN");
+                            let event_name =
+                                record.event_name().map(|e| e.as_str()).unwrap_or("UNKNOWN");
 
                             let new_image = record.dynamodb().and_then(|d| {
                                 d.new_image().map(|img| {
@@ -118,13 +115,12 @@ pub fn spawn_stream_poller() {
                                 })
                             });
 
-                            if let Err(e) =
-                                crate::common::stream_handler::handle_stream_record(
-                                    event_name,
-                                    new_image.as_ref(),
-                                    old_image.as_ref(),
-                                )
-                                .await
+                            if let Err(e) = crate::common::stream_handler::handle_stream_record(
+                                event_name,
+                                new_image.as_ref(),
+                                old_image.as_ref(),
+                            )
+                            .await
                             {
                                 tracing::error!(
                                     event_name = %event_name,
@@ -154,16 +150,13 @@ pub fn spawn_stream_poller() {
             shard_iterators = next_iterators;
 
             // Poll interval
-            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+            tokio::time::sleep(std::time::Duration::from_secs(5)).await;
         }
     });
 }
 
 #[cfg(all(feature = "server", feature = "local-dev"))]
-async fn get_stream_arn(
-    dynamodb: &aws_sdk_dynamodb::Client,
-    table_name: &str,
-) -> Option<String> {
+async fn get_stream_arn(dynamodb: &aws_sdk_dynamodb::Client, table_name: &str) -> Option<String> {
     dynamodb
         .describe_table()
         .table_name(table_name)
@@ -180,9 +173,7 @@ async fn get_stream_arn(
 /// while serde_dynamo expects `serde_dynamo::AttributeValue`. They are
 /// wire-compatible via JSON, so we serialize + deserialize.
 #[cfg(all(feature = "server", feature = "local-dev"))]
-fn convert_av(
-    av: &aws_sdk_dynamodbstreams::types::AttributeValue,
-) -> serde_dynamo::AttributeValue {
+fn convert_av(av: &aws_sdk_dynamodbstreams::types::AttributeValue) -> serde_dynamo::AttributeValue {
     // Quick match for common types to avoid JSON round-trip overhead
     match av {
         aws_sdk_dynamodbstreams::types::AttributeValue::S(s) => {
@@ -197,13 +188,9 @@ fn convert_av(
         aws_sdk_dynamodbstreams::types::AttributeValue::Null(b) => {
             serde_dynamo::AttributeValue::Null(*b)
         }
-        aws_sdk_dynamodbstreams::types::AttributeValue::M(m) => {
-            serde_dynamo::AttributeValue::M(
-                m.iter()
-                    .map(|(k, v)| (k.clone(), convert_av(v)))
-                    .collect(),
-            )
-        }
+        aws_sdk_dynamodbstreams::types::AttributeValue::M(m) => serde_dynamo::AttributeValue::M(
+            m.iter().map(|(k, v)| (k.clone(), convert_av(v))).collect(),
+        ),
         aws_sdk_dynamodbstreams::types::AttributeValue::L(l) => {
             serde_dynamo::AttributeValue::L(l.iter().map(convert_av).collect())
         }

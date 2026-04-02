@@ -32,7 +32,7 @@ impl ServerConfig {
     pub fn sns(&self) -> &crate::common::utils::aws::SnsClient {
         &aws_sns::SNS_CLIENT
     }
-    pub fn qdrant(&self) -> &crate::common::utils::aws::QdrantClient {
+    pub fn qdrant(&self) -> &qdrant_client::Qdrant {
         &qdrant_config::QDRANT_CLIENT
     }
     pub fn bedrock_embeddings(&self) -> &crate::common::utils::aws::BedrockEmbeddingsClient {
