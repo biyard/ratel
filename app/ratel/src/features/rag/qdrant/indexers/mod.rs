@@ -1,8 +1,10 @@
-pub mod reply_indexer;
 pub mod material_indexer;
+pub mod post_indexer;
+pub mod reply_indexer;
 
-pub use reply_indexer::*;
 pub use material_indexer::*;
+pub use post_indexer::*;
+pub use reply_indexer::*;
 
 use crate::common::utils::aws::QdrantClient;
 

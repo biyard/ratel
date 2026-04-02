@@ -27,7 +27,7 @@ pub async fn upload_material(
 
     let opt = AiModeratorMaterial::opt()
         .sk(EntityType::AiModeratorMaterial(String::default()).to_string())
-        .limit((MAX_MATERIALS + 1) as i64);
+        .limit((MAX_MATERIALS + 1) as i32);
     let (existing, _) = AiModeratorMaterial::query(cli, &pk, opt).await?;
     if existing.len() >= MAX_MATERIALS {
         return Err(AiModeratorError::MaterialLimitReached.into());

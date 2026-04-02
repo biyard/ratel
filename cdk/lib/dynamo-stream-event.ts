@@ -95,6 +95,104 @@ export class DynamoStreamEventStack extends Stack {
       },
     });
 
+    // ── Pipe 1b: Post Publish → PostVectorIndex ─────────────────────
+    // Triggers when a post is published (same filter as TimelinePipe) for Qdrant indexing
+    new pipes.CfnPipe(this, "PostVectorIndexPipe", {
+      name: `ratel-${stage}-post-vector-index-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["INSERT", "MODIFY"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: [{ prefix: "POST" }] },
+                    status: { S: ["PUBLISHED"] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "PostVectorIndex",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    // ── Rule: Route PostVectorIndex events to app-shell Lambda ─────
+    new events.Rule(this, "PostVectorIndexRule", {
+      eventBus,
+      description:
+        "Route post publish events to app-shell for Qdrant vector indexing",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["PostVectorIndex"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
+    // ── Pipe 1c: Post Delete → PostVectorDelete ───────────────────
+    // Triggers when a published post is removed
+    new pipes.CfnPipe(this, "PostVectorDeletePipe", {
+      name: `ratel-${stage}-post-vector-delete-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["REMOVE"],
+                dynamodb: {
+                  OldImage: {
+                    sk: { S: [{ prefix: "POST" }] },
+                    status: { S: ["PUBLISHED"] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "PostVectorDelete",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.OldImage>}',
+      },
+    });
+
+    // ── Rule: Route PostVectorDelete events to app-shell Lambda ────
+    new events.Rule(this, "PostVectorDeleteRule", {
+      eventBus,
+      description:
+        "Route post delete events to app-shell for Qdrant vector removal",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["PostVectorDelete"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
     // ── Pipe 2: Engagement Change → PopularPostUpdate ────────────────
     // Triggers when likes/comments/shares change on a published post
     new pipes.CfnPipe(this, "PopularPostPipe", {

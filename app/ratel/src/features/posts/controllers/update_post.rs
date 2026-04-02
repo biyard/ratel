@@ -166,23 +166,16 @@ pub async fn update_post_handler(post_id: FeedPartition, req: UpdatePostRequest)
 
     crate::transact_write_items!(cli, transacts)?;
 
+    #[cfg(feature = "local-dev")]
     if post.status == PostStatus::Published {
-        crate::features::posts::services::index_post_async(
-            conf.qdrant(),
-            conf.bedrock_embeddings(),
-            &post,
-        )
-        .await;
-
-        #[cfg(feature = "local-dev")]
-        {
-            let _ = crate::features::timeline::services::fan_out_timeline_entries(post.clone())
-                .await
-                .map_err(|e| {
-                    tracing::error!("local-dev timeline fan-out failed: {}", e);
-                });
-        }
+        let _ = crate::features::timeline::services::fan_out_timeline_entries(post.clone())
+            .await
+            .map_err(|e| {
+                tracing::error!("local-dev timeline fan-out failed: {}", e);
+            });
     }
+
+    // Qdrant vector indexing is handled by DynamoStream → PostVectorIndex event
 
     Ok(post)
 }

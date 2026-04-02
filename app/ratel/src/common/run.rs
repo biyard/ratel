@@ -117,6 +117,8 @@ pub enum DetailType {
     PopularPostUpdate,
     PopularSpaceUpdate,
     NotificationSend,
+    PostVectorIndex,
+    PostVectorDelete,
     AiModeratorReplyCheck,
     AiModeratorReplyIndex,
     #[serde(other)]
@@ -165,6 +167,16 @@ async fn event_bridge_handler(
             let notification: crate::common::models::notification::Notification =
                 DetailType::parse_detail(&envelope.detail)?;
             notification.process().await
+        }
+        DetailType::PostVectorIndex => {
+            let post: crate::features::posts::models::Post =
+                DetailType::parse_detail(&envelope.detail)?;
+            crate::features::rag::qdrant::indexers::post_indexer::index_post(post).await
+        }
+        DetailType::PostVectorDelete => {
+            let post: crate::features::posts::models::Post =
+                DetailType::parse_detail(&envelope.detail)?;
+            crate::features::rag::qdrant::indexers::post_indexer::delete_post_index(post).await
         }
         DetailType::AiModeratorReplyCheck => {
             let post: crate::features::spaces::pages::actions::actions::discussion::SpacePost =
