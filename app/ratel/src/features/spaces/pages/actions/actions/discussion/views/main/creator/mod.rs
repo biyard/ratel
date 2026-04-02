@@ -60,7 +60,7 @@ pub fn CreatorMain(
                         }
                         crate::features::ai_moderator::AiModeratorSetting {
                             space_id,
-                            discussion_sk: discussion_id().to_string(),
+                            discussion_id: use_memo(move || SpaceDiscussionEntityType(discussion_id().to_string())),
                         }
                     }
                 }
