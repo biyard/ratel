@@ -138,6 +138,7 @@ html[data-theme="light"] {
     var(--light, var(--table-light-border));
   --border-separator: var(--dark, var(--gray-800)) var(--light, #e5e5e5);
   --border-subtle: var(--dark, #464646) var(--light, var(--gray-700));
+  --border-post-divider: var(--dark, #ffffff) var(--light, #000000);
 
   /* Table styles */
   --table-bg: var(--dark, var(--bg-dark)) var(--light, var(--gray-50));
@@ -669,6 +670,9 @@ a {
   }
   .border-subtle {
     border-color: var(--border-subtle);
+  }
+  .border-post-divider {
+    border-color: var(--border-post-divider);
   }
 
   /* Panel delete icon color override */

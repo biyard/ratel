@@ -73,7 +73,6 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
     let tr: TeamMenuTranslate = use_translate();
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let team_ctx = crate::common::contexts::use_team_context();
-    let nav = use_navigator();
     let current_route = use_route::<Route>();
     let user = user_ctx().user.clone().unwrap_or_default();
 
@@ -337,7 +336,6 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                                                 show_user_menu.set(false);
                                                 spawn(async move {
                                                     let _ = crate::features::auth::controllers::logout_handler().await;
-                                                    nav.push("/");
                                                     #[cfg(target_arch = "wasm32")]
                                                     {
                                                         if let Some(window) = web_sys::window() {
