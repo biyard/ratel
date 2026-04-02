@@ -1,51 +1,19 @@
 use super::super::*;
 use dioxus_primitives::{ContentAlign, ContentSide};
 
-#[cfg(feature = "membership")]
-use crate::features::auth::hooks::use_user_membership;
-
 #[component]
 pub fn RewardSetting(
     saved_credits: ReadSignal<u64>,
+    is_paid: bool,
+    max_credits: u64,
+    remaining_credits: ReadSignal<u64>,
+    upgrade_route: String,
     #[props(default)] on_change: EventHandler<u64>,
 ) -> Element {
     let tr: RewardSettingTranslate = use_translate();
     let mut enable_reward = use_signal(move || saved_credits() > 0);
     let mut credits = use_signal(move || saved_credits());
-
-    #[cfg(feature = "membership")]
-    let membership = use_user_membership();
-    #[cfg(not(feature = "membership"))]
-    let membership: Option<()> = None;
-
-    #[cfg(feature = "membership")]
-    let is_paid = membership.as_ref().map_or(false, |m| m.is_paid());
-    #[cfg(not(feature = "membership"))]
-    let is_paid = false;
-
-    #[cfg(feature = "membership")]
-    let max_credits = membership
-        .as_ref()
-        .map_or(0, |m| m.max_credits_per_space as u64);
-    #[cfg(not(feature = "membership"))]
-    let max_credits = 0u64;
-
-    #[cfg(feature = "membership")]
-    let available_credits = membership
-        .as_ref()
-        .map_or(0, |m| m.remaining_credits.max(0) as u64)
-        .saturating_add(saved_credits());
-    #[cfg(not(feature = "membership"))]
-    let available_credits = 0u64;
-
-    #[cfg(feature = "membership")]
-    let initial_remaining_credits = use_memo(move || {
-        membership
-            .as_ref()
-            .map_or(0, |m| m.remaining_credits.max(0) as u64)
-    });
-    #[cfg(not(feature = "membership"))]
-    let initial_remaining_credits = use_memo(|| 0u64);
+    let available_credits = remaining_credits().saturating_add(saved_credits());
 
     let boost_multiplier = credits();
     let total_reward = credits() * 10_000;
@@ -107,7 +75,7 @@ pub fn RewardSetting(
                                     }
                                 }
                             } else {
-                                UnlockButton {}
+                                UnlockButton { upgrade_route: upgrade_route.clone() }
                             }
                         }
                     }
@@ -201,7 +169,7 @@ pub fn RewardSetting(
                                 div { class: "flex gap-3 justify-between items-center w-full",
                                     p { class: label_class, {tr.remaining_credits} }
                                     p { class: "font-semibold text-green-500 font-raleway text-[15px]/[18px] tracking-[-0.16px]",
-                                        {format_number(initial_remaining_credits())}
+                                        {format_number(remaining_credits())}
                                     }
                                 }
                             }
@@ -233,24 +201,15 @@ pub fn RewardSetting(
 }
 
 #[component]
-fn UnlockButton() -> Element {
+fn UnlockButton(upgrade_route: String) -> Element {
     let tr: UnlockButtonTranslate = use_translate();
     let nav = use_navigator();
-    let user_ctx = crate::features::auth::hooks::use_user_context();
-    let username = user_ctx
-        .read()
-        .user
-        .as_ref()
-        .map(|u| u.username.clone())
-        .unwrap_or_default();
 
     rsx! {
         button {
             class: "inline-flex gap-1.5 items-center py-1.5 px-3 text-xs font-semibold rounded-full transition-all bg-primary/10 text-primary hover:bg-primary/20",
             onclick: move |_| {
-                let username = username.clone();
-                // FIXME: unlock with modal
-                nav.push(format!("/{username}/memberships"));
+                nav.push(upgrade_route.clone());
             },
             icons::security::Lock1 { width: "14", height: "14", class: "[&>path]:stroke-current" }
             {tr.unlock}

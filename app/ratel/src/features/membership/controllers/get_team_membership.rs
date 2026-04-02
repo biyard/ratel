@@ -8,11 +8,23 @@ use crate::features::membership::*;
 use crate::features::posts::models::Team;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 
-#[get("/v3/teams/:username/memberships", user: User, team: Team, permissions: TeamGroupPermissions)]
+#[get("/v3/teams/:username/memberships", user: User)]
 pub async fn get_team_membership_handler(username: String) -> Result<TeamMembershipResponse> {
     let result = async {
         let conf = crate::features::membership::config::get();
         let cli = conf.common.dynamodb();
+        let team_query_option = Team::opt()
+            .sk(Team::compose_gsi2_sk(String::default()))
+            .limit(1);
+        let (teams, _) =
+            Team::find_by_username_prefix(cli, username.clone(), team_query_option).await?;
+        let team = teams
+            .into_iter()
+            .find(|team| team.username == username)
+            .ok_or_else(|| Error::NotFound("Team not found".to_string()))?;
+        let permissions = Team::get_permissions_by_team_pk(cli, &team.pk, &user.pk)
+            .await
+            .unwrap_or_else(|_| TeamGroupPermissions::empty());
 
         if !permissions.contains(TeamGroupPermission::TeamAdmin) {
             return Err(Error::NotFound("Permission denied".to_string()));
