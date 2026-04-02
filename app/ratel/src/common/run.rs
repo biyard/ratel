@@ -174,7 +174,7 @@ async fn event_bridge_handler(
         DetailType::AiModeratorReplyIndex => {
             let comment: crate::features::spaces::pages::actions::actions::discussion::SpacePostComment =
                 DetailType::parse_detail(&envelope.detail)?;
-            crate::features::ai_moderator::services::index_reply::index_reply(comment).await
+            crate::features::rag::qdrant::indexers::reply_indexer::index_reply(comment).await
         }
         DetailType::Unknown => {
             tracing::warn!(

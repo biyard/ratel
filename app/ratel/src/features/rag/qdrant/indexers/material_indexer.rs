@@ -1,11 +1,10 @@
 use crate::common::Result;
-use crate::features::ai_moderator::services::qdrant_service::{
-    get_qdrant_client, QdrantIndexType, MaterialPayload, QdrantPayload,
-};
+use crate::features::rag::qdrant::payloads::MaterialPayload;
+use crate::features::rag::qdrant::types::{QdrantIndexType, QdrantPayload};
+
+use super::get_discussion_qdrant_client;
 
 /// Index reference material content into the discussion-scoped Qdrant collection.
-///
-/// Called after a material is uploaded and its content extracted.
 pub async fn index_material(
     space_id: &str,
     discussion_sk: &str,
@@ -15,7 +14,7 @@ pub async fn index_material(
 ) -> Result<()> {
     let config = crate::common::CommonConfig::default();
     let bedrock = config.bedrock_embeddings();
-    let qdrant = get_qdrant_client(space_id, discussion_sk);
+    let qdrant = get_discussion_qdrant_client(space_id, discussion_sk);
 
     let vector = bedrock.embed(content).await?;
 
@@ -37,6 +36,6 @@ pub async fn delete_material_vectors(
     discussion_sk: &str,
     material_id: &str,
 ) -> Result<()> {
-    let qdrant = get_qdrant_client(space_id, discussion_sk);
+    let qdrant = get_discussion_qdrant_client(space_id, discussion_sk);
     qdrant.delete_point(material_id.to_string()).await
 }
