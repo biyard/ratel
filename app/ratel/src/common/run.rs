@@ -117,6 +117,8 @@ pub enum DetailType {
     PopularPostUpdate,
     PopularSpaceUpdate,
     NotificationSend,
+    AiModeratorReplyCheck,
+    AiModeratorReplyIndex,
     #[serde(other)]
     Unknown,
 }
@@ -163,6 +165,16 @@ async fn event_bridge_handler(
             let notification: crate::common::models::notification::Notification =
                 DetailType::parse_detail(&envelope.detail)?;
             notification.process().await
+        }
+        DetailType::AiModeratorReplyCheck => {
+            let post: crate::features::spaces::pages::actions::actions::discussion::SpacePost =
+                DetailType::parse_detail(&envelope.detail)?;
+            crate::features::ai_moderator::services::event_handler::handle_ai_moderator_event(post).await
+        }
+        DetailType::AiModeratorReplyIndex => {
+            let comment: crate::features::spaces::pages::actions::actions::discussion::SpacePostComment =
+                DetailType::parse_detail(&envelope.detail)?;
+            crate::features::ai_moderator::services::index_reply::index_reply(comment).await
         }
         DetailType::Unknown => {
             tracing::warn!(
