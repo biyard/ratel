@@ -288,6 +288,10 @@ test.describe
   });
 
   test("Create a final poll scheduled one day later", async ({ browser }) => {
+    // Month-boundary calendar navigation (e.g., March 31 → April 1) adds
+    // extra steps that can push total execution past the default 60s timeout.
+    test.setTimeout(120000);
+
     const context = await browser.newContext({
       storageState: "admin1.json",
       viewport: { width: 1440, height: 950 },
@@ -373,8 +377,9 @@ test.describe
       await showCalendarButtons.nth(1).click();
       await page.waitForLoadState("load");
 
-      // Click the end date in the calendar — use .first() to handle
-      // month boundaries where the date may appear in multiple sections.
+      // Click the end date in the calendar using its accessible name.
+      // Use .first() to avoid strict mode violation when the date appears
+      // in multiple month sections of the calendar grid.
       await page
         .getByRole("button", { name: dayAfterLabel })
         .first()
