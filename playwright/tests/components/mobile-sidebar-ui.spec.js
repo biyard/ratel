@@ -36,16 +36,15 @@ const MOBILE_VIEWPORT = { width: 375, height: 667 };
  * Opens the mobile sidebar sheet by clicking the More button and waits
  * for the inner content to be visible.
  *
- * Uses force:true to bypass Playwright's DOM-stability retry loop —
- * post-hydration effects (e.g. sidebar is_mobile detection) can keep
- * mutating the DOM, causing .click() to retry until test timeout.
- * Retries the click once if the content does not appear, to handle the
- * case where the first click fires before Dioxus has attached handlers.
+ * Uses the clickNoNav helper (no page-navigation wait) since this is an
+ * in-page interaction. Retries the click once if the content does not
+ * appear, to handle the case where the first click fires before Dioxus
+ * has attached event handlers.
  *
  * @returns {import("@playwright/test").Locator} The sidebar content locator.
  */
 async function openMobileSidebar(page) {
-  await clickNoNav(page, { testId: "mobile-more-btn" }, { force: true });
+  await clickNoNav(page, { testId: "mobile-more-btn" });
 
   const sidebarContent = page.getByTestId("mobile-sidebar-content");
 
@@ -53,7 +52,7 @@ async function openMobileSidebar(page) {
     await expect(sidebarContent).toBeVisible({ timeout: 10000 });
   } catch {
     // Retry: first click may have fired before Dioxus attached event handlers
-    await clickNoNav(page, { testId: "mobile-more-btn" }, { force: true });
+    await clickNoNav(page, { testId: "mobile-more-btn" });
     await expect(sidebarContent).toBeVisible({ timeout: 10000 });
   }
 
@@ -179,9 +178,7 @@ test.describe(
         await openMobileSidebar(page);
 
         // Click profile button to open dropdown.
-        // Use force:true to bypass DOM-stability retry loop (same reason
-        // as the More button — is_mobile signal keeps mutating the DOM).
-        await clickNoNav(page, { testId: "sidebar-profile-btn" }, { force: true });
+        await clickNoNav(page, { testId: "sidebar-profile-btn" });
 
         // The dropdown should contain logout button — it renders outside the
         // sidebar-mobile-inner div (in the ProfileButton's relative wrapper),
