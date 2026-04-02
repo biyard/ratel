@@ -14,19 +14,6 @@ pub fn run(app: fn() -> Element) {
 
 #[cfg(not(feature = "server"))]
 fn launch(app: fn() -> Element) {
-    // Signal to Playwright that WASM is loaded and executing.
-    // Set before dioxus::launch() so the flag is available even if a
-    // component suspends during hydration (e.g. Context::init() waiting
-    // on a server function). The goto() helper in Playwright waits on
-    // this flag, then relies on Playwright's built-in visibility checks
-    // to ensure elements are interactive before proceeding.
-    if let Some(window) = web_sys::window() {
-        let _ = js_sys::Reflect::set(
-            &window,
-            &wasm_bindgen::JsValue::from_str("__dioxus_hydrated"),
-            &wasm_bindgen::JsValue::TRUE,
-        );
-    }
     dioxus::launch(app);
 }
 

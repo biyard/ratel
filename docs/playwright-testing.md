@@ -390,7 +390,7 @@ PLAYWRIGHT_ID=my-test-run npx playwright test
 
 - Default test timeout is 30000ms (30s). Increase with `PLAYWRIGHT_TIMEOUT` env var.
 - Ensure the app is running at `http://localhost:8080` (or set `PLAYWRIGHT_BASE_URL`).
-- Check that the Dioxus WASM app is loading correctly (the `goto()` helper waits for `window.__dioxus_hydrated` which is set in `run.rs` as soon as WASM starts executing).
+- Check that the Dioxus WASM app is loading correctly (the `goto()` helper waits for `window.__dioxus_hydrated` which is set in `App`'s `use_effect` after `Context::init()` resolves).
 
 ### Auth Setup Fails
 

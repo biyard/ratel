@@ -16,6 +16,20 @@ pub fn App() -> Element {
 
     let _ = crate::features::auth::Context::init()?;
 
+    // Signal to Playwright that the app has fully hydrated and event handlers
+    // are attached. This runs only after Context::init() resolves (no longer
+    // suspended), so the flag guarantees the UI is interactive.
+    #[cfg(not(feature = "server"))]
+    use_effect(|| {
+        if let Some(window) = web_sys::window() {
+            let _ = js_sys::Reflect::set(
+                &window,
+                &wasm_bindgen::JsValue::from_str("__dioxus_hydrated"),
+                &wasm_bindgen::JsValue::TRUE,
+            );
+        }
+    });
+
     crate::common::contexts::TeamContext::init();
     let conf = config::get();
     let env = conf.common.env;
