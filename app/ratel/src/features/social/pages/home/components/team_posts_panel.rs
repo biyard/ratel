@@ -48,7 +48,7 @@ pub fn TeamPostsPanel(
             {
                 match view_mode {
                     HomeViewMode::Card => rsx! {
-                        div { class: "grid grid-cols-2 max-mobile:grid-cols-1 items-stretch gap-10 max-tablet:gap-4",
+                        div { class: "grid grid-cols-2 max-mobile:grid-cols-1 items-stretch gap-5 max-tablet:gap-4",
                             for (idx, post) in items.iter().cloned().enumerate() {
                                 TeamPostCard {
                                     key: "card-{post.pk}",
@@ -109,7 +109,7 @@ fn TeamPostCard(post: PostResponse, #[props(default = false)] full_width: bool) 
                             for cat in post_categories.iter() {
                                 div {
                                     key: "{cat}",
-                                    class: "flex h-[25px] items-center justify-center rounded-[8px] border border-[#A1A1A1] px-2 py-[3px]",
+                                    class: "flex h-[25px] items-center justify-center rounded-[8px] border border-tag-stroke px-2 py-[3px]",
                                     span { class: "font-bold font-raleway text-[12px]/[14px] tracking-[-0.12px] text-text-primary",
                                         "{cat}"
                                     }
@@ -126,7 +126,7 @@ fn TeamPostCard(post: PostResponse, #[props(default = false)] full_width: bool) 
                 }
 
                 div { class: "flex items-center justify-between",
-                    span { class: "font-inter text-[15px]/[22px] text-[#8C8C8C]",
+                    span { class: "font-inter text-[15px]/[22px] text-foreground-muted",
                         {format_post_date(created_at)}
                     }
                     div { class: "flex items-center gap-[10px]",
@@ -154,7 +154,7 @@ fn TeamPostCard(post: PostResponse, #[props(default = false)] full_width: bool) 
                 }
 
                 div {
-                    class: "min-h-0 flex-1 overflow-hidden font-raleway text-[15px]/[22px] text-[#D4D4D4]",
+                    class: "min-h-0 flex-1 overflow-hidden font-raleway text-[15px]/[22px] text-foreground",
                     style: "display: -webkit-box; -webkit-line-clamp: 12; -webkit-box-orient: vertical;",
                     dangerous_inner_html: html_contents,
                 }
@@ -184,14 +184,14 @@ fn TeamPostListItem(post: PostResponse) -> Element {
             onclick: move |_| {
                 nav.push(post_url.clone());
             },
-            div { class: "flex w-full flex-col border-b border-[#262626] py-6",
+            div { class: "flex w-full flex-col border-b border-white light:border-black py-6",
                 div { class: "flex items-start justify-between gap-6",
                     if !post_categories.is_empty() {
                         div { class: "flex min-w-0 items-center gap-2 flex-wrap",
                             for cat in post_categories.iter() {
                                 div {
                                     key: "{cat}",
-                                    class: "flex h-[25px] items-center justify-center rounded-[8px] border border-[#A1A1A1] px-2 py-[3px]",
+                                    class: "flex h-[25px] items-center justify-center rounded-[8px] border border-tag-stroke px-2 py-[3px]",
                                     span { class: "font-bold font-raleway text-[12px]/[14px] tracking-[-0.12px] text-text-primary",
                                         "{cat}"
                                     }
@@ -203,12 +203,12 @@ fn TeamPostListItem(post: PostResponse) -> Element {
                     }
                 }
 
-                h2 { class: "font-bold font-raleway text-[26px]/[30px] text-text-primary line-clamp-2 mb-2.5",
+                h2 { class: "font-bold font-raleway text-[26px]/[30px] text-text-primary line-clamp-2 mt-3 mb-2.5",
                     "{title}"
                 }
 
                 div { class: "flex items-center justify-between gap-4 max-mobile:flex-col max-mobile:items-start",
-                    span { class: "font-inter text-[15px]/[22px] text-[#8C8C8C]",
+                    span { class: "font-inter text-[15px]/[22px] text-foreground-muted",
                         {format_post_date(created_at)}
                     }
                     div { class: "flex shrink-0 items-center gap-6",
