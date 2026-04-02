@@ -5,6 +5,7 @@ use super::controllers::{
 };
 use super::Result as AppResult;
 use super::*;
+use crate::common::hooks::use_origin;
 #[cfg(not(feature = "server"))]
 use crate::common::{wasm_bindgen, wasm_bindgen_futures, web_sys};
 use crate::features::auth::hooks::use_user_context;
@@ -88,7 +89,7 @@ pub fn Home(username: String) -> Element {
 
     let Some(user) = user else {
         return rsx! {
-            div { class: "flex flex-col items-center justify-center w-full h-full py-10",
+            div { class: "flex flex-col justify-center items-center py-10 w-full h-full",
                 p { class: "text-foreground-muted", {tr.login_required} }
             }
         };
@@ -164,7 +165,7 @@ pub fn Home(username: String) -> Element {
     let save_blocked = is_blocked_text(&nickname()) || is_blocked_text(&description());
 
     rsx! {
-        div { class: "w-full max-w-[800px] mx-auto flex flex-col gap-6 px-4 mt-5",
+        div { class: "flex flex-col gap-6 px-4 mx-auto mt-5 w-full max-w-[800px]",
             h1 { class: "text-xl font-bold text-text-primary", {tr.settings} }
 
             // Card 1: Profile
@@ -172,19 +173,19 @@ pub fn Home(username: String) -> Element {
                 div { class: "flex flex-col gap-5 w-full",
                     h2 { class: "text-lg font-bold text-text-primary", {tr.profile} }
 
-                    div { class: "flex items-center gap-4",
+                    div { class: "flex gap-4 items-center",
                         FileUploader {
                             on_upload_success: move |url: String| profile_url.set(url),
                             accept: "image/*",
                             if profile_url().is_empty() {
-                                div { class: "w-16 h-16 rounded-full bg-card-bg flex items-center justify-center text-xs text-foreground-muted cursor-pointer",
+                                div { class: "flex justify-center items-center w-16 h-16 text-xs rounded-full cursor-pointer bg-card-bg text-foreground-muted",
                                     {tr.upload}
                                 }
                             } else {
                                 img {
                                     src: "{profile_url()}",
                                     alt: "Profile",
-                                    class: "w-16 h-16 rounded-full object-cover cursor-pointer",
+                                    class: "object-cover w-16 h-16 rounded-full cursor-pointer",
                                 }
                             }
                         }
@@ -221,7 +222,7 @@ pub fn Home(username: String) -> Element {
                         TextArea {
                             value: description(),
                             placeholder: tr.description_placeholder,
-                            class: "min-h-[100px] resize-y",
+                            class: "resize-y min-h-[100px]",
                             oninput: move |e: Event<FormData>| description.set(e.value()),
                         }
                     }
@@ -484,7 +485,7 @@ fn SubscriptionCard() -> Element {
                         }
                         Link {
                             to: "/membership",
-                            class: "text-xs text-primary hover:underline no-underline",
+                            class: "text-xs no-underline hover:underline text-primary",
                             "Change Plan"
                         }
                     }
@@ -541,7 +542,7 @@ fn SubscriptionCard() -> Element {
                 }
 
                 if show_card_form() {
-                    div { class: "flex flex-col gap-4 rounded-[10px] border border-border p-4",
+                    div { class: "flex flex-col gap-4 p-4 border rounded-[10px] border-border",
                         SettingsRow { label: "Card Number",
                             Input {
                                 placeholder: "0000000000000000",
@@ -554,7 +555,7 @@ fn SubscriptionCard() -> Element {
                             }
                         }
                         div { class: "flex gap-3",
-                            div { class: "flex-1 flex flex-col gap-1.5",
+                            div { class: "flex flex-col flex-1 gap-1.5",
                                 label { class: "text-sm font-semibold text-text-primary",
                                     "Expiry Month"
                                 }
@@ -568,7 +569,7 @@ fn SubscriptionCard() -> Element {
                                     },
                                 }
                             }
-                            div { class: "flex-1 flex flex-col gap-1.5",
+                            div { class: "flex flex-col flex-1 gap-1.5",
                                 label { class: "text-sm font-semibold text-text-primary",
                                     "Expiry Year"
                                 }
@@ -667,18 +668,13 @@ fn format_js_error(err: wasm_bindgen::JsValue) -> String {
 #[component]
 fn McpServerCard() -> Element {
     let tr: UserSettingsTranslate = use_translate();
-    let mut mcp_secret =
-        use_server_future(move || async move { get_mcp_secret_handler().await })?;
-    let mcp_data = mcp_secret.read();
-
-    let secret_value = mcp_data
-        .as_ref()
-        .and_then(|r| r.as_ref().ok())
-        .and_then(|resp| resp.secret.clone());
+    let mut mcp_secret = use_loader(move || async move { get_mcp_secret_handler().await })?;
+    let secret_value = mcp_secret().secret;
 
     let mut generating = use_signal(|| false);
     let mut copied = use_signal(|| false);
     let mut mcp_message = use_signal(|| Option::<(String, bool)>::None);
+    let origin = use_origin();
 
     let on_generate = move |_: MouseEvent| {
         spawn(async move {
@@ -696,19 +692,11 @@ fn McpServerCard() -> Element {
         });
     };
 
-    let mcp_url = secret_value.as_ref().map(|_s| {
-        #[cfg(not(feature = "server"))]
-        {
-            let origin = web_sys::window()
-                .and_then(|w| w.location().origin().ok())
-                .unwrap_or_default();
-            format!("{origin}/mcp")
-        }
-        #[cfg(feature = "server")]
-        {
-            String::from("/mcp")
-        }
-    });
+    let mcp_url = if let Some(secret_value) = secret_value.clone() {
+        Some(format!("{origin}/mcp/{secret_value}"))
+    } else {
+        None
+    };
 
     let on_copy = {
         let mcp_url = mcp_url.clone();
@@ -720,10 +708,8 @@ fn McpServerCard() -> Element {
                     spawn(async move {
                         if let Some(window) = web_sys::window() {
                             let clipboard = window.navigator().clipboard();
-                            match wasm_bindgen_futures::JsFuture::from(
-                                clipboard.write_text(&url),
-                            )
-                            .await
+                            match wasm_bindgen_futures::JsFuture::from(clipboard.write_text(&url))
+                                .await
                             {
                                 Ok(_) => {
                                     copied.set(true);
@@ -767,7 +753,7 @@ fn McpServerCard() -> Element {
                     }
                 }
             } else {
-                p { class: "text-sm text-foreground-muted italic", {tr.mcp_not_generated} }
+                p { class: "text-sm italic text-foreground-muted", {tr.mcp_not_generated} }
             }
 
             if let Some((msg, is_success)) = mcp_message() {
