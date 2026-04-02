@@ -3,7 +3,7 @@ use crate::features::my_follower::controllers::{
     check_follow_status_handler, follow_user, unfollow_user,
 };
 use crate::features::posts::controllers::create_post::create_post_handler;
-use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
+use crate::features::posts::types::TeamGroupPermission;
 use crate::features::posts::*;
 use crate::features::social::controllers::find_team::find_team_handler;
 use crate::features::social::pages::home::components::*;
@@ -23,7 +23,6 @@ translate! {
 pub fn Home(username: String) -> Element {
     let tr: HomeTranslate = use_translate();
     let mut view_mode: Signal<HomeViewMode> = use_signal(|| HomeViewMode::List);
-    let team_ctx = crate::common::contexts::use_team_context();
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let nav = use_navigator();
     let logged_in = user_ctx().user.is_some();
@@ -33,11 +32,10 @@ pub fn Home(username: String) -> Element {
         find_team_handler(name).await
     }))?;
     let team_detail_data = team_detail.read();
-    let team_resp = team_detail_data.as_ref().unwrap();
 
     let (display_name, profile_url, description, thumbnail_url, is_creator, team_pk_str) =
-        match team_resp {
-            Ok(t) => {
+        match team_detail_data.as_ref().and_then(|r| r.as_ref().ok()) {
+            Some(t) => {
                 let perms = t.permissions.as_ref().cloned().unwrap_or_default();
                 let is_creator = perms.contains(&TeamGroupPermission::TeamAdmin)
                     || perms.contains(&TeamGroupPermission::TeamEdit);
@@ -54,7 +52,7 @@ pub fn Home(username: String) -> Element {
                     Some(t.pk.clone()),
                 )
             }
-            Err(_) => (
+            None => (
                 username.clone(),
                 String::new(),
                 String::new(),
