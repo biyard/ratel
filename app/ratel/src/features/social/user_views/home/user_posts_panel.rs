@@ -148,7 +148,7 @@ fn UserPostListItem(post: PostResponse) -> Element {
         Link {
             to: "{post_url}",
             class: "block",
-            div { class: "flex flex-col gap-3 py-5 border-b border-separator",
+            div { class: "flex flex-col gap-4 py-5 border-b border-separator",
                 if !category.is_empty() {
                     div { class: "flex items-center border border-tag-stroke rounded-[8px] px-2 py-0.5 w-fit",
                         span { class: "text-[12px] font-bold text-text-primary leading-[14px] tracking-[-0.12px]",
