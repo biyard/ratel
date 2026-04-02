@@ -2,8 +2,6 @@ use crate::common::{Error, Result};
 use crate::common::types::*;
 use crate::features::ai_moderator::models::*;
 use crate::features::ai_moderator::services::moderation_handler;
-use crate::features::rag::qdrant::indexers::discussion_collection;
-
 // SpacePost and SpacePostComment are publicly re-exported from the discussion module
 use crate::features::spaces::pages::actions::actions::discussion::SpacePost;
 use crate::features::spaces::pages::actions::actions::discussion::SpacePostComment;
@@ -114,8 +112,8 @@ pub async fn handle_ai_moderator_event(post: SpacePost) -> Result<()> {
 /// Fetch relevant material context from Qdrant (best-effort, errors are logged and ignored).
 async fn fetch_material_context(
     config: &crate::common::CommonConfig,
-    space_id: &str,
-    discussion_sk: &str,
+    _space_id: &str,
+    _discussion_sk: &str,
     recent_replies: &[String],
 ) -> Vec<String> {
     let query_text = recent_replies
@@ -138,9 +136,10 @@ async fn fetch_material_context(
         }
     };
 
-    let _collection = discussion_collection(space_id, discussion_sk);
     let _qdrant = config.qdrant();
+    let _collection = crate::features::rag::qdrant::indexers::collection_name();
     // TODO: Implement Qdrant search for material retrieval using the official client.
+    // Filter by type=material, space_id, discussion_id in the single collection.
     // Use _qdrant.search_points(...) on _collection with _embedding vector.
 
     Vec::new()
