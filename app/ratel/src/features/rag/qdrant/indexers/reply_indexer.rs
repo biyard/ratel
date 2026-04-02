@@ -3,15 +3,13 @@ use crate::features::rag::qdrant::payloads::ReplyPayload;
 use crate::features::rag::qdrant::types::{QdrantIndexType, QdrantPayload};
 use crate::features::spaces::pages::actions::actions::discussion::SpacePostComment;
 
-use super::get_discussion_qdrant_client;
+use super::{discussion_collection, upsert_point};
 
 /// Index a SpacePostComment into the discussion-scoped Qdrant collection.
-///
-/// Called from DynamoStream when a new SpacePostComment is inserted.
-/// Acquires QdrantClient and BedrockEmbeddingsClient from common config.
 pub async fn index_reply(comment: SpacePostComment) -> Result<()> {
     let config = crate::common::CommonConfig::default();
     let bedrock = config.bedrock_embeddings();
+    let qdrant = config.qdrant();
 
     let space_pk_str = comment
         .space_pk
@@ -32,7 +30,7 @@ pub async fn index_reply(comment: SpacePostComment) -> Result<()> {
         return Ok(());
     }
 
-    let qdrant = get_discussion_qdrant_client(space_id, &discussion_sk);
+    let collection = discussion_collection(space_id, &discussion_sk);
     let point_id = comment.sk.to_string();
     let vector = bedrock.embed(&comment.content).await?;
 
@@ -43,7 +41,5 @@ pub async fn index_reply(comment: SpacePostComment) -> Result<()> {
         author_pk: comment.author_pk.to_string(),
     };
 
-    qdrant
-        .upsert_point(point_id, vector, payload.into_payload())
-        .await
+    upsert_point(qdrant, &collection, &point_id, vector, payload.into_payload()).await
 }

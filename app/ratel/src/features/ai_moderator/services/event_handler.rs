@@ -2,7 +2,7 @@ use crate::common::{Error, Result};
 use crate::common::types::*;
 use crate::features::ai_moderator::models::*;
 use crate::features::ai_moderator::services::moderation_handler;
-use crate::features::rag::qdrant::indexers::get_discussion_qdrant_client;
+use crate::features::rag::qdrant::indexers::discussion_collection;
 
 // SpacePost and SpacePostComment are publicly re-exported from the discussion module
 use crate::features::spaces::pages::actions::actions::discussion::SpacePost;
@@ -138,10 +138,10 @@ async fn fetch_material_context(
         }
     };
 
-    let _qdrant = get_discussion_qdrant_client(space_id, discussion_sk);
-    // TODO: Add search method to QdrantClient and implement material retrieval.
-    // For now, return empty. The Qdrant search endpoint needs to be added to
-    // crate::common::utils::aws::QdrantClient.
+    let _collection = discussion_collection(space_id, discussion_sk);
+    let _qdrant = config.qdrant();
+    // TODO: Implement Qdrant search for material retrieval using the official client.
+    // Use _qdrant.search_points(...) on _collection with _embedding vector.
 
     Vec::new()
 }
