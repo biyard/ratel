@@ -56,6 +56,12 @@ pub use components::SuspenseBoundary;
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
 #[cfg(feature = "server")]
+pub mod stream_handler;
+
+#[cfg(all(feature = "server", feature = "local-dev"))]
+pub mod stream_poller;
+
+#[cfg(feature = "server")]
 pub mod mcp;
 #[cfg(feature = "server")]
 pub mod server_lib;
