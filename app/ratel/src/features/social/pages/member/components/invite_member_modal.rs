@@ -1,6 +1,7 @@
 use super::super::controllers::{add_team_member_handler, find_user_handler, FindUserQueryType};
 use super::super::dto::{AddTeamMemberRequest, FoundUserResponse, TeamRole};
 use super::super::*;
+use dioxus_translate::use_language;
 
 use icons::validations;
 
@@ -20,6 +21,7 @@ pub fn InviteMemberModal(
 ) -> Element {
     let _username = username;
     let tr: InviteMemberTranslate = use_translate();
+    let lang = use_language();
     let mut role_index = use_signal(|| 0usize);
     let mut selected_users = use_signal(Vec::<FoundUserResponse>::new);
     let mut search_value = use_signal(String::new);
@@ -110,8 +112,8 @@ pub fn InviteMemberModal(
                     });
                     on_close.call(());
                 }
-                Err(_) => {
-                    message.set(Some(failed_invite()));
+                Err(e) => {
+                    message.set(Some(e.translate(&lang()).to_string()));
                 }
             }
         });
