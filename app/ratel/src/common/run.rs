@@ -30,11 +30,19 @@ fn serve(app: fn() -> Element) {
     let app = dioxus_router.layer(session_layer);
 
     #[cfg(not(feature = "lambda"))]
-    dioxus::serve(move || {
-        let app = app.clone();
+    {
+        #[cfg(feature = "local-dev")]
+        {
+            tracing::info!("Starting local-dev DynamoDB Stream poller");
+            crate::common::stream_poller::spawn_stream_poller();
+        }
 
-        async move { Ok(app) }
-    });
+        dioxus::serve(move || {
+            let app = app.clone();
+
+            async move { Ok(app) }
+        });
+    }
 
     #[cfg(feature = "lambda")]
     {
