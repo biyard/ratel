@@ -24,11 +24,6 @@ pub fn points_summary_card(
                 h2 { class: "text-base font-semibold text-text-primary tracking-[0.5px]",
                     "{tr.title}"
                 }
-                icons::arrows::ArrowUp {
-                    width: "20",
-                    height: "20",
-                    class: "-rotate-90 [&>path]:stroke-white",
-                }
             }
 
             div { class: "flex justify-between items-start mb-5",
