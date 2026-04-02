@@ -198,6 +198,10 @@ pub enum EntityType {
 
     TimelineEntry(String), // TIMELINE_ENTRY#${timestamp}#${post_pk_inner}
 
+    // AI Moderator
+    AiModeratorConfig,
+    AiModeratorMaterial(String), // AIMODMATERIAL#{material_id}
+
     // MCP
     McpClientSecret,
 }

@@ -1537,30 +1537,15 @@ pub async fn invalidate_user_services(user_pk: &crate::common::types::Partition)
 }
 
 /// Build the axum router for the MCP endpoint.
-/// The client secret must be sent via the `Authorization: Bearer <token>` header.
+/// The MCP service is mounted at `/mcp/{client_secret}`.
 pub fn mcp_router() -> Router {
-    Router::new().route("/mcp", axum::routing::any(mcp_handler))
+    Router::new().route("/mcp/{client_secret}", axum::routing::any(mcp_handler))
 }
 
 async fn mcp_handler(
+    axum::extract::Path(client_secret): axum::extract::Path<String>,
     request: axum::http::Request<axum::body::Body>,
 ) -> axum::response::Response {
-    let client_secret = request
-        .headers()
-        .get("authorization")
-        .and_then(|v| v.to_str().ok())
-        .and_then(|v| v.strip_prefix("Bearer "))
-        .map(|s| s.to_string());
-
-    let Some(client_secret) = client_secret else {
-        return axum::response::Response::builder()
-            .status(401)
-            .body(axum::body::Body::from(
-                "Missing or invalid Authorization header. Expected: Bearer <token>",
-            ))
-            .unwrap();
-    };
-
     let Some(service) = get_or_create_service(&client_secret).await else {
         return axum::response::Response::builder()
             .status(401)
