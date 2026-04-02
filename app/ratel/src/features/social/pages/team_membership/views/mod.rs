@@ -1,0 +1,270 @@
+use crate::common::*;
+use crate::features::membership::controllers::{
+    get_team_membership_handler, get_team_purchase_history_handler, PurchaseHistoryItem,
+};
+use crate::features::membership::models::TeamMembershipResponse;
+use crate::features::social::pages::user_membership::components::format_date;
+use dioxus::prelude::*;
+
+#[component]
+pub fn Home(username: String) -> Element {
+    let tr: TeamMembershipTranslate = use_translate();
+
+    let membership_resource =
+        use_server_future(use_reactive((&username,), |(name,)| async move {
+            get_team_membership_handler(name).await
+        }))?;
+
+    let history_resource = use_server_future(use_reactive((&username,), |(name,)| async move {
+        get_team_purchase_history_handler(name, None).await
+    }))?;
+
+    let membership_state = membership_resource.read();
+    let history_state = history_resource.read();
+
+    let membership = match membership_state.as_ref() {
+        Some(Ok(data)) => data.clone(),
+        Some(Err(_)) => {
+            return rsx! {
+                div { class: "flex flex-col gap-6 p-6 mx-auto w-full max-w-4xl",
+                    h1 { class: "text-2xl font-bold text-text-primary", {tr.title} }
+                    div { class: "p-6 rounded-lg border bg-card-bg border-card-border",
+                        p { class: "text-text-secondary", {tr.no_permission} }
+                    }
+                }
+            };
+        }
+        None => {
+            return rsx! {
+                div { class: "flex justify-center items-center min-h-screen", LoadingIndicator {} }
+            };
+        }
+    };
+
+    let tier_name = format_tier(&membership.tier.0);
+    let tier_color = match tier_name.as_str() {
+        "Pro" => "text-blue-500",
+        "Max" => "text-purple-500",
+        "Vip" => "text-amber-500",
+        _ => "text-text-secondary",
+    };
+
+    rsx! {
+        div { class: "flex flex-col gap-6 p-6 mx-auto w-full max-w-4xl",
+            h1 { class: "text-2xl font-bold text-text-primary", {tr.title} }
+
+            div { class: "p-6 rounded-lg border bg-card-bg border-card-border",
+                h2 { class: "mb-4 text-xl font-semibold text-text-primary", {tr.current_plan} }
+
+                div { class: "flex flex-col gap-4",
+                    div { class: "flex gap-3 items-center",
+                        lucide_dioxus::Sparkles { class: format!("w-6 h-6 {}", tier_color) }
+                        div {
+                            div { class: "text-sm text-text-secondary", {tr.tier} }
+                            div { class: format!("text-lg font-bold {}", tier_color),
+                                "{tier_name}"
+                            }
+                        }
+                    }
+
+                    div { class: "grid grid-cols-2 gap-4",
+                        div {
+                            div { class: "text-sm text-text-secondary", {tr.total_credits} }
+                            div { class: "text-lg font-semibold text-text-primary",
+                                "{membership.total_credits}"
+                            }
+                        }
+                        div {
+                            div { class: "text-sm text-text-secondary", {tr.remaining_credits} }
+                            div { class: "text-lg font-semibold text-text-primary",
+                                "{membership.remaining_credits}"
+                            }
+                        }
+                    }
+
+                    div { class: "grid grid-cols-2 gap-4",
+                        div {
+                            div { class: "text-sm text-text-secondary", {tr.expiration} }
+                            div { class: "text-lg font-semibold text-text-primary",
+                                {format_date(membership.expired_at, tr.unlimited)}
+                            }
+                        }
+                    }
+
+                    if let Some(next) = membership.next_membership {
+                        div { class: "p-3 rounded border bg-background-secondary border-amber-500/30",
+                            div { class: "text-sm font-semibold text-amber-500",
+                                {tr.scheduled_downgrade}
+                            }
+                            div { class: "text-sm text-text-secondary",
+                                "{tr.next_membership}: {format_tier(&next.0)}"
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Purchase History
+            div { class: "p-6 rounded-lg border bg-card-bg border-card-border",
+                h2 { class: "mb-4 text-xl font-semibold text-text-primary", {tr.purchase_history} }
+
+                {render_history(&history_state, &tr)}
+            }
+        }
+    }
+}
+
+fn render_history(
+    state: &Option<std::result::Result<ListResponse<PurchaseHistoryItem>, crate::common::Error>>,
+    tr: &TeamMembershipTranslate,
+) -> Element {
+    let Some(state) = state else {
+        return rsx! {
+            div { class: "flex justify-center py-8", LoadingIndicator {} }
+        };
+    };
+
+    let empty = ListResponse {
+        items: vec![],
+        bookmark: None,
+    };
+    let history = match state {
+        Ok(data) => data,
+        Err(_) => &empty,
+    };
+
+    if history.items.is_empty() {
+        return rsx! {
+            div { class: "py-8 text-center text-text-secondary", {tr.no_purchases} }
+        };
+    }
+
+    rsx! {
+        div { class: "overflow-x-auto",
+            table { class: "w-full",
+                thead {
+                    tr { class: "border-b border-card-border",
+                        th { class: "py-3 px-2 text-sm font-semibold text-left text-text-secondary",
+                            {tr.transaction_type}
+                        }
+                        th { class: "py-3 px-2 text-sm font-semibold text-left text-text-secondary",
+                            {tr.amount}
+                        }
+                        th { class: "py-3 px-2 text-sm font-semibold text-left text-text-secondary",
+                            {tr.payment_id}
+                        }
+                        th { class: "py-3 px-2 text-sm font-semibold text-left text-text-secondary",
+                            {tr.date}
+                        }
+                    }
+                }
+                tbody {
+                    for (idx , item) in history.items.iter().enumerate() {
+                        tr {
+                            key: "{idx}",
+                            class: "border-b last:border-0 border-card-border",
+                            td { class: "py-3 px-2 text-sm text-text-primary", "{item.tx_type}" }
+                            td { class: "py-3 px-2 text-sm text-text-primary",
+                                {format!("₩{}", item.amount)}
+                            }
+                            td { class: "py-3 px-2 font-mono text-xs text-text-secondary",
+                                "{item.payment_id}"
+                            }
+                            td { class: "py-3 px-2 text-sm text-text-secondary",
+                                {format_date(item.created_at, tr.unlimited)}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn format_tier(tier: &str) -> String {
+    tier.strip_prefix("MEMBERSHIP#").unwrap_or(tier).to_string()
+}
+
+translate! {
+    TeamMembershipTranslate;
+
+    title: {
+        en: "Team Membership",
+        ko: "팀 멤버십",
+    },
+
+    current_plan: {
+        en: "Current Plan",
+        ko: "현재 플랜",
+    },
+
+    tier: {
+        en: "Tier",
+        ko: "등급",
+    },
+
+    total_credits: {
+        en: "Total Credits",
+        ko: "총 크레딧",
+    },
+
+    remaining_credits: {
+        en: "Remaining Credits",
+        ko: "남은 크레딧",
+    },
+
+    expiration: {
+        en: "Expires",
+        ko: "만료일",
+    },
+
+    next_membership: {
+        en: "Next Membership",
+        ko: "다음 멤버십",
+    },
+
+    scheduled_downgrade: {
+        en: "Scheduled Downgrade",
+        ko: "예정된 다운그레이드",
+    },
+
+    unlimited: {
+        en: "Unlimited",
+        ko: "무제한",
+    },
+
+    no_permission: {
+        en: "You don't have permission to view this page.",
+        ko: "이 페이지를 볼 수 있는 권한이 없습니다.",
+    },
+
+    purchase_history: {
+        en: "Purchase History",
+        ko: "구매 내역",
+    },
+
+    transaction_type: {
+        en: "Type",
+        ko: "유형",
+    },
+
+    amount: {
+        en: "Amount",
+        ko: "금액",
+    },
+
+    payment_id: {
+        en: "Payment ID",
+        ko: "결제 ID",
+    },
+
+    date: {
+        en: "Date",
+        ko: "날짜",
+    },
+
+    no_purchases: {
+        en: "No purchase history",
+        ko: "구매 내역이 없습니다",
+    },
+}
