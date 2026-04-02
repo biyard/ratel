@@ -205,7 +205,105 @@ export class DynamoStreamEventStack extends Stack {
       targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
     });
 
-    // ── Pipe 4: Notification Insert → NotificationSend ─────────────
+    // ── Pipe 4: Discussion Reply → AiModeratorReplyCheck ────────────
+    // Triggers when a SpacePost entity's comments field changes (reply added)
+    new pipes.CfnPipe(this, "AiModeratorPipe", {
+      name: `ratel-${stage}-ai-moderator-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 1,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["MODIFY"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: [{ prefix: "SPACE_POST#" }] },
+                    comments: { N: [{ exists: true }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "AiModeratorReplyCheck",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    // ── Rule: Route AiModeratorReplyCheck events to app-shell Lambda ─
+    new events.Rule(this, "AiModeratorReplyCheckRule", {
+      eventBus,
+      description:
+        "Route discussion reply events to app-shell for AI moderator check",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["AiModeratorReplyCheck"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
+    // ── Pipe 5: Discussion Comment Insert → AiModeratorReplyIndex ───
+    // Triggers when a new SpacePostComment is inserted (reply added to discussion)
+    new pipes.CfnPipe(this, "AiModeratorReplyIndexPipe", {
+      name: `ratel-${stage}-ai-moderator-reply-index-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["INSERT"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: [{ prefix: "SPACE_POST_COMMENT#" }] },
+                    content: { S: [{ exists: true }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "AiModeratorReplyIndex",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    // ── Rule: Route AiModeratorReplyIndex events to app-shell Lambda ─
+    new events.Rule(this, "AiModeratorReplyIndexRule", {
+      eventBus,
+      description:
+        "Route new discussion comments to app-shell for Qdrant indexing",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["AiModeratorReplyIndex"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
+    // ── Pipe 6: Notification Insert → NotificationSend ─────────────
     // Triggers when a new Notification entity is inserted
     new pipes.CfnPipe(this, "NotificationPipe", {
       name: `ratel-${stage}-notification-pipe`,
