@@ -1,8 +1,10 @@
 use super::*;
-use crate::features::membership::*;
-use crate::features::membership::controllers::normalize_error;
-use crate::features::membership::models::{Membership, MembershipTier, TeamMembership, TeamMembershipResponse};
 use crate::features::auth::User;
+use crate::features::membership::controllers::normalize_error;
+use crate::features::membership::models::{
+    Membership, MembershipTier, TeamMembership, TeamMembershipResponse,
+};
+use crate::features::membership::*;
 use crate::features::posts::models::Team;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 
