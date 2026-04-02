@@ -19,23 +19,49 @@ impl std::fmt::Display for QdrantIndexType {
     }
 }
 
-/// Marker trait for Qdrant payload structs.
+/// Trait for Qdrant entities that can produce embedding vectors.
 ///
-/// Any struct that derives `Serialize` and implements this trait
-/// automatically gets `into_payload()` via serde serialization.
+/// Implement this on any `#[derive(QdrantEntity)]` struct to enable
+/// `upsert_points()`.
+#[cfg(feature = "server")]
+#[async_trait::async_trait]
+pub trait Embedding {
+    async fn embed(&self) -> crate::common::Result<Vec<f32>>;
+}
+
+/// Convert a `serde_json::Value` into a `qdrant_client::qdrant::Value`.
 ///
-/// ```ignore
-/// #[derive(Serialize)]
-/// struct MyPayload { r#type: QdrantIndexType, content: String }
-/// impl QdrantPayload for MyPayload {}
-///
-/// let map = my_payload.into_payload();
-/// ```
-pub trait QdrantPayload: Serialize + Sized {
-    fn into_payload(self) -> serde_json::Map<String, serde_json::Value> {
-        match serde_json::to_value(&self) {
-            Ok(serde_json::Value::Object(map)) => map,
-            _ => serde_json::Map::new(),
+/// Used by the `QdrantEntity` derive macro to build payloads.
+#[cfg(feature = "server")]
+pub fn json_to_qdrant_value(v: serde_json::Value) -> qdrant_client::qdrant::Value {
+    match v {
+        serde_json::Value::String(s) => qdrant_client::qdrant::Value::from(s),
+        serde_json::Value::Number(n) => {
+            if let Some(i) = n.as_i64() {
+                qdrant_client::qdrant::Value::from(i)
+            } else if let Some(f) = n.as_f64() {
+                qdrant_client::qdrant::Value::from(f)
+            } else {
+                qdrant_client::qdrant::Value::from(n.to_string())
+            }
+        }
+        serde_json::Value::Bool(b) => qdrant_client::qdrant::Value::from(b),
+        serde_json::Value::Null => qdrant_client::qdrant::Value::from(""),
+        serde_json::Value::Array(arr) => {
+            let list: Vec<qdrant_client::qdrant::Value> =
+                arr.into_iter().map(json_to_qdrant_value).collect();
+            qdrant_client::qdrant::Value::from(list)
+        }
+        serde_json::Value::Object(map) => {
+            let inner: std::collections::HashMap<String, qdrant_client::qdrant::Value> = map
+                .into_iter()
+                .map(|(k, v)| (k, json_to_qdrant_value(v)))
+                .collect();
+            qdrant_client::qdrant::Value {
+                kind: Some(qdrant_client::qdrant::value::Kind::StructValue(
+                    qdrant_client::qdrant::Struct { fields: inner },
+                )),
+            }
         }
     }
 }

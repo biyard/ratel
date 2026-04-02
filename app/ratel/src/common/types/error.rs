@@ -232,6 +232,13 @@ pub enum Error {
     AiModerator(#[from] crate::features::ai_moderator::types::AiModeratorError),
 }
 
+#[cfg(feature = "server")]
+impl From<qdrant_client::QdrantError> for Error {
+    fn from(e: qdrant_client::QdrantError) -> Self {
+        Error::InternalServerError(format!("Qdrant error: {e}"))
+    }
+}
+
 impl From<std::convert::Infallible> for Error {
     fn from(e: std::convert::Infallible) -> Self {
         match e {}
