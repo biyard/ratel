@@ -18,7 +18,6 @@ pub fn TeamSettingLayout(username: String) -> Element {
     crate::common::contexts::TeamContext::init();
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let mut team_ctx = crate::common::contexts::use_team_context();
-
     let _teams_loader = use_resource(move || async move {
         let user = user_ctx().user.clone();
         if user.is_some() {
@@ -100,7 +99,6 @@ fn SettingsSidemenu(username: String) -> Element {
     let permissions: TeamGroupPermissions = permissions_val.into();
     let is_admin = permissions.contains(TeamGroupPermission::TeamAdmin);
     let can_edit = is_admin || permissions.contains(TeamGroupPermission::TeamEdit);
-
     let user_role = if is_admin {
         "Creator"
     } else if can_edit {
@@ -141,9 +139,11 @@ fn SettingsSidemenu(username: String) -> Element {
             }
 
             div { class: "flex flex-col flex-1 overflow-y-auto px-3 pb-4 gap-0.5",
-                SettingNavItem {
-                    label: tr.general_settings.to_string(),
-                    route: settings_route,
+                if can_edit {
+                    SettingNavItem {
+                        label: tr.general_settings.to_string(),
+                        route: settings_route,
+                    }
                 }
                 SettingNavItem {
                     label: tr.team_management.to_string(),

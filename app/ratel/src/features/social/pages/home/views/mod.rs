@@ -28,71 +28,64 @@ pub fn Home(username: String) -> Element {
     let nav = use_navigator();
     let logged_in = user_ctx().user.is_some();
 
-    let team_item = {
-        let teams = team_ctx.teams.read();
-        teams.iter().find(|team| team.username == username).cloned()
-    };
+    // Load team info (including permissions) from server for all users
+    let team_detail = use_server_future(use_reactive((&username,), |(name,)| async move {
+        find_team_handler(name).await
+    }))?;
+    let team_detail_data = team_detail.read();
+    let team_resp = team_detail_data.as_ref().unwrap();
 
-    let team_pk_str = team_item.as_ref().map(|t| t.pk.clone());
-
-    let (display_name, profile_url, description, is_creator) = match team_item {
-        Some(team) => {
-            let mut mask = 0i64;
-            for v in &team.permissions {
-                mask |= 1i64 << (*v as i32);
+    let (display_name, profile_url, description, thumbnail_url, is_creator, team_pk_str) =
+        match team_resp {
+            Ok(t) => {
+                let perms = t.permissions.as_ref().cloned().unwrap_or_default();
+                let is_creator = perms.contains(&TeamGroupPermission::TeamAdmin)
+                    || perms.contains(&TeamGroupPermission::TeamEdit);
+                (
+                    if t.nickname.is_empty() {
+                        t.username.clone()
+                    } else {
+                        t.nickname.clone()
+                    },
+                    t.profile_url.clone().unwrap_or_default(),
+                    t.html_contents.clone(),
+                    t.thumbnail_url.clone().unwrap_or_default(),
+                    is_creator,
+                    Some(t.pk.clone()),
+                )
             }
-            let permissions: TeamGroupPermissions = mask.into();
-            let is_creator = permissions.contains(TeamGroupPermission::TeamAdmin)
-                || permissions.contains(TeamGroupPermission::TeamEdit);
-            (
-                if team.nickname.is_empty() {
-                    team.username.clone()
-                } else {
-                    team.nickname.clone()
-                },
-                team.profile_url.clone(),
-                team.description.clone(),
-                is_creator,
-            )
-        }
-        None => (username.clone(), String::new(), String::new(), false),
-    };
-
-    // Load thumbnail_url directly from Team entity via find_team_handler
-    let team_detail = use_resource(use_reactive((&username,), |(name,)| async move {
-        find_team_handler(name).await.ok()
-    }));
-    let thumbnail_url = team_detail
-        .read()
-        .as_ref()
-        .and_then(|opt| opt.as_ref())
-        .and_then(|t| t.thumbnail_url.clone())
-        .unwrap_or_default();
+            Err(_) => (
+                username.clone(),
+                String::new(),
+                String::new(),
+                String::new(),
+                false,
+                None,
+            ),
+        };
 
     // Follow status — use_server_future so target_pk is available when button renders
     let username_for_status = username.clone();
     let follow_status = use_server_future(move || {
         let name = username_for_status.clone();
         async move {
-            check_follow_status_handler(name).await.map_err(|e| {
-                tracing::error!("check_follow_status failed: {e}");
-                e
-            })
+            check_follow_status_handler(name).await.ok()
         }
     })?;
 
     let follow_status_val = follow_status.read();
-    let initial_status = follow_status_val.as_ref().unwrap();
+    let initial_follow = follow_status_val
+        .as_ref()
+        .and_then(|opt| opt.as_ref())
+        .map(|s| s.is_following)
+        .unwrap_or(false);
+    let follow_target_pk = follow_status_val
+        .as_ref()
+        .and_then(|opt| opt.as_ref())
+        .map(|s| s.target_pk.clone());
 
-    let mut is_following = use_signal(move || {
-        initial_status
-            .as_ref()
-            .map(|s| s.is_following)
-            .unwrap_or(false)
-    });
+    let mut is_following = use_signal(move || initial_follow);
     let mut processing = use_signal(|| false);
-
-    let follow_target_pk = initial_status.as_ref().ok().map(|s| s.target_pk.clone());
 
     let settings_route = Route::TeamSetting {
         username: username.clone(),
