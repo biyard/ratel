@@ -137,10 +137,9 @@ async fn fetch_material_context(
     };
 
     let _qdrant = config.qdrant();
-    let _collection = crate::features::rag::qdrant::indexers::collection_name();
     // TODO: Implement Qdrant search for material retrieval using the official client.
-    // Filter by type=material, space_id, discussion_id in the single collection.
-    // Use _qdrant.search_points(...) on _collection with _embedding vector.
+    // Use MaterialPayload::collection_name() and filter by type=material, space_id, discussion_id.
+    // Use _qdrant.search_points(...) with _embedding vector.
 
     Vec::new()
 }
