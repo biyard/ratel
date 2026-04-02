@@ -88,6 +88,11 @@ translate! {
         ko: "팀 삭제에 실패했습니다",
     },
 
+    success_update_team: {
+        en: "Team settings saved successfully",
+        ko: "팀 설정이 저장되었습니다",
+    },
+
     failed_update_team: {
         en: "Failed to update team",
         ko: "팀 업데이트에 실패했습니다",
@@ -143,16 +148,6 @@ translate! {
         ko: "이름 변경",
     },
 
-    allow_invite: {
-        en: "Allow members to invite their connections",
-        ko: "멤버들이 연결 대상을 초대할 수 있도록 허용",
-    },
-
-    allow_create_space: {
-        en: "Allow members to create space",
-        ko: "멤버들이 스페이스를 생성할 수 있도록 허용",
-    },
-
     last_saved_at: {
         en: "Last saved at",
         ko: "마지막 저장",
@@ -171,16 +166,6 @@ translate! {
     team_logo_hint: {
         en: "Recommended size: 256 × 256px (1:1 ratio) • Max file size: 2MB",
         ko: "권장 크기: 256 × 256px (1:1 비율) • 최대 파일 크기: 2MB",
-    },
-
-    allow_invite_description: {
-        en: "Group members can invite 1st degree connections to the group. All requests to join will still require admin approval.",
-        ko: "그룹 멤버가 1촌 연결 대상을 그룹에 초대할 수 있습니다. 가입 요청은 여전히 관리자 승인이 필요합니다.",
-    },
-
-    allow_create_space_description: {
-        en: "Allow members to create and manage their own spaces within this group.",
-        ko: "멤버들이 이 그룹 내에서 자신의 스페이스를 생성하고 관리할 수 있도록 허용합니다.",
     },
 
     delete_team: {
@@ -243,8 +228,108 @@ translate! {
         ko: "멤버",
     },
 
+    admin_role: {
+        en: "Admin",
+        ko: "관리자",
+    },
+
     failed_remove_member: {
         en: "Failed to remove member. Please try again.",
         ko: "멤버 제거에 실패했습니다. 다시 시도해주세요.",
+    },
+
+    subscription: {
+        en: "Subscription",
+        ko: "구독",
+    },
+
+    subscription_billing: {
+        en: "Subscription & Billing",
+        ko: "구독 및 결제",
+    },
+
+    current_plan: {
+        en: "Current Plan",
+        ko: "현재 플랜",
+    },
+
+    credits: {
+        en: "Credits",
+        ko: "크레딧",
+    },
+
+    expires: {
+        en: "Expires",
+        ko: "만료일",
+    },
+
+    unlimited: {
+        en: "Unlimited",
+        ko: "무제한",
+    },
+
+    change_plan: {
+        en: "Change Plan",
+        ko: "플랜 변경",
+    },
+
+    card: {
+        en: "Card",
+        ko: "카드",
+    },
+
+    card_holder: {
+        en: "Card Holder",
+        ko: "카드 소유자",
+    },
+
+    change_card: {
+        en: "Change Card",
+        ko: "카드 변경",
+    },
+
+    add_card: {
+        en: "Add Card",
+        ko: "카드 추가",
+    },
+
+    card_number: {
+        en: "Card Number",
+        ko: "카드 번호",
+    },
+
+    expiry_month: {
+        en: "Expiry Month",
+        ko: "만료 월",
+    },
+
+    expiry_year: {
+        en: "Expiry Year",
+        ko: "만료 연도",
+    },
+
+    birth_date: {
+        en: "Birth Date (YYMMDD)",
+        ko: "생년월일 (YYMMDD)",
+    },
+
+    card_password_label: {
+        en: "Card Password (first 2 digits)",
+        ko: "카드 비밀번호 (앞 2자리)",
+    },
+
+    save_card: {
+        en: "Save Card",
+        ko: "카드 저장",
+    },
+
+    saving_card: {
+        en: "Saving...",
+        ko: "저장 중...",
+    },
+
+    card_updated: {
+        en: "Card updated successfully.",
+        ko: "카드가 업데이트되었습니다.",
     },
 }

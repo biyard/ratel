@@ -8,6 +8,7 @@ pub struct LikePostResponse {
     pub like: bool,
 }
 
+#[mcp_tool(name = "like_post", description = "Like or unlike a post.")]
 #[post("/api/posts/:post_id/like", user: User)]
 pub async fn like_post_handler(post_id: FeedPartition, like: bool) -> Result<LikePostResponse> {
     let conf = crate::features::posts::config::get();
@@ -22,22 +23,11 @@ pub async fn like_post_handler(post_id: FeedPartition, like: bool) -> Result<Lik
         {
             // Check if the post just became popular and trigger broader fan-out
             if let Some(post) = Post::get(cli, &post_pk, Some(EntityType::Post)).await? {
-                if crate::features::timeline::services::is_popular(
-                    post.likes,
-                    post.comments,
-                    post.shares,
-                ) {
-                    let _ = crate::features::timeline::services::fan_out_popular_post(
-                        cli,
-                        &post.pk,
-                        &post.user_pk,
-                        post.updated_at,
-                    )
+                let _ = crate::features::timeline::services::fan_out_popular_post(post)
                     .await
                     .map_err(|e| {
                         tracing::error!("popular post fan-out failed: {}", e);
                     });
-                }
             }
         }
 

@@ -53,7 +53,7 @@ use crate::features::admin::{AdminLayout, AdminMainPage};
 
 use crate::features::posts::{Index as PostIndex, PostDetail, PostEdit};
 
-use crate::views::Index;
+use crate::views::{Index, PrivacyPolicyPage, TermsOfServicePage};
 use layout::AppLayout;
 use membership::Home as MembershipHome;
 use root_layout::RootLayout;
@@ -79,6 +79,8 @@ use crate::features::social::pages::setting::layout::TeamSettingLayout;
 use crate::features::social::pages::setting::Home as TeamSetting;
 #[cfg(feature = "social")]
 use crate::features::social::pages::setting::ManagementPage as TeamSettingMember;
+#[cfg(feature = "social")]
+use crate::features::social::pages::setting::SubscriptionPage as TeamSettingSubscription;
 
 // User pages
 #[cfg(feature = "social")]
@@ -91,6 +93,8 @@ use crate::features::social::pages::space::Home as UserSpaces;
 use crate::features::social::pages::user_draft::Home as UserDrafts;
 #[cfg(feature = "social")]
 use crate::features::social::pages::user_membership::Home as UserMemberships;
+#[cfg(feature = "social")]
+use crate::features::social::pages::team_membership::Home as TeamMemberships;
 #[cfg(feature = "social")]
 use crate::features::social::pages::user_reward::Home as UserRewards;
 #[cfg(feature = "social")]
@@ -105,6 +109,12 @@ pub enum Route {
         #[layout(AppLayout)]
             #[route("/")]
             Index { },
+
+            #[route("/privacy")]
+            PrivacyPolicyPage { },
+
+            #[route("/terms")]
+            TermsOfServicePage { },
 
             #[cfg_attr(feature="membership", route("/membership"))]
             #[cfg(feature="membership")]
@@ -122,15 +132,19 @@ pub enum Route {
             #[route("/my-follower")]
             MyFollowerPage { },
 
-            #[layout(AdminLayout)]
-                #[route("/")]
-                AdminMainPage {},
-            #[end_layout]
+            #[nest("/admin")]
+                #[layout(AdminLayout)]
+                    #[route("/")]
+                    AdminMainPage {},
+                #[end_layout]
+            #[end_nest]
 
             #[cfg(feature = "social")]
             #[nest("/:username")]
                 #[route("/rewards")]
                 UserRewards { username: String },
+                #[route("/settings")]
+                UserSettingPage { username: String },
                 #[layout(SocialLayout)]
                     #[route("/")]
                     UserHomeRoot { username: String },
@@ -156,12 +170,16 @@ pub enum Route {
                     TeamMember { username: String },
                     #[route("/team-rewards")]
                     TeamReward { username: String },
+                    #[route("/team-memberships")]
+                    TeamMemberships { username: String },
                 #[end_layout]
                 #[layout(TeamSettingLayout)]
-                    #[route("/settings")]
+                    #[route("/team-settings")]
                     TeamSetting { username: String },
-                    #[route("/settings/members")]
+                    #[route("/team-settings/members")]
                     TeamSettingMember { username: String },
+                    #[route("/team-settings/subscription")]
+                    TeamSettingSubscription { username: String },
                 #[end_layout]
             #[end_nest]
         #[end_layout]

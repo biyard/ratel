@@ -1,9 +1,9 @@
+use super::HomeViewMode;
 use crate::common::hooks::use_infinite_query;
 use crate::common::*;
 use crate::features::posts::controllers::dto::PostResponse;
 use crate::features::posts::controllers::list_user_posts::list_user_posts_handler;
 use dioxus::prelude::*;
-use super::HomeViewMode;
 
 #[component]
 pub fn UserPostsPanel(username: String, view_mode: HomeViewMode) -> Element {
@@ -74,20 +74,18 @@ fn UserPostCard(post: PostResponse) -> Element {
         Link {
             to: "{post_url}",
             class: "block",
-            div { class: "flex flex-col gap-4 py-6 border-b border-separator",
-                div { class: "flex items-center justify-between",
-                    if !category.is_empty() {
+            div { class: "flex flex-col gap-5 py-6 border-b border-separator",
+                if !category.is_empty() {
+                    div { class: "flex items-center justify-between",
                         div { class: "flex items-center border border-tag-stroke rounded-[8px] px-2 py-0.5",
                             span { class: "text-[12px] font-bold text-text-primary leading-[14px] tracking-[-0.12px]",
                                 "{category}"
                             }
                         }
-                    } else {
-                        div {}
-                    }
-                    div { class: "flex items-center gap-2",
-                        icons::edit::Edit1 {
-                            class: "w-5 h-5 [&>path]:stroke-icon-primary cursor-pointer",
+                        div { class: "flex items-center gap-2",
+                            icons::edit::Edit1 {
+                                class: "w-5 h-5 [&>path]:stroke-icon-primary cursor-pointer",
+                            }
                         }
                     }
                 }
@@ -143,12 +141,17 @@ fn UserPostListItem(post: PostResponse) -> Element {
     let likes = post.likes;
     let comments = post.comments;
     let category = post.categories.first().cloned().unwrap_or_default();
+    let title_class = if category.is_empty() {
+        "text-[20px] font-bold text-text-primary tracking-[0.5px] leading-[25px] line-clamp-2"
+    } else {
+        "text-[20px] font-bold text-text-primary tracking-[0.5px] leading-[25px] line-clamp-2 mt-2"
+    };
 
     rsx! {
         Link {
             to: "{post_url}",
             class: "block",
-            div { class: "flex flex-col gap-3 py-5 border-b border-separator",
+            div { class: "flex flex-col gap-4 py-5 border-b border-separator",
                 if !category.is_empty() {
                     div { class: "flex items-center border border-tag-stroke rounded-[8px] px-2 py-0.5 w-fit",
                         span { class: "text-[12px] font-bold text-text-primary leading-[14px] tracking-[-0.12px]",
@@ -157,7 +160,7 @@ fn UserPostListItem(post: PostResponse) -> Element {
                     }
                 }
 
-                h2 { class: "text-[20px] font-bold text-text-primary tracking-[0.5px] leading-[25px] line-clamp-2",
+                h2 { class: "{title_class}",
                     "{title}"
                 }
 

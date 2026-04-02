@@ -7,8 +7,7 @@ pub fn FullActionLayover(
     #[props(default)] bottom_class: String,
     #[props(default)] bottom_left: Option<Element>,
     #[props(default)] bottom_right: Option<Element>,
-    #[props(extends=GlobalAttributes)]
-    attributes: Vec<Attribute>,
+    #[props(extends=GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
 ) -> Element {
     let layout_ui = use_space_layout_ui();
@@ -24,14 +23,14 @@ pub fn FullActionLayover(
         sidebar_visible.set(true);
     });
 
-    let base_content_class = "mx-auto flex w-full max-w-desktop flex-1 flex-col gap-4 overflow-y-auto pb-6";
+    let base_content_class = "mx-auto flex w-full max-w-desktop flex-1 flex-col gap-4 overflow-y-auto scrollbar-none pb-20 max-tablet:pb-36";
     let content_class = if content_class.is_empty() {
         base_content_class.to_string()
     } else {
         format!("{base_content_class} {content_class}")
     };
 
-    let base_bottom_class = "-mx-5 -mb-5 max-tablet:-mx-3 max-tablet:-mb-3 max-mobile:-mx-2 max-mobile:-mb-2 flex items-center justify-between gap-3 border-t border-card-border bg-card-bg px-5 py-3";
+    let base_bottom_class = "fixed bottom-0 left-0 right-0 flex items-center justify-between gap-3 border-t border-card-border bg-card-bg px-5 py-3 z-30";
     let bottom_class = if bottom_class.is_empty() {
         base_bottom_class.to_string()
     } else {
@@ -39,11 +38,8 @@ pub fn FullActionLayover(
     };
 
     rsx! {
-        div { class: "flex min-h-0 w-full flex-1 flex-col gap-4",
-            ..attributes,
-            div { class: "{content_class}",
-                {children}
-            }
+        div { class: "flex min-h-0 w-full flex-1 flex-col", ..attributes,
+            div { class: "{content_class}", {children} }
 
             div { class: "{bottom_class}",
                 div {

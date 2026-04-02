@@ -1,4 +1,5 @@
 use crate::common::*;
+use crate::features::auth::{LoginModal, SignupModal};
 use crate::features::posts::controllers::dto::CategoryResponse;
 use crate::features::posts::controllers::list_categories::list_categories_handler;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
@@ -37,12 +38,13 @@ pub fn SocialLayout(username: String) -> Element {
             div { class: "hidden tablet:flex h-screen overflow-hidden",
                 TeamSidemenu { key: "{username}", username: username.clone(), logged_in }
             }
-            div { class: "flex flex-col min-w-0 min-h-0",
-                div { class: "flex overflow-auto flex-1 p-5 w-full bg-background rounded-tl-[10px]",
+            div { class: "flex flex-col min-w-0 min-h-0 overflow-hidden",
+                div { class: "flex overflow-auto flex-1 p-5 w-full bg-background rounded-tl-[10px] max-tablet:p-3 max-mobile:p-2",
                     Outlet::<Route> {}
                 }
             }
         }
+
     }
 }
 
@@ -66,13 +68,11 @@ pub fn UserLayout(username: String) -> Element {
     }
 }
 
-
 #[component]
 fn TeamSidemenu(username: String, logged_in: bool) -> Element {
     let tr: TeamMenuTranslate = use_translate();
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let team_ctx = crate::common::contexts::use_team_context();
-    let nav = use_navigator();
     let current_route = use_route::<Route>();
     let user = user_ctx().user.clone().unwrap_or_default();
 
@@ -96,6 +96,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
 
     // Hook must be at top level - not inside conditionals
     let mut show_user_menu = use_signal(|| false);
+    let mut popup = use_popup();
 
     let data = resource.read();
     let fallback_team = {
@@ -119,6 +120,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
         let permissions: TeamGroupPermissions = mask.into();
         let is_admin = permissions.contains(TeamGroupPermission::TeamAdmin);
         let can_team_edit = is_admin || permissions.contains(TeamGroupPermission::TeamEdit);
+        let is_team_member = mask != 0;
 
         let user_role = if is_admin || can_team_edit {
             "Creator"
@@ -163,15 +165,27 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                 // Auth buttons (guest only)
                 if !logged_in {
                     div { class: "flex flex-col gap-2 px-4 pb-4 shrink-0",
-                        Link {
-                            to: "/auth/",
-                            class: "flex justify-center items-center py-2.5 w-full text-sm font-semibold rounded-full transition-opacity hover:opacity-90 bg-primary text-[#000000]",
-                            "Sign up"
+                        Button {
+                            style: ButtonStyle::Primary,
+                            shape: ButtonShape::Rounded,
+                            class: "w-full",
+                            onclick: move |_| {
+                                popup.open(rsx! {
+                                    SignupModal {}
+                                });
+                            },
+                            "{tr.sign_up}"
                         }
-                        Link {
-                            to: "/auth/",
-                            class: "flex justify-center items-center py-2.5 w-full text-sm font-semibold rounded-full border transition-colors border-border text-text-primary hover:bg-hover",
-                            "Log in"
+                        Button {
+                            style: ButtonStyle::Outline,
+                            shape: ButtonShape::Rounded,
+                            class: "w-full",
+                            onclick: move |_| {
+                                popup.open(rsx! {
+                                    LoginModal {}
+                                });
+                            },
+                            "{tr.log_in}"
                         }
                     }
                 }
@@ -223,6 +237,30 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                     }
                 }
 
+                // ADMIN section — visible only to team admins/editors
+                if can_team_edit {
+                    div { class: "flex flex-col px-3 pb-4 shrink-0",
+                        {
+                            let is_draft_active = matches!(current_route, Route::TeamDraft { .. });
+                            let draft_class = if is_draft_active {
+                                "bg-hover text-text-primary"
+                            } else {
+                                "text-foreground-muted hover:bg-hover hover:text-text-primary"
+                            };
+                            rsx! {
+                                Link {
+                                    to: Route::TeamDraft { username: username.clone() },
+                                    class: "flex gap-2.5 items-center py-2 px-2 w-full text-sm font-medium text-left rounded-lg transition-colors {draft_class}",
+                                    lucide_dioxus::FileText {
+                                        class: "w-4 h-4 [&>path]:stroke-current [&>polyline]:stroke-current [&>line]:stroke-current shrink-0",
+                                    }
+                                    span { "{tr.drafts}" }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Bottom: user info + settings (logged-in only)
                 if logged_in {
                     {
@@ -265,24 +303,32 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                                     div {
                                         class: "overflow-hidden absolute right-3 left-3 bottom-full z-30 py-1 mb-1 rounded-lg border shadow-lg bg-popover border-border",
                                         onclick: move |e| e.stop_propagation(),
-                                        Link {
-                                            to: Route::TeamReward { username: username.clone() },
-                                            class: "flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-hover transition-colors w-full text-left",
-                                            onclick: move |_| show_user_menu.set(false),
-                                            "data-pw": "team-reward-menu-link",
-                                            icons::game::Trophy {
-                                                class: "w-[15px] h-[15px] [&>path]:stroke-text-primary [&>path]:fill-transparent shrink-0",
+                                        if can_team_edit {
+                                            Link {
+                                                to: Route::TeamReward { username: username.clone() },
+                                                class: "flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-hover transition-colors w-full text-left",
+                                                onclick: move |_| show_user_menu.set(false),
+                                                "data-pw": "team-reward-menu-link",
+                                                icons::game::Trophy {
+                                                    class: "w-[15px] h-[15px] [&>path]:stroke-text-primary [&>path]:fill-transparent shrink-0",
+                                                }
+                                                {tr.rewards}
                                             }
-                                            {tr.rewards}
                                         }
-                                        Link {
-                                            to: Route::TeamSetting { username: username.clone() },
-                                            class: "flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-hover transition-colors w-full text-left",
-                                            onclick: move |_| show_user_menu.set(false),
-                                            lucide_dioxus::Settings {
-                                                class: "w-[15px] h-[15px] [&>path]:stroke-text-primary [&>line]:stroke-text-primary [&>polyline]:stroke-text-primary [&>circle]:stroke-text-primary shrink-0",
+                                        if is_team_member {
+                                            Link {
+                                                to: if can_team_edit {
+                                                    Route::TeamSetting { username: username.clone() }
+                                                } else {
+                                                    Route::TeamSettingMember { username: username.clone() }
+                                                },
+                                                class: "flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-hover transition-colors w-full text-left",
+                                                onclick: move |_| show_user_menu.set(false),
+                                                lucide_dioxus::Settings {
+                                                    class: "w-[15px] h-[15px] [&>path]:stroke-text-primary [&>line]:stroke-text-primary [&>polyline]:stroke-text-primary [&>circle]:stroke-text-primary shrink-0",
+                                                }
+                                                {tr.settings}
                                             }
-                                            {tr.settings}
                                         }
                                         button {
                                             class: "flex gap-2 items-center py-2 px-3 w-full text-sm text-left transition-colors text-destructive hover:bg-hover",
@@ -290,7 +336,6 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                                                 show_user_menu.set(false);
                                                 spawn(async move {
                                                     let _ = crate::features::auth::controllers::logout_handler().await;
-                                                    nav.push("/");
                                                     #[cfg(target_arch = "wasm32")]
                                                     {
                                                         if let Some(window) = web_sys::window() {
@@ -401,9 +446,24 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
 translate! {
     TeamMenuTranslate;
 
+    sign_up: {
+        en: "Sign up",
+        ko: "회원가입",
+    },
+
+    log_in: {
+        en: "Log in",
+        ko: "로그인",
+    },
+
     back_to_page: {
         en: "Back to page",
         ko: "페이지로 돌아가기",
+    },
+
+    drafts: {
+        en: "Draft",
+        ko: "초안",
     },
 
     rewards: {

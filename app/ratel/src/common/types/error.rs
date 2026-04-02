@@ -155,6 +155,10 @@ pub enum Error {
     #[translate(en = "Failed to change membership", ko = "멤버십 변경에 실패했습니다.")]
     MembershipChangeFailed,
 
+    #[error("Membership already active")]
+    #[translate(en = "Membership is already active", ko = "멤버십이 이미 활성화되어 있습니다.")]
+    MembershipAlreadyActive,
+
     // Credential-related
     #[error("Invalid verification code input")]
     #[translate(en = "Invalid verification code", ko = "인증 코드가 유효하지 않습니다.")]
@@ -195,6 +199,10 @@ pub enum Error {
     #[translate(from)]
     ExchangePoints(#[from] crate::features::social::pages::user_reward::controllers::ExchangePointsError),
 
+    #[error("{0}")]
+    #[translate(from)]
+    Member(#[from] crate::features::social::pages::member::types::MemberError),
+
     // Post related errors
     #[error("Invalid username")]
     #[translate(en = "Invalid username. Check URL.", ko = "유효하지 않은 사용자 이름입니다. URL을 확인해주세요.")]
@@ -218,6 +226,10 @@ pub enum Error {
     #[error("Action has ended")]
     #[translate(en = "This action has ended", ko = "이 액션은 종료되었습니다.")]
     ActionEnded,
+
+    #[error("{0}")]
+    #[translate(from)]
+    McpServer(#[from] McpServerError),
 }
 
 impl From<std::convert::Infallible> for Error {
@@ -263,6 +275,8 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             Error::SpaceActionQuiz(e) => e.status_code(),
             Error::SpaceActionDiscussion(e) => e.status_code(),
             Error::ExchangePoints(e) => e.status_code(),
+            Error::McpServer(e) => e.status_code(),
+            Error::Member(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
@@ -281,6 +295,38 @@ impl From<aws_sdk_dynamodb::Error> for Error {
 impl From<serde_dynamo::Error> for Error {
     fn from(e: serde_dynamo::Error) -> Self {
         Error::Aws(crate::common::utils::aws::error::AwsError::from(e))
+    }
+}
+
+#[cfg(feature = "server")]
+impl From<Error> for rmcp::ErrorData {
+    fn from(e: Error) -> Self {
+        match &e {
+            Error::UnauthorizedAccess
+            | Error::NoSessionFound
+            | Error::Unauthorized(_) => {
+                rmcp::ErrorData::invalid_request(e.to_string(), None)
+            }
+            Error::NotFound(_)
+            | Error::InvitationNotFound
+            | Error::SpaceNotFound => {
+                rmcp::ErrorData::invalid_params(e.to_string(), None)
+            }
+            Error::BadRequest(_)
+            | Error::Duplicate(_)
+            | Error::NoPermission
+            | Error::InvalidPartitionKey(_)
+            | Error::McpServer(_) => {
+                rmcp::ErrorData::invalid_params(e.to_string(), None)
+            }
+            _ => {
+                tracing::error!("MCP internal error: {e}");
+                rmcp::ErrorData::internal_error(
+                    "An internal server error occurred.".to_string(),
+                    None,
+                )
+            }
+        }
     }
 }
 
@@ -321,7 +367,14 @@ impl dioxus::fullstack::AsStatusCode for Error {
             Error::SpaceActionQuiz(e) => e.status_code(),
             Error::SpaceActionDiscussion(e) => e.status_code(),
             Error::ExchangePoints(e) => e.status_code(),
+            Error::McpServer(e) => e.status_code(),
+            Error::Member(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }
+
+// Note: From<Error> for lambda_runtime::Error (= Box<dyn std::error::Error + Send + Sync>)
+// is provided by the blanket impl in std, since Error implements std::error::Error + Send + Sync.
+// This preserves the full error source chain for Lambda debugging, unlike the previous
+// to_string()-based conversion.
