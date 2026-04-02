@@ -50,8 +50,15 @@ async fn poll_loop() {
     let mut shard_iterators: HashMap<String, String> = HashMap::new();
 
     loop {
+        tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+
         // Discover shards
-        match streams_client.describe_stream().stream_arn(&stream_arn).send().await {
+        match streams_client
+            .describe_stream()
+            .stream_arn(&stream_arn)
+            .send()
+            .await
+        {
             Ok(output) => {
                 if let Some(desc) = output.stream_description() {
                     for shard in desc.shards() {
@@ -63,7 +70,9 @@ async fn poll_loop() {
                             .get_shard_iterator()
                             .stream_arn(&stream_arn)
                             .shard_id(&shard_id)
-                            .shard_iterator_type(aws_sdk_dynamodbstreams::types::ShardIteratorType::Latest)
+                            .shard_iterator_type(
+                                aws_sdk_dynamodbstreams::types::ShardIteratorType::Latest,
+                            )
                             .send()
                             .await
                         {
@@ -75,8 +84,7 @@ async fn poll_loop() {
                 }
             }
             Err(e) => {
-                tracing::error!(error = %e, "Failed to describe stream");
-                tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+                tracing::error!(stream_arn = %stream_arn, error = %e, "Failed to describe stream");
                 continue;
             }
         }
@@ -84,10 +92,17 @@ async fn poll_loop() {
         // Poll each shard
         let mut next_iterators: HashMap<String, String> = HashMap::new();
         for (shard_id, iterator) in &shard_iterators {
-            match streams_client.get_records().shard_iterator(iterator).limit(100).send().await {
+            match streams_client
+                .get_records()
+                .shard_iterator(iterator)
+                .limit(100)
+                .send()
+                .await
+            {
                 Ok(output) => {
                     for record in output.records() {
-                        let event_name = record.event_name().map(|e| e.as_str()).unwrap_or("UNKNOWN");
+                        let event_name =
+                            record.event_name().map(|e| e.as_str()).unwrap_or("UNKNOWN");
                         let new_image = record.dynamodb().and_then(|d| {
                             d.new_image().map(|img| {
                                 img.iter()
@@ -123,7 +138,6 @@ async fn poll_loop() {
         }
 
         shard_iterators = next_iterators;
-        tokio::time::sleep(std::time::Duration::from_secs(5)).await;
     }
 }
 
