@@ -94,6 +94,8 @@ use crate::features::social::pages::user_draft::Home as UserDrafts;
 #[cfg(feature = "social")]
 use crate::features::social::pages::user_membership::Home as UserMemberships;
 #[cfg(feature = "social")]
+use crate::features::social::pages::team_membership::Home as TeamMemberships;
+#[cfg(feature = "social")]
 use crate::features::social::pages::user_reward::Home as UserRewards;
 #[cfg(feature = "social")]
 use crate::features::social::pages::user_setting::Home as UserSettingPage;
@@ -168,6 +170,8 @@ pub enum Route {
                     TeamMember { username: String },
                     #[route("/team-rewards")]
                     TeamReward { username: String },
+                    #[route("/team-memberships")]
+                    TeamMemberships { username: String },
                 #[end_layout]
                 #[layout(TeamSettingLayout)]
                     #[route("/team-settings")]

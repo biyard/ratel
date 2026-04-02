@@ -155,6 +155,10 @@ pub enum Error {
     #[translate(en = "Failed to change membership", ko = "멤버십 변경에 실패했습니다.")]
     MembershipChangeFailed,
 
+    #[error("Membership already active")]
+    #[translate(en = "Membership is already active", ko = "멤버십이 이미 활성화되어 있습니다.")]
+    MembershipAlreadyActive,
+
     // Credential-related
     #[error("Invalid verification code input")]
     #[translate(en = "Invalid verification code", ko = "인증 코드가 유효하지 않습니다.")]

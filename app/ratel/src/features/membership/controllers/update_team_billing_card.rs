@@ -2,33 +2,33 @@ use super::*;
 use crate::features::auth::User;
 use crate::features::membership::controllers::get_billing_info::BillingInfoResponse;
 use crate::features::membership::controllers::normalize_error;
-use crate::features::membership::models::{CardInfo, UserPayment};
-use crate::features::membership::*;
+use crate::features::membership::controllers::update_billing_card::UpdateBillingCardRequest;
+use crate::features::membership::models::TeamPayment;
 #[cfg(feature = "server")]
 use crate::features::membership::services::portone::PortOne;
-use serde::{Deserialize, Serialize};
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-#[serde(rename_all = "camelCase")]
-pub struct UpdateBillingCardRequest {
-    pub card_info: CardInfo,
-}
+use crate::features::membership::*;
+use crate::features::posts::models::Team;
+use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 
 #[cfg(feature = "server")]
 use super::mask_card_number;
 
-#[post("/v3/me/billing", user: User)]
-pub async fn update_billing_card_handler(
+#[post("/v3/teams/:username/billing", user: User, team: Team, permissions: TeamGroupPermissions)]
+pub async fn update_team_billing_card_handler(
+    username: String,
     req: UpdateBillingCardRequest,
 ) -> Result<BillingInfoResponse> {
     let result = async {
+        if !permissions.contains(TeamGroupPermission::TeamAdmin) {
+            return Err(Error::NotFound("Permission denied".to_string()));
+        }
+
         let conf = crate::features::membership::config::get();
         let cli = conf.common.dynamodb();
         let portone = PortOne::new(conf.portone.api_secret);
 
-        let pk = CompositePartition::user_payment_pk(user.pk.clone().into());
-        let payment: UserPayment = UserPayment::get(cli, &pk, None::<String>)
+        let pk = CompositePartition::team_payment_pk(team.pk.clone().into());
+        let payment: TeamPayment = TeamPayment::get(cli, &pk, None::<String>)
             .await?
             .ok_or_else(|| {
                 Error::NotFound(
@@ -52,7 +52,7 @@ pub async fn update_billing_card_handler(
             .await?;
 
         let new_billing_key = res.billing_key_info.billing_key;
-        UserPayment::updater(&payment.pk, &payment.sk)
+        TeamPayment::updater(&payment.pk, &payment.sk)
             .with_billing_key(new_billing_key)
             .with_masked_card_number(masked.clone())
             .execute(cli)

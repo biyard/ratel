@@ -1,17 +1,7 @@
-use crate::features::social::*;
-use crate::features::social::pages::setting::i18n::TeamSettingsTranslate;
-use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use crate::common::*;
-
-/// Context shared between the settings layout header and child pages.
-/// Child pages (e.g. AdminPage) increment `save_trigger` to be notified
-/// when the header Save button is clicked, and set `is_saving` while the
-/// request is in-flight so the header button shows a loading state.
-#[derive(Clone, Copy)]
-pub struct SettingsSaveContext {
-    pub save_trigger: Signal<u64>,
-    pub is_saving: Signal<bool>,
-}
+use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
+use crate::features::social::pages::setting::i18n::TeamSettingsTranslate;
+use crate::features::social::*;
 
 #[component]
 pub fn TeamSettingLayout(username: String) -> Element {
@@ -57,7 +47,7 @@ pub fn TeamSettingLayout(username: String) -> Element {
             }
             div { class: "flex flex-col min-w-0 min-h-0 bg-background rounded-tl-[10px]",
                 // Top header bar
-                div { class: "flex items-center justify-between shrink-0 px-6 py-4 border-b border-border",
+                div { class: "flex items-center shrink-0 px-6 py-4 border-b border-border",
                     span { class: "text-base font-bold text-text-primary", "Settings" }
                     if is_general_settings && can_edit {
                         Button {
@@ -71,7 +61,6 @@ pub fn TeamSettingLayout(username: String) -> Element {
                         }
                     }
                 }
-                // Scrollable content, centered
                 div { class: "flex overflow-auto flex-1 justify-center px-6 py-8",
                     div { class: "w-full max-w-2xl",
                         Outlet::<Route> {}
@@ -118,10 +107,22 @@ fn SettingsSidemenu(username: String) -> Element {
 
     let user_display = user.display_name.clone();
     let user_profile = user.profile_url.clone();
-    let team_home_route = Route::TeamHome { username: username.clone() }.to_string();
-    let settings_route = Route::TeamSetting { username: username.clone() }.to_string();
-    let management_route = Route::TeamSettingMember { username: username.clone() }.to_string();
-    let subscription_route = Route::TeamSettingSubscription { username: username.clone() }.to_string();
+    let team_home_route = Route::TeamHome {
+        username: username.clone(),
+    }
+    .to_string();
+    let settings_route = Route::TeamSetting {
+        username: username.clone(),
+    }
+    .to_string();
+    let management_route = Route::TeamSettingMember {
+        username: username.clone(),
+    }
+    .to_string();
+    let subscription_route = Route::TeamSettingSubscription {
+        username: username.clone(),
+    }
+    .to_string();
 
     rsx! {
         div { class: "flex flex-col w-full h-full overflow-hidden",
