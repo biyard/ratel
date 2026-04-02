@@ -6,6 +6,7 @@ use crate::features::posts::types::*;
 use crate::features::posts::*;
 use crate::features::auth::OptionalUser;
 
+#[mcp_tool(name = "get_post", description = "Get post details by ID.")]
 #[get("/api/posts/:post_id", user: OptionalUser)]
 pub async fn get_post_handler(post_id: FeedPartition) -> Result<PostDetailResponse> {
     let conf = crate::features::posts::config::get();

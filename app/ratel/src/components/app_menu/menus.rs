@@ -169,3 +169,13 @@ pub fn SignInIcon() -> Element {
         }
     }
 }
+
+
+#[component]
+pub fn AdminIcon() -> Element {
+    rsx! {
+        icons::settings::Settings {
+            class: "size-6 transition-all [&>path]:stroke-menu-text group-hover:[&>path]:stroke-menu-text/80 [&>circle]:stroke-menu-text group-hover:[&>circle]:stroke-menu-text/80",
+        }
+    }
+}

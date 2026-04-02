@@ -100,7 +100,7 @@ services:
   # Development fetcher (source code mounting)
   localstack:
     hostname: localstack
-    image: localstack/localstack:2026.03.0
+    image: localstack/localstack:4.14.0
     restart: always
     ports:
       - "4566:4566"
@@ -116,9 +116,9 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
       interval: 10s
-      timeout: 10s
+      timeout: 5s
       retries: 30
-      start_period: 60s
+      start_period: 30s
     volumes:
       - ./.build/localstack-data:/var/lib/localstack
     networks:

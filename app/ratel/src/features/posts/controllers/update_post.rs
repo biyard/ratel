@@ -37,6 +37,7 @@ pub enum UpdatePostRequest {
     },
 }
 
+#[mcp_tool(name = "update_post", description = "Update a post (publish, edit content, change visibility).")]
 #[put("/api/posts/:post_id", user: User)]
 pub async fn update_post_handler(post_id: FeedPartition, req: UpdatePostRequest) -> Result<Post> {
     let conf = crate::features::posts::config::get();
