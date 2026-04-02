@@ -102,22 +102,18 @@ fn TeamPostCard(post: PostResponse, #[props(default = false)] full_width: bool) 
             onclick: move |_| {
                 nav.push(post_url.clone());
             },
-            div { class: "flex h-full flex-col gap-4 border-b border-white light:border-black py-3",
-                div { class: "flex min-h-[25px] items-start",
-                    if !post_categories.is_empty() {
-                        div { class: "flex min-w-0 items-center gap-2 flex-wrap",
-                            for cat in post_categories.iter() {
-                                div {
-                                    key: "{cat}",
-                                    class: "flex h-[25px] items-center justify-center rounded-[8px] border border-tag-stroke px-2 py-[3px]",
-                                    span { class: "font-bold font-raleway text-[12px]/[14px] tracking-[-0.12px] text-text-primary",
-                                        "{cat}"
-                                    }
+            div { class: "flex h-full flex-col gap-4 border-b border-post-divider py-3",
+                if !post_categories.is_empty() {
+                    div { class: "flex min-w-0 items-center gap-2 flex-wrap",
+                        for cat in post_categories.iter() {
+                            div {
+                                key: "{cat}",
+                                class: "flex h-[25px] items-center justify-center rounded-[8px] border border-tag-stroke px-2 py-[3px]",
+                                span { class: "font-bold font-raleway text-[12px]/[14px] tracking-[-0.12px] text-text-primary",
+                                    "{cat}"
                                 }
                             }
                         }
-                    } else {
-                        div { class: "h-[25px]" }
                     }
                 }
 
@@ -184,7 +180,7 @@ fn TeamPostListItem(post: PostResponse) -> Element {
             onclick: move |_| {
                 nav.push(post_url.clone());
             },
-            div { class: "flex w-full flex-col border-b border-white light:border-black py-6",
+            div { class: "flex w-full flex-col border-b border-post-divider py-6",
                 div { class: "flex items-start justify-between gap-6",
                     if !post_categories.is_empty() {
                         div { class: "flex min-w-0 items-center gap-2 flex-wrap",
