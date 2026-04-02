@@ -53,12 +53,7 @@ pub fn SubscriptionPage(username: String) -> Element {
     let is_admin = {
         let teams = team_ctx.teams.read();
         teams.iter().find(|t| t.username == username).map_or(false, |t| {
-            let mut mask = 0i64;
-            for v in &t.permissions {
-                mask |= 1i64 << (*v as i32);
-            }
-            let permissions: crate::features::posts::types::TeamGroupPermissions = mask.into();
-            permissions.contains(crate::features::posts::types::TeamGroupPermission::TeamAdmin)
+            t.has_permission(crate::features::posts::types::TeamGroupPermission::TeamAdmin)
         })
     };
     if !is_admin {

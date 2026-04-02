@@ -21,10 +21,7 @@ pub async fn list_members_handler(
     };
 
     // Only team members (users with any permission) can view the member list
-    if !permissions.contains(TeamGroupPermission::PostRead)
-        && !permissions.contains(TeamGroupPermission::TeamEdit)
-        && !permissions.contains(TeamGroupPermission::TeamAdmin)
-    {
+    if permissions.0.is_empty() {
         return Err(Error::NoPermission);
     }
 
