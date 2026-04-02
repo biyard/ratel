@@ -19,10 +19,17 @@ pub fn use_origin() -> Signal<String> {
         let parts = ctx.parts_mut();
         let origin = parts
             .headers
-            .get("origin")
+            .get("host")
             .and_then(|v| v.to_str().ok())
             .unwrap_or_default();
 
-        use_signal(move || origin.to_string())
+        let is_https = parts
+            .headers
+            .get("referer")
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or_default()
+            .starts_with("https://");
+
+        use_signal(move || format!("{}://{}", if is_https { "https" } else { "http" }, origin))
     }
 }
