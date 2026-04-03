@@ -1,6 +1,10 @@
 use crate::common::models::auth::{AdminUser, User};
 use crate::common::types::MembershipPartition;
 use crate::features::admin::*;
+#[cfg(feature = "server")]
+use crate::features::membership::models::{
+    ensure_team_membership_monthly_refill, ensure_user_membership_monthly_refill,
+};
 use crate::features::membership::models::{
     Membership, MembershipTier, TeamMembership, UserMembership,
 };
@@ -84,6 +88,7 @@ pub async fn list_enterprise_memberships(
             if items.len() >= PAGE_SIZE as usize {
                 break;
             }
+            let membership = ensure_user_membership_monthly_refill(cli, membership).await?;
 
             let Some(user) = User::get(cli, membership.pk.clone(), Some(EntityType::User)).await?
             else {
@@ -139,6 +144,10 @@ pub async fn list_enterprise_memberships(
             TeamMembership::find_by_membership(cli, membership_pk, team_opt).await?;
 
         for membership in team_memberships {
+            #[cfg(feature = "server")]
+            let membership = ensure_team_membership_monthly_refill(cli, membership).await?;
+            #[cfg(not(feature = "server"))]
+            let membership = membership;
             let Some(team) = Team::get(cli, membership.pk.clone(), Some(EntityType::Team)).await?
             else {
                 continue;

@@ -18,12 +18,18 @@ pub fn current_month() -> String {
     chrono::Utc::now().format("%Y-%m").to_string()
 }
 
-pub async fn sleep(duration: std::time::Duration) {
+pub fn add_one_month(timestamp_millis: i64) -> Option<i64> {
+    let dt = chrono::DateTime::from_timestamp_millis(timestamp_millis)?;
+    let next = dt.checked_add_months(chrono::Months::new(1))?;
+    Some(next.timestamp_millis())
+}
+
+pub async fn sleep(_duration: std::time::Duration) {
     #[cfg(feature = "web")]
-    gloo_timers::future::sleep(duration).await;
+    gloo_timers::future::sleep(_duration).await;
 
     #[cfg(feature = "server")]
-    tokio::time::sleep(duration).await;
+    tokio::time::sleep(_duration).await;
 }
 
 pub fn time_ago(timestamp_millis: i64) -> String {
