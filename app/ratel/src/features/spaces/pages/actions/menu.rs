@@ -8,7 +8,7 @@ pub fn get_nav_item(
     if role == SpaceUserRole::Viewer
         && !matches!(
             space.status,
-            Some(SpaceStatus::Started) | Some(SpaceStatus::Finished)
+            Some(SpaceStatus::Ongoing) | Some(SpaceStatus::Finished)
         )
     {
         return None;

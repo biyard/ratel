@@ -111,15 +111,12 @@ impl SpaceCommon {
     }
 
     pub fn is_active(&self) -> bool {
-        matches!(
-            self.status,
-            Some(SpaceStatus::Started | SpaceStatus::InProgress)
-        )
+        matches!(self.status, Some(SpaceStatus::Ongoing | SpaceStatus::Open))
     }
 
     pub fn is_participation_open(&self) -> bool {
-        matches!(self.status, Some(SpaceStatus::InProgress))
-            || (self.join_anytime && matches!(self.status, Some(SpaceStatus::Started)))
+        matches!(self.status, Some(SpaceStatus::Open))
+            || (self.join_anytime && matches!(self.status, Some(SpaceStatus::Ongoing)))
     }
 }
 

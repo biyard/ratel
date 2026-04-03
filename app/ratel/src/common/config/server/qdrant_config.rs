@@ -1,5 +1,7 @@
 use dioxus::fullstack::Lazy;
 
+use crate::common::Environment;
+
 pub static QDRANT_CLIENT: Lazy<qdrant_client::Qdrant> = Lazy::new(|| async move {
     let cfg = QdrantConfig::default();
     let mut builder = qdrant_client::Qdrant::from_url(cfg.endpoint);
@@ -22,7 +24,11 @@ pub struct QdrantConfig {
 impl Default for QdrantConfig {
     fn default() -> Self {
         QdrantConfig {
-            endpoint: option_env!("QDRANT_URL").unwrap_or("http://localhost:6334"),
+            endpoint: option_env!("QDRANT_URL").unwrap_or_else(|| match Environment::default() {
+                Environment::Local => "http://localhost:6334",
+                Environment::Dev => "http://qdrant.ratel-dev-svc.local:6334",
+                _ => "http://qdrant.ratel-prod-svc.local:6334",
+            }),
             api_key: option_env!("QDRANT_API_KEY").unwrap_or(""),
             prefix: option_env!("DYNAMO_TABLE_PREFIX").unwrap_or("ratel-local"),
         }
