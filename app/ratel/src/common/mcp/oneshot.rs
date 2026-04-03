@@ -24,6 +24,12 @@ pub async fn mcp_oneshot<T: serde::de::DeserializeOwned>(
     body: Option<Vec<u8>>,
 ) -> crate::common::Result<T> {
     use tower::ServiceExt;
+    crate::debug!(
+        transport = "mcp",
+        method = method,
+        path = path,
+        "Sending MCP oneshot request"
+    );
 
     let router = get_app_router();
     let encoded_path = path.replace("#", "%23");
@@ -37,17 +43,28 @@ pub async fn mcp_oneshot<T: serde::de::DeserializeOwned>(
         builder = builder.header("content-type", "application/json");
     }
 
-    let req = builder
-        .body(axum::body::Body::from(body.unwrap_or_default()))
-        .map_err(|e| {
-            crate::common::Error::InternalServerError(format!(
-                "Failed to build MCP oneshot request: {e}"
-            ))
-        })?;
+    let body = if let Some(body) = body {
+        axum::body::Body::from(body)
+    } else {
+        axum::body::Body::empty()
+    };
+
+    let req = builder.body(body).map_err(|e| {
+        crate::common::Error::InternalServerError(format!(
+            "Failed to build MCP oneshot request: {e}"
+        ))
+    })?;
 
     let res = router.oneshot(req).await.map_err(|e| {
         crate::common::Error::InternalServerError(format!("MCP oneshot failed: {e}"))
     })?;
+    crate::debug!(
+        transport = "mcp",
+        method = method,
+        path = path,
+        "MCP oneshot response status: {}",
+        res.status()
+    );
 
     let (parts, body) = res.into_parts();
     let bytes = axum::body::to_bytes(body, 10 * 1024 * 1024)
@@ -59,6 +76,7 @@ pub async fn mcp_oneshot<T: serde::de::DeserializeOwned>(
         })?;
 
     if !parts.status.is_success() {
+        crate::error!(status = %parts.status, "MCP oneshot response error");
         let msg = String::from_utf8_lossy(&bytes).to_string();
         return Err(crate::common::Error::InternalServerError(msg));
     }

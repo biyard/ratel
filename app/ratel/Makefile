@@ -67,8 +67,6 @@ BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					VOTER_TAG_SECRET='$(VOTER_TAG_SECRET)' \
 					ATTR_VOTING_AUTHORITY_JSON='$(ATTR_VOTING_AUTHORITY_JSON)' \
 
-RUST_FLAG ?=
-
 test:
 	mkdir -p ./test-build-target/debug/deps/public
 	npx @tailwindcss/cli -i tailwind.css -o ./assets/tailwind.css
