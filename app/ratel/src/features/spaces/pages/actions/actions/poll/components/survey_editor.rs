@@ -142,7 +142,7 @@ fn PlusIcon() -> Element {
 
 #[component]
 fn QuestionTypeSelector(on_add: EventHandler<Question>) -> Element {
-    let button_class = "px-3 py-2 text-sm border border-neutral-600 rounded-lg hover:bg-neutral-800 text-neutral-300 flex items-center gap-1";
+    let button_class = "px-3 py-2 text-sm border rounded-lg flex items-center gap-1 border-input-box-border bg-transparent text-text-primary transition-colors duration-150 hover:bg-hover hover:text-text-primary";
     rsx! {
         div { class: "flex flex-wrap gap-2",
             Button {

@@ -74,7 +74,7 @@ pub fn FollowUserInvite(space_id: SpacePartition, on_refresh: EventHandler<()>) 
                             {tr.identifier_label}
                         }
                         Input {
-                            class: "flex flex-col justify-center items-start px-3 py-2.5 w-full font-medium leading-6 border-gray-600 rounded-[8px] border-[0.5px] bg-web-input sp-dash-font-raleway text-[15px] tracking-[0.5px] text-font-primary placeholder:text-card-more-muted",
+                            class: "flex flex-col justify-center items-start px-3 py-2.5 w-full font-medium leading-6 rounded-[8px] border-[0.5px] border-input-box-border bg-input-box-bg sp-dash-font-raleway text-[15px] tracking-[0.5px] text-text-primary placeholder:text-muted-foreground",
                             placeholder: tr.identifier_placeholder.to_string(),
                             value: identifier_input(),
                             oninput: move |evt: Event<FormData>| {
