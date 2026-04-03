@@ -51,4 +51,12 @@ translate! {
         en: "FAILED",
         ko: "FAILED"
     },
+    delete_action: {
+        en: "Delete action",
+        ko: "액션 삭제",
+    },
+    deleted_successfully: {
+        en: "Action deleted successfully.",
+        ko: "액션이 삭제되었습니다.",
+    },
 }

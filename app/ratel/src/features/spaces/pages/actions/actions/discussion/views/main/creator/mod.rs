@@ -1,5 +1,5 @@
 use crate::features::spaces::pages::actions::actions::discussion::*;
-use crate::features::spaces::pages::actions::ActionCommonSettings;
+use crate::features::spaces::pages::actions::{ActionCommonSettings, ActionDeleteButton};
 mod i18n;
 mod overview_tab;
 pub use i18n::DiscussionCreatorTranslate;
@@ -61,6 +61,10 @@ pub fn CreatorMain(
                         crate::features::ai_moderator::AiModeratorSetting {
                             space_id,
                             discussion_id: use_memo(move || SpaceDiscussionEntityType(discussion_id().to_string())),
+                        }
+                        ActionDeleteButton {
+                            space_id: space_id(),
+                            action_id: discussion_id().to_string(),
                         }
                     }
                 }
