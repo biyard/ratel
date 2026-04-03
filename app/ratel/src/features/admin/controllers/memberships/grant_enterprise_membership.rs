@@ -1,12 +1,11 @@
 use crate::common::models::auth::{AdminUser, User};
 use crate::features::admin::*;
 use crate::features::membership::models::{
-    Membership, MembershipResponse, MembershipTier, TeamMembership, UserMembership,
+    ENTERPRISE_MAX_CREDITS_PER_SPACE, ENTERPRISE_MONTHLY_REFILL_CREDITS, Membership,
+    MembershipResponse, MembershipTier, TeamMembership, UserMembership,
 };
 use crate::features::posts::models::Team;
 
-const ENTERPRISE_CREDITS: i64 = 1_000_000;
-const ENTERPRISE_MAX_CREDITS_PER_SPACE: i64 = 1_000;
 const ENTERPRISE_DISPLAY_ORDER: i32 = 999;
 const ENTERPRISE_NAME: &str = "Enterprise";
 
@@ -48,7 +47,7 @@ fn build_enterprise_membership(existing: Option<Membership>) -> Membership {
         sk: EntityType::Membership,
         created_at,
         updated_at: now,
-        credits: ENTERPRISE_CREDITS,
+        credits: ENTERPRISE_MONTHLY_REFILL_CREDITS,
         tier,
         price_dollars: 0,
         price_won: 0,
@@ -100,6 +99,10 @@ pub async fn grant_enterprise_membership(
             )?;
             user_membership.auto_renew = false;
             user_membership.next_membership = None;
+            user_membership.monthly_refill_credits = ENTERPRISE_MONTHLY_REFILL_CREDITS;
+            user_membership.next_refill_at =
+                crate::common::utils::time::add_one_month(crate::common::utils::time::now())
+                    .unwrap_or(crate::common::utils::time::now() + 30 * 24 * 60 * 60 * 1_000);
             user_membership.upsert(cli).await?;
             user_membership.remaining_credits
         }
@@ -122,6 +125,10 @@ pub async fn grant_enterprise_membership(
             )?;
             team_membership.auto_renew = false;
             team_membership.next_membership = None;
+            team_membership.monthly_refill_credits = ENTERPRISE_MONTHLY_REFILL_CREDITS;
+            team_membership.next_refill_at =
+                crate::common::utils::time::add_one_month(crate::common::utils::time::now())
+                    .unwrap_or(crate::common::utils::time::now() + 30 * 24 * 60 * 60 * 1_000);
             team_membership.upsert(cli).await?;
             team_membership.remaining_credits
         }
