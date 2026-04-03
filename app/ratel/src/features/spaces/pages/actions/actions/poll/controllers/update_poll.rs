@@ -2,6 +2,7 @@ use crate::features::spaces::pages::actions::actions::poll::*;
 use crate::features::spaces::pages::actions::models::SpaceAction;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum UpdatePollRequest {
     Title { title: String },
@@ -11,10 +12,14 @@ pub enum UpdatePollRequest {
     CanisterUploadEnabled { canister_upload_enabled: bool },
 }
 
+#[mcp_tool(name = "update_poll", description = "Update a poll (title, time range, questions, response_editable). Requires creator role.")]
 #[post("/api/spaces/{space_pk}/polls/{poll_sk}", role: SpaceUserRole)]
 pub async fn update_poll(
+    #[mcp(description = "Space partition key")]
     space_pk: SpacePartition,
+    #[mcp(description = "Poll sort key (e.g. 'SpacePoll#<uuid>')")]
     poll_sk: SpacePollEntityType,
+    #[mcp(description = "Poll update data as JSON. Supported variants: {\"title\": \"...\"}, {\"started_at\": <ms>, \"ended_at\": <ms>}, {\"questions\": [...]}, {\"response_editable\": true}")]
     req: UpdatePollRequest,
 ) -> Result<String> {
     SpacePoll::can_edit(&role)?;

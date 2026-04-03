@@ -32,6 +32,8 @@ fn serve(app: fn() -> Element) {
         .merge(membership_router);
     let app = dioxus_router.layer(session_layer);
 
+    crate::common::mcp::set_app_router(app.clone());
+
     #[cfg(not(feature = "lambda"))]
     {
         #[cfg(feature = "local-dev")]

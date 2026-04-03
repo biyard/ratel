@@ -11,6 +11,7 @@ use crate::features::spaces::space_common::models::SpaceInvitationMember;
 use crate::features::spaces::space_common::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum UpdateSpaceRequest {
     Publish {
@@ -89,9 +90,12 @@ impl From<SpaceCommon> for UpdateSpaceResponse {
     }
 }
 
+#[mcp_tool(name = "update_space", description = "Update a space (publish, change visibility, content, title, start, finish, quota, etc.). Requires creator role.")]
 #[patch("/api/spaces/{space_id}", role: SpaceUserRole, space: SpaceCommon)]
 pub async fn update_space(
+    #[mcp(description = "Space partition key")]
     space_id: SpacePartition,
+    #[mcp(description = "Update data as JSON. Supported variants: {\"visibility\": \"Public\"}, {\"anonymous_participation\": true}, {\"join_anytime\": true}, {\"start\": true}, {\"finished\": true}, {\"quotas\": 100}, {\"title\": \"...\"}, {\"content\": \"...\"}, {\"publish\": true, \"visibility\": \"Public\"}, {\"logo\": \"url\"}")]
     req: UpdateSpaceRequest,
 ) -> Result<UpdateSpaceResponse> {
     if role != SpaceUserRole::Creator {
