@@ -49,7 +49,7 @@ pub fn SurveyEditor(props: SurveyEditorProps) -> Element {
                                         questions.set(qs);
                                     },
                                     {tr.btn_delete}
-                                    icons::edit::Delete2 { class: "w-6 h-6 [&>path]:stroke-[#737373]" }
+                                    icons::edit::Delete2 { class: "w-6 h-6 [&>path]:stroke-[#737373] [&>path]:fill-none" }
                                 }
                             }
                         }
