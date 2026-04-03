@@ -224,7 +224,7 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: FeedPartition) -> E
             h2 { class: "text-xl font-bold text-text-primary", {post.title} }
 
             div { class: "flex flex-row justify-between",
-                div { class: "flex flex-row gap-2 justify-start items-center w-6 h-6 rounded-full",
+                div { class: "flex flex-row gap-2 justify-start items-center w-fit",
                     if !post.author_profile_url.is_empty() {
                         img {
                             src: post.author_profile_url.clone(),
