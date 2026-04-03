@@ -6,6 +6,7 @@ use crate::features::spaces::pages::actions::actions::follow::*;
 #[cfg(feature = "server")]
 use crate::features::spaces::space_common::models::space_reward::SpaceReward;
 
+#[mcp_tool(name = "follow_user", description = "Follow a user as part of a space follow action. Requires participant role.")]
 #[post(
     "/api/spaces/{space_id}/follows/{follow_id}/user",
     role: SpaceUserRole,
@@ -13,8 +14,11 @@ use crate::features::spaces::space_common::models::space_reward::SpaceReward;
     space: SpaceCommon
 )]
 pub async fn follow_user(
+    #[mcp(description = "Space partition key")]
     space_id: SpacePartition,
+    #[mcp(description = "Follow action sort key (e.g. 'SpaceActionFollow#<uuid>')")]
     follow_id: SpaceActionFollowEntityType,
+    #[mcp(description = "Target user partition key to follow (e.g. 'USER#<uuid>')")]
     target_pk: Partition,
 ) -> Result<()> {
     let common_config = crate::common::CommonConfig::default();

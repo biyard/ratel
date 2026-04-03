@@ -4,10 +4,12 @@ use crate::features::spaces::pages::actions::actions::quiz::*;
 use crate::features::spaces::space_common::models::space_reward::SpaceReward;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct RespondQuizRequest {
     pub answers: Vec<Answer>,
 }
 
+#[mcp_tool(name = "respond_quiz", description = "Submit answers to a quiz. Requires participant role. Returns score.")]
 #[post(
     "/api/spaces/{space_pk}/quizzes/{quiz_id}/respond",
     role: SpaceUserRole,
@@ -16,8 +18,11 @@ pub struct RespondQuizRequest {
     space: SpaceCommon
 )]
 pub async fn respond_quiz(
+    #[mcp(description = "Space partition key")]
     space_pk: SpacePartition,
+    #[mcp(description = "Quiz sort key (e.g. 'SpaceQuiz#<uuid>')")]
     quiz_id: SpaceQuizEntityType,
+    #[mcp(description = "Quiz answers. Each answer: {\"answer_type\": \"single_choice\", \"answer\": <index>} or {\"answer_type\": \"multiple_choice\", \"answer\": [<indices>]}")]
     req: RespondQuizRequest,
 ) -> Result<()> {
     let common_config = crate::common::CommonConfig::default();

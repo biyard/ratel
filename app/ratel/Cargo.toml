@@ -38,6 +38,7 @@ rand = { version = "0.10" }
 futures = { version = "0.3", optional = true }
 urlencoding = { version = "2" }
 tokio = { workspace = true, optional = true }
+tower = { version = "0.5", features = ["util"], optional = true }
 
 web-sys = { workspace = true, features = [
   "Blob",
@@ -149,6 +150,7 @@ server = [
   "sha3",
   "ssi",
   "tokio",
+  "tower",
   "tower-sessions",
   "url",
   "uuid",

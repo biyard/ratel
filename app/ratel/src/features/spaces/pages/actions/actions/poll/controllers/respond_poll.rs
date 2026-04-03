@@ -5,6 +5,7 @@ use crate::features::spaces::pages::actions::models::SpaceAction;
 use crate::features::spaces::space_common::models::space_reward::SpaceReward;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct RespondPollRequest {
     pub answers: Vec<Answer>,
 }
@@ -122,10 +123,14 @@ async fn get_respondent_from_panels(
     ))
 }
 
+#[mcp_tool(name = "respond_poll", description = "Submit answers to a poll. Requires participant role and space in Ongoing status.")]
 #[post("/api/spaces/{space_pk}/polls/{poll_sk}/respond", role: SpaceUserRole, author: SpaceAuthor, space: SpaceCommon, user: crate::features::auth::User)]
 pub async fn respond_poll(
+    #[mcp(description = "Space partition key")]
     space_pk: SpacePartition,
+    #[mcp(description = "Poll sort key (e.g. 'SpacePoll#<uuid>')")]
     poll_sk: SpacePollEntityType,
+    #[mcp(description = "Poll answers. Each answer: {\"answer_type\": \"single_choice\", \"answer\": <index>} or {\"answer_type\": \"multiple_choice\", \"answer\": [<indices>]}")]
     req: RespondPollRequest,
 ) -> Result<RespondPollResponse> {
     let common_config = crate::common::CommonConfig::default();

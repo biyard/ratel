@@ -71,17 +71,11 @@ pub async fn create_team_handler(body: CreateTeamRequest) -> crate::features::so
     })
 }
 
-#[post("/api/user-shell/teams/list", session: Extension<tower_sessions::Session>)]
+#[mcp_tool(name = "list_teams", description = "List all teams the user belongs to with their role and permissions. Use team_id from the result as the team_id parameter in create_post to post under a team.")]
+#[post("/api/user-shell/teams/list", user: crate::features::auth::User)]
 pub async fn get_user_teams_handler() -> crate::features::social::Result<Vec<crate::common::contexts::TeamItem>> {
-    let Extension(session) = session;
-    let user_pk: String = session
-        .get::<String>("user_id")
-        .await
-        .map_err(|e| crate::features::social::Error::Unauthorized(e.to_string()))?
-        .ok_or(crate::features::social::Error::Unauthorized("no session".to_string()))?;
-
     let cli = crate::features::social::config::get().dynamodb();
-    let user_pk: crate::common::types::Partition = user_pk.parse().unwrap_or_default();
+    let user_pk = user.pk.clone();
 
     let sk_prefix = "UserTeam".to_string();
     let opt = crate::features::auth::UserTeamQueryOption::builder().sk(sk_prefix);
