@@ -18,7 +18,7 @@ pub static CANISTER_SERVICE: Lazy<CanisterService> = Lazy::new(|| async move {
             ic_agent::identity::Secp256k1Identity::from_pem_file(path.trim())
                 .map_err(|e| ServerFnError::new(format!("IC identity load error: {}", e)))?,
         )
-    } else if let Ok(pem) = std::env::var("ICP_IDENTITY_PEM") {
+    } else if let Some(pem) = option_env!("ICP_IDENTITY_PEM") {
         let normalized = pem.replace("\\n", "\n");
         Some(
             ic_agent::identity::Secp256k1Identity::from_pem(normalized.as_bytes())
