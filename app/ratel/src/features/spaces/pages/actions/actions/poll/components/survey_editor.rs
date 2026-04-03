@@ -282,7 +282,7 @@ fn SubjectiveQuestionEditor(
     rsx! {
         crate::common::components::Input {
             variant: crate::common::components::InputVariant::Plain,
-            class: "p-2 w-full text-white bg-transparent border-b outline-none focus:border-blue-500 border-neutral-600 placeholder-neutral-500",
+            class: "p-2 w-full bg-transparent border-b outline-none border-neutral-600 text-text-primary placeholder:text-muted-foreground focus:border-blue-500",
             placeholder: "Question title",
             value: "{q.title}",
             oninput: move |evt: Event<FormData>| {
@@ -301,7 +301,7 @@ fn SubjectiveQuestionEditor(
                 }
             },
         }
-        span { class: "text-xs text-neutral-500", "Text answer field" }
+        span { class: "text-xs text-text-primary-muted", "Text answer field" }
     }
 }
 
@@ -317,7 +317,7 @@ fn CheckboxQuestionEditor(
     rsx! {
         crate::common::components::Input {
             variant: crate::common::components::InputVariant::Plain,
-            class: "p-2 w-full text-white bg-transparent border-b outline-none focus:border-blue-500 border-neutral-600 placeholder-neutral-500",
+            class: "p-2 w-full bg-transparent border-b outline-none border-neutral-600 text-text-primary placeholder:text-muted-foreground focus:border-blue-500",
             placeholder: "Question title",
             value: "{q.title}",
             oninput: move |evt: Event<FormData>| {
@@ -347,7 +347,7 @@ fn CheckboxQuestionEditor(
                         div { class: "flex gap-2 items-center",
                             crate::common::components::Input {
                                 variant: crate::common::components::InputVariant::Plain,
-                                class: "flex-1 p-2 text-sm text-white bg-transparent border-b outline-none border-neutral-700",
+                                class: "flex-1 p-2 text-sm bg-transparent border-b outline-none border-neutral-700 text-text-primary placeholder:text-muted-foreground",
                                 value: "{option}",
                                 oninput: move |evt: Event<FormData>| {
                                     let mut next = question.clone();
@@ -385,7 +385,7 @@ fn DropdownQuestionEditor(
     rsx! {
         crate::common::components::Input {
             variant: crate::common::components::InputVariant::Plain,
-            class: "p-2 w-full text-white bg-transparent border-b outline-none focus:border-blue-500 border-neutral-600 placeholder-neutral-500",
+            class: "p-2 w-full bg-transparent border-b outline-none border-neutral-600 text-text-primary placeholder:text-muted-foreground focus:border-blue-500",
             placeholder: "Question title",
             value: "{q.title}",
             oninput: move |evt: Event<FormData>| {
@@ -415,7 +415,7 @@ fn DropdownQuestionEditor(
                         div { class: "flex gap-2 items-center",
                             crate::common::components::Input {
                                 variant: crate::common::components::InputVariant::Plain,
-                                class: "flex-1 p-2 text-sm text-white bg-transparent border-b outline-none border-neutral-700",
+                                class: "flex-1 p-2 text-sm bg-transparent border-b outline-none border-neutral-700 text-text-primary placeholder:text-muted-foreground",
                                 value: "{option}",
                                 oninput: move |evt: Event<FormData>| {
                                     let mut next = question.clone();
