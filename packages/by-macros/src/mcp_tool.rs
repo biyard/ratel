@@ -142,13 +142,10 @@ fn build_format_path(route: &str) -> String {
         route
     };
 
+    let segments: Vec<&str> = path_part.split('/').filter(|s| !s.is_empty()).collect();
     let mut result = String::new();
-    for segment in path_part.split('/') {
-        if !result.is_empty() || path_part.starts_with('/') {
-            if !result.is_empty() || segment.is_empty() {
-                result.push('/');
-            }
-        }
+    for segment in segments {
+        result.push('/');
         if segment.starts_with('{') && segment.ends_with('}') {
             result.push_str("{}");
         } else if segment.starts_with(':') {
