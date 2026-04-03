@@ -78,46 +78,53 @@ pub fn PollCreatorPage(
                 }
                 TabContent { index: 0usize, value: "question-tab", QuestionTab {} }
                 TabContent { index: 1usize, value: "setting-tab",
-                    ActionCommonSettings {
-                        space_id,
-                        action_id: poll_id().to_string(),
-                        action_setting: ctx.poll().space_action,
-                        on_date_change,
-                    }
+                    div { class: "flex flex-col gap-4 w-full",
+                        ActionCommonSettings {
+                            space_id,
+                            action_id: poll_id().to_string(),
+                            action_setting: ctx.poll().space_action,
+                            on_date_change,
+                        }
 
-                    // Response Editable toggle
-                    Card { class: "mt-4",
-                        div { class: "flex justify-between items-center self-stretch border-b border-separator",
-                            div { class: "flex gap-1 items-center",
-                                p { class: "font-semibold font-raleway text-[15px]/[18px] tracking-[-0.16px] text-web-font-primary",
-                                    {tr.response_editable_title}
-                                }
-                                Tooltip {
-                                    TooltipTrigger {
-                                        icons::help_support::Info {
-                                            width: "14",
-                                            height: "14",
-                                            class: "cursor-help text-web-font-neutral [&>path]:stroke-current [&>circle]:fill-current [&>path]:fill-none",
+                        // Response Editable toggle
+                        Card { class: "mt-4 mb-4",
+                            div { class: "flex justify-between items-center self-stretch border-b border-separator",
+                                div { class: "flex gap-1 items-center",
+                                    p { class: "font-semibold font-raleway text-[15px]/[18px] tracking-[-0.16px] text-web-font-primary",
+                                        {tr.response_editable_title}
+                                    }
+                                    Tooltip {
+                                        TooltipTrigger {
+                                            icons::help_support::Info {
+                                                width: "14",
+                                                height: "14",
+                                                class: "cursor-help text-web-font-neutral [&>path]:stroke-current [&>circle]:fill-current [&>path]:fill-none",
+                                            }
+                                        }
+                                        TooltipContent {
+                                            side: ContentSide::Bottom,
+                                            align: ContentAlign::Start,
+                                            p { class: "w-72", {tr.response_editable_desc} }
                                         }
                                     }
-                                    TooltipContent {
-                                        side: ContentSide::Bottom,
-                                        align: ContentAlign::Start,
-                                        p { class: "w-72", {tr.response_editable_desc} }
-                                    }
+                                }
+
+                                Switch {
+                                    active: ctx.poll().response_editable && !ctx.poll().encrypted_upload_enabled,
+                                    disabled: ctx.poll().encrypted_upload_enabled,
+                                    on_toggle: on_response_editable_toggle,
                                 }
                             }
+                        }
 
-                            Switch {
-                                active: ctx.poll().response_editable && !ctx.poll().encrypted_upload_enabled,
-                                disabled: ctx.poll().encrypted_upload_enabled,
-                                on_toggle: on_response_editable_toggle,
-                            }
+                        // Encrypted Upload toggle
+                        EncryptedUploadSetting { enabled, on_toggle: on_encrypted_upload_toggle }
+
+                        ActionDeleteButton {
+                            space_id: space_id(),
+                            action_id: poll_id().to_string(),
                         }
                     }
-
-                    // Encrypted Upload toggle
-                    EncryptedUploadSetting { enabled, on_toggle: on_encrypted_upload_toggle }
                 }
             }
         }

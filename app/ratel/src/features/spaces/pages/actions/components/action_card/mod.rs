@@ -6,10 +6,16 @@ use i18n::ActionCardTranslate;
 mod i18n;
 
 #[component]
-pub fn ActionCard(action: SpaceActionSummary, space_id: SpacePartition) -> Element {
+pub fn ActionCard(
+    action: SpaceActionSummary,
+    space_id: SpacePartition,
+    #[props(default = false)] deletable: bool,
+    #[props(default)] on_deleted: Option<EventHandler<()>>,
+) -> Element {
     let tr: ActionCardTranslate = use_translate();
     let nav = navigator();
     let mut toast = use_toast();
+    let mut popup = use_popup();
     let space = use_space();
     let role = use_space_role()();
     let now = crate::common::utils::time::get_now_timestamp_millis();
@@ -66,6 +72,57 @@ pub fn ActionCard(action: SpaceActionSummary, space_id: SpacePartition) -> Eleme
     } else {
         "flex flex-col w-full text-left border transition-colors cursor-pointer gap-[0.625rem] !rounded-[1rem] !bg-neutral-900 light:!bg-white !p-[0.9375rem] border-neutral-800 light:border-neutral-300 light:hover:!bg-neutral-50 hover:!bg-neutral-800"
     };
+
+    let action_id = action.action_id.clone();
+    let on_delete_click = {
+        let mut popup = popup;
+        let mut toast = toast;
+        let nav = nav.clone();
+        let space_id = space_id.clone();
+        let on_deleted = on_deleted.clone();
+        move |evt: MouseEvent| {
+            evt.stop_propagation();
+            evt.prevent_default();
+
+            let mut popup = popup;
+            let mut toast = toast;
+            let nav = nav.clone();
+            let space_id = space_id.clone();
+            let action_id = action_id.clone();
+            let on_deleted = on_deleted.clone();
+
+            let on_cancel = move |_| popup.close();
+            let on_confirm = move |_| {
+                let mut popup = popup;
+                let mut toast = toast;
+                let nav = nav.clone();
+                let space_id = space_id.clone();
+                let action_id = action_id.clone();
+                let on_deleted = on_deleted.clone();
+                spawn(async move {
+                    match delete_space_action(space_id.clone(), action_id).await {
+                        Ok(_) => {
+                            popup.close();
+                            toast.info(tr.deleted_successfully.to_string());
+                            if let Some(on_deleted) = on_deleted {
+                                on_deleted.call(());
+                            } else {
+                                nav.push(Route::SpaceActionsPage { space_id });
+                            }
+                        }
+                        Err(err) => {
+                            toast.error(err);
+                        }
+                    }
+                });
+            };
+
+            popup.open(rsx! {
+                DeleteActionPopup { on_confirm, on_cancel }
+            });
+        }
+    };
+
     rsx! {
         SpaceCard {
             class: card_class.to_string(),
@@ -118,9 +175,20 @@ pub fn ActionCard(action: SpaceActionSummary, space_id: SpacePartition) -> Eleme
                     }
                 }
 
-                if let Some(period) = period {
-                    span { class: "font-medium text-[0.75rem]/[1rem] text-neutral-500 max-mobile:self-end",
-                        {period}
+                div { class: "flex items-center gap-2 max-mobile:self-end",
+                    if let Some(period) = period {
+                        span { class: "font-medium text-[0.75rem]/[1rem] text-neutral-500",
+                            {period}
+                        }
+                    }
+                    if deletable {
+                        button {
+                            r#type: "button",
+                            "aria-label": tr.delete_action,
+                            class: "inline-flex h-8 w-8 items-center justify-center text-neutral-500 transition-colors duration-150 hover:text-neutral-200 light:hover:text-neutral-700",
+                            onclick: on_delete_click,
+                            icons::edit::Delete2 { class: "h-4 w-4 [&>path]:stroke-current [&>path]:fill-none" }
+                        }
                     }
                 }
             }

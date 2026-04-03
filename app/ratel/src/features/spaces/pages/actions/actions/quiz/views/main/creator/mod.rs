@@ -1,5 +1,5 @@
 use crate::features::spaces::pages::actions::actions::quiz::*;
-use crate::features::spaces::pages::actions::ActionCommonSettings;
+use crate::features::spaces::pages::actions::{ActionCommonSettings, ActionDeleteButton};
 mod i18n;
 mod overview_tab;
 mod quiz_tab;
@@ -41,11 +41,17 @@ pub fn QuizCreatorPage(
                     QuizTab { can_edit: can_edit_quiz }
                 }
                 TabContent { index: 3usize, value: "setting-tab",
-                    ActionCommonSettings {
-                        space_id,
-                        action_id: quiz_id().to_string(),
-                        action_setting: ctx.quiz().space_action,
-                        on_date_change: move |_range: DateTimeRange| async move {},
+                    div { class: "flex flex-col gap-4 w-full",
+                        ActionCommonSettings {
+                            space_id,
+                            action_id: quiz_id().to_string(),
+                            action_setting: ctx.quiz().space_action,
+                            on_date_change: move |_range: DateTimeRange| async move {},
+                        }
+                        ActionDeleteButton {
+                            space_id: space_id(),
+                            action_id: quiz_id().to_string(),
+                        }
                     }
                 }
             }

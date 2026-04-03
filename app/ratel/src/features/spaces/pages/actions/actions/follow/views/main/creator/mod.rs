@@ -28,10 +28,16 @@ pub fn FollowCreatorPage(
                     FollowerSetting { space_id }
                 }
                 TabContent { index: 1usize, value: "setting-tab",
-                    ActionCommonSettings {
-                        space_id,
-                        action_id: follow_id().to_string(),
-                        action_setting: action_setting(),
+                    div { class: "flex flex-col gap-4 w-full",
+                        ActionCommonSettings {
+                            space_id,
+                            action_id: follow_id().to_string(),
+                            action_setting: action_setting(),
+                        }
+                        ActionDeleteButton {
+                            space_id: space_id(),
+                            action_id: follow_id().to_string(),
+                        }
                     }
                 }
             }
