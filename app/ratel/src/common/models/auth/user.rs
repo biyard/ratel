@@ -132,6 +132,33 @@ impl User {
 pub const SESSION_KEY_USER_ID: &str = "user_id";
 
 #[cfg(feature = "server")]
+async fn extract_user_from_mcp_secret(parts: &Parts) -> Option<User> {
+    let auth_header = parts.headers.get("authorization")?.to_str().ok()?;
+    if !auth_header.starts_with("McpSecret") {
+        return None;
+    }
+
+    let raw_secret = auth_header.strip_prefix("McpSecret ")?;
+    if raw_secret.is_empty() {
+        return None;
+    }
+
+    let conf = ServerConfig::default();
+    let cli = conf.dynamodb();
+
+    let hashed = crate::common::models::McpClientSecret::hash_secret(raw_secret);
+    let opt = crate::common::models::McpClientSecret::opt().limit(1);
+    let (secrets, _) = crate::common::models::McpClientSecret::find_by_secret(cli, &hashed, opt)
+        .await
+        .ok()?;
+
+    let secret = secrets.first()?;
+    User::get(cli, &secret.pk, Some(EntityType::User))
+        .await
+        .ok()?
+}
+
+#[cfg(feature = "server")]
 async fn extract_user_from_parts<S>(parts: &mut Parts, state: &S) -> Result<User>
 where
     S: Send + Sync,
@@ -139,6 +166,12 @@ where
 {
     if let Some(user) = parts.extensions.get::<User>() {
         return Ok(user.clone());
+    }
+
+    // Try MCP secret auth first: Authorization: McpSecret {secret}
+    if let Some(user) = extract_user_from_mcp_secret(parts).await {
+        parts.extensions.insert(user.clone());
+        return Ok(user);
     }
 
     let conf = ServerConfig::default();

@@ -114,6 +114,10 @@ pub fn CreatorActionPage(space_id: ReadSignal<SpacePartition>) -> Element {
                                 key: "{action.action_id}",
                                 action: action.clone(),
                                 space_id: space_id(),
+                                deletable: true,
+                                on_deleted: move |_| {
+                                    actions.restart();
+                                },
                             }
                         }
                     }

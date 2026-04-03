@@ -4,10 +4,14 @@ use crate::features::auth::OptionalUser;
 use crate::features::spaces::pages::actions::actions::discussion::*;
 use std::collections::HashSet;
 
+#[mcp_tool(name = "list_comments", description = "List comments on a discussion, sorted by likes. Supports pagination.")]
 #[get("/api/spaces/{space_id}/discussions/{discussion_sk}/comments?bookmark", role: SpaceUserRole, user: OptionalUser)]
 pub async fn list_comments(
+    #[mcp(description = "Space partition key")]
     space_id: SpacePartition,
+    #[mcp(description = "Discussion sort key (e.g. 'SpacePost#<uuid>')")]
     discussion_sk: SpacePostEntityType,
+    #[mcp(description = "Pagination bookmark. Omit for first page.")]
     bookmark: Option<String>,
 ) -> Result<ListResponse<DiscussionCommentResponse>> {
     SpacePost::can_view(&role)?;

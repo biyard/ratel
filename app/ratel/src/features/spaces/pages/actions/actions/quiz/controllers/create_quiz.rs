@@ -1,7 +1,11 @@
 use crate::features::spaces::pages::actions::actions::quiz::*;
 
+#[mcp_tool(name = "create_quiz", description = "Create a new quiz action in a space. Requires creator role.")]
 #[post("/api/spaces/{space_pk}/quizzes", role: SpaceUserRole)]
-pub async fn create_quiz(space_pk: SpacePartition) -> Result<QuizResponse> {
+pub async fn create_quiz(
+    #[mcp(description = "Space partition key")]
+    space_pk: SpacePartition,
+) -> Result<QuizResponse> {
     SpaceQuiz::can_edit(&role)?;
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();

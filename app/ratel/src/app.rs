@@ -8,6 +8,11 @@ use dioxus::prelude::*;
 pub const MAIN_CSS: Asset = asset!("/assets/main.css");
 pub const MAIN_JS: Asset = asset!("/assets/ratel-app-shell.js");
 
+#[cfg(feature = "server")]
+pub fn app() -> by_axum::axum::AxumRouter {
+    dioxus::server::router(App)
+}
+
 #[component]
 pub fn App() -> Element {
     use_context_provider(|| PopupService::new());
