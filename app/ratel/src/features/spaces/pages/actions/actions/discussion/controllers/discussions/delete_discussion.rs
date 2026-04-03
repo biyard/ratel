@@ -1,9 +1,12 @@
 use crate::features::spaces::pages::actions::actions::discussion::*;
 use crate::features::spaces::space_common::models::aggregate::DashboardAggregate;
 
+#[mcp_tool(name = "delete_discussion", description = "Delete a discussion from a space. Requires creator role.")]
 #[delete("/api/spaces/{space_id}/discussions/{discussion_sk}", role: SpaceUserRole)]
 pub async fn delete_discussion(
+    #[mcp(description = "Space partition key")]
     space_id: SpacePartition,
+    #[mcp(description = "Discussion sort key (e.g. 'SpacePost#<uuid>')")]
     discussion_sk: SpacePostEntityType,
 ) -> Result<()> {
     SpacePost::can_edit(&role)?;

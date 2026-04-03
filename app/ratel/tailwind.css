@@ -259,8 +259,8 @@ html[data-theme="light"] {
     var(--light, #e5e5e5);
   --color-choice-editor-field-text: var(--dark, #d4d4d4)
     var(--light, #262626);
-  --color-choice-editor-field-placeholder: var(--dark, #737373)
-    var(--light, #262626);
+  --color-choice-editor-field-placeholder: var(--dark, var(--gray-500))
+    var(--light, var(--gray-600));
   --color-choice-editor-action: var(--dark, #737373) var(--light, #262626);
   --color-choice-editor-selector-bg: var(--dark, #101010)
     var(--light, #fafafa);

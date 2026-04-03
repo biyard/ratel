@@ -61,9 +61,9 @@ pub fn MaterialList(
                                     key: "{material_id}",
                                     class: "flex gap-2 justify-between items-center py-2 px-3 rounded-[8px] bg-card-bg",
                                     div { class: "flex gap-2 items-center min-w-0",
-                                        icons::files::Pdf {
-                                            width: "16",
-                                            height: "16",
+                                        FileExtensionIcon {
+                                            ext: FileExtension::PDF,
+                                            size: 20,
                                         }
                                         span { class: "text-[13px] font-medium truncate text-text-primary",
                                             {file_name}

@@ -9,42 +9,7 @@ use crate::features::spaces::space_common::types::space_page_actions_quiz_key;
 const DEFAULT_PROFILE_URL: &str = "https://metadata.ratel.foundation/ratel/default-profile.png";
 
 fn file_icon(ext: &FileExtension) -> Element {
-    match ext {
-        FileExtension::JPG => rsx! {
-            icons::files::Jpg { width: "36", height: "36" }
-        },
-        FileExtension::PNG => rsx! {
-            icons::files::Png { width: "36", height: "36" }
-        },
-        FileExtension::PDF => rsx! {
-            icons::files::Pdf { width: "36", height: "36" }
-        },
-        FileExtension::ZIP => rsx! {
-            icons::files::Zip { width: "36", height: "36" }
-        },
-        FileExtension::WORD => rsx! {
-            icons::files::Docx { width: "36", height: "36" }
-        },
-        FileExtension::PPTX => rsx! {
-            icons::files::Pptx { width: "36", height: "36" }
-        },
-        FileExtension::EXCEL => rsx! {
-            icons::files::Xlsx { width: "36", height: "36" }
-        },
-        FileExtension::MP4 => rsx! {
-            icons::files::Mp4 { width: "36", height: "36" }
-        },
-        FileExtension::MOV => rsx! {
-            icons::files::Mov { width: "36", height: "36" }
-        },
-        FileExtension::MKV => rsx! {
-            icons::file::File {
-                width: "36",
-                height: "36",
-                class: "[&>path]:stroke-current text-card-meta",
-            }
-        },
-    }
+    rsx! { FileExtensionIcon { ext: ext.clone(), size: 36 } }
 }
 
 #[component]

@@ -3,6 +3,7 @@ use crate::features::ai_moderator::*;
 use super::get_ai_moderator_config::AiModeratorConfigResponse;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct UpdateAiModeratorConfigRequest {
     pub enabled: bool,
     pub reply_interval: i64,
@@ -10,10 +11,14 @@ pub struct UpdateAiModeratorConfigRequest {
     pub guidelines: String,
 }
 
+#[mcp_tool(name = "update_ai_moderator", description = "Configure AI moderator for a discussion. Sets enabled state, reply interval, and guidelines. Requires creator role and premium membership.")]
 #[post("/api/spaces/{space_id}/discussions/{discussion_id}/ai-moderator", role: SpaceUserRole, user: crate::features::auth::User)]
 pub async fn update_ai_moderator_config(
+    #[mcp(description = "Space partition key")]
     space_id: SpacePartition,
+    #[mcp(description = "Discussion sort key (e.g. 'SpacePost#<uuid>')")]
     discussion_id: SpaceDiscussionEntityType,
+    #[mcp(description = "AI moderator config: {\"enabled\": bool, \"reply_interval\": int, \"guidelines\": \"text\"}")]
     req: UpdateAiModeratorConfigRequest,
 ) -> Result<AiModeratorConfigResponse> {
     role.is_creator()?;

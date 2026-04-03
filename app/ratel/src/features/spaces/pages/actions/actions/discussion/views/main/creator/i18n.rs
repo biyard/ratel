@@ -12,7 +12,7 @@ translate! {
         ko: "개요",
     },
     tab_setting: {
-        en: "Setting",
+        en: "Settings",
         ko: "설정",
     },
     title_label: {

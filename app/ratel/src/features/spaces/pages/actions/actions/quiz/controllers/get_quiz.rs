@@ -2,9 +2,12 @@ use crate::features::auth::OptionalUser;
 
 use crate::features::spaces::pages::actions::actions::quiz::*;
 
+#[mcp_tool(name = "get_quiz", description = "Get quiz details including questions, attempt count, and the current user's score.")]
 #[get("/api/spaces/{space_pk}/quizzes/{quiz_id}", role: SpaceUserRole, user: OptionalUser)]
 pub async fn get_quiz(
+    #[mcp(description = "Space partition key")]
     space_pk: SpacePartition,
+    #[mcp(description = "Quiz sort key (e.g. 'SpaceQuiz#<uuid>')")]
     quiz_id: SpaceQuizEntityType,
 ) -> Result<QuizResponse> {
     SpaceQuiz::can_view(&role)?;

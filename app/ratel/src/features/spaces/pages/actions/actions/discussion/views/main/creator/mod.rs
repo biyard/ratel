@@ -1,5 +1,5 @@
 use crate::features::spaces::pages::actions::actions::discussion::*;
-use crate::features::spaces::pages::actions::ActionCommonSettings;
+use crate::features::spaces::pages::actions::{ActionCommonSettings, ActionDeleteButton};
 mod i18n;
 mod overview_tab;
 pub use i18n::DiscussionCreatorTranslate;
@@ -62,6 +62,10 @@ pub fn CreatorMain(
                             space_id,
                             discussion_id: use_memo(move || SpaceDiscussionEntityType(discussion_id().to_string())),
                         }
+                        ActionDeleteButton {
+                            space_id: space_id(),
+                            action_id: discussion_id().to_string(),
+                        }
                     }
                 }
             }
@@ -70,7 +74,5 @@ pub fn CreatorMain(
 }
 
 fn date_time_to_millis(date: time::Date, hour: u8, minute: u8) -> i64 {
-    let datetime = date.with_hms(hour, minute, 0).expect("valid time");
-    let offset_datetime = datetime.assume_utc();
-    (offset_datetime.unix_timestamp()) * 1000
+    crate::common::utils::time::kst_date_time_to_utc_millis(date, hour, minute)
 }

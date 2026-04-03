@@ -185,6 +185,7 @@ jobs:
           PORTONE_STORE_ID: ${{ secrets.PORTONE_STORE_ID }}
           PORTONE_INICIS_CHANNEL_KEY: ${{ secrets.PROD_PORTONE_INICIS_CHANNEL_KEY }}
 
+          QDRANT_URL: ${{ secrets.QDRANT_URL }}
           QDRANT_API_KEY: ${{secrets.QDRANT_API_KEY }}
 
           ECR: ${{ steps.ratel-ecr.outputs.registry }}/ratel/app-shell

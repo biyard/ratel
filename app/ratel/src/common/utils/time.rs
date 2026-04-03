@@ -24,6 +24,12 @@ pub fn add_one_month(timestamp_millis: i64) -> Option<i64> {
     Some(next.timestamp_millis())
 }
 
+pub fn kst_date_time_to_utc_millis(date: time::Date, hour: u8, minute: u8) -> i64 {
+    let datetime = date.with_hms(hour, minute, 0).expect("valid time");
+    let offset_datetime = datetime.assume_utc() - time::Duration::hours(9);
+    offset_datetime.unix_timestamp() * 1000
+}
+
 pub async fn sleep(_duration: std::time::Duration) {
     #[cfg(feature = "web")]
     gloo_timers::future::sleep(_duration).await;
