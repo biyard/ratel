@@ -27,6 +27,8 @@ async fn poll_loop() {
     use aws_sdk_dynamodbstreams::Client as StreamsClient;
     use std::collections::HashMap;
 
+    use crate::common::dynamodb::DynamoConfig;
+
     let cfg = crate::common::CommonConfig::default();
     let dynamodb = cfg.dynamodb();
 
@@ -45,8 +47,27 @@ async fn poll_loop() {
 
     tracing::info!(stream_arn = %stream_arn, "DynamoDB stream poller started");
 
-    let aws_config = aws_config::load_defaults(aws_config::BehaviorVersion::latest()).await;
-    let streams_client = StreamsClient::new(&aws_config);
+    let streams_client = {
+        let aws_config = crate::common::aws_config::AwsConfig::default();
+        let mut builder = aws_sdk_dynamodbstreams::Config::builder()
+            .region(aws_config::Region::new(aws_config.region))
+            .behavior_version_latest()
+            .credentials_provider(aws_credential_types::Credentials::new(
+                aws_config.access_key_id,
+                aws_config.secret_access_key,
+                None,
+                None,
+                "loaded-from-config",
+            ));
+
+        let ddb_cfg = DynamoConfig::default();
+        if let Some(ep) = ddb_cfg.endpoint {
+            builder = builder.endpoint_url(ep);
+        }
+
+        StreamsClient::from_conf(builder.build())
+    };
+
     let mut shard_iterators: HashMap<String, String> = HashMap::new();
 
     loop {

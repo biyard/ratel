@@ -1,8 +1,8 @@
 use std::collections::HashSet;
 
 use crate::features::posts::models::Post;
-use crate::features::timeline::*;
 use crate::features::timeline::models::TimelineReason;
+use crate::features::timeline::*;
 
 use super::common::{collect_followers_with_reason, write_timeline_entries};
 
@@ -13,6 +13,9 @@ use super::common::{collect_followers_with_reason, write_timeline_entries};
 /// 2. **Team member fan-out** -- if the author is a Team, delivers to all team members
 /// 3. Deduplicates across strategies so each user gets at most one entry
 pub async fn fan_out_timeline_entries(post: Post) -> Result<()> {
+    if !post.is_published() {
+        return Ok(());
+    }
     tracing::info!(
         "Timeline update: post_pk={}, author_pk={}, created_at={}",
         post.pk,
@@ -33,7 +36,9 @@ pub async fn fan_out_timeline_entries(post: Post) -> Result<()> {
     entries.push((author_pk.clone(), TimelineReason::Following));
 
     // 2. All followers of the author
-    collect_followers(cli, author_pk, &mut seen, &mut entries).await?;
+    if post.is_public() {
+        collect_followers(cli, author_pk, &mut seen, &mut entries).await?;
+    }
 
     // 3. If the author is a Team, all team members
     if matches!(author_pk, Partition::Team(_)) {
