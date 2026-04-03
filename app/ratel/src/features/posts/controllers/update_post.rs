@@ -37,7 +37,10 @@ pub enum UpdatePostRequest {
     },
 }
 
-#[mcp_tool(name = "update_post", description = "Update a post (publish, edit content, change visibility).")]
+#[mcp_tool(
+    name = "update_post",
+    description = "Update a post (publish, edit content, change visibility)."
+)]
 #[put("/api/posts/:post_id", user: User)]
 pub async fn update_post_handler(post_id: FeedPartition, req: UpdatePostRequest) -> Result<Post> {
     let conf = crate::features::posts::config::get();
@@ -165,17 +168,6 @@ pub async fn update_post_handler(post_id: FeedPartition, req: UpdatePostRequest)
     };
 
     crate::transact_write_items!(cli, transacts)?;
-
-    #[cfg(feature = "local-dev")]
-    if post.status == PostStatus::Published {
-        let _ = crate::features::timeline::services::fan_out_timeline_entries(post.clone())
-            .await
-            .map_err(|e| {
-                tracing::error!("local-dev timeline fan-out failed: {}", e);
-            });
-    }
-
-    // Qdrant vector indexing is handled by DynamoStream → PostVectorIndex event
 
     Ok(post)
 }

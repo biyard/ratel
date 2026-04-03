@@ -362,11 +362,11 @@ where
         .flatten();
 
         if participant.is_some() {
-            let role = if matches!(space.status, Some(crate::common::SpaceStatus::InProgress)) {
+            let role = if matches!(space.status, Some(crate::common::SpaceStatus::Open)) {
                 SpaceUserRole::Candidate
             } else if matches!(
                 space.status,
-                Some(crate::common::SpaceStatus::Started | crate::common::SpaceStatus::Finished)
+                Some(crate::common::SpaceStatus::Ongoing | crate::common::SpaceStatus::Finished)
             ) {
                 if has_completed_prerequisite_actions(cli, &space, &user).await? {
                     SpaceUserRole::Participant
