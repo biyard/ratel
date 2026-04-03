@@ -4,9 +4,12 @@ use crate::common::SpaceUserRole;
 use crate::common::types::Partition;
 use crate::common::types::SpacePartition;
 
+#[mcp_tool(name = "uninstall_space_app", description = "Uninstall an app from a space. Requires creator role.")]
 #[delete("/api/spaces/{space_id}/apps", role: SpaceUserRole)]
 pub async fn uninstall_space_app(
+    #[mcp(description = "Space partition key")]
     space_id: SpacePartition,
+    #[mcp(description = "App type: 'General', 'File', 'Analyzes', or 'Panels'")]
     app_type: SpaceAppType,
 ) -> Result<SpaceApp> {
     SpaceApp::can_delete(role)?;

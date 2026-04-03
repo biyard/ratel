@@ -5,8 +5,12 @@ use crate::features::posts::models::Post;
 use crate::features::posts::types::{BoosterType, SpaceType};
 use crate::spaces::{InvitationStatus, SpaceInvitationMember};
 
+#[mcp_tool(name = "get_space", description = "Get space details by ID, including status, visibility, participation info.")]
 #[get("/api/spaces/{space_id}", user: OptionalUser)]
-pub async fn get_space(space_id: SpacePartition) -> Result<SpaceResponse> {
+pub async fn get_space(
+    #[mcp(description = "Space partition key (e.g. 'SPACE#<uuid>' or '<uuid>')")]
+    space_id: SpacePartition,
+) -> Result<SpaceResponse> {
     let config = crate::features::spaces::space_common::config::get();
     let dynamo = config.common.dynamodb();
 

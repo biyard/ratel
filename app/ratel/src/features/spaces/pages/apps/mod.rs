@@ -1,6 +1,6 @@
 pub mod apps;
 mod context;
-mod controllers;
+pub(crate) mod controllers;
 mod hooks;
 mod layout;
 mod menu;
