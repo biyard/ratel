@@ -14,6 +14,14 @@ if [ "${RESET_DB}" = "true" ]; then
   echo 'Deleting ratel-local-main table if exists...'
   aws --endpoint-url=$ENDPOINT dynamodb delete-table --table-name ratel-local-main 2>/dev/null && \
     aws --endpoint-url=$ENDPOINT dynamodb wait table-not-exists --table-name ratel-local-main 2>/dev/null || true
+
+  # Clean up stale internal Kinesis stream used by DynamoDB Streams.
+  # LocalStack persists this stream independently; if it survives a table
+  # delete/recreate cycle the new table's stream linkage silently breaks.
+  echo 'Cleaning up stale DynamoDB Streams Kinesis backend...'
+  aws --endpoint-url=$ENDPOINT kinesis delete-stream \
+    --stream-name __ddb_stream_ratel-local-main 2>/dev/null || true
+  sleep 1
 fi
 
 echo 'Creating ratel-local table with GSIs and DynamoDB Streams...'

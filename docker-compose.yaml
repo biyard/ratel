@@ -109,11 +109,12 @@ services:
       PERSISTENCE: ${LOCALSTACK_PERSISTENCE:-1}
       LOCALSTACK_ACKNOWLEDGE_ACCOUNT_REQUIREMENT: ${LOCALSTACK_ACKNOWLEDGE_ACCOUNT_REQUIREMENT:-1}
       SERVICES: dynamodb,s3,sqs,dynamodbstreams,lambda
-      DYNAMODB_SHARE_DB: 1
+      DYNAMODB_SHARE_DB: 0
       SQS_ENDPOINT_STRATEGY: "off"
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-test}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-test}
       AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_DEFAULT_REGION: ${AWS_REGION:-us-east-1}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
       interval: 10s
@@ -137,6 +138,7 @@ services:
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-test}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-test}
       AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_DEFAULT_REGION: ${AWS_REGION:-us-east-1}
       LOCALSTACK_ENDPOINT: http://localstack:4566
       RESET_DB: ${RESET_DB:-true}
     volumes:
@@ -162,6 +164,7 @@ services:
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-test}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-test}
       AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_DEFAULT_REGION: ${AWS_REGION:-us-east-1}
     depends_on:
       - localstack-init
     profiles:
