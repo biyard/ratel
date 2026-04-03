@@ -53,40 +53,5 @@ pub fn FileCard(file: File, editable: bool, on_delete: Option<EventHandler<Strin
 }
 
 fn file_extension_icon(ext: &FileExtension) -> Element {
-    match ext {
-        FileExtension::JPG => rsx! {
-            icons::files::Jpg { width: "36", height: "36" }
-        },
-        FileExtension::PNG => rsx! {
-            icons::files::Png { width: "36", height: "36" }
-        },
-        FileExtension::PDF => rsx! {
-            icons::files::Pdf { width: "36", height: "36" }
-        },
-        FileExtension::ZIP => rsx! {
-            icons::files::Zip { width: "36", height: "36" }
-        },
-        FileExtension::WORD => rsx! {
-            icons::files::Docx { width: "36", height: "36" }
-        },
-        FileExtension::PPTX => rsx! {
-            icons::files::Pptx { width: "36", height: "36" }
-        },
-        FileExtension::EXCEL => rsx! {
-            icons::files::Xlsx { width: "36", height: "36" }
-        },
-        FileExtension::MP4 => rsx! {
-            icons::files::Mp4 { width: "36", height: "36" }
-        },
-        FileExtension::MOV => rsx! {
-            icons::files::Mov { width: "36", height: "36" }
-        },
-        FileExtension::MKV => rsx! {
-            icons::file::File {
-                width: "36",
-                height: "36",
-                class: "[&>path]:stroke-current text-card-meta",
-            }
-        },
-    }
+    rsx! { FileExtensionIcon { ext: ext.clone(), size: 36 } }
 }
