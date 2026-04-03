@@ -1,22 +1,22 @@
-use super::controllers::{
-    change_password_handler, get_mcp_secret_handler, get_user_detail_handler,
-    regenerate_mcp_secret_handler, update_profile_handler, ChangePasswordRequest,
-    UpdateProfileRequest,
-};
 use super::Result as AppResult;
+use super::controllers::{
+    ChangePasswordRequest, UpdateProfileRequest, change_password_handler, get_mcp_secret_handler,
+    get_user_detail_handler, regenerate_mcp_secret_handler, update_profile_handler,
+};
 use super::*;
 use crate::common::hooks::use_origin;
 #[cfg(not(feature = "server"))]
 use crate::common::{wasm_bindgen, wasm_bindgen_futures, web_sys};
 use crate::features::auth::hooks::use_user_context;
 use crate::features::membership::controllers::{
-    get_billing_info_handler, get_membership_handler, update_billing_card_handler,
-    UpdateBillingCardRequest,
+    UpdateBillingCardRequest, get_billing_info_handler, get_membership_handler,
+    update_billing_card_handler,
 };
 use crate::features::membership::models::CardInfo;
+use crate::features::social::pages::user_membership::components::format_membership_tier_label;
 use dioxus::prelude::*;
 #[cfg(not(feature = "server"))]
-use web_sys::js_sys::{Reflect, JSON};
+use web_sys::js_sys::{JSON, Reflect};
 
 translate! {
     UserSettingsTranslate;
@@ -55,6 +55,7 @@ translate! {
     expires: { en: "Expires", ko: "만료일" },
     unlimited: { en: "Unlimited", ko: "무제한" },
     change_plan: { en: "Change Plan", ko: "플랜 변경" },
+    enterprise: { en: "Enterprise", ko: "엔터프라이즈" },
     card: { en: "Card", ko: "카드" },
     card_holder: { en: "Card Holder", ko: "카드 소유자" },
     change_card: { en: "Change Card", ko: "카드 변경" },
@@ -378,6 +379,7 @@ fn PasswordCard() -> Element {
 
 #[component]
 fn SubscriptionCard() -> Element {
+    let tr: UserSettingsTranslate = use_translate();
     let membership = use_server_future(move || async move { get_membership_handler().await })?;
     let mut billing_info =
         use_server_future(move || async move { get_billing_info_handler().await })?;
@@ -387,7 +389,7 @@ fn SubscriptionCard() -> Element {
 
     let (tier_label, remaining, total, expired_at, is_free) =
         if let Some(Ok(m)) = membership_data.as_ref() {
-            let tier = m.tier.0.replace("MEMBERSHIP#", "");
+            let tier = format_membership_tier_label(&m.tier.0, tr.enterprise);
             let free = tier.eq_ignore_ascii_case("free");
             (
                 tier,
