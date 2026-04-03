@@ -105,7 +105,7 @@ pub fn PollContent(
                             let keys = space_page_actions_poll_key(&space_id(), &poll_id());
                             query.invalidate(&keys);
                             toast.info(tr.submit_success);
-                            nav.push(format!("/spaces/{}/actions", space_id()));
+                            nav.replace(format!("/spaces/{}/actions", space_id()));
                         }
                         Err(err) => {
                             toast.error(err);
