@@ -135,13 +135,23 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: FeedPartition) -> E
                                         style: ButtonStyle::Text,
                                         class: "flex items-center py-2 px-4 w-full text-sm text-red-400 cursor-pointer hover:bg-hover"
                                             .to_string(),
-                                        onclick: move |_| {
-                                            let nav = nav.clone();
-                                            let pk = post_pk_for_delete.clone();
-                                            spawn(async move {
-                                                let _ = delete_post_handler(pk, Some(false)).await;
-                                                nav.go_back();
-                                            });
+                                        onclick: {
+                                            let author_type = post.author_type.clone();
+                                            let author_username = post.author_username.clone();
+                                            move |_| {
+                                                let nav = nav.clone();
+                                                let pk = post_pk_for_delete.clone();
+                                                let author_type = author_type.clone();
+                                                let author_username = author_username.clone();
+                                                spawn(async move {
+                                                    let _ = delete_post_handler(pk, Some(false)).await;
+                                                    if author_type == crate::features::auth::UserType::Team {
+                                                        nav.push(format!("/{}/home", author_username));
+                                                    } else {
+                                                        nav.push("/");
+                                                    }
+                                                });
+                                            }
                                         },
                                         span { class: "inline-flex items-center text-red-400",
                                             {t.delete}
