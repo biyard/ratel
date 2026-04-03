@@ -21,7 +21,7 @@ pub fn OverviewTab() -> Element {
     let discussion = ctx.discussion.read().clone();
     let is_space_active = matches!(
         space.status,
-        Some(crate::common::SpaceStatus::Started | crate::common::SpaceStatus::InProgress)
+        Some(crate::common::SpaceStatus::Ongoing | crate::common::SpaceStatus::Open)
     );
     let can_participate =
         is_space_active && discussion.post.status() == DiscussionStatus::InProgress;
@@ -167,11 +167,13 @@ pub fn OverviewTab() -> Element {
             // Category input
             {
                 let categories_res = use_server_future(move || list_categories(space_id()))?;
-                let available_categories = categories_res.read().as_ref()
+                let available_categories = categories_res
+
+                    .read()
+                    .as_ref()
                     .and_then(|r| r.as_ref().ok())
                     .cloned()
                     .unwrap_or_default();
-
                 rsx! {
                     div { class: "flex flex-col gap-2 w-full",
                         span { class: "font-bold text-[15px]/[18px] tracking-[-0.16px] text-text-primary",
@@ -195,7 +197,7 @@ pub fn OverviewTab() -> Element {
             }
 
             // Rich text editor for content
-            div { class: "flex overflow-hidden flex-col px-3 pt-3 pb-1 w-full min-h-[280px] border rounded-[8px] border-c-wg-30 bg-background",
+            div { class: "flex overflow-hidden flex-col px-3 pt-3 pb-1 w-full border min-h-[280px] rounded-[8px] border-c-wg-30 bg-background",
                 div { class: "flex flex-col gap-3 w-full h-full",
                     crate::common::components::TiptapEditor {
                         class: "flex-1 w-full h-full min-h-0 [&>div]:flex [&>div]:h-full [&>div]:min-h-0 [&>div]:flex-1 [&>div]:overflow-hidden [&>div]:bg-transparent [&>div]:border-0 [&_[data-tiptap-toolbar]]:border-b [&_[data-tiptap-toolbar]]:border-c-wg-30 [&_[data-tiptap-toolbar]]:bg-transparent [&_[contenteditable='true']]:h-full [&_[contenteditable='true']]:min-h-[96px] [&_[contenteditable='true']]:overflow-y-auto [&_[contenteditable='true']]:bg-transparent [&_[contenteditable='true']]:px-0 [&_[contenteditable='true']]:text-[15px] [&_[contenteditable='true']]:leading-[22px] [&_[contenteditable='true']]:font-medium [&_[contenteditable='true']]:text-text-primary [&_[contenteditable='true']]:outline-none [&_[contenteditable='true']]:placeholder:text-text-tertiary",

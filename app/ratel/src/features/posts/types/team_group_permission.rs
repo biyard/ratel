@@ -49,8 +49,6 @@ impl TeamGroupPermissions {
             TeamGroupPermission::TeamAdmin,
             TeamGroupPermission::TeamEdit,
             TeamGroupPermission::GroupEdit,
-            TeamGroupPermission::ManagePromotions,
-            TeamGroupPermission::ManageNews,
         ])
     }
 

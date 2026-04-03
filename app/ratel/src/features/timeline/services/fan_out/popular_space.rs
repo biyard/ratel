@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
-use crate::features::timeline::*;
 use crate::features::timeline::models::TimelineReason;
+use crate::features::timeline::*;
 
 use super::common::{collect_follower_pks, collect_followers_with_reason, write_timeline_entries};
 
@@ -11,7 +11,7 @@ use super::common::{collect_follower_pks, collect_followers_with_reason, write_t
 /// Delivers the space's associated post to followers of the space author and their
 /// 2nd-degree network who don't already have the entry.
 pub async fn fan_out_popular_space(space: crate::common::models::space::SpaceCommon) -> Result<()> {
-    if !is_popular_space(space.participants) {
+    if !is_popular_space(space.participants) || !space.is_public() || !space.is_published() {
         return Ok(());
     }
 

@@ -1,5 +1,8 @@
 use crate::common::{
-    icons::{edit::{Eye, EyeOff}, home::Home1},
+    icons::{
+        edit::{Eye, EyeOff},
+        home::Home1,
+    },
     models::space::SpaceCommon,
 };
 
@@ -38,8 +41,8 @@ pub fn SpaceTop(
     let is_creator = real_role == SpaceUserRole::Creator;
     let can_preview = current_role == SpaceUserRole::Creator;
     let is_published = ctx.space().publish_state == SpacePublishState::Published;
-    let is_in_progress = ctx.space().status == Some(SpaceStatus::InProgress);
-    let is_started = ctx.space().status == Some(SpaceStatus::Started);
+    let is_in_progress = ctx.space().status == Some(SpaceStatus::Open);
+    let is_started = ctx.space().status == Some(SpaceStatus::Ongoing);
     let space_id = ctx.space().id;
     let space_logo = {
         let logo = ctx.space().logo.clone();
@@ -134,9 +137,7 @@ pub fn SpaceTop(
                             onclick: move |_| {
                                 let space_id = space_id.clone();
                                 popup.open(rsx! {
-                                    SpaceStartModal {
-                                        space_id,
-                                    }
+                                    SpaceStartModal { space_id }
                                 });
                             },
                             {tr.start}
@@ -148,9 +149,7 @@ pub fn SpaceTop(
                             onclick: move |_| {
                                 let space_id = space_id.clone();
                                 popup.open(rsx! {
-                                    SpaceEndModal {
-                                        space_id,
-                                    }
+                                    SpaceEndModal { space_id }
                                 });
                             },
                             {tr.finish}

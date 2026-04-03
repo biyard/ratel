@@ -64,7 +64,11 @@ pub struct Post {
 
     pub urls: Vec<String>,
 
-    #[serde(default, deserialize_with = "deserialize_categories", alias = "category")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_categories",
+        alias = "category"
+    )]
     pub categories: Vec<String>,
 }
 
@@ -400,5 +404,13 @@ impl Post {
                 Error::InternalServerError("Failed to unlike comment".into())
             })?;
         Ok(())
+    }
+
+    pub fn is_published(&self) -> bool {
+        self.status == PostStatus::Published
+    }
+
+    pub fn is_public(&self) -> bool {
+        self.visibility == Some(Visibility::Public)
     }
 }
