@@ -164,9 +164,7 @@ pub async fn delete_space_action(space_id: SpacePartition, action_id: String) ->
                 bookmark = next_bookmark;
             }
 
-            crate::transact_write_items!(cli, txs).map_err(|e| {
-                Error::InternalServerError(format!("Failed to delete follow action: {e}"))
-            })?;
+            crate::transact_write_all_items!(cli, txs);
         }
     }
 
