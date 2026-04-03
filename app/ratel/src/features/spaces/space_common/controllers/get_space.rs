@@ -64,6 +64,15 @@ pub async fn get_space(space_id: SpacePartition) -> Result<SpaceResponse> {
             (false, None, None, None)
         };
 
+    // Check if any action has prerequisite flag
+    let has_prerequisite = {
+        use crate::features::spaces::pages::actions::models::SpaceAction;
+        let opt = SpaceAction::opt_all();
+        let (actions, _) = SpaceAction::find_by_space(dynamo, space_pk_partition.clone(), opt).await
+            .unwrap_or_default();
+        actions.iter().any(|a| a.prerequisite)
+    };
+
     Ok(SpaceResponse {
         id: space.pk.clone().into(),
         post_id: post_pk.into(),
@@ -107,6 +116,7 @@ pub async fn get_space(space_id: SpacePartition) -> Result<SpaceResponse> {
         quota: space.quota,
         is_report: false,
         logo: space.logo,
+        has_prerequisite,
     })
 }
 
@@ -152,6 +162,8 @@ pub struct SpaceResponse {
     pub is_report: bool,
     #[serde(default)]
     pub logo: String,
+    #[serde(default)]
+    pub has_prerequisite: bool,
 }
 
 impl SpaceResponse {
