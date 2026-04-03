@@ -1,6 +1,6 @@
+use crate::features::auth::User;
 use crate::features::posts::models::*;
 use crate::features::posts::*;
-use crate::features::auth::User;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
@@ -18,18 +18,6 @@ pub async fn like_post_handler(post_id: FeedPartition, like: bool) -> Result<Lik
 
     if like {
         Post::like(cli, post_pk.clone(), user.pk).await?;
-
-        #[cfg(feature = "local-dev")]
-        {
-            // Check if the post just became popular and trigger broader fan-out
-            if let Some(post) = Post::get(cli, &post_pk, Some(EntityType::Post)).await? {
-                let _ = crate::features::timeline::services::fan_out_popular_post(post)
-                    .await
-                    .map_err(|e| {
-                        tracing::error!("popular post fan-out failed: {}", e);
-                    });
-            }
-        }
 
         Ok(LikePostResponse { like: true })
     } else {

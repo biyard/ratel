@@ -1,0 +1,33 @@
+{
+  "ratel-local-main": [
+    {
+      "PutRequest": {
+        "Item": {
+          "pk": { "S": "USER#10000000-0000-0000-0000-000000000001" },
+          "sk": { "S": "USER" },
+          "created_at": { "N": "1764227900000" },
+          "updated_at": { "N": "1764227900000" },
+          "display_name": { "S": "Admin User" },
+          "email": { "S": "admin@ratel.foundation" },
+          "profile_url": { "S": "https://metadata.ratel.foundation/ratel/default-profile.png" },
+          "username": { "S": "admin" },
+          "term_agreed": { "BOOL": true },
+          "informed_agreed": { "BOOL": true },
+          "user_type": { "N": "98" },
+          "password": { "S": "d590005c41712ddad6630ca03348fad16ce2fbfb611725116c14631ff02268d8" },
+          "theme": { "N": "3" },
+          "points": { "N": "0" },
+          "followers_count": { "N": "0" },
+          "followings_count": { "N": "0" },
+          "description": { "S": "" },
+          "gsi1_pk": { "S": "EMAIL#PASSWORD#admin@ratel.foundation" },
+          "gsi1_sk": { "S": "d590005c41712ddad6630ca03348fad16ce2fbfb611725116c14631ff02268d8" },
+          "gsi2_pk": { "S": "USERNAME#admin" },
+          "gsi2_sk": { "S": "TS#1764227900000" },
+          "gsi3_pk": { "S": "EMAIL#admin@ratel.foundation" },
+          "gsi3_sk": { "S": "TS#1764227900000" }
+        }
+      }
+    }
+  ]
+}

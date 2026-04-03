@@ -255,8 +255,8 @@ fn is_visible_for_role(role: &SpaceUserRole, started_at: Option<i64>, now: i64) 
 
 fn is_visible_for_space_status(status: Option<SpaceStatus>, prerequisite: bool) -> bool {
     match status {
-        Some(SpaceStatus::Started) | Some(SpaceStatus::Finished) => true,
-        Some(SpaceStatus::InProgress) => prerequisite,
+        Some(SpaceStatus::Ongoing) | Some(SpaceStatus::Finished) => true,
+        Some(SpaceStatus::Open) => prerequisite,
         _ => false,
     }
 }
@@ -271,7 +271,7 @@ fn should_only_show_prerequisite_actions(
     }
 
     match status {
-        Some(SpaceStatus::Started) | Some(SpaceStatus::Finished) => join_anytime,
+        Some(SpaceStatus::Ongoing) | Some(SpaceStatus::Finished) => join_anytime,
         _ => true,
     }
 }

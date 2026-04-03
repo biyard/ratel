@@ -1,0 +1,56 @@
+{
+  "ratel-local-main": [
+    {
+      "PutRequest": {
+        "Item": {
+          "pk": { "S": "ATTRIBUTE_CODE#wKFegq" },
+          "sk": { "S": "ATTRIBUTE_CODE" },
+          "created_at": { "N": "1764227900000" },
+          "university": { "S": "Konkuk" },
+          "gender": { "S": "female" },
+          "gsi1_pk": { "S": "AC#ATTRIBUTE_CODE" },
+          "gsi1_sk": { "S": "AC#1764227900000" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "pk": { "S": "ATTRIBUTE_CODE#bVn0Vq" },
+          "sk": { "S": "ATTRIBUTE_CODE" },
+          "created_at": { "N": "1764227901000" },
+          "university": { "S": "Konkuk" },
+          "gender": { "S": "male" },
+          "gsi1_pk": { "S": "AC#ATTRIBUTE_CODE" },
+          "gsi1_sk": { "S": "AC#1764227901000" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "pk": { "S": "ATTRIBUTE_CODE#bIFviB" },
+          "sk": { "S": "ATTRIBUTE_CODE" },
+          "created_at": { "N": "1764227902000" },
+          "university": { "S": "Sogang" },
+          "gender": { "S": "female" },
+          "gsi1_pk": { "S": "AC#ATTRIBUTE_CODE" },
+          "gsi1_sk": { "S": "AC#1764227902000" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "pk": { "S": "ATTRIBUTE_CODE#j94EA1" },
+          "sk": { "S": "ATTRIBUTE_CODE" },
+          "created_at": { "N": "1764227903000" },
+          "university": { "S": "Sogang" },
+          "gender": { "S": "male" },
+          "gsi1_pk": { "S": "AC#ATTRIBUTE_CODE" },
+          "gsi1_sk": { "S": "AC#1764227903000" }
+        }
+      }
+    }
+  ]
+}

@@ -16,10 +16,10 @@ use rmcp::{
 use tokio::sync::RwLock;
 
 use crate::common::config::ServerConfig;
-use crate::common::models::McpClientSecret;
 use crate::common::models::auth::OptionalUser;
-use crate::common::models::User;
 use crate::common::models::space::{SpaceAdmin, SpaceAuthor, SpaceCommon, SpaceParticipant};
+use crate::common::models::McpClientSecret;
+use crate::common::models::User;
 use crate::common::types::FeedPartition;
 use crate::common::types::TeamPartition;
 use crate::common::types::{
@@ -223,9 +223,7 @@ pub struct DeleteDiscussionMcpRequest {
 pub struct SpaceAppMcpRequest {
     #[schemars(description = "Space partition key")]
     pub space_id: SpacePartition,
-    #[schemars(
-        description = "App type: 'General', 'File', 'Analyzes', or 'Panels'"
-    )]
+    #[schemars(description = "App type: 'General', 'File', 'Analyzes', or 'Panels'")]
     pub app_type: String,
 }
 
@@ -250,7 +248,10 @@ impl RatelMcpServer {
             .into_mcp()
     }
 
-    #[rmcp::tool(name = "get_me", description = "Get current user info and membership details.")]
+    #[rmcp::tool(
+        name = "get_me",
+        description = "Get current user info and membership details."
+    )]
     async fn get_me(&self) -> McpResult {
         let user = OptionalUser(Some(self.user.clone()));
         get_me_handler_mcp_impl(user).await.into_mcp()
@@ -282,7 +283,10 @@ impl RatelMcpServer {
             .map(|v| {
                 v.parse().map_err(|_| {
                     ErrorData::invalid_params(
-                        format!("Invalid visibility value: '{}'. Expected 'Public' or 'Private'.", v),
+                        format!(
+                            "Invalid visibility value: '{}'. Expected 'Public' or 'Private'.",
+                            v
+                        ),
                         None,
                     )
                 })
@@ -315,7 +319,10 @@ impl RatelMcpServer {
             .into_mcp()
     }
 
-    #[rmcp::tool(name = "create_space", description = "Create a space on an existing post.")]
+    #[rmcp::tool(
+        name = "create_space",
+        description = "Create a space on an existing post."
+    )]
     async fn create_space(&self, Parameters(req): Parameters<CreateSpaceMcpRequest>) -> McpResult {
         create_space_handler_mcp_impl(
             self.user.clone(),
@@ -341,10 +348,7 @@ impl RatelMcpServer {
         name = "update_space",
         description = "Update a space (publish, change visibility, content, title, start, finish, quota, etc.). Requires creator role."
     )]
-    async fn update_space(
-        &self,
-        Parameters(req): Parameters<UpdateSpaceMcpRequest>,
-    ) -> McpResult {
+    async fn update_space(&self, Parameters(req): Parameters<UpdateSpaceMcpRequest>) -> McpResult {
         update_space_impl(&self.user, req.space_id, req.update)
             .await
             .into_mcp()
@@ -354,10 +358,7 @@ impl RatelMcpServer {
         name = "delete_space",
         description = "Delete a space and unlink its post. Requires creator role."
     )]
-    async fn delete_space(
-        &self,
-        Parameters(req): Parameters<DeleteSpaceMcpRequest>,
-    ) -> McpResult {
+    async fn delete_space(&self, Parameters(req): Parameters<DeleteSpaceMcpRequest>) -> McpResult {
         delete_space_impl(&self.user, req.space_id).await.into_mcp()
     }
 
@@ -367,10 +368,7 @@ impl RatelMcpServer {
         name = "create_poll",
         description = "Create a new poll action in a space. Requires creator role."
     )]
-    async fn create_poll(
-        &self,
-        Parameters(req): Parameters<SpaceActionMcpRequest>,
-    ) -> McpResult {
+    async fn create_poll(&self, Parameters(req): Parameters<SpaceActionMcpRequest>) -> McpResult {
         create_poll_impl(&self.user, req.space_id).await.into_mcp()
     }
 
@@ -378,10 +376,7 @@ impl RatelMcpServer {
         name = "update_poll",
         description = "Update a poll (title, time range, questions, response_editable). Requires creator role."
     )]
-    async fn update_poll(
-        &self,
-        Parameters(req): Parameters<UpdatePollMcpRequest>,
-    ) -> McpResult {
+    async fn update_poll(&self, Parameters(req): Parameters<UpdatePollMcpRequest>) -> McpResult {
         update_poll_impl(&self.user, req.space_id, req.poll_id, req.update)
             .await
             .into_mcp()
@@ -391,10 +386,7 @@ impl RatelMcpServer {
         name = "delete_poll",
         description = "Delete a poll from a space. Requires creator role."
     )]
-    async fn delete_poll(
-        &self,
-        Parameters(req): Parameters<DeletePollMcpRequest>,
-    ) -> McpResult {
+    async fn delete_poll(&self, Parameters(req): Parameters<DeletePollMcpRequest>) -> McpResult {
         delete_poll_impl(&self.user, req.space_id, req.poll_id)
             .await
             .into_mcp()
@@ -406,10 +398,7 @@ impl RatelMcpServer {
         name = "create_quiz",
         description = "Create a new quiz action in a space. Requires creator role."
     )]
-    async fn create_quiz(
-        &self,
-        Parameters(req): Parameters<SpaceActionMcpRequest>,
-    ) -> McpResult {
+    async fn create_quiz(&self, Parameters(req): Parameters<SpaceActionMcpRequest>) -> McpResult {
         create_quiz_impl(&self.user, req.space_id).await.into_mcp()
     }
 
@@ -417,10 +406,7 @@ impl RatelMcpServer {
         name = "update_quiz",
         description = "Update a quiz (title, description, time, questions, answers, pass_score, retry_count, files). Requires creator role."
     )]
-    async fn update_quiz(
-        &self,
-        Parameters(req): Parameters<UpdateQuizMcpRequest>,
-    ) -> McpResult {
+    async fn update_quiz(&self, Parameters(req): Parameters<UpdateQuizMcpRequest>) -> McpResult {
         update_quiz_impl(&self.user, req.space_id, req.quiz_id, req.update)
             .await
             .into_mcp()
@@ -473,10 +459,7 @@ impl RatelMcpServer {
         name = "create_follow",
         description = "Create a follow action in a space. Requires creator role."
     )]
-    async fn create_follow(
-        &self,
-        Parameters(req): Parameters<SpaceActionMcpRequest>,
-    ) -> McpResult {
+    async fn create_follow(&self, Parameters(req): Parameters<SpaceActionMcpRequest>) -> McpResult {
         create_follow_impl(&self.user, req.space_id)
             .await
             .into_mcp()
@@ -629,8 +612,7 @@ async fn get_space_impl(
 
     let (participant_pk, participant_sk) =
         SpaceParticipant::keys(space.pk.clone(), user.pk.clone());
-    let participant =
-        SpaceParticipant::get(cli, &participant_pk, Some(&participant_sk)).await?;
+    let participant = SpaceParticipant::get(cli, &participant_pk, Some(&participant_sk)).await?;
     let is_participation_open = space.is_participation_open();
     let can_participate = participant.is_none() && is_participation_open;
 
@@ -710,7 +692,7 @@ async fn update_space_impl(
             }
             su = su
                 .with_publish_state(crate::common::SpacePublishState::Published)
-                .with_status(crate::common::SpaceStatus::InProgress)
+                .with_status(crate::common::SpaceStatus::Open)
                 .with_visibility(visibility.clone());
             let post_updater = Post::updater(post_pk, EntityType::Post)
                 .with_updated_at(now)
@@ -743,17 +725,17 @@ async fn update_space_impl(
             pu = Some(post_updater);
         }
         UpdateSpaceRequest::Start { start } => {
-            if updated_space.status != Some(crate::common::SpaceStatus::InProgress) {
+            if updated_space.status != Some(crate::common::SpaceStatus::Open) {
                 return Err(crate::common::McpServerError::StartNotAvailable.into());
             }
             if !start {
                 return Err(crate::common::McpServerError::CannotUndoStart.into());
             }
-            su = su.with_status(crate::common::SpaceStatus::Started);
-            updated_space.status = Some(crate::common::SpaceStatus::Started);
+            su = su.with_status(crate::common::SpaceStatus::Ongoing);
+            updated_space.status = Some(crate::common::SpaceStatus::Ongoing);
         }
         UpdateSpaceRequest::Finish { finished } => {
-            if updated_space.status != Some(crate::common::SpaceStatus::Started) {
+            if updated_space.status != Some(crate::common::SpaceStatus::Ongoing) {
                 return Err(crate::common::McpServerError::FinishNotAvailable.into());
             }
             if !finished {
@@ -1052,8 +1034,7 @@ async fn update_quiz_impl(
     let mut updater = SpaceQuiz::updater(&space_pk, &quiz_sk).with_updated_at(now);
     let action_pk = CompositePartition(space_id, quiz_sk_type.to_string());
     let action_sk = EntityType::SpaceAction;
-    let mut action_updater =
-        SpaceAction::updater(&action_pk, &action_sk).with_updated_at(now);
+    let mut action_updater = SpaceAction::updater(&action_pk, &action_sk).with_updated_at(now);
     let mut should_update_action = false;
 
     if let Some(title) = req.title {
@@ -1148,9 +1129,8 @@ async fn create_discussion_impl(
         post.create_transact_write_item(),
         space_action.create_transact_write_item(),
     ];
-    crate::transact_write_items!(cli, items).map_err(|e| {
-        crate::common::Error::Unknown(format!("Failed to create discussion: {e}"))
-    })?;
+    crate::transact_write_items!(cli, items)
+        .map_err(|e| crate::common::Error::Unknown(format!("Failed to create discussion: {e}")))?;
 
     Ok(serde_json::json!({
         "pk": post.pk.to_string(),
@@ -1350,8 +1330,14 @@ async fn uninstall_space_app_impl(
 
     cli.delete_item()
         .table_name(table)
-        .key("pk", aws_sdk_dynamodb::types::AttributeValue::S(space_pk_partition.to_string()))
-        .key("sk", aws_sdk_dynamodb::types::AttributeValue::S(sk.to_string()))
+        .key(
+            "pk",
+            aws_sdk_dynamodb::types::AttributeValue::S(space_pk_partition.to_string()),
+        )
+        .key(
+            "sk",
+            aws_sdk_dynamodb::types::AttributeValue::S(sk.to_string()),
+        )
         .send()
         .await
         .map_err(|e| crate::common::Error::Unknown(format!("Failed to uninstall app: {e}")))?;
@@ -1425,7 +1411,11 @@ async fn list_teams_impl(user: &User) -> crate::common::Result<Vec<McpTeamItem>>
             username: ut.username,
             profile_url: ut.profile_url,
             description,
-            permissions: perms.0.into_iter().map(|p| permission_name(p).to_string()).collect(),
+            permissions: perms
+                .0
+                .into_iter()
+                .map(|p| permission_name(p).to_string())
+                .collect(),
         });
     }
 

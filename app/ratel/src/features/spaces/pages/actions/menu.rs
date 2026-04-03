@@ -8,13 +8,15 @@ pub fn get_nav_item(
     // Creator always sees the actions tab
     if role != SpaceUserRole::Creator {
         match space.status {
-            Some(SpaceStatus::InProgress) => {
+            Some(SpaceStatus::Open) => {
                 // During InProgress, non-creators only see tab if prerequisite actions exist
                 if !space.has_prerequisite {
                     return None;
                 }
             }
-            Some(SpaceStatus::Started) | Some(SpaceStatus::Finished) => {
+            Some(SpaceStatus::Ongoing)
+            | Some(SpaceStatus::Processing)
+            | Some(SpaceStatus::Finished) => {
                 // Always show for Started/Finished
             }
             _ => {

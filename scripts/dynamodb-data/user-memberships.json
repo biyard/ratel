@@ -1,0 +1,44 @@
+{
+  "ratel-local-main": [
+    {
+      "PutRequest": {
+        "Item": {
+          "pk": { "S": "USER#00000000-0000-0000-0000-000000000001" },
+          "sk": { "S": "USER_MEMBERSHIP" },
+          "created_at": { "N": "1764227900000" },
+          "updated_at": { "N": "1764227900000" },
+          "expired_at": { "N": "1766819900000" },
+          "membership_pk": { "S": "MEMBERSHIP#PRO" },
+          "status": { "S": "Active" },
+          "total_credits": { "N": "100" },
+          "remaining_credits": { "N": "100" },
+          "auto_renew": { "BOOL": true },
+          "gsi1_pk": { "S": "UM#MEMBERSHIP#PRO" },
+          "gsi1_sk": { "S": "TS#1764227900000" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "pk": { "S": "USER#00000000-0000-0000-0000-000000000021" },
+          "sk": { "S": "USER_MEMBERSHIP" },
+          "created_at": { "N": "1764227900000" },
+          "updated_at": { "N": "1764227900000" },
+          "expired_at": { "N": "1766819900000" },
+          "membership_pk": { "S": "MEMBERSHIP#PRO" },
+          "status": { "S": "Active" },
+          "total_credits": { "N": "40" },
+          "remaining_credits": { "N": "40" },
+          "auto_renew": { "BOOL": true },
+          "gsi1_pk": { "S": "UM#MEMBERSHIP#PRO" },
+          "gsi1_sk": { "S": "TS#1764227900000" },
+          "gsi2_pk": { "S": "USER#00000000-0000-0000-0000-000000000021" },
+          "gsi2_sk": { "S": "TS#1764227900000" },
+          "gsi3_pk": { "S": "USER_MEMBERSHIP#00000000-0000-0000-0000-000000000021" },
+          "gsi3_sk": { "S": "TS#1764227900000" }
+        }
+      }
+    }
+  ]
+}
