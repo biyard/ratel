@@ -320,7 +320,5 @@ pub fn ActionSettingsModal(
 }
 
 fn date_time_to_millis(date: time::Date, hour: u8, minute: u8) -> i64 {
-    let datetime = date.with_hms(hour, minute, 0).expect("valid time");
-    let offset_datetime = datetime.assume_utc();
-    offset_datetime.unix_timestamp() * 1000
+    crate::common::utils::time::kst_date_time_to_utc_millis(date, hour, minute)
 }
