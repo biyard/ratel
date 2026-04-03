@@ -4,6 +4,8 @@ pub mod config;
 pub mod controllers;
 pub mod models;
 pub mod services;
+#[cfg(feature = "server")]
+pub mod server;
 
 #[cfg(not(feature = "server"))]
 pub mod interop;

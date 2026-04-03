@@ -5,7 +5,10 @@ use super::*;
 
 use crate::common::models::space::SpaceCommon;
 #[cfg(feature = "server")]
-use crate::features::membership::models::{Membership, TeamMembership, UserMembership};
+use crate::features::membership::models::{
+    Membership, TeamMembership, UserMembership, ensure_team_membership_monthly_refill,
+    ensure_user_membership_monthly_refill,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -160,6 +163,7 @@ async fn set_credits(
                     Error::InternalServerError(format!("Failed to get team membership: {e:?}"))
                 })?
                 .ok_or(SpaceRewardError::CreditsExceedBalance)?;
+        team_membership = ensure_team_membership_monthly_refill(cli, team_membership).await?;
 
         let membership_pk: Partition = team_membership.membership_pk.clone().into();
         let membership = Membership::get(cli, membership_pk, Some(EntityType::Membership))
@@ -184,6 +188,7 @@ async fn set_credits(
                     Error::InternalServerError(format!("Failed to get user membership: {e:?}"))
                 })?
                 .ok_or(SpaceRewardError::CreditsExceedBalance)?;
+        user_membership = ensure_user_membership_monthly_refill(cli, user_membership).await?;
 
         let membership_pk: Partition = user_membership.membership_pk.clone().into();
         let membership = Membership::get(cli, membership_pk, Some(EntityType::Membership))
@@ -253,6 +258,9 @@ async fn remove_credits(
                 .map_err(|e| {
                     Error::InternalServerError(format!("Failed to get team membership: {e:?}"))
                 })? {
+                    let team_membership =
+                        ensure_team_membership_monthly_refill(cli, team_membership.clone())
+                            .await?;
                     items.push(
                         TeamMembership::updater(&team_membership.pk, &team_membership.sk)
                             .increase_remaining_credits(reward.credits)
@@ -264,9 +272,10 @@ async fn remove_credits(
                 UserMembership::get(cli, user.pk.clone(), Some(EntityType::UserMembership))
                     .await
                     .map_err(|e| {
-                        Error::InternalServerError(format!("Failed to get user membership: {e:?}"))
-                    })?
+                    Error::InternalServerError(format!("Failed to get user membership: {e:?}"))
+                })?
             {
+                let um = ensure_user_membership_monthly_refill(cli, um.clone()).await?;
                 items.push(
                     UserMembership::updater(&um.pk, &um.sk)
                         .increase_remaining_credits(reward.credits)

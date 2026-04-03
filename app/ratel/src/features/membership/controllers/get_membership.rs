@@ -1,6 +1,8 @@
 use super::*;
 use crate::features::auth::User;
 use crate::features::membership::controllers::normalize_error;
+#[cfg(feature = "server")]
+use crate::features::membership::models::ensure_user_membership_monthly_refill;
 use crate::features::membership::models::{
     Membership, MembershipTier, UserMembership, UserMembershipResponse,
 };
@@ -17,6 +19,8 @@ pub async fn get_membership_handler() -> Result<UserMembershipResponse> {
 
         let (user_membership, membership) = match user_membership {
             Some(user_membership) => {
+                let user_membership =
+                    ensure_user_membership_monthly_refill(cli, user_membership).await?;
                 let membership_pk: Partition = user_membership.membership_pk.clone().into();
                 let membership = Membership::get(cli, membership_pk, Some(EntityType::Membership))
                     .await?

@@ -1,11 +1,15 @@
 mod i18n;
 
+use crate::common::ListResponse;
 use crate::common::RewardCondition;
 use crate::common::RewardPeriod;
 use crate::common::RewardUserBehavior;
+use crate::common::hooks::use_infinite_query;
+use crate::common::utils::format::format_with_commas;
 use crate::features::admin::controllers::{
-    create_reward, list_rewards, update_reward, CreateGlobalRewardRequest, RewardResponse,
-    UpdateGlobalRewardRequest,
+    CreateGlobalRewardRequest, GrantEnterpriseMembershipRequest, MembershipGrantTargetType,
+    RewardResponse, UpdateGlobalRewardRequest, create_reward, grant_enterprise_membership,
+    list_enterprise_memberships, list_rewards, update_reward,
 };
 use crate::features::admin::models::reward_types::{
     ConditionType, RewardConditionExt, RewardPeriodExt, RewardUserBehaviorExt,
@@ -19,6 +23,13 @@ pub fn AdminMainPage() -> Element {
 
     let mut rewards_resource = use_server_future(move || async move { list_rewards().await })?;
     let rewards_state = rewards_resource.value();
+    let mut enterprise_memberships_query =
+        use_infinite_query::<
+            String,
+            crate::features::admin::controllers::EnterpriseMembershipGrantListItem,
+            ListResponse<crate::features::admin::controllers::EnterpriseMembershipGrantListItem>,
+            _,
+        >(move |bookmark| async move { list_enterprise_memberships(bookmark).await })?;
 
     let mut show_form = use_signal(|| false);
     let mut editing = use_signal(|| Option::<RewardResponse>::None);
@@ -29,6 +40,10 @@ pub fn AdminMainPage() -> Element {
     let mut form_period = use_signal(|| RewardPeriod::default());
     let mut form_condition_type = use_signal(|| ConditionType::default());
     let mut form_condition_value = use_signal(|| 0i64);
+    let mut grant_target_type = use_signal(MembershipGrantTargetType::default);
+    let mut grant_username = use_signal(String::new);
+    let mut grant_submitting = use_signal(|| false);
+    let mut grant_message = use_signal(|| Option::<(String, bool)>::None);
 
     let open_create_form = move |_| {
         editing.set(None);
@@ -99,6 +114,40 @@ pub fn AdminMainPage() -> Element {
         });
     };
 
+    let on_grant_enterprise = move |_| {
+        let username = grant_username.read().trim().to_string();
+        let target_type = grant_target_type();
+
+        if username.is_empty() {
+            grant_message.set(Some((tr.username_placeholder.to_string(), false)));
+            return;
+        }
+
+        grant_submitting.set(true);
+        grant_message.set(None);
+
+        spawn(async move {
+            let result = grant_enterprise_membership(GrantEnterpriseMembershipRequest {
+                username,
+                target_type,
+            })
+            .await;
+
+            grant_submitting.set(false);
+            match result {
+                Ok(_) => {
+                    grant_message.set(Some((tr.grant_success.to_string(), true)));
+                    grant_username.set(String::new());
+                    enterprise_memberships_query.restart();
+                }
+                Err(err) => {
+                    error!("Failed to grant enterprise membership: {:?}", err);
+                    grant_message.set(Some((format!("{}: {}", tr.grant_failed, err), false)));
+                }
+            }
+        });
+    };
+
     if rewards_state.read().is_none() {
         return rsx! {
             div { class: "py-8 px-4 mx-auto w-full max-w-desktop",
@@ -118,12 +167,17 @@ pub fn AdminMainPage() -> Element {
         }
         None => vec![],
     };
+    let enterprise_memberships = enterprise_memberships_query.items();
 
     let is_editing = editing.read().is_some();
     let show_form_val = *show_form.read();
     let is_submitting_val = *is_submitting.read();
     let current_condition_type = form_condition_type.read().clone();
     let show_condition_value = current_condition_type != ConditionType::None;
+    let grant_target_type_value = grant_target_type();
+    let grant_username_value = grant_username();
+    let grant_submitting_value = grant_submitting();
+    let grant_message_value = grant_message();
 
     rsx! {
         div { class: "py-6 px-4 mx-auto w-full max-w-desktop",
@@ -336,7 +390,9 @@ pub fn AdminMainPage() -> Element {
                                         rsx! {
                                             tr { class: "border-b transition-colors border-card-border hover:bg-card-border/10",
                                                 td { class: "py-3 px-4 text-text-primary", "{reward.reward_behavior.label()}" }
-                                                td { class: "py-3 px-4 text-text-primary", "{reward.point}" }
+                                                td { class: "py-3 px-4 text-text-primary",
+                                                    "{format_with_commas(reward.point)}"
+                                                }
                                                 td { class: "py-3 px-4 text-text-primary", "{reward.period.label()}" }
                                                 td { class: "py-3 px-4 text-text-primary", "{reward.condition.label()}" }
                                                 td { class: "py-3 px-4",
@@ -350,6 +406,131 @@ pub fn AdminMainPage() -> Element {
                                         }
                                     }
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+
+            div { class: "mt-6 rounded-lg border bg-bg border-card-border",
+                div { class: "py-3 px-4 border-b border-card-border",
+                    span { class: "text-sm font-medium text-text-primary", "{tr.enterprise_title}" }
+                }
+                div { class: "p-4",
+                    p { class: "mb-4 text-sm text-text-secondary", "{tr.enterprise_description}" }
+
+                    div { class: "grid grid-cols-1 gap-4 md:grid-cols-[180px_1fr_auto]",
+                        div {
+                            label { class: "block mb-1 text-sm font-medium text-text-secondary",
+                                "{tr.target_type}"
+                            }
+                            select {
+                                class: "py-2 px-3 w-full rounded-lg border bg-bg border-card-border text-text-primary",
+                                value: match grant_target_type_value {
+                                    MembershipGrantTargetType::User => "user",
+                                    MembershipGrantTargetType::Team => "team",
+                                },
+                                onchange: move |e| {
+                                    let value = e.value();
+                                    if value == "team" {
+                                        grant_target_type.set(MembershipGrantTargetType::Team);
+                                    } else {
+                                        grant_target_type.set(MembershipGrantTargetType::User);
+                                    }
+                                },
+                                option { value: "user", "{tr.target_user}" }
+                                option { value: "team", "{tr.target_team}" }
+                            }
+                        }
+
+                        div {
+                            label { class: "block mb-1 text-sm font-medium text-text-secondary",
+                                "{tr.username}"
+                            }
+                            Input {
+                                value: grant_username_value,
+                                placeholder: tr.username_placeholder,
+                                oninput: move |e: Event<FormData>| grant_username.set(e.value()),
+                            }
+                        }
+
+                        div { class: "flex items-end",
+                            Button {
+                                style: ButtonStyle::Primary,
+                                disabled: grant_submitting_value,
+                                onclick: on_grant_enterprise,
+                                "{tr.grant_enterprise}"
+                            }
+                        }
+                    }
+
+                    if let Some((message, ok)) = grant_message_value {
+                        p {
+                            class: if ok {
+                                "mt-4 text-sm text-primary"
+                            } else {
+                                "mt-4 text-sm text-destructive"
+                            },
+                            "{message}"
+                        }
+                    }
+
+                    div { class: "mt-6 pt-6 border-t border-card-border",
+                        h3 { class: "mb-3 text-sm font-medium text-text-primary",
+                            "{tr.enterprise_granted_list}"
+                        }
+
+                        if enterprise_memberships.is_empty() {
+                            if enterprise_memberships_query.is_loading() {
+                                p { class: "text-sm text-text-secondary", "{tr.loading}" }
+                            } else {
+                                p { class: "text-sm text-text-secondary",
+                                    "{tr.enterprise_granted_empty}"
+                                }
+                            }
+                        } else {
+                            div { class: "overflow-x-auto rounded-lg border border-card-border",
+                                table { class: "w-full text-sm",
+                                    thead {
+                                        tr { class: "border-b border-card-border bg-card-border/30",
+                                            th { class: "py-3 px-4 font-medium text-left text-text-secondary",
+                                                "{tr.target_type}"
+                                            }
+                                            th { class: "py-3 px-4 font-medium text-left text-text-secondary",
+                                                "{tr.username}"
+                                            }
+                                            th { class: "py-3 px-4 font-medium text-left text-text-secondary",
+                                                "{tr.granted_credits}"
+                                            }
+                                            th { class: "py-3 px-4 font-medium text-left text-text-secondary",
+                                                "{tr.max_credit}"
+                                            }
+                                        }
+                                    }
+                                    tbody {
+                                        for item in enterprise_memberships {
+                                            tr { key: "{item.username}", class: "border-b border-card-border last:border-b-0",
+                                                td { class: "py-3 px-4 text-text-primary",
+                                                    match item.target_type {
+                                                        MembershipGrantTargetType::User => tr.target_user.to_string(),
+                                                        MembershipGrantTargetType::Team => tr.target_team.to_string(),
+                                                    }
+                                                }
+                                                td { class: "py-3 px-4 text-text-primary", "{item.username}" }
+                                                td { class: "py-3 px-4 text-text-primary",
+                                                    "{format_with_commas(item.remaining_credits)}"
+                                                }
+                                                td { class: "py-3 px-4 text-text-primary",
+                                                    "{format_with_commas(item.max_credits_per_space)}"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            if enterprise_memberships_query.has_more() {
+                                {enterprise_memberships_query.more_element()}
                             }
                         }
                     }
