@@ -1,6 +1,7 @@
 use crate::features::spaces::pages::actions::actions::quiz::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct UpdateQuizRequest {
     #[serde(default)]
     pub title: Option<String>,
@@ -22,10 +23,14 @@ pub struct UpdateQuizRequest {
     pub files: Option<Vec<File>>,
 }
 
+#[mcp_tool(name = "update_quiz", description = "Update a quiz (title, description, time, questions, answers, pass_score, retry_count, files). Requires creator role.")]
 #[post("/api/spaces/{space_pk}/quizzes/{quiz_id}", role: SpaceUserRole)]
 pub async fn update_quiz(
+    #[mcp(description = "Space partition key")]
     space_pk: SpacePartition,
+    #[mcp(description = "Quiz sort key (e.g. 'SpaceQuiz#<uuid>')")]
     quiz_id: SpaceQuizEntityType,
+    #[mcp(description = "Quiz update data as JSON. Fields: title, description, started_at, ended_at, retry_count, pass_score, questions, answers, files (all optional)")]
     req: UpdateQuizRequest,
 ) -> Result<String> {
     SpaceQuiz::can_edit(&role)?;

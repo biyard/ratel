@@ -6,7 +6,7 @@ mod hooks;
 mod layout;
 mod models;
 pub mod pages;
-mod space_common;
+pub(crate) mod space_common;
 
 pub use layout::SpaceLayout;
 pub use space_common::{InvitationStatus, SpaceInvitationMember};
