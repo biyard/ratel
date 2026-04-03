@@ -1,9 +1,11 @@
 use crate::common::*;
 use crate::features::membership::controllers::{
-    get_team_membership_handler, get_team_purchase_history_handler, PurchaseHistoryItem,
+    PurchaseHistoryItem, get_team_membership_handler, get_team_purchase_history_handler,
 };
 use crate::features::membership::models::TeamMembershipResponse;
-use crate::features::social::pages::user_membership::components::format_date;
+use crate::features::social::pages::user_membership::components::{
+    format_date, format_membership_tier_label,
+};
 use dioxus::prelude::*;
 
 #[component]
@@ -41,7 +43,7 @@ pub fn Home(username: String) -> Element {
         }
     };
 
-    let tier_name = format_tier(&membership.tier.0);
+    let tier_name = format_membership_tier_label(&membership.tier.0, tr.enterprise);
     let tier_color = match tier_name.as_str() {
         "Pro" => "text-blue-500",
         "Max" => "text-purple-500",
@@ -97,7 +99,7 @@ pub fn Home(username: String) -> Element {
                                 {tr.scheduled_downgrade}
                             }
                             div { class: "text-sm text-text-secondary",
-                                "{tr.next_membership}: {format_tier(&next.0)}"
+                                "{tr.next_membership}: {format_membership_tier_label(&next.0, tr.enterprise)}"
                             }
                         }
                     }
@@ -181,10 +183,6 @@ fn render_history(
     }
 }
 
-fn format_tier(tier: &str) -> String {
-    tier.strip_prefix("MEMBERSHIP#").unwrap_or(tier).to_string()
-}
-
 translate! {
     TeamMembershipTranslate;
 
@@ -201,6 +199,11 @@ translate! {
     tier: {
         en: "Tier",
         ko: "등급",
+    },
+
+    enterprise: {
+        en: "Enterprise",
+        ko: "엔터프라이즈",
     },
 
     total_credits: {
