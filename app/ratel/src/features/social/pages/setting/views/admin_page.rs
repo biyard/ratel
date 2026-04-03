@@ -1,13 +1,14 @@
 use super::super::components::DeleteTeamPopup;
 use super::super::controllers::TeamResponse;
-use super::super::controllers::{delete_team_handler, update_team_handler, UpdateTeamRequest};
+use super::super::controllers::{UpdateTeamRequest, delete_team_handler, update_team_handler};
 use super::super::*;
 use crate::features::membership::controllers::{
-    get_team_billing_info_handler, get_team_membership_handler, update_team_billing_card_handler,
-    UpdateBillingCardRequest,
+    UpdateBillingCardRequest, get_team_billing_info_handler, get_team_membership_handler,
+    update_team_billing_card_handler,
 };
 use crate::features::membership::models::CardInfo;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
+use crate::features::social::pages::user_membership::components::format_membership_tier_label;
 use dioxus::prelude::*;
 
 fn format_last_saved(ts_millis: i64) -> String {
@@ -290,7 +291,7 @@ fn TeamSubscriptionCard(username: String) -> Element {
 
     let (tier_label, remaining, total, expired_at, is_free) = match membership_data.as_ref() {
         Some(Ok(m)) => {
-            let tier = m.tier.0.replace("MEMBERSHIP#", "");
+            let tier = format_membership_tier_label(&m.tier.0, tr.enterprise);
             let free = tier.eq_ignore_ascii_case("free");
             (
                 tier,

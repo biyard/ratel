@@ -13,4 +13,6 @@ pub struct UserMembershipLocal {
     pub remaining_credits: i64,
     pub auto_renew: bool,
     pub next_membership: Option<MembershipPartition>,
+    pub monthly_refill_credits: i64,
+    pub next_refill_at: i64,
 }
