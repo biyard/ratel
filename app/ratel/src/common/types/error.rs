@@ -230,6 +230,17 @@ pub enum Error {
     #[error("{0}")]
     #[translate(from)]
     McpServer(#[from] McpServerError),
+
+    #[error("{0}")]
+    #[translate(from)]
+    AiModerator(#[from] crate::features::ai_moderator::types::AiModeratorError),
+}
+
+#[cfg(feature = "server")]
+impl From<qdrant_client::QdrantError> for Error {
+    fn from(e: qdrant_client::QdrantError) -> Self {
+        Error::InternalServerError(format!("Qdrant error: {e}"))
+    }
 }
 
 impl From<std::convert::Infallible> for Error {
@@ -277,6 +288,7 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             Error::ExchangePoints(e) => e.status_code(),
             Error::McpServer(e) => e.status_code(),
             Error::Member(e) => e.status_code(),
+            Error::AiModerator(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
@@ -369,6 +381,7 @@ impl dioxus::fullstack::AsStatusCode for Error {
             Error::ExchangePoints(e) => e.status_code(),
             Error::McpServer(e) => e.status_code(),
             Error::Member(e) => e.status_code(),
+            Error::AiModerator(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

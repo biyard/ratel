@@ -31,6 +31,14 @@ impl SpaceUserRole {
         matches!(self, SpaceUserRole::Creator)
     }
 
+    pub fn is_creator(&self) -> Result<()> {
+        if matches!(self, SpaceUserRole::Creator) {
+            Ok(())
+        } else {
+            Err(Error::NoPermission)
+        }
+    }
+
     pub fn can_edit(&self) -> bool {
         matches!(self, SpaceUserRole::Creator)
     }

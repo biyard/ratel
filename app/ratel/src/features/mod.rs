@@ -14,3 +14,6 @@ pub mod social;
 pub mod spaces;
 
 pub mod timeline;
+
+pub mod ai_moderator;
+pub mod rag;
