@@ -33,6 +33,7 @@ pub fn PollContent(
         space.join_anytime,
     );
 
+    let nav = navigator();
     let mut answers: Signal<HashMap<usize, Answer>> = use_signal(|| {
         let mut map = HashMap::new();
         if let Some(ref my_resp) = poll.my_response {
@@ -84,10 +85,12 @@ pub fn PollContent(
             let questions = questions.clone();
             let mut query = query;
             let mut toast = toast;
+            let nav = nav.clone();
             move || {
                 let questions = questions.clone();
                 let mut query = query;
                 let mut toast = toast;
+                let nav = nav.clone();
 
                 spawn(async move {
                     let answers_map = answers.read().clone();
@@ -102,6 +105,7 @@ pub fn PollContent(
                             let keys = space_page_actions_poll_key(&space_id(), &poll_id());
                             query.invalidate(&keys);
                             toast.info(tr.submit_success);
+                            nav.push(format!("/spaces/{}/actions", space_id()));
                         }
                         Err(err) => {
                             toast.error(err);
