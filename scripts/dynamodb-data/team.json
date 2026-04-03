@@ -1,0 +1,175 @@
+{
+  "ratel-local-main": [
+    {
+      "PutRequest": {
+        "Item": {
+          "pk": { "S": "TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61" },
+          "sk": { "S": "TEAM" },
+          "gsi6_pk": { "S": "TEAM" },
+          "gsi6_sk": { "S": "0" },
+          "profile_url": { "S": "" },
+          "created_at": { "N": "1764227900000" },
+          "updated_at": { "N": "1764227900000" },
+          "description": { "S": "" },
+          "display_name": { "S": "hiteam" },
+          "followers": { "N": "0" },
+          "followings": { "N": "0" },
+          "gsi1_pk": { "S": "TEAM_NAME_IDX#TEAM" },
+          "gsi1_sk": { "S": "hiteam" },
+          "gsi2_pk": { "S": "USERNAME#hiteam" },
+          "gsi2_sk": { "S": "TS#1764227900000" },
+          "username": { "S": "hiteam" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "pk": { "S": "TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61" },
+          "sk": { "S": "TEAM_GROUP#0e55a3b3-fb35-45b2-8a57-1440dda643ef" },
+          "permissions": { "N": "1099511627775" },
+          "members": { "N": "3" },
+          "gsi1_pk": {
+            "S": "TEAM_GROUP_PK#TEAM_GROUP#0e55a3b3-fb35-45b2-8a57-1440dda643ef"
+          },
+          "gsi1_sk": { "S": "1764227900000" },
+          "name": { "S": "Admin" },
+          "created_at": { "N": "1764227900000" },
+          "description": { "S": "Administrators group with all permissions" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "pk": { "S": "TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61" },
+          "sk": { "S": "TEAM_OWNER" },
+          "profile_url": {
+            "S": "https://metadata.ratel.foundation/ratel/default-profile.png"
+          },
+          "user_pk": { "S": "USER#00000000-0000-0000-0000-000000000002" },
+          "gsi1_pk": {
+            "S": "USER_PK#USER#00000000-0000-0000-0000-000000000002"
+          },
+          "gsi1_sk": { "S": "TEAM_OWNER" },
+          "display_name": { "S": "User 2" },
+          "username": { "S": "user2" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "pk": { "S": "USER#00000000-0000-0000-0000-000000000002" },
+          "sk": { "S": "USER_TEAM#TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61" },
+          "last_used_at": { "N": "1764227900000" },
+          "profile_url": {
+            "S": "https://metadata.ratel.foundation/ratel/default-profile.png"
+          },
+          "gsi1_pk": {
+            "S": "TEAM_PK#USER_TEAM#TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61"
+          },
+          "gsi1_sk": { "S": "1764227900000" },
+          "display_name": { "S": "hiteam" },
+          "username": { "S": "hiteam" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "pk": { "S": "USER#00000000-0000-0000-0000-000000000002" },
+          "sk": {
+            "S": "USER_TEAM_GROUP#TEAM_GROUP#0e55a3b3-fb35-45b2-8a57-1440dda643ef"
+          },
+          "team_group_permissions": { "N": "1099511627775" },
+          "gsi1_pk": {
+            "S": "TEAM_GROUP_PK#USER_TEAM_GROUP#TEAM_GROUP#0e55a3b3-fb35-45b2-8a57-1440dda643ef"
+          },
+          "gsi1_sk": { "S": "1099511627775" },
+          "gsi2_pk": {
+            "S": "USER_TEAM_GROUP#TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61"
+          },
+          "gsi2_sk": { "S": "USER#00000000-0000-0000-0000-000000000002" },
+          "team_pk": { "S": "TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "pk": { "S": "USER#00000000-0000-0000-0000-000000000003" },
+          "sk": { "S": "USER_TEAM#TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61" },
+          "last_used_at": { "N": "1764227900000" },
+          "profile_url": {
+            "S": "https://metadata.ratel.foundation/ratel/default-profile.png"
+          },
+          "gsi1_pk": {
+            "S": "TEAM_PK#USER_TEAM#TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61"
+          },
+          "gsi1_sk": { "S": "1764227900000" },
+          "display_name": { "S": "hiteam" },
+          "username": { "S": "hiteam" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "pk": { "S": "USER#00000000-0000-0000-0000-000000000003" },
+          "sk": {
+            "S": "USER_TEAM_GROUP#TEAM_GROUP#0e55a3b3-fb35-45b2-8a57-1440dda643ef"
+          },
+          "team_group_permissions": { "N": "1099511627775" },
+          "gsi1_pk": {
+            "S": "TEAM_GROUP_PK#USER_TEAM_GROUP#TEAM_GROUP#0e55a3b3-fb35-45b2-8a57-1440dda643ef"
+          },
+          "gsi1_sk": { "S": "1099511627775" },
+          "gsi2_pk": {
+            "S": "USER_TEAM_GROUP#TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61"
+          },
+          "gsi2_sk": { "S": "USER#00000000-0000-0000-0000-000000000003" },
+          "team_pk": { "S": "TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "pk": { "S": "USER#00000000-0000-0000-0000-000000000004" },
+          "sk": { "S": "USER_TEAM#TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61" },
+          "last_used_at": { "N": "1764227900000" },
+          "profile_url": {
+            "S": "https://metadata.ratel.foundation/ratel/default-profile.png"
+          },
+          "gsi1_pk": {
+            "S": "TEAM_PK#USER_TEAM#TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61"
+          },
+          "gsi1_sk": { "S": "1764227900000" },
+          "display_name": { "S": "hiteam" },
+          "username": { "S": "hiteam" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "pk": { "S": "USER#00000000-0000-0000-0000-000000000004" },
+          "sk": {
+            "S": "USER_TEAM_GROUP#TEAM_GROUP#0e55a3b3-fb35-45b2-8a57-1440dda643ef"
+          },
+          "team_group_permissions": { "N": "1099511627775" },
+          "gsi1_pk": {
+            "S": "TEAM_GROUP_PK#USER_TEAM_GROUP#TEAM_GROUP#0e55a3b3-fb35-45b2-8a57-1440dda643ef"
+          },
+          "gsi1_sk": { "S": "1099511627775" },
+          "gsi2_pk": {
+            "S": "USER_TEAM_GROUP#TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61"
+          },
+          "gsi2_sk": { "S": "USER#00000000-0000-0000-0000-000000000004" },
+          "team_pk": { "S": "TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61" }
+        }
+      }
+    }
+  ]
+}

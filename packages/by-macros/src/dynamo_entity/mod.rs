@@ -114,7 +114,7 @@ impl FieldInfo {
 fn parse_struct_cfg(attrs: &[Attribute]) -> StructCfg {
     let mut cfg = StructCfg {
         table: "main".into(),
-        table_prefix: env!("DYNAMO_TABLE_PREFIX").into(),
+        table_prefix: option_env!("DYNAMO_TABLE_PREFIX").unwrap_or_default().into(),
         result_ty: "std::result::Result".into(),
         // FIXME: rename after finishing migration
         error_ctor: "crate::Error".into(),
