@@ -104,15 +104,16 @@ services:
     restart: always
     ports:
       - "4566:4566"
+      - "4510-4559:4510-4559"
     environment:
       PERSISTENCE: ${LOCALSTACK_PERSISTENCE:-1}
       LOCALSTACK_ACKNOWLEDGE_ACCOUNT_REQUIREMENT: ${LOCALSTACK_ACKNOWLEDGE_ACCOUNT_REQUIREMENT:-1}
-      SERVICES: dynamodb,s3,sqs
+      SERVICES: dynamodb,s3,sqs,dynamodbstreams,lambda
       DYNAMODB_SHARE_DB: 1
       SQS_ENDPOINT_STRATEGY: "off"
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-test}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-test}
-      AWS_DEFAULT_REGION: ${AWS_REGION:-us-east-1}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
       interval: 10s
@@ -121,6 +122,7 @@ services:
       start_period: 30s
     volumes:
       - ./.build/localstack-data:/var/lib/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - ratel-network
     profiles:
@@ -134,9 +136,9 @@ services:
     environment:
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-test}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-test}
-      AWS_DEFAULT_REGION: ${AWS_REGION:-us-east-1}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
       LOCALSTACK_ENDPOINT: http://localstack:4566
-      RESET_DB: ${RESET_DB:-false}
+      RESET_DB: ${RESET_DB:-true}
     volumes:
       - ./scripts:/scripts
     networks:
@@ -159,7 +161,7 @@ services:
       DYNAMO_ENDPOINT: http://localstack:4566
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-test}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-test}
-      AWS_DEFAULT_REGION: ${AWS_REGION:-us-east-1}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
     depends_on:
       - localstack-init
     profiles:
