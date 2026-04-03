@@ -5,14 +5,15 @@ pub fn SpaceStatusBadge(status: SpaceStatus) -> Element {
     let lang = use_language();
 
     let color = match status {
-        SpaceStatus::InProgress => BadgeColor::Blue,
-        SpaceStatus::Started => BadgeColor::Green,
-        SpaceStatus::Waiting => BadgeColor::Orange,
+        SpaceStatus::Designing => BadgeColor::Purple,
+        SpaceStatus::Open => BadgeColor::Blue,
+        SpaceStatus::Ongoing => BadgeColor::Green,
+        SpaceStatus::Processing => BadgeColor::Orange,
         SpaceStatus::Finished => BadgeColor::Grey,
     };
 
     rsx! {
-        div { class: "shrink-0 whitespace-nowrap",
+        div { class: "whitespace-nowrap shrink-0",
             Badge { color, variant: BadgeVariant::Rounded, {status.translate(&lang())} }
         }
     }

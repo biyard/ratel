@@ -77,7 +77,7 @@ pub fn ActionCard(action: SpaceActionSummary, space_id: SpacePartition) -> Eleme
 
                         if !enable_action {
                             let space_status = space().status;
-                            if !matches!(space_status, Some(SpaceStatus::Started)) {
+                            if !matches!(space_status, Some(SpaceStatus::Ongoing)) {
                                 toast.error(crate::common::Error::SpaceNotStarted);
                                 return;
                             }
@@ -128,11 +128,7 @@ pub fn ActionCard(action: SpaceActionSummary, space_id: SpacePartition) -> Eleme
             // Title
             p {
                 class: "w-full font-semibold text-[1.125rem]/[1.75rem] truncate",
-                class: if action.title.is_empty() {
-                    "text-foreground-muted italic"
-                } else {
-                    "text-text-primary"
-                },
+                class: if action.title.is_empty() { "text-foreground-muted italic" } else { "text-text-primary" },
                 {title}
             }
 

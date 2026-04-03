@@ -1,8 +1,8 @@
 use std::collections::HashSet;
 
 use crate::features::posts::models::Post;
-use crate::features::timeline::*;
 use crate::features::timeline::models::TimelineReason;
+use crate::features::timeline::*;
 
 use super::common::{collect_follower_pks, collect_followers_with_reason, write_timeline_entries};
 
@@ -11,7 +11,10 @@ use super::common::{collect_follower_pks, collect_followers_with_reason, write_t
 /// Called asynchronously when a post crosses popularity thresholds (likes, comments).
 /// Delivers to followers-of-followers (2nd degree) who don't already have the entry.
 pub async fn fan_out_popular_post(post: Post) -> Result<()> {
-    if !is_popular(post.likes, post.comments, post.shares) {
+    if !is_popular(post.likes, post.comments, post.shares)
+        || !post.is_published()
+        || !post.is_public()
+    {
         return Ok(());
     }
 
