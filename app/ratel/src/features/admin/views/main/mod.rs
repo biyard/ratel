@@ -447,17 +447,16 @@ pub fn AdminMainPage() -> Element {
                             label { class: "block mb-1 text-sm font-medium text-text-secondary",
                                 "{tr.username}"
                             }
-                            input {
-                                class: "py-2 px-3 w-full rounded-lg border bg-bg border-card-border text-text-primary",
-                                value: "{grant_username_value}",
-                                placeholder: "{tr.username_placeholder}",
-                                oninput: move |e| grant_username.set(e.value()),
+                            Input {
+                                value: grant_username_value,
+                                placeholder: tr.username_placeholder,
+                                oninput: move |e: Event<FormData>| grant_username.set(e.value()),
                             }
                         }
 
                         div { class: "flex items-end",
-                            button {
-                                class: "py-2 px-4 text-white bg-blue-600 rounded-lg transition-colors hover:bg-blue-700 disabled:opacity-50",
+                            Button {
+                                style: ButtonStyle::Primary,
                                 disabled: grant_submitting_value,
                                 onclick: on_grant_enterprise,
                                 "{tr.grant_enterprise}"
@@ -468,9 +467,9 @@ pub fn AdminMainPage() -> Element {
                     if let Some((message, ok)) = grant_message_value {
                         p {
                             class: if ok {
-                                "mt-4 text-sm text-green-500"
+                                "mt-4 text-sm text-primary"
                             } else {
-                                "mt-4 text-sm text-red-500"
+                                "mt-4 text-sm text-destructive"
                             },
                             "{message}"
                         }
@@ -510,7 +509,7 @@ pub fn AdminMainPage() -> Element {
                                     }
                                     tbody {
                                         for item in enterprise_memberships {
-                                            tr { class: "border-b border-card-border last:border-b-0",
+                                            tr { key: "{item.username}", class: "border-b border-card-border last:border-b-0",
                                                 td { class: "py-3 px-4 text-text-primary",
                                                     match item.target_type {
                                                         MembershipGrantTargetType::User => tr.target_user.to_string(),
