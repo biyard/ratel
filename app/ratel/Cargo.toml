@@ -21,6 +21,8 @@ aws-sdk-bedrockruntime = { workspace = true, optional = true }
 aws-sdk-bedrockagentruntime = { version = "1", optional = true }
 aws-smithy-types = { version = "1", optional = true }
 aws-sdk-dynamodb = { workspace = true, optional = true }
+aws-sdk-dynamodbstreams = { workspace = true, optional = true }
+qdrant-client = { workspace = true, optional = true }
 schemars = { workspace = true, optional = true }
 aide = { workspace = true, optional = true }
 tracing = { workspace = true }
@@ -121,6 +123,7 @@ server = [
   "aws-sdk-bedrockagentruntime",
   "aws-sdk-bedrockruntime",
   "aws-sdk-dynamodb",
+  "aws-sdk-dynamodbstreams",
   "aws-sdk-s3",
   "aws-sdk-sesv2",
   "aws-sdk-sns",
@@ -135,6 +138,7 @@ server = [
   "ic-agent",
   "k256",
   "names",
+  "qdrant-client",
   "random-string",
   "reqwest",
   "ratel-canister",

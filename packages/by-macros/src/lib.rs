@@ -7,6 +7,7 @@ mod dynamo_entity;
 mod dynamo_enum;
 mod enum_prop;
 mod mcp_tool;
+mod qdrant_entity;
 pub(crate) mod parse_queryable_fields;
 #[cfg(feature = "server")]
 mod query_builder_functions;
@@ -74,6 +75,18 @@ pub fn dynamo_entity_derive(input: TokenStream) -> TokenStream {
         .with_target(false)
         .try_init();
     dynamo_entity_impl(input)
+}
+
+#[proc_macro_derive(QdrantEntity, attributes(qdrant))]
+pub fn qdrant_entity_derive(input: TokenStream) -> TokenStream {
+    let _ = tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .with_file(true)
+        .with_line_number(true)
+        .with_thread_ids(true)
+        .with_target(false)
+        .try_init();
+    qdrant_entity::qdrant_entity_impl(input)
 }
 
 #[proc_macro_derive(DummyDynamoEntity, attributes(dynamo))]
