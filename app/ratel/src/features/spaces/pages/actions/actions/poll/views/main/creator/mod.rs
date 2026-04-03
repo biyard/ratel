@@ -88,7 +88,7 @@ pub fn PollCreatorPage(
 
                         // Response Editable toggle
                         Card { class: "mt-4 mb-4",
-                            div { class: "flex justify-between items-center self-stretch border-b border-separator",
+                            div { class: "flex justify-between items-center self-stretch",
                                 div { class: "flex gap-1 items-center",
                                     p { class: "font-semibold font-raleway text-[15px]/[18px] tracking-[-0.16px] text-web-font-primary",
                                         {tr.response_editable_title}
