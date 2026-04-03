@@ -75,7 +75,7 @@ pub fn QuizEditor(props: QuizEditorProps) -> Element {
                                         }
                                     },
                                     "Delete"
-                                    icons::edit::Delete2 { class: "w-6 h-6 [&>path]:stroke-quiz-editor-icon" }
+                                    icons::edit::Delete2 { class: "w-6 h-6 [&>path]:stroke-quiz-editor-icon [&>path]:fill-none" }
                                 }
                             }
                         }
