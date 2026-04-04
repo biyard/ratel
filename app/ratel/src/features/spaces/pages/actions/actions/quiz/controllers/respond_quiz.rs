@@ -89,6 +89,13 @@ pub async fn respond_quiz(
 
     let already_passed = attempts.iter().any(|a| a.score >= quiz.pass_score);
     if score >= quiz.pass_score && !already_passed {
+        #[cfg(feature = "activity")]
+        let activity_user_pk = user.pk.clone();
+        #[cfg(feature = "activity")]
+        let activity_user_name = user.display_name.clone();
+        #[cfg(feature = "activity")]
+        let activity_user_avatar = user.profile_url.clone();
+
         match SpaceReward::get_by_action(
             cli,
             space_id.clone(),
@@ -117,6 +124,29 @@ pub async fn respond_quiz(
                     error = %e,
                     "SpaceReward not found for quiz action"
                 );
+            }
+        }
+
+        #[cfg(feature = "activity")]
+        {
+            if let Err(e) = crate::features::activity::controllers::record_activity(
+                cli,
+                space_id.clone(),
+                crate::features::activity::types::AuthorPartition::from(activity_user_pk),
+                quiz_action_id.clone(),
+                crate::features::spaces::pages::actions::types::SpaceActionType::Quiz,
+                space_action.activity_score,
+                space_action.additional_score,
+                crate::features::activity::types::SpaceActivityData::Quiz {
+                    quiz_id: quiz_id.to_string(),
+                    passed: true,
+                    correct_count: score as u32,
+                    pass_threshold: quiz.pass_score as u32,
+                },
+                activity_user_name,
+                activity_user_avatar,
+            ).await {
+                tracing::error!(error = %e, "Failed to record quiz activity");
             }
         }
     }
