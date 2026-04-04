@@ -164,19 +164,31 @@ pub struct SpaceNavItem {
     pub link: NavigationTarget,
 }
 
-#[cfg(all(feature = "activity", not(feature = "server")))]
+#[cfg(feature = "activity")]
 fn ranking_widget(space_id: &SpacePartition) -> Element {
     rsx! {
         div {
             class: "max-tablet:hidden px-2",
-            crate::features::activity::components::RankingWidget {
-                space_id: space_id.clone(),
-            }
+            {ranking_widget_inner(space_id)}
         }
     }
 }
 
-#[cfg(any(not(feature = "activity"), feature = "server"))]
+#[cfg(all(feature = "activity", not(feature = "server")))]
+fn ranking_widget_inner(space_id: &SpacePartition) -> Element {
+    rsx! {
+        crate::features::activity::components::RankingWidget {
+            space_id: space_id.clone(),
+        }
+    }
+}
+
+#[cfg(all(feature = "activity", feature = "server"))]
+fn ranking_widget_inner(_space_id: &SpacePartition) -> Element {
+    rsx! {}
+}
+
+#[cfg(not(feature = "activity"))]
 fn ranking_widget(_space_id: &SpacePartition) -> Element {
     rsx! {}
 }
