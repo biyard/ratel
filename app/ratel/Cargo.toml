@@ -111,7 +111,7 @@ rmcp = { version = "0.7.0", git = "https://github.com/modelcontextprotocol/rust-
 
 
 [features]
-full = ["membership", "social", "spaces_full"]
+full = ["membership", "social", "spaces_full", "activity"]
 default = ["full"]
 bypass = []
 web = ["dioxus/web", "getrandom", "gloo-timers", "time/wasm-bindgen"]
@@ -164,6 +164,7 @@ membership = []
 social = []
 spaces = []
 spaces_full = ["spaces"]
+activity = []
 local-dev = ["beta","bypass"]
 beta = []
 futures = ["dep:futures"]

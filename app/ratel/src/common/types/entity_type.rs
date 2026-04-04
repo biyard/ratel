@@ -204,6 +204,10 @@ pub enum EntityType {
 
     // MCP
     McpClientSecret,
+
+    // Activity
+    SpaceActivity(String), // SPACE_ACTIVITY#action_id#timestamp
+    SpaceScore,
 }
 
 impl TryInto<Partition> for EntityType {
