@@ -5,7 +5,6 @@ pub mod controllers;
 #[cfg(feature = "server")]
 pub mod services;
 
-#[cfg(not(feature = "server"))]
 pub mod components;
 
 pub mod i18n;

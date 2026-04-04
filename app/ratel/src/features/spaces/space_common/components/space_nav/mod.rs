@@ -169,23 +169,11 @@ fn ranking_widget(space_id: &SpacePartition) -> Element {
     rsx! {
         div {
             class: "max-tablet:hidden px-2",
-            {ranking_widget_inner(space_id)}
+            crate::features::activity::components::RankingWidget {
+                space_id: space_id.clone(),
+            }
         }
     }
-}
-
-#[cfg(all(feature = "activity", not(feature = "server")))]
-fn ranking_widget_inner(space_id: &SpacePartition) -> Element {
-    rsx! {
-        crate::features::activity::components::RankingWidget {
-            space_id: space_id.clone(),
-        }
-    }
-}
-
-#[cfg(all(feature = "activity", feature = "server"))]
-fn ranking_widget_inner(_space_id: &SpacePartition) -> Element {
-    rsx! {}
 }
 
 #[cfg(not(feature = "activity"))]
