@@ -85,12 +85,10 @@ pub fn PollContent(
             let questions = questions.clone();
             let mut query = query;
             let mut toast = toast;
-            let nav = nav.clone();
             move || {
                 let questions = questions.clone();
                 let mut query = query;
                 let mut toast = toast;
-                let nav = nav.clone();
 
                 spawn(async move {
                     let answers_map = answers.read().clone();
@@ -105,7 +103,12 @@ pub fn PollContent(
                             let keys = space_page_actions_poll_key(&space_id(), &poll_id());
                             query.invalidate(&keys);
                             toast.info(tr.submit_success);
-                            nav.replace(format!("/spaces/{}/actions", space_id()));
+                            nav.replace(
+                                crate::Route::SpaceActionsPage {
+                                    space_id: space_id(),
+                                }
+                                .to_string(),
+                            );
                         }
                         Err(err) => {
                             toast.error(err);
