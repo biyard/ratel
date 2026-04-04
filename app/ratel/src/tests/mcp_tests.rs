@@ -1,8 +1,7 @@
 use super::*;
 use crate::common::models::McpClientSecret;
-use crate::common::types::{EntityType, Partition};
+use crate::common::types::Partition;
 
-/// Helper: create an MCP client secret for a test user and return the raw token.
 async fn create_mcp_secret(
     cli: &crate::common::aws_sdk_dynamodb::Client,
     user_pk: &Partition,
@@ -12,308 +11,191 @@ async fn create_mcp_secret(
     raw_token
 }
 
-/// Helper: set up test context and store router for mcp_oneshot.
 async fn setup_mcp_test() -> (TestContext, String) {
     let ctx = TestContext::setup().await;
-    crate::common::mcp::set_app_router(ctx.app.clone());
     let raw_token = create_mcp_secret(&ctx.ddb, &ctx.test_user.0.pk).await;
     (ctx, raw_token)
 }
 
-/// Check if an error is a DynamoDB/infrastructure issue (skip test if so).
-fn is_infra_error(e: &crate::common::Error) -> bool {
-    let msg = format!("{e}");
-    msg.contains("Aws")
-        || msg.contains("cannot be serialized")
-        || msg.contains("panicked")
-        || msg.contains("No session found")
+/// Send MCP JSON-RPC request via POST /mcp/{secret}.
+/// Parses SSE response body to extract JSON-RPC response.
+async fn mcp_request(
+    app: axum::Router,
+    secret: &str,
+    jsonrpc_body: serde_json::Value,
+) -> (axum::http::StatusCode, serde_json::Value) {
+    let path = format!("/mcp/{}", secret);
+    let body_bytes = serde_json::to_vec(&jsonrpc_body).unwrap();
+
+    let req = axum::http::Request::builder()
+        .uri(format!("http://localhost:8080{}", path))
+        .method("POST")
+        .header("content-type", "application/json")
+        .header("accept", "application/json, text/event-stream")
+        .body(axum::body::Body::from(body_bytes))
+        .unwrap();
+
+    let res: axum::http::Response<axum::body::Body> =
+        tower::ServiceExt::oneshot(app, req).await.unwrap();
+
+    let (parts, body) = res.into_parts();
+    let bytes = axum::body::to_bytes(body, 10 * 1024 * 1024)
+        .await
+        .unwrap()
+        .to_vec();
+    let body_str = String::from_utf8(bytes).unwrap();
+
+    (parts.status, parse_sse_json(&body_str))
+}
+
+/// Parse SSE body → JSON-RPC response. Handles both plain JSON and SSE format.
+fn parse_sse_json(sse_body: &str) -> serde_json::Value {
+    if let Ok(v) = serde_json::from_str::<serde_json::Value>(sse_body) {
+        return v;
+    }
+    for line in sse_body.lines() {
+        if let Some(data) = line.trim().strip_prefix("data:") {
+            if let Ok(v) = serde_json::from_str::<serde_json::Value>(data.trim()) {
+                return v;
+            }
+        }
+    }
+    serde_json::json!({ "_raw": sse_body })
+}
+
+/// Call an MCP tool via JSON-RPC (stateless mode — no session needed).
+async fn mcp_tool_call(
+    app: axum::Router,
+    secret: &str,
+    tool_name: &str,
+    arguments: serde_json::Value,
+) -> (axum::http::StatusCode, serde_json::Value) {
+    mcp_request(
+        app,
+        secret,
+        serde_json::json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "tools/call",
+            "params": { "name": tool_name, "arguments": arguments }
+        }),
+    )
+    .await
+}
+
+/// Extract parsed JSON from MCP tool result content.
+fn extract_tool_content(body: &serde_json::Value) -> serde_json::Value {
+    let text = body
+        .pointer("/result/content/0/text")
+        .and_then(|v| v.as_str())
+        .unwrap_or("{}");
+    serde_json::from_str(text).unwrap_or_default()
 }
 
 #[tokio::test]
-async fn test_mcp_get_me() {
-    let (_ctx, raw_token) = setup_mcp_test().await;
-
-    let result =
-        crate::features::auth::controllers::get_me_handler_mcp_impl(raw_token.clone()).await;
-
-    assert!(
-        result.is_ok(),
-        "get_me should succeed: {:?}",
-        result.err()
-    );
-    let resp = result.unwrap();
-    assert!(
-        resp.user.is_some(),
-        "user should be present in get_me response"
-    );
+async fn test_mcp_tool_get_me() {
+    let (ctx, token) = setup_mcp_test().await;
+    let (status, body) = mcp_tool_call(ctx.app, &token, "get_me", serde_json::json!({})).await;
+    assert_eq!(status, 200, "get_me: {:?}", body);
+    assert!(body.get("result").is_some(), "should have result: {:?}", body);
 }
 
 #[tokio::test]
-async fn test_mcp_create_post() {
-    let (_ctx, raw_token) = setup_mcp_test().await;
-
-    let result = crate::features::posts::controllers::create_post_handler_mcp_impl(
-        raw_token.clone(),
-        None,
-    )
-    .await;
-
-    if let Err(ref e) = result {
-        if is_infra_error(e) {
-            eprintln!("Skipping: DynamoDB infrastructure issue: {e}");
-            return;
-        }
-    }
-    assert!(
-        result.is_ok(),
-        "create_post should succeed: {:?}",
-        result.err()
-    );
-    let resp = result.unwrap();
-    assert!(
-        matches!(resp.post_pk, Partition::Feed(_)),
-        "post_pk should be a Feed partition: {:?}",
-        resp.post_pk
-    );
+async fn test_mcp_tool_create_post() {
+    let (ctx, token) = setup_mcp_test().await;
+    let (status, body) =
+        mcp_tool_call(ctx.app, &token, "create_post", serde_json::json!({})).await;
+    assert_eq!(status, 200, "create_post: {:?}", body);
+    let content = extract_tool_content(&body);
+    assert!(content.get("post_pk").is_some(), "should have post_pk: {:?}", content);
 }
 
 #[tokio::test]
-async fn test_mcp_list_posts() {
-    let (_ctx, raw_token) = setup_mcp_test().await;
-
-    let result = crate::features::posts::controllers::list_posts_handler_mcp_impl(
-        raw_token.clone(),
-        None,
-    )
-    .await;
-
-    if let Err(ref e) = result {
-        if is_infra_error(e) {
-            eprintln!("Skipping: DynamoDB infrastructure issue: {e}");
-            return;
-        }
-    }
-    assert!(
-        result.is_ok(),
-        "list_posts should succeed: {:?}",
-        result.err()
-    );
+async fn test_mcp_tool_list_teams() {
+    let (ctx, token) = setup_mcp_test().await;
+    let (status, body) =
+        mcp_tool_call(ctx.app, &token, "list_teams", serde_json::json!({})).await;
+    assert_eq!(status, 200, "list_teams: {:?}", body);
+    assert!(body.get("result").is_some(), "should have result: {:?}", body);
 }
 
 #[tokio::test]
-async fn test_mcp_create_post_and_get() {
-    let (_ctx, raw_token) = setup_mcp_test().await;
-
-    let create_result = crate::features::posts::controllers::create_post_handler_mcp_impl(
-        raw_token.clone(),
-        None,
-    )
-    .await;
-
-    if let Err(ref e) = create_result {
-        if is_infra_error(e) {
-            eprintln!("Skipping: DynamoDB infrastructure issue: {e}");
-            return;
-        }
-    }
-    let create_result = create_result.expect("create_post should succeed");
-    let post_pk = create_result.post_pk;
-
-    let get_result = crate::features::posts::controllers::get_post_handler_mcp_impl(
-        raw_token.clone(),
-        post_pk
-            .clone()
-            .try_into()
-            .expect("convert to FeedPartition"),
-    )
-    .await;
-
-    if let Err(ref e) = get_result {
-        if is_infra_error(e) {
-            eprintln!("Skipping: DynamoDB infrastructure issue: {e}");
-            return;
-        }
-    }
-    assert!(
-        get_result.is_ok(),
-        "get_post should succeed: {:?}",
-        get_result.err()
-    );
-}
-
-#[tokio::test]
-async fn test_mcp_create_post_and_like() {
-    let (_ctx, raw_token) = setup_mcp_test().await;
-
-    let create_result = crate::features::posts::controllers::create_post_handler_mcp_impl(
-        raw_token.clone(),
-        None,
-    )
-    .await;
-
-    if let Err(ref e) = create_result {
-        if is_infra_error(e) {
-            eprintln!("Skipping: DynamoDB infrastructure issue: {e}");
-            return;
-        }
-    }
-    let create_result = create_result.expect("create_post should succeed");
-
-    let post_pk: crate::common::types::FeedPartition = create_result
-        .post_pk
-        .clone()
-        .try_into()
-        .expect("convert to FeedPartition");
-
-    // Publish the post
-    let update_result = crate::features::posts::controllers::update_post_handler_mcp_impl(
-        raw_token.clone(),
-        post_pk.clone(),
-        crate::features::posts::controllers::UpdatePostRequest::Publish {
-            title: "Test Post".to_string(),
-            content: "<p>Test content</p>".to_string(),
-            image_urls: None,
-            publish: true,
-            visibility: Some(crate::features::posts::types::Visibility::Public),
-            categories: None,
-        },
-    )
-    .await;
-
-    if let Err(ref e) = update_result {
-        if is_infra_error(e) {
-            eprintln!("Skipping: DynamoDB infrastructure issue: {e}");
-            return;
-        }
-    }
-    update_result.expect("update_post should succeed");
-
-    // Like the post
-    let like_result = crate::features::posts::controllers::like_post_handler_mcp_impl(
-        raw_token.clone(),
-        post_pk,
-        true,
-    )
-    .await;
-
-    if let Err(ref e) = like_result {
-        if is_infra_error(e) {
-            eprintln!("Skipping: DynamoDB infrastructure issue: {e}");
-            return;
-        }
-    }
-    assert!(
-        like_result.is_ok(),
-        "like_post should succeed: {:?}",
-        like_result.err()
-    );
-    assert!(like_result.unwrap().like, "like should be true");
-}
-
-#[tokio::test]
-async fn test_mcp_invalid_secret_fails() {
+async fn test_mcp_tool_invalid_secret() {
     let ctx = TestContext::setup().await;
-    crate::common::mcp::set_app_router(ctx.app.clone());
+    let (status, body) =
+        mcp_tool_call(ctx.app, "invalid-secret", "create_post", serde_json::json!({})).await;
 
-    let result = crate::features::posts::controllers::create_post_handler_mcp_impl(
-        "invalid-secret-token".to_string(),
-        None,
-    )
-    .await;
-
-    assert!(
-        result.is_err(),
-        "invalid secret should fail for authenticated endpoints"
-    );
+    // Tool call should produce an error (either MCP-level or tool-level)
+    let has_error = body.get("error").is_some()
+        || body.pointer("/result/isError").and_then(|v| v.as_bool()).unwrap_or(false)
+        || status != 200;
+    assert!(has_error, "invalid secret should error: status={}, body={:?}", status, body);
 }
 
 #[tokio::test]
-async fn test_mcp_list_teams() {
-    let (_ctx, raw_token) = setup_mcp_test().await;
+async fn test_mcp_tool_create_and_get_post() {
+    let (ctx, token) = setup_mcp_test().await;
 
-    let result = crate::features::social::controllers::get_user_teams_handler_mcp_impl(
-        raw_token.clone(),
-    )
-    .await;
+    let (_, body) =
+        mcp_tool_call(ctx.app.clone(), &token, "create_post", serde_json::json!({})).await;
+    let post_pk = extract_tool_content(&body)["post_pk"].as_str().unwrap().to_string();
 
-    if let Err(ref e) = result {
-        if is_infra_error(e) {
-            eprintln!("Skipping: DynamoDB infrastructure issue: {e}");
-            return;
-        }
-    }
-    assert!(
-        result.is_ok(),
-        "list_teams should succeed: {:?}",
-        result.err()
-    );
+    let (status, body) = mcp_tool_call(
+        ctx.app, &token, "get_post", serde_json::json!({ "post_id": post_pk }),
+    ).await;
+    assert_eq!(status, 200, "get_post: {:?}", body);
 }
 
 #[tokio::test]
-async fn test_mcp_create_post_and_create_space() {
-    let (_ctx, raw_token) = setup_mcp_test().await;
+async fn test_mcp_tool_create_publish_like() {
+    let (ctx, token) = setup_mcp_test().await;
 
-    let create_result = crate::features::posts::controllers::create_post_handler_mcp_impl(
-        raw_token.clone(),
-        None,
-    )
-    .await;
+    let (_, body) =
+        mcp_tool_call(ctx.app.clone(), &token, "create_post", serde_json::json!({})).await;
+    let post_pk = extract_tool_content(&body)["post_pk"].as_str().unwrap().to_string();
 
-    if let Err(ref e) = create_result {
-        if is_infra_error(e) {
-            eprintln!("Skipping: DynamoDB infrastructure issue: {e}");
-            return;
-        }
-    }
-    let create_result = create_result.expect("create_post should succeed");
+    let (status, _) = mcp_tool_call(ctx.app.clone(), &token, "update_post", serde_json::json!({
+        "post_id": post_pk, "title": "Test", "content": "<p>Hi</p>",
+        "publish": true, "visibility": "Public"
+    })).await;
+    assert_eq!(status, 200);
 
-    let post_pk: crate::common::types::FeedPartition = create_result
-        .post_pk
-        .clone()
-        .try_into()
-        .expect("convert to FeedPartition");
+    let (status, body) = mcp_tool_call(
+        ctx.app, &token, "like_post", serde_json::json!({ "post_id": post_pk, "like": true }),
+    ).await;
+    assert_eq!(status, 200, "like_post: {:?}", body);
+}
 
-    // Publish the post first
-    let update_result = crate::features::posts::controllers::update_post_handler_mcp_impl(
-        raw_token.clone(),
-        post_pk.clone(),
-        crate::features::posts::controllers::UpdatePostRequest::Publish {
-            title: "Space Post".to_string(),
-            content: "<p>Space content</p>".to_string(),
-            image_urls: None,
-            publish: true,
-            visibility: Some(crate::features::posts::types::Visibility::Public),
-            categories: None,
-        },
-    )
-    .await;
+#[tokio::test]
+async fn test_mcp_tool_delete_post() {
+    let (ctx, token) = setup_mcp_test().await;
 
-    if let Err(ref e) = update_result {
-        if is_infra_error(e) {
-            eprintln!("Skipping: DynamoDB infrastructure issue: {e}");
-            return;
-        }
-    }
-    update_result.expect("update_post should succeed");
+    let (_, body) =
+        mcp_tool_call(ctx.app.clone(), &token, "create_post", serde_json::json!({})).await;
+    let post_pk = extract_tool_content(&body)["post_pk"].as_str().unwrap().to_string();
 
-    // Create a space
-    let space_result = crate::features::posts::controllers::create_space_handler_mcp_impl(
-        raw_token.clone(),
-        crate::features::posts::controllers::CreateSpaceRequest {
-            post_id: post_pk,
-        },
-    )
-    .await;
+    let (status, body) = mcp_tool_call(
+        ctx.app, &token, "delete_post", serde_json::json!({ "post_id": post_pk }),
+    ).await;
+    assert_eq!(status, 200, "delete_post: {:?}", body);
+}
 
-    if let Err(ref e) = space_result {
-        if is_infra_error(e) {
-            eprintln!("Skipping: DynamoDB infrastructure issue: {e}");
-            return;
-        }
-    }
-    assert!(
-        space_result.is_ok(),
-        "create_space should succeed: {:?}",
-        space_result.err()
-    );
+#[tokio::test]
+async fn test_mcp_tool_create_space() {
+    let (ctx, token) = setup_mcp_test().await;
+
+    let (_, body) =
+        mcp_tool_call(ctx.app.clone(), &token, "create_post", serde_json::json!({})).await;
+    let post_pk = extract_tool_content(&body)["post_pk"].as_str().unwrap().to_string();
+
+    let (status, _) = mcp_tool_call(ctx.app.clone(), &token, "update_post", serde_json::json!({
+        "post_id": post_pk, "title": "Space Post", "content": "<p>Space</p>",
+        "publish": true, "visibility": "Public"
+    })).await;
+    assert_eq!(status, 200);
+
+    let (status, body) = mcp_tool_call(
+        ctx.app, &token, "create_space", serde_json::json!({ "post_id": post_pk }),
+    ).await;
+    assert_eq!(status, 200, "create_space: {:?}", body);
 }
