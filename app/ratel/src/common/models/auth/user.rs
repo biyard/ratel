@@ -134,6 +134,7 @@ pub const SESSION_KEY_USER_ID: &str = "user_id";
 #[cfg(feature = "server")]
 async fn extract_user_from_mcp_secret(parts: &Parts) -> Option<User> {
     let auth_header = parts.headers.get("authorization")?.to_str().ok()?;
+    debug!("auth header: {}", auth_header);
     if !auth_header.starts_with("McpSecret") {
         return None;
     }
@@ -153,9 +154,13 @@ async fn extract_user_from_mcp_secret(parts: &Parts) -> Option<User> {
         .ok()?;
 
     let secret = secrets.first()?;
-    User::get(cli, &secret.pk, Some(EntityType::User))
+    debug!("found secret: {:?}", secret);
+    let user = User::get(cli, &secret.pk, Some(EntityType::User))
         .await
-        .ok()?
+        .ok()?;
+    debug!("found user: {:?}", user);
+
+    user
 }
 
 #[cfg(feature = "server")]
