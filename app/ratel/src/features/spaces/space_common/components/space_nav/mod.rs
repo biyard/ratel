@@ -53,7 +53,7 @@ pub fn SpaceNav(
                 div { class: "max-tablet:hidden",
                     if show_participation_card {
                         ParticipationCard {
-                            space_id,
+                            space_id: space_id.clone(),
                             credential_path,
                             on_login: login_handler,
                         }
@@ -73,6 +73,9 @@ pub fn SpaceNav(
                     }
                 }
             }
+
+            {ranking_widget(&space_id)}
+
             Row {
                 class: "max-tablet:hidden",
                 main_axis_align: MainAxisAlign::Between,
@@ -159,6 +162,23 @@ pub struct SpaceNavItem {
     pub icon: Element,
     pub label: String,
     pub link: NavigationTarget,
+}
+
+#[cfg(all(feature = "activity", not(feature = "server")))]
+fn ranking_widget(space_id: &SpacePartition) -> Element {
+    rsx! {
+        div {
+            class: "max-tablet:hidden px-2",
+            crate::features::activity::components::RankingWidget {
+                space_id: space_id.clone(),
+            }
+        }
+    }
+}
+
+#[cfg(any(not(feature = "activity"), feature = "server"))]
+fn ranking_widget(_space_id: &SpacePartition) -> Element {
+    rsx! {}
 }
 
 #[component]
