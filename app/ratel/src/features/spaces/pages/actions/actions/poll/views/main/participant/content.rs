@@ -103,12 +103,9 @@ pub fn PollContent(
                             let keys = space_page_actions_poll_key(&space_id(), &poll_id());
                             query.invalidate(&keys);
                             toast.info(tr.submit_success);
-                            nav.replace(
-                                crate::Route::SpaceActionsPage {
-                                    space_id: space_id(),
-                                }
-                                .to_string(),
-                            );
+                            nav.replace(crate::Route::SpaceActionsPage {
+                                space_id: space_id(),
+                            });
                         }
                         Err(err) => {
                             toast.error(err);
