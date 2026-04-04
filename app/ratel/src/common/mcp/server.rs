@@ -598,7 +598,10 @@ async fn get_or_create_service(client_secret: &str) -> McpService {
     let service = StreamableHttpService::new(
         move || RatelMcpServer::new(secret.clone()),
         Arc::new(LocalSessionManager::default()),
-        Default::default(),
+        rmcp::transport::streamable_http_server::StreamableHttpServerConfig {
+            sse_keep_alive: Some(std::time::Duration::from_secs(15)),
+            stateful_mode: false,
+        },
     );
 
     let mut cache = MCP_SERVICES.write().await;
