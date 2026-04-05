@@ -42,6 +42,27 @@ Use `aria-selected`, `aria-owns`, `aria-`, etc. with their Tailwind variant pref
 
 ## Components
 
+## cfg-gated Component Variants (SSR Hydration)
+
+```rust
+// BAD — different output on server vs client causes hydration mismatch
+#[cfg(not(feature = "server"))]
+#[component]
+fn MyWidget() -> Element { rsx! { div { "content" } } }
+
+#[cfg(feature = "server")]
+#[component]
+fn MyWidget() -> Element { rsx! {} }
+
+// GOOD — same component renders on both sides; data loads client-side via use_loader
+#[component]
+fn MyWidget() -> Element { rsx! { div { "content" } } }
+```
+
+A component must produce the same HTML structure on server and client. If the server renders nothing but the client renders a `div`, hydration will fail. Use a single component definition — server functions and `use_loader` handle data fetching naturally on the client.
+
+## Components
+
 - Raw `<div class="flex ...">` for layouts — use `Row` or `Col` components
 - Raw `<button>` — use `Button` component
 - Raw `<input>` — use `Input` component

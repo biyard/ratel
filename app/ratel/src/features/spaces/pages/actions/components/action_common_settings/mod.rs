@@ -194,31 +194,9 @@ pub fn ActionCommonSettings(
                 },
             }
 
-            ActivityScoreSetting { space_id, action_id, action_setting }
+            crate::features::activity::components::ActivityScoreSetting { space_id, action_id, action_setting }
         }
     }
-}
-
-#[cfg(not(feature = "server"))]
-#[component]
-fn ActivityScoreSetting(
-    space_id: ReadSignal<SpacePartition>,
-    action_id: ReadSignal<String>,
-    action_setting: ReadSignal<SpaceAction>,
-) -> Element {
-    rsx! {
-        crate::features::activity::components::ActivityScoreSetting { space_id, action_id, action_setting }
-    }
-}
-
-#[cfg(feature = "server")]
-#[component]
-fn ActivityScoreSetting(
-    space_id: ReadSignal<SpacePartition>,
-    action_id: ReadSignal<String>,
-    action_setting: ReadSignal<SpaceAction>,
-) -> Element {
-    rsx! {}
 }
 
 translate! {
