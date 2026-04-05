@@ -32,11 +32,14 @@
 - **References**: conventions/dioxus-app.md, conventions/styling.md, conventions/i18n.md, conventions/design-system-guide.md
 - **Skills**: dioxus-knowledge-patch, rust-knowledge-patch
 
-## Step 8: Verify Build
+## Step 8: Lint & Format
+- **References**: conventions/lint-and-format.md
+
+## Step 9: Verify Build
 - **References**: conventions/build-commands.md
 - **Skills**: superpowers:verification-before-completion
 
-## Step 9: Test
+## Step 10: Test
 - Write and run e2e tests
 - **References**: conventions/playwright-tests.md
 - **Skills**: playwright-scenario-writer
