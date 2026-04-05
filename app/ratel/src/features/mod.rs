@@ -17,3 +17,6 @@ pub mod timeline;
 
 pub mod ai_moderator;
 pub mod rag;
+
+#[cfg(feature = "activity")]
+pub mod activity;
