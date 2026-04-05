@@ -1,6 +1,5 @@
 use crate::features::auth::*;
 
-#[cfg(feature = "membership")]
 use crate::features::membership::models::{
     Membership, MembershipTier, UserMembership, UserMembershipResponse,
 };
@@ -9,7 +8,6 @@ use crate::features::membership::models::{
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct GetMeResponse {
     pub user: Option<User>,
-    #[cfg(feature = "membership")]
     pub membership: Option<UserMembershipResponse>,
 }
 
@@ -18,7 +16,6 @@ pub struct GetMeResponse {
 pub async fn get_me_handler() -> Result<GetMeResponse> {
     let user: Option<User> = user.into();
 
-    #[cfg(feature = "membership")]
     let membership = {
         match &user {
             Some(u) => {
@@ -76,7 +73,6 @@ pub async fn get_me_handler() -> Result<GetMeResponse> {
 
     Ok(GetMeResponse {
         user,
-        #[cfg(feature = "membership")]
         membership,
     })
 }

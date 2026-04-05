@@ -101,5 +101,27 @@ pub async fn reply_comment(
         }
     }
 
+    {
+        let author_partition = crate::features::activity::types::AuthorPartition::from(author.pk.clone());
+
+        if let Err(e) = crate::features::activity::controllers::record_activity(
+            cli,
+            space_id.clone(),
+            author_partition,
+            discussion_sk.to_string(),
+            crate::features::spaces::pages::actions::types::SpaceActionType::TopicDiscussion,
+            space_action.activity_score,
+            space_action.additional_score,
+            crate::features::activity::types::SpaceActivityData::Discussion {
+                discussion_id: discussion_sk.to_string(),
+                is_first_contribution: false,
+            },
+            author.display_name.clone(),
+            author.profile_url.clone(),
+        ).await {
+            tracing::error!(error = %e, "Failed to record reply activity");
+        }
+    }
+
     Ok(comment.into())
 }

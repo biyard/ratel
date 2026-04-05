@@ -76,6 +76,15 @@ pub async fn handle_stream_record(
                 if let Err(e) = notification.process().await {
                     tracing::error!(error = %e, "stream: NotificationSend failed");
                 }
+            } else if sk.starts_with("SPACE_ACTIVITY#") {
+                {
+                    let activity = deserialize(image)?;
+                    if let Err(e) =
+                        crate::features::activity::services::aggregate_score(activity).await
+                    {
+                        tracing::error!(error = %e, "stream: ActivityScoreAggregate failed");
+                    }
+                }
             }
         }
         "MODIFY" => {

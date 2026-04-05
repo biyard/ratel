@@ -26,6 +26,11 @@ pub struct SpaceAction {
 
     pub credits: u64,
     pub total_points: u64,
+
+    #[serde(default)]
+    pub activity_score: i64,
+    #[serde(default)]
+    pub additional_score: i64,
 }
 
 #[cfg(feature = "server")]
@@ -52,6 +57,8 @@ impl SpaceAction {
             ended_at: now + 7 * 24 * 60 * 60 * 1000, // Default 7 days
             credits: 0,
             total_points: 0,
+            activity_score: 0,
+            additional_score: 0,
         }
     }
 }

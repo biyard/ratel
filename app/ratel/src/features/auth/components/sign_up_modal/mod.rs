@@ -400,7 +400,6 @@ pub fn SignupModal(
                                             .set(UserContext {
                                                 user: Some(user.user),
                                                 refresh_token: user.refresh_token,
-                                                #[cfg(feature = "membership")]
                                                 membership: None,
                                             });
                                         if let Some(handler) = &on_success {
@@ -441,7 +440,6 @@ pub fn SignupModal(
                                         .set(UserContext {
                                             user: Some(user.user),
                                             refresh_token: user.refresh_token,
-                                            #[cfg(feature = "membership")]
                                             membership: None,
                                         });
                                     if let Some(handler) = &on_success {
