@@ -75,8 +75,4 @@ Use visually distinct styling for placeholder states (e.g., `text-foreground-mut
 
 ## Anti-patterns
 
-- `style="color: #fcb300"` — use semantic token class instead
-- `style="background: #1a1a1a"` — use `bg-background` or `bg-card-bg`
-- Raw `<div class="flex ...">` for layouts — use `Row` or `Col` components
-- Raw `<button>` — use `Button` component
-- Raw `<input>` — use `Input` component
+See `conventions/anti-patterns.md` for the full list of styling, component, and navigation anti-patterns.

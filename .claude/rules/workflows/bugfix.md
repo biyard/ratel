@@ -7,7 +7,7 @@
 
 ## Step 2: Fix
 - Implement the fix in the relevant layer
-- **References**: conventions/dynamodb-patterns.md, conventions/dioxus-app.md, conventions/styling.md, conventions/error-handling.md
+- **References**: conventions/dynamodb-patterns.md, conventions/dioxus-app.md, conventions/styling.md, conventions/error-handling.md, conventions/anti-patterns.md
 
 ## Step 3: Lint & Format
 - **References**: conventions/lint-and-format.md

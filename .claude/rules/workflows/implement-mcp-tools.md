@@ -8,7 +8,7 @@
 ## Step 2: Annotate Controllers
 - Add `#[mcp_tool(name, description)]` above the route attribute
 - Add `#[mcp(description = "...")]` on each parameter
-- **References**: conventions/mcp-tools.md
+- **References**: conventions/mcp-tools.md, conventions/anti-patterns.md
 - **Skills**: rust-mcp-server, rust-knowledge-patch
 
 ## Step 3: Register in MCP Server
