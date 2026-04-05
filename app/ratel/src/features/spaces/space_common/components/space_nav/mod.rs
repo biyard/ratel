@@ -164,20 +164,13 @@ pub struct SpaceNavItem {
     pub link: NavigationTarget,
 }
 
-#[cfg(not(feature = "server"))]
 #[component]
 fn RankingWidgetWrapper(space_id: SpacePartition) -> Element {
     rsx! {
         div { class: "px-2 max-tablet:hidden",
-            crate::features::activity::components::RankingWidget { space_id: space_id.clone() }
+            crate::features::activity::components::RankingWidget { space_id }
         }
     }
-}
-
-#[cfg(feature = "server")]
-#[component]
-fn RankingWidgetWrapper(space_id: SpacePartition) -> Element {
-    rsx! {}
 }
 
 #[component]
