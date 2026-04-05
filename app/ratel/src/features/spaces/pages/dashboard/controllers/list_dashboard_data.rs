@@ -93,7 +93,6 @@ pub async fn list_dashboard_data_handler(
     //     }));
     // }
 
-    #[cfg(feature = "activity")]
     {
         use crate::features::activity::models::SpaceScore;
         use crate::features::spaces::space_common::types::dashboard::*;

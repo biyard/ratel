@@ -3,117 +3,92 @@ use crate::features::activity::i18n::ActivityTranslate;
 use crate::features::activity::*;
 
 #[component]
-pub fn RankingWidget(space_id: SpacePartition) -> Element {
+pub fn RankingWidget(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: ActivityTranslate = use_translate();
 
-    let ranking_loader = use_server_future(use_reactive(
-        (&space_id,),
-        |(sid,)| async move { get_ranking_handler(sid.clone(), None).await },
-    ))?;
+    let ranking_loader =
+        use_loader(move || async move { get_ranking_handler(space_id(), None).await })?;
 
-    let my_score_loader = use_server_future(use_reactive(
-        (&space_id,),
-        |(sid,)| async move { get_my_score_handler(sid.clone()).await },
-    ))?;
+    let my_score_loader =
+        use_loader(move || async move { get_my_score_handler(space_id()).await })?;
 
-    let ranking = ranking_loader.read();
-    let my_score = my_score_loader.read();
+    let ranking = ranking_loader();
+    let my_score = my_score_loader();
 
-    let top3 = ranking
-        .as_ref()
-        .and_then(|r| r.as_ref().ok())
-        .map(|r| r.entries.iter().take(3).cloned().collect::<Vec<_>>())
-        .unwrap_or_default();
-
-    let my = my_score
-        .as_ref()
-        .and_then(|r| r.as_ref().ok())
-        .cloned();
+    let top3: Vec<_> = ranking.items.iter().take(3).cloned().collect();
 
     if top3.is_empty() {
         return rsx! {};
     }
 
     rsx! {
-        Card {
-            variant: CardVariant::Outlined,
-            class: "mx-4 mb-2",
-            Col {
-                class: "w-full",
+        Card { variant: CardVariant::Outlined, class: "mx-4 mb-2",
+            Col { class: "w-full",
 
                 Row {
-                    class: "px-3 py-2 border-b border-separator",
+                    class: "py-2 px-3 border-b border-separator",
                     main_axis_align: MainAxisAlign::Between,
                     cross_axis_align: CrossAxisAlign::Center,
-                    span {
-                        class: "text-xs font-semibold text-text-primary",
-                        "{tr.ranking}"
-                    }
+                    span { class: "text-xs font-semibold text-text-primary", "{tr.ranking}" }
                 }
 
                 for entry in top3.iter() {
+                    {
+                        let is_me = my_score.rank > 0 && entry.rank == my_score.rank;
+                        rsx! {
+                            Row {
+                                class: "py-1.5 px-3 aria-highlighted:bg-primary/10",
+                                "aria-highlighted": is_me,
+                                main_axis_align: MainAxisAlign::Between,
+                                cross_axis_align: CrossAxisAlign::Center,
+                                Row { class: "gap-2", cross_axis_align: CrossAxisAlign::Center,
+                                    span { class: "w-4 text-xs font-medium text-center text-foreground-muted", "{entry.rank}" }
+                                    if !entry.avatar.is_empty() {
+                                        img {
+                                            class: "object-cover w-5 h-5 rounded-full",
+                                            src: "{entry.avatar}",
+                                            alt: "{entry.name}",
+                                        }
+                                    } else {
+                                        div { class: "flex justify-center items-center w-5 h-5 rounded-full bg-primary",
+                                            span { class: "font-medium text-[10px] text-btn-primary-text",
+                                                "{entry.name.chars().next().unwrap_or('?')}"
+                                            }
+                                        }
+                                    }
+                                    span { class: "text-xs text-text-primary truncate max-w-[80px]",
+                                        if is_me {
+                                            "{entry.name} ({tr.you})"
+                                        } else {
+                                            "{entry.name}"
+                                        }
+                                    }
+                                }
+                                span {
+                                    class: "text-xs font-medium text-text-primary aria-highlighted:text-primary",
+                                    "aria-highlighted": is_me,
+                                    "{entry.total_score}"
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if my_score.rank > 3 {
+                    div { class: "border-t border-separator" }
                     Row {
-                        class: "px-3 py-1.5",
+                        class: "py-1.5 px-3 rounded-b-lg bg-primary/10",
                         main_axis_align: MainAxisAlign::Between,
                         cross_axis_align: CrossAxisAlign::Center,
                         Row {
                             class: "gap-2",
                             cross_axis_align: CrossAxisAlign::Center,
-                            span {
-                                class: "text-xs font-medium text-foreground-muted w-4 text-center",
-                                "{entry.rank}"
+                            span { class: "w-4 text-xs font-medium text-center text-foreground-muted",
+                                "{my_score.rank}"
                             }
-                            if !entry.avatar.is_empty() {
-                                img {
-                                    class: "w-5 h-5 rounded-full object-cover",
-                                    src: "{entry.avatar}",
-                                    alt: "{entry.name}",
-                                }
-                            } else {
-                                div {
-                                    class: "flex items-center justify-center w-5 h-5 rounded-full bg-primary",
-                                    span {
-                                        class: "text-[10px] font-medium text-btn-primary-text",
-                                        "{entry.name.chars().next().unwrap_or('?')}"
-                                    }
-                                }
-                            }
-                            span {
-                                class: "text-xs text-text-primary truncate max-w-[80px]",
-                                "{entry.name}"
-                            }
+                            span { class: "text-xs font-semibold text-primary", "{tr.you}" }
                         }
-                        span {
-                            class: "text-xs font-medium text-text-primary",
-                            "{entry.total_score}"
-                        }
-                    }
-                }
-
-                if let Some(ref score) = my {
-                    if score.rank > 0 {
-                        div { class: "border-t border-separator" }
-                        Row {
-                            class: "px-3 py-1.5 bg-primary/10 rounded-b-lg",
-                            main_axis_align: MainAxisAlign::Between,
-                            cross_axis_align: CrossAxisAlign::Center,
-                            Row {
-                                class: "gap-2",
-                                cross_axis_align: CrossAxisAlign::Center,
-                                span {
-                                    class: "text-xs font-medium text-foreground-muted w-4 text-center",
-                                    "{score.rank}"
-                                }
-                                span {
-                                    class: "text-xs font-semibold text-primary",
-                                    "{tr.you}"
-                                }
-                            }
-                            span {
-                                class: "text-xs font-medium text-primary",
-                                "{score.total_score}"
-                            }
-                        }
+                        span { class: "text-xs font-medium text-primary", "{my_score.total_score}" }
                     }
                 }
             }

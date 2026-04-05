@@ -89,11 +89,8 @@ pub async fn respond_quiz(
 
     let already_passed = attempts.iter().any(|a| a.score >= quiz.pass_score);
     if score >= quiz.pass_score && !already_passed {
-        #[cfg(feature = "activity")]
         let activity_user_pk = user.pk.clone();
-        #[cfg(feature = "activity")]
         let activity_user_name = user.display_name.clone();
-        #[cfg(feature = "activity")]
         let activity_user_avatar = user.profile_url.clone();
 
         match SpaceReward::get_by_action(
@@ -127,7 +124,6 @@ pub async fn respond_quiz(
             }
         }
 
-        #[cfg(feature = "activity")]
         {
             if let Err(e) = crate::features::activity::controllers::record_activity(
                 cli,

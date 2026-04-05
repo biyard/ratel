@@ -205,9 +205,9 @@ New UI from Figma goes in:
 
 ## Styling Anti-patterns (avoid)
 
-- ❌ `style="color: #fcb300"` — use semantic token class instead
-- ❌ `style="background: #1a1a1a"` — use `bg-background` or `bg-card-bg`
-- ❌ Raw `<div class="flex ...">` for layouts — use `Row` or `Col` components
-- ❌ Raw `<button>` — use `Button` component
-- ❌ Raw `<input>` — use `Input` component
-- ✅ `class: "gap-4 p-5 rounded-[10px]"` — Tailwind spacing/sizing is fine to use directly
+- `style="color: #fcb300"` — use semantic token class instead
+- `style="background: #1a1a1a"` — use `bg-background` or `bg-card-bg`
+- Raw `<div class="flex ...">` for layouts — use `Row` or `Col` components
+- Raw `<button>` — use `Button` component
+- Raw `<input>` — use `Input` component
+- `class: "gap-4 p-5 rounded-[10px]"` — Tailwind spacing/sizing is fine to use directly
