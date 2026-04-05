@@ -20,7 +20,7 @@ pub fn RootLayout() -> Element {
                     div { "Oops, we encountered an error" }
                 }
             },
-            Outlet::<Route> {}
+            SuspenseBoundary { Outlet::<Route> {} }
         }
         PopupZone {}
         ToastProvider {}
