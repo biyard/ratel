@@ -18,7 +18,6 @@ Ratel is a decentralized legislative platform. Monorepo: Dioxus 0.7 fullstack ap
 | `app/ratel/` | Dioxus fullstack app (features gated by Cargo features) |
 | `app/ratel/src/common/` | Shared types, models, components, utils |
 | `app/ratel/src/features/` | Feature modules: auth, posts, spaces, users, teams, membership, admin |
-| `packages/main-api/` | Axum REST API (`src/controllers/v3/`) |
 | `packages/by-macros/` | Proc macros (DynamoEntity derive) |
 | `packages/dioxus-translate/` | i18n framework |
 | `packages/icons/` | Icon library |

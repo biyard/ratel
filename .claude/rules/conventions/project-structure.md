@@ -11,7 +11,6 @@ globs: ["app/ratel/Cargo.toml", "packages/*/Cargo.toml"]
 | `app/ratel/` | Dioxus fullstack app (`app-shell`) | Single package, feature-gated modules |
 | `app/ratel/src/common/` | Shared foundation: types, models, components, utils, config | `use crate::common::*;` |
 | `app/ratel/src/features/` | Feature modules: auth, posts, spaces, users, teams, membership, admin | Each gated by Cargo feature |
-| `packages/main-api/` | REST API (Axum 0.8.1) | v3 controllers at `src/controllers/v3/` |
 | `packages/by-macros/` | Proc macros (DynamoEntity derive) | |
 | `packages/bdk/` | Biyard Dev Kit | |
 | `packages/dioxus-translate/` | i18n framework | `translate!` macro |
