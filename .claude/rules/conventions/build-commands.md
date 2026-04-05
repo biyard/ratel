@@ -1,5 +1,5 @@
 ---
-globs: ["Makefile", "docker-compose*.yml", "app/ratel/Cargo.toml", "packages/main-api/Makefile"]
+globs: ["Makefile", "docker-compose*.yml", "app/ratel/Cargo.toml"]
 ---
 
 # Build & Verification Commands
@@ -15,12 +15,6 @@ cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev dx serve --port 8000 --web
 ```
 
 **`DYNAMO_TABLE_PREFIX` is required at compile time** for DynamoEntity. Use `ratel-dev` for dev, `ratel-local` for Docker local.
-
-## Backend (packages/main-api/)
-
-```bash
-cd packages/main-api && make test
-```
 
 ## Playwright E2E Tests
 
