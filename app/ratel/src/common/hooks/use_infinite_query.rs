@@ -203,14 +203,6 @@ where
         rand::rng().random::<u64>()
     });
 
-    let mut accumulated_sync = accumulated.clone();
-    let mut next_bookmark_sync = next_bookmark.clone();
-    let _sync_effect = use_effect(move || {
-        let res = rsc();
-        accumulated_sync.set(res.items().clone());
-        next_bookmark_sync.set(res.bookmark());
-    });
-
     let effect = use_effect(move || {
         let nb = bookmark();
 
@@ -219,6 +211,7 @@ where
         }
 
         spawn(async move {
+            loading.set(true);
             let res = match future(nb.clone()).await {
                 Ok(ret) => {
                     let next = ret.bookmark();
