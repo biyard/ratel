@@ -1,13 +1,6 @@
 use crate::features::activity::*;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-pub struct RankingResponse {
-    pub entries: Vec<RankingEntryResponse>,
-    pub bookmark: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct RankingEntryResponse {
     pub rank: u32,
@@ -21,21 +14,18 @@ pub struct RankingEntryResponse {
 pub async fn get_ranking_handler(
     space_id: SpacePartition,
     bookmark: Option<String>,
-) -> Result<RankingResponse> {
+) -> Result<ListResponse<RankingEntryResponse>> {
     use crate::features::activity::models::SpaceScore;
 
     let cfg = crate::common::CommonConfig::default();
     let cli = cfg.dynamodb();
     let space_pk: Partition = space_id.into();
 
-    let mut opts = SpaceScore::opt().limit(50);
-    if let Some(bm) = bookmark {
-        opts = opts.bookmark(bm);
-    }
+    let opts = SpaceScore::opt_with_bookmark(bookmark).limit(50);
 
     let (scores, next_bookmark) = SpaceScore::find_by_space(cli, &space_pk, opts).await?;
 
-    let entries: Vec<RankingEntryResponse> = scores
+    let items: Vec<RankingEntryResponse> = scores
         .iter()
         .enumerate()
         .map(|(i, score)| RankingEntryResponse {
@@ -47,8 +37,5 @@ pub async fn get_ranking_handler(
         })
         .collect();
 
-    Ok(RankingResponse {
-        entries,
-        bookmark: next_bookmark,
-    })
+    Ok((items, next_bookmark).into())
 }
