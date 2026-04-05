@@ -11,11 +11,17 @@ pub struct MyScoreResponse {
     pub rank: u32,
 }
 
-#[get("/api/spaces/:space_id/my-score", _space: crate::common::models::space::SpaceCommon, user: crate::features::auth::User)]
+#[get("/api/spaces/:space_id/my-score", _space: crate::common::models::space::SpaceCommon, user: crate::common::models::OptionalUser)]
 pub async fn get_my_score_handler(
     space_id: SpacePartition,
 ) -> Result<MyScoreResponse> {
+    use crate::common::models::User;
     use crate::features::activity::models::SpaceScore;
+
+    let user: Option<User> = user.into();
+    let Some(user) = user else {
+        return Ok(MyScoreResponse::default());
+    };
 
     let cfg = crate::common::CommonConfig::default();
     let cli = cfg.dynamodb();
