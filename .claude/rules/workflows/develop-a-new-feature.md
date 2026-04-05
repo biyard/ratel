@@ -20,26 +20,32 @@
 ## Step 5: Implement Server Functions
 - Create controllers, models, error types
 - **Skills**: rust-dynamodb-skill, dioxus-knowledge-patch, rust-knowledge-patch
-- **References**: conventions/error-handling.md
+- **References**: conventions/server-functions.md, conventions/error-handling.md
 
-## Step 6: Design Frontend UI
+## Step 6: Write Server Function Tests
+- Add integration tests in `app/ratel/src/tests/<feature>_tests.rs`
+- Register module in `app/ratel/src/tests/mod.rs`
+- Test success, error, and unauthenticated cases
+- **References**: conventions/server-function-tests.md
+
+## Step 7: Design Frontend UI
 - Design UI layout, component hierarchy, and visual style before implementation
 - **References**: conventions/styling.md, conventions/figma-design-system.md, conventions/design-system-guide.md
 - **Skills**: frontend-design, figma:figma-implement-design
 
-## Step 7: Implement Frontend
+## Step 8: Implement Frontend
 - Create components, views, hooks, i18n
 - **References**: conventions/dioxus-app.md, conventions/styling.md, conventions/i18n.md, conventions/design-system-guide.md
 - **Skills**: dioxus-knowledge-patch, rust-knowledge-patch
 
-## Step 8: Lint & Format
+## Step 9: Lint & Format
 - **References**: conventions/lint-and-format.md
 
-## Step 9: Verify Build
+## Step 10: Verify Build
 - **References**: conventions/build-commands.md
 - **Skills**: superpowers:verification-before-completion
 
-## Step 10: Test
+## Step 11: Test
 - Write and run e2e tests
 - **References**: conventions/playwright-tests.md
 - **Skills**: playwright-scenario-writer
