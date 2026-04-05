@@ -1,13 +1,13 @@
-When Performing a code review, respond in Korean or English. If a PR is written by Korean, respond in Korean, otherwise English.
+When performing a code review, respond in Korean or English. If a PR is written in Korean, respond in Korean, otherwise English.
 
-When performing a code review,
-* Find out the anti-pattern in the `/docs/troubleshooting.md` file.
-* For files under `app/`, apply the Dioxus convention checks defined in `/docs/dioxus-convention.md`. See `/docs/dioxus-convention-review-checklist.md` for the review checklist.
-* Pay special attention to `toast.error()` usage: it must receive a typed `common::Error` variant, never a raw string. See section 12 of `/docs/dioxus-convention.md` for the full toast convention.
-* **Do not use `Error::BadRequest(String)` for domain-specific errors.** Instead, define a specific error enum with `Translate` derive (e.g., `SpaceActionQuizError`, `SpaceRewardError`) for user-friendly, i18n-compatible error handling. See the `SpaceRewardError` pattern in `app/ratel/src/common/types/reward/error.rs` and the "Error Handling Convention" section of `CLAUDE.md`. When reviewing code that introduces new `Error::BadRequest(...)` calls, flag it and suggest a typed error variant instead. **Important:** `common::Error` uses `derive(Translate)` with the `#[translate(from)]` attribute on wrapper variants to delegate translation to the inner error's `translate()` method. When adding a new wrapper variant, annotate it with `#[translate(from)]` so the derive macro generates the delegation automatically.
-* For TailwindCSS styling, apply the conventions defined in `/docs/tailwindcss-convention.md`. Key checks:
-  - Use semantic design tokens (`bg-card`, `text-text-primary`), not raw color values (`bg-neutral-800`).
-  - Do not use `light:` or `dark:` prefixes in component classes; define both light/dark values as semantic tokens in `app/ratel/tailwind.css`.
-  - Prefer `aria-selected:` / `group-aria-selected:` variants over Rust if/else class selection for toggleable states.
-  - Flag excessive `!important` overrides (`!bg-*`, `!text-*`) — components should accept a `class` prop instead.
-  - Use `max-tablet:` / `max-mobile:` for responsive breakpoints.
+When performing a code review, follow the workflow in `.claude/rules/workflows/code-review.md` and apply the convention rules in `.claude/rules/conventions/`:
+
+* **Server functions** (`.claude/rules/conventions/server-functions.md`): Use SubPartition types (`{Name}Partition`, `{Name}EntityType`) with `id` naming for path params and DTOs. Never expose raw `Partition` or `EntityType` in API interfaces.
+* **Error handling** (`.claude/rules/conventions/error-handling.md`): Do not use `Error::BadRequest(String)`. Define typed error enums with `Translate` derive or unit variants on `common::Error`. Log details with `crate::error!` before converting to unit error types — users must never see internal details.
+* **Styling** (`.claude/rules/conventions/styling.md`): Use semantic design tokens (`bg-card-bg`, `text-text-primary`), not raw Tailwind palette colors (`bg-neutral-800`, `text-gray-500`). Use primitive components (`Button`, `Input`, `Card`, `Row`, `Col`) — never raw HTML elements.
+* **i18n** (`.claude/rules/conventions/i18n.md`): All user-facing strings must use the `translate!` macro. Enum values in UI must use `.translate()`, never `.to_string()`.
+* **Dioxus app** (`.claude/rules/conventions/dioxus-app.md`): Follow component structure patterns, use `SeoMeta` on page views, guard `wasm_bindgen` calls with `#[cfg(not(feature = "server"))]`.
+* **Lint & format** (`.claude/rules/conventions/lint-and-format.md`): Verify `rustywind` and `dx fmt` were applied to changed `.rs` files.
+* **Tests** (`.claude/rules/conventions/server-function-tests.md`, `.claude/rules/conventions/playwright-tests.md`): Verify server function tests exist for new/changed endpoints. Verify e2e tests for user-facing changes.
+* **MCP tools** (`.claude/rules/conventions/mcp-tools.md`): If MCP tools are added, verify `#[mcp_tool]` annotation, registration in `server.rs`, and integration tests in `mcp_tests.rs`.
+* **Anti-patterns**: Check `/docs/troubleshooting.md` for known anti-patterns.
