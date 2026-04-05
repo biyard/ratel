@@ -74,7 +74,7 @@ pub fn SpaceNav(
                 }
             }
 
-            {ranking_widget(&space_id)}
+            RankingWidgetWrapper { space_id }
 
             Row {
                 class: "max-tablet:hidden",
@@ -164,8 +164,9 @@ pub struct SpaceNavItem {
     pub link: NavigationTarget,
 }
 
-#[cfg(feature = "activity")]
-fn ranking_widget(space_id: &SpacePartition) -> Element {
+#[cfg(all(feature = "activity", not(feature = "server")))]
+#[component]
+fn RankingWidgetWrapper(space_id: SpacePartition) -> Element {
     rsx! {
         div {
             class: "max-tablet:hidden px-2",
@@ -176,8 +177,9 @@ fn ranking_widget(space_id: &SpacePartition) -> Element {
     }
 }
 
-#[cfg(not(feature = "activity"))]
-fn ranking_widget(_space_id: &SpacePartition) -> Element {
+#[cfg(any(not(feature = "activity"), feature = "server"))]
+#[component]
+fn RankingWidgetWrapper(space_id: SpacePartition) -> Element {
     rsx! {}
 }
 
