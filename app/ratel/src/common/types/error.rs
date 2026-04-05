@@ -235,7 +235,6 @@ pub enum Error {
     #[translate(from)]
     AiModerator(#[from] crate::features::ai_moderator::types::AiModeratorError),
 
-    #[cfg(feature = "activity")]
     #[error("{0}")]
     #[translate(from)]
     Activity(#[from] crate::features::activity::types::ActivityError),
@@ -294,7 +293,6 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             Error::McpServer(e) => e.status_code(),
             Error::Member(e) => e.status_code(),
             Error::AiModerator(e) => e.status_code(),
-            #[cfg(feature = "activity")]
             Error::Activity(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
@@ -389,7 +387,6 @@ impl dioxus::fullstack::AsStatusCode for Error {
             Error::McpServer(e) => e.status_code(),
             Error::Member(e) => e.status_code(),
             Error::AiModerator(e) => e.status_code(),
-            #[cfg(feature = "activity")]
             Error::Activity(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }

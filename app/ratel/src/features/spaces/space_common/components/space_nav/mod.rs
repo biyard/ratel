@@ -164,7 +164,7 @@ pub struct SpaceNavItem {
     pub link: NavigationTarget,
 }
 
-#[cfg(all(feature = "activity", not(feature = "server")))]
+#[cfg(not(feature = "server"))]
 #[component]
 fn RankingWidgetWrapper(space_id: SpacePartition) -> Element {
     rsx! {
@@ -177,7 +177,7 @@ fn RankingWidgetWrapper(space_id: SpacePartition) -> Element {
     }
 }
 
-#[cfg(any(not(feature = "activity"), feature = "server"))]
+#[cfg(feature = "server")]
 #[component]
 fn RankingWidgetWrapper(space_id: SpacePartition) -> Element {
     rsx! {}

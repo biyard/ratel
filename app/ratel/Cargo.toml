@@ -111,7 +111,7 @@ rmcp = { version = "0.7.0", git = "https://github.com/modelcontextprotocol/rust-
 
 
 [features]
-full = ["membership", "social", "spaces_full", "activity"]
+full = []
 default = ["full"]
 bypass = []
 web = ["dioxus/web", "getrandom", "gloo-timers", "time/wasm-bindgen"]
@@ -160,11 +160,6 @@ server = [
 
 lambda = ["lambda_http", "lambda_runtime", "server"]
 layout_test = ["web"]
-membership = []
-social = []
-spaces = []
-spaces_full = ["spaces"]
-activity = []
 local-dev = ["beta","bypass"]
 beta = []
 futures = ["dep:futures"]

@@ -77,7 +77,6 @@ pub async fn handle_stream_record(
                     tracing::error!(error = %e, "stream: NotificationSend failed");
                 }
             } else if sk.starts_with("SPACE_ACTIVITY#") {
-                #[cfg(feature = "activity")]
                 {
                     let activity = deserialize(image)?;
                     if let Err(e) =
