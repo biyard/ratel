@@ -44,7 +44,7 @@ pub fn SpaceNav(
         div {
             class: "flex z-40 flex-col gap-2.5 justify-between pt-2.5 w-full h-full divide-y shrink-0 divide-divider {class} max-tablet:flex-row max-tablet:h-16 max-tablet:items-stretch max-tablet:justify-around max-tablet:sticky max-tablet:bottom-0 max-tablet:bg-space-bg",
             "data-testid": "space-nav-root",
-            div { class: "flex flex-col gap-2.5 pb-4 w-full",
+            div { class: "flex flex-col flex-1 gap-2.5 pb-4 w-full",
                 img {
                     src: "{logo}",
                     class: "mx-4 mt-5 mb-2.5 w-25 max-tablet:hidden",
@@ -147,7 +147,7 @@ fn NavItem(item: SpaceNavItem) -> Element {
     // NOTE: Link component does not support class attribute merging.
     rsx! {
         Link {
-            class: "flex flex-1 flex-row gap-2 items-center py-2 px-1 w-full text-sm font-medium rounded-sm text-text aria-selected:bg-space-nav-item-selected max-tablet:flex-col max-tablet:gap-0.5 aria-selected:text-primary max-tablet:aria-selected:bg-transparent max-tablet:py-0 hover:bg-space-nav-item-hover",
+            class: "flex flex-row flex-1 gap-2 items-center py-2 px-1 w-full text-sm font-medium rounded-sm text-text aria-selected:bg-space-nav-item-selected max-tablet:flex-col max-tablet:gap-0.5 aria-selected:text-primary max-tablet:aria-selected:bg-transparent max-tablet:py-0 hover:bg-space-nav-item-hover",
             "aria-selected": is_active,
             to: item.link,
             div { class: "max-tablet:h-6 max-tablet:w-6 max-tablet:flex max-tablet:items-center max-tablet:justify-center",
@@ -168,11 +168,8 @@ pub struct SpaceNavItem {
 #[component]
 fn RankingWidgetWrapper(space_id: SpacePartition) -> Element {
     rsx! {
-        div {
-            class: "max-tablet:hidden px-2",
-            crate::features::activity::components::RankingWidget {
-                space_id: space_id.clone(),
-            }
+        div { class: "px-2 max-tablet:hidden",
+            crate::features::activity::components::RankingWidget { space_id: space_id.clone() }
         }
     }
 }
