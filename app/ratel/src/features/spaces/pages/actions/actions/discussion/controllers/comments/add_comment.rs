@@ -95,7 +95,6 @@ pub async fn add_comment(
         }
     }
 
-    #[cfg(feature = "activity")]
     {
         let author_partition = crate::features::activity::types::AuthorPartition::from(author.pk.clone());
 

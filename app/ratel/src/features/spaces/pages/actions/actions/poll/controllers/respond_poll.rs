@@ -230,7 +230,6 @@ pub async fn respond_poll(
             .await?;
     } else {
         let respondent = get_respondent_from_panels(cli, &space_pk, &author.pk).await?;
-        #[cfg(feature = "activity")]
         let activity_answers = req.answers.clone();
         let answer_record = SpacePollUserAnswer::new(
             space_pk.clone(),
@@ -252,11 +251,8 @@ pub async fn respond_poll(
             );
         crate::transact_write_items!(cli, vec![agg_item]).ok();
 
-        #[cfg(feature = "activity")]
         let activity_user_pk = user.pk.clone();
-        #[cfg(feature = "activity")]
         let activity_user_name = user.display_name.clone();
-        #[cfg(feature = "activity")]
         let activity_user_avatar = user.profile_url.clone();
 
         match SpaceReward::get_by_action(
@@ -290,7 +286,6 @@ pub async fn respond_poll(
             }
         }
 
-        #[cfg(feature = "activity")]
         {
             let optional_count = poll.questions.iter().enumerate().filter(|(i, q)| {
                 let is_required = match q {
