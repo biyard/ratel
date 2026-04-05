@@ -20,7 +20,7 @@
 ## Step 5: Implement Server Functions
 - Create controllers, models, error types
 - **Skills**: rust-dynamodb-skill, dioxus-knowledge-patch, rust-knowledge-patch
-- **References**: conventions/server-functions.md, conventions/error-handling.md
+- **References**: conventions/server-functions.md, conventions/error-handling.md, conventions/anti-patterns.md
 
 ## Step 6: Write Server Function Tests
 - Add integration tests in `app/ratel/src/tests/<feature>_tests.rs`
@@ -35,7 +35,7 @@
 
 ## Step 8: Implement Frontend
 - Create components, views, hooks, i18n
-- **References**: conventions/dioxus-app.md, conventions/styling.md, conventions/i18n.md, conventions/design-system-guide.md
+- **References**: conventions/dioxus-app.md, conventions/styling.md, conventions/i18n.md, conventions/design-system-guide.md, conventions/anti-patterns.md
 - **Skills**: dioxus-knowledge-patch, rust-knowledge-patch
 
 ## Step 9: Lint & Format

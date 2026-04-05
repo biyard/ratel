@@ -10,4 +10,4 @@ When performing a code review, follow the workflow in `.claude/rules/workflows/c
 * **Lint & format** (`.claude/rules/conventions/lint-and-format.md`): Verify `rustywind` and `dx fmt` were applied to changed `.rs` files.
 * **Tests** (`.claude/rules/conventions/server-function-tests.md`, `.claude/rules/conventions/playwright-tests.md`): Verify server function tests exist for new/changed endpoints. Verify e2e tests for user-facing changes.
 * **MCP tools** (`.claude/rules/conventions/mcp-tools.md`): If MCP tools are added, verify `#[mcp_tool]` annotation, registration in `server.rs`, and integration tests in `mcp_tests.rs`.
-* **Anti-patterns**: Check `/docs/troubleshooting.md` for known anti-patterns.
+* **Anti-patterns**: Check `.claude/rules/conventions/anti-patterns.md` for known anti-patterns.

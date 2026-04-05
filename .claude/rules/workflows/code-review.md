@@ -29,10 +29,14 @@
 - Verify e2e tests for user-facing changes
 - **References**: conventions/server-function-tests.md, conventions/playwright-tests.md
 
-## Step 6: Check Lint & Format
+## Step 6: Check Anti-patterns
+- Verify no known anti-patterns are introduced
+- **References**: conventions/anti-patterns.md
+
+## Step 7: Check Lint & Format
 - Verify `rustywind` and `dx fmt` were applied to changed `.rs` files
 - **References**: conventions/lint-and-format.md
 
-## Step 7: Verify Build
+## Step 8: Verify Build
 - **References**: conventions/build-commands.md
 - **Skills**: superpowers:verification-before-completion

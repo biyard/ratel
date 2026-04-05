@@ -78,6 +78,26 @@ Never spawn unbounded async tasks from `onscroll`. Use trailing-edge throttle wi
 - `use_effect` only re-runs when reactive signals are read **inside** the closure
 - Event handlers: `onscroll: move |_| { ... }` — no outer brace wrapping needed
 
+## Navigation with `use_navigator`
+
+Use `use_navigator()` for programmatic navigation (after async operations, conditional redirects, etc.):
+
+```rust
+let nav = use_navigator();
+
+// Push — adds to history stack (user can go back)
+nav.push(Route::SpaceDashboardPage { space_id });
+
+// Replace — replaces current entry (no back navigation)
+nav.replace(Route::PostDetailPage { post_id });
+```
+
+- **Always use `Route` enum variants**, not format strings — ensures compile-time route validation
+- Use `nav.push()` for normal navigation (post-creation redirects, menu clicks)
+- Use `nav.replace()` when the current page should not remain in history (e.g., after edit → view)
+- For static links in RSX, prefer `Link { to: Route::... }` over `div { onclick: nav.push() }` (accessibility)
+- Place navigation **after** all `.await` points — Dioxus drops the future if the component unmounts mid-await
+
 ## Async Event Handlers
 
 Never call `popup.close()` or navigate away before `.await` points — Dioxus drops the future when the component unmounts. Move unmounting actions after all awaits.
@@ -101,4 +121,4 @@ Namespace must match exactly. JS files in `app/ratel/assets/` for `asset!()` mac
 
 - `alt` on all `img` elements
 - `aria-label` on icon-only buttons
-- Use `Link { to: "..." }` for navigation, not `div { onclick: navigator.push() }`
+- Use `Link { to: Route::... }` for navigation, not `div { onclick: navigator.push() }`

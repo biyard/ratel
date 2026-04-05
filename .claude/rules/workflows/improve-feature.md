@@ -20,7 +20,7 @@
 
 ## Step 5: Implement Changes
 - Modify existing controllers, models, components as needed
-- **References**: conventions/server-functions.md, conventions/dynamodb-patterns.md, conventions/dioxus-app.md, conventions/styling.md, conventions/error-handling.md, conventions/i18n.md, conventions/design-system-guide.md
+- **References**: conventions/server-functions.md, conventions/dynamodb-patterns.md, conventions/dioxus-app.md, conventions/styling.md, conventions/error-handling.md, conventions/i18n.md, conventions/design-system-guide.md, conventions/anti-patterns.md
 - **Skills**: dioxus-knowledge-patch, rust-knowledge-patch
 
 ## Step 6: Write/Update Server Function Tests
