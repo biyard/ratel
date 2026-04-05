@@ -25,7 +25,10 @@ pub enum Error {
     Unauthorized(String),
 
     #[error("Internal server error: {0}")]
-    #[translate(en = "Internal server error", ko = "서버 내부 오류가 발생하였습니다. 잠시 후 다시 시도해주세요.")]
+    #[translate(
+        en = "Internal server error",
+        ko = "서버 내부 오류가 발생하였습니다. 잠시 후 다시 시도해주세요."
+    )]
     InternalServerError(String),
 
     #[error("Bookmark is invalid")]
@@ -39,7 +42,10 @@ pub enum Error {
     #[cfg(feature = "server")]
     #[serde(skip)]
     #[error("AWS error: {0}")]
-    #[translate(en = "Internal server error", ko = "서버 내부 오류가 발생하였습니다. 잠시 후 다시 시도해주세요.")]
+    #[translate(
+        en = "Internal server error",
+        ko = "서버 내부 오류가 발생하였습니다. 잠시 후 다시 시도해주세요."
+    )]
     Aws(#[from] crate::common::utils::aws::error::AwsError),
 
     #[cfg(feature = "server")]
@@ -69,11 +75,17 @@ pub enum Error {
     NoPermission,
 
     #[error("Exceeded maximum attempt for email verification")]
-    #[translate(en = "Exceeded maximum attempt for email verification", ko = "이메일 인증 최대 시도 횟수를 초과했습니다.")]
+    #[translate(
+        en = "Exceeded maximum attempt for email verification",
+        ko = "이메일 인증 최대 시도 횟수를 초과했습니다."
+    )]
     ExceededAttemptEmailVerification,
 
     #[error("Exceeded maximum attempt for phone verification")]
-    #[translate(en = "Exceeded maximum attempt for phone verification", ko = "전화 인증 최대 시도 횟수를 초과했습니다.")]
+    #[translate(
+        en = "Exceeded maximum attempt for phone verification",
+        ko = "전화 인증 최대 시도 횟수를 초과했습니다."
+    )]
     ExceededAttemptPhoneVerification,
 
     #[error("Send SMS Failed: {0}")]
@@ -97,28 +109,46 @@ pub enum Error {
     AlreadyParticipating,
 
     #[error("Participation is not open")]
-    #[translate(en = "Participation is only available while the space is open.", ko = "참여는 스페이스가 열려 있는 동안만 가능합니다.")]
+    #[translate(
+        en = "Participation is only available while the space is open.",
+        ko = "참여는 스페이스가 열려 있는 동안만 가능합니다."
+    )]
     ParticipationNotOpen,
 
     #[error("not found verification code")]
-    #[translate(en = "Verification code not found", ko = "인증 코드를 찾을 수 없습니다.")]
+    #[translate(
+        en = "Verification code not found",
+        ko = "인증 코드를 찾을 수 없습니다."
+    )]
     NotFoundVerificationCode,
     #[error("verification code is expired")]
-    #[translate(en = "Verification code is expired", ko = "인증 코드가 만료되었습니다.")]
+    #[translate(
+        en = "Verification code is expired",
+        ko = "인증 코드가 만료되었습니다."
+    )]
     ExpiredVerification,
     #[error("invalid verification code")]
-    #[translate(en = "Invalid verification code", ko = "인증 코드가 유효하지 않습니다.")]
+    #[translate(
+        en = "Invalid verification code",
+        ko = "인증 코드가 유효하지 않습니다."
+    )]
     InvalidVerificationCode,
 
     #[error("not found space")]
     #[translate(en = "Not found space", ko = "스페이스를 찾을 수 없습니다.")]
     SpaceNotFound,
     #[error("not found author")]
-    #[translate(en = "Not found space author", ko = "스페이스 작성자를 찾을 수 없습니다.")]
+    #[translate(
+        en = "Not found space author",
+        ko = "스페이스 작성자를 찾을 수 없습니다."
+    )]
     InvalidSpaceAuthor,
 
     #[error("discussion is not in progress")]
-    #[translate(en = "Discussion is not in progress", ko = "토론이 진행중 상태가 아닙니다.")]
+    #[translate(
+        en = "Discussion is not in progress",
+        ko = "토론이 진행중 상태가 아닙니다."
+    )]
     DiscussionNotInProgress,
 
     #[error("space post ended")]
@@ -126,20 +156,32 @@ pub enum Error {
     SpacePostEnded,
 
     #[error("space post contents is too short")]
-    #[translate(en = "Space post contents must be at least 10 characters long.", ko = "스페이스 게시글의 내용은 10자 이상이어야 합니다.")]
+    #[translate(
+        en = "Space post contents must be at least 10 characters long.",
+        ko = "스페이스 게시글의 내용은 10자 이상이어야 합니다."
+    )]
     ValidationTooShortContents,
 
     // DAO-related
     #[error("At least 3 admins must be selected")]
-    #[translate(en = "At least 3 admins must be selected", ko = "최소 3명의 관리자를 선택해야 합니다.")]
+    #[translate(
+        en = "At least 3 admins must be selected",
+        ko = "최소 3명의 관리자를 선택해야 합니다."
+    )]
     InsufficientAdmins,
 
     #[error("Transaction cancelled: You rejected the transaction")]
-    #[translate(en = "Transaction cancelled: You rejected the transaction", ko = "트랜잭션 취소: 트랜잭션을 거부했습니다.")]
+    #[translate(
+        en = "Transaction cancelled: You rejected the transaction",
+        ko = "트랜잭션 취소: 트랜잭션을 거부했습니다."
+    )]
     TransactionRejected,
 
     #[error("MetaMask not installed")]
-    #[translate(en = "MetaMask not installed. Please install MetaMask to continue", ko = "MetaMask가 설치되어 있지 않습니다. 계속하려면 MetaMask를 설치하세요.")]
+    #[translate(
+        en = "MetaMask not installed. Please install MetaMask to continue",
+        ko = "MetaMask가 설치되어 있지 않습니다. 계속하려면 MetaMask를 설치하세요."
+    )]
     MetamaskNotInstalled,
 
     #[error("Wallet error: {0}")]
@@ -148,7 +190,10 @@ pub enum Error {
 
     // Membership-related
     #[error("Membership response missing")]
-    #[translate(en = "Membership response missing", ko = "멤버십 응답이 누락되었습니다.")]
+    #[translate(
+        en = "Membership response missing",
+        ko = "멤버십 응답이 누락되었습니다."
+    )]
     MembershipResponseMissing,
 
     #[error("Failed to change membership")]
@@ -156,12 +201,18 @@ pub enum Error {
     MembershipChangeFailed,
 
     #[error("Membership already active")]
-    #[translate(en = "Membership is already active", ko = "멤버십이 이미 활성화되어 있습니다.")]
+    #[translate(
+        en = "Membership is already active",
+        ko = "멤버십이 이미 활성화되어 있습니다."
+    )]
     MembershipAlreadyActive,
 
     // Credential-related
     #[error("Invalid verification code input")]
-    #[translate(en = "Invalid verification code", ko = "인증 코드가 유효하지 않습니다.")]
+    #[translate(
+        en = "Invalid verification code",
+        ko = "인증 코드가 유효하지 않습니다."
+    )]
     InvalidCodeInput,
 
     #[error("Failed to response quiz")]
@@ -187,17 +238,22 @@ pub enum Error {
 
     #[error("{0}")]
     #[translate(from)]
-    SpaceActionQuiz(#[from] crate::features::spaces::pages::actions::actions::quiz::SpaceActionQuizError),
-
-    #[error("{0}")]
-    #[translate(from)]
-    SpaceActionDiscussion(
-        #[from] crate::features::spaces::pages::actions::actions::discussion::SpaceActionDiscussionError,
+    SpaceActionQuiz(
+        #[from] crate::features::spaces::pages::actions::actions::quiz::SpaceActionQuizError,
     ),
 
     #[error("{0}")]
     #[translate(from)]
-    ExchangePoints(#[from] crate::features::social::pages::user_reward::controllers::ExchangePointsError),
+    SpaceActionDiscussion(
+        #[from]
+        crate::features::spaces::pages::actions::actions::discussion::SpaceActionDiscussionError,
+    ),
+
+    #[error("{0}")]
+    #[translate(from)]
+    ExchangePoints(
+        #[from] crate::features::social::pages::user_reward::controllers::ExchangePointsError,
+    ),
 
     #[error("{0}")]
     #[translate(from)]
@@ -205,22 +261,34 @@ pub enum Error {
 
     // Post related errors
     #[error("Invalid username")]
-    #[translate(en = "Invalid username. Check URL.", ko = "유효하지 않은 사용자 이름입니다. URL을 확인해주세요.")]
+    #[translate(
+        en = "Invalid username. Check URL.",
+        ko = "유효하지 않은 사용자 이름입니다. URL을 확인해주세요."
+    )]
     PostInvalidUsername,
 
     #[error("Web function")]
-    #[translate(en = "This function is only available on web.", ko = "이 기능은 웹에서만 사용할 수 있습니다.")]
+    #[translate(
+        en = "This function is only available on web.",
+        ko = "이 기능은 웹에서만 사용할 수 있습니다."
+    )]
     OnlyWebFunction,
     #[error("Invalid email")]
     #[translate(en = "Invalid email", ko = "유효하지 않은 이메일입니다.")]
     InvalidEmail,
 
     #[error("invalid space action")]
-    #[translate(en = "Please delete and re-create the action", ko = "액션을 삭제하고 다시 만들어주세요.")]
+    #[translate(
+        en = "Please delete and re-create the action",
+        ko = "액션을 삭제하고 다시 만들어주세요."
+    )]
     SpaceActionNotFound,
 
     #[error("Space is not started")]
-    #[translate(en = "Space is not started yet", ko = "스페이스가 아직 시작되지 않았습니다.")]
+    #[translate(
+        en = "Space is not started yet",
+        ko = "스페이스가 아직 시작되지 않았습니다."
+    )]
     SpaceNotStarted,
 
     #[error("Action has ended")]
@@ -234,6 +302,10 @@ pub enum Error {
     #[error("{0}")]
     #[translate(from)]
     AiModerator(#[from] crate::features::ai_moderator::types::AiModeratorError),
+
+    #[error("{0}")]
+    #[translate(from)]
+    Activity(#[from] crate::features::activity::types::ActivityError),
 }
 
 #[cfg(feature = "server")]
@@ -289,6 +361,7 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             Error::McpServer(e) => e.status_code(),
             Error::Member(e) => e.status_code(),
             Error::AiModerator(e) => e.status_code(),
+            Error::Activity(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
@@ -314,23 +387,17 @@ impl From<serde_dynamo::Error> for Error {
 impl From<Error> for rmcp::ErrorData {
     fn from(e: Error) -> Self {
         match &e {
-            Error::UnauthorizedAccess
-            | Error::NoSessionFound
-            | Error::Unauthorized(_) => {
+            Error::UnauthorizedAccess | Error::NoSessionFound | Error::Unauthorized(_) => {
                 rmcp::ErrorData::invalid_request(e.to_string(), None)
             }
-            Error::NotFound(_)
-            | Error::InvitationNotFound
-            | Error::SpaceNotFound => {
+            Error::NotFound(_) | Error::InvitationNotFound | Error::SpaceNotFound => {
                 rmcp::ErrorData::invalid_params(e.to_string(), None)
             }
             Error::BadRequest(_)
             | Error::Duplicate(_)
             | Error::NoPermission
             | Error::InvalidPartitionKey(_)
-            | Error::McpServer(_) => {
-                rmcp::ErrorData::invalid_params(e.to_string(), None)
-            }
+            | Error::McpServer(_) => rmcp::ErrorData::invalid_params(e.to_string(), None),
             _ => {
                 tracing::error!("MCP internal error: {e}");
                 rmcp::ErrorData::internal_error(
@@ -382,6 +449,7 @@ impl dioxus::fullstack::AsStatusCode for Error {
             Error::McpServer(e) => e.status_code(),
             Error::Member(e) => e.status_code(),
             Error::AiModerator(e) => e.status_code(),
+            Error::Activity(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

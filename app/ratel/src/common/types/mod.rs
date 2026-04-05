@@ -34,5 +34,9 @@ pub use list_response::ListResponse;
 
 pub mod attribute;
 
+mod event_bridge_envelope;
+#[cfg(feature = "lambda")]
+pub use event_bridge_envelope::*;
+
 mod file;
 pub use file::*;

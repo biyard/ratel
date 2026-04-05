@@ -115,5 +115,31 @@ pub async fn follow_user(
         }
     }
 
+    {
+        let follow_space_action = crate::features::spaces::pages::actions::models::SpaceAction::get(
+            cli,
+            &CompositePartition(space_id.clone(), follow_id.to_string()),
+            Some(EntityType::SpaceAction),
+        ).await.ok().flatten();
+        if let Some(ref sa) = follow_space_action {
+            if let Err(e) = crate::features::activity::controllers::record_activity(
+                cli,
+                space_id.clone(),
+                crate::features::activity::types::AuthorPartition::from(user.pk.clone()),
+                follow_id.to_string(),
+                crate::features::spaces::pages::actions::types::SpaceActionType::Follow,
+                sa.activity_score,
+                sa.additional_score,
+                crate::features::activity::types::SpaceActivityData::Follow {
+                    follow_id: follow_id.to_string(),
+                },
+                user.display_name.clone(),
+                user.profile_url.clone(),
+            ).await {
+                tracing::error!(error = %e, "Failed to record follow activity");
+            }
+        }
+    }
+
     Ok(())
 }
