@@ -115,7 +115,6 @@ pub async fn follow_user(
         }
     }
 
-    #[cfg(feature = "activity")]
     {
         let follow_space_action = crate::features::spaces::pages::actions::models::SpaceAction::get(
             cli,

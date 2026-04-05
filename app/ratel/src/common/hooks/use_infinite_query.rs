@@ -17,7 +17,7 @@ where
     next_bookmark: Signal<Option<Bookmark>>,
     accumulated: Signal<Vec<I>>,
     has_more: Memo<bool>,
-    rsc: Resource<Result<T>>,
+    rsc: Loader<T>,
     effect: Effect,
     loading: Signal<bool>,
     key: u64,
@@ -193,26 +193,14 @@ where
 {
     let bookmark: Signal<Option<Bookmark>> = use_signal(move || None);
 
-    let rsc = use_server_future(move || async move { future(None).await })?;
-    let val = rsc.read();
-    let res = val.as_ref().unwrap().as_ref().unwrap();
-    let mut next_bookmark: Signal<Option<Bookmark>> = use_signal(move || res.bookmark());
-    let mut accumulated: Signal<Vec<I>> = use_signal(move || res.items().clone());
+    let rsc = use_loader(move || async move { future(None).await })?;
+    let mut next_bookmark: Signal<Option<Bookmark>> = use_signal(move || rsc().bookmark());
+    let mut accumulated: Signal<Vec<I>> = use_signal(move || rsc().items().clone());
     let has_more = use_memo(move || next_bookmark().is_some());
     let mut loading = use_signal(|| false);
     let key = use_server_cached(|| {
         use rand::RngExt;
         rand::rng().random::<u64>()
-    });
-
-    let rsc_sync = rsc.clone();
-    let mut accumulated_sync = accumulated.clone();
-    let mut next_bookmark_sync = next_bookmark.clone();
-    let _sync_effect = use_effect(move || {
-        if let Some(Ok(res)) = rsc_sync.read().as_ref() {
-            accumulated_sync.set(res.items().clone());
-            next_bookmark_sync.set(res.bookmark());
-        }
     });
 
     let effect = use_effect(move || {
@@ -223,6 +211,7 @@ where
         }
 
         spawn(async move {
+            loading.set(true);
             let res = match future(nb.clone()).await {
                 Ok(ret) => {
                     let next = ret.bookmark();

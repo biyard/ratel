@@ -1,0 +1,198 @@
+---
+globs: ["app/ratel/**/*.rs"]
+---
+
+# Anti-patterns
+
+Patterns to avoid across the Ratel codebase. Each item shows the bad pattern and its correct replacement.
+
+## Navigation
+
+```rust
+// BAD — String path bypasses compile-time route validation
+nav.push(format!("/spaces/{}/dashboard", space_id));
+nav.replace(format!("/posts/{post_id}"));
+Link { to: "/spaces/{space_id}/dashboard", "Dashboard" }
+
+// GOOD — Route enum ensures valid routes at compile time
+nav.push(Route::SpaceDashboardPage { space_id });
+nav.replace(Route::PostDetailPage { post_id });
+Link { to: Route::SpaceDashboardPage { space_id }, "Dashboard" }
+```
+
+## Conditional Class Strings
+
+```rust
+// BAD — conditional class string via if/else
+let cls = if active { "px-3 py-1.5 bg-primary/10" } else { "px-3 py-1.5" };
+Row { class: "{cls}", ... }
+
+// GOOD — aria attribute + Tailwind variant
+Row { class: "px-3 py-1.5 aria-relevant:bg-primary/10", "aria-relevant": active, ... }
+```
+
+Use `aria-selected`, `aria-owns`, `aria-`, etc. with their Tailwind variant prefixes instead of building class strings conditionally.
+
+## Styling
+
+- `style="color: #fcb300"` — use semantic token class instead
+- `style="background: #1a1a1a"` — use `bg-background` or `bg-card-bg`
+- `text-neutral-400`, `bg-slate-800`, `text-gray-500` — use `text-foreground-muted`, `bg-card-bg`, `text-text-primary`
+- `z-101` (silently ignored) — use `z-[101]` for arbitrary values
+
+## Components
+
+## cfg-gated Component Variants (SSR Hydration)
+
+```rust
+// BAD — different output on server vs client causes hydration mismatch
+#[cfg(not(feature = "server"))]
+#[component]
+fn MyWidget() -> Element { rsx! { div { "content" } } }
+
+#[cfg(feature = "server")]
+#[component]
+fn MyWidget() -> Element { rsx! {} }
+
+// GOOD — same component renders on both sides; data loads client-side via use_loader
+#[component]
+fn MyWidget() -> Element { rsx! { div { "content" } } }
+```
+
+A component must produce the same HTML structure on server and client. If the server renders nothing but the client renders a `div`, hydration will fail. Use a single component definition — server functions and `use_loader` handle data fetching naturally on the client.
+
+## Components
+
+- Raw `<div class="flex ...">` for layouts — use `Row` or `Col` components
+- Raw `<button>` — use `Button` component
+- Raw `<input>` — use `Input` component
+- Raw `<select>` — use `Select` component
+
+## Props Cloning in Closures
+
+```rust
+// BAD — cloning props to pass into closures
+fn MyComponent(tag: Vec<String>, on_remove: EventHandler<Vec<String>>) {
+    onclick: {
+        let tag = tag.clone();
+        move |_| {
+            on_remove.call(tag.clone());
+        }
+    },
+}
+
+// GOOD — use ReadSignal, which is Copy and avoids cloning
+fn MyComponent(tag: ReadSignal<Vec<String>>, on_remove: EventHandler<Vec<String>>) {
+    onclick: move |_| {
+        on_remove.call(tag());
+    },
+}
+```
+
+Dioxus auto-converts `T` to `ReadSignal<T>` when passed as a prop. `ReadSignal` implements `Copy`, so it can be moved into closures without cloning.
+
+## Reactive Server Futures
+
+```rust
+// BAD — use_reactive + use_server_future with manual clone
+fn MyComponent(space_id: SpacePartition) -> Element {
+    let loader = use_server_future(use_reactive((&space_id,), |(sid,)| async move {
+        get_ranking_handler(sid.clone(), None).await
+    }))?;
+}
+
+// GOOD — ReadSignal prop + use_loader (signal is Copy, no clone needed)
+fn MyComponent(space_id: ReadSignal<SpacePartition>) -> Element {
+    let loader = use_loader(move || async move {
+        get_ranking_handler(space_id(), None).await
+    })?;
+}
+```
+
+When a prop is used only in async loaders, accept `ReadSignal<T>` instead of `T`. `ReadSignal` is `Copy` and reactive — calling `space_id()` inside the closure automatically re-runs when the value changes, eliminating the need for `use_reactive` and `.clone()`.
+
+## Async Event Handlers
+
+```rust
+// BAD — unnecessary spawn wrapping
+onfocusout: move |_| {
+    spawn(async move {
+        // async work
+    });
+},
+
+// GOOD — use async move directly
+onfocusout: move |_| async move {
+    // async work
+},
+```
+
+## Error Handling
+
+```rust
+// BAD — leaks internal details to user
+Error::BadRequest(format!("DynamoDB error: {e}"))
+
+// GOOD — log detail server-side, return generic unit error
+crate::error!("failed to create entity: {e}");
+MyFeatureError::CreateFailed
+```
+
+## List Response Types
+
+```rust
+// BAD — custom struct duplicating ListResponse fields
+pub struct RankingResponse {
+    pub entries: Vec<RankingEntryResponse>,
+    pub bookmark: Option<String>,
+}
+
+// GOOD — use ListResponse<T> from common::types
+pub async fn get_ranking_handler(...) -> Result<ListResponse<RankingEntryResponse>> {
+    let (items, next_bookmark) = Model::find_by_pk(cli, &pk, opts).await?;
+    Ok((items, next_bookmark).into())
+}
+```
+
+Never create custom response structs with `items` + `bookmark` fields. Use `ListResponse<T>` which already derives `PartialEq`, implements `Bookmarker`, `ItemIter`, and converts from `(Vec<T>, Option<String>)`.
+
+## Bookmark Option Handling
+
+```rust
+// BAD — manual if-let to set bookmark
+let mut opts = Model::opt().limit(50);
+if let Some(bm) = bookmark {
+    opts = opts.bookmark(bm);
+}
+
+// GOOD — use opt_with_bookmark which handles Option internally
+let opts = Model::opt_with_bookmark(bookmark).limit(50);
+```
+
+`opt_with_bookmark(Option<String>)` is generated by `DynamoEntity` derive and handles the `None` case internally.
+
+## API Types
+
+```rust
+// BAD — exposes raw Partition/EntityType with prefix in API
+fn update_poll(space_pk: Partition, poll_sk: EntityType)
+
+// GOOD — uses SubPartition with id naming, no prefix
+fn update_poll(space_id: SpacePartition, poll_id: SpacePollEntityType)
+```
+
+## i18n
+
+```rust
+// BAD — hardcoded string in UI
+"Submit"
+
+// GOOD — translated string
+"{t.submit}"
+
+// BAD — Display trait for enum in UI
+status.to_string()
+
+// GOOD — Translate trait for enum in UI
+status.translate(&lang())
+```

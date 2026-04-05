@@ -449,5 +449,53 @@ export class DynamoStreamEventStack extends Stack {
       },
       targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
     });
+
+    // ── Pipe 7: Space Activity Insert → ActivityScoreAggregate ──────
+    // Triggers when a new SpaceActivity record is inserted (user performs an action)
+    new pipes.CfnPipe(this, "ActivityScorePipe", {
+      name: `ratel-${stage}-activity-score-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["INSERT"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: [{ prefix: "SPACE_ACTIVITY#" }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "ActivityScoreAggregate",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    // ── Rule: Route ActivityScoreAggregate events to app-shell Lambda ─
+    new events.Rule(this, "ActivityScoreAggregateRule", {
+      eventBus,
+      description:
+        "Route space activity events to app-shell for score aggregation",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["ActivityScoreAggregate"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
   }
 }
