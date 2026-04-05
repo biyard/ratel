@@ -61,6 +61,29 @@ Every page view should include `SeoMeta { title: "..." }` and use `translate!` f
 - `is_paid()` checks `!tier.0.contains("Free")`
 - Tiers: Free, Pro, Max, Vip, Enterprise(String)
 
+## Data Loading with `use_loader`
+
+Prefer `use_loader` over `use_server_future` for loading server data. `use_loader` returns a `Loader<T>` which requires `T: PartialEq`.
+
+```rust
+// Single async call — use_loader with closure
+let resource = use_loader(move || async move {
+    get_my_handler(space_id()).await
+})?;
+let data = resource();  // returns Result<T>
+
+// Reactive prop — accept ReadSignal<T> so signal is Copy (no clone needed)
+fn MyComponent(space_id: ReadSignal<SpacePartition>) -> Element {
+    let resource = use_loader(move || async move {
+        get_handler(space_id(), None).await
+    })?;
+}
+```
+
+- Response types must derive `PartialEq` (required by `Loader<T>`)
+- Access data with `resource()` — not `.read()`
+- Accept `ReadSignal<T>` props when used only in loaders — avoids `use_reactive` + `.clone()`
+
 ## Pagination with `use_infinite_query`
 
 - Prefer over `use_server_future` for any list that may exceed one page

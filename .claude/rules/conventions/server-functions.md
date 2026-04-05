@@ -76,6 +76,27 @@ pub struct SpaceResponse {
 }
 ```
 
+### List Response Pattern
+
+For endpoints returning paginated lists, use `ListResponse<T>` from `common::types` — never create custom structs with `items` + `bookmark` fields.
+
+```rust
+#[get("/api/spaces/:space_id/ranking?bookmark", _space: SpaceCommon)]
+pub async fn get_ranking_handler(
+    space_id: SpacePartition,
+    bookmark: Option<String>,
+) -> Result<ListResponse<RankingEntryResponse>> {
+    let mut opts = Model::opt().limit(50);
+    if let Some(bm) = bookmark {
+        opts = opts.bookmark(bm);
+    }
+    let (items, next_bookmark) = Model::find_by_pk(cli, &pk, opts).await?;
+    Ok((items, next_bookmark).into())
+}
+```
+
+`ListResponse<T>` already derives `PartialEq`, implements `Bookmarker` + `ItemIter`, and converts from `(Vec<T>, Option<String>)`.
+
 ### Rules
 
 - **Path params**: always SubPartition (`SpacePartition`, `FeedPartition`, `{Name}EntityType`)
