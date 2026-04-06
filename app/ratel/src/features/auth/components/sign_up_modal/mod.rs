@@ -408,9 +408,7 @@ pub fn SignupModal(
                                         }
                                         popup.close();
                                     }
-                                    Err(Error::Duplicate(message))
-                                        if message.starts_with("Username already exists:") =>
-                                    {
+                                    Err(Error::UsernameAlreadyExists) => {
                                         username_warning
                                             .set(tr.username_already_exists.to_string());
                                     }
@@ -454,9 +452,7 @@ pub fn SignupModal(
                                     }
                                     popup.close();
                                 }
-                                Err(Error::Duplicate(message))
-                                    if message.starts_with("Username already exists:") =>
-                                {
+                                Err(Error::UsernameAlreadyExists) => {
                                     username_warning.set(tr.username_already_exists.to_string());
                                 }
                                 Err(e) => {

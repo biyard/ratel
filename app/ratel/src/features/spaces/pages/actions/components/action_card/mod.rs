@@ -202,8 +202,8 @@ pub fn ActionCard(
 
             // Description
             div {
-                class: "flex-1 w-full min-h-0 font-medium break-words line-clamp-1 text-[0.75rem]/[1rem] text-neutral-300 light:text-neutral-600",
-                class: if action.description.is_empty() { " text-white light:text-neutral-900" },
+                class: "flex-1 w-full min-h-0 font-medium break-words line-clamp-1 text-[0.75rem]/[1rem] text-foreground-muted",
+                class: if action.description.is_empty() { " text-text-primary" },
                 dangerous_inner_html: description,
             }
 
