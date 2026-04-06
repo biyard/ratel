@@ -69,7 +69,7 @@ async function loginAsExistingUser(
   const page = await context.newPage();
 
   await goto(page, startUrl);
-  await click(page, { label: "Sign In" });
+  await click(page, { text: "Sign In" });
   await waitPopup(page, { visible: true });
   await fill(page, { placeholder: "Enter your email address" }, email);
   await click(page, { text: "Continue" });
