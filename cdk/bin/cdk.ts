@@ -83,7 +83,7 @@ new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {
 //   prodDomain: "ratel.foundation",
 // });
 
-new QdrantStack(app, `ratel-${env}-qdrant-ap-northeast-2`, {
+const qdrantStack = new QdrantStack(app, `ratel-${env}-qdrant-ap-northeast-2`, {
   env: {
     account: awsAccount,
     region: "ap-northeast-2",
@@ -112,6 +112,7 @@ const ap_northeast_2_lambda = new RegionalLambdaStack(
     sharedSecurityGroup: vpcEndpointStack.sharedSecurityGroup,
   },
 );
+qdrantStack.addDependency(ap_northeast_2_lambda);
 
 new RegionalLambdaStack(app, `ratel-${env}-svc-eu-central-1`, {
   env: {
