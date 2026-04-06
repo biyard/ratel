@@ -54,16 +54,6 @@ new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {
   icpIdentityPem: process.env.ICP_IDENTITY_PEM,
 });
 
-// new DaemonStack(app, `ratel-${env}-daemon-ap-northeast-2`, {
-//   env: {
-//     account: awsAccount,
-//     region: "ap-northeast-2",
-//   },
-//   commit: process.env.COMMIT!,
-//   vpc: escStack.vpc,
-//   cluster: escStack.cluster,
-// });
-
 new QdrantStack(app, `ratel-${env}-qdrant-ap-northeast-2`, {
   env: {
     account: awsAccount,
@@ -73,9 +63,8 @@ new QdrantStack(app, `ratel-${env}-qdrant-ap-northeast-2`, {
   vpc: escStack.vpc,
   cluster: escStack.cluster,
   namespace: escStack.namespace,
-  qdrantApiKey: process.env.QDRANT_API_KEY,
   baseDomain,
-  vectorDomain: `vector.${host}`,
+  qdrantDomain: `qdrant.${host}`,
 });
 
 const ap_northeast_2_lambda = new RegionalLambdaStack(
