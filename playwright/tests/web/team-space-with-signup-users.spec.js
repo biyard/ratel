@@ -160,7 +160,7 @@ async function participateAndCompletePoll(page, spaceUrl, pollOptionText) {
     }),
   ).toBeVisible({ timeout: 5000 });
   // Click the "Submit" button inside the confirmation popup
-  await click(page, { text: "Submit" });
+  await click(page, { testId: "poll-confirm-submit" });
   await page.waitForLoadState("load");
 }
 
