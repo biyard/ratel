@@ -19,9 +19,7 @@ export interface QdrantStackProps extends StackProps {
   stage: string;
   cluster: ecs.ICluster;
   vpc: ec2.IVpc;
-  qdrantApiKey?: string;
   baseDomain: string;
-  vectorDomain: string;
   qdrantDomain: string;
   namespace: sd.PrivateDnsNamespace;
 }
@@ -30,14 +28,7 @@ export class QdrantStack extends Stack {
   constructor(scope: Construct, id: string, props: QdrantStackProps) {
     super(scope, id, { ...props, crossRegionReferences: true });
 
-    const {
-      cluster,
-      vpc,
-      qdrantApiKey,
-      baseDomain,
-      vectorDomain,
-      qdrantDomain,
-    } = props;
+    const { cluster, vpc, baseDomain, qdrantDomain } = props;
 
     // Security group for Qdrant
     const sg = new ec2.SecurityGroup(this, "QdrantSG", {
@@ -108,19 +99,12 @@ export class QdrantStack extends Stack {
     // Grant EFS access to task role
     fileSystem.grantRootAccess(taskDefinition.taskRole);
 
-    // Container environment
-    const containerEnv: Record<string, string> = {};
-    if (qdrantApiKey) {
-      containerEnv["QDRANT__SERVICE__API_KEY"] = qdrantApiKey;
-    }
-
     const container = taskDefinition.addContainer("QdrantContainer", {
       image: ecs.ContainerImage.fromRegistry("qdrant/qdrant:latest"),
       logging: new ecs.AwsLogDriver({
         streamPrefix: `ratel-${props.stage}-qdrant`,
         logRetention: logs.RetentionDays.TWO_WEEKS,
       }),
-      environment: containerEnv,
     });
 
     container.addPortMappings(
@@ -147,15 +131,15 @@ export class QdrantStack extends Stack {
       vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
       securityGroups: [sg],
       cloudMapOptions: {
-        name: "vector",
+        name: "qdrant",
         cloudMapNamespace: props.namespace,
         dnsRecordType: sd.DnsRecordType.SRV,
         container,
-        containerPort: 6333,
+        containerPort: 6334,
       },
     });
 
-    // --- API Gateway with custom domain vector.ratel.foundation ---
+    // --- API Gateway with custom domain for gRPC (port 6334) ---
 
     // Filter subnets to exclude AZs where API Gateway VPC Link is not available (apne2-az4)
     const supportedSubnets = vpc.publicSubnets.filter(
@@ -170,7 +154,7 @@ export class QdrantStack extends Stack {
 
     const httpApi = new apigw.HttpApi(this, "QdrantHttpApi", {
       apiName: `ratel-${props.stage}-qdrant-api`,
-      description: "Qdrant Vector DB API Gateway",
+      description: "Qdrant Vector DB gRPC API Gateway",
     });
 
     const qdrantIntegration = new HttpServiceDiscoveryIntegration(
@@ -197,12 +181,12 @@ export class QdrantStack extends Stack {
     });
 
     const cert = new acm.Certificate(this, "QdrantCert", {
-      domainName: vectorDomain,
+      domainName: qdrantDomain,
       validation: acm.CertificateValidation.fromDns(zone),
     });
 
     const domainName = new apigw.DomainName(this, "QdrantDomain", {
-      domainName: vectorDomain,
+      domainName: qdrantDomain,
       certificate: cert,
     });
 
@@ -213,75 +197,11 @@ export class QdrantStack extends Stack {
 
     new route53.ARecord(this, "QdrantAliasA", {
       zone,
-      recordName: vectorDomain,
+      recordName: qdrantDomain,
       target: route53.RecordTarget.fromAlias({
         bind: () => ({
           dnsName: domainName.regionalDomainName,
           hostedZoneId: domainName.regionalHostedZoneId,
-        }),
-      }),
-    });
-
-    // --- gRPC API Gateway with custom domain (port 6334) ---
-
-    const grpcCloudMapService = new sd.Service(this, "QdrantGrpcService", {
-      namespace: props.namespace,
-      name: "qdrant",
-      dnsRecordType: sd.DnsRecordType.SRV,
-    });
-
-    grpcCloudMapService.registerNonIpInstance("QdrantGrpcInstance", {
-      customAttributes: {
-        AWS_INSTANCE_IPV4: `vector.${props.namespace.namespaceName}`,
-        AWS_INSTANCE_PORT: "6334",
-      },
-    });
-
-    const grpcHttpApi = new apigw.HttpApi(this, "QdrantGrpcHttpApi", {
-      apiName: `ratel-${props.stage}-qdrant-grpc-api`,
-      description: "Qdrant Vector DB gRPC API Gateway",
-    });
-
-    const grpcIntegration = new HttpServiceDiscoveryIntegration(
-      "QdrantGrpcIntegration",
-      grpcCloudMapService,
-      { vpcLink },
-    );
-
-    grpcHttpApi.addRoutes({
-      path: "/{proxy+}",
-      methods: [apigw.HttpMethod.ANY],
-      integration: grpcIntegration,
-    });
-
-    grpcHttpApi.addRoutes({
-      path: "/",
-      methods: [apigw.HttpMethod.ANY],
-      integration: grpcIntegration,
-    });
-
-    const grpcCert = new acm.Certificate(this, "QdrantGrpcCert", {
-      domainName: qdrantDomain,
-      validation: acm.CertificateValidation.fromDns(zone),
-    });
-
-    const grpcDomainName = new apigw.DomainName(this, "QdrantGrpcDomain", {
-      domainName: qdrantDomain,
-      certificate: grpcCert,
-    });
-
-    new apigw.ApiMapping(this, "QdrantGrpcApiMapping", {
-      api: grpcHttpApi,
-      domainName: grpcDomainName,
-    });
-
-    new route53.ARecord(this, "QdrantGrpcAliasA", {
-      zone,
-      recordName: qdrantDomain,
-      target: route53.RecordTarget.fromAlias({
-        bind: () => ({
-          dnsName: grpcDomainName.regionalDomainName,
-          hostedZoneId: grpcDomainName.regionalHostedZoneId,
         }),
       }),
     });
