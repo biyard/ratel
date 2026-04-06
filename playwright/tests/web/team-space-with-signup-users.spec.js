@@ -94,10 +94,42 @@ async function signUpFromSpace(browser, spaceUrl) {
  */
 async function participateAndCompletePoll(page, spaceUrl, pollOptionText) {
   await goto(page, spaceUrl + "/dashboard");
-  await click(page, { text: "Participate" });
-  // The "Required Actions" layover appears after two sequential async server
-  // calls (participate_space + list_actions), so it needs a longer timeout
-  // than the default 5s used by getLocator().
+
+  // Wait for user profile to confirm full hydration before interacting
+  await expect(page.locator("#space-user-profile")).toBeVisible({
+    timeout: 10000,
+  });
+
+  // The WASM onclick handlers may not be attached immediately after goto()
+  // returns (SSR markup is present but Dioxus hydration is still wiring
+  // event listeners). Retry the click until the participate API is actually
+  // called, confirming the handler fired.
+  let participated = false;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const participatePromise = page.waitForResponse(
+      (r) =>
+        r.url().includes("/participate") && r.request().method() === "POST",
+      { timeout: 10000 },
+    );
+
+    await click(page, { text: "Participate" });
+
+    try {
+      await participatePromise;
+      participated = true;
+      break;
+    } catch {
+      // Handler didn't fire — wait briefly for hydration then retry
+      await page.waitForTimeout(2000);
+    }
+  }
+
+  if (!participated) {
+    throw new Error("Participate API was never called after 3 click attempts");
+  }
+
+  // The "Required Actions" layover appears after the participate call
+  // followed by a list_actions call, so it needs a longer timeout.
   await expect(
     page.getByText("Required Actions", { exact: true }),
   ).toBeVisible({ timeout: 15000 });
@@ -376,46 +408,25 @@ test.describe.serial("Space with actions created by a team", () => {
 
     try {
       // Navigate to space dashboard and log in from there.
-      console.log("[User2] step 1: goto space dashboard");
       await goto(page, spaceUrl + "/dashboard");
-      console.log("[User2] step 2: click Sign In");
       await click(page, { text: "Sign In" });
-      console.log("[User2] step 3: waitPopup visible");
       await waitPopup(page, { visible: true });
-      console.log("[User2] step 4: fill email");
       await fill(page, { placeholder: "Enter your email address" }, user2.email);
-      console.log("[User2] step 5: click Continue (email)");
       await click(page, { text: "Continue" });
-      console.log("[User2] step 6: fill password");
       await fill(page, { placeholder: "Enter your password" }, user2.password);
-      console.log("[User2] step 7: click Continue (password)");
       await click(page, { text: "Continue" });
-      console.log("[User2] step 8: waitPopup hidden");
       await waitPopup(page, { visible: false });
 
-      console.log("[User2] step 9: click Participate");
-      await click(page, { text: "Participate" });
-      console.log("[User2] step 10: wait Required Actions");
-      await expect(
-        page.getByText("Required Actions", { exact: true }),
-      ).toBeVisible({ timeout: 15000 });
-
-      console.log("[User2] step 11: click poll");
-      await click(page, { text: "Team Poll: Budget Allocation" });
-      await page.waitForURL(/\/actions\/polls\//, { waitUntil: "load" });
-      console.log("[User2] step 12: select option");
-      await click(page, { text: "Increase marketing spend" });
-      console.log("[User2] step 13: submit");
-      await click(page, { text: "Submit" });
-      await page.waitForLoadState("load");
-
-      console.log("[User2] step 14: navigate to dashboard");
-      await page.goto(spaceUrl + "/dashboard");
-      await page.waitForLoadState("domcontentloaded");
-      await page.waitForFunction(
-        () => document.querySelector("[data-dioxus-id]") !== null,
+      // Use the shared helper for robust participation (handles re-navigation,
+      // hydration wait, and retry logic for the Participate click).
+      await participateAndCompletePoll(
+        page,
+        spaceUrl,
+        "Increase marketing spend",
       );
-      console.log("[User2] step 15: verify profile");
+
+      // Navigate back to dashboard to verify participation
+      await goto(page, spaceUrl + "/dashboard");
       const userProfile = page.locator("#space-user-profile");
       await expect(userProfile).toBeVisible();
 
@@ -450,7 +461,7 @@ test.describe.serial("Space with actions created by a team", () => {
       await goto(page, spaceUrl + "/actions");
 
       // Click the follow action card to navigate to it
-      await click(page, { text: "Follow Users" });
+      await click(page, { text: "Test Team" });
       await page.waitForURL(/\/actions\/follows\//, { waitUntil: "load" });
 
       // Click "Follow" on the first non-creator user (the team creator)
@@ -473,7 +484,7 @@ test.describe.serial("Space with actions created by a team", () => {
 
     try {
       await goto(page, spaceUrl + "/actions");
-      await click(page, { text: "Follow Users" });
+      await click(page, { text: "Test Team" });
       await page.waitForURL(/\/actions\/follows\//, { waitUntil: "load" });
 
       const followBtn = page.getByRole("button", { name: "Follow" }).first();
