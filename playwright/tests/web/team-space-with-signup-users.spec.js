@@ -95,10 +95,15 @@ async function signUpFromSpace(browser, spaceUrl) {
 async function participateAndCompletePoll(page, spaceUrl, pollOptionText) {
   await goto(page, spaceUrl + "/dashboard");
   await click(page, { text: "Participate" });
-  await getLocator(page, { text: "Required Actions" });
+  // The "Required Actions" layover appears after two sequential async server
+  // calls (participate_space + list_actions), so it needs a longer timeout
+  // than the default 5s used by getLocator().
+  await expect(
+    page.getByText("Required Actions", { exact: true }),
+  ).toBeVisible({ timeout: 15000 });
 
-  // Click the prerequisite poll
-  await click(page, { text: "How should the team allocate the Q2 budget?" });
+  // Click the prerequisite poll (action card shows the poll title)
+  await click(page, { text: "Team Poll: Budget Allocation" });
   await page.waitForURL(/\/actions\/polls\//, { waitUntil: "load" });
 
   // Answer the single choice question
@@ -226,14 +231,15 @@ test.describe.serial("Space with actions created by a team", () => {
     await click(page, { testId: "poll-add-question" });
     await click(page, { text: "Single Choice" });
 
+    // nth(0) is the poll title input (still visible); question starts at nth(1)
     const textInputs = page.locator('input[type="text"]:visible');
-    await textInputs.nth(0).fill("How should the team allocate the Q2 budget?");
-    await textInputs.nth(1).fill("Increase marketing spend");
-    await textInputs.nth(2).fill("Invest in R&D");
+    await textInputs.nth(1).fill("How should the team allocate the Q2 budget?");
+    await textInputs.nth(2).fill("Increase marketing spend");
+    await textInputs.nth(3).fill("Invest in R&D");
 
     await page.getByRole("button", { name: "Add Option" }).first().click();
     await page.waitForLoadState("load");
-    await textInputs.nth(3).fill("Save for reserves");
+    await textInputs.nth(4).fill("Save for reserves");
 
     await page.keyboard.press("Tab");
     await page.waitForLoadState("load");
@@ -370,35 +376,46 @@ test.describe.serial("Space with actions created by a team", () => {
 
     try {
       // Navigate to space dashboard and log in from there.
+      console.log("[User2] step 1: goto space dashboard");
       await goto(page, spaceUrl + "/dashboard");
+      console.log("[User2] step 2: click Sign In");
       await click(page, { text: "Sign In" });
+      console.log("[User2] step 3: waitPopup visible");
       await waitPopup(page, { visible: true });
+      console.log("[User2] step 4: fill email");
       await fill(page, { placeholder: "Enter your email address" }, user2.email);
+      console.log("[User2] step 5: click Continue (email)");
       await click(page, { text: "Continue" });
+      console.log("[User2] step 6: fill password");
       await fill(page, { placeholder: "Enter your password" }, user2.password);
+      console.log("[User2] step 7: click Continue (password)");
       await click(page, { text: "Continue" });
+      console.log("[User2] step 8: waitPopup hidden");
       await waitPopup(page, { visible: false });
 
-      // After login the space page re-renders with auth state.
-      // Click Participate directly — no goto needed since page is already loaded.
+      console.log("[User2] step 9: click Participate");
       await click(page, { text: "Participate" });
-      await getLocator(page, { text: "Required Actions" });
+      console.log("[User2] step 10: wait Required Actions");
+      await expect(
+        page.getByText("Required Actions", { exact: true }),
+      ).toBeVisible({ timeout: 15000 });
 
-      // Complete the prerequisite poll
-      await click(page, { text: "How should the team allocate the Q2 budget?" });
+      console.log("[User2] step 11: click poll");
+      await click(page, { text: "Team Poll: Budget Allocation" });
       await page.waitForURL(/\/actions\/polls\//, { waitUntil: "load" });
+      console.log("[User2] step 12: select option");
       await click(page, { text: "Increase marketing spend" });
+      console.log("[User2] step 13: submit");
       await click(page, { text: "Submit" });
       await page.waitForLoadState("load");
 
-      // Navigate back to dashboard to verify participation.
-      // Use page.goto directly to avoid goto helper's WASM waitForResponse
-      // which can hang when WASM is served from the browser memory cache.
+      console.log("[User2] step 14: navigate to dashboard");
       await page.goto(spaceUrl + "/dashboard");
       await page.waitForLoadState("domcontentloaded");
       await page.waitForFunction(
         () => document.querySelector("[data-dioxus-id]") !== null,
       );
+      console.log("[User2] step 15: verify profile");
       const userProfile = page.locator("#space-user-profile");
       await expect(userProfile).toBeVisible();
 
@@ -750,16 +767,17 @@ test.describe.serial("Space with actions created by a team", () => {
     await click(page, { testId: "poll-add-question" });
     await click(page, { text: "Single Choice" });
 
+    // nth(0) is the poll title input (still visible); question starts at nth(1)
     const textInputs = page.locator('input[type="text"]:visible');
     await textInputs
-      .nth(0)
+      .nth(1)
       .fill("How would you rate your overall experience in this space?");
-    await textInputs.nth(1).fill("Excellent");
-    await textInputs.nth(2).fill("Good");
+    await textInputs.nth(2).fill("Excellent");
+    await textInputs.nth(3).fill("Good");
 
     await page.getByRole("button", { name: "Add Option" }).first().click();
     await page.waitForLoadState("load");
-    await textInputs.nth(3).fill("Needs improvement");
+    await textInputs.nth(4).fill("Needs improvement");
 
     await page.keyboard.press("Tab");
     await page.waitForLoadState("load");
