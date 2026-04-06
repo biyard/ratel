@@ -37,6 +37,14 @@ export interface RegionalLambdaStackProps extends StackProps {
 
   apiDomain: string;
   baseDomain: string;
+
+  // Optional — when provided, the Lambda is placed in this VPC (required to
+  // resolve CloudMap private DNS). Use the same VPC that hosts Qdrant.
+  vpc?: ec2.IVpc;
+  // Optional — CloudMap namespace for service discovery (e.g. qdrant.*.svc.local)
+  namespace?: sd.PrivateDnsNamespace;
+  // Optional — Qdrant security group; ingress for Lambda SG is added when provided
+  qdrantSecurityGroup?: ec2.ISecurityGroup;
 }
 
 export class RegionalLambdaStack extends Stack {
@@ -50,6 +58,37 @@ export class RegionalLambdaStack extends Stack {
       domainName: baseDomain,
     });
 
+    // VPC attachment is opt-in: only when props.vpc is provided, the Lambda
+    // joins the VPC (required to resolve CloudMap private DNS for Qdrant).
+    // Otherwise the Lambda runs on the public Lambda fleet with no VPC.
+    let lambdaSg: ec2.SecurityGroup | undefined;
+    if (props.vpc) {
+      lambdaSg = new ec2.SecurityGroup(this, "LambdaSG", {
+        vpc: props.vpc,
+        description: "Security group for Regional Lambda",
+        allowAllOutbound: true,
+      });
+
+      // Allow this Lambda to reach Qdrant on gRPC (6334) and REST (6333).
+      if (props.qdrantSecurityGroup) {
+        props.qdrantSecurityGroup.addIngressRule(
+          lambdaSg,
+          ec2.Port.tcp(6334),
+          "Lambda to Qdrant gRPC",
+        );
+        props.qdrantSecurityGroup.addIngressRule(
+          lambdaSg,
+          ec2.Port.tcp(6333),
+          "Lambda to Qdrant REST",
+        );
+      }
+
+      new ec2.GatewayVpcEndpoint(this, "DynamoDbEndpoint", {
+        vpc: props.vpc,
+        service: ec2.GatewayVpcEndpointAwsService.DYNAMODB,
+      });
+    }
+
     // --- HTTP API (shared between ECS and Lambda) ---
     const httpApi = new apigw.HttpApi(this, "HttpApi", {
       apiName: `ratel-api-${this.stackName}`,
@@ -62,18 +101,30 @@ export class RegionalLambdaStack extends Stack {
       "ratel/app-shell-lambda",
     );
 
+    const environment: { [key: string]: string } = {
+      REGION: this.region,
+      DISABLE_ANSI: "true",
+      NO_COLOR: "true",
+      GOOGLE_APPLICATION_CREDENTIALS: ".gcp/firebase-service-account.json",
+    };
+
     const apiLambda = new lambda.DockerImageFunction(this, "Function", {
       code: lambda.DockerImageCode.fromEcr(appShellRepository, {
         tagOrDigest: props.commit,
       }),
-      environment: {
-        REGION: this.region,
-        DISABLE_ANSI: "true",
-        NO_COLOR: "true",
-        GOOGLE_APPLICATION_CREDENTIALS: ".gcp/firebase-service-account.json",
-      },
+      environment,
       memorySize: 128,
       timeout: cdk.Duration.seconds(30),
+      // VPC attachment only when a VPC is supplied; otherwise the function
+      // runs on the public Lambda fleet (no ENI, faster cold start).
+      ...(props.vpc
+        ? {
+            allowPublicSubnet: true,
+            vpc: props.vpc,
+            vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
+            securityGroups: lambdaSg ? [lambdaSg] : undefined,
+          }
+        : {}),
     });
     this.lambdaFunction = apiLambda;
 
@@ -164,147 +215,5 @@ export class RegionalLambdaStack extends Stack {
         ),
       ),
     });
-
-    // // NOTE: SurveyLambda will be deprecated
-    // if (props.env?.region !== "ap-northeast-2") {
-    //   return;
-    // }
-
-    // const startSurveyLambda = new lambda.Function(
-    //   this,
-    //   "StartSurveyEventLambda",
-    //   {
-    //     runtime: lambda.Runtime.PROVIDED_AL2023,
-    //     code: lambda.Code.fromAsset("survey-worker"),
-    //     handler: "bootstrap",
-    //     environment: {
-    //       REGION: this.region,
-    //       DISABLE_ANSI: "true",
-    //       NO_COLOR: "true",
-    //     },
-    //     memorySize: 256,
-    //     timeout: Duration.seconds(150),
-    //   },
-    // );
-
-    // const eventBus = new events.EventBus(this, "RatelEventBus", {
-    //   eventBusName: `ratel-${props.stage}-bus`,
-    // });
-
-    // const schedulerRole = new iam.Role(this, "SurveySchedulerRole", {
-    //   roleName: `ratel-${props.stage}-${this.region}-survey-scheduler-role`,
-    //   assumedBy: new iam.ServicePrincipal("scheduler.amazonaws.com"),
-    // });
-
-    // eventBus.grantPutEventsTo(schedulerRole);
-
-    // new events.Rule(this, "SurveyFetcherRule", {
-    //   eventBus,
-    //   description: "Route Survey Fetcher events to survey fetcher Lambda",
-    //   eventPattern: {
-    //     source: ["ratel.spaces"],
-    //     detailType: ["SurveyFetcher"],
-    //   },
-    //   targets: [new eventsTargets.LambdaFunction(startSurveyLambda)],
-    // });
-
-    // const tableName = `ratel-${props.stage}-main`;
-
-    // const mainTable = dynamodb.Table.fromTableName(
-    //   this,
-    //   "MainTable",
-    //   tableName,
-    // );
-
-    // mainTable.grantReadData(startSurveyLambda);
-
-    // startSurveyLambda.addToRolePolicy(
-    //   new iam.PolicyStatement({
-    //     effect: iam.Effect.ALLOW,
-    //     actions: [
-    //       "ses:SendEmail",
-    //       "ses:SendRawEmail",
-    //       "ses:SendTemplatedEmail",
-    //       "ses:SendBulkEmail",
-    //       "ses:SendBulkTemplatedEmail",
-    //     ],
-    //     resources: [
-    //       `arn:aws:ses:${this.region}:${this.account}:identity/ratel.foundation`,
-    //       `arn:aws:ses:${this.region}:${this.account}:template/start_survey`,
-    //     ],
-    //   }),
-    // );
-
-    // if (this.region === "ap-northeast-2") {
-    //   const mainTableStreamArn = cdk.Fn.importValue(
-    //     `ratel-${props.stage}-main-stream-arn`,
-    //   );
-    //   const mainTableWithStream = dynamodb.Table.fromTableAttributes(
-    //     this,
-    //     "MainTableWithStream",
-    //     {
-    //       tableName,
-    //       tableStreamArn: mainTableStreamArn,
-    //     },
-    //   );
-
-    //   const spaceStreamLambda = new lambda.Function(this, "SpaceStreamWorker", {
-    //     runtime: lambda.Runtime.PROVIDED_AL2023,
-    //     code: lambda.Code.fromAsset("space-stream-worker"),
-    //     handler: "bootstrap",
-    //     environment: {
-    //       REGION: this.region,
-    //       DISABLE_ANSI: "true",
-    //       NO_COLOR: "true",
-    //     },
-    //     memorySize: 256,
-    //     timeout: Duration.seconds(150),
-    //   });
-
-    //   const privateBucketName =
-    //     process.env.PRIVATE_BUCKET_NAME ?? "metadata.ratel.foundation";
-    //   if (privateBucketName) {
-    //     spaceStreamLambda.addToRolePolicy(
-    //       new iam.PolicyStatement({
-    //         effect: iam.Effect.ALLOW,
-    //         actions: ["s3:GetObject", "s3:HeadObject", "s3:PutObject"],
-    //         resources: [`arn:aws:s3:::${privateBucketName}/*`],
-    //       }),
-    //     );
-    //     spaceStreamLambda.addToRolePolicy(
-    //       new iam.PolicyStatement({
-    //         effect: iam.Effect.ALLOW,
-    //         actions: ["s3:ListBucket"],
-    //         resources: [`arn:aws:s3:::${privateBucketName}`],
-    //       }),
-    //     );
-    //   }
-
-    //   spaceStreamLambda.addEventSource(
-    //     new lambdaEventSources.DynamoEventSource(mainTableWithStream, {
-    //       startingPosition: lambda.StartingPosition.LATEST,
-    //       batchSize: 10,
-    //       bisectBatchOnError: true,
-    //       retryAttempts: 3,
-    //     }),
-    //   );
-    // }
-
-    // startSurveyLambda.addToRolePolicy(
-    //   new iam.PolicyStatement({
-    //     effect: iam.Effect.ALLOW,
-    //     actions: [
-    //       "dynamodb:GetItem",
-    //       "dynamodb:BatchGetItem",
-    //       "dynamodb:Query",
-    //       "dynamodb:Scan",
-    //       "dynamodb:PutItem",
-    //       "dynamodb:UpdateItem",
-    //       "dynamodb:DeleteItem",
-    //       "dynamodb:TransactWriteItems",
-    //     ],
-    //     resources: [mainTable.tableArn, `${mainTable.tableArn}/index/*`],
-    //   }),
-    // );
   }
 }

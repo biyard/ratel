@@ -36,6 +36,9 @@ RUN_FEATURES ?= local-dev
 
 REPOSITORY ?= ratel/app-shell
 ECR ?= $(shell aws ecr describe-repositories --repository-names $(REPOSITORY)  --query "repositories[0].repositoryUri" --output text)
+QDRANT_PREFIX ?= ratel-$(ENV)
+QDRANT_URL ?= http://localhost:6334
+QDRANT_API_KEY ?= ""
 
 BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) \
@@ -66,6 +69,9 @@ BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					ICP_IDENTITY_PEM='$(ICP_IDENTITY_PEM)' \
 					VOTER_TAG_SECRET='$(VOTER_TAG_SECRET)' \
 					ATTR_VOTING_AUTHORITY_JSON='$(ATTR_VOTING_AUTHORITY_JSON)' \
+					QDRANT_URL=$(QDRANT_URL) \
+					QDRANT_API_KEY=$(QDRANT_API_KEY) \
+					QDRANT_PREFIX=$(QDRANT_PREFIX) \
 
 test:
 	mkdir -p ./test-build-target/debug/deps/public
