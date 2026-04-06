@@ -1,4 +1,4 @@
-use crate::common::models::space::{SpaceAuthor, SpaceCommon};
+use crate::common::models::space::{SpaceUser, SpaceCommon};
 use crate::features::spaces::pages::actions::actions::discussion::*;
 use crate::features::spaces::pages::actions::models::SpaceAction;
 #[cfg(feature = "server")]
@@ -11,7 +11,7 @@ pub struct AddCommentRequest {
 }
 
 #[mcp_tool(name = "add_comment", description = "Add a comment to a discussion. Requires participant role and discussion in progress.")]
-#[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments", role: SpaceUserRole, author: SpaceAuthor, space: SpaceCommon, user: crate::features::auth::User )]
+#[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments", role: SpaceUserRole, member: SpaceUser, space: SpaceCommon, user: crate::features::auth::User )]
 pub async fn add_comment(
     #[mcp(description = "Space partition key")]
     space_id: SpacePartition,
@@ -56,7 +56,7 @@ pub async fn add_comment(
     }
 
     let comment =
-        SpacePost::comment(cli, space_id.clone(), space_post_id, req.content, &author).await?;
+        SpacePost::comment(cli, space_id.clone(), space_post_id, req.content, &member).await?;
 
     let space_pk: Partition = space_id.clone().into();
     let agg_item =
@@ -96,7 +96,7 @@ pub async fn add_comment(
     }
 
     {
-        let author_partition = crate::features::activity::types::AuthorPartition::from(author.pk.clone());
+        let author_partition = crate::features::activity::types::AuthorPartition::from(member.pk.clone());
 
         if let Err(e) = crate::features::activity::controllers::record_activity(
             cli,
@@ -110,8 +110,8 @@ pub async fn add_comment(
                 discussion_id: discussion_sk.to_string(),
                 is_first_contribution: true,
             },
-            author.display_name.clone(),
-            author.profile_url.clone(),
+            member.display_name.clone(),
+            member.profile_url.clone(),
         ).await {
             tracing::error!(error = %e, "Failed to record discussion activity");
         }

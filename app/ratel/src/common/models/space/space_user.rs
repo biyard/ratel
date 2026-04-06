@@ -6,14 +6,14 @@ use crate::common::*;
 use tower_sessions::Session;
 
 #[derive(Debug, Clone, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-pub struct SpaceAuthor {
+pub struct SpaceUser {
     pub pk: Partition,
     pub display_name: String,
     pub profile_url: String,
     pub username: String,
 }
 
-impl From<User> for SpaceAuthor {
+impl From<User> for SpaceUser {
     fn from(user: User) -> Self {
         Self {
             pk: user.pk,
@@ -24,7 +24,7 @@ impl From<User> for SpaceAuthor {
     }
 }
 
-impl From<SpaceParticipant> for SpaceAuthor {
+impl From<SpaceParticipant> for SpaceUser {
     fn from(participant: SpaceParticipant) -> Self {
         Self {
             pk: participant.user_pk,
@@ -36,7 +36,7 @@ impl From<SpaceParticipant> for SpaceAuthor {
 }
 
 #[cfg(feature = "server")]
-impl<S> FromRequestParts<S> for SpaceAuthor
+impl<S> FromRequestParts<S> for SpaceUser
 where
     S: Send + Sync,
     Session: FromRequestParts<S, Rejection: std::fmt::Debug>,
@@ -44,14 +44,14 @@ where
     type Rejection = Error;
 
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self> {
-        if let Some(author) = parts.extensions.get::<SpaceAuthor>() {
+        if let Some(author) = parts.extensions.get::<SpaceUser>() {
             return Ok(author.clone());
         }
 
         let user = User::from_request_parts(parts, state).await?;
         let space = SpaceCommon::from_request_parts(parts, state).await?;
 
-        let author: SpaceAuthor = if space.anonymous_participation {
+        let author: SpaceUser = if space.anonymous_participation {
             if let Some(participant) = parts.extensions.get::<SpaceParticipant>() {
                 participant.clone().into()
             } else {
@@ -74,3 +74,6 @@ where
         Ok(author)
     }
 }
+
+/// Backward-compatible alias
+pub type SpaceAuthor = SpaceUser;
