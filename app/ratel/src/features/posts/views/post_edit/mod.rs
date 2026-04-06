@@ -205,7 +205,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
             .await
             {
                 Ok(_) => {
-                    nav.push(format!("/posts/{post_id}"));
+                    nav.replace(format!("/posts/{post_id}"));
                 }
                 Err(e) => {
                     dioxus::logger::tracing::error!("Publish failed: {:?}", e);
@@ -422,7 +422,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                                             save_version,
                                         );
                                     }
-                                    cats_query.restart();
+                                    cats_query.refresh();
                                 }
                                 Err(e) => {
                                     toast.error(e);

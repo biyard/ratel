@@ -6,6 +6,7 @@ use crate::features::spaces::pages::actions::actions::follow::*;
 #[cfg(feature = "server")]
 use crate::features::spaces::space_common::models::space_reward::SpaceReward;
 
+#[mcp_tool(name = "follow_user", description = "Follow a user as part of a space follow action. Requires participant role.")]
 #[post(
     "/api/spaces/{space_id}/follows/{follow_id}/user",
     role: SpaceUserRole,
@@ -13,8 +14,11 @@ use crate::features::spaces::space_common::models::space_reward::SpaceReward;
     space: SpaceCommon
 )]
 pub async fn follow_user(
+    #[mcp(description = "Space partition key")]
     space_id: SpacePartition,
+    #[mcp(description = "Follow action sort key (e.g. 'SpaceActionFollow#<uuid>')")]
     follow_id: SpaceActionFollowEntityType,
+    #[mcp(description = "Target user partition key to follow (e.g. 'USER#<uuid>')")]
     target_pk: Partition,
 ) -> Result<()> {
     let common_config = crate::common::CommonConfig::default();
@@ -108,6 +112,32 @@ pub async fn follow_user(
                 error = %e,
                 "SpaceReward not found for follow action"
             );
+        }
+    }
+
+    {
+        let follow_space_action = crate::features::spaces::pages::actions::models::SpaceAction::get(
+            cli,
+            &CompositePartition(space_id.clone(), follow_id.to_string()),
+            Some(EntityType::SpaceAction),
+        ).await.ok().flatten();
+        if let Some(ref sa) = follow_space_action {
+            if let Err(e) = crate::features::activity::controllers::record_activity(
+                cli,
+                space_id.clone(),
+                crate::features::activity::types::AuthorPartition::from(user.pk.clone()),
+                follow_id.to_string(),
+                crate::features::spaces::pages::actions::types::SpaceActionType::Follow,
+                sa.activity_score,
+                sa.additional_score,
+                crate::features::activity::types::SpaceActivityData::Follow {
+                    follow_id: follow_id.to_string(),
+                },
+                user.display_name.clone(),
+                user.profile_url.clone(),
+            ).await {
+                tracing::error!(error = %e, "Failed to record follow activity");
+            }
         }
     }
 

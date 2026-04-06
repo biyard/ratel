@@ -14,12 +14,26 @@ if [ "${RESET_DB}" = "true" ]; then
   echo 'Deleting ratel-local-main table if exists...'
   aws --endpoint-url=$ENDPOINT dynamodb delete-table --table-name ratel-local-main 2>/dev/null && \
     aws --endpoint-url=$ENDPOINT dynamodb wait table-not-exists --table-name ratel-local-main 2>/dev/null || true
+
+  # Clean up stale internal Kinesis stream used by DynamoDB Streams.
+  # LocalStack persists this stream independently; if it survives a table
+  # delete/recreate cycle the new table's stream linkage silently breaks.
+  echo 'Cleaning up stale DynamoDB Streams Kinesis backend...'
+  aws --endpoint-url=$ENDPOINT kinesis delete-stream \
+    --stream-name __ddb_stream_ratel-local-main 2>/dev/null || true
+  sleep 1
 fi
 
-echo 'Creating ratel-local table with GSIs...'
+echo 'Creating ratel-local table with GSIs and DynamoDB Streams...'
 aws --endpoint-url=$ENDPOINT dynamodb create-table --cli-input-json file:///scripts/dynamodb-schema.json 2>/dev/null || \
   echo 'ratel-local-main table already exists, skipping creation'
-echo 'ratel-local-main table and GSIs ready'
+
+# Verify stream is enabled (update if table existed without streams)
+aws --endpoint-url=$ENDPOINT dynamodb update-table \
+  --table-name ratel-local-main \
+  --stream-specification StreamEnabled=true,StreamViewType=NEW_AND_OLD_IMAGES 2>/dev/null || true
+
+echo 'ratel-local-main table and GSIs ready (streams enabled: NEW_AND_OLD_IMAGES)'
 
 echo 'Waiting for LocalStack to be ready...'
 until aws --endpoint-url=$ENDPOINT sqs list-queues >/dev/null 2>&1; do
@@ -30,12 +44,8 @@ aws --endpoint-url=$ENDPOINT sqs create-queue --queue-name watermark-queue
 aws --endpoint-url=$ENDPOINT sqs create-queue --queue-name artwork-image-queue
 echo 'SQS queues created successfully'
 
-echo 'Creating admin user...'
-ADMIN_UUID="10000000-0000-0000-0000-000000000001"
-ADMIN_PASSWORD_HASH="d590005c41712ddad6630ca03348fad16ce2fbfb611725116c14631ff02268d8"
-TIMESTAMP=$(date +%s%3N)
-
-# Membership
+# Seed data — all static JSON loaded via batch-write-item
+echo 'Seeding membership data...'
 aws --endpoint-url=$ENDPOINT dynamodb batch-write-item --request-items file://scripts/dynamodb-data/membership.json
 
 # Playwright test overrides for LocalStack only.
@@ -51,419 +61,31 @@ aws --endpoint-url=$ENDPOINT dynamodb update-item \
     ":max": {"N": "-1"}
   }'
 
-# Reward
+echo 'Seeding reward data...'
 aws --endpoint-url=$ENDPOINT dynamodb batch-write-item --request-items file://scripts/dynamodb-data/reward.json
 
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "USER#'${ADMIN_UUID}'"},
-    "sk": {"S": "USER"},
-    "created_at": {"N": "'${TIMESTAMP}'"},
-    "updated_at": {"N": "'${TIMESTAMP}'"},
-    "display_name": {"S": "Admin User"},
-    "email": {"S": "admin@ratel.foundation"},
-    "profile_url": {"S": "https://metadata.ratel.foundation/ratel/default-profile.png" },
-    "username": {"S": "admin"},
-    "term_agreed": {"BOOL": true},
-    "informed_agreed": {"BOOL": true},
-    "user_type": {"N": "98"},
-    "password": {"S": "'${ADMIN_PASSWORD_HASH}'"},
-    "theme": {"N": "3"},
-    "points": {"N": "0"},
-    "followers_count": {"N": "0"},
-    "followings_count": {"N": "0"},
-    "description": {"S": ""},
-    "gsi1_pk": {"S": "EMAIL#PASSWORD#admin@ratel.foundation"},
-    "gsi1_sk": {"S": "'${ADMIN_PASSWORD_HASH}'"},
-    "gsi2_pk": {"S": "USERNAME#admin"},
-    "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
-    "gsi3_pk": {"S": "EMAIL#admin@ratel.foundation"},
-    "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
-  }'
+echo 'Seeding admin user...'
+aws --endpoint-url=$ENDPOINT dynamodb batch-write-item --request-items file://scripts/dynamodb-data/admin-user.json
 
-# Create Attribute Codes
-echo 'Creating attribute codes...'
+echo 'Seeding attribute codes...'
+aws --endpoint-url=$ENDPOINT dynamodb batch-write-item --request-items file://scripts/dynamodb-data/attribute-codes.json
 
-# Attribute Code 1 - Konkuk female
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "ATTRIBUTE_CODE#wKFegq"},
-    "sk": {"S": "ATTRIBUTE_CODE"},
-    "created_at": {"N": "'${TIMESTAMP}'"},
-    "university": {"S": "Konkuk"},
-    "gender": {"S": "female"},
-    "gsi1_pk": {"S": "AC#ATTRIBUTE_CODE"},
-    "gsi1_sk": {"S": "AC#'${TIMESTAMP}'"}
-  }'
+echo 'Seeding test users...'
+aws --endpoint-url=$ENDPOINT dynamodb batch-write-item --request-items file://scripts/dynamodb-data/test-users.json
 
-# Attribute Code 2 - Konkuk male
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "ATTRIBUTE_CODE#bVn0Vq"},
-    "sk": {"S": "ATTRIBUTE_CODE"},
-    "created_at": {"N": "'$((TIMESTAMP + 1000))'"},
-    "university": {"S": "Konkuk"},
-    "gender": {"S": "male"},
-    "gsi1_pk": {"S": "AC#ATTRIBUTE_CODE"},
-    "gsi1_sk": {"S": "AC#'$((TIMESTAMP + 1000))'"}
-  }'
+echo 'Seeding user memberships...'
+aws --endpoint-url=$ENDPOINT dynamodb batch-write-item --request-items file://scripts/dynamodb-data/user-memberships.json
 
-# Attribute Code 3 - Sogang female
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "ATTRIBUTE_CODE#bIFviB"},
-    "sk": {"S": "ATTRIBUTE_CODE"},
-    "created_at": {"N": "'$((TIMESTAMP + 2000))'"},
-    "university": {"S": "Sogang"},
-    "gender": {"S": "female"},
-    "gsi1_pk": {"S": "AC#ATTRIBUTE_CODE"},
-    "gsi1_sk": {"S": "AC#'$((TIMESTAMP + 2000))'"}
-  }'
+echo 'Seeding team (hiteam) with groups, members...'
+aws --endpoint-url=$ENDPOINT dynamodb batch-write-item --request-items file://scripts/dynamodb-data/team.json
 
-# Attribute Code 4 - Sogang male
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "ATTRIBUTE_CODE#j94EA1"},
-    "sk": {"S": "ATTRIBUTE_CODE"},
-    "created_at": {"N": "'$((TIMESTAMP + 3000))'"},
-    "university": {"S": "Sogang"},
-    "gender": {"S": "male"},
-    "gsi1_pk": {"S": "AC#ATTRIBUTE_CODE"},
-    "gsi1_sk": {"S": "AC#'$((TIMESTAMP + 3000))'"}
-  }'
+echo 'Seeding EVM addresses...'
+aws --endpoint-url=$ENDPOINT dynamodb batch-write-item --request-items file://scripts/dynamodb-data/evm-addresses.json
 
-echo 'Attribute codes created successfully'
-
-# Test Users for Public Deliberation
-echo 'Creating test users...'
-
-i=1
-
-## loop 10
-while [ $i -le 8 ]
-do
-    echo "Creating test user $i"
-    aws --endpoint-url=$ENDPOINT dynamodb put-item \
-        --table-name ratel-local-main \
-        --item '{
-        "pk": {"S": "USER#00000000-0000-0000-0000-00000000000'${i}'"},
-        "sk": {"S": "USER"},
-        "created_at": {"N": "'${TIMESTAMP}'"},
-        "updated_at": {"N": "'${TIMESTAMP}'"},
-        "display_name": {"S": "User'${i}'"},
-        "email": {"S": "hi+user'${i}'@biyard.co"},
-        "profile_url": {"S": "https://metadata.ratel.foundation/ratel/default-profile.png"},
-        "username": {"S": "user'${i}'"},
-        "term_agreed": {"BOOL": true},
-        "informed_agreed": {"BOOL": true},
-        "user_type": {"N": "1"},
-        "password": {"S": "'${ADMIN_PASSWORD_HASH}'"},
-        "theme": {"N": "3"},
-        "points": {"N": "0"},
-        "followers_count": {"N": "0"},
-        "followings_count": {"N": "0"},
-        "description": {"S": ""},
-        "gsi1_pk": {"S": "EMAIL#PASSWORD#hi+user'${i}'@biyard.co"},
-        "gsi1_sk": {"S": "'${ADMIN_PASSWORD_HASH}'"},
-        "gsi2_pk": {"S": "USERNAME#user'${i}'"},
-        "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
-        "gsi3_pk": {"S": "EMAIL#hi+user'${i}'@biyard.co"},
-        "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
-    }'
-
-    i=$((i + 1))
-done
-
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "USER#00000000-0000-0000-0000-000000000019"},
-    "sk": {"S": "USER"},
-    "created_at": {"N": "'${TIMESTAMP}'"},
-    "updated_at": {"N": "'${TIMESTAMP}'"},
-    "display_name": {"S": "Guest1"},
-    "email": {"S": "hi+anon1@biyard.co"},
-    "profile_url": {"S": "https://metadata.ratel.foundation/ratel/default-profile.png"},
-    "username": {"S": "anon1"},
-    "term_agreed": {"BOOL": true},
-    "informed_agreed": {"BOOL": true},
-    "user_type": {"N": "1"},
-    "password": {"S": "'${ADMIN_PASSWORD_HASH}'"},
-    "theme": {"N": "3"},
-    "points": {"N": "0"},
-    "followers_count": {"N": "0"},
-    "followings_count": {"N": "0"},
-    "description": {"S": "건국대 여자"},
-    "gsi1_pk": {"S": "EMAIL#PASSWORD#hi+anon1@biyard.co"},
-    "gsi1_sk": {"S": "'${ADMIN_PASSWORD_HASH}'"},
-    "gsi2_pk": {"S": "USERNAME#anon1"},
-    "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
-    "gsi3_pk": {"S": "EMAIL#hi+anon1@biyard.co"},
-    "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
-  }'
-
-
-i=1
-
-while [ $i -le 2 ]
-do
-    aws --endpoint-url=$ENDPOINT dynamodb put-item \
-    --table-name ratel-local-main \
-    --item '{
-        "pk": {"S": "USER#00000000-0000-0000-0000-00000000002'${i}'"},
-        "sk": {"S": "USER"},
-        "created_at": {"N": "'${TIMESTAMP}'"},
-        "updated_at": {"N": "'${TIMESTAMP}'"},
-        "display_name": {"S": "Creator'${i}'"},
-        "email": {"S": "hi+admin'${i}'@biyard.co"},
-        "profile_url": {"S": "https://metadata.ratel.foundation/ratel/default-profile.png"},
-        "username": {"S": "admin'${i}'"},
-        "term_agreed": {"BOOL": true},
-        "informed_agreed": {"BOOL": true},
-        "user_type": {"N": "1"},
-        "password": {"S": "'${ADMIN_PASSWORD_HASH}'"},
-        "theme": {"N": "3"},
-        "points": {"N": "0"},
-        "followers_count": {"N": "0"},
-        "followings_count": {"N": "0"},
-        "description": {"S": "공론조사 관리자"},
-        "gsi1_pk": {"S": "EMAIL#PASSWORD#hi+admin'${i}'@biyard.co"},
-        "gsi1_sk": {"S": "'${ADMIN_PASSWORD_HASH}'"},
-        "gsi2_pk": {"S": "USERNAME#admin'${i}'"},
-        "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
-        "gsi3_pk": {"S": "EMAIL#hi+admin'${i}'@biyard.co"},
-        "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
-    }'
-    i=$((i + 1))
-done
-
-echo 'Test users created successfully'
-
-# Create UserMemberships for test users
-echo 'Creating user memberships...'
-
-# Calculate expiration timestamp (30 days from now in milliseconds)
-EXPIRED_AT=$((TIMESTAMP + 30 * 24 * 60 * 60 * 1000))
-
-
-# User1 - PRO Membership (40 credits)
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "USER#00000000-0000-0000-0000-000000000001"},
-    "sk": {"S": "USER_MEMBERSHIP"},
-    "created_at": {"N": "'${TIMESTAMP}'"},
-    "updated_at": {"N": "'${TIMESTAMP}'"},
-    "expired_at": {"N": "'${EXPIRED_AT}'"},
-    "membership_pk": {"S": "MEMBERSHIP#PRO"},
-    "status": {"S": "Active"},
-    "total_credits": {"N": "100"},
-    "remaining_credits": {"N": "100"},
-    "auto_renew": {"BOOL": true},
-    "gsi1_pk": {"S": "UM#MEMBERSHIP#PRO"},
-    "gsi1_sk": {"S": "TS#'${TIMESTAMP}'"}
-  }'
-
-# Admin1 (hi+admin1@biyard.co) - PRO Membership (40 credits)
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "USER#00000000-0000-0000-0000-000000000021"},
-    "sk": {"S": "USER_MEMBERSHIP"},
-    "created_at": {"N": "'${TIMESTAMP}'"},
-    "updated_at": {"N": "'${TIMESTAMP}'"},
-    "expired_at": {"N": "'${EXPIRED_AT}'"},
-    "membership_pk": {"S": "MEMBERSHIP#PRO"},
-    "status": {"S": "Active"},
-    "total_credits": {"N": "40"},
-    "remaining_credits": {"N": "40"},
-    "auto_renew": {"BOOL": true},
-    "gsi1_pk": {"S": "UM#MEMBERSHIP#PRO"},
-    "gsi1_sk": {"S": "TS#'${TIMESTAMP}'"},
-    "gsi2_pk": {"S": "USER#00000000-0000-0000-0000-000000000021"},
-    "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
-    "gsi3_pk": {"S": "USER_MEMBERSHIP#00000000-0000-0000-0000-000000000021"},
-    "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
-  }'
-
-echo 'User memberships created successfully'
-
-# Create a Team (hiteam)
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-    --table-name ratel-local-main \
-    --item '{
-            "gsi6_pk": {"S": "TEAM"},
-            "profile_url": {"S": ""},
-            "created_at": {"N": "'${TIMESTAMP}'"},
-            "description": {"S": ""},
-            "display_name": {"S": "hiteam"},
-            "followers": {"N": "0"},
-            "updated_at": {"N": "'${TIMESTAMP}'"},
-            "followings": {"N": "0"},
-            "gsi1_pk": {"S": "TEAM_NAME_IDX#TEAM"},
-            "sk": {"S": "TEAM"},
-            "gsi2_pk": {"S": "USERNAME#hiteam"},
-            "pk": {"S": "TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61"},
-            "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
-            "gsi1_sk": {"S": "hiteam"},
-            "gsi6_sk": {"S": "0"},
-            "username": {"S": "hiteam"}
-        }'
-
-# Create a TEAM group (Admin)
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-    --table-name ratel-local-main \
-    --item '{
-            "permissions": {"N": "-4611686018420032497"},
-            "members": {"N": "3"},
-            "gsi1_pk": {"S": "TEAM_GROUP_PK#TEAM_GROUP#0e55a3b3-fb35-45b2-8a57-1440dda643ef"},
-            "name": {"S": "Admin"},
-            "sk": {"S": "TEAM_GROUP#0e55a3b3-fb35-45b2-8a57-1440dda643ef"},
-            "created_at": {"N": "'${TIMESTAMP}'"},
-            "description": {"S": "Administrators group with all permissions"},
-            "pk": {"S": "TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61"},
-            "gsi1_sk": {"S": "'${TIMESTAMP}'"}
-        }'
-
-# Setting Owner(hi+2@ratel.foundation)
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-    --table-name ratel-local-main \
-    --item '{
-            "profile_url": {"S": "https://metadata.ratel.foundation/ratel/default-profile.png"},
-            "user_pk": {"S": "USER#00000000-0000-0000-0000-000000000002"},
-            "gsi1_pk": {"S": "USER_PK#USER#00000000-0000-0000-0000-000000000002"},
-            "sk": {"S": "TEAM_OWNER"},
-            "pk": {"S": "TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61"},
-            "display_name": {"S": "User 2"},
-            "gsi1_sk": {"S": "TEAM_OWNER"},
-            "username": {"S": "user2"}
-        }'
-
-# Add users to team (hi+2@ratel.foundation, hi+3@ratel.foundation)
-## User team
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-    --table-name ratel-local-main \
-    --item '{
-            "last_used_at": {"N": "'${TIMESTAMP}'"},
-            "profile_url": {"S": "https://metadata.ratel.foundation/ratel/default-profile.png"},
-            "gsi1_pk": {"S": "TEAM_PK#USER_TEAM#TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61"},
-            "sk": {"S": "USER_TEAM#TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61"},
-            "pk": {"S": "USER#00000000-0000-0000-0000-000000000002"},
-            "display_name": {"S": "hiteam"},
-            "gsi1_sk": {"S": "'${TIMESTAMP}'"},
-            "username": {"S": "hiteam"}
-        }'
-## User group
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-    --table-name ratel-local-main \
-    --item '{
-            "team_group_permissions": {"N": "-4611686018420032497"},
-            "gsi1_pk": {"S": "TEAM_GROUP_PK#USER_TEAM_GROUP#TEAM_GROUP#0e55a3b3-fb35-45b2-8a57-1440dda643ef"},
-            "sk": {"S": "USER_TEAM_GROUP#TEAM_GROUP#0e55a3b3-fb35-45b2-8a57-1440dda643ef"},
-            "gsi2_pk": {"S": "USER_TEAM_GROUP#TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61"},
-            "pk": {"S": "USER#00000000-0000-0000-0000-000000000002"},
-            "team_pk": {"S": "TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61"},
-            "gsi2_sk": {"S": "USER#00000000-0000-0000-0000-000000000002"},
-            "gsi1_sk": {"S": "-4611686018420032497"}
-        }'
-
-## User team
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-    --table-name ratel-local-main \
-    --item '{
-            "last_used_at": {"N": "'${TIMESTAMP}'"},
-            "profile_url": {"S": "https://metadata.ratel.foundation/ratel/default-profile.png"},
-            "gsi1_pk": {"S": "TEAM_PK#USER_TEAM#TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61"},
-            "sk": {"S": "USER_TEAM#TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61"},
-            "pk": {"S": "USER#00000000-0000-0000-0000-000000000003"},
-            "display_name": {"S": "hiteam"},
-            "gsi1_sk": {"S": "'${TIMESTAMP}'"},
-            "username": {"S": "hiteam"}
-        }'
-## User group
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-    --table-name ratel-local-main \
-    --item '{
-            "team_group_permissions": {"N": "-4611686018420032497"},
-            "gsi1_pk": {"S": "TEAM_GROUP_PK#USER_TEAM_GROUP#TEAM_GROUP#0e55a3b3-fb35-45b2-8a57-1440dda643ef"},
-            "sk": {"S": "USER_TEAM_GROUP#TEAM_GROUP#0e55a3b3-fb35-45b2-8a57-1440dda643ef"},
-            "gsi2_pk": {"S": "USER_TEAM_GROUP#TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61"},
-            "pk": {"S": "USER#00000000-0000-0000-0000-000000000003"},
-            "team_pk": {"S": "TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61"},
-            "gsi2_sk": {"S": "USER#00000000-0000-0000-0000-000000000003"},
-            "gsi1_sk": {"S": "-4611686018420032497"}
-        }'
-
-## User team (user4)
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-    --table-name ratel-local-main \
-    --item '{
-            "last_used_at": {"N": "'${TIMESTAMP}'"},
-            "profile_url": {"S": "https://metadata.ratel.foundation/ratel/default-profile.png"},
-            "gsi1_pk": {"S": "TEAM_PK#USER_TEAM#TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61"},
-            "sk": {"S": "USER_TEAM#TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61"},
-            "pk": {"S": "USER#00000000-0000-0000-0000-000000000004"},
-            "display_name": {"S": "hiteam"},
-            "gsi1_sk": {"S": "'${TIMESTAMP}'"},
-            "username": {"S": "hiteam"}
-        }'
-## User group (user4)
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-    --table-name ratel-local-main \
-    --item '{
-            "team_group_permissions": {"N": "-4611686018420032497"},
-            "gsi1_pk": {"S": "TEAM_GROUP_PK#USER_TEAM_GROUP#TEAM_GROUP#0e55a3b3-fb35-45b2-8a57-1440dda643ef"},
-            "sk": {"S": "USER_TEAM_GROUP#TEAM_GROUP#0e55a3b3-fb35-45b2-8a57-1440dda643ef"},
-            "gsi2_pk": {"S": "USER_TEAM_GROUP#TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61"},
-            "pk": {"S": "USER#00000000-0000-0000-0000-000000000004"},
-            "team_pk": {"S": "TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61"},
-            "gsi2_sk": {"S": "USER#00000000-0000-0000-0000-000000000004"},
-            "gsi1_sk": {"S": "-4611686018420032497"}
-        }'
-
-# Add EVM addresses for team admin members
-echo 'Creating EVM addresses for team admins...'
-
-# User2 EVM Address (team owner)
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-    --table-name ratel-local-main \
-    --item '{
-            "pk": {"S": "USER#00000000-0000-0000-0000-000000000002"},
-            "sk": {"S": "USER_EVM_ADDRESS"},
-            "evm_address": {"S": "0x1234567890123456789012345678901234567890"},
-            "gsi1_pk": {"S": "EVM#0x1234567890123456789012345678901234567890"},
-            "gsi1_sk": {"S": "USER_EVM_ADDRESS"}
-        }'
-
-# User3 EVM Address
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-    --table-name ratel-local-main \
-    --item '{
-            "pk": {"S": "USER#00000000-0000-0000-0000-000000000003"},
-            "sk": {"S": "USER_EVM_ADDRESS"},
-            "evm_address": {"S": "0x2345678901234567890123456789012345678901"},
-            "gsi1_pk": {"S": "EVM#0x2345678901234567890123456789012345678901"},
-            "gsi1_sk": {"S": "USER_EVM_ADDRESS"}
-        }'
-
-# User4 EVM Address
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-    --table-name ratel-local-main \
-    --item '{
-            "pk": {"S": "USER#00000000-0000-0000-0000-000000000004"},
-            "sk": {"S": "USER_EVM_ADDRESS"},
-            "evm_address": {"S": "0x3456789012345678901234567890123456789012"},
-            "gsi1_pk": {"S": "EVM#0x3456789012345678901234567890123456789012"},
-            "gsi1_sk": {"S": "USER_EVM_ADDRESS"}
-        }'
-
-echo 'EVM addresses created successfully'
-
+# MCP Client Secrets for testing
+# Raw tokens: user1=test-mcp-secret-user1, user2=test-mcp-secret-user2, user3=test-mcp-secret-user3
+echo 'Seeding MCP client secrets...'
+aws --endpoint-url=$ENDPOINT dynamodb batch-write-item --request-items file://scripts/dynamodb-data/mcp-client-secret.json
 
 echo '======================================'
 echo 'LocalStack initialization completed!'
@@ -496,6 +118,11 @@ echo '  Members with Admin permission & EVM addresses:'
 echo '    user2 (owner): 0x1234567890123456789012345678901234567890'
 echo '    user3: 0x2345678901234567890123456789012345678901'
 echo '    user4: 0x3456789012345678901234567890123456789012'
+echo ''
+echo 'MCP Client Secrets (raw tokens for testing):'
+echo '  user1: test-mcp-secret-user1'
+echo '  user2: test-mcp-secret-user2'
+echo '  user3: test-mcp-secret-user3'
 echo ''
 echo 'Attribute Codes:'
 echo '  j94EA1 - Sogang Male'

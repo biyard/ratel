@@ -1,6 +1,9 @@
 use crate::features::membership::models::Currency;
 use crate::features::membership::*;
 
+pub const ENTERPRISE_MONTHLY_REFILL_CREDITS: i64 = 1_000_000;
+pub const ENTERPRISE_MAX_CREDITS_PER_SPACE: i64 = 1_000;
+
 #[derive(
     Debug,
     Clone,
@@ -112,6 +115,11 @@ pub struct UserMembership {
 
     pub auto_renew: bool,
     pub next_membership: Option<MembershipPartition>,
+
+    #[serde(default)]
+    pub monthly_refill_credits: i64,
+    #[serde(default)]
+    pub next_refill_at: i64,
 }
 
 impl UserMembership {
@@ -140,6 +148,8 @@ impl UserMembership {
             auto_renew: true,
             status: MembershipStatus::Active,
             next_membership: None,
+            monthly_refill_credits: 0,
+            next_refill_at: 0,
         })
     }
 
@@ -170,6 +180,19 @@ impl UserMembership {
         self
     }
 
+    pub fn renewal_date_rfc_3339(&self) -> Option<String> {
+        if self.is_infinite() {
+            return None;
+        }
+
+        let datetime = chrono::DateTime::from_timestamp_millis(self.expired_at)?;
+        Some(datetime.to_rfc3339())
+    }
+
+    pub fn needs_monthly_refill(&self, now: i64) -> bool {
+        self.monthly_refill_credits > 0 && self.next_refill_at > 0 && now >= self.next_refill_at
+    }
+
     /// Use credits from this membership (validates and deducts locally).
     /// Must be followed by a DB updater in a transaction to persist.
     pub fn use_credits(&mut self, amount: i64) -> Result<()> {
@@ -181,6 +204,31 @@ impl UserMembership {
 
         Ok(())
     }
+}
+
+#[cfg(feature = "server")]
+pub async fn ensure_user_membership_monthly_refill(
+    cli: &aws_sdk_dynamodb::Client,
+    mut membership: UserMembership,
+) -> Result<UserMembership> {
+    let now = crate::common::utils::time::now();
+    if !membership.needs_monthly_refill(now) {
+        return Ok(membership);
+    }
+
+    membership.total_credits = membership.monthly_refill_credits;
+    membership.remaining_credits = membership.monthly_refill_credits;
+    membership.updated_at = now;
+
+    let mut next_refill_at = membership.next_refill_at;
+    while next_refill_at <= now {
+        next_refill_at = crate::common::utils::time::add_one_month(next_refill_at)
+            .unwrap_or(next_refill_at + 30 * 24 * 60 * 60 * 1_000);
+    }
+    membership.next_refill_at = next_refill_at;
+    membership.upsert(cli).await?;
+
+    Ok(membership)
 }
 
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
@@ -268,6 +316,10 @@ pub struct TeamMembership {
 
     pub auto_renew: bool,
     pub next_membership: Option<MembershipPartition>,
+    #[serde(default)]
+    pub monthly_refill_credits: i64,
+    #[serde(default)]
+    pub next_refill_at: i64,
 }
 
 impl TeamMembership {
@@ -296,6 +348,8 @@ impl TeamMembership {
             auto_renew: true,
             status: MembershipStatus::Active,
             next_membership: None,
+            monthly_refill_credits: 0,
+            next_refill_at: 0,
         })
     }
 
@@ -326,6 +380,19 @@ impl TeamMembership {
         self
     }
 
+    pub fn renewal_date_rfc_3339(&self) -> Option<String> {
+        if self.is_infinite() {
+            return None;
+        }
+
+        let datetime = chrono::DateTime::from_timestamp_millis(self.expired_at)?;
+        Some(datetime.to_rfc3339())
+    }
+
+    pub fn needs_monthly_refill(&self, now: i64) -> bool {
+        self.monthly_refill_credits > 0 && self.next_refill_at > 0 && now >= self.next_refill_at
+    }
+
     pub fn use_credits(&mut self, amount: i64) -> Result<()> {
         if self.remaining_credits < amount {
             return Err(SpaceRewardError::CreditsExceedBalance.into());
@@ -335,6 +402,31 @@ impl TeamMembership {
 
         Ok(())
     }
+}
+
+#[cfg(feature = "server")]
+pub async fn ensure_team_membership_monthly_refill(
+    cli: &aws_sdk_dynamodb::Client,
+    mut membership: TeamMembership,
+) -> Result<TeamMembership> {
+    let now = crate::common::utils::time::now();
+    if !membership.needs_monthly_refill(now) {
+        return Ok(membership);
+    }
+
+    membership.total_credits = membership.monthly_refill_credits;
+    membership.remaining_credits = membership.monthly_refill_credits;
+    membership.updated_at = now;
+
+    let mut next_refill_at = membership.next_refill_at;
+    while next_refill_at <= now {
+        next_refill_at = crate::common::utils::time::add_one_month(next_refill_at)
+            .unwrap_or(next_refill_at + 30 * 24 * 60 * 60 * 1_000);
+    }
+    membership.next_refill_at = next_refill_at;
+    membership.upsert(cli).await?;
+
+    Ok(membership)
 }
 
 #[derive(Debug, Clone, Default, PartialEq, serde::Serialize, serde::Deserialize)]

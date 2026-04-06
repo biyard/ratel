@@ -5,14 +5,19 @@ use crate::features::spaces::pages::actions::models::SpaceAction;
 use crate::features::spaces::space_common::models::space_reward::SpaceReward;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct AddCommentRequest {
     pub content: String,
 }
 
+#[mcp_tool(name = "add_comment", description = "Add a comment to a discussion. Requires participant role and discussion in progress.")]
 #[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments", role: SpaceUserRole, author: SpaceAuthor, space: SpaceCommon, user: crate::features::auth::User )]
 pub async fn add_comment(
+    #[mcp(description = "Space partition key")]
     space_id: SpacePartition,
+    #[mcp(description = "Discussion sort key (e.g. 'SpacePost#<uuid>')")]
     discussion_sk: SpacePostEntityType,
+    #[mcp(description = "Comment content as JSON: {\"content\": \"text\"}")]
     req: AddCommentRequest,
 ) -> Result<DiscussionCommentResponse> {
     SpacePost::can_view(&role)?;
@@ -87,6 +92,28 @@ pub async fn add_comment(
                 error = %e,
                 "SpaceReward not found for discussion action"
             );
+        }
+    }
+
+    {
+        let author_partition = crate::features::activity::types::AuthorPartition::from(author.pk.clone());
+
+        if let Err(e) = crate::features::activity::controllers::record_activity(
+            cli,
+            space_id.clone(),
+            author_partition,
+            discussion_sk.to_string(),
+            crate::features::spaces::pages::actions::types::SpaceActionType::TopicDiscussion,
+            space_action.activity_score,
+            space_action.additional_score,
+            crate::features::activity::types::SpaceActivityData::Discussion {
+                discussion_id: discussion_sk.to_string(),
+                is_first_contribution: true,
+            },
+            author.display_name.clone(),
+            author.profile_url.clone(),
+        ).await {
+            tracing::error!(error = %e, "Failed to record discussion activity");
         }
     }
 

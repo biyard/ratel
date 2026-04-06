@@ -21,6 +21,8 @@ aws-sdk-bedrockruntime = { workspace = true, optional = true }
 aws-sdk-bedrockagentruntime = { version = "1", optional = true }
 aws-smithy-types = { version = "1", optional = true }
 aws-sdk-dynamodb = { workspace = true, optional = true }
+aws-sdk-dynamodbstreams = { workspace = true, optional = true }
+qdrant-client = { workspace = true, optional = true }
 schemars = { workspace = true, optional = true }
 aide = { workspace = true, optional = true }
 tracing = { workspace = true }
@@ -36,6 +38,7 @@ rand = { version = "0.10" }
 futures = { version = "0.3", optional = true }
 urlencoding = { version = "2" }
 tokio = { workspace = true, optional = true }
+tower = { version = "0.5", features = ["util"], optional = true }
 
 web-sys = { workspace = true, features = [
   "Blob",
@@ -108,7 +111,7 @@ rmcp = { version = "0.7.0", git = "https://github.com/modelcontextprotocol/rust-
 
 
 [features]
-full = ["membership", "social", "spaces_full"]
+full = []
 default = ["full"]
 bypass = []
 web = ["dioxus/web", "getrandom", "gloo-timers", "time/wasm-bindgen"]
@@ -121,6 +124,7 @@ server = [
   "aws-sdk-bedrockagentruntime",
   "aws-sdk-bedrockruntime",
   "aws-sdk-dynamodb",
+  "aws-sdk-dynamodbstreams",
   "aws-sdk-s3",
   "aws-sdk-sesv2",
   "aws-sdk-sns",
@@ -135,6 +139,7 @@ server = [
   "ic-agent",
   "k256",
   "names",
+  "qdrant-client",
   "random-string",
   "reqwest",
   "ratel-canister",
@@ -145,6 +150,7 @@ server = [
   "sha3",
   "ssi",
   "tokio",
+  "tower",
   "tower-sessions",
   "url",
   "uuid",
@@ -154,10 +160,6 @@ server = [
 
 lambda = ["lambda_http", "lambda_runtime", "server"]
 layout_test = ["web"]
-membership = []
-social = []
-spaces = []
-spaces_full = ["spaces"]
 local-dev = ["beta","bypass"]
 beta = []
 futures = ["dep:futures"]

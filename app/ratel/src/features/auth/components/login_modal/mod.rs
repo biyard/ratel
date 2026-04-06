@@ -75,7 +75,6 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                 user_ctx.set(UserContext {
                     user: Some(user.user),
                     refresh_token: user.refresh_token,
-                    #[cfg(feature = "membership")]
                     membership: None,
                 });
                 if let Some(handler) = &on_success {
@@ -111,7 +110,6 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                         user_ctx.set(UserContext {
                             user: Some(user.user),
                             refresh_token: user.refresh_token,
-                            #[cfg(feature = "membership")]
                             membership: None,
                         });
                         if let Some(handler) = &on_success {
@@ -220,7 +218,6 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                     user_ctx.set(UserContext {
                         user: Some(user.user),
                         refresh_token: user.refresh_token,
-                        #[cfg(feature = "membership")]
                         membership: None,
                     });
                     if let Some(handler) = &on_success {

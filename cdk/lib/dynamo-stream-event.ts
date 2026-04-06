@@ -95,6 +95,104 @@ export class DynamoStreamEventStack extends Stack {
       },
     });
 
+    // ── Pipe 1b: Post Publish → PostVectorIndex ─────────────────────
+    // Triggers when a post is published (same filter as TimelinePipe) for Qdrant indexing
+    new pipes.CfnPipe(this, "PostVectorIndexPipe", {
+      name: `ratel-${stage}-post-vector-index-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["INSERT", "MODIFY"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: [{ prefix: "POST" }] },
+                    status: { S: ["PUBLISHED"] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "PostVectorIndex",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    // ── Rule: Route PostVectorIndex events to app-shell Lambda ─────
+    new events.Rule(this, "PostVectorIndexRule", {
+      eventBus,
+      description:
+        "Route post publish events to app-shell for Qdrant vector indexing",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["PostVectorIndex"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
+    // ── Pipe 1c: Post Delete → PostVectorDelete ───────────────────
+    // Triggers when a published post is removed
+    new pipes.CfnPipe(this, "PostVectorDeletePipe", {
+      name: `ratel-${stage}-post-vector-delete-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["REMOVE"],
+                dynamodb: {
+                  OldImage: {
+                    sk: { S: [{ prefix: "POST" }] },
+                    status: { S: ["PUBLISHED"] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "PostVectorDelete",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.OldImage>}',
+      },
+    });
+
+    // ── Rule: Route PostVectorDelete events to app-shell Lambda ────
+    new events.Rule(this, "PostVectorDeleteRule", {
+      eventBus,
+      description:
+        "Route post delete events to app-shell for Qdrant vector removal",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["PostVectorDelete"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
     // ── Pipe 2: Engagement Change → PopularPostUpdate ────────────────
     // Triggers when likes/comments/shares change on a published post
     new pipes.CfnPipe(this, "PopularPostPipe", {
@@ -205,7 +303,105 @@ export class DynamoStreamEventStack extends Stack {
       targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
     });
 
-    // ── Pipe 4: Notification Insert → NotificationSend ─────────────
+    // ── Pipe 4: Discussion Reply → AiModeratorReplyCheck ────────────
+    // Triggers when a SpacePost entity's comments field changes (reply added)
+    new pipes.CfnPipe(this, "AiModeratorPipe", {
+      name: `ratel-${stage}-ai-moderator-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 1,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["MODIFY"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: [{ prefix: "SPACE_POST#" }] },
+                    comments: { N: [{ exists: true }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "AiModeratorReplyCheck",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    // ── Rule: Route AiModeratorReplyCheck events to app-shell Lambda ─
+    new events.Rule(this, "AiModeratorReplyCheckRule", {
+      eventBus,
+      description:
+        "Route discussion reply events to app-shell for AI moderator check",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["AiModeratorReplyCheck"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
+    // ── Pipe 5: Discussion Comment Insert → AiModeratorReplyIndex ───
+    // Triggers when a new SpacePostComment is inserted (reply added to discussion)
+    new pipes.CfnPipe(this, "AiModeratorReplyIndexPipe", {
+      name: `ratel-${stage}-ai-moderator-reply-index-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["INSERT"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: [{ prefix: "SPACE_POST_COMMENT#" }] },
+                    content: { S: [{ exists: true }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "AiModeratorReplyIndex",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    // ── Rule: Route AiModeratorReplyIndex events to app-shell Lambda ─
+    new events.Rule(this, "AiModeratorReplyIndexRule", {
+      eventBus,
+      description:
+        "Route new discussion comments to app-shell for Qdrant indexing",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["AiModeratorReplyIndex"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
+    // ── Pipe 6: Notification Insert → NotificationSend ─────────────
     // Triggers when a new Notification entity is inserted
     new pipes.CfnPipe(this, "NotificationPipe", {
       name: `ratel-${stage}-notification-pipe`,
@@ -250,6 +446,54 @@ export class DynamoStreamEventStack extends Stack {
       eventPattern: {
         source: ["ratel.dynamodb.stream"],
         detailType: ["NotificationSend"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
+    // ── Pipe 7: Space Activity Insert → ActivityScoreAggregate ──────
+    // Triggers when a new SpaceActivity record is inserted (user performs an action)
+    new pipes.CfnPipe(this, "ActivityScorePipe", {
+      name: `ratel-${stage}-activity-score-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["INSERT"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: [{ prefix: "SPACE_ACTIVITY#" }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "ActivityScoreAggregate",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    // ── Rule: Route ActivityScoreAggregate events to app-shell Lambda ─
+    new events.Rule(this, "ActivityScoreAggregateRule", {
+      eventBus,
+      description:
+        "Route space activity events to app-shell for score aggregation",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["ActivityScoreAggregate"],
       },
       targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
     });

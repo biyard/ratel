@@ -1,5 +1,5 @@
 mod constants;
-mod utils;
+pub mod utils;
 mod views;
 
 #[cfg(feature = "server")]

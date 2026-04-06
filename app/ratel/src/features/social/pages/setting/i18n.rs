@@ -273,6 +273,11 @@ translate! {
         ko: "플랜 변경",
     },
 
+    enterprise: {
+        en: "Enterprise",
+        ko: "엔터프라이즈",
+    },
+
     card: {
         en: "Card",
         ko: "카드",

@@ -1,0 +1,323 @@
+{
+  "ratel-local-main": [
+    {
+      "PutRequest": {
+        "Item": {
+          "pk": { "S": "USER#00000000-0000-0000-0000-000000000001" },
+          "sk": { "S": "USER" },
+          "created_at": { "N": "1764227900000" },
+          "updated_at": { "N": "1764227900000" },
+          "display_name": { "S": "User1" },
+          "email": { "S": "hi+user1@biyard.co" },
+          "profile_url": { "S": "https://metadata.ratel.foundation/ratel/default-profile.png" },
+          "username": { "S": "user1" },
+          "term_agreed": { "BOOL": true },
+          "informed_agreed": { "BOOL": true },
+          "user_type": { "N": "1" },
+          "password": { "S": "d590005c41712ddad6630ca03348fad16ce2fbfb611725116c14631ff02268d8" },
+          "theme": { "N": "3" },
+          "points": { "N": "0" },
+          "followers_count": { "N": "0" },
+          "followings_count": { "N": "0" },
+          "description": { "S": "" },
+          "gsi1_pk": { "S": "EMAIL#PASSWORD#hi+user1@biyard.co" },
+          "gsi1_sk": { "S": "d590005c41712ddad6630ca03348fad16ce2fbfb611725116c14631ff02268d8" },
+          "gsi2_pk": { "S": "USERNAME#user1" },
+          "gsi2_sk": { "S": "TS#1764227900000" },
+          "gsi3_pk": { "S": "EMAIL#hi+user1@biyard.co" },
+          "gsi3_sk": { "S": "TS#1764227900000" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "pk": { "S": "USER#00000000-0000-0000-0000-000000000002" },
+          "sk": { "S": "USER" },
+          "created_at": { "N": "1764227900000" },
+          "updated_at": { "N": "1764227900000" },
+          "display_name": { "S": "User2" },
+          "email": { "S": "hi+user2@biyard.co" },
+          "profile_url": { "S": "https://metadata.ratel.foundation/ratel/default-profile.png" },
+          "username": { "S": "user2" },
+          "term_agreed": { "BOOL": true },
+          "informed_agreed": { "BOOL": true },
+          "user_type": { "N": "1" },
+          "password": { "S": "d590005c41712ddad6630ca03348fad16ce2fbfb611725116c14631ff02268d8" },
+          "theme": { "N": "3" },
+          "points": { "N": "0" },
+          "followers_count": { "N": "0" },
+          "followings_count": { "N": "0" },
+          "description": { "S": "" },
+          "gsi1_pk": { "S": "EMAIL#PASSWORD#hi+user2@biyard.co" },
+          "gsi1_sk": { "S": "d590005c41712ddad6630ca03348fad16ce2fbfb611725116c14631ff02268d8" },
+          "gsi2_pk": { "S": "USERNAME#user2" },
+          "gsi2_sk": { "S": "TS#1764227900000" },
+          "gsi3_pk": { "S": "EMAIL#hi+user2@biyard.co" },
+          "gsi3_sk": { "S": "TS#1764227900000" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "pk": { "S": "USER#00000000-0000-0000-0000-000000000003" },
+          "sk": { "S": "USER" },
+          "created_at": { "N": "1764227900000" },
+          "updated_at": { "N": "1764227900000" },
+          "display_name": { "S": "User3" },
+          "email": { "S": "hi+user3@biyard.co" },
+          "profile_url": { "S": "https://metadata.ratel.foundation/ratel/default-profile.png" },
+          "username": { "S": "user3" },
+          "term_agreed": { "BOOL": true },
+          "informed_agreed": { "BOOL": true },
+          "user_type": { "N": "1" },
+          "password": { "S": "d590005c41712ddad6630ca03348fad16ce2fbfb611725116c14631ff02268d8" },
+          "theme": { "N": "3" },
+          "points": { "N": "0" },
+          "followers_count": { "N": "0" },
+          "followings_count": { "N": "0" },
+          "description": { "S": "" },
+          "gsi1_pk": { "S": "EMAIL#PASSWORD#hi+user3@biyard.co" },
+          "gsi1_sk": { "S": "d590005c41712ddad6630ca03348fad16ce2fbfb611725116c14631ff02268d8" },
+          "gsi2_pk": { "S": "USERNAME#user3" },
+          "gsi2_sk": { "S": "TS#1764227900000" },
+          "gsi3_pk": { "S": "EMAIL#hi+user3@biyard.co" },
+          "gsi3_sk": { "S": "TS#1764227900000" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "pk": { "S": "USER#00000000-0000-0000-0000-000000000004" },
+          "sk": { "S": "USER" },
+          "created_at": { "N": "1764227900000" },
+          "updated_at": { "N": "1764227900000" },
+          "display_name": { "S": "User4" },
+          "email": { "S": "hi+user4@biyard.co" },
+          "profile_url": { "S": "https://metadata.ratel.foundation/ratel/default-profile.png" },
+          "username": { "S": "user4" },
+          "term_agreed": { "BOOL": true },
+          "informed_agreed": { "BOOL": true },
+          "user_type": { "N": "1" },
+          "password": { "S": "d590005c41712ddad6630ca03348fad16ce2fbfb611725116c14631ff02268d8" },
+          "theme": { "N": "3" },
+          "points": { "N": "0" },
+          "followers_count": { "N": "0" },
+          "followings_count": { "N": "0" },
+          "description": { "S": "" },
+          "gsi1_pk": { "S": "EMAIL#PASSWORD#hi+user4@biyard.co" },
+          "gsi1_sk": { "S": "d590005c41712ddad6630ca03348fad16ce2fbfb611725116c14631ff02268d8" },
+          "gsi2_pk": { "S": "USERNAME#user4" },
+          "gsi2_sk": { "S": "TS#1764227900000" },
+          "gsi3_pk": { "S": "EMAIL#hi+user4@biyard.co" },
+          "gsi3_sk": { "S": "TS#1764227900000" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "pk": { "S": "USER#00000000-0000-0000-0000-000000000005" },
+          "sk": { "S": "USER" },
+          "created_at": { "N": "1764227900000" },
+          "updated_at": { "N": "1764227900000" },
+          "display_name": { "S": "User5" },
+          "email": { "S": "hi+user5@biyard.co" },
+          "profile_url": { "S": "https://metadata.ratel.foundation/ratel/default-profile.png" },
+          "username": { "S": "user5" },
+          "term_agreed": { "BOOL": true },
+          "informed_agreed": { "BOOL": true },
+          "user_type": { "N": "1" },
+          "password": { "S": "d590005c41712ddad6630ca03348fad16ce2fbfb611725116c14631ff02268d8" },
+          "theme": { "N": "3" },
+          "points": { "N": "0" },
+          "followers_count": { "N": "0" },
+          "followings_count": { "N": "0" },
+          "description": { "S": "" },
+          "gsi1_pk": { "S": "EMAIL#PASSWORD#hi+user5@biyard.co" },
+          "gsi1_sk": { "S": "d590005c41712ddad6630ca03348fad16ce2fbfb611725116c14631ff02268d8" },
+          "gsi2_pk": { "S": "USERNAME#user5" },
+          "gsi2_sk": { "S": "TS#1764227900000" },
+          "gsi3_pk": { "S": "EMAIL#hi+user5@biyard.co" },
+          "gsi3_sk": { "S": "TS#1764227900000" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "pk": { "S": "USER#00000000-0000-0000-0000-000000000006" },
+          "sk": { "S": "USER" },
+          "created_at": { "N": "1764227900000" },
+          "updated_at": { "N": "1764227900000" },
+          "display_name": { "S": "User6" },
+          "email": { "S": "hi+user6@biyard.co" },
+          "profile_url": { "S": "https://metadata.ratel.foundation/ratel/default-profile.png" },
+          "username": { "S": "user6" },
+          "term_agreed": { "BOOL": true },
+          "informed_agreed": { "BOOL": true },
+          "user_type": { "N": "1" },
+          "password": { "S": "d590005c41712ddad6630ca03348fad16ce2fbfb611725116c14631ff02268d8" },
+          "theme": { "N": "3" },
+          "points": { "N": "0" },
+          "followers_count": { "N": "0" },
+          "followings_count": { "N": "0" },
+          "description": { "S": "" },
+          "gsi1_pk": { "S": "EMAIL#PASSWORD#hi+user6@biyard.co" },
+          "gsi1_sk": { "S": "d590005c41712ddad6630ca03348fad16ce2fbfb611725116c14631ff02268d8" },
+          "gsi2_pk": { "S": "USERNAME#user6" },
+          "gsi2_sk": { "S": "TS#1764227900000" },
+          "gsi3_pk": { "S": "EMAIL#hi+user6@biyard.co" },
+          "gsi3_sk": { "S": "TS#1764227900000" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "pk": { "S": "USER#00000000-0000-0000-0000-000000000007" },
+          "sk": { "S": "USER" },
+          "created_at": { "N": "1764227900000" },
+          "updated_at": { "N": "1764227900000" },
+          "display_name": { "S": "User7" },
+          "email": { "S": "hi+user7@biyard.co" },
+          "profile_url": { "S": "https://metadata.ratel.foundation/ratel/default-profile.png" },
+          "username": { "S": "user7" },
+          "term_agreed": { "BOOL": true },
+          "informed_agreed": { "BOOL": true },
+          "user_type": { "N": "1" },
+          "password": { "S": "d590005c41712ddad6630ca03348fad16ce2fbfb611725116c14631ff02268d8" },
+          "theme": { "N": "3" },
+          "points": { "N": "0" },
+          "followers_count": { "N": "0" },
+          "followings_count": { "N": "0" },
+          "description": { "S": "" },
+          "gsi1_pk": { "S": "EMAIL#PASSWORD#hi+user7@biyard.co" },
+          "gsi1_sk": { "S": "d590005c41712ddad6630ca03348fad16ce2fbfb611725116c14631ff02268d8" },
+          "gsi2_pk": { "S": "USERNAME#user7" },
+          "gsi2_sk": { "S": "TS#1764227900000" },
+          "gsi3_pk": { "S": "EMAIL#hi+user7@biyard.co" },
+          "gsi3_sk": { "S": "TS#1764227900000" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "pk": { "S": "USER#00000000-0000-0000-0000-000000000008" },
+          "sk": { "S": "USER" },
+          "created_at": { "N": "1764227900000" },
+          "updated_at": { "N": "1764227900000" },
+          "display_name": { "S": "User8" },
+          "email": { "S": "hi+user8@biyard.co" },
+          "profile_url": { "S": "https://metadata.ratel.foundation/ratel/default-profile.png" },
+          "username": { "S": "user8" },
+          "term_agreed": { "BOOL": true },
+          "informed_agreed": { "BOOL": true },
+          "user_type": { "N": "1" },
+          "password": { "S": "d590005c41712ddad6630ca03348fad16ce2fbfb611725116c14631ff02268d8" },
+          "theme": { "N": "3" },
+          "points": { "N": "0" },
+          "followers_count": { "N": "0" },
+          "followings_count": { "N": "0" },
+          "description": { "S": "" },
+          "gsi1_pk": { "S": "EMAIL#PASSWORD#hi+user8@biyard.co" },
+          "gsi1_sk": { "S": "d590005c41712ddad6630ca03348fad16ce2fbfb611725116c14631ff02268d8" },
+          "gsi2_pk": { "S": "USERNAME#user8" },
+          "gsi2_sk": { "S": "TS#1764227900000" },
+          "gsi3_pk": { "S": "EMAIL#hi+user8@biyard.co" },
+          "gsi3_sk": { "S": "TS#1764227900000" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "pk": { "S": "USER#00000000-0000-0000-0000-000000000019" },
+          "sk": { "S": "USER" },
+          "created_at": { "N": "1764227900000" },
+          "updated_at": { "N": "1764227900000" },
+          "display_name": { "S": "Guest1" },
+          "email": { "S": "hi+anon1@biyard.co" },
+          "profile_url": { "S": "https://metadata.ratel.foundation/ratel/default-profile.png" },
+          "username": { "S": "anon1" },
+          "term_agreed": { "BOOL": true },
+          "informed_agreed": { "BOOL": true },
+          "user_type": { "N": "1" },
+          "password": { "S": "d590005c41712ddad6630ca03348fad16ce2fbfb611725116c14631ff02268d8" },
+          "theme": { "N": "3" },
+          "points": { "N": "0" },
+          "followers_count": { "N": "0" },
+          "followings_count": { "N": "0" },
+          "description": { "S": "건국대 여자" },
+          "gsi1_pk": { "S": "EMAIL#PASSWORD#hi+anon1@biyard.co" },
+          "gsi1_sk": { "S": "d590005c41712ddad6630ca03348fad16ce2fbfb611725116c14631ff02268d8" },
+          "gsi2_pk": { "S": "USERNAME#anon1" },
+          "gsi2_sk": { "S": "TS#1764227900000" },
+          "gsi3_pk": { "S": "EMAIL#hi+anon1@biyard.co" },
+          "gsi3_sk": { "S": "TS#1764227900000" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "pk": { "S": "USER#00000000-0000-0000-0000-000000000021" },
+          "sk": { "S": "USER" },
+          "created_at": { "N": "1764227900000" },
+          "updated_at": { "N": "1764227900000" },
+          "display_name": { "S": "Creator1" },
+          "email": { "S": "hi+admin1@biyard.co" },
+          "profile_url": { "S": "https://metadata.ratel.foundation/ratel/default-profile.png" },
+          "username": { "S": "admin1" },
+          "term_agreed": { "BOOL": true },
+          "informed_agreed": { "BOOL": true },
+          "user_type": { "N": "1" },
+          "password": { "S": "d590005c41712ddad6630ca03348fad16ce2fbfb611725116c14631ff02268d8" },
+          "theme": { "N": "3" },
+          "points": { "N": "0" },
+          "followers_count": { "N": "0" },
+          "followings_count": { "N": "0" },
+          "description": { "S": "공론조사 관리자" },
+          "gsi1_pk": { "S": "EMAIL#PASSWORD#hi+admin1@biyard.co" },
+          "gsi1_sk": { "S": "d590005c41712ddad6630ca03348fad16ce2fbfb611725116c14631ff02268d8" },
+          "gsi2_pk": { "S": "USERNAME#admin1" },
+          "gsi2_sk": { "S": "TS#1764227900000" },
+          "gsi3_pk": { "S": "EMAIL#hi+admin1@biyard.co" },
+          "gsi3_sk": { "S": "TS#1764227900000" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "pk": { "S": "USER#00000000-0000-0000-0000-000000000022" },
+          "sk": { "S": "USER" },
+          "created_at": { "N": "1764227900000" },
+          "updated_at": { "N": "1764227900000" },
+          "display_name": { "S": "Creator2" },
+          "email": { "S": "hi+admin2@biyard.co" },
+          "profile_url": { "S": "https://metadata.ratel.foundation/ratel/default-profile.png" },
+          "username": { "S": "admin2" },
+          "term_agreed": { "BOOL": true },
+          "informed_agreed": { "BOOL": true },
+          "user_type": { "N": "1" },
+          "password": { "S": "d590005c41712ddad6630ca03348fad16ce2fbfb611725116c14631ff02268d8" },
+          "theme": { "N": "3" },
+          "points": { "N": "0" },
+          "followers_count": { "N": "0" },
+          "followings_count": { "N": "0" },
+          "description": { "S": "공론조사 관리자" },
+          "gsi1_pk": { "S": "EMAIL#PASSWORD#hi+admin2@biyard.co" },
+          "gsi1_sk": { "S": "d590005c41712ddad6630ca03348fad16ce2fbfb611725116c14631ff02268d8" },
+          "gsi2_pk": { "S": "USERNAME#admin2" },
+          "gsi2_sk": { "S": "TS#1764227900000" },
+          "gsi3_pk": { "S": "EMAIL#hi+admin2@biyard.co" },
+          "gsi3_sk": { "S": "TS#1764227900000" }
+        }
+      }
+    }
+  ]
+}

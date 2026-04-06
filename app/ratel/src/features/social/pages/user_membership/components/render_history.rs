@@ -75,8 +75,19 @@ pub fn format_date(timestamp: i64, unlimited_label: &str) -> String {
         return unlimited_label.to_string();
     }
 
-    let dt = crate::common::chrono::Utc.timestamp_millis_opt(timestamp).single();
+    let dt = crate::common::chrono::Utc
+        .timestamp_millis_opt(timestamp)
+        .single();
 
     dt.map(|v| v.format("%Y-%m-%d").to_string())
         .unwrap_or_else(|| timestamp.to_string())
+}
+
+pub fn format_membership_tier_label(tier: &str, enterprise_label: &str) -> String {
+    let tier = tier.strip_prefix("MEMBERSHIP#").unwrap_or(tier);
+    if tier.starts_with("ENTERPRISE#") {
+        enterprise_label.to_string()
+    } else {
+        tier.to_string()
+    }
 }

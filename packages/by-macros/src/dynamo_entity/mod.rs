@@ -114,7 +114,7 @@ impl FieldInfo {
 fn parse_struct_cfg(attrs: &[Attribute]) -> StructCfg {
     let mut cfg = StructCfg {
         table: "main".into(),
-        table_prefix: env!("DYNAMO_TABLE_PREFIX").into(),
+        table_prefix: option_env!("DYNAMO_TABLE_PREFIX").unwrap_or_default().into(),
         result_ty: "std::result::Result".into(),
         // FIXME: rename after finishing migration
         error_ctor: "crate::Error".into(),
@@ -1242,42 +1242,87 @@ fn generate_struct_impl(
                 pk: impl std::fmt::Display,
                 sk: Option<impl std::fmt::Display>
             ) -> #result_ty <Option<Self>, #err_ctor> {
-                let key_condition = if sk.is_some() {
-                    "#pk = :pk AND begins_with(#sk, :sk)"
-                } else {
-                    "#pk = :pk"
-                };
-
-                let mut req = cli
-                    .query()
-                    .table_name(Self::table_name())
-                    .key_condition_expression(key_condition)
-                    .expression_attribute_names("#pk", Self::pk_field())
-                    .expression_attribute_values(
-                        ":pk",
-                        aws_sdk_dynamodb::types::AttributeValue::S(pk.to_string()),
-                    );
-
                 if let Some(sk) = sk {
-                    req = req
+                    let sk_str = sk.to_string();
+                    let pk_str = pk.to_string();
+
+                    // Try exact match first (#sk = :sk)
+                    let resp = cli
+                        .query()
+                        .table_name(Self::table_name())
+                        .key_condition_expression("#pk = :pk AND #sk = :sk")
+                        .expression_attribute_names("#pk", Self::pk_field())
                         .expression_attribute_names("#sk", "sk")
-                        .expression_attribute_values(":sk", aws_sdk_dynamodb::types::AttributeValue::S(sk.to_string()));
-                }
+                        .expression_attribute_values(
+                            ":pk",
+                            aws_sdk_dynamodb::types::AttributeValue::S(pk_str.clone()),
+                        )
+                        .expression_attribute_values(
+                            ":sk",
+                            aws_sdk_dynamodb::types::AttributeValue::S(sk_str.clone()),
+                        )
+                        .limit(1)
+                        .send()
+                        .await
+                        .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
 
-                let resp = req
-                    .limit(1)
-                    .send()
-                    .await
-                    .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
-
-                if let Some(mut items) = resp.items {
-                    if let Some(item) = items.pop() {
-                        let ev: Self = serde_dynamo::from_item(item)?;
-                        Ok(Some(ev))
-                    } else {
-                        Ok(None)
+                    if let Some(items) = &resp.items {
+                        if let Some(item) = items.first() {
+                            let ev: Self = serde_dynamo::from_item(item.clone())?;
+                            return Ok(Some(ev));
+                        }
                     }
+
+                    // Fall back to begins_with
+                    let resp = cli
+                        .query()
+                        .table_name(Self::table_name())
+                        .key_condition_expression("#pk = :pk AND begins_with(#sk, :sk)")
+                        .expression_attribute_names("#pk", Self::pk_field())
+                        .expression_attribute_names("#sk", "sk")
+                        .expression_attribute_values(
+                            ":pk",
+                            aws_sdk_dynamodb::types::AttributeValue::S(pk_str),
+                        )
+                        .expression_attribute_values(
+                            ":sk",
+                            aws_sdk_dynamodb::types::AttributeValue::S(sk_str),
+                        )
+                        .limit(1)
+                        .send()
+                        .await
+                        .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
+
+                    if let Some(items) = resp.items {
+                        if let Some(item) = items.into_iter().next() {
+                            let ev: Self = serde_dynamo::from_item(item)?;
+                            return Ok(Some(ev));
+                        }
+                    }
+
+                    Ok(None)
                 } else {
+                    let resp = cli
+                        .query()
+                        .table_name(Self::table_name())
+                        .key_condition_expression("#pk = :pk")
+                        .expression_attribute_names("#pk", Self::pk_field())
+                        .expression_attribute_values(
+                            ":pk",
+                            aws_sdk_dynamodb::types::AttributeValue::S(pk.to_string()),
+                        )
+                        .limit(1)
+                        .send()
+                        .await
+                        .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
+
+                    if let Some(items) = resp.items {
+                        if let Some(item) = items.into_iter().next() {
+                            let ev: Self = serde_dynamo::from_item(item)?;
+                            return Ok(Some(ev));
+                        }
+                    }
+
                     Ok(None)
                 }
             }

@@ -2,9 +2,12 @@ use crate::features::auth::OptionalUser;
 
 use crate::features::spaces::pages::actions::actions::poll::*;
 
+#[mcp_tool(name = "get_poll", description = "Get poll details including questions and the current user's response.")]
 #[get("/api/spaces/{space_pk}/polls/{poll_sk}", role: SpaceUserRole, user: OptionalUser)]
 pub async fn get_poll(
+    #[mcp(description = "Space partition key")]
     space_pk: SpacePartition,
+    #[mcp(description = "Poll sort key (e.g. 'SpacePoll#<uuid>')")]
     poll_sk: SpacePollEntityType,
 ) -> Result<PollResponse> {
     SpacePoll::can_view(&role)?;

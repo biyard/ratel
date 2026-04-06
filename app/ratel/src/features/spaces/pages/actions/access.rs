@@ -16,10 +16,10 @@ pub fn can_execute_space_action(
     let can_execute_status = match role {
         SpaceUserRole::Creator => true,
         SpaceUserRole::Candidate => {
-            matches!(status, Some(SpaceStatus::InProgress))
-                || (join_anytime && matches!(status, Some(SpaceStatus::Started)))
+            matches!(status, Some(SpaceStatus::Open))
+                || (join_anytime && matches!(status, Some(SpaceStatus::Ongoing)))
         }
-        SpaceUserRole::Participant => matches!(status, Some(SpaceStatus::Started)),
+        SpaceUserRole::Participant => matches!(status, Some(SpaceStatus::Ongoing)),
         SpaceUserRole::Viewer => false,
     };
 

@@ -14,4 +14,10 @@ pub use action_common_settings::RewardSetting;
 mod full_action_layover;
 pub use full_action_layover::FullActionLayover;
 
+mod delete_action_popup;
+pub use delete_action_popup::DeleteActionPopup;
+
+mod delete_action_button;
+pub use delete_action_button::ActionDeleteButton;
+
 use super::*;

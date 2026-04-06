@@ -2,6 +2,7 @@ use crate::features::spaces::pages::actions::actions::discussion::*;
 use crate::features::spaces::pages::actions::models::SpaceAction;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct UpdateDiscussionRequest {
     #[serde(default)]
     pub title: Option<String>,
@@ -15,10 +16,14 @@ pub struct UpdateDiscussionRequest {
     pub ended_at: Option<i64>,
 }
 
+#[mcp_tool(name = "update_discussion", description = "Update a discussion (title, html_contents, category_name, started_at, ended_at). Requires creator role.")]
 #[patch("/api/spaces/{space_id}/discussions/{discussion_sk}", role: SpaceUserRole)]
 pub async fn update_discussion(
+    #[mcp(description = "Space partition key")]
     space_id: SpacePartition,
+    #[mcp(description = "Discussion sort key (e.g. 'SpacePost#<uuid>')")]
     discussion_sk: SpacePostEntityType,
+    #[mcp(description = "Discussion update data as JSON. Fields: title, html_contents, category_name, started_at, ended_at (all optional)")]
     req: UpdateDiscussionRequest,
 ) -> Result<SpacePost> {
     SpacePost::can_edit(&role)?;

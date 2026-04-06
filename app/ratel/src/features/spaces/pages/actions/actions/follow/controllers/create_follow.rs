@@ -2,13 +2,17 @@ use crate::common::models::space::SpaceCommon;
 use crate::features::spaces::pages::actions::actions::follow::models::*;
 use crate::features::spaces::pages::actions::actions::follow::*;
 
+#[mcp_tool(name = "create_follow", description = "Create a follow action in a space. Requires creator role.")]
 #[post(
     "/api/spaces/{space_pk}/follows",
     role: SpaceUserRole,
     user: crate::features::auth::User,
     space: SpaceCommon
 )]
-pub async fn create_follow(space_pk: SpacePartition) -> Result<SpaceFollowAction> {
+pub async fn create_follow(
+    #[mcp(description = "Space partition key")]
+    space_pk: SpacePartition,
+) -> Result<SpaceFollowAction> {
     SpaceFollowAction::can_edit(&role)?;
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();

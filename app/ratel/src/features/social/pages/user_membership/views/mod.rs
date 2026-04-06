@@ -1,4 +1,4 @@
-use super::components::{format_date, render_history};
+use super::components::{format_date, format_membership_tier_label, render_history};
 use super::controllers::get_membership::{MembershipResponse, get_membership_handler};
 use super::controllers::get_membership_transfer::{
     PurchaseHistoryResponse, get_purchase_history_handler,
@@ -31,7 +31,7 @@ pub fn Home(username: String) -> Element {
         _ => MembershipResponse::default(),
     };
 
-    let tier_name = format_tier(&membership.tier);
+    let tier_name = format_membership_tier_label(&membership.tier, tr.enterprise);
     let tier_color = match tier_name.as_str() {
         "Pro" => "text-blue-500",
         "Max" => "text-purple-500",
@@ -85,7 +85,7 @@ pub fn Home(username: String) -> Element {
                                 "{tr.scheduled_downgrade}"
                             }
                             div { class: "text-sm text-text-secondary",
-                                "{tr.next_membership}: {format_tier(&next_membership)}"
+                                "{tr.next_membership}: {format_membership_tier_label(&next_membership, tr.enterprise)}"
                             }
                         }
                     }
@@ -99,10 +99,6 @@ pub fn Home(username: String) -> Element {
             }
         }
     }
-}
-
-fn format_tier(tier: &str) -> String {
-    tier.strip_prefix("MEMBERSHIP#").unwrap_or(tier).to_string()
 }
 
 translate! {
@@ -121,6 +117,11 @@ translate! {
     tier: {
         en: "Tier",
         ko: "등급",
+    },
+
+    enterprise: {
+        en: "Enterprise",
+        ko: "엔터프라이즈",
     },
 
     total_credits: {

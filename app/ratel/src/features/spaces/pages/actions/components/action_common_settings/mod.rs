@@ -19,51 +19,37 @@ pub fn ActionCommonSettings(
     let mut current_credits = use_signal(move || action_setting().credits);
     let setting = action_setting();
 
-    #[cfg(feature = "membership")]
     let space = crate::features::spaces::space_common::hooks::use_space();
-    #[cfg(feature = "membership")]
     let current_space = space();
-    #[cfg(feature = "membership")]
     let user_ctx = crate::features::auth::hooks::use_user_context();
-    #[cfg(feature = "membership")]
     let personal_username = user_ctx
         .read()
         .user
         .as_ref()
         .map(|u| u.username.clone())
         .unwrap_or_default();
-    #[cfg(feature = "membership")]
     let owner_username = current_space.author_username.clone();
-    #[cfg(feature = "membership")]
     let team_detail =
         use_server_future(use_reactive((&owner_username,), |(username,)| async move {
             crate::features::social::controllers::find_team_handler(username.to_string()).await
         }))?;
-    #[cfg(feature = "membership")]
     let team_detail_read = team_detail.read();
-    #[cfg(feature = "membership")]
     let team_detail = team_detail_read
         .as_ref()
         .and_then(|r| r.as_ref().ok())
         .cloned();
-    #[cfg(feature = "membership")]
     let is_team_author = current_space.author_type == crate::common::UserType::Team;
-    #[cfg(feature = "membership")]
     let team_username = team_detail
         .as_ref()
         .map(|team| team.username.clone())
         .unwrap_or_else(|| current_space.author_username.clone());
-    #[cfg(feature = "membership")]
     let is_team_space = is_team_author || team_detail.is_some();
-    #[cfg(feature = "membership")]
     let upgrade_route = if is_team_space {
         format!("/{}/team-memberships", team_username)
     } else {
         format!("/{personal_username}/memberships")
     };
-    #[cfg(feature = "membership")]
     let user_membership = crate::features::auth::hooks::use_user_membership();
-    #[cfg(feature = "membership")]
     let team_membership = use_server_future(use_reactive(
         (&team_username, &is_team_space),
         |(team_username, is_team_space)| async move {
@@ -78,14 +64,11 @@ pub fn ActionCommonSettings(
             }
         },
     ))?;
-    #[cfg(feature = "membership")]
     let team_membership_read = team_membership.read();
-    #[cfg(feature = "membership")]
     let team_membership = team_membership_read
         .as_ref()
         .and_then(|r| r.as_ref().ok())
         .and_then(|membership| membership.clone());
-    #[cfg(feature = "membership")]
     let base_is_paid = if is_team_space {
         team_membership
             .as_ref()
@@ -95,7 +78,6 @@ pub fn ActionCommonSettings(
             .as_ref()
             .is_some_and(|membership| membership.is_paid())
     };
-    #[cfg(feature = "membership")]
     let base_max_credits = if is_team_space {
         team_membership.as_ref().map_or(0, |membership| {
             membership.max_credits_per_space.max(0) as u64
@@ -105,7 +87,6 @@ pub fn ActionCommonSettings(
             membership.max_credits_per_space.max(0) as u64
         })
     };
-    #[cfg(feature = "membership")]
     let base_remaining_credits = if is_team_space {
         team_membership
             .as_ref()
@@ -115,36 +96,27 @@ pub fn ActionCommonSettings(
             .as_ref()
             .map_or(0, |membership| membership.remaining_credits.max(0) as u64)
     };
-    #[cfg(feature = "membership")]
     let mut remaining_credits = use_signal(move || base_remaining_credits);
-    #[cfg(feature = "membership")]
-    let mut last_loaded_remaining_credits = use_signal(move || base_remaining_credits);
-    #[cfg(feature = "membership")]
+    let mut auth_ctx = use_context::<crate::features::auth::context::Context>();
     use_effect(move || {
-        if last_loaded_remaining_credits() != base_remaining_credits {
-            last_loaded_remaining_credits.set(base_remaining_credits);
-            remaining_credits.set(base_remaining_credits);
+        if !is_team_space {
+            let new_credits = auth_ctx
+                .user_context
+                .read()
+                .membership
+                .as_ref()
+                .map_or(0, |m| m.remaining_credits.max(0) as u64);
+            remaining_credits.set(new_credits);
         }
     });
-
-    #[cfg(feature = "membership")]
-    let mut auth_ctx = use_context::<crate::features::auth::context::Context>();
-    #[cfg(not(feature = "membership"))]
-    let base_is_paid = false;
-    #[cfg(not(feature = "membership"))]
-    let base_max_credits = 0;
-    #[cfg(not(feature = "membership"))]
-    let remaining_credits = use_signal(|| 0u64);
-    #[cfg(not(feature = "membership"))]
-    let upgrade_route = String::new();
 
     rsx! {
         div { class: "flex flex-col gap-5 w-full",
             div { class: "flex flex-col gap-2.5",
                 p { {tr.date} }
                 DateAndTimePicker {
-                    initial_started_at: Some(setting.started_at),
-                    initial_ended_at: Some(setting.ended_at),
+                    initial_started_at: Some(setting.started_at + 9 * 60 * 60 * 1000),
+                    initial_ended_at: Some(setting.ended_at + 9 * 60 * 60 * 1000),
                     on_change: move |range: DateTimeRange| async move {
                         if let (Some(start_date), Some(end_date)) = (range.start_date, range.end_date) {
                             let started_at = date_time_to_millis(
@@ -197,7 +169,6 @@ pub fn ActionCommonSettings(
                         Ok(_) => {
                             let delta = credits as i64 - previous_credits as i64;
                             current_credits.set(credits);
-                            #[cfg(feature = "membership")]
                             {
                                 remaining_credits
                                     .set(
@@ -222,6 +193,8 @@ pub fn ActionCommonSettings(
                     }
                 },
             }
+
+            crate::features::activity::components::ActivityScoreSetting { space_id, action_id, action_setting }
         }
     }
 }
@@ -244,7 +217,5 @@ translate! {
 }
 
 fn date_time_to_millis(date: time::Date, hour: u8, minute: u8) -> i64 {
-    let datetime = date.with_hms(hour, minute, 0).expect("valid time");
-    let offset_datetime = datetime.assume_utc();
-    offset_datetime.unix_timestamp() * 1000
+    crate::common::utils::time::kst_date_time_to_utc_millis(date, hour, minute)
 }

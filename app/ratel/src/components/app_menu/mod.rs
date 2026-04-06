@@ -431,7 +431,6 @@ fn LanguageIcon() -> Element {
     }
 }
 
-#[cfg(feature = "membership")]
 #[component]
 fn MembershipMenuItem(label: &'static str, collapsed: bool) -> Element {
     rsx! {
@@ -444,10 +443,4 @@ fn MembershipMenuItem(label: &'static str, collapsed: bool) -> Element {
             },
         }
     }
-}
-
-#[cfg(not(feature = "membership"))]
-#[component]
-fn MembershipMenuItem(label: &'static str, collapsed: bool) -> Element {
-    rsx! {}
 }

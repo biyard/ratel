@@ -198,8 +198,16 @@ pub enum EntityType {
 
     TimelineEntry(String), // TIMELINE_ENTRY#${timestamp}#${post_pk_inner}
 
+    // AI Moderator
+    AiModeratorConfig,
+    AiModeratorMaterial(String), // AIMODMATERIAL#{material_id}
+
     // MCP
     McpClientSecret,
+
+    // Activity
+    SpaceActivity(String), // SPACE_ACTIVITY#action_id#timestamp
+    SpaceScore,
 }
 
 impl TryInto<Partition> for EntityType {
