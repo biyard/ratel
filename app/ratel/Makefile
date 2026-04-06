@@ -37,6 +37,8 @@ RUN_FEATURES ?= local-dev
 REPOSITORY ?= ratel/app-shell
 ECR ?= $(shell aws ecr describe-repositories --repository-names $(REPOSITORY)  --query "repositories[0].repositoryUri" --output text)
 QDRANT_PREFIX ?= ratel-$(ENV)
+QDRANT_URL ?= http://localhost:6334
+QDRANT_API_KEY ?= ""
 
 BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) \
