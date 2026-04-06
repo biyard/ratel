@@ -131,24 +131,16 @@ pub async fn signup_handler(req: SignupRequest) -> Result<SignupResponse> {
 }
 
 #[cfg(feature = "server")]
-async fn ensure_username_available(
-    cli: &aws_sdk_dynamodb::Client,
-    username: &str,
-) -> Result<()> {
+async fn ensure_username_available(cli: &aws_sdk_dynamodb::Client, username: &str) -> Result<()> {
     let (users, _) = User::find_by_username(
         cli,
         username,
-        UserQueryOption::builder()
-            .sk("TS#".to_string())
-            .limit(1),
+        UserQueryOption::builder().sk("TS#".to_string()).limit(1),
     )
     .await?;
 
     if !users.is_empty() {
-        return Err(Error::Duplicate(format!(
-            "Username already exists: {}",
-            username
-        )));
+        return Err(Error::UsernameAlreadyExists);
     }
 
     Ok(())
