@@ -213,6 +213,19 @@ pub fn OverviewContent(
                     if allow_edit {
                         FileUploadZone {
                             on_upload: move |file: File| {
+                                if let Some(url) = file.url.clone() {
+                                    let space_pk = space_id();
+                                    spawn(async move {
+                                        let _ = crate::features::spaces::pages::apps::apps::file::create_file_link(
+                                                space_pk,
+                                                crate::features::spaces::pages::apps::apps::file::CreateFileLinkRequest {
+                                                    file_url: url,
+                                                    link_target: crate::features::spaces::pages::apps::apps::file::FileLinkTarget::Overview,
+                                                },
+                                            )
+                                            .await;
+                                    });
+                                }
                                 let mut current = files();
                                 current.push(file);
                                 files.set(current);

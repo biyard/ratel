@@ -9,7 +9,9 @@ use crate::features::spaces::space_common::types::space_page_actions_quiz_key;
 const DEFAULT_PROFILE_URL: &str = "https://metadata.ratel.foundation/ratel/default-profile.png";
 
 fn file_icon(ext: &FileExtension) -> Element {
-    rsx! { FileExtensionIcon { ext: ext.clone(), size: 36 } }
+    rsx! {
+        FileExtensionIcon { ext: ext.clone(), size: 36 }
+    }
 }
 
 #[component]
@@ -73,6 +75,21 @@ pub fn UploadTab(can_edit: bool) -> Element {
                             name
                         };
                         let ext = FileExtension::from_name_or_url(&uploaded_name, &url);
+                        let file_url = url.clone();
+                        let link_space_id = space_id();
+                        let link_quiz_id = quiz_id().to_string();
+                        spawn(async move {
+                            let _ = crate::features::spaces::pages::apps::apps::file::create_file_link(
+                                    link_space_id,
+                                    crate::features::spaces::pages::apps::apps::file::CreateFileLinkRequest {
+                                        file_url,
+                                        link_target: crate::features::spaces::pages::apps::apps::file::FileLinkTarget::Board(
+                                            link_quiz_id,
+                                        ),
+                                    },
+                                )
+                                .await;
+                        });
                         let mut next = files();
                         next.push(File {
                             id: url.clone(),
@@ -171,6 +188,8 @@ pub fn UploadTab(can_edit: bool) -> Element {
                                         }
                                     }
 
+
+
                                     div { class: "flex items-center gap-2 shrink-0",
                                         if file.url.is_some() {
                                             Button {
@@ -191,8 +210,7 @@ pub fn UploadTab(can_edit: bool) -> Element {
                                             Button {
                                                 size: ButtonSize::Icon,
                                                 style: ButtonStyle::Text,
-                                                class: "p-1 rounded-full transition-colors focus:outline-none hover:bg-hover"
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    .to_string(),
+                                                class: "p-1 rounded-full transition-colors focus:outline-none hover:bg-hover".to_string(),
                                                 onclick: move |_| {
                                                     if opened_menu().as_ref() == Some(&menu_file_id) {
                                                         opened_menu.set(None);
