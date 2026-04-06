@@ -1,4 +1,4 @@
-use crate::common::models::space::SpaceAuthor;
+use crate::common::models::space::SpaceUser;
 use crate::features::spaces::pages::actions::actions::poll::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -9,7 +9,7 @@ pub struct VerifyVoteResponse {
     pub decrypted_metadata: Option<serde_json::Value>,
 }
 
-#[get("/api/spaces/{space_pk}/polls/{poll_sk}/verify", role: SpaceUserRole, author: SpaceAuthor)]
+#[get("/api/spaces/{space_pk}/polls/{poll_sk}/verify", role: SpaceUserRole, member: SpaceUser)]
 pub async fn verify_vote(
     space_pk: SpacePartition,
     poll_sk: SpacePollEntityType,
@@ -19,7 +19,7 @@ pub async fn verify_vote(
     let space_pk: Partition = space_pk.into();
     let poll_sk_entity: EntityType = poll_sk.into();
 
-    SpacePollUserAnswer::find_one(cli, &space_pk, &poll_sk_entity, &author.pk)
+    SpacePollUserAnswer::find_one(cli, &space_pk, &poll_sk_entity, &member.pk)
         .await?
         .ok_or(Error::NotFound("No vote found for this user".into()))?;
 
@@ -29,7 +29,7 @@ pub async fn verify_vote(
         .ok_or(Error::InternalServerError(
             "Encrypted voting is not configured".into(),
         ))?;
-    let voter_tag = crypto.build_voter_tag(&poll_sk_entity, &author.pk)?;
+    let voter_tag = crypto.build_voter_tag(&poll_sk_entity, &member.pk)?;
 
     let canister = common_config.canister();
     let ballot = canister
@@ -37,7 +37,7 @@ pub async fn verify_vote(
         .await?
         .ok_or(Error::NotFound("No on-chain vote found".into()))?;
 
-    let decrypted = crypto.decrypt(&poll_sk_entity, &author.pk, &ballot.ciphertext_blob)?;
+    let decrypted = crypto.decrypt(&poll_sk_entity, &member.pk, &ballot.ciphertext_blob)?;
 
     if decrypted.ciphertext_hash != ballot.ciphertext_hash {
         return Err(Error::InternalServerError(
