@@ -16,9 +16,9 @@ pub fn RankingTable(data: RankingTableData) -> Element {
         div { class: "flex h-full w-full min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl max-mobile:rounded-xl bg-web-card-bg",
 
             // Header
-            div { class: "bg-web-graph-bg px-[30px] max-tablet:px-5 max-mobile:px-4",
+            div { class: "bg-web-graph-bg",
                 div { class: "flex min-w-[620px] max-tablet:min-w-[520px] max-mobile:min-w-0 self-stretch",
-                    div { class: "flex h-14 w-[88px] max-tablet:w-[64px] max-mobile:w-[56px] items-center gap-1 rounded-tl-[10px] border-b border-separator bg-web-graph-bg p-4 max-tablet:p-3 max-mobile:p-2.5",
+                    div { class: "flex h-14 w-[88px] max-tablet:w-[80px] max-mobile:w-[80px] items-center gap-1 rounded-tl-[10px] border-b border-separator bg-web-graph-bg pl-[30px] pr-4 max-tablet:px-5 max-mobile:px-4",
                         span { class: "text-left text-[13px] max-mobile:text-[12px] font-semibold tracking-[-0.14px] text-text-primary",
                             "{tr.rank}"
                         }
@@ -42,7 +42,7 @@ pub fn RankingTable(data: RankingTableData) -> Element {
                     //         icons::ratel::Sorter { width: "20", height: "20" }
                     //     }
                     // }
-                    div { class: "flex h-14 w-[170px] max-tablet:w-[120px] max-mobile:w-[96px] items-center gap-1 rounded-tr-[10px] border-b border-separator bg-web-graph-bg p-4 max-tablet:p-3 max-mobile:p-2.5",
+                    div { class: "flex h-14 w-[170px] max-tablet:w-[120px] max-mobile:w-[96px] items-center gap-1 rounded-tr-[10px] border-b border-separator bg-web-graph-bg pl-4 pr-[30px] max-tablet:px-5 max-mobile:px-4",
                         span { class: "text-left text-[13px] max-mobile:text-[12px] font-semibold tracking-[-0.14px] text-text-primary",
                             "{tr.score}"
                         }
@@ -59,14 +59,14 @@ pub fn RankingTable(data: RankingTableData) -> Element {
             }
 
             // Body
-            div { class: "flex-1 min-h-0 px-[30px] max-tablet:px-5 max-mobile:px-4",
+            div { class: "flex-1 min-h-0",
                 div { class: "h-full min-h-0 overflow-y-auto",
                     for entry in page_entries.iter() {
                         div {
                             class: "flex items-stretch self-stretch min-w-[620px] max-tablet:min-w-[520px] max-mobile:min-w-0",
 
                             // Rank
-                            div { class: "flex w-[88px] max-tablet:w-[64px] max-mobile:w-[56px] items-center border-b border-separator px-4 max-tablet:px-3 py-4 max-mobile:py-3",
+                            div { class: "flex w-[88px] max-tablet:w-[80px] max-mobile:w-[80px] items-center border-b border-separator pl-[30px] pr-4 max-tablet:px-5 py-4 max-mobile:px-4 max-mobile:py-3",
                                 span { class: "flex-1 basis-0 text-center text-text-primary text-sm leading-[22px] max-mobile:text-[13px] max-mobile:leading-5 font-normal font-raleway",
                                     "{entry.rank}"
                                 }
@@ -94,7 +94,7 @@ pub fn RankingTable(data: RankingTableData) -> Element {
                                 }
                             }
 
-                            div { class: "flex w-[170px] max-tablet:w-[120px] max-mobile:w-[96px] items-center border-b border-separator px-4 max-tablet:px-3 py-4 max-mobile:py-3",
+                            div { class: "flex w-[170px] max-tablet:w-[120px] max-mobile:w-[96px] items-center border-b border-separator pl-4 pr-[30px] max-tablet:px-5 py-4 max-mobile:px-4 max-mobile:py-3",
                                 span { class: "flex-1 basis-0 text-right text-text-primary text-sm leading-[22px] max-mobile:text-[13px] max-mobile:leading-5 font-normal font-roboto",
                                     "{entry.score:.0}"
                                 }
