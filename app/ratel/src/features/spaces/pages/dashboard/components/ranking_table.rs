@@ -29,19 +29,19 @@ pub fn RankingTable(data: RankingTableData) -> Element {
                             "{tr.participant}"
                         }
                     }
-                    div { class: "flex h-14 w-[170px] max-tablet:w-[120px] max-mobile:w-[96px] items-center gap-1 border-b border-separator bg-web-graph-bg p-4 max-tablet:p-3 max-mobile:p-2.5",
-                        span { class: "text-left text-[13px] max-mobile:text-[12px] font-semibold tracking-[-0.14px] text-text-primary",
-                            "{tr.point}"
-                        }
-                        icons::help_support::Info {
-                            width: "20",
-                            height: "20",
-                            class: "h-5 w-5 [&>path]:stroke-text-secondary [&>path]:fill-none [&>circle]:stroke-text-secondary [&>circle]:fill-none cursor-pointer",
-                        }
-                        div { class: "ml-auto shrink-0",
-                            icons::ratel::Sorter { width: "20", height: "20" }
-                        }
-                    }
+                    // div { class: "flex h-14 w-[170px] max-tablet:w-[120px] max-mobile:w-[96px] items-center gap-1 border-b border-separator bg-web-graph-bg p-4 max-tablet:p-3 max-mobile:p-2.5",
+                    //     span { class: "text-left text-[13px] max-mobile:text-[12px] font-semibold tracking-[-0.14px] text-text-primary",
+                    //         "{tr.point}"
+                    //     }
+                    //     icons::help_support::Info {
+                    //         width: "20",
+                    //         height: "20",
+                    //         class: "h-5 w-5 [&>path]:stroke-text-secondary [&>path]:fill-none [&>circle]:stroke-text-secondary [&>circle]:fill-none cursor-pointer",
+                    //     }
+                    //     div { class: "ml-auto shrink-0",
+                    //         icons::ratel::Sorter { width: "20", height: "20" }
+                    //     }
+                    // }
                     div { class: "flex h-14 w-[170px] max-tablet:w-[120px] max-mobile:w-[96px] items-center gap-1 rounded-tr-[10px] border-b border-separator bg-web-graph-bg p-4 max-tablet:p-3 max-mobile:p-2.5",
                         span { class: "text-left text-[13px] max-mobile:text-[12px] font-semibold tracking-[-0.14px] text-text-primary",
                             "{tr.score}"
@@ -62,7 +62,8 @@ pub fn RankingTable(data: RankingTableData) -> Element {
             div { class: "flex-1 min-h-0 px-[30px] max-tablet:px-5 max-mobile:px-4",
                 div { class: "h-full min-h-0 overflow-y-auto",
                     for entry in page_entries.iter() {
-                        div { class: "flex items-stretch self-stretch min-w-[620px] max-tablet:min-w-[520px] max-mobile:min-w-0",
+                        div {
+                            class: "flex items-stretch self-stretch min-w-[620px] max-tablet:min-w-[520px] max-mobile:min-w-0",
 
                             // Rank
                             div { class: "flex w-[88px] max-tablet:w-[64px] max-mobile:w-[56px] items-center border-b border-separator px-4 max-tablet:px-3 py-4 max-mobile:py-3",
@@ -93,19 +94,25 @@ pub fn RankingTable(data: RankingTableData) -> Element {
                                 }
                             }
 
-                            // Point
                             div { class: "flex w-[170px] max-tablet:w-[120px] max-mobile:w-[96px] items-center border-b border-separator px-4 max-tablet:px-3 py-4 max-mobile:py-3",
                                 span { class: "flex-1 basis-0 text-right text-text-primary text-sm leading-[22px] max-mobile:text-[13px] max-mobile:leading-5 font-normal font-roboto",
-                                    "{entry.score:.0} P"
+                                    "{entry.score:.0}"
                                 }
                             }
+                        
+                        // // Point
+                        // div { class: "flex w-[170px] max-tablet:w-[120px] max-mobile:w-[96px] items-center border-b border-separator px-4 max-tablet:px-3 py-4 max-mobile:py-3",
+                        //     span { class: "flex-1 basis-0 text-right text-text-primary text-sm leading-[22px] max-mobile:text-[13px] max-mobile:leading-5 font-normal font-roboto",
+                        //         "{entry.score:.0} P"
+                        //     }
+                        // }
 
-                            // Score
-                            div { class: "flex w-[170px] max-tablet:w-[120px] max-mobile:w-[96px] items-center border-b border-separator px-4 max-tablet:px-3 py-4 max-mobile:py-3",
-                                span { class: "flex-1 basis-0 text-right text-text-primary text-sm leading-[22px] max-mobile:text-[13px] max-mobile:leading-5 font-normal font-roboto",
-                                    "{entry.change}"
-                                }
-                            }
+                        // // Score
+                        // div { class: "flex w-[170px] max-tablet:w-[120px] max-mobile:w-[96px] items-center border-b border-separator px-4 max-tablet:px-3 py-4 max-mobile:py-3",
+                        //     span { class: "flex-1 basis-0 text-right text-text-primary text-sm leading-[22px] max-mobile:text-[13px] max-mobile:leading-5 font-normal font-roboto",
+                        //         "{entry.change}"
+                        //     }
+                        // }
                         }
                     }
                 }
