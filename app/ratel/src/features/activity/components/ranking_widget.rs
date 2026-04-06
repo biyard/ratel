@@ -37,26 +37,26 @@ pub fn RankingWidget(space_id: ReadSignal<SpacePartition>) -> Element {
                         let is_me = my_score.rank > 0 && entry.rank == my_score.rank;
                         rsx! {
                             Row {
-                                class: "py-1.5 px-3 aria-highlighted:bg-primary/10",
+                                class: "py-1.5 px-3 w-full aria-highlighted:bg-primary/10",
                                 "aria-highlighted": is_me,
                                 main_axis_align: MainAxisAlign::Between,
                                 cross_axis_align: CrossAxisAlign::Center,
-                                Row { class: "gap-2", cross_axis_align: CrossAxisAlign::Center,
-                                    span { class: "w-4 text-xs font-medium text-center text-foreground-muted", "{entry.rank}" }
+                                Row { class: "gap-2 min-w-0 flex-1", cross_axis_align: CrossAxisAlign::Center,
+                                    span { class: "w-4 text-xs font-medium text-center text-foreground-muted shrink-0", "{entry.rank}" }
                                     if !entry.avatar.is_empty() {
                                         img {
-                                            class: "object-cover w-5 h-5 rounded-full",
+                                            class: "object-cover w-5 h-5 rounded-full shrink-0",
                                             src: "{entry.avatar}",
                                             alt: "{entry.name}",
                                         }
                                     } else {
-                                        div { class: "flex justify-center items-center w-5 h-5 rounded-full bg-primary",
+                                        div { class: "flex justify-center items-center w-5 h-5 rounded-full bg-primary shrink-0",
                                             span { class: "font-medium text-[10px] text-btn-primary-text",
                                                 "{entry.name.chars().next().unwrap_or('?')}"
                                             }
                                         }
                                     }
-                                    span { class: "text-xs text-text-primary truncate max-w-[80px]",
+                                    span { class: "text-xs text-text-primary truncate min-w-0",
                                         if is_me {
                                             "{entry.name} ({tr.you})"
                                         } else {
@@ -65,7 +65,7 @@ pub fn RankingWidget(space_id: ReadSignal<SpacePartition>) -> Element {
                                     }
                                 }
                                 span {
-                                    class: "text-xs font-medium text-text-primary aria-highlighted:text-primary",
+                                    class: "w-10 text-xs font-medium text-right tabular-nums text-text-primary shrink-0 aria-highlighted:text-primary",
                                     "aria-highlighted": is_me,
                                     "{entry.total_score}"
                                 }
@@ -77,18 +77,18 @@ pub fn RankingWidget(space_id: ReadSignal<SpacePartition>) -> Element {
                 if my_score.rank > 3 {
                     div { class: "border-t border-separator" }
                     Row {
-                        class: "py-1.5 px-3 rounded-b-lg bg-primary/10",
+                        class: "py-1.5 px-3 w-full rounded-b-lg bg-primary/10",
                         main_axis_align: MainAxisAlign::Between,
                         cross_axis_align: CrossAxisAlign::Center,
                         Row {
-                            class: "gap-2",
+                            class: "gap-2 min-w-0 flex-1",
                             cross_axis_align: CrossAxisAlign::Center,
                             span { class: "w-4 text-xs font-medium text-center text-foreground-muted",
                                 "{my_score.rank}"
                             }
                             span { class: "text-xs font-semibold text-primary", "{tr.you}" }
                         }
-                        span { class: "text-xs font-medium text-primary", "{my_score.total_score}" }
+                        span { class: "w-10 text-xs font-medium text-right tabular-nums text-primary shrink-0", "{my_score.total_score}" }
                     }
                 }
             }
