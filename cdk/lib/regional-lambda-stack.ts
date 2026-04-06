@@ -88,6 +88,7 @@ export class RegionalLambdaStack extends Stack {
       },
       memorySize: 128,
       timeout: cdk.Duration.seconds(30),
+      allowPublicSubnet: true,
       vpc,
       vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
       securityGroups: [lambdaSg],
