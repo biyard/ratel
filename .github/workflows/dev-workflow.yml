@@ -119,17 +119,23 @@ jobs:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
+      - name: Restore cache
+        id: app-shell-build-cache
+        uses: actions/cache/restore@v4
+        with:
+          key: app-shell-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            app-shell-build-${{ runner.os }}-rust-
+          path: |
+            ~/.cargo/bin
+            target
+
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
           toolchain: stable
           target: wasm32-unknown-unknown
-          save-if: ${{ github.ref == 'refs/heads/dev' }}
-          cache-workspace-crates: true
-          cache-all-crates: true
-
-      - name: Set Rust version hash
-        run: echo "RUSTC_HASH=$(rustc --version | sha256sum | cut -d ' ' -f 1)" >> "$GITHUB_ENV"
+          cache: false
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -256,6 +262,15 @@ jobs:
           make build
           make docker
           make docker.push
+
+      - name: Save cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          key: app-shell-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+          path: |
+            ~/.cargo/bin
+            target
 
       - name: Deploy to S3
         env:
