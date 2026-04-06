@@ -30,8 +30,14 @@ export class QdrantStack extends Stack {
   constructor(scope: Construct, id: string, props: QdrantStackProps) {
     super(scope, id, { ...props, crossRegionReferences: true });
 
-    const { cluster, vpc, qdrantApiKey, baseDomain, vectorDomain, qdrantDomain } =
-      props;
+    const {
+      cluster,
+      vpc,
+      qdrantApiKey,
+      baseDomain,
+      vectorDomain,
+      qdrantDomain,
+    } = props;
 
     // Security group for Qdrant
     const sg = new ec2.SecurityGroup(this, "QdrantSG", {
@@ -220,9 +226,8 @@ export class QdrantStack extends Stack {
 
     const grpcCloudMapService = new sd.Service(this, "QdrantGrpcService", {
       namespace: props.namespace,
-      name: "vector-grpc",
+      name: "qdrant",
       dnsRecordType: sd.DnsRecordType.SRV,
-      dnsTtl: { seconds: 10 } as any,
     });
 
     grpcCloudMapService.registerNonIpInstance("QdrantGrpcInstance", {
