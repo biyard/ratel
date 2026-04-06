@@ -19,9 +19,8 @@ export interface QdrantStackProps extends StackProps {
   stage: string;
   cluster: ecs.ICluster;
   vpc: ec2.IVpc;
-  qdrantApiKey?: string;
   baseDomain: string;
-  vectorDomain: string;
+  qdrantDomain: string;
   namespace: sd.PrivateDnsNamespace;
 }
 
@@ -29,7 +28,7 @@ export class QdrantStack extends Stack {
   constructor(scope: Construct, id: string, props: QdrantStackProps) {
     super(scope, id, { ...props, crossRegionReferences: true });
 
-    const { cluster, vpc, qdrantApiKey, baseDomain, vectorDomain } = props;
+    const { cluster, vpc, baseDomain, qdrantDomain } = props;
 
     // Security group for Qdrant
     const sg = new ec2.SecurityGroup(this, "QdrantSG", {
@@ -100,19 +99,12 @@ export class QdrantStack extends Stack {
     // Grant EFS access to task role
     fileSystem.grantRootAccess(taskDefinition.taskRole);
 
-    // Container environment
-    const containerEnv: Record<string, string> = {};
-    if (qdrantApiKey) {
-      containerEnv["QDRANT__SERVICE__API_KEY"] = qdrantApiKey;
-    }
-
     const container = taskDefinition.addContainer("QdrantContainer", {
       image: ecs.ContainerImage.fromRegistry("qdrant/qdrant:latest"),
       logging: new ecs.AwsLogDriver({
         streamPrefix: `ratel-${props.stage}-qdrant`,
         logRetention: logs.RetentionDays.TWO_WEEKS,
       }),
-      environment: containerEnv,
     });
 
     container.addPortMappings(
@@ -143,11 +135,11 @@ export class QdrantStack extends Stack {
         cloudMapNamespace: props.namespace,
         dnsRecordType: sd.DnsRecordType.SRV,
         container,
-        containerPort: 6333,
+        containerPort: 6334,
       },
     });
 
-    // --- API Gateway with custom domain vector.ratel.foundation ---
+    // --- API Gateway with custom domain for gRPC (port 6334) ---
 
     // Filter subnets to exclude AZs where API Gateway VPC Link is not available (apne2-az4)
     const supportedSubnets = vpc.publicSubnets.filter(
@@ -162,7 +154,7 @@ export class QdrantStack extends Stack {
 
     const httpApi = new apigw.HttpApi(this, "QdrantHttpApi", {
       apiName: `ratel-${props.stage}-qdrant-api`,
-      description: "Qdrant Vector DB API Gateway",
+      description: "Qdrant Vector DB gRPC API Gateway",
     });
 
     const qdrantIntegration = new HttpServiceDiscoveryIntegration(
@@ -189,12 +181,12 @@ export class QdrantStack extends Stack {
     });
 
     const cert = new acm.Certificate(this, "QdrantCert", {
-      domainName: vectorDomain,
+      domainName: qdrantDomain,
       validation: acm.CertificateValidation.fromDns(zone),
     });
 
     const domainName = new apigw.DomainName(this, "QdrantDomain", {
-      domainName: vectorDomain,
+      domainName: qdrantDomain,
       certificate: cert,
     });
 
@@ -205,7 +197,7 @@ export class QdrantStack extends Stack {
 
     new route53.ARecord(this, "QdrantAliasA", {
       zone,
-      recordName: vectorDomain,
+      recordName: qdrantDomain,
       target: route53.RecordTarget.fromAlias({
         bind: () => ({
           dnsName: domainName.regionalDomainName,

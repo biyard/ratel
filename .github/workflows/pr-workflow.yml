@@ -52,7 +52,7 @@ jobs:
           components: clippy, rustfmt
           toolchain: stable
           target: wasm32-unknown-unknown
-          cache: false
+          save-if: ${{ github.ref == 'refs/heads/dev' }}
 
       - uses: cargo-bins/cargo-binstall@main
       - name: Install system dependencies
@@ -81,23 +81,21 @@ jobs:
   ratel-app:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: app/ratel
-
     outputs:
       image: ${{ steps.build.outputs.image }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Restore build cache
+      - name: Restore cache
+        id: app-shell-build-cache
         uses: actions/cache/restore@v4
         with:
-          key: app-shell-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}-${{ github.run_id }}
+          key: app-shell-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            app-shell-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
+            app-shell-build-${{ runner.os }}-rust-
           path: |
+            ~/.cargo/bin
             target
 
       - uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -146,7 +144,8 @@ jobs:
           COMMIT: pr-${{ github.sha }}
           ECR: ratel/app-shell
         run: |
-          npm i -D tailwindcss
+          npm i
+          cd app/ratel
           make build-testing
           make docker
 
@@ -167,10 +166,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Restore cache
+        id: app-shell-build-cache
+        uses: actions/cache/restore@v4
+        with:
+          key: app-shell-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            app-shell-build-${{ runner.os }}-rust-
+          path: |
+            ~/.cargo/bin
+            target
+
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
           toolchain: stable
+          target: wasm32-unknown-unknown
           cache: false
 
       - uses: cargo-bins/cargo-binstall@main

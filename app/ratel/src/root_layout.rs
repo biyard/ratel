@@ -16,6 +16,8 @@ pub fn RootLayout() -> Element {
                         };
                     }
                 }
+
+                error.clear_errors();
                 rsx! {
                     div { "Oops, we encountered an error" }
                 }
