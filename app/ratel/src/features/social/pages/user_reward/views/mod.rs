@@ -9,17 +9,28 @@ use dioxus::prelude::*;
 pub fn Home(username: ReadSignal<String>) -> Element {
     let tr: RewardsPageTranslate = use_translate();
 
-    let rewards_resource = use_loader(use_reactive((&username,), |(name,)| async move {
+    let rewards_resource = use_server_future(use_reactive((&username,), |(name,)| async move {
         get_user_rewards_handler(name(), None).await
     }))?;
 
     let transactions_resource =
-        use_loader(use_reactive((&username,), |(name,)| async move {
+        use_server_future(use_reactive((&username,), |(name,)| async move {
             list_user_transactions_handler(name(), None, None).await
         }))?;
 
-    let rewards: RewardsResponse = rewards_resource.read().clone();
-    let initial_transactions = transactions_resource.read().clone();
+    let rewards_binding = rewards_resource.read();
+    let rewards: RewardsResponse = rewards_binding
+        .as_ref()
+        .and_then(|r| r.as_ref().ok())
+        .cloned()
+        .unwrap_or_default();
+
+    let tx_binding = transactions_resource.read();
+    let initial_transactions: super::controllers::ListTransactionsResponse = tx_binding
+        .as_ref()
+        .and_then(|r| r.as_ref().ok())
+        .cloned()
+        .unwrap_or_default();
 
     let mut transactions = use_signal(Vec::<PointTransactionResponse>::new);
     let mut next_bookmark = use_signal(|| Option::<String>::None);

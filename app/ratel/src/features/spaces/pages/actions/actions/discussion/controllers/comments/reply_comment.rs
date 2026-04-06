@@ -1,4 +1,4 @@
-use crate::common::models::space::{SpaceAuthor, SpaceCommon};
+use crate::common::models::space::{SpaceUser, SpaceCommon};
 use crate::features::spaces::pages::actions::actions::discussion::*;
 use crate::features::spaces::pages::actions::models::SpaceAction;
 #[cfg(feature = "server")]
@@ -9,7 +9,7 @@ pub struct ReplyCommentRequest {
     pub content: String,
 }
 
-#[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments/{comment_sk}/reply", role: SpaceUserRole, author: SpaceAuthor, space: SpaceCommon, user: crate::features::auth::User)]
+#[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments/{comment_sk}/reply", role: SpaceUserRole, member: SpaceUser, space: SpaceCommon, user: crate::features::auth::User)]
 pub async fn reply_comment(
     space_id: SpacePartition,
     discussion_sk: SpacePostEntityType,
@@ -59,7 +59,7 @@ pub async fn reply_comment(
         space_post_pk,
         comment_sk_entity,
         req.content,
-        &author,
+        &member,
     )
     .await?;
 
@@ -102,7 +102,7 @@ pub async fn reply_comment(
     }
 
     {
-        let author_partition = crate::features::activity::types::AuthorPartition::from(author.pk.clone());
+        let author_partition = crate::features::activity::types::AuthorPartition::from(member.pk.clone());
 
         if let Err(e) = crate::features::activity::controllers::record_activity(
             cli,
@@ -116,8 +116,8 @@ pub async fn reply_comment(
                 discussion_id: discussion_sk.to_string(),
                 is_first_contribution: false,
             },
-            author.display_name.clone(),
-            author.profile_url.clone(),
+            member.display_name.clone(),
+            member.profile_url.clone(),
         ).await {
             tracing::error!(error = %e, "Failed to record reply activity");
         }
