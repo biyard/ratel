@@ -83,7 +83,7 @@ pub fn ManagementPage(username: String) -> Element {
                 let mut members_query = members_query;
                 move |result: InviteResult| {
                     if result.total_added > 0 {
-                        members_query.restart();
+                        members_query.refresh();
                     }
                 }
             };
@@ -167,7 +167,7 @@ pub fn ManagementPage(username: String) -> Element {
                                                 error_msg.set(Some(failed_msg));
                                             } else {
                                                 error_msg.set(None);
-                                                members_query.restart();
+                                                members_query.refresh();
                                             }
                                         });
                                     },

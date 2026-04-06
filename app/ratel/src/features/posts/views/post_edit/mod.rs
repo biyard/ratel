@@ -422,7 +422,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                                             save_version,
                                         );
                                     }
-                                    cats_query.restart();
+                                    cats_query.refresh();
                                 }
                                 Err(e) => {
                                     toast.error(e);

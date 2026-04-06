@@ -22,6 +22,7 @@ where
     loading: Signal<bool>,
     key: u64,
     has_paginated: Signal<bool>,
+    base_loading: Signal<bool>,
 }
 
 // Manual Clone/Copy impls: all fields (Signal, Memo, Resource, Effect, u64) are
@@ -73,11 +74,26 @@ where
         self.accumulated.set(new_items);
     }
 
-    pub fn restart(&mut self) {
+    /// Reload with the same key, preserving accumulated items until new data arrives.
+    /// Use after mutations (add/delete/update) where the query key has not changed.
+    pub fn refresh(&mut self) {
         self.bookmark.set(None);
         self.next_bookmark.set(None);
         self.has_paginated.set(false);
         self.rsc.restart();
+    }
+
+    /// Restart with a new key. Clears accumulated items immediately and sets
+    /// `is_base_loading()` until the first page resolves.
+    /// Use when a query parameter (username, category, etc.) has changed.
+    pub fn restart(&mut self) {
+        self.accumulated.set(vec![]);
+        self.base_loading.set(true);
+        self.refresh();
+    }
+
+    pub fn is_base_loading(&self) -> bool {
+        *self.base_loading.read()
     }
 
     pub fn has_more(&self) -> bool {
@@ -200,6 +216,7 @@ where
     let has_more = use_memo(move || next_bookmark().is_some());
     let mut loading = use_signal(|| false);
     let mut has_paginated = use_signal(|| false);
+    let mut base_loading = use_signal(|| false);
     let key = use_server_cached(|| {
         use rand::RngExt;
         rand::rng().random::<u64>()
@@ -215,6 +232,7 @@ where
         }
         next_bookmark.set(res.bookmark());
         accumulated.set(res.items().clone());
+        base_loading.set(false);
     });
 
     let effect = use_effect(move || {
@@ -272,5 +290,6 @@ where
         loading,
         key,
         has_paginated,
+        base_loading,
     })
 }

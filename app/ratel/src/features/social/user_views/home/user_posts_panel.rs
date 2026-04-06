@@ -23,6 +23,16 @@ pub fn UserPostsPanel(username: String, view_mode: HomeViewMode) -> Element {
 
     let items = v.items();
 
+    if v.is_base_loading() {
+        return rsx! {
+            div { class: "flex flex-col gap-5 w-full py-4",
+                for _ in 0..3 {
+                    crate::common::components::Skeleton { class: "h-24 w-full rounded-xl" }
+                }
+            }
+        };
+    }
+
     if items.is_empty() {
         return rsx! {
             div { class: "flex justify-center items-center w-full py-20 text-foreground-muted text-base",
