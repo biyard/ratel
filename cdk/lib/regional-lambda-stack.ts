@@ -39,12 +39,10 @@ export interface RegionalLambdaStackProps extends StackProps {
   baseDomain: string;
 
   // Optional — when provided, the Lambda is placed in this VPC (required to
-  // resolve CloudMap private DNS). Use the same VPC that hosts Qdrant.
+  // resolve CloudMap private DNS for Qdrant). Use the same VPC that hosts Qdrant.
   vpc?: ec2.IVpc;
-  // Optional — CloudMap namespace for service discovery (e.g. qdrant.*.svc.local)
-  namespace?: sd.PrivateDnsNamespace;
-  // Optional — Qdrant security group; ingress for Lambda SG is added when provided
-  qdrantSecurityGroup?: ec2.ISecurityGroup;
+  // Optional — shared SG from EcsClusterStack. Must be provided whenever vpc is.
+  sharedSecurityGroup?: ec2.ISecurityGroup;
 }
 
 export class RegionalLambdaStack extends Stack {
@@ -58,35 +56,14 @@ export class RegionalLambdaStack extends Stack {
       domainName: baseDomain,
     });
 
-    // VPC attachment is opt-in: only when props.vpc is provided, the Lambda
-    // joins the VPC (required to resolve CloudMap private DNS for Qdrant).
-    // Otherwise the Lambda runs on the public Lambda fleet with no VPC.
-    let lambdaSg: ec2.SecurityGroup | undefined;
-    if (props.vpc) {
-      lambdaSg = new ec2.SecurityGroup(this, "LambdaSG", {
-        vpc: props.vpc,
-        description: "Security group for Regional Lambda",
-        allowAllOutbound: true,
-      });
-
-      // Allow this Lambda to reach Qdrant on gRPC (6334) and REST (6333).
-      if (props.qdrantSecurityGroup) {
-        props.qdrantSecurityGroup.addIngressRule(
-          lambdaSg,
-          ec2.Port.tcp(6334),
-          "Lambda to Qdrant gRPC",
-        );
-        props.qdrantSecurityGroup.addIngressRule(
-          lambdaSg,
-          ec2.Port.tcp(6333),
-          "Lambda to Qdrant REST",
-        );
-      }
-
-      new ec2.GatewayVpcEndpoint(this, "DynamoDbEndpoint", {
-        vpc: props.vpc,
-        service: ec2.GatewayVpcEndpointAwsService.DYNAMODB,
-      });
+    // VPC attachment is opt-in. When props.vpc is provided, the Lambda joins
+    // the VPC and uses the shared SG from VpcServiceStack (which grants
+    // access to Qdrant via self-reference and Bedrock via the endpoint SG).
+    // VPC-wide endpoints (DynamoDB, Bedrock) live in VpcServiceStack.
+    if (props.vpc && !props.sharedSecurityGroup) {
+      throw new Error(
+        "RegionalLambdaStack: sharedSecurityGroup is required when vpc is set",
+      );
     }
 
     // --- HTTP API (shared between ECS and Lambda) ---
@@ -117,16 +94,28 @@ export class RegionalLambdaStack extends Stack {
       timeout: cdk.Duration.seconds(30),
       // VPC attachment only when a VPC is supplied; otherwise the function
       // runs on the public Lambda fleet (no ENI, faster cold start).
-      ...(props.vpc
+      ...(props.vpc && props.sharedSecurityGroup
         ? {
             allowPublicSubnet: true,
             vpc: props.vpc,
             vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
-            securityGroups: lambdaSg ? [lambdaSg] : undefined,
+            securityGroups: [props.sharedSecurityGroup],
           }
         : {}),
     });
     this.lambdaFunction = apiLambda;
+
+    // Grant Bedrock model invocation permissions. The VPC endpoint (above)
+    // only provides network reachability — IAM is still required.
+    apiLambda.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: [
+          "bedrock:InvokeModel",
+          "bedrock:InvokeModelWithResponseStream",
+        ],
+        resources: ["*"],
+      }),
+    );
 
     const lambdaIntegration = new HttpLambdaIntegration(
       "LambdaIntegration",
