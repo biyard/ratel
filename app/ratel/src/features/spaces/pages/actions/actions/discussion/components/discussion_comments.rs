@@ -122,7 +122,7 @@ pub fn DiscussionComments(
                                     can_manage_comments,
                                     current_user_pk: current_user_pk.clone(),
                                     on_refresh_comments: move |_| {
-                                        comments_query.restart();
+                                        comments_query.refresh();
                                         discussion_query.restart();
                                     },
                                 }
@@ -390,7 +390,7 @@ fn CommentItem(
                     on_success: move |_| {
                         reply_count.set(reply_count() + 1);
                         show_replies.set(true);
-                        replies_query.restart();
+                        replies_query.refresh();
                         on_refresh_comments.call(());
                     },
                 }
@@ -412,11 +412,11 @@ fn CommentItem(
                                     current_user_pk: current_user_pk.clone(),
                                     on_refresh_comments: move |_| on_refresh_comments.call(()),
                                     on_refresh_replies: move |_| {
-                                        replies_query.restart();
+                                        replies_query.refresh();
                                     },
                                     on_deleted: move |_| {
                                         reply_count.set(reply_count().saturating_sub(1));
-                                        replies_query.restart();
+                                        replies_query.refresh();
                                         on_refresh_comments.call(());
                                     },
                                 }

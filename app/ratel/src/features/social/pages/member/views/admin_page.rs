@@ -9,8 +9,8 @@ pub fn AdminPage(username: String, team_pk: TeamPartition) -> Element {
     let _ = username;
     let mut refresh = use_signal(|| 0u64);
 
-    let member_resource = use_loader(use_reactive((&team_pk,), move |(team_pk,)| {
-        let _ = refresh();
+    let refresh_val = refresh();
+    let member_resource = use_loader(use_reactive((&team_pk, &refresh_val), move |(team_pk, _)| {
         async move {
             Ok::<_, super::super::Error>(
                 list_members_handler(team_pk, None, None)
