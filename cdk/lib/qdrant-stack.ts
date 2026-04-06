@@ -17,44 +17,16 @@ export interface QdrantStackProps extends StackProps {
   cluster: ecs.ICluster;
   vpc: ec2.IVpc;
   namespace: sd.PrivateDnsNamespace;
+  // Shared SG from VpcServiceStack — every VPC service attaches this so
+  // intra-SG traffic (including 6333/6334) is allowed by self-reference.
+  sharedSecurityGroup: ec2.ISecurityGroup;
 }
 
 export class QdrantStack extends Stack {
-  public readonly securityGroup: ec2.SecurityGroup;
-
   constructor(scope: Construct, id: string, props: QdrantStackProps) {
     super(scope, id, { ...props, crossRegionReferences: true });
 
-    const { cluster, vpc } = props;
-
-    // Security group for Qdrant
-    const sg = new ec2.SecurityGroup(this, "QdrantSG", {
-      vpc,
-      description: "Qdrant vector DB security group",
-      allowAllOutbound: true,
-    });
-    this.securityGroup = sg;
-
-    sg.addIngressRule(
-      ec2.Peer.ipv4(vpc.vpcCidrBlock),
-      ec2.Port.tcp(6333),
-      "Qdrant REST API",
-    );
-    sg.addIngressRule(
-      ec2.Peer.ipv4(vpc.vpcCidrBlock),
-      ec2.Port.tcp(6334),
-      "Qdrant gRPC",
-    );
-    // sg.addIngressRule(
-    //   props.albSecurityGroup,
-    //   ec2.Port.tcp(6333),
-    //   "ALB to Qdrant REST",
-    // );
-    // sg.addIngressRule(
-    //   props.albSecurityGroup,
-    //   ec2.Port.tcp(6334),
-    //   "ALB to Qdrant gRPC",
-    // );
+    const { cluster, vpc, sharedSecurityGroup } = props;
 
     // EFS for persistent storage (use public subnets since default VPC has no private subnets)
     const fileSystem = new efs.FileSystem(this, "QdrantEfs", {
@@ -126,8 +98,9 @@ export class QdrantStack extends Stack {
       readOnly: false,
     });
 
-    // Allow task to connect to EFS
-    fileSystem.connections.allowDefaultPortFrom(sg);
+    // Allow task to connect to EFS (via shared SG — every VPC service can
+    // mount, which is acceptable since EFS access is also gated by IAM).
+    fileSystem.connections.allowDefaultPortFrom(sharedSecurityGroup);
 
     const fargateService = new ecs.FargateService(this, "QdrantService", {
       cluster,
@@ -137,7 +110,7 @@ export class QdrantStack extends Stack {
       minHealthyPercent: 0,
       assignPublicIp: true,
       vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
-      securityGroups: [sg],
+      securityGroups: [sharedSecurityGroup],
       cloudMapOptions: {
         name: "qdrant",
         cloudMapNamespace: props.namespace,
