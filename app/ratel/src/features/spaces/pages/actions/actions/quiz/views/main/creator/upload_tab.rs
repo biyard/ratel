@@ -77,15 +77,12 @@ pub fn UploadTab(can_edit: bool) -> Element {
                         let ext = FileExtension::from_name_or_url(&uploaded_name, &url);
                         let file_url = url.clone();
                         let link_space_id = space_id();
-                        let link_quiz_id = quiz_id().to_string();
                         spawn(async move {
                             let _ = crate::features::spaces::pages::apps::apps::file::create_file_link(
                                     link_space_id,
                                     crate::features::spaces::pages::apps::apps::file::CreateFileLinkRequest {
                                         file_url,
-                                        link_target: crate::features::spaces::pages::apps::apps::file::FileLinkTarget::Board(
-                                            link_quiz_id,
-                                        ),
+                                        link_target: crate::features::spaces::pages::apps::apps::file::FileLinkTarget::Files,
                                     },
                                 )
                                 .await;
@@ -187,8 +184,6 @@ pub fn UploadTab(can_edit: bool) -> Element {
                                             }
                                         }
                                     }
-
-
 
                                     div { class: "flex items-center gap-2 shrink-0",
                                         if file.url.is_some() {
