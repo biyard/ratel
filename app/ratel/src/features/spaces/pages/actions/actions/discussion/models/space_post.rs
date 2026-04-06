@@ -45,7 +45,7 @@ impl SpacePost {
         title: String,
         html_contents: String,
         category_name: String,
-        author: &crate::common::models::space::SpaceAuthor,
+        author: &crate::common::models::space::SpaceUser,
         started_at: Option<i64>,
         ended_at: Option<i64>,
     ) -> Self {
@@ -89,7 +89,7 @@ impl SpacePost {
         space_pk: SpacePartition,
         space_post_pk: SpacePostPartition,
         content: String,
-        author: &crate::common::models::space::SpaceAuthor,
+        author: &crate::common::models::space::SpaceUser,
     ) -> crate::features::spaces::pages::actions::actions::discussion::Result<SpacePostComment>
     {
         let (pk, sk) = SpacePost::keys(&space_pk, &space_post_pk);

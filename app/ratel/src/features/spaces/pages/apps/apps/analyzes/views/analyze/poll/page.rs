@@ -742,6 +742,12 @@ fn build_excel_data(
         });
     }
 
+    let category_label = if poll.space_action.prerequisite {
+        tr.sample_survey.to_string()
+    } else {
+        tr.final_survey.to_string()
+    };
+
     for response_row in user_rows {
         let start_row = rows.len();
 
@@ -752,7 +758,7 @@ fn build_excel_data(
                 poll,
                 sample,
                 &response_row,
-                tr.sample_survey.to_string(),
+                category_label.clone(),
                 tr.question.to_string(),
                 tr.answer.to_string(),
                 col_category,

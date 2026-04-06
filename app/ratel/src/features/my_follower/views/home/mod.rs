@@ -41,8 +41,8 @@ pub fn MyFollowerPage() -> Element {
                 match follow_user(target_pk).await {
                     Ok(_) => {
                         toast.info(tr.follow_toast.to_string());
-                        followers_query.restart();
-                        followings_query.restart();
+                        followers_query.refresh();
+                        followings_query.refresh();
                     }
                     Err(err) => {
                         toast.error(err);
@@ -64,8 +64,8 @@ pub fn MyFollowerPage() -> Element {
                 match unfollow_user(target_pk).await {
                     Ok(_) => {
                         toast.info(tr.unfollow_toast.to_string());
-                        followers_query.restart();
-                        followings_query.restart();
+                        followers_query.refresh();
+                        followings_query.refresh();
                     }
                     Err(err) => {
                         toast.error(err);
