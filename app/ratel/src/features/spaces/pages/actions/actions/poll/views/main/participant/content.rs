@@ -133,6 +133,7 @@ pub fn PollContent(
                             {tr.submit_confirm_cancel}
                         }
                         Button {
+                            "data-testid": "poll-confirm-submit",
                             style: ButtonStyle::Primary,
                             shape: ButtonShape::Square,
                             class: "min-w-[120px]",
@@ -168,6 +169,8 @@ pub fn PollContent(
                         {tr.btn_back}
                     }
                 }
+
+
 
                 if !is_last_question && total > 0 {
                     Button {
@@ -218,7 +221,9 @@ pub fn PollContent(
                     }
                 }
 
-                if is_in_progress && can_execute_action && has_response && !poll.response_editable && can_respond {
+                if is_in_progress && can_execute_action && has_response && !poll.response_editable
+                    && can_respond
+                {
                     div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
                         {tr.already_responded}
                     }
@@ -252,6 +257,7 @@ pub fn PollContent(
                                         enable_other_option: true,
                                         on_change: move |ans: Answer| {
                                             answers.write().insert(idx, ans.clone());
+
 
                                             if can_submit && can_next && should_auto_next(&question, &ans) {
                                                 question_index.set(idx + 1);

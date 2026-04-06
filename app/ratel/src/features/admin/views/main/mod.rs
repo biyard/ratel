@@ -138,7 +138,7 @@ pub fn AdminMainPage() -> Element {
                 Ok(_) => {
                     grant_message.set(Some((tr.grant_success.to_string(), true)));
                     grant_username.set(String::new());
-                    enterprise_memberships_query.restart();
+                    enterprise_memberships_query.refresh();
                 }
                 Err(err) => {
                     error!("Failed to grant enterprise membership: {:?}", err);

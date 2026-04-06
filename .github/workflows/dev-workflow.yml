@@ -11,22 +11,12 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    needs: [ratel-app]
+    needs: [ratel-app, ratel-app-lambda]
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
-      # - name: Download Survey Fetcher Lambda
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     name: survey-worker-${{ github.sha }}
-      #     path: ./cdk/survey-worker
-      # - name: Download Space Stream Worker Lambda
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     name: space-stream-worker-${{ github.sha }}
-      #     path: ./cdk/space-stream-worker
 
       # - name: Write Firebase service account (dev)
       #   run: |
@@ -39,10 +29,6 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
-      # - name: Setup SSH session with tmate
-      #   uses: mxschmitt/action-tmate@v3
-      #   with:
-      #     limit-access-to-actor: true
       - name: Deploy
         env:
           ENV: dev
@@ -113,25 +99,29 @@ jobs:
   ratel-app:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: app/ratel
-
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
-      - name: Cache builder
+      - name: Restore cache
         id: app-shell-build-cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
-          key: app-shell-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}-${{ github.run_id }}
+          key: app-shell-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            app-shell-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
+            app-shell-build-${{ runner.os }}-rust-
           path: |
+            ~/.cargo/bin
             target
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+          toolchain: stable
+          target: wasm32-unknown-unknown
+          cache: false
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -142,12 +132,6 @@ jobs:
       - name: Login to Amazon ECR
         id: ratel-ecr
         uses: aws-actions/amazon-ecr-login@v2
-
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          components: clippy, rustfmt
-          toolchain: stable
-          target: wasm32-unknown-unknown
 
       - uses: cargo-bins/cargo-binstall@main
       - name: Install system dependencies
@@ -253,24 +237,31 @@ jobs:
           VOTER_TAG_SECRET: ${{ secrets.DEV_VOTER_TAG_SECRET }}
           ATTR_VOTING_AUTHORITY_JSON: ${{ secrets.DEV_ATTR_VOTING_AUTHORITY_JSON }}
         run: |
-          npm i -D tailwindcss
-          rm -rf ../../target/dx
-          ECR=$ECR-lambda make build-lambda
-          ECR=$ECR-lambda make docker
-          ECR=$ECR-lambda make docker.push
+          npm i
+          rm -rf target/dx
+
+          cd app/ratel
 
           make build
           make docker
           make docker.push
+
+      - name: Save cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          key: app-shell-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+          path: |
+            ~/.cargo/bin
+            target
 
       - name: Deploy to S3
         env:
           BUCKET: ${{ secrets.DEV_RATEL_BUCKET }}
           CDN: ${{ secrets.DEV_RATEL_CDN }}
         run: |
-          aws s3 sync ../../target/dx/app-shell/release/web/public $BUCKET
+          aws s3 sync target/dx/app-shell/release/web/public $BUCKET
           aws cloudfront create-invalidation --distribution-id $CDN --paths "/*"
-          cd ../..
           tar czvf app-shell.tar.gz target/dx/app-shell/release/web
 
       - name: Upload Artifacts
@@ -281,366 +272,163 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-  # NOTE: migrate to DynamoDB
-  # image-worker:
-  #   runs-on: ubuntu-22.04
-  #   defaults:
-  #     run:
-  #       working-directory: packages/image-worker
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         submodules: recursive
-  #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
-  #     - uses: aws-actions/configure-aws-credentials@v2
-  #       with:
-  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #         aws-region: ap-northeast-2
-  #     - uses: actions-rust-lang/setup-rust-toolchain@v1
-  #       with:
-  #         components: clippy, rustfmt
-  #         target: wasm32-unknown-unknown
-  #         toolchain: stable
-  #     - uses: cargo-bins/cargo-binstall@main
-  #     - name: Install toml-cli
-  #       run: |
-  #         cargo binstall toml-cli --force
-  #     - name: Cache builder
-  #       id: image-worker-build-cache
-  #       uses: actions/cache@v4
-  #       with:
-  #         key: image-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
-  #         restore-keys: |
-  #           image-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
-  #           image-worker-build-${{ runner.os }}-
-  #           image-worker-build-
-  #         path: |
-  #           packages/image-worker/target
-  #     - name: Deploy APIs
-  #       env:
-  #         REGION: ap-northeast-2
-  #         ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #         ENV: dev
-  #         RUST_LOG: debug
-  #         SERVICE: image-worker
-  #         DATABASE_TYPE: postgres
-  #         DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
-  #         MIGRATE: false
-  #         DYNAMO_TABLE_PREFIX: ratel-dev
-  #       run: |
-  #         make build
-  #     - name: Upload Artifacts
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: image-worker-${{ github.sha }}
-  #         path: ${{ github.workspace }}/.build/image-worker/bootstrap
-  #         if-no-files-found: error
-  #         retention-days: 7
+  ratel-app-lambda:
+    runs-on: ubuntu-latest
 
-  # fetcher:
-  #   runs-on: ubuntu-latest
-  #   defaults:
-  #     run:
-  #       working-directory: packages/fetcher
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         submodules: recursive
-  #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
-  #     - uses: aws-actions/configure-aws-credentials@v2
-  #       with:
-  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #         aws-region: ap-northeast-2
-  #     - uses: actions-rust-lang/setup-rust-toolchain@v1
-  #       with:
-  #         components: clippy, rustfmt
-  #         target: wasm32-unknown-unknown
-  #         toolchain: stable
-  #     - uses: cargo-bins/cargo-binstall@main
-  #     - name: Install dependencies
-  #       run: |
-  #         cargo binstall toml-cli
-  #     - name: Cache builder
-  #       id: fetcher-build-cache
-  #       uses: actions/cache@v4
-  #       with:
-  #         key: fetcher-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}-${{ github.run_id }}
-  #         restore-keys: |
-  #           fetcher-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
-  #           fetcher-build-${{ runner.os }}-
-  #           fetcher-build-
-  #         path: |
-  #           packages/fetcher/target
-  #     - name: Deploy APIs
-  #       env:
-  #         REGION: ap-northeast-2
-  #         ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
-  #         ENV: dev
-  #         RUST_LOG: info
-  #         TELEGRAM_TOKEN: ${{ secrets.DEV_TELEGRAM_TOKEN }}
+      - name: Restore cache
+        id: app-shell-build-cache
+        uses: actions/cache/restore@v4
+        with:
+          key: app-shell-lambda-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            app-shell-lambda-build-${{ runner.os }}-rust-
+          path: |
+            ~/.cargo/bin
+            target
 
-  #         DYNAMO_TABLE_PREFIX: ratel-dev
-  #       run: |
-  #         make docker.build
-  #         make docker.login
-  #         make docker.push
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+          toolchain: stable
+          target: wasm32-unknown-unknown
+          cache: false
 
-  # survey-worker:
-  #   runs-on: ubuntu-22.04
-  #   defaults:
-  #     run:
-  #       working-directory: packages/survey-worker
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
 
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         submodules: recursive
-  #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
+      - name: Login to Amazon ECR
+        id: ratel-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-  #     - uses: aws-actions/configure-aws-credentials@v2
-  #       with:
-  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #         aws-region: ap-northeast-2
+      - uses: cargo-bins/cargo-binstall@main
+      - name: Install system dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            lld
 
-  #     - uses: actions-rust-lang/setup-rust-toolchain@v1
-  #       with:
-  #         components: clippy, rustfmt
-  #         toolchain: stable
+      - name: Install Dioxus-cli
+        run: |
+          cargo binstall dioxus-cli@0.7.3 --force
 
-  #     - uses: cargo-bins/cargo-binstall@main
-  #     - name: Install toml-cli
-  #       run: |
-  #         cargo binstall toml-cli --force
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.15.0 --activate
 
-  #     - name: Cache builder
-  #       id: survey-worker-build-cache
-  #       uses: actions/cache@v4
-  #       with:
-  #         key: survey-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}-${{ github.run_id }}
-  #         restore-keys: |
-  #           survey-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
-  #           survey-worker-build-${{ runner.os }}-
-  #           survey-worker-build-
-  #         path: |
-  #           packages/survey-worker/target
+      - name: Building APIs
+        env:
+          REGION: ap-northeast-2
+          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-  #     - name: Build survey-worker Lambda
-  #       env:
-  #         REGION: ap-northeast-2
-  #         ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          ENV: dev
+          RUST_LOG: error
+          SERVICE: app-shell
+          DOMAIN: dev.ratel.foundation
+          BUCKET_NAME: metadata.ratel.foundation
+          SLACK_HOOK: ${{ secrets.DEV_SLACK }}
 
-  #         ENV: dev
-  #         RUST_LOG: info
-  #         SERVICE: survey-worker
-  #         DOMAIN: dev.ratel.foundation
+          BINANCE_API_KEY: ${{ secrets.DEV_BINANCE_API_KEY }}
+          BINANCE_SECRET_KEY: ${{ secrets.DEV_BINANCE_SECRET_KEY }}
+          BINANCE_WEBHOOK: https://api.dev.ratel.foundation/v2/binances/webhooks
+          REDIRECT_DOMAIN: https://dev.ratel.foundation
 
-  #         DYNAMO_TABLE_PREFIX: ratel-dev
-  #         DYNAMO_ENDPOINT: none
-  #         RUST_FLAG: "--features lambda --release"
-  #         WEB_BUILD: false
-  #       run: |
-  #         make bin.build
-  #         mv target/release/survey-worker ../../bootstrap
+          KAIA_ENDPOINT: https://public-en-kairos.node.kaia.io
+          KAIA_ARCHIVE_ENDPOINT: https://archive-en-kairos.node.kaia.io
+          BLOCK_EXPLORER_URL: https://kairos.kaiascan.io
+          KAIA_FEEPAYER_KEY: ${{ secrets.DEV_KAIA_KEY }}
+          KAIA_FEEPAYER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
+          KAIA_OWNER_KEY: ${{ secrets.DEV_KAIA_KEY }}
+          KAIA_OWNER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
 
-  #     - name: Upload Survey Worker Artifact
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: survey-worker-${{ github.sha }}
-  #         path: ${{ github.workspace }}/bootstrap
-  #         if-no-files-found: error
-  #         retention-days: 7
+          TELEGRAM_TOKEN: ${{ secrets.DEV_TELEGRAM_TOKEN }}
 
-  # space-stream-worker:
-  #   runs-on: ubuntu-22.04
-  #   defaults:
-  #     run:
-  #       working-directory: packages/space-stream-worker
+          BBS_BLS_X: ${{ secrets.BBS_BLS_X }}
+          BBS_BLS_Y: ${{ secrets.BBS_BLS_Y }}
+          BBS_BLS_D: ${{ secrets.BBS_BLS_D }}
+          BBS_BLS_CRV: ${{ secrets.BBS_BLS_CRV }}
 
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         submodules: recursive
-  #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
+          P256_X: ${{ secrets.P256_X }}
+          P256_Y: ${{ secrets.P256_Y }}
+          P256_D: ${{ secrets.P256_D }}
+          P256_CRV: ${{ secrets.P256_CRV }}
 
-  #     - uses: aws-actions/configure-aws-credentials@v2
-  #       with:
-  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #         aws-region: ap-northeast-2
+          DYNAMO_TABLE_PREFIX: ratel-dev
+          DYNAMO_ENDPOINT: none
+          # RUST_FLAG: "--features lambda --release"
+          ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
 
-  #     - uses: actions-rust-lang/setup-rust-toolchain@v1
-  #       with:
-  #         components: clippy, rustfmt
-  #         toolchain: stable
+          FCM_ENABLED: true
+          RATEL_PROJECT_ID: ${{ secrets.RATEL_PROJECT_ID }}
+          REWARD: true
 
-  #     - uses: cargo-bins/cargo-binstall@main
-  #     - name: Install toml-cli
-  #       run: |
-  #         cargo binstall toml-cli --force
+          BEDROCK_AGENT_ID: ${{ secrets.DEV_BEDROCK_AGENT_ID }}
+          BEDROCK_AGENT_ALIAS_ID: ${{ secrets.DEV_BEDROCK_AGENT_ALIAS_ID }}
 
-  #     - name: Cache builder
-  #       id: space-stream-worker-build-cache
-  #       uses: actions/cache@v4
-  #       with:
-  #         key: space-stream-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}-${{ github.run_id }}
-  #         restore-keys: |
-  #           space-stream-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
-  #           space-stream-worker-build-${{ runner.os }}-
-  #           space-stream-worker-build-
-  #         path: |
-  #           packages/space-stream-worker/target
+          BIYARD_API_URL: https://api.dev.biyard.co
+          BIYARD_API_KEY: ${{ secrets.DEV_BIYARD_API_KEY }}
+          BIYARD_PROJECT_ID: ${{ secrets.DEV_BIYARD_PROJECT_ID }}
 
-  #     - name: Build space-stream-worker Lambda
-  #       env:
-  #         REGION: ap-northeast-2
-  #         ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
 
-  #         ENV: dev
-  #         RUST_LOG: info
-  #         SERVICE: space-stream-worker
-  #         DOMAIN: dev.ratel.foundation
-  #         PRIVATE_BUCKET_NAME: metadata.ratel.foundation
+          PORTONE_STORE_ID: ${{ secrets.DEV_PORTONE_STORE_ID}}
+          PORTONE_INICIS_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_INICIS_CHANNEL_KEY }}
+          PORTONE_API_SECRET: ${{ secrets.DEV_PORTONE_API_SECRET }}
+          PORTONE_KPN_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_KPN_CHANNEL_KEY }}
 
-  #         DYNAMO_TABLE_PREFIX: ratel-dev
-  #         DYNAMO_ENDPOINT: none
-  #         RUST_FLAG: "--features lambda --release"
-  #         WEB_BUILD: false
-  #       run: |
-  #         make bin.build
-  #         mv target/release/space-stream-worker ../../bootstrap
+          QDRANT_URL: ${{ secrets.DEV_QDRANT_URL }}
+          QDRANT_API_KEY: ${{secrets.DEV_QDRANT_API_KEY }}
 
-  #     - name: Upload Space Stream Worker Artifact
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: space-stream-worker-${{ github.sha }}
-  #         path: ${{ github.workspace }}/bootstrap
-  #         if-no-files-found: error
-  #         retention-days: 7
+          ECR: ${{ steps.ratel-ecr.outputs.registry }}/ratel/app-shell-lambda
 
-  # ratel-web:
-  #   runs-on: ubuntu-latest
-  #   defaults:
-  #     run:
-  #       working-directory: ts-packages/web
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: aws-actions/configure-aws-credentials@v2
-  #       with:
-  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #         aws-region: ap-northeast-2
+          WALLETCONNECT_PROJECT_ID: ${{ secrets.WALLETCONNECT_PROJECT_ID }}
 
-  #     - name: Setup pnpm
-  #       run: |
-  #         corepack enable
-  #         corepack prepare pnpm@10.15.0 --activate
+          RATEL_CANISTER_ID: lqy7q-dh777-77777-aaaaq-cai
+          IC_URL: https://icp.dev.biyard.co
+          ICP_IDENTITY_PEM: ${{ secrets.DEV_ICP_IDENTITY_PEM }}
+          VOTER_TAG_SECRET: ${{ secrets.DEV_VOTER_TAG_SECRET }}
+          ATTR_VOTING_AUTHORITY_JSON: ${{ secrets.DEV_ATTR_VOTING_AUTHORITY_JSON }}
+        run: |
+          npm i
+          rm -rf target/dx
 
-  #     - name: Build
-  #       env:
-  #         REGION: ap-northeast-2
-  #         VITE_LOG_LEVEL: info
-  #         VITE_RPC_URL: https://public-en-kairos.node.kaia.io
-  #         VITE_BLOCK_EXPLORER_URL: https://kairos.kaiascan.io
-  #         VITE_OPERATOR_ADDRESS: ${{ secrets.OPERATOR_ADDRESS }}
-  #         VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
-  #         VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
-  #         VITE_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-  #         VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
-  #         VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
-  #         VITE_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
-  #         VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
+          cd app/ratel
+          make build-lambda
+          make docker
+          make docker.push
 
-  #         VITE_PORTONE_STORE_ID: ${{ secrets.DEV_PORTONE_STORE_ID}}
-  #         VITE_PORTONE_INICIS_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_INICIS_CHANNEL_KEY }}
-
-  #         VITE_ENV: dev
-  #         VITE_SIGN_DOMAIN: dev.ratel.foundation
-  #         VITE_API_URL: https://dev.ratel.foundation
-  #         VITE_EXPERIMENT: true
-  #         VITE_TELEGRAM_BOTNAME: crypto_ratel_dev_bot
-  #         VITE_STORYBOOK_URL: https://storybook.dev.ratel.foundation
-  #         VITE_USDT_ADDRESS: "0xd077a400968890eacc75cdc901f0356c943e4fdb"
-  #       run: |
-  #         make build
-
-  #     - name: Deploy to S3
-  #       env:
-  #         BUCKET: ${{ secrets.DEV_RATEL_BUCKET }}
-  #         CDN: ${{ secrets.DEV_RATEL_CDN }}
-  #       run: |
-  #         aws s3 sync dist $BUCKET
-  #         aws cloudfront create-invalidation --distribution-id $CDN --paths "/*"
-
-  #     - name: Prepare artifacts
-  #       run: |
-  #         tar czvf dist.tar.gz dist
-
-  #     - name: Upload Artifacts
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: ratel-web-${{ github.sha }}
-  #         path: ${{ github.workspace }}/ts-packages/web/dist.tar.gz
-  #         if-no-files-found: error
-  #         retention-days: 7
-
-  # ratel-storybook:
-  #   runs-on: ubuntu-latest
-  #   defaults:
-  #     run:
-  #       working-directory: ts-packages/web
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: aws-actions/configure-aws-credentials@v2
-  #       with:
-  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #         aws-region: ap-northeast-2
-
-  #     - name: Setup pnpm
-  #       run: |
-  #         corepack enable
-  #         corepack prepare pnpm@10.15.0 --activate
-
-  #     - name: Build
-  #       env:
-  #         REGION: ap-northeast-2
-  #         VITE_LOG_LEVEL: info
-  #         VITE_RPC_URL: https://public-en-kairos.node.kaia.io
-  #         VITE_BLOCK_EXPLORER_URL: https://kairos.kaiascan.io
-  #         VITE_USDT_ADDRESS: "0xd077a400968890eacc75cdc901f0356c943e4fdb"
-  #         VITE_OPERATOR_ADDRESS: ${{ secrets.OPERATOR_ADDRESS }}
-  #         VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
-  #         VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
-  #         VITE_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-  #         VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
-  #         VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
-  #         VITE_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
-  #         VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
-
-  #         VITE_ENV: dev
-  #         VITE_SIGN_DOMAIN: dev.ratel.foundation
-  #         VITE_API_URL: https://dev.ratel.foundation
-  #         VITE_EXPERIMENT: true
-  #         VITE_TELEGRAM_BOTNAME: crypto_ratel_dev_bot
-  #       run: |
-  #         pnpm i
-  #         npx storybook build
-
-  #     - name: Deploy
-  #       env:
-  #         BUCKET_NAME: ${{ secrets.RATEL_STORYBOOK_BUCKET }}
-  #         CDN: ${{ secrets.RATEL_STORYBOOK_CDN }}
-  #       run: |
-  #         aws s3 sync storybook-static s3://$BUCKET_NAME
-  #         aws cloudfront create-invalidation --distribution-id $CDN --paths "/*"
+      - name: Save cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          key: app-shell-lambda-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+          path: |
+            ~/.cargo/bin
+            target
 
   # android-apk:
   #   runs-on: ubuntu-latest

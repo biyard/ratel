@@ -1,4 +1,4 @@
-use crate::common::models::space::{SpaceAuthor, SpaceCommon};
+use crate::common::models::space::{SpaceUser, SpaceCommon};
 use crate::features::spaces::pages::actions::actions::quiz::*;
 #[cfg(feature = "server")]
 use crate::features::spaces::space_common::models::space_reward::SpaceReward;
@@ -13,7 +13,7 @@ pub struct RespondQuizRequest {
 #[post(
     "/api/spaces/{space_pk}/quizzes/{quiz_id}/respond",
     role: SpaceUserRole,
-    author: SpaceAuthor,
+    member: SpaceUser,
     user: crate::features::auth::User,
     space: SpaceCommon
 )]
@@ -72,12 +72,12 @@ pub async fn respond_quiz(
 
     let total_allowed = quiz.retry_count.saturating_add(1).min(MAX_TOTAL_ATTEMPTS);
     let limit: i32 = total_allowed as i32;
-    let attempts = SpaceQuizAttempt::list_by_quiz_user(cli, &quiz_id, &author.pk, limit).await?;
+    let attempts = SpaceQuizAttempt::list_by_quiz_user(cli, &quiz_id, &member.pk, limit).await?;
     if attempts.len() as i64 >= total_allowed {
         return Err(SpaceActionQuizError::NoRemainingAttempts.into());
     }
     let score = calculate_score(&quiz.questions, &correct.answers, &req.answers)?;
-    let attempt = SpaceQuizAttempt::new(quiz_id.clone(), author, req.answers, score);
+    let attempt = SpaceQuizAttempt::new(quiz_id.clone(), member.clone(), req.answers, score);
     attempt.create(cli).await?;
 
     if attempts.is_empty() {
@@ -90,8 +90,8 @@ pub async fn respond_quiz(
     let already_passed = attempts.iter().any(|a| a.score >= quiz.pass_score);
     if score >= quiz.pass_score && !already_passed {
         let activity_user_pk = user.pk.clone();
-        let activity_user_name = user.display_name.clone();
-        let activity_user_avatar = user.profile_url.clone();
+        let activity_user_name = member.display_name.clone();
+        let activity_user_avatar = member.profile_url.clone();
 
         match SpaceReward::get_by_action(
             cli,

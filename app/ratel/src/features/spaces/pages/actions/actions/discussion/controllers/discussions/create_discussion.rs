@@ -1,7 +1,7 @@
 use crate::features::spaces::pages::actions::actions::discussion::*;
 
 #[mcp_tool(name = "create_discussion", description = "Create a new discussion in a space.")]
-#[post("/api/spaces/{space_id}/discussions", role: SpaceUserRole, author: crate::common::models::space::SpaceAuthor)]
+#[post("/api/spaces/{space_id}/discussions", role: SpaceUserRole, member: crate::common::models::space::SpaceUser)]
 pub async fn create_discussion(
     #[mcp(description = "Space partition key (e.g. 'SPACE#<uuid>')")]
     space_id: SpacePartition,
@@ -14,7 +14,7 @@ pub async fn create_discussion(
         String::new(),
         String::new(),
         String::new(),
-        &author,
+        &member,
         None,
         None,
     );

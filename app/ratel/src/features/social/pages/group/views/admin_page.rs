@@ -18,8 +18,8 @@ pub fn AdminPage(username: String, team_pk: TeamPartition, permissions: i64) -> 
     let can_edit_team = perms.contains(TeamGroupPermission::TeamEdit);
 
     let mut refresh = use_signal(|| 0u64);
-    let group_resource = use_loader(use_reactive((&team_pk,), move |(team_pk,)| {
-        let _ = refresh();
+    let refresh_val = refresh();
+    let group_resource = use_loader(use_reactive((&team_pk, &refresh_val), move |(team_pk, _)| {
         async move {
             Ok::<_, super::super::Error>(
                 list_groups_handler(team_pk, None)

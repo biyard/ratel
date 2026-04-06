@@ -84,7 +84,7 @@ pub async fn handle_ai_moderator_event(post: SpacePost) -> Result<()> {
             .await?;
 
     // Save the AI moderator reply as a SpacePostComment
-    let ai_author = crate::common::models::space::SpaceAuthor {
+    let ai_author = crate::common::models::space::SpaceUser {
         pk: Partition::default(),
         display_name: AI_MODERATOR_DISPLAY_NAME.to_string(),
         username: AI_MODERATOR_USERNAME.to_string(),

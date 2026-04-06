@@ -255,7 +255,7 @@ fn CommentItem(
                                         if reply_to_comment_handler(pk, sk, content).await.is_ok() {
                                             reply_count.set(reply_count() + 1);
                                             on_comment_count_inc.call(());
-                                            replies.restart();
+                                            replies.refresh();
                                             show_replies.set(true);
                                         }
                                         reply_text.set(String::new());
