@@ -11,6 +11,7 @@ use crate::features::spaces::space_common::models::space_reward::SpaceReward;
     "/api/spaces/{space_id}/follows/{follow_id}/user",
     role: SpaceUserRole,
     user: crate::features::auth::User,
+    author: crate::common::models::space::SpaceAuthor,
     space: SpaceCommon
 )]
 pub async fn follow_user(
@@ -133,8 +134,8 @@ pub async fn follow_user(
                 crate::features::activity::types::SpaceActivityData::Follow {
                     follow_id: follow_id.to_string(),
                 },
-                user.display_name.clone(),
-                user.profile_url.clone(),
+                author.display_name.clone(),
+                author.profile_url.clone(),
             ).await {
                 tracing::error!(error = %e, "Failed to record follow activity");
             }
