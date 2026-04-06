@@ -168,7 +168,10 @@ pub struct SpaceNavItem {
 fn RankingWidgetWrapper(space_id: SpacePartition) -> Element {
     rsx! {
         div { class: "px-2 max-tablet:hidden",
-            crate::features::activity::components::RankingWidget { space_id }
+            dioxus::prelude::SuspenseBoundary {
+                fallback: |_| rsx! {},
+                crate::features::activity::components::RankingWidget { space_id }
+            }
         }
     }
 }
