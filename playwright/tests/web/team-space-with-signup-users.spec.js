@@ -759,20 +759,7 @@ test.describe.serial("Space with actions created by a team", () => {
     for (const c of creatorComments) {
       await goto(page, discussionUrl);
       await fill(page, { placeholder: "Write a comment..." }, c.text);
-      // Click the send button (icon-only button next to the input)
-      const commentInput = page.getByPlaceholder("Write a comment...", {
-        exact: true,
-      });
-      // Clear focus from input to enable the button, then find and click it
-      const sendBtns = page.locator(
-        "button:not([disabled]):has(svg)",
-      );
-      // The comment send button is adjacent to the input
-      await commentInput.press("Tab");
-      // Locate the send button by finding buttons near the comment input
-      const sendBtn = sendBtns.first();
-      await sendBtn.click();
-      await page.waitForLoadState("load");
+      await click(page, { testId: "comment-send-btn" });
     }
 
     // Post newUser comments
@@ -793,17 +780,7 @@ test.describe.serial("Space with actions created by a team", () => {
             { placeholder: "Write a comment..." },
             c.text,
           );
-          const commentInput = userPage.getByPlaceholder(
-            "Write a comment...",
-            { exact: true },
-          );
-          const sendBtns = userPage.locator(
-            "button:not([disabled]):has(svg)",
-          );
-          await commentInput.press("Tab");
-          const sendBtn = sendBtns.first();
-          await sendBtn.click();
-          await userPage.waitForLoadState("load");
+          await click(userPage, { testId: "comment-send-btn" });
         }
       } finally {
         await context.close();
@@ -828,17 +805,7 @@ test.describe.serial("Space with actions created by a team", () => {
             { placeholder: "Write a comment..." },
             c.text,
           );
-          const commentInput = userPage.getByPlaceholder(
-            "Write a comment...",
-            { exact: true },
-          );
-          const sendBtns = userPage.locator(
-            "button:not([disabled]):has(svg)",
-          );
-          await commentInput.press("Tab");
-          const sendBtn = sendBtns.first();
-          await sendBtn.click();
-          await userPage.waitForLoadState("load");
+          await click(userPage, { testId: "comment-send-btn" });
         }
       } finally {
         await context.close();
