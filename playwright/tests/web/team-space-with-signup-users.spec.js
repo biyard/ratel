@@ -47,40 +47,6 @@ async function hideFab(page) {
 }
 
 /**
- * Log in as an existing user in a fresh context.
- * Returns { context, page } — caller must close context.
- *
- * @param {string} startUrl - URL to navigate to before login. Defaults to "/".
- *   When the caller will later call goto() on a different URL, pass that URL
- *   here to avoid a WASM memory-cache hang (goto's waitForResponse only fires
- *   on the first network fetch; same-URL reloads re-fetch but cross-URL
- *   navigations may serve WASM from memory cache with no response event).
- */
-async function loginAsExistingUser(
-  browser,
-  { email, password },
-  startUrl = "/",
-) {
-  const context = await browser.newContext({
-    storageState: { cookies: [], origins: [] },
-    viewport: { width: 1440, height: 950 },
-    locale: "en-US",
-  });
-  const page = await context.newPage();
-
-  await goto(page, startUrl);
-  await click(page, { text: "Sign In" });
-  await waitPopup(page, { visible: true });
-  await fill(page, { placeholder: "Enter your email address" }, email);
-  await click(page, { text: "Continue" });
-  await fill(page, { placeholder: "Enter your password" }, password);
-  await click(page, { text: "Continue" });
-  await waitPopup(page, { visible: false });
-
-  return { context, page };
-}
-
-/**
  * Sign up a new user from the space page.
  * Returns { context, page, displayName } — caller must close context.
  */
@@ -395,20 +361,44 @@ test.describe.serial("Space with actions created by a team", () => {
   // ─── 5. User2: Log in and participate ─────────────────────────────────────
 
   test("User2: Log in and participate in the space", async ({ browser }) => {
-    const { context, page } = await loginAsExistingUser(
-      browser,
-      user2,
-      spaceUrl + "/dashboard",
-    );
+    const context = await browser.newContext({
+      storageState: { cookies: [], origins: [] },
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const page = await context.newPage();
 
     try {
-      await participateAndCompletePoll(
-        page,
-        spaceUrl,
-        "Increase marketing spend",
-      );
-
+      // Navigate to space dashboard and log in from there.
       await goto(page, spaceUrl + "/dashboard");
+      await click(page, { text: "Sign In" });
+      await waitPopup(page, { visible: true });
+      await fill(page, { placeholder: "Enter your email address" }, user2.email);
+      await click(page, { text: "Continue" });
+      await fill(page, { placeholder: "Enter your password" }, user2.password);
+      await click(page, { text: "Continue" });
+      await waitPopup(page, { visible: false });
+
+      // After login the space page re-renders with auth state.
+      // Click Participate directly — no goto needed since page is already loaded.
+      await click(page, { text: "Participate" });
+      await getLocator(page, { text: "Required Actions" });
+
+      // Complete the prerequisite poll
+      await click(page, { text: "How should the team allocate the Q2 budget?" });
+      await page.waitForURL(/\/actions\/polls\//, { waitUntil: "load" });
+      await click(page, { text: "Increase marketing spend" });
+      await click(page, { text: "Submit" });
+      await page.waitForLoadState("load");
+
+      // Navigate back to dashboard to verify participation.
+      // Use page.goto directly to avoid goto helper's WASM waitForResponse
+      // which can hang when WASM is served from the browser memory cache.
+      await page.goto(spaceUrl + "/dashboard");
+      await page.waitForLoadState("domcontentloaded");
+      await page.waitForFunction(
+        () => document.querySelector("[data-dioxus-id]") !== null,
+      );
       const userProfile = page.locator("#space-user-profile");
       await expect(userProfile).toBeVisible();
 
