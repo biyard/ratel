@@ -129,17 +129,37 @@ async function participateAndCompletePoll(page, spaceUrl, pollOptionText) {
   }
 
   // The "Required Actions" layover appears after the participate call
-  // followed by a list_actions call, so it needs a longer timeout.
+  // followed by a list_actions server call, so it needs a generous timeout
+  // (CI can be slow with back-to-back server calls).
   await expect(
     page.getByText("Required Actions", { exact: true }),
-  ).toBeVisible({ timeout: 15000 });
+  ).toBeVisible({ timeout: 30000 });
 
   // Click the prerequisite poll (action card shows the poll title)
   await click(page, { text: "Team Poll: Budget Allocation" });
   await page.waitForURL(/\/actions\/polls\//, { waitUntil: "load" });
+  // Wait for Dioxus hydration on the poll page before interacting
+  await page.waitForFunction(
+    () => document.querySelector("[data-dioxus-id]") !== null,
+  );
 
-  // Answer the single choice question
+  // Wait for poll options to be visible before clicking
+  await expect(page.getByText(pollOptionText, { exact: true })).toBeVisible({
+    timeout: 10000,
+  });
   await click(page, { text: pollOptionText });
+
+  // Click Submit — this opens a confirmation popup (response_editable is false
+  // by default, so the poll shows a "Submit response" confirmation dialog).
+  await click(page, { text: "Submit" });
+
+  // Wait for the confirmation popup to appear, then confirm
+  await expect(
+    page.getByText("Once submitted, this response cannot be edited", {
+      exact: false,
+    }),
+  ).toBeVisible({ timeout: 5000 });
+  // Click the "Submit" button inside the confirmation popup
   await click(page, { text: "Submit" });
   await page.waitForLoadState("load");
 }
@@ -462,11 +482,17 @@ test.describe.serial("Space with actions created by a team", () => {
 
       // Click the follow action card to navigate to it
       await click(page, { text: "Test Team" });
-      await page.waitForURL(/\/actions\/follows\//, { waitUntil: "load" });
+      await page.waitForURL(/\/actions\/follows\//, {
+        waitUntil: "load",
+        timeout: 15000,
+      });
+      await page.waitForFunction(
+        () => document.querySelector("[data-dioxus-id]") !== null,
+      );
 
       // Click "Follow" on the first non-creator user (the team creator)
       const followBtn = page.getByRole("button", { name: "Follow" }).first();
-      await expect(followBtn).toBeVisible();
+      await expect(followBtn).toBeVisible({ timeout: 10000 });
       await followBtn.click();
       await page.waitForLoadState("load");
     } finally {
@@ -485,10 +511,16 @@ test.describe.serial("Space with actions created by a team", () => {
     try {
       await goto(page, spaceUrl + "/actions");
       await click(page, { text: "Test Team" });
-      await page.waitForURL(/\/actions\/follows\//, { waitUntil: "load" });
+      await page.waitForURL(/\/actions\/follows\//, {
+        waitUntil: "load",
+        timeout: 15000,
+      });
+      await page.waitForFunction(
+        () => document.querySelector("[data-dioxus-id]") !== null,
+      );
 
       const followBtn = page.getByRole("button", { name: "Follow" }).first();
-      await expect(followBtn).toBeVisible();
+      await expect(followBtn).toBeVisible({ timeout: 10000 });
       await followBtn.click();
       await page.waitForLoadState("load");
     } finally {
@@ -508,23 +540,54 @@ test.describe.serial("Space with actions created by a team", () => {
 
     try {
       await goto(page, spaceUrl + "/actions");
+
+      // Wait for the quiz action card to be visible before clicking
+      await expect(
+        page.getByText("Team Quiz: Protocol Knowledge Check", { exact: true }),
+      ).toBeVisible({ timeout: 10000 });
       await click(page, { text: "Team Quiz: Protocol Knowledge Check" });
-      await page.waitForURL(/\/actions\/quizzes\//, { waitUntil: "load" });
+      await page.waitForURL(/\/actions\/quizzes\//, {
+        waitUntil: "load",
+        timeout: 15000,
+      });
+      // Wait for Dioxus hydration on the quiz page
+      await page.waitForFunction(
+        () => document.querySelector("[data-dioxus-id]") !== null,
+      );
+
+      // Wait for quiz overview to fully load (data-testid on the overview)
+      await expect(page.getByTestId("quiz-read-overview")).toBeVisible({
+        timeout: 10000,
+      });
 
       // Overview page → click Next to start
       await click(page, { testId: "quiz-read-next" });
 
+      // Wait for quiz step to be visible before interacting with questions
+      await expect(page.getByTestId("quiz-read-quiz")).toBeVisible({
+        timeout: 10000,
+      });
+
       // Q1 (Single Choice): Select "To enable collective decision-making"
+      await expect(
+        page.getByText("To enable collective decision-making", { exact: true }),
+      ).toBeVisible({ timeout: 10000 });
       await click(page, { text: "To enable collective decision-making" });
       // Auto-advances to Q2 after single-choice selection
 
-      // Q2 (Multiple Choice): Select "Transparency" and "Community participation"
+      // Q2 (Multiple Choice): Wait for options to appear, then select
+      await expect(
+        page.getByText("Transparency", { exact: true }),
+      ).toBeVisible({ timeout: 10000 });
       await click(page, { text: "Transparency" });
       await click(page, { text: "Community participation" });
 
-      // Submit quiz
+      // Submit quiz and wait for navigation back to actions page
       await click(page, { text: "Submit" });
-      await page.waitForLoadState("load");
+      await page.waitForURL(/\/actions(?:\/)?$/, {
+        waitUntil: "load",
+        timeout: 15000,
+      });
     } finally {
       await context.close();
     }
@@ -540,20 +603,52 @@ test.describe.serial("Space with actions created by a team", () => {
 
     try {
       await goto(page, spaceUrl + "/actions");
+
+      // Wait for the quiz action card to be visible before clicking
+      await expect(
+        page.getByText("Team Quiz: Protocol Knowledge Check", { exact: true }),
+      ).toBeVisible({ timeout: 10000 });
       await click(page, { text: "Team Quiz: Protocol Knowledge Check" });
-      await page.waitForURL(/\/actions\/quizzes\//, { waitUntil: "load" });
+      await page.waitForURL(/\/actions\/quizzes\//, {
+        waitUntil: "load",
+        timeout: 15000,
+      });
+      // Wait for Dioxus hydration on the quiz page
+      await page.waitForFunction(
+        () => document.querySelector("[data-dioxus-id]") !== null,
+      );
+
+      // Wait for quiz overview to fully load
+      await expect(page.getByTestId("quiz-read-overview")).toBeVisible({
+        timeout: 10000,
+      });
 
       await click(page, { testId: "quiz-read-next" });
 
+      // Wait for quiz step to be visible
+      await expect(page.getByTestId("quiz-read-quiz")).toBeVisible({
+        timeout: 10000,
+      });
+
       // Q1: Select "To enable collective decision-making"
+      await expect(
+        page.getByText("To enable collective decision-making", { exact: true }),
+      ).toBeVisible({ timeout: 10000 });
       await click(page, { text: "To enable collective decision-making" });
 
-      // Q2: Select "Transparency" and "Community participation"
+      // Q2: Wait for options, then select
+      await expect(
+        page.getByText("Transparency", { exact: true }),
+      ).toBeVisible({ timeout: 10000 });
       await click(page, { text: "Transparency" });
       await click(page, { text: "Community participation" });
 
+      // Submit quiz and wait for navigation back to actions page
       await click(page, { text: "Submit" });
-      await page.waitForLoadState("load");
+      await page.waitForURL(/\/actions(?:\/)?$/, {
+        waitUntil: "load",
+        timeout: 15000,
+      });
     } finally {
       await context.close();
     }
@@ -806,10 +901,22 @@ test.describe.serial("Space with actions created by a team", () => {
 
     try {
       await goto(page, spaceUrl + "/actions");
+      await expect(
+        page.getByText("Final Survey: Space Experience", { exact: true }),
+      ).toBeVisible({ timeout: 10000 });
       await click(page, { text: "Final Survey: Space Experience" });
-      await page.waitForURL(/\/actions\/polls\//, { waitUntil: "load" });
+      await page.waitForURL(/\/actions\/polls\//, {
+        waitUntil: "load",
+        timeout: 15000,
+      });
+      await page.waitForFunction(
+        () => document.querySelector("[data-dioxus-id]") !== null,
+      );
 
-      // Answer the question
+      // Wait for poll option to be visible, then answer
+      await expect(
+        page.getByText("Excellent", { exact: true }),
+      ).toBeVisible({ timeout: 10000 });
       await click(page, { text: "Excellent" });
       await click(page, { text: "Submit" });
       await page.waitForLoadState("load");
@@ -828,10 +935,22 @@ test.describe.serial("Space with actions created by a team", () => {
 
     try {
       await goto(page, spaceUrl + "/actions");
+      await expect(
+        page.getByText("Final Survey: Space Experience", { exact: true }),
+      ).toBeVisible({ timeout: 10000 });
       await click(page, { text: "Final Survey: Space Experience" });
-      await page.waitForURL(/\/actions\/polls\//, { waitUntil: "load" });
+      await page.waitForURL(/\/actions\/polls\//, {
+        waitUntil: "load",
+        timeout: 15000,
+      });
+      await page.waitForFunction(
+        () => document.querySelector("[data-dioxus-id]") !== null,
+      );
 
-      // Answer the question
+      // Wait for poll option to be visible, then answer
+      await expect(page.getByText("Good", { exact: true })).toBeVisible({
+        timeout: 10000,
+      });
       await click(page, { text: "Good" });
       await click(page, { text: "Submit" });
       await page.waitForLoadState("load");
