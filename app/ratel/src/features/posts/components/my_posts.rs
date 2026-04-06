@@ -62,16 +62,6 @@ pub fn TeamPosts(teamname: String) -> Element {
 
     let items = v.items();
 
-    if v.is_base_loading() {
-        return rsx! {
-            div { class: "flex flex-col gap-5 w-full py-4",
-                for _ in 0..3 {
-                    crate::common::components::Skeleton { class: "h-24 w-full rounded-xl" }
-                }
-            }
-        };
-    }
-
     if items.is_empty() {
         return rsx! {
             div { class: "flex flex-row justify-start items-center w-full text-base font-medium text-gray-500 border border-gray-500 h-fit px-[16px] py-[20px] rounded-[8px]",
