@@ -52,7 +52,7 @@ jobs:
           components: clippy, rustfmt
           toolchain: stable
           target: wasm32-unknown-unknown
-          cache: false
+          save-if: ${{ github.ref == 'refs/heads/dev' }}
 
       - uses: cargo-bins/cargo-binstall@main
       - name: Install system dependencies
@@ -91,21 +91,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Restore build cache
-        uses: actions/cache/restore@v4
-        with:
-          key: app-shell-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}-${{ github.run_id }}
-          restore-keys: |
-            app-shell-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
-          path: |
-            target
-
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
           toolchain: stable
           target: wasm32-unknown-unknown
-          cache: false
+          save-if: ${{ github.ref == 'refs/heads/dev' }}
 
       - uses: cargo-bins/cargo-binstall@main
       - name: Install system dependencies
@@ -171,7 +162,8 @@ jobs:
         with:
           components: clippy, rustfmt
           toolchain: stable
-          cache: false
+          target: wasm32-unknown-unknown
+          save-if: ${{ github.ref == 'refs/heads/dev' }}
 
       - uses: cargo-bins/cargo-binstall@main
       - name: Install system dependencies
