@@ -30,7 +30,7 @@ pub struct SpaceQuizAttempt {
 impl SpaceQuizAttempt {
     pub fn new(
         quiz_id: SpaceQuizEntityType,
-        author: crate::common::models::space::SpaceAuthor,
+        author: crate::common::models::space::SpaceUser,
         answers: Vec<Answer>,
         score: i64,
     ) -> Self {

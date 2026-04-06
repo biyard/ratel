@@ -32,7 +32,7 @@ impl SpacePollUserAnswer {
         poll_sk: EntityType,
         answers: Vec<Answer>,
         respondent: Option<RespondentAttr>,
-        author: crate::common::models::space::SpaceAuthor,
+        author: crate::common::models::space::SpaceUser,
     ) -> Self {
         let user_pk = author.pk;
         let created_at = get_now_timestamp_millis();

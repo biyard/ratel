@@ -58,6 +58,10 @@ pub enum Error {
     #[translate(en = "Bad request", ko = "잘못된 요청입니다.")]
     BadRequest(String),
 
+    #[error("Username already exists")]
+    #[translate(en = "Username already exists", ko = "이미 존재하는 사용자 이름입니다.")]
+    UsernameAlreadyExists,
+
     #[error("Duplicate entry: {0}")]
     #[translate(en = "Duplicate entry", ko = "중복된 항목입니다.")]
     Duplicate(String),

@@ -295,6 +295,7 @@ pub fn SignupModal(
                             } else {
                                 username_warning.set(String::new());
                             }
+                            error_message.set(None);
                         },
                     }
                     if !username_warning().is_empty() {
@@ -407,6 +408,10 @@ pub fn SignupModal(
                                         }
                                         popup.close();
                                     }
+                                    Err(Error::UsernameAlreadyExists) => {
+                                        username_warning
+                                            .set(tr.username_already_exists.to_string());
+                                    }
                                     Err(e) => {
                                         error_message.set(Some(format!("{e}")));
                                     }
@@ -446,6 +451,9 @@ pub fn SignupModal(
                                         handler.call(());
                                     }
                                     popup.close();
+                                }
+                                Err(Error::UsernameAlreadyExists) => {
+                                    username_warning.set(tr.username_already_exists.to_string());
                                 }
                                 Err(e) => {
                                     error_message.set(Some(format!("{e}")));
@@ -606,6 +614,10 @@ translate! {
     email_already_registered: {
         en: "This email is already registered. Please use Forgot Password.",
         ko: "이미 등록된 이메일입니다. 비밀번호 찾기를 이용해주세요.",
+    },
+    username_already_exists: {
+        en: "This username already exists.",
+        ko: "이미 존재하는 유저이름입니다.",
     },
     failed_verify_code: {
         en: "Verification code is incorrect or has expired",
