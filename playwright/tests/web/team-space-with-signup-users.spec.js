@@ -49,8 +49,18 @@ async function hideFab(page) {
 /**
  * Log in as an existing user in a fresh context.
  * Returns { context, page } — caller must close context.
+ *
+ * @param {string} startUrl - URL to navigate to before login. Defaults to "/".
+ *   When the caller will later call goto() on a different URL, pass that URL
+ *   here to avoid a WASM memory-cache hang (goto's waitForResponse only fires
+ *   on the first network fetch; same-URL reloads re-fetch but cross-URL
+ *   navigations may serve WASM from memory cache with no response event).
  */
-async function loginAsExistingUser(browser, { email, password }) {
+async function loginAsExistingUser(
+  browser,
+  { email, password },
+  startUrl = "/",
+) {
   const context = await browser.newContext({
     storageState: { cookies: [], origins: [] },
     viewport: { width: 1440, height: 950 },
@@ -58,7 +68,7 @@ async function loginAsExistingUser(browser, { email, password }) {
   });
   const page = await context.newPage();
 
-  await goto(page, "/");
+  await goto(page, startUrl);
   await click(page, { label: "Sign In" });
   await waitPopup(page, { visible: true });
   await fill(page, { placeholder: "Enter your email address" }, email);
@@ -385,7 +395,11 @@ test.describe.serial("Space with actions created by a team", () => {
   // ─── 5. User2: Log in and participate ─────────────────────────────────────
 
   test("User2: Log in and participate in the space", async ({ browser }) => {
-    const { context, page } = await loginAsExistingUser(browser, user2);
+    const { context, page } = await loginAsExistingUser(
+      browser,
+      user2,
+      spaceUrl + "/dashboard",
+    );
 
     try {
       await participateAndCompletePoll(
