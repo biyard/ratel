@@ -77,7 +77,7 @@ pub async fn respond_quiz(
         return Err(SpaceActionQuizError::NoRemainingAttempts.into());
     }
     let score = calculate_score(&quiz.questions, &correct.answers, &req.answers)?;
-    let attempt = SpaceQuizAttempt::new(quiz_id.clone(), author, req.answers, score);
+    let attempt = SpaceQuizAttempt::new(quiz_id.clone(), author.clone(), req.answers, score);
     attempt.create(cli).await?;
 
     if attempts.is_empty() {
@@ -90,8 +90,8 @@ pub async fn respond_quiz(
     let already_passed = attempts.iter().any(|a| a.score >= quiz.pass_score);
     if score >= quiz.pass_score && !already_passed {
         let activity_user_pk = user.pk.clone();
-        let activity_user_name = user.display_name.clone();
-        let activity_user_avatar = user.profile_url.clone();
+        let activity_user_name = author.display_name.clone();
+        let activity_user_avatar = author.profile_url.clone();
 
         match SpaceReward::get_by_action(
             cli,

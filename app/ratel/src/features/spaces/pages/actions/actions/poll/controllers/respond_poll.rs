@@ -236,7 +236,7 @@ pub async fn respond_poll(
             poll_sk_entity.clone(),
             req.answers,
             respondent,
-            author,
+            author.clone(),
         );
         answer_record.create(cli).await?;
 
@@ -252,8 +252,8 @@ pub async fn respond_poll(
         crate::transact_write_items!(cli, vec![agg_item]).ok();
 
         let activity_user_pk = user.pk.clone();
-        let activity_user_name = user.display_name.clone();
-        let activity_user_avatar = user.profile_url.clone();
+        let activity_user_name = author.display_name.clone();
+        let activity_user_avatar = author.profile_url.clone();
 
         match SpaceReward::get_by_action(
             cli,
