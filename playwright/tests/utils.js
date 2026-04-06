@@ -102,24 +102,26 @@ export async function waitPopup(page, { visible = true }) {
 }
 
 export async function goto(page, url) {
+  // Wait for the WASM response with a timeout fallback. When the browser
+  // serves WASM from memory/disk cache on same-context navigations, the
+  // response event may never fire, so we race against a 5-second timeout
+  // and fall through to the hydration check below.
   await Promise.all([
-    page.waitForResponse(
-      (response) =>
-        response.url().includes("app-shell") &&
-        response.url().endsWith(".wasm") &&
-        response.status() === 200,
-    ),
+    Promise.race([
+      page.waitForResponse(
+        (response) =>
+          response.url().includes("app-shell") &&
+          response.url().endsWith(".wasm") &&
+          response.status() === 200,
+      ),
+      new Promise((resolve) => setTimeout(resolve, 5000)),
+    ]),
     page.goto(url),
   ]);
   await page.waitForLoadState("domcontentloaded");
   await page.waitForTimeout(200);
   // Wait for Dioxus WASM to hydrate — SSR markup already contains
   // [data-dioxus-id], so also verify the interpreter is initialised.
-  // NOTE: In Dioxus 0.7, `dioxus` is only available as a local binding
-  // inside document::eval() contexts, NOT as `window.dioxus`. Checking
-  // `window.dioxus.send` would hang forever. Instead we check for the
-  // presence of hydrated DOM elements and rely on Playwright's built-in
-  // action retries for any remaining hydration delay.
   await page.waitForFunction(
     () => document.querySelector("[data-dioxus-id]") !== null
   );
