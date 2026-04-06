@@ -12,6 +12,15 @@ export interface EcsClusterStackProps extends StackProps {
   stage: string;
 }
 
+/**
+ * Per-stage ECS infrastructure: the ECS cluster and the CloudMap private DNS
+ * namespace. Each stage (dev/prod) gets its own namespace (e.g.
+ * `ratel-dev-svc.local`, `ratel-prod-svc.local`).
+ *
+ * VPC-wide resources (shared SG, DynamoDB gateway endpoint, Bedrock interface
+ * endpoint) live in `VpcEndpointStack` because they can only exist once per
+ * VPC and must be shared across stages.
+ */
 export class EcsClusterStack extends Stack {
   public readonly cluster: ecs.Cluster;
   public readonly vpc: ec2.IVpc;
@@ -23,9 +32,13 @@ export class EcsClusterStack extends Stack {
     this.vpc = ec2.Vpc.fromLookup(this, "Vpc", { isDefault: true });
     this.cluster = new ecs.Cluster(this, "Cluster", { vpc: this.vpc });
 
-    this.namespace = new sd.PrivateDnsNamespace(this, `${props.stage}-Namespace`, {
-      name: `ratel-${props.stage}-svc.local`,
-      vpc: this.vpc,
-    });
+    this.namespace = new sd.PrivateDnsNamespace(
+      this,
+      `${props.stage}-Namespace`,
+      {
+        name: `ratel-${props.stage}-svc.local`,
+        vpc: this.vpc,
+      },
+    );
   }
 }

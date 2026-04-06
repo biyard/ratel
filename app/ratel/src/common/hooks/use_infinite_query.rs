@@ -1,5 +1,4 @@
 use crate::*;
-use dioxus::fullstack::{Loading, Transportable};
 use serde::de::DeserializeOwned;
 
 use crate::common::{
@@ -17,10 +16,12 @@ where
     next_bookmark: Signal<Option<Bookmark>>,
     accumulated: Signal<Vec<I>>,
     has_more: Memo<bool>,
-    rsc: Resource<Result<T>>,
+    rsc: Loader<T>,
     effect: Effect,
     loading: Signal<bool>,
     key: u64,
+    has_paginated: Signal<bool>,
+    base_loading: Signal<bool>,
 }
 
 // Manual Clone/Copy impls: all fields (Signal, Memo, Resource, Effect, u64) are
@@ -72,11 +73,26 @@ where
         self.accumulated.set(new_items);
     }
 
-    pub fn restart(&mut self) {
+    /// Reload with the same key, preserving accumulated items until new data arrives.
+    /// Use after mutations (add/delete/update) where the query key has not changed.
+    pub fn refresh(&mut self) {
         self.bookmark.set(None);
         self.next_bookmark.set(None);
-        self.accumulated.set(Vec::new());
+        self.has_paginated.set(false);
         self.rsc.restart();
+    }
+
+    /// Restart with a new key. Clears accumulated items immediately and sets
+    /// `is_base_loading()` until the first page resolves.
+    /// Use when a query parameter (username, category, etc.) has changed.
+    pub fn restart(&mut self) {
+        self.accumulated.set(vec![]);
+        self.base_loading.set(true);
+        self.refresh();
+    }
+
+    pub fn is_base_loading(&self) -> bool {
+        *self.base_loading.read()
     }
 
     pub fn has_more(&self) -> bool {
@@ -193,26 +209,29 @@ where
 {
     let bookmark: Signal<Option<Bookmark>> = use_signal(move || None);
 
-    let rsc = use_server_future(move || async move { future(None).await })?;
-    let val = rsc.read();
-    let res = val.as_ref().unwrap().as_ref().unwrap();
-    let mut next_bookmark: Signal<Option<Bookmark>> = use_signal(move || res.bookmark());
-    let mut accumulated: Signal<Vec<I>> = use_signal(move || res.items().clone());
+    let rsc = use_loader(move || async move { future(None).await })?;
+    let mut next_bookmark: Signal<Option<Bookmark>> = use_signal(move || rsc().bookmark());
+    let mut accumulated: Signal<Vec<I>> = use_signal(move || rsc().items().clone());
     let has_more = use_memo(move || next_bookmark().is_some());
     let mut loading = use_signal(|| false);
+    let mut has_paginated = use_signal(|| false);
+    let mut base_loading = use_signal(|| false);
     let key = use_server_cached(|| {
         use rand::RngExt;
         rand::rng().random::<u64>()
     });
 
-    let rsc_sync = rsc.clone();
-    let mut accumulated_sync = accumulated.clone();
-    let mut next_bookmark_sync = next_bookmark.clone();
+    // When rsc resolves with new data (e.g. after restart()) and we are not
+    // in a paginated state, sync the base page back into accumulated.
+    // Reading rsc() first ensures we re-run whenever rsc resolves.
     let _sync_effect = use_effect(move || {
-        if let Some(Ok(res)) = rsc_sync.read().as_ref() {
-            accumulated_sync.set(res.items().clone());
-            next_bookmark_sync.set(res.bookmark());
+        let res = rsc();
+        if has_paginated() {
+            return;
         }
+        next_bookmark.set(res.bookmark());
+        accumulated.set(res.items().clone());
+        base_loading.set(false);
     });
 
     let effect = use_effect(move || {
@@ -223,6 +242,8 @@ where
         }
 
         spawn(async move {
+            has_paginated.set(true);
+            loading.set(true);
             let res = match future(nb.clone()).await {
                 Ok(ret) => {
                     let next = ret.bookmark();
@@ -267,5 +288,7 @@ where
         effect,
         loading,
         key,
+        has_paginated,
+        base_loading,
     })
 }

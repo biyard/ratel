@@ -2,8 +2,12 @@ use crate::features::spaces::pages::actions::actions::poll::*;
 use crate::features::spaces::pages::actions::models::SpaceAction;
 use crate::features::spaces::space_common::models::aggregate::DashboardAggregate;
 
+#[mcp_tool(name = "create_poll", description = "Create a new poll action in a space. Requires creator role.")]
 #[post("/api/spaces/{space_pk}/polls", role: SpaceUserRole)]
-pub async fn create_poll(space_pk: SpacePartition) -> Result<PollResponse> {
+pub async fn create_poll(
+    #[mcp(description = "Space partition key")]
+    space_pk: SpacePartition,
+) -> Result<PollResponse> {
     SpacePoll::can_edit(&role)?;
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();

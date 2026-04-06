@@ -1,12 +1,16 @@
 use super::super::*;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct McpSecretResponse {
+    /// The raw token (only present immediately after generate/regenerate).
     pub secret: Option<String>,
+    /// Whether a secret has been generated for this user.
+    pub has_secret: bool,
 }
 
-/// Get the current MCP client secret for the logged-in user, if one exists.
+/// Check whether the logged-in user has an MCP client secret.
+/// The raw token is NOT returned here (it's only available at generation time).
 #[get("/api/me/mcp-secret", user: crate::features::auth::User)]
 pub async fn get_mcp_secret_handler() -> Result<McpSecretResponse> {
     let conf = crate::common::config::ServerConfig::default();
@@ -20,7 +24,8 @@ pub async fn get_mcp_secret_handler() -> Result<McpSecretResponse> {
     .await?;
 
     Ok(McpSecretResponse {
-        secret: existing.map(|s| s.secret),
+        secret: None,
+        has_secret: existing.is_some(),
     })
 }
 
@@ -58,5 +63,6 @@ pub async fn regenerate_mcp_secret_handler() -> Result<McpSecretResponse> {
 
     Ok(McpSecretResponse {
         secret: Some(raw_token),
+        has_secret: true,
     })
 }

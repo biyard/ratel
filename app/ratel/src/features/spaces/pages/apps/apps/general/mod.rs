@@ -1,4 +1,4 @@
-mod controllers;
+pub(crate) mod controllers;
 mod i18n;
 mod views;
 

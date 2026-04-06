@@ -38,7 +38,7 @@ pub fn ChoiceOptionRow(props: ChoiceOptionRowProps) -> Element {
             {leading}
             Input {
                 variant: InputVariant::Plain,
-                class: "flex-1 w-full h-11 px-3 rounded-lg border bg-choice-editor-field-bg border-choice-editor-field-border text-sm text-choice-editor-field-text placeholder:text-choice-editor-field-placeholder focus:border-primary focus-visible:border-primary focus-visible:ring-0",
+                class: "flex-1 w-full h-11 px-3 rounded-lg border bg-choice-editor-field-bg border-choice-editor-field-border text-sm text-choice-editor-field-text placeholder:text-muted-foreground focus:border-primary focus-visible:border-primary focus-visible:ring-0",
                 value: value.clone(),
                 placeholder,
                 oninput: move |evt: Event<FormData>| on_change.call(evt.value()),
@@ -182,7 +182,7 @@ pub fn ChoiceQuestionEditor(
     rsx! {
         Input {
             variant: InputVariant::Plain,
-            class: "w-full h-11 px-3 rounded-lg border bg-choice-editor-field-bg border-choice-editor-field-border text-sm text-choice-editor-field-text placeholder:text-choice-editor-field-placeholder focus:border-primary focus-visible:border-primary focus-visible:ring-0",
+            class: "w-full h-11 px-3 rounded-lg border bg-choice-editor-field-bg border-choice-editor-field-border text-sm text-choice-editor-field-text placeholder:text-muted-foreground focus:border-primary focus-visible:border-primary focus-visible:ring-0",
             placeholder: "Input",
             value: q.title.clone(),
             oninput: move |evt: Event<FormData>| {

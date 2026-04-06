@@ -4,10 +4,12 @@ use crate::features::spaces::pages::actions::actions::quiz::*;
 use crate::features::spaces::space_common::models::space_reward::SpaceReward;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct RespondQuizRequest {
     pub answers: Vec<Answer>,
 }
 
+#[mcp_tool(name = "respond_quiz", description = "Submit answers to a quiz. Requires participant role. Returns score.")]
 #[post(
     "/api/spaces/{space_pk}/quizzes/{quiz_id}/respond",
     role: SpaceUserRole,
@@ -16,8 +18,11 @@ pub struct RespondQuizRequest {
     space: SpaceCommon
 )]
 pub async fn respond_quiz(
+    #[mcp(description = "Space partition key")]
     space_pk: SpacePartition,
+    #[mcp(description = "Quiz sort key (e.g. 'SpaceQuiz#<uuid>')")]
     quiz_id: SpaceQuizEntityType,
+    #[mcp(description = "Quiz answers. Each answer: {\"answer_type\": \"single_choice\", \"answer\": <index>} or {\"answer_type\": \"multiple_choice\", \"answer\": [<indices>]}")]
     req: RespondQuizRequest,
 ) -> Result<()> {
     let common_config = crate::common::CommonConfig::default();
@@ -84,6 +89,10 @@ pub async fn respond_quiz(
 
     let already_passed = attempts.iter().any(|a| a.score >= quiz.pass_score);
     if score >= quiz.pass_score && !already_passed {
+        let activity_user_pk = user.pk.clone();
+        let activity_user_name = user.display_name.clone();
+        let activity_user_avatar = user.profile_url.clone();
+
         match SpaceReward::get_by_action(
             cli,
             space_id.clone(),
@@ -112,6 +121,28 @@ pub async fn respond_quiz(
                     error = %e,
                     "SpaceReward not found for quiz action"
                 );
+            }
+        }
+
+        {
+            if let Err(e) = crate::features::activity::controllers::record_activity(
+                cli,
+                space_id.clone(),
+                crate::features::activity::types::AuthorPartition::from(activity_user_pk),
+                quiz_action_id.clone(),
+                crate::features::spaces::pages::actions::types::SpaceActionType::Quiz,
+                space_action.activity_score,
+                space_action.additional_score,
+                crate::features::activity::types::SpaceActivityData::Quiz {
+                    quiz_id: quiz_id.to_string(),
+                    passed: true,
+                    correct_count: score as u32,
+                    pass_threshold: quiz.pass_score as u32,
+                },
+                activity_user_name,
+                activity_user_avatar,
+            ).await {
+                tracing::error!(error = %e, "Failed to record quiz activity");
             }
         }
     }

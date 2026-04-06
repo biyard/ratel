@@ -35,7 +35,6 @@ bigdecimal = "0.4.7"
 serde = { version = "1.0", features = ["derive"] }
 serde_repr = "0.1.19"
 serde_json = "1.0"
-dto = { path = "./packages/dto" }
 sqlx = { version = "0.8.3", features = [
   "bigdecimal",
   "postgres",
@@ -60,11 +59,13 @@ aide = { version = "0.15", git = "https://github.com/tamasfe/aide.git", features
   "scalar",
   "swagger",
 ] }
-axum = { version = "0.8.1", features = ["macros"] }
+axum = { version = "0.8.5", features = ["macros"] }
 async-trait = "0.1.81"
 
 aws-sdk-bedrockruntime = "1"
 aws-sdk-dynamodb = "1.92.0"
+aws-sdk-dynamodbstreams = "1"
+qdrant-client = "1"
 serde_dynamo = { version = "4.2.14", features = ["aws-sdk-dynamodb+1"] }
 thiserror = "2.0.16"
 uuid = { version = "1.10.1", features = ["v7"] }

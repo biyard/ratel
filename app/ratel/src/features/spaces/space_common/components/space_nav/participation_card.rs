@@ -138,10 +138,10 @@ pub fn ParticipationCard(
             div { class: "flex flex-col gap-2.5 items-start py-4 px-3 w-full border rounded-[12px] border-primary bg-primary/5",
                 div { class: "flex flex-col gap-2.5 items-start w-full",
                     div { class: "flex flex-col gap-1 items-start w-full",
-                        p { class: "w-full font-bold text-white font-raleway text-[15px]/[18px] tracking-[-0.16px]",
+                        p { class: "w-full font-bold text-text-primary font-raleway text-[15px]/[18px] tracking-[-0.16px]",
                             {tr.title}
                         }
-                        p { class: "w-full font-medium text-gray-300 font-raleway text-[13px]/[20px]",
+                        p { class: "w-full font-medium text-text-secondary font-raleway text-[13px]/[20px]",
                             {tr.description}
                         }
                     }
@@ -203,12 +203,12 @@ fn ParticipationRequirementTag(kind: ParticipationTag, label: String) -> Element
         ParticipationTag::Warning => (
             "border-red-500 bg-red-500/5",
             "border-red-500 text-red-500",
-            "text-white",
+            "text-text-primary",
         ),
         ParticipationTag::Success => (
             "border-green-500 bg-green-500/5",
             "border-green-500 text-green-500",
-            "text-white",
+            "text-text-primary",
         ),
     };
 

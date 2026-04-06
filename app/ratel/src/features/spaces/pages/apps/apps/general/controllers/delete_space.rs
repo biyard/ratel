@@ -7,8 +7,12 @@ pub struct DeleteSpaceResponse {
     pub message: String,
 }
 
+#[mcp_tool(name = "delete_space", description = "Delete a space and unlink its post. Requires creator role.")]
 #[delete("/api/spaces/{space_id}/settings", role: SpaceUserRole)]
-pub async fn delete_space(space_id: SpacePartition) -> crate::common::Result<DeleteSpaceResponse> {
+pub async fn delete_space(
+    #[mcp(description = "Space partition key")]
+    space_id: SpacePartition,
+) -> crate::common::Result<DeleteSpaceResponse> {
     use crate::common::models::space::SpaceCommon;
     use crate::common::types::{EntityType, Partition};
     use crate::features::posts::models::Post;

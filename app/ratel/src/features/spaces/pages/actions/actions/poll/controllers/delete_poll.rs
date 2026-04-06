@@ -1,8 +1,14 @@
 use crate::features::spaces::pages::actions::actions::poll::*;
 use crate::features::spaces::space_common::models::aggregate::DashboardAggregate;
 
+#[mcp_tool(name = "delete_poll", description = "Delete a poll from a space. Requires creator role.")]
 #[delete("/api/spaces/{space_pk}/polls/{poll_sk}", role: SpaceUserRole)]
-pub async fn delete_poll(space_pk: SpacePartition, poll_sk: SpacePollEntityType) -> Result<String> {
+pub async fn delete_poll(
+    #[mcp(description = "Space partition key")]
+    space_pk: SpacePartition,
+    #[mcp(description = "Poll sort key (e.g. 'SpacePoll#<uuid>')")]
+    poll_sk: SpacePollEntityType,
+) -> Result<String> {
     SpacePoll::can_edit(&role)?;
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();

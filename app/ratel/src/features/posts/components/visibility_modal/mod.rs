@@ -116,7 +116,7 @@ pub fn VisibilityModal(
                         selected.set(Visibility::Private);
                     },
                     div { class: "flex justify-center items-center w-10 h-10 rounded-full bg-primary/15 shrink-0",
-                        icons::security::Lock1 { class: "w-5 h-5 [&>path]:stroke-primary [&>rect]:stroke-primary [&>circle]:stroke-primary" }
+                        icons::security::Lock1 { class: "w-5 h-5 [&>path]:stroke-primary [&>path]:fill-none [&>rect]:stroke-primary [&>rect]:fill-none [&>circle]:stroke-primary [&>circle]:fill-none" }
                     }
                     div { class: "flex flex-col gap-0.5 items-start",
                         span { class: "text-sm font-semibold text-text-primary", "{tr.private_label}" }

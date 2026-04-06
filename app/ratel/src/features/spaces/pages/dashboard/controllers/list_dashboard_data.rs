@@ -93,5 +93,33 @@ pub async fn list_dashboard_data_handler(
     //     }));
     // }
 
+    {
+        use crate::features::activity::models::SpaceScore;
+        use crate::features::spaces::space_common::types::dashboard::*;
+
+        let score_opts = SpaceScore::opt().limit(50);
+
+        if let Ok((scores, _)) = SpaceScore::find_by_space(cli, &space_pk, score_opts).await {
+            if !scores.is_empty() {
+                let entries: Vec<RankingEntry> = scores
+                    .iter()
+                    .enumerate()
+                    .map(|(i, score)| RankingEntry {
+                        rank: (i as u32) + 1,
+                        name: score.user_name.clone(),
+                        avatar: score.user_avatar.clone(),
+                        score: score.total_score as f64,
+                        change: 0,
+                    })
+                    .collect();
+
+                components.push(DashboardComponentData::RankingTable(RankingTableData {
+                    entries,
+                    page_size: 10,
+                }));
+            }
+        }
+    }
+
     Ok(components)
 }

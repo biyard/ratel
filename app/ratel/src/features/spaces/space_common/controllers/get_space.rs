@@ -5,8 +5,12 @@ use crate::features::posts::models::Post;
 use crate::features::posts::types::{BoosterType, SpaceType};
 use crate::spaces::{InvitationStatus, SpaceInvitationMember};
 
+#[mcp_tool(name = "get_space", description = "Get space details by ID, including status, visibility, participation info.")]
 #[get("/api/spaces/{space_id}", user: OptionalUser)]
-pub async fn get_space(space_id: SpacePartition) -> Result<SpaceResponse> {
+pub async fn get_space(
+    #[mcp(description = "Space partition key (e.g. 'SPACE#<uuid>' or '<uuid>')")]
+    space_id: SpacePartition,
+) -> Result<SpaceResponse> {
     let config = crate::features::spaces::space_common::config::get();
     let dynamo = config.common.dynamodb();
 
@@ -64,6 +68,15 @@ pub async fn get_space(space_id: SpacePartition) -> Result<SpaceResponse> {
             (false, None, None, None)
         };
 
+    // Check if any action has prerequisite flag
+    let has_prerequisite = {
+        use crate::features::spaces::pages::actions::models::SpaceAction;
+        let opt = SpaceAction::opt_all();
+        let (actions, _) = SpaceAction::find_by_space(dynamo, space_pk_partition.clone(), opt).await
+            .unwrap_or_default();
+        actions.iter().any(|a| a.prerequisite)
+    };
+
     Ok(SpaceResponse {
         id: space.pk.clone().into(),
         post_id: post_pk.into(),
@@ -107,6 +120,7 @@ pub async fn get_space(space_id: SpacePartition) -> Result<SpaceResponse> {
         quota: space.quota,
         is_report: false,
         logo: space.logo,
+        has_prerequisite,
     })
 }
 
@@ -152,6 +166,8 @@ pub struct SpaceResponse {
     pub is_report: bool,
     #[serde(default)]
     pub logo: String,
+    #[serde(default)]
+    pub has_prerequisite: bool,
 }
 
 impl SpaceResponse {

@@ -1,7 +1,11 @@
 use crate::features::spaces::pages::actions::actions::discussion::*;
 
+#[mcp_tool(name = "create_discussion", description = "Create a new discussion in a space.")]
 #[post("/api/spaces/{space_id}/discussions", role: SpaceUserRole, author: crate::common::models::space::SpaceAuthor)]
-pub async fn create_discussion(space_id: SpacePartition) -> Result<SpacePost> {
+pub async fn create_discussion(
+    #[mcp(description = "Space partition key (e.g. 'SPACE#<uuid>')")]
+    space_id: SpacePartition,
+) -> Result<SpacePost> {
     SpacePost::can_edit(&role)?;
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();

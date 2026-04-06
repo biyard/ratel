@@ -2,6 +2,7 @@ use crate::common::*;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use crate::features::social::pages::setting::i18n::TeamSettingsTranslate;
 use crate::features::social::*;
+use super::SettingsSaveContext;
 
 #[component]
 pub fn TeamSettingLayout(username: String) -> Element {
@@ -22,6 +23,24 @@ pub fn TeamSettingLayout(username: String) -> Element {
         }
     });
 
+    // Provide save context so child pages can hook into the header Save button
+    let mut save_ctx = use_context_provider(|| SettingsSaveContext {
+        save_trigger: Signal::new(0u64),
+        is_saving: Signal::new(false),
+    });
+
+    let current_route = use_route::<Route>();
+    let is_general_settings = matches!(current_route, Route::TeamSetting { .. });
+
+    // Check if user has edit permission (for showing Save button)
+    let can_edit = {
+        let teams = team_ctx.teams.read();
+        teams.iter().find(|t| t.username == username).map_or(false, |t| {
+            t.has_permission(TeamGroupPermission::TeamAdmin)
+                || t.has_permission(TeamGroupPermission::TeamEdit)
+        })
+    };
+
     rsx! {
         div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-team-bg text-text-primary",
             div { class: "hidden tablet:flex",
@@ -31,6 +50,17 @@ pub fn TeamSettingLayout(username: String) -> Element {
                 // Top header bar
                 div { class: "flex items-center shrink-0 px-6 py-4 border-b border-border",
                     span { class: "text-base font-bold text-text-primary", "Settings" }
+                    if is_general_settings && can_edit {
+                        Button {
+                            size: ButtonSize::Medium,
+                            style: ButtonStyle::Primary,
+                            loading: (save_ctx.is_saving)(),
+                            onclick: move |_| {
+                                *(save_ctx.save_trigger).write() += 1;
+                            },
+                            "Save"
+                        }
+                    }
                 }
                 div { class: "flex overflow-auto flex-1 justify-center px-6 py-8",
                     div { class: "w-full max-w-2xl",

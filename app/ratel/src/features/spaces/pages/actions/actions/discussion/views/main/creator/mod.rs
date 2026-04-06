@@ -1,5 +1,5 @@
 use crate::features::spaces::pages::actions::actions::discussion::*;
-use crate::features::spaces::pages::actions::ActionCommonSettings;
+use crate::features::spaces::pages::actions::{ActionCommonSettings, ActionDeleteButton};
 mod i18n;
 mod overview_tab;
 pub use i18n::DiscussionCreatorTranslate;
@@ -28,34 +28,44 @@ pub fn CreatorMain(
                     OverviewTab {}
                 }
                 TabContent { index: 1usize, value: "setting-tab",
-                    ActionCommonSettings {
-                        space_id,
-                        action_id: discussion_id().to_string(),
-                        action_setting: ctx.discussion().space_action,
-                        on_date_change: move |range: DateTimeRange| async move {
-                            let space_id = space_id();
-                            let discussion_id = discussion_id();
-                            if let (Some(start_date), Some(end_date)) = (range.start_date, range.end_date) {
-                                let started_at = date_time_to_millis(
-                                    start_date,
-                                    range.start_hour,
-                                    range.start_minute,
-                                );
-                                let ended_at = date_time_to_millis(
-                                    end_date,
-                                    range.end_hour,
-                                    range.end_minute,
-                                );
-                                let req = UpdateDiscussionRequest {
-                                    title: None,
-                                    html_contents: None,
-                                    category_name: None,
-                                    started_at: Some(started_at),
-                                    ended_at: Some(ended_at),
-                                };
-                                let _ = update_discussion(space_id, discussion_id, req).await;
-                            }
-                        },
+                    div { class: "flex flex-col gap-5 w-full",
+                        ActionCommonSettings {
+                            space_id,
+                            action_id: discussion_id().to_string(),
+                            action_setting: ctx.discussion().space_action,
+                            on_date_change: move |range: DateTimeRange| async move {
+                                let space_id = space_id();
+                                let discussion_id = discussion_id();
+                                if let (Some(start_date), Some(end_date)) = (range.start_date, range.end_date) {
+                                    let started_at = date_time_to_millis(
+                                        start_date,
+                                        range.start_hour,
+                                        range.start_minute,
+                                    );
+                                    let ended_at = date_time_to_millis(
+                                        end_date,
+                                        range.end_hour,
+                                        range.end_minute,
+                                    );
+                                    let req = UpdateDiscussionRequest {
+                                        title: None,
+                                        html_contents: None,
+                                        category_name: None,
+                                        started_at: Some(started_at),
+                                        ended_at: Some(ended_at),
+                                    };
+                                    let _ = update_discussion(space_id, discussion_id, req).await;
+                                }
+                            },
+                        }
+                        crate::features::ai_moderator::AiModeratorSetting {
+                            space_id,
+                            discussion_id: use_memo(move || SpaceDiscussionEntityType(discussion_id().to_string())),
+                        }
+                        ActionDeleteButton {
+                            space_id: space_id(),
+                            action_id: discussion_id().to_string(),
+                        }
                     }
                 }
             }
@@ -64,7 +74,5 @@ pub fn CreatorMain(
 }
 
 fn date_time_to_millis(date: time::Date, hour: u8, minute: u8) -> i64 {
-    let datetime = date.with_hms(hour, minute, 0).expect("valid time");
-    let offset_datetime = datetime.assume_utc();
-    (offset_datetime.unix_timestamp()) * 1000
+    crate::common::utils::time::kst_date_time_to_utc_millis(date, hour, minute)
 }

@@ -133,7 +133,7 @@ pub fn InviteParticipant() -> Element {
                                 Ok(_) => {
                                     invited_emails.set(vec![]);
                                     email_input.set(String::new());
-                                    invitations_query.restart();
+                                    invitations_query.refresh();
                                     toast.info(tr.participants_invited_successfully);
                                 }
                                 Err(err) => {
@@ -189,7 +189,7 @@ pub fn InviteParticipant() -> Element {
                                         space_id: space().id,
                                         item,
                                         on_deleted: move |_| {
-                                            invitations_query.restart();
+                                            invitations_query.refresh();
                                         },
                                     }
                                 }

@@ -1,8 +1,9 @@
-use axum::Router;
 use crate::common::aws_sdk_dynamodb;
+use crate::common::mcp::mcp_router;
 use crate::common::models::auth::User;
 use crate::common::types::UserType;
 use crate::common::utils::password::hash_password;
+use axum::Router;
 
 use crate::App;
 
@@ -27,8 +28,10 @@ impl TestContext {
             config.common.env.to_string(),
         );
 
-        let dioxus_router = dioxus::server::router(App);
+        let mcp_router = crate::common::mcp::mcp_router();
+        let dioxus_router = dioxus::server::router(App).merge(mcp_router);
         let app = dioxus_router.layer(session_layer);
+        crate::common::mcp::set_app_router(app.clone());
 
         let ddb = cli.clone();
         let test_user = create_user_session(app.clone(), &ddb).await;

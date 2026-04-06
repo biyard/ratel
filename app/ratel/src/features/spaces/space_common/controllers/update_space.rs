@@ -1,16 +1,17 @@
 #[cfg(feature = "server")]
-use crate::features::spaces::space_common::models::SpaceInvitationMember;
-use crate::features::spaces::space_common::*;
+use crate::common::models::space::SpaceCommon;
 #[cfg(feature = "server")]
 use crate::common::SpaceUserRole;
-#[cfg(feature = "server")]
-use crate::common::models::space::SpaceCommon;
 #[cfg(feature = "server")]
 use crate::features::posts::models::Post;
 #[cfg(feature = "server")]
 use crate::features::posts::types::PostStatus;
+#[cfg(feature = "server")]
+use crate::features::spaces::space_common::models::SpaceInvitationMember;
+use crate::features::spaces::space_common::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum UpdateSpaceRequest {
     Publish {
@@ -89,9 +90,12 @@ impl From<SpaceCommon> for UpdateSpaceResponse {
     }
 }
 
+#[mcp_tool(name = "update_space", description = "Update a space (publish, change visibility, content, title, start, finish, quota, etc.). Requires creator role.")]
 #[patch("/api/spaces/{space_id}", role: SpaceUserRole, space: SpaceCommon)]
 pub async fn update_space(
+    #[mcp(description = "Space partition key")]
     space_id: SpacePartition,
+    #[mcp(description = "Update data as JSON. Supported variants: {\"visibility\": \"Public\"}, {\"anonymous_participation\": true}, {\"join_anytime\": true}, {\"start\": true}, {\"finished\": true}, {\"quotas\": 100}, {\"title\": \"...\"}, {\"content\": \"...\"}, {\"publish\": true, \"visibility\": \"Public\"}, {\"logo\": \"url\"}")]
     req: UpdateSpaceRequest,
 ) -> Result<UpdateSpaceResponse> {
     if role != SpaceUserRole::Creator {
@@ -124,7 +128,7 @@ pub async fn update_space(
 
             su = su
                 .with_publish_state(SpacePublishState::Published)
-                .with_status(SpaceStatus::InProgress)
+                .with_status(SpaceStatus::Open)
                 .with_visibility(visibility.clone());
 
             let mut post_updater = Post::updater(post_pk, EntityType::Post).with_updated_at(now);
@@ -167,7 +171,7 @@ pub async fn update_space(
         UpdateSpaceRequest::Start { start } => {
             use crate::features::spaces::space_common::models::SpaceEmailVerification;
 
-            if updated_space.status != Some(SpaceStatus::InProgress) {
+            if updated_space.status != Some(SpaceStatus::Open) {
                 return Err(Error::BadRequest(
                     "Start is not available for the current status.".into(),
                 ));
@@ -177,14 +181,14 @@ pub async fn update_space(
                 return Err(Error::BadRequest("it does not support start now".into()));
             }
 
-            su = su.with_status(SpaceStatus::Started);
+            su = su.with_status(SpaceStatus::Ongoing);
 
-            updated_space.status = Some(SpaceStatus::Started);
+            updated_space.status = Some(SpaceStatus::Ongoing);
 
             let _ = SpaceEmailVerification::expire_verifications(dynamo, space_pk.clone()).await?;
         }
         UpdateSpaceRequest::Finish { finished } => {
-            if updated_space.status != Some(SpaceStatus::Started) {
+            if updated_space.status != Some(SpaceStatus::Ongoing) {
                 return Err(Error::BadRequest(
                     "Finish is not available for the current status.".into(),
                 ));

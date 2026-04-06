@@ -1,21 +1,22 @@
-use super::controllers::{
-    change_password_handler, get_mcp_secret_handler, get_user_detail_handler,
-    regenerate_mcp_secret_handler, update_profile_handler, ChangePasswordRequest,
-    UpdateProfileRequest,
-};
 use super::Result as AppResult;
+use super::controllers::{
+    ChangePasswordRequest, UpdateProfileRequest, change_password_handler, get_mcp_secret_handler,
+    get_user_detail_handler, regenerate_mcp_secret_handler, update_profile_handler,
+};
 use super::*;
+use crate::common::hooks::use_origin;
 #[cfg(not(feature = "server"))]
 use crate::common::{wasm_bindgen, wasm_bindgen_futures, web_sys};
 use crate::features::auth::hooks::use_user_context;
 use crate::features::membership::controllers::{
-    get_billing_info_handler, get_membership_handler, update_billing_card_handler,
-    UpdateBillingCardRequest,
+    UpdateBillingCardRequest, get_billing_info_handler, get_membership_handler,
+    update_billing_card_handler,
 };
 use crate::features::membership::models::CardInfo;
+use crate::features::social::pages::user_membership::components::format_membership_tier_label;
 use dioxus::prelude::*;
 #[cfg(not(feature = "server"))]
-use web_sys::js_sys::{Reflect, JSON};
+use web_sys::js_sys::{JSON, Reflect};
 
 translate! {
     UserSettingsTranslate;
@@ -54,6 +55,7 @@ translate! {
     expires: { en: "Expires", ko: "만료일" },
     unlimited: { en: "Unlimited", ko: "무제한" },
     change_plan: { en: "Change Plan", ko: "플랜 변경" },
+    enterprise: { en: "Enterprise", ko: "엔터프라이즈" },
     card: { en: "Card", ko: "카드" },
     card_holder: { en: "Card Holder", ko: "카드 소유자" },
     change_card: { en: "Change Card", ko: "카드 변경" },
@@ -78,6 +80,7 @@ translate! {
     mcp_copied: { en: "Copied to clipboard!", ko: "클립보드에 복사되었습니다!" },
     mcp_copy: { en: "Copy", ko: "복사" },
     mcp_not_generated: { en: "No secret generated yet. Click Generate to create one.", ko: "아직 시크릿이 생성되지 않았습니다. 생성 버튼을 클릭하세요." },
+    mcp_secret_exists: { en: "A secret has been generated. Click Regenerate to get a new URL. The token is only shown once after generation.", ko: "시크릿이 생성되어 있습니다. 재생성 버튼을 클릭하면 새 URL을 받을 수 있습니다. 토큰은 생성 직후에만 표시됩니다." },
 }
 
 #[component]
@@ -88,7 +91,7 @@ pub fn Home(username: String) -> Element {
 
     let Some(user) = user else {
         return rsx! {
-            div { class: "flex flex-col items-center justify-center w-full h-full py-10",
+            div { class: "flex flex-col justify-center items-center py-10 w-full h-full",
                 p { class: "text-foreground-muted", {tr.login_required} }
             }
         };
@@ -164,7 +167,7 @@ pub fn Home(username: String) -> Element {
     let save_blocked = is_blocked_text(&nickname()) || is_blocked_text(&description());
 
     rsx! {
-        div { class: "w-full max-w-[800px] mx-auto flex flex-col gap-6 px-4 mt-5",
+        div { class: "flex flex-col gap-6 px-4 mx-auto mt-5 w-full max-w-[800px]",
             h1 { class: "text-xl font-bold text-text-primary", {tr.settings} }
 
             // Card 1: Profile
@@ -172,19 +175,19 @@ pub fn Home(username: String) -> Element {
                 div { class: "flex flex-col gap-5 w-full",
                     h2 { class: "text-lg font-bold text-text-primary", {tr.profile} }
 
-                    div { class: "flex items-center gap-4",
+                    div { class: "flex gap-4 items-center",
                         FileUploader {
                             on_upload_success: move |url: String| profile_url.set(url),
                             accept: "image/*",
                             if profile_url().is_empty() {
-                                div { class: "w-16 h-16 rounded-full bg-card-bg flex items-center justify-center text-xs text-foreground-muted cursor-pointer",
+                                div { class: "flex justify-center items-center w-16 h-16 text-xs rounded-full cursor-pointer bg-card-bg text-foreground-muted",
                                     {tr.upload}
                                 }
                             } else {
                                 img {
                                     src: "{profile_url()}",
                                     alt: "Profile",
-                                    class: "w-16 h-16 rounded-full object-cover cursor-pointer",
+                                    class: "object-cover w-16 h-16 rounded-full cursor-pointer",
                                 }
                             }
                         }
@@ -221,7 +224,7 @@ pub fn Home(username: String) -> Element {
                         TextArea {
                             value: description(),
                             placeholder: tr.description_placeholder,
-                            class: "min-h-[100px] resize-y",
+                            class: "resize-y min-h-[100px]",
                             oninput: move |e: Event<FormData>| description.set(e.value()),
                         }
                     }
@@ -376,6 +379,7 @@ fn PasswordCard() -> Element {
 
 #[component]
 fn SubscriptionCard() -> Element {
+    let tr: UserSettingsTranslate = use_translate();
     let membership = use_server_future(move || async move { get_membership_handler().await })?;
     let mut billing_info =
         use_server_future(move || async move { get_billing_info_handler().await })?;
@@ -385,7 +389,7 @@ fn SubscriptionCard() -> Element {
 
     let (tier_label, remaining, total, expired_at, is_free) =
         if let Some(Ok(m)) = membership_data.as_ref() {
-            let tier = m.tier.0.replace("MEMBERSHIP#", "");
+            let tier = format_membership_tier_label(&m.tier.0, tr.enterprise);
             let free = tier.eq_ignore_ascii_case("free");
             (
                 tier,
@@ -484,7 +488,7 @@ fn SubscriptionCard() -> Element {
                         }
                         Link {
                             to: "/membership",
-                            class: "text-xs text-primary hover:underline no-underline",
+                            class: "text-xs no-underline hover:underline text-primary",
                             "Change Plan"
                         }
                     }
@@ -541,7 +545,7 @@ fn SubscriptionCard() -> Element {
                 }
 
                 if show_card_form() {
-                    div { class: "flex flex-col gap-4 rounded-[10px] border border-border p-4",
+                    div { class: "flex flex-col gap-4 p-4 border rounded-[10px] border-border",
                         SettingsRow { label: "Card Number",
                             Input {
                                 placeholder: "0000000000000000",
@@ -554,7 +558,7 @@ fn SubscriptionCard() -> Element {
                             }
                         }
                         div { class: "flex gap-3",
-                            div { class: "flex-1 flex flex-col gap-1.5",
+                            div { class: "flex flex-col flex-1 gap-1.5",
                                 label { class: "text-sm font-semibold text-text-primary",
                                     "Expiry Month"
                                 }
@@ -568,7 +572,7 @@ fn SubscriptionCard() -> Element {
                                     },
                                 }
                             }
-                            div { class: "flex-1 flex flex-col gap-1.5",
+                            div { class: "flex flex-col flex-1 gap-1.5",
                                 label { class: "text-sm font-semibold text-text-primary",
                                     "Expiry Year"
                                 }
@@ -667,26 +671,24 @@ fn format_js_error(err: wasm_bindgen::JsValue) -> String {
 #[component]
 fn McpServerCard() -> Element {
     let tr: UserSettingsTranslate = use_translate();
-    let mut mcp_secret =
-        use_server_future(move || async move { get_mcp_secret_handler().await })?;
-    let mcp_data = mcp_secret.read();
+    let mut mcp_status = use_loader(move || async move { get_mcp_secret_handler().await })?;
+    let has_secret = mcp_status().has_secret;
 
-    let secret_value = mcp_data
-        .as_ref()
-        .and_then(|r| r.as_ref().ok())
-        .and_then(|resp| resp.secret.clone());
-
+    // Holds the raw token only right after generation (not persisted across reloads)
+    let mut raw_token = use_signal(|| Option::<String>::None);
     let mut generating = use_signal(|| false);
     let mut copied = use_signal(|| false);
     let mut mcp_message = use_signal(|| Option::<(String, bool)>::None);
+    let origin = use_origin();
 
     let on_generate = move |_: MouseEvent| {
         spawn(async move {
             generating.set(true);
             mcp_message.set(None);
             match regenerate_mcp_secret_handler().await {
-                Ok(_) => {
-                    mcp_secret.restart();
+                Ok(resp) => {
+                    raw_token.set(resp.secret);
+                    mcp_status.restart();
                 }
                 Err(e) => {
                     mcp_message.set(Some((format!("{e}"), false)));
@@ -696,19 +698,7 @@ fn McpServerCard() -> Element {
         });
     };
 
-    let mcp_url = secret_value.as_ref().map(|_s| {
-        #[cfg(not(feature = "server"))]
-        {
-            let origin = web_sys::window()
-                .and_then(|w| w.location().origin().ok())
-                .unwrap_or_default();
-            format!("{origin}/mcp")
-        }
-        #[cfg(feature = "server")]
-        {
-            String::from("/mcp")
-        }
-    });
+    let mcp_url = raw_token().map(|token| format!("{origin}/mcp/{token}"));
 
     let on_copy = {
         let mcp_url = mcp_url.clone();
@@ -720,10 +710,8 @@ fn McpServerCard() -> Element {
                     spawn(async move {
                         if let Some(window) = web_sys::window() {
                             let clipboard = window.navigator().clipboard();
-                            match wasm_bindgen_futures::JsFuture::from(
-                                clipboard.write_text(&url),
-                            )
-                            .await
+                            match wasm_bindgen_futures::JsFuture::from(clipboard.write_text(&url))
+                                .await
                             {
                                 Ok(_) => {
                                     copied.set(true);
@@ -751,6 +739,7 @@ fn McpServerCard() -> Element {
             p { class: "text-sm text-foreground-muted", {tr.mcp_description} }
 
             if let Some(ref url) = mcp_url {
+                // Just generated — show the full URL with copy button
                 SettingsRow { label: tr.mcp_server_url.to_string(),
                     div { class: "flex gap-2 items-center",
                         Input { value: url.clone(), disabled: true }
@@ -766,8 +755,12 @@ fn McpServerCard() -> Element {
                         }
                     }
                 }
+            } else if has_secret {
+                // Secret exists but raw token is no longer available
+                p { class: "text-sm italic text-foreground-muted", {tr.mcp_secret_exists} }
             } else {
-                p { class: "text-sm text-foreground-muted italic", {tr.mcp_not_generated} }
+                // No secret generated yet
+                p { class: "text-sm italic text-foreground-muted", {tr.mcp_not_generated} }
             }
 
             if let Some((msg, is_success)) = mcp_message() {
@@ -778,12 +771,12 @@ fn McpServerCard() -> Element {
 
             div { class: "flex justify-end",
                 Button {
-                    style: if secret_value.is_some() { ButtonStyle::Secondary } else { ButtonStyle::Primary },
+                    style: if has_secret { ButtonStyle::Secondary } else { ButtonStyle::Primary },
                     disabled: generating(),
                     onclick: on_generate,
                     if generating() {
                         {tr.mcp_generating}
-                    } else if secret_value.is_some() {
+                    } else if has_secret {
                         {tr.mcp_regenerate}
                     } else {
                         {tr.mcp_generate}

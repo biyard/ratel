@@ -16,8 +16,12 @@ use crate::features::spaces::pages::actions::actions::quiz::{SpaceQuiz, SpaceQui
 #[cfg(feature = "server")]
 use std::collections::HashSet;
 
+#[mcp_tool(name = "list_actions", description = "List all actions in a space (polls, quizzes, discussions, follow). Shows action type, title, and status.")]
 #[get("/api/spaces/{space_pk}/actions", role: SpaceUserRole, user: OptionalUser, space: SpaceCommon)]
-pub async fn list_actions(space_pk: SpacePartition) -> Result<Vec<SpaceActionSummary>> {
+pub async fn list_actions(
+    #[mcp(description = "Space partition key")]
+    space_pk: SpacePartition,
+) -> Result<Vec<SpaceActionSummary>> {
     let cli = crate::features::spaces::pages::actions::config::get()
         .common
         .dynamodb();
@@ -255,8 +259,8 @@ fn is_visible_for_role(role: &SpaceUserRole, started_at: Option<i64>, now: i64) 
 
 fn is_visible_for_space_status(status: Option<SpaceStatus>, prerequisite: bool) -> bool {
     match status {
-        Some(SpaceStatus::Started) | Some(SpaceStatus::Finished) => true,
-        Some(SpaceStatus::InProgress) => prerequisite,
+        Some(SpaceStatus::Ongoing) | Some(SpaceStatus::Finished) => true,
+        Some(SpaceStatus::Open) => prerequisite,
         _ => false,
     }
 }
@@ -271,7 +275,7 @@ fn should_only_show_prerequisite_actions(
     }
 
     match status {
-        Some(SpaceStatus::Started) | Some(SpaceStatus::Finished) => join_anytime,
+        Some(SpaceStatus::Ongoing) | Some(SpaceStatus::Finished) => join_anytime,
         _ => true,
     }
 }
