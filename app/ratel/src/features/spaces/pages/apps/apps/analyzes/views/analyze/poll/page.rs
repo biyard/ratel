@@ -742,7 +742,7 @@ fn build_excel_data(
         });
     }
 
-    let sample_category_label = if poll.space_action.prerequisite {
+    let category_label = if poll.space_action.prerequisite {
         tr.sample_survey.to_string()
     } else {
         tr.final_survey.to_string()
@@ -758,7 +758,7 @@ fn build_excel_data(
                 poll,
                 sample,
                 &response_row,
-                sample_category_label.clone(),
+                category_label.clone(),
                 tr.question.to_string(),
                 tr.answer.to_string(),
                 col_category,
