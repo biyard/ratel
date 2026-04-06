@@ -148,44 +148,44 @@ export class QdrantStack extends Stack {
       },
     });
 
-    // --- Register with shared ALB for external gRPC access (port 6334) ---
+    // // --- Register with shared ALB for external gRPC access (port 6334) ---
 
-    props.albListener.addTargets(`QdrantTarget-${props.stage}`, {
-      port: 6334,
-      protocol: elbv2.ApplicationProtocol.HTTP,
-      targets: [
-        fargateService.loadBalancerTarget({
-          containerName: "QdrantContainer",
-          containerPort: 6334,
-        }),
-      ],
-      conditions: [elbv2.ListenerCondition.hostHeaders([qdrantDomain])],
-      priority: props.stage === "prod" ? 10 : 20,
-      healthCheck: {
-        path: "/healthz",
-        port: "6333",
-        protocol: elbv2.Protocol.HTTP,
-      },
-    });
+    // props.albListener.addTargets(`QdrantTarget-${props.stage}`, {
+    //   port: 6334,
+    //   protocol: elbv2.ApplicationProtocol.HTTP,
+    //   targets: [
+    //     fargateService.loadBalancerTarget({
+    //       containerName: "QdrantContainer",
+    //       containerPort: 6334,
+    //     }),
+    //   ],
+    //   conditions: [elbv2.ListenerCondition.hostHeaders([qdrantDomain])],
+    //   priority: props.stage === "prod" ? 10 : 20,
+    //   healthCheck: {
+    //     path: "/healthz",
+    //     port: "6333",
+    //     protocol: elbv2.Protocol.HTTP,
+    //   },
+    // });
 
-    // --- Register with shared ALB for Qdrant UI/REST access (port 6333) ---
+    // // --- Register with shared ALB for Qdrant UI/REST access (port 6333) ---
 
-    props.albListener.addTargets(`QdrantUiTarget-${props.stage}`, {
-      port: 6333,
-      protocol: elbv2.ApplicationProtocol.HTTP,
-      targets: [
-        fargateService.loadBalancerTarget({
-          containerName: "QdrantContainer",
-          containerPort: 6333,
-        }),
-      ],
-      conditions: [elbv2.ListenerCondition.hostHeaders([qdrantUiDomain])],
-      priority: props.stage === "prod" ? 11 : 21,
-      healthCheck: {
-        path: "/healthz",
-        port: "6333",
-        protocol: elbv2.Protocol.HTTP,
-      },
-    });
+    // props.albListener.addTargets(`QdrantUiTarget-${props.stage}`, {
+    //   port: 6333,
+    //   protocol: elbv2.ApplicationProtocol.HTTP,
+    //   targets: [
+    //     fargateService.loadBalancerTarget({
+    //       containerName: "QdrantContainer",
+    //       containerPort: 6333,
+    //     }),
+    //   ],
+    //   conditions: [elbv2.ListenerCondition.hostHeaders([qdrantUiDomain])],
+    //   priority: props.stage === "prod" ? 11 : 21,
+    //   healthCheck: {
+    //     path: "/healthz",
+    //     port: "6333",
+    //     protocol: elbv2.Protocol.HTTP,
+    //   },
+    // });
   }
 }

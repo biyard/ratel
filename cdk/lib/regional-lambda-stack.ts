@@ -50,6 +50,20 @@ export class RegionalLambdaStack extends Stack {
       domainName: baseDomain,
     });
 
+    // Default VPC + DynamoDB gateway endpoint
+    const vpc = ec2.Vpc.fromLookup(this, "DefaultVpc", { isDefault: true });
+
+    const lambdaSg = new ec2.SecurityGroup(this, "LambdaSG", {
+      vpc,
+      description: "Security group for Regional Lambda",
+      allowAllOutbound: true,
+    });
+
+    new ec2.GatewayVpcEndpoint(this, "DynamoDbEndpoint", {
+      vpc,
+      service: ec2.GatewayVpcEndpointAwsService.DYNAMODB,
+    });
+
     // --- HTTP API (shared between ECS and Lambda) ---
     const httpApi = new apigw.HttpApi(this, "HttpApi", {
       apiName: `ratel-api-${this.stackName}`,
@@ -74,6 +88,10 @@ export class RegionalLambdaStack extends Stack {
       },
       memorySize: 128,
       timeout: cdk.Duration.seconds(30),
+      allowPublicSubnet: true,
+      vpc,
+      vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
+      securityGroups: [lambdaSg],
     });
     this.lambdaFunction = apiLambda;
 
@@ -164,147 +182,5 @@ export class RegionalLambdaStack extends Stack {
         ),
       ),
     });
-
-    // // NOTE: SurveyLambda will be deprecated
-    // if (props.env?.region !== "ap-northeast-2") {
-    //   return;
-    // }
-
-    // const startSurveyLambda = new lambda.Function(
-    //   this,
-    //   "StartSurveyEventLambda",
-    //   {
-    //     runtime: lambda.Runtime.PROVIDED_AL2023,
-    //     code: lambda.Code.fromAsset("survey-worker"),
-    //     handler: "bootstrap",
-    //     environment: {
-    //       REGION: this.region,
-    //       DISABLE_ANSI: "true",
-    //       NO_COLOR: "true",
-    //     },
-    //     memorySize: 256,
-    //     timeout: Duration.seconds(150),
-    //   },
-    // );
-
-    // const eventBus = new events.EventBus(this, "RatelEventBus", {
-    //   eventBusName: `ratel-${props.stage}-bus`,
-    // });
-
-    // const schedulerRole = new iam.Role(this, "SurveySchedulerRole", {
-    //   roleName: `ratel-${props.stage}-${this.region}-survey-scheduler-role`,
-    //   assumedBy: new iam.ServicePrincipal("scheduler.amazonaws.com"),
-    // });
-
-    // eventBus.grantPutEventsTo(schedulerRole);
-
-    // new events.Rule(this, "SurveyFetcherRule", {
-    //   eventBus,
-    //   description: "Route Survey Fetcher events to survey fetcher Lambda",
-    //   eventPattern: {
-    //     source: ["ratel.spaces"],
-    //     detailType: ["SurveyFetcher"],
-    //   },
-    //   targets: [new eventsTargets.LambdaFunction(startSurveyLambda)],
-    // });
-
-    // const tableName = `ratel-${props.stage}-main`;
-
-    // const mainTable = dynamodb.Table.fromTableName(
-    //   this,
-    //   "MainTable",
-    //   tableName,
-    // );
-
-    // mainTable.grantReadData(startSurveyLambda);
-
-    // startSurveyLambda.addToRolePolicy(
-    //   new iam.PolicyStatement({
-    //     effect: iam.Effect.ALLOW,
-    //     actions: [
-    //       "ses:SendEmail",
-    //       "ses:SendRawEmail",
-    //       "ses:SendTemplatedEmail",
-    //       "ses:SendBulkEmail",
-    //       "ses:SendBulkTemplatedEmail",
-    //     ],
-    //     resources: [
-    //       `arn:aws:ses:${this.region}:${this.account}:identity/ratel.foundation`,
-    //       `arn:aws:ses:${this.region}:${this.account}:template/start_survey`,
-    //     ],
-    //   }),
-    // );
-
-    // if (this.region === "ap-northeast-2") {
-    //   const mainTableStreamArn = cdk.Fn.importValue(
-    //     `ratel-${props.stage}-main-stream-arn`,
-    //   );
-    //   const mainTableWithStream = dynamodb.Table.fromTableAttributes(
-    //     this,
-    //     "MainTableWithStream",
-    //     {
-    //       tableName,
-    //       tableStreamArn: mainTableStreamArn,
-    //     },
-    //   );
-
-    //   const spaceStreamLambda = new lambda.Function(this, "SpaceStreamWorker", {
-    //     runtime: lambda.Runtime.PROVIDED_AL2023,
-    //     code: lambda.Code.fromAsset("space-stream-worker"),
-    //     handler: "bootstrap",
-    //     environment: {
-    //       REGION: this.region,
-    //       DISABLE_ANSI: "true",
-    //       NO_COLOR: "true",
-    //     },
-    //     memorySize: 256,
-    //     timeout: Duration.seconds(150),
-    //   });
-
-    //   const privateBucketName =
-    //     process.env.PRIVATE_BUCKET_NAME ?? "metadata.ratel.foundation";
-    //   if (privateBucketName) {
-    //     spaceStreamLambda.addToRolePolicy(
-    //       new iam.PolicyStatement({
-    //         effect: iam.Effect.ALLOW,
-    //         actions: ["s3:GetObject", "s3:HeadObject", "s3:PutObject"],
-    //         resources: [`arn:aws:s3:::${privateBucketName}/*`],
-    //       }),
-    //     );
-    //     spaceStreamLambda.addToRolePolicy(
-    //       new iam.PolicyStatement({
-    //         effect: iam.Effect.ALLOW,
-    //         actions: ["s3:ListBucket"],
-    //         resources: [`arn:aws:s3:::${privateBucketName}`],
-    //       }),
-    //     );
-    //   }
-
-    //   spaceStreamLambda.addEventSource(
-    //     new lambdaEventSources.DynamoEventSource(mainTableWithStream, {
-    //       startingPosition: lambda.StartingPosition.LATEST,
-    //       batchSize: 10,
-    //       bisectBatchOnError: true,
-    //       retryAttempts: 3,
-    //     }),
-    //   );
-    // }
-
-    // startSurveyLambda.addToRolePolicy(
-    //   new iam.PolicyStatement({
-    //     effect: iam.Effect.ALLOW,
-    //     actions: [
-    //       "dynamodb:GetItem",
-    //       "dynamodb:BatchGetItem",
-    //       "dynamodb:Query",
-    //       "dynamodb:Scan",
-    //       "dynamodb:PutItem",
-    //       "dynamodb:UpdateItem",
-    //       "dynamodb:DeleteItem",
-    //       "dynamodb:TransactWriteItems",
-    //     ],
-    //     resources: [mainTable.tableArn, `${mainTable.tableArn}/index/*`],
-    //   }),
-    // );
   }
 }
