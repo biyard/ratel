@@ -81,22 +81,29 @@ jobs:
   ratel-app:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: app/ratel
-
     outputs:
       image: ${{ steps.build.outputs.image }}
 
     steps:
       - uses: actions/checkout@v4
 
+      - name: Restore cache
+        id: app-shell-build-cache
+        uses: actions/cache/restore@v4
+        with:
+          key: app-shell-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            app-shell-build-${{ runner.os }}-rust-
+          path: |
+            ~/.cargo/bin
+            target
+
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
           toolchain: stable
           target: wasm32-unknown-unknown
-          save-if: ${{ github.ref == 'refs/heads/dev' }}
+          cache: false
 
       - uses: cargo-bins/cargo-binstall@main
       - name: Install system dependencies
@@ -137,7 +144,8 @@ jobs:
           COMMIT: pr-${{ github.sha }}
           ECR: ratel/app-shell
         run: |
-          npm i -D tailwindcss
+          npm i
+          cd app/ratel
           make build-testing
           make docker
 
@@ -158,12 +166,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Restore cache
+        id: app-shell-build-cache
+        uses: actions/cache/restore@v4
+        with:
+          key: app-shell-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            app-shell-build-${{ runner.os }}-rust-
+          path: |
+            ~/.cargo/bin
+            target
+
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
           toolchain: stable
           target: wasm32-unknown-unknown
-          save-if: ${{ github.ref == 'refs/heads/dev' }}
+          cache: false
 
       - uses: cargo-bins/cargo-binstall@main
       - name: Install system dependencies
