@@ -37,6 +37,14 @@ export interface RegionalLambdaStackProps extends StackProps {
 
   apiDomain: string;
   baseDomain: string;
+
+  // Optional — when provided, the Lambda is placed in this VPC (required to
+  // resolve CloudMap private DNS). Use the same VPC that hosts Qdrant.
+  vpc?: ec2.IVpc;
+  // Optional — CloudMap namespace for service discovery (e.g. qdrant.*.svc.local)
+  namespace?: sd.PrivateDnsNamespace;
+  // Optional — Qdrant security group; ingress for Lambda SG is added when provided
+  qdrantSecurityGroup?: ec2.ISecurityGroup;
 }
 
 export class RegionalLambdaStack extends Stack {
@@ -50,14 +58,30 @@ export class RegionalLambdaStack extends Stack {
       domainName: baseDomain,
     });
 
-    // Default VPC + DynamoDB gateway endpoint
-    const vpc = ec2.Vpc.fromLookup(this, "DefaultVpc", { isDefault: true });
+    // Use shared VPC when provided (required for CloudMap private DNS resolution),
+    // otherwise fall back to the default VPC for regions that don't need service discovery.
+    const vpc =
+      props.vpc ?? ec2.Vpc.fromLookup(this, "DefaultVpc", { isDefault: true });
 
     const lambdaSg = new ec2.SecurityGroup(this, "LambdaSG", {
       vpc,
       description: "Security group for Regional Lambda",
       allowAllOutbound: true,
     });
+
+    // Allow this Lambda to reach Qdrant on gRPC (6334) and REST (6333).
+    if (props.qdrantSecurityGroup) {
+      props.qdrantSecurityGroup.addIngressRule(
+        lambdaSg,
+        ec2.Port.tcp(6334),
+        "Lambda to Qdrant gRPC",
+      );
+      props.qdrantSecurityGroup.addIngressRule(
+        lambdaSg,
+        ec2.Port.tcp(6333),
+        "Lambda to Qdrant REST",
+      );
+    }
 
     new ec2.GatewayVpcEndpoint(this, "DynamoDbEndpoint", {
       vpc,
@@ -76,16 +100,18 @@ export class RegionalLambdaStack extends Stack {
       "ratel/app-shell-lambda",
     );
 
+    const environment: { [key: string]: string } = {
+      REGION: this.region,
+      DISABLE_ANSI: "true",
+      NO_COLOR: "true",
+      GOOGLE_APPLICATION_CREDENTIALS: ".gcp/firebase-service-account.json",
+    };
+
     const apiLambda = new lambda.DockerImageFunction(this, "Function", {
       code: lambda.DockerImageCode.fromEcr(appShellRepository, {
         tagOrDigest: props.commit,
       }),
-      environment: {
-        REGION: this.region,
-        DISABLE_ANSI: "true",
-        NO_COLOR: "true",
-        GOOGLE_APPLICATION_CREDENTIALS: ".gcp/firebase-service-account.json",
-      },
+      environment,
       memorySize: 128,
       timeout: cdk.Duration.seconds(30),
       allowPublicSubnet: true,

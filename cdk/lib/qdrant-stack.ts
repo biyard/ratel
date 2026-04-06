@@ -24,6 +24,8 @@ export interface QdrantStackProps extends StackProps {
 }
 
 export class QdrantStack extends Stack {
+  public readonly securityGroup: ec2.SecurityGroup;
+
   constructor(scope: Construct, id: string, props: QdrantStackProps) {
     super(scope, id, { ...props, crossRegionReferences: true });
 
@@ -35,6 +37,7 @@ export class QdrantStack extends Stack {
       description: "Qdrant vector DB security group",
       allowAllOutbound: true,
     });
+    this.securityGroup = sg;
 
     sg.addIngressRule(
       ec2.Peer.ipv4(vpc.vpcCidrBlock),
@@ -142,9 +145,7 @@ export class QdrantStack extends Stack {
       cloudMapOptions: {
         name: "qdrant",
         cloudMapNamespace: props.namespace,
-        dnsRecordType: sd.DnsRecordType.SRV,
-        container,
-        containerPort: 6334,
+        dnsRecordType: sd.DnsRecordType.A,
       },
     });
 

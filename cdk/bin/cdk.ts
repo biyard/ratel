@@ -66,20 +66,24 @@ const albStack = new AlbStack(app, "ratel-alb-ap-northeast-2", {
   prodDomain: "ratel.foundation",
 });
 
-new QdrantStack(app, `ratel-${env}-qdrant-ap-northeast-2`, {
-  env: {
-    account: awsAccount,
-    region: "ap-northeast-2",
+const qdrantStack = new QdrantStack(
+  app,
+  `ratel-${env}-qdrant-ap-northeast-2`,
+  {
+    env: {
+      account: awsAccount,
+      region: "ap-northeast-2",
+    },
+    stage: env,
+    vpc: escStack.vpc,
+    cluster: escStack.cluster,
+    namespace: escStack.namespace,
+    qdrantDomain: `qdrant.${host}`,
+    qdrantUiDomain: `qdrant-ui.${host}`,
+    albListener: albStack.listener,
+    albSecurityGroup: albStack.albSecurityGroup,
   },
-  stage: env,
-  vpc: escStack.vpc,
-  cluster: escStack.cluster,
-  namespace: escStack.namespace,
-  qdrantDomain: `qdrant.${host}`,
-  qdrantUiDomain: `qdrant-ui.${host}`,
-  albListener: albStack.listener,
-  albSecurityGroup: albStack.albSecurityGroup,
-});
+);
 
 const ap_northeast_2_lambda = new RegionalLambdaStack(
   app,
@@ -93,6 +97,10 @@ const ap_northeast_2_lambda = new RegionalLambdaStack(
     commit: process.env.COMMIT!,
     baseDomain,
     apiDomain: `lambda-${apiDomain}`,
+    // Place Lambda in the same VPC as Qdrant so CloudMap private DNS resolves.
+    vpc: escStack.vpc,
+    namespace: escStack.namespace,
+    qdrantSecurityGroup: qdrantStack.securityGroup,
   },
 );
 
