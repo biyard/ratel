@@ -34,18 +34,18 @@ pub fn qdrant_entity_impl(input: TokenStream) -> TokenStream {
 
     // Parse fields
     let Data::Struct(data_struct) = &input.data else {
-        return syn::Error::new_spanned(&input.ident, "QdrantEntity can only be derived for structs")
-            .to_compile_error()
-            .into();
-    };
-
-    let Fields::Named(fields) = &data_struct.fields else {
         return syn::Error::new_spanned(
             &input.ident,
-            "QdrantEntity requires named fields",
+            "QdrantEntity can only be derived for structs",
         )
         .to_compile_error()
         .into();
+    };
+
+    let Fields::Named(fields) = &data_struct.fields else {
+        return syn::Error::new_spanned(&input.ident, "QdrantEntity requires named fields")
+            .to_compile_error()
+            .into();
     };
 
     let mut id_field: Option<syn::Ident> = None;
@@ -102,7 +102,7 @@ pub fn qdrant_entity_impl(input: TokenStream) -> TokenStream {
     let expanded = quote! {
         impl #name {
             pub fn collection_name() -> String {
-                let prefix = option_env!("DYNAMO_TABLE_PREFIX").unwrap_or("ratel-local");
+                let prefix = option_env!("QDRANT_PREFIX").unwrap_or("ratel-local");
                 format!("{}-{}", prefix, #collection_name_lit)
             }
 
