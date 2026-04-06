@@ -21,6 +21,7 @@ where
     effect: Effect,
     loading: Signal<bool>,
     key: u64,
+    has_paginated: Signal<bool>,
 }
 
 // Manual Clone/Copy impls: all fields (Signal, Memo, Resource, Effect, u64) are
@@ -75,7 +76,7 @@ where
     pub fn restart(&mut self) {
         self.bookmark.set(None);
         self.next_bookmark.set(None);
-        self.accumulated.set(Vec::new());
+        self.has_paginated.set(false);
         self.rsc.restart();
     }
 
@@ -198,9 +199,22 @@ where
     let mut accumulated: Signal<Vec<I>> = use_signal(move || rsc().items().clone());
     let has_more = use_memo(move || next_bookmark().is_some());
     let mut loading = use_signal(|| false);
+    let mut has_paginated = use_signal(|| false);
     let key = use_server_cached(|| {
         use rand::RngExt;
         rand::rng().random::<u64>()
+    });
+
+    // When rsc resolves with new data (e.g. after restart()) and we are not
+    // in a paginated state, sync the base page back into accumulated.
+    // Reading rsc() first ensures we re-run whenever rsc resolves.
+    let _sync_effect = use_effect(move || {
+        let res = rsc();
+        if has_paginated() {
+            return;
+        }
+        next_bookmark.set(res.bookmark());
+        accumulated.set(res.items().clone());
     });
 
     let effect = use_effect(move || {
@@ -211,6 +225,7 @@ where
         }
 
         spawn(async move {
+            has_paginated.set(true);
             loading.set(true);
             let res = match future(nb.clone()).await {
                 Ok(ret) => {
@@ -256,5 +271,6 @@ where
         effect,
         loading,
         key,
+        has_paginated,
     })
 }
