@@ -29,8 +29,14 @@ pub async fn list_user_transactions_handler(
     let cfg = crate::common::CommonConfig::default();
     let cli = cfg.dynamodb();
 
-    let (users, _) =
-        crate::features::auth::User::find_by_username(cli, &username, Default::default()).await?;
+    let (users, _) = crate::features::auth::User::find_by_username(
+        cli,
+        &username,
+        crate::features::auth::User::opt()
+            .sk("TS#".to_string())
+            .limit(1),
+    )
+    .await?;
     let user = users
         .into_iter()
         .find(|u| u.username == username)

@@ -131,6 +131,30 @@ pub async fn signup_handler(req: SignupRequest) -> Result<SignupResponse> {
 }
 
 #[cfg(feature = "server")]
+async fn ensure_username_available(
+    cli: &aws_sdk_dynamodb::Client,
+    username: &str,
+) -> Result<()> {
+    let (users, _) = User::find_by_username(
+        cli,
+        username,
+        UserQueryOption::builder()
+            .sk("TS#".to_string())
+            .limit(1),
+    )
+    .await?;
+
+    if !users.is_empty() {
+        return Err(Error::Duplicate(format!(
+            "Username already exists: {}",
+            username
+        )));
+    }
+
+    Ok(())
+}
+
+#[cfg(feature = "server")]
 async fn signup_with_email_password(
     cli: &aws_sdk_dynamodb::Client,
     SignupRequest {
@@ -175,6 +199,8 @@ async fn signup_with_email_password(
     }
     let hashed_password = hash_password(&password);
 
+    ensure_username_available(cli, &username).await?;
+
     let user = User::new(
         display_name,
         email,
@@ -216,6 +242,8 @@ async fn signup_with_oauth(
             email
         )));
     }
+    ensure_username_available(cli, &username).await?;
+
     let user = User::new(
         display_name,
         email,
@@ -323,6 +351,8 @@ async fn signup_with_wallet(
             evm_address
         )));
     }
+
+    ensure_username_available(cli, &username).await?;
 
     let email = format!("{}@wallet.placeholder", &evm_address[2..10].to_lowercase());
     let user = User::new(
