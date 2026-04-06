@@ -17,17 +17,6 @@ jobs:
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
-      - name: Download Survey Worker
-        uses: actions/download-artifact@v4
-        with:
-          name: survey-worker-${{ github.sha }}
-          path: ./cdk/survey-worker
-      - name: Download Space Stream Worker Lambda
-        uses: actions/download-artifact@v4
-        with:
-          name: space-stream-worker-${{ github.sha }}
-          path: ./cdk/space-stream-worker
-
       # - name: Write Firebase service account (prod)
       #   run: |
       #     mkdir -p cdk/main-api/.gcp
