@@ -63,10 +63,11 @@ pub fn DiscussionComments(
                         oninput: move |e: Event<FormData>| comment_input.set(e.value()),
                     }
                     Button {
+                        "data-testid": "comment-send-btn",
                         style: ButtonStyle::Primary,
                         shape: ButtonShape::Rounded,
                         size: ButtonSize::Icon,
-                        class: "size-10 shrink-0 !p-0 inline-flex items-center justify-center".to_string(),
+                        class: "inline-flex justify-center items-center size-10 shrink-0 !p-0".to_string(),
                         disabled: comment_input().trim().is_empty(),
                         onclick: {
                             move |_| {
@@ -92,11 +93,11 @@ pub fn DiscussionComments(
                             }
                         },
                         if comment_input().trim().is_empty() {
-                            span { class: "inline-flex items-center justify-center leading-none",
+                            span { class: "inline-flex justify-center items-center leading-none",
                                 icons::chat::SquareChat { class: "size-5 [&>path]:stroke-btn-primary-disable-text [&>path]:fill-transparent" }
                             }
                         } else {
-                            span { class: "inline-flex items-center justify-center leading-none",
+                            span { class: "inline-flex justify-center items-center leading-none",
                                 icons::chat::SquareChat { class: "size-5 [&>path]:stroke-btn-primary-text [&>path]:fill-transparent" }
                             }
                         }
@@ -163,24 +164,24 @@ fn CollapsibleCommentBody(
     };
 
     rsx! {
-        div { class: "flex flex-col items-start gap-2 w-full",
+        div { class: "flex flex-col gap-2 items-start w-full",
             div { class: "w-full",
                 p { class: "{body_class}", {content} }
             }
             if collapsible && !expanded() {
-                div { class: "-mt-5 h-5 w-full bg-gradient-to-t from-card via-card/80 to-transparent" }
-                div { class: "flex w-full justify-center -mt-1",
+                div { class: "-mt-5 w-full h-5 bg-gradient-to-t to-transparent from-card via-card/80" }
+                div { class: "flex justify-center -mt-1 w-full",
                     button {
-                        class: "inline-flex items-center justify-center px-0 text-xs font-medium text-primary hover:text-primary",
+                        class: "inline-flex justify-center items-center px-0 text-xs font-medium text-primary hover:text-primary",
                         onclick: move |_| expanded.set(true),
                         "{tr.show_more}"
                     }
                 }
             }
             if collapsible && expanded() {
-                div { class: "flex w-full justify-center",
+                div { class: "flex justify-center w-full",
                     button {
-                        class: "inline-flex items-center justify-center px-0 text-xs font-medium text-primary hover:text-primary",
+                        class: "inline-flex justify-center items-center px-0 text-xs font-medium text-primary hover:text-primary",
                         onclick: move |_| expanded.toggle(),
                         "{tr.show_less}"
                     }
@@ -234,7 +235,7 @@ fn CommentItem(
     let more_replies = replies_query.more_element();
 
     rsx! {
-        div { class: "flex flex-col gap-3 rounded-xl bg-card px-4 py-3",
+        div { class: "flex flex-col gap-3 py-3 px-4 rounded-xl bg-card",
             div { class: "flex justify-between items-center",
                 div { class: "flex gap-2 items-center text-sm",
                     if !comment.author_profile_url.is_empty() {
@@ -259,11 +260,11 @@ fn CommentItem(
                             crate::common::icons::validations::Extra { class: "size-4 [&>circle]:fill-current" }
                         }
                         if show_action_menu() {
-                            div { class: "absolute right-0 top-8 z-10 min-w-[110px] rounded-md bg-card p-1 shadow-lg",
+                            div { class: "absolute right-0 top-8 z-10 p-1 rounded-md shadow-lg min-w-[110px] bg-card",
                                 Button {
                                     size: ButtonSize::Small,
                                     style: ButtonStyle::Text,
-                                    class: "w-full !justify-start text-left text-xs text-text-primary hover:bg-transparent focus:bg-transparent rounded"
+                                    class: "w-full text-xs text-left rounded hover:bg-transparent focus:bg-transparent !justify-start text-text-primary"
                                         .to_string(),
                                     onclick: move |_| {
                                         edit_content.set(original_content_for_edit.clone());
@@ -275,7 +276,7 @@ fn CommentItem(
                                 Button {
                                     size: ButtonSize::Small,
                                     style: ButtonStyle::Text,
-                                    class: "w-full !justify-start text-left text-xs text-red-500 hover:bg-transparent focus:bg-transparent rounded"
+                                    class: "w-full text-xs text-left text-red-500 rounded hover:bg-transparent focus:bg-transparent !justify-start"
                                         .to_string(),
                                     onclick: move |_| {
                                         let target = delete_target.clone();
@@ -297,12 +298,12 @@ fn CommentItem(
             if is_editing() {
                 div { class: "flex flex-col gap-2",
                     TextArea {
-                        class: "w-full min-h-[84px] resize-none rounded-lg bg-input-box-bg border border-input-box-border px-3 py-2 text-sm text-text-primary outline-none"
+                        class: "py-2 px-3 w-full text-sm rounded-lg border outline-none resize-none min-h-[84px] bg-input-box-bg border-input-box-border text-text-primary"
                             .to_string(),
                         value: edit_content(),
                         oninput: move |e: Event<FormData>| edit_content.set(e.value()),
                     }
-                    div { class: "flex justify-end gap-2",
+                    div { class: "flex gap-2 justify-end",
                         Button {
                             style: ButtonStyle::Outline,
                             shape: ButtonShape::Square,
@@ -342,7 +343,7 @@ fn CommentItem(
             } else {
                 CollapsibleCommentBody { content: comment.content.clone() }
             }
-            div { class: "flex items-center justify-between text-xs text-text-secondary",
+            div { class: "flex justify-between items-center text-xs text-text-secondary",
                 Button {
                     size: ButtonSize::Inline,
                     style: ButtonStyle::Text,
@@ -361,7 +362,7 @@ fn CommentItem(
                             show_replies.toggle();
                         }
                     },
-                    span { class: "inline-flex items-center gap-1 leading-none",
+                    span { class: "inline-flex gap-1 items-center leading-none",
                         icons::chat::SquareChat { class: "size-4 shrink-0 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
                         span { class: "font-normal text-text-secondary text-[12px]",
                             "{reply_count()} {tr.responses}"
@@ -395,7 +396,7 @@ fn CommentItem(
                 }
             }
             if show_replies() && reply_count() > 0 {
-                div { class: "ml-5 flex flex-col gap-2 pl-4",
+                div { class: "flex flex-col gap-2 pl-4 ml-5",
                     for reply in replies.iter() {
                         {
                             let reply = reply.clone();
@@ -461,12 +462,12 @@ fn ReplyItem(
     let mut edit_content = use_signal(|| reply.content.clone());
 
     rsx! {
-        div { class: "flex flex-col gap-2 rounded-lg border border-divider bg-card px-3 py-2.5",
-            div { class: "flex items-center justify-between gap-2",
-                div { class: "flex items-center gap-2 text-sm",
+        div { class: "flex flex-col gap-2 py-2.5 px-3 rounded-lg border border-divider bg-card",
+            div { class: "flex gap-2 justify-between items-center",
+                div { class: "flex gap-2 items-center text-sm",
                     if !reply.author_profile_url.is_empty() {
                         img {
-                            class: "size-4 rounded-full",
+                            class: "rounded-full size-4",
                             src: "{reply.author_profile_url}",
                         }
                     }
@@ -486,11 +487,11 @@ fn ReplyItem(
                             crate::common::icons::validations::Extra { class: "size-4 [&>circle]:fill-current" }
                         }
                         if show_action_menu() {
-                            div { class: "absolute right-0 top-8 z-10 min-w-[110px] rounded-md bg-card p-1 shadow-lg",
+                            div { class: "absolute right-0 top-8 z-10 p-1 rounded-md shadow-lg min-w-[110px] bg-card",
                                 Button {
                                     size: ButtonSize::Small,
                                     style: ButtonStyle::Text,
-                                    class: "w-full !justify-start text-left text-xs text-text-primary hover:bg-transparent focus:bg-transparent rounded"
+                                    class: "w-full text-xs text-left rounded hover:bg-transparent focus:bg-transparent !justify-start text-text-primary"
                                         .to_string(),
                                     onclick: move |_| {
                                         edit_content.set(original_reply_for_edit.clone());
@@ -502,7 +503,7 @@ fn ReplyItem(
                                 Button {
                                     size: ButtonSize::Small,
                                     style: ButtonStyle::Text,
-                                    class: "w-full !justify-start text-left text-xs text-red-500 hover:bg-transparent focus:bg-transparent rounded"
+                                    class: "w-full text-xs text-left text-red-500 rounded hover:bg-transparent focus:bg-transparent !justify-start"
                                         .to_string(),
                                     onclick: move |_| {
                                         let target = delete_target.clone();
@@ -524,12 +525,12 @@ fn ReplyItem(
             if is_editing() {
                 div { class: "flex flex-col gap-2",
                     TextArea {
-                        class: "w-full min-h-[84px] resize-none rounded-lg bg-input-box-bg border border-input-box-border px-3 py-2 text-sm text-text-primary outline-none"
+                        class: "py-2 px-3 w-full text-sm rounded-lg border outline-none resize-none min-h-[84px] bg-input-box-bg border-input-box-border text-text-primary"
                             .to_string(),
                         value: edit_content(),
                         oninput: move |e: Event<FormData>| edit_content.set(e.value()),
                     }
-                    div { class: "flex justify-end gap-2",
+                    div { class: "flex gap-2 justify-end",
                         Button {
                             style: ButtonStyle::Outline,
                             shape: ButtonShape::Square,
@@ -671,20 +672,20 @@ fn ReplyInput(
     let mut show_reply_input = show_reply_input;
 
     rsx! {
-        div { class: "mt-1 rounded-xl bg-card-bg-secondary p-3",
+        div { class: "p-3 mt-1 rounded-xl bg-card-bg-secondary",
             TextArea {
-                class: "h-20 w-full resize-none rounded-lg bg-input-box-bg border border-input-box-border px-3 py-2 text-sm text-text-primary outline-none placeholder:text-text-tertiary"
+                class: "py-2 px-3 w-full h-20 text-sm rounded-lg border outline-none resize-none bg-input-box-bg border-input-box-border text-text-primary placeholder:text-text-tertiary"
                     .to_string(),
                 placeholder: "{tr.write_reply}",
                 value: reply_input(),
                 oninput: move |e: Event<FormData>| reply_input.set(e.value()),
             }
-            div { class: "mt-2 flex justify-end",
+            div { class: "flex justify-end mt-2",
                 Button {
                     style: ButtonStyle::Primary,
                     shape: ButtonShape::Rounded,
                     size: ButtonSize::Icon,
-                    class: "size-10 !p-0 inline-flex items-center justify-center".to_string(),
+                    class: "inline-flex justify-center items-center size-10 !p-0".to_string(),
                     disabled: reply_input().trim().is_empty(),
                     onclick: {
                         move |_| {
@@ -708,7 +709,7 @@ fn ReplyInput(
                             });
                         }
                     },
-                    span { class: "inline-flex items-center justify-center leading-none",
+                    span { class: "inline-flex justify-center items-center leading-none",
                         icons::chat::SquareChat { class: "size-5 [&>path]:stroke-btn-primary-text [&>path]:fill-transparent" }
                     }
                 }
