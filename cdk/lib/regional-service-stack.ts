@@ -40,10 +40,11 @@ export interface RegionalServiceStackProps extends StackProps {
   baseDomain: string;
 
   // ECS deployment (high-traffic regions)
-  enableEcs?: boolean;
-  cluster?: ecs.ICluster;
-  vpc?: ec2.IVpc;
-  namespace?: sd.PrivateDnsNamespace;
+  cluster: ecs.ICluster;
+  vpc: ec2.IVpc;
+  namespace: sd.PrivateDnsNamespace;
+  // Shared SG from VpcServiceStack — required whenever enableEcs is true
+  sharedSecurityGroup: ec2.ISecurityGroup;
 
   icUrl?: string;
   ratelCanisterId?: string;
@@ -65,167 +66,110 @@ export class RegionalServiceStack extends Stack {
       description: "Ratel API Gateway",
     });
 
-    if (props.enableEcs && props.cluster && props.vpc && props.namespace) {
-      // --- ECS Fargate deployment (high-traffic region) ---
-      const { cluster, vpc } = props;
+    // --- ECS Fargate deployment (high-traffic region) ---
+    const { cluster, vpc, sharedSecurityGroup } = props;
 
-      const appShellRepository = Repository.fromRepositoryName(
-        this,
-        "AppShellRepository",
-        "ratel/app-shell",
-      );
+    const appShellRepository = Repository.fromRepositoryName(
+      this,
+      "AppShellRepository",
+      "ratel/app-shell",
+    );
 
-      const sg = new ec2.SecurityGroup(this, "AppShellSG", {
-        vpc,
-        description: "App Shell ECS security group",
-        allowAllOutbound: true,
-      });
-      sg.addIngressRule(
-        ec2.Peer.ipv4(vpc.vpcCidrBlock),
-        ec2.Port.tcp(8080),
-        "App Shell HTTP",
-      );
+    // Use shared SG from VpcServiceStack — intra-VPC 8080 traffic is
+    // covered by SG self-reference.
+    const sg = sharedSecurityGroup;
 
-      const taskExecutionRole = new iam.Role(
-        this,
-        "AppShellTaskExecutionRole",
-        {
-          assumedBy: new iam.ServicePrincipal("ecs-tasks.amazonaws.com"),
-        },
-      );
-      taskExecutionRole.addManagedPolicy(
-        iam.ManagedPolicy.fromAwsManagedPolicyName(
-          "service-role/AmazonECSTaskExecutionRolePolicy",
-        ),
-      );
+    const taskExecutionRole = new iam.Role(this, "AppShellTaskExecutionRole", {
+      assumedBy: new iam.ServicePrincipal("ecs-tasks.amazonaws.com"),
+    });
+    taskExecutionRole.addManagedPolicy(
+      iam.ManagedPolicy.fromAwsManagedPolicyName(
+        "service-role/AmazonECSTaskExecutionRolePolicy",
+      ),
+    );
 
-      const taskDefinition = new ecs.TaskDefinition(this, "AppShellTaskDef", {
-        compatibility: ecs.Compatibility.FARGATE,
-        cpu: "256",
-        memoryMiB: "512",
-        executionRole: taskExecutionRole,
-      });
+    const taskDefinition = new ecs.TaskDefinition(this, "AppShellTaskDef", {
+      compatibility: ecs.Compatibility.FARGATE,
+      cpu: "256",
+      memoryMiB: "512",
+      executionRole: taskExecutionRole,
+    });
 
-      const container = taskDefinition.addContainer("AppShellContainer", {
-        image: ecs.ContainerImage.fromEcrRepository(
-          appShellRepository,
-          props.commit,
-        ),
-        logging: new ecs.AwsLogDriver({
-          streamPrefix: `ratel-${props.stage}-app-shell`,
-          logRetention: logs.RetentionDays.TWO_WEEKS,
-        }),
-        environment: {
-          REGION: this.region,
-          DISABLE_ANSI: "true",
-          NO_COLOR: "true",
-          GOOGLE_APPLICATION_CREDENTIALS: ".gcp/firebase-service-account.json",
-          IP: "0.0.0.0",
-          PORT: "8080",
-          ...(props.icUrl ? { IC_URL: props.icUrl } : {}),
-          ...(props.ratelCanisterId
-            ? { RATEL_CANISTER_ID: props.ratelCanisterId }
-            : {}),
-          ...(props.icpIdentityPem
-            ? { ICP_IDENTITY_PEM: props.icpIdentityPem }
-            : {}),
-        },
-      });
+    const container = taskDefinition.addContainer("AppShellContainer", {
+      image: ecs.ContainerImage.fromEcrRepository(
+        appShellRepository,
+        props.commit,
+      ),
+      logging: new ecs.AwsLogDriver({
+        streamPrefix: `ratel-${props.stage}-app-shell`,
+        logRetention: logs.RetentionDays.TWO_WEEKS,
+      }),
+      environment: {
+        REGION: this.region,
+        DISABLE_ANSI: "true",
+        NO_COLOR: "true",
+        GOOGLE_APPLICATION_CREDENTIALS: ".gcp/firebase-service-account.json",
+        IP: "0.0.0.0",
+        PORT: "8080",
+        ...(props.icUrl ? { IC_URL: props.icUrl } : {}),
+        ...(props.ratelCanisterId
+          ? { RATEL_CANISTER_ID: props.ratelCanisterId }
+          : {}),
+        ...(props.icpIdentityPem
+          ? { ICP_IDENTITY_PEM: props.icpIdentityPem }
+          : {}),
+      },
+    });
 
-      container.addPortMappings({
+    container.addPortMappings({
+      containerPort: 8080,
+      protocol: ecs.Protocol.TCP,
+    });
+
+    const fargateService = new ecs.FargateService(this, "AppShellService", {
+      cluster,
+      taskDefinition,
+      desiredCount: props.minCapacity ?? 2,
+      maxHealthyPercent: 200,
+      minHealthyPercent: 100,
+      assignPublicIp: true,
+      vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
+      securityGroups: [sg],
+      cloudMapOptions: {
+        name: "app",
+        cloudMapNamespace: props.namespace,
+        dnsRecordType: sd.DnsRecordType.SRV,
+        container,
         containerPort: 8080,
-        protocol: ecs.Protocol.TCP,
-      });
+      },
+    });
 
-      const fargateService = new ecs.FargateService(this, "AppShellService", {
-        cluster,
-        taskDefinition,
-        desiredCount: props.minCapacity ?? 2,
-        maxHealthyPercent: 200,
-        minHealthyPercent: 100,
-        assignPublicIp: true,
-        vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
-        securityGroups: [sg],
-        cloudMapOptions: {
-          name: "app",
-          cloudMapNamespace: props.namespace,
-          dnsRecordType: sd.DnsRecordType.SRV,
-          container,
-          containerPort: 8080,
-        },
-      });
+    const supportedSubnets = vpc.publicSubnets.filter(
+      (s) => s.availabilityZone !== "ap-northeast-2d",
+    );
 
-      const supportedSubnets = vpc.publicSubnets.filter(
-        (s) => s.availabilityZone !== "ap-northeast-2d",
-      );
+    const vpcLink = new apigw.VpcLink(this, "AppShellVpcLink", {
+      vpc,
+      subnets: { subnets: supportedSubnets },
+      securityGroups: [sg],
+    });
 
-      const vpcLink = new apigw.VpcLink(this, "AppShellVpcLink", {
-        vpc,
-        subnets: { subnets: supportedSubnets },
-        securityGroups: [sg],
-      });
+    const ecsIntegration = new HttpServiceDiscoveryIntegration(
+      "EcsIntegration",
+      fargateService.cloudMapService!,
+      { vpcLink },
+    );
 
-      const ecsIntegration = new HttpServiceDiscoveryIntegration(
-        "EcsIntegration",
-        fargateService.cloudMapService!,
-        { vpcLink },
-      );
-
-      httpApi.addRoutes({
-        path: "/{proxy+}",
-        methods: [apigw.HttpMethod.ANY],
-        integration: ecsIntegration,
-      });
-      httpApi.addRoutes({
-        path: "/",
-        methods: [apigw.HttpMethod.ANY],
-        integration: ecsIntegration,
-      });
-    } else {
-      // --- Lambda deployment (default) ---
-      const appShellRepository = Repository.fromRepositoryName(
-        this,
-        "AppShellRepository",
-        "ratel/app-shell-lambda",
-      );
-
-      const apiLambda = new lambda.DockerImageFunction(this, "Function", {
-        code: lambda.DockerImageCode.fromEcr(appShellRepository, {
-          tagOrDigest: props.commit,
-        }),
-        environment: {
-          REGION: this.region,
-          DISABLE_ANSI: "true",
-          NO_COLOR: "true",
-          GOOGLE_APPLICATION_CREDENTIALS: ".gcp/firebase-service-account.json",
-          ...(props.icUrl ? { IC_URL: props.icUrl } : {}),
-          ...(props.ratelCanisterId
-            ? { RATEL_CANISTER_ID: props.ratelCanisterId }
-            : {}),
-          ...(props.icpIdentityPem
-            ? { ICP_IDENTITY_PEM: props.icpIdentityPem }
-            : {}),
-        },
-        memorySize: 128,
-        timeout: cdk.Duration.seconds(30),
-      });
-
-      const lambdaIntegration = new HttpLambdaIntegration(
-        "LambdaIntegration",
-        apiLambda,
-      );
-
-      httpApi.addRoutes({
-        path: "/{proxy+}",
-        methods: [apigw.HttpMethod.ANY],
-        integration: lambdaIntegration,
-      });
-      httpApi.addRoutes({
-        path: "/",
-        methods: [apigw.HttpMethod.ANY],
-        integration: lambdaIntegration,
-      });
-    }
+    httpApi.addRoutes({
+      path: "/{proxy+}",
+      methods: [apigw.HttpMethod.ANY],
+      integration: ecsIntegration,
+    });
+    httpApi.addRoutes({
+      path: "/",
+      methods: [apigw.HttpMethod.ANY],
+      integration: ecsIntegration,
+    });
 
     // Certificate for custom domain
     const cert = new acm.Certificate(this, "Cert", {
