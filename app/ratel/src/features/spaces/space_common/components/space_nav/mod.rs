@@ -74,8 +74,8 @@ pub fn SpaceNav(
                 }
             }
 
-            RankingWidgetWrapper { space_id }
-
+            // FIXME: uncomment this line when post list issue is fixed
+            //RankingWidgetWrapper { space_id }
             Row {
                 class: "max-tablet:hidden",
                 main_axis_align: MainAxisAlign::Between,
@@ -168,8 +168,7 @@ pub struct SpaceNavItem {
 fn RankingWidgetWrapper(space_id: SpacePartition) -> Element {
     rsx! {
         div { class: "px-2 max-tablet:hidden",
-            dioxus::prelude::SuspenseBoundary {
-                fallback: |_| rsx! {},
+            dioxus::prelude::SuspenseBoundary { fallback: |_| rsx! {},
                 crate::features::activity::components::RankingWidget { space_id }
             }
         }
