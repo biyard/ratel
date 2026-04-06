@@ -119,15 +119,17 @@ jobs:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
-      - name: Restore cache
-        id: app-shell-build-cache
-        uses: actions/cache/restore@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          key: app-shell-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            app-shell-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
-          path: |
-            target
+          components: clippy, rustfmt
+          toolchain: stable
+          target: wasm32-unknown-unknown
+          save-if: ${{ github.ref == 'refs/heads/dev' }}
+          cache-workspace-crates: true
+          cache-all-crates: true
+
+      - name: Set Rust version hash
+        run: echo "RUSTC_HASH=$(rustc --version | sha256sum | cut -d ' ' -f 1)" >> "$GITHUB_ENV"
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -138,12 +140,6 @@ jobs:
       - name: Login to Amazon ECR
         id: ratel-ecr
         uses: aws-actions/amazon-ecr-login@v2
-
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          components: clippy, rustfmt
-          toolchain: stable
-          target: wasm32-unknown-unknown
 
       - uses: cargo-bins/cargo-binstall@main
       - name: Install system dependencies
@@ -260,14 +256,6 @@ jobs:
           make build
           make docker
           make docker.push
-
-      - name: Save cache
-        if: always()
-        uses: actions/cache/save@v4
-        with:
-          key: app-shell-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
-          path: |
-            target
 
       - name: Deploy to S3
         env:
