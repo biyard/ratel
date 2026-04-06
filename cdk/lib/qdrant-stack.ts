@@ -16,18 +16,16 @@ export interface QdrantStackProps extends StackProps {
   stage: string;
   cluster: ecs.ICluster;
   vpc: ec2.IVpc;
-  qdrantDomain: string;
-  qdrantUiDomain: string;
   namespace: sd.PrivateDnsNamespace;
-  albListener: elbv2.ApplicationListener;
-  albSecurityGroup: ec2.ISecurityGroup;
 }
 
 export class QdrantStack extends Stack {
+  public readonly securityGroup: ec2.SecurityGroup;
+
   constructor(scope: Construct, id: string, props: QdrantStackProps) {
     super(scope, id, { ...props, crossRegionReferences: true });
 
-    const { cluster, vpc, qdrantDomain, qdrantUiDomain } = props;
+    const { cluster, vpc } = props;
 
     // Security group for Qdrant
     const sg = new ec2.SecurityGroup(this, "QdrantSG", {
@@ -35,6 +33,7 @@ export class QdrantStack extends Stack {
       description: "Qdrant vector DB security group",
       allowAllOutbound: true,
     });
+    this.securityGroup = sg;
 
     sg.addIngressRule(
       ec2.Peer.ipv4(vpc.vpcCidrBlock),
@@ -46,16 +45,16 @@ export class QdrantStack extends Stack {
       ec2.Port.tcp(6334),
       "Qdrant gRPC",
     );
-    sg.addIngressRule(
-      props.albSecurityGroup,
-      ec2.Port.tcp(6333),
-      "ALB to Qdrant REST",
-    );
-    sg.addIngressRule(
-      props.albSecurityGroup,
-      ec2.Port.tcp(6334),
-      "ALB to Qdrant gRPC",
-    );
+    // sg.addIngressRule(
+    //   props.albSecurityGroup,
+    //   ec2.Port.tcp(6333),
+    //   "ALB to Qdrant REST",
+    // );
+    // sg.addIngressRule(
+    //   props.albSecurityGroup,
+    //   ec2.Port.tcp(6334),
+    //   "ALB to Qdrant gRPC",
+    // );
 
     // EFS for persistent storage (use public subnets since default VPC has no private subnets)
     const fileSystem = new efs.FileSystem(this, "QdrantEfs", {
@@ -142,9 +141,7 @@ export class QdrantStack extends Stack {
       cloudMapOptions: {
         name: "qdrant",
         cloudMapNamespace: props.namespace,
-        dnsRecordType: sd.DnsRecordType.SRV,
-        container,
-        containerPort: 6334,
+        dnsRecordType: sd.DnsRecordType.A,
       },
     });
 

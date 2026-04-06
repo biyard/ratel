@@ -56,17 +56,17 @@ new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {
 });
 
 // Shared ALB for Qdrant gRPC across dev and prod
-const albStack = new AlbStack(app, "ratel-alb-ap-northeast-2", {
-  env: {
-    account: awsAccount,
-    region: "ap-northeast-2",
-  },
-  baseDomain,
-  devDomain: "dev.ratel.foundation",
-  prodDomain: "ratel.foundation",
-});
+// const albStack = new AlbStack(app, "ratel-alb-ap-northeast-2", {
+//   env: {
+//     account: awsAccount,
+//     region: "ap-northeast-2",
+//   },
+//   baseDomain,
+//   devDomain: "dev.ratel.foundation",
+//   prodDomain: "ratel.foundation",
+// });
 
-new QdrantStack(app, `ratel-${env}-qdrant-ap-northeast-2`, {
+const qdrantStack = new QdrantStack(app, `ratel-${env}-qdrant-ap-northeast-2`, {
   env: {
     account: awsAccount,
     region: "ap-northeast-2",
@@ -75,10 +75,10 @@ new QdrantStack(app, `ratel-${env}-qdrant-ap-northeast-2`, {
   vpc: escStack.vpc,
   cluster: escStack.cluster,
   namespace: escStack.namespace,
-  qdrantDomain: `qdrant.${host}`,
-  qdrantUiDomain: `qdrant-ui.${host}`,
-  albListener: albStack.listener,
-  albSecurityGroup: albStack.albSecurityGroup,
+  // qdrantDomain: `qdrant.${host}`,
+  // qdrantUiDomain: `qdrant-ui.${host}`,
+  // albListener: albStack.listener,
+  // albSecurityGroup: albStack.albSecurityGroup,
 });
 
 const ap_northeast_2_lambda = new RegionalLambdaStack(
@@ -93,6 +93,10 @@ const ap_northeast_2_lambda = new RegionalLambdaStack(
     commit: process.env.COMMIT!,
     baseDomain,
     apiDomain: `lambda-${apiDomain}`,
+    // Place Lambda in the same VPC as Qdrant so CloudMap private DNS resolves.
+    vpc: escStack.vpc,
+    namespace: escStack.namespace,
+    qdrantSecurityGroup: qdrantStack.securityGroup,
   },
 );
 
