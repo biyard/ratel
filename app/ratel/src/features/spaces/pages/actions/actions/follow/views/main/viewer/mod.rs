@@ -27,7 +27,7 @@ pub fn FollowViewerPage(
     let on_refresh_list = {
         let mut users_query_refresh = users_query.clone();
         move |_| {
-            users_query_refresh.restart();
+            users_query_refresh.refresh();
         }
     };
     let on_follow = {

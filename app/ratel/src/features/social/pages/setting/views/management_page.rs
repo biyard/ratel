@@ -48,7 +48,6 @@ pub fn ManagementPage(username: String) -> Element {
         }
     };
 
-    let mut refresh = use_signal(|| 0u64);
     let mut error_msg = use_signal(|| Option::<String>::None);
     let failed_remove_member = tr.failed_remove_member.to_string();
 
@@ -67,14 +66,6 @@ pub fn ManagementPage(username: String) -> Element {
             },
         )?;
 
-    // Restart query when members are added/removed (skip initial render where refresh == 0)
-    use_effect(move || {
-        let r = refresh();
-        if r > 0 {
-            members_query.restart();
-        }
-    });
-
     let members = members_query.items();
 
     let on_add_members_click = {
@@ -89,9 +80,10 @@ pub fn ManagementPage(username: String) -> Element {
                 }
             };
             let on_invited = {
+                let mut members_query = members_query;
                 move |result: InviteResult| {
                     if result.total_added > 0 {
-                        refresh.set(refresh() + 1);
+                        members_query.refresh();
                     }
                 }
             };
@@ -162,6 +154,7 @@ pub fn ManagementPage(username: String) -> Element {
                                         let team_pk = team_pk_signal();
                                         let mut error_msg = error_msg.clone();
                                         let failed_msg = failed_remove.clone();
+                                        let mut members_query = members_query;
                                         spawn(async move {
                                             let result = crate::features::social::pages::member::controllers::remove_team_member_handler(
                                                 team_pk.clone(),
@@ -174,7 +167,7 @@ pub fn ManagementPage(username: String) -> Element {
                                                 error_msg.set(Some(failed_msg));
                                             } else {
                                                 error_msg.set(None);
-                                                refresh.set(refresh() + 1);
+                                                members_query.refresh();
                                             }
                                         });
                                     },
