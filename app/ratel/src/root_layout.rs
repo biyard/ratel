@@ -11,6 +11,9 @@ pub fn RootLayout() -> Element {
 
                 if let Some(err) = error.error() {
                     if let Some(e) = err.downcast_ref::<Error>() {
+                        debug!("downcasted into Error");
+                        error.clear_errors();
+
                         return rsx! {
                             div { {e.translate(&lang())} }
                         };

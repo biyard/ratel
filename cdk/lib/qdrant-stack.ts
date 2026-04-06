@@ -5,30 +5,29 @@ import {
   aws_iam as iam,
   aws_logs as logs,
   aws_servicediscovery as sd,
-  aws_apigatewayv2 as apigw,
-  aws_route53 as route53,
-  aws_certificatemanager as acm,
+  aws_elasticloadbalancingv2 as elbv2,
   RemovalPolicy,
   Stack,
   StackProps,
 } from "aws-cdk-lib";
 import { Construct } from "constructs";
-import { HttpServiceDiscoveryIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
 
 export interface QdrantStackProps extends StackProps {
   stage: string;
   cluster: ecs.ICluster;
   vpc: ec2.IVpc;
-  baseDomain: string;
   qdrantDomain: string;
+  qdrantUiDomain: string;
   namespace: sd.PrivateDnsNamespace;
+  albListener: elbv2.ApplicationListener;
+  albSecurityGroup: ec2.ISecurityGroup;
 }
 
 export class QdrantStack extends Stack {
   constructor(scope: Construct, id: string, props: QdrantStackProps) {
     super(scope, id, { ...props, crossRegionReferences: true });
 
-    const { cluster, vpc, baseDomain, qdrantDomain } = props;
+    const { cluster, vpc, qdrantDomain, qdrantUiDomain } = props;
 
     // Security group for Qdrant
     const sg = new ec2.SecurityGroup(this, "QdrantSG", {
@@ -46,6 +45,16 @@ export class QdrantStack extends Stack {
       ec2.Peer.ipv4(vpc.vpcCidrBlock),
       ec2.Port.tcp(6334),
       "Qdrant gRPC",
+    );
+    sg.addIngressRule(
+      props.albSecurityGroup,
+      ec2.Port.tcp(6333),
+      "ALB to Qdrant REST",
+    );
+    sg.addIngressRule(
+      props.albSecurityGroup,
+      ec2.Port.tcp(6334),
+      "ALB to Qdrant gRPC",
     );
 
     // EFS for persistent storage (use public subnets since default VPC has no private subnets)
@@ -139,71 +148,44 @@ export class QdrantStack extends Stack {
       },
     });
 
-    // --- API Gateway with custom domain for gRPC (port 6334) ---
+    // --- Register with shared ALB for external gRPC access (port 6334) ---
 
-    // Filter subnets to exclude AZs where API Gateway VPC Link is not available (apne2-az4)
-    const supportedSubnets = vpc.publicSubnets.filter(
-      (s) => s.availabilityZone !== "ap-northeast-2d",
-    );
-
-    const vpcLink = new apigw.VpcLink(this, "QdrantVpcLink", {
-      vpc,
-      subnets: { subnets: supportedSubnets },
-      securityGroups: [sg],
-    });
-
-    const httpApi = new apigw.HttpApi(this, "QdrantHttpApi", {
-      apiName: `ratel-${props.stage}-qdrant-api`,
-      description: "Qdrant Vector DB gRPC API Gateway",
-    });
-
-    const qdrantIntegration = new HttpServiceDiscoveryIntegration(
-      "QdrantIntegration",
-      fargateService.cloudMapService!,
-      { vpcLink },
-    );
-
-    httpApi.addRoutes({
-      path: "/{proxy+}",
-      methods: [apigw.HttpMethod.ANY],
-      integration: qdrantIntegration,
-    });
-
-    httpApi.addRoutes({
-      path: "/",
-      methods: [apigw.HttpMethod.ANY],
-      integration: qdrantIntegration,
-    });
-
-    // DNS + Certificate
-    const zone = route53.HostedZone.fromLookup(this, "RootZone", {
-      domainName: baseDomain,
-    });
-
-    const cert = new acm.Certificate(this, "QdrantCert", {
-      domainName: qdrantDomain,
-      validation: acm.CertificateValidation.fromDns(zone),
-    });
-
-    const domainName = new apigw.DomainName(this, "QdrantDomain", {
-      domainName: qdrantDomain,
-      certificate: cert,
-    });
-
-    new apigw.ApiMapping(this, "QdrantApiMapping", {
-      api: httpApi,
-      domainName,
-    });
-
-    new route53.ARecord(this, "QdrantAliasA", {
-      zone,
-      recordName: qdrantDomain,
-      target: route53.RecordTarget.fromAlias({
-        bind: () => ({
-          dnsName: domainName.regionalDomainName,
-          hostedZoneId: domainName.regionalHostedZoneId,
+    props.albListener.addTargets(`QdrantTarget-${props.stage}`, {
+      port: 6334,
+      protocol: elbv2.ApplicationProtocol.HTTP,
+      targets: [
+        fargateService.loadBalancerTarget({
+          containerName: "QdrantContainer",
+          containerPort: 6334,
         }),
-      }),
+      ],
+      conditions: [elbv2.ListenerCondition.hostHeaders([qdrantDomain])],
+      priority: props.stage === "prod" ? 10 : 20,
+      healthCheck: {
+        path: "/healthz",
+        port: "6333",
+        protocol: elbv2.Protocol.HTTP,
+      },
+    });
+
+    // --- Register with shared ALB for Qdrant UI/REST access (port 6333) ---
+
+    props.albListener.addTargets(`QdrantUiTarget-${props.stage}`, {
+      port: 6333,
+      protocol: elbv2.ApplicationProtocol.HTTP,
+      targets: [
+        fargateService.loadBalancerTarget({
+          containerName: "QdrantContainer",
+          containerPort: 6333,
+        }),
+      ],
+      conditions: [elbv2.ListenerCondition.hostHeaders([qdrantUiDomain])],
+      priority: props.stage === "prod" ? 11 : 21,
+      healthCheck: {
+        path: "/healthz",
+        port: "6333",
+        protocol: elbv2.Protocol.HTTP,
+      },
     });
   }
 }
