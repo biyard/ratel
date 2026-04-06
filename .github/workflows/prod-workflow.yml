@@ -11,7 +11,7 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    needs: [fetcher, ratel-app, survey-worker, space-stream-worker]
+    needs: [ratel-app]
     steps:
       - uses: actions/checkout@v3
         with:
