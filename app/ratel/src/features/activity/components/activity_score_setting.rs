@@ -41,22 +41,18 @@ pub fn ActivityScoreSetting(
     rsx! {
         Collapsible {
             CollapsibleTrigger {
-                r#as: move |_attrs: Vec<Attribute>| {
+                r#as: move |attrs: Vec<Attribute>| {
                     rsx! {
                         Card {
+                            attributes: attrs,
                             variant: CardVariant::Outlined,
                             class: "cursor-pointer",
                             Row {
                                 class: "w-full p-4",
                                 main_axis_align: MainAxisAlign::Between,
                                 cross_axis_align: CrossAxisAlign::Center,
-                                span {
-                                    class: "text-sm font-semibold text-text-primary",
-                                    "{tr.activity_score}"
-                                }
-                                lucide_dioxus::ChevronDown {
-                                    class: "w-4 h-4 text-foreground-muted",
-                                }
+                                span { class: "text-sm font-semibold text-text-primary", "{tr.activity_score}" }
+                                lucide_dioxus::ChevronDown { class: "w-4 h-4 text-foreground-muted" }
                             }
                         }
                     }
@@ -66,15 +62,10 @@ pub fn ActivityScoreSetting(
                 Card {
                     variant: CardVariant::Outlined,
                     class: "rounded-t-none border-t-0 p-4",
-                    Col {
-                        class: "gap-4 w-full",
+                    Col { class: "gap-4 w-full",
 
-                        Col {
-                            class: "gap-2",
-                            p {
-                                class: "text-sm font-medium text-text-primary",
-                                "{tr.activity_score}"
-                            }
+                        Col { class: "gap-2",
+                            p { class: "text-sm font-medium text-text-primary", "{tr.activity_score}" }
                             Input {
                                 r#type: InputType::Number,
                                 value: "{current_activity_score()}",
@@ -90,14 +81,11 @@ pub fn ActivityScoreSetting(
                         }
 
                         if show_additional {
-                            Col {
-                                class: "gap-2",
-                                p {
-                                    class: "text-sm font-medium text-text-primary",
+                            Col { class: "gap-2",
+                                p { class: "text-sm font-medium text-text-primary",
                                     "{tr.additional_score}"
                                 }
-                                p {
-                                    class: "text-xs text-foreground-muted",
+                                p { class: "text-xs text-foreground-muted",
                                     "{tr.additional_score_desc}"
                                 }
                                 Input {
