@@ -52,7 +52,7 @@ jobs:
           components: clippy, rustfmt
           toolchain: stable
           target: wasm32-unknown-unknown
-          save-if: ${{ github.ref == 'refs/heads/dev' }}
+          cache: false
 
       - uses: cargo-bins/cargo-binstall@main
       - name: Install system dependencies
