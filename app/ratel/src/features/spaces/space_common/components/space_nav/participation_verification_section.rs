@@ -90,20 +90,13 @@ pub fn ParticipationVerificationSection(
                             }
                         }
                     }
-
-                    div { class: "mt-5 flex items-start gap-1 rounded-[12px] border border-[#404040] bg-[#262626] px-5 py-[15px]",
-                        crate::common::lucide_dioxus::Info { size: 18, class: "mt-0.5 shrink-0 text-[#737373]" }
-                        p { class: "font-medium text-[12px]/[16px] text-[#D4D4D4]",
-                            {tr.notice}
-                        }
-                    }
                 }
             }
 
             div { class: "mt-auto flex w-full justify-end gap-3 pt-5",
                 Button {
                     style: ButtonStyle::Text,
-                    class: "!rounded-[10px] !px-5 !py-3 !text-white",
+                    class: "!rounded-[10px] !px-5 !py-3 !text-white hover:!bg-white/5 hover:!text-white",
                     onclick: move |_| on_back.call(()),
                     {tr.back}
                 }

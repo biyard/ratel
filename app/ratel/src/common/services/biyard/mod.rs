@@ -36,6 +36,11 @@ pub struct TransactPointRequest {
     pub month: Option<String>,
 }
 
+#[derive(Debug, Clone, Serialize)]
+struct TransactPointsBody {
+    transactions: Vec<TransactPointRequest>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransactPointResponse {
     pub transaction_id: String,
@@ -149,14 +154,16 @@ impl BiyardService {
         month: Option<String>,
     ) -> Result<AwardPointResponse> {
         let path = format!("{}/v1/projects/{}/points", self.base_url, self.project_id);
-        let body = vec![TransactPointRequest {
-            tx_type: "Award".to_string(),
-            to: Some(Self::convert_user_id(&target_pk)?),
-            from: None,
-            amount: points,
-            description: Some(description),
-            month,
-        }];
+        let body = TransactPointsBody {
+            transactions: vec![TransactPointRequest {
+                tx_type: "Award".to_string(),
+                to: Some(Self::convert_user_id(&target_pk)?),
+                from: None,
+                amount: points,
+                description: Some(description),
+                month,
+            }],
+        };
 
         let res = self
             .cli
@@ -192,14 +199,16 @@ impl BiyardService {
         month: String,
     ) -> Result<ExchangePointResponse> {
         let path = format!("{}/v1/projects/{}/points", self.base_url, self.project_id);
-        let body = vec![TransactPointRequest {
-            tx_type: "Exchange".to_string(),
-            to: None,
-            from: Some(Self::convert_user_id(&user_pk)?),
-            amount,
-            description: Some("Point-to-Token Exchange".to_string()),
-            month: Some(month),
-        }];
+        let body = TransactPointsBody {
+            transactions: vec![TransactPointRequest {
+                tx_type: "Exchange".to_string(),
+                to: None,
+                from: Some(Self::convert_user_id(&user_pk)?),
+                amount,
+                description: Some("Point-to-Token Exchange".to_string()),
+                month: Some(month),
+            }],
+        };
 
         let res = self
             .cli
