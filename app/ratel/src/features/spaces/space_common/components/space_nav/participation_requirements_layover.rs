@@ -15,6 +15,8 @@ pub fn ParticipationRequirementsLayover(
     requirements: Vec<
         crate::features::spaces::controllers::panel_requirements::PanelRequirementStatus,
     >,
+    on_verified_refresh: EventHandler<()>,
+    on_completed: EventHandler<()>,
 ) -> Element {
     let tr: ParticipationRequirementsLayoverTranslate = use_translate();
     let mut current_step = use_signal(|| ParticipationLayoverStep::SeeYourDifference);
@@ -29,6 +31,7 @@ pub fn ParticipationRequirementsLayover(
     let handle_verified = move |next_requirements| {
         current_requirements.set(next_requirements);
         current_step.set(ParticipationLayoverStep::CreateCredential);
+        on_verified_refresh.call(());
     };
 
     rsx! {
@@ -53,7 +56,7 @@ pub fn ParticipationRequirementsLayover(
                     }
                 },
                 ParticipationLayoverStep::CreateCredential => rsx! {
-                    ParticipationCredentialSection { requirements: current_requirements() }
+                    ParticipationCredentialSection { requirements: current_requirements(), on_completed }
                 },
             }
         }
