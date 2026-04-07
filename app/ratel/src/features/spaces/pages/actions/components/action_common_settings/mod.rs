@@ -115,16 +115,16 @@ pub fn ActionCommonSettings(
             div { class: "flex flex-col gap-2.5",
                 p { {tr.date} }
                 DateAndTimePicker {
-                    initial_started_at: Some(setting.started_at + 9 * 60 * 60 * 1000),
-                    initial_ended_at: Some(setting.ended_at + 9 * 60 * 60 * 1000),
+                    initial_started_at: Some(setting.started_at),
+                    initial_ended_at: Some(setting.ended_at),
                     on_change: move |range: DateTimeRange| async move {
                         if let (Some(start_date), Some(end_date)) = (range.start_date, range.end_date) {
-                            let started_at = date_time_to_millis(
+                            let started_at = range.timezone.local_to_utc_millis(
                                 start_date,
                                 range.start_hour,
                                 range.start_minute,
                             );
-                            let ended_at = date_time_to_millis(
+                            let ended_at = range.timezone.local_to_utc_millis(
                                 end_date,
                                 range.end_hour,
                                 range.end_minute,
@@ -216,6 +216,3 @@ translate! {
     },
 }
 
-fn date_time_to_millis(date: time::Date, hour: u8, minute: u8) -> i64 {
-    crate::common::utils::time::kst_date_time_to_utc_millis(date, hour, minute)
-}
