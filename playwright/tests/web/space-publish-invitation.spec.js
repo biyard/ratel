@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { click, fill, goto, getLocator, getEditor, waitPopup } from "../utils";
+import { CONFIGS } from "../config";
 
 /**
  * Space Publish with Invitation Emails
@@ -134,6 +135,7 @@ test.describe.serial("Space publish and invitation (event-driven notification)",
   }) => {
     // Create a fresh anonymous context (no session cookies)
     const context = await browser.newContext({
+      baseURL: CONFIGS.BASE_URL,
       storageState: { cookies: [], origins: [] },
     });
     const page = await context.newPage();
@@ -168,6 +170,7 @@ test.describe.serial("Space publish and invitation (event-driven notification)",
 
     // Create a fresh anonymous context
     const context = await browser.newContext({
+      baseURL: CONFIGS.BASE_URL,
       storageState: { cookies: [], origins: [] },
     });
     const page = await context.newPage();
