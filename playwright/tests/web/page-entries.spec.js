@@ -5,8 +5,18 @@ import { goto } from "../utils";
  * Page Entries — Accessibility Smoke Test
  *
  * Verifies that every registered route in the app loads without showing
- * the "Page not found" component. Test data is set up via REST API calls
- * using page.request (which carries the browser's auth cookies from user.json).
+ * the "Page not found" component, and that the expected layout container
+ * is visible for each page group.
+ *
+ * Layout testid mapping:
+ *   app-layout          → AppLayout (SidebarInset wrapper): /, /privacy, /terms,
+ *                         /membership, /my-follower, /posts/*, /admin/
+ *   social-layout       → SocialLayout: /:username/* (user + team pages)
+ *   team-setting-layout → TeamSettingLayout: /:username/team-settings/*
+ *   space-layout-container → SpaceLayout: /spaces/:id/*
+ *
+ * Test data is set up via REST API calls using page.request (which carries
+ * the browser's auth cookies from user.json).
  *
  * API body format follows the Dioxus server function convention:
  *   Each parameter is wrapped by its Rust parameter name as the JSON key.
@@ -128,128 +138,211 @@ test.describe.serial("Page entries accessibility", () => {
     expect(data.followId).toBeTruthy();
   });
 
-  // ── Helper ─────────────────────────────────────────────────────────────────
+  // ── Helpers ────────────────────────────────────────────────────────────────
 
-  async function checkPage(page, url) {
+  /**
+   * Navigate to `url` and verify:
+   *   1. "Page not found" is NOT shown (no 404/route mismatch)
+   *   2. The expected layout container identified by `testId` IS visible
+   *      (confirms the page rendered actual content, not an empty/error shell)
+   */
+  async function checkPage(page, url, testId) {
     await goto(page, url);
     await expect(
       page.getByText("Page not found"),
     ).toBeHidden({ timeout: 15000 });
+    await expect(
+      page.getByTestId(testId),
+    ).toBeVisible({ timeout: 15000 });
   }
 
-  // ── Static pages ───────────────────────────────────────────────────────────
+  // ── Static / app-shell pages (AppLayout) ───────────────────────────────────
 
-  test("GET /", async ({ page }) => checkPage(page, "/"));
-  test("GET /privacy", async ({ page }) => checkPage(page, "/privacy"));
-  test("GET /terms", async ({ page }) => checkPage(page, "/terms"));
-  test("GET /membership", async ({ page }) => checkPage(page, "/membership"));
-  test("GET /my-follower", async ({ page }) => checkPage(page, "/my-follower"));
+  test("GET /", async ({ page }) => checkPage(page, "/", "app-layout"));
+  test("GET /privacy", async ({ page }) =>
+    checkPage(page, "/privacy", "app-layout"));
+  test("GET /terms", async ({ page }) =>
+    checkPage(page, "/terms", "app-layout"));
+  test("GET /membership", async ({ page }) =>
+    checkPage(page, "/membership", "app-layout"));
+  test("GET /my-follower", async ({ page }) =>
+    checkPage(page, "/my-follower", "app-layout"));
 
-  // ── Post pages ─────────────────────────────────────────────────────────────
+  // ── Post pages (AppLayout) ─────────────────────────────────────────────────
 
-  test("GET /posts/", async ({ page }) => checkPage(page, "/posts/"));
+  test("GET /posts/", async ({ page }) =>
+    checkPage(page, "/posts/", "app-layout"));
   test("GET /posts/:post_id", async ({ page }) =>
-    checkPage(page, `/posts/${data.postId}`));
+    checkPage(page, `/posts/${data.postId}`, "app-layout"));
   test("GET /posts/:post_id/edit", async ({ page }) =>
-    checkPage(page, `/posts/${data.postId}/edit`));
+    checkPage(page, `/posts/${data.postId}/edit`, "app-layout"));
 
-  // ── User profile pages ─────────────────────────────────────────────────────
+  // ── User / team pages (SocialLayout) ──────────────────────────────────────
 
   test("GET /:username/", async ({ page }) =>
-    checkPage(page, `/${data.username}/`));
+    checkPage(page, `/${data.username}/`, "social-layout"));
   test("GET /:username/posts", async ({ page }) =>
-    checkPage(page, `/${data.username}/posts`));
+    checkPage(page, `/${data.username}/posts`, "social-layout"));
   test("GET /:username/memberships", async ({ page }) =>
-    checkPage(page, `/${data.username}/memberships`));
+    checkPage(page, `/${data.username}/memberships`, "social-layout"));
   test("GET /:username/drafts", async ({ page }) =>
-    checkPage(page, `/${data.username}/drafts`));
+    checkPage(page, `/${data.username}/drafts`, "social-layout"));
   test("GET /:username/credentials", async ({ page }) =>
-    checkPage(page, `/${data.username}/credentials`));
+    checkPage(page, `/${data.username}/credentials`, "social-layout"));
   test("GET /:username/spaces", async ({ page }) =>
-    checkPage(page, `/${data.username}/spaces`));
+    checkPage(page, `/${data.username}/spaces`, "social-layout"));
   // NOTE: /:username/rewards depends on an external biyard service for SSR.
   // The server-side rendering hangs when the service is unavailable,
   // causing page.goto to timeout. Skip in test environments.
   test.skip("GET /:username/rewards", async ({ page }) =>
-    checkPage(page, `/${data.username}/rewards`));
+    checkPage(page, `/${data.username}/rewards`, "app-layout"));
   test("GET /:username/settings", async ({ page }) =>
-    checkPage(page, `/${data.username}/settings`));
+    checkPage(page, `/${data.username}/settings`, "app-layout"));
 
-  // ── Team pages ─────────────────────────────────────────────────────────────
+  // ── Team-specific pages (SocialLayout) ────────────────────────────────────
 
   test("GET /:teamUsername/home", async ({ page }) =>
-    checkPage(page, `/${data.teamUsername}/home`));
+    checkPage(page, `/${data.teamUsername}/home`, "social-layout"));
   test("GET /:teamUsername/team-drafts", async ({ page }) =>
-    checkPage(page, `/${data.teamUsername}/team-drafts`));
+    checkPage(page, `/${data.teamUsername}/team-drafts`, "social-layout"));
   test("GET /:teamUsername/groups", async ({ page }) =>
-    checkPage(page, `/${data.teamUsername}/groups`));
+    checkPage(page, `/${data.teamUsername}/groups`, "social-layout"));
   test("GET /:teamUsername/dao", async ({ page }) =>
-    checkPage(page, `/${data.teamUsername}/dao`));
+    checkPage(page, `/${data.teamUsername}/dao`, "social-layout"));
   test("GET /:teamUsername/members", async ({ page }) =>
-    checkPage(page, `/${data.teamUsername}/members`));
+    checkPage(page, `/${data.teamUsername}/members`, "social-layout"));
   test("GET /:teamUsername/team-rewards", async ({ page }) =>
-    checkPage(page, `/${data.teamUsername}/team-rewards`));
+    checkPage(page, `/${data.teamUsername}/team-rewards`, "social-layout"));
   test("GET /:teamUsername/team-memberships", async ({ page }) =>
-    checkPage(page, `/${data.teamUsername}/team-memberships`));
-  test("GET /:teamUsername/team-settings", async ({ page }) =>
-    checkPage(page, `/${data.teamUsername}/team-settings`));
-  test("GET /:teamUsername/team-settings/members", async ({ page }) =>
-    checkPage(page, `/${data.teamUsername}/team-settings/members`));
-  test("GET /:teamUsername/team-settings/subscription", async ({ page }) =>
-    checkPage(page, `/${data.teamUsername}/team-settings/subscription`));
+    checkPage(
+      page,
+      `/${data.teamUsername}/team-memberships`,
+      "social-layout",
+    ));
 
-  // ── Space pages ────────────────────────────────────────────────────────────
+  // ── Team settings pages (TeamSettingLayout) ────────────────────────────────
+
+  test("GET /:teamUsername/team-settings", async ({ page }) =>
+    checkPage(
+      page,
+      `/${data.teamUsername}/team-settings`,
+      "team-setting-layout",
+    ));
+  test("GET /:teamUsername/team-settings/members", async ({ page }) =>
+    checkPage(
+      page,
+      `/${data.teamUsername}/team-settings/members`,
+      "team-setting-layout",
+    ));
+  test("GET /:teamUsername/team-settings/subscription", async ({ page }) =>
+    checkPage(
+      page,
+      `/${data.teamUsername}/team-settings/subscription`,
+      "team-setting-layout",
+    ));
+
+  // ── Space pages (SpaceLayout) ──────────────────────────────────────────────
 
   test("GET /spaces/:space_id/dashboard", async ({ page }) =>
-    checkPage(page, `/spaces/${data.spaceId}/dashboard`));
+    checkPage(
+      page,
+      `/spaces/${data.spaceId}/dashboard`,
+      "space-layout-container",
+    ));
   test("GET /spaces/:space_id/overview", async ({ page }) =>
-    checkPage(page, `/spaces/${data.spaceId}/overview`));
+    checkPage(
+      page,
+      `/spaces/${data.spaceId}/overview`,
+      "space-layout-container",
+    ));
   test("GET /spaces/:space_id/report", async ({ page }) =>
-    checkPage(page, `/spaces/${data.spaceId}/report`));
+    checkPage(
+      page,
+      `/spaces/${data.spaceId}/report`,
+      "space-layout-container",
+    ));
 
-  // ── Space action pages ─────────────────────────────────────────────────────
+  // ── Space action pages (SpaceLayout) ──────────────────────────────────────
 
   test("GET /spaces/:space_id/actions/", async ({ page }) =>
-    checkPage(page, `/spaces/${data.spaceId}/actions/`));
+    checkPage(
+      page,
+      `/spaces/${data.spaceId}/actions/`,
+      "space-layout-container",
+    ));
   test("GET /spaces/:space_id/actions/polls/:poll_id", async ({ page }) =>
-    checkPage(page, `/spaces/${data.spaceId}/actions/polls/${data.pollId}`));
+    checkPage(
+      page,
+      `/spaces/${data.spaceId}/actions/polls/${data.pollId}`,
+      "space-layout-container",
+    ));
   test("GET /spaces/:space_id/actions/quizzes/:quiz_id", async ({ page }) =>
-    checkPage(page, `/spaces/${data.spaceId}/actions/quizzes/${data.quizId}`));
-  test("GET /spaces/:space_id/actions/discussions/:discussion_id", async ({ page }) =>
-    checkPage(page, `/spaces/${data.spaceId}/actions/discussions/${data.discussionId}`));
+    checkPage(
+      page,
+      `/spaces/${data.spaceId}/actions/quizzes/${data.quizId}`,
+      "space-layout-container",
+    ));
+  test(
+    "GET /spaces/:space_id/actions/discussions/:discussion_id",
+    async ({ page }) =>
+      checkPage(
+        page,
+        `/spaces/${data.spaceId}/actions/discussions/${data.discussionId}`,
+        "space-layout-container",
+      ),
+  );
   // NOTE: discussion editor page loads discussion context via server function,
   // which can cause SSR crash (ERR_EMPTY_RESPONSE) in some environments.
-  // The route exists but may need data pre-population to render without errors.
+  // The route exists but may need a fully configured space to render without errors.
   test.skip(
     "GET /spaces/:space_id/actions/discussions/:discussion_id/edit",
     async ({ page }) =>
       checkPage(
         page,
         `/spaces/${data.spaceId}/actions/discussions/${data.discussionId}/edit`,
+        "space-layout-container",
       ),
   );
   test("GET /spaces/:space_id/actions/follows/:follow_id", async ({ page }) =>
     checkPage(
       page,
       `/spaces/${data.spaceId}/actions/follows/${data.followId}`,
+      "space-layout-container",
     ));
 
-  // ── Space app pages ────────────────────────────────────────────────────────
+  // ── Space app pages (SpaceLayout) ─────────────────────────────────────────
 
   test("GET /spaces/:space_id/apps/", async ({ page }) =>
-    checkPage(page, `/spaces/${data.spaceId}/apps/`));
+    checkPage(
+      page,
+      `/spaces/${data.spaceId}/apps/`,
+      "space-layout-container",
+    ));
   test("GET /spaces/:space_id/apps/general", async ({ page }) =>
-    checkPage(page, `/spaces/${data.spaceId}/apps/general`));
+    checkPage(
+      page,
+      `/spaces/${data.spaceId}/apps/general`,
+      "space-layout-container",
+    ));
   test("GET /spaces/:space_id/apps/files", async ({ page }) =>
-    checkPage(page, `/spaces/${data.spaceId}/apps/files`));
+    checkPage(
+      page,
+      `/spaces/${data.spaceId}/apps/files`,
+      "space-layout-container",
+    ));
   test("GET /spaces/:space_id/apps/analyzes", async ({ page }) =>
-    checkPage(page, `/spaces/${data.spaceId}/apps/analyzes`));
+    checkPage(
+      page,
+      `/spaces/${data.spaceId}/apps/analyzes`,
+      "space-layout-container",
+    ));
   test(
     "GET /spaces/:space_id/apps/analyzes/poll/:poll_id",
     async ({ page }) =>
       checkPage(
         page,
         `/spaces/${data.spaceId}/apps/analyzes/poll/${data.pollId}`,
+        "space-layout-container",
       ),
   );
   test(
@@ -258,10 +351,19 @@ test.describe.serial("Page entries accessibility", () => {
       checkPage(
         page,
         `/spaces/${data.spaceId}/apps/analyzes/discussion/${data.discussionId}`,
+        "space-layout-container",
       ),
   );
   test("GET /spaces/:space_id/apps/panels", async ({ page }) =>
-    checkPage(page, `/spaces/${data.spaceId}/apps/panels`));
+    checkPage(
+      page,
+      `/spaces/${data.spaceId}/apps/panels`,
+      "space-layout-container",
+    ));
   test("GET /spaces/:space_id/apps/incentive-pool", async ({ page }) =>
-    checkPage(page, `/spaces/${data.spaceId}/apps/incentive-pool`));
+    checkPage(
+      page,
+      `/spaces/${data.spaceId}/apps/incentive-pool`,
+      "space-layout-container",
+    ));
 });
