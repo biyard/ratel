@@ -44,21 +44,18 @@ pub fn UploadTab(can_edit: bool) -> Element {
     let upload_uploader_profile_url = uploader_profile_url.clone();
     let mut query = use_query_store();
 
-    let save_files = move |next_files: Vec<File>| {
-        let mut toast = toast;
-        spawn(async move {
-            let req = UpdateDiscussionRequest {
-                files: Some(next_files),
-                ..Default::default()
-            };
-            if let Err(err) = update_discussion(space_id(), discussion_id(), req).await {
-                error!("Failed to update discussion files: {:?}", err);
-                toast.error(err);
-            } else {
-                let keys = space_page_actions_discussion_key(&space_id(), &discussion_id());
-                query.invalidate(&keys);
-            }
-        });
+    let save_files = move |next_files: Vec<File>| async move {
+        let req = UpdateDiscussionRequest {
+            files: Some(next_files),
+            ..Default::default()
+        };
+        if let Err(err) = update_discussion(space_id(), discussion_id(), req).await {
+            error!("Failed to update discussion files: {:?}", err);
+            toast.error(err);
+        } else {
+            let keys = space_page_actions_discussion_key(&space_id(), &discussion_id());
+            query.invalidate(&keys);
+        }
     };
 
     rsx! {
@@ -105,7 +102,7 @@ pub fn UploadTab(can_edit: bool) -> Element {
                             uploaded_at: Some(crate::common::utils::time::now()),
                         });
                         files.set(next.clone());
-                        save_files(next);
+                        save_files(next).await;
                         }
                     },
                     div { class: "flex px-4 py-2.5 w-full gap-5 flex-col items-center justify-center rounded-[12px] border border-dashed border-quiz-upload-zone-border bg-quiz-upload-zone-bg text-center transition-colors hover:border-primary",
