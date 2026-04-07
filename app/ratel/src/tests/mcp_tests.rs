@@ -114,20 +114,24 @@ async fn test_mcp_tool_create_post() {
 async fn test_mcp_tool_list_teams() {
     let (ctx, token) = setup_mcp_test().await;
 
-    // Create a team so there is at least one team to list
+    // Create a team so there is at least one team to list.
+    // Dioxus server functions wrap the named parameter as a JSON key:
+    // create_team_handler(body: CreateTeamRequest, ...) → send {"body": {...}}
     let team_username = format!("t{}", &uuid::Uuid::new_v4().simple().to_string()[..7]);
-    let (status, _, _) = crate::test_post! {
+    let (status, _, resp) = crate::test_post! {
         app: ctx.app.clone(),
         path: "/api/teams/create",
         headers: ctx.test_user.1.clone(),
         body: {
-            "username": team_username,
-            "nickname": "Test Team",
-            "profile_url": "",
-            "description": ""
+            "body": {
+                "username": team_username,
+                "nickname": "Test Team",
+                "profile_url": "",
+                "description": ""
+            }
         }
     };
-    assert_eq!(status, 200, "create_team failed");
+    assert_eq!(status, 200, "create_team failed: {:?}", resp);
 
     // list_teams via MCP must return the newly created team
     let (status, body) =
@@ -231,18 +235,22 @@ async fn test_mcp_tool_create_space() {
 /// Helper: create a team via HTTP and return the team username.
 async fn create_test_team(ctx: &TestContext) -> String {
     let team_username = format!("t{}", &uuid::Uuid::new_v4().simple().to_string()[..7]);
-    let (status, _, _) = crate::test_post! {
+    // Dioxus server functions wrap the named parameter as a JSON key.
+    // create_team_handler(body: CreateTeamRequest, ...) → send {"body": {...}}
+    let (status, _, resp) = crate::test_post! {
         app: ctx.app.clone(),
         path: "/api/teams/create",
         headers: ctx.test_user.1.clone(),
         body: {
-            "username": team_username,
-            "nickname": "Test Team",
-            "profile_url": "",
-            "description": ""
+            "body": {
+                "username": team_username,
+                "nickname": "Test Team",
+                "profile_url": "",
+                "description": ""
+            }
         }
     };
-    assert_eq!(status, 200, "create_team failed");
+    assert_eq!(status, 200, "create_team failed: {:?}", resp);
     team_username
 }
 
