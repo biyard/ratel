@@ -78,11 +78,13 @@ pub fn UploadTab(can_edit: bool) -> Element {
                         let file_url = url.clone();
                         let link_space_id = space_id();
                         let link_quiz_id = quiz_id().to_string();
+                        let link_file_name = uploaded_name.clone();
                         spawn(async move {
                             if let Err(e) = crate::features::spaces::pages::apps::apps::file::create_file_link(
                                     link_space_id,
                                     crate::features::spaces::pages::apps::apps::file::CreateFileLinkRequest {
                                         file_url,
+                                        file_name: Some(link_file_name),
                                         link_target: crate::features::spaces::pages::apps::apps::file::FileLinkTarget::Quiz(
                                             link_quiz_id,
                                         ),
