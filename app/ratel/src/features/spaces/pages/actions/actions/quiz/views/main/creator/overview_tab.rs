@@ -111,10 +111,10 @@ pub fn OverviewTab(can_edit: bool) -> Element {
                         Button {
                             style: ButtonStyle::Outline,
                             shape: ButtonShape::Square,
-                            class: "min-w-[110px] inline-flex items-center justify-center gap-2 border-white text-white hover:text-white",
+                            class: "min-w-[110px] inline-flex items-center justify-center gap-2",
                             disabled: status() == OverviewStatus::Saving,
                             onclick: on_save,
-                            crate::common::icons::other_devices::Save { class: "w-5 h-5 [&>path]:stroke-white [&>path]:fill-transparent" }
+                            crate::common::icons::other_devices::Save { class: "w-5 h-5 [&>path]:stroke-current [&>path]:fill-transparent" }
                             {tr.btn_save}
                         }
                     }
