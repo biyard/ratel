@@ -7,7 +7,9 @@ use crate::features::spaces::pages::actions::actions::quiz::*;
 use crate::features::spaces::pages::actions::components::FullActionLayover;
 use crate::features::spaces::pages::apps::apps::file::components::FileCard;
 use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
-use crate::features::spaces::space_common::types::space_page_actions_quiz_key;
+use crate::features::spaces::space_common::types::{
+    space_my_score_key, space_page_actions_quiz_key, space_ranking_key,
+};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum QuizReadStep {
@@ -160,14 +162,14 @@ pub fn QuizReadPage(
 
     let on_submit = move |_| {
         let req = RespondQuizRequest { answers: answers() };
-        let mut query = query;
-        let mut toast = toast;
         let nav = nav.clone();
         spawn(async move {
             match respond_quiz(space_id(), quiz_id(), req).await {
                 Ok(_) => {
                     let keys = space_page_actions_quiz_key(&space_id(), &quiz_id());
                     query.invalidate(&keys);
+                    query.invalidate(&space_ranking_key(&space_id()));
+                    query.invalidate(&space_my_score_key(&space_id()));
                     toast.info(i18n.submit_success);
                     nav.push(format!("/spaces/{}/actions", space_id()));
                 }
@@ -320,7 +322,9 @@ pub fn QuizReadPage(
                         }
                     }
 
-                    if is_in_progress && can_execute_action && !has_passed && quiz.attempt_count >= total_allowed && can_respond {
+                    if is_in_progress && can_execute_action && !has_passed
+                        && quiz.attempt_count >= total_allowed && can_respond
+                    {
                         div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
                             {i18n.no_remaining_attempts}
                         }
