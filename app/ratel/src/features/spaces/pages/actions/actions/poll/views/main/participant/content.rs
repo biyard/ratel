@@ -118,31 +118,21 @@ pub fn PollContent(
     let on_submit = move |_| {
         if can_submit && !poll.response_editable {
             let mut popup = popup;
-            let mut cancel_popup = popup;
             let confirm_submit_response = build_submit_response();
+            let on_cancel = move |_| {
+                popup.close();
+            };
+            let on_confirm = move |_| {
+                popup.close();
+                confirm_submit_response();
+            };
             popup
                 .open(rsx! {
-                    div { class: "flex w-full justify-end gap-3",
-                        Button {
-                            style: ButtonStyle::Outline,
-                            shape: ButtonShape::Square,
-                            class: "min-w-[120px]",
-                            onclick: move |_| {
-                                cancel_popup.close();
-                            },
-                            {tr.submit_confirm_cancel}
-                        }
-                        Button {
-                            "data-testid": "poll-confirm-submit",
-                            style: ButtonStyle::Primary,
-                            shape: ButtonShape::Square,
-                            class: "min-w-[120px]",
-                            onclick: move |_| {
-                                popup.close();
-                                confirm_submit_response();
-                            },
-                            {tr.submit_confirm_action}
-                        }
+                    PollSubmitConfirm {
+                        cancel_label: tr.submit_confirm_cancel,
+                        confirm_label: tr.submit_confirm_action,
+                        on_cancel,
+                        on_confirm,
                     }
                 })
                 .with_title(tr.submit_confirm_title)
@@ -269,6 +259,34 @@ pub fn PollContent(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+#[component]
+fn PollSubmitConfirm(
+    cancel_label: String,
+    confirm_label: String,
+    on_cancel: EventHandler<MouseEvent>,
+    on_confirm: EventHandler<MouseEvent>,
+) -> Element {
+    rsx! {
+        div { class: "flex gap-3 justify-end w-full",
+            Button {
+                style: ButtonStyle::Outline,
+                shape: ButtonShape::Square,
+                class: "min-w-[120px]",
+                onclick: move |e| on_cancel.call(e),
+                {cancel_label}
+            }
+            Button {
+                "data-testid": "poll-confirm-submit",
+                style: ButtonStyle::Primary,
+                shape: ButtonShape::Square,
+                class: "min-w-[120px]",
+                onclick: move |e| on_confirm.call(e),
+                {confirm_label}
             }
         }
     }
