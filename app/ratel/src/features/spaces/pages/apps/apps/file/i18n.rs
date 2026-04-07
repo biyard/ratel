@@ -19,6 +19,10 @@ translate! {
         en: "Boards",
         ko: "게시판",
     },
+    tab_quiz: {
+        en: "Quiz",
+        ko: "퀴즈",
+    },
     attached_files: {
         en: "Attached Files",
         ko: "첨부 파일",

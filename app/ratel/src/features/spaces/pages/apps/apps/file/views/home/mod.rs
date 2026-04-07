@@ -6,6 +6,7 @@ enum FileTab {
     All,
     Overview,
     Boards,
+    Quiz,
 }
 
 fn is_image_ext(ext: &FileExtension) -> bool {
@@ -79,6 +80,17 @@ pub fn SpaceFileAppPage(space_id: SpacePartition) -> Element {
                     .filter(|f| f.url.as_ref().is_some_and(|url| linked_urls.contains(url)))
                     .collect()
             }
+            FileTab::Quiz => {
+                let linked_urls: Vec<String> = links
+                    .iter()
+                    .filter(|link| matches!(link.link_target, FileLinkTarget::Quiz(_)))
+                    .map(|link| link.file_url.clone())
+                    .collect();
+                all_files
+                    .into_iter()
+                    .filter(|f| f.url.as_ref().is_some_and(|url| linked_urls.contains(url)))
+                    .collect()
+            }
         }
     };
 
@@ -141,14 +153,14 @@ pub fn SpaceFileAppPage(space_id: SpacePartition) -> Element {
                         }
                     }
                     {
-                        let (style, class) = tab_button_props(FileTab::Boards);
+                        let (style, class) = tab_button_props(FileTab::Quiz);
                         rsx! {
                             Button {
                                 class: class.to_string(),
                                 style,
                                 shape: ButtonShape::Square,
-                                onclick: move |_| active_tab.set(FileTab::Boards),
-                                {tr.tab_boards}
+                                onclick: move |_| active_tab.set(FileTab::Quiz),
+                                {tr.tab_quiz}
                             }
                         }
                     }

@@ -6,4 +6,5 @@ pub enum FileLinkTarget {
     Files,
     Overview,
     Board(String),
+    Quiz(String),
 }
