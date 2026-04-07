@@ -1,5 +1,6 @@
 use super::ServerConfig;
 use crate::common::utils::aws::S3Client;
+use aws_config::Region;
 use dioxus::fullstack::Lazy;
 
 pub static S3_CLIENT: Lazy<S3Client> = Lazy::new(|| async move {
@@ -8,9 +9,11 @@ pub static S3_CLIENT: Lazy<S3Client> = Lazy::new(|| async move {
         bucket_name,
         asset_dir,
         expire,
+        region,
     } = S3Config::default();
 
     let aws_sdk_config = config.aws.get_sdk_config();
+    let aws_sdk_config = aws_sdk_config.into_builder().region(Region::new(region)).build();
 
     dioxus::Ok(S3Client::new(
         &aws_sdk_config,
@@ -24,6 +27,7 @@ pub struct S3Config {
     pub bucket_name: String,
     pub asset_dir: Option<String>,
     pub expire: u64,
+    pub region: String,
 }
 
 impl Default for S3Config {
@@ -40,11 +44,13 @@ impl Default for S3Config {
             Some(value) => value.parse::<u64>().ok().unwrap_or_default(),
             None => 3600,
         };
+        let region = option_env!("S3_REGION").unwrap_or("ap-northeast-2").to_string();
 
         S3Config {
             bucket_name,
             asset_dir,
             expire,
+            region,
         }
     }
 }
