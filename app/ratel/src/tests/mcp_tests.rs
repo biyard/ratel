@@ -113,10 +113,42 @@ async fn test_mcp_tool_create_post() {
 #[tokio::test]
 async fn test_mcp_tool_list_teams() {
     let (ctx, token) = setup_mcp_test().await;
+
+    // Create a team so there is at least one team to list.
+    // Dioxus server functions wrap the named parameter as a JSON key:
+    // create_team_handler(body: CreateTeamRequest, ...) → send {"body": {...}}
+    let team_username = format!("t{}", &uuid::Uuid::new_v4().simple().to_string()[..7]);
+    let (status, _, resp) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: "/api/teams/create",
+        headers: ctx.test_user.1.clone(),
+        body: {
+            "body": {
+                "username": team_username,
+                "nickname": "Test Team",
+                "profile_url": "",
+                "description": ""
+            }
+        }
+    };
+    assert_eq!(status, 200, "create_team failed: {:?}", resp);
+
+    // list_teams via MCP must return the newly created team
     let (status, body) =
         mcp_tool_call(ctx.app, &token, "list_teams", serde_json::json!({})).await;
     assert_eq!(status, 200, "list_teams: {:?}", body);
-    assert!(body.get("result").is_some(), "should have result: {:?}", body);
+
+    let content = extract_tool_content(&body);
+    let teams = content.as_array().expect("list_teams should return an array");
+    assert!(
+        !teams.is_empty(),
+        "list_teams should return at least one team after creation: {:?}",
+        body
+    );
+    let found = teams
+        .iter()
+        .any(|t| t.get("username").and_then(|v| v.as_str()) == Some(&team_username));
+    assert!(found, "created team '{}' not found in list_teams result: {:?}", team_username, teams);
 }
 
 #[tokio::test]
@@ -198,4 +230,130 @@ async fn test_mcp_tool_create_space() {
         ctx.app, &token, "create_space", serde_json::json!({ "post_id": post_pk }),
     ).await;
     assert_eq!(status, 200, "create_space: {:?}", body);
+}
+
+/// Helper: create a team via HTTP and return the team username.
+async fn create_test_team(ctx: &TestContext) -> String {
+    let team_username = format!("t{}", &uuid::Uuid::new_v4().simple().to_string()[..7]);
+    // Dioxus server functions wrap the named parameter as a JSON key.
+    // create_team_handler(body: CreateTeamRequest, ...) → send {"body": {...}}
+    let (status, _, resp) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: "/api/teams/create",
+        headers: ctx.test_user.1.clone(),
+        body: {
+            "body": {
+                "username": team_username,
+                "nickname": "Test Team",
+                "profile_url": "",
+                "description": ""
+            }
+        }
+    };
+    assert_eq!(status, 200, "create_team failed: {:?}", resp);
+    team_username
+}
+
+/// Helper: call list_teams via MCP and return the team_id (pk) for the given username.
+async fn get_team_id_by_username(
+    app: axum::Router,
+    token: &str,
+    username: &str,
+) -> String {
+    let (status, body) =
+        mcp_tool_call(app, token, "list_teams", serde_json::json!({})).await;
+    assert_eq!(status, 200, "list_teams: {:?}", body);
+
+    let content = extract_tool_content(&body);
+    let teams = content.as_array().expect("list_teams should return array");
+    teams
+        .iter()
+        .find(|t| t.get("username").and_then(|v| v.as_str()) == Some(username))
+        .and_then(|t| t.get("pk").and_then(|v| v.as_str()))
+        .unwrap_or_else(|| panic!("team '{}' not found in list_teams", username))
+        .to_string()
+}
+
+#[tokio::test]
+async fn test_mcp_tool_team_create_post() {
+    let (ctx, token) = setup_mcp_test().await;
+
+    // Step 1: create a team and resolve its team_id via list_teams
+    let team_username = create_test_team(&ctx).await;
+    let team_id = get_team_id_by_username(ctx.app.clone(), &token, &team_username).await;
+
+    // Step 2: create a post under the team
+    let (status, body) = mcp_tool_call(
+        ctx.app.clone(),
+        &token,
+        "create_post",
+        serde_json::json!({ "team_id": team_id }),
+    )
+    .await;
+    assert_eq!(status, 200, "team create_post: {:?}", body);
+
+    let content = extract_tool_content(&body);
+    let post_pk = content["post_pk"]
+        .as_str()
+        .expect("should have post_pk")
+        .to_string();
+
+    // Step 3: verify the post belongs to the team by fetching it
+    let (status, body) = mcp_tool_call(
+        ctx.app,
+        &token,
+        "get_post",
+        serde_json::json!({ "post_id": post_pk }),
+    )
+    .await;
+    assert_eq!(status, 200, "get_post (team post): {:?}", body);
+}
+
+#[tokio::test]
+async fn test_mcp_tool_team_post_and_space() {
+    let (ctx, token) = setup_mcp_test().await;
+
+    // Step 1: create a team and resolve its team_id via list_teams
+    let team_username = create_test_team(&ctx).await;
+    let team_id = get_team_id_by_username(ctx.app.clone(), &token, &team_username).await;
+
+    // Step 2: create a draft post under the team
+    let (status, body) = mcp_tool_call(
+        ctx.app.clone(),
+        &token,
+        "create_post",
+        serde_json::json!({ "team_id": team_id }),
+    )
+    .await;
+    assert_eq!(status, 200, "team create_post: {:?}", body);
+    let post_pk = extract_tool_content(&body)["post_pk"]
+        .as_str()
+        .expect("should have post_pk")
+        .to_string();
+
+    // Step 3: publish the team post
+    let (status, _) = mcp_tool_call(
+        ctx.app.clone(),
+        &token,
+        "update_post",
+        serde_json::json!({
+            "post_id": post_pk,
+            "title": "Team Space Post",
+            "content": "<p>Team post content</p>",
+            "publish": true,
+            "visibility": "Public"
+        }),
+    )
+    .await;
+    assert_eq!(status, 200, "update_post (publish team post) failed");
+
+    // Step 4: create a space from the team post
+    let (status, body) = mcp_tool_call(
+        ctx.app,
+        &token,
+        "create_space",
+        serde_json::json!({ "post_id": post_pk }),
+    )
+    .await;
+    assert_eq!(status, 200, "create_space from team post: {:?}", body);
 }
