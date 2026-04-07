@@ -77,7 +77,7 @@ pub async fn get_user_teams_handler() -> crate::features::social::Result<Vec<cra
     let cli = crate::features::social::config::get().dynamodb();
     let user_pk = user.pk.clone();
 
-    let sk_prefix = "UserTeam".to_string();
+    let sk_prefix = crate::common::types::EntityType::UserTeam(String::new()).to_string();
     let opt = crate::features::auth::UserTeamQueryOption::builder().sk(sk_prefix);
     let (user_teams, _): (Vec<crate::features::auth::UserTeam>, _) =
         crate::features::auth::UserTeam::query(cli, &user_pk, opt).await?;
