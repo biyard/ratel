@@ -18,8 +18,12 @@ pub fn PollCreatorPage(
         let space_id = space_id();
         let poll_id = poll_id();
         if let (Some(start_date), Some(end_date)) = (range.start_date, range.end_date) {
-            let started_at = date_time_to_millis(start_date, range.start_hour, range.start_minute);
-            let ended_at = date_time_to_millis(end_date, range.end_hour, range.end_minute);
+            let started_at = range
+                .timezone
+                .local_to_utc_millis(start_date, range.start_hour, range.start_minute);
+            let ended_at = range
+                .timezone
+                .local_to_utc_millis(end_date, range.end_hour, range.end_minute);
             let _ = update_poll(
                 space_id,
                 poll_id,
@@ -169,9 +173,6 @@ fn EncryptedUploadSetting(
     }
 }
 
-fn date_time_to_millis(date: time::Date, hour: u8, minute: u8) -> i64 {
-    crate::common::utils::time::kst_date_time_to_utc_millis(date, hour, minute)
-}
 
 translate! {
     CreatorTranslate;
