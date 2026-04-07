@@ -27,31 +27,15 @@ pub fn OverviewContent(
     let mut files = use_signal(Vec::<File>::new);
     let mut original_files = use_signal(Vec::<File>::new);
     let mut is_like_processing = use_signal(|| false);
-    let mut did_load = use_signal(|| false);
+
+    let mut file_loader = use_loader(move || async move {
+        crate::features::spaces::pages::apps::apps::file::get_overview_files(space_id()).await
+    })?;
 
     use_effect(move || {
-        if did_load() {
-            return;
+        if !is_editing() {
+            files.set(file_loader());
         }
-        did_load.set(true);
-
-        spawn(async move {
-            let Ok(all_files) = crate::features::spaces::pages::apps::apps::file::get_space_files(space_id()).await else { return; };
-            let Ok(links) = crate::features::spaces::pages::apps::apps::file::list_file_links(space_id()).await else { return; };
-
-            let overview_urls: std::collections::HashSet<String> = links
-                .into_iter()
-                .filter(|l: &crate::features::spaces::pages::apps::apps::file::FileLinkInfo| {
-                    l.link_target == crate::features::spaces::pages::apps::apps::file::FileLinkTarget::Overview
-                })
-                .map(|l| l.file_url)
-                .collect();
-            let overview_files: Vec<File> = all_files
-                .into_iter()
-                .filter(|f: &File| f.url.as_ref().is_some_and(|url| overview_urls.contains(url)))
-                .collect();
-            files.set(overview_files);
-        });
     });
 
     let allow_edit = editable && is_editing();
@@ -156,6 +140,7 @@ pub fn OverviewContent(
                                                         }
 
                                                         is_editing.set(false);
+                                                        file_loader.restart();
                                                     }
                                                     Err(err) => {
                                                         error.set(Some(err.to_string()));

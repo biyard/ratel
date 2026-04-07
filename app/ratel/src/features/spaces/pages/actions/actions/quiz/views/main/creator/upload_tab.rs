@@ -68,6 +68,9 @@ pub fn UploadTab(can_edit: bool) -> Element {
                     accept: ".pdf,.docx,.pptx,.xlsx,.png,.jpg,.jpeg,.mp4,.mov",
                     on_upload_success: move |_url: String| {},
                     on_upload_meta: move |uploaded: UploadedFileMeta| {
+                        let upload_uploader_name = upload_uploader_name.clone();
+                        let upload_uploader_profile_url = upload_uploader_profile_url.clone();
+                        async move {
                         let UploadedFileMeta { url, name, size } = uploaded;
                         let uploaded_name = if name.trim().is_empty() {
                             extract_filename_from_url(&url)
@@ -75,26 +78,21 @@ pub fn UploadTab(can_edit: bool) -> Element {
                             name
                         };
                         let ext = FileExtension::from_name_or_url(&uploaded_name, &url);
-                        let file_url = url.clone();
-                        let link_space_id = space_id();
-                        let link_quiz_id = quiz_id().to_string();
-                        let link_file_name = uploaded_name.clone();
-                        spawn(async move {
-                            if let Err(e) = crate::features::spaces::pages::apps::apps::file::create_file_link(
-                                    link_space_id,
-                                    crate::features::spaces::pages::apps::apps::file::CreateFileLinkRequest {
-                                        file_url,
-                                        file_name: Some(link_file_name),
-                                        link_target: crate::features::spaces::pages::apps::apps::file::FileLinkTarget::Quiz(
-                                            link_quiz_id,
-                                        ),
-                                    },
-                                )
-                                .await
-                            {
-                                error!("Failed to create file link: {:?}", e);
-                            }
-                        });
+                        if let Err(e) = crate::features::spaces::pages::apps::apps::file::create_file_link(
+                                space_id(),
+                                crate::features::spaces::pages::apps::apps::file::CreateFileLinkRequest {
+                                    file_url: url.clone(),
+                                    file_name: Some(uploaded_name.clone()),
+                                    link_target: crate::features::spaces::pages::apps::apps::file::FileLinkTarget::Quiz(
+                                        quiz_id().to_string(),
+                                    ),
+                                },
+                            )
+                            .await
+                        {
+                            error!("Failed to create file link: {:?}", e);
+                            return;
+                        }
                         let mut next = files();
                         next.push(File {
                             id: url.clone(),
@@ -108,6 +106,7 @@ pub fn UploadTab(can_edit: bool) -> Element {
                         });
                         files.set(next.clone());
                         save_files(next);
+                        }
                     },
                     div { class: "flex px-4 py-2.5 w-full gap-5 flex-col items-center justify-center rounded-[12px] border border-dashed border-quiz-upload-zone-border bg-quiz-upload-zone-bg text-center transition-colors hover:border-primary",
                         div { class: "flex flex-col w-full justify-center items-center gap-1",
@@ -235,11 +234,24 @@ pub fn UploadTab(can_edit: bool) -> Element {
                                             class: "flex items-center py-2 px-4 w-full text-sm text-red-400 cursor-pointer hover:bg-hover"
                                                 .to_string(),
                                             onclick: move |_| {
-                                                let mut next = files();
-                                                next.retain(|f| f.id != delete_file_id);
-                                                files.set(next.clone());
-                                                opened_menu.set(None);
-                                                save_files(next);
+                                                let file_url = delete_file_id.clone();
+                                                async move {
+                                                    let mut next = files();
+                                                    next.retain(|f| f.id != file_url);
+                                                    files.set(next);
+                                                    opened_menu.set(None);
+                                                    if let Err(e) = remove_quiz_file(
+                                                        space_id(),
+                                                        quiz_id(),
+                                                        RemoveQuizFileRequest {
+                                                            file_url,
+                                                        },
+                                                    )
+                                                    .await
+                                                    {
+                                                        error!("Failed to remove quiz file: {:?}", e);
+                                                    }
+                                                }
                                             },
                                             span { class: "inline-flex items-center text-red-400", {tr.upload_delete} }
                                         }

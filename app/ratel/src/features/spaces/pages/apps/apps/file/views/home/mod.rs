@@ -194,40 +194,40 @@ pub fn SpaceFileAppPage(space_id: SpacePartition) -> Element {
                                     file: file.clone(),
                                     editable: editing(),
                                     on_delete: move |file_id: String| {
+                                        let space_id = space_id.clone();
+                                        async move {
                                         let current = files();
                                         if let Some(f) = current.iter().find(|f| f.id == file_id) {
                                             if let Some(url) = f.url.clone() {
-                                                let space_id = space_id.clone();
                                                 let links = file_links();
-                                                spawn(async move {
-                                                    let matched = links.iter().find(|l| l.file_url == url);
-                                                    if let Some(link) = matched {
-                                                        let link_target = link.link_target.clone();
-                                                        if let Err(e) = crate::features::spaces::pages::apps::apps::file::delete_file_link(
+                                                let matched = links.iter().find(|l| l.file_url == url);
+                                                if let Some(link) = matched {
+                                                    let link_target = link.link_target.clone();
+                                                    if let Err(e) = crate::features::spaces::pages::apps::apps::file::delete_file_link(
+                                                        space_id.clone(),
+                                                        crate::features::spaces::pages::apps::apps::file::DeleteFileLinkRequest {
+                                                            file_url: url.clone(),
+                                                            link_target: link_target.clone(),
+                                                        },
+                                                    ).await {
+                                                        error!("Failed to delete file link: {:?}", e);
+                                                    }
+                                                    if let FileLinkTarget::Quiz(quiz_id) = link_target {
+                                                        if let Err(e) = crate::features::spaces::pages::actions::actions::quiz::controllers::remove_quiz_file(
                                                             space_id.clone(),
-                                                            crate::features::spaces::pages::apps::apps::file::DeleteFileLinkRequest {
-                                                                file_url: url.clone(),
-                                                                link_target: link_target.clone(),
-                                                            },
+                                                            quiz_id.into(),
+                                                            crate::features::spaces::pages::actions::actions::quiz::controllers::RemoveQuizFileRequest { file_url: url },
                                                         ).await {
-                                                            error!("Failed to delete file link: {:?}", e);
-                                                        }
-                                                        if let FileLinkTarget::Quiz(quiz_id) = link_target {
-                                                            if let Err(e) = crate::features::spaces::pages::actions::actions::quiz::controllers::remove_quiz_file(
-                                                                space_id,
-                                                                quiz_id.into(),
-                                                                crate::features::spaces::pages::actions::actions::quiz::controllers::RemoveQuizFileRequest { file_url: url },
-                                                            ).await {
-                                                                error!("Failed to remove quiz file: {:?}", e);
-                                                            }
+                                                            error!("Failed to remove quiz file: {:?}", e);
                                                         }
                                                     }
-                                                });
+                                                }
                                             }
                                         }
                                         let mut updated = files();
                                         updated.retain(|f| f.id != file_id);
                                         files.set(updated);
+                                    }
                                     },
                                 }
                             }
