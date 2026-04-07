@@ -42,7 +42,7 @@ pub fn TeamSettingLayout(username: String) -> Element {
     };
 
     rsx! {
-        div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-team-bg text-text-primary",
+        div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-team-bg text-text-primary", "data-testid": "team-setting-layout",
             div { class: "hidden tablet:flex",
                 SettingsSidemenu { username: username.clone() }
             }

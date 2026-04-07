@@ -34,7 +34,7 @@ pub fn SocialLayout(username: String) -> Element {
     });
 
     rsx! {
-        div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-team-bg text-text-primary",
+        div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-team-bg text-text-primary", "data-testid": "social-layout",
             div { class: "hidden tablet:flex h-screen overflow-hidden",
                 TeamSidemenu { key: "{username}", username: username.clone(), logged_in }
             }
