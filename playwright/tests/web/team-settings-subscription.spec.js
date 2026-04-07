@@ -58,10 +58,10 @@ test.describe.serial(
 
     test("should navigate to team settings page", async ({ page }) => {
       // Navigate directly to the team settings page
-      await goto(page, `/${teamUsername}/settings`);
+      await goto(page, `/${teamUsername}/team-settings`);
 
       // Verify the settings page loaded by checking a unique nav item
-      await expect(page).toHaveURL(new RegExp(`/${teamUsername}/settings`));
+      await expect(page).toHaveURL(new RegExp(`/${teamUsername}/team-settings`));
       await getLocator(page, { text: "General settings" });
     });
 
@@ -69,7 +69,7 @@ test.describe.serial(
       page,
     }) => {
       // Navigate to team settings first (each test gets a fresh page from storageState)
-      await goto(page, `/${teamUsername}/settings`);
+      await goto(page, `/${teamUsername}/team-settings`);
 
       // Verify we are on the settings page
       await getLocator(page, { text: "General settings" });
@@ -80,19 +80,19 @@ test.describe.serial(
 
       // Wait for URL to update to the subscription route
       await page.waitForURL(
-        new RegExp(`/${teamUsername}/settings/subscription`),
+        new RegExp(`/${teamUsername}/team-settings/subscription`),
         { waitUntil: "load" },
       );
 
       // Verify we are on the subscription page
       await expect(page).toHaveURL(
-        new RegExp(`/${teamUsername}/settings/subscription`),
+        new RegExp(`/${teamUsername}/team-settings/subscription`),
       );
     });
 
     test("should display the membership plans header", async ({ page }) => {
       // Navigate to the subscription page directly
-      await goto(page, `/${teamUsername}/settings/subscription`);
+      await goto(page, `/${teamUsername}/team-settings/subscription`);
 
       // The MembershipPlanHeader renders "Membership Plans" as the h1 heading
       const heading = page.getByRole("heading", { name: "Membership Plans" });
@@ -100,7 +100,7 @@ test.describe.serial(
     });
 
     test("should display all membership plan cards", async ({ page }) => {
-      await goto(page, `/${teamUsername}/settings/subscription`);
+      await goto(page, `/${teamUsername}/team-settings/subscription`);
 
       // Wait for the membership plans heading to confirm page is loaded
       await expect(
@@ -138,7 +138,7 @@ test.describe.serial(
     test("should display plan features and action buttons", async ({
       page,
     }) => {
-      await goto(page, `/${teamUsername}/settings/subscription`);
+      await goto(page, `/${teamUsername}/team-settings/subscription`);
 
       // Wait for the page to fully render
       await expect(
@@ -181,7 +181,7 @@ test.describe.serial(
     test("should show the Subscription nav item as active in the sidebar", async ({
       page,
     }) => {
-      await goto(page, `/${teamUsername}/settings/subscription`);
+      await goto(page, `/${teamUsername}/team-settings/subscription`);
 
       // Wait for page to load
       await expect(
@@ -189,11 +189,9 @@ test.describe.serial(
       ).toBeVisible();
 
       // The settings sidebar should show "Subscription" as a navigation link.
-      // On desktop, the sidebar is visible (hidden on mobile via "hidden tablet:flex").
-      // The SettingNavItem renders a Link with the label text.
-      // Verify the "Subscription" nav item is present in the sidebar.
-      const sidebar = page.locator(".hidden.tablet\\:flex");
-      const subscriptionLink = sidebar.getByText("Subscription", { exact: true });
+      // Verify the "Subscription" nav item is present within the team-setting-layout.
+      const layout = page.getByTestId("team-setting-layout");
+      const subscriptionLink = layout.getByText("Subscription", { exact: true });
       await expect(subscriptionLink).toBeVisible();
     });
   },
