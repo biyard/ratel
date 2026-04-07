@@ -70,6 +70,7 @@ export default defineConfig({
       dependencies: ["auth-setup"],
       use: {
         ...devices["iPhone 14"],
+        browserName: "chromium",
         storageState: "user.json",
       },
     },
