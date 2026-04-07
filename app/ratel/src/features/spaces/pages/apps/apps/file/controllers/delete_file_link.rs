@@ -1,6 +1,6 @@
 use crate::features::spaces::pages::apps::apps::file::*;
 #[cfg(feature = "server")]
-use crate::features::spaces::pages::apps::apps::file::models::FileLink;
+use crate::features::spaces::pages::apps::apps::file::models::{FileLink, SpaceFile};
 #[cfg(feature = "server")]
 use crate::common::SpaceUserRole;
 
@@ -21,10 +21,26 @@ pub async fn delete_file_link(
 
     let links = FileLink::list_by_space(cli, &space_pk).await?;
 
-    for link in links {
+    for link in &links {
         if link.file_url == req.file_url && link.link_target == req.link_target {
-            FileLink::delete(cli, &link.pk, Some(link.sk)).await?;
+            FileLink::delete(cli, &link.pk, Some(link.sk.clone())).await?;
             break;
+        }
+    }
+
+    let remaining = links
+        .iter()
+        .filter(|l| l.file_url == req.file_url && l.link_target != req.link_target)
+        .count();
+
+    if remaining == 0 {
+        let (pk, sk) = SpaceFile::keys(&space_pk);
+        if let Some(mut space_file) = SpaceFile::get(cli, &pk, Some(sk.clone())).await? {
+            space_file.files.retain(|f| f.url.as_deref() != Some(&req.file_url));
+            SpaceFile::updater(&pk, sk)
+                .with_files(space_file.files)
+                .execute(cli)
+                .await?;
         }
     }
 

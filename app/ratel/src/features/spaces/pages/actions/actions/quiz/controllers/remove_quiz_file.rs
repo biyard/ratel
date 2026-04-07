@@ -1,4 +1,7 @@
 use crate::features::spaces::pages::actions::actions::quiz::*;
+use crate::features::spaces::pages::apps::apps::file::{
+    delete_file_link, DeleteFileLinkRequest, FileLinkTarget,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct RemoveQuizFileRequest {
@@ -14,10 +17,11 @@ pub async fn remove_quiz_file(
     SpaceQuiz::can_edit(&role)?;
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
-    let space_pk: Partition = space_pk.into();
+    let space_pk_partition: Partition = space_pk.clone().into();
+    let link_target = FileLinkTarget::Quiz(quiz_id.to_string());
     let quiz_sk: EntityType = quiz_id.into();
 
-    let quiz = SpaceQuiz::get(cli, &space_pk, Some(quiz_sk.clone()))
+    let quiz = SpaceQuiz::get(cli, &space_pk_partition, Some(quiz_sk.clone()))
         .await?
         .ok_or(Error::NotFound("Quiz not found".into()))?;
 
@@ -27,10 +31,19 @@ pub async fn remove_quiz_file(
         .filter(|f| f.url.as_ref() != Some(&req.file_url))
         .collect();
 
-    SpaceQuiz::updater(&space_pk, &quiz_sk)
+    SpaceQuiz::updater(&space_pk_partition, &quiz_sk)
         .with_files(updated_files)
         .execute(cli)
         .await?;
+
+    delete_file_link(
+        space_pk,
+        DeleteFileLinkRequest {
+            file_url: req.file_url,
+            link_target,
+        },
+    )
+    .await?;
 
     Ok(())
 }
