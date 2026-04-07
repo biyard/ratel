@@ -113,10 +113,38 @@ async fn test_mcp_tool_create_post() {
 #[tokio::test]
 async fn test_mcp_tool_list_teams() {
     let (ctx, token) = setup_mcp_test().await;
+
+    // Create a team so there is at least one team to list
+    let team_username = format!("t{}", &uuid::Uuid::new_v4().simple().to_string()[..7]);
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: "/api/teams/create",
+        headers: ctx.test_user.1.clone(),
+        body: {
+            "username": team_username,
+            "nickname": "Test Team",
+            "profile_url": "",
+            "description": ""
+        }
+    };
+    assert_eq!(status, 200, "create_team failed");
+
+    // list_teams via MCP must return the newly created team
     let (status, body) =
         mcp_tool_call(ctx.app, &token, "list_teams", serde_json::json!({})).await;
     assert_eq!(status, 200, "list_teams: {:?}", body);
-    assert!(body.get("result").is_some(), "should have result: {:?}", body);
+
+    let content = extract_tool_content(&body);
+    let teams = content.as_array().expect("list_teams should return an array");
+    assert!(
+        !teams.is_empty(),
+        "list_teams should return at least one team after creation: {:?}",
+        body
+    );
+    let found = teams
+        .iter()
+        .any(|t| t.get("username").and_then(|v| v.as_str()) == Some(&team_username));
+    assert!(found, "created team '{}' not found in list_teams result: {:?}", team_username, teams);
 }
 
 #[tokio::test]
