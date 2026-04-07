@@ -5,6 +5,7 @@ pub fn ParticipationCredentialSection(
     requirements: Vec<
         crate::features::spaces::controllers::panel_requirements::PanelRequirementStatus,
     >,
+    on_completed: EventHandler<()>,
 ) -> Element {
     let tr: ParticipationCredentialSectionTranslate = use_translate();
     let mut layover = use_layover();
@@ -79,7 +80,10 @@ pub fn ParticipationCredentialSection(
                     Button {
                         class: "!rounded-[10px] !px-5 !py-3 max-mobile:!w-full",
                         style: ButtonStyle::Primary,
-                        onclick: move |_| layover.close(),
+                        onclick: move |_| {
+                            layover.close();
+                            on_completed.call(());
+                        },
                         span { class: "font-bold font-raleway text-[14px]/[16px] text-[#0A0A0A]",
                             {tr.enter_space}
                         }

@@ -106,15 +106,35 @@ impl DynamoIndex {
 
             args.push(quote! { #field_name: #ft });
             arg_names.push(field_name);
+
+            // If the field is a signed/unsigned integer, DynamoDB sorts the
+            // GSI key lexicographically — "10" < "5" — so naive `to_string`
+            // breaks numeric ordering. Emit a fixed-width, offset-based
+            // encoding that preserves numeric order under string compare.
+            let numeric_encode = Self::numeric_lex_encoding(&ft);
+
             get_arg_formatter.push(if self.is_option(field_type) {
-                quote! {
-                    if let Some(v) = &self.#field_name {
-                        v.to_string()
-                    } else {
-                        tracing::debug!(#error);
-                        "".to_string()
+                if let Some(ref enc) = numeric_encode {
+                    quote! {
+                        if let Some(v) = &self.#field_name {
+                            #enc(*v)
+                        } else {
+                            tracing::debug!(#error);
+                            "".to_string()
+                        }
+                    }
+                } else {
+                    quote! {
+                        if let Some(v) = &self.#field_name {
+                            v.to_string()
+                        } else {
+                            tracing::debug!(#error);
+                            "".to_string()
+                        }
                     }
                 }
+            } else if let Some(ref enc) = numeric_encode {
+                quote! { #enc(self.#field_name) }
             } else {
                 quote! { self.#field_name.to_string() }
             });
@@ -151,6 +171,52 @@ impl DynamoIndex {
         };
 
         out
+    }
+
+    /// For signed/unsigned integer field types, returns a closure expression
+    /// that formats the value as a fixed-width, offset-based string which
+    /// sorts lexicographically in the same order as the numeric value. This
+    /// is required because DynamoDB GSI sort keys use string ordering, so
+    /// `"10" < "5"` under naive `to_string` serialization.
+    ///
+    /// Encoding:
+    /// - signed `iN`  → `(v as i{2N}) + (iN::MAX as i{2N}) + 1`, padded to
+    ///   `ceil(log10(2^N))` digits (so all non-negative after offset)
+    /// - unsigned `uN` → `v`, padded to `ceil(log10(2^N))` digits
+    fn numeric_lex_encoding(ty: &Type) -> Option<proc_macro2::TokenStream> {
+        let ty_str = ty.to_token_stream().to_string();
+        let ty_str = ty_str.replace(' ', "");
+
+        // (width, is_signed, wider_type)
+        let (width, is_signed, wider) = match ty_str.as_str() {
+            "i8" => (3usize, true, quote! { i16 }),
+            "i16" => (5usize, true, quote! { i32 }),
+            "i32" => (10usize, true, quote! { i64 }),
+            "i64" => (20usize, true, quote! { i128 }),
+            "u8" => (3usize, false, quote! { u8 }),
+            "u16" => (5usize, false, quote! { u16 }),
+            "u32" => (10usize, false, quote! { u32 }),
+            "u64" => (20usize, false, quote! { u64 }),
+            _ => return None,
+        };
+
+        let source_ty: proc_macro2::TokenStream = ty_str.parse().ok()?;
+
+        if is_signed {
+            // Offset by MAX + 1 so all values become non-negative.
+            Some(quote! {
+                (|v: #source_ty| -> String {
+                    let shifted: #wider = (v as #wider) - (#source_ty::MIN as #wider);
+                    format!("{:0width$}", shifted, width = #width)
+                })
+            })
+        } else {
+            Some(quote! {
+                (|v: #source_ty| -> String {
+                    format!("{:0width$}", v, width = #width)
+                })
+            })
+        }
     }
 
     pub fn is_option(&self, ty: &Type) -> bool {

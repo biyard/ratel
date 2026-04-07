@@ -74,8 +74,9 @@ pub fn SpaceNav(
                 }
             }
 
-            // FIXME: uncomment this line when post list issue is fixed
-            //RankingWidgetWrapper { space_id }
+            if !show_participation_card {
+                RankingWidgetWrapper { space_id }
+            }
             Row {
                 class: "max-tablet:hidden",
                 main_axis_align: MainAxisAlign::Between,
