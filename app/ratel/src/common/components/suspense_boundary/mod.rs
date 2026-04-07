@@ -8,10 +8,11 @@ pub fn SuspenseBoundary(
     rsx! {
         dioxus::prelude::SuspenseBoundary {
             fallback: |_| rsx! {
-                LoadingIndicator {}
+                div { class: "flex justify-center items-center w-full h-full min-h-screen bg-background",
+                    LoadingIndicator {}
+                }
             },
             {children}
         }
-
     }
 }

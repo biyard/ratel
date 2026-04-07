@@ -1,4 +1,4 @@
-use crate::common::models::space::{SpaceAuthor, SpaceCommon};
+use crate::common::models::space::{SpaceUser, SpaceCommon};
 use crate::features::spaces::pages::actions::actions::poll::*;
 use crate::features::spaces::pages::actions::models::SpaceAction;
 #[cfg(feature = "server")]
@@ -124,7 +124,7 @@ async fn get_respondent_from_panels(
 }
 
 #[mcp_tool(name = "respond_poll", description = "Submit answers to a poll. Requires participant role and space in Ongoing status.")]
-#[post("/api/spaces/{space_pk}/polls/{poll_sk}/respond", role: SpaceUserRole, author: SpaceAuthor, space: SpaceCommon, user: crate::features::auth::User)]
+#[post("/api/spaces/{space_pk}/polls/{poll_sk}/respond", role: SpaceUserRole, member: SpaceUser, space: SpaceCommon, user: crate::features::auth::User)]
 pub async fn respond_poll(
     #[mcp(description = "Space partition key")]
     space_pk: SpacePartition,
@@ -173,7 +173,7 @@ pub async fn respond_poll(
     }
 
     let existing =
-        SpacePollUserAnswer::find_one(cli, &space_pk, &poll_sk_entity, &author.pk).await?;
+        SpacePollUserAnswer::find_one(cli, &space_pk, &poll_sk_entity, &member.pk).await?;
 
     if existing.is_some() && !poll.response_editable {
         return Err(Error::BadRequest("Response editing not allowed".into()));
@@ -193,7 +193,7 @@ pub async fn respond_poll(
             submitted_at_ms: now,
         };
         let envelope =
-            crypto.encrypt(&poll_sk_entity, &author.pk, &req.answers, Some(&metadata))?;
+            crypto.encrypt(&poll_sk_entity, &member.pk, &req.answers, Some(&metadata))?;
         let selections: Vec<ratel_canister::types::QuestionSelection> = req
             .answers
             .iter()
@@ -221,7 +221,7 @@ pub async fn respond_poll(
 
     // DynamoDB record
     if existing.is_some() {
-        let (pk, sk) = SpacePollUserAnswer::keys(&author.pk, &poll_sk_entity, &space_pk);
+        let (pk, sk) = SpacePollUserAnswer::keys(&member.pk, &poll_sk_entity, &space_pk);
         let now = crate::common::utils::time::get_now_timestamp_millis();
         SpacePollUserAnswer::updater(pk, sk)
             .with_answers(req.answers)
@@ -229,14 +229,14 @@ pub async fn respond_poll(
             .execute(cli)
             .await?;
     } else {
-        let respondent = get_respondent_from_panels(cli, &space_pk, &author.pk).await?;
+        let respondent = get_respondent_from_panels(cli, &space_pk, &member.pk).await?;
         let activity_answers = req.answers.clone();
         let answer_record = SpacePollUserAnswer::new(
             space_pk.clone(),
             poll_sk_entity.clone(),
             req.answers,
             respondent,
-            author,
+            member.clone(),
         );
         answer_record.create(cli).await?;
 
@@ -252,8 +252,8 @@ pub async fn respond_poll(
         crate::transact_write_items!(cli, vec![agg_item]).ok();
 
         let activity_user_pk = user.pk.clone();
-        let activity_user_name = user.display_name.clone();
-        let activity_user_avatar = user.profile_url.clone();
+        let activity_user_name = member.display_name.clone();
+        let activity_user_avatar = member.profile_url.clone();
 
         match SpaceReward::get_by_action(
             cli,
