@@ -8,7 +8,7 @@ use dioxus_primitives::{
     popover::{PopoverContentProps, PopoverTriggerProps},
     ContentAlign,
 };
-use time::{ext::NumericalDuration, format_description, Date, OffsetDateTime};
+use time::{ext::NumericalDuration, format_description, Date, OffsetDateTime, UtcOffset};
 
 use strum::IntoEnumIterator;
 
@@ -54,6 +54,49 @@ impl Timezone {
             Timezone::Seoul => "Seoul (UTC+9)",
             Timezone::Sydney => "Sydney (UTC+11)",
         }
+    }
+
+    /// Fixed offset from UTC in whole seconds. Handles half-hour offsets
+    /// like Kolkata (+5:30). Note: this does not account for daylight
+    /// saving time — we intentionally use the standard (non-DST) offset
+    /// so the stored timestamp is deterministic from the picker input.
+    pub const fn offset_seconds(&self) -> i32 {
+        match self {
+            Timezone::Pacific => -8 * 3600,
+            Timezone::Mountain => -7 * 3600,
+            Timezone::Central => -6 * 3600,
+            Timezone::Eastern => -5 * 3600,
+            Timezone::Utc => 0,
+            Timezone::London => 0,
+            Timezone::Paris => 3600,
+            Timezone::Istanbul => 3 * 3600,
+            Timezone::Dubai => 4 * 3600,
+            Timezone::Kolkata => 5 * 3600 + 30 * 60,
+            Timezone::Bangkok => 7 * 3600,
+            Timezone::Shanghai => 8 * 3600,
+            Timezone::Seoul => 9 * 3600,
+            Timezone::Sydney => 11 * 3600,
+        }
+    }
+
+    /// Convert a wall-clock (date + hour + minute) in this timezone to a
+    /// UTC unix timestamp in milliseconds.
+    pub fn local_to_utc_millis(&self, date: Date, hour: u8, minute: u8) -> i64 {
+        let offset = UtcOffset::from_whole_seconds(self.offset_seconds())
+            .unwrap_or(UtcOffset::UTC);
+        let datetime = date.with_hms(hour, minute, 0).expect("valid time");
+        datetime.assume_offset(offset).unix_timestamp() * 1000
+    }
+
+    /// Convert a UTC unix timestamp (milliseconds) to wall-clock
+    /// (date + hour + minute) in this timezone.
+    pub fn utc_millis_to_local(&self, ms: i64) -> (Date, u8, u8) {
+        let offset = UtcOffset::from_whole_seconds(self.offset_seconds())
+            .unwrap_or(UtcOffset::UTC);
+        let dt = OffsetDateTime::from_unix_timestamp(ms / 1000)
+            .unwrap_or(OffsetDateTime::UNIX_EPOCH)
+            .to_offset(offset);
+        (dt.date(), dt.hour(), dt.minute())
     }
 
     pub const fn short_label(&self) -> &'static str {
@@ -176,8 +219,11 @@ impl std::fmt::Display for Timezone {
 }
 
 #[component]
-pub fn TimezonePicker(#[props(default)] on_change: EventHandler<Timezone>) -> Element {
-    let local_tz = Timezone::detect_local();
+pub fn TimezonePicker(
+    #[props(default)] value: Option<Timezone>,
+    #[props(default)] on_change: EventHandler<Timezone>,
+) -> Element {
+    let initial_tz = value.unwrap_or_else(Timezone::detect_local);
 
     let options = Timezone::iter().enumerate().map(|(i, tz)| {
         rsx! {
@@ -193,7 +239,7 @@ pub fn TimezonePicker(#[props(default)] on_change: EventHandler<Timezone>) -> El
             Select::<Option<Timezone>> {
                 class: "@max-mobile:w-full",
                 placeholder: "Timezone",
-                default_value: Some(local_tz),
+                default_value: Some(initial_tz),
                 on_value_change: move |v: Option<Option<Timezone>>| {
                     if let Some(Some(tz)) = v {
                         on_change.call(tz);
@@ -221,25 +267,10 @@ pub struct DateTimeRange {
     pub end_date: Option<Date>,
     pub end_hour: u8,
     pub end_minute: u8,
-}
-
-/// Converts a date + hour + minute into total minutes since an arbitrary epoch,
-/// used to compute and preserve the duration between start and end.
-fn to_total_minutes(date: Date, hour: u8, minute: u8) -> i64 {
-    let datetime = date.with_hms(hour, minute, 0).expect("valid time");
-    let offset_datetime = datetime.assume_utc();
-    offset_datetime.unix_timestamp() / 60
-}
-
-/// Converts total minutes (since Unix epoch) back into (Date, hour, minute).
-fn from_total_minutes(total: i64) -> (Date, u8, u8) {
-    let offset_datetime =
-        OffsetDateTime::from_unix_timestamp(total * 60).expect("valid timestamp");
-    (
-        offset_datetime.date(),
-        offset_datetime.hour(),
-        offset_datetime.minute(),
-    )
+    /// Timezone the user selected in the picker. Callers should use this
+    /// to convert the wall-clock `(date, hour, minute)` values back to
+    /// UTC millis via `Timezone::local_to_utc_millis`.
+    pub timezone: Timezone,
 }
 
 #[component]
@@ -248,115 +279,50 @@ pub fn DateAndTimePicker(
     #[props(default)] initial_started_at: Option<i64>,
     #[props(default)] initial_ended_at: Option<i64>,
 ) -> Element {
-    let now = OffsetDateTime::now_utc();
-    let next_hour = (now.hour() + 1) % 24;
-    let today = now.date();
-    let tomorrow = today.saturating_add(1.days());
+    const ONE_DAY_MS: i64 = 86_400_000;
+    const ONE_HOUR_MS: i64 = 3_600_000;
+    const ONE_MIN_MS: i64 = 60_000;
 
-    let start_dt_opt = initial_started_at
-        .and_then(|ms| OffsetDateTime::from_unix_timestamp(ms / 1000).ok());
-    let end_dt_opt = initial_ended_at
-        .and_then(|ms| OffsetDateTime::from_unix_timestamp(ms / 1000).ok());
-
-    let (
-        init_start_date,
-        init_start_h,
-        init_start_m,
-        init_end_date,
-        init_end_h,
-        init_end_m,
-    ) = match (start_dt_opt, end_dt_opt) {
-        (Some(start_dt), Some(end_dt)) => {
-            // If the provided end is before start, clamp end to be start + 1 day.
-            let clamped_end = if end_dt >= start_dt {
-                end_dt
-            } else {
-                start_dt + 1.days()
-            };
-
-            (
-                start_dt.date(),
-                start_dt.hour(),
-                start_dt.minute(),
-                clamped_end.date(),
-                clamped_end.hour(),
-                clamped_end.minute(),
-            )
-        }
-        (Some(start_dt), None) => {
-            // Derive end from start when only start is provided.
-            let end_dt = start_dt + 1.days();
-            (
-                start_dt.date(),
-                start_dt.hour(),
-                start_dt.minute(),
-                end_dt.date(),
-                end_dt.hour(),
-                end_dt.minute(),
-            )
-        }
-        (None, Some(end_dt)) => {
-            // Derive start from end when only end is provided.
-            let start_dt = end_dt - 1.days();
-            (
-                start_dt.date(),
-                start_dt.hour(),
-                start_dt.minute(),
-                end_dt.date(),
-                end_dt.hour(),
-                end_dt.minute(),
-            )
-        }
-        (None, None) => {
-            // Preserve existing defaults when neither side is provided.
-            (
-                today,
-                next_hour,
-                0,
-                tomorrow,
-                next_hour,
-                0,
-            )
-        }
+    let now_ms = OffsetDateTime::now_utc().unix_timestamp() * 1000;
+    // Default: next full hour from now, duration 1 day. Snap to the hour so
+    // the displayed default matches the TimePicker defaults.
+    let default_start_ms = {
+        let hour = ONE_HOUR_MS;
+        ((now_ms + hour) / hour) * hour
     };
 
-    let mut selected_start_date = use_signal(|| Some(init_start_date));
-    let mut selected_end_date = use_signal(|| Some(init_end_date));
-    let mut start_hour = use_signal(move || init_start_h);
-    let mut start_minute = use_signal(move || init_start_m);
-    let mut end_hour = use_signal(move || init_end_h);
-    let mut end_minute = use_signal(move || init_end_m);
+    let (init_start_ms, init_end_ms) = match (initial_started_at, initial_ended_at) {
+        (Some(s), Some(e)) if e >= s => (s, e),
+        (Some(s), Some(_)) => (s, s + ONE_DAY_MS),
+        (Some(s), None) => (s, s + ONE_DAY_MS),
+        (None, Some(e)) => (e - ONE_DAY_MS, e),
+        (None, None) => (default_start_ms, default_start_ms + ONE_DAY_MS),
+    };
+
+    // Source of truth: raw UTC millis. Wall-clock display is derived from
+    // `(raw_ms, tz)`, so switching timezone re-renders automatically and
+    // the round-trip stays consistent.
+    let mut raw_start = use_signal(move || init_start_ms);
+    let mut raw_end = use_signal(move || init_end_ms);
+    let mut tz = use_signal(Timezone::detect_local);
+
+    let display_start = use_memo(move || tz().utc_millis_to_local(raw_start()));
+    let display_end = use_memo(move || tz().utc_millis_to_local(raw_end()));
+
     let format = format_description::parse("[year]-[month]-[day]").unwrap();
 
     let emit = move || {
+        let (sd, sh, sm) = display_start();
+        let (ed, eh, em) = display_end();
         on_change.call(DateTimeRange {
-            start_date: selected_start_date(),
-            start_hour: start_hour(),
-            start_minute: start_minute(),
-            end_date: selected_end_date(),
-            end_hour: end_hour(),
-            end_minute: end_minute(),
+            start_date: Some(sd),
+            start_hour: sh,
+            start_minute: sm,
+            end_date: Some(ed),
+            end_hour: eh,
+            end_minute: em,
+            timezone: tz(),
         });
-    };
-
-    // Computes the duration (in minutes) between the current start and end.
-    let get_duration = move || -> i64 {
-        let sd = selected_start_date().unwrap_or(today);
-        let ed = selected_end_date().unwrap_or(tomorrow);
-        let start_total = to_total_minutes(sd, start_hour(), start_minute());
-        let end_total = to_total_minutes(ed, end_hour(), end_minute());
-        (end_total - start_total).max(1)
-    };
-
-    // Adjusts the end date/time to preserve the given duration from the current start.
-    let mut adjust_end = move |duration_minutes: i64| {
-        let sd = selected_start_date().unwrap_or(today);
-        let new_end_total =
-            to_total_minutes(sd, start_hour(), start_minute()) + duration_minutes;
-        let (new_end_date, new_end_h, new_end_m) = from_total_minutes(new_end_total);
-        selected_end_date.set(Some(new_end_date));
-        end_hour.set(new_end_h);
-        end_minute.set(new_end_m);
     };
 
     rsx! {
@@ -365,23 +331,28 @@ pub fn DateAndTimePicker(
             div { class: "flex flex-row gap-4 items-center w-full @max-mobile:flex-col",
                 div { class: "flex flex-row flex-1 gap-4 items-center min-w-0 @max-mobile:flex-col @max-mobile:w-full",
                     DatePicker {
-                        selected_date: selected_start_date(),
-                        on_value_change: move |v| {
-                            let duration = get_duration();
-                            selected_start_date.set(v);
-                            adjust_end(duration);
-                            emit();
+                        selected_date: Some(display_start().0),
+                        on_value_change: move |v: Option<Date>| {
+                            if let Some(new_date) = v {
+                                let duration = (raw_end() - raw_start()).max(ONE_MIN_MS);
+                                let (_, h, m) = display_start();
+                                let new_start = tz().local_to_utc_millis(new_date, h, m);
+                                raw_start.set(new_start);
+                                raw_end.set(new_start + duration);
+                                emit();
+                            }
                         },
-                        DatePickerInput { date: selected_start_date().and_then(|d| d.format(&format).ok()).unwrap_or_default() }
+                        DatePickerInput { date: display_start().0.format(&format).unwrap_or_default() }
                     }
                     TimePicker {
-                        hour: start_hour(),
-                        minute: start_minute(),
+                        hour: display_start().1,
+                        minute: display_start().2,
                         on_change: move |(h, m)| {
-                            let duration = get_duration();
-                            start_hour.set(h);
-                            start_minute.set(m);
-                            adjust_end(duration);
+                            let duration = (raw_end() - raw_start()).max(ONE_MIN_MS);
+                            let d = display_start().0;
+                            let new_start = tz().local_to_utc_millis(d, h, m);
+                            raw_start.set(new_start);
+                            raw_end.set(new_start + duration);
                             emit();
                         },
                     }
@@ -391,25 +362,39 @@ pub fn DateAndTimePicker(
 
                 div { class: "flex flex-row flex-1 gap-4 items-center min-w-0 @max-mobile:flex-col @max-mobile:w-full",
                     DatePicker {
-                        selected_date: selected_end_date(),
-                        on_value_change: move |v| {
-                            selected_end_date.set(v);
-                            emit();
+                        selected_date: Some(display_end().0),
+                        on_value_change: move |v: Option<Date>| {
+                            if let Some(new_date) = v {
+                                let (_, h, m) = display_end();
+                                let new_end = tz().local_to_utc_millis(new_date, h, m);
+                                raw_end.set(new_end.max(raw_start() + ONE_MIN_MS));
+                                emit();
+                            }
                         },
-                        DatePickerInput { date: selected_end_date().and_then(|d| d.format(&format).ok()).unwrap_or_default() }
+                        DatePickerInput { date: display_end().0.format(&format).unwrap_or_default() }
                     }
                     TimePicker {
-                        hour: end_hour(),
-                        minute: end_minute(),
+                        hour: display_end().1,
+                        minute: display_end().2,
                         on_change: move |(h, m)| {
-                            end_hour.set(h);
-                            end_minute.set(m);
+                            let d = display_end().0;
+                            let new_end = tz().local_to_utc_millis(d, h, m);
+                            raw_end.set(new_end.max(raw_start() + ONE_MIN_MS));
                             emit();
                         },
                     }
                 }
 
-                TimezonePicker {}
+                TimezonePicker {
+                    value: tz(),
+                    on_change: move |new_tz: Timezone| {
+                        tz.set(new_tz);
+                        // Raw UTC ms don't change — display reactively
+                        // re-renders via the memo. We still emit so the
+                        // caller receives the new timezone.
+                        emit();
+                    },
+                }
             }
         }
     }
