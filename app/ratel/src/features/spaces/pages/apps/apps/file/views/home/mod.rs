@@ -153,6 +153,18 @@ pub fn SpaceFileAppPage(space_id: SpacePartition) -> Element {
                         }
                     }
                     {
+                        let (style, class) = tab_button_props(FileTab::Boards);
+                        rsx! {
+                            Button {
+                                class: class.to_string(),
+                                style,
+                                shape: ButtonShape::Square,
+                                onclick: move |_| active_tab.set(FileTab::Boards),
+                                {tr.tab_boards}
+                            }
+                        }
+                    }
+                    {
                         let (style, class) = tab_button_props(FileTab::Quiz);
                         rsx! {
                             Button {
@@ -212,14 +224,26 @@ pub fn SpaceFileAppPage(space_id: SpacePartition) -> Element {
                                                     ).await {
                                                         error!("Failed to delete file link: {:?}", e);
                                                     }
-                                                    if let FileLinkTarget::Quiz(quiz_id) = link_target {
-                                                        if let Err(e) = crate::features::spaces::pages::actions::actions::quiz::controllers::remove_quiz_file(
-                                                            space_id.clone(),
-                                                            quiz_id.into(),
-                                                            crate::features::spaces::pages::actions::actions::quiz::controllers::RemoveQuizFileRequest { file_url: url },
-                                                        ).await {
-                                                            error!("Failed to remove quiz file: {:?}", e);
+                                                    match link_target {
+                                                        FileLinkTarget::Quiz(quiz_id) => {
+                                                            if let Err(e) = crate::features::spaces::pages::actions::actions::quiz::controllers::remove_quiz_file(
+                                                                space_id.clone(),
+                                                                quiz_id.into(),
+                                                                crate::features::spaces::pages::actions::actions::quiz::controllers::RemoveQuizFileRequest { file_url: url },
+                                                            ).await {
+                                                                error!("Failed to remove quiz file: {:?}", e);
+                                                            }
                                                         }
+                                                        FileLinkTarget::Board(discussion_id) => {
+                                                            if let Err(e) = crate::features::spaces::pages::actions::actions::discussion::controllers::remove_discussion_file(
+                                                                space_id.clone(),
+                                                                discussion_id.into(),
+                                                                crate::features::spaces::pages::actions::actions::discussion::controllers::RemoveDiscussionFileRequest { file_url: url },
+                                                            ).await {
+                                                                error!("Failed to remove discussion file: {:?}", e);
+                                                            }
+                                                        }
+                                                        _ => {}
                                                     }
                                                 }
                                             }

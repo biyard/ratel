@@ -11,9 +11,37 @@ translate! {
         en: "Overview",
         ko: "개요",
     },
+    tab_upload: {
+        en: "Upload",
+        ko: "업로드",
+    },
     tab_setting: {
         en: "Settings",
         ko: "설정",
+    },
+    upload_drop_title: {
+        en: "Drag & Drop files here",
+        ko: "여기에 파일을 드래그 앤 드롭하세요",
+    },
+    upload_cta: {
+        en: "Upload",
+        ko: "업로드",
+    },
+    upload_supported_types: {
+        en: "PDF, DOCX, PPTX, XLSX, PNG, JPG, MP4, MOV 100MB",
+        ko: "PDF, DOCX, PPTX, XLSX, PNG, JPG, MP4, MOV 100MB",
+    },
+    upload_empty: {
+        en: "No uploaded files yet.",
+        ko: "아직 업로드된 파일이 없습니다.",
+    },
+    upload_view: {
+        en: "View",
+        ko: "보기",
+    },
+    upload_delete: {
+        en: "Delete",
+        ko: "삭제",
     },
     title_label: {
         en: "Title",
