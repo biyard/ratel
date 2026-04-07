@@ -1,16 +1,21 @@
 use crate::features::activity::controllers::{get_my_score_handler, get_ranking_handler};
 use crate::features::activity::i18n::ActivityTranslate;
 use crate::features::activity::*;
+use crate::features::spaces::space_common::types::{space_my_score_key, space_ranking_key};
 
 #[component]
 pub fn RankingWidget(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: ActivityTranslate = use_translate();
 
-    let ranking_loader =
-        use_loader(move || async move { get_ranking_handler(space_id(), None).await })?;
+    let ranking_key = space_ranking_key(&space_id());
+    let ranking_loader = use_query(&ranking_key, move || async move {
+        get_ranking_handler(space_id(), None).await
+    })?;
 
-    let my_score_loader =
-        use_loader(move || async move { get_my_score_handler(space_id()).await })?;
+    let my_score_key = space_my_score_key(&space_id());
+    let my_score_loader = use_query(&my_score_key, move || async move {
+        get_my_score_handler(space_id()).await
+    })?;
 
     let ranking = ranking_loader();
     let my_score = my_score_loader();
