@@ -8,7 +8,7 @@ enum ParticipationTag {
 
 #[component]
 pub fn ParticipationCard(
-    space_id: SpacePartition,
+    space_id: ReadSignal<SpacePartition>,
     credential_path: Option<String>,
     on_login: EventHandler<()>,
 ) -> Element {
@@ -22,18 +22,25 @@ pub fn ParticipationCard(
     let mut current_role = ctx.current_role;
     let panel_requirements_query_key = vec![
         "Space".to_string(),
-        space_id.to_string(),
+        space_id().to_string(),
         "PanelRequirements".to_string(),
     ];
-    let panel_requirements_loader = use_query(&panel_requirements_query_key, {
-        let space_id = space_id.clone();
-        move || {
+    // Use use_server_future instead of use_query to avoid Suspense panics on
+    // unmount when navigating away from a Space as a Viewer.
+    let panel_requirements_resource = use_server_future({
+        move || async move {
             crate::features::spaces::controllers::panel_requirements::get_panel_requirements(
-                space_id.clone(),
+                space_id(),
             )
+            .await
         }
     })?;
-    let panel_requirements = panel_requirements_loader.read().clone();
+    let panel_requirements = panel_requirements_resource
+        .read()
+        .as_ref()
+        .and_then(|r| r.as_ref().ok())
+        .cloned()
+        .unwrap_or_default();
     let all_requirements_satisfied = panel_requirements
         .iter()
         .all(|requirement| requirement.satisfied);
@@ -46,22 +53,38 @@ pub fn ParticipationCard(
     let layover_login = login_for_participate.clone();
 
     let handle_participate = move |_| {
-        let space_id = space_id.clone();
-
         if participate_credential_path.is_none() {
             login_for_participate.call(());
             return;
         }
 
         if !all_requirements_satisfied {
+            let mut refresh_panel_requirements = panel_requirements_resource;
+            let panel_requirements_query_key_for_verified = panel_requirements_query_key.clone();
+            let on_verified_refresh = move |_| {
+                query.invalidate(&panel_requirements_query_key_for_verified);
+                refresh_panel_requirements.restart();
+                space.restart();
+                role.restart();
+            };
+            let mut refresh_panel_requirements = panel_requirements_resource;
+            let panel_requirements_query_key_for_completed = panel_requirements_query_key.clone();
+            let on_completed = move |_| {
+                query.invalidate(&panel_requirements_query_key_for_completed);
+                refresh_panel_requirements.restart();
+                space.restart();
+                role.restart();
+            };
             layover
                 .open(
                     "space-participation-requirements".to_string(),
                     String::new(),
                     rsx! {
                         ParticipationRequirementsLayover {
-                            space_id: space_id.clone(),
+                            space_id: space_id(),
                             requirements: layover_requirements.clone(),
+                            on_verified_refresh,
+                            on_completed,
                         }
                     },
                 )
@@ -70,14 +93,14 @@ pub fn ParticipationCard(
         }
 
         spawn(async move {
-            let space_detail = crate::features::spaces::space_common::types::space_key(&space_id);
+            let space_detail = crate::features::spaces::space_common::types::space_key(&space_id());
             let panel_requirements_key = vec![
                 "Space".to_string(),
-                space_id.to_string(),
+                space_id().to_string(),
                 "PanelRequirements".to_string(),
             ];
             if crate::features::spaces::controllers::participate_space::participate_space(
-                space_id.clone(),
+                space_id(),
             )
             .await
             .is_ok()
@@ -86,7 +109,7 @@ pub fn ParticipationCard(
                 // because role change unmounts this component
                 let prerequisite_actions = if let Ok(actions) =
                     crate::features::spaces::pages::actions::controllers::list_actions(
-                        space_id.clone(),
+                        space_id(),
                     )
                     .await
                 {
@@ -106,7 +129,7 @@ pub fn ParticipationCard(
                             String::new(),
                             rsx! {
                                 PrerequisiteActionsLayover {
-                                    space_id,
+                                    space_id: space_id(),
                                     actions: prerequisite_actions,
                                 }
                             },
