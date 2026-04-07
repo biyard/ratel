@@ -5,7 +5,9 @@ use crate::features::spaces::pages::actions::actions::poll::controllers::*;
 use crate::features::spaces::pages::actions::actions::poll::*;
 use crate::features::spaces::pages::actions::components::FullActionLayover;
 use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
-use crate::features::spaces::space_common::types::space_page_actions_poll_key;
+use crate::features::spaces::space_common::types::{
+    space_my_score_key, space_page_actions_poll_key, space_ranking_key,
+};
 use std::collections::HashMap;
 
 #[component]
@@ -83,13 +85,8 @@ pub fn PollContent(
         let questions = poll.questions.clone();
         move || {
             let questions = questions.clone();
-            let mut query = query;
-            let mut toast = toast;
             move || {
                 let questions = questions.clone();
-                let mut query = query;
-                let mut toast = toast;
-
                 spawn(async move {
                     let answers_map = answers.read().clone();
                     let payload: Vec<Answer> = (0..questions.len())
@@ -102,6 +99,8 @@ pub fn PollContent(
                         Ok(_) => {
                             let keys = space_page_actions_poll_key(&space_id(), &poll_id());
                             query.invalidate(&keys);
+                            query.invalidate(&space_ranking_key(&space_id()));
+                            query.invalidate(&space_my_score_key(&space_id()));
                             toast.info(tr.submit_success);
                             nav.replace(crate::Route::SpaceActionsPage {
                                 space_id: space_id(),
@@ -159,8 +158,6 @@ pub fn PollContent(
                         {tr.btn_back}
                     }
                 }
-
-
 
                 if !is_last_question && total > 0 {
                     Button {
@@ -247,7 +244,6 @@ pub fn PollContent(
                                         enable_other_option: true,
                                         on_change: move |ans: Answer| {
                                             answers.write().insert(idx, ans.clone());
-
 
                                             if can_submit && can_next && should_auto_next(&question, &ans) {
                                                 question_index.set(idx + 1);

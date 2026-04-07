@@ -19,7 +19,7 @@ impl QueryStore {
         }
     }
 
-    fn register(&mut self, key: &QueryKey) {
+    pub fn register(&mut self, key: &QueryKey) {
         let mut prefix = Vec::with_capacity(key.len());
         for part in key {
             prefix.push(part.clone());
@@ -29,7 +29,14 @@ impl QueryStore {
         }
     }
 
-    fn stamp(&self, key: &QueryKey) -> u64 {
+    fn stamp(&mut self, key: &QueryKey) -> u64 {
+        // Ensure entries exist so reads below establish reactive subscriptions.
+        // Without this, on the first render (before `use_effect` registration
+        // has run), `versions.get(prefix)` returns None and no subscription is
+        // created — then `invalidate()` later bumps a signal nothing is
+        // watching, and the loader never re-fetches.
+        self.register(key);
+
         let mut prefix = Vec::with_capacity(key.len());
         let mut stamp = 0_u64;
 
@@ -83,15 +90,13 @@ where
     T: 'static + Clone + PartialEq + Serialize + DeserializeOwned,
     E: Into<dioxus::CapturedError> + 'static,
 {
-    let query = use_query_store();
+    let mut query = use_query_store();
     let key: QueryKey = key.iter().map(|s| s.as_ref().to_string()).collect();
 
-    use_effect(use_reactive((&key,), {
-        let mut query = query;
-        move |(key,)| {
-            query.register(&key);
-        }
-    }));
+    // Register synchronously on every render so the loader's reactive
+    // subscriptions are established on the very first render. `register`
+    // is idempotent (no-op for already-registered keys).
+    query.register(&key);
 
     use_loader(use_reactive((&key,), move |(key,)| {
         let _version = query.stamp(&key);
