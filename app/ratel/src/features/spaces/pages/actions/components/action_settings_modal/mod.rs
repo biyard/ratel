@@ -85,8 +85,12 @@ pub fn ActionSettingsModal(
                 }
             };
 
-            let started_at = date_time_to_millis(start_date, range.start_hour, range.start_minute);
-            let ended_at = date_time_to_millis(end_date, range.end_hour, range.end_minute);
+            let started_at = range
+                .timezone
+                .local_to_utc_millis(start_date, range.start_hour, range.start_minute);
+            let ended_at = range
+                .timezone
+                .local_to_utc_millis(end_date, range.end_hour, range.end_minute);
 
             let selected_actions = selected_actions.clone();
             let space_id = space_id.clone();
@@ -319,6 +323,3 @@ pub fn ActionSettingsModal(
     }
 }
 
-fn date_time_to_millis(date: time::Date, hour: u8, minute: u8) -> i64 {
-    crate::common::utils::time::kst_date_time_to_utc_millis(date, hour, minute)
-}

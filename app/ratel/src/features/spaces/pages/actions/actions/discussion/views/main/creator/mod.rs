@@ -43,16 +43,12 @@ pub fn CreatorMain(
                                 let space_id = space_id();
                                 let discussion_id = discussion_id();
                                 if let (Some(start_date), Some(end_date)) = (range.start_date, range.end_date) {
-                                    let started_at = date_time_to_millis(
-                                        start_date,
-                                        range.start_hour,
-                                        range.start_minute,
-                                    );
-                                    let ended_at = date_time_to_millis(
-                                        end_date,
-                                        range.end_hour,
-                                        range.end_minute,
-                                    );
+                                    let started_at = range
+                                        .timezone
+                                        .local_to_utc_millis(start_date, range.start_hour, range.start_minute);
+                                    let ended_at = range
+                                        .timezone
+                                        .local_to_utc_millis(end_date, range.end_hour, range.end_minute);
                                     let req = UpdateDiscussionRequest {
                                         title: None,
                                         html_contents: None,
@@ -80,6 +76,3 @@ pub fn CreatorMain(
     }
 }
 
-fn date_time_to_millis(date: time::Date, hour: u8, minute: u8) -> i64 {
-    crate::common::utils::time::kst_date_time_to_utc_millis(date, hour, minute)
-}

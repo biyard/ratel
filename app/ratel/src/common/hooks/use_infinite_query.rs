@@ -272,6 +272,9 @@ where
                         "Effect fetch failed for bookmark: {:?} with error: {:?}",
                         nb, e
                     );
+                    // Stop pagination on error to prevent infinite retry loops
+                    // when the IntersectionObserver keeps the sentinel visible.
+                    next_bookmark.set(None);
                 }
             };
             loading.set(false);
