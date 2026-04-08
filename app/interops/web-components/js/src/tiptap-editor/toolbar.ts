@@ -1,15 +1,15 @@
 import type { Editor } from "@tiptap/core";
 import {
-  TEXT_COLORS,
-  HIGHLIGHT_COLORS,
-  type TiptapColorPicker,
+  // TEXT_COLORS,
+  // HIGHLIGHT_COLORS,
+  // type TiptapColorPicker,
   type TiptapHeadingSelect,
 } from "./components";
 
 // Ensure all web components are registered
 import "./components/toolbar-button";
 import "./components/toolbar-separator";
-import "./components/color-picker";
+// import "./components/color-picker";
 import "./components/heading-select";
 
 function btn(
@@ -65,37 +65,42 @@ export function buildToolbar(editor: Editor): HTMLDivElement {
   toolbarScroller.appendChild(sep());
 
   // ── Colors ─────────────────────────────────────────────────────────
-
-  const textColorPicker = document.createElement(
-    "tiptap-color-picker",
-  ) as TiptapColorPicker;
-  textColorPicker.colors = TEXT_COLORS;
-  toolbarScroller.appendChild(textColorPicker);
-  // Set trigger label/title after mount
-  requestAnimationFrame(() => {
-    textColorPicker.triggerLabel =
-      '<span class="border-b-[3px] border-current pb-px">A</span>';
-    textColorPicker.triggerTitle = "Text Color";
-  });
-  textColorPicker.addEventListener("color-select", ((e: CustomEvent) => {
-    editor.chain().focus().setColor(e.detail).run();
-  }) as EventListener);
-
-  const highlightPicker = document.createElement(
-    "tiptap-color-picker",
-  ) as TiptapColorPicker;
-  highlightPicker.colors = HIGHLIGHT_COLORS;
-  toolbarScroller.appendChild(highlightPicker);
-  requestAnimationFrame(() => {
-    highlightPicker.triggerLabel =
-      '<span class="bg-yellow-300 px-1 rounded-sm">A</span>';
-    highlightPicker.triggerTitle = "Highlight";
-  });
-  highlightPicker.addEventListener("color-select", ((e: CustomEvent) => {
-    editor.chain().focus().setHighlight({ color: e.detail }).run();
-  }) as EventListener);
-
-  toolbarScroller.appendChild(sep());
+  // Disabled per product request: text color / highlight pickers removed
+  // from the toolbar to keep editor output visually consistent. Re-enable
+  // by uncommenting this block together with the imports at the top of
+  // the file (`TEXT_COLORS`, `HIGHLIGHT_COLORS`, `TiptapColorPicker`,
+  // and `./components/color-picker`).
+  //
+  // const textColorPicker = document.createElement(
+  //   "tiptap-color-picker",
+  // ) as TiptapColorPicker;
+  // textColorPicker.colors = TEXT_COLORS;
+  // toolbarScroller.appendChild(textColorPicker);
+  // // Set trigger label/title after mount
+  // requestAnimationFrame(() => {
+  //   textColorPicker.triggerLabel =
+  //     '<span class="border-b-[3px] border-current pb-px">A</span>';
+  //   textColorPicker.triggerTitle = "Text Color";
+  // });
+  // textColorPicker.addEventListener("color-select", ((e: CustomEvent) => {
+  //   editor.chain().focus().setColor(e.detail).run();
+  // }) as EventListener);
+  //
+  // const highlightPicker = document.createElement(
+  //   "tiptap-color-picker",
+  // ) as TiptapColorPicker;
+  // highlightPicker.colors = HIGHLIGHT_COLORS;
+  // toolbarScroller.appendChild(highlightPicker);
+  // requestAnimationFrame(() => {
+  //   highlightPicker.triggerLabel =
+  //     '<span class="bg-yellow-300 px-1 rounded-sm">A</span>';
+  //   highlightPicker.triggerTitle = "Highlight";
+  // });
+  // highlightPicker.addEventListener("color-select", ((e: CustomEvent) => {
+  //   editor.chain().focus().setHighlight({ color: e.detail }).run();
+  // }) as EventListener);
+  //
+  // toolbarScroller.appendChild(sep());
 
   // ── Heading ────────────────────────────────────────────────────────
 
