@@ -98,7 +98,14 @@ export class RegionalLambdaStack extends Stack {
         ? {
             allowPublicSubnet: true,
             vpc: props.vpc,
-            vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
+            vpcSubnets: {
+              subnetType: ec2.SubnetType.PUBLIC,
+              availabilityZones: [
+                "ap-northeast-2a",
+                "ap-northeast-2b",
+                "ap-northeast-2c",
+              ],
+            },
             securityGroups: [props.sharedSecurityGroup],
           }
         : {}),

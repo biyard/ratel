@@ -39,6 +39,17 @@ use layout::AppLayout;
 use membership::Home as MembershipHome;
 use root_layout::RootLayout;
 
+/// Top-level `/credentials` entry point. The underlying `CredentialPage`
+/// component shows the *current user's* credentials and ignores its
+/// `username` prop, so we wrap it here with an empty placeholder to
+/// expose a username-less route.
+#[component]
+fn CredentialsHome() -> Element {
+    rsx! {
+        CredentialPage { username: String::new() }
+    }
+}
+
 // Team pages
 use crate::features::social::layout::SocialLayout;
 use crate::features::social::pages::dao::Home as TeamDao;
@@ -79,6 +90,9 @@ pub enum Route {
 
             #[route("/membership")]
             MembershipHome {  },
+
+            #[route("/credentials")]
+            CredentialsHome {  },
 
             #[nest("/posts")]
                 #[route("/")]

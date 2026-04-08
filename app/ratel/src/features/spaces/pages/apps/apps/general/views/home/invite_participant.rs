@@ -203,8 +203,11 @@ pub fn InviteParticipant() -> Element {
     }
 }
 
+/// Pill-shaped chip used to display a queued email/username before
+/// submission. Re-exported so the Administrators panel can reuse the
+/// same look as InviteParticipant.
 #[component]
-fn InviteEmailChip(value: String, on_remove: EventHandler<MouseEvent>) -> Element {
+pub fn InviteEmailChip(value: String, on_remove: EventHandler<MouseEvent>) -> Element {
     rsx! {
         div { class: "flex gap-1 items-center pr-1 pl-3 h-7 rounded-[100px] bg-btn-primary-bg",
             span { class: "font-medium leading-6 font-raleway text-[15px] tracking-[0.5px] text-btn-primary-text",
