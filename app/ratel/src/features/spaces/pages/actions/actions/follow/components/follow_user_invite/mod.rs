@@ -80,33 +80,33 @@ pub fn FollowUserInvite(space_id: SpacePartition, on_refresh: EventHandler<()>) 
                             oninput: move |evt: Event<FormData>| {
                                 identifier_input.set(evt.value().to_string());
                             },
-                            onkeydown: move |evt: Event<KeyboardData>| {
-                                if evt.key() != Key::Enter {
-                                    return;
-                                }
+                            onconfirm: move |_| {
                                 let identifiers = normalize_identifier_input(&identifier_input());
                                 if identifiers.is_empty() {
                                     return;
-                                };
+                                }
                                 let space_id = space_id.clone();
                                 let mut pending_identifiers = pending_identifiers.clone();
                                 let mut identifier_input = identifier_input.clone();
                                 spawn(async move {
                                     if let Ok(res) = check_follow_users(
-                                        space_id,
-                                        CheckFollowUsersRequest { identifiers },
-                                    )
-                                    .await
+                                            space_id,
+                                            CheckFollowUsersRequest {
+                                                identifiers,
+                                            },
+                                        )
+                                        .await
                                     {
                                         let existing = res.existing_identifiers;
                                         if !existing.is_empty() {
-                                            pending_identifiers.with_mut(|list| {
-                                                for value in existing {
-                                                    if !list.iter().any(|v| v == &value) {
-                                                        list.push(value);
+                                            pending_identifiers
+                                                .with_mut(|list| {
+                                                    for value in existing {
+                                                        if !list.iter().any(|v| v == &value) {
+                                                            list.push(value);
+                                                        }
                                                     }
-                                                }
-                                            });
+                                                });
                                         }
                                     }
                                     identifier_input.set(String::new());
