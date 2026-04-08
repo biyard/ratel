@@ -11,6 +11,12 @@ use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use dioxus::prelude::*;
 use dioxus_primitives::scroll_area::ScrollDirection;
 
+#[derive(Clone)]
+pub struct ChangeRolePayload {
+    pub user_id: String,
+    pub new_role: TeamRole,
+}
+
 const PAGE_SIZE: i32 = 10;
 
 #[component]
@@ -50,6 +56,11 @@ pub fn ManagementPage(username: String) -> Element {
 
     let mut error_msg = use_signal(|| Option::<String>::None);
     let failed_remove_member = tr.failed_remove_member.to_string();
+    let failed_change_role = tr.failed_change_role.to_string();
+
+    let user_ctx = crate::features::auth::hooks::use_user_context();
+    let current_user_pk: Option<String> =
+        user_ctx().user.as_ref().map(|u| u.pk.to_string());
 
     // Members infinite scroll query
     let team_pk_signal = use_signal(|| team_pk.clone());
@@ -110,9 +121,7 @@ pub fn ManagementPage(username: String) -> Element {
                         size: ButtonSize::Small,
                         class: "flex items-center gap-2".to_string(),
                         onclick: on_add_members_click,
-                        lucide_dioxus::UserPlus {
-                            class: "w-4 h-4 [&>path]:stroke-btn-primary-text [&>line]:stroke-btn-primary-text",
-                        }
+                        lucide_dioxus::UserPlus { class: "w-4 h-4 [&>path]:stroke-btn-primary-text [&>line]:stroke-btn-primary-text" }
                         {tr.add_members}
                     }
                 }
@@ -138,17 +147,23 @@ pub fn ManagementPage(username: String) -> Element {
                 ScrollArea {
                     direction: ScrollDirection::Vertical,
                     class: "flex flex-col max-h-[540px]",
-                    for (idx, member) in members.iter().enumerate() {
+                    for (idx , member) in members.iter().enumerate() {
                         {
                             let is_last = idx == members.len() - 1;
                             let member = member.clone();
                             let failed_remove = failed_remove_member.clone();
+                            let failed_role = failed_change_role.clone();
+                            let is_self = current_user_pk
+                                .as_deref()
+                                .map(|pk| pk == member.user_id.as_str())
+                                .unwrap_or(false);
                             rsx! {
                                 MemberRow {
                                     key: "{member.user_id}",
                                     member: member.clone(),
                                     is_last,
                                     can_manage,
+                                    is_self,
                                     on_remove: move |_| {
                                         let member = member.clone();
                                         let team_pk = team_pk_signal();
@@ -157,12 +172,34 @@ pub fn ManagementPage(username: String) -> Element {
                                         let mut members_query = members_query;
                                         spawn(async move {
                                             let result = crate::features::social::pages::member::controllers::remove_team_member_handler(
-                                                team_pk.clone(),
-                                                crate::features::social::pages::member::dto::RemoveMemberRequest {
-                                                    user_pks: vec![member.user_id.clone()],
-                                                },
-                                            )
-                                            .await;
+                                                    team_pk.clone(),
+                                                    crate::features::social::pages::member::dto::RemoveMemberRequest {
+                                                        user_pks: vec![member.user_id.clone()],
+                                                    },
+                                                )
+                                                .await;
+                                            if result.is_err() {
+                                                error_msg.set(Some(failed_msg));
+                                            } else {
+                                                error_msg.set(None);
+                                                members_query.refresh();
+                                            }
+                                        });
+                                    },
+                                    on_change_role: move |payload: ChangeRolePayload| {
+                                        let team_pk = team_pk_signal();
+                                        let mut error_msg = error_msg.clone();
+                                        let failed_msg = failed_role.clone();
+                                        let mut members_query = members_query;
+                                        spawn(async move {
+                                            let result = crate::features::social::pages::member::controllers::update_member_role_handler(
+                                                    team_pk.clone(),
+                                                    crate::features::social::pages::member::dto::UpdateMemberRoleRequest {
+                                                        user_pk: payload.user_id,
+                                                        role: payload.new_role,
+                                                    },
+                                                )
+                                                .await;
                                             if result.is_err() {
                                                 error_msg.set(Some(failed_msg));
                                             } else {
@@ -192,7 +229,14 @@ pub fn ManagementPage(username: String) -> Element {
 }
 
 #[component]
-fn MemberRow(member: TeamMemberResponse, is_last: bool, can_manage: bool, on_remove: EventHandler<()>) -> Element {
+fn MemberRow(
+    member: TeamMemberResponse,
+    is_last: bool,
+    can_manage: bool,
+    is_self: bool,
+    on_remove: EventHandler<()>,
+    on_change_role: EventHandler<ChangeRolePayload>,
+) -> Element {
     let tr: TeamSettingsTranslate = use_translate();
     let border_class = if is_last {
         ""
@@ -200,6 +244,7 @@ fn MemberRow(member: TeamMemberResponse, is_last: bool, can_manage: bool, on_rem
         "border-b border-border"
     };
     let mut show_menu = use_signal(|| false);
+    let can_change_role = can_manage && !member.is_owner && !is_self;
 
     let display = if member.display_name.is_empty() {
         member.username.clone()
@@ -227,7 +272,9 @@ fn MemberRow(member: TeamMemberResponse, is_last: bool, can_manage: bool, on_rem
 
                 // Name + username
                 div { class: "flex flex-col min-w-0 flex-1",
-                    span { class: "text-sm font-semibold text-text-primary truncate", "{display}" }
+                    span { class: "text-sm font-semibold text-text-primary truncate",
+                        "{display}"
+                    }
                     span { class: "text-xs text-foreground-muted truncate", "@{member.username}" }
                 }
 
@@ -258,9 +305,7 @@ fn MemberRow(member: TeamMemberResponse, is_last: bool, can_manage: bool, on_rem
                                 e.stop_propagation();
                                 show_menu.toggle();
                             },
-                            lucide_dioxus::Ellipsis {
-                                class: "w-4 h-4 [&>circle]:fill-text-primary [&>circle]:stroke-none",
-                            }
+                            lucide_dioxus::Ellipsis { class: "w-4 h-4 [&>circle]:fill-text-primary [&>circle]:stroke-none" }
                         }
                         if show_menu() {
                             div {
@@ -270,6 +315,48 @@ fn MemberRow(member: TeamMemberResponse, is_last: bool, can_manage: bool, on_rem
                             div {
                                 class: if is_last { "absolute right-0 bottom-8 z-20 w-44 bg-popover border border-border rounded-lg shadow-lg py-1 overflow-hidden" } else { "absolute right-0 top-8 z-20 w-44 bg-popover border border-border rounded-lg shadow-lg py-1 overflow-hidden" },
                                 onclick: move |e| e.stop_propagation(),
+                                if can_change_role && member.role != TeamRole::Admin {
+                                    Button {
+                                        style: ButtonStyle::Text,
+                                        size: ButtonSize::Small,
+                                        shape: ButtonShape::Square,
+                                        class: "flex items-center gap-2 w-full text-text-primary justify-start".to_string(),
+                                        onclick: {
+                                            let user_id = member.user_id.clone();
+                                            move |_| {
+                                                show_menu.set(false);
+                                                on_change_role
+                                                    .call(ChangeRolePayload {
+                                                        user_id: user_id.clone(),
+                                                        new_role: TeamRole::Admin,
+                                                    });
+                                            }
+                                        },
+                                        lucide_dioxus::ShieldCheck { class: "w-4 h-4 [&>path]:stroke-text-primary" }
+                                        {tr.make_admin}
+                                    }
+                                }
+                                if can_change_role && member.role != TeamRole::Member {
+                                    Button {
+                                        style: ButtonStyle::Text,
+                                        size: ButtonSize::Small,
+                                        shape: ButtonShape::Square,
+                                        class: "flex items-center gap-2 w-full text-text-primary justify-start".to_string(),
+                                        onclick: {
+                                            let user_id = member.user_id.clone();
+                                            move |_| {
+                                                show_menu.set(false);
+                                                on_change_role
+                                                    .call(ChangeRolePayload {
+                                                        user_id: user_id.clone(),
+                                                        new_role: TeamRole::Member,
+                                                    });
+                                            }
+                                        },
+                                        lucide_dioxus::User { class: "w-4 h-4 [&>path]:stroke-text-primary [&>circle]:stroke-text-primary" }
+                                        {tr.make_member}
+                                    }
+                                }
                                 Button {
                                     style: ButtonStyle::Text,
                                     size: ButtonSize::Small,
@@ -279,9 +366,7 @@ fn MemberRow(member: TeamMemberResponse, is_last: bool, can_manage: bool, on_rem
                                         show_menu.set(false);
                                         on_remove.call(());
                                     },
-                                    lucide_dioxus::UserMinus {
-                                        class: "w-4 h-4 [&>path]:stroke-destructive [&>line]:stroke-destructive",
-                                    }
+                                    lucide_dioxus::UserMinus { class: "w-4 h-4 [&>path]:stroke-destructive [&>line]:stroke-destructive" }
                                     {tr.remove_from_team}
                                 }
                             }
