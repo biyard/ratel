@@ -88,7 +88,26 @@ fn AttributeRequirementRow(
         )
     };
 
-    let label = requirement_label(requirement.attribute, &tr);
+    let label = requirement_label(requirement.attribute.clone(), &tr);
+    let attribute = requirement.attribute.clone();
+
+    // Collective attributes only need to confirm "category is verified"
+    // — there's no point listing every possible value (e.g. all age
+    // ranges or both genders). The label pill alone fills the row in
+    // that case. Conditional rows still show the chip box with the
+    // specific allowed values.
+    if requirement.collective {
+        return rsx! {
+            div { class: "flex flex-row gap-[10px] items-center w-full",
+                div { class: "h-[60px] inline-flex w-full items-center gap-[10px] rounded-full px-[15px] py-[13px] {pill_class}",
+                    {icon}
+                    span { class: "font-bold text-[15px]/[18px] tracking-[-0.16px] text-white",
+                        {label}
+                    }
+                }
+            }
+        };
+    }
 
     rsx! {
         div { class: "flex w-full flex-row items-center gap-[10px] max-mobile:flex-col max-mobile:items-start",
@@ -104,6 +123,7 @@ fn AttributeRequirementRow(
                     RequirementValueTag {
                         value: value.clone(),
                         is_mine: requirement.current_value.as_deref() == Some(value.as_str()),
+                        attribute: attribute.clone(),
                     }
                 }
             }
@@ -112,18 +132,46 @@ fn AttributeRequirementRow(
 }
 
 #[component]
-fn RequirementValueTag(value: String, is_mine: bool) -> Element {
+fn RequirementValueTag(
+    value: String,
+    is_mine: bool,
+    attribute: crate::features::spaces::controllers::panel_requirements::PanelRequirementAttribute,
+) -> Element {
+    let tr: ParticipationAttributesSectionTranslate = use_translate();
+    let display = display_requirement_value(&attribute, &value, &tr);
+
     if is_mine {
         rsx! {
             span { class: "inline-flex items-center justify-center rounded-[6px] bg-[#FCB300] px-2 py-[3px] font-semibold text-[14px]/[20px] tracking-[0.5px] text-[#0A0A0A]",
-                {value}
+                {display}
             }
         }
     } else {
         rsx! {
             span { class: "inline-flex items-center justify-center rounded-[6px] bg-white px-2 py-[3px] font-semibold text-[14px]/[20px] tracking-[0.5px] text-[#0A0A0A]",
-                {value}
+                {display}
             }
+        }
+    }
+}
+
+/// Translates raw value strings produced by the backend (e.g. `"male"`,
+/// `"female"`) into the user's current locale. Non-localizable values
+/// like age ranges (`"0-17"`) and university names are returned as-is.
+fn display_requirement_value(
+    attribute: &crate::features::spaces::controllers::panel_requirements::PanelRequirementAttribute,
+    value: &str,
+    tr: &ParticipationAttributesSectionTranslate,
+) -> String {
+    use crate::features::spaces::controllers::panel_requirements::PanelRequirementAttribute;
+    match attribute {
+        PanelRequirementAttribute::Gender => match value.to_ascii_lowercase().as_str() {
+            "male" => tr.gender_male.to_string(),
+            "female" => tr.gender_female.to_string(),
+            _ => value.to_string(),
+        },
+        PanelRequirementAttribute::Age | PanelRequirementAttribute::University => {
+            value.to_string()
         }
     }
 }
@@ -186,6 +234,16 @@ translate! {
     university: {
         en: "University",
         ko: "대학교",
+    },
+
+    gender_male: {
+        en: "Male",
+        ko: "남성",
+    },
+
+    gender_female: {
+        en: "Female",
+        ko: "여성",
     },
 
     verification_required: {
