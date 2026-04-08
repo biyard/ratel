@@ -14,6 +14,17 @@ pub fn PollCreatorPage(
     let mut enabled = use_signal(move || ctx.poll().encrypted_upload_enabled);
     let mut toast = crate::common::use_toast();
 
+    // Creators can keep editing the action even after it has started
+    // (e.g. adding a final survey question). The delete button is the
+    // only thing that stays locked: it's hidden once `is_action_locked`
+    // returns true so that an action with live responses can't be
+    // removed.
+    let space = crate::features::spaces::space_common::hooks::use_space()();
+    let locked = crate::features::spaces::pages::actions::is_action_locked(
+        space.status,
+        ctx.poll().space_action.started_at,
+    );
+
     let on_date_change = move |range: DateTimeRange| async move {
         let space_id = space_id();
         let poll_id = poll_id();
@@ -124,9 +135,12 @@ pub fn PollCreatorPage(
                         // Encrypted Upload toggle
                         EncryptedUploadSetting { enabled, on_toggle: on_encrypted_upload_toggle }
 
-                        ActionDeleteButton {
-                            space_id: space_id(),
-                            action_id: poll_id().to_string(),
+                        // Delete button is hidden once the action is locked.
+                        if !locked {
+                            ActionDeleteButton {
+                                space_id: space_id(),
+                                action_id: poll_id().to_string(),
+                            }
                         }
                     }
                 }

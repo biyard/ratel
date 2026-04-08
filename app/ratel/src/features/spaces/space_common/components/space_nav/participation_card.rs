@@ -41,9 +41,6 @@ pub fn ParticipationCard(
         .and_then(|r| r.as_ref().ok())
         .cloned()
         .unwrap_or_default();
-    let all_requirements_satisfied = panel_requirements
-        .iter()
-        .all(|requirement| requirement.satisfied);
     let participate_credential_path = credential_path.clone();
     let credential_button_path = credential_path.clone();
     let login_for_participate = on_login.clone();
@@ -52,100 +49,122 @@ pub fn ParticipationCard(
     let layover_credential_path = credential_path.clone();
     let layover_login = login_for_participate.clone();
 
+    // Closure invoked by the layover's "Join Space" button after the
+    // user explicitly checks the consent checkbox in the
+    // See your Difference step. Persists the consent flag onto the
+    // SpaceParticipant record via `participate_space`.
+    let on_join_after_consent = {
+        let panel_requirements_query_key = panel_requirements_query_key.clone();
+        move |_| {
+            let panel_requirements_query_key = panel_requirements_query_key.clone();
+            spawn(async move {
+                let space_detail =
+                    crate::features::spaces::space_common::types::space_key(&space_id());
+                let panel_requirements_key = panel_requirements_query_key.clone();
+                let req = crate::features::spaces::controllers::participate_space::ParticipateSpaceRequest {
+                    informed_agreed: true,
+                };
+                if crate::features::spaces::controllers::participate_space::participate_space(
+                    space_id(),
+                    req,
+                )
+                .await
+                .is_ok()
+                {
+                    let prerequisite_actions = if let Ok(actions) =
+                        crate::features::spaces::pages::actions::controllers::list_actions(
+                            space_id(),
+                        )
+                        .await
+                    {
+                        let filtered: Vec<
+                            crate::features::spaces::pages::actions::types::SpaceActionSummary,
+                        > = actions.into_iter().filter(|a| a.prerequisite).collect();
+                        filtered
+                    } else {
+                        vec![]
+                    };
+
+                    let mut layover = layover;
+                    // Close the join layover before swapping role / opening
+                    // the prerequisite actions layover.
+                    layover.close();
+
+                    if !prerequisite_actions.is_empty() {
+                        layover
+                            .open(
+                                "space-prerequisite-actions".to_string(),
+                                String::new(),
+                                rsx! {
+                                    PrerequisiteActionsLayover {
+                                        space_id: space_id(),
+                                        actions: prerequisite_actions,
+                                    }
+                                },
+                            )
+                            .set_size(LayoverSize::Medium);
+                    }
+
+                    if let Ok(next_role) =
+                        crate::features::spaces::space_common::controllers::get_user_role(
+                            space_id(),
+                        )
+                        .await
+                    {
+                        current_role.set(next_role);
+                    }
+
+                    query.invalidate(&space_detail);
+                    query.invalidate(&panel_requirements_key);
+                    space.restart();
+                    role.restart();
+                }
+            });
+        }
+    };
+
     let handle_participate = move |_| {
         if participate_credential_path.is_none() {
             login_for_participate.call(());
             return;
         }
 
-        if !all_requirements_satisfied {
-            let mut refresh_panel_requirements = panel_requirements_resource;
-            let panel_requirements_query_key_for_verified = panel_requirements_query_key.clone();
-            let on_verified_refresh = move |_| {
-                query.invalidate(&panel_requirements_query_key_for_verified);
-                refresh_panel_requirements.restart();
-                space.restart();
-                role.restart();
-            };
-            let mut refresh_panel_requirements = panel_requirements_resource;
-            let panel_requirements_query_key_for_completed = panel_requirements_query_key.clone();
-            let on_completed = move |_| {
-                query.invalidate(&panel_requirements_query_key_for_completed);
-                refresh_panel_requirements.restart();
-                space.restart();
-                role.restart();
-            };
-            layover
-                .open(
-                    "space-participation-requirements".to_string(),
-                    String::new(),
-                    rsx! {
-                        ParticipationRequirementsLayover {
-                            space_id: space_id(),
-                            requirements: layover_requirements.clone(),
-                            on_verified_refresh,
-                            on_completed,
-                        }
-                    },
-                )
-                .set_size(LayoverSize::Medium);
-            return;
-        }
-
-        spawn(async move {
-            let space_detail = crate::features::spaces::space_common::types::space_key(&space_id());
-            let panel_requirements_key = vec![
-                "Space".to_string(),
-                space_id().to_string(),
-                "PanelRequirements".to_string(),
-            ];
-            if crate::features::spaces::controllers::participate_space::participate_space(
-                space_id(),
+        // Always open the join layover. The "See your Difference" step
+        // either shows the consent checkbox + Join button (when all
+        // requirements are satisfied) or routes the user through the
+        // "Improve My Credential" verification flow.
+        let mut refresh_panel_requirements = panel_requirements_resource;
+        let panel_requirements_query_key_for_verified = panel_requirements_query_key.clone();
+        let on_verified_refresh = move |_| {
+            query.invalidate(&panel_requirements_query_key_for_verified);
+            refresh_panel_requirements.restart();
+            space.restart();
+            role.restart();
+        };
+        let mut refresh_panel_requirements = panel_requirements_resource;
+        let panel_requirements_query_key_for_completed = panel_requirements_query_key.clone();
+        let on_completed = move |_| {
+            query.invalidate(&panel_requirements_query_key_for_completed);
+            refresh_panel_requirements.restart();
+            space.restart();
+            role.restart();
+        };
+        let on_join = on_join_after_consent.clone();
+        layover
+            .open(
+                "space-participation-requirements".to_string(),
+                String::new(),
+                rsx! {
+                    ParticipationRequirementsLayover {
+                        space_id: space_id(),
+                        requirements: layover_requirements.clone(),
+                        on_verified_refresh,
+                        on_completed,
+                        on_join,
+                    }
+                },
             )
-            .await
-            .is_ok()
-            {
-                // Fetch prerequisite actions BEFORE updating role,
-                // because role change unmounts this component
-                let prerequisite_actions = if let Ok(actions) =
-                    crate::features::spaces::pages::actions::controllers::list_actions(
-                        space_id(),
-                    )
-                    .await
-                {
-                    let filtered: Vec<
-                        crate::features::spaces::pages::actions::types::SpaceActionSummary,
-                    > = actions.into_iter().filter(|a| a.prerequisite).collect();
-                    filtered
-                } else {
-                    vec![]
-                };
-
-                // Show prerequisite actions layover before role change
-                if !prerequisite_actions.is_empty() {
-                    layover
-                        .open(
-                            "space-prerequisite-actions".to_string(),
-                            String::new(),
-                            rsx! {
-                                PrerequisiteActionsLayover {
-                                    space_id: space_id(),
-                                    actions: prerequisite_actions,
-                                }
-                            },
-                        )
-                        .set_size(LayoverSize::Medium);
-                }
-
-                // Now update role — this will unmount ParticipationCard
-                // Space is InProgress when participation card is shown, so user becomes Candidate
-                current_role.set(SpaceUserRole::Candidate);
-                query.invalidate(&space_detail);
-                query.invalidate(&panel_requirements_key);
-                space.restart();
-                role.restart();
-            }
-        });
+            .set_size(LayoverSize::Medium);
     };
 
     // let handle_open_credentials = move |_| {

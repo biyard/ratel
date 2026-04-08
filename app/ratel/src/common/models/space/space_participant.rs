@@ -25,6 +25,13 @@ pub struct SpaceParticipant {
     pub space_pk: Partition,
     #[dynamo(prefix = "SP", name = "find_by_user", index = "gsi1", pk)]
     pub user_pk: Partition,
+
+    /// Records the user's explicit consent to verify the required
+    /// attributes for this space (the "I understand and agree…"
+    /// checkbox shown when joining). `Option<bool>` so that existing
+    /// participants without this field still deserialize cleanly.
+    #[serde(default)]
+    pub informed_agreed: Option<bool>,
 }
 
 impl SpaceParticipant {
@@ -49,6 +56,7 @@ impl SpaceParticipant {
             user_type: UserType::AnonymousSpaceUser,
             space_pk,
             user_pk,
+            informed_agreed: None,
         }
     }
 
@@ -75,6 +83,7 @@ impl SpaceParticipant {
             user_type,
             space_pk,
             user_pk,
+            informed_agreed: None,
         }
     }
 
@@ -92,6 +101,7 @@ impl SpaceParticipant {
             user_type: UserType::AnonymousSpaceUser,
             space_pk,
             user_pk,
+            informed_agreed: None,
         }
     }
 
@@ -222,6 +232,7 @@ impl From<(Partition, User)> for SpaceParticipant {
             profile_url: user.profile_url,
             space_pk,
             user_pk: user.pk,
+            informed_agreed: None,
         }
     }
 }

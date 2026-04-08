@@ -91,10 +91,9 @@ test.describe.serial("Page entries accessibility", () => {
   });
 
   test("setup: create poll via API", async ({ page }) => {
-    const res = await page.request.post(
-      `/api/spaces/${data.spaceId}/polls`,
-      { data: {} },
-    );
+    const res = await page.request.post(`/api/spaces/${data.spaceId}/polls`, {
+      data: {},
+    });
     expect(res.ok(), `create poll: ${await res.text()}`).toBeTruthy();
     const body = await res.json();
     // sk is "SpacePoll#uuid" — strip prefix
@@ -103,10 +102,9 @@ test.describe.serial("Page entries accessibility", () => {
   });
 
   test("setup: create quiz via API", async ({ page }) => {
-    const res = await page.request.post(
-      `/api/spaces/${data.spaceId}/quizzes`,
-      { data: {} },
-    );
+    const res = await page.request.post(`/api/spaces/${data.spaceId}/quizzes`, {
+      data: {},
+    });
     expect(res.ok(), `create quiz: ${await res.text()}`).toBeTruthy();
     const body = await res.json();
     // quiz response returns quiz_id directly (no prefix)
@@ -127,10 +125,9 @@ test.describe.serial("Page entries accessibility", () => {
   });
 
   test("setup: create follow action via API", async ({ page }) => {
-    const res = await page.request.post(
-      `/api/spaces/${data.spaceId}/follows`,
-      { data: {} },
-    );
+    const res = await page.request.post(`/api/spaces/${data.spaceId}/follows`, {
+      data: {},
+    });
     expect(res.ok(), `create follow: ${await res.text()}`).toBeTruthy();
     const body = await res.json();
     // sk is "SpaceActionFollow#uuid" — strip prefix
@@ -148,12 +145,10 @@ test.describe.serial("Page entries accessibility", () => {
    */
   async function checkPage(page, url, testId) {
     await goto(page, url);
-    await expect(
-      page.getByText("Page not found"),
-    ).toBeHidden({ timeout: 15000 });
-    await expect(
-      page.getByTestId(testId),
-    ).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText("Page not found")).toBeHidden({
+      timeout: 15000,
+    });
+    await expect(page.getByTestId(testId)).toBeVisible({ timeout: 15000 });
   }
 
   // ── Static / app-shell pages (AppLayout) ───────────────────────────────────
@@ -214,11 +209,7 @@ test.describe.serial("Page entries accessibility", () => {
   test("GET /:teamUsername/team-rewards", async ({ page }) =>
     checkPage(page, `/${data.teamUsername}/team-rewards`, "social-layout"));
   test("GET /:teamUsername/team-memberships", async ({ page }) =>
-    checkPage(
-      page,
-      `/${data.teamUsername}/team-memberships`,
-      "social-layout",
-    ));
+    checkPage(page, `/${data.teamUsername}/team-memberships`, "social-layout"));
 
   // ── Team settings pages (TeamSettingLayout) ────────────────────────────────
 
@@ -282,27 +273,25 @@ test.describe.serial("Page entries accessibility", () => {
       `/spaces/${data.spaceId}/actions/quizzes/${data.quizId}`,
       "space-layout-container",
     ));
-  test(
-    "GET /spaces/:space_id/actions/discussions/:discussion_id",
-    async ({ page }) =>
-      checkPage(
-        page,
-        `/spaces/${data.spaceId}/actions/discussions/${data.discussionId}`,
-        "space-layout-container",
-      ),
-  );
+  test("GET /spaces/:space_id/actions/discussions/:discussion_id", async ({
+    page,
+  }) =>
+    checkPage(
+      page,
+      `/spaces/${data.spaceId}/actions/discussions/${data.discussionId}`,
+      "space-layout-container",
+    ));
   // NOTE: discussion editor page loads discussion context via server function,
   // which can cause SSR crash (ERR_EMPTY_RESPONSE) in some environments.
   // The route exists but may need a fully configured space to render without errors.
-  test.skip(
-    "GET /spaces/:space_id/actions/discussions/:discussion_id/edit",
-    async ({ page }) =>
-      checkPage(
-        page,
-        `/spaces/${data.spaceId}/actions/discussions/${data.discussionId}/edit`,
-        "space-layout-container",
-      ),
-  );
+  test.skip("GET /spaces/:space_id/actions/discussions/:discussion_id/edit", async ({
+    page,
+  }) =>
+    checkPage(
+      page,
+      `/spaces/${data.spaceId}/actions/discussions/${data.discussionId}/edit`,
+      "space-layout-container",
+    ));
   test("GET /spaces/:space_id/actions/follows/:follow_id", async ({ page }) =>
     checkPage(
       page,
@@ -313,11 +302,7 @@ test.describe.serial("Page entries accessibility", () => {
   // ── Space app pages (SpaceLayout) ─────────────────────────────────────────
 
   test("GET /spaces/:space_id/apps/", async ({ page }) =>
-    checkPage(
-      page,
-      `/spaces/${data.spaceId}/apps/`,
-      "space-layout-container",
-    ));
+    checkPage(page, `/spaces/${data.spaceId}/apps/`, "space-layout-container"));
   test("GET /spaces/:space_id/apps/general", async ({ page }) =>
     checkPage(
       page,
@@ -336,24 +321,20 @@ test.describe.serial("Page entries accessibility", () => {
       `/spaces/${data.spaceId}/apps/analyzes`,
       "space-layout-container",
     ));
-  test(
-    "GET /spaces/:space_id/apps/analyzes/poll/:poll_id",
-    async ({ page }) =>
-      checkPage(
-        page,
-        `/spaces/${data.spaceId}/apps/analyzes/poll/${data.pollId}`,
-        "space-layout-container",
-      ),
-  );
-  test(
-    "GET /spaces/:space_id/apps/analyzes/discussion/:discussion_id",
-    async ({ page }) =>
-      checkPage(
-        page,
-        `/spaces/${data.spaceId}/apps/analyzes/discussion/${data.discussionId}`,
-        "space-layout-container",
-      ),
-  );
+  test("GET /spaces/:space_id/apps/analyzes/poll/:poll_id", async ({ page }) =>
+    checkPage(
+      page,
+      `/spaces/${data.spaceId}/apps/analyzes/poll/${data.pollId}`,
+      "space-layout-container",
+    ));
+  test("GET /spaces/:space_id/apps/analyzes/discussion/:discussion_id", async ({
+    page,
+  }) =>
+    checkPage(
+      page,
+      `/spaces/${data.spaceId}/apps/analyzes/discussion/${data.discussionId}`,
+      "space-layout-container",
+    ));
   test("GET /spaces/:space_id/apps/panels", async ({ page }) =>
     checkPage(
       page,
@@ -366,4 +347,13 @@ test.describe.serial("Page entries accessibility", () => {
       `/spaces/${data.spaceId}/apps/incentive-pool`,
       "space-layout-container",
     ));
+
+  test("should NOT show Admin menu item for non-admin users", async ({
+    page,
+  }) => {
+    // The `page` fixture uses the default user.json storage state
+    // (hi+user1@biyard.co), which is a regular non-admin user.
+    await goto(page, "/");
+    await expect(page.getByTestId("admin-menu")).toBeHidden({ timeout: 10000 });
+  });
 });
