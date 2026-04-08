@@ -12,16 +12,12 @@ pub fn AiModeratorSetting(
     let tr: AiModeratorSettingTranslate = use_translate();
     let mut toast = use_toast();
 
-    let config_res = use_server_future(move || {
-        async move { get_ai_moderator_config(space_id(), discussion_id()).await }
-    })?;
+    let config_res =
+        use_loader(
+            move || async move { get_ai_moderator_config(space_id(), discussion_id()).await },
+        )?;
 
-    let config = config_res
-        .read()
-        .as_ref()
-        .and_then(|r| r.as_ref().ok())
-        .cloned()
-        .unwrap_or_default();
+    let config = config_res();
 
     let AiModeratorConfigResponse {
         enabled: init_enabled,
@@ -39,12 +35,7 @@ pub fn AiModeratorSetting(
 
     let mut last_synced = use_signal(move || (init_enabled, init_interval, init_guidelines));
     use_effect(move || {
-        let current = config_res
-            .read()
-            .as_ref()
-            .and_then(|r| r.as_ref().ok())
-            .cloned()
-            .unwrap_or_default();
+        let current = config_res();
         let latest = (
             current.enabled,
             current.reply_interval,
@@ -111,11 +102,7 @@ pub fn AiModeratorSetting(
                                             class: "cursor-help text-web-font-neutral [&>path]:stroke-current [&>circle]:fill-current [&>path]:fill-none",
                                         }
                                     }
-                                    TooltipContent {
-                                        side: ContentSide::Bottom,
-                                        align: ContentAlign::Start,
-                                        {tr.ai_moderator_tooltip}
-                                    }
+                                    TooltipContent { side: ContentSide::Bottom, align: ContentAlign::Start, {tr.ai_moderator_tooltip} }
                                 }
                             }
                             div { "data-testid": "ai-moderator-toggle",
@@ -131,13 +118,7 @@ pub fn AiModeratorSetting(
                                             reply_interval: reply_interval(),
                                             guidelines: guidelines(),
                                         };
-                                        match update_ai_moderator_config(
-                                            space_id(),
-                                            discussion_id,
-                                            req,
-                                        )
-                                        .await
-                                        {
+                                        match update_ai_moderator_config(space_id(), discussion_id, req).await {
                                             Ok(_) => {
                                                 toast.info(tr.config_saved.to_string());
                                             }
@@ -180,7 +161,7 @@ pub fn AiModeratorSetting(
                         p { class: label_class, {tr.guidelines_label} }
                         TextArea {
                             "data-testid": "ai-moderator-guidelines",
-                            class: "min-h-[100px] w-full",
+                            class: "w-full min-h-[100px]",
                             placeholder: tr.guidelines_placeholder,
                             value: guidelines(),
                             oninput: move |evt: FormEvent| {
@@ -191,10 +172,7 @@ pub fn AiModeratorSetting(
                     }
 
                     // Reference Materials
-                    MaterialList {
-                        space_id,
-                        discussion_sk: discussion_id,
-                    }
+                    MaterialList { space_id, discussion_sk: discussion_id }
 
                     // Info notice
                     div { class: "flex gap-5 items-start p-5 w-full border rounded-[12px] border-web-card-stroke3 bg-web-card-bg2",
