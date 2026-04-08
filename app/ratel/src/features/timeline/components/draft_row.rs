@@ -109,7 +109,7 @@ pub fn DraftScrollRow(
             h2 { class: "px-1 text-lg font-semibold text-text-primary", "{tr.drafts_title}" }
             div { class: "relative",
                 div {
-                    class: "flex overflow-x-auto gap-4 pb-2 snap-x snap-mandatory scrollbar-none",
+                    class: "flex overflow-x-auto gap-4 items-start pb-2 snap-x snap-mandatory scrollbar-none",
                     onmounted: move |_| {
                         let js = check_js_mount.clone();
                         spawn(async move {
@@ -137,7 +137,7 @@ pub fn DraftScrollRow(
                             rsx! {
                                 div {
                                     key: "draft-{post.pk}",
-                                    class: "flex relative flex-col pt-5 pb-5 border cursor-pointer snap-start shrink-0 w-[340px] max-mobile:w-[280px] rounded-[10px] bg-card-bg-secondary border-card-enable-border group",
+                                    class: "flex relative flex-col pt-5 pb-5 border cursor-pointer snap-start shrink-0 w-[340px] max-mobile:w-[280px] min-h-45 rounded-[10px] bg-card-bg-secondary border-card-enable-border group",
                                     onclick: move |_| {
                                         let nav = nav.clone();
                                         let post_pk: FeedPartition = post_pk_for_nav.clone().into();
@@ -174,8 +174,8 @@ pub fn DraftScrollRow(
                                             };
                                             popup
                                                 .open(rsx! {
-                                                    DeleteDraftConfirmation { on_cancel, on_confirm }
-                                                });
+                                                DeleteDraftConfirmation { on_cancel, on_confirm }
+                                            });
                                         },
                                         icons::edit::Delete2 {
                                             width: "18",
