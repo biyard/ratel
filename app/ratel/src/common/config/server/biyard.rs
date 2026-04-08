@@ -38,6 +38,6 @@ pub static BIYARD_SERVICE: Lazy<BiyardService> = Lazy::new(|| async move {
     dioxus::Ok(BiyardService::new(
         config.api_secret.to_string(),
         config.project_id.to_string(),
-        "https://biyard.co".to_string(),
+        "https://api.biyard.co".to_string(),
     ))
 });
