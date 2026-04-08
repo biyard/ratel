@@ -23,7 +23,7 @@ pub async fn remove_discussion_file(
 
     let post = SpacePost::get(cli, &space_pk, Some(discussion_sk.clone()))
         .await?
-        .ok_or(Error::NotFound("Discussion not found".into()))?;
+        .ok_or(SpaceActionDiscussionError::NotFound)?;
 
     let updated_files: Vec<File> = post
         .files
