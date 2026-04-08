@@ -181,7 +181,17 @@ pub fn ActionCard(
                             {period}
                         }
                     }
-                    if deletable {
+                    // Only allow deletion while the action is not locked.
+                    // An action is locked once the space has launched
+                    // (Ongoing) AND the action's time window has begun,
+                    // or the space has moved past the live phase
+                    // (Processing / Finished).
+                    if deletable
+                        && !crate::features::spaces::pages::actions::is_action_locked(
+                            space().status,
+                            action.started_at.unwrap_or(i64::MAX),
+                        )
+                    {
                         button {
                             r#type: "button",
                             "aria-label": tr.delete_action,
