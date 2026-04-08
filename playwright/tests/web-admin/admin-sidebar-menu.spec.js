@@ -42,6 +42,7 @@ test.describe.serial("Admin sidebar menu for SystemAdmin users (#1333)", () => {
   test("should navigate to /admin when clicking Admin menu", async ({
     page,
   }) => {
+    await goto(page, "/");
     await click(page, { testId: "admin-menu" });
     await expect(page).toHaveURL(/\/admin/);
   });
@@ -49,6 +50,7 @@ test.describe.serial("Admin sidebar menu for SystemAdmin users (#1333)", () => {
   // --- 3. Verify admin page content ---
 
   test("should render the admin Reward Management page", async ({ page }) => {
+    await goto(page, "/");
     await click(page, { testId: "admin-menu" });
     await expect(page).toHaveURL(/\/admin/);
     await expect(
