@@ -60,15 +60,29 @@ pub async fn update_member_role_handler(
 
     if !already_in_target_role {
         // Build transact items: delete all existing UserTeamGroup rows, insert the new one.
-        let mut transact_items: Vec<aws_sdk_dynamodb::types::TransactWriteItem> = existing_groups
-            .iter()
-            .map(|utg| {
-                crate::features::auth::UserTeamGroup::delete_transact_write_item(
-                    utg.pk.clone(),
-                    utg.sk.clone(),
-                )
-            })
-            .collect();
+        // Must fit in a single DynamoDB TransactWriteItems call (max 100 items) so the
+        // delete + insert is atomic — chunking across transactions would let a failure
+        // leave the user partially de-grouped.
+        const MAX_TRANSACT_ITEMS: usize = 100;
+        let total_items = existing_groups.len() + 1;
+        if total_items > MAX_TRANSACT_ITEMS {
+            crate::error!(
+                "update_member_role: user {} has {} groups in team {}, exceeds single-transaction limit",
+                target_user.pk,
+                existing_groups.len(),
+                team_pk,
+            );
+            return Err(MemberError::RoleChangeFailed.into());
+        }
+
+        let mut transact_items: Vec<aws_sdk_dynamodb::types::TransactWriteItem> =
+            Vec::with_capacity(total_items);
+        for utg in &existing_groups {
+            transact_items.push(crate::features::auth::UserTeamGroup::delete_transact_write_item(
+                utg.pk.clone(),
+                utg.sk.clone(),
+            ));
+        }
 
         let new_user_team_group = crate::features::auth::UserTeamGroup::new(
             target_user.pk.clone(),
@@ -78,7 +92,10 @@ pub async fn update_member_role_handler(
         );
         transact_items.push(new_user_team_group.upsert_transact_write_item());
 
-        crate::transact_write_all_items!(cli, transact_items);
+        crate::transact_write_items!(cli, transact_items).map_err(|e| {
+            crate::error!("update_member_role: transact_write failed: {e}");
+            MemberError::RoleChangeFailed
+        })?;
     }
 
     Ok(TeamMemberResponse {

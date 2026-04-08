@@ -17,6 +17,10 @@ pub enum MemberError {
     #[error("Cannot change owner role")]
     #[translate(en = "The team owner's role cannot be changed.", ko = "팀 소유자의 역할은 변경할 수 없습니다.")]
     CannotChangeOwnerRole,
+
+    #[error("Role change failed")]
+    #[translate(en = "Failed to change member role.", ko = "멤버 역할 변경에 실패했습니다.")]
+    RoleChangeFailed,
 }
 
 #[cfg(feature = "server")]
@@ -28,6 +32,7 @@ impl MemberError {
             MemberError::TooManyInvitations => StatusCode::BAD_REQUEST,
             MemberError::CannotChangeOwnRole => StatusCode::FORBIDDEN,
             MemberError::CannotChangeOwnerRole => StatusCode::FORBIDDEN,
+            MemberError::RoleChangeFailed => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }
