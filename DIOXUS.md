@@ -406,7 +406,9 @@ fn DogImage() -> Element {
 fn app() -> Element {
     rsx! {
         SuspenseBoundary {
-            fallback: |_| rsx! { p { "로딩 중..." } },
+            fallback: |_| rsx! { 
+                div { class: "flex justify-center items-center w-full h-full min-h-screen", LoadingIndicator {} }
+            },
             DogImage {}
         }
     }
