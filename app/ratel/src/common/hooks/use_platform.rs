@@ -57,28 +57,25 @@ pub fn use_platform() -> Signal<Platform> {
         }
     });
 
-    #[cfg(not(feature = "server"))]
-    {
-        use_effect(move || {
-            use wasm_bindgen::closure::Closure;
-            use wasm_bindgen::JsCast;
+    use_effect(move || {
+        use wasm_bindgen::closure::Closure;
+        use wasm_bindgen::JsCast;
 
-            let closure = Closure::wrap(Box::new(move || {
-                let width = web_sys::window().unwrap().inner_width().unwrap().as_f64().unwrap_or_default();
-                platform.set(if width < 550.0 {
-                    Platform::Mobile
-                } else if width < 1024.0 {
-                    Platform::Tablet
-                } else {
-                    Platform::Desktop
-                });
-            }) as Box<dyn FnMut()>);
-            web_sys::window().unwrap()
-                .add_event_listener_with_callback("resize", closure.as_ref().unchecked_ref())
-                .unwrap();
-            closure.forget();
-        });
-    }
+        let closure = Closure::wrap(Box::new(move || {
+            let width = web_sys::window().unwrap().inner_width().unwrap().as_f64().unwrap_or_default();
+            platform.set(if width < 550.0 {
+                Platform::Mobile
+            } else if width < 1024.0 {
+                Platform::Tablet
+            } else {
+                Platform::Desktop
+            });
+        }) as Box<dyn FnMut()>);
+        web_sys::window().unwrap()
+            .add_event_listener_with_callback("resize", closure.as_ref().unchecked_ref())
+            .unwrap();
+        closure.forget();
+    });
 
     platform
 }
