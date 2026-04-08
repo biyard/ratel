@@ -12,9 +12,9 @@ use dioxus::prelude::*;
 use dioxus_primitives::scroll_area::ScrollDirection;
 
 #[derive(Clone)]
-pub struct ChangeRolePayload {
-    pub user_id: String,
-    pub new_role: TeamRole,
+struct ChangeRolePayload {
+    user_id: String,
+    new_role: TeamRole,
 }
 
 const PAGE_SIZE: i32 = 10;
@@ -147,7 +147,7 @@ pub fn ManagementPage(username: String) -> Element {
                 ScrollArea {
                     direction: ScrollDirection::Vertical,
                     class: "flex flex-col max-h-[540px]",
-                    for (idx, member) in members.iter().enumerate() {
+                    for (idx , member) in members.iter().enumerate() {
                         {
                             let is_last = idx == members.len() - 1;
                             let member = member.clone();
