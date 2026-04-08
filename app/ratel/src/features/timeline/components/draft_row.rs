@@ -1,10 +1,10 @@
 use crate::common::utils::time::time_ago;
+use crate::common::*;
 use crate::features::posts::components::FeedContents;
 use crate::features::posts::controllers::delete_post::delete_post_handler;
 use crate::features::posts::controllers::dto::*;
 use crate::features::posts::controllers::list_user_drafts::list_user_drafts_handler;
 use crate::features::posts::types::*;
-use crate::features::timeline::*;
 use dioxus_translate::use_language;
 use std::collections::HashSet;
 
@@ -32,57 +32,88 @@ translate! {
     },
 }
 
-/// A horizontal row of the user's draft posts, displayed at the top of the timeline.
+/// Shared horizontal-scrolling row of draft post cards.
 ///
-/// Fetches drafts and renders the entire section only when drafts exist.
-/// When there are no drafts, returns nothing — the `CreatePostButton` is rendered
-/// independently in parent views so it remains visible regardless.
+/// Responsibilities:
+/// - Render the "Drafts" heading and the scroll container
+/// - Render each card (badge, title, preview, updated_at)
+/// - Handle the delete button + confirmation popup
+/// - Track left/right scroll affordance buttons via `onmounted`/`onscroll`
+///
+/// The parent is responsible for fetching the draft list and passing it in.
+/// The `aria_label` is used both as the accessibility label and as the JS
+/// query selector anchor, so it must be unique within the rendered page
+/// (e.g. `"Drafts section"` vs `"Team Drafts section"`).
 #[component]
-pub fn DraftTimeline() -> Element {
+pub fn DraftScrollRow(
+    items: Vec<PostResponse>,
+    aria_label: String,
+    #[props(default)] test_id: Option<String>,
+) -> Element {
     let tr: DraftTimelineTranslate = use_translate();
-    let drafts = use_server_future(move || async move {
-        let result = list_user_drafts_handler(None).await;
-        if let Err(ref e) = result {
-            tracing::error!("Failed to load drafts: {:?}", e);
-        }
-        result
-    })?;
-
-    let val = drafts.read();
-    let res = val.as_ref().unwrap();
-
-    let all_items = match res {
-        Ok(resp) => resp.items.clone(),
-        Err(_) => vec![],
-    };
-
+    let nav = use_navigator();
+    let lang = use_language();
+    let mut popup = use_popup();
+    let mut can_scroll_left = use_signal(|| false);
+    let mut can_scroll_right = use_signal(|| false);
     let deleted = use_signal(HashSet::<String>::new);
 
     let deleted_keys = deleted.read().clone();
-    let items: Vec<PostResponse> = all_items
+    let visible: Vec<PostResponse> = items
         .into_iter()
         .filter(|post| !deleted_keys.contains(&post.pk.to_string()))
         .collect();
 
-    if items.is_empty() {
+    if visible.is_empty() {
         return rsx! {};
     }
 
-    let nav = use_navigator();
-    let lang = use_language();
-    let mut can_scroll_left = use_signal(|| false);
-    let mut can_scroll_right = use_signal(|| false);
-    let mut popup = use_popup();
+    // JS selectors scoped to the specific aria-label so multiple instances
+    // on the same page don't collide. Built once per render.
+    let check_scroll_js = format!(
+        r#"
+        const el = document.querySelector('[aria-label="{label}"] .scrollbar-none');
+        if (el) {{
+            dioxus.send([el.scrollLeft > 0, el.scrollLeft + el.clientWidth < el.scrollWidth - 1]);
+        }} else {{
+            dioxus.send([false, false]);
+        }}
+        "#,
+        label = aria_label,
+    );
+    let scroll_left_js = format!(
+        r#"
+        const el = document.querySelector('[aria-label="{label}"] .scrollbar-none');
+        if (el) el.scrollBy({{ left: -340, behavior: 'smooth' }});
+        "#,
+        label = aria_label,
+    );
+    let scroll_right_js = format!(
+        r#"
+        const el = document.querySelector('[aria-label="{label}"] .scrollbar-none');
+        if (el) el.scrollBy({{ left: 340, behavior: 'smooth' }});
+        "#,
+        label = aria_label,
+    );
+
+    let check_js_mount = check_scroll_js.clone();
+    let check_js_scroll = check_scroll_js.clone();
+    let left_js = scroll_left_js.clone();
+    let right_js = scroll_right_js.clone();
 
     rsx! {
-        section { class: "flex flex-col gap-3 w-full", aria_label: "Drafts section",
+        section {
+            class: "flex flex-col gap-3 w-full",
+            aria_label: "{aria_label}",
+            "data-testid": test_id.clone().unwrap_or_default(),
             h2 { class: "px-1 text-lg font-semibold text-text-primary", "{tr.drafts_title}" }
             div { class: "relative",
                 div {
-                    class: "flex overflow-x-auto gap-4 pb-2 snap-x snap-mandatory scrollbar-none",
+                    class: "flex overflow-x-auto gap-4 items-start pb-2 snap-x snap-mandatory scrollbar-none",
                     onmounted: move |_| {
+                        let js = check_js_mount.clone();
                         spawn(async move {
-                            let mut eval = document::eval(DRAFT_CHECK_SCROLL_JS);
+                            let mut eval = document::eval(&js);
                             if let Ok(val) = eval.recv::<Vec<bool>>().await {
                                 can_scroll_left.set(val[0]);
                                 can_scroll_right.set(val[1]);
@@ -90,29 +121,30 @@ pub fn DraftTimeline() -> Element {
                         });
                     },
                     onscroll: move |_| {
+                        let js = check_js_scroll.clone();
                         spawn(async move {
-                            let mut eval = document::eval(DRAFT_CHECK_SCROLL_JS);
+                            let mut eval = document::eval(&js);
                             if let Ok(val) = eval.recv::<Vec<bool>>().await {
                                 can_scroll_left.set(val[0]);
                                 can_scroll_right.set(val[1]);
                             }
                         });
                     },
-                    for post in items {
+                    for post in visible {
                         {
                             let post_pk_for_nav = post.pk.clone();
                             let post_pk_for_delete = post.pk.clone();
                             rsx! {
                                 div {
                                     key: "draft-{post.pk}",
-                                    class: "relative flex flex-col pt-5 pb-5 border cursor-pointer snap-start shrink-0 w-[340px] max-mobile:w-[280px] rounded-[10px] bg-card-bg-secondary border-card-enable-border group",
+                                    class: "flex relative flex-col pt-5 pb-5 border cursor-pointer snap-start shrink-0 w-[340px] max-mobile:w-[280px] min-h-45 rounded-[10px] bg-card-bg-secondary border-card-enable-border group",
                                     onclick: move |_| {
                                         let nav = nav.clone();
                                         let post_pk: FeedPartition = post_pk_for_nav.clone().into();
                                         nav.push(format!("/posts/{post_pk}/edit"));
                                     },
                                     button {
-                                        class: "absolute top-2 right-2 p-1.5 rounded-full cursor-pointer opacity-60 group-hover:opacity-100 transition-opacity z-[10] hover:bg-destructive/10",
+                                        class: "absolute top-2 right-2 p-1.5 rounded-full transition-opacity cursor-pointer opacity-60 group-hover:opacity-100 z-[10] hover:bg-destructive/10",
                                         aria_label: "Delete draft",
                                         onclick: move |e: MouseEvent| {
                                             e.stop_propagation();
@@ -140,11 +172,9 @@ pub fn DraftTimeline() -> Element {
                                                     });
                                                 }
                                             };
-                                            popup.open(rsx! {
-                                                DeleteDraftConfirmation {
-                                                    on_cancel,
-                                                    on_confirm,
-                                                }
+                                            popup
+                                                .open(rsx! {
+                                                DeleteDraftConfirmation { on_cancel, on_confirm }
                                             });
                                         },
                                         icons::edit::Delete2 {
@@ -183,7 +213,8 @@ pub fn DraftTimeline() -> Element {
                         class: "absolute left-0 top-1/2 p-1 rounded-full transition-colors -translate-y-1/2 cursor-pointer z-[101] hover:bg-accent/20",
                         aria_label: "Scroll Drafts left",
                         onclick: move |_| {
-                            let _ = document::eval(DRAFT_SCROLL_LEFT_JS);
+                            let js = left_js.clone();
+                            let _ = document::eval(&js);
                         },
                         lucide_dioxus::ChevronLeft {
                             size: 20,
@@ -196,7 +227,8 @@ pub fn DraftTimeline() -> Element {
                         class: "absolute right-0 top-1/2 p-1 rounded-full transition-colors -translate-y-1/2 cursor-pointer z-[101] hover:bg-accent/20",
                         aria_label: "Scroll Drafts right",
                         onclick: move |_| {
-                            let _ = document::eval(DRAFT_SCROLL_RIGHT_JS);
+                            let js = right_js.clone();
+                            let _ = document::eval(&js);
                         },
                         lucide_dioxus::ChevronRight {
                             size: 20,
@@ -205,6 +237,39 @@ pub fn DraftTimeline() -> Element {
                     }
                 }
             }
+        }
+    }
+}
+
+/// A horizontal row of the current user's draft posts, displayed at the top
+/// of the personal timeline. Thin wrapper around [`DraftScrollRow`].
+#[component]
+pub fn DraftTimeline() -> Element {
+    let drafts = use_server_future(move || async move {
+        let result = list_user_drafts_handler(None).await;
+        if let Err(ref e) = result {
+            tracing::error!("Failed to load drafts: {:?}", e);
+        }
+        result
+    })?;
+
+    let val = drafts.read();
+    let res = val.as_ref().unwrap();
+
+    let items = match res {
+        Ok(resp) => resp.items.clone(),
+        Err(_) => vec![],
+    };
+
+    if items.is_empty() {
+        return rsx! {};
+    }
+
+    rsx! {
+        DraftScrollRow {
+            items,
+            aria_label: "Drafts section".to_string(),
+            test_id: "draft-timeline".to_string(),
         }
     }
 }
@@ -219,14 +284,14 @@ fn DeleteDraftConfirmation(
     rsx! {
         div { class: "flex flex-col w-[400px] max-w-full gap-6",
             div { class: "flex flex-col gap-2",
-                div { class: "text-lg font-bold text-text-primary text-center",
+                div { class: "text-lg font-bold text-center text-text-primary",
                     "{tr.delete_draft_title}"
                 }
-                div { class: "text-sm text-foreground-muted leading-6 text-center",
+                div { class: "text-sm leading-6 text-center text-foreground-muted",
                     "{tr.delete_draft_description}"
                 }
             }
-            div { class: "flex items-center justify-end gap-3",
+            div { class: "flex gap-3 justify-end items-center",
                 Button {
                     style: ButtonStyle::Outline,
                     size: ButtonSize::Small,
@@ -243,22 +308,3 @@ fn DeleteDraftConfirmation(
         }
     }
 }
-
-const DRAFT_CHECK_SCROLL_JS: &str = r#"
-    const el = document.querySelector('[aria-label="Drafts section"] .scrollbar-none');
-    if (el) {
-        dioxus.send([el.scrollLeft > 0, el.scrollLeft + el.clientWidth < el.scrollWidth - 1]);
-    } else {
-        dioxus.send([false, false]);
-    }
-"#;
-
-const DRAFT_SCROLL_LEFT_JS: &str = r#"
-    const el = document.querySelector('[aria-label="Drafts section"] .scrollbar-none');
-    if (el) el.scrollBy({ left: -340, behavior: 'smooth' });
-"#;
-
-const DRAFT_SCROLL_RIGHT_JS: &str = r#"
-    const el = document.querySelector('[aria-label="Drafts section"] .scrollbar-none');
-    if (el) el.scrollBy({ left: 340, behavior: 'smooth' });
-"#;

@@ -26,7 +26,7 @@ pub fn SpaceTop(
     labels: Vec<SpaceTopLabel>,
     space_status: Option<SpaceStatus>,
     show_participate_button: bool,
-    on_participant: Option<EventHandler<()>>,
+    #[props(default)] on_participant: Option<EventHandler<()>>,
 ) -> Element {
     let tr: SpaceTopTranslates = use_translate();
 

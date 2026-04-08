@@ -4,6 +4,7 @@ use crate::components::sheet::{
     Sheet, SheetContent, SheetDescription, SheetHeader, SheetSide, SheetTitle,
 };
 use crate::components::tooltip::{Tooltip, TooltipContent, TooltipTrigger};
+use crate::*;
 use dioxus::core::use_drop;
 use dioxus::prelude::*;
 use dioxus_primitives::dioxus_attributes::attributes;
@@ -85,7 +86,7 @@ impl SidebarCollapsible {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, DioxusController)]
 #[allow(dead_code)]
 pub struct SidebarCtx {
     pub state: Memo<SidebarState>,
@@ -100,25 +101,19 @@ pub struct SidebarCtx {
 
 impl SidebarCtx {
     /// Toggle the sidebar open/closed state
-    pub fn toggle(&self) {
+    pub fn toggle(&mut self) {
         if (self.is_mobile)() {
-            let current = (self.open_mobile)();
-            let mut open_mobile = self.open_mobile;
-            open_mobile.set(!current);
+            let current = self.open_mobile();
+            self.set_open_mobile(!current);
         } else {
             self.set_open.call(!self.open());
         }
     }
 
     /// Set the mobile sidebar open state
-    pub fn set_open_mobile(&self, value: bool) {
-        let mut open_mobile = self.open_mobile;
-        open_mobile.set(value);
-    }
-
-    /// Get the current open state (desktop)
-    pub fn open(&self) -> bool {
-        self.open.cloned()
+    pub fn set_open_mobile(&mut self, value: bool) {
+        self.open_mobile.set(value);
+        self.open.set(value);
     }
 }
 
@@ -186,7 +181,7 @@ pub fn SidebarProvider(
         }
     });
 
-    let ctx = SidebarCtx {
+    let mut ctx = SidebarCtx {
         state,
         side,
         is_mobile,
@@ -259,7 +254,7 @@ pub fn Sidebar(
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
 ) -> Element {
-    let ctx = use_sidebar();
+    let mut ctx = use_sidebar();
     let mut ctx_side = ctx.side;
     if *ctx_side.peek() != side {
         ctx_side.set(side);
@@ -347,7 +342,7 @@ pub fn SidebarTrigger(
     #[props(extends = button)]
     attributes: Vec<Attribute>,
 ) -> Element {
-    let ctx = use_sidebar();
+    let mut ctx = use_sidebar();
 
     let base = attributes!(button {
         class: "sidebar-trigger",
@@ -391,7 +386,7 @@ pub fn SidebarTrigger(
 
 #[component]
 pub fn SidebarRail(#[props(extends = GlobalAttributes)] attributes: Vec<Attribute>) -> Element {
-    let ctx = use_sidebar();
+    let mut ctx = use_sidebar();
 
     let base = attributes!(button {
         class: "sidebar-rail",

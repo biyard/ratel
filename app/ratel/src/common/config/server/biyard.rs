@@ -1,6 +1,6 @@
 use aws_sdk_dynamodb::{
-    Client, Config,
     config::{Credentials, Region},
+    Client, Config,
 };
 
 use crate::common::{aws_config::AwsConfig, services::BiyardService};
@@ -11,7 +11,6 @@ use dioxus::fullstack::Lazy;
 pub struct BiyardConfig {
     pub api_secret: &'static str,
     pub project_id: &'static str,
-    pub base_url: &'static str,
 }
 
 #[cfg(feature = "server")]
@@ -30,12 +29,6 @@ impl Default for BiyardConfig {
                 );
                 "ratel_project_id"
             }),
-            base_url: option_env!("BIYARD_API_URL").unwrap_or_else(|| {
-                tracing::warn!(
-                    "BIYARD_API_URL not set, using default value. Some features may not work properly."
-                );
-                "https://dev.biyard.co"
-            }),
         }
     }
 }
@@ -45,6 +38,6 @@ pub static BIYARD_SERVICE: Lazy<BiyardService> = Lazy::new(|| async move {
     dioxus::Ok(BiyardService::new(
         config.api_secret.to_string(),
         config.project_id.to_string(),
-        config.base_url.to_string(),
+        "https://api.biyard.co".to_string(),
     ))
 });

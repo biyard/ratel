@@ -1,4 +1,5 @@
 const credential = {
+  initialize: (_conf) => {},
   request_identity_verification: async (storeId, channelKey, prefix) => {
     if (!window.PortOne || !window.PortOne.requestIdentityVerification) {
       return Promise.reject(new Error("PortOne SDK not loaded"));
