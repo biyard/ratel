@@ -20,5 +20,5 @@ test("create storage state", async ({ page }) => {
 
   console.log("✅ Global authenticated user setup completed");
   console.log(`📄 Test user saved: ${email}`);
-  console.log(`🔐 Storage state saved to: user.json`);
+  console.log(`🔐 Storage state saved to: admin.json`);
 });
