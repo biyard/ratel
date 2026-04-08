@@ -2,38 +2,48 @@ use super::*;
 use dioxus_primitives::checkbox::CheckboxState;
 
 #[component]
-pub fn ParticipationAttributesSection(
+pub fn ParticipationConsentSection(
     requirements: Vec<
         crate::features::spaces::controllers::panel_requirements::PanelRequirementStatus,
     >,
-    on_continue: EventHandler<()>,
+    on_join: EventHandler<()>,
 ) -> Element {
     let tr: ParticipationAttributesSectionTranslate = use_translate();
+    let has_missing = requirements
+        .iter()
+        .any(|requirement| !requirement.satisfied);
+    let all_satisfied = (!requirements.is_empty() && !has_missing) || requirements.is_empty();
+    // Local state for the consent checkbox shown when every required
+    // attribute is already verified. The checkbox starts unchecked and
+    // the Join Space button stays disabled until the user explicitly
+    // ticks it.
+    let mut consent_checked = use_signal(|| false);
+
+    if !all_satisfied {
+        Err(SpaceError::NoEligibleCredential)?
+    }
 
     rsx! {
-        div { class: "flex flex-col flex-1 gap-5 px-[30px] py-[30px] max-tablet:px-5 max-tablet:py-5 max-mobile:px-4 max-mobile:py-4",
+        div { class: "flex flex-col flex-1 gap-5 bg-card-bg text-text-primary px-[30px] py-[30px] max-tablet:px-5 max-tablet:py-5 max-mobile:px-4 max-mobile:py-4",
             // Header: title that adapts to the match state +
             // (when something is missing) the orange "missing required
             // attributes" banner.
             div { class: "flex flex-col items-start w-full gap-[10px]",
                 h3 { class: "font-bold text-[24px]/[28px] tracking-[-0.24px]",
-                    {tr.partial_match_title}
-                }
-
-                div { class: "inline-flex items-center px-5 rounded-full gap-[10px] bg-[rgba(249,115,22,0.1)] py-[10px]",
-                    crate::common::lucide_dioxus::CircleAlert { size: 18, class: "text-[#F97316] shrink-0" }
-                    span { class: "font-medium text-[13px]/[16px] tracking-[-0.14px] text-[#F97316]",
-                        {tr.missing_notice}
+                    if all_satisfied {
+                        {tr.full_match_title}
+                    } else {
+                        {tr.partial_match_title}
                     }
                 }
             }
 
             div { class: "flex flex-col items-start py-5 px-4 w-full border gap-[10px] rounded-[12px] border-[#404040] bg-card-bg-3",
                 div { class: "flex flex-col gap-1 items-start w-full",
-                    p { class: "font-bold text-text-secondary text-[15px]/[18px] tracking-[-0.16px]",
+                    p { class: "font-bold text-[15px]/[18px] tracking-[-0.16px]",
                         {tr.requirements_to_unlock}
                     }
-                    p { class: "font-medium text-[13px]/[20px] text-text-third",
+                    p { class: "font-medium text-[13px]/[20px] text-desc-text",
                         {tr.requirements_description}
                     }
                 }
@@ -45,14 +55,34 @@ pub fn ParticipationAttributesSection(
                 }
             }
 
-            div { class: "flex flex-row justify-end items-center pt-5 mt-auto w-full",
-                Button {
-                    class: "!rounded-[10px] !px-5 !py-3 max-mobile:!w-full",
-                    style: ButtonStyle::Primary,
-                    onclick: move |_| on_continue.call(()),
-                    span { class: "font-bold text-[14px]/[16px] text-[#0A0A0A]",
-                        {tr.improve_my_credential}
+            div { class: "flex flex-col gap-4 pt-5 mt-auto w-full",
+                label { class: "flex gap-2 items-start cursor-pointer select-none",
+                    crate::common::Checkbox {
+                        checked: ReadSignal::new(
+                            Signal::new(
+                                Some(
+                                    if consent_checked() {
+                                        CheckboxState::Checked
+                                    } else {
+                                        CheckboxState::Unchecked
+                                    },
+                                ),
+                            ),
+                        ),
+                        on_checked_change: move |checked| {
+                            consent_checked.set(matches!(checked, CheckboxState::Checked));
+                        },
+                        aria_label: "Participation consent checkbox",
                     }
+                    span { class: "font-medium pt-[1px] text-[13px]/[18px]", {tr.consent_label} }
+                }
+                Button {
+                    class: "self-end !rounded-[10px] !px-5 !py-3 max-mobile:!w-full",
+                    style: ButtonStyle::Primary,
+                    disabled: !consent_checked(),
+                    "data-testid": "join-space-confirm",
+                    onclick: move |_| on_join.call(()),
+                    span { class: "font-bold text-[14px]/[16px] text-desc-text", {tr.join_space} }
                 }
             }
         }
@@ -96,7 +126,7 @@ fn AttributeRequirementRow(
             div { class: "flex flex-row items-center w-full gap-[10px]",
                 div { class: "inline-flex items-center w-full rounded-full h-[60px] gap-[10px] px-[15px] py-[13px] {pill_class}",
                     {icon}
-                    span { class: "font-bold text-text-primary text-[15px]/[18px] tracking-[-0.16px]",
+                    span { class: "font-bold text-[15px]/[18px] tracking-[-0.16px]",
                         {label}
                     }
                 }
@@ -108,9 +138,7 @@ fn AttributeRequirementRow(
         div { class: "flex flex-row items-center w-full gap-[10px] max-mobile:flex-col max-mobile:items-start",
             div { class: "inline-flex items-center rounded-full h-[60px] min-w-[222px] gap-[10px] px-[15px] py-[13px] {pill_class} max-mobile:min-w-0",
                 {icon}
-                span { class: "font-bold text-white text-[15px]/[18px] tracking-[-0.16px]",
-                    {label}
-                }
+                span { class: "font-bold text-[15px]/[18px] tracking-[-0.16px]", {label} }
             }
 
             div { class: "flex flex-row flex-wrap flex-1 gap-1 items-center h-auto min-h-[60px] rounded-[8px] px-[10px] py-[15px] {value_box_class} max-mobile:w-full",

@@ -16,7 +16,6 @@ pub fn ParticipationRequirementsLayover(
         crate::features::spaces::controllers::panel_requirements::PanelRequirementStatus,
     >,
     on_verified_refresh: EventHandler<()>,
-    on_completed: EventHandler<()>,
     /// Called when the user has acknowledged the consent checkbox in
     /// the See your Difference step and wants to actually join the
     /// space. The handler should run `participate_space` and close the
@@ -24,14 +23,34 @@ pub fn ParticipationRequirementsLayover(
     on_join: EventHandler<()>,
 ) -> Element {
     let tr: ParticipationRequirementsLayoverTranslate = use_translate();
-    let mut current_step = use_signal(|| ParticipationLayoverStep::SeeYourDifference);
     let mut current_requirements = use_signal(|| requirements);
+    let all_satisfied = use_memo(move || {
+        let requirements = current_requirements();
 
-    let handle_continue = move |_| {
-        current_step.set(ParticipationLayoverStep::MatchRequiredAttributes);
+        let has_missing = requirements
+            .iter()
+            .any(|requirement| !requirement.satisfied);
+        (!requirements.is_empty() && !has_missing) || requirements.is_empty()
+    });
+
+    let mut current_step = use_signal(move || {
+        if all_satisfied() {
+            ParticipationLayoverStep::ConsentParticipate
+        } else {
+            ParticipationLayoverStep::SeeYourDifference
+        }
+    });
+
+    let mut handle_continue = move |_| {
+        if let Some(next) = current_step().next() {
+            current_step.set(next)
+        }
     };
+
     let handle_back = move |_| {
-        current_step.set(ParticipationLayoverStep::SeeYourDifference);
+        if let Some(back) = current_step().back() {
+            current_step.set(back)
+        }
     };
     let handle_verified = move |next_requirements| {
         current_requirements.set(next_requirements);
@@ -40,20 +59,15 @@ pub fn ParticipationRequirementsLayover(
     };
 
     rsx! {
-        div { class: "flex h-full w-full flex-col bg-[#1A1A1A] text-web-font-primary",
-            ParticipationLayoverHeader { title: tr.join_space.to_string() }
-            if current_step() != ParticipationLayoverStep::SeeYourDifference {
+        div { class: "flex flex-col w-full h-full bg-modal-card-bg text-web-font-primary",
+            ParticipationLayoverHeader { title: tr.join_space }
+            if current_step() != ParticipationLayoverStep::ConsentParticipate {
                 ParticipationStepBar { current_step: current_step() }
             }
 
             match current_step() {
                 ParticipationLayoverStep::SeeYourDifference => rsx! {
-                    ParticipationAttributesSection {
-                        requirements: current_requirements(),
-                        current_step: current_step(),
-                        on_continue: handle_continue,
-                        on_join,
-                    }
+                    ParticipationAttributesSection { requirements: current_requirements(), on_continue: handle_continue }
                 },
                 ParticipationLayoverStep::MatchRequiredAttributes => rsx! {
                     ParticipationVerificationSection {
@@ -64,7 +78,10 @@ pub fn ParticipationRequirementsLayover(
                     }
                 },
                 ParticipationLayoverStep::CreateCredential => rsx! {
-                    ParticipationCredentialSection { requirements: current_requirements(), on_completed }
+                    ParticipationCredentialSection { requirements: current_requirements(), on_completed: handle_continue }
+                },
+                ParticipationLayoverStep::ConsentParticipate => rsx! {
+                    ParticipationConsentSection { requirements: current_requirements(), on_join }
                 },
             }
         }
