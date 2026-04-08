@@ -88,7 +88,13 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
     let on_participant = move |_| async move {
         let space_id = space_id();
         let space_detail = space_key(&space_id);
-        participate.call(space_id).await;
+        // Default participate flow (e.g. mobile quick button) does not
+        // carry a consent flag — the layover-driven flow sets it.
+        let req =
+            crate::features::spaces::controllers::participate_space::ParticipateSpaceRequest {
+                informed_agreed: None,
+            };
+        participate.call(space_id, req).await;
         query.invalidate(&space_detail);
     };
 
@@ -139,7 +145,9 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
             }
             div { class: "{content_class}",
                 if show_sidebar {
-                    div { class: "max-tablet:w-full max-tablet:fixed max-tablet:top-0 max-tablet:z-50 max-tablet:bg-space-bg", "data-testid": "space-top-wrapper",
+                    div {
+                        class: "max-tablet:w-full max-tablet:fixed max-tablet:top-0 max-tablet:z-50 max-tablet:bg-space-bg",
+                        "data-testid": "space-top-wrapper",
                         SpaceTop {
                             labels,
                             space_status,

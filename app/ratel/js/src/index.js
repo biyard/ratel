@@ -21,7 +21,7 @@ if (typeof window !== "undefined") {
         if (isKakaoInApp) {
           const targetUrl = window.location.href;
           window.location.replace(
-            `kakaotalk://web/openExternal?url=${encodeURIComponent(targetUrl)}`,
+            `kakaotalk://web/openExternal?url=${encodeURIComponent(targetUrl)}`
           );
         }
       },
@@ -33,6 +33,42 @@ if (typeof window !== "undefined") {
       initialize: (_conf) => {},
     },
     ratel_user_reward: {
+      initialize: (_conf) => {},
+    },
+    ratel_team_dao: {
+      initialize: (_conf) => {},
+    },
+    ratel_team_home: {
+      initialize: (_conf) => {},
+    },
+    ratel_team_draft: {
+      initialize: (_conf) => {},
+    },
+    ratel_team_member: {
+      initialize: (_conf) => {},
+    },
+    ratel_team_group: {
+      initialize: (_conf) => {},
+    },
+    ratel_user_post: {
+      initialize: (_conf) => {},
+    },
+    ratel_user_space: {
+      initialize: (_conf) => {},
+    },
+    ratel_user_draft: {
+      initialize: (_conf) => {},
+    },
+    ratel_user_membership: {
+      initialize: (_conf) => {},
+    },
+    ratel_user_setting: {
+      initialize: (_conf) => {},
+    },
+    ratel_my_follower: {
+      initialize: (_conf) => {},
+    },
+    space_common: {
       initialize: (_conf) => {},
     },
     membership,

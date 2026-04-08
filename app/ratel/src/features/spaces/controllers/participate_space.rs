@@ -17,8 +17,22 @@ pub struct ParticipateSpaceResponse {
     pub profile_url: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub struct ParticipateSpaceRequest {
+    /// Whether the user explicitly consented to having their required
+    /// attributes verified for this space (the "I understand and
+    /// agree…" checkbox in the join layover). Optional for backwards
+    /// compatibility — when missing, treated as `false`.
+    #[serde(default)]
+    pub informed_agreed: Option<bool>,
+}
+
 #[post("/api/spaces/{space_id}/participate", user: OptionalUser)]
-pub async fn participate_space(space_id: SpacePartition) -> Result<ParticipateSpaceResponse> {
+pub async fn participate_space(
+    space_id: SpacePartition,
+    body: ParticipateSpaceRequest,
+) -> Result<ParticipateSpaceResponse> {
+    let agreed = body.informed_agreed;
     let config = crate::features::spaces::config::get();
     let dynamo = config.common.dynamodb();
     let now = get_now_timestamp_millis();
@@ -78,11 +92,12 @@ pub async fn participate_space(space_id: SpacePartition) -> Result<ParticipateSp
 
                 let participant = SpaceParticipant::get(dynamo, &pk, Some(&sk)).await?;
                 if participant.is_none() {
-                    let sp = if space.anonymous_participation {
+                    let mut sp = if space.anonymous_participation {
                         SpaceParticipant::new(space.pk.clone(), user.pk.clone())
                     } else {
                         SpaceParticipant::new_non_anonymous(space.pk.clone(), user.clone())
                     };
+                    sp.informed_agreed = agreed;
                     let new_space = SpaceCommon::updater(&space.pk, &space.sk)
                         .increase_participants(1)
                         .with_updated_at(now);
@@ -105,11 +120,12 @@ pub async fn participate_space(space_id: SpacePartition) -> Result<ParticipateSp
         }
     }
 
-    let sp = if space.anonymous_participation {
+    let mut sp = if space.anonymous_participation {
         SpaceParticipant::new(space.pk.clone(), user.pk.clone())
     } else {
         SpaceParticipant::new_non_anonymous(space.pk.clone(), user.clone())
     };
+    sp.informed_agreed = agreed;
 
     let space_update = SpaceCommon::updater(&space.pk, &space.sk)
         .increase_participants(1)

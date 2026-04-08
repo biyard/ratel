@@ -17,6 +17,11 @@ pub fn ParticipationRequirementsLayover(
     >,
     on_verified_refresh: EventHandler<()>,
     on_completed: EventHandler<()>,
+    /// Called when the user has acknowledged the consent checkbox in
+    /// the See your Difference step and wants to actually join the
+    /// space. The handler should run `participate_space` and close the
+    /// layover.
+    on_join: EventHandler<()>,
 ) -> Element {
     let tr: ParticipationRequirementsLayoverTranslate = use_translate();
     let mut current_step = use_signal(|| ParticipationLayoverStep::SeeYourDifference);
@@ -37,7 +42,9 @@ pub fn ParticipationRequirementsLayover(
     rsx! {
         div { class: "flex h-full w-full flex-col bg-[#1A1A1A] text-web-font-primary",
             ParticipationLayoverHeader { title: tr.join_space.to_string() }
-            ParticipationStepBar { current_step: current_step() }
+            if current_step() != ParticipationLayoverStep::SeeYourDifference {
+                ParticipationStepBar { current_step: current_step() }
+            }
 
             match current_step() {
                 ParticipationLayoverStep::SeeYourDifference => rsx! {
@@ -45,6 +52,7 @@ pub fn ParticipationRequirementsLayover(
                         requirements: current_requirements(),
                         current_step: current_step(),
                         on_continue: handle_continue,
+                        on_join,
                     }
                 },
                 ParticipationLayoverStep::MatchRequiredAttributes => rsx! {

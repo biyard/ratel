@@ -1,4 +1,5 @@
 use super::*;
+use dioxus_primitives::checkbox::CheckboxState;
 
 #[component]
 pub fn ParticipationAttributesSection(
@@ -7,18 +8,34 @@ pub fn ParticipationAttributesSection(
     >,
     current_step: ParticipationLayoverStep,
     on_continue: EventHandler<()>,
+    /// Called when the user has accepted the consent checkbox in the
+    /// "all satisfied" branch and wants to actually join the space.
+    on_join: EventHandler<()>,
 ) -> Element {
     let tr: ParticipationAttributesSectionTranslate = use_translate();
     let has_missing = requirements
         .iter()
         .any(|requirement| !requirement.satisfied);
-    let show_continue = current_step == ParticipationLayoverStep::SeeYourDifference;
+    let all_satisfied = (!requirements.is_empty() && !has_missing) || requirements.is_empty();
+    let show_continue = current_step == ParticipationLayoverStep::SeeYourDifference && has_missing;
+    // Local state for the consent checkbox shown when every required
+    // attribute is already verified. The checkbox starts unchecked and
+    // the Join Space button stays disabled until the user explicitly
+    // ticks it.
+    let mut consent_checked = use_signal(|| false);
 
     rsx! {
         div { class: "flex flex-1 flex-col gap-5 bg-[#1A1A1A] px-[30px] py-[30px] max-tablet:px-5 max-tablet:py-5 max-mobile:px-4 max-mobile:py-4",
+            // Header: title that adapts to the match state +
+            // (when something is missing) the orange "missing required
+            // attributes" banner.
             div { class: "flex flex-col items-start gap-[10px] w-full",
                 h3 { class: "font-bold text-[24px]/[28px] tracking-[-0.24px] text-white",
-                    {tr.partial_match_title}
+                    if all_satisfied {
+                        {tr.full_match_title}
+                    } else {
+                        {tr.partial_match_title}
+                    }
                 }
 
                 if has_missing {
@@ -56,6 +73,46 @@ pub fn ParticipationAttributesSection(
                         onclick: move |_| on_continue.call(()),
                         span { class: "font-bold text-[14px]/[16px] text-[#0A0A0A]",
                             {tr.improve_my_credential}
+                        }
+                    }
+                }
+            }
+
+            // All required attributes are verified — ask the user to
+            // explicitly consent before joining. The Join Space button
+            // stays disabled until the checkbox is ticked so the user
+            // cannot skip the acknowledgement.
+            if all_satisfied && current_step == ParticipationLayoverStep::SeeYourDifference {
+                div { class: "mt-auto flex w-full flex-col gap-4 pt-5",
+                    label { class: "flex items-start gap-2 cursor-pointer select-none text-white",
+                        crate::common::Checkbox {
+                            checked: ReadSignal::new(
+                                Signal::new(
+                                    Some(
+                                        if consent_checked() {
+                                            CheckboxState::Checked
+                                        } else {
+                                            CheckboxState::Unchecked
+                                        },
+                                    ),
+                                ),
+                            ),
+                            on_checked_change: move |checked| {
+                                consent_checked.set(matches!(checked, CheckboxState::Checked));
+                            },
+                            aria_label: "Participation consent checkbox",
+                        }
+                        span { class: "pt-[1px] font-medium text-[13px]/[18px] text-white",
+                            {tr.consent_label}
+                        }
+                    }
+                    Button {
+                        class: "!rounded-[10px] !px-5 !py-3 self-end max-mobile:!w-full",
+                        style: ButtonStyle::Primary,
+                        disabled: !consent_checked(),
+                        onclick: move |_| on_join.call(()),
+                        span { class: "font-bold text-[14px]/[16px] text-[#0A0A0A]",
+                            {tr.join_space}
                         }
                     }
                 }
@@ -170,9 +227,7 @@ fn display_requirement_value(
             "female" => tr.gender_female.to_string(),
             _ => value.to_string(),
         },
-        PanelRequirementAttribute::Age | PanelRequirementAttribute::University => {
-            value.to_string()
-        }
+        PanelRequirementAttribute::Age | PanelRequirementAttribute::University => value.to_string(),
     }
 }
 
@@ -201,6 +256,11 @@ translate! {
         ko: "속성이 일부 일치합니다",
     },
 
+    full_match_title: {
+        en: "Your Attributes Match",
+        ko: "속성이 모두 일치합니다",
+    },
+
     missing_notice: {
         en: "Some required attributes are missing for this space",
         ko: "이 스페이스에 필요한 속성이 부족합니다",
@@ -212,13 +272,23 @@ translate! {
     },
 
     requirements_description: {
-        en: "To join this space, certain attributes are required. Based on your current profile, some attributes do not match. You must meet the requirements below to unlock access.",
-        ko: "이 스페이스에 참여하려면 특정 속성이 필요합니다. 현재 프로필 기준으로 일부 속성이 일치하지 않습니다. 아래 요건을 충족해야 접근이 가능합니다.",
+        en: "To join this space, certain attributes are required. You must meet the requirements below to unlock access.",
+        ko: "이 스페이스에 참여하려면 특정 속성이 필요합니다. 아래 요건을 충족해야 접근이 가능합니다.",
     },
 
     improve_my_credential: {
         en: "Improve My Credential",
         ko: "내 Credential 개선하기",
+    },
+
+    consent_label: {
+        en: "I understand and agree to verify the required attributes for this Space.",
+        ko: "이 스페이스에 필요한 속성의 검증에 동의합니다.",
+    },
+
+    join_space: {
+        en: "Join Space",
+        ko: "스페이스 참여",
     },
 
     age: {
