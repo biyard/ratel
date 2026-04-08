@@ -111,7 +111,11 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
     };
 
     rsx! {
-        SeoMeta { title: space.title.clone(), description: space.description() }
+        SeoMeta {
+            title: space.title.clone(),
+            description: space.description(),
+            image: if space.logo.is_empty() { "https://metadata.ratel.foundation/logos/logo-symbol.png".to_string() } else { space.logo.clone() },
+        }
         div { class: "{layout_class}", "data-testid": "space-layout-container",
             if show_sidebar {
                 SpaceNav {
