@@ -277,7 +277,7 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                             {tr.open_wallet}
                         }
                     }
-
+                
                 }
             } else if loading() {
                 div { class: "flex absolute inset-0 justify-center items-center w-full h-full bg-background/95",
@@ -301,36 +301,33 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                 }
 
                 div { class: "flex flex-col gap-2.5 w-full",
-                    label { class: "text-sm", {tr.email_address} }
+                    label { r#for: "email", class: "text-sm", {tr.email_address} }
                     div { class: "relative w-full",
-                        input {
-                            autocomplete: "off",
-                            class: "flex px-5 w-full min-w-0 h-9 text-base font-light border outline-none md:text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none shadow-xs transition-[color,box-shadow] file:text-text-primary file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground aria-invalid:ring-destructive/20 aria-invalid:outline aria-invalid:border-c-p-50 bg-input-box-bg border-input-box-border rounded-[10px] py-5.5 text-text-primary dark:bg-input/30 dark:aria-invalid:ring-destructive/40 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[1px]",
+                        Input {
+                            id: "email",
+                            name: "username",
+                            autocomplete: "email",
                             "data-slot": "input",
                             "data-testid": "email-input",
                             disabled: loading(),
-                            name: "username",
                             placeholder: "{tr.email_placeholder}",
-                            r#type: "email",
+                            r#type: InputType::Email,
                             value: email(),
-                            oninput: move |ev| {
+                            oninput: move |ev: FormEvent| {
                                 email.set(ev.data().value());
                             },
-                            onkeydown: move |ev: KeyboardEvent| async move {
-                                if ev.key() == Key::Enter {
-                                    ev.prevent_default();
-                                    submit_email_login(
-                                            email,
-                                            password,
-                                            show_password,
-                                            loading,
-                                            error_message,
-                                            user_ctx,
-                                            popup,
-                                            on_success,
-                                        )
-                                        .await;
-                                }
+                            onconfirm: move |_| async move {
+                                submit_email_login(
+                                        email,
+                                        password,
+                                        show_password,
+                                        loading,
+                                        error_message,
+                                        user_ctx,
+                                        popup,
+                                        on_success,
+                                    )
+                                    .await;
                             },
                         }
                     }
@@ -338,34 +335,33 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                 div {
                     aria_hidden: if show_password() { "false" } else { "true" },
                     class: "flex flex-col gap-2.5 w-full aria-hidden:hidden",
-                    label { class: "text-sm", {tr.password} }
+                    label { r#for: "password", class: "text-sm", {tr.password} }
                     div { class: "relative w-full",
-                        input {
-                            class: "flex px-5 w-full min-w-0 h-9 text-base font-light border outline-none md:text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none shadow-xs transition-[color,box-shadow] text-text-primary file:text-text-primary file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium selection:bg-primary selection:text-primary-foreground border-input-box-border bg-input-box-bg placeholder:text-muted-foreground aria-invalid:ring-destructive/20 aria-invalid:outline aria-invalid:border-c-p-50 rounded-[10px] py-5.5 dark:bg-input/30 dark:aria-invalid:ring-destructive/40 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[1px]",
+                        Input {
+                            id: "password",
+                            name: "password",
+                            autocomplete: "current-password",
                             "data-slot": "input",
                             "data-testid": "password-input",
                             disabled: loading(),
                             placeholder: "{tr.password_placeholder}",
-                            r#type: "password",
+                            r#type: InputType::Password,
                             value: password(),
-                            oninput: move |ev| {
+                            oninput: move |ev: FormEvent| {
                                 password.set(ev.data().value());
                             },
-                            onkeydown: move |ev: KeyboardEvent| async move {
-                                if ev.key() == Key::Enter {
-                                    ev.prevent_default();
-                                    submit_email_login(
-                                            email,
-                                            password,
-                                            show_password,
-                                            loading,
-                                            error_message,
-                                            user_ctx,
-                                            popup,
-                                            on_success,
-                                        )
-                                        .await;
-                                }
+                            onconfirm: move |_| async move {
+                                submit_email_login(
+                                        email,
+                                        password,
+                                        show_password,
+                                        loading,
+                                        error_message,
+                                        user_ctx,
+                                        popup,
+                                        on_success,
+                                    )
+                                    .await;
                             },
                         }
                     }
