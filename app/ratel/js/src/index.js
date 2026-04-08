@@ -29,6 +29,12 @@ if (typeof window !== "undefined") {
     ratel_team_setting: {
       initialize: (_conf) => {},
     },
+    ratel_team_reward: {
+      initialize: (_conf) => {},
+    },
+    ratel_user_reward: {
+      initialize: (_conf) => {},
+    },
     membership,
     spaces,
     auth,

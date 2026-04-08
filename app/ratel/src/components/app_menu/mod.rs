@@ -18,6 +18,11 @@ translate! {
         ko: "멤버십",
     },
 
+    credentials: {
+        en: "Credentials",
+        ko: "인증",
+    },
+
     rewards: {
         en: "Rewards",
         ko: "보상",
@@ -81,6 +86,18 @@ pub fn AppMenu() -> Element {
                     MembershipMenuItem { label: tr.membership, collapsed }
 
                     if let Some(user) = user_ctx().user.as_ref() {
+                        SidebarMenuItem {
+                            Link {
+                                to: format!("/credentials"),
+                                class: "flex gap-2 items-center py-1.5 w-full text-sm rounded-md aria-extended:px-0 aria-extended:justify-center sidebar-menu-button hover:bg-accent/10 [&>svg]:w-5 [&>svg]:h-5",
+                                "aria-extended": collapsed,
+                                i::CredentialsIcon {}
+                                if !collapsed {
+                                    span { "{tr.credentials}" }
+                                }
+                            }
+                        }
+
                         SidebarMenuItem {
                             Link {
                                 to: format!("/{}/rewards", user.username),
