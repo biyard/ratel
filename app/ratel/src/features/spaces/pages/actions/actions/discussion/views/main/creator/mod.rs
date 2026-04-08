@@ -15,6 +15,15 @@ pub fn CreatorMain(
     let tr: DiscussionCreatorTranslate = use_translate();
     let ctx = use_discussion_context();
 
+    // The delete button is the only thing the lifecycle lock still
+    // applies to — creators can keep editing the discussion (title,
+    // body, time range, etc.) even after it has started.
+    let space = crate::features::spaces::space_common::hooks::use_space()();
+    let locked = crate::features::spaces::pages::actions::is_action_locked(
+        space.status,
+        ctx.discussion().space_action.started_at,
+    );
+
     rsx! {
         div { class: "flex flex-col flex-1 gap-4 w-full min-h-0",
             h3 { {tr.page_title} }
@@ -65,9 +74,12 @@ pub fn CreatorMain(
                             space_id,
                             discussion_id: use_memo(move || SpaceDiscussionEntityType(discussion_id().to_string())),
                         }
-                        ActionDeleteButton {
-                            space_id: space_id(),
-                            action_id: discussion_id().to_string(),
+                        // Delete button is hidden once the action is locked.
+                        if !locked {
+                            ActionDeleteButton {
+                                space_id: space_id(),
+                                action_id: discussion_id().to_string(),
+                            }
                         }
                     }
                 }

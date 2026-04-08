@@ -164,7 +164,7 @@ jobs:
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
           ENV: dev
-          RUST_LOG: error
+          RUST_LOG: info
           SERVICE: app-shell
           DOMAIN: dev.ratel.foundation
           BUCKET_NAME: metadata.ratel.foundation
@@ -340,7 +340,7 @@ jobs:
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
           ENV: dev
-          RUST_LOG: error
+          RUST_LOG: info
           SERVICE: app-shell
           DOMAIN: dev.ratel.foundation
           BUCKET_NAME: metadata.ratel.foundation

@@ -9,7 +9,7 @@ use crate::features::spaces::space_common::{
     components::{SpaceNav, SpaceNavItem, SpaceTop, SpaceTopLabel},
     hooks::use_space_role,
 };
-use crate::features::spaces::{controllers::participate_space::participate_space, *};
+use crate::features::spaces::*;
 
 #[derive(Clone, Copy)]
 pub struct SpaceLayoutUiContext {
@@ -51,13 +51,12 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
     } else {
         None
     };
-    let credential_path = user
-        .as_ref()
-        .map(|user| format!("/{}/credentials", user.username));
+    // Credentials now live at a top-level `/credentials` route (it shows
+    // the current user's own credentials regardless of the URL).
+    let credential_path = user.as_ref().map(|_user| "/credentials".to_string());
     let mut popup = use_popup();
     let tr: SpaceLayoutTranslate = use_translate();
 
-    let mut participate = use_action(participate_space);
     let is_mobile = use_is_mobile();
 
     let show_participate =
@@ -85,12 +84,14 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
     }];
     let space_status = space.status.clone();
 
-    let on_participant = move |_| async move {
-        let space_id = space_id();
-        let space_detail = space_key(&space_id);
-        participate.call(space_id).await;
-        query.invalidate(&space_detail);
-    };
+    // The legacy "quick participate" callback used to call
+    // `participate_space` directly without surfacing the informed-
+    // consent checkbox. The flow has since been moved entirely into
+    // `ParticipationCard` → join layover, and `SpaceTop` no longer
+    // renders its own Participate button (`show_participate_button:
+    // false` below). We deliberately drop the bypass closure here so
+    // there is exactly one entry point for participation that always
+    // requires explicit consent.
 
     let layout_class = if show_sidebar {
         "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-space-bg text-web-font-primary max-tablet:flex max-tablet:flex-col max-tablet:overflow-visible max-tablet:!h-auto max-tablet:min-h-screen"
@@ -105,7 +106,11 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
     };
 
     rsx! {
-        SeoMeta { title: space.title.clone(), description: space.description() }
+        SeoMeta {
+            title: space.title.clone(),
+            description: space.description(),
+            image: if space.logo.is_empty() { "https://metadata.ratel.foundation/logos/logo-symbol.png".to_string() } else { space.logo.clone() },
+        }
         div { class: "{layout_class}", "data-testid": "space-layout-container",
             if show_sidebar {
                 SpaceNav {
@@ -139,12 +144,13 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
             }
             div { class: "{content_class}",
                 if show_sidebar {
-                    div { class: "max-tablet:w-full max-tablet:fixed max-tablet:top-0 max-tablet:z-50 max-tablet:bg-space-bg", "data-testid": "space-top-wrapper",
+                    div {
+                        class: "max-tablet:w-full max-tablet:fixed max-tablet:top-0 max-tablet:z-50 max-tablet:bg-space-bg",
+                        "data-testid": "space-top-wrapper",
                         SpaceTop {
                             labels,
                             space_status,
                             show_participate_button: false,
-                            on_participant,
                         }
                     }
                 }

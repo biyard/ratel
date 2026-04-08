@@ -39,11 +39,13 @@ export default defineConfig({
 
   /* Configure projects for major browsers */
   projects: [
-    // Authenticated tests (requires global setup)
+    // Auth setup — shared by all authenticated projects
     {
       name: "auth-setup",
       testMatch: ["**/*.auth.setup.js"],
     },
+
+    // Desktop — all web spec files under tests/web/
     {
       name: "Desktop",
       testMatch: ["tests/web/*.spec.js"],
@@ -54,23 +56,23 @@ export default defineConfig({
           width: 1440,
           height: 950,
         },
-        // This will be loaded in the beforeEach of authenticated tests
         storageState: "user.json",
       },
     },
-    // Component tests manage their own browser contexts and auth state.
-    // NOTE: These tests create their own browser contexts via browser.newContext().
-    // Project-level `use` options (device/viewport/userAgent, baseURL, etc.) are
-    // NOT applied to manually created contexts, so any required context options
-    // must be passed explicitly when calling browser.newContext().
-    // In this repo, the shared `goto()` helper forwards relative paths directly
-    // to page.goto(), so component tests that use relative URLs must include
-    // baseURL in the browser.newContext() options.
+
+    // Mobile — spec files under tests/mobile/
+    // NOTE: tests that create their own browser contexts via browser.newContext()
+    // must pass viewport/userAgent explicitly, as project-level `use` options
+    // do not apply to manually created contexts.
     {
-      name: "Component tests",
-      testMatch: ["tests/components/**/*.spec.js"],
+      name: "Mobile",
+      testMatch: ["tests/mobile/*.spec.js"],
       dependencies: ["auth-setup"],
-      use: {},
+      use: {
+        ...devices["iPhone 14"],
+        browserName: "chromium",
+        storageState: "user.json",
+      },
     },
   ],
 
