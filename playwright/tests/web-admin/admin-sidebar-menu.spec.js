@@ -23,14 +23,13 @@ import { click, fill, goto, waitPopup } from "../utils";
  */
 
 test.describe.serial("Admin sidebar menu for SystemAdmin users (#1333)", () => {
-  const adminEmail = "admin@ratel.foundation";
-  const adminPassword = "admin!234";
-
   // --- 1. Log in and verify Admin menu item is visible ---
 
   test("should show Admin menu item in sidebar after login", async ({
     page,
   }) => {
+    await goto(page, "/");
+
     // The sidebar starts collapsed (default_open: false), so text labels
     // are hidden. Use data-testid which is always present on the link.
     await expect(page.getByTestId("admin-menu")).toBeVisible({

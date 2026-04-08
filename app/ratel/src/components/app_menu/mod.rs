@@ -124,6 +124,7 @@ pub fn AppMenu() -> Element {
                         if user.user_type == UserType::Admin {
                             NavMenuItem {
                                 href: Route::AdminMainPage {},
+                                test_id: "admin-menu",
                                 label: tr.admin,
                                 collapsed,
                                 icon: rsx! {
@@ -241,13 +242,20 @@ pub fn AppMenu() -> Element {
 }
 
 #[component]
-fn NavMenuItem(href: Route, label: &'static str, collapsed: bool, icon: Element) -> Element {
+fn NavMenuItem(
+    href: Route,
+    label: &'static str,
+    collapsed: bool,
+    icon: Element,
+    test_id: Option<String>,
+) -> Element {
     rsx! {
         SidebarMenuItem {
             Link {
                 to: href,
                 class: "flex gap-2 items-center py-1.5 w-full text-sm rounded-md aria-collapsed:px-0 aria-collapsed:justify-center sidebar-menu-button [&>svg]:w-5 [&>svg]:h-5 group hover:bg-accent/10",
                 "aria-collapsed": collapsed,
+                "data-testid": test_id,
                 {icon}
                 span { class: "block group-aria-collapsed:hidden", {label} }
             }
