@@ -38,26 +38,38 @@ pub fn Input(
     onblur: Option<EventHandler<FocusEvent>>,
     onfocusin: Option<EventHandler<FocusEvent>>,
     onfocusout: Option<EventHandler<FocusEvent>>,
-    onkeydown: Option<EventHandler<KeyboardEvent>>,
     onkeypress: Option<EventHandler<KeyboardEvent>>,
     onkeyup: Option<EventHandler<KeyboardEvent>>,
+    onkeydown: Option<EventHandler<KeyboardEvent>>,
     oncompositionstart: Option<EventHandler<CompositionEvent>>,
     oncompositionupdate: Option<EventHandler<CompositionEvent>>,
     oncompositionend: Option<EventHandler<CompositionEvent>>,
     oncopy: Option<EventHandler<ClipboardEvent>>,
     oncut: Option<EventHandler<ClipboardEvent>>,
     onpaste: Option<EventHandler<ClipboardEvent>>,
-    onconfirm: Option<EventHandler<KeyboardEvent>>, // Keydown event with Enter key
-    oncancel: Option<EventHandler<KeyboardEvent>>,  // Keydown event with Escape key
+    onconfirm: Option<EventHandler<KeyboardEvent>>, // Enter key inside the input
+    oncancel: Option<EventHandler<KeyboardEvent>>,  // Escape key inside the input
     #[props(extends=GlobalAttributes)]
     #[props(extends=input)]
     attributes: Vec<Attribute>,
 ) -> Element {
-    rsx! {
-        input {
+    let merged = dioxus_primitives::merge_attributes(vec![
+        dioxus_primitives::dioxus_attributes::attributes!(input {
             r#type: r#type.to_string(),
             class: "{variant} {class}",
+            name: if &autocomplete != "off" {
+                autocomplete.clone()
+            },
+            id: if &autocomplete != "off" {
+                autocomplete.clone()
+            },
             autocomplete,
+        }),
+        attributes,
+    ]);
+
+    rsx! {
+        input {
             oninput: move |e| _ = oninput.map(|callback| callback(e)),
             onchange: move |e| _ = onchange.map(|callback| callback(e)),
             oninvalid: move |e| _ = oninvalid.map(|callback| callback(e)),
@@ -76,26 +88,78 @@ pub fn Input(
             oncut: move |e| _ = oncut.map(|callback| callback(e)),
             onpaste: move |e| _ = onpaste.map(|callback| callback(e)),
             onkeydown: move |evt: KeyboardEvent| {
-                if evt.key() == Key::Enter {
-                    debug!("Enter key pressed, triggering onconfirm");
-                    if let Some(onconfirm) = &onconfirm {
-                        onconfirm.call(evt.clone());
-                    }
-                } else if evt.key() == Key::Escape {
-                    debug!("Escape key pressed, triggering oncancel");
-                    if let Some(oncancel) = &oncancel {
-                        oncancel.call(evt.clone());
-                    }
-                }
-                if evt.propagates() {
-                    if let Some(onkeydown) = &onkeydown {
-                        onkeydown.call(evt);
-                    }
-                }
+                handle_confirm_cancel(&evt, onconfirm, oncancel, onkeydown);
             },
-            ..attributes,
+            ..merged,
         }
     }
+}
+
+/// Dispatches [`onconfirm`] on Enter and [`oncancel`] on Escape while
+/// tolerating browser autofill events.
+///
+/// Browser autofill can dispatch synthetic keydown events where `key` and
+/// `isComposing` are `undefined`, which panics the default wasm-bindgen
+/// conversions used by `KeyboardEvent::key()` / `KeyboardEvent::is_composing()`.
+/// We work around that by reading the raw JS properties defensively — see
+/// <https://github.com/DioxusLabs/dioxus/pull/4492>.
+#[cfg(feature = "web")]
+fn handle_confirm_cancel(
+    evt: &KeyboardEvent,
+    onconfirm: Option<EventHandler<KeyboardEvent>>,
+    oncancel: Option<EventHandler<KeyboardEvent>>,
+    onkeydown: Option<EventHandler<KeyboardEvent>>,
+) {
+    use dioxus::web::WebEventExt;
+    use wasm_bindgen::{JsCast, JsValue};
+    use web_sys::js_sys::Reflect;
+
+    let Some(web_event) = evt.try_as_web_event() else {
+        return;
+    };
+    let js_obj: &JsValue = web_event.unchecked_ref();
+
+    let is_composing = Reflect::get(js_obj, &JsValue::from_str("isComposing"))
+        .ok()
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+    if is_composing {
+        return;
+    }
+
+    let key = Reflect::get(js_obj, &JsValue::from_str("key"))
+        .ok()
+        .and_then(|v| v.as_string())
+        .unwrap_or_default();
+
+    if key == "Enter" {
+        evt.prevent_default();
+        debug!("Enter key pressed, triggering onconfirm");
+        if let Some(onconfirm) = onconfirm {
+            onconfirm.call(evt.clone());
+        }
+    } else if key == "Escape" {
+        evt.prevent_default();
+        debug!("Escape key pressed, triggering oncancel");
+        if let Some(oncancel) = oncancel {
+            oncancel.call(evt.clone());
+        }
+    }
+
+    if evt.propagates() {
+        if let Some(onkeydown) = onkeydown {
+            onkeydown.call(evt.clone());
+        }
+    }
+}
+
+#[cfg(not(feature = "web"))]
+fn handle_confirm_cancel(
+    _evt: &KeyboardEvent,
+    _onconfirm: Option<EventHandler<KeyboardEvent>>,
+    _oncancel: Option<EventHandler<KeyboardEvent>>,
+    _onkeydown: Option<EventHandler<KeyboardEvent>>,
+) {
 }
 
 #[derive(
