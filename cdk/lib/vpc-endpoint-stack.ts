@@ -70,5 +70,26 @@ export class VpcEndpointStack extends Stack {
       privateDnsEnabled: true,
       securityGroups: [bedrockEndpointSg],
     });
+
+    // SES interface endpoint — dedicated SG that only accepts 443 from
+    // the shared SG. Private DNS lets the SDK use the default endpoint URL.
+    const sesEndpointSg = new ec2.SecurityGroup(this, "SesEndpointSG", {
+      vpc: this.vpc,
+      description: "SES VPC interface endpoint",
+      allowAllOutbound: false,
+    });
+    sesEndpointSg.addIngressRule(
+      this.sharedSecurityGroup,
+      ec2.Port.tcp(443),
+      "Shared services to SES",
+    );
+
+    new ec2.InterfaceVpcEndpoint(this, "SesEndpoint", {
+      vpc: this.vpc,
+      service: ec2.InterfaceVpcEndpointAwsService.EMAIL_SMTP,
+      subnets: { subnetType: ec2.SubnetType.PUBLIC },
+      privateDnsEnabled: true,
+      securityGroups: [sesEndpointSg],
+    });
   }
 }
