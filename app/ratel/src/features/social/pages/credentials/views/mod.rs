@@ -1,11 +1,11 @@
 use super::components::{CodeInputModal, VerificationMethodModal};
 use super::config::get;
-use super::controllers::get_credentials::{CredentialResponse, get_credentials_handler};
-use super::controllers::sign_attributes::{SignAttributesRequest, sign_attributes_handler};
+use super::controllers::get_credentials::{get_credentials_handler, CredentialResponse};
+use super::controllers::sign_attributes::{sign_attributes_handler, SignAttributesRequest};
 use super::*;
 use crate::common::icons::ratel::*;
-use dioxus::prelude::*;
 use crate::features::auth::hooks::use_user_context;
+use dioxus::prelude::*;
 
 #[component]
 pub fn Home(username: String) -> Element {
@@ -54,44 +54,46 @@ pub fn Home(username: String) -> Element {
     let lang = lang();
 
     rsx! {
-        div { class: "flex flex-col gap-4 py-6 w-full",
-            div {
-                class: "flex overflow-hidden relative flex-col items-center py-6 px-4 rounded-lg gap-[17.5px]",
-                style: "background: radial-gradient(circle at center, rgba(77, 92, 255, 0.5) 0%, rgba(30, 30, 30, 1) 100%);",
-                BadgeCheckIcon { width: "40", height: "40" }
-                div { class: "flex flex-col gap-1 items-center",
-                    h2 { class: "text-lg font-bold text-white", {tr.vc} }
-                    p { class: "text-sm text-neutral-300", "{tr.id}: {did}" }
-                }
-            }
-
-            div { class: "flex flex-col gap-5 py-4 px-4 rounded-lg bg-component-bg",
-                div { class: "text-base font-semibold text-text-primary", {tr.my_did} }
-
-                if attributes.is_empty() {
-                    div { class: "flex items-center py-3 px-4 rounded-lg border text-text-primary border-card-border",
-                        {tr.no_data}
+        div { class: "flex flex-col w-full justify-center items-center",
+            div { class: "flex flex-col gap-4 py-6 w-desktop px-2",
+                div {
+                    class: "flex overflow-hidden relative flex-col items-center py-6 px-4 rounded-lg gap-[17.5px]",
+                    style: "background: radial-gradient(circle at center, rgba(77, 92, 255, 0.5) 0%, rgba(30, 30, 30, 1) 100%);",
+                    BadgeCheckIcon { width: "40", height: "40" }
+                    div { class: "flex flex-col gap-1 items-center",
+                        h2 { class: "text-lg font-bold text-white", {tr.vc} }
+                        p { class: "text-sm text-neutral-300", "{tr.id}: {did}" }
                     }
                 }
 
-                for attr in attributes {
-                    VerifiedItem { label: attr.label, value: attr.value }
-                }
+                div { class: "flex flex-col gap-5 py-4 px-4 rounded-lg bg-component-bg",
+                    div { class: "text-base font-semibold text-text-primary", {tr.my_did} }
 
-                div { class: "flex justify-center",
-                    button {
-                        class: "text-primary hover:text-primary/60",
-                        onclick: move |_| {
-                            let inner_popup = popup.clone();
-                            popup.open(rsx! {
-                                VerificationMethodModal {
-                                    on_identity_verify: move |new_credential| {
-                                        credential.restart();
-                                    },
-                                }
-                            });
-                        },
-                        {tr.verify}
+                    if attributes.is_empty() {
+                        div { class: "flex items-center py-3 px-4 rounded-lg border text-text-primary border-card-border",
+                            {tr.no_data}
+                        }
+                    }
+
+                    for attr in attributes {
+                        VerifiedItem { label: attr.label, value: attr.value }
+                    }
+
+                    div { class: "flex justify-center",
+                        button {
+                            class: "text-primary hover:text-primary/60",
+                            onclick: move |_| {
+                                let inner_popup = popup.clone();
+                                popup.open(rsx! {
+                                    VerificationMethodModal {
+                                        on_identity_verify: move |new_credential| {
+                                            credential.restart();
+                                        },
+                                    }
+                                });
+                            },
+                            {tr.verify}
+                        }
                     }
                 }
             }

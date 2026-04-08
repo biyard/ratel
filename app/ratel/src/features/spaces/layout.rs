@@ -51,9 +51,9 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
     } else {
         None
     };
-    let credential_path = user
-        .as_ref()
-        .map(|user| format!("/{}/credentials", user.username));
+    // Credentials now live at a top-level `/credentials` route (it shows
+    // the current user's own credentials regardless of the URL).
+    let credential_path = user.as_ref().map(|_user| "/credentials".to_string());
     let mut popup = use_popup();
     let tr: SpaceLayoutTranslate = use_translate();
 
