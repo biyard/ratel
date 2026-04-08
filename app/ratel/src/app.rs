@@ -20,7 +20,6 @@ pub fn App() -> Element {
     ThemeService::init();
     let _ = crate::features::auth::Context::init()?;
     crate::common::contexts::TeamContext::init();
-    let conf = config::get();
     use_context_provider(QueryStore::new);
 
     use_effect(move || {
