@@ -7,6 +7,7 @@ mod layout;
 mod models;
 pub mod pages;
 pub(crate) mod space_common;
+mod types;
 
 pub use layout::SpaceLayout;
 pub use space_common::{InvitationStatus, SpaceInvitationMember};
@@ -14,6 +15,7 @@ pub use space_common::{InvitationStatus, SpaceInvitationMember};
 use crate::*;
 use hooks::*;
 use space_common::*;
+pub use types::*;
 
 // Re-export common types/macros for model derives.
 pub use crate::common::macros::dynamo_entity::DynamoEntity;

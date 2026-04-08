@@ -11,11 +11,14 @@ use std::collections::BTreeSet;
 #[cfg(feature = "server")]
 use crate::features::spaces::models::verified_attributes::UserAttributesExt;
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Translate)]
 #[serde(rename_all = "snake_case")]
 pub enum PanelRequirementAttribute {
+    #[translate(en = "Age", ko = "나이")]
     Age,
+    #[translate(en = "Gender", ko = "성별")]
     Gender,
+    #[translate(en = "University", ko = "대학교")]
     University,
 }
 
@@ -89,9 +92,9 @@ pub async fn get_panel_requirements(
             continue;
         }
 
-        let is_collective = active_attributes.iter().any(|attr| {
-            matches!(attr, PanelAttribute::CollectiveAttribute(_))
-        });
+        let is_collective = active_attributes
+            .iter()
+            .any(|attr| matches!(attr, PanelAttribute::CollectiveAttribute(_)));
 
         let required_values = active_attributes
             .iter()
@@ -175,7 +178,9 @@ pub(crate) async fn matched_panel_attributes(
         return Ok(vec![]);
     }
 
-    let age = verified_attributes.age().and_then(|value| u8::try_from(value).ok());
+    let age = verified_attributes
+        .age()
+        .and_then(|value| u8::try_from(value).ok());
     let gender = verified_attributes.gender;
     let has_university = verified_attributes
         .university
@@ -188,9 +193,10 @@ pub(crate) async fn matched_panel_attributes(
 
     let mut matched_attributes = vec![];
 
-    for panel in collective_panels.iter().filter(|panel| {
-        panel_matches_user(age, gender, has_university, panel)
-    }) {
+    for panel in collective_panels
+        .iter()
+        .filter(|panel| panel_matches_user(age, gender, has_university, panel))
+    {
         matched_attributes.extend(panel_attributes(panel));
     }
 
