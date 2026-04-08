@@ -6,7 +6,7 @@ use crate::features::spaces::space_common::models::aggregate::DashboardAggregate
 #[cfg(feature = "server")]
 use crate::features::spaces::space_common::models::dashboard::aggregate as _;
 
-#[delete("/api/spaces/{space_id}/actions/{action_id}", role: SpaceUserRole)]
+#[delete("/api/spaces/{space_id}/actions/{action_id}", role: SpaceUserRole, space: crate::common::models::space::SpaceCommon)]
 pub async fn delete_space_action(space_id: SpacePartition, action_id: String) -> Result<()> {
     if role != SpaceUserRole::Creator {
         return Err(Error::NoPermission);
@@ -19,6 +19,18 @@ pub async fn delete_space_action(space_id: SpacePartition, action_id: String) ->
     let space_action = SpaceAction::get(cli, &action_pk, Some(EntityType::SpaceAction))
         .await?
         .ok_or(Error::NotFound("Action not found".into()))?;
+
+    // Once the action has started it is locked — creators can no
+    // longer delete it. The list UI hides the delete button past
+    // lock; defend the API surface here too.
+    if crate::features::spaces::pages::actions::is_action_locked(
+        space.status.clone(),
+        space_action.started_at,
+    ) {
+        return Err(Error::BadRequest(
+            "Action cannot be deleted after it has started".into(),
+        ));
+    }
 
     let space_pk: Partition = space_id.into();
 

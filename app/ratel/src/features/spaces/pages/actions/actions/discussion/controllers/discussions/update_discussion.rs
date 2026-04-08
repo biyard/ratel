@@ -17,7 +17,7 @@ pub struct UpdateDiscussionRequest {
 }
 
 #[mcp_tool(name = "update_discussion", description = "Update a discussion (title, html_contents, category_name, started_at, ended_at). Requires creator role.")]
-#[patch("/api/spaces/{space_id}/discussions/{discussion_sk}", role: SpaceUserRole)]
+#[patch("/api/spaces/{space_id}/discussions/{discussion_sk}", role: SpaceUserRole, space: crate::common::models::space::SpaceCommon)]
 pub async fn update_discussion(
     #[mcp(description = "Space partition key")]
     space_id: SpacePartition,
@@ -33,12 +33,28 @@ pub async fn update_discussion(
     let discussion_sk_entity: EntityType = discussion_sk.clone().into();
 
     let now = crate::common::utils::time::get_now_timestamp_millis();
-    let mut updater = SpacePost::updater(&space_pk, &discussion_sk_entity).with_updated_at(now);
 
     let action_pk = CompositePartition::<SpacePartition, String>(
         space_id.clone(),
         discussion_sk.to_string(),
     );
+
+    // Lock all discussion edits once the action has started. UI
+    // disables inputs; defend the API surface here too.
+    let space_action_check = SpaceAction::get(cli, &action_pk, Some(EntityType::SpaceAction))
+        .await
+        .map_err(|e| Error::InternalServerError(format!("Failed to get space action: {e:?}")))?
+        .ok_or(Error::NotFound("Space action not found".into()))?;
+    if crate::features::spaces::pages::actions::is_action_locked(
+        space.status.clone(),
+        space_action_check.started_at,
+    ) {
+        return Err(Error::BadRequest(
+            "Discussion cannot be edited after the action has started".into(),
+        ));
+    }
+
+    let mut updater = SpacePost::updater(&space_pk, &discussion_sk_entity).with_updated_at(now);
     let mut action_updater =
         SpaceAction::updater(&action_pk, &EntityType::SpaceAction).with_updated_at(now);
     let mut update_action = false;
