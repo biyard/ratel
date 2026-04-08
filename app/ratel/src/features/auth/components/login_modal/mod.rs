@@ -1,4 +1,5 @@
 use crate::common::assets::RATEL_LOGO;
+use crate::common::components::popup::PopupService;
 use crate::features::auth::context::UserContext;
 use crate::features::auth::controllers::login::{
     login_handler, wallet_check_handler, wallet_nonce_handler, LoginRequest, WalletCheckRequest,
@@ -17,12 +18,61 @@ enum WalletStep {
     Done,
 }
 
+/// Shared email-login action. Extracted as a free `async fn` so it can be
+/// awaited from multiple event handlers (button onclick, email/password
+/// `onkeydown` Enter handlers) without moving a closure multiple times or
+/// falling back to `spawn`. Signals are `Copy`, so each caller passes them
+/// by value.
+async fn submit_email_login(
+    email: Signal<String>,
+    password: Signal<String>,
+    mut show_password: Signal<bool>,
+    mut loading: Signal<bool>,
+    mut error_message: Signal<Option<String>>,
+    mut user_ctx: Store<UserContext>,
+    mut popup: PopupService,
+    on_success: Option<Callback<()>>,
+) {
+    error_message.set(None);
+
+    if !show_password() {
+        show_password.set(true);
+        return;
+    }
+
+    loading.set(true);
+    let result = login_handler(LoginRequest::Email {
+        email: email.read().clone(),
+        password: password.read().clone(),
+        device_id: None,
+    })
+    .await;
+    loading.set(false);
+
+    match result {
+        Ok(user) => {
+            user_ctx.set(UserContext {
+                user: Some(user.user),
+                refresh_token: user.refresh_token,
+                membership: None,
+            });
+            if let Some(handler) = &on_success {
+                handler.call(());
+            }
+            popup.close();
+        }
+        Err(e) => {
+            error_message.set(Some(format!("{e}")));
+        }
+    }
+}
+
 #[component]
 pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Element {
     let tr: LoginModalTranslate = use_translate();
     let mut email = use_signal(|| String::new());
     let mut password = use_signal(|| String::new());
-    let mut show_password = use_signal(|| false);
+    let show_password = use_signal(|| false);
     let mut loading = use_signal(|| false);
     let mut error_message: Signal<Option<String>> = use_signal(|| None);
     //NOTE: Web Feature issue
@@ -53,40 +103,6 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
         }
     };
 
-    let handle_email_login = move |_| async move {
-        error_message.set(None);
-
-        if !show_password() {
-            show_password.set(true);
-            return;
-        }
-
-        loading.set(true);
-        let result = login_handler(LoginRequest::Email {
-            email: email.read().clone(),
-            password: password.read().clone(),
-            device_id: None,
-        })
-        .await;
-        loading.set(false);
-
-        match result {
-            Ok(user) => {
-                user_ctx.set(UserContext {
-                    user: Some(user.user),
-                    refresh_token: user.refresh_token,
-                    membership: None,
-                });
-                if let Some(handler) = &on_success {
-                    handler.call(());
-                }
-                popup.close();
-            }
-            Err(e) => {
-                error_message.set(Some(format!("{e}")));
-            }
-        }
-    };
 
     let handle_google_login = move |_| async move {
         error_message.set(None);
@@ -301,6 +317,22 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                             oninput: move |ev| {
                                 email.set(ev.data().value());
                             },
+                            onkeydown: move |ev: KeyboardEvent| async move {
+                                if ev.key() == Key::Enter {
+                                    ev.prevent_default();
+                                    submit_email_login(
+                                        email,
+                                        password,
+                                        show_password,
+                                        loading,
+                                        error_message,
+                                        user_ctx,
+                                        popup,
+                                        on_success,
+                                    )
+                                    .await;
+                                }
+                            },
                         }
                     }
                 }
@@ -320,6 +352,22 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                             oninput: move |ev| {
                                 password.set(ev.data().value());
                             },
+                            onkeydown: move |ev: KeyboardEvent| async move {
+                                if ev.key() == Key::Enter {
+                                    ev.prevent_default();
+                                    submit_email_login(
+                                        email,
+                                        password,
+                                        show_password,
+                                        loading,
+                                        error_message,
+                                        user_ctx,
+                                        popup,
+                                        on_success,
+                                    )
+                                    .await;
+                                }
+                            },
                         }
                     }
                 }
@@ -334,7 +382,19 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                         "data-slot": "button",
                         "data-testid": "continue-button",
                         disabled: loading(),
-                        onclick: handle_email_login,
+                        onclick: move |_| async move {
+                            submit_email_login(
+                                email,
+                                password,
+                                show_password,
+                                loading,
+                                error_message,
+                                user_ctx,
+                                popup,
+                                on_success,
+                            )
+                            .await;
+                        },
                         if loading() {
                             {tr.loading}
                         } else {

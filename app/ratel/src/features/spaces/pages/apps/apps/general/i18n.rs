@@ -112,8 +112,8 @@ translate! {
         ko: "관리자",
     },
     enter_username: {
-        en: "Enter username",
-        ko: "사용자명을 입력하세요",
+        en: "Enter username or email",
+        ko: "사용자명 또는 이메일을 입력하세요",
     },
     delete_space: {
         en: "Delete Space",

@@ -16,9 +16,6 @@ if (typeof window !== "undefined") {
         console.debug("Initializing app shell with config");
       },
     },
-    ratel_team_setting: {
-      initialize: (_conf) => {},
-    },
     membership,
     spaces,
     auth,
