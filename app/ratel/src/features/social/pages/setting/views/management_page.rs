@@ -147,7 +147,7 @@ pub fn ManagementPage(username: String) -> Element {
                 ScrollArea {
                     direction: ScrollDirection::Vertical,
                     class: "flex flex-col max-h-[540px]",
-                    for (idx , member) in members.iter().enumerate() {
+                    for (idx, member) in members.iter().enumerate() {
                         {
                             let is_last = idx == members.len() - 1;
                             let member = member.clone();
