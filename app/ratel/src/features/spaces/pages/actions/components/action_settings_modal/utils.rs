@@ -108,6 +108,7 @@ pub async fn apply_selected_action_dates(
                         category_name: None,
                         started_at: Some(started_at),
                         ended_at: Some(ended_at),
+                        files: None,
                     },
                 )
                 .await?;

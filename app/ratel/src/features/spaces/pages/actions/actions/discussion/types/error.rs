@@ -10,6 +10,10 @@ pub enum SpaceActionDiscussionError {
         ko = "현재 스페이스 상태에서는 토론을 하실 수 없습니다."
     )]
     NotAvailableInCurrentStatus,
+
+    #[error("Discussion not found")]
+    #[translate(en = "Discussion not found", ko = "토론을 찾을 수 없습니다.")]
+    NotFound,
 }
 
 #[cfg(feature = "server")]
@@ -17,6 +21,7 @@ impl SpaceActionDiscussionError {
     pub fn status_code(&self) -> bdk::prelude::axum::http::StatusCode {
         use bdk::prelude::axum::http::StatusCode;
         match self {
+            SpaceActionDiscussionError::NotFound => StatusCode::NOT_FOUND,
             _ => StatusCode::BAD_REQUEST,
         }
     }

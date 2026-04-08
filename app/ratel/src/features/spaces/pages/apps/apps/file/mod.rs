@@ -10,7 +10,7 @@ mod views;
 use components::*;
 use i18n::*;
 use models::*;
-use types::*;
+pub use types::*;
 
 pub use controllers::*;
 

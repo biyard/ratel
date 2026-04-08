@@ -74,6 +74,7 @@ pub fn OverviewTab() -> Element {
                 },
                 started_at: None,
                 ended_at: None,
+                files: None,
             };
 
             if let Err(err) = update_discussion(space_id(), discussion_id(), req).await {
@@ -101,6 +102,7 @@ pub fn OverviewTab() -> Element {
                 },
                 started_at: None,
                 ended_at: None,
+                files: None,
             };
             if let Err(err) = update_discussion(space_id(), discussion_id(), req).await {
                 error!("Failed to update discussion: {:?}", err);
