@@ -55,8 +55,5 @@ pub fn App() -> Element {
         AuthProvider {}
 
         Router::<Route> {}
-        if env == Environment::Local {
-            DevTools {}
-        }
     }
 }
