@@ -1,16 +1,17 @@
 use crate::*;
 
 #[component]
-pub fn SuspenseBoundary(
-    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
-    children: Element,
-) -> Element {
+pub fn SuspenseBoundary(children: Element) -> Element {
     rsx! {
         dioxus::prelude::SuspenseBoundary {
-            fallback: |_| rsx! {
-                div { class: "flex justify-center items-center w-full h-full min-h-screen bg-background",
-                    LoadingIndicator {}
-                }
+            fallback: |_ctx: SuspenseContext| {
+                // if let Some(el) = ctx.suspended_nodes() {
+                //     debug!("Suspended nodes: {el:#?}");
+                //     return rsx! {
+                //         {el}
+                //     };
+                // }
+                rsx! {}
             },
             {children}
         }
