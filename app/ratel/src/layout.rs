@@ -29,7 +29,7 @@ pub fn AppLayout() -> Element {
                 class: "border-r border-divider bg-bg",
                 AppMenu {}
             }
-            SidebarInset { class: "overflow-x-hidden relative flex-1 min-w-0",
+            SidebarInset { class: "overflow-x-hidden relative flex-1 min-w-0", "data-testid": "app-layout",
                 // Right gradient blur edge
                 div { class: "fixed top-0 right-0 z-40 w-10 h-full bg-linear-to-l to-transparent pointer-events-none from-bg backdrop-blur-sm mask-[linear-gradient(to_left,black,transparent)]" }
                 // Add bottom padding on mobile so content is not hidden behind the bottom nav.
