@@ -33,6 +33,11 @@ translate! {
         ko: "관리자",
     },
 
+    settings: {
+        en: "Settings",
+        ko: "설정",
+    },
+
     sign_in: {
         en: "Sign In",
         ko: "로그인",
@@ -60,7 +65,7 @@ pub fn AppMenu() -> Element {
     let tr: AppMenuTranslate = use_translate();
     let mut popup = use_popup();
     let user_ctx = crate::features::auth::hooks::use_user_context();
-    let ctx = use_sidebar();
+    let mut ctx = use_sidebar();
     let collapsed = (ctx.state)() == SidebarState::Collapsed;
 
     let logged_in = user_ctx().is_logged_in();
@@ -83,61 +88,60 @@ pub fn AppMenu() -> Element {
                             i::HomeIcon {}
                         },
                     }
-                    MembershipMenuItem { label: tr.membership, collapsed }
+                    NavMenuItem {
+                        href: Route::MembershipHome {},
+                        label: tr.membership,
+                        collapsed,
+                        icon: rsx! {
+                            i::MembershipIcon {}
+                        },
+                    }
 
                     if let Some(user) = user_ctx().user.as_ref() {
-                        SidebarMenuItem {
-                            Link {
-                                to: format!("/credentials"),
-                                class: "flex gap-2 items-center py-1.5 w-full text-sm rounded-md aria-extended:px-0 aria-extended:justify-center sidebar-menu-button hover:bg-accent/10 [&>svg]:w-5 [&>svg]:h-5",
-                                "aria-extended": collapsed,
+                        NavMenuItem {
+                            href: Route::CredentialsHome {
+                                username: user.username.clone(),
+                            },
+                            label: tr.rewards,
+                            collapsed,
+                            icon: rsx! {
                                 i::CredentialsIcon {}
-                                if !collapsed {
-                                    span { "{tr.credentials}" }
-                                }
-                            }
+                            },
                         }
 
-                        SidebarMenuItem {
-                            Link {
-                                to: format!("/{}/rewards", user.username),
-                                class: "flex gap-2 items-center py-1.5 w-full text-sm rounded-md aria-extended:px-0 aria-extended:justify-center sidebar-menu-button hover:bg-accent/10 [&>svg]:w-5 [&>svg]:h-5",
-                                "aria-extended": collapsed,
+                        NavMenuItem {
+                            href: Route::UserRewards {
+                                username: user.username.clone(),
+                            },
+                            label: tr.rewards,
+                            collapsed,
+                            icon: rsx! {
                                 i::RewardsIcon {}
-                                if !collapsed {
-                                    span { "{tr.rewards}" }
-                                }
-                            }
+                            },
                         }
 
                         if user.user_type == UserType::Admin {
-                            SidebarMenuItem {
-                                Link {
-                                    to: Route::AdminMainPage {},
-                                    class: "flex gap-2 items-center py-1.5 w-full text-sm rounded-md aria-extended:px-0 aria-extended:justify-center sidebar-menu-button hover:bg-accent/10 [&>svg]:w-5 [&>svg]:h-5",
-                                    "aria-extended": collapsed,
-                                    "data-testid": "admin-menu",
+                            NavMenuItem {
+                                href: Route::AdminMainPage {},
+                                label: tr.admin,
+                                collapsed,
+                                icon: rsx! {
                                     i::AdminIcon {}
-                                    if !collapsed {
-                                        span { "{tr.admin}" }
-                                    }
-                                }
+                                },
                             }
                         }
-
-                        SidebarMenuItem {
-                            Link {
-                                to: format!("/{}/settings", user.username),
-                                class: "flex gap-2 items-center py-1.5 w-full text-sm rounded-md aria-extended:px-0 aria-extended:justify-center sidebar-menu-button hover:bg-accent/10 [&>svg]:w-5 [&>svg]:h-5",
-                                "aria-extended": collapsed,
+                        NavMenuItem {
+                            href: Route::UserSettingPage {
+                                username: user.username.clone(),
+                            },
+                            label: tr.settings,
+                            collapsed,
+                            icon: rsx! {
                                 lucide_dioxus::Settings {
                                     size: 20,
                                     class: "[&>path]:stroke-icon-primary [&>line]:stroke-icon-primary [&>circle]:stroke-icon-primary",
                                 }
-                                if !collapsed {
-                                    span { "Settings" }
-                                }
-                            }
+                            },
                         }
                     }
                 }
@@ -241,12 +245,10 @@ fn NavMenuItem(href: Route, label: &'static str, collapsed: bool, icon: Element)
         SidebarMenuItem {
             Link {
                 to: href,
-                class: "flex gap-2 items-center py-1.5 w-full text-sm rounded-md aria-extended:px-0 aria-extended:justify-center sidebar-menu-button hover:bg-accent/10 [&>svg]:w-5 [&>svg]:h-5",
-                "aria-extended": collapsed,
+                class: "flex gap-2 items-center py-1.5 w-full text-sm rounded-md aria-collapsed:px-0 aria-collapsed:justify-center sidebar-menu-button [&>svg]:w-5 [&>svg]:h-5 group hover:bg-accent/10",
+                "aria-collapsed": collapsed,
                 {icon}
-                if !collapsed {
-                    span { "{label}" }
-                }
+                span { class: "block group-aria-collapsed:hidden", {label} }
             }
         }
     }
@@ -444,20 +446,6 @@ fn LanguageIcon() -> Element {
                 height: "16",
                 class: "object-cover rounded-full",
             }
-        }
-    }
-}
-
-#[component]
-fn MembershipMenuItem(label: &'static str, collapsed: bool) -> Element {
-    rsx! {
-        NavMenuItem {
-            href: Route::MembershipHome {},
-            label,
-            collapsed,
-            icon: rsx! {
-                i::MembershipIcon {}
-            },
         }
     }
 }
