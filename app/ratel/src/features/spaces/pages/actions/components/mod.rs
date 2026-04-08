@@ -23,7 +23,4 @@ pub use delete_action_button::ActionDeleteButton;
 mod settings_switch_button;
 pub use settings_switch_button::{ActionEditMode, SettingsSwitchButton, use_action_edit_mode};
 
-mod action_locked_overlay;
-pub use action_locked_overlay::ActionLockedOverlay;
-
 use super::*;
