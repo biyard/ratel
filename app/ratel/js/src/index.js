@@ -14,62 +14,7 @@ if (typeof window !== "undefined") {
     app_shell: {
       initialize: (_conf) => {
         console.debug("Initializing app shell with config");
-
-        const userAgent = navigator.userAgent.toLowerCase();
-        const isKakaoInApp = userAgent.includes("kakaotalk");
-
-        if (isKakaoInApp) {
-          const targetUrl = window.location.href;
-          window.location.replace(
-            `kakaotalk://web/openExternal?url=${encodeURIComponent(targetUrl)}`
-          );
-        }
       },
-    },
-    ratel_team_setting: {
-      initialize: (_conf) => {},
-    },
-    ratel_team_reward: {
-      initialize: (_conf) => {},
-    },
-    ratel_user_reward: {
-      initialize: (_conf) => {},
-    },
-    ratel_team_dao: {
-      initialize: (_conf) => {},
-    },
-    ratel_team_home: {
-      initialize: (_conf) => {},
-    },
-    ratel_team_draft: {
-      initialize: (_conf) => {},
-    },
-    ratel_team_member: {
-      initialize: (_conf) => {},
-    },
-    ratel_team_group: {
-      initialize: (_conf) => {},
-    },
-    ratel_user_post: {
-      initialize: (_conf) => {},
-    },
-    ratel_user_space: {
-      initialize: (_conf) => {},
-    },
-    ratel_user_draft: {
-      initialize: (_conf) => {},
-    },
-    ratel_user_membership: {
-      initialize: (_conf) => {},
-    },
-    ratel_user_setting: {
-      initialize: (_conf) => {},
-    },
-    ratel_my_follower: {
-      initialize: (_conf) => {},
-    },
-    space_common: {
-      initialize: (_conf) => {},
     },
     membership,
     spaces,

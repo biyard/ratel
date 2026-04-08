@@ -23,32 +23,22 @@ pub fn App() -> Element {
     let conf = config::get();
     let env = conf.common.env;
     use_context_provider(QueryStore::new);
-    let mut init = use_signal(|| false);
 
     use_effect(move || {
-        if init() {
-            return;
-        }
+        document::eval(
+            r#"
+  const userAgent = navigator.userAgent.toLowerCase();
+  const isKakaoInApp = userAgent.includes("kakaotalk");
 
-        init.set(true);
-        interop::initialize(&serde_wasm_bindgen::to_value(&serde_json::json!({})).unwrap());
+  if (isKakaoInApp) {
+    const targetUrl = window.location.href;
+    window.location.replace(
+      `kakaotalk://web/openExternal?url=${encodeURIComponent(targetUrl)}`,
+    );
+  }
+"#,
+        );
     });
-
-    let keywords = vec![
-        "ratel".to_string(),
-        "knowledge platform".to_string(),
-        "ai knowledge base".to_string(),
-        "human knowledge dataset".to_string(),
-        "ai training data".to_string(),
-        "community intelligence".to_string(),
-        "participatory platform".to_string(),
-        "survey rewards".to_string(),
-        "poll rewards".to_string(),
-        "web3 knowledge economy".to_string(),
-        "ai memory platform".to_string(),
-        "vector knowledge database".to_string(),
-        "collective intelligence".to_string(),
-    ];
 
     rsx! {
         document::Link { rel: "icon", href: crate::common::assets::FAVICON }
@@ -56,14 +46,6 @@ pub fn App() -> Element {
         document::Link {
             rel: "stylesheet",
             href: asset!("/assets/dx-components-theme.css"),
-        }
-        crate::common::SeoMeta {
-            title: "Ratel – AI Knowledge Platform Powered by Human Essences",
-            description: "Ratel is a participatory knowledge platform where users share expertise, opinions, and insights as structured “Essences”. AI agents learn from the knowledge base while users earn rewards through surveys, polls, and discussions.",
-            image: "https://metadata.ratel.foundation/logos/logo-symbol.png",
-            url: "https://ratel.foundation",
-            robots: Robots::IndexNofollow,
-            keywords,
         }
         document::Script { src: MAIN_JS }
         document::Script { src: "https://cdn.portone.io/v2/browser-sdk.js" }
