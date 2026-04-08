@@ -105,10 +105,15 @@ pub fn ParticipationCard(
                             .set_size(LayoverSize::Medium);
                     }
 
-                    // Now update role — this will unmount ParticipationCard.
-                    // Space is InProgress when participation card is shown,
-                    // so the user becomes Candidate.
-                    current_role.set(SpaceUserRole::Candidate);
+                    if let Ok(next_role) =
+                        crate::features::spaces::space_common::controllers::get_user_role(
+                            space_id(),
+                        )
+                        .await
+                    {
+                        current_role.set(next_role);
+                    }
+
                     query.invalidate(&space_detail);
                     query.invalidate(&panel_requirements_key);
                     space.restart();
