@@ -21,7 +21,6 @@ pub fn App() -> Element {
     let _ = crate::features::auth::Context::init()?;
     crate::common::contexts::TeamContext::init();
     let conf = config::get();
-    let env = conf.common.env;
     use_context_provider(QueryStore::new);
 
     use_effect(move || {
