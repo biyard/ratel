@@ -67,6 +67,7 @@ pub fn AppMenu() -> Element {
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let mut ctx = use_sidebar();
     let collapsed = (ctx.state)() == SidebarState::Collapsed;
+    debug!("user ctx: {:?}", user_ctx());
 
     let logged_in = user_ctx().is_logged_in();
 
