@@ -48,18 +48,14 @@ export class VpcEndpointStack extends Stack {
 
     // Bedrock interface endpoint — dedicated SG that only accepts 443 from
     // the shared SG. Private DNS lets the SDK use the default endpoint URL.
-    const bedrockEndpointSg = new ec2.SecurityGroup(
-      this,
-      "BedrockEndpointSG",
-      {
-        vpc: this.vpc,
-        description: "Bedrock runtime VPC interface endpoint",
-        allowAllOutbound: false,
-      },
-    );
+    const bedrockEndpointSg = new ec2.SecurityGroup(this, "BedrockEndpointSG", {
+      vpc: this.vpc,
+      description: "Bedrock runtime VPC interface endpoint",
+      allowAllOutbound: false,
+    });
     bedrockEndpointSg.addIngressRule(
       this.sharedSecurityGroup,
-      ec2.Port.tcp(443),
+      ec2.Port.allTraffic(),
       "Shared services to Bedrock runtime",
     );
 
@@ -80,23 +76,14 @@ export class VpcEndpointStack extends Stack {
     });
     sesEndpointSg.addIngressRule(
       this.sharedSecurityGroup,
-      ec2.Port.tcp(443),
+      ec2.Port.allTraffic(),
       "Shared services to SES",
     );
 
-    // email-smtp endpoint does not support all AZs in ap-northeast-2 (excludes
-    // ap-northeast-2d). Restrict to the three supported AZs explicitly.
-    new ec2.InterfaceVpcEndpoint(this, "SesEndpoint", {
+    new ec2.InterfaceVpcEndpoint(this, "SesEmailEndpoint", {
       vpc: this.vpc,
-      service: ec2.InterfaceVpcEndpointAwsService.EMAIL_SMTP,
-      subnets: {
-        subnetType: ec2.SubnetType.PUBLIC,
-        availabilityZones: [
-          "ap-northeast-2a",
-          "ap-northeast-2b",
-          "ap-northeast-2c",
-        ],
-      },
+      service: ec2.InterfaceVpcEndpointAwsService.EMAIL,
+      subnets: { subnetType: ec2.SubnetType.PUBLIC },
       privateDnsEnabled: true,
       securityGroups: [sesEndpointSg],
     });
