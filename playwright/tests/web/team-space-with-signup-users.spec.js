@@ -147,14 +147,14 @@ async function participateAndCompletePoll(page, spaceUrl, pollOptionText) {
 
   // Step 4: Click "Join Space" — this is what actually calls the
   // /participate API. The text "Join Space" appears twice in the
-  // layover (the header and the submit button), so target the button
-  // role explicitly to avoid a strict-mode violation.
+  // layover (the header and the submit button), so we target the
+  // button by its `data-testid` via the shared `click` helper to
+  // stay within the playwright-tests convention rules.
   const participatePromise = page.waitForResponse(
     (r) => r.url().includes("/participate") && r.request().method() === "POST",
     { timeout: 15000 }
   );
-  await page.getByRole("button", { name: "Join Space" }).click();
-  await page.waitForLoadState("load");
+  await clickNoNav(page, { testId: "join-space-confirm" });
   await participatePromise;
 
   // Step 5: The "Required Actions" layover appears after the

@@ -57,28 +57,33 @@ pub fn SettingsSwitchButton() -> Element {
     let is_editing = edit_mode();
 
     rsx! {
-        div { class: "flex justify-end items-center w-full mb-2",
-            button {
-                r#type: "button",
-                class: "inline-flex gap-2 items-center px-3 py-2 text-sm font-semibold rounded-full border transition-colors cursor-pointer bg-card-bg border-card-border text-text-primary hover:bg-hover",
+        div { class: "flex justify-end items-center mb-2 w-full",
+            Button {
+                style: ButtonStyle::Outline,
+                shape: ButtonShape::Rounded,
+                size: ButtonSize::Small,
                 "data-testid": "action-settings-switch",
                 onclick: move |_| {
                     edit_mode.set(!is_editing);
                 },
                 if is_editing {
-                    icons::arrows::LineArrowLeft {
-                        width: "16",
-                        height: "16",
-                        class: "[&>path]:stroke-current",
+                    div { class: "flex flex-row items-center gap-1",
+                        icons::arrows::LineArrowLeft {
+                            width: "16",
+                            height: "16",
+                            class: "[&>path]:stroke-current",
+                        }
+                        span { {tr.back_to_participant} }
                     }
-                    span { {tr.back_to_participant} }
                 } else {
-                    icons::settings::Settings2 {
-                        width: "16",
-                        height: "16",
-                        class: "[&>path]:stroke-current [&>circle]:stroke-current [&>path]:fill-none [&>circle]:fill-none",
+                    div { class: "flex flex-row items-center gap-1",
+                        icons::settings::Settings2 {
+                            width: "16",
+                            height: "16",
+                            class: "[&>path]:stroke-current [&>circle]:stroke-current [&>path]:fill-none [&>circle]:fill-none",
+                        }
+                        span { {tr.settings} }
                     }
-                    span { {tr.settings} }
                 }
             }
         }

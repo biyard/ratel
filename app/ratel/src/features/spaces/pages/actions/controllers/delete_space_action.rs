@@ -27,9 +27,7 @@ pub async fn delete_space_action(space_id: SpacePartition, action_id: String) ->
         space.status.clone(),
         space_action.started_at,
     ) {
-        return Err(Error::BadRequest(
-            "Action cannot be deleted after it has started".into(),
-        ));
+        return Err(Error::ActionLocked);
     }
 
     let space_pk: Partition = space_id.into();
@@ -59,8 +57,9 @@ pub async fn delete_space_action(space_id: SpacePartition, action_id: String) ->
                 SpaceAction::delete_transact_write_item(&space_action.pk, &EntityType::SpaceAction),
                 DashboardAggregate::inc_polls(&space_pk, -1),
             ];
-            crate::transact_write_items!(cli, txs)
-                .map_err(|e| Error::InternalServerError(format!("Failed to delete poll action: {e}")))?;
+            crate::transact_write_items!(cli, txs).map_err(|e| {
+                Error::InternalServerError(format!("Failed to delete poll action: {e}"))
+            })?;
         }
         SpaceActionType::TopicDiscussion => {
             let discussion_sk = EntityType::SpacePost(action_id);
@@ -132,8 +131,9 @@ pub async fn delete_space_action(space_id: SpacePartition, action_id: String) ->
                 );
             }
 
-            crate::transact_write_items!(cli, txs)
-                .map_err(|e| Error::InternalServerError(format!("Failed to delete quiz action: {e}")))?;
+            crate::transact_write_items!(cli, txs).map_err(|e| {
+                Error::InternalServerError(format!("Failed to delete quiz action: {e}"))
+            })?;
         }
         SpaceActionType::Follow => {
             let follow_sk = EntityType::SpaceActionFollow(action_id);
@@ -147,7 +147,9 @@ pub async fn delete_space_action(space_id: SpacePartition, action_id: String) ->
 
             let mut bookmark: Option<String> = None;
             loop {
-                let mut opt = crate::features::spaces::pages::actions::actions::follow::SpaceFollowUser::opt()
+                let mut opt =
+                    crate::features::spaces::pages::actions::actions::follow::SpaceFollowUser::opt(
+                    )
                     .sk(EntityType::SpaceSubscriptionUser(String::default()).to_string())
                     .limit(100);
                 if let Some(bk) = bookmark.clone() {
