@@ -2,8 +2,10 @@ use crate::features::spaces::pages::actions::actions::discussion::*;
 use crate::features::spaces::pages::actions::{ActionCommonSettings, ActionDeleteButton};
 mod i18n;
 mod overview_tab;
+mod upload_tab;
 pub use i18n::DiscussionCreatorTranslate;
 pub use overview_tab::*;
+pub use upload_tab::*;
 
 #[component]
 pub fn CreatorMain(
@@ -28,7 +30,8 @@ pub fn CreatorMain(
             Tabs { class: "flex-1 min-h-0", default_value: "overview-tab",
                 TabList {
                     TabTrigger { index: 0usize, value: "overview-tab", {tr.tab_overview} }
-                    TabTrigger { index: 1usize, value: "setting-tab", {tr.tab_setting} }
+                    TabTrigger { index: 1usize, value: "upload-tab", {tr.tab_upload} }
+                    TabTrigger { index: 2usize, value: "setting-tab", {tr.tab_setting} }
                 }
                 TabContent {
                     index: 0usize,
@@ -36,7 +39,10 @@ pub fn CreatorMain(
                     class: "flex flex-1 min-h-0",
                     OverviewTab {}
                 }
-                TabContent { index: 1usize, value: "setting-tab",
+                TabContent { index: 1usize, value: "upload-tab",
+                    UploadTab { can_edit: true }
+                }
+                TabContent { index: 2usize, value: "setting-tab",
                     div { class: "flex flex-col gap-5 w-full",
                         ActionCommonSettings {
                             space_id,
@@ -58,6 +64,7 @@ pub fn CreatorMain(
                                         category_name: None,
                                         started_at: Some(started_at),
                                         ended_at: Some(ended_at),
+                                        files: None,
                                     };
                                     let _ = update_discussion(space_id, discussion_id, req).await;
                                 }

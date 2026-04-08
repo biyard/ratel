@@ -36,6 +36,9 @@ pub struct SpacePost {
     pub author_display_name: String,
     pub author_profile_url: String,
     pub author_username: String,
+
+    #[serde(default)]
+    pub files: Vec<File>,
 }
 
 #[cfg(feature = "server")]
@@ -70,6 +73,7 @@ impl SpacePost {
             author_display_name: author.display_name.clone(),
             author_profile_url: author.profile_url.clone(),
             author_username: author.username.clone(),
+            files: vec![],
         }
     }
 
