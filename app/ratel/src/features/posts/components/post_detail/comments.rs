@@ -1,5 +1,5 @@
 use super::PostDetailTranslate;
-use crate::common::components::{Button, ButtonShape, ButtonSize, ButtonStyle, Input, InputVariant, TextArea};
+use crate::common::components::{Button, ButtonShape, ButtonSize, ButtonStyle, TextArea};
 use crate::common::hooks::use_infinite_query;
 use crate::features::posts::controllers::comments::add_comment::add_comment_handler;
 use crate::features::posts::controllers::comments::like_comment::like_comment_handler;
@@ -20,6 +20,7 @@ pub fn CommentSection(
     let mut comment_count = use_signal(|| detail.post.as_ref().map(|p| p.comments).unwrap_or(0));
     let mut comment_input = use_signal(String::new);
     let mut is_submitting = use_signal(|| false);
+    let post_pk_signal = use_signal(|| post_pk.clone());
 
     let comments: Vec<PostCommentResponse> = {
         let mut result: Vec<PostCommentResponse> = Vec::new();
@@ -36,13 +37,34 @@ pub fn CommentSection(
             h2 { class: "text-lg font-bold text-text-primary",
                 "{t.comments_title} ({comment_count()})"
             }
-            div { class: "flex gap-2",
-                Input {
-                    variant: InputVariant::Default,
-                    class: "flex-1 h-10".to_string(),
+            div { class: "flex gap-2 items-end",
+                TextArea {
+                    class: "flex-1 min-h-10 resize-none rounded-[10px] border border-input-box-border bg-input-box-bg px-3 py-2 text-sm text-text-primary outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[1px]"
+                        .to_string(),
                     placeholder: t.share_your_thoughts.to_string(),
                     value: comment_input(),
                     oninput: move |e: Event<FormData>| comment_input.set(e.value()),
+                    onkeydown: move |evt: KeyboardEvent| {
+                        if evt.key() == Key::Enter
+                            && (evt.modifiers().contains(Modifiers::CONTROL)
+                                || evt.modifiers().contains(Modifiers::META))
+                        {
+                            evt.prevent_default();
+                            let content = comment_input().trim().to_string();
+                            if content.is_empty() || is_submitting() {
+                                return;
+                            }
+                            is_submitting.set(true);
+                            comment_input.set(String::new());
+                            spawn(async move {
+                                if add_comment_handler(post_pk_signal(), content).await.is_ok() {
+                                    comment_count.set(comment_count() + 1);
+                                    on_refresh.call(());
+                                }
+                                is_submitting.set(false);
+                            });
+                        }
+                    },
                 }
                 Button {
                     style: ButtonStyle::Primary,
@@ -50,24 +72,20 @@ pub fn CommentSection(
                     size: ButtonSize::Icon,
                     class: "size-10 shrink-0 !p-0 inline-flex items-center justify-center".to_string(),
                     disabled: comment_input().trim().is_empty() || is_submitting(),
-                    onclick: {
-                        let pk = post_pk.clone();
-                        move |_| {
-                            let content = comment_input().trim().to_string();
-                            if content.is_empty() || is_submitting() {
-                                return;
-                            }
-                            is_submitting.set(true);
-                            comment_input.set(String::new());
-                            let pk = pk.clone();
-                            spawn(async move {
-                                if add_comment_handler(pk, content).await.is_ok() {
-                                    comment_count.set(comment_count() + 1);
-                                    on_refresh.call(());
-                                }
-                                is_submitting.set(false);
-                            });
+                    onclick: move |_| {
+                        let content = comment_input().trim().to_string();
+                        if content.is_empty() || is_submitting() {
+                            return;
                         }
+                        is_submitting.set(true);
+                        comment_input.set(String::new());
+                        spawn(async move {
+                            if add_comment_handler(post_pk_signal(), content).await.is_ok() {
+                                comment_count.set(comment_count() + 1);
+                                on_refresh.call(());
+                            }
+                            is_submitting.set(false);
+                        });
                     },
                     if comment_input().trim().is_empty() {
                         span { class: "inline-flex items-center justify-center leading-none",
@@ -82,7 +100,9 @@ pub fn CommentSection(
             }
             div { class: "flex flex-col divide-y divide-divider",
                 for comment in comments {
-                    div { key: "{comment.sk}", class: "py-3 first:pt-0 last:pb-0",
+                    div {
+                        key: "{comment.sk}",
+                        class: "py-3 first:pt-0 last:pb-0",
                         CommentItem {
                             comment: comment.clone(),
                             post_pk: post_pk.clone(),
@@ -146,13 +166,16 @@ fn CommentItem(
                             src: "{comment.author_profile_url}",
                         }
                     }
-                    span { class: "font-semibold text-text-primary", {comment.author_display_name.clone()} }
+                    span { class: "font-semibold text-text-primary",
+                        {comment.author_display_name.clone()}
+                    }
                     span { class: "text-xs text-text-secondary", "{comment_time}" }
                 }
             }
 
             // Content
-            p { class: "whitespace-pre-wrap break-words text-sm text-text-primary",
+            p {
+                class: "whitespace-pre-wrap break-words text-sm text-text-primary",
                 dangerous_inner_html: "{comment.content}",
             }
 
@@ -183,11 +206,9 @@ fn CommentItem(
                 Button {
                     size: ButtonSize::Inline,
                     style: ButtonStyle::Text,
-                    class: if optimistic_liked() {
-                        "inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary".to_string()
-                    } else {
-                        "inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-primary".to_string()
-                    },
+                    class: if optimistic_liked() { "inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary"
+                        .to_string() } else { "inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-primary"
+                        .to_string() },
                     disabled: is_processing(),
                     onclick: {
                         let pk = post_pk.clone();
@@ -231,6 +252,36 @@ fn CommentItem(
                         placeholder: t.contents_hint.to_string(),
                         value: reply_text(),
                         oninput: move |e: Event<FormData>| reply_text.set(e.value()),
+                        onkeydown: move |evt: KeyboardEvent| {
+                            if evt.key() == Key::Enter
+                                && (evt.modifiers().contains(Modifiers::CONTROL)
+                                    || evt.modifiers().contains(Modifiers::META))
+                            {
+                                evt.prevent_default();
+                                let content = reply_text().trim().to_string();
+                                if content.is_empty() || is_reply_submitting() {
+                                    return;
+                                }
+                                is_reply_submitting.set(true);
+                                spawn(async move {
+                                    if reply_to_comment_handler(
+                                            post_pk_signal(),
+                                            comment_sk_signal(),
+                                            content,
+                                        )
+                                        .await
+                                        .is_ok()
+                                    {
+                                        reply_count.set(reply_count() + 1);
+                                        on_comment_count_inc.call(());
+                                        replies.refresh();
+                                        show_replies.set(true);
+                                    }
+                                    reply_text.set(String::new());
+                                    is_reply_submitting.set(false);
+                                });
+                            }
+                        },
                     }
                     div { class: "mt-2 flex justify-end",
                         Button {
@@ -239,29 +290,25 @@ fn CommentItem(
                             size: ButtonSize::Icon,
                             class: "size-10 !p-0 inline-flex items-center justify-center".to_string(),
                             disabled: reply_text().trim().is_empty() || is_reply_submitting(),
-                            onclick: {
-                                let pk = post_pk.clone();
-                                let sk = comment_sk_for_reply.clone();
-                                move |_| {
-                                    let content = reply_text().trim().to_string();
-                                    if content.is_empty() || is_reply_submitting() {
-                                        return;
-                                    }
-                                    is_reply_submitting.set(true);
-                                    let pk = pk.clone();
-                                    let sk = sk.clone();
-                                    let mut replies = replies.clone();
-                                    spawn(async move {
-                                        if reply_to_comment_handler(pk, sk, content).await.is_ok() {
-                                            reply_count.set(reply_count() + 1);
-                                            on_comment_count_inc.call(());
-                                            replies.refresh();
-                                            show_replies.set(true);
-                                        }
-                                        reply_text.set(String::new());
-                                        is_reply_submitting.set(false);
-                                    });
+                            onclick: move |_| {
+                                let content = reply_text().trim().to_string();
+                                if content.is_empty() || is_reply_submitting() {
+                                    return;
                                 }
+                                is_reply_submitting.set(true);
+                                spawn(async move {
+                                    if reply_to_comment_handler(post_pk_signal(), comment_sk_signal(), content)
+                                        .await
+                                        .is_ok()
+                                    {
+                                        reply_count.set(reply_count() + 1);
+                                        on_comment_count_inc.call(());
+                                        replies.refresh();
+                                        show_replies.set(true);
+                                    }
+                                    reply_text.set(String::new());
+                                    is_reply_submitting.set(false);
+                                });
                             },
                             span { class: "inline-flex items-center justify-center leading-none",
                                 icons::chat::SquareChat { class: "size-5 [&>path]:stroke-btn-primary-text [&>path]:fill-transparent" }
@@ -314,18 +361,16 @@ fn ReplyItem(
                 span { class: "font-semibold text-text-primary", {reply.author_display_name.clone()} }
                 span { class: "text-xs text-text-secondary", "{reply_time}" }
             }
-            p { class: "whitespace-pre-wrap break-words text-sm text-text-primary",
+            p {
+                class: "whitespace-pre-wrap break-words text-sm text-text-primary",
                 dangerous_inner_html: "{reply.content}",
             }
             div { class: "flex justify-end pt-1",
                 Button {
                     size: ButtonSize::Inline,
                     style: ButtonStyle::Text,
-                    class: if optimistic_liked() {
-                        "inline-flex items-center gap-1.5 text-sm text-primary".to_string()
-                    } else {
-                        "inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-primary".to_string()
-                    },
+                    class: if optimistic_liked() { "inline-flex items-center gap-1.5 text-sm text-primary".to_string() } else { "inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-primary"
+                        .to_string() },
                     disabled: is_processing(),
                     onclick: {
                         let pk = post_pk.clone();
