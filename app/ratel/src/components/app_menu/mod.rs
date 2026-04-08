@@ -100,9 +100,7 @@ pub fn AppMenu() -> Element {
 
                     if let Some(user) = user_ctx().user.as_ref() {
                         NavMenuItem {
-                            href: Route::CredentialsHome {
-                                username: user.username.clone(),
-                            },
+                            href: Route::CredentialsHome {},
                             label: tr.rewards,
                             collapsed,
                             icon: rsx! {
