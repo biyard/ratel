@@ -1,0 +1,15 @@
+{
+  "name": "ratel-ds",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "tokens": "node scripts/build-tokens.js",
+    "css":    "npx tailwindcss -i assets/tailwind.css -o assets/tailwind.out.css --watch",
+    "build":  "node scripts/build-tokens.js && npx tailwindcss -i assets/tailwind.css -o assets/tailwind.out.css --minify"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0",
+    "postcss":     "^8.4.0",
+    "autoprefixer": "^10.4.0"
+  }
+}

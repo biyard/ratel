@@ -1,0 +1,21 @@
+# Rust build output
+/target
+
+# Node / Tailwind
+node_modules/
+
+# Dioxus generated
+dist/
+.dioxus/
+
+# Environment
+.env
+.env.local
+
+# Credentials
+credentials.json
+token.json
+
+# OS
+.DS_Store
+Thumbs.db

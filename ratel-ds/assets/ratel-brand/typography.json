@@ -1,0 +1,1107 @@
+{
+  "Family": {
+    "primary": {
+      "$type": "string",
+      "$value": "Raleway",
+      "$description": "Primary font family",
+      "$extensions": {
+        "com.figma.variableId": "VariableID:1549:50202",
+        "com.figma.scopes": [
+          "ALL_SCOPES"
+        ],
+        "com.figma.type": "string",
+        "com.figma.isOverride": true
+      }
+    }
+  },
+  "Weights": {
+    "Thin": {
+      "$type": "number",
+      "$value": 100,
+      "$description": "Font weight for Thin",
+      "$extensions": {
+        "com.figma.variableId": "VariableID:1549:50203",
+        "com.figma.scopes": [
+          "ALL_SCOPES"
+        ],
+        "com.figma.isOverride": true
+      }
+    },
+    "ExtraLight": {
+      "$type": "number",
+      "$value": 200,
+      "$description": "Font weight for ExtraLight",
+      "$extensions": {
+        "com.figma.variableId": "VariableID:1549:50204",
+        "com.figma.scopes": [
+          "ALL_SCOPES"
+        ],
+        "com.figma.isOverride": true
+      }
+    },
+    "Light": {
+      "$type": "number",
+      "$value": 300,
+      "$description": "Font weight for Light",
+      "$extensions": {
+        "com.figma.variableId": "VariableID:1549:50205",
+        "com.figma.scopes": [
+          "ALL_SCOPES"
+        ],
+        "com.figma.isOverride": true
+      }
+    },
+    "Regular": {
+      "$type": "number",
+      "$value": 400,
+      "$description": "Font weight for Regular",
+      "$extensions": {
+        "com.figma.variableId": "VariableID:1549:50206",
+        "com.figma.scopes": [
+          "ALL_SCOPES"
+        ],
+        "com.figma.isOverride": true
+      }
+    },
+    "Medium": {
+      "$type": "number",
+      "$value": 500,
+      "$description": "Font weight for Medium",
+      "$extensions": {
+        "com.figma.variableId": "VariableID:1549:50207",
+        "com.figma.scopes": [
+          "ALL_SCOPES"
+        ],
+        "com.figma.isOverride": true
+      }
+    },
+    "SemiBold": {
+      "$type": "number",
+      "$value": 600,
+      "$description": "Font weight for SemiBold",
+      "$extensions": {
+        "com.figma.variableId": "VariableID:1549:50208",
+        "com.figma.scopes": [
+          "ALL_SCOPES"
+        ],
+        "com.figma.isOverride": true
+      }
+    },
+    "Bold": {
+      "$type": "number",
+      "$value": 700,
+      "$description": "Font weight for Bold",
+      "$extensions": {
+        "com.figma.variableId": "VariableID:1549:50209",
+        "com.figma.scopes": [
+          "ALL_SCOPES"
+        ],
+        "com.figma.isOverride": true
+      }
+    },
+    "ExtraBold": {
+      "$type": "number",
+      "$value": 800,
+      "$description": "Font weight for ExtraBold",
+      "$extensions": {
+        "com.figma.variableId": "VariableID:1549:50210",
+        "com.figma.scopes": [
+          "ALL_SCOPES"
+        ],
+        "com.figma.isOverride": true
+      }
+    },
+    "Black": {
+      "$type": "number",
+      "$value": 900,
+      "$description": "Font weight for Black",
+      "$extensions": {
+        "com.figma.variableId": "VariableID:1549:50211",
+        "com.figma.scopes": [
+          "ALL_SCOPES"
+        ],
+        "com.figma.isOverride": true
+      }
+    }
+  },
+  "Title": {
+    "Title-1": {
+      "fontSize": {
+        "$type": "number",
+        "$value": 64,
+        "$description": "Font size for Title/Title-1",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50212",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "lineHeight": {
+        "$type": "number",
+        "$value": 70,
+        "$description": "Line height for Title/Title-1",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50213",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "letterSpacing": {
+        "$type": "number",
+        "$value": -0.800000011920929,
+        "$description": "Letter spacing for Title/Title-1",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50214",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "fontFamily": {
+        "$type": "string",
+        "$value": "{Family.primary}",
+        "$description": "Font family for Title/Title-1",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50215",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.type": "string",
+          "com.figma.isOverride": true
+        }
+      }
+    },
+    "Title-2": {
+      "fontSize": {
+        "$type": "number",
+        "$value": 40,
+        "$description": "Font size for Title/Title-2",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50216",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "lineHeight": {
+        "$type": "number",
+        "$value": 48,
+        "$description": "Line height for Title/Title-2",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50217",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "letterSpacing": {
+        "$type": "number",
+        "$value": -0.6399999856948853,
+        "$description": "Letter spacing for Title/Title-2",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50218",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "fontFamily": {
+        "$type": "string",
+        "$value": "{Family.primary}",
+        "$description": "Font family for Title/Title-2",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50219",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.type": "string",
+          "com.figma.isOverride": true
+        }
+      }
+    },
+    "Title-3": {
+      "fontSize": {
+        "$type": "number",
+        "$value": 32,
+        "$description": "Font size for Title/Title-3",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50220",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "lineHeight": {
+        "$type": "number",
+        "$value": 36,
+        "$description": "Line height for Title/Title-3",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50221",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "letterSpacing": {
+        "$type": "number",
+        "$value": -0.6000000238418579,
+        "$description": "Letter spacing for Title/Title-3",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50222",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "fontFamily": {
+        "$type": "string",
+        "$value": "{Family.primary}",
+        "$description": "Font family for Title/Title-3",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50223",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.type": "string",
+          "com.figma.isOverride": true
+        }
+      }
+    }
+  },
+  "Heading": {
+    "H1": {
+      "fontSize": {
+        "$type": "number",
+        "$value": 28,
+        "$description": "Font size for Heading/H1",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50224",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "lineHeight": {
+        "$type": "number",
+        "$value": 32,
+        "$description": "Line height for Heading/H1",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50225",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "letterSpacing": {
+        "$type": "number",
+        "$value": -0.5600000023841858,
+        "$description": "Letter spacing for Heading/H1",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50226",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "fontFamily": {
+        "$type": "string",
+        "$value": "{Family.primary}",
+        "$description": "Font family for Heading/H1",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50227",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.type": "string",
+          "com.figma.isOverride": true
+        }
+      }
+    },
+    "H2": {
+      "fontSize": {
+        "$type": "number",
+        "$value": 26,
+        "$description": "Font size for Heading/H2",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50228",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "lineHeight": {
+        "$type": "number",
+        "$value": 30,
+        "$description": "Line height for Heading/H2",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50229",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "letterSpacing": {
+        "$type": "number",
+        "$value": -0.25999999046325684,
+        "$description": "Letter spacing for Heading/H2",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50230",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "fontFamily": {
+        "$type": "string",
+        "$value": "{Family.primary}",
+        "$description": "Font family for Heading/H2",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50231",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.type": "string",
+          "com.figma.isOverride": true
+        }
+      }
+    },
+    "H3": {
+      "fontSize": {
+        "$type": "number",
+        "$value": 24,
+        "$description": "Font size for Heading/H3",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50232",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "lineHeight": {
+        "$type": "number",
+        "$value": 28,
+        "$description": "Line height for Heading/H3",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50233",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "letterSpacing": {
+        "$type": "number",
+        "$value": -0.23999999463558197,
+        "$description": "Letter spacing for Heading/H3",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50234",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "fontFamily": {
+        "$type": "string",
+        "$value": "{Family.primary}",
+        "$description": "Font family for Heading/H3",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50235",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.type": "string",
+          "com.figma.isOverride": true
+        }
+      }
+    },
+    "H4": {
+      "fontSize": {
+        "$type": "number",
+        "$value": 20,
+        "$description": "Font size for Heading/H4",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50236",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "lineHeight": {
+        "$type": "number",
+        "$value": 24,
+        "$description": "Line height for Heading/H4",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50237",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "letterSpacing": {
+        "$type": "number",
+        "$value": -0.20000000298023224,
+        "$description": "Letter spacing for Heading/H4",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50238",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "fontFamily": {
+        "$type": "string",
+        "$value": "{Family.primary}",
+        "$description": "Font family for Heading/H4",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50239",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.type": "string",
+          "com.figma.isOverride": true
+        }
+      }
+    }
+  },
+  "Label": {
+    "Label-1": {
+      "fontSize": {
+        "$type": "number",
+        "$value": 17,
+        "$description": "Font size for Label/Label-1",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50240",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "lineHeight": {
+        "$type": "number",
+        "$value": 20,
+        "$description": "Line height for Label/Label-1",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50241",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "letterSpacing": {
+        "$type": "number",
+        "$value": -0.18000000715255737,
+        "$description": "Letter spacing for Label/Label-1",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50242",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "fontFamily": {
+        "$type": "string",
+        "$value": "{Family.primary}",
+        "$description": "Font family for Label/Label-1",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50243",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.type": "string",
+          "com.figma.isOverride": true
+        }
+      }
+    },
+    "Label-2": {
+      "fontSize": {
+        "$type": "number",
+        "$value": 15,
+        "$description": "Font size for Label/Label-2",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50244",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "lineHeight": {
+        "$type": "number",
+        "$value": 18,
+        "$description": "Line height for Label/Label-2",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50245",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "letterSpacing": {
+        "$type": "number",
+        "$value": -0.1599999964237213,
+        "$description": "Letter spacing for Label/Label-2",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50246",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "fontFamily": {
+        "$type": "string",
+        "$value": "{Family.primary}",
+        "$description": "Font family for Label/Label-2",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50247",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.type": "string",
+          "com.figma.isOverride": true
+        }
+      }
+    },
+    "Label-3": {
+      "fontSize": {
+        "$type": "number",
+        "$value": 13,
+        "$description": "Font size for Label/Label-3",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50248",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "lineHeight": {
+        "$type": "number",
+        "$value": 16,
+        "$description": "Line height for Label/Label-3",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50249",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "letterSpacing": {
+        "$type": "number",
+        "$value": -0.14000000059604645,
+        "$description": "Letter spacing for Label/Label-3",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50250",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "fontFamily": {
+        "$type": "string",
+        "$value": "{Family.primary}",
+        "$description": "Font family for Label/Label-3",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50251",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.type": "string",
+          "com.figma.isOverride": true
+        }
+      }
+    },
+    "Label-4": {
+      "fontSize": {
+        "$type": "number",
+        "$value": 12,
+        "$description": "Font size for Label/Label-4",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50252",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "lineHeight": {
+        "$type": "number",
+        "$value": 14,
+        "$description": "Line height for Label/Label-4",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50253",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "letterSpacing": {
+        "$type": "number",
+        "$value": -0.11999999731779099,
+        "$description": "Letter spacing for Label/Label-4",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50254",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "fontFamily": {
+        "$type": "string",
+        "$value": "{Family.primary}",
+        "$description": "Font family for Label/Label-4",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50255",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.type": "string",
+          "com.figma.isOverride": true
+        }
+      }
+    },
+    "Label-5": {
+      "fontSize": {
+        "$type": "number",
+        "$value": 11,
+        "$description": "Font size for Label/Label-5",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50256",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "lineHeight": {
+        "$type": "number",
+        "$value": 14,
+        "$description": "Line height for Label/Label-5",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50257",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "letterSpacing": {
+        "$type": "number",
+        "$value": -0.10000000149011612,
+        "$description": "Letter spacing for Label/Label-5",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50258",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "fontFamily": {
+        "$type": "string",
+        "$value": "{Family.primary}",
+        "$description": "Font family for Label/Label-5",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50259",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.type": "string",
+          "com.figma.isOverride": true
+        }
+      }
+    }
+  },
+  "Body": {
+    "Body-1": {
+      "fontSize": {
+        "$type": "number",
+        "$value": 17,
+        "$description": "Font size for Body/Body-1",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50260",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "lineHeight": {
+        "$type": "number",
+        "$value": 28,
+        "$description": "Line height for Body/Body-1",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50261",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "letterSpacing": {
+        "$type": "number",
+        "$value": 0,
+        "$description": "Letter spacing for Body/Body-1",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50262",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "fontFamily": {
+        "$type": "string",
+        "$value": "{Family.primary}",
+        "$description": "Font family for Body/Body-1",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50263",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.type": "string",
+          "com.figma.isOverride": true
+        }
+      }
+    },
+    "Body-2": {
+      "fontSize": {
+        "$type": "number",
+        "$value": 15,
+        "$description": "Font size for Body/Body-2",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50264",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "lineHeight": {
+        "$type": "number",
+        "$value": 22,
+        "$description": "Line height for Body/Body-2",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50265",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "letterSpacing": {
+        "$type": "number",
+        "$value": 0,
+        "$description": "Letter spacing for Body/Body-2",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50266",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "fontFamily": {
+        "$type": "string",
+        "$value": "{Family.primary}",
+        "$description": "Font family for Body/Body-2",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50267",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.type": "string",
+          "com.figma.isOverride": true
+        }
+      }
+    },
+    "Body-3": {
+      "fontSize": {
+        "$type": "number",
+        "$value": 13,
+        "$description": "Font size for Body/Body-3",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50268",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "lineHeight": {
+        "$type": "number",
+        "$value": 20,
+        "$description": "Line height for Body/Body-3",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50269",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "letterSpacing": {
+        "$type": "number",
+        "$value": 0,
+        "$description": "Letter spacing for Body/Body-3",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50270",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "fontFamily": {
+        "$type": "string",
+        "$value": "{Family.primary}",
+        "$description": "Font family for Body/Body-3",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50271",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.type": "string",
+          "com.figma.isOverride": true
+        }
+      }
+    },
+    "Body-4": {
+      "fontSize": {
+        "$type": "number",
+        "$value": 12,
+        "$description": "Font size for Body/Body-4",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50272",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "lineHeight": {
+        "$type": "number",
+        "$value": 16,
+        "$description": "Line height for Body/Body-4",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50273",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "letterSpacing": {
+        "$type": "number",
+        "$value": 0,
+        "$description": "Letter spacing for Body/Body-4",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50274",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.isOverride": true
+        }
+      },
+      "fontFamily": {
+        "$type": "string",
+        "$value": "{Family.primary}",
+        "$description": "Font family for Body/Body-4",
+        "$extensions": {
+          "com.figma.variableId": "VariableID:1549:50275",
+          "com.figma.scopes": [
+            "ALL_SCOPES"
+          ],
+          "com.figma.type": "string",
+          "com.figma.isOverride": true
+        }
+      }
+    }
+  },
+  "Tiny": {
+    "fontSize": {
+      "$type": "number",
+      "$value": 10,
+      "$description": "Font size for Tiny",
+      "$extensions": {
+        "com.figma.variableId": "VariableID:1549:50276",
+        "com.figma.scopes": [
+          "ALL_SCOPES"
+        ],
+        "com.figma.isOverride": true
+      }
+    },
+    "lineHeight": {
+      "$type": "number",
+      "$value": 12,
+      "$description": "Line height for Tiny",
+      "$extensions": {
+        "com.figma.variableId": "VariableID:1549:50277",
+        "com.figma.scopes": [
+          "ALL_SCOPES"
+        ],
+        "com.figma.isOverride": true
+      }
+    },
+    "letterSpacing": {
+      "$type": "number",
+      "$value": 0,
+      "$description": "Letter spacing for Tiny",
+      "$extensions": {
+        "com.figma.variableId": "VariableID:1549:50278",
+        "com.figma.scopes": [
+          "ALL_SCOPES"
+        ],
+        "com.figma.isOverride": true
+      }
+    },
+    "fontFamily": {
+      "$type": "string",
+      "$value": "{Family.primary}",
+      "$description": "Font family for Tiny",
+      "$extensions": {
+        "com.figma.variableId": "VariableID:1549:50279",
+        "com.figma.scopes": [
+          "ALL_SCOPES"
+        ],
+        "com.figma.type": "string",
+        "com.figma.isOverride": true
+      }
+    }
+  },
+  "Tiny Extended": {
+    "fontSize": {
+      "$type": "number",
+      "$value": 10,
+      "$description": "Font size for Tiny Extended",
+      "$extensions": {
+        "com.figma.variableId": "VariableID:1549:50280",
+        "com.figma.scopes": [
+          "ALL_SCOPES"
+        ],
+        "com.figma.isOverride": true
+      }
+    },
+    "lineHeight": {
+      "$type": "number",
+      "$value": 12,
+      "$description": "Line height for Tiny Extended",
+      "$extensions": {
+        "com.figma.variableId": "VariableID:1549:50281",
+        "com.figma.scopes": [
+          "ALL_SCOPES"
+        ],
+        "com.figma.isOverride": true
+      }
+    },
+    "letterSpacing": {
+      "$type": "number",
+      "$value": 1,
+      "$description": "Letter spacing for Tiny Extended",
+      "$extensions": {
+        "com.figma.variableId": "VariableID:1549:50282",
+        "com.figma.scopes": [
+          "ALL_SCOPES"
+        ],
+        "com.figma.isOverride": true
+      }
+    },
+    "fontFamily": {
+      "$type": "string",
+      "$value": "{Family.primary}",
+      "$description": "Font family for Tiny Extended",
+      "$extensions": {
+        "com.figma.variableId": "VariableID:1549:50283",
+        "com.figma.scopes": [
+          "ALL_SCOPES"
+        ],
+        "com.figma.type": "string",
+        "com.figma.isOverride": true
+      }
+    }
+  },
+  "Micro": {
+    "fontSize": {
+      "$type": "number",
+      "$value": 9,
+      "$description": "Font size for Micro",
+      "$extensions": {
+        "com.figma.variableId": "VariableID:1549:50284",
+        "com.figma.scopes": [
+          "ALL_SCOPES"
+        ],
+        "com.figma.isOverride": true
+      }
+    },
+    "lineHeight": {
+      "$type": "number",
+      "$value": 10,
+      "$description": "Line height for Micro",
+      "$extensions": {
+        "com.figma.variableId": "VariableID:1549:50285",
+        "com.figma.scopes": [
+          "ALL_SCOPES"
+        ],
+        "com.figma.isOverride": true
+      }
+    },
+    "letterSpacing": {
+      "$type": "number",
+      "$value": 0,
+      "$description": "Letter spacing for Micro",
+      "$extensions": {
+        "com.figma.variableId": "VariableID:1549:50286",
+        "com.figma.scopes": [
+          "ALL_SCOPES"
+        ],
+        "com.figma.isOverride": true
+      }
+    },
+    "fontFamily": {
+      "$type": "string",
+      "$value": "{Family.primary}",
+      "$description": "Font family for Micro",
+      "$extensions": {
+        "com.figma.variableId": "VariableID:1549:50287",
+        "com.figma.scopes": [
+          "ALL_SCOPES"
+        ],
+        "com.figma.type": "string",
+        "com.figma.isOverride": true
+      }
+    }
+  },
+  "$extensions": {
+    "com.figma.modeName": "Default"
+  }
+}

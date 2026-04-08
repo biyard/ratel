@@ -1,0 +1,12 @@
+[package]
+name = "ratel-ds"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dioxus = { version = "0.7", features = ["web", "router"] }
+
+[profile.release]
+opt-level = "z"
+lto      = true
+codegen-units = 1

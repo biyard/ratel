@@ -1,0 +1,713 @@
+/* tailwind.css — entry point for Tailwind CSS compilation
+ *
+ * tokens.css is imported first so CSS custom properties are available
+ * to all Tailwind utilities that reference var(--ratel-*).
+ *
+ * Compile with: npx tailwindcss -i assets/tailwind.css -o assets/tailwind.out.css
+ */
+
+@import "./tokens.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base resets ─────────────────────────────────────────────────────────── */
+@layer base {
+  /* html/body sit outside #app[data-theme], so they cannot use semantic tokens.
+   * Hardcode the dark surface so there is no light flash behind the app shell. */
+  html, body {
+    background-color: #0A0A0A;
+    color: #A1A1A1;
+  }
+
+  html {
+    font-family: var(--ratel-font-family), ui-sans-serif, system-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  /* Scrollbar styling (Webkit) */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--ratel-color-border-stroke-neutral-800); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--ratel-color-font-neutral-absolute); }
+}
+
+/* ── Component layer: doc-site utilities ─────────────────────────────────── */
+@layer components {
+
+  /* Sidebar shell */
+  .ds-sidebar {
+    @apply fixed inset-y-0 left-0 z-40 flex flex-col w-64 overflow-y-auto;
+    background-color: #0F0F0F;
+    border-right: var(--ratel-stroke-1) solid #1F1F1F;
+  }
+
+  /* Main content wrapper (offset for sidebar) */
+  .ds-content-area {
+    @apply ml-64 min-h-screen;
+    background-color: var(--ratel-color-border-background-neutral-950);
+  }
+
+  /* Top page header bar */
+  .ds-page-header {
+    @apply sticky top-0 z-30 flex items-center justify-between px-8 py-4;
+    background-color: var(--ratel-color-border-background-neutral-950);
+    border-bottom: var(--ratel-stroke-1) solid var(--ratel-color-border-stroke-neutral-800);
+  }
+
+  /* Content page container */
+  .ds-page-content {
+    @apply px-8 py-10 max-w-5xl;
+  }
+
+  /* Documentation section block */
+  .ds-section {
+    @apply mb-10;
+  }
+
+  .ds-section-title {
+    @apply text-h2 font-semibold mb-2;
+    color: var(--ratel-color-font-default);
+    letter-spacing: var(--ratel-text-heading-h2-ls);
+  }
+
+  .ds-section-desc {
+    @apply text-body-2 mb-6;
+    color: var(--ratel-color-font-body);
+  }
+
+  /* Preview container */
+  .ds-preview-box {
+    @apply rounded-ratel-xl border flex flex-col overflow-hidden;
+    border-color: var(--ratel-color-border-stroke-neutral-800);
+    background-color: var(--ratel-color-border-background-neutral-850);
+  }
+
+  .ds-preview-canvas {
+    @apply p-8 flex flex-wrap gap-4 items-center justify-start;
+    background-color: var(--ratel-color-border-background-neutral-950);
+    background-image: radial-gradient(circle, var(--ratel-color-border-stroke-neutral-800) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  .ds-preview-label {
+    @apply px-4 py-2 text-label-3 font-medium;
+    background-color: var(--ratel-color-border-background-neutral-850);
+    border-top: var(--ratel-stroke-1) solid var(--ratel-color-border-stroke-neutral-800);
+    color: var(--ratel-color-font-neutral-absolute);
+  }
+
+  /* Code block */
+  .ds-code-block {
+    @apply rounded-ratel-lg overflow-hidden;
+    background-color: #0F0F0F;
+    border: var(--ratel-stroke-1) solid #1F1F1F;
+  }
+
+  .ds-code-header {
+    @apply flex items-center justify-between px-4 py-2.5 text-label-3;
+    background-color: #1A1A1A;
+    border-bottom: var(--ratel-stroke-1) solid #2A2A2A;
+    color: #737373;
+  }
+
+  .ds-code-content {
+    @apply p-5 overflow-x-auto text-label-3 leading-relaxed;
+    color: #D4D4D4;
+    font-family: "ui-monospace", "SFMono-Regular", "Menlo", monospace;
+  }
+
+  /* Token table */
+  .ds-token-table {
+    @apply w-full text-label-3 border-collapse rounded-ratel-lg overflow-hidden;
+  }
+
+  .ds-token-table th {
+    @apply text-left px-4 py-2.5 font-semibold text-label-3 uppercase tracking-wide;
+    background-color: var(--ratel-color-border-incard-background-default);
+    color: var(--ratel-color-font-neutral-absolute);
+    border-bottom: var(--ratel-stroke-1) solid var(--ratel-color-border-stroke-neutral-800);
+  }
+
+  .ds-token-table td {
+    @apply px-4 py-3 align-middle;
+    color: var(--ratel-color-font-body);
+    border-bottom: var(--ratel-stroke-1) solid var(--ratel-color-border-stroke-neutral-800);
+  }
+
+  .ds-token-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .ds-token-table td code {
+    @apply px-1.5 py-0.5 rounded-ratel-xs text-label-4;
+    background-color: var(--ratel-color-border-incard-background-default);
+    color: var(--ratel-color-generic-primary);
+    font-family: ui-monospace, monospace;
+  }
+
+  /* Color swatch */
+  .ds-swatch-grid {
+    @apply grid grid-cols-2 gap-3;
+  }
+
+  @media (min-width: 640px)  { .ds-swatch-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 1024px) { .ds-swatch-grid { grid-template-columns: repeat(5, 1fr); } }
+
+  .ds-swatch-card {
+    @apply rounded-ratel-lg overflow-hidden border;
+    border-color: var(--ratel-color-border-stroke-neutral-800);
+  }
+
+  .ds-swatch-color {
+    @apply h-14 w-full;
+  }
+
+  .ds-swatch-info {
+    @apply px-3 py-2;
+    background-color: var(--ratel-color-border-background-neutral-850);
+  }
+
+  .ds-swatch-name {
+    @apply text-label-3 font-medium;
+    color: var(--ratel-color-font-default);
+  }
+
+  .ds-swatch-value {
+    @apply text-label-4;
+    color: var(--ratel-color-font-neutral-absolute);
+    font-family: ui-monospace, monospace;
+  }
+
+  /* Do / Don't blocks */
+  .ds-do-dont-grid {
+    @apply grid grid-cols-1 gap-4;
+  }
+
+  @media (min-width: 768px) { .ds-do-dont-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .ds-do-block, .ds-dont-block {
+    @apply rounded-ratel-xl overflow-hidden border;
+  }
+
+  .ds-do-block {
+    border-color: var(--ratel-color-generic-success);
+  }
+
+  .ds-dont-block {
+    border-color: var(--ratel-color-generic-error);
+  }
+
+  .ds-do-header {
+    @apply flex items-center gap-2 px-4 py-2.5 text-label-3 font-semibold;
+    background-color: var(--ratel-color-generic-success-opacity-5%);
+    color: var(--ratel-color-generic-success);
+    border-bottom: var(--ratel-stroke-1) solid var(--ratel-color-generic-success);
+  }
+
+  .ds-dont-header {
+    @apply flex items-center gap-2 px-4 py-2.5 text-label-3 font-semibold;
+    background-color: var(--ratel-color-generic-error-opacity-5%);
+    color: var(--ratel-color-generic-error);
+    border-bottom: var(--ratel-stroke-1) solid var(--ratel-color-generic-error);
+  }
+
+  .ds-do-body, .ds-dont-body {
+    @apply p-4 text-body-2;
+    background-color: var(--ratel-color-border-background-neutral-850);
+    color: var(--ratel-color-font-body);
+  }
+
+  /* Nav section header in sidebar */
+  .ds-nav-section-header {
+    @apply px-4 pt-6 pb-1.5 text-label-4 font-semibold uppercase tracking-widest;
+    color: #525252;
+  }
+
+  /* Nav link */
+  .ds-nav-link {
+    @apply flex items-center gap-2 mx-2 px-3 py-2 rounded-ratel-md text-label-2 transition-colors duration-150;
+    color: #737373;
+  }
+
+  .ds-nav-link:hover {
+    background-color: #1A1A1A;
+    color: #A1A1A1;
+  }
+
+  .ds-nav-link.active {
+    background-color: var(--ratel-color-generic-primary-opacity-10%);
+    color: var(--ratel-color-generic-primary);
+  }
+
+  /* Page intro */
+  .ds-page-intro {
+    @apply mb-8 pb-8;
+    border-bottom: var(--ratel-stroke-1) solid var(--ratel-color-border-stroke-neutral-800);
+  }
+
+  .ds-page-title {
+    @apply text-h1 font-bold mb-2;
+    color: var(--ratel-color-font-default);
+    letter-spacing: var(--ratel-text-heading-h1-ls);
+  }
+
+  .ds-page-subtitle {
+    @apply text-body-1 max-w-2xl;
+    color: var(--ratel-color-font-body);
+  }
+
+  /* Tab bar for variant switcher */
+  .ds-tabs {
+    @apply flex gap-1 p-1 rounded-ratel-lg w-fit;
+    background-color: var(--ratel-color-border-incard-background-default);
+  }
+
+  .ds-tab {
+    @apply px-4 py-1.5 rounded-ratel-md text-label-2 font-medium transition-colors duration-150 cursor-pointer;
+    color: var(--ratel-color-font-neutral-absolute);
+  }
+
+  .ds-tab.active {
+    background-color: var(--ratel-color-border-background-neutral-850);
+    color: var(--ratel-color-font-default);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+
+  /* Inline token pill */
+  .ds-token-pill {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-ratel-full text-label-4 font-medium;
+    background-color: var(--ratel-color-border-incard-background-default);
+    color: var(--ratel-color-generic-primary);
+    border: var(--ratel-stroke-1) solid var(--ratel-color-border-stroke-neutral-800);
+    font-family: ui-monospace, monospace;
+  }
+
+  /* Badge component (used in component docs) */
+  .ds-badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-ratel-full text-label-4 font-medium;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     Button component — Figma: node 10033-19878
+     Variants : primary | secondary | outline (line) | ghost (base) | destructive
+     Sizes    : xs | sm | md | lg
+     Radius   : square (default) | round (pill) | icon-square | icon-round
+     ═══════════════════════════════════════════════════════════════════════ */
+
+  /* ── Base ─────────────────────────────────────────────────────────────── */
+  .btn {
+    @apply inline-flex items-center justify-center select-none whitespace-nowrap;
+    font-family:    var(--ratel-font-family), sans-serif;
+    font-weight:    700;          /* Web/Btn/Bold */
+    cursor:         pointer;
+    outline-offset: 2px;
+    transition:     box-shadow 150ms ease, background-color 150ms ease, opacity 150ms ease;
+  }
+
+  /* ── Sizes (text buttons) — exact Figma values ──────────────────────── */
+
+  /* xs: 4/8px pad · 12px/14px SemiBold · radius 6px · gap 4px */
+  .btn-xs {
+    gap:           4px;
+    padding:       4px 8px;
+    font-size:     12px;
+    line-height:   14px;
+    font-weight:   600;           /* Web/Btn/SemiBold */
+    letter-spacing: 0;
+    border-radius: var(--ratel-radius-1-xs);    /* 2px... use md fallback */
+    border-radius: 6px;
+  }
+
+  /* sm: 8/16px pad · 14px/16px Bold · radius 8px · gap 4px */
+  .btn-sm {
+    gap:           4px;
+    padding:       8px 16px;
+    font-size:     14px;
+    line-height:   16px;
+    letter-spacing: 0;
+    border-radius: var(--ratel-radius-1-lg);    /* 8px */
+  }
+
+  /* md: 12/20px pad · 14px/16px Bold · radius 10px · gap 8px */
+  .btn-md {
+    gap:           8px;
+    padding:       12px 20px;
+    font-size:     14px;
+    line-height:   16px;
+    letter-spacing: 0;
+    border-radius: 10px;
+  }
+
+  /* lg: 12/25px pad · 16px/18px Bold · radius 12px · gap 8px */
+  .btn-lg {
+    gap:           8px;
+    padding:       12px 25px;
+    font-size:     16px;
+    line-height:   18px;
+    letter-spacing: 0;
+    border-radius: var(--ratel-radius-xl);      /* 12px */
+  }
+
+  /* ── Radius modifier: round (pill) ──────────────────────────────────── */
+  .btn-round {
+    border-radius: 9999px !important;
+  }
+
+  /* ── Icon-only sizing (overrides padding → fixed square dimensions) ── */
+  .btn-icon {
+    padding: 0 !important;
+    flex-shrink: 0;
+  }
+  /* lg icon: not explicitly in Figma, use md size */
+  .btn-icon.btn-lg { width: 48px; height: 48px; }
+  .btn-icon.btn-md { width: 44px; height: 44px; }
+  .btn-icon.btn-sm { width: 32px; height: 32px; }
+  .btn-icon.btn-xs { width: 24px; height: 24px; }
+
+  /* ── Variants ────────────────────────────────────────────────────────── */
+
+  /* Primary — #FCB300 fill · #0A0A0A text */
+  .btn-primary {
+    background-color: var(--ratel-color-button-background-primary);
+    color:            var(--ratel-color-font-black-absolute);
+  }
+  .btn-primary:hover:not(:disabled) {
+    box-shadow: inset 0 0 0 9999px var(--ratel-color-button-hover-dark-opacity-20%);
+  }
+  .btn-primary:focus-visible {
+    outline: 2px solid var(--ratel-color-button-background-primary);
+  }
+
+  /* Secondary — white fill · #0A0A0A text */
+  .btn-secondary {
+    background-color: var(--ratel-color-button-background-invert-white);
+    color:            var(--ratel-color-font-invert-black);
+  }
+  .btn-secondary:hover:not(:disabled) {
+    box-shadow: inset 0 0 0 9999px var(--ratel-color-button-hover-dark-opacity-20%);
+  }
+  .btn-secondary:focus-visible {
+    outline: 2px solid var(--ratel-color-button-stroke-white);
+  }
+
+  /* Outline / Line — transparent · white border · white text */
+  .btn-outline {
+    background-color: transparent;
+    color:            var(--ratel-color-font-invert-white);
+    border:           1px solid var(--ratel-color-button-stroke-white);
+  }
+  .btn-outline:hover:not(:disabled) {
+    box-shadow: inset 0 0 0 9999px var(--ratel-color-button-hover-dark-opacity-20%);
+  }
+  .btn-outline:focus-visible {
+    outline: 2px solid var(--ratel-color-button-stroke-white);
+  }
+
+  /* Ghost / Base — no fill, no border · white text */
+  .btn-ghost {
+    background-color: transparent;
+    color:            var(--ratel-color-font-invert-white);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    box-shadow: inset 0 0 0 9999px var(--ratel-color-button-hover-dark-opacity-20%);
+  }
+  .btn-ghost:focus-visible {
+    outline: 2px solid var(--ratel-color-button-stroke-white);
+  }
+
+  /* Destructive — error red fill · white text */
+  .btn-destructive {
+    background-color: var(--ratel-color-generic-error);
+    color:            var(--ratel-color-font-white-absolute);
+  }
+  .btn-destructive:hover:not(:disabled) {
+    box-shadow: inset 0 0 0 9999px var(--ratel-color-button-hover-dark-opacity-20%);
+  }
+  .btn-destructive:focus-visible {
+    outline: 2px solid var(--ratel-color-generic-error);
+  }
+
+  /* Disabled — overrides all variants */
+  .btn:disabled {
+    background-color: var(--ratel-color-button-disable) !important;
+    color:            var(--ratel-color-font-disable) !important;
+    border-color:     var(--ratel-color-button-disable) !important;
+    box-shadow:       none !important;
+    cursor:           not-allowed;
+    opacity:          0.5;
+  }
+
+  /* Demo-only forced hover state for documentation */
+  .btn.demo-hover {
+    box-shadow: inset 0 0 0 9999px var(--ratel-color-button-hover-dark-opacity-20%);
+  }
+
+  /* Phosphor icon sizing inside buttons */
+  .btn i.ph {
+    display:     inline-flex;
+    align-items: center;
+    font-style:  normal;
+    line-height: 1;
+    font-size:   20px;
+  }
+  .btn-xs i.ph { font-size: 14px; }
+  .btn-sm i.ph { font-size: 16px; }
+  .btn-md i.ph { font-size: 20px; }
+  .btn-lg i.ph { font-size: 24px; }
+
+  /* ── Input component ───────────────────────────────────────────────────── */
+
+  /* Field wrapper — contains label + input + helper text */
+  .inp-field {
+    @apply flex flex-col;
+    gap: var(--ratel-space-6);
+  }
+
+  /* Label above the input */
+  .inp-label {
+    font-size:      var(--ratel-text-label-label-3-size);
+    line-height:    var(--ratel-text-label-label-3-lh);
+    letter-spacing: var(--ratel-text-label-label-3-ls);
+    font-weight:    var(--ratel-font-weight-medium);
+    color:          var(--ratel-color-font-default);
+  }
+
+  /* Base input element */
+  .inp {
+    @apply w-full rounded-ratel-md outline-none transition-colors duration-150;
+    background-color: var(--ratel-color-border-background-neutral-850);
+    color:            var(--ratel-color-font-default);
+    border:           var(--ratel-stroke-1) solid var(--ratel-color-border-stroke-neutral-800);
+    font-family:      var(--ratel-font-family);
+  }
+
+  /* Placeholder */
+  .inp::placeholder {
+    color: var(--ratel-color-font-placeholder-neutral-400);
+  }
+
+  /* Focus ring — 2px primary outline, no border-color change */
+  .inp:focus {
+    border-color: var(--ratel-color-generic-primary);
+    box-shadow:   0 0 0 var(--ratel-stroke-2) var(--ratel-color-generic-primary-opacity-25%);
+  }
+
+  /* Sizes */
+  .inp-sm {
+    padding:        var(--ratel-space-6) var(--ratel-space-10);
+    font-size:      var(--ratel-text-label-label-3-size);
+    line-height:    var(--ratel-text-label-label-3-lh);
+    letter-spacing: var(--ratel-text-label-label-3-ls);
+  }
+
+  .inp-md {
+    padding:        var(--ratel-space-8) var(--ratel-space-12);
+    font-size:      var(--ratel-text-label-label-2-size);
+    line-height:    var(--ratel-text-label-label-2-lh);
+    letter-spacing: var(--ratel-text-label-label-2-ls);
+  }
+
+  .inp-lg {
+    padding:        var(--ratel-space-12) var(--ratel-space-16);
+    font-size:      var(--ratel-text-label-label-1-size);
+    line-height:    var(--ratel-text-label-label-1-lh);
+    letter-spacing: var(--ratel-text-label-label-1-ls);
+  }
+
+  /* Error state */
+  .inp-error {
+    border-color: var(--ratel-color-generic-error) !important;
+  }
+
+  .inp-error:focus {
+    box-shadow: 0 0 0 var(--ratel-stroke-2) var(--ratel-color-generic-error-opacity-10%) !important;
+  }
+
+  /* Disabled state */
+  .inp-disabled,
+  .inp:disabled {
+    background-color: var(--ratel-color-button-disable) !important;
+    color:            var(--ratel-color-font-disable) !important;
+    border-color:     var(--ratel-color-border-stroke-neutral-800) !important;
+    cursor:           not-allowed;
+    opacity:          0.65;
+  }
+
+  .inp-disabled::placeholder,
+  .inp:disabled::placeholder {
+    color: var(--ratel-color-font-disable);
+  }
+
+  /* Helper / error message below input */
+  .inp-helper {
+    font-size:      var(--ratel-text-label-label-4-size);
+    line-height:    var(--ratel-text-label-label-4-lh);
+    letter-spacing: var(--ratel-text-label-label-4-ls);
+    color:          var(--ratel-color-font-neutral-absolute);
+  }
+
+  .inp-helper-error {
+    color: var(--ratel-color-generic-error);
+  }
+
+  /* Valid state */
+  .inp-valid {
+    border-color: var(--ratel-color-generic-success) !important;
+  }
+  .inp-valid:focus {
+    box-shadow: 0 0 0 var(--ratel-stroke-2) var(--ratel-color-generic-success-opacity-5%) !important;
+  }
+
+  /* Round / pill shape */
+  .inp-round {
+    border-radius: 9999px !important;
+  }
+
+  /* Icon wrapper — relative container, used when leading/trailing icons are present */
+  .inp-wrapper {
+    position: relative;
+    display:  flex;
+    align-items: center;
+    width: 100%;
+  }
+
+  .inp-icon-leading,
+  .inp-icon-trailing {
+    position:  absolute;
+    top:       50%;
+    transform: translateY(-50%);
+    display:   flex;
+    align-items: center;
+    font-size: 18px;
+    color: var(--ratel-color-font-neutral-absolute);
+  }
+
+  .inp-icon-leading  { left:  12px; }
+  .inp-icon-trailing { right: 12px; }
+
+  /* Padding adjustments to clear icons */
+  .inp.inp-has-leading  { padding-left:  38px !important; }
+  .inp.inp-has-trailing { padding-right: 38px !important; }
+
+  /* Make icon span interactive (e.g. password toggle, clear button) */
+  .inp-icon-trailing.inp-icon-btn,
+  .inp-icon-leading.inp-icon-btn {
+    cursor: pointer;
+  }
+  .inp-icon-trailing.inp-icon-btn:hover,
+  .inp-icon-leading.inp-icon-btn:hover {
+    color: var(--ratel-color-font-default);
+  }
+
+  /* Textarea — multiline input */
+  .inp-textarea {
+    resize:     vertical;
+    min-height: 80px;
+  }
+}
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     Playground page — two-column code / preview split
+     ═══════════════════════════════════════════════════════════════════════ */
+
+  /* Full-height outer container (fills shell main area minus header) */
+  .pg-layout {
+    display:        flex;
+    flex-direction: row;
+    height:         calc(100vh - 57px);
+    overflow:       hidden;
+  }
+
+  /* Left / right panels — each scrolls independently */
+  .pg-panel {
+    display:        flex;
+    flex-direction: column;
+    flex:           1 1 0;
+    min-width:      0;
+    overflow:       hidden;
+  }
+
+  .pg-panel + .pg-panel {
+    border-left: 1px solid var(--ratel-color-border-stroke-neutral-800);
+  }
+
+  /* Panel header bar */
+  .pg-panel-header {
+    @apply flex items-center justify-between px-4 py-2.5 shrink-0;
+    background-color: var(--ratel-color-border-background-neutral-850);
+    border-bottom:    1px solid var(--ratel-color-border-stroke-neutral-800);
+  }
+
+  .pg-panel-title {
+    @apply text-label-3 font-semibold uppercase tracking-widest;
+    color: var(--ratel-color-font-neutral-absolute);
+  }
+
+  /* Scrollable panel body */
+  .pg-panel-body {
+    @apply flex-1 overflow-y-auto overflow-x-hidden;
+  }
+
+  /* Code textarea */
+  .pg-code {
+    @apply w-full h-full p-5 outline-none resize-none text-label-3 leading-relaxed;
+    background-color: #0A0A0A;
+    color:            #D4D4D4;
+    font-family:      ui-monospace, "SFMono-Regular", "Menlo", monospace;
+    tab-size:         4;
+    caret-color:      var(--ratel-color-generic-primary);
+  }
+
+  /* Preview canvas inside playground */
+  .pg-canvas {
+    @apply p-8 flex flex-wrap gap-4 items-start;
+    min-height: 100%;
+    background-color: var(--ratel-color-border-background-neutral-950);
+    background-image: radial-gradient(circle, var(--ratel-color-border-stroke-neutral-800) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  /* Example picker tab strip */
+  .pg-tabs {
+    @apply flex items-center gap-1 overflow-x-auto;
+    scrollbar-width: none;
+  }
+
+  .pg-tabs::-webkit-scrollbar { display: none; }
+
+  .pg-tab {
+    @apply px-3 py-1 rounded-ratel-md text-label-3 font-medium whitespace-nowrap cursor-pointer transition-colors duration-100;
+    color: var(--ratel-color-font-neutral-absolute);
+  }
+
+  .pg-tab:hover { color: var(--ratel-color-font-default); }
+
+  .pg-tab.active {
+    background-color: var(--ratel-color-generic-primary-opacity-10%);
+    color:            var(--ratel-color-generic-primary);
+  }
+
+  /* Error banner inside preview panel */
+  .pg-error {
+    @apply m-4 p-4 rounded-ratel-lg text-label-3;
+    background-color: var(--ratel-color-generic-error-opacity-5%);
+    border:           1px solid var(--ratel-color-generic-error);
+    color:            var(--ratel-color-generic-error);
+    font-family:      ui-monospace, monospace;
+    white-space:      pre-wrap;
+  }
+
+/* ── Utilities layer additions ───────────────────────────────────────────── */
+@layer utilities {
+  .text-token { @apply font-mono text-label-4; color: var(--ratel-color-generic-primary); }
+
+  /* Scroll-lock for sidebar on mobile */
+  .overflow-hidden-body { overflow: hidden; }
+}

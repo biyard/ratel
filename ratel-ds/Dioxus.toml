@@ -1,0 +1,16 @@
+[application]
+name             = "ratel-ds"
+default_platform = "web"
+
+[web.app]
+title = "Ratel Design System"
+
+[web.watcher]
+reload_html = true
+watch_path  = ["src", "assets"]
+
+[web.resource]
+style = ["assets/tailwind.out.css"]
+
+[web.resource.dev]
+style = ["assets/tailwind.out.css"]
