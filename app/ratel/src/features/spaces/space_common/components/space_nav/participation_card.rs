@@ -62,7 +62,7 @@ pub fn ParticipationCard(
                     crate::features::spaces::space_common::types::space_key(&space_id());
                 let panel_requirements_key = panel_requirements_query_key.clone();
                 let req = crate::features::spaces::controllers::participate_space::ParticipateSpaceRequest {
-                    informed_agreed: Some(true),
+                    informed_agreed: true,
                 };
                 if crate::features::spaces::controllers::participate_space::participate_space(
                     space_id(),

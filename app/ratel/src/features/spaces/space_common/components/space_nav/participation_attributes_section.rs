@@ -110,6 +110,7 @@ pub fn ParticipationAttributesSection(
                         class: "!rounded-[10px] !px-5 !py-3 self-end max-mobile:!w-full",
                         style: ButtonStyle::Primary,
                         disabled: !consent_checked(),
+                        "data-testid": "join-space-confirm",
                         onclick: move |_| on_join.call(()),
                         span { class: "font-bold text-[14px]/[16px] text-[#0A0A0A]",
                             {tr.join_space}

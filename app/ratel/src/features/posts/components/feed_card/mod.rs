@@ -151,6 +151,7 @@ fn FeedBody(post: PostResponse, on_edit: Option<EventHandler<MouseEvent>>) -> El
 
 #[component]
 pub fn FeedContents(contents: String, urls: Vec<String>) -> Element {
+    let _ = urls;
     let preview = strip_html_tags(&contents);
     rsx! {
         div { class: "px-5 mt-2 break-all text-desc-text",

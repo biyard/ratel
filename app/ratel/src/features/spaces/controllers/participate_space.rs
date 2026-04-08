@@ -21,10 +21,9 @@ pub struct ParticipateSpaceResponse {
 pub struct ParticipateSpaceRequest {
     /// Whether the user explicitly consented to having their required
     /// attributes verified for this space (the "I understand and
-    /// agree…" checkbox in the join layover). Optional for backwards
-    /// compatibility — when missing, treated as `false`.
+    /// agree…" checkbox in the join layover).
     #[serde(default)]
-    pub informed_agreed: Option<bool>,
+    pub informed_agreed: bool,
 }
 
 #[post("/api/spaces/{space_id}/participate", user: OptionalUser)]
@@ -32,7 +31,7 @@ pub async fn participate_space(
     space_id: SpacePartition,
     body: ParticipateSpaceRequest,
 ) -> Result<ParticipateSpaceResponse> {
-    let agreed = body.informed_agreed;
+    let agreed = Some(body.informed_agreed);
     let config = crate::features::spaces::config::get();
     let dynamo = config.common.dynamodb();
     let now = get_now_timestamp_millis();
