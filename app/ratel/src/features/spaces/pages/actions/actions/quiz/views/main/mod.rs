@@ -56,7 +56,9 @@ pub fn QuizActionPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) ->
 
     rsx! {
         div { class: "flex flex-col flex-1 mx-auto w-full min-h-0 max-w-desktop",
-            SettingsSwitchButton {}
+            if !show_creator_view {
+                SettingsSwitchButton {}
+            }
             {content}
         }
     }

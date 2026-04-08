@@ -40,6 +40,20 @@ pub async fn update_space_action(
         .map_err(|e| Error::InternalServerError(format!("Failed to get space action: {e:?}")))?
         .ok_or(Error::NotFound("Space action not found".into()))?;
 
+    // Once the action has started, its configuration is locked. The
+    // creator UI disables all the inputs and hides the delete button,
+    // but we still defend the API surface here so direct calls cannot
+    // reconfigure a live or ended action. `is_action_locked` considers
+    // both the space status and the action's own start time.
+    if crate::features::spaces::pages::actions::is_action_locked(
+        space.status.clone(),
+        space_action.started_at,
+    ) {
+        return Err(Error::BadRequest(
+            "Action settings cannot be changed after the action has started".into(),
+        ));
+    }
+
     match req {
         UpdateSpaceActionRequest::Credits { credits } => {
             update_credits(

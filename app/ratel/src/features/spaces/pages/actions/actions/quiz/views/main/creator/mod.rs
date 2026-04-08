@@ -1,5 +1,7 @@
 use crate::features::spaces::pages::actions::actions::quiz::*;
-use crate::features::spaces::pages::actions::{ActionCommonSettings, ActionDeleteButton};
+use crate::features::spaces::pages::actions::{
+    ActionCommonSettings, ActionDeleteButton, ActionLockedOverlay,
+};
 mod i18n;
 mod overview_tab;
 mod quiz_tab;
@@ -18,6 +20,15 @@ pub fn QuizCreatorPage(
     let ctx = Context::init(space_id, quiz_id)?;
     let can_edit_quiz = ctx.quiz.read().user_response_count == 0;
 
+    // Lock check: once the action has started, all settings become
+    // read-only (backend also rejects direct API calls).
+    let space = crate::features::spaces::space_common::hooks::use_space()();
+    let locked = crate::features::spaces::pages::actions::is_action_locked(
+        space.status,
+        ctx.quiz().space_action.started_at,
+    );
+    let editable_if_unlocked = !locked && can_edit_quiz;
+
     rsx! {
         div { class: "flex min-h-0 w-full flex-1 flex-col gap-4",
             h3 { {tr.page_title} }
@@ -32,25 +43,36 @@ pub fn QuizCreatorPage(
                     index: 0usize,
                     value: "overview-tab",
                     class: "flex min-h-0 flex-1",
-                    OverviewTab { can_edit: true }
+                    ActionLockedOverlay { locked,
+                        OverviewTab { can_edit: !locked }
+                    }
                 }
                 TabContent { index: 1usize, value: "upload-tab",
-                    UploadTab { can_edit: true }
+                    ActionLockedOverlay { locked,
+                        UploadTab { can_edit: !locked }
+                    }
                 }
                 TabContent { index: 2usize, value: "quiz-tab",
-                    QuizTab { can_edit: can_edit_quiz }
+                    ActionLockedOverlay { locked,
+                        QuizTab { can_edit: editable_if_unlocked }
+                    }
                 }
                 TabContent { index: 3usize, value: "setting-tab",
-                    div { class: "flex flex-col gap-4 w-full",
-                        ActionCommonSettings {
-                            space_id,
-                            action_id: quiz_id().to_string(),
-                            action_setting: ctx.quiz().space_action,
-                            on_date_change: move |_range: DateTimeRange| async move {},
-                        }
-                        ActionDeleteButton {
-                            space_id: space_id(),
-                            action_id: quiz_id().to_string(),
+                    ActionLockedOverlay { locked,
+                        div { class: "flex flex-col gap-4 w-full",
+                            ActionCommonSettings {
+                                space_id,
+                                action_id: quiz_id().to_string(),
+                                action_setting: ctx.quiz().space_action,
+                                on_date_change: move |_range: DateTimeRange| async move {},
+                            }
+                            // Delete button hidden once the action is locked.
+                            if !locked {
+                                ActionDeleteButton {
+                                    space_id: space_id(),
+                                    action_id: quiz_id().to_string(),
+                                }
+                            }
                         }
                     }
                 }

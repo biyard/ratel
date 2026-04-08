@@ -1,4 +1,5 @@
 use super::*;
+use crate::features::spaces::pages::actions::components::ActionLockedOverlay;
 use dioxus_primitives::{ContentAlign, ContentSide};
 mod question_tab;
 
@@ -13,6 +14,15 @@ pub fn PollCreatorPage(
     let mut ctx = Context::init(space_id, poll_id)?;
     let mut enabled = use_signal(move || ctx.poll().encrypted_upload_enabled);
     let mut toast = crate::common::use_toast();
+
+    // Whether this action's configuration is locked (live / ended).
+    // When locked, the form is rendered read-only via
+    // `ActionLockedOverlay` and the delete button is hidden.
+    let space = crate::features::spaces::space_common::hooks::use_space()();
+    let locked = crate::features::spaces::pages::actions::is_action_locked(
+        space.status,
+        ctx.poll().space_action.started_at,
+    );
 
     let on_date_change = move |range: DateTimeRange| async move {
         let space_id = space_id();
@@ -80,53 +90,62 @@ pub fn PollCreatorPage(
                     TabTrigger { index: 0usize, value: "question-tab", {tr.tab_questions} }
                     TabTrigger { index: 1usize, value: "setting-tab", {tr.tab_setting} }
                 }
-                TabContent { index: 0usize, value: "question-tab", QuestionTab {} }
+                TabContent { index: 0usize, value: "question-tab",
+                    ActionLockedOverlay { locked,
+                        QuestionTab {}
+                    }
+                }
                 TabContent { index: 1usize, value: "setting-tab",
-                    div { class: "flex flex-col gap-4 w-full",
-                        ActionCommonSettings {
-                            space_id,
-                            action_id: poll_id().to_string(),
-                            action_setting: ctx.poll().space_action,
-                            on_date_change,
-                        }
+                    ActionLockedOverlay { locked,
+                        div { class: "flex flex-col gap-4 w-full",
+                            ActionCommonSettings {
+                                space_id,
+                                action_id: poll_id().to_string(),
+                                action_setting: ctx.poll().space_action,
+                                on_date_change,
+                            }
 
-                        // Response Editable toggle
-                        Card { class: "mt-4 mb-4",
-                            div { class: "flex justify-between items-center self-stretch",
-                                div { class: "flex gap-1 items-center",
-                                    p { class: "font-semibold font-raleway text-[15px]/[18px] tracking-[-0.16px] text-web-font-primary",
-                                        {tr.response_editable_title}
-                                    }
-                                    Tooltip {
-                                        TooltipTrigger {
-                                            icons::help_support::Info {
-                                                width: "14",
-                                                height: "14",
-                                                class: "cursor-help text-web-font-neutral [&>path]:stroke-current [&>circle]:fill-current [&>path]:fill-none",
+                            // Response Editable toggle
+                            Card { class: "mt-4 mb-4",
+                                div { class: "flex justify-between items-center self-stretch",
+                                    div { class: "flex gap-1 items-center",
+                                        p { class: "font-semibold font-raleway text-[15px]/[18px] tracking-[-0.16px] text-web-font-primary",
+                                            {tr.response_editable_title}
+                                        }
+                                        Tooltip {
+                                            TooltipTrigger {
+                                                icons::help_support::Info {
+                                                    width: "14",
+                                                    height: "14",
+                                                    class: "cursor-help text-web-font-neutral [&>path]:stroke-current [&>circle]:fill-current [&>path]:fill-none",
+                                                }
+                                            }
+                                            TooltipContent {
+                                                side: ContentSide::Bottom,
+                                                align: ContentAlign::Start,
+                                                p { class: "w-72", {tr.response_editable_desc} }
                                             }
                                         }
-                                        TooltipContent {
-                                            side: ContentSide::Bottom,
-                                            align: ContentAlign::Start,
-                                            p { class: "w-72", {tr.response_editable_desc} }
-                                        }
+                                    }
+
+                                    Switch {
+                                        active: ctx.poll().response_editable && !ctx.poll().encrypted_upload_enabled,
+                                        disabled: ctx.poll().encrypted_upload_enabled,
+                                        on_toggle: on_response_editable_toggle,
                                     }
                                 }
+                            }
 
-                                Switch {
-                                    active: ctx.poll().response_editable && !ctx.poll().encrypted_upload_enabled,
-                                    disabled: ctx.poll().encrypted_upload_enabled,
-                                    on_toggle: on_response_editable_toggle,
+                            // Encrypted Upload toggle
+                            EncryptedUploadSetting { enabled, on_toggle: on_encrypted_upload_toggle }
+
+                            // Delete button is hidden once the action is locked.
+                            if !locked {
+                                ActionDeleteButton {
+                                    space_id: space_id(),
+                                    action_id: poll_id().to_string(),
                                 }
                             }
-                        }
-
-                        // Encrypted Upload toggle
-                        EncryptedUploadSetting { enabled, on_toggle: on_encrypted_upload_toggle }
-
-                        ActionDeleteButton {
-                            space_id: space_id(),
-                            action_id: poll_id().to_string(),
                         }
                     }
                 }

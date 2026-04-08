@@ -11,7 +11,10 @@ use crate::features::spaces::space_common::hooks::use_space_role;
 use viewer::*;
 
 #[component]
-pub fn FollowActionPage(space_id: SpacePartition, follow_id: SpaceActionFollowEntityType) -> Element {
+pub fn FollowActionPage(
+    space_id: SpacePartition,
+    follow_id: SpaceActionFollowEntityType,
+) -> Element {
     let role = use_space_role()();
     let space_id_sig: ReadSignal<SpacePartition> = use_signal(|| space_id.clone()).into();
     let follow_id_sig: ReadSignal<SpaceActionFollowEntityType> =
@@ -20,9 +23,8 @@ pub fn FollowActionPage(space_id: SpacePartition, follow_id: SpaceActionFollowEn
     // Lightweight fetch of the underlying SpaceAction so we can decide
     // whether the follow action has started. After it starts the creator
     // should switch into the participant (viewer) view.
-    let action_loader = use_loader(move || async move {
-        get_follow(space_id_sig(), follow_id_sig()).await
-    })?;
+    let action_loader =
+        use_loader(move || async move { get_follow(space_id_sig(), follow_id_sig()).await })?;
     let space = crate::features::spaces::space_common::hooks::use_space()();
     let locked = crate::features::spaces::pages::actions::is_action_locked(
         space.status,
@@ -48,7 +50,9 @@ pub fn FollowActionPage(space_id: SpacePartition, follow_id: SpaceActionFollowEn
 
     rsx! {
         div { class: "flex flex-col flex-1 mx-auto w-full min-h-0 max-w-desktop",
-            SettingsSwitchButton {}
+            if !show_creator_view {
+                SettingsSwitchButton {}
+            }
             {content}
         }
     }
