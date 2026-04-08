@@ -3,6 +3,7 @@ use serde::Serialize;
 
 use crate::common::types::{Partition, SpacePartition, UserOrTeam};
 use crate::features::rag::qdrant::types::QdrantIndexType;
+use crate::types::*;
 
 /// Payload for indexing a discussion reply into Qdrant.
 #[derive(Debug, Clone, Serialize, QdrantEntity)]
@@ -15,8 +16,8 @@ pub struct ReplyPayload {
     pub space_id: SpacePartition,
     // Reply-specific fields
     #[qdrant(id)]
-    pub comment_id: String,
-    pub discussion_id: String,
+    pub comment_id: SpacePostCommentEntityType,
+    pub discussion_id: SpacePostPartition,
     pub content: String,
     pub author: String,
 }
@@ -36,18 +37,15 @@ impl ReplyPayload {
         comment: &crate::features::spaces::pages::actions::actions::discussion::SpacePostComment,
         tenant_id: String,
     ) -> Self {
-        let space_id = match &comment.space_pk {
-            Some(Partition::Space(inner)) => SpacePartition(inner.clone()),
-            _ => SpacePartition::default(),
-        };
+        let space_id = comment.space_pk.clone().unwrap().into();
 
         Self {
             r#type: QdrantIndexType::Reply,
             tenant_id,
             user_id: UserOrTeam::from(comment.author_pk.clone()),
             space_id,
-            comment_id: comment.sk.to_string(),
-            discussion_id: comment.pk.to_string(),
+            comment_id: comment.sk.clone().into(),
+            discussion_id: comment.pk.clone().into(),
             content: comment.content.clone(),
             author: comment.author_display_name.clone(),
         }

@@ -42,7 +42,12 @@ export default defineConfig({
     // Auth setup — shared by all authenticated projects
     {
       name: "auth-setup",
-      testMatch: ["**/*.auth.setup.js"],
+      testMatch: ["**/user.auth.setup.js"],
+    },
+
+    {
+      name: "admin-auth-setup",
+      testMatch: ["**/admin.auth.setup.js"],
     },
 
     // Desktop — all web spec files under tests/web/
@@ -57,6 +62,19 @@ export default defineConfig({
           height: 950,
         },
         storageState: "user.json",
+      },
+    },
+    {
+      name: "Desktop - SysAdmin",
+      testMatch: ["tests/web-admin/*.spec.js"],
+      dependencies: ["admin-auth-setup"],
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: {
+          width: 1440,
+          height: 950,
+        },
+        storageState: "admin.json",
       },
     },
 
