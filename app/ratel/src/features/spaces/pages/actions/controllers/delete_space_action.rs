@@ -70,7 +70,9 @@ pub async fn delete_space_action(space_id: SpacePartition, action_id: String) ->
                     Some(discussion_sk.clone()),
                 )
                 .await?
-                .ok_or(Error::NotFound("Discussion not found".into()))?;
+                .ok_or(
+                    crate::features::spaces::pages::actions::actions::discussion::SpaceActionDiscussionError::NotFound,
+                )?;
 
             if discussion.comments > 0 {
                 return Err(Error::BadRequest(

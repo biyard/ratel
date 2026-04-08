@@ -16,8 +16,12 @@ translate! {
         ko: "개요",
     },
     tab_boards: {
-        en: "Boards",
-        ko: "게시판",
+        en: "Discussions",
+        ko: "토론",
+    },
+    tab_quiz: {
+        en: "Quiz",
+        ko: "퀴즈",
     },
     attached_files: {
         en: "Attached Files",

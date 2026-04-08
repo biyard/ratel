@@ -4,7 +4,7 @@ use crate::common::components::{FileUploader, UploadedFileMeta};
 use crate::common::types::extract_filename_from_url;
 use crate::common::utils::time::time_ago;
 use crate::features::spaces::hooks::use_user;
-use crate::features::spaces::space_common::types::space_page_actions_quiz_key;
+use crate::features::spaces::space_common::types::space_page_actions_discussion_key;
 
 const DEFAULT_PROFILE_URL: &str = "https://metadata.ratel.foundation/ratel/default-profile.png";
 
@@ -16,14 +16,14 @@ fn file_icon(ext: &FileExtension) -> Element {
 
 #[component]
 pub fn UploadTab(can_edit: bool) -> Element {
-    let ctx = use_space_quiz_context();
-    let tr: QuizCreatorTranslate = use_translate();
+    let ctx = use_discussion_context();
+    let tr: DiscussionCreatorTranslate = use_translate();
     let mut toast = use_toast();
     let user = use_user()?;
-    let mut files = use_signal(|| ctx.quiz.read().files.clone());
+    let mut files = use_signal(|| ctx.discussion.read().post.files.clone());
     let mut opened_menu = use_signal(|| Option::<String>::None);
     let space_id = ctx.space_id;
-    let quiz_id = ctx.quiz_id;
+    let discussion_id = ctx.discussion_id;
     let uploader_name = user().unwrap_or_default().display_name;
     let uploader_profile_url = match user()
         .map(|u| u.profile_url)
@@ -37,15 +37,15 @@ pub fn UploadTab(can_edit: bool) -> Element {
     let mut query = use_query_store();
 
     let save_files = move |next_files: Vec<File>| async move {
-        let req = UpdateQuizRequest {
+        let req = UpdateDiscussionRequest {
             files: Some(next_files),
             ..Default::default()
         };
-        if let Err(err) = update_quiz(space_id(), quiz_id(), req).await {
-            error!("Failed to update quiz files: {:?}", err);
+        if let Err(err) = update_discussion(space_id(), discussion_id(), req).await {
+            error!("Failed to update discussion files: {:?}", err);
             toast.error(err);
         } else {
-            let keys = space_page_actions_quiz_key(&space_id(), &quiz_id());
+            let keys = space_page_actions_discussion_key(&space_id(), &discussion_id());
             query.invalidate(&keys);
         }
     };
@@ -72,8 +72,8 @@ pub fn UploadTab(can_edit: bool) -> Element {
                                     crate::features::spaces::pages::apps::apps::file::CreateFileLinkRequest {
                                         file_url: url.clone(),
                                         file_name: Some(uploaded_name.clone()),
-                                        link_target: crate::features::spaces::pages::apps::apps::file::FileLinkTarget::Quiz(
-                                            quiz_id().to_string(),
+                                        link_target: crate::features::spaces::pages::apps::apps::file::FileLinkTarget::Board(
+                                            discussion_id().to_string(),
                                         ),
                                     },
                                 )
@@ -144,7 +144,7 @@ pub fn UploadTab(can_edit: bool) -> Element {
                         opened_menu,
                         files,
                         space_id,
-                        quiz_id,
+                        discussion_id,
                         fallback_profile_url: uploader_profile_url.clone(),
                         fallback_uploader_name: uploader_name.clone(),
                     }
@@ -161,11 +161,11 @@ fn FileItem(
     mut opened_menu: Signal<Option<String>>,
     mut files: Signal<Vec<File>>,
     space_id: ReadSignal<SpacePartition>,
-    quiz_id: ReadSignal<SpaceQuizEntityType>,
+    discussion_id: ReadSignal<SpacePostEntityType>,
     fallback_profile_url: String,
     fallback_uploader_name: String,
 ) -> Element {
-    let tr: QuizCreatorTranslate = use_translate();
+    let tr: DiscussionCreatorTranslate = use_translate();
     let mut toast = use_toast();
 
     let (file_id, file_name, file_ext, has_url, profile_url, display_name, uploaded_at) = {
@@ -259,14 +259,16 @@ fn FileItem(
                                 let prev = files();
                                 files.write().retain(|f| f.id != file_url);
                                 opened_menu.set(None);
-                                if let Err(e) = remove_quiz_file(
+                                if let Err(e) = remove_discussion_file(
                                         space_id(),
-                                        quiz_id(),
-                                        RemoveQuizFileRequest { file_url },
+                                        discussion_id(),
+                                        RemoveDiscussionFileRequest {
+                                            file_url,
+                                        },
                                     )
                                     .await
                                 {
-                                    error!("Failed to remove quiz file: {:?}", e);
+                                    error!("Failed to remove discussion file: {:?}", e);
                                     files.set(prev);
                                     toast.error(e);
                                 }

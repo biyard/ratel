@@ -46,7 +46,7 @@ pub async fn reply_comment(
     let (post_pk, post_sk) = SpacePost::keys(&space_id, &space_post_pk);
     let post = SpacePost::get(cli, &post_pk, Some(post_sk))
         .await?
-        .ok_or(Error::NotFound("Discussion not found".into()))?;
+        .ok_or(SpaceActionDiscussionError::NotFound)?;
     if post.status() != DiscussionStatus::InProgress {
         return Err(Error::DiscussionNotInProgress);
     }
