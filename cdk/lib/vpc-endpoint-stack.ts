@@ -84,10 +84,19 @@ export class VpcEndpointStack extends Stack {
       "Shared services to SES",
     );
 
+    // email-smtp endpoint does not support all AZs in ap-northeast-2 (excludes
+    // ap-northeast-2d). Restrict to the three supported AZs explicitly.
     new ec2.InterfaceVpcEndpoint(this, "SesEndpoint", {
       vpc: this.vpc,
       service: ec2.InterfaceVpcEndpointAwsService.EMAIL_SMTP,
-      subnets: { subnetType: ec2.SubnetType.PUBLIC },
+      subnets: {
+        subnetType: ec2.SubnetType.PUBLIC,
+        availabilityZones: [
+          "ap-northeast-2a",
+          "ap-northeast-2b",
+          "ap-northeast-2c",
+        ],
+      },
       privateDnsEnabled: true,
       securityGroups: [sesEndpointSg],
     });
