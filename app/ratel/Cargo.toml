@@ -111,8 +111,7 @@ rmcp = { version = "0.7.0", git = "https://github.com/modelcontextprotocol/rust-
 
 
 [features]
-full = []
-default = ["full"]
+default = []
 bypass = []
 web = ["dioxus/web", "getrandom", "gloo-timers", "time/wasm-bindgen"]
 desktop = ["dioxus/desktop"]
