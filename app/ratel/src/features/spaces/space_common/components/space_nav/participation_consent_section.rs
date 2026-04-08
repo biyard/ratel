@@ -24,12 +24,12 @@ pub fn ParticipationConsentSection(
     }
 
     rsx! {
-        div { class: "flex flex-col flex-1 gap-5 bg-[#1A1A1A] px-[30px] py-[30px] max-tablet:px-5 max-tablet:py-5 max-mobile:px-4 max-mobile:py-4",
+        div { class: "flex flex-col flex-1 gap-5 bg-card-bg text-text-primary px-[30px] py-[30px] max-tablet:px-5 max-tablet:py-5 max-mobile:px-4 max-mobile:py-4",
             // Header: title that adapts to the match state +
             // (when something is missing) the orange "missing required
             // attributes" banner.
             div { class: "flex flex-col items-start w-full gap-[10px]",
-                h3 { class: "font-bold text-white text-[24px]/[28px] tracking-[-0.24px]",
+                h3 { class: "font-bold text-[24px]/[28px] tracking-[-0.24px]",
                     if all_satisfied {
                         {tr.full_match_title}
                     } else {
@@ -38,12 +38,12 @@ pub fn ParticipationConsentSection(
                 }
             }
 
-            div { class: "flex flex-col items-start py-5 px-4 w-full border gap-[10px] rounded-[12px] border-[#404040] bg-[#262626]",
+            div { class: "flex flex-col items-start py-5 px-4 w-full border gap-[10px] rounded-[12px] border-[#404040] bg-card-bg-3",
                 div { class: "flex flex-col gap-1 items-start w-full",
-                    p { class: "font-bold text-white text-[15px]/[18px] tracking-[-0.16px]",
+                    p { class: "font-bold text-[15px]/[18px] tracking-[-0.16px]",
                         {tr.requirements_to_unlock}
                     }
-                    p { class: "font-medium text-[13px]/[20px] text-[#D4D4D4]",
+                    p { class: "font-medium text-[13px]/[20px] text-desc-text",
                         {tr.requirements_description}
                     }
                 }
@@ -56,7 +56,7 @@ pub fn ParticipationConsentSection(
             }
 
             div { class: "flex flex-col gap-4 pt-5 mt-auto w-full",
-                label { class: "flex gap-2 items-start text-white cursor-pointer select-none",
+                label { class: "flex gap-2 items-start cursor-pointer select-none",
                     crate::common::Checkbox {
                         checked: ReadSignal::new(
                             Signal::new(
@@ -74,9 +74,7 @@ pub fn ParticipationConsentSection(
                         },
                         aria_label: "Participation consent checkbox",
                     }
-                    span { class: "font-medium text-white pt-[1px] text-[13px]/[18px]",
-                        {tr.consent_label}
-                    }
+                    span { class: "font-medium pt-[1px] text-[13px]/[18px]", {tr.consent_label} }
                 }
                 Button {
                     class: "self-end !rounded-[10px] !px-5 !py-3 max-mobile:!w-full",
@@ -84,7 +82,7 @@ pub fn ParticipationConsentSection(
                     disabled: !consent_checked(),
                     "data-testid": "join-space-confirm",
                     onclick: move |_| on_join.call(()),
-                    span { class: "font-bold text-[14px]/[16px] text-[#0A0A0A]", {tr.join_space} }
+                    span { class: "font-bold text-[14px]/[16px] text-desc-text", {tr.join_space} }
                 }
             }
         }
@@ -128,7 +126,7 @@ fn AttributeRequirementRow(
             div { class: "flex flex-row items-center w-full gap-[10px]",
                 div { class: "inline-flex items-center w-full rounded-full h-[60px] gap-[10px] px-[15px] py-[13px] {pill_class}",
                     {icon}
-                    span { class: "font-bold text-white text-[15px]/[18px] tracking-[-0.16px]",
+                    span { class: "font-bold text-[15px]/[18px] tracking-[-0.16px]",
                         {label}
                     }
                 }
@@ -140,9 +138,7 @@ fn AttributeRequirementRow(
         div { class: "flex flex-row items-center w-full gap-[10px] max-mobile:flex-col max-mobile:items-start",
             div { class: "inline-flex items-center rounded-full h-[60px] min-w-[222px] gap-[10px] px-[15px] py-[13px] {pill_class} max-mobile:min-w-0",
                 {icon}
-                span { class: "font-bold text-white text-[15px]/[18px] tracking-[-0.16px]",
-                    {label}
-                }
+                span { class: "font-bold text-[15px]/[18px] tracking-[-0.16px]", {label} }
             }
 
             div { class: "flex flex-row flex-wrap flex-1 gap-1 items-center h-auto min-h-[60px] rounded-[8px] px-[10px] py-[15px] {value_box_class} max-mobile:w-full",
