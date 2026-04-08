@@ -139,7 +139,7 @@ jobs:
           DYNAMO_ENDPOINT: http://localstack:4566
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
-          AWS_REGION: us-east-1
+          AWS_REGION: ap-northeast-2
           AWS_ACCOUNT_ID: test
           COMMIT: pr-${{ github.sha }}
           ECR: ratel/app-shell
@@ -223,7 +223,7 @@ jobs:
           DYNAMO_ENDPOINT: http://localhost:4566
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
-          AWS_REGION: us-east-1
+          AWS_REGION: ap-northeast-2
           AWS_ACCOUNT_ID: test
           RUST_LOG: info
           ENV: local
