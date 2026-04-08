@@ -1,5 +1,5 @@
 use crate::common::components::{
-    Button, ButtonShape, ButtonSize, ButtonStyle, Input, InputVariant, TextArea,
+    Button, ButtonShape, ButtonSize, ButtonStyle, TextArea,
 };
 use crate::common::hooks::use_infinite_query;
 use crate::common::query::use_query_store;
@@ -57,13 +57,42 @@ pub fn DiscussionComments(
         div { class: "flex flex-col gap-4",
             h2 { class: "text-lg font-bold text-text-primary", "{tr.comments} ({comment_count})" }
             if can_comment {
-                div { class: "flex gap-2",
-                    Input {
-                        variant: InputVariant::Default,
-                        class: "flex-1 h-10".to_string(),
+                div { class: "flex gap-2 items-end",
+                    TextArea {
+                        class: "flex-1 min-h-10 resize-none rounded-[10px] border border-input-box-border bg-input-box-bg px-3 py-2 text-sm text-text-primary outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[1px]"
+                            .to_string(),
                         placeholder: "{tr.write_comment}",
                         value: comment_input(),
                         oninput: move |e: Event<FormData>| comment_input.set(e.value()),
+                        onkeydown: move |evt: KeyboardEvent| {
+                            if evt.key() == Key::Enter
+                                && (evt.modifiers().contains(Modifiers::CONTROL)
+                                    || evt.modifiers().contains(Modifiers::META))
+                            {
+                                evt.prevent_default();
+                                let content = comment_input().trim().to_string();
+                                if content.is_empty() {
+                                    return;
+                                }
+                                comment_input.set(String::new());
+                                let mut comments_query = ctx.comments;
+                                let mut discussion_query = discussion_ctx.discussion;
+                                spawn(async move {
+                                    let req = AddCommentRequest { content };
+                                    match add_comment(space_id(), discussion_id(), req).await {
+                                        Ok(comment) => {
+                                            comments_query.insert(comment);
+                                            discussion_query.restart();
+                                            query.invalidate(&space_ranking_key(&space_id()));
+                                            query.invalidate(&space_my_score_key(&space_id()));
+                                        }
+                                        Err(e) => {
+                                            error!("Failed to add comment: {:?}", e);
+                                        }
+                                    }
+                                });
+                            }
+                        },
                     }
                     Button {
                         "data-testid": "comment-send-btn",
@@ -685,6 +714,34 @@ fn ReplyInput(
                 placeholder: "{tr.write_reply}",
                 value: reply_input(),
                 oninput: move |e: Event<FormData>| reply_input.set(e.value()),
+                onkeydown: move |evt: KeyboardEvent| {
+                    if evt.key() == Key::Enter
+                        && (evt.modifiers().contains(Modifiers::CONTROL)
+                            || evt.modifiers().contains(Modifiers::META))
+                    {
+                        evt.prevent_default();
+                        let content = reply_input().trim().to_string();
+                        if content.is_empty() {
+                            return;
+                        }
+                        spawn(async move {
+                            let req = ReplyCommentRequest { content };
+                            match reply_comment(space_id(), discussion_id(), comment_sk(), req).await
+                            {
+                                Ok(_) => {
+                                    reply_input.set(String::new());
+                                    show_reply_input.set(false);
+                                    on_success.call(());
+                                    query.invalidate(&space_ranking_key(&space_id()));
+                                    query.invalidate(&space_my_score_key(&space_id()));
+                                }
+                                Err(e) => {
+                                    error!("Failed to reply: {:?}", e);
+                                }
+                            }
+                        });
+                    }
+                },
             }
             div { class: "flex justify-end mt-2",
                 Button {
