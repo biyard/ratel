@@ -9,6 +9,18 @@ pub enum MemberError {
     #[error("Too many invitations")]
     #[translate(en = "You can invite up to 100 members at once.", ko = "한번에 최대 100명까지 초대할 수 있습니다.")]
     TooManyInvitations,
+
+    #[error("Cannot change your own role")]
+    #[translate(en = "You cannot change your own role.", ko = "본인의 역할은 변경할 수 없습니다.")]
+    CannotChangeOwnRole,
+
+    #[error("Cannot change owner role")]
+    #[translate(en = "The team owner's role cannot be changed.", ko = "팀 소유자의 역할은 변경할 수 없습니다.")]
+    CannotChangeOwnerRole,
+
+    #[error("Role change failed")]
+    #[translate(en = "Failed to change member role.", ko = "멤버 역할 변경에 실패했습니다.")]
+    RoleChangeFailed,
 }
 
 #[cfg(feature = "server")]
@@ -18,6 +30,9 @@ impl MemberError {
         match self {
             MemberError::UserNotFound => StatusCode::NOT_FOUND,
             MemberError::TooManyInvitations => StatusCode::BAD_REQUEST,
+            MemberError::CannotChangeOwnRole => StatusCode::FORBIDDEN,
+            MemberError::CannotChangeOwnerRole => StatusCode::FORBIDDEN,
+            MemberError::RoleChangeFailed => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }

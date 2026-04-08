@@ -70,5 +70,35 @@ export class VpcEndpointStack extends Stack {
       privateDnsEnabled: true,
       securityGroups: [bedrockEndpointSg],
     });
+
+    // SES interface endpoint — dedicated SG that only accepts 443 from
+    // the shared SG. Private DNS lets the SDK use the default endpoint URL.
+    const sesEndpointSg = new ec2.SecurityGroup(this, "SesEndpointSG", {
+      vpc: this.vpc,
+      description: "SES VPC interface endpoint",
+      allowAllOutbound: false,
+    });
+    sesEndpointSg.addIngressRule(
+      this.sharedSecurityGroup,
+      ec2.Port.tcp(443),
+      "Shared services to SES",
+    );
+
+    // email-smtp endpoint does not support all AZs in ap-northeast-2 (excludes
+    // ap-northeast-2d). Restrict to the three supported AZs explicitly.
+    new ec2.InterfaceVpcEndpoint(this, "SesEndpoint", {
+      vpc: this.vpc,
+      service: ec2.InterfaceVpcEndpointAwsService.EMAIL_SMTP,
+      subnets: {
+        subnetType: ec2.SubnetType.PUBLIC,
+        availabilityZones: [
+          "ap-northeast-2a",
+          "ap-northeast-2b",
+          "ap-northeast-2c",
+        ],
+      },
+      privateDnsEnabled: true,
+      securityGroups: [sesEndpointSg],
+    });
   }
 }
