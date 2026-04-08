@@ -1,4 +1,5 @@
 use super::*;
+use dioxus_primitives::checkbox::CheckboxState;
 
 #[component]
 pub fn ParticipationAttributesSection(
@@ -7,18 +8,34 @@ pub fn ParticipationAttributesSection(
     >,
     current_step: ParticipationLayoverStep,
     on_continue: EventHandler<()>,
+    /// Called when the user has accepted the consent checkbox in the
+    /// "all satisfied" branch and wants to actually join the space.
+    on_join: EventHandler<()>,
 ) -> Element {
     let tr: ParticipationAttributesSectionTranslate = use_translate();
     let has_missing = requirements
         .iter()
         .any(|requirement| !requirement.satisfied);
-    let show_continue = current_step == ParticipationLayoverStep::SeeYourDifference;
+    let all_satisfied = (!requirements.is_empty() && !has_missing) || requirements.is_empty();
+    let show_continue = current_step == ParticipationLayoverStep::SeeYourDifference && has_missing;
+    // Local state for the consent checkbox shown when every required
+    // attribute is already verified. The checkbox starts unchecked and
+    // the Join Space button stays disabled until the user explicitly
+    // ticks it.
+    let mut consent_checked = use_signal(|| false);
 
     rsx! {
         div { class: "flex flex-1 flex-col gap-5 bg-[#1A1A1A] px-[30px] py-[30px] max-tablet:px-5 max-tablet:py-5 max-mobile:px-4 max-mobile:py-4",
+            // Header: title that adapts to the match state +
+            // (when something is missing) the orange "missing required
+            // attributes" banner.
             div { class: "flex flex-col items-start gap-[10px] w-full",
                 h3 { class: "font-bold text-[24px]/[28px] tracking-[-0.24px] text-white",
-                    {tr.partial_match_title}
+                    if all_satisfied {
+                        {tr.full_match_title}
+                    } else {
+                        {tr.partial_match_title}
+                    }
                 }
 
                 if has_missing {
@@ -60,6 +77,47 @@ pub fn ParticipationAttributesSection(
                     }
                 }
             }
+
+            // All required attributes are verified — ask the user to
+            // explicitly consent before joining. The Join Space button
+            // stays disabled until the checkbox is ticked so the user
+            // cannot skip the acknowledgement.
+            if all_satisfied && current_step == ParticipationLayoverStep::SeeYourDifference {
+                div { class: "mt-auto flex w-full flex-col gap-4 pt-5",
+                    label { class: "flex items-start gap-2 cursor-pointer select-none text-white",
+                        crate::common::Checkbox {
+                            checked: ReadSignal::new(
+                                Signal::new(
+                                    Some(
+                                        if consent_checked() {
+                                            CheckboxState::Checked
+                                        } else {
+                                            CheckboxState::Unchecked
+                                        },
+                                    ),
+                                ),
+                            ),
+                            on_checked_change: move |checked| {
+                                consent_checked.set(matches!(checked, CheckboxState::Checked));
+                            },
+                            aria_label: "Participation consent checkbox",
+                        }
+                        span { class: "pt-[1px] font-medium text-[13px]/[18px] text-white",
+                            {tr.consent_label}
+                        }
+                    }
+                    Button {
+                        class: "!rounded-[10px] !px-5 !py-3 self-end max-mobile:!w-full",
+                        style: ButtonStyle::Primary,
+                        disabled: !consent_checked(),
+                        "data-testid": "join-space-confirm",
+                        onclick: move |_| on_join.call(()),
+                        span { class: "font-bold text-[14px]/[16px] text-[#0A0A0A]",
+                            {tr.join_space}
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -88,7 +146,26 @@ fn AttributeRequirementRow(
         )
     };
 
-    let label = requirement_label(requirement.attribute, &tr);
+    let label = requirement_label(requirement.attribute.clone(), &tr);
+    let attribute = requirement.attribute.clone();
+
+    // Collective attributes only need to confirm "category is verified"
+    // — there's no point listing every possible value (e.g. all age
+    // ranges or both genders). The label pill alone fills the row in
+    // that case. Conditional rows still show the chip box with the
+    // specific allowed values.
+    if requirement.collective {
+        return rsx! {
+            div { class: "flex flex-row gap-[10px] items-center w-full",
+                div { class: "h-[60px] inline-flex w-full items-center gap-[10px] rounded-full px-[15px] py-[13px] {pill_class}",
+                    {icon}
+                    span { class: "font-bold text-[15px]/[18px] tracking-[-0.16px] text-white",
+                        {label}
+                    }
+                }
+            }
+        };
+    }
 
     rsx! {
         div { class: "flex w-full flex-row items-center gap-[10px] max-mobile:flex-col max-mobile:items-start",
@@ -104,6 +181,7 @@ fn AttributeRequirementRow(
                     RequirementValueTag {
                         value: value.clone(),
                         is_mine: requirement.current_value.as_deref() == Some(value.as_str()),
+                        attribute: attribute.clone(),
                     }
                 }
             }
@@ -112,19 +190,45 @@ fn AttributeRequirementRow(
 }
 
 #[component]
-fn RequirementValueTag(value: String, is_mine: bool) -> Element {
+fn RequirementValueTag(
+    value: String,
+    is_mine: bool,
+    attribute: crate::features::spaces::controllers::panel_requirements::PanelRequirementAttribute,
+) -> Element {
+    let tr: ParticipationAttributesSectionTranslate = use_translate();
+    let display = display_requirement_value(&attribute, &value, &tr);
+
     if is_mine {
         rsx! {
             span { class: "inline-flex items-center justify-center rounded-[6px] bg-[#FCB300] px-2 py-[3px] font-semibold text-[14px]/[20px] tracking-[0.5px] text-[#0A0A0A]",
-                {value}
+                {display}
             }
         }
     } else {
         rsx! {
             span { class: "inline-flex items-center justify-center rounded-[6px] bg-white px-2 py-[3px] font-semibold text-[14px]/[20px] tracking-[0.5px] text-[#0A0A0A]",
-                {value}
+                {display}
             }
         }
+    }
+}
+
+/// Translates raw value strings produced by the backend (e.g. `"male"`,
+/// `"female"`) into the user's current locale. Non-localizable values
+/// like age ranges (`"0-17"`) and university names are returned as-is.
+fn display_requirement_value(
+    attribute: &crate::features::spaces::controllers::panel_requirements::PanelRequirementAttribute,
+    value: &str,
+    tr: &ParticipationAttributesSectionTranslate,
+) -> String {
+    use crate::features::spaces::controllers::panel_requirements::PanelRequirementAttribute;
+    match attribute {
+        PanelRequirementAttribute::Gender => match value.to_ascii_lowercase().as_str() {
+            "male" => tr.gender_male.to_string(),
+            "female" => tr.gender_female.to_string(),
+            _ => value.to_string(),
+        },
+        PanelRequirementAttribute::Age | PanelRequirementAttribute::University => value.to_string(),
     }
 }
 
@@ -153,6 +257,11 @@ translate! {
         ko: "속성이 일부 일치합니다",
     },
 
+    full_match_title: {
+        en: "Your Attributes Match",
+        ko: "속성이 모두 일치합니다",
+    },
+
     missing_notice: {
         en: "Some required attributes are missing for this space",
         ko: "이 스페이스에 필요한 속성이 부족합니다",
@@ -164,13 +273,23 @@ translate! {
     },
 
     requirements_description: {
-        en: "To join this space, certain attributes are required. Based on your current profile, some attributes do not match. You must meet the requirements below to unlock access.",
-        ko: "이 스페이스에 참여하려면 특정 속성이 필요합니다. 현재 프로필 기준으로 일부 속성이 일치하지 않습니다. 아래 요건을 충족해야 접근이 가능합니다.",
+        en: "To join this space, certain attributes are required. You must meet the requirements below to unlock access.",
+        ko: "이 스페이스에 참여하려면 특정 속성이 필요합니다. 아래 요건을 충족해야 접근이 가능합니다.",
     },
 
     improve_my_credential: {
         en: "Improve My Credential",
         ko: "내 Credential 개선하기",
+    },
+
+    consent_label: {
+        en: "I understand and agree to verify the required attributes for this Space.",
+        ko: "이 스페이스에 필요한 속성의 검증에 동의합니다.",
+    },
+
+    join_space: {
+        en: "Join Space",
+        ko: "스페이스 참여",
     },
 
     age: {
@@ -186,6 +305,16 @@ translate! {
     university: {
         en: "University",
         ko: "대학교",
+    },
+
+    gender_male: {
+        en: "Male",
+        ko: "남성",
+    },
+
+    gender_female: {
+        en: "Female",
+        ko: "여성",
     },
 
     verification_required: {

@@ -46,7 +46,7 @@ pub fn MyDrafts() -> Element {
     }
 
     rsx! {
-        div { class: "flex flex-col flex-1 gap-2.5",
+        div { class: "flex flex-col flex-1 gap-2.5 items-stretch w-full",
             for post in items.iter() {
                 {
                     let post_pk_for_nav = post.pk.clone();
@@ -55,7 +55,7 @@ pub fn MyDrafts() -> Element {
                     rsx! {
                         div {
                             key: "{post.pk}",
-                            class: "flex flex-col gap-2.5 pt-5 pb-2.5 rounded-lg border cursor-pointer bg-card-bg border-card-enable-border",
+                            class: "flex overflow-hidden flex-col gap-2.5 pt-5 pb-2.5 w-full rounded-lg border cursor-pointer bg-card-bg border-card-enable-border",
                             onclick: move |_| {
                                 let nav = nav.clone();
                                 let post_pk: FeedPartition = post_pk_for_nav.clone().into();
@@ -136,7 +136,7 @@ pub fn TeamDrafts(username: String) -> Element {
     }
 
     rsx! {
-        div { class: "flex flex-col flex-1 gap-2.5",
+        div { class: "flex flex-col flex-1 gap-2.5 items-stretch w-full",
             for post in items.iter() {
                 {
                     let post_pk_for_nav = post.pk.clone();
@@ -145,7 +145,7 @@ pub fn TeamDrafts(username: String) -> Element {
                     rsx! {
                         div {
                             key: "{post.pk}",
-                            class: "flex flex-col gap-2.5 pt-5 pb-2.5 rounded-lg border cursor-pointer bg-card-bg border-card-enable-border",
+                            class: "flex overflow-hidden flex-col gap-2.5 pt-5 pb-2.5 w-full rounded-lg border cursor-pointer bg-card-bg border-card-enable-border",
                             onclick: move |_| {
                                 let nav = nav.clone();
                                 let post_pk: FeedPartition = post_pk_for_nav.clone().into();

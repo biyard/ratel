@@ -1,11 +1,13 @@
-use super::components::{CodeInputModal, VerificationMethodModal};
 use super::config::get;
-use super::controllers::get_credentials::{CredentialResponse, get_credentials_handler};
-use super::controllers::sign_attributes::{SignAttributesRequest, sign_attributes_handler};
+use super::controllers::get_credentials::{get_credentials_handler, CredentialResponse};
+use super::controllers::sign_attributes::{sign_attributes_handler, SignAttributesRequest};
 use super::*;
+use crate::common::components::{
+    Button, ButtonStyle, Card, CardDirection, CardVariant, Col, CrossAxisAlign, MainAxisAlign, Row,
+};
 use crate::common::icons::ratel::*;
-use dioxus::prelude::*;
 use crate::features::auth::hooks::use_user_context;
+use dioxus::prelude::*;
 
 #[component]
 pub fn Home(username: String) -> Element {
@@ -13,7 +15,6 @@ pub fn Home(username: String) -> Element {
 
     let user_ctx = use_user_context();
     let mut credential = use_loader(get_credentials_handler)?;
-    let mut popup = use_popup();
     let mut toast = use_toast();
     let lang = use_language();
 
@@ -54,22 +55,35 @@ pub fn Home(username: String) -> Element {
     let lang = lang();
 
     rsx! {
-        div { class: "flex flex-col gap-4 py-6 w-full",
+        div { class: "flex flex-col gap-4 px-4 py-6 mx-auto w-full max-w-desktop max-mobile:px-3 max-mobile:py-4",
+
+            // Hero credential card — figma blue/dark radial gradient.
+            // The gradient itself is identical to the figma spec; the
+            // text colors are pinned to white because the dark backdrop
+            // is the same in both light and dark themes.
             div {
-                class: "flex overflow-hidden relative flex-col items-center py-6 px-4 rounded-lg gap-[17.5px]",
+                class: "flex overflow-hidden relative flex-col gap-[17.5px] items-center py-6 px-4 w-full rounded-lg",
                 style: "background: radial-gradient(circle at center, rgba(77, 92, 255, 0.5) 0%, rgba(30, 30, 30, 1) 100%);",
                 BadgeCheckIcon { width: "40", height: "40" }
-                div { class: "flex flex-col gap-1 items-center",
+                div { class: "flex flex-col gap-1 items-center w-full text-center",
                     h2 { class: "text-lg font-bold text-white", {tr.vc} }
-                    p { class: "text-sm text-neutral-300", "{tr.id}: {did}" }
+                    p { class: "text-sm break-all text-neutral-300", "{tr.id}: {did}" }
                 }
             }
 
-            div { class: "flex flex-col gap-5 py-4 px-4 rounded-lg bg-component-bg",
+            // Attribute list card.
+            Card {
+                variant: CardVariant::Outlined,
+                direction: CardDirection::Col,
+                class: "gap-5 py-4 px-4 w-full",
                 div { class: "text-base font-semibold text-text-primary", {tr.my_did} }
 
                 if attributes.is_empty() {
-                    div { class: "flex items-center py-3 px-4 rounded-lg border text-text-primary border-card-border",
+                    Card {
+                        variant: CardVariant::Outlined,
+                        direction: CardDirection::Row,
+                        cross_axis_align: CrossAxisAlign::Center,
+                        class: "py-3 px-4 w-full text-text-primary",
                         {tr.no_data}
                     }
                 }
@@ -78,18 +92,41 @@ pub fn Home(username: String) -> Element {
                     VerifiedItem { label: attr.label, value: attr.value }
                 }
 
-                div { class: "flex justify-center",
-                    button {
-                        class: "text-primary hover:text-primary/60",
-                        onclick: move |_| {
-                            let inner_popup = popup.clone();
-                            popup.open(rsx! {
-                                VerificationMethodModal {
-                                    on_identity_verify: move |new_credential| {
+                Row {
+                    class: "justify-center w-full",
+                    main_axis_align: MainAxisAlign::Center,
+                    Button {
+                        style: ButtonStyle::Text,
+                        class: "font-semibold text-primary! hover:text-primary/70!",
+                        onclick: move |_| async move {
+                            // PortOne verification is a browser-only flow
+                            // (interop module is gated to non-server
+                            // builds), so the entire body is cfg-gated.
+                            #[cfg(not(feature = "server"))]
+                            {
+                                let conf = super::config::get();
+                                let prefix = match user_ctx().user_id() {
+                                    Some(id) => id,
+                                    None => {
+                                        toast.warn(tr.verification_error.to_string());
+                                        return;
+                                    }
+                                };
+                                match super::interop::verify_identity(
+                                        conf.portone.store_id,
+                                        conf.portone.inicis_channel_key,
+                                        &prefix,
+                                    )
+                                    .await
+                                {
+                                    Ok(_updated) => {
                                         credential.restart();
-                                    },
+                                    }
+                                    Err(err) => {
+                                        toast.error(err);
+                                    }
                                 }
-                            });
+                            }
                         },
                         {tr.verify}
                     }
@@ -101,17 +138,21 @@ pub fn Home(username: String) -> Element {
 
 #[component]
 fn VerifiedItem(label: String, value: String) -> Element {
+    let is_age = label == "Age" || label == "나이";
     rsx! {
-        div { class: "flex flex-row gap-4 items-center p-4 rounded-lg border border-border-primary",
-            if label == "Age" || label == "나이" {
-                ProfileCardIcon { class: "[&>path]:fill-transparent [&_g>path]:fill-transparent" }
+        Card {
+            variant: CardVariant::Outlined,
+            direction: CardDirection::Row,
+            cross_axis_align: CrossAxisAlign::Center,
+            class: "gap-4 p-4 w-full",
+            if is_age {
+                ProfileCardIcon { class: "shrink-0 [&>path]:fill-transparent [&_g>path]:fill-transparent [&>path]:stroke-icon-primary [&_g>path]:stroke-icon-primary" }
             } else {
-                BranchUserIcon { class: "[&>path]:fill-transparent [&_g>path]:fill-transparent" }
+                BranchUserIcon { class: "shrink-0 [&>path]:fill-transparent [&_g>path]:fill-transparent [&>path]:stroke-icon-primary [&_g>path]:stroke-icon-primary" }
             }
-            div { class: "flex flex-col",
-
-                p { class: "text-sm text-text-primary", "{label}" }
-                p { class: "text-base font-medium text-text-primary", "{value}" }
+            Col { class: "gap-0.5 min-w-0",
+                p { class: "text-sm truncate text-foreground-muted", "{label}" }
+                p { class: "text-base font-medium truncate text-text-primary", "{value}" }
             }
         }
     }

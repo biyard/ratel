@@ -299,6 +299,13 @@ pub enum Error {
     #[translate(en = "This action has ended", ko = "이 액션은 종료되었습니다.")]
     ActionEnded,
 
+    #[error("Action is locked")]
+    #[translate(
+        en = "This action can no longer be modified after it has started.",
+        ko = "액션이 시작된 이후에는 변경할 수 없습니다."
+    )]
+    ActionLocked,
+
     #[error("{0}")]
     #[translate(from)]
     McpServer(#[from] McpServerError),

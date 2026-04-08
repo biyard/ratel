@@ -6,7 +6,7 @@ use crate::features::spaces::space_common::models::aggregate::DashboardAggregate
 #[cfg(feature = "server")]
 use crate::features::spaces::space_common::models::dashboard::aggregate as _;
 
-#[delete("/api/spaces/{space_id}/actions/{action_id}", role: SpaceUserRole)]
+#[delete("/api/spaces/{space_id}/actions/{action_id}", role: SpaceUserRole, space: crate::common::models::space::SpaceCommon)]
 pub async fn delete_space_action(space_id: SpacePartition, action_id: String) -> Result<()> {
     if role != SpaceUserRole::Creator {
         return Err(Error::NoPermission);
@@ -19,6 +19,16 @@ pub async fn delete_space_action(space_id: SpacePartition, action_id: String) ->
     let space_action = SpaceAction::get(cli, &action_pk, Some(EntityType::SpaceAction))
         .await?
         .ok_or(Error::NotFound("Action not found".into()))?;
+
+    // Once the action has started it is locked — creators can no
+    // longer delete it. The list UI hides the delete button past
+    // lock; defend the API surface here too.
+    if crate::features::spaces::pages::actions::is_action_locked(
+        space.status.clone(),
+        space_action.started_at,
+    ) {
+        return Err(Error::ActionLocked);
+    }
 
     let space_pk: Partition = space_id.into();
 
@@ -47,8 +57,9 @@ pub async fn delete_space_action(space_id: SpacePartition, action_id: String) ->
                 SpaceAction::delete_transact_write_item(&space_action.pk, &EntityType::SpaceAction),
                 DashboardAggregate::inc_polls(&space_pk, -1),
             ];
-            crate::transact_write_items!(cli, txs)
-                .map_err(|e| Error::InternalServerError(format!("Failed to delete poll action: {e}")))?;
+            crate::transact_write_items!(cli, txs).map_err(|e| {
+                Error::InternalServerError(format!("Failed to delete poll action: {e}"))
+            })?;
         }
         SpaceActionType::TopicDiscussion => {
             let discussion_sk = EntityType::SpacePost(action_id);
@@ -120,8 +131,9 @@ pub async fn delete_space_action(space_id: SpacePartition, action_id: String) ->
                 );
             }
 
-            crate::transact_write_items!(cli, txs)
-                .map_err(|e| Error::InternalServerError(format!("Failed to delete quiz action: {e}")))?;
+            crate::transact_write_items!(cli, txs).map_err(|e| {
+                Error::InternalServerError(format!("Failed to delete quiz action: {e}"))
+            })?;
         }
         SpaceActionType::Follow => {
             let follow_sk = EntityType::SpaceActionFollow(action_id);
@@ -135,7 +147,9 @@ pub async fn delete_space_action(space_id: SpacePartition, action_id: String) ->
 
             let mut bookmark: Option<String> = None;
             loop {
-                let mut opt = crate::features::spaces::pages::actions::actions::follow::SpaceFollowUser::opt()
+                let mut opt =
+                    crate::features::spaces::pages::actions::actions::follow::SpaceFollowUser::opt(
+                    )
                     .sk(EntityType::SpaceSubscriptionUser(String::default()).to_string())
                     .limit(100);
                 if let Some(bk) = bookmark.clone() {
