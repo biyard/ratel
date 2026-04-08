@@ -22,6 +22,39 @@ pub enum ParticipationLayoverStep {
     SeeYourDifference = 1,
     MatchRequiredAttributes = 2,
     CreateCredential = 3,
+    ConsentParticipate = 4,
+}
+
+impl ParticipationLayoverStep {
+    pub fn next(&self) -> Option<Self> {
+        match self {
+            ParticipationLayoverStep::SeeYourDifference => {
+                Some(ParticipationLayoverStep::MatchRequiredAttributes)
+            }
+            ParticipationLayoverStep::MatchRequiredAttributes => {
+                Some(ParticipationLayoverStep::CreateCredential)
+            }
+            ParticipationLayoverStep::CreateCredential => {
+                Some(ParticipationLayoverStep::ConsentParticipate)
+            }
+            ParticipationLayoverStep::ConsentParticipate => None,
+        }
+    }
+
+    pub fn back(&self) -> Option<Self> {
+        match self {
+            ParticipationLayoverStep::SeeYourDifference => None,
+            ParticipationLayoverStep::MatchRequiredAttributes => {
+                Some(ParticipationLayoverStep::SeeYourDifference)
+            }
+            ParticipationLayoverStep::CreateCredential => {
+                Some(ParticipationLayoverStep::MatchRequiredAttributes)
+            }
+            ParticipationLayoverStep::ConsentParticipate => {
+                Some(ParticipationLayoverStep::CreateCredential)
+            }
+        }
+    }
 }
 
 #[component]
@@ -29,8 +62,8 @@ pub fn ParticipationStepBar(current_step: ParticipationLayoverStep) -> Element {
     let tr: ParticipationStepBarTranslate = use_translate();
 
     rsx! {
-        div { class: "flex w-full flex-col items-start bg-[#1A1A1A]",
-            div { class: "flex w-full items-center justify-center gap-5 border-y border-[#262626] px-5 py-6 max-mobile:flex-col max-mobile:items-start max-mobile:gap-3",
+        div { class: "flex flex-col items-start w-full",
+            div { class: "flex gap-5 justify-center items-center py-6 px-5 w-full border-y border-[#262626] max-mobile:flex-col max-mobile:items-start max-mobile:gap-3",
                 StepBarItem {
                     step: 1,
                     label: tr.see_your_difference.to_string(),
@@ -62,14 +95,14 @@ fn StepBarItem(step: u8, label: String, active: bool, show_line: bool) -> Elemen
         "bg-[#737373] text-[#0A0A0A]"
     };
     let text_class = if active {
-        "text-white"
+        "text-web-font-primary"
     } else {
-        "text-[#8C8C8C]"
+        "text-font-secondary"
     };
 
     rsx! {
-        div { class: "flex items-center gap-2",
-            div { class: "flex size-6 shrink-0 items-center justify-center rounded-full font-semibold text-[12px]/[16px] {circle_class}",
+        div { class: "flex gap-2 items-center",
+            div { class: "flex justify-center items-center font-semibold rounded-full size-6 shrink-0 text-[12px]/[16px] {circle_class}",
                 {step.to_string()}
             }
             span { class: "font-semibold font-raleway text-[15px]/[18px] tracking-[-0.16px] {text_class}",
