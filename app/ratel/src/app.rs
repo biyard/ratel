@@ -23,15 +23,21 @@ pub fn App() -> Element {
     let conf = config::get();
     let env = conf.common.env;
     use_context_provider(QueryStore::new);
-    let mut init = use_signal(|| false);
 
     use_effect(move || {
-        if init() {
-            return;
-        }
+        document::eval(
+            r#"
+  const userAgent = navigator.userAgent.toLowerCase();
+  const isKakaoInApp = userAgent.includes("kakaotalk");
 
-        init.set(true);
-        interop::initialize(&serde_wasm_bindgen::to_value(&serde_json::json!({})).unwrap());
+  if (isKakaoInApp) {
+    const targetUrl = window.location.href;
+    window.location.replace(
+      `kakaotalk://web/openExternal?url=${encodeURIComponent(targetUrl)}`,
+    );
+  }
+"#,
+        );
     });
 
     rsx! {
