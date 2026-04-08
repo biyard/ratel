@@ -103,7 +103,6 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
         }
     };
 
-
     let handle_google_login = move |_| async move {
         error_message.set(None);
         loading.set(true);
@@ -260,13 +259,13 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
             // Loading overlay
             if wallet_step() == WalletStep::WaitingSignature {
 
-                div { class: "absolute inset-0 w-full h-full flex flex-col gap-10 items-center justify-center bg-background z-1 p-5",
-                    div { class: "w-full h-full max-h-200 flex flex-col justify-between",
-                        div { class: "flex flex-col w-full gap-4",
-                            p { class: "text-xl text-text-primary font-semibold text-center",
+                div { class: "flex absolute inset-0 flex-col gap-10 justify-center items-center p-5 w-full h-full bg-background z-1",
+                    div { class: "flex flex-col justify-between w-full h-full max-h-200",
+                        div { class: "flex flex-col gap-4 w-full",
+                            p { class: "text-xl font-semibold text-center text-text-primary",
                                 {tr.waiting_wallet_signature}
                             }
-                            p { class: "text-base text-muted-foreground text-center",
+                            p { class: "text-base text-center text-muted-foreground",
                                 {tr.waiting_wallet_description}
                             }
                         }
@@ -278,14 +277,14 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                             {tr.open_wallet}
                         }
                     }
-                
+
                 }
             } else if loading() {
-                div { class: "absolute inset-0 w-full h-full flex items-center justify-center bg-background/95",
+                div { class: "flex absolute inset-0 justify-center items-center w-full h-full bg-background/95",
                     crate::common::components::LoadingIndicator { class: "size-8" }
                 }
             }
-            img { src: RATEL_LOGO, alt: "Ratel", class: "h-10 object-contain" }
+            img { src: RATEL_LOGO, alt: "Ratel", class: "object-contain h-10" }
 
             div { class: "flex flex-col gap-4 w-full",
                 div { class: "flex flex-row gap-1 justify-start items-center w-full text-sm",
@@ -305,7 +304,7 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                     label { class: "text-sm", {tr.email_address} }
                     div { class: "relative w-full",
                         input {
-                            autocomplete: "email",
+                            autocomplete: "off",
                             class: "flex px-5 w-full min-w-0 h-9 text-base font-light border outline-none md:text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none shadow-xs transition-[color,box-shadow] file:text-text-primary file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground aria-invalid:ring-destructive/20 aria-invalid:outline aria-invalid:border-c-p-50 bg-input-box-bg border-input-box-border rounded-[10px] py-5.5 text-text-primary dark:bg-input/30 dark:aria-invalid:ring-destructive/40 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[1px]",
                             "data-slot": "input",
                             "data-testid": "email-input",
@@ -321,16 +320,16 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                                 if ev.key() == Key::Enter {
                                     ev.prevent_default();
                                     submit_email_login(
-                                        email,
-                                        password,
-                                        show_password,
-                                        loading,
-                                        error_message,
-                                        user_ctx,
-                                        popup,
-                                        on_success,
-                                    )
-                                    .await;
+                                            email,
+                                            password,
+                                            show_password,
+                                            loading,
+                                            error_message,
+                                            user_ctx,
+                                            popup,
+                                            on_success,
+                                        )
+                                        .await;
                                 }
                             },
                         }
@@ -356,16 +355,16 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                                 if ev.key() == Key::Enter {
                                     ev.prevent_default();
                                     submit_email_login(
-                                        email,
-                                        password,
-                                        show_password,
-                                        loading,
-                                        error_message,
-                                        user_ctx,
-                                        popup,
-                                        on_success,
-                                    )
-                                    .await;
+                                            email,
+                                            password,
+                                            show_password,
+                                            loading,
+                                            error_message,
+                                            user_ctx,
+                                            popup,
+                                            on_success,
+                                        )
+                                        .await;
                                 }
                             },
                         }
@@ -384,16 +383,16 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                         disabled: loading(),
                         onclick: move |_| async move {
                             submit_email_login(
-                                email,
-                                password,
-                                show_password,
-                                loading,
-                                error_message,
-                                user_ctx,
-                                popup,
-                                on_success,
-                            )
-                            .await;
+                                    email,
+                                    password,
+                                    show_password,
+                                    loading,
+                                    error_message,
+                                    user_ctx,
+                                    popup,
+                                    on_success,
+                                )
+                                .await;
                         },
                         if loading() {
                             {tr.loading}
@@ -456,7 +455,7 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
             }
             div { class: "flex flex-row gap-2.5 justify-center items-center w-full",
                 button {
-                    class: "font-medium cursor-pointer text-neutral-400 text-xs/3.5 bg-transparent border-none p-0",
+                    class: "p-0 font-medium bg-transparent border-none cursor-pointer text-neutral-400 text-xs/3.5",
                     onclick: move |_| {
                         popup.close();
                         navigator.push("/privacy");
@@ -464,7 +463,7 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                     {tr.privacy_policy}
                 }
                 button {
-                    class: "font-medium cursor-pointer text-neutral-400 text-xs/3.5 bg-transparent border-none p-0",
+                    class: "p-0 font-medium bg-transparent border-none cursor-pointer text-neutral-400 text-xs/3.5",
                     onclick: move |_| {
                         popup.close();
                         navigator.push("/terms");
