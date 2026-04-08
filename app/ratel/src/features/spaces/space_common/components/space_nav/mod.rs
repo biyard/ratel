@@ -33,6 +33,8 @@ pub fn SpaceNav(
     anonymous_user_profile: Option<(String, String)>,
     login_handler: EventHandler<()>,
     role: SpaceUserRole,
+    real_role: SpaceUserRole,
+    on_role_change: EventHandler<SpaceUserRole>,
     show_participation_card: bool,
     credential_path: Option<String>,
     #[props(default)] class: String,
@@ -93,6 +95,8 @@ pub fn SpaceNav(
                             .map(|(_, display_name)| display_name.clone())
                             .unwrap_or_else(|| user.display_name.clone()),
                         user_role: role,
+                        real_role,
+                        on_role_change,
                     }
                 } else {
                     SpaceUserLogin { onclick: login_handler }

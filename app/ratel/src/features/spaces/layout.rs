@@ -120,6 +120,13 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
                     user,
                     anonymous_user_profile,
                     role,
+                    real_role: ctx.role(),
+                    on_role_change: {
+                        let mut current_role = ctx.current_role;
+                        move |new_role| {
+                            current_role.set(new_role);
+                        }
+                    },
                     show_participation_card: show_participate,
                     credential_path: credential_path.clone(),
                     login_handler: move |_| {
