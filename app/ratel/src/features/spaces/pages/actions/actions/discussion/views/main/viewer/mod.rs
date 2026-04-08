@@ -2,6 +2,7 @@ use super::*;
 use crate::common::components::{Button, ButtonSize, ButtonStyle};
 use crate::features::spaces::pages::actions::actions::discussion::components::DiscussionComments;
 use crate::features::spaces::pages::actions::components::FullActionLayover;
+use crate::features::spaces::pages::apps::apps::file::components::FileCard;
 use crate::features::spaces::space_common::hooks::use_space;
 
 translate! {
@@ -102,6 +103,18 @@ pub fn DiscussionContent(discussion: SpacePost) -> Element {
                 div {
                     class: "max-w-none prose prose-invert light:prose text-text-primary",
                     dangerous_inner_html: "{discussion.html_contents}",
+                }
+            }
+            if !discussion.files.is_empty() {
+                div { class: "grid grid-cols-4 gap-2.5 max-desktop:grid-cols-3 max-tablet:grid-cols-2 max-mobile:grid-cols-1",
+                    for file in discussion.files.iter() {
+                        FileCard {
+                            key: "{file.id}",
+                            file: file.clone(),
+                            editable: false,
+                            on_delete: None,
+                        }
+                    }
                 }
             }
             hr { class: "border-divider" }

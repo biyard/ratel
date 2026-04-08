@@ -37,6 +37,7 @@ pub fn DiscussionActionEditorPage(
                     category_name: if c.is_empty() { None } else { Some(c) },
                     started_at: None,
                     ended_at: None,
+                    files: None,
                 };
                 match update_discussion(space_id, discussion_id, req).await {
                     Ok(_) => {
