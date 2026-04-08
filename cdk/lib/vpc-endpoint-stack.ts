@@ -48,18 +48,14 @@ export class VpcEndpointStack extends Stack {
 
     // Bedrock interface endpoint — dedicated SG that only accepts 443 from
     // the shared SG. Private DNS lets the SDK use the default endpoint URL.
-    const bedrockEndpointSg = new ec2.SecurityGroup(
-      this,
-      "BedrockEndpointSG",
-      {
-        vpc: this.vpc,
-        description: "Bedrock runtime VPC interface endpoint",
-        allowAllOutbound: false,
-      },
-    );
+    const bedrockEndpointSg = new ec2.SecurityGroup(this, "BedrockEndpointSG", {
+      vpc: this.vpc,
+      description: "Bedrock runtime VPC interface endpoint",
+      allowAllOutbound: false,
+    });
     bedrockEndpointSg.addIngressRule(
       this.sharedSecurityGroup,
-      ec2.Port.tcp(443),
+      ec2.Port.allTraffic(),
       "Shared services to Bedrock runtime",
     );
 
@@ -80,7 +76,7 @@ export class VpcEndpointStack extends Stack {
     });
     sesEndpointSg.addIngressRule(
       this.sharedSecurityGroup,
-      ec2.Port.tcp(443),
+      ec2.Port.allTraffic(),
       "Shared services to SES",
     );
 
