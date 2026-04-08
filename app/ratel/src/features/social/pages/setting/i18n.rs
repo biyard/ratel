@@ -238,6 +238,21 @@ translate! {
         ko: "멤버 제거에 실패했습니다. 다시 시도해주세요.",
     },
 
+    make_admin: {
+        en: "Make admin",
+        ko: "관리자로 변경",
+    },
+
+    make_member: {
+        en: "Make member",
+        ko: "멤버로 변경",
+    },
+
+    failed_change_role: {
+        en: "Failed to change member role. Please try again.",
+        ko: "멤버 역할 변경에 실패했습니다. 다시 시도해주세요.",
+    },
+
     subscription: {
         en: "Subscription",
         ko: "구독",
