@@ -23,6 +23,16 @@ pub fn App() -> Element {
     let conf = config::get();
     let env = conf.common.env;
     use_context_provider(QueryStore::new);
+    let mut init = use_signal(|| false);
+
+    use_effect(move || {
+        if init() {
+            return;
+        }
+
+        init.set(true);
+        interop::initialize(&serde_wasm_bindgen::to_value(&serde_json::json!({})).unwrap());
+    });
 
     let keywords = vec![
         "ratel".to_string(),
