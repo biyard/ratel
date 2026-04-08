@@ -26,6 +26,9 @@ if (typeof window !== "undefined") {
         }
       },
     },
+    ratel_team_setting: {
+      initialize: (_conf) => {},
+    },
     membership,
     spaces,
     auth,
