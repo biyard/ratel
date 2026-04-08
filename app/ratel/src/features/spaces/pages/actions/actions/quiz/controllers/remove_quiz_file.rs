@@ -8,22 +8,22 @@ pub struct RemoveQuizFileRequest {
     pub file_url: String,
 }
 
-#[delete("/api/spaces/{space_pk}/quizzes/{quiz_id}/files", role: SpaceUserRole)]
+#[delete("/api/spaces/{space_id}/quizzes/{quiz_id}/files", role: SpaceUserRole)]
 pub async fn remove_quiz_file(
-    space_pk: SpacePartition,
+    space_id: SpacePartition,
     quiz_id: SpaceQuizEntityType,
     req: RemoveQuizFileRequest,
 ) -> Result<()> {
     SpaceQuiz::can_edit(&role)?;
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
-    let space_pk_partition: Partition = space_pk.clone().into();
+    let space_pk: Partition = space_id.clone().into();
     let link_target = FileLinkTarget::Quiz(quiz_id.to_string());
     let quiz_sk: EntityType = quiz_id.into();
 
-    let quiz = SpaceQuiz::get(cli, &space_pk_partition, Some(quiz_sk.clone()))
+    let quiz = SpaceQuiz::get(cli, &space_pk, Some(quiz_sk.clone()))
         .await?
-        .ok_or(Error::NotFound("Quiz not found".into()))?;
+        .ok_or(SpaceActionQuizError::NotFound)?;
 
     let updated_files: Vec<File> = quiz
         .files
@@ -31,13 +31,13 @@ pub async fn remove_quiz_file(
         .filter(|f| f.url.as_ref() != Some(&req.file_url))
         .collect();
 
-    SpaceQuiz::updater(&space_pk_partition, &quiz_sk)
+    SpaceQuiz::updater(&space_pk, &quiz_sk)
         .with_files(updated_files)
         .execute(cli)
         .await?;
 
     delete_file_link(
-        space_pk,
+        space_id,
         DeleteFileLinkRequest {
             file_url: req.file_url,
             link_target,
