@@ -203,13 +203,13 @@ translate! {
     },
 
     portone_title: {
-        en: "PortOne Verification",
-        ko: "PortOne 인증",
+        en: "Identity Verification",
+        ko: "본인 인증",
     },
 
     portone_description: {
-        en: "Use PortOne identity verification to import the required attributes into your credential.",
-        ko: "PortOne 본인 인증으로 필요한 속성을 Credential에 가져옵니다.",
+        en: "Use identity verification to import the required attributes into your credential.",
+        ko: "본인 인증으로 필요한 속성을 Credential에 가져옵니다.",
     },
 
     import_title: {
