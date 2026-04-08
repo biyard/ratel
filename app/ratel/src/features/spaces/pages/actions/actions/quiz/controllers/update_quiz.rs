@@ -24,7 +24,7 @@ pub struct UpdateQuizRequest {
 }
 
 #[mcp_tool(name = "update_quiz", description = "Update a quiz (title, description, time, questions, answers, pass_score, retry_count, files). Requires creator role.")]
-#[post("/api/spaces/{space_pk}/quizzes/{quiz_id}", role: SpaceUserRole, space: crate::common::models::space::SpaceCommon)]
+#[post("/api/spaces/{space_pk}/quizzes/{quiz_id}", role: SpaceUserRole)]
 pub async fn update_quiz(
     #[mcp(description = "Space partition key")]
     space_pk: SpacePartition,
@@ -55,27 +55,6 @@ pub async fn update_quiz(
     }
 
     let now = crate::common::utils::time::get_now_timestamp_millis();
-
-    // Lock all quiz edits once the action has started. UI already
-    // disables inputs; defend the API surface here too.
-    let action_pk_for_check = CompositePartition(space_id.clone(), quiz_id.to_string());
-    let space_action_check =
-        crate::features::spaces::pages::actions::models::SpaceAction::get(
-            cli,
-            &action_pk_for_check,
-            Some(EntityType::SpaceAction),
-        )
-        .await
-        .map_err(|e| Error::InternalServerError(format!("Failed to get space action: {e:?}")))?
-        .ok_or(Error::NotFound("Space action not found".into()))?;
-    if crate::features::spaces::pages::actions::is_action_locked(
-        space.status.clone(),
-        space_action_check.started_at,
-    ) {
-        return Err(Error::BadRequest(
-            "Quiz cannot be edited after the action has started".into(),
-        ));
-    }
     let mut updater = SpaceQuiz::updater(&space_pk, &quiz_sk).with_updated_at(now);
     let action_pk = CompositePartition(space_id, quiz_id.to_string());
     let action_sk = EntityType::SpaceAction;
