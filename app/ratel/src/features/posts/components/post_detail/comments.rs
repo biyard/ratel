@@ -39,9 +39,8 @@ pub fn CommentSection(
             }
             div { class: "flex gap-2 items-end",
                 TextArea {
-                    class: "flex-1 min-h-10 resize-none rounded-[10px] border border-input-box-border bg-input-box-bg px-3 py-2 text-sm text-text-primary outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[1px]"
-                        .to_string(),
-                    placeholder: t.share_your_thoughts.to_string(),
+                    class: "flex-1 min-h-10 resize-none rounded-[10px] border border-input-box-border bg-input-box-bg px-3 py-2 text-sm text-text-primary outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[1px]",
+                    placeholder: t.share_your_thoughts,
                     value: comment_input(),
                     oninput: move |e: Event<FormData>| comment_input.set(e.value()),
                     onkeydown: move |evt: KeyboardEvent| {
@@ -70,7 +69,7 @@ pub fn CommentSection(
                     style: ButtonStyle::Primary,
                     shape: ButtonShape::Rounded,
                     size: ButtonSize::Icon,
-                    class: "size-10 shrink-0 !p-0 inline-flex items-center justify-center".to_string(),
+                    class: "size-10 shrink-0 !p-0 inline-flex items-center justify-center",
                     disabled: comment_input().trim().is_empty() || is_submitting(),
                     onclick: move |_| {
                         let content = comment_input().trim().to_string();
@@ -184,7 +183,7 @@ fn CommentItem(
                 Button {
                     size: ButtonSize::Inline,
                     style: ButtonStyle::Text,
-                    class: "inline-flex items-center text-text-secondary hover:text-primary".to_string(),
+                    class: "inline-flex items-center text-text-secondary hover:text-primary",
                     onclick: move |_| {
                         let is_open = show_replies() || show_reply_input();
                         if is_open {
@@ -206,9 +205,7 @@ fn CommentItem(
                 Button {
                     size: ButtonSize::Inline,
                     style: ButtonStyle::Text,
-                    class: if optimistic_liked() { "inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary"
-                        .to_string() } else { "inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-primary"
-                        .to_string() },
+                    class: if optimistic_liked() { "inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary" } else { "inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-primary" },
                     disabled: is_processing(),
                     onclick: {
                         let pk = post_pk.clone();
@@ -247,9 +244,8 @@ fn CommentItem(
             if show_reply_input() {
                 div { class: "mt-1 rounded-xl bg-card-bg-secondary p-3",
                     TextArea {
-                        class: "h-20 w-full resize-none rounded-lg bg-input-box-bg border border-input-box-border px-3 py-2 text-sm text-text-primary outline-none placeholder:text-text-tertiary"
-                            .to_string(),
-                        placeholder: t.contents_hint.to_string(),
+                        class: "h-20 w-full resize-none rounded-lg bg-input-box-bg border border-input-box-border px-3 py-2 text-sm text-text-primary outline-none placeholder:text-text-tertiary",
+                        placeholder: t.contents_hint,
                         value: reply_text(),
                         oninput: move |e: Event<FormData>| reply_text.set(e.value()),
                         onkeydown: move |evt: KeyboardEvent| {
@@ -288,7 +284,7 @@ fn CommentItem(
                             style: ButtonStyle::Primary,
                             shape: ButtonShape::Rounded,
                             size: ButtonSize::Icon,
-                            class: "size-10 !p-0 inline-flex items-center justify-center".to_string(),
+                            class: "size-10 !p-0 inline-flex items-center justify-center",
                             disabled: reply_text().trim().is_empty() || is_reply_submitting(),
                             onclick: move |_| {
                                 let content = reply_text().trim().to_string();
@@ -369,8 +365,7 @@ fn ReplyItem(
                 Button {
                     size: ButtonSize::Inline,
                     style: ButtonStyle::Text,
-                    class: if optimistic_liked() { "inline-flex items-center gap-1.5 text-sm text-primary".to_string() } else { "inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-primary"
-                        .to_string() },
+                    class: if optimistic_liked() { "inline-flex items-center gap-1.5 text-sm text-primary" } else { "inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-primary" },
                     disabled: is_processing(),
                     onclick: {
                         let pk = post_pk.clone();
