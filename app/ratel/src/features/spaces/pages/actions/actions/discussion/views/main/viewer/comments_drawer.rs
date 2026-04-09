@@ -1,4 +1,8 @@
+use crate::common::components::{Sheet, SheetContent, SheetHeader, SheetSide, SheetTitle};
+use crate::features::spaces::pages::actions::actions::discussion::components::DiscussionComments;
+use crate::features::spaces::pages::actions::actions::discussion::views::main::viewer::DiscussionViewerTranslate;
 use crate::features::spaces::pages::actions::actions::discussion::*;
+use lucide_dioxus::MessageCircle;
 
 #[component]
 pub fn CommentsDrawer(
@@ -10,10 +14,53 @@ pub fn CommentsDrawer(
     current_user_pk: Option<String>,
     comment_count: usize,
 ) -> Element {
-    rsx! {}
+    let tr: DiscussionViewerTranslate = use_translate();
+    let mut open_sig = open;
+
+    rsx! {
+        Sheet {
+            open: open_sig(),
+            on_open_change: move |v| open_sig.set(v),
+            SheetContent {
+                side: SheetSide::Right,
+                class: "w-full max-w-[420px] max-mobile:max-w-full max-mobile:h-[85vh] max-mobile:w-full",
+                SheetHeader {
+                    SheetTitle { "{tr.comments} ({comment_count})" }
+                }
+                div { class: "overflow-y-auto flex-1 px-4 pb-6",
+                    DiscussionComments {
+                        space_id,
+                        discussion_id,
+                        can_comment,
+                        can_manage_comments,
+                        current_user_pk,
+                    }
+                }
+            }
+        }
+    }
 }
 
 #[component]
 pub fn FloatingCommentsButton(open: Signal<bool>, comment_count: usize) -> Element {
-    rsx! {}
+    let tr: DiscussionViewerTranslate = use_translate();
+    let mut open_sig = open;
+
+    if open_sig() {
+        return rsx! {};
+    }
+
+    rsx! {
+        button {
+            class: "flex fixed right-6 bottom-6 z-40 justify-center items-center w-14 h-14 rounded-full shadow-lg transition-transform bg-btn-primary-bg text-btn-primary-text hover:scale-105 focus-visible:ring-2 focus-visible:ring-ring/50",
+            "aria-label": "{tr.open_comments}",
+            onclick: move |_| open_sig.set(true),
+            MessageCircle { class: "w-6 h-6 [&>path]:stroke-icon-primary" }
+            if comment_count > 0 {
+                span { class: "flex absolute -top-1 -right-1 justify-center items-center px-1 h-5 text-xs font-bold rounded-full min-w-5 bg-primary text-btn-primary-text",
+                    "{comment_count}"
+                }
+            }
+        }
+    }
 }

@@ -20,21 +20,68 @@ pub use toc_context::{DiscussionTocContext, TocEntry, use_discussion_toc_context
 
 use super::*;
 use crate::features::spaces::pages::actions::actions::discussion::*;
-use crate::features::spaces::space_common::hooks::use_space;
+use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
 
 #[component]
 pub fn ViewerMain(
     space_id: ReadSignal<SpacePartition>,
     discussion_id: ReadSignal<SpacePostEntityType>,
 ) -> Element {
-    let _tr: DiscussionViewerTranslate = use_translate();
+    let tr: DiscussionViewerTranslate = use_translate();
+    let role = use_space_role()();
+    let user = crate::features::spaces::hooks::use_user()?;
+    let current_user_pk = user.read().as_ref().map(|u| u.pk.to_string());
     let ctx = use_discussion_context();
+    let space = use_space().read().clone();
+
+    // Initialize the TOC context so content_body and table_of_contents share state.
+    DiscussionTocContext::init();
+
     let discussion_response = ctx.discussion();
-    let _discussion = discussion_response.post;
+    let discussion = discussion_response.post;
+    let can_participate = discussion.status() == DiscussionStatus::InProgress;
+    let can_comment = crate::features::spaces::pages::actions::can_execute_space_action(
+        role,
+        discussion_response.space_action.prerequisite,
+        space.status,
+        space.join_anytime,
+    ) && can_participate;
+    let can_manage_comments = can_comment;
+    let comment_count = discussion.comments.max(0) as usize;
+
+    let drawer_open = use_signal(|| false);
+
+    let title = if discussion.title.is_empty() {
+        tr.untitled_discussion.to_string()
+    } else {
+        discussion.title.clone()
+    };
 
     rsx! {
         div { class: "flex flex-col gap-6 mx-auto w-full max-w-[1080px] px-4 py-6 md:px-6 md:py-8 desktop:px-8",
-            div { class: "text-text-primary", "ViewerMain scaffold — filling in tasks" }
+            DiscussionProperties { discussion: discussion.clone() }
+
+            h1 { class: "text-2xl font-bold tracking-tight text-text-primary md:text-3xl desktop:text-4xl",
+                "{title}"
+            }
+
+            DiscussionMetaLine { discussion: discussion.clone() }
+
+            DiscussionAttachments { files: discussion.files.clone() }
+
+            NotionLayout { html_contents: discussion.html_contents.clone() }
         }
+
+        CommentsDrawer {
+            open: drawer_open,
+            space_id,
+            discussion_id,
+            can_comment,
+            can_manage_comments,
+            current_user_pk,
+            comment_count,
+        }
+
+        FloatingCommentsButton { open: drawer_open, comment_count }
     }
 }
