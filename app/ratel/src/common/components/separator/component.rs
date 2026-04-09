@@ -45,4 +45,12 @@ pub enum SeparatorVariant {
     Solid,
     #[strum(serialize = "border-dashed")]
     Dashed,
+    #[strum(
+        serialize = "border-0 h-px bg-gradient-to-r from-transparent via-[color:rgba(252,179,0,0.4)] to-transparent"
+    )]
+    Gradient,
+    #[strum(
+        serialize = "border-0 h-px bg-gradient-to-r from-transparent via-[color:rgba(110,237,216,0.4)] to-transparent"
+    )]
+    GradientAccent,
 }
