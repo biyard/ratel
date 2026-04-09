@@ -95,6 +95,9 @@ pub enum Partition {
     Timeline(String), // TIMELINE#{user_id}
 
     Category, // CATEGORY - shared pk for all categories
+
+    // Gamification — Quest Map / Chapters
+    SpaceChapter(String), // SPACE_CHAPTER#{chapter_id} — chapter scoped to a space
 }
 
 impl Partition {
