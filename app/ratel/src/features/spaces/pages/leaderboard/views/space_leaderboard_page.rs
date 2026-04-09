@@ -11,15 +11,14 @@ use super::*;
 /// Loads ranking data for the space and composes filter chips, a podium for
 /// the top 3 entries, and a scrollable list for all remaining entries.
 #[component]
-pub fn SpaceLeaderboardPage(space_id: SpacePartition) -> Element {
+pub fn SpaceLeaderboardPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: LeaderboardTranslate = use_translate();
     let user_ctx = use_user_context();
     let current_user_pk = user_ctx.read().user.as_ref().map(|u| u.pk.to_string());
 
-    let sid = space_id.clone();
-    let ranking_key = space_ranking_key(&sid);
+    let ranking_key = space_ranking_key(&space_id());
     let ranking_loader = use_query(&ranking_key, move || async move {
-        get_ranking_handler(sid.clone(), None).await
+        get_ranking_handler(space_id(), None).await
     })?;
 
     let ranking = ranking_loader();
