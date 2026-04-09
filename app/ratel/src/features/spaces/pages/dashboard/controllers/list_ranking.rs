@@ -15,12 +15,12 @@ pub async fn list_ranking_handler(
     let cli = cfg.dynamodb();
     let space_pk: crate::common::Partition = space_id.into();
 
-    let mut opts = SpaceScore::opt().limit(50);
+    let mut opts = SpaceScore::opt().limit(50).scan_index_forward(true);
     if let Some(bm) = bookmark {
         opts = opts.bookmark(bm);
     }
 
-    let (scores, _) = SpaceScore::find_by_space(cli, &space_pk, opts).await?;
+    let (scores, _) = SpaceScore::find_by_space_rank(cli, &space_pk, opts).await?;
 
     let entries: Vec<RankingEntry> = scores
         .iter()
