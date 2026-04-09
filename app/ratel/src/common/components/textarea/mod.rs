@@ -8,6 +8,7 @@ pub fn TextArea(
     #[props(default)] disabled: bool,
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
     #[props(optional)] oninput: Option<EventHandler<FormEvent>>,
+    #[props(optional)] onkeydown: Option<EventHandler<KeyboardEvent>>,
 ) -> Element {
     rsx! {
         textarea {
@@ -17,6 +18,11 @@ pub fn TextArea(
             disabled,
             oninput: move |e| {
                 if let Some(handler) = &oninput {
+                    handler.call(e);
+                }
+            },
+            onkeydown: move |e| {
+                if let Some(handler) = &onkeydown {
                     handler.call(e);
                 }
             },
