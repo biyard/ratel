@@ -208,6 +208,14 @@ pub enum EntityType {
     // Activity
     SpaceActivity(String), // SPACE_ACTIVITY#action_id#timestamp
     SpaceScore,
+
+    // Gamification — Quest Map / XP
+    SpaceChapter(String),      // SPACE_CHAPTER#{chapter_id}
+    SpaceXpLedger(String),     // SPACE_XP_LEDGER#{user_pk}#{timestamp}
+    UserGlobalXp,              // USER_GLOBAL_XP — singleton per user
+    UserStreak,                // USER_STREAK — singleton per user
+    UserSpaceCombo(String),    // USER_SPACE_COMBO#{user_pk}
+    SpaceCreatorEarnings,      // SPACE_CREATOR_EARNINGS — singleton per space
 }
 
 impl TryInto<Partition> for EntityType {
