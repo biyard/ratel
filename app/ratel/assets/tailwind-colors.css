@@ -332,3 +332,45 @@
   /* ---- Web: Pop ---- */
   --color-web-pop-bg: #1A1A1A;
 }
+
+/* ==========================================================================
+   LIGHT THEME COUNTERPARTS - GAMIFICATION RENEWAL (Phase 1)
+   Softer surfaces and shadows for the light theme.
+   ========================================================================== */
+
+html[data-theme="light"] {
+  /* Glass surfaces — lighter base with lower opacity contrast */
+  --glass-surface-primary: linear-gradient(135deg, rgba(0, 0, 0, 0.03), rgba(0, 0, 0, 0.01));
+  --glass-surface-accent: linear-gradient(135deg, rgba(252, 179, 0, 0.12), rgba(255, 255, 255, 0.6));
+  --glass-surface-teal: linear-gradient(135deg, rgba(110, 237, 216, 0.14), rgba(255, 255, 255, 0.6));
+
+  /* Glass borders */
+  --glass-border: 1px solid rgba(0, 0, 0, 0.08);
+  --glass-border-primary: 1px solid rgba(252, 179, 0, 0.4);
+  --glass-border-accent: 1px solid rgba(110, 237, 216, 0.45);
+
+  /* Depth shadows — softer in light mode */
+  --depth-sm: 0 4px 16px -4px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  --depth-md: 0 8px 24px -8px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  --depth-lg: 0 16px 40px -12px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  --depth-hero:
+    0 20px 60px -16px rgba(0, 0, 0, 0.14),
+    0 0 80px -24px rgba(252, 179, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+
+  /* Rim glows — lighter and smaller in light mode */
+  --rim-glow-primary: 0 0 40px -16px rgba(252, 179, 0, 0.25);
+  --rim-glow-accent: 0 0 40px -16px rgba(110, 237, 216, 0.25);
+  --rim-glow-danger: 0 0 40px -16px rgba(219, 39, 128, 0.25);
+
+  /* Gradient text — darker end stops for contrast */
+  --text-gradient-gold: linear-gradient(180deg, #8a5d00 0%, #a07a30 60%, #5a4220 100%);
+  --text-gradient-teal: linear-gradient(180deg, #1a4a40 0%, #3a7a6a 50%, #0a2520 100%);
+
+  /* Rails */
+  --rail-recessed: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.03));
+  --rail-fill-primary: linear-gradient(90deg, #8a5d00, #fcb300 40%, #ffe082 70%, #6eedd8 100%);
+  --rail-fill-teal: linear-gradient(90deg, #0a2520, #3a7a6a 50%, #6eedd8 100%);
+
+  /* Spheres — unchanged (same radial gradient works in both themes) */
+}
