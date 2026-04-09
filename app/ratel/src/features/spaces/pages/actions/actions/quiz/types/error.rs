@@ -104,6 +104,10 @@ pub enum SpaceActionQuizError {
         ko = "답변 유형이 질문 유형과 일치하지 않습니다."
     )]
     AnswerTypeMismatch,
+
+    #[error("Quiz not found")]
+    #[translate(en = "Quiz not found", ko = "퀴즈를 찾을 수 없습니다.")]
+    NotFound,
 }
 
 #[cfg(feature = "server")]
@@ -111,6 +115,7 @@ impl SpaceActionQuizError {
     pub fn status_code(&self) -> bdk::prelude::axum::http::StatusCode {
         use bdk::prelude::axum::http::StatusCode;
         match self {
+            SpaceActionQuizError::NotFound => StatusCode::NOT_FOUND,
             _ => StatusCode::BAD_REQUEST,
         }
     }

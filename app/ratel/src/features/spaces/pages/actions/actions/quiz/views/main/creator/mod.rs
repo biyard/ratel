@@ -16,7 +16,20 @@ pub fn QuizCreatorPage(
 ) -> Element {
     let tr: QuizCreatorTranslate = use_translate();
     let ctx = Context::init(space_id, quiz_id)?;
+    // `can_edit_quiz` is the long-standing guard that prevents quiz
+    // questions/answers from being mutated once participants have
+    // started responding (it would invalidate scores). Lifecycle lock
+    // is no longer applied here — creators can keep tweaking even
+    // after the action starts.
     let can_edit_quiz = ctx.quiz.read().user_response_count == 0;
+
+    // The delete button is the only thing that respects the lifecycle
+    // lock now: once the action has started we hide it.
+    let space = crate::features::spaces::space_common::hooks::use_space()();
+    let locked = crate::features::spaces::pages::actions::is_action_locked(
+        space.status,
+        ctx.quiz().space_action.started_at,
+    );
 
     rsx! {
         div { class: "flex min-h-0 w-full flex-1 flex-col gap-4",
@@ -48,9 +61,12 @@ pub fn QuizCreatorPage(
                             action_setting: ctx.quiz().space_action,
                             on_date_change: move |_range: DateTimeRange| async move {},
                         }
-                        ActionDeleteButton {
-                            space_id: space_id(),
-                            action_id: quiz_id().to_string(),
+                        // Delete button hidden once the action is locked.
+                        if !locked {
+                            ActionDeleteButton {
+                                space_id: space_id(),
+                                action_id: quiz_id().to_string(),
+                            }
                         }
                     }
                 }

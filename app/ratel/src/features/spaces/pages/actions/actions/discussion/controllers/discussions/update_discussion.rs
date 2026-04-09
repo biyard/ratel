@@ -1,7 +1,7 @@
 use crate::features::spaces::pages::actions::actions::discussion::*;
 use crate::features::spaces::pages::actions::models::SpaceAction;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct UpdateDiscussionRequest {
     #[serde(default)]
@@ -14,6 +14,8 @@ pub struct UpdateDiscussionRequest {
     pub started_at: Option<i64>,
     #[serde(default)]
     pub ended_at: Option<i64>,
+    #[serde(default)]
+    pub files: Option<Vec<File>>,
 }
 
 #[mcp_tool(name = "update_discussion", description = "Update a discussion (title, html_contents, category_name, started_at, ended_at). Requires creator role.")]
@@ -61,6 +63,14 @@ pub async fn update_discussion(
     }
     if let Some(ended_at) = req.ended_at {
         updater = updater.with_ended_at(ended_at);
+    }
+    if let Some(mut files) = req.files {
+        for file in &mut files {
+            if file.id.is_empty() {
+                file.id = crate::common::uuid::Uuid::now_v7().to_string();
+            }
+        }
+        updater = updater.with_files(files);
     }
 
     let post = updater.execute(cli).await?;

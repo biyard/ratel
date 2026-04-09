@@ -179,3 +179,12 @@ pub fn AdminIcon() -> Element {
         }
     }
 }
+
+#[component]
+pub fn CredentialsIcon() -> Element {
+    rsx! {
+        icons::security::ShieldGood {
+            class: "size-6 transition-all [&>path]:stroke-menu-text group-hover:[&>path]:stroke-menu-text/80 [&>path]:fill-transparent",
+        }
+    }
+}

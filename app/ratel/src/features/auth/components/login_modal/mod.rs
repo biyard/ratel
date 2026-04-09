@@ -1,4 +1,5 @@
 use crate::common::assets::RATEL_LOGO;
+use crate::common::components::popup::PopupService;
 use crate::features::auth::context::UserContext;
 use crate::features::auth::controllers::login::{
     login_handler, wallet_check_handler, wallet_nonce_handler, LoginRequest, WalletCheckRequest,
@@ -17,12 +18,61 @@ enum WalletStep {
     Done,
 }
 
+/// Shared email-login action. Extracted as a free `async fn` so it can be
+/// awaited from multiple event handlers (button onclick, email/password
+/// `onkeydown` Enter handlers) without moving a closure multiple times or
+/// falling back to `spawn`. Signals are `Copy`, so each caller passes them
+/// by value.
+async fn submit_email_login(
+    email: Signal<String>,
+    password: Signal<String>,
+    mut show_password: Signal<bool>,
+    mut loading: Signal<bool>,
+    mut error_message: Signal<Option<String>>,
+    mut user_ctx: Store<UserContext>,
+    mut popup: PopupService,
+    on_success: Option<Callback<()>>,
+) {
+    error_message.set(None);
+
+    if !show_password() {
+        show_password.set(true);
+        return;
+    }
+
+    loading.set(true);
+    let result = login_handler(LoginRequest::Email {
+        email: email.read().clone(),
+        password: password.read().clone(),
+        device_id: None,
+    })
+    .await;
+    loading.set(false);
+
+    match result {
+        Ok(user) => {
+            user_ctx.set(UserContext {
+                user: Some(user.user),
+                refresh_token: user.refresh_token,
+                membership: None,
+            });
+            if let Some(handler) = &on_success {
+                handler.call(());
+            }
+            popup.close();
+        }
+        Err(e) => {
+            error_message.set(Some(format!("{e}")));
+        }
+    }
+}
+
 #[component]
 pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Element {
     let tr: LoginModalTranslate = use_translate();
     let mut email = use_signal(|| String::new());
     let mut password = use_signal(|| String::new());
-    let mut show_password = use_signal(|| false);
+    let show_password = use_signal(|| false);
     let mut loading = use_signal(|| false);
     let mut error_message: Signal<Option<String>> = use_signal(|| None);
     //NOTE: Web Feature issue
@@ -50,41 +100,6 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
         #[cfg(feature = "web")]
         {
             let _ = wallet_open_app().await;
-        }
-    };
-
-    let handle_email_login = move |_| async move {
-        error_message.set(None);
-
-        if !show_password() {
-            show_password.set(true);
-            return;
-        }
-
-        loading.set(true);
-        let result = login_handler(LoginRequest::Email {
-            email: email.read().clone(),
-            password: password.read().clone(),
-            device_id: None,
-        })
-        .await;
-        loading.set(false);
-
-        match result {
-            Ok(user) => {
-                user_ctx.set(UserContext {
-                    user: Some(user.user),
-                    refresh_token: user.refresh_token,
-                    membership: None,
-                });
-                if let Some(handler) = &on_success {
-                    handler.call(());
-                }
-                popup.close();
-            }
-            Err(e) => {
-                error_message.set(Some(format!("{e}")));
-            }
         }
     };
 
@@ -244,13 +259,13 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
             // Loading overlay
             if wallet_step() == WalletStep::WaitingSignature {
 
-                div { class: "absolute inset-0 w-full h-full flex flex-col gap-10 items-center justify-center bg-background z-1 p-5",
-                    div { class: "w-full h-full max-h-200 flex flex-col justify-between",
-                        div { class: "flex flex-col w-full gap-4",
-                            p { class: "text-xl text-text-primary font-semibold text-center",
+                div { class: "flex absolute inset-0 flex-col gap-10 justify-center items-center p-5 w-full h-full bg-background z-1",
+                    div { class: "flex flex-col justify-between w-full h-full max-h-200",
+                        div { class: "flex flex-col gap-4 w-full",
+                            p { class: "text-xl font-semibold text-center text-text-primary",
                                 {tr.waiting_wallet_signature}
                             }
-                            p { class: "text-base text-muted-foreground text-center",
+                            p { class: "text-base text-center text-muted-foreground",
                                 {tr.waiting_wallet_description}
                             }
                         }
@@ -265,11 +280,11 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                 
                 }
             } else if loading() {
-                div { class: "absolute inset-0 w-full h-full flex items-center justify-center bg-background/95",
+                div { class: "flex absolute inset-0 justify-center items-center w-full h-full bg-background/95",
                     crate::common::components::LoadingIndicator { class: "size-8" }
                 }
             }
-            img { src: RATEL_LOGO, alt: "Ratel", class: "h-10 object-contain" }
+            img { src: RATEL_LOGO, alt: "Ratel", class: "object-contain h-10" }
 
             div { class: "flex flex-col gap-4 w-full",
                 div { class: "flex flex-row gap-1 justify-start items-center w-full text-sm",
@@ -286,20 +301,33 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                 }
 
                 div { class: "flex flex-col gap-2.5 w-full",
-                    label { class: "text-sm", {tr.email_address} }
+                    label { r#for: "email", class: "text-sm", {tr.email_address} }
                     div { class: "relative w-full",
-                        input {
+                        Input {
+                            id: "email",
+                            name: "username",
                             autocomplete: "email",
-                            class: "flex px-5 w-full min-w-0 h-9 text-base font-light border outline-none md:text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none shadow-xs transition-[color,box-shadow] file:text-text-primary file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground aria-invalid:ring-destructive/20 aria-invalid:outline aria-invalid:border-c-p-50 bg-input-box-bg border-input-box-border rounded-[10px] py-5.5 text-text-primary dark:bg-input/30 dark:aria-invalid:ring-destructive/40 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[1px]",
                             "data-slot": "input",
                             "data-testid": "email-input",
                             disabled: loading(),
-                            name: "username",
                             placeholder: "{tr.email_placeholder}",
-                            r#type: "email",
+                            r#type: InputType::Email,
                             value: email(),
-                            oninput: move |ev| {
+                            oninput: move |ev: FormEvent| {
                                 email.set(ev.data().value());
+                            },
+                            onconfirm: move |_| async move {
+                                submit_email_login(
+                                        email,
+                                        password,
+                                        show_password,
+                                        loading,
+                                        error_message,
+                                        user_ctx,
+                                        popup,
+                                        on_success,
+                                    )
+                                    .await;
                             },
                         }
                     }
@@ -307,18 +335,33 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                 div {
                     aria_hidden: if show_password() { "false" } else { "true" },
                     class: "flex flex-col gap-2.5 w-full aria-hidden:hidden",
-                    label { class: "text-sm", {tr.password} }
+                    label { r#for: "password", class: "text-sm", {tr.password} }
                     div { class: "relative w-full",
-                        input {
-                            class: "flex px-5 w-full min-w-0 h-9 text-base font-light border outline-none md:text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none shadow-xs transition-[color,box-shadow] text-text-primary file:text-text-primary file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium selection:bg-primary selection:text-primary-foreground border-input-box-border bg-input-box-bg placeholder:text-muted-foreground aria-invalid:ring-destructive/20 aria-invalid:outline aria-invalid:border-c-p-50 rounded-[10px] py-5.5 dark:bg-input/30 dark:aria-invalid:ring-destructive/40 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[1px]",
+                        Input {
+                            id: "password",
+                            name: "password",
+                            autocomplete: "current-password",
                             "data-slot": "input",
                             "data-testid": "password-input",
                             disabled: loading(),
                             placeholder: "{tr.password_placeholder}",
-                            r#type: "password",
+                            r#type: InputType::Password,
                             value: password(),
-                            oninput: move |ev| {
+                            oninput: move |ev: FormEvent| {
                                 password.set(ev.data().value());
+                            },
+                            onconfirm: move |_| async move {
+                                submit_email_login(
+                                        email,
+                                        password,
+                                        show_password,
+                                        loading,
+                                        error_message,
+                                        user_ctx,
+                                        popup,
+                                        on_success,
+                                    )
+                                    .await;
                             },
                         }
                     }
@@ -334,7 +377,19 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                         "data-slot": "button",
                         "data-testid": "continue-button",
                         disabled: loading(),
-                        onclick: handle_email_login,
+                        onclick: move |_| async move {
+                            submit_email_login(
+                                    email,
+                                    password,
+                                    show_password,
+                                    loading,
+                                    error_message,
+                                    user_ctx,
+                                    popup,
+                                    on_success,
+                                )
+                                .await;
+                        },
                         if loading() {
                             {tr.loading}
                         } else {
@@ -396,7 +451,7 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
             }
             div { class: "flex flex-row gap-2.5 justify-center items-center w-full",
                 button {
-                    class: "font-medium cursor-pointer text-neutral-400 text-xs/3.5 bg-transparent border-none p-0",
+                    class: "p-0 font-medium bg-transparent border-none cursor-pointer text-neutral-400 text-xs/3.5",
                     onclick: move |_| {
                         popup.close();
                         navigator.push("/privacy");
@@ -404,7 +459,7 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                     {tr.privacy_policy}
                 }
                 button {
-                    class: "font-medium cursor-pointer text-neutral-400 text-xs/3.5 bg-transparent border-none p-0",
+                    class: "p-0 font-medium bg-transparent border-none cursor-pointer text-neutral-400 text-xs/3.5",
                     onclick: move |_| {
                         popup.close();
                         navigator.push("/terms");

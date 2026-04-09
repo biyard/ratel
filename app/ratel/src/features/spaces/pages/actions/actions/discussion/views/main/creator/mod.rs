@@ -2,8 +2,10 @@ use crate::features::spaces::pages::actions::actions::discussion::*;
 use crate::features::spaces::pages::actions::{ActionCommonSettings, ActionDeleteButton};
 mod i18n;
 mod overview_tab;
+mod upload_tab;
 pub use i18n::DiscussionCreatorTranslate;
 pub use overview_tab::*;
+pub use upload_tab::*;
 
 #[component]
 pub fn CreatorMain(
@@ -13,13 +15,23 @@ pub fn CreatorMain(
     let tr: DiscussionCreatorTranslate = use_translate();
     let ctx = use_discussion_context();
 
+    // The delete button is the only thing the lifecycle lock still
+    // applies to — creators can keep editing the discussion (title,
+    // body, time range, etc.) even after it has started.
+    let space = crate::features::spaces::space_common::hooks::use_space()();
+    let locked = crate::features::spaces::pages::actions::is_action_locked(
+        space.status,
+        ctx.discussion().space_action.started_at,
+    );
+
     rsx! {
         div { class: "flex flex-col flex-1 gap-4 w-full min-h-0",
             h3 { {tr.page_title} }
             Tabs { class: "flex-1 min-h-0", default_value: "overview-tab",
                 TabList {
                     TabTrigger { index: 0usize, value: "overview-tab", {tr.tab_overview} }
-                    TabTrigger { index: 1usize, value: "setting-tab", {tr.tab_setting} }
+                    TabTrigger { index: 1usize, value: "upload-tab", {tr.tab_upload} }
+                    TabTrigger { index: 2usize, value: "setting-tab", {tr.tab_setting} }
                 }
                 TabContent {
                     index: 0usize,
@@ -27,7 +39,10 @@ pub fn CreatorMain(
                     class: "flex flex-1 min-h-0",
                     OverviewTab {}
                 }
-                TabContent { index: 1usize, value: "setting-tab",
+                TabContent { index: 1usize, value: "upload-tab",
+                    UploadTab { can_edit: true }
+                }
+                TabContent { index: 2usize, value: "setting-tab",
                     div { class: "flex flex-col gap-5 w-full",
                         ActionCommonSettings {
                             space_id,
@@ -49,6 +64,7 @@ pub fn CreatorMain(
                                         category_name: None,
                                         started_at: Some(started_at),
                                         ended_at: Some(ended_at),
+                                        files: None,
                                     };
                                     let _ = update_discussion(space_id, discussion_id, req).await;
                                 }
@@ -58,9 +74,12 @@ pub fn CreatorMain(
                             space_id,
                             discussion_id: use_memo(move || SpaceDiscussionEntityType(discussion_id().to_string())),
                         }
-                        ActionDeleteButton {
-                            space_id: space_id(),
-                            action_id: discussion_id().to_string(),
+                        // Delete button is hidden once the action is locked.
+                        if !locked {
+                            ActionDeleteButton {
+                                space_id: space_id(),
+                                action_id: discussion_id().to_string(),
+                            }
                         }
                     }
                 }

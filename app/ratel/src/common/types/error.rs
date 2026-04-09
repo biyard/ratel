@@ -1,4 +1,4 @@
-use crate::common::*;
+use crate::{common::*, spaces::SpaceError};
 use dioxus::fullstack::Loading;
 pub use thiserror::Error;
 
@@ -59,7 +59,10 @@ pub enum Error {
     BadRequest(String),
 
     #[error("Username already exists")]
-    #[translate(en = "Username already exists", ko = "이미 존재하는 사용자 이름입니다.")]
+    #[translate(
+        en = "Username already exists",
+        ko = "이미 존재하는 사용자 이름입니다."
+    )]
     UsernameAlreadyExists,
 
     #[error("Duplicate entry: {0}")]
@@ -238,6 +241,10 @@ pub enum Error {
 
     #[error("{0}")]
     #[translate(from)]
+    Space(#[from] SpaceError),
+
+    #[error("{0}")]
+    #[translate(from)]
     SpaceReward(#[from] SpaceRewardError),
 
     #[error("{0}")]
@@ -298,6 +305,13 @@ pub enum Error {
     #[error("Action has ended")]
     #[translate(en = "This action has ended", ko = "이 액션은 종료되었습니다.")]
     ActionEnded,
+
+    #[error("Action is locked")]
+    #[translate(
+        en = "This action can no longer be modified after it has started.",
+        ko = "액션이 시작된 이후에는 변경할 수 없습니다."
+    )]
+    ActionLocked,
 
     #[error("{0}")]
     #[translate(from)]
