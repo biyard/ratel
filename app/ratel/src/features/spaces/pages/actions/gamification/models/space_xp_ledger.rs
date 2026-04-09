@@ -14,7 +14,6 @@ use crate::features::spaces::pages::actions::gamification::*;
 /// A `user_pk` GSI (`find_by_user`) lets the global profile query every
 /// ledger entry for a single user across spaces.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, DynamoEntity)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct SpaceXpLedgerEntry {
     pub pk: Partition,  // Partition::Space
     pub sk: EntityType, // EntityType::SpaceXpLedger({user_pk}#{timestamp})

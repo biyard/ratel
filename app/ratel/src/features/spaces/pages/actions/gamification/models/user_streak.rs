@@ -14,7 +14,6 @@ use crate::features::spaces::pages::actions::gamification::*;
 /// - 7–29 days: ×1.15
 /// - 30+ days:  ×1.5
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, DynamoEntity)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct UserStreak {
     pub pk: Partition,  // Partition::User
     pub sk: EntityType, // EntityType::UserStreak

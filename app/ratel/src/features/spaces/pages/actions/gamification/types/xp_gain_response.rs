@@ -11,7 +11,6 @@ use crate::common::*;
 /// `xp_earned`, and `new_level` is the level the user holds after the
 /// award was committed.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct XpGainResponse {
     pub xp_earned: i64,
     pub base_points: i64,

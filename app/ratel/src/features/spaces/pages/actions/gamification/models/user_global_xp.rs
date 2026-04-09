@@ -9,7 +9,6 @@ use crate::features::spaces::pages::actions::gamification::*;
 /// There is exactly one of these per user; `UserGlobalXp::upsert` on the
 /// main table replaces or creates the singleton in one call.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, DynamoEntity)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct UserGlobalXp {
     pub pk: Partition,  // Partition::User
     pub sk: EntityType, // EntityType::UserGlobalXp

@@ -13,7 +13,6 @@ use crate::features::spaces::pages::actions::gamification::*;
 /// All chapters for a space live under the space partition; listing them
 /// for the Quest Map is a single `find_by_pk` query.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, DynamoEntity)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct SpaceChapter {
     pub pk: Partition,  // Partition::Space
     pub sk: EntityType, // EntityType::SpaceChapter

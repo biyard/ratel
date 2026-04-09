@@ -12,7 +12,6 @@ use crate::features::spaces::pages::actions::gamification::*;
 /// up from their own spaces; for `Team` recipients, earnings accrue on
 /// the team entity only — team-internal distribution is out of V1 scope.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, DynamoEntity)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct SpaceCreatorEarnings {
     pub pk: Partition,  // Partition::Space
     pub sk: EntityType, // EntityType::SpaceCreatorEarnings

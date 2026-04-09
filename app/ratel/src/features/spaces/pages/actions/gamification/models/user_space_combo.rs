@@ -15,7 +15,6 @@ use crate::features::spaces::pages::actions::gamification::*;
 /// - 3–4 clears: ×2.0
 /// - 5+  clears: ×3.0
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, DynamoEntity)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct UserSpaceCombo {
     pub pk: Partition,  // Partition::Space
     pub sk: EntityType, // EntityType::UserSpaceCombo(user_pk)

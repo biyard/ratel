@@ -9,7 +9,6 @@ use crate::common::*;
 /// level up from their own spaces. For `Team` recipients, earnings accrue
 /// on the team entity; team-internal distribution is out of V1 scope.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 #[serde(tag = "type", content = "id")]
 pub enum CreatorRecipient {
     User(UserPartition),
