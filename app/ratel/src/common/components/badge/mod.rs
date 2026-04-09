@@ -101,15 +101,7 @@ pub enum BadgeVariant {
     Rounded,
 }
 
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    DeserializeFromStr,
-    SerializeDisplay,
-    Default,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum BadgeFill {
     #[default]
     Flat,
