@@ -44,7 +44,7 @@ pub async fn respond_quiz(
     .await?
     .ok_or(Error::SpaceActionNotFound)?;
 
-    if !crate::features::spaces::pages::actions::can_execute_space_action(
+    if !crate::features::spaces::pages::actions::can_execute_space_action_legacy(
         role,
         space_action.prerequisite,
         space.status,

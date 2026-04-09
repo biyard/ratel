@@ -20,23 +20,36 @@ pub fn is_action_locked(space_status: Option<SpaceStatus>, action_started_at: i6
     }
 }
 
+/// Phase-4 access check: determines whether a user may execute (submit)
+/// an action given their role, the chapter that owns the action, DAG
+/// dependency status, and the prior-chapter gate.
+///
+/// # Arguments
+/// * `role` – the requesting user's role in the space.
+/// * `chapter` – the `SpaceChapter` that owns this action.
+/// * `action_deps_met` – `true` when every DAG parent action is `Cleared`.
+/// * `prior_chapters_complete` – `true` when every chapter with a lower
+///   `order` is fully cleared by this user.
+/// * `status` – current `SpaceStatus`.
+/// * `join_anytime` – whether late-joining is allowed.
 pub fn can_execute_space_action(
     role: SpaceUserRole,
-    prerequisite: bool,
+    chapter: &crate::features::spaces::pages::actions::gamification::models::SpaceChapter,
+    action_deps_met: bool,
+    prior_chapters_complete: bool,
     status: Option<SpaceStatus>,
     join_anytime: bool,
 ) -> bool {
-    let can_execute_role = match role {
+    let role_ok = match role {
         SpaceUserRole::Creator => true,
-        SpaceUserRole::Candidate => prerequisite,
-        SpaceUserRole::Participant => !prerequisite,
-        SpaceUserRole::Viewer => false,
+        _ => {
+            role_meets_chapter_requirement(role, chapter.actor_role)
+                && action_deps_met
+                && prior_chapters_complete
+        }
     };
 
-    let can_execute_status = match role {
-        // Creators can interact at any phase except once the space
-        // has ended — at that point they behave like viewers
-        // (read-only) for polls, quizzes, discussions, follows, etc.
+    let status_ok = match role {
         SpaceUserRole::Creator => !matches!(
             status,
             Some(SpaceStatus::Processing | SpaceStatus::Finished)
@@ -49,5 +62,181 @@ pub fn can_execute_space_action(
         SpaceUserRole::Viewer => false,
     };
 
-    can_execute_role && can_execute_status
+    role_ok && status_ok
+}
+
+/// Compatibility adapter for callers that do not have chapter context.
+///
+/// Synthesises a `SpaceChapter` from the `prerequisite` flag so that
+/// existing controllers (respond_poll, respond_quiz, discussion, follow)
+/// can keep their existing call signature while internally delegating to
+/// the new chapter-aware `can_execute_space_action`.
+///
+/// - `prerequisite = true` → `actor_role: Candidate` (pre-space actions)
+/// - `prerequisite = false` → `actor_role: Participant` (main actions)
+pub fn can_execute_space_action_legacy(
+    role: SpaceUserRole,
+    prerequisite: bool,
+    status: Option<SpaceStatus>,
+    join_anytime: bool,
+) -> bool {
+    let synthetic = crate::features::spaces::pages::actions::gamification::models::SpaceChapter {
+        actor_role: if prerequisite {
+            SpaceUserRole::Candidate
+        } else {
+            SpaceUserRole::Participant
+        },
+        ..Default::default()
+    };
+    can_execute_space_action(role, &synthetic, true, true, status, join_anytime)
+}
+
+/// Helper: check whether `role` meets or exceeds `required`.
+fn role_meets_chapter_requirement(role: SpaceUserRole, required: SpaceUserRole) -> bool {
+    match (role, required) {
+        (SpaceUserRole::Creator, _) => true,
+        (
+            SpaceUserRole::Participant,
+            SpaceUserRole::Participant | SpaceUserRole::Candidate | SpaceUserRole::Viewer,
+        ) => true,
+        (SpaceUserRole::Candidate, SpaceUserRole::Candidate | SpaceUserRole::Viewer) => true,
+        (SpaceUserRole::Viewer, SpaceUserRole::Viewer) => true,
+        _ => false,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::features::spaces::pages::actions::gamification::models::SpaceChapter;
+    use crate::features::spaces::pages::actions::gamification::types::ChapterBenefit;
+
+    fn chapter(actor_role: SpaceUserRole) -> SpaceChapter {
+        SpaceChapter {
+            actor_role,
+            ..Default::default()
+        }
+    }
+
+    // ── Role-match tests ──────────────────────────────────────────────────────
+
+    #[test]
+    fn creator_always_allowed_if_space_not_finished() {
+        let c = chapter(SpaceUserRole::Participant);
+        assert!(can_execute_space_action(
+            SpaceUserRole::Creator,
+            &c,
+            false, // deps NOT met — creator bypasses
+            false, // prior chapters NOT complete — creator bypasses
+            Some(SpaceStatus::Ongoing),
+            false,
+        ));
+    }
+
+    #[test]
+    fn creator_blocked_when_finished() {
+        let c = chapter(SpaceUserRole::Participant);
+        assert!(!can_execute_space_action(
+            SpaceUserRole::Creator,
+            &c,
+            true,
+            true,
+            Some(SpaceStatus::Finished),
+            false,
+        ));
+    }
+
+    #[test]
+    fn participant_meets_participant_chapter() {
+        let c = chapter(SpaceUserRole::Participant);
+        assert!(can_execute_space_action(
+            SpaceUserRole::Participant,
+            &c,
+            true,
+            true,
+            Some(SpaceStatus::Ongoing),
+            false,
+        ));
+    }
+
+    #[test]
+    fn candidate_blocked_from_participant_chapter() {
+        let c = chapter(SpaceUserRole::Participant);
+        assert!(!can_execute_space_action(
+            SpaceUserRole::Candidate,
+            &c,
+            true,
+            true,
+            Some(SpaceStatus::Ongoing),
+            false,
+        ));
+    }
+
+    // ── DAG gate ──────────────────────────────────────────────────────────────
+
+    #[test]
+    fn participant_blocked_when_deps_not_met() {
+        let c = chapter(SpaceUserRole::Participant);
+        assert!(!can_execute_space_action(
+            SpaceUserRole::Participant,
+            &c,
+            false, // deps NOT met
+            true,
+            Some(SpaceStatus::Ongoing),
+            false,
+        ));
+    }
+
+    // ── Prior-chapter gate ────────────────────────────────────────────────────
+
+    #[test]
+    fn participant_blocked_when_prior_chapter_not_complete() {
+        let c = chapter(SpaceUserRole::Participant);
+        assert!(!can_execute_space_action(
+            SpaceUserRole::Participant,
+            &c,
+            true,
+            false, // prior chapters NOT complete
+            Some(SpaceStatus::Ongoing),
+            false,
+        ));
+    }
+
+    // ── Legacy compat ─────────────────────────────────────────────────────────
+
+    #[test]
+    fn legacy_prerequisite_true_behaves_like_candidate() {
+        // Candidate + Open → allowed
+        assert!(can_execute_space_action_legacy(
+            SpaceUserRole::Candidate,
+            true,
+            Some(SpaceStatus::Open),
+            false,
+        ));
+        // Participant + Open → blocked (wrong status for participant)
+        assert!(!can_execute_space_action_legacy(
+            SpaceUserRole::Participant,
+            true,
+            Some(SpaceStatus::Open),
+            false,
+        ));
+    }
+
+    #[test]
+    fn legacy_prerequisite_false_behaves_like_participant() {
+        // Participant + Ongoing → allowed
+        assert!(can_execute_space_action_legacy(
+            SpaceUserRole::Participant,
+            false,
+            Some(SpaceStatus::Ongoing),
+            false,
+        ));
+        // Candidate + Ongoing + no join_anytime → blocked
+        assert!(!can_execute_space_action_legacy(
+            SpaceUserRole::Candidate,
+            false,
+            Some(SpaceStatus::Ongoing),
+            false,
+        ));
+    }
 }

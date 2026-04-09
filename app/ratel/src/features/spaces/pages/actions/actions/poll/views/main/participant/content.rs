@@ -28,7 +28,7 @@ pub fn PollContent(
     let poll = poll_loader.read().clone();
     let space = use_space().read().clone();
     let role = use_space_role()();
-    let can_execute_action = crate::features::spaces::pages::actions::can_execute_space_action(
+    let can_execute_action = crate::features::spaces::pages::actions::can_execute_space_action_legacy(
         role,
         poll.space_action.prerequisite,
         space.status,

@@ -36,7 +36,7 @@ pub fn ViewerMain(
     let discussion_response = ctx.discussion();
     let discussion = discussion_response.post;
     let can_participate = discussion.status() == DiscussionStatus::InProgress;
-    let can_comment = crate::features::spaces::pages::actions::can_execute_space_action(
+    let can_comment = crate::features::spaces::pages::actions::can_execute_space_action_legacy(
         role,
         discussion_response.space_action.prerequisite,
         space.status,
