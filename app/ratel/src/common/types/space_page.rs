@@ -16,4 +16,6 @@ pub enum SpacePage {
     Report,
     #[translate(ko = "보상")]
     Rewards,
+    #[translate(ko = "리더보드")]
+    Leaderboard,
 }

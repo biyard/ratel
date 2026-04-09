@@ -2,14 +2,12 @@ use crate::common::*;
 use crate::features::activity::controllers::{get_my_score_handler, get_ranking_handler};
 use crate::features::spaces::pages::actions::gamification::i18n::GamificationTranslate;
 use crate::features::spaces::space_common::types::{space_my_score_key, space_ranking_key};
+use crate::Route;
 
 /// Leaderboard rail for the dungeon-hero header.
 ///
 /// Renders the top-3 users as gradient spheres (gold / teal / bronze) followed
-/// by a clickable "YOU · #N" pill showing the current user's rank in the space.
-///
-/// The pill is a placeholder link — Phase 8 will wire it to the per-space
-/// leaderboard page.
+/// by a clickable "YOU · #N" pill that navigates to the per-space leaderboard page.
 #[component]
 pub fn LeaderboardRail(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: GamificationTranslate = use_translate();
@@ -61,13 +59,13 @@ pub fn LeaderboardRail(space_id: ReadSignal<SpacePartition>) -> Element {
                 }
             }
 
-            // The "YOU · #N" pill is a placeholder — Phase 8 wires it to the
-            // per-space leaderboard page. For now the onclick is a no-op.
             if my_score.rank > 0 {
-                div {
-                    class: "py-1 px-3 text-xs font-semibold rounded-full border cursor-pointer bg-primary/10 border-primary/30 text-primary",
+                Link {
+                    to: Route::SpaceLeaderboardPage {
+                        space_id: space_id(),
+                    },
+                    class: "py-1 px-3 text-xs font-semibold no-underline rounded-full border cursor-pointer bg-primary/10 border-primary/30 text-primary",
                     "data-testid": "leaderboard-rail-you-pill",
-                    onclick: move |_| {},
                     "{tr.you_label} · #{my_score.rank}"
                 }
             }
