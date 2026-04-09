@@ -45,7 +45,6 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 mod migration {
     use std::collections::{HashMap, HashSet};
 
-    use app_shell::common::macros::DynamoEntity;
     use app_shell::common::models::space::SpaceCommon;
     use app_shell::common::types::{EntityType, Partition, SpacePartition, SpaceUserRole, UserPartition};
     use app_shell::features::spaces::pages::actions::gamification::{
@@ -124,13 +123,11 @@ mod migration {
 
         let mut global_xp_seeded = 0usize;
         let mut streaks_seeded = 0usize;
-        for (user_pk, total_points) in &user_totals {
-            let user_id: UserPartition = match user_pk {
-                Partition::User(id) => UserPartition(id.clone()),
-                _ => continue,
-            };
+        for (user_id_str, total_points) in &user_totals {
+            let user_id = UserPartition(user_id_str.clone());
+            let user_pk: Partition = Partition::User(user_id_str.clone());
 
-            if !has_entity::<UserGlobalXp>(&cli, user_pk, &EntityType::UserGlobalXp).await? {
+            if !has_entity::<UserGlobalXp>(&cli, &user_pk, &EntityType::UserGlobalXp).await? {
                 let mut entry = UserGlobalXp::new(user_id.clone());
                 entry.total_points = *total_points;
                 entry.total_xp = *total_points; // historical XP == P (no multipliers)
@@ -139,7 +136,7 @@ mod migration {
                 global_xp_seeded += 1;
             }
 
-            if !has_entity::<UserStreak>(&cli, user_pk, &EntityType::UserStreak).await? {
+            if !has_entity::<UserStreak>(&cli, &user_pk, &EntityType::UserStreak).await? {
                 let entry = UserStreak::new(user_id);
                 entry.create(&cli).await?;
                 streaks_seeded += 1;
@@ -283,31 +280,37 @@ mod migration {
     /// and quiz attempt row in the table and bucket `total_points`
     /// by user. Future phases will replace this with direct ledger
     /// reads once the ledger is populated.
+    ///
+    /// Keyed by user id string (not `Partition`) because `Partition`
+    /// does not derive `Hash`. Converted back to `Partition::User`
+    /// by the caller when performing row writes.
     async fn compute_user_historical_totals(
         cli: &aws_sdk_dynamodb::Client,
-    ) -> std::result::Result<HashMap<Partition, i64>, Box<dyn std::error::Error>> {
+    ) -> std::result::Result<HashMap<String, i64>, Box<dyn std::error::Error>> {
         // Collect the set of users that have ever interacted with any
         // space action. We intentionally over-estimate by including any
         // row whose pk starts with `USER#` and whose sk hints at
         // participation. A missing user is worse than an extra zero row.
-        let mut users: HashSet<Partition> = HashSet::new();
+        let mut users: HashSet<String> = HashSet::new();
 
         // Walk poll answers — pk = SPACE_POLL_USER_ANSWER#<user_id>.
-        let poll_answers = scan_by_pk_prefix(cli, SpaceAction::table_name(), "SPACE_POLL_USER_ANSWER").await?;
+        let poll_answers =
+            scan_by_pk_prefix(cli, SpaceAction::table_name(), "SPACE_POLL_USER_ANSWER").await?;
         for item in poll_answers {
             if let Some(AttributeValue::S(pk)) = item.get("pk") {
                 if let Some(rest) = pk.strip_prefix("SPACE_POLL_USER_ANSWER#") {
-                    users.insert(Partition::User(rest.to_string()));
+                    users.insert(rest.to_string());
                 }
             }
         }
 
         // Walk quiz attempts — pk = SPACE_QUIZ_ATTEMPT#<user_id>.
-        let quiz_attempts = scan_by_pk_prefix(cli, SpaceAction::table_name(), "SPACE_QUIZ_ATTEMPT").await?;
+        let quiz_attempts =
+            scan_by_pk_prefix(cli, SpaceAction::table_name(), "SPACE_QUIZ_ATTEMPT").await?;
         for item in quiz_attempts {
             if let Some(AttributeValue::S(pk)) = item.get("pk") {
                 if let Some(rest) = pk.strip_prefix("SPACE_QUIZ_ATTEMPT#") {
-                    users.insert(Partition::User(rest.to_string()));
+                    users.insert(rest.to_string());
                 }
             }
         }
@@ -320,8 +323,8 @@ mod migration {
         // rows exist and Phase 6's award_xp service can update them in
         // place. The migration log documents this choice.
         let mut totals = HashMap::with_capacity(users.len());
-        for user_pk in users {
-            totals.insert(user_pk, 0i64);
+        for user_id in users {
+            totals.insert(user_id, 0i64);
         }
         Ok(totals)
     }
