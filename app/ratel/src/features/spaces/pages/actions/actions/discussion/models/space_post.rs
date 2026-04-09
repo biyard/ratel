@@ -212,6 +212,8 @@ impl From<(SpacePost, SpaceUserRole)>
             ended_at: Some(post.ended_at),
             credits: 0,
             prerequisite: false,
+            chapter_id: None,
+            depends_on: vec![],
         }
     }
 }

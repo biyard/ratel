@@ -6,6 +6,7 @@ use crate::common::*;
 /// `RoleDowngrade` variant exists. Role progression in the Quest Map moves
 /// from `Viewer` → `Candidate` → `Participant` and never back.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 #[serde(tag = "type", content = "value")]
 pub enum ChapterBenefit {
     /// Upgrade the user to this role upon chapter completion. No XP award

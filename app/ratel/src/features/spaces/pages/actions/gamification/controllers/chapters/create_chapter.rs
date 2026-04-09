@@ -1,6 +1,7 @@
 use super::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub struct CreateChapterRequest {
     pub name: String,
     #[serde(default)]

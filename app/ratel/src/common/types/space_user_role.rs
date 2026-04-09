@@ -8,12 +8,12 @@ use crate::common::*;
     Deserialize,
     Default,
     // DynamoEnum,
-    // JsonSchema,
     // OperationIo,
     Translate,
     PartialEq,
     Eq,
 )]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub enum SpaceUserRole {
     #[default]
     #[translate(en = "Viewer", ko = "뷰어")]

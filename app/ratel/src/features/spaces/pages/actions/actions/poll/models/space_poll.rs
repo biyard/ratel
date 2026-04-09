@@ -140,6 +140,8 @@ impl From<(SpacePoll, bool)>
             user_participated,
             credits: 0,
             prerequisite: false,
+            chapter_id: None,
+            depends_on: vec![],
         }
     }
 }

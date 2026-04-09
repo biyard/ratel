@@ -45,7 +45,7 @@ pub async fn delete_chapter(
         return Err(GamificationError::ChapterNotEmpty.into());
     }
 
-    SpaceChapter::delete(cli, pk, sk).await.map_err(|e| {
+    SpaceChapter::delete(cli, pk, Some(sk)).await.map_err(|e| {
         crate::error!("delete_chapter: failed to delete chapter: {e}");
         Error::InternalServerError("failed to delete chapter".into())
     })?;

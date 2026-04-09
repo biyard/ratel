@@ -1,6 +1,7 @@
 use super::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub struct ReorderChaptersRequest {
     pub ordered_ids: Vec<String>,
 }

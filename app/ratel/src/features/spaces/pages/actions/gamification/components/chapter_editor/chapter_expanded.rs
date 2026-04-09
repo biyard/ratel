@@ -28,33 +28,31 @@ pub fn ChapterExpanded(
 
     let order_label = format!("{} {}", tr.ch_pill, chapter.order + 1);
 
-    // Save handler: sends update to server
-    let save_chapter = {
-        let chapter_id = chapter_id.clone();
-        move |_: ()| {
-            let sid = space_id();
-            let cid = chapter_id.clone();
-            let name = name_draft();
-            let role = actor_role_draft();
-            let benefit = benefit_draft();
-            spawn(async move {
-                let req = UpdateChapterRequest {
-                    name: Some(name),
-                    description: None,
-                    actor_role: Some(role),
-                    completion_benefit: Some(benefit),
-                };
-                match update_chapter(sid, cid, req).await {
-                    Ok(_) => {
-                        on_saved.call(());
-                    }
-                    Err(e) => {
-                        tracing::error!("Failed to update chapter: {e}");
-                    }
+    // Save handler: sends update to server (use_callback is Copy, safe in multiple closures)
+    let chapter_id_signal = use_signal(|| chapter_id.clone());
+    let save_chapter = use_callback(move |_: ()| {
+        let sid = space_id();
+        let cid = chapter_id_signal();
+        let name = name_draft();
+        let role = actor_role_draft();
+        let benefit = benefit_draft();
+        spawn(async move {
+            let req = UpdateChapterRequest {
+                name: Some(name),
+                description: None,
+                actor_role: Some(role),
+                completion_benefit: Some(benefit),
+            };
+            match update_chapter(sid, cid, req).await {
+                Ok(_) => {
+                    on_saved.call(());
                 }
-            });
-        }
-    };
+                Err(e) => {
+                    tracing::error!("Failed to update chapter: {e}");
+                }
+            }
+        });
+    });
 
     // Actor role display values
     let role_options = vec![
@@ -106,7 +104,7 @@ pub fn ChapterExpanded(
 
             // Name field
             Col { class: "gap-1 w-full",
-                Label { "{tr.chapter_name}" }
+                Label { html_for: "chapter-name", "{tr.chapter_name}" }
                 Input {
                     r#type: InputType::Text,
                     value: name_draft(),
@@ -124,7 +122,7 @@ pub fn ChapterExpanded(
             Row { class: "gap-4 w-full max-mobile:flex-col",
                 // Actor role
                 Col { class: "flex-1 gap-1",
-                    Label { "{tr.actor_role_label}" }
+                    Label { html_for: "actor-role", "{tr.actor_role_label}" }
                     div { class: "flex gap-2",
                         for (role , label) in role_options.iter() {
                             {
@@ -149,7 +147,7 @@ pub fn ChapterExpanded(
 
                 // Completion benefit
                 Col { class: "flex-1 gap-1",
-                    Label { "{tr.benefit_label}" }
+                    Label { html_for: "benefit", "{tr.benefit_label}" }
                     div { class: "flex flex-wrap gap-2",
                         for (key , label) in benefit_options.iter() {
                             {

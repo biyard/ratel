@@ -48,6 +48,8 @@ impl From<SpaceFollowAction>
             user_participated: false,
             credits: 0,
             prerequisite: false,
+            chapter_id: None,
+            depends_on: vec![],
         }
     }
 }

@@ -1,6 +1,7 @@
 use super::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub struct UpdateChapterRequest {
     #[serde(default)]
     pub name: Option<String>,
@@ -73,7 +74,7 @@ pub async fn update_chapter(
 
     if let Some(description) = req.description.clone() {
         chapter.description = Some(description.clone());
-        updater = updater.with_description(Some(description));
+        updater = updater.with_description(description);
     }
 
     if let Some(actor_role) = req.actor_role {

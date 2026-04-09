@@ -109,8 +109,11 @@ pub async fn update_space_action(
         }
         UpdateSpaceActionRequest::ChapterId { chapter_id } => {
             space_action.chapter_id = chapter_id.clone();
-            SpaceAction::updater(&pk, &EntityType::SpaceAction)
-                .with_chapter_id(chapter_id)
+            let mut updater = SpaceAction::updater(&pk, &EntityType::SpaceAction);
+            if let Some(cid) = chapter_id {
+                updater = updater.with_chapter_id(cid);
+            }
+            updater
                 .with_updated_at(now)
                 .execute(cli)
                 .await
