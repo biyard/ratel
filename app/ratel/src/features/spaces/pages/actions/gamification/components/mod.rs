@@ -1,12 +1,14 @@
 use super::*;
 
+pub mod chapter_editor;
+pub mod completion_overlay;
 pub mod dungeon_hero;
 pub mod leaderboard_rail;
 pub mod quest_briefing;
 pub mod quest_map;
 pub mod title_region;
 pub mod xp_hud;
-pub mod completion_overlay;
+pub use chapter_editor::*;
 pub use completion_overlay::*;
 pub use dungeon_hero::*;
 pub use leaderboard_rail::*;

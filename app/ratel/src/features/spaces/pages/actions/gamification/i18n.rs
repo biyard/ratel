@@ -58,4 +58,20 @@ translate! {
     completion_chapter_complete: { en: "Chapter Complete!", ko: "챕터 완료!" },
     completion_role_upgraded: { en: "Role Upgraded!", ko: "역할 승급!" },
     completion_tap_dismiss: { en: "Tap to continue", ko: "탭하여 계속" },
+
+    // Chapter Editor
+    ch_pill: { en: "CH", ko: "CH" },
+    add_chapter: { en: "Add chapter", ko: "챕터 추가" },
+    add_chapter_hint: { en: "Create a new chapter for your quest map", ko: "퀘스트 맵에 새 챕터를 만드세요" },
+    chapter_name: { en: "Chapter name", ko: "챕터 이름" },
+    actor_role_label: { en: "Actor role", ko: "참여 역할" },
+    benefit_label: { en: "Completion benefit", ko: "완료 보상" },
+    benefit_xp_only: { en: "XP only", ko: "XP만" },
+    benefit_role_upgrade: { en: "Role upgrade", ko: "역할 승급" },
+    benefit_role_and_xp: { en: "Role upgrade + XP", ko: "역할 승급 + XP" },
+    depends_on_label: { en: "Depends on", ko: "선행 조건" },
+    click_to_connect: { en: "Click a quest to set as dependency", ko: "선행 퀘스트를 클릭하세요" },
+    delete_chapter: { en: "Delete", ko: "삭제" },
+    collapse: { en: "Collapse", ko: "접기" },
+    preview_participant: { en: "Preview as Participant", ko: "참여자로 미리보기" },
 }

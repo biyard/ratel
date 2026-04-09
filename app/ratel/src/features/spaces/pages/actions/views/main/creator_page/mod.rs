@@ -9,6 +9,41 @@ pub fn CreatorActionPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: CreatorActionPageTranslate = use_translate();
     let mut layover = use_layover();
     let mut actions = use_loader(move || async move { list_actions(space_id()).await })?;
+    let mut preview_mode = use_signal(|| false);
+
+    // When preview mode is on, render the participant page instead
+    if preview_mode() {
+        return rsx! {
+            div {
+                id: "creator-action-page",
+                class: "flex flex-col gap-5 items-start w-full text-web-font-primary",
+
+                div { class: "flex flex-col gap-2.5 mx-auto w-full max-w-[1024px]",
+                    // Header with back-to-editor button
+                    Row {
+                        main_axis_align: MainAxisAlign::Between,
+                        cross_axis_align: CrossAxisAlign::Center,
+                        class: "w-full",
+                        h3 { {tr.title} }
+                        Button {
+                            size: ButtonSize::Medium,
+                            style: ButtonStyle::Outline,
+                            shape: ButtonShape::Rounded,
+                            onclick: move |_| preview_mode.set(false),
+                            Row {
+                                cross_axis_align: CrossAxisAlign::Center,
+                                class: "gap-2",
+                                lucide_dioxus::ArrowLeft { class: "w-4 h-4" }
+                                span { {tr.back_to_editor} }
+                            }
+                        }
+                    }
+
+                    ParticipantPage { space_id }
+                }
+            }
+        };
+    }
 
     rsx! {
         div {
@@ -17,14 +52,14 @@ pub fn CreatorActionPage(space_id: ReadSignal<SpacePartition>) -> Element {
 
             div { class: "flex flex-col gap-2.5 mx-auto w-full max-w-[1024px]",
                 div { class: "flex justify-between items-center w-full max-mobile:flex-col max-mobile:items-stretch max-mobile:gap-3",
-                    div { class: "flex items-center gap-2",
+                    div { class: "flex gap-2 items-center",
                         h3 { {tr.title} }
                         Tooltip {
                             TooltipTrigger {
                                 icons::help_support::Info {
                                     width: "16",
                                     height: "16",
-                                    class: "h-4 w-4 [&>path]:stroke-text-secondary [&>path]:fill-none [&>circle]:stroke-text-secondary [&>circle]:fill-current cursor-pointer",
+                                    class: "w-4 h-4 cursor-pointer [&>path]:stroke-text-secondary [&>path]:fill-none [&>circle]:stroke-text-secondary [&>circle]:fill-current",
                                 }
                             }
                             TooltipContent {
@@ -35,95 +70,58 @@ pub fn CreatorActionPage(space_id: ReadSignal<SpacePartition>) -> Element {
                         }
                     }
 
-                    Button {
-                        size: ButtonSize::Medium,
-                        style: ButtonStyle::Secondary,
-                        shape: ButtonShape::Square,
-                        class: "inline-flex border-action-type-card-border hover:border-action-type-card-border font-raleway max-mobile:w-full bg-action-type-card-bg hover:bg-action-type-card-bg text-btn-action-settings-text hover:text-btn-action-settings-text hover:opacity-90",
-                        onclick: move |_| {
-                            layover
-                                .open(
-                                    "space-action-settings-layover".to_string(),
-                                    String::new(),
-                                    rsx! {
-                                        ActionSettingsModal {
-                                            space_id: space_id(),
-                                            actions: actions(),
-                                            on_applied: move |_| {
-                                                actions.restart();
-                                            },
-                                        }
-                                    },
-                                )
-                                .set_size(LayoverSize::Small);
-                        },
-                        div { class: "flex flex-row gap-2.5 justify-center items-center",
-                            icons::settings::Settings2 {
-                                width: "16",
-                                height: "16",
-                                class: "[&>path]:fill-current [&>circle]:stroke-current [&>circle]:fill-none",
+                    Row { class: "gap-2 max-mobile:flex-col",
+                        // Preview as Participant button
+                        Button {
+                            size: ButtonSize::Medium,
+                            style: ButtonStyle::Outline,
+                            shape: ButtonShape::Square,
+                            onclick: move |_| preview_mode.set(true),
+                            Row {
+                                cross_axis_align: CrossAxisAlign::Center,
+                                class: "gap-2",
+                                lucide_dioxus::Eye { class: "w-4 h-4" }
+                                span { {tr.preview_participant} }
                             }
-                            span { {tr.button_settings_label} }
                         }
-                    }
-                }
 
-                // Empty state card
-                SpaceCard {
-                    class: "flex flex-col gap-5 justify-center items-center w-full border border-dashed border-neutral-800 light:border-neutral-300 !bg-neutral-900 light:!bg-neutral-100 !rounded-[0.75rem] !px-4 !pt-[0.625rem] !pb-5"
-                        .to_string(),
-                    icons::game::Thunder { class: "size-6 [&>path]:fill-none [&>path]:stroke-neutral-400 light:[&>path]:stroke-neutral-500" }
-                    p { class: "font-medium text-[1.0625rem]/[1.25rem] text-font-primary",
-                        {tr.no_actions_title}
-                    }
-
-                    Button {
-                        style: ButtonStyle::Secondary,
-                        onclick: move |_| {
-                            layover
-                                .open(
-                                    "space-actions-layover".to_string(),
-                                    tr.layover_title.to_string(),
-                                    rsx! {
-                                        CreateActionModal { space_id: space_id() }
-                                    },
-                                )
-                                .set_size(LayoverSize::Half);
-                        },
-                        div { class: "flex flex-row gap-2 justify-center items-center w-full",
-                            icons::validations::AddCircle {
-                                width: "24",
-                                height: "24",
-                                class: "[&>circle]:fill-none [&>circle]:stroke-neutral-900 [&>path]:stroke-neutral-900",
-                            }
-                            span { {tr.button_add_action_label} }
-                        }
-                    
-                    }
-
-                    p { class: "font-semibold text-center text-[0.75rem]/[1rem] text-neutral-400 light:text-neutral-600",
-                        {tr.no_actions_description}
-                    }
-                }
-
-                // Action cards grid
-                if !actions.is_empty() {
-                    div { class: "grid grid-cols-1 gap-2.5 w-full tablet:grid-cols-2",
-                        for action in actions.iter() {
-                            ActionCard {
-                                key: "{action.action_id}",
-                                action: action.clone(),
-                                space_id: space_id(),
-                                deletable: true,
-                                on_deleted: move |_| {
-                                    actions.restart();
-                                },
+                        Button {
+                            size: ButtonSize::Medium,
+                            style: ButtonStyle::Secondary,
+                            shape: ButtonShape::Square,
+                            class: "inline-flex hover:opacity-90 border-action-type-card-border font-raleway max-mobile:w-full bg-action-type-card-bg text-btn-action-settings-text hover:border-action-type-card-border hover:bg-action-type-card-bg hover:text-btn-action-settings-text",
+                            onclick: move |_| {
+                                layover
+                                    .open(
+                                        "space-action-settings-layover".to_string(),
+                                        String::new(),
+                                        rsx! {
+                                            ActionSettingsModal {
+                                                space_id: space_id(),
+                                                actions: actions(),
+                                                on_applied: move |_| {
+                                                    actions.restart();
+                                                },
+                                            }
+                                        },
+                                    )
+                                    .set_size(LayoverSize::Small);
+                            },
+                            div { class: "flex flex-row gap-2.5 justify-center items-center",
+                                icons::settings::Settings2 {
+                                    width: "16",
+                                    height: "16",
+                                    class: "[&>path]:fill-current [&>circle]:stroke-current [&>circle]:fill-none",
+                                }
+                                span { {tr.button_settings_label} }
                             }
                         }
                     }
                 }
+
+                // Chapter Editor (replaces old action grid)
+                ChapterEditor { space_id }
             }
-        
         }
     }
 }

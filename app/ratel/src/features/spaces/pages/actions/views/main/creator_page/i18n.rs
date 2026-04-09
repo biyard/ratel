@@ -33,4 +33,12 @@ translate! {
         en: "Select Action Type",
         ko: "액션 유형 선택"
     },
+    preview_participant: {
+        en: "Preview as Participant",
+        ko: "참여자로 미리보기",
+    },
+    back_to_editor: {
+        en: "Back to Editor",
+        ko: "에디터로 돌아가기",
+    },
 }

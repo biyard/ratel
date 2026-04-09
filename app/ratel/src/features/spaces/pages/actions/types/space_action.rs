@@ -24,6 +24,14 @@ pub struct SpaceActionSummary {
     pub user_participated: bool,
     pub credits: u64,
     pub prerequisite: bool,
+
+    /// Chapter this action belongs to (raw ID, no prefix).
+    #[serde(default)]
+    pub chapter_id: Option<String>,
+
+    /// DAG parent action IDs within the same chapter.
+    #[serde(default)]
+    pub depends_on: Vec<String>,
 }
 
 impl From<crate::features::spaces::pages::actions::models::SpaceAction> for SpaceActionSummary {
@@ -46,6 +54,8 @@ impl From<crate::features::spaces::pages::actions::models::SpaceAction> for Spac
             user_participated: false,
             credits: action.credits,
             prerequisite: action.prerequisite,
+            chapter_id: action.chapter_id.map(|cid| cid.0),
+            depends_on: action.depends_on,
         }
     }
 }
