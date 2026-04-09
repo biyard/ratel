@@ -975,3 +975,36 @@ body {
   background-color: var(--color-border);
   border-radius: 3px;
 }
+
+/* ==========================================================================
+   DESIGN TOKENS - GAMIFICATION RENEWAL (Phase 1)
+   Glass surfaces, depth shadows, rim glows, gradient text, rails, spheres.
+   Dark-theme defaults live here. Light-theme counterparts in tailwind-colors.css.
+   ========================================================================== */
+
+@theme {
+  /* Glass surfaces (gradient fills with subtle corner highlight) */
+  --glass-surface-primary: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+  --glass-surface-accent: linear-gradient(135deg, rgba(252, 179, 0, 0.08), rgba(0, 0, 0, 0.3));
+  --glass-surface-teal: linear-gradient(135deg, rgba(110, 237, 216, 0.08), rgba(0, 0, 0, 0.3));
+  --glass-blur: blur(16px);
+
+  /* Glass borders (thin tinted 1px) */
+  --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+  --glass-border-primary: 1px solid rgba(252, 179, 0, 0.3);
+  --glass-border-accent: 1px solid rgba(110, 237, 216, 0.35);
+
+  /* Stacked depth shadows */
+  --depth-sm: 0 8px 24px -8px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --depth-md: 0 16px 40px -12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --depth-lg: 0 24px 60px -16px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --depth-hero:
+    0 30px 80px -20px rgba(0, 0, 0, 0.8),
+    0 0 120px -30px rgba(252, 179, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+  /* Rim glows (ambient light, not stamps) */
+  --rim-glow-primary: 0 0 60px -20px rgba(252, 179, 0, 0.35);
+  --rim-glow-accent: 0 0 60px -20px rgba(110, 237, 216, 0.35);
+  --rim-glow-danger: 0 0 60px -20px rgba(219, 39, 128, 0.35);
+}
