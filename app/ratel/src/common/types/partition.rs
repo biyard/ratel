@@ -32,6 +32,7 @@ pub enum Partition {
     Session(String),
 
     Notification(String), // user_pk
+    SpaceStatusChangeEvent(String), // uuid_v7
 
     // Spaces
     Space(String),

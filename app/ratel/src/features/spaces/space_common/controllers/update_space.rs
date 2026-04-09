@@ -112,6 +112,7 @@ pub async fn update_space(
     let mut pu: Option<_> = None;
     let mut should_send_invitation = false;
     let mut updated_space = space.clone();
+    let mut status_transition: Option<(Option<SpaceStatus>, SpaceStatus)> = None;
 
     match req {
         UpdateSpaceRequest::Publish {
@@ -143,6 +144,7 @@ pub async fn update_space(
 
             updated_space.publish_state = SpacePublishState::Published;
             updated_space.visibility = visibility;
+            status_transition = Some((space.status.clone(), SpaceStatus::Open));
         }
         UpdateSpaceRequest::Visibility { visibility } => {
             su = su.with_visibility(visibility.clone());
@@ -186,6 +188,7 @@ pub async fn update_space(
             updated_space.status = Some(SpaceStatus::Ongoing);
 
             let _ = SpaceEmailVerification::expire_verifications(dynamo, space_pk.clone()).await?;
+            status_transition = Some((Some(SpaceStatus::Open), SpaceStatus::Ongoing));
         }
         UpdateSpaceRequest::Finish { finished } => {
             if updated_space.status != Some(SpaceStatus::Ongoing) {
@@ -201,6 +204,7 @@ pub async fn update_space(
             su = su.with_status(SpaceStatus::Finished);
 
             updated_space.status = Some(SpaceStatus::Finished);
+            status_transition = Some((Some(SpaceStatus::Ongoing), SpaceStatus::Finished));
         }
         UpdateSpaceRequest::Anonymous {
             anonymous_participation,
@@ -252,6 +256,17 @@ pub async fn update_space(
             .ok_or_else(|| Error::InternalServerError("Failed to get post".to_string()))?;
 
         SpaceInvitationMember::send_email(dynamo, &updated_space, post.title).await?;
+    }
+
+    if let Some((old_status, new_status)) = status_transition {
+        use crate::common::models::space::SpaceStatusChangeEvent;
+        let event = SpaceStatusChangeEvent::new(space_pk.clone(), old_status, new_status);
+        if let Err(e) = event.create(dynamo).await {
+            tracing::error!(
+                "update_space: failed to persist SpaceStatusChangeEvent: {e}"
+            );
+            // Do not fail the request — the status has already changed.
+        }
     }
 
     Ok(UpdateSpaceResponse::from(updated_space))
