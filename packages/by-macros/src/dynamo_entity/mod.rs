@@ -1117,6 +1117,55 @@ fn generate_struct_impl(
         idx_fns_v2.push(idx.generate());
     }
     let builder_fns = generate_builder_functions(&fields);
+    let find_all_fn = if let Some(sk_name) = &s_cfg.sk_name {
+        let sk_field_name = syn::LitStr::new(sk_name, proc_macro2::Span::call_site());
+        quote! {
+            pub async fn find_all(
+                cli: &aws_sdk_dynamodb::Client,
+                sk: impl std::fmt::Display,
+                opt: #opt_ident,
+            ) -> #result_ty <(Vec<#ident>, Option<String>), #err_ctor> {
+                let mut req = cli
+                    .query()
+                    .table_name(#table_lit_str)
+                    .index_name("type-index")
+                    .key_condition_expression("#sk = :sk")
+                    .expression_attribute_names("#sk", #sk_field_name)
+                    .expression_attribute_values(
+                        ":sk",
+                        aws_sdk_dynamodb::types::AttributeValue::S(sk.to_string()),
+                    );
+
+                if let Some(bookmark) = opt.bookmark {
+                    let lek = Self::decode_bookmark_all(&bookmark)?;
+                    req = req.set_exclusive_start_key(Some(lek));
+                }
+
+                let resp = req
+                    .limit(opt.limit)
+                    .send()
+                    .await
+                    .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
+
+                let items = resp
+                    .items
+                    .unwrap_or_default()
+                    .into_iter()
+                    .map(|item| serde_dynamo::from_item(item))
+                    .collect::<std::result::Result<Vec<_>, _>>()?;
+
+                let bookmark = if let Some(ref last_evaluated_key) = resp.last_evaluated_key {
+                    Some(Self::encode_lek_all(last_evaluated_key)?)
+                } else {
+                    None
+                };
+
+                Ok((items, bookmark))
+            }
+        }
+    } else {
+        quote! {}
+    };
 
     let out = quote! {
         #st_query_option
@@ -1197,6 +1246,8 @@ fn generate_struct_impl(
 
                 Ok((items, bookmark))
             }
+
+            #find_all_fn
 
             #sk_fn
 

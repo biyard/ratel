@@ -29,6 +29,7 @@ pub enum DetailType {
     AiModeratorReplyCheck,
     AiModeratorReplyIndex,
     ActivityScoreAggregate,
+    SpaceStatusChangeEvent,
     #[serde(other)]
     Unknown,
 }
@@ -109,6 +110,12 @@ impl EventBridgeEnvelope {
             DetailType::ActivityScoreAggregate => {
                 let activity = DetailType::parse_detail(&self.detail)?;
                 crate::features::activity::services::aggregate_score(activity).await
+            }
+            DetailType::SpaceStatusChangeEvent => {
+                let event: crate::common::models::space::SpaceStatusChangeEvent =
+                    DetailType::parse_detail(&self.detail)?;
+                crate::features::spaces::space_common::services::handle_space_status_change(event)
+                    .await
             }
             DetailType::Unknown => {
                 tracing::warn!(
