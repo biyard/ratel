@@ -284,7 +284,7 @@ async fn test_space_action_with_chapter_id() {
 
 // ── Phase 4: access control unit tests ───────────────────────────────────────
 
-use crate::features::spaces::pages::actions::access::can_execute_space_action;
+use crate::features::spaces::pages::actions::can_execute_space_action;
 use crate::common::types::SpaceStatus;
 
 fn make_chapter(actor_role: SpaceUserRole) -> SpaceChapter {
