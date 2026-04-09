@@ -26,35 +26,26 @@ pub fn SpaceUserProfile(
                     if is_admin {
                         ContextMenu {
                             ContextMenuTrigger {
-                                span {
-                                    class: "text-xs cursor-context-menu text-text-secondary",
+                                span { class: "text-xs cursor-context-menu text-text-secondary",
                                     {user_role.translate(&lang)}
                                 }
                             }
                             ContextMenuContent {
-                                ContextMenuItem {
-                                    value: "viewer".to_string(),
-                                    index: 0usize,
-                                    on_select: move |_| {
-                                        on_role_change.call(SpaceUserRole::Viewer);
-                                    },
-                                    {SpaceUserRole::Viewer.translate(&lang)}
-                                }
-                                ContextMenuItem {
-                                    value: "candidate".to_string(),
-                                    index: 1usize,
-                                    on_select: move |_| {
-                                        on_role_change.call(SpaceUserRole::Candidate);
-                                    },
-                                    {SpaceUserRole::Candidate.translate(&lang)}
-                                }
-                                ContextMenuItem {
-                                    value: "participant".to_string(),
-                                    index: 2usize,
-                                    on_select: move |_| {
-                                        on_role_change.call(SpaceUserRole::Participant);
-                                    },
-                                    {SpaceUserRole::Participant.translate(&lang)}
+                                for (idx , (role , value)) in [
+                                    (SpaceUserRole::Viewer, "viewer"),
+                                    (SpaceUserRole::Candidate, "candidate"),
+                                    (SpaceUserRole::Participant, "participant"),
+                                ]
+                                    .into_iter()
+                                    .enumerate()
+                                {
+                                    ContextMenuItem {
+                                        key: "{value}",
+                                        value,
+                                        index: idx,
+                                        on_select: move |_| on_role_change.call(role),
+                                        {role.translate(&lang)}
+                                    }
                                 }
                             }
                         }
