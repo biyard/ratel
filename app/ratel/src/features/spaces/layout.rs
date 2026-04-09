@@ -183,7 +183,7 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
                         }
                     }
                 }
-                div { class: "flex overflow-auto flex-1 p-5 w-full bg-background rounded-tl-[10px] max-tablet:rounded-tl-none max-tablet:p-3 max-mobile:p-2 max-tablet:overflow-visible",
+                div { class: "flex overflow-auto flex-1 p-5 w-full bg-background rounded-tl-[10px] max-tablet:rounded-tl-none max-tablet:p-3 max-mobile:p-2 max-tablet:overflow-visible max-tablet:pb-20",
                     SuspenseBoundary { Outlet::<Route> {} }
                 }
             }
