@@ -12,4 +12,8 @@ translate! {
         ko: "경험치 진행도",
     },
     you_label: { en: "YOU", ko: "나" },
+    dungeon_label: { en: "Dungeon", ko: "던전" },
+    floor_label: { en: "Floor", ko: "층" },
+    explorers_label: { en: "Explorers", ko: "탐험가" },
+    chapters_label: { en: "Chapters", ko: "챕터" },
 }
