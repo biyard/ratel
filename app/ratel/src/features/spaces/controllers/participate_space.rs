@@ -2,6 +2,7 @@ use crate::common::models::auth::{OptionalUser, User};
 use crate::common::models::space::SpaceCommon;
 use crate::common::utils::time::get_now_timestamp_millis;
 use crate::common::SpaceVisibility;
+use crate::features::activity::{models::SpaceScore, types::AuthorPartition};
 use crate::features::posts::models::Post;
 use crate::features::posts::types::TeamGroupPermission;
 use crate::features::spaces::models::{
@@ -77,6 +78,10 @@ pub async fn participate_space(
         return Err(Error::AlreadyParticipating);
     }
 
+    let author = AuthorPartition::from(user.pk.clone());
+    let (score_pk, score_sk) = SpaceScore::keys(&space_id, &author);
+    let existing_score = SpaceScore::get(dynamo, &score_pk, Some(score_sk.clone())).await?;
+
     if space.visibility != SpaceVisibility::Public {
         let (pk, sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
         let member = SpaceInvitationMember::get(dynamo, &pk, Some(&sk)).await?;
@@ -100,12 +105,23 @@ pub async fn participate_space(
                     let new_space = SpaceCommon::updater(&space.pk, &space.sk)
                         .increase_participants(1)
                         .with_updated_at(now);
-
-                    crate::transact_write!(
-                        dynamo,
+                    let mut txs = vec![
                         sp.create_transact_write_item(),
                         new_space.transact_write_item(),
-                    )?;
+                    ];
+                    if existing_score.is_none() {
+                        txs.push(
+                            SpaceScore::new(
+                                space_id.clone(),
+                                author.clone(),
+                                sp.display_name.clone(),
+                                sp.profile_url.clone(),
+                            )
+                            .create_transact_write_item(),
+                        );
+                    }
+
+                    crate::transact_write_items!(dynamo, txs)?;
 
                     return Ok(ParticipateSpaceResponse {
                         username: sp.username,
@@ -131,13 +147,24 @@ pub async fn participate_space(
         .with_updated_at(now);
     let invitation = SpaceInvitationMember::new(space.pk.clone(), user.clone())
         .with_status(InvitationStatus::Accepted);
-
-    crate::transact_write!(
-        dynamo,
+    let mut txs = vec![
         sp.create_transact_write_item(),
         space_update.transact_write_item(),
         invitation.upsert_transact_write_item(),
-    )?;
+    ];
+    if existing_score.is_none() {
+        txs.push(
+            SpaceScore::new(
+                space_id,
+                author,
+                sp.display_name.clone(),
+                sp.profile_url.clone(),
+            )
+            .create_transact_write_item(),
+        );
+    }
+
+    crate::transact_write_items!(dynamo, txs)?;
 
     Ok(ParticipateSpaceResponse {
         username: sp.username,
