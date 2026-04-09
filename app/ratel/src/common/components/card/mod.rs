@@ -85,7 +85,7 @@ pub enum CrossAxisAlign {
 )]
 pub enum CardVariant {
     #[default]
-    #[strum(serialize = "bg-card-bg border bg-card-bg border-card-border")]
+    #[strum(serialize = "border bg-card-bg border-card-border")]
     Normal,
 
     #[strum(serialize = "border border-card-border")]
@@ -93,6 +93,26 @@ pub enum CardVariant {
 
     #[strum(serialize = "bg-card-bg")]
     Filled,
+
+    #[strum(
+        serialize = "border bg-[image:var(--glass-surface-primary)] backdrop-blur-[var(--glass-blur)] border-white/8 shadow-[var(--depth-sm)]"
+    )]
+    Glass,
+
+    #[strum(
+        serialize = "border bg-[image:var(--glass-surface-accent)] backdrop-blur-[var(--glass-blur)] border-[color:rgba(252,179,0,0.3)] shadow-[var(--depth-md)]"
+    )]
+    GlassPrimary,
+
+    #[strum(
+        serialize = "border bg-[image:var(--glass-surface-teal)] backdrop-blur-[var(--glass-blur)] border-[color:rgba(110,237,216,0.35)] shadow-[var(--depth-md)]"
+    )]
+    GlassAccent,
+
+    #[strum(
+        serialize = "border bg-[image:var(--glass-surface-accent)] backdrop-blur-[var(--glass-blur)] border-[color:rgba(252,179,0,0.3)] shadow-[var(--depth-hero)]"
+    )]
+    Hero,
 }
 
 #[derive(
