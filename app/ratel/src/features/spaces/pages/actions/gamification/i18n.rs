@@ -35,4 +35,19 @@ translate! {
     past_chapters_summary: { en: "chapters cleared", ko: "챕터 완료" },
     expand_past_chapters: { en: "Show completed chapters", ko: "완료된 챕터 보기" },
     collapse_past_chapters: { en: "Hide completed chapters", ko: "완료된 챕터 숨기기" },
+
+    // Quest Briefing overlay
+    briefing_xp_at_stake: { en: "XP at stake", ko: "획득 가능 XP" },
+    briefing_begin: { en: "BEGIN", ko: "시작" },
+    briefing_cancel: { en: "Cancel", ko: "취소" },
+    briefing_time_remaining: { en: "Time remaining", ko: "남은 시간" },
+    briefing_retries: { en: "Retries", ko: "재시도" },
+    briefing_prerequisites: { en: "Prerequisites", ko: "선행 조건" },
+    briefing_met: { en: "Met", ko: "충족" },
+    briefing_not_met: { en: "Not met", ko: "미충족" },
+    briefing_unlocks_next: { en: "Unlocks next", ko: "다음 잠금 해제" },
+    briefing_base: { en: "base", ko: "기본" },
+    briefing_explorers: { en: "explorers", ko: "탐험가" },
+    briefing_combo: { en: "combo", ko: "콤보" },
+    briefing_streak: { en: "streak", ko: "연속" },
 }
