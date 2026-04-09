@@ -7,7 +7,7 @@ pub fn LoadingIndicator(
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
 ) -> Element {
     let wrapper_class = if class.is_empty() {
-        "flex col-span-full row-span-full justify-center items-center w-full min-h-[50vh] h-full grow max-tablet:max-w-[150px] max-tablet:mx-auto".to_string()
+        "flex col-span-full row-span-full justify-center items-center w-full min-h-[50vh] h-full grow max-tablet:max-w-[150px] max-tablet:mx-auto [&>dotlottie-wc]:drop-shadow-[0_0_12px_rgba(252,179,0,0.5)]".to_string()
     } else {
         class
     };
