@@ -31,7 +31,7 @@ pub fn PopupZone() -> Element {
 
     rsx! {
         div {
-            class: "flex fixed top-0 left-0 justify-center items-center w-screen h-screen bg-popup-background backdrop-blur-[10px] z-[101] bg-no-s",
+            class: "flex fixed inset-0 justify-center items-center bg-black/60 backdrop-blur-sm z-[101]",
             onclick: move |_| {
                 if backdrop_closable {
                     popup.close();
@@ -39,8 +39,7 @@ pub fn PopupZone() -> Element {
             },
 
             div {
-                class: "relative rounded-[20px] p-[25px] min-w-[300px] max-mobile:!w-full max-mobile:!mx-[20px] bg-popover text-text-primary {overflow_class}",
-                style: "box-shadow: 0px 0px 100px rgba(255, 206, 71, 0.25)",
+                class: "relative rounded-2xl border p-[25px] min-w-[300px] max-mobile:!w-full max-mobile:!mx-[20px] bg-[image:var(--glass-surface-primary)] backdrop-blur-[var(--glass-blur)] border-white/8 shadow-[var(--depth-lg)] text-text-primary {overflow_class}",
                 onclick: move |e| {
                     e.stop_propagation();
                 },
