@@ -497,5 +497,53 @@ export class DynamoStreamEventStack extends Stack {
       },
       targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
     });
+
+    // ── Pipe 8: SpaceStatusChangeEvent Insert → SpaceStatusChangeEvent ──
+    // Triggers when a new SpaceStatusChangeEvent row is inserted by update_space
+    new pipes.CfnPipe(this, "SpaceStatusChangeEventPipe", {
+      name: `ratel-${stage}-space-status-change-event-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["INSERT"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: [{ prefix: "SPACE_STATUS_CHANGE_EVENT#" }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "SpaceStatusChangeEvent",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    // ── Rule: Route SpaceStatusChangeEvent events to app-shell Lambda ───
+    new events.Rule(this, "SpaceStatusChangeEventRule", {
+      eventBus,
+      description:
+        "Route space status change events to app-shell for notification fan-out",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["SpaceStatusChangeEvent"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
   }
 }

@@ -186,6 +186,7 @@ pub enum EntityType {
     TeamPurchase(String),
 
     Notification(String), // notification id
+    SpaceStatusChangeEvent(String), // uuid_v7 (same id as pk)
 
     //
     SpaceAction,
