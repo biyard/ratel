@@ -1019,3 +1019,11 @@ body {
   --rail-fill-primary: linear-gradient(90deg, #a07a30, #fcb300 40%, #ffe082 70%, #9fdcc9 100%);
   --rail-fill-teal: linear-gradient(90deg, #3a7a6a, #6eedd8 50%, #e6fff8 100%);
 }
+
+@theme {
+  /* Avatar / medal spheres (radial gradient from top-left highlight to bottom-right shadow) */
+  --sphere-gold: radial-gradient(circle at 30% 30%, #fff8e7, #ffe082, #fcb300, #8a5d00);
+  --sphere-teal: radial-gradient(circle at 30% 30%, #c4f5e8, #9fdcc9, #3a7a6a);
+  --sphere-bronze: radial-gradient(circle at 30% 30%, #f5e8d0, #b08d5c, #5a4220);
+  --sphere-neutral: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
+}
