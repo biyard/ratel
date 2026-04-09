@@ -11,4 +11,5 @@ translate! {
         en: "Experience points progress",
         ko: "경험치 진행도",
     },
+    you_label: { en: "YOU", ko: "나" },
 }
