@@ -239,7 +239,7 @@ fn role_meets_requirement(role: SpaceUserRole, required: SpaceUserRole) -> bool 
 
 /// Collect the set of action ids that the current user has completed.
 #[cfg(feature = "server")]
-async fn collect_cleared_action_ids(
+pub async fn collect_cleared_action_ids(
     cli: &aws_sdk_dynamodb::Client,
     space_pk: &Partition,
     user_pk: &Partition,
