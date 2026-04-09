@@ -32,6 +32,7 @@ pub fn SpaceUserProfile(
                             }
                             ContextMenuContent {
                                 for (idx , (role , value)) in [
+                                    (SpaceUserRole::Creator, "admin"),
                                     (SpaceUserRole::Viewer, "viewer"),
                                     (SpaceUserRole::Candidate, "candidate"),
                                     (SpaceUserRole::Participant, "participant"),
