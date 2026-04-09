@@ -30,17 +30,20 @@ pub async fn get_my_score_handler(
     let (pk, sk) = SpaceScore::keys(&space_id, &author);
 
     let score = SpaceScore::get(cli, &pk, Some(sk))
-        .await?
+        .await
+        .map_err(|e| Error::InternalServerError(format!("failed to load my score: {e:?}")))?
         .unwrap_or_default();
 
     // Calculate rank by counting entries with higher score
     let space_pk: Partition = space_id.into();
-    let opts = SpaceScore::opt().limit(1000);
+    let opts = SpaceScore::opt().limit(1000).scan_index_forward(true);
 
-    let (all_scores, _) = SpaceScore::find_by_space(cli, &space_pk, opts).await?;
+    let (all_scores, _) = SpaceScore::find_by_space_rank(cli, &space_pk, opts)
+        .await
+        .map_err(|e| Error::InternalServerError(format!("failed to load ranking scores: {e:?}")))?;
     let rank = all_scores
         .iter()
-        .position(|s| s.total_score <= score.total_score)
+        .position(|s| s.user_pk == author)
         .map(|pos| (pos as u32) + 1)
         .unwrap_or(0);
 
