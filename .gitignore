@@ -66,3 +66,5 @@ user.json
 /playwright/admin1.json
 /app/ratel/test-build-target/
 /playwright/admin.json
+
+/.superpowers/brainstorm/**/state/

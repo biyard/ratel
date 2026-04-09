@@ -7,6 +7,7 @@ pub mod types;
 
 pub(crate) mod hooks;
 
+pub use controllers::profile;
 pub use controllers::*;
 pub use models::*;
 pub use services::*;
