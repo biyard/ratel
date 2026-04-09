@@ -81,6 +81,7 @@ pub async fn add_follow_users(
                 target_user.profile_url,
                 target_user.username,
                 target_user.user_type,
+                target_user.description,
             )
         } else if !is_email {
             let (teams, _) =
@@ -94,6 +95,7 @@ pub async fn add_follow_users(
                     team.profile_url,
                     team.username,
                     UserType::Team,
+                    team.description,
                 )
             } else {
                 return Err(Error::NotFound(format!("User not found: {}", identifier)));
@@ -103,10 +105,7 @@ pub async fn add_follow_users(
         };
 
         let (pk, sk) = SpaceFollowUser::keys(&space_id, &follow_user.user_pk);
-        if SpaceFollowUser::get(cli, &pk, Some(sk))
-            .await?
-            .is_some()
-        {
+        if SpaceFollowUser::get(cli, &pk, Some(sk)).await?.is_some() {
             continue;
         }
 
