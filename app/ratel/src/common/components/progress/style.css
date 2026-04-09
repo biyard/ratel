@@ -1,11 +1,13 @@
 .progress {
     position: relative;
     overflow: hidden;
-    width: 200px;
+    width: 100%;
     height: .5rem;
     box-sizing: border-box;
     border-radius: 9999px;
-    background: var(--primary-color-5);
+    background-image: var(--rail-recessed);
+    border: 1px solid rgba(0, 0, 0, 0.4);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
 }
 
 .progress[data-state='indeterminate'] .progress-indicator {
@@ -16,8 +18,12 @@
 .progress-indicator {
     width: var(--progress-value, 0%);
     height: 100%;
-    background-color: var(--secondary-color-1);
-    transition: width 250ms ease;
+    border-radius: 9999px;
+    background-image: var(--rail-fill-primary);
+    box-shadow:
+        0 0 16px rgba(252, 179, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    transition: width 300ms ease;
 }
 
 @keyframes indeterminate {
