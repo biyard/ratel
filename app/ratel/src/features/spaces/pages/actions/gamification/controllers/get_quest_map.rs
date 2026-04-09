@@ -13,13 +13,17 @@ use crate::features::spaces::pages::actions::actions::poll::SpacePollUserAnswer;
 /// One response includes every chapter (sorted by `order`) together with
 /// their quest nodes and the user's per-node status so the UI can render
 /// the interactive DAG without additional round-trips.
+#[mcp_tool(name = "get_quest_map", description = "Get the quest map for a space with chapters, quest nodes, and current user state including combo/streak multipliers.")]
 #[get(
     "/api/spaces/{space_id}/quest-map",
     role: SpaceUserRole,
     user: OptionalUser,
     space: SpaceCommon
 )]
-pub async fn get_quest_map(space_id: SpacePartition) -> Result<QuestMapResponse> {
+pub async fn get_quest_map(
+    #[mcp(description = "Space partition key")]
+    space_id: SpacePartition,
+) -> Result<QuestMapResponse> {
     let config = crate::common::CommonConfig::default();
     let cli = config.dynamodb();
     let space_pk: Partition = space_id.clone().into();

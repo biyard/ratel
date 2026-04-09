@@ -527,6 +527,84 @@ impl RatelMcpServer {
     async fn list_teams(&self) -> McpResult {
         crate::features::social::controllers::get_user_teams_handler_mcp_handler(&self.mcp_secret).await
     }
+
+    // ── Gamification: Chapter tools ─────────────────────────────────
+
+    #[rmcp::tool(
+        name = "create_chapter",
+        description = "Create a new chapter in a space. Requires creator role."
+    )]
+    async fn create_chapter(
+        &self,
+        Parameters(req): Parameters<crate::features::spaces::pages::actions::gamification::controllers::chapters::CreateChapterMcpRequest>,
+    ) -> McpResult {
+        crate::features::spaces::pages::actions::gamification::controllers::chapters::create_chapter_mcp_handler(&self.mcp_secret, req).await
+    }
+
+    #[rmcp::tool(
+        name = "list_chapters",
+        description = "List all chapters in a space, sorted by order."
+    )]
+    async fn list_chapters(
+        &self,
+        Parameters(req): Parameters<crate::features::spaces::pages::actions::gamification::controllers::chapters::ListChaptersMcpRequest>,
+    ) -> McpResult {
+        crate::features::spaces::pages::actions::gamification::controllers::chapters::list_chapters_mcp_handler(&self.mcp_secret, req).await
+    }
+
+    #[rmcp::tool(
+        name = "update_chapter",
+        description = "Update a chapter's name, description, actor role, or completion benefit. Requires creator role."
+    )]
+    async fn update_chapter(
+        &self,
+        Parameters(req): Parameters<crate::features::spaces::pages::actions::gamification::controllers::chapters::UpdateChapterMcpRequest>,
+    ) -> McpResult {
+        crate::features::spaces::pages::actions::gamification::controllers::chapters::update_chapter_mcp_handler(&self.mcp_secret, req).await
+    }
+
+    #[rmcp::tool(
+        name = "delete_chapter",
+        description = "Delete an empty chapter from a space. Fails if the chapter has actions assigned. Requires creator role."
+    )]
+    async fn delete_chapter(
+        &self,
+        Parameters(req): Parameters<crate::features::spaces::pages::actions::gamification::controllers::chapters::DeleteChapterMcpRequest>,
+    ) -> McpResult {
+        crate::features::spaces::pages::actions::gamification::controllers::chapters::delete_chapter_mcp_handler(&self.mcp_secret, req).await
+    }
+
+    #[rmcp::tool(
+        name = "reorder_chapters",
+        description = "Reorder chapters in a space by providing the full ordered list of chapter IDs. Requires creator role."
+    )]
+    async fn reorder_chapters(
+        &self,
+        Parameters(req): Parameters<crate::features::spaces::pages::actions::gamification::controllers::chapters::ReorderChaptersMcpRequest>,
+    ) -> McpResult {
+        crate::features::spaces::pages::actions::gamification::controllers::chapters::reorder_chapters_mcp_handler(&self.mcp_secret, req).await
+    }
+
+    // ── Gamification: Quest map & profile tools ─────────────────────
+
+    #[rmcp::tool(
+        name = "get_quest_map",
+        description = "Get the quest map for a space with chapters, quest nodes, and current user state including combo/streak multipliers."
+    )]
+    async fn get_quest_map(
+        &self,
+        Parameters(req): Parameters<crate::features::spaces::pages::actions::gamification::controllers::GetQuestMapMcpRequest>,
+    ) -> McpResult {
+        crate::features::spaces::pages::actions::gamification::controllers::get_quest_map_mcp_handler(&self.mcp_secret, req).await
+    }
+
+    #[rmcp::tool(
+        name = "get_my_global_profile",
+        description = "Get the authenticated user's global gamification profile including XP, level, streak, dungeons entered, and quests cleared."
+    )]
+    async fn get_my_global_profile(&self) -> McpResult {
+        crate::features::spaces::pages::actions::gamification::controllers::profile::get_my_global_profile_mcp_handler(&self.mcp_secret).await
+    }
 }
 
 #[tool_handler]

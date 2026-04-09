@@ -23,6 +23,7 @@ pub struct GlobalProfileResponse {
 ///
 /// Reads `UserGlobalXp` and `UserStreak` singletons from DynamoDB.
 /// Missing singletons are treated as zero-state (new user).
+#[mcp_tool(name = "get_my_global_profile", description = "Get the authenticated user's global gamification profile including XP, level, streak, dungeons entered, and quests cleared.")]
 #[get("/api/me/profile", user: crate::features::auth::User)]
 pub async fn get_my_global_profile() -> Result<GlobalProfileResponse> {
     let config = crate::common::CommonConfig::default();

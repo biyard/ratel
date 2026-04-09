@@ -5,9 +5,12 @@ pub struct ReorderChaptersRequest {
     pub ordered_ids: Vec<String>,
 }
 
+#[mcp_tool(name = "reorder_chapters", description = "Reorder chapters in a space by providing the full ordered list of chapter IDs. Requires creator role.")]
 #[post("/api/spaces/{space_id}/chapters/reorder", role: SpaceUserRole)]
 pub async fn reorder_chapters(
+    #[mcp(description = "Space partition key")]
     space_id: SpacePartition,
+    #[mcp(description = "Reorder data: ordered_ids array with all chapter IDs in desired order")]
     req: ReorderChaptersRequest,
 ) -> Result<String> {
     if role != SpaceUserRole::Creator {

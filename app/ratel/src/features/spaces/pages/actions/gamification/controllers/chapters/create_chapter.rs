@@ -9,9 +9,12 @@ pub struct CreateChapterRequest {
     pub completion_benefit: Option<ChapterBenefit>,
 }
 
+#[mcp_tool(name = "create_chapter", description = "Create a new chapter in a space. Requires creator role.")]
 #[post("/api/spaces/{space_id}/chapters", role: SpaceUserRole)]
 pub async fn create_chapter(
+    #[mcp(description = "Space partition key")]
     space_id: SpacePartition,
+    #[mcp(description = "Chapter creation data: name, optional actor_role, optional completion_benefit")]
     req: CreateChapterRequest,
 ) -> Result<String> {
     if role != SpaceUserRole::Creator {

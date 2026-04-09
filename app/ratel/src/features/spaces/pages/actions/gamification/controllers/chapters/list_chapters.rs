@@ -1,7 +1,11 @@
 use super::*;
 
+#[mcp_tool(name = "list_chapters", description = "List all chapters in a space, sorted by order.")]
 #[get("/api/spaces/{space_id}/chapters", role: SpaceUserRole)]
-pub async fn list_chapters(space_id: SpacePartition) -> Result<Vec<SpaceChapter>> {
+pub async fn list_chapters(
+    #[mcp(description = "Space partition key")]
+    space_id: SpacePartition,
+) -> Result<Vec<SpaceChapter>> {
     let config = crate::common::CommonConfig::default();
     let cli = config.dynamodb();
     let space_pk: Partition = space_id.into();

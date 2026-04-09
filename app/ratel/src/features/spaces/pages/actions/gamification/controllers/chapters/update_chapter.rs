@@ -20,10 +20,14 @@ fn is_forward_role_upgrade(target: SpaceUserRole) -> bool {
     )
 }
 
+#[mcp_tool(name = "update_chapter", description = "Update a chapter's name, description, actor role, or completion benefit. Requires creator role.")]
 #[patch("/api/spaces/{space_id}/chapters/{chapter_id}", role: SpaceUserRole)]
 pub async fn update_chapter(
+    #[mcp(description = "Space partition key")]
     space_id: SpacePartition,
+    #[mcp(description = "Chapter ID to update")]
     chapter_id: String,
+    #[mcp(description = "Chapter update data: optional name, description, actor_role, completion_benefit")]
     req: UpdateChapterRequest,
 ) -> Result<SpaceChapter> {
     if role != SpaceUserRole::Creator {

@@ -1,7 +1,13 @@
 use super::*;
 
+#[mcp_tool(name = "delete_chapter", description = "Delete an empty chapter from a space. Fails if the chapter has actions assigned. Requires creator role.")]
 #[delete("/api/spaces/{space_id}/chapters/{chapter_id}", role: SpaceUserRole)]
-pub async fn delete_chapter(space_id: SpacePartition, chapter_id: String) -> Result<String> {
+pub async fn delete_chapter(
+    #[mcp(description = "Space partition key")]
+    space_id: SpacePartition,
+    #[mcp(description = "Chapter ID to delete")]
+    chapter_id: String,
+) -> Result<String> {
     if role != SpaceUserRole::Creator {
         return Err(Error::Unauthorized(
             "Only creators can delete chapters".into(),
