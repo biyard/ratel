@@ -1,4 +1,4 @@
-//! Phase 2 integration tests for the gamification data model.
+//! Phase 2 + Phase 4 integration tests for the gamification data model.
 //!
 //! These tests exercise the DynamoEntity round-trip for every new model
 //! and verify that `SpaceAction` stays backward-compatible with records
@@ -280,4 +280,170 @@ async fn test_space_action_with_chapter_id() {
         .create(&ctx.ddb)
         .await
         .expect("SpaceAction without chapter_id should still create");
+}
+
+// ── Phase 4: access control unit tests ───────────────────────────────────────
+
+use crate::features::spaces::pages::actions::access::{
+    can_execute_space_action, can_execute_space_action_legacy,
+};
+use crate::common::types::SpaceStatus;
+
+fn make_chapter(actor_role: SpaceUserRole) -> SpaceChapter {
+    SpaceChapter {
+        actor_role,
+        ..Default::default()
+    }
+}
+
+#[test]
+fn test_can_execute_space_action_role_match() {
+    // Creator always passes (regardless of deps / prior chapter state).
+    let chapter = make_chapter(SpaceUserRole::Participant);
+    assert!(
+        can_execute_space_action(
+            SpaceUserRole::Creator,
+            &chapter,
+            false,
+            false,
+            Some(SpaceStatus::Ongoing),
+            false,
+        ),
+        "creator should bypass all gates"
+    );
+
+    // Participant meets Participant chapter.
+    assert!(can_execute_space_action(
+        SpaceUserRole::Participant,
+        &chapter,
+        true,
+        true,
+        Some(SpaceStatus::Ongoing),
+        false,
+    ));
+
+    // Candidate does NOT meet Participant chapter.
+    assert!(!can_execute_space_action(
+        SpaceUserRole::Candidate,
+        &chapter,
+        true,
+        true,
+        Some(SpaceStatus::Ongoing),
+        false,
+    ));
+
+    // Viewer is always blocked.
+    assert!(!can_execute_space_action(
+        SpaceUserRole::Viewer,
+        &chapter,
+        true,
+        true,
+        Some(SpaceStatus::Ongoing),
+        false,
+    ));
+}
+
+#[test]
+fn test_can_execute_space_action_dag_gate() {
+    let chapter = make_chapter(SpaceUserRole::Participant);
+
+    // DAG deps not met → blocked even with correct role and prior chapters.
+    assert!(!can_execute_space_action(
+        SpaceUserRole::Participant,
+        &chapter,
+        false, // deps NOT met
+        true,
+        Some(SpaceStatus::Ongoing),
+        false,
+    ));
+
+    // DAG deps met → allowed.
+    assert!(can_execute_space_action(
+        SpaceUserRole::Participant,
+        &chapter,
+        true,
+        true,
+        Some(SpaceStatus::Ongoing),
+        false,
+    ));
+}
+
+#[test]
+fn test_can_execute_space_action_prior_chapter_gate() {
+    let chapter = make_chapter(SpaceUserRole::Participant);
+
+    // Prior chapters not complete → blocked even with correct role and deps met.
+    assert!(!can_execute_space_action(
+        SpaceUserRole::Participant,
+        &chapter,
+        true,
+        false, // prior chapters NOT complete
+        Some(SpaceStatus::Ongoing),
+        false,
+    ));
+
+    // Prior chapters complete → allowed.
+    assert!(can_execute_space_action(
+        SpaceUserRole::Participant,
+        &chapter,
+        true,
+        true,
+        Some(SpaceStatus::Ongoing),
+        false,
+    ));
+}
+
+// ── Phase 4: HTTP integration test for get_quest_map ─────────────────────────
+
+#[tokio::test]
+async fn test_get_quest_map_response() {
+    let ctx = TestContext::setup().await;
+
+    // Create a space via the HTTP API.
+    let (status, _, space_body) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: "/api/spaces",
+        headers: ctx.test_user.1.clone(),
+        body: {
+            "req": {
+                "title": "Quest Map Test Space",
+                "description": "phase-4 test",
+                "logo": ""
+            }
+        }
+    };
+    assert_eq!(status, 200, "create space: {:?}", space_body);
+    let space_pk_str = space_body["pk"]
+        .as_str()
+        .expect("space pk should be a string");
+    // space_pk_str includes "SPACE#" prefix; strip it for the SubPartition path param.
+    let space_id = space_pk_str
+        .trim_start_matches("SPACE#");
+
+    // GET /api/spaces/{space_id}/quest-map — expect 200 even with no chapters.
+    let (status, _, quest_map_body) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: &format!("/api/spaces/{}/quest-map", space_id),
+        headers: ctx.test_user.1.clone(),
+    };
+    assert_eq!(status, 200, "get_quest_map: {:?}", quest_map_body);
+
+    // Response must contain the expected top-level keys.
+    assert!(
+        quest_map_body["chapters"].is_array(),
+        "chapters should be an array: {:?}",
+        quest_map_body
+    );
+    assert!(
+        quest_map_body["current_user_state"].is_object(),
+        "current_user_state should be an object: {:?}",
+        quest_map_body
+    );
+    // With no chapters created, the array should be empty.
+    assert_eq!(
+        quest_map_body["chapters"].as_array().unwrap().len(),
+        0,
+        "no chapters should exist yet: {:?}",
+        quest_map_body
+    );
 }
