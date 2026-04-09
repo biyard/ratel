@@ -17,6 +17,12 @@ pub enum UpdateSpaceActionRequest {
     Time { started_at: i64, ended_at: i64 },
     Prerequisite { prerequisite: bool },
     ActivityScore { activity_score: i64, additional_score: i64 },
+    ChapterId {
+        chapter_id: Option<crate::common::SpaceChapterEntityType>,
+    },
+    DependsOn {
+        depends_on: Vec<String>,
+    },
 }
 
 #[post(
@@ -99,6 +105,62 @@ pub async fn update_space_action(
                 .await
                 .map_err(|e| {
                     Error::InternalServerError(format!("Failed to update activity score: {e:?}"))
+                })?;
+        }
+        UpdateSpaceActionRequest::ChapterId { chapter_id } => {
+            space_action.chapter_id = chapter_id.clone();
+            SpaceAction::updater(&pk, &EntityType::SpaceAction)
+                .with_chapter_id(chapter_id)
+                .with_updated_at(now)
+                .execute(cli)
+                .await
+                .map_err(|e| {
+                    crate::error!("Failed to update chapter_id: {e:?}");
+                    Error::InternalServerError("Failed to update chapter_id".into())
+                })?;
+        }
+        UpdateSpaceActionRequest::DependsOn { depends_on } => {
+            // Validate the DAG before applying the update
+            if let Some(ref chapter_entity) = space_action.chapter_id {
+                let space_pk: Partition = space_id.clone().into();
+                let (all_actions, _) = SpaceAction::find_by_space(
+                    cli,
+                    &space_pk,
+                    SpaceAction::opt(),
+                )
+                .await
+                .map_err(|e| {
+                    crate::error!("Failed to load actions for DAG validation: {e:?}");
+                    Error::InternalServerError("Failed to load actions".into())
+                })?;
+
+                let chapter_id_str = &chapter_entity.0;
+                let chapter_actions: Vec<SpaceAction> = all_actions
+                    .into_iter()
+                    .filter(|a| {
+                        a.chapter_id
+                            .as_ref()
+                            .map(|cid| &cid.0 == chapter_id_str)
+                            .unwrap_or(false)
+                    })
+                    .collect();
+
+                crate::features::spaces::pages::actions::gamification::validate_depends_on(
+                    &chapter_actions,
+                    &action_id,
+                    &depends_on,
+                )?;
+            }
+
+            space_action.depends_on = depends_on.clone();
+            SpaceAction::updater(&pk, &EntityType::SpaceAction)
+                .with_depends_on(depends_on)
+                .with_updated_at(now)
+                .execute(cli)
+                .await
+                .map_err(|e| {
+                    crate::error!("Failed to update depends_on: {e:?}");
+                    Error::InternalServerError("Failed to update depends_on".into())
                 })?;
         }
     }

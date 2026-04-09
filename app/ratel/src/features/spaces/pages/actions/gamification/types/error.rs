@@ -54,6 +54,13 @@ pub enum GamificationError {
         ko = "이 챕터를 진행할 수 있는 역할이 아닙니다"
     )]
     RoleMismatch,
+
+    #[error("invalid role downgrade in chapter benefit")]
+    #[translate(
+        en = "Role upgrade must be forward (Viewer -> Candidate -> Participant)",
+        ko = "역할 업그레이드는 순방향이어야 합니다 (뷰어 -> 후보 -> 참가자)"
+    )]
+    InvalidRoleDowngrade,
 }
 
 #[cfg(feature = "server")]
@@ -63,6 +70,7 @@ impl GamificationError {
         match self {
             GamificationError::ChapterNotFound => StatusCode::NOT_FOUND,
             GamificationError::RoleMismatch => StatusCode::FORBIDDEN,
+            GamificationError::InvalidRoleDowngrade => StatusCode::BAD_REQUEST,
             _ => StatusCode::BAD_REQUEST,
         }
     }
