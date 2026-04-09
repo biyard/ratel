@@ -98,3 +98,31 @@
     background: var(--primary-color-3);
     color: var(--secondary-color-4);
 }
+
+/* Gamification renewal Phase 1 — radial sphere avatar variant */
+.avatar-sphere {
+  border-radius: 50%;
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.4),
+    inset 0 2px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #1a1208;
+  font-weight: 800;
+}
+
+.avatar-sphere-gold {
+  background: var(--sphere-gold);
+}
+
+.avatar-sphere-teal {
+  background: var(--sphere-teal);
+  color: #0a2520;
+}
+
+.avatar-sphere-bronze {
+  background: var(--sphere-bronze);
+  color: #1a1208;
+}

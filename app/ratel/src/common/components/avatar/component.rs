@@ -24,6 +24,12 @@ pub enum AvatarShape {
     #[default]
     Circle,
     Rounded,
+    /// Radial gradient sphere with rim highlight. Used in leaderboard medals and level badges.
+    Sphere,
+    /// Sphere with a teal palette. Used for 2nd-place leaderboard avatars.
+    SphereTeal,
+    /// Sphere with a bronze palette. Used for 3rd-place leaderboard avatars.
+    SphereBronze,
 }
 
 impl AvatarShape {
@@ -31,6 +37,9 @@ impl AvatarShape {
         match self {
             AvatarShape::Circle => "avatar-circle",
             AvatarShape::Rounded => "avatar-rounded",
+            AvatarShape::Sphere => "avatar-sphere avatar-sphere-gold",
+            AvatarShape::SphereTeal => "avatar-sphere avatar-sphere-teal",
+            AvatarShape::SphereBronze => "avatar-sphere avatar-sphere-bronze",
         }
     }
 }
