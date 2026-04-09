@@ -7,7 +7,12 @@ use crate::features::timeline::components::DraftScrollRow;
 /// rendering (cards, scroll affordances, delete) to [`DraftScrollRow`].
 #[component]
 pub fn TeamDraftTimeline(username: String) -> Element {
-    let teamname_signal = use_signal(|| username);
+    let mut teamname_signal = use_signal(|| username.clone());
+    use_effect(use_reactive((&username,), move |(name,)| {
+        if *teamname_signal.peek() != name {
+            teamname_signal.set(name);
+        }
+    }));
 
     let drafts = use_server_future(move || {
         let teamname = teamname_signal();

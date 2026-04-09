@@ -23,6 +23,13 @@ pub enum NotificationData {
         comment_preview: String,
         cta_url: String,
     },
+    SendSpaceStatusUpdate {
+        emails: Vec<String>,
+        headline: String,
+        body: String,
+        cta_url: String,
+        space_title: String,
+    },
 }
 
 #[cfg(feature = "server")]
@@ -87,6 +94,26 @@ impl NotificationData {
                     mentioned_by_name,
                     &comment_preview[..comment_preview.len().min(50)]
                 );
+            }
+            NotificationData::SendSpaceStatusUpdate {
+                emails,
+                headline,
+                body,
+                cta_url,
+                space_title,
+            } => {
+                let operation = EmailOperation::SpaceStatusNotification {
+                    headline: headline.clone(),
+                    body: body.clone(),
+                    space_title: space_title.clone(),
+                    cta_url: cta_url.clone(),
+                };
+
+                let template = EmailTemplate {
+                    targets: emails.clone(),
+                    operation,
+                };
+                template.send_email(ses).await?;
             }
             NotificationData::None => {
                 tracing::warn!("Received notification with no data, skipping");

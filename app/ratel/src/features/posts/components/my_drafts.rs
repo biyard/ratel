@@ -111,13 +111,21 @@ pub fn MyDrafts() -> Element {
 
 #[component]
 pub fn TeamDrafts(username: String) -> Element {
-    let teamname_signal = use_signal(|| username);
+    let mut teamname_signal = use_signal(|| username.clone());
     let mut v = use_infinite_query(move |bookmark| {
         let teamname = teamname_signal();
         async move { list_team_drafts_handler(teamname, bookmark).await }
     })?;
-
     let deleted = use_signal(HashSet::<String>::new);
+    let mut v_clone = v.clone();
+    let mut deleted_clone = deleted;
+    use_effect(use_reactive((&username,), move |(name,)| {
+        if *teamname_signal.peek() != name {
+            teamname_signal.set(name);
+            deleted_clone.set(HashSet::new());
+            v_clone.restart();
+        }
+    }));
     let nav = use_navigator();
 
     let deleted_keys = deleted.read().clone();
