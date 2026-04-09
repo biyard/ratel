@@ -23,13 +23,6 @@ pub fn ContextMenu(props: ContextMenuProps) -> Element {
 pub fn ContextMenuTrigger(props: ContextMenuTriggerProps) -> Element {
     rsx! {
         context_menu::ContextMenuTrigger {
-            padding: "20px",
-            background: "var(--primary-color)",
-            border: "1px dashed var(--primary-color-6)",
-            border_radius: ".5rem",
-            cursor: "context-menu",
-            user_select: "none",
-            text_align: "center",
             attributes: props.attributes,
             {props.children}
         }

@@ -97,9 +97,9 @@ pub async fn list_dashboard_data_handler(
         use crate::features::activity::models::SpaceScore;
         use crate::features::spaces::space_common::types::dashboard::*;
 
-        let score_opts = SpaceScore::opt().limit(50);
+        let score_opts = SpaceScore::opt().limit(50).scan_index_forward(true);
 
-        if let Ok((scores, _)) = SpaceScore::find_by_space(cli, &space_pk, score_opts).await {
+        if let Ok((scores, _)) = SpaceScore::find_by_space_rank(cli, &space_pk, score_opts).await {
             if !scores.is_empty() {
                 let entries: Vec<RankingEntry> = scores
                     .iter()

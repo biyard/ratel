@@ -10,6 +10,7 @@
   opacity: 0;
   pointer-events: none;
   will-change: transform, opacity;
+  transform-origin: bottom left;
 }
 
 .context-menu-content[data-state="closed"] {
@@ -19,12 +20,12 @@
 @keyframes context-menu-animate-out {
   0% {
     opacity: 1;
-    transform: scale(1) translateY(0);
+    transform: translateY(-100%) scale(1);
   }
 
   100% {
     opacity: 0;
-    transform: scale(0.95) translateY(-2px);
+    transform: translateY(calc(-100% + 2px)) scale(0.95);
   }
 }
 
@@ -35,12 +36,12 @@
 @keyframes context-menu-animate-in {
   0% {
     opacity: 0;
-    transform: scale(0.95) translateY(-2px);
+    transform: translateY(calc(-100% + 2px)) scale(0.95);
   }
 
   100% {
     opacity: 1;
-    transform: scale(1) translateY(0);
+    transform: translateY(-100%) scale(1);
   }
 }
 

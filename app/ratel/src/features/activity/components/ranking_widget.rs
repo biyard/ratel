@@ -27,7 +27,7 @@ pub fn RankingWidget(space_id: ReadSignal<SpacePartition>) -> Element {
     }
 
     rsx! {
-        Card { variant: CardVariant::Outlined, class: "mx-4 mb-2",
+        Card { variant: CardVariant::Outlined, class: "mx-4 my-2 !py-2.5",
             Col { class: "w-full",
 
                 Row {
@@ -46,8 +46,12 @@ pub fn RankingWidget(space_id: ReadSignal<SpacePartition>) -> Element {
                                 "aria-highlighted": is_me,
                                 main_axis_align: MainAxisAlign::Between,
                                 cross_axis_align: CrossAxisAlign::Center,
-                                Row { class: "gap-2 min-w-0 flex-1", cross_axis_align: CrossAxisAlign::Center,
-                                    span { class: "w-4 text-xs font-medium text-center text-foreground-muted shrink-0", "{entry.rank}" }
+                                Row {
+                                    class: "gap-2 min-w-0 flex-1",
+                                    cross_axis_align: CrossAxisAlign::Center,
+                                    span { class: "w-4 text-xs font-medium text-center text-foreground-muted shrink-0",
+                                        "{entry.rank}"
+                                    }
                                     if !entry.avatar.is_empty() {
                                         img {
                                             class: "object-cover w-5 h-5 rounded-full shrink-0",
@@ -93,7 +97,9 @@ pub fn RankingWidget(space_id: ReadSignal<SpacePartition>) -> Element {
                             }
                             span { class: "text-xs font-semibold text-primary", "{tr.you}" }
                         }
-                        span { class: "w-10 text-xs font-medium text-right tabular-nums text-primary shrink-0", "{my_score.total_score}" }
+                        span { class: "w-10 text-xs font-medium text-right tabular-nums text-primary shrink-0",
+                            "{my_score.total_score}"
+                        }
                     }
                 }
             }

@@ -21,9 +21,11 @@ pub async fn get_ranking_handler(
     let cli = cfg.dynamodb();
     let space_pk: Partition = space_id.into();
 
-    let opts = SpaceScore::opt_with_bookmark(bookmark).limit(50);
+    let opts = SpaceScore::opt_with_bookmark(bookmark)
+        .limit(50)
+        .scan_index_forward(true);
 
-    let (scores, next_bookmark) = SpaceScore::find_by_space(cli, &space_pk, opts).await?;
+    let (scores, next_bookmark) = SpaceScore::find_by_space_rank(cli, &space_pk, opts).await?;
 
     let items: Vec<RankingEntryResponse> = scores
         .iter()
