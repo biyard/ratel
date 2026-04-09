@@ -37,7 +37,7 @@ pub async fn participate_space(
     let dynamo = config.common.dynamodb();
     let now = get_now_timestamp_millis();
 
-    let space_pk_partition: Partition = space_id.into();
+    let space_pk_partition: Partition = space_id.clone().into();
     let space =
         SpaceCommon::get(dynamo, &space_pk_partition, Some(&EntityType::SpaceCommon)).await?;
     let space = space.ok_or_else(|| Error::NotFound("Space Not Found".to_string()))?;
