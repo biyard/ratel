@@ -1,0 +1,2 @@
+mod global_player_profile_page;
+pub use global_player_profile_page::GlobalPlayerProfilePage;

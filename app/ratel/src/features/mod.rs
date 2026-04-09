@@ -17,3 +17,5 @@ pub mod ai_moderator;
 pub mod rag;
 
 pub mod activity;
+
+pub mod profile;

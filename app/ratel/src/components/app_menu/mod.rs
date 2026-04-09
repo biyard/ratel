@@ -57,6 +57,11 @@ translate! {
         en: "User Profile",
         ko: "사용자 프로필",
     },
+
+    my_profile: {
+        en: "My Profile",
+        ko: "내 프로필",
+    },
 }
 
 #[component]
@@ -376,6 +381,19 @@ fn ProfileButton(collapsed: bool) -> Element {
                             div { class: "w-5 h-5 rounded-full bg-neutral-600" }
                         }
                         span { class: "text-sm truncate", "{user.display_name}" }
+                    }
+
+                    // My Profile
+                    Link {
+                        class: "flex gap-2 items-center py-1.5 px-2 w-full rounded-md cursor-pointer hover:bg-hover",
+                        to: Route::GlobalPlayerProfilePage {},
+                        onclick: move |_| open.set(false),
+                        "data-testid": "my-profile-link",
+                        lucide_dioxus::User {
+                            size: 16,
+                            class: "shrink-0 [&>path]:stroke-icon-primary [&>circle]:stroke-icon-primary",
+                        }
+                        span { class: "text-sm", "{tr.my_profile}" }
                     }
 
                     // Teams

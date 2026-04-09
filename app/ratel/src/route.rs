@@ -3,6 +3,7 @@ use crate::*;
 use crate::features::my_follower::MyFollowerPage;
 
 use crate::features::spaces::pages::dashboard::SpaceDashboardPage;
+use crate::features::spaces::pages::leaderboard::SpaceLeaderboardPage;
 use crate::features::spaces::pages::overview::SpaceOverviewPage;
 use crate::features::spaces::pages::report::SpaceReportPage;
 use crate::features::spaces::SpaceLayout;
@@ -31,6 +32,7 @@ use crate::features::spaces::pages::actions::actions::quiz::QuizActionPage;
 use crate::features::spaces::pages::actions::SpaceActionsPage;
 
 use crate::features::admin::{AdminLayout, AdminMainPage};
+use crate::features::profile::GlobalPlayerProfilePage;
 
 use crate::features::posts::{Index as PostIndex, PostDetail, PostEdit};
 
@@ -106,6 +108,9 @@ pub enum Route {
             #[route("/my-follower")]
             MyFollowerPage { },
 
+            #[route("/me/profile")]
+            GlobalPlayerProfilePage { },
+
             #[nest("/admin")]
                 #[layout(AdminLayout)]
                     #[route("/")]
@@ -165,6 +170,8 @@ pub enum Route {
                 SpaceOverviewPage { space_id: SpacePartition },
                 #[route("/report")]
                 SpaceReportPage { space_id: SpacePartition },
+                #[route("/leaderboard")]
+                SpaceLeaderboardPage { space_id: SpacePartition },
 
                 #[nest("/actions")]
                     #[route("/")]
