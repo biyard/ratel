@@ -393,3 +393,67 @@ async fn test_handle_no_recipients_is_noop_participants() {
 
     assert_eq!(before, after, "expected zero new notifications");
 }
+
+// ── Task 13a ─────────────────────────────────────────────────────────────────
+
+#[tokio::test]
+async fn test_handle_dedupes_duplicate_emails() {
+    let ctx = TestContext::setup().await;
+    let space =
+        insert_user_space(&ctx, ctx.test_user.0.pk.clone(), Some(SpaceStatus::Open)).await;
+
+    // Create two users with the same email to simulate an email collision.
+    let p1 = create_test_user(&ctx.ddb).await;
+
+    // p2 is created with the same email as p1 by passing it directly to User::new.
+    let username2 = create_user_name();
+    let p2 = crate::common::models::auth::User::new(
+        "dupUser".to_string(),
+        p1.email.clone(),
+        String::new(),
+        true,
+        true,
+        crate::common::types::UserType::Individual,
+        username2,
+        None,
+    );
+    p2.create(&ctx.ddb).await.unwrap();
+
+    insert_participant_for(&ctx, &space.pk, &p1).await;
+    insert_participant_for(&ctx, &space.pk, &p2).await;
+
+    handle_space_status_change(SpaceStatusChangeEvent::new(
+        space.pk.clone(),
+        Some(SpaceStatus::Open),
+        SpaceStatus::Ongoing,
+    ))
+    .await
+    .expect("handler failed");
+
+    let rows = notifications_matching(&ctx, |n| {
+        if let NotificationData::SendSpaceStatusUpdate { headline, .. } = &n.data {
+            headline.contains("is starting now")
+        } else {
+            false
+        }
+    })
+    .await;
+
+    let count_matching: usize = rows
+        .iter()
+        .flat_map(|n| {
+            if let NotificationData::SendSpaceStatusUpdate { emails, .. } = &n.data {
+                emails.iter().filter(|e| **e == p1.email).cloned().collect::<Vec<_>>()
+            } else {
+                vec![]
+            }
+        })
+        .count();
+
+    assert_eq!(
+        count_matching,
+        1,
+        "expected duplicate email to appear once, got {}",
+        count_matching
+    );
+}
