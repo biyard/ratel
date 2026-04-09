@@ -324,6 +324,12 @@ pub enum Error {
     #[error("{0}")]
     #[translate(from)]
     Activity(#[from] crate::features::activity::types::ActivityError),
+
+    #[error("{0}")]
+    #[translate(from)]
+    Gamification(
+        #[from] crate::features::spaces::pages::actions::gamification::GamificationError,
+    ),
 }
 
 #[cfg(feature = "server")]
@@ -380,6 +386,7 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             Error::Member(e) => e.status_code(),
             Error::AiModerator(e) => e.status_code(),
             Error::Activity(e) => e.status_code(),
+            Error::Gamification(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
@@ -468,6 +475,7 @@ impl dioxus::fullstack::AsStatusCode for Error {
             Error::Member(e) => e.status_code(),
             Error::AiModerator(e) => e.status_code(),
             Error::Activity(e) => e.status_code(),
+            Error::Gamification(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
