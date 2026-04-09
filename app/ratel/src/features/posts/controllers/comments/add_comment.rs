@@ -19,7 +19,7 @@ pub async fn add_comment_handler(
     let conf = crate::features::posts::config::get();
     let cli = conf.dynamodb();
 
-    let post_pk: Partition = post_id.into();
+    let post_pk: Partition = post_id.clone().into();
 
     let post = Post::get(cli, &post_pk, Some(EntityType::Post))
         .await?
@@ -32,7 +32,20 @@ pub async fn add_comment_handler(
         _ => {}
     }
 
-    let comment = Post::comment(cli, post.pk.clone(), req.content, req.images, user).await?;
+    let comment = Post::comment(cli, post.pk.clone(), req.content, req.images, user.clone()).await?;
+
+    // Send mention notifications
+    {
+        let cta_url = format!("/posts/{}", post_id);
+        crate::common::utils::mention::create_mention_notifications(
+            cli,
+            &comment.content,
+            &user.pk,
+            &user.display_name,
+            &cta_url,
+        )
+        .await;
+    }
 
     Ok(comment)
 }
