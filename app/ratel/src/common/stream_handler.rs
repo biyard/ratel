@@ -85,6 +85,17 @@ pub async fn handle_stream_record(
                         tracing::error!(error = %e, "stream: ActivityScoreAggregate failed");
                     }
                 }
+            } else if sk.starts_with("SPACE_STATUS_CHANGE_EVENT#") {
+                let event: crate::common::models::space::SpaceStatusChangeEvent =
+                    deserialize(image)?;
+                if let Err(e) =
+                    crate::features::spaces::space_common::services::handle_space_status_change(
+                        event,
+                    )
+                    .await
+                {
+                    tracing::error!(error = %e, "stream: SpaceStatusChangeEvent failed");
+                }
             }
         }
         "MODIFY" => {
