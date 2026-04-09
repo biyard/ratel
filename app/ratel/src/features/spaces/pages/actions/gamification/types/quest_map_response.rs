@@ -1,4 +1,6 @@
 use crate::common::*;
+use crate::features::spaces::pages::actions::gamification::types::ChapterBenefit;
+use crate::features::spaces::pages::actions::types::SpaceActionType;
 
 /// Response payload for the Quest Map participant view endpoint
 /// (`get_quest_map`). This DTO is the shape the frontend `QuestMap`
