@@ -8,7 +8,7 @@ mod table_of_contents;
 mod toc_context;
 
 pub use attachments::DiscussionAttachments;
-pub use comments_drawer::{CommentsDrawer, FloatingCommentsButton};
+pub use comments_drawer::{CommentsSideDrawer, FloatingCommentsButton, CommentsBottomDrawer, CommentsBottomBar};
 pub use content_body::DiscussionContentBody;
 pub use i18n::DiscussionViewerTranslate;
 pub use layout::NotionLayout;
@@ -32,7 +32,6 @@ pub fn ViewerMain(
     let ctx = use_discussion_context();
     let space = use_space().read().clone();
 
-    // Initialize the TOC context so content_body and table_of_contents share state.
     DiscussionTocContext::init();
 
     let discussion_response = ctx.discussion();
@@ -47,12 +46,13 @@ pub fn ViewerMain(
     let can_manage_comments = can_comment;
     let comment_count = discussion.comments.max(0) as usize;
 
-    let drawer_open = use_signal(|| false);
+    let mut side_drawer_open = use_signal(|| false);
+    let mut bottom_drawer_open = use_signal(|| false);
 
     let title = if discussion.title.is_empty() {
-        tr.untitled_discussion.to_string()
+        tr.untitled_discussion
     } else {
-        discussion.title.clone()
+        &discussion.title
     };
 
     rsx! {
@@ -66,10 +66,24 @@ pub fn ViewerMain(
             DiscussionAttachments { files: discussion.files.clone() }
 
             NotionLayout { html_contents: discussion.html_contents.clone() }
+
         }
 
-        CommentsDrawer {
-            open: drawer_open,
+        // Desktop (>=800px): floating button + right side drawer
+        FloatingCommentsButton { open: side_drawer_open, comment_count }
+        CommentsSideDrawer {
+            open: side_drawer_open,
+            space_id,
+            discussion_id,
+            can_comment,
+            can_manage_comments,
+            current_user_pk: current_user_pk.clone(),
+            comment_count,
+        }
+
+        // Mobile (<800px): bottom drawer + handle bar
+        CommentsBottomDrawer {
+            open: bottom_drawer_open,
             space_id,
             discussion_id,
             can_comment,
@@ -78,6 +92,6 @@ pub fn ViewerMain(
             comment_count,
         }
 
-        FloatingCommentsButton { open: drawer_open, comment_count }
+        CommentsBottomBar { open: bottom_drawer_open, comment_count }
     }
 }
