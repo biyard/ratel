@@ -4,7 +4,7 @@ use web_sys::js_sys::Promise;
 
 use crate::features::auth::*;
 
-#[cfg(feature = "web")]
+#[cfg(all(feature = "web", not(feature = "server")))]
 pub fn wallet_connect_initialize(config: &crate::common::WalletConnectConfig) {
     wallet_initialize(
         &config.project_id,
