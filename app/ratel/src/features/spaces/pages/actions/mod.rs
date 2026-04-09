@@ -16,7 +16,7 @@ use models::*;
 use types::*;
 
 pub use access::*;
-pub use gamification::*;
+pub use gamification::{models::*, types::*};
 pub use menu::*;
 pub use views::*;
 
