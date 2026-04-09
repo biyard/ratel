@@ -22,6 +22,8 @@ pub struct SpaceFollowUser {
     pub username: String,
     #[serde(default)]
     pub user_type: UserType,
+    #[serde(default)]
+    pub description: String,
 }
 
 #[cfg(feature = "server")]
@@ -33,6 +35,7 @@ impl SpaceFollowUser {
         profile_url: String,
         username: String,
         user_type: UserType,
+        description: String,
     ) -> Self {
         let now = get_now_timestamp_millis();
         let pk: Partition = space_pk.into();
@@ -48,6 +51,7 @@ impl SpaceFollowUser {
             profile_url,
             username,
             user_type,
+            description,
         }
     }
 
