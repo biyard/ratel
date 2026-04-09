@@ -1,9 +1,12 @@
 use dioxus::fullstack::{Loader, Loading};
 
-use crate::features::spaces::space_common::{
-    controllers::{get_user_role, SpaceResponse},
-    hooks::*,
-    *,
+use crate::{
+    features::spaces::space_common::{
+        controllers::{get_user_role, SpaceResponse},
+        hooks::*,
+        *,
+    },
+    spaces::controllers::panel_requirements::PanelRequirementStatus,
 };
 
 #[derive(Clone, Copy, DioxusController)]
@@ -11,18 +14,27 @@ pub struct SpaceContextProvider {
     pub role: Loader<SpaceUserRole>,
     pub space: Loader<SpaceResponse>,
     pub current_role: Signal<SpaceUserRole>,
+    pub panel_requirements: Loader<Vec<PanelRequirementStatus>>,
 }
 
 impl SpaceContextProvider {
     pub fn init(space_id: ReadSignal<SpacePartition>) -> crate::common::Result<Self, Loading> {
         let role = use_loader(move || async move { get_user_role(space_id()).await })?;
         let space = use_loader(move || async move { get_space(space_id()).await })?;
+        let mut panel_requirements = use_loader(move || async move {
+            crate::features::spaces::controllers::panel_requirements::get_panel_requirements(
+                space_id(),
+            )
+            .await
+        })?;
+
         let mut current_role = use_signal(|| role());
 
         let srv = Self {
             role,
             space,
             current_role,
+            panel_requirements,
         };
         debug!("Initialized SpaceContextProvider");
         use_context_provider(move || srv);

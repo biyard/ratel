@@ -1,4 +1,4 @@
-use crate::common::*;
+use crate::{common::*, spaces::SpaceError};
 use dioxus::fullstack::Loading;
 pub use thiserror::Error;
 
@@ -59,7 +59,10 @@ pub enum Error {
     BadRequest(String),
 
     #[error("Username already exists")]
-    #[translate(en = "Username already exists", ko = "이미 존재하는 사용자 이름입니다.")]
+    #[translate(
+        en = "Username already exists",
+        ko = "이미 존재하는 사용자 이름입니다."
+    )]
     UsernameAlreadyExists,
 
     #[error("Duplicate entry: {0}")]
@@ -235,6 +238,10 @@ pub enum Error {
     #[error("{0}")]
     #[translate(from)]
     Follow(#[from] crate::features::my_follower::types::FollowError),
+
+    #[error("{0}")]
+    #[translate(from)]
+    Space(#[from] SpaceError),
 
     #[error("{0}")]
     #[translate(from)]
