@@ -1008,3 +1008,14 @@ body {
   --rim-glow-accent: 0 0 60px -20px rgba(110, 237, 216, 0.35);
   --rim-glow-danger: 0 0 60px -20px rgba(219, 39, 128, 0.35);
 }
+
+@theme {
+  /* Gradient text fills (apply via background-clip: text) */
+  --text-gradient-gold: linear-gradient(180deg, #fff8e7 0%, #f0d28a 60%, #a07a30 100%);
+  --text-gradient-teal: linear-gradient(180deg, #f0fffa 0%, #9fdcc9 50%, #3a7a6a 100%);
+
+  /* Progress bar rails */
+  --rail-recessed: linear-gradient(180deg, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.25));
+  --rail-fill-primary: linear-gradient(90deg, #a07a30, #fcb300 40%, #ffe082 70%, #9fdcc9 100%);
+  --rail-fill-teal: linear-gradient(90deg, #3a7a6a, #6eedd8 50%, #e6fff8 100%);
+}
