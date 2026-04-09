@@ -15,7 +15,7 @@ impl PendingImage {
 
 #[component]
 pub fn ImageUploadPreview(images: Signal<Vec<PendingImage>>) -> Element {
-    let items = images.read().clone();
+    let items = images.read();
     if items.is_empty() {
         return rsx! {};
     }
@@ -25,8 +25,8 @@ pub fn ImageUploadPreview(images: Signal<Vec<PendingImage>>) -> Element {
             for (i , img) in items.iter().enumerate() {
                 div { class: "group relative",
                     img {
-                        class: "aspect-video w-full rounded-lg object-cover",
-                        class: if img.uploading { "animate-pulse opacity-50" } else { "" },
+                        class: "aspect-video w-full rounded-lg object-cover aria-busy:animate-pulse aria-busy:opacity-50",
+                        "aria-busy": img.uploading,
                         src: "{img.local_url}",
                         alt: "Pending image {i}",
                     }

@@ -1,4 +1,6 @@
-use crate::common::components::{Sheet, SheetContent, SheetHeader, SheetSide, SheetTitle};
+use crate::common::components::{
+    Button, ButtonShape, ButtonSize, Sheet, SheetContent, SheetHeader, SheetSide, SheetTitle,
+};
 use crate::features::spaces::pages::actions::actions::discussion::components::DiscussionComments;
 use crate::features::spaces::pages::actions::actions::discussion::views::main::viewer::DiscussionViewerTranslate;
 use crate::features::spaces::pages::actions::actions::discussion::*;
@@ -51,14 +53,18 @@ pub fn FloatingCommentsButton(open: Signal<bool>, comment_count: usize) -> Eleme
     }
 
     rsx! {
-        button {
-            class: "flex fixed right-6 bottom-6 z-40 justify-center items-center w-14 h-14 rounded-full shadow-lg transition-transform bg-btn-primary-bg text-btn-primary-text hover:scale-105 focus-visible:ring-2 focus-visible:ring-ring/50",
-            "aria-label": "{tr.open_comments}",
-            onclick: move |_| open_sig.set(true),
-            MessageCircle { class: "w-6 h-6 [&>path]:stroke-icon-primary" }
-            if comment_count > 0 {
-                span { class: "flex absolute -top-1 -right-1 justify-center items-center px-1 h-5 text-xs font-bold rounded-full min-w-5 bg-primary text-btn-primary-text",
-                    "{comment_count}"
+        div { class: "fixed right-6 bottom-6 z-40",
+            Button {
+                size: ButtonSize::Icon,
+                shape: ButtonShape::Rounded,
+                class: "w-14 h-14 shadow-lg transition-transform hover:scale-105",
+                "aria-label": "{tr.open_comments}",
+                onclick: move |_| open_sig.set(true),
+                MessageCircle { class: "w-6 h-6 [&>path]:stroke-icon-primary" }
+                if comment_count > 0 {
+                    span { class: "flex absolute -top-1 -right-1 justify-center items-center px-1 h-5 text-xs font-bold rounded-full min-w-5 bg-primary text-btn-primary-text",
+                        "{comment_count}"
+                    }
                 }
             }
         }

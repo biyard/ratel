@@ -6,3 +6,6 @@ pub use get_space::*;
 
 mod update_space;
 pub use update_space::*;
+
+mod list_space_members;
+pub use list_space_members::*;

@@ -18,6 +18,11 @@ pub enum NotificationData {
         author_display_name: String,
         cta_url: String,
     },
+    MentionInComment {
+        mentioned_by_name: String,
+        comment_preview: String,
+        cta_url: String,
+    },
 }
 
 #[cfg(feature = "server")]
@@ -71,6 +76,17 @@ impl NotificationData {
                     operation,
                 };
                 template.send_email(ses).await?;
+            }
+            NotificationData::MentionInComment {
+                mentioned_by_name,
+                comment_preview,
+                ..
+            } => {
+                tracing::info!(
+                    "Mention notification: {} mentioned in comment: {}",
+                    mentioned_by_name,
+                    &comment_preview[..comment_preview.len().min(50)]
+                );
             }
             NotificationData::None => {
                 tracing::warn!("Received notification with no data, skipping");
