@@ -50,4 +50,12 @@ translate! {
     briefing_explorers: { en: "explorers", ko: "탐험가" },
     briefing_combo: { en: "combo", ko: "콤보" },
     briefing_streak: { en: "streak", ko: "연속" },
+
+    // Completion Overlay
+    completion_xp_earned: { en: "XP earned!", ko: "XP 획득!" },
+    completion_level_up: { en: "LEVEL UP!", ko: "레벨 업!" },
+    completion_quest_unlocked: { en: "New quest unlocked", ko: "새 퀘스트 잠금 해제" },
+    completion_chapter_complete: { en: "Chapter Complete!", ko: "챕터 완료!" },
+    completion_role_upgraded: { en: "Role Upgraded!", ko: "역할 승급!" },
+    completion_tap_dismiss: { en: "Tap to continue", ko: "탭하여 계속" },
 }

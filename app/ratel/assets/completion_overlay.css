@@ -1,0 +1,51 @@
+/* ── Completion Overlay Animations ─────────────────────────────── */
+
+@keyframes xp-burst {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes level-up-glow {
+    0% {
+        box-shadow: 0 0 0 0 rgba(252, 179, 0, 0.6);
+    }
+    50% {
+        box-shadow: 0 0 40px 20px rgba(252, 179, 0, 0.3);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(252, 179, 0, 0);
+    }
+}
+
+@keyframes slide-up-fade {
+    0% {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.animate-xp-burst {
+    animation: xp-burst 0.6s ease-out forwards;
+}
+
+.animate-level-glow {
+    animation: level-up-glow 1.5s ease-out forwards;
+}
+
+.animate-slide-up {
+    animation: slide-up-fade 0.4s ease-out forwards;
+}

@@ -6,6 +6,8 @@ pub mod quest_briefing;
 pub mod quest_map;
 pub mod title_region;
 pub mod xp_hud;
+pub mod completion_overlay;
+pub use completion_overlay::*;
 pub use dungeon_hero::*;
 pub use leaderboard_rail::*;
 pub use quest_briefing::*;
