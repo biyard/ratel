@@ -58,13 +58,41 @@
   ```bash
   cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev dx check --features web
   ```
+- **One-time test prerequisites** (only once per environment):
+  ```bash
+  # Install tailwind via workspace pnpm
+  cd /home/hackartist/data/devel/github.com/biyard/ratel_notification-space-status-to-participant && pnpm install
+  # Generate the tailwind.css asset (required by asset!() macro at build time)
+  cd app/ratel && npx @tailwindcss/cli -i tailwind.css -o ./assets/tailwind.css
+  # Create the public directory dioxus-server looks for at runtime
+  mkdir -p target/debug/deps/public
+  # Ensure LocalStack is running (DynamoDB on :4566)
+  docker ps | grep localstack  # should show ratel-localstack-1 healthy
+  ```
 - **Run a single test** during TDD iterations:
   ```bash
-  cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- <test_name>
+  cd app/ratel && \
+    AWS_ACCESS_KEY_ID=test \
+    AWS_SECRET_ACCESS_KEY=test \
+    AWS_REGION=us-east-1 \
+    AWS_ACCOUNT_ID=000000000000 \
+    DYNAMO_TABLE_PREFIX=ratel-local \
+    DYNAMODB_ENDPOINT=http://localhost:4566 \
+    RUST_LOG=info \
+    cargo test --features "server,bypass" --tests -- <test_name>
   ```
+  (The AWS values are dummies — they must be present at compile time for `option_env!()` but tests hit LocalStack, not real AWS. The feature set is `server,bypass` — there is no `full` feature in this crate.)
 - **Run all new tests** before declaring a phase done:
   ```bash
-  cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- space_status_change
+  cd app/ratel && \
+    AWS_ACCESS_KEY_ID=test \
+    AWS_SECRET_ACCESS_KEY=test \
+    AWS_REGION=us-east-1 \
+    AWS_ACCOUNT_ID=000000000000 \
+    DYNAMO_TABLE_PREFIX=ratel-local \
+    DYNAMODB_ENDPOINT=http://localhost:4566 \
+    RUST_LOG=info \
+    cargo test --features "server,bypass" --tests -- space_status_change
   ```
 - **Commit cadence**: commit at the end of every task (after build-check or test-pass). Small commits let us roll back individual steps cleanly.
 - **Never use `Error::BadRequest(String)`**. Use typed error enums per `.claude/rules/conventions/error-handling.md`.
@@ -748,7 +776,7 @@ pub use setup::*;
 The current handler unconditionally returns `Ok(())` at Task 7, so this test should already pass. Confirm:
 
 ```bash
-cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- test_handle_unknown_transition_is_noop
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "server,bypass" --tests -- test_handle_unknown_transition_is_noop
 ```
 Expected: PASS.
 
@@ -955,7 +983,7 @@ async fn test_handle_publish_to_open_notifies_team_members() {
 - [ ] **Step 2: Run the test to verify it fails**
 
 ```bash
-cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- test_handle_publish_to_open_notifies_team_members
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "server,bypass" --tests -- test_handle_publish_to_open_notifies_team_members
 ```
 Expected: FAIL — the handler is still a stub, so no `Notification` rows exist.
 
@@ -1217,7 +1245,7 @@ fn build_space_url(space_pk: &Partition) -> String {
 - [ ] **Step 4: Run the test to verify it passes**
 
 ```bash
-cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- test_handle_publish_to_open_notifies_team_members
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "server,bypass" --tests -- test_handle_publish_to_open_notifies_team_members
 ```
 Expected: PASS.
 
@@ -1318,7 +1346,7 @@ async fn test_handle_publish_to_open_skips_user_authored() {
 - [ ] **Step 2: Run the test**
 
 ```bash
-cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- test_handle_publish_to_open_skips_user_authored
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "server,bypass" --tests -- test_handle_publish_to_open_skips_user_authored
 ```
 Expected: PASS — the handler already early-returns when `space.user_pk` is not `Partition::Team(..)`. The test is regression protection.
 
@@ -1393,7 +1421,7 @@ async fn test_handle_open_to_ongoing_notifies_participants() {
 - [ ] **Step 2: Run it**
 
 ```bash
-cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- test_handle_open_to_ongoing_notifies_participants
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "server,bypass" --tests -- test_handle_open_to_ongoing_notifies_participants
 ```
 Expected: PASS (the handler's `Open → Ongoing` arm is already wired in Task 9).
 
@@ -1461,7 +1489,7 @@ async fn test_handle_ongoing_to_finished_notifies_participants() {
 - [ ] **Step 2: Run it**
 
 ```bash
-cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- test_handle_ongoing_to_finished_notifies_participants
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "server,bypass" --tests -- test_handle_ongoing_to_finished_notifies_participants
 ```
 Expected: PASS.
 
@@ -1519,7 +1547,7 @@ async fn test_handle_no_recipients_is_noop() {
 - [ ] **Step 2: Run it**
 
 ```bash
-cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- test_handle_no_recipients_is_noop
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "server,bypass" --tests -- test_handle_no_recipients_is_noop
 ```
 Expected: PASS.
 
@@ -1596,7 +1624,7 @@ async fn test_handle_dedupes_duplicate_emails() {
 - [ ] **Step 2: Run it**
 
 ```bash
-cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- test_handle_dedupes_duplicate_emails
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "server,bypass" --tests -- test_handle_dedupes_duplicate_emails
 ```
 Expected: PASS. The handler's `resolve_emails` already deduplicates via `HashSet`, so this is a regression test. If it fails, the dedupe in `resolve_emails` is broken — fix it there.
 
@@ -1670,7 +1698,7 @@ async fn test_handle_batches_emails_into_chunks_of_50() {
 - [ ] **Step 4: Run it**
 
 ```bash
-cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- test_handle_batches_emails_into_chunks_of_50
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "server,bypass" --tests -- test_handle_batches_emails_into_chunks_of_50
 ```
 Expected: PASS. The handler's `emails.chunks(EMAIL_CHUNK_SIZE)` already produces `[50, 50, 20]` for 120 inputs. Regression check.
 
@@ -1864,7 +1892,7 @@ async fn test_publish_creates_status_change_event() {
 - [ ] **Step 2: Run the test to verify it fails**
 
 ```bash
-cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- test_publish_creates_status_change_event
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "server,bypass" --tests -- test_publish_creates_status_change_event
 ```
 Expected: FAIL — `update_space` does not yet write the event.
 
@@ -1938,7 +1966,7 @@ At the end of the function, after the `if should_send_invitation { ... }` block 
 - [ ] **Step 4: Re-run the red test to verify it now passes**
 
 ```bash
-cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- test_publish_creates_status_change_event
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "server,bypass" --tests -- test_publish_creates_status_change_event
 ```
 Expected: PASS.
 
@@ -2072,7 +2100,7 @@ async fn test_title_update_creates_no_status_change_event() {
 - [ ] **Step 4: Run all three tests**
 
 ```bash
-cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- test_start_creates_status_change_event test_finish_creates_status_change_event test_title_update_creates_no_status_change_event
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "server,bypass" --tests -- test_start_creates_status_change_event test_finish_creates_status_change_event test_title_update_creates_no_status_change_event
 ```
 Expected: all PASS.
 
@@ -2292,14 +2320,14 @@ cd /home/hackartist/data/devel/github.com/biyard/ratel_notification-space-status
 - [ ] **Step 1: Run all space status change tests**
 
 ```bash
-cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- space_status_change
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "server,bypass" --tests -- space_status_change
 ```
 Expected: all tests pass.
 
 - [ ] **Step 2: Run the broader suite to confirm no regressions**
 
 ```bash
-cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass"
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "server,bypass" --tests
 ```
 Expected: no failures in existing tests.
 
