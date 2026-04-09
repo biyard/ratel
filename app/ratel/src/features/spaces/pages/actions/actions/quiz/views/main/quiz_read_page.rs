@@ -5,9 +5,10 @@ use crate::features::spaces::pages::actions::actions::poll::components::{
 };
 use crate::features::spaces::pages::actions::actions::quiz::*;
 use crate::features::spaces::pages::actions::components::FullActionLayover;
+use crate::features::spaces::pages::actions::gamification::components::completion_overlay::CompletionOverlay;
 use crate::features::spaces::pages::actions::gamification::components::quest_briefing::QuestBriefing;
 use crate::features::spaces::pages::actions::gamification::types::{
-    QuestNodeStatus, QuestNodeView,
+    QuestNodeStatus, QuestNodeView, XpGainResponse,
 };
 use crate::features::spaces::pages::actions::types::SpaceActionType;
 use crate::features::spaces::pages::apps::apps::file::components::FileCard;
@@ -113,6 +114,7 @@ pub fn QuizReadPage(
     let mut step = use_signal(|| QuizReadStep::Overview);
     let mut question_index = use_signal(|| 0usize);
     let nav = navigator();
+    let mut completion_response: Signal<Option<XpGainResponse>> = use_signal(|| None);
     let space = use_space().read().clone();
 
     let initial_answers = quiz.my_response.clone().unwrap_or_else(|| {
@@ -173,13 +175,17 @@ pub fn QuizReadPage(
         let nav = nav.clone();
         spawn(async move {
             match respond_quiz(space_id(), quiz_id(), req).await {
-                Ok(_) => {
+                Ok(xp_opt) => {
                     let keys = space_page_actions_quiz_key(&space_id(), &quiz_id());
                     query.invalidate(&keys);
                     query.invalidate(&space_ranking_key(&space_id()));
                     query.invalidate(&space_my_score_key(&space_id()));
-                    toast.info(i18n.submit_success);
-                    nav.push(format!("/spaces/{}/actions", space_id()));
+                    if let Some(xp) = xp_opt {
+                        completion_response.set(Some(xp));
+                    } else {
+                        toast.info(i18n.submit_success);
+                        nav.push(format!("/spaces/{}/actions", space_id()));
+                    }
                 }
                 Err(err) => {
                     error!("Failed to submit quiz response: {:?}", err);
@@ -194,6 +200,7 @@ pub fn QuizReadPage(
     };
 
     rsx! {
+        CompletionOverlay { response: completion_response }
         if step() == QuizReadStep::Overview {
             QuestBriefing {
                 node: QuestNodeView {

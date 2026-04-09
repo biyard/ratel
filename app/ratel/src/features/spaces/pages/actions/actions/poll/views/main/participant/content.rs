@@ -4,6 +4,8 @@ use crate::features::spaces::pages::actions::actions::poll::components::*;
 use crate::features::spaces::pages::actions::actions::poll::controllers::*;
 use crate::features::spaces::pages::actions::actions::poll::*;
 use crate::features::spaces::pages::actions::components::FullActionLayover;
+use crate::features::spaces::pages::actions::gamification::components::completion_overlay::CompletionOverlay;
+use crate::features::spaces::pages::actions::gamification::types::XpGainResponse;
 use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
 use crate::features::spaces::space_common::types::{
     space_my_score_key, space_page_actions_poll_key, space_ranking_key,
@@ -39,6 +41,7 @@ pub fn PollContent(
     );
 
     let nav = navigator();
+    let mut completion_response: Signal<Option<XpGainResponse>> = use_signal(|| None);
     let mut answers: Signal<HashMap<usize, Answer>> = use_signal(|| {
         let mut map = HashMap::new();
         if let Some(ref my_resp) = poll.my_response {
@@ -99,15 +102,19 @@ pub fn PollContent(
                     let req = RespondPollRequest { answers: payload };
 
                     match respond_poll(space_id(), poll_id(), req).await {
-                        Ok(_) => {
+                        Ok(resp) => {
                             let keys = space_page_actions_poll_key(&space_id(), &poll_id());
                             query.invalidate(&keys);
                             query.invalidate(&space_ranking_key(&space_id()));
                             query.invalidate(&space_my_score_key(&space_id()));
-                            toast.info(tr.submit_success);
-                            nav.replace(crate::Route::SpaceActionsPage {
-                                space_id: space_id(),
-                            });
+                            if let Some(xp) = resp.xp {
+                                completion_response.set(Some(xp));
+                            } else {
+                                toast.info(tr.submit_success);
+                                nav.replace(crate::Route::SpaceActionsPage {
+                                    space_id: space_id(),
+                                });
+                            }
                         }
                         Err(err) => {
                             toast.error(err);
@@ -145,6 +152,7 @@ pub fn PollContent(
     };
 
     rsx! {
+        CompletionOverlay { response: completion_response }
         FullActionLayover {
             bottom_right: rsx! {
                 if !is_first_question && total > 0 {

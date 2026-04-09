@@ -5,6 +5,7 @@ use crate::common::hooks::use_infinite_query;
 use crate::common::query::use_query_store;
 use crate::common::utils::time::time_ago;
 use crate::features::spaces::pages::actions::actions::discussion::*;
+use crate::features::spaces::pages::actions::gamification::types::XpGainResponse;
 use crate::features::spaces::space_common::types::{space_my_score_key, space_ranking_key};
 
 translate! {
@@ -42,6 +43,7 @@ pub fn DiscussionComments(
     can_comment: bool,
     can_manage_comments: bool,
     current_user_pk: Option<String>,
+    #[props(default)] completion_response: Signal<Option<XpGainResponse>>,
 ) -> Element {
     let tr: DiscussionCommentsTranslate = use_translate();
     let discussion_ctx = use_discussion_context();
@@ -81,14 +83,18 @@ pub fn DiscussionComments(
                                 comment_input.set(String::new());
                                 let mut comments_query = ctx.comments;
                                 let mut discussion_query = discussion_ctx.discussion;
+                                let mut completion_response = completion_response;
                                 spawn(async move {
                                     let req = AddCommentRequest { content };
                                     match add_comment(space_id(), discussion_id(), req).await {
-                                        Ok(comment) => {
-                                            comments_query.insert(comment);
+                                        Ok(resp) => {
+                                            comments_query.insert(resp.comment);
                                             discussion_query.restart();
                                             query.invalidate(&space_ranking_key(&space_id()));
                                             query.invalidate(&space_my_score_key(&space_id()));
+                                            if let Some(xp) = resp.xp {
+                                                completion_response.set(Some(xp));
+                                            }
                                         }
                                         Err(e) => {
                                             error!("Failed to add comment: {:?}", e);

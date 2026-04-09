@@ -2,10 +2,11 @@ use super::*;
 use crate::common::components::{Button, ButtonSize, ButtonStyle};
 use crate::features::spaces::pages::actions::actions::discussion::components::DiscussionComments;
 use crate::features::spaces::pages::actions::components::FullActionLayover;
+use crate::features::spaces::pages::actions::gamification::components::completion_overlay::CompletionOverlay;
 use crate::features::spaces::pages::actions::gamification::components::quest_briefing::QuestBriefing;
 use crate::features::spaces::pages::actions::gamification::hooks::use_quest_briefing;
 use crate::features::spaces::pages::actions::gamification::types::{
-    QuestNodeStatus, QuestNodeView,
+    QuestNodeStatus, QuestNodeView, XpGainResponse,
 };
 use crate::features::spaces::pages::actions::types::SpaceActionType;
 use crate::features::spaces::pages::apps::apps::file::components::FileCard;
@@ -54,6 +55,7 @@ pub fn ViewerMain(
     ) && can_participate;
     let can_manage_comments = can_comment;
     let nav = navigator();
+    let mut completion_response: Signal<Option<XpGainResponse>> = use_signal(|| None);
 
     if show_briefing {
         let node = QuestNodeView {
@@ -80,6 +82,7 @@ pub fn ViewerMain(
         }
     } else {
         rsx! {
+            CompletionOverlay { response: completion_response }
             FullActionLayover {
                 content_class: "gap-5".to_string(),
                 bottom_right: rsx! {
@@ -101,6 +104,7 @@ pub fn ViewerMain(
                         can_comment,
                         can_manage_comments,
                         current_user_pk,
+                        completion_response,
                     }
                 }
             }

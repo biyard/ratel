@@ -8,10 +8,11 @@ use crate::features::spaces::pages::actions::actions::follow::controllers::{
 };
 use crate::features::spaces::pages::actions::actions::follow::*;
 use crate::features::spaces::pages::actions::components::FullActionLayover;
+use crate::features::spaces::pages::actions::gamification::components::completion_overlay::CompletionOverlay;
 use crate::features::spaces::pages::actions::gamification::components::quest_briefing::QuestBriefing;
 use crate::features::spaces::pages::actions::gamification::hooks::use_quest_briefing;
 use crate::features::spaces::pages::actions::gamification::types::{
-    QuestNodeStatus, QuestNodeView,
+    QuestNodeStatus, QuestNodeView, XpGainResponse,
 };
 use crate::features::spaces::pages::actions::types::SpaceActionType;
 use crate::features::spaces::space_common::types::{space_my_score_key, space_ranking_key};
@@ -29,6 +30,7 @@ pub fn FollowViewerPage(
     let nav = navigator();
     let nav_back = nav.clone();
     let mut toast = use_toast();
+    let mut completion_response: Signal<Option<XpGainResponse>> = use_signal(|| None);
     let mut query = use_query_store();
     let mut users_query =
         use_infinite_query(move |bookmark| list_follow_users(space_id(), bookmark))?;
@@ -48,11 +50,14 @@ pub fn FollowViewerPage(
             let mut on_refresh_list = on_refresh_list.clone();
             spawn(async move {
                 match follow_user(space_id(), follow_id(), target_pk).await {
-                    Ok(_) => {
+                    Ok(xp_opt) => {
                         toast.info(list_tr.subscribed_toast.to_string());
                         on_refresh_list(());
                         query.invalidate(&space_ranking_key(&space_id()));
                         query.invalidate(&space_my_score_key(&space_id()));
+                        if let Some(xp) = xp_opt {
+                            completion_response.set(Some(xp));
+                        }
                     }
                     Err(err) => {
                         toast.error(err);
@@ -108,6 +113,7 @@ pub fn FollowViewerPage(
         }
     } else {
         rsx! {
+            CompletionOverlay { response: completion_response }
             FullActionLayover {
                 bottom_right: rsx! {
                     Button {
