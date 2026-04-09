@@ -1,3 +1,4 @@
+use crate::common::components::TiptapEditor;
 use crate::features::spaces::pages::actions::actions::discussion::views::main::viewer::{
     use_discussion_toc_context, TocEntry,
 };
@@ -20,9 +21,12 @@ pub fn DiscussionContentBody(html_contents: String) -> Element {
     }
 
     rsx! {
-        div {
-            class: "discussion-content prose prose-invert light:prose max-w-none text-text-primary [&>*]:rounded-md [&>*]:transition-colors [&>*]:duration-150 [&>*:hover]:-ml-2 [&>*:hover]:bg-hover [&>*:hover]:pl-2",
-            dangerous_inner_html: "{html_contents}",
+        div { class: "discussion-content w-full bg-transparent [&_.tiptap>*]:rounded-md [&_.tiptap>*]:transition-colors [&_.tiptap>*]:duration-150 [&_.tiptap>*:hover]:-ml-2 [&_.tiptap>*:hover]:bg-hover [&_.tiptap>*:hover]:pl-2",
+            TiptapEditor {
+                class: "w-full bg-transparent",
+                content: html_contents,
+                editable: false,
+            }
         }
     }
 }

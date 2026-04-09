@@ -4,7 +4,6 @@ mod content_body;
 mod i18n;
 mod layout;
 mod meta_line;
-mod properties;
 mod table_of_contents;
 mod toc_context;
 
@@ -14,7 +13,6 @@ pub use content_body::DiscussionContentBody;
 pub use i18n::DiscussionViewerTranslate;
 pub use layout::NotionLayout;
 pub use meta_line::DiscussionMetaLine;
-pub use properties::DiscussionProperties;
 pub use table_of_contents::DiscussionToc;
 pub use toc_context::{DiscussionTocContext, TocEntry, use_discussion_toc_context};
 
@@ -59,8 +57,6 @@ pub fn ViewerMain(
 
     rsx! {
         div { class: "flex flex-col gap-6 mx-auto w-full max-w-[1080px] px-4 py-6 md:px-6 md:py-8 desktop:px-8",
-            DiscussionProperties { discussion: discussion.clone() }
-
             h1 { class: "text-2xl font-bold tracking-tight text-text-primary md:text-3xl desktop:text-4xl",
                 "{title}"
             }
