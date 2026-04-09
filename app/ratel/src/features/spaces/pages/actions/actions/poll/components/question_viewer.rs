@@ -198,8 +198,16 @@ pub fn QuestionViewer(props: QuestionViewerProps) -> Element {
                 },
             }
 
+            if total > 1 {
+                Row { class: "gap-1.5 justify-center pt-2",
+                    for i in 0..total {
+                        div { class: if i == index { "h-2.5 w-2.5 rounded-full bg-primary" } else if i < index { "h-2 w-2 rounded-full bg-accent" } else { "h-2 w-2 rounded-full bg-foreground-muted/30" } }
+                    }
+                }
+            }
+
             if on_prev.is_some() || on_next.is_some() {
-                div { class: "flex w-full items-center justify-end gap-3 pt-2",
+                div { class: "flex gap-3 justify-end items-center pt-2 w-full",
                     if index > 0 {
                         if let Some(on_prev) = on_prev {
                             crate::common::components::Button {
@@ -235,11 +243,11 @@ pub fn QuestionViewer(props: QuestionViewerProps) -> Element {
 fn QuestionTitle(title: String, description: Option<String>, is_required: Option<bool>) -> Element {
     rsx! {
         div {
-            class: "mb-3 flex flex-col gap-1",
+            class: "flex flex-col gap-1 mb-3",
             "data-question-title-wrap": true,
-            div { class: "flex items-center gap-1",
+            div { class: "flex gap-1 items-center",
                 span {
-                    class: "text-lg font-semibold text-poll-question-title",
+                    class: "text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent",
                     "data-question-title": true,
                     "{title}"
                 }
@@ -294,7 +302,7 @@ fn SingleChoiceViewer(
             description: question.description.clone(),
             is_required: question.is_required,
         }
-        div { class: "grid w-full grid-cols-1 gap-3 md:grid-cols-2",
+        div { class: "grid grid-cols-1 gap-3 w-full md:grid-cols-2",
             for (opt_idx , option) in question.options.iter().enumerate() {
                 {
                     let is_selected = selected == Some(opt_idx as i32);
@@ -304,7 +312,7 @@ fn SingleChoiceViewer(
                         button {
                             key: "single-{index}-{opt_idx}",
                             "aria-selected": is_selected,
-                            class: "group relative flex min-h-[88px] w-full items-center overflow-hidden rounded-xl text-left transition-all bg-option-card-bg hover:bg-option-card-hover-bg aria-selected:bg-gradient-to-r aria-selected:from-primary/80 aria-selected:to-primary aria-selected:shadow-[0_8px_20px_rgba(0,0,0,0.2)] aria-selected:ring-2 aria-selected:ring-primary/90",
+                            class: "flex overflow-hidden relative items-center w-full text-left rounded-xl transition-all group min-h-[88px] bg-option-card-bg aria-selected:bg-gradient-to-r aria-selected:from-primary/80 aria-selected:to-primary aria-selected:shadow-[0_8px_20px_rgba(0,0,0,0.2)] aria-selected:ring-2 aria-selected:ring-primary/90 hover:bg-option-card-hover-bg",
                             class: if disabled { "cursor-not-allowed opacity-60" } else { "cursor-pointer" },
                             disabled,
                             onclick: move |_| {
@@ -316,15 +324,14 @@ fn SingleChoiceViewer(
                                     })
                             },
                             div { class: "absolute inset-y-0 left-0 w-[72px] bg-option-card-accent group-aria-selected:bg-primary" }
-                            div { class: "relative z-10 flex w-full items-center justify-between px-5 py-4",
+                            div { class: "flex relative z-10 justify-between items-center py-4 px-5 w-full",
                                 div { class: "w-10 shrink-0" }
-                                span {
-                                    class: "text-[20px] font-semibold tracking-[0.2px] text-text-primary group-aria-selected:text-text-third",
+                                span { class: "font-semibold text-[20px] tracking-[0.2px] text-text-primary group-aria-selected:text-text-third",
                                     "{option}"
                                 }
-                                div { class: "flex w-10 shrink-0 items-center justify-center",
+                                div { class: "flex justify-center items-center w-10 shrink-0",
                                     if is_selected {
-                                        div { class: "flex size-6 items-center justify-center rounded-full bg-white",
+                                        div { class: "flex justify-center items-center bg-white rounded-full size-6",
                                             icons::validations::Check { class: "size-4 [&>path]:stroke-primary" }
                                         }
                                     }
@@ -338,49 +345,48 @@ fn SingleChoiceViewer(
         if enable_other_option && question.allow_other.unwrap_or(false) {
             div {
                 "aria-selected": other_selected,
-                class: "group relative flex min-h-[88px] w-full items-center overflow-hidden rounded-xl text-left transition-all bg-option-card-bg hover:bg-option-card-hover-bg aria-selected:bg-gradient-to-r aria-selected:from-primary/80 aria-selected:to-primary aria-selected:shadow-[0_8px_20px_rgba(0,0,0,0.2)]",
+                class: "flex overflow-hidden relative items-center w-full text-left rounded-xl transition-all group min-h-[88px] bg-option-card-bg aria-selected:bg-gradient-to-r aria-selected:from-primary/80 aria-selected:to-primary aria-selected:shadow-[0_8px_20px_rgba(0,0,0,0.2)] hover:bg-option-card-hover-bg",
                 class: if disabled { "cursor-not-allowed opacity-60" } else { "cursor-pointer" },
                 onclick: move |_| {
                     if disabled {
                         return;
                     }
 
-                    on_change.call(Answer::SingleChoice {
-                        answer: None,
-                        other: Some(other_value_for_row_click.clone()),
-                    });
+                    on_change
+                        .call(Answer::SingleChoice {
+                            answer: None,
+                            other: Some(other_value_for_row_click.clone()),
+                        });
                 },
                 div { class: "absolute inset-y-0 left-0 w-[72px] bg-option-card-accent group-aria-selected:bg-primary" }
-                    div { class: "relative z-10 flex w-full items-center px-5 py-4",
-                        div { class: "w-[64px] shrink-0" }
-                        div { class: "flex-1 pr-4",
+                div { class: "flex relative z-10 items-center py-4 px-5 w-full",
+                    div { class: "w-[64px] shrink-0" }
+                    div { class: "flex-1 pr-4",
                         crate::common::components::Input {
                             variant: crate::common::components::InputVariant::Plain,
-                                class: "h-11 w-full appearance-none border-0 bg-transparent px-0 text-left text-[18px] text-text-primary shadow-none outline-none ring-0 placeholder:text-text-primary-muted focus:border-transparent focus:outline-none focus:ring-0 focus-visible:border-transparent focus-visible:outline-none focus-visible:ring-0",
-                            placeholder: if other_selected {
-                                tr.other_placeholder
-                            } else {
-                                ""
-                            },
+                            class: "px-0 w-full h-11 text-left bg-transparent border-0 ring-0 shadow-none appearance-none outline-none focus:border-transparent focus:ring-0 focus:outline-none focus-visible:border-transparent focus-visible:ring-0 focus-visible:outline-none text-[18px] text-text-primary placeholder:text-text-primary-muted",
+                            placeholder: if other_selected { tr.other_placeholder } else { "" },
                             value: other_value.clone(),
                             disabled,
                             onfocus: move |_| {
-                                on_change.call(Answer::SingleChoice {
-                                    answer: None,
-                                    other: Some(other_value_for_focus.clone()),
-                                });
+                                on_change
+                                    .call(Answer::SingleChoice {
+                                        answer: None,
+                                        other: Some(other_value_for_focus.clone()),
+                                    });
                             },
                             oninput: move |evt: Event<FormData>| {
-                                on_change.call(Answer::SingleChoice {
-                                    answer: None,
-                                    other: Some(evt.value().to_string()),
-                                });
+                                on_change
+                                    .call(Answer::SingleChoice {
+                                        answer: None,
+                                        other: Some(evt.value().to_string()),
+                                    });
                             },
                         }
-                        }
-                        div { class: "flex w-10 shrink-0 items-center justify-center",
+                    }
+                    div { class: "flex justify-center items-center w-10 shrink-0",
                         if other_selected {
-                            div { class: "flex size-6 items-center justify-center rounded-full bg-white",
+                            div { class: "flex justify-center items-center bg-white rounded-full size-6",
                                 icons::validations::Check { class: "size-4 [&>path]:stroke-primary" }
                             }
                         }
@@ -429,7 +435,7 @@ fn MultipleChoiceViewer(
             description: question.description.clone(),
             is_required: question.is_required,
         }
-        div { class: "grid w-full grid-cols-1 gap-3 md:grid-cols-2",
+        div { class: "grid grid-cols-1 gap-3 w-full md:grid-cols-2",
             for (opt_idx , option) in question.options.iter().enumerate() {
                 {
                     let is_selected = selected.contains(&(opt_idx as i32));
@@ -441,7 +447,7 @@ fn MultipleChoiceViewer(
                         button {
                             key: "multi-{index}-{opt_idx}",
                             "aria-selected": is_selected,
-                            class: "group relative flex min-h-[88px] w-full items-center overflow-hidden rounded-xl text-left transition-all bg-option-card-bg hover:bg-option-card-hover-bg aria-selected:bg-gradient-to-r aria-selected:from-primary/80 aria-selected:to-primary aria-selected:shadow-[0_8px_20px_rgba(0,0,0,0.2)] aria-selected:ring-2 aria-selected:ring-primary/90",
+                            class: "flex overflow-hidden relative items-center w-full text-left rounded-xl transition-all group min-h-[88px] bg-option-card-bg aria-selected:bg-gradient-to-r aria-selected:from-primary/80 aria-selected:to-primary aria-selected:shadow-[0_8px_20px_rgba(0,0,0,0.2)] aria-selected:ring-2 aria-selected:ring-primary/90 hover:bg-option-card-hover-bg",
                             class: if disabled { "cursor-not-allowed opacity-60" } else { "cursor-pointer" },
                             disabled,
                             onclick: move |_| {
@@ -459,19 +465,17 @@ fn MultipleChoiceViewer(
                                         } else {
                                             Some(other_value_for_option_click.clone())
                                         },
-                                    }
-                                    )
+                                    })
                             },
                             div { class: "absolute inset-y-0 left-0 w-[72px] bg-option-card-accent group-aria-selected:bg-primary" }
-                            div { class: "relative z-10 flex w-full items-center justify-between px-5 py-4",
+                            div { class: "flex relative z-10 justify-between items-center py-4 px-5 w-full",
                                 div { class: "w-10 shrink-0" }
-                                span {
-                                    class: "text-[20px] font-semibold tracking-[0.2px] text-text-primary group-aria-selected:text-text-third",
+                                span { class: "font-semibold text-[20px] tracking-[0.2px] text-text-primary group-aria-selected:text-text-third",
                                     "{option}"
                                 }
-                                div { class: "flex w-10 shrink-0 items-center justify-center",
+                                div { class: "flex justify-center items-center w-10 shrink-0",
                                     if is_selected {
-                                        div { class: "flex size-6 items-center justify-center rounded-full bg-white",
+                                        div { class: "flex justify-center items-center bg-white rounded-full size-6",
                                             icons::validations::Check { class: "size-4 [&>path]:stroke-primary" }
                                         }
                                     }
@@ -485,53 +489,52 @@ fn MultipleChoiceViewer(
         if enable_other_option && question.allow_other.unwrap_or(false) {
             div {
                 "aria-selected": other_selected,
-                class: "group relative flex min-h-[88px] w-full items-center overflow-hidden rounded-xl text-left transition-all bg-option-card-bg hover:bg-option-card-hover-bg aria-selected:bg-gradient-to-r aria-selected:from-primary/80 aria-selected:to-primary aria-selected:shadow-[0_8px_20px_rgba(0,0,0,0.2)]",
+                class: "flex overflow-hidden relative items-center w-full text-left rounded-xl transition-all group min-h-[88px] bg-option-card-bg aria-selected:bg-gradient-to-r aria-selected:from-primary/80 aria-selected:to-primary aria-selected:shadow-[0_8px_20px_rgba(0,0,0,0.2)] hover:bg-option-card-hover-bg",
                 class: if disabled { "cursor-not-allowed opacity-60" } else { "cursor-pointer" },
                 onclick: move |_| {
                     if disabled {
                         return;
                     }
 
-                    on_change.call(Answer::MultipleChoice {
-                        answer: Some(selected_for_row_click.clone()),
-                        other: if other_selected {
-                            None
-                        } else {
-                            Some(other_value_for_row_click.clone())
-                        },
-                    });
+                    on_change
+                        .call(Answer::MultipleChoice {
+                            answer: Some(selected_for_row_click.clone()),
+                            other: if other_selected {
+                                None
+                            } else {
+                                Some(other_value_for_row_click.clone())
+                            },
+                        });
                 },
                 div { class: "absolute inset-y-0 left-0 w-[72px] bg-option-card-accent group-aria-selected:bg-primary" }
-                div { class: "relative z-10 flex w-full items-center px-5 py-4",
+                div { class: "flex relative z-10 items-center py-4 px-5 w-full",
                     div { class: "w-[64px] shrink-0" }
                     div { class: "flex-1 pr-4",
                         crate::common::components::Input {
                             variant: crate::common::components::InputVariant::Plain,
-                            class: "h-11 w-full appearance-none border-0 bg-transparent px-0 text-left text-[18px] text-text-primary shadow-none outline-none ring-0 placeholder:text-text-primary-muted focus:border-transparent focus:outline-none focus:ring-0 focus-visible:border-transparent focus-visible:outline-none focus-visible:ring-0",
-                            placeholder: if other_selected {
-                                tr.other_placeholder
-                            } else {
-                                ""
-                            },
+                            class: "px-0 w-full h-11 text-left bg-transparent border-0 ring-0 shadow-none appearance-none outline-none focus:border-transparent focus:ring-0 focus:outline-none focus-visible:border-transparent focus-visible:ring-0 focus-visible:outline-none text-[18px] text-text-primary placeholder:text-text-primary-muted",
+                            placeholder: if other_selected { tr.other_placeholder } else { "" },
                             value: other_value.clone(),
                             disabled,
                             onfocus: move |_| {
-                                on_change.call(Answer::MultipleChoice {
-                                    answer: Some(selected_for_focus.clone()),
-                                    other: Some(other_value_for_focus.clone()),
-                                });
+                                on_change
+                                    .call(Answer::MultipleChoice {
+                                        answer: Some(selected_for_focus.clone()),
+                                        other: Some(other_value_for_focus.clone()),
+                                    });
                             },
                             oninput: move |evt: Event<FormData>| {
-                                on_change.call(Answer::MultipleChoice {
-                                    answer: Some(selected_for_input.clone()),
-                                    other: Some(evt.value().to_string()),
-                                });
+                                on_change
+                                    .call(Answer::MultipleChoice {
+                                        answer: Some(selected_for_input.clone()),
+                                        other: Some(evt.value().to_string()),
+                                    });
                             },
                         }
                     }
-                    div { class: "flex w-10 shrink-0 items-center justify-center",
+                    div { class: "flex justify-center items-center w-10 shrink-0",
                         if other_selected {
-                            div { class: "flex size-6 items-center justify-center rounded-full bg-white",
+                            div { class: "flex justify-center items-center bg-white rounded-full size-6",
                                 icons::validations::Check { class: "size-4 [&>path]:stroke-primary" }
                             }
                         }
@@ -582,7 +585,7 @@ fn SubjectiveQuestionViewer(
     };
 
     rsx! {
-        div { class: "flex w-full flex-col gap-[10px]",
+        div { class: "flex flex-col w-full gap-[10px]",
             QuestionTitle {
                 title: question.title.clone(),
                 description: Some(question.description.clone()),
@@ -592,7 +595,7 @@ fn SubjectiveQuestionViewer(
                 crate::common::components::Input {
                     variant: crate::common::components::InputVariant::Plain,
                     r#type: crate::common::components::InputType::Text,
-                    class: "px-4 py-3 text-base rounded-lg border focus:border-yellow-500 focus:outline-none bg-input-box-bg border-input-box-border text-text-primary placeholder:text-neutral-600",
+                    class: "py-3 px-4 text-base rounded-lg border focus:border-yellow-500 focus:outline-none bg-input-box-bg border-input-box-border text-text-primary placeholder:text-neutral-600",
                     placeholder: tr.subjective_input_placeholder,
                     disabled,
                     value: "{draft()}",
@@ -604,7 +607,7 @@ fn SubjectiveQuestionViewer(
                 }
             } else {
                 crate::common::components::TextArea {
-                    class: "px-4 py-3 text-base rounded-lg border focus:border-yellow-500 focus:outline-none bg-input-box-bg border-input-box-border min-h-[185px] text-text-primary placeholder:text-neutral-600",
+                    class: "py-3 px-4 text-base rounded-lg border focus:border-yellow-500 focus:outline-none bg-input-box-bg border-input-box-border min-h-[185px] text-text-primary placeholder:text-neutral-600",
                     placeholder: tr.subjective_input_placeholder,
                     disabled,
                     value: "{draft()}",
@@ -650,7 +653,7 @@ fn CheckboxViewer(
                         button {
                             key: "checkbox-{index}-{opt_idx}",
                             "aria-selected": is_selected,
-                            class: "group flex w-full items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors border-input-box-border hover:border-border-subtle aria-selected:border-primary aria-selected:bg-primary/10",
+                            class: "flex gap-3 items-center p-3 w-full rounded-lg border transition-colors cursor-pointer group border-input-box-border aria-selected:border-primary aria-selected:bg-primary/10 hover:border-border-subtle",
                             disabled,
                             onclick: move |_| {
                                 let mut next = selected.clone();
@@ -670,13 +673,14 @@ fn CheckboxViewer(
                                         answer: Some(next),
                                     });
                             },
-                            div {
-                                class: "w-4 h-4 rounded border-2 flex items-center justify-center border-foreground-muted group-aria-selected:border-primary group-aria-selected:bg-primary",
+                            div { class: "flex justify-center items-center w-4 h-4 rounded border-2 border-foreground-muted group-aria-selected:border-primary group-aria-selected:bg-primary",
                                 if is_selected {
                                     icons::validations::Check { class: "size-3 [&>path]:stroke-white" }
                                 }
                             }
-                            span { class: "text-sm text-foreground-muted group-aria-selected:text-text-primary", "{option}" }
+                            span { class: "text-sm text-foreground-muted group-aria-selected:text-text-primary",
+                                "{option}"
+                            }
                         }
                     }
                 }
@@ -705,7 +709,7 @@ fn DropdownViewer(
             is_required: question.is_required,
         }
         select {
-            class: "w-full p-3 rounded-lg border border-neutral-700 bg-neutral-900 text-white focus:border-blue-500 outline-none",
+            class: "p-3 w-full text-white rounded-lg border outline-none focus:border-blue-500 border-neutral-700 bg-neutral-900",
             disabled,
             onchange: move |evt| {
                 let val: String = evt.value().to_string();
@@ -748,20 +752,20 @@ fn LinearScaleViewer(
             description: question.description.clone(),
             is_required: question.is_required,
         }
-        div { class: "flex w-full flex-col gap-5 select-none",
-            div { class: "flex w-full items-center justify-between text-sm font-medium text-text-primary-muted",
+        div { class: "flex flex-col gap-5 w-full select-none",
+            div { class: "flex justify-between items-center w-full text-sm font-medium text-text-primary-muted",
                 span { class: "max-w-[40%] truncate", "{question.min_label}" }
                 span { class: "max-w-[40%] truncate text-right", "{question.max_label}" }
             }
             div { class: "w-full",
-                div { class: "flex flex-wrap justify-center gap-2 px-1 pb-1",
+                div { class: "flex flex-wrap gap-2 justify-center px-1 pb-1",
                     for val in min..=max {
                         {
                             let is_selected = selected == Some(val as i32);
                             let on_change = on_change.clone();
                             rsx! {
                                 button {
-                                    class: "flex size-10 shrink-0 items-center justify-center rounded-lg text-[15px] font-normal transition-colors",
+                                    class: "flex justify-center items-center font-normal rounded-lg transition-colors size-10 shrink-0 text-[15px]",
                                     class: if is_selected { "bg-primary text-white" } else { "bg-neutral-700 text-white" },
                                     class: if disabled { "cursor-not-allowed opacity-60" } else { "cursor-pointer" },
                                     disabled,
