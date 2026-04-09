@@ -4,6 +4,7 @@ pub mod config;
 pub mod controllers;
 pub mod hooks;
 pub mod models;
+pub mod services;
 pub mod types;
 
 #[cfg(not(feature = "server"))]
