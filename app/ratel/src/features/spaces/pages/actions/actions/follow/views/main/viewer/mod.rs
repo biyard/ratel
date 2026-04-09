@@ -8,6 +8,12 @@ use crate::features::spaces::pages::actions::actions::follow::controllers::{
 };
 use crate::features::spaces::pages::actions::actions::follow::*;
 use crate::features::spaces::pages::actions::components::FullActionLayover;
+use crate::features::spaces::pages::actions::gamification::components::quest_briefing::QuestBriefing;
+use crate::features::spaces::pages::actions::gamification::hooks::use_quest_briefing;
+use crate::features::spaces::pages::actions::gamification::types::{
+    QuestNodeStatus, QuestNodeView,
+};
+use crate::features::spaces::pages::actions::types::SpaceActionType;
 use crate::features::spaces::space_common::types::{space_my_score_key, space_ranking_key};
 mod i18n;
 use i18n::FollowViewerTranslate;
@@ -19,6 +25,7 @@ pub fn FollowViewerPage(
 ) -> Element {
     let tr: FollowViewerTranslate = use_translate();
     let list_tr: FollowUserListTranslate = use_translate();
+    let (show_briefing, dismiss) = use_quest_briefing();
     let nav = navigator();
     let nav_back = nav.clone();
     let mut toast = use_toast();
@@ -76,28 +83,53 @@ pub fn FollowViewerPage(
         }
     };
 
-    rsx! {
-        FullActionLayover {
-            bottom_right: rsx! {
-                Button {
-                    style: ButtonStyle::Outline,
-                    shape: ButtonShape::Square,
-                    class: "min-w-[120px]",
-                    onclick: move |_| {
-                        nav_back.push(format!("/spaces/{}/actions", space_id()));
-                    },
-                    {tr.btn_back}
-                }
-            },
-            div { class: "w-full",
-                FollowUserList {
-                    space_id: space_id(),
-                    users,
-                    can_delete: false,
-                    on_refresh: on_refresh_list,
-                    on_follow,
-                    on_unfollow,
-                    more_element,
+    if show_briefing {
+        let node = QuestNodeView {
+            id: follow_id().to_string(),
+            action_type: SpaceActionType::Follow,
+            title: String::new(),
+            base_points: 0,
+            projected_xp: 0,
+            status: QuestNodeStatus::Active,
+            depends_on: vec![],
+            chapter_id: String::new(),
+            started_at: None,
+            ended_at: None,
+            quiz_result: None,
+        };
+        rsx! {
+            QuestBriefing {
+                node,
+                on_begin: move |_| dismiss.call(()),
+                on_cancel: move |_| {
+                    nav.go_back();
+                },
+            }
+        }
+    } else {
+        rsx! {
+            FullActionLayover {
+                bottom_right: rsx! {
+                    Button {
+                        style: ButtonStyle::Outline,
+                        shape: ButtonShape::Square,
+                        class: "min-w-[120px]",
+                        onclick: move |_| {
+                            nav_back.push(format!("/spaces/{}/actions", space_id()));
+                        },
+                        {tr.btn_back}
+                    }
+                },
+                div { class: "w-full",
+                    FollowUserList {
+                        space_id: space_id(),
+                        users,
+                        can_delete: false,
+                        on_refresh: on_refresh_list,
+                        on_follow,
+                        on_unfollow,
+                        more_element,
+                    }
                 }
             }
         }

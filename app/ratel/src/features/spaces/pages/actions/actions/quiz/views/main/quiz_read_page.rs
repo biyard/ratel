@@ -5,6 +5,11 @@ use crate::features::spaces::pages::actions::actions::poll::components::{
 };
 use crate::features::spaces::pages::actions::actions::quiz::*;
 use crate::features::spaces::pages::actions::components::FullActionLayover;
+use crate::features::spaces::pages::actions::gamification::components::quest_briefing::QuestBriefing;
+use crate::features::spaces::pages::actions::gamification::types::{
+    QuestNodeStatus, QuestNodeView,
+};
+use crate::features::spaces::pages::actions::types::SpaceActionType;
 use crate::features::spaces::pages::apps::apps::file::components::FileCard;
 use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
 use crate::features::spaces::space_common::types::{
@@ -190,64 +195,25 @@ pub fn QuizReadPage(
 
     rsx! {
         if step() == QuizReadStep::Overview {
-            FullActionLayover {
-                "data-testid": "quiz-read-overview",
-                content_class: "gap-6".to_string(),
-                bottom_left: rsx! {
-                    div { class: "text-sm text-foreground-muted",
-                        "{i18n.remaining_submissions} {remaining_submissions}/{total_allowed}"
-                    }
+            QuestBriefing {
+                node: QuestNodeView {
+                    id: quiz_id().to_string(),
+                    action_type: SpaceActionType::Quiz,
+                    title: quiz.title.clone(),
+                    base_points: 0,
+                    projected_xp: 0,
+                    status: QuestNodeStatus::Active,
+                    depends_on: vec![],
+                    chapter_id: String::new(),
+                    started_at: None,
+                    ended_at: None,
+                    quiz_result: None,
                 },
-                bottom_right: rsx! {
-                    Button {
-                        style: ButtonStyle::Outline,
-                        shape: ButtonShape::Square,
-                        class: "min-w-[120px]",
-                        onclick: on_cancel,
-                        {i18n.btn_cancel}
-                    }
-                    Button {
-                        style: ButtonStyle::Primary,
-                        shape: ButtonShape::Square,
-                        class: "min-w-[120px]",
-                        disabled: quiz.questions.is_empty(),
-                        "data-testid": "quiz-read-next",
-                        onclick: move |_| {
-                            question_index.set(0);
-                            step.set(QuizReadStep::Quiz);
-                        },
-                        {i18n.btn_next}
-                    }
+                on_begin: move |_| {
+                    question_index.set(0);
+                    step.set(QuizReadStep::Quiz);
                 },
-                div { class: "w-full",
-                    div { class: "font-bold text-[28px]/[34px] text-text-primary", "{quiz.title}" }
-
-                    div { class: "flex justify-end items-center py-4 border-y border-card-border",
-                        div { class: "font-light shrink-0 text-[14px] text-text-primary",
-                            "{time_ago(quiz.created_at)}"
-                        }
-                    }
-
-                    if !quiz.description.is_empty() {
-                        div {
-                            class: "text-[15px]/[24px] tracking-[0.5px] text-foreground-muted",
-                            dangerous_inner_html: quiz.description.clone(),
-                        }
-                    }
-
-                    if !quiz.files.is_empty() {
-                        div { class: "grid grid-cols-4 gap-2.5 max-desktop:grid-cols-3 max-tablet:grid-cols-2 max-mobile:grid-cols-1",
-                            for file in quiz.files.iter() {
-                                FileCard {
-                                    key: "{file.id}",
-                                    file: file.clone(),
-                                    editable: false,
-                                    on_delete: None,
-                                }
-                            }
-                        }
-                    }
-                }
+                on_cancel,
             }
         } else {
             FullActionLayover {

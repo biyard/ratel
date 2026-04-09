@@ -2,6 +2,12 @@ use super::*;
 use crate::common::components::{Button, ButtonSize, ButtonStyle};
 use crate::features::spaces::pages::actions::actions::discussion::components::DiscussionComments;
 use crate::features::spaces::pages::actions::components::FullActionLayover;
+use crate::features::spaces::pages::actions::gamification::components::quest_briefing::QuestBriefing;
+use crate::features::spaces::pages::actions::gamification::hooks::use_quest_briefing;
+use crate::features::spaces::pages::actions::gamification::types::{
+    QuestNodeStatus, QuestNodeView,
+};
+use crate::features::spaces::pages::actions::types::SpaceActionType;
 use crate::features::spaces::pages::apps::apps::file::components::FileCard;
 use crate::features::spaces::space_common::hooks::use_space;
 
@@ -28,6 +34,7 @@ pub fn ViewerMain(
     discussion_id: ReadSignal<SpacePostEntityType>,
 ) -> Element {
     let tr: DiscussionViewerTranslate = use_translate();
+    let (show_briefing, dismiss) = use_quest_briefing();
     let role = use_space_role()();
     let user = crate::features::spaces::hooks::use_user()?;
     let current_user_pk = user.read().as_ref().map(|u| u.pk.to_string());
@@ -48,28 +55,53 @@ pub fn ViewerMain(
     let can_manage_comments = can_comment;
     let nav = navigator();
 
-    rsx! {
-        FullActionLayover {
-            content_class: "gap-5".to_string(),
-            bottom_right: rsx! {
-                Button {
-                    style: ButtonStyle::Outline,
-                    shape: ButtonShape::Square,
-                    class: "min-w-[120px]",
-                    onclick: move |_| {
-                        nav.push(format!("/spaces/{}/actions", space_id()));
-                    },
-                    {tr.back}
-                }
-            },
-            div { class: "w-full",
-                DiscussionContent { discussion: discussion.clone() }
-                DiscussionComments {
-                    space_id,
-                    discussion_id,
-                    can_comment,
-                    can_manage_comments,
-                    current_user_pk,
+    if show_briefing {
+        let node = QuestNodeView {
+            id: discussion_id().to_string(),
+            action_type: SpaceActionType::TopicDiscussion,
+            title: discussion.title.clone(),
+            base_points: 0,
+            projected_xp: 0,
+            status: QuestNodeStatus::Active,
+            depends_on: vec![],
+            chapter_id: String::new(),
+            started_at: None,
+            ended_at: None,
+            quiz_result: None,
+        };
+        rsx! {
+            QuestBriefing {
+                node,
+                on_begin: move |_| dismiss.call(()),
+                on_cancel: move |_| {
+                    nav.go_back();
+                },
+            }
+        }
+    } else {
+        rsx! {
+            FullActionLayover {
+                content_class: "gap-5".to_string(),
+                bottom_right: rsx! {
+                    Button {
+                        style: ButtonStyle::Outline,
+                        shape: ButtonShape::Square,
+                        class: "min-w-[120px]",
+                        onclick: move |_| {
+                            nav.push(format!("/spaces/{}/actions", space_id()));
+                        },
+                        {tr.back}
+                    }
+                },
+                div { class: "w-full",
+                    DiscussionContent { discussion: discussion.clone() }
+                    DiscussionComments {
+                        space_id,
+                        discussion_id,
+                        can_comment,
+                        can_manage_comments,
+                        current_user_pk,
+                    }
                 }
             }
         }
