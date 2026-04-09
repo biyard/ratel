@@ -55,6 +55,15 @@ fn prerequisite_check_error(context: &str, err: impl std::fmt::Display) -> Error
 }
 
 #[cfg(feature = "server")]
+fn serializable_role_error(context: &str, err: Error) -> Error {
+    match err {
+        Error::Aws(err) => prerequisite_check_error(context, err),
+        Error::Session(err) => prerequisite_check_error(context, err),
+        other => other,
+    }
+}
+
+#[cfg(feature = "server")]
 async fn has_completed_prerequisite_actions(
     cli: &aws_sdk_dynamodb::Client,
     space: &crate::common::models::space::SpaceCommon,
@@ -291,7 +300,9 @@ where
             return Ok(space_role.clone());
         }
 
-        let space = SpaceCommon::from_request_parts(parts, state).await?;
+        let space = SpaceCommon::from_request_parts(parts, state)
+            .await
+            .map_err(|err| serializable_role_error("Failed to load space for role", err))?;
 
         let user = User::from_request_parts(parts, state).await.ok();
 
@@ -368,7 +379,15 @@ where
                 space.status,
                 Some(crate::common::SpaceStatus::Ongoing | crate::common::SpaceStatus::Finished)
             ) {
-                if has_completed_prerequisite_actions(cli, &space, &user).await? {
+                if has_completed_prerequisite_actions(cli, &space, &user)
+                    .await
+                    .map_err(|err| {
+                        serializable_role_error(
+                            "Failed to verify prerequisite actions for role",
+                            err,
+                        )
+                    })?
+                {
                     SpaceUserRole::Participant
                 } else {
                     SpaceUserRole::Candidate
