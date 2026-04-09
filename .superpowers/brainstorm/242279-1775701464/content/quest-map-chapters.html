@@ -1,0 +1,176 @@
+<h2>4-chapter quest map — participant view</h2>
+<p class="subtitle">Your 4-chapter example rendered from a Participant's POV. Chapters 0 & 1 collapse into a compact "✓ Passed" strip, Chapter 2 is the active container, Chapter 3 is locked. Creator earnings live in the Hero band (shown only to the author).</p>
+
+<div class="mockup" onclick="toggleSelect(this)" data-choice="chapter-mockup">
+  <div class="mockup-header">Preview · Participant POV · /spaces/seoul-climate-2026 → /actions</div>
+  <div class="mockup-body" style="padding:0;background:radial-gradient(ellipse at top,#1a1a23 0%,#08080d 60%,#000 100%);font-family:'Space Grotesk',Inter,system-ui,sans-serif;color:rgba(255,255,255,0.92);position:relative">
+
+    <div style="position:absolute;inset:0;background:radial-gradient(circle at 20% 0%,rgba(252,179,0,0.08),transparent 40%),radial-gradient(circle at 80% 30%,rgba(110,237,216,0.05),transparent 40%);pointer-events:none"></div>
+
+    <!-- ============== DUNGEON HERO BAND ============== -->
+    <div style="position:relative;padding:22px 28px 18px;background:linear-gradient(180deg,rgba(20,16,8,0.7) 0%,rgba(8,8,13,0.4) 100%);border-bottom:1px solid rgba(252,179,0,0.2);box-shadow:inset 0 1px 0 rgba(255,255,255,0.05)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap">
+        <div style="flex:1;min-width:260px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <div style="width:14px;height:1px;background:linear-gradient(90deg,transparent,#d49600)"></div>
+            <div style="font-size:9px;font-weight:700;color:#d49600;letter-spacing:2.5px;text-transform:uppercase">Dungeon · Floor 3</div>
+          </div>
+          <div style="font-size:28px;font-weight:800;letter-spacing:-1px;line-height:1.05;background:linear-gradient(180deg,#fff8e7 0%,#f0d28a 60%,#a07a30 100%);-webkit-background-clip:text;background-clip:text;color:transparent">SEOUL CLIMATE 2026</div>
+          <div style="display:flex;gap:14px;margin-top:8px;flex-wrap:wrap;font-size:11px">
+            <div style="color:rgba(255,255,255,0.7)"><span style="color:#9fdcc9">⚔</span> <strong>1,247</strong> <span style="opacity:0.55">explorers</span></div>
+            <div style="color:rgba(255,255,255,0.7)"><span style="color:#e8b658">🏆</span> <strong>4</strong> <span style="opacity:0.55">chapters</span></div>
+            <div style="color:rgba(255,255,255,0.7)"><span style="color:#e8b658">⏳</span> <strong>4d 12h</strong> <span style="opacity:0.55">left</span></div>
+          </div>
+        </div>
+        <div style="background:linear-gradient(135deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:10px 14px;min-width:200px;box-shadow:0 8px 32px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.06)">
+          <div style="font-size:9px;font-weight:700;color:#9fdcc9;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Leaderboard</div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <div style="width:28px;height:28px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#ffe082,#d49600);color:#1a1a1a;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;box-shadow:0 3px 8px rgba(252,179,0,0.4),inset 0 1px 0 rgba(255,255,255,0.4)">1</div>
+            <div style="width:24px;height:24px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#c4f5e8,#5fbfa6);color:#0a2520;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;box-shadow:0 2px 6px rgba(110,237,216,0.3);inset 0 1px 0 rgba(255,255,255,0.4)">2</div>
+            <div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,rgba(255,255,255,0.3),rgba(255,255,255,0.1));color:rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:10px;border:1px solid rgba(255,255,255,0.15)">3</div>
+            <div style="margin-left:auto;background:linear-gradient(135deg,rgba(252,179,0,0.18),rgba(252,179,0,0.05));border:1px solid rgba(252,179,0,0.4);color:#e8b658;padding:4px 10px;border-radius:10px;font-weight:700;font-size:10px">YOU · #34</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- XP HUD + Creator Earnings chip (creator chip rendered here only if user IS the author) -->
+      <div style="margin-top:14px;background:linear-gradient(135deg,rgba(255,255,255,0.05),rgba(255,255,255,0.01));border:1px solid rgba(252,179,0,0.25);border-radius:16px;padding:12px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;box-shadow:0 16px 40px -16px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.06),0 0 60px -20px rgba(252,179,0,0.2)">
+        <div style="background:radial-gradient(circle at 30% 30%,#ffe082 0%,#fcb300 40%,#8a5d00 100%);color:#1a1208;width:48px;height:48px;border-radius:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;flex-shrink:0;box-shadow:0 6px 16px rgba(252,179,0,0.4),inset 0 1.5px 0 rgba(255,255,255,0.5),inset 0 -1.5px 0 rgba(0,0,0,0.2)">
+          <div style="font-size:7px;letter-spacing:0.8px;opacity:0.7">LVL</div>
+          <div style="font-size:18px;line-height:1">8</div>
+        </div>
+        <div style="flex:1;min-width:180px">
+          <div style="display:flex;justify-content:space-between;font-size:9px;font-weight:600;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:5px">
+            <span>Citizen · Tier IV</span><span>47% to Lvl 9</span>
+          </div>
+          <div style="height:8px;background:linear-gradient(180deg,rgba(0,0,0,0.5),rgba(0,0,0,0.2));border-radius:5px;overflow:hidden;border:1px solid rgba(0,0,0,0.4);box-shadow:inset 0 2px 4px rgba(0,0,0,0.6)">
+            <div style="height:100%;width:47%;background:linear-gradient(90deg,#a07a30,#fcb300 40%,#ffe082 70%,#9fdcc9 100%);border-radius:4px;box-shadow:0 0 16px rgba(252,179,0,0.6),inset 0 1px 0 rgba(255,255,255,0.4)"></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <div style="background:linear-gradient(135deg,rgba(252,179,0,0.18),rgba(212,150,0,0.05));border:1px solid rgba(252,179,0,0.3);color:#e8b658;padding:7px 12px;border-radius:12px;font-weight:700;font-size:11px;box-shadow:0 4px 12px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.08)">🔥 12d</div>
+          <div style="background:linear-gradient(135deg,rgba(110,237,216,0.18),rgba(95,191,166,0.05));border:1px solid rgba(110,237,216,0.3);color:#9fdcc9;padding:7px 12px;border-radius:12px;font-weight:700;font-size:11px;box-shadow:0 4px 12px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.08)">⚡ ×2</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============== CHAPTERS ============== -->
+    <div style="padding:24px 28px 32px;position:relative">
+
+      <!-- Chapters 0-1 collapsed past strip -->
+      <div style="background:linear-gradient(135deg,rgba(252,179,0,0.05),rgba(0,0,0,0.25));border:1px solid rgba(252,179,0,0.2);border-radius:14px;padding:10px 16px;margin-bottom:24px;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:0 8px 24px -12px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.04)">
+        <div style="display:flex;gap:4px">
+          <div style="background:radial-gradient(circle at 30% 30%,#ffe082,#d49600);color:#1a1208;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;box-shadow:0 2px 6px rgba(252,179,0,0.3)">✓</div>
+          <div style="background:radial-gradient(circle at 30% 30%,#ffe082,#d49600);color:#1a1208;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;box-shadow:0 2px 6px rgba(252,179,0,0.3)">✓</div>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.85)">Chapters 0-1 · Passed <span style="opacity:0.5;font-weight:500">·</span> <span style="color:#9fdcc9;font-weight:700">Participant unlocked</span></div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.45);margin-top:2px">Proving yours ✓ Qualify ✓ · +164,170 XP earned</div>
+        </div>
+        <div style="color:rgba(255,255,255,0.4);font-size:14px">▼</div>
+      </div>
+
+      <!-- Chapter 2 header -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="background:linear-gradient(135deg,rgba(110,237,216,0.2),rgba(95,191,166,0.05));border:1px solid rgba(110,237,216,0.4);color:#9fdcc9;padding:3px 10px;border-radius:8px;font-weight:800;font-size:10px;letter-spacing:1.5px">▶ ACTIVE</div>
+        <div style="font-size:14px;font-weight:800;color:rgba(255,255,255,0.95);letter-spacing:0.3px">CHAPTER 2 · Debate</div>
+        <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(159,220,201,0.4),transparent)"></div>
+        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.55);letter-spacing:1px">1 / 3</div>
+      </div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.45);margin-bottom:16px;padding-left:4px">Complete all 3 debates to unlock the Final Poll chapter · XP only</div>
+
+      <!-- Chapter 2 DAG (3 nodes: 2 parents, 1 final child) -->
+      <div style="position:relative;margin-bottom:34px">
+        <svg viewBox="0 0 600 220" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="gf" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#fcb300" stop-opacity="0.7"/>
+              <stop offset="100%" stop-color="#9fdcc9" stop-opacity="0.7"/>
+            </linearGradient>
+            <linearGradient id="lf" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#9fdcc9" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#555" stop-opacity="0.2"/>
+            </linearGradient>
+          </defs>
+          <path d="M 150 60 Q 150 100 300 135" stroke="url(#gf)" stroke-width="2.5" fill="none"/>
+          <path d="M 450 60 Q 450 100 300 135" stroke="url(#lf)" stroke-width="2.5" stroke-dasharray="5,4" fill="none"/>
+        </svg>
+
+        <!-- Row 1: 1 cleared + 1 active -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:24px;position:relative;z-index:1">
+          <div style="background:linear-gradient(135deg,rgba(252,179,0,0.1),rgba(0,0,0,0.3));border:1px solid rgba(252,179,0,0.3);border-radius:16px;padding:14px 16px;box-shadow:0 10px 28px -8px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.05)">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <div style="background:linear-gradient(135deg,rgba(252,179,0,0.25),rgba(212,150,0,0.05));border:1px solid rgba(252,179,0,0.35);color:#e8b658;padding:3px 9px;border-radius:7px;font-weight:700;font-size:9px;letter-spacing:1.2px">DISCUSSION</div>
+              <div style="background:radial-gradient(circle at 30% 30%,#ffe082,#fcb300);color:#1a1208;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;box-shadow:0 3px 10px rgba(252,179,0,0.4),inset 0 1px 0 rgba(255,255,255,0.5)">✓</div>
+            </div>
+            <div style="font-weight:700;font-size:14px;color:rgba(255,255,255,0.95)">Public Transit Debate</div>
+            <div style="font-size:10px;color:#e8b658;font-weight:600;margin-top:3px">+312,400 XP earned</div>
+          </div>
+
+          <!-- Active HERO quest -->
+          <div style="background:linear-gradient(155deg,rgba(110,237,216,0.18),rgba(20,40,38,0.5) 50%,rgba(0,0,0,0.6));border:1px solid rgba(110,237,216,0.5);border-radius:18px;padding:16px 18px;box-shadow:0 20px 50px -16px rgba(0,0,0,0.7),0 0 60px -20px rgba(110,237,216,0.35),inset 0 1px 0 rgba(255,255,255,0.08);position:relative;overflow:hidden;cursor:pointer">
+            <div style="position:absolute;top:-30%;left:-10%;width:50%;height:120%;background:radial-gradient(ellipse,rgba(110,237,216,0.15),transparent 60%);pointer-events:none"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;position:relative">
+              <div style="background:linear-gradient(135deg,rgba(110,237,216,0.3),rgba(95,191,166,0.1));border:1px solid rgba(110,237,216,0.5);color:#9fdcc9;padding:3px 9px;border-radius:7px;font-weight:700;font-size:9px;letter-spacing:1.2px">▶ DISCUSSION</div>
+              <div style="background:rgba(110,237,216,0.15);color:#9fdcc9;padding:3px 9px;border-radius:7px;font-weight:700;font-size:9px">×2 COMBO</div>
+            </div>
+            <div style="font-weight:800;font-size:15px;color:rgba(255,255,255,0.98);position:relative">Emission Enforcement</div>
+            <div style="font-size:9px;color:rgba(255,255,255,0.5);margin-top:2px;position:relative">ends in 2d · active now</div>
+            <div style="margin-top:8px;position:relative">
+              <div style="font-size:8px;color:#9fdcc9;font-weight:700;letter-spacing:1px;text-transform:uppercase">XP at stake</div>
+              <div style="font-size:22px;font-weight:800;background:linear-gradient(180deg,#e6fff8,#9fdcc9 60%,#3a7a6a);-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1;letter-spacing:-0.6px">436,450</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 2: final DAG leaf, depends on both above, LOCKED (one parent not done) -->
+        <div style="display:flex;justify-content:center;position:relative;z-index:1">
+          <div style="width:60%;background:linear-gradient(135deg,rgba(255,255,255,0.02),rgba(0,0,0,0.4));border:1px dashed rgba(159,220,201,0.25);border-radius:16px;padding:14px 16px;opacity:0.65">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);padding:3px 9px;border-radius:7px;font-weight:700;font-size:9px;letter-spacing:1.2px">DISCUSSION</div>
+              <div style="color:rgba(255,255,255,0.4);font-size:13px">🔒</div>
+            </div>
+            <div style="font-weight:700;font-size:14px;color:rgba(255,255,255,0.55)">Final Stakeholder Round</div>
+            <div style="font-size:9px;color:rgba(255,255,255,0.35);margin-top:2px">Complete Emission Enforcement to unlock</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chapter 3 locked header -->
+      <div style="background:linear-gradient(135deg,rgba(255,255,255,0.03),rgba(0,0,0,0.3));border:1px dashed rgba(255,255,255,0.12);border-radius:14px;padding:16px 20px;display:flex;align-items:center;gap:14px;opacity:0.6">
+        <div style="font-size:16px;color:rgba(255,255,255,0.35)">🔒</div>
+        <div style="flex:1">
+          <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:1.5px">CHAPTER 3 · LOCKED</div>
+          <div style="font-size:14px;font-weight:700;color:rgba(255,255,255,0.5);margin-top:1px">Final Poll</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:3px">Complete Chapter 2 · Debate to unlock · 1 quest · XP only</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Creator earnings overlay / callout -->
+<div style="margin-top:24px;padding:20px;background:linear-gradient(135deg,rgba(252,179,0,0.08),rgba(0,0,0,0.3));border:1px solid rgba(252,179,0,0.25);border-radius:16px">
+  <div style="font-size:10px;font-weight:700;color:#d49600;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">If you are the author · rendered ABOVE the XP HUD</div>
+  <div style="background:linear-gradient(135deg,rgba(255,220,140,0.12),rgba(20,16,8,0.4));border:1px solid rgba(252,179,0,0.4);border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:16px;box-shadow:0 16px 40px -16px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.08),0 0 60px -24px rgba(252,179,0,0.3)">
+    <div style="background:radial-gradient(circle at 30% 30%,#ffe082,#fcb300 40%,#8a5d00);color:#1a1208;width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 6px 16px rgba(252,179,0,0.4),inset 0 1.5px 0 rgba(255,255,255,0.5);flex-shrink:0">👑</div>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:9px;font-weight:700;color:#d49600;letter-spacing:1.5px;text-transform:uppercase">Creator Earnings · This Space</div>
+      <div style="display:flex;gap:18px;margin-top:4px">
+        <div>
+          <div style="font-size:20px;font-weight:800;background:linear-gradient(180deg,#fff8e7,#f0d28a 60%,#a07a30);-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1">1,247,300</div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.45);margin-top:2px;letter-spacing:0.5px;text-transform:uppercase">XP · 10% of all rewards</div>
+        </div>
+        <div>
+          <div style="font-size:20px;font-weight:800;background:linear-gradient(180deg,#fff8e7,#f0d28a 60%,#a07a30);-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1">42,180 P</div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.45);margin-top:2px;letter-spacing:0.5px;text-transform:uppercase">Ratel Points</div>
+        </div>
+      </div>
+    </div>
+    <div style="background:linear-gradient(135deg,rgba(252,179,0,0.2),rgba(212,150,0,0.05));border:1px solid rgba(252,179,0,0.4);color:#e8b658;padding:8px 14px;border-radius:12px;font-weight:700;font-size:11px;box-shadow:0 4px 12px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.08)">View breakdown →</div>
+  </div>
+  <p style="margin-top:12px;font-size:11px;color:rgba(255,255,255,0.55);line-height:1.5">Every time a user completes any quest, 10% of their earned XP + Ratel points is minted additively and credited here. Visible only to the space author (user or team). Updates live with each completion.</p>
+</div>
+
+<p class="subtitle" style="margin-top:24px;text-align:center">Click the main mockup if the 4-chapter structure works. Tell me if the collapsed strip, chapter 3 lock state, or creator card need changes.</p>

@@ -1,0 +1,166 @@
+<h2>Creator · Chapter editor + DAG wiring</h2>
+<p class="subtitle">Lives at <code>/spaces/{id}/actions</code> for creators, replacing today's card-grid editor. Lets authors build the chapter spine and wire action dependencies inside each chapter.</p>
+
+<div class="mockup" onclick="toggleSelect(this)" data-choice="chapter-editor">
+  <div class="mockup-header">Preview · Creator view · /spaces/seoul-climate-2026/actions (edit mode)</div>
+  <div class="mockup-body" style="padding:0;background:radial-gradient(ellipse at top,#1a1a23 0%,#08080d 60%,#000 100%);font-family:'Space Grotesk',Inter,system-ui,sans-serif;color:rgba(255,255,255,0.92);position:relative">
+
+    <div style="position:absolute;inset:0;background:radial-gradient(circle at 20% 0%,rgba(252,179,0,0.06),transparent 40%);pointer-events:none"></div>
+
+    <!-- ============== TOP BAR ============== -->
+    <div style="position:relative;padding:18px 28px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(180deg,rgba(20,16,8,0.5),rgba(8,8,13,0.2))">
+      <div>
+        <div style="font-size:9px;font-weight:700;color:#d49600;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:2px">⚙ Creator · Chapter Editor</div>
+        <div style="font-size:20px;font-weight:800;letter-spacing:-0.5px;background:linear-gradient(180deg,#fff8e7,#f0d28a);-webkit-background-clip:text;background-clip:text;color:transparent">Design the dungeon</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);padding:8px 14px;border-radius:11px;font-weight:700;font-size:11px">Preview as Participant</div>
+        <div style="background:linear-gradient(180deg,#ffe082,#fcb300 50%,#8a5d00);color:#1a1208;padding:8px 16px;border-radius:11px;font-weight:800;font-size:11px;box-shadow:0 6px 16px rgba(252,179,0,0.35),inset 0 1px 0 rgba(255,255,255,0.4)">Save & Publish</div>
+      </div>
+    </div>
+
+    <div style="padding:24px 28px 32px;position:relative">
+
+      <!-- ============== CHAPTER LIST (top section) ============== -->
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.45);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px">Chapters · serial order (drag ⋮⋮ to reorder)</div>
+
+      <!-- Chapter 0 -->
+      <div style="background:linear-gradient(135deg,rgba(252,179,0,0.05),rgba(0,0,0,0.3));border:1px solid rgba(252,179,0,0.2);border-radius:14px;padding:14px 18px;margin-bottom:10px;display:flex;align-items:center;gap:14px">
+        <div style="color:rgba(255,255,255,0.3);font-size:16px;cursor:grab">⋮⋮</div>
+        <div style="background:rgba(252,179,0,0.15);border:1px solid rgba(252,179,0,0.35);color:#e8b658;padding:4px 10px;border-radius:7px;font-weight:800;font-size:10px;letter-spacing:1px">CH 0</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:14px;color:rgba(255,255,255,0.95)">Proving yours</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.45);margin-top:2px">
+            actor · <span style="color:#9fdcc9;font-weight:700">Viewer</span> &nbsp;→&nbsp; on complete · <span style="color:#e8b658;font-weight:700">Upgrade to Candidate</span> &nbsp;·&nbsp; 2 quests
+          </div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);padding:6px 10px;border-radius:9px;font-size:10px;font-weight:700;cursor:pointer">Edit</div>
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);padding:6px 10px;border-radius:9px;font-size:10px;font-weight:700;cursor:pointer">⌄</div>
+      </div>
+
+      <!-- Chapter 1 -->
+      <div style="background:linear-gradient(135deg,rgba(252,179,0,0.05),rgba(0,0,0,0.3));border:1px solid rgba(252,179,0,0.2);border-radius:14px;padding:14px 18px;margin-bottom:10px;display:flex;align-items:center;gap:14px">
+        <div style="color:rgba(255,255,255,0.3);font-size:16px;cursor:grab">⋮⋮</div>
+        <div style="background:rgba(252,179,0,0.15);border:1px solid rgba(252,179,0,0.35);color:#e8b658;padding:4px 10px;border-radius:7px;font-weight:800;font-size:10px;letter-spacing:1px">CH 1</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:14px;color:rgba(255,255,255,0.95)">Qualify</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.45);margin-top:2px">
+            actor · <span style="color:#9fdcc9;font-weight:700">Candidate</span> &nbsp;→&nbsp; on complete · <span style="color:#e8b658;font-weight:700">Upgrade to Participant + XP</span> &nbsp;·&nbsp; 3 quests
+          </div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);padding:6px 10px;border-radius:9px;font-size:10px;font-weight:700;cursor:pointer">Edit</div>
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);padding:6px 10px;border-radius:9px;font-size:10px;font-weight:700;cursor:pointer">⌄</div>
+      </div>
+
+      <!-- Chapter 2 - EXPANDED (active edit) -->
+      <div style="background:linear-gradient(135deg,rgba(110,237,216,0.08),rgba(0,0,0,0.3));border:1px solid rgba(110,237,216,0.35);border-radius:14px;margin-bottom:10px;box-shadow:0 12px 32px -8px rgba(0,0,0,0.5),0 0 40px -20px rgba(110,237,216,0.25)">
+        <!-- Chapter header with inline editable fields -->
+        <div style="padding:14px 18px;border-bottom:1px solid rgba(110,237,216,0.15);display:flex;align-items:center;gap:14px">
+          <div style="color:rgba(255,255,255,0.3);font-size:16px;cursor:grab">⋮⋮</div>
+          <div style="background:rgba(110,237,216,0.18);border:1px solid rgba(110,237,216,0.4);color:#9fdcc9;padding:4px 10px;border-radius:7px;font-weight:800;font-size:10px;letter-spacing:1px">CH 2</div>
+          <div style="flex:1">
+            <input value="Debate" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:#fff;padding:6px 10px;border-radius:8px;font-weight:700;font-size:14px;width:220px;font-family:inherit"/>
+            <div style="display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap">
+              <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.45);letter-spacing:1px;text-transform:uppercase">Actor</div>
+              <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:#9fdcc9;padding:4px 10px;border-radius:7px;font-size:10px;font-weight:700">Participant ⌄</div>
+              <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.45);letter-spacing:1px;text-transform:uppercase;margin-left:8px">Benefit</div>
+              <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:#e8b658;padding:4px 10px;border-radius:7px;font-size:10px;font-weight:700">XP only ⌄</div>
+            </div>
+          </div>
+          <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);padding:6px 10px;border-radius:9px;font-size:10px;font-weight:700;cursor:pointer">⌃</div>
+        </div>
+
+        <!-- DAG editor panel -->
+        <div style="padding:18px 20px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.55);letter-spacing:1.3px;text-transform:uppercase">Quests in this chapter · drag to wire dependencies</div>
+            <div style="display:flex;gap:6px">
+              <div style="background:linear-gradient(135deg,rgba(110,237,216,0.2),rgba(95,191,166,0.05));border:1px solid rgba(110,237,216,0.4);color:#9fdcc9;padding:5px 10px;border-radius:9px;font-size:10px;font-weight:700;cursor:pointer">+ Add quest</div>
+            </div>
+          </div>
+
+          <!-- DAG canvas -->
+          <div style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;position:relative;min-height:220px">
+            <svg viewBox="0 0 600 220" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="ce-gf" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#9fdcc9" stop-opacity="0.7"/>
+                  <stop offset="100%" stop-color="#5fbfa6" stop-opacity="0.5"/>
+                </linearGradient>
+              </defs>
+              <path d="M 150 60 Q 150 100 300 135" stroke="url(#ce-gf)" stroke-width="2.5" fill="none"/>
+              <path d="M 450 60 Q 450 100 300 135" stroke="url(#ce-gf)" stroke-width="2.5" fill="none"/>
+            </svg>
+
+            <!-- Row 1: parents -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;position:relative;z-index:1">
+              <div style="background:linear-gradient(135deg,rgba(255,255,255,0.04),rgba(0,0,0,0.3));border:1px dashed rgba(110,237,216,0.35);border-radius:12px;padding:12px 14px;cursor:move">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                  <div style="background:rgba(110,237,216,0.12);border:1px solid rgba(110,237,216,0.3);color:#9fdcc9;padding:2px 7px;border-radius:6px;font-weight:700;font-size:8px;letter-spacing:1.2px">DISCUSSION</div>
+                  <div style="color:rgba(255,255,255,0.35);font-size:11px">⋮⋮</div>
+                </div>
+                <div style="font-weight:700;font-size:12px;color:rgba(255,255,255,0.92)">Public Transit Debate</div>
+                <div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:2px">175 P · no parents</div>
+              </div>
+              <div style="background:linear-gradient(135deg,rgba(255,255,255,0.04),rgba(0,0,0,0.3));border:1px dashed rgba(110,237,216,0.35);border-radius:12px;padding:12px 14px;cursor:move">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                  <div style="background:rgba(110,237,216,0.12);border:1px solid rgba(110,237,216,0.3);color:#9fdcc9;padding:2px 7px;border-radius:6px;font-weight:700;font-size:8px;letter-spacing:1.2px">DISCUSSION</div>
+                  <div style="color:rgba(255,255,255,0.35);font-size:11px">⋮⋮</div>
+                </div>
+                <div style="font-weight:700;font-size:12px;color:rgba(255,255,255,0.92)">Emission Enforcement</div>
+                <div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:2px">175 P · no parents</div>
+              </div>
+            </div>
+
+            <!-- Row 2: child with edge chips -->
+            <div style="display:flex;justify-content:center;position:relative;z-index:1">
+              <div style="width:60%;background:linear-gradient(135deg,rgba(110,237,216,0.08),rgba(0,0,0,0.4));border:1px dashed rgba(110,237,216,0.35);border-radius:12px;padding:12px 14px;cursor:move">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                  <div style="background:rgba(110,237,216,0.12);border:1px solid rgba(110,237,216,0.3);color:#9fdcc9;padding:2px 7px;border-radius:6px;font-weight:700;font-size:8px;letter-spacing:1.2px">DISCUSSION</div>
+                  <div style="color:rgba(255,255,255,0.35);font-size:11px">⋮⋮</div>
+                </div>
+                <div style="font-weight:700;font-size:12px;color:rgba(255,255,255,0.92)">Final Stakeholder Round</div>
+                <div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:3px;display:flex;gap:4px;align-items:center;flex-wrap:wrap">
+                  <span>200 P · depends on</span>
+                  <span style="background:rgba(110,237,216,0.12);border:1px solid rgba(110,237,216,0.3);color:#9fdcc9;padding:1px 6px;border-radius:6px;font-size:8px;font-weight:700">Public Transit × ×</span>
+                  <span style="background:rgba(110,237,216,0.12);border:1px solid rgba(110,237,216,0.3);color:#9fdcc9;padding:1px 6px;border-radius:6px;font-size:8px;font-weight:700">Emission × ×</span>
+                  <span style="background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);padding:1px 6px;border-radius:6px;font-size:8px;font-weight:700">+ add</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Helper text -->
+          <div style="margin-top:10px;font-size:10px;color:rgba(255,255,255,0.4);display:flex;gap:14px;flex-wrap:wrap">
+            <span>⋮⋮ drag to move between chapters</span>
+            <span>Shift-drag to draw a dependency</span>
+            <span>Click × on a chip to remove</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chapter 3 -->
+      <div style="background:linear-gradient(135deg,rgba(252,179,0,0.05),rgba(0,0,0,0.3));border:1px solid rgba(252,179,0,0.2);border-radius:14px;padding:14px 18px;margin-bottom:10px;display:flex;align-items:center;gap:14px">
+        <div style="color:rgba(255,255,255,0.3);font-size:16px;cursor:grab">⋮⋮</div>
+        <div style="background:rgba(252,179,0,0.15);border:1px solid rgba(252,179,0,0.35);color:#e8b658;padding:4px 10px;border-radius:7px;font-weight:800;font-size:10px;letter-spacing:1px">CH 3</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:14px;color:rgba(255,255,255,0.95)">Final Poll</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.45);margin-top:2px">
+            actor · <span style="color:#9fdcc9;font-weight:700">Participant</span> &nbsp;→&nbsp; on complete · <span style="color:#e8b658;font-weight:700">XP only</span> &nbsp;·&nbsp; 1 quest
+          </div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);padding:6px 10px;border-radius:9px;font-size:10px;font-weight:700;cursor:pointer">Edit</div>
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);padding:6px 10px;border-radius:9px;font-size:10px;font-weight:700;cursor:pointer">⌄</div>
+      </div>
+
+      <!-- Add chapter -->
+      <div style="background:linear-gradient(135deg,rgba(255,255,255,0.03),rgba(0,0,0,0.2));border:1px dashed rgba(255,255,255,0.15);border-radius:14px;padding:14px;text-align:center;cursor:pointer">
+        <div style="color:rgba(255,255,255,0.55);font-size:12px;font-weight:700">+ Add chapter</div>
+        <div style="color:rgba(255,255,255,0.35);font-size:10px;margin-top:2px">Inherits the actor role of the previous chapter by default</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:24px;text-align:center">Click if the editor model works. Tell me if you want a dedicated separate page for editing each chapter instead of the inline expand, or if drag-to-wire should be a different affordance.</p>

@@ -1,0 +1,139 @@
+<h2>Completion / Level-Up moment</h2>
+<p class="subtitle">The dopamine peak — rendered here as a hero frame (the climax) plus a small storyboard strip showing the animation sequence. Triggered after a successful quest submission.</p>
+
+<!-- ============== HERO FRAME · the climax ============== -->
+<div class="mockup" onclick="toggleSelect(this)" data-choice="completion">
+  <div class="mockup-header">Preview · Hero climax frame (≈ t+1.6s after submit)</div>
+  <div class="mockup-body" style="padding:0;background:#000;font-family:'Space Grotesk',Inter,system-ui,sans-serif;color:rgba(255,255,255,0.92);position:relative;min-height:580px;overflow:hidden">
+
+    <!-- Dim+blur backdrop (the quest map behind) -->
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at top,#1a1a23 0%,#08080d 60%,#000 100%);opacity:0.25"></div>
+    <div style="position:absolute;inset:0;backdrop-filter:blur(20px);background:rgba(0,0,0,0.6)"></div>
+
+    <!-- Radial burst behind level badge -->
+    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:700px;height:700px;background:radial-gradient(circle,rgba(252,179,0,0.22) 0%,transparent 55%);pointer-events:none"></div>
+    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:900px;height:900px;background:radial-gradient(circle,rgba(110,237,216,0.08) 0%,transparent 60%);pointer-events:none"></div>
+
+    <!-- Sunburst rays (SVG) -->
+    <svg viewBox="0 0 600 600" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:560px;height:560px;opacity:0.28;pointer-events:none">
+      <defs>
+        <linearGradient id="ray" x1="50%" y1="0%" x2="50%" y2="100%">
+          <stop offset="0%" stop-color="#fcb300" stop-opacity="0"/>
+          <stop offset="50%" stop-color="#fcb300" stop-opacity="0.8"/>
+          <stop offset="100%" stop-color="#fcb300" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <g transform="translate(300,300)">
+        <rect x="-1" y="-280" width="2" height="260" fill="url(#ray)"/>
+        <rect x="-1" y="-280" width="2" height="260" fill="url(#ray)" transform="rotate(22.5)"/>
+        <rect x="-1" y="-280" width="2" height="260" fill="url(#ray)" transform="rotate(45)"/>
+        <rect x="-1" y="-280" width="2" height="260" fill="url(#ray)" transform="rotate(67.5)"/>
+        <rect x="-1" y="-280" width="2" height="260" fill="url(#ray)" transform="rotate(90)"/>
+        <rect x="-1" y="-280" width="2" height="260" fill="url(#ray)" transform="rotate(112.5)"/>
+        <rect x="-1" y="-280" width="2" height="260" fill="url(#ray)" transform="rotate(135)"/>
+        <rect x="-1" y="-280" width="2" height="260" fill="url(#ray)" transform="rotate(157.5)"/>
+        <rect x="-1" y="-280" width="2" height="260" fill="url(#ray)" transform="rotate(180)"/>
+        <rect x="-1" y="-280" width="2" height="260" fill="url(#ray)" transform="rotate(202.5)"/>
+        <rect x="-1" y="-280" width="2" height="260" fill="url(#ray)" transform="rotate(225)"/>
+        <rect x="-1" y="-280" width="2" height="260" fill="url(#ray)" transform="rotate(247.5)"/>
+        <rect x="-1" y="-280" width="2" height="260" fill="url(#ray)" transform="rotate(270)"/>
+        <rect x="-1" y="-280" width="2" height="260" fill="url(#ray)" transform="rotate(292.5)"/>
+        <rect x="-1" y="-280" width="2" height="260" fill="url(#ray)" transform="rotate(315)"/>
+        <rect x="-1" y="-280" width="2" height="260" fill="url(#ray)" transform="rotate(337.5)"/>
+      </g>
+    </svg>
+
+    <!-- Content stack -->
+    <div style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:580px;padding:40px 30px;gap:14px">
+
+      <!-- LEVEL UP banner -->
+      <div style="background:linear-gradient(135deg,rgba(255,220,140,0.1),rgba(0,0,0,0.4));border:1px solid rgba(252,179,0,0.5);color:#e8b658;padding:6px 18px;border-radius:100px;font-weight:800;font-size:10px;letter-spacing:3px;text-transform:uppercase;box-shadow:0 8px 24px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.1)">★ LEVEL UP ★</div>
+
+      <!-- Big level badge -->
+      <div style="position:relative">
+        <div style="background:radial-gradient(circle at 32% 30%,#fff8e7 0%,#ffe082 20%,#fcb300 50%,#8a5d00 100%);color:#1a1208;width:140px;height:140px;border-radius:32px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:900;box-shadow:0 24px 60px rgba(252,179,0,0.5),0 0 100px rgba(252,179,0,0.3),inset 0 4px 0 rgba(255,255,255,0.5),inset 0 -4px 0 rgba(0,0,0,0.25);transform:rotate(-2deg)">
+          <div style="font-size:11px;letter-spacing:2px;opacity:0.6;font-weight:800">LEVEL</div>
+          <div style="font-size:72px;line-height:0.9;letter-spacing:-3px;margin-top:-2px">9</div>
+        </div>
+        <!-- Sparkles around badge -->
+        <div style="position:absolute;top:-8px;right:-14px;font-size:26px;filter:drop-shadow(0 0 12px rgba(252,179,0,0.8))">✦</div>
+        <div style="position:absolute;bottom:-6px;left:-16px;font-size:22px;filter:drop-shadow(0 0 10px rgba(252,179,0,0.8))">✦</div>
+      </div>
+
+      <!-- Tier label -->
+      <div style="font-size:13px;font-weight:800;color:rgba(255,255,255,0.9);letter-spacing:0.5px;text-align:center">
+        CITIZEN · TIER V <span style="color:#9fdcc9;font-weight:700">UNLOCKED</span>
+      </div>
+
+      <!-- +XP card -->
+      <div style="margin-top:8px;background:linear-gradient(135deg,rgba(110,237,216,0.14),rgba(0,0,0,0.5));border:1px solid rgba(110,237,216,0.4);border-radius:18px;padding:14px 22px;min-width:340px;box-shadow:0 16px 40px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.06)">
+        <div style="text-align:center">
+          <div style="font-size:9px;color:#9fdcc9;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px">Emission Enforcement ✓</div>
+          <div style="font-size:44px;font-weight:800;line-height:1;background:linear-gradient(180deg,#f0fffa,#9fdcc9 50%,#3a9080);-webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:-1.5px">+436,450 XP</div>
+        </div>
+      </div>
+
+      <!-- Streak / Combo chip strip -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+        <div style="background:linear-gradient(135deg,rgba(252,179,0,0.2),rgba(212,150,0,0.05));border:1px solid rgba(252,179,0,0.4);color:#e8b658;padding:8px 14px;border-radius:12px;font-weight:700;font-size:11px;box-shadow:0 4px 12px rgba(0,0,0,0.5)">🔥 13-day streak <span style="opacity:0.55">(+1)</span></div>
+        <div style="background:linear-gradient(135deg,rgba(110,237,216,0.22),rgba(95,191,166,0.05));border:1px solid rgba(110,237,216,0.45);color:#9fdcc9;padding:8px 14px;border-radius:12px;font-weight:700;font-size:11px;box-shadow:0 4px 12px rgba(0,0,0,0.5)">⚡ combo ×3 armed <span style="opacity:0.55">(+1)</span></div>
+        <div style="background:linear-gradient(135deg,rgba(252,179,0,0.12),rgba(0,0,0,0.4));border:1px solid rgba(252,179,0,0.3);color:rgba(255,255,255,0.85);padding:8px 14px;border-radius:12px;font-weight:700;font-size:11px;box-shadow:0 4px 12px rgba(0,0,0,0.5)">📈 Leaderboard #34 → <span style="color:#e8b658">#29</span></div>
+      </div>
+
+      <!-- New unlock toast -->
+      <div style="margin-top:10px;background:linear-gradient(135deg,rgba(110,237,216,0.1),rgba(0,0,0,0.4));border:1px dashed rgba(110,237,216,0.35);border-radius:12px;padding:8px 14px;font-size:11px;color:rgba(255,255,255,0.8);display:flex;gap:8px;align-items:center">
+        <span style="font-size:14px;filter:drop-shadow(0 0 8px rgba(110,237,216,0.6))">🔓</span>
+        <span>New quest unlocked · <strong style="color:#9fdcc9">Final Stakeholder Round</strong></span>
+      </div>
+
+      <!-- Actions -->
+      <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.8);padding:11px 18px;border-radius:12px;font-weight:700;font-size:11px;cursor:pointer">See leaderboard</div>
+        <div style="background:linear-gradient(180deg,#9fdcc9,#6eedd8 50%,#3a9080);color:#0a2520;padding:11px 22px;border-radius:12px;font-weight:800;font-size:12px;letter-spacing:0.4px;box-shadow:0 8px 20px rgba(110,237,216,0.4),inset 0 1px 0 rgba(255,255,255,0.5);cursor:pointer">CONTINUE QUESTING ▶</div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- ============== Storyboard strip ============== -->
+<div style="margin-top:28px">
+  <div class="label" style="margin-bottom:10px">Animation sequence (what the user actually sees)</div>
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px">
+
+    <div style="background:linear-gradient(135deg,rgba(255,255,255,0.03),rgba(0,0,0,0.3));border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 10px;text-align:center">
+      <div style="font-size:9px;font-weight:700;color:#e8b658;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:8px">t+0</div>
+      <div style="font-size:28px;margin:6px 0">💥</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.7);line-height:1.4"><strong>Submit</strong><br/>Button pulses, spark particles burst outward, screen flash</div>
+    </div>
+
+    <div style="background:linear-gradient(135deg,rgba(255,255,255,0.03),rgba(0,0,0,0.3));border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 10px;text-align:center">
+      <div style="font-size:9px;font-weight:700;color:#e8b658;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:8px">t+0.4s</div>
+      <div style="font-size:22px;margin:6px 0;color:#9fdcc9;font-weight:900">+436k</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.7);line-height:1.4"><strong>+XP burst</strong><br/>Big number flies up from center, counter ticks on the XP HUD</div>
+    </div>
+
+    <div style="background:linear-gradient(135deg,rgba(255,255,255,0.03),rgba(0,0,0,0.3));border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 10px;text-align:center">
+      <div style="font-size:9px;font-weight:700;color:#e8b658;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:8px">t+0.9s</div>
+      <div style="font-size:22px;margin:6px 0">⚡🔥</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.7);line-height:1.4"><strong>Combo/Streak</strong><br/>Combo chip bumps ×2→×3, streak counter +1 with shake</div>
+    </div>
+
+    <div style="background:linear-gradient(135deg,rgba(252,179,0,0.12),rgba(0,0,0,0.4));border:1px solid rgba(252,179,0,0.35);border-radius:12px;padding:12px 10px;text-align:center;box-shadow:0 0 24px rgba(252,179,0,0.15)">
+      <div style="font-size:9px;font-weight:700;color:#e8b658;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:8px">t+1.6s</div>
+      <div style="font-size:28px;margin:6px 0;filter:drop-shadow(0 0 10px rgba(252,179,0,0.6))">★</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.7);line-height:1.4"><strong>Level up</strong><br/>If threshold crossed: the hero frame above. Sunburst reveals.</div>
+    </div>
+
+    <div style="background:linear-gradient(135deg,rgba(110,237,216,0.1),rgba(0,0,0,0.3));border:1px solid rgba(110,237,216,0.3);border-radius:12px;padding:12px 10px;text-align:center">
+      <div style="font-size:9px;font-weight:700;color:#9fdcc9;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:8px">t+3s</div>
+      <div style="font-size:22px;margin:6px 0">🔓</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.7);line-height:1.4"><strong>Unlock reveal</strong><br/>Quest map redraws, new node lights up behind the dismissing overlay</div>
+    </div>
+
+  </div>
+  <p style="margin-top:14px;font-size:11px;color:rgba(255,255,255,0.55);line-height:1.5">Total sequence ≈ 3.5s. If no level-up is triggered, the hero frame is skipped and the flow goes t+0 → t+0.4 → t+0.9 → t+2 (unlock reveal, ≈ 2s total). User can tap anywhere after t+0.9 to skip to the unlock reveal.</p>
+</div>
+
+<p class="subtitle" style="margin-top:24px;text-align:center">Click the hero frame if it works. Tell me if the sequence is too long, if level-up should always play even without a threshold, or if the "See leaderboard" / "Continue questing" CTAs need reshuffling.</p>

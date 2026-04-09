@@ -1,0 +1,92 @@
+<h2>Quest Briefing overlay</h2>
+<p class="subtitle">Appears when the user clicks an active quest tile. Shows stakes, rules, prerequisites, and XP math upfront. Replaces today's quiz "Overview" tab and adds the same ceremony to polls / discussions / follows.</p>
+
+<div class="mockup" onclick="toggleSelect(this)" data-choice="briefing">
+  <div class="mockup-header">Preview · Briefing overlay over the Quest Map</div>
+  <div class="mockup-body" style="padding:0;background:#000;font-family:'Space Grotesk',Inter,system-ui,sans-serif;color:rgba(255,255,255,0.92);position:relative;min-height:620px;overflow:hidden">
+
+    <!-- Dim backdrop hint of the quest map behind -->
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at top,#1a1a23 0%,#08080d 60%,#000 100%);opacity:0.35"></div>
+    <div style="position:absolute;inset:0;backdrop-filter:blur(14px);background:rgba(0,0,0,0.55)"></div>
+
+    <!-- ============== BRIEFING CARD ============== -->
+    <div style="position:relative;max-width:560px;margin:40px auto;background:linear-gradient(165deg,rgba(110,237,216,0.12) 0%,rgba(20,40,38,0.4) 30%,rgba(8,8,13,0.92) 70%);backdrop-filter:blur(24px);border:1px solid rgba(110,237,216,0.35);border-radius:24px;padding:0;box-shadow:0 30px 80px -20px rgba(0,0,0,0.8),0 0 120px -30px rgba(110,237,216,0.35),inset 0 1px 0 rgba(255,255,255,0.08);overflow:hidden">
+
+      <!-- Decorative glow in corner -->
+      <div style="position:absolute;top:-20%;right:-10%;width:60%;height:80%;background:radial-gradient(ellipse,rgba(110,237,216,0.2),transparent 60%);pointer-events:none"></div>
+
+      <!-- Header band -->
+      <div style="position:relative;padding:22px 26px 16px;border-bottom:1px solid rgba(255,255,255,0.06)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px">
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap">
+              <div style="background:linear-gradient(135deg,rgba(110,237,216,0.3),rgba(95,191,166,0.1));border:1px solid rgba(110,237,216,0.5);color:#9fdcc9;padding:4px 10px;border-radius:8px;font-weight:700;font-size:9px;letter-spacing:1.3px">▶ DISCUSSION</div>
+              <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.65);padding:4px 10px;border-radius:8px;font-weight:700;font-size:9px;letter-spacing:1.3px">CHAPTER 2 · DEBATE</div>
+            </div>
+            <div style="font-size:26px;font-weight:800;letter-spacing:-0.8px;line-height:1.1;background:linear-gradient(180deg,#f0fffa,#9fdcc9 70%,#3a7a6a);-webkit-background-clip:text;background-clip:text;color:transparent">Emission Enforcement</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:4px">Weigh in on how the city should enforce 2030 emission targets. 3 open questions · multiple-choice + free text.</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;cursor:pointer">×</div>
+        </div>
+      </div>
+
+      <!-- XP at stake — big hero number -->
+      <div style="position:relative;padding:24px 26px;text-align:center;background:linear-gradient(180deg,rgba(110,237,216,0.05),transparent 70%)">
+        <div style="font-size:10px;font-weight:700;color:#9fdcc9;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">XP at stake</div>
+        <div style="font-size:52px;font-weight:800;line-height:1;background:linear-gradient(180deg,#f0fffa 0%,#9fdcc9 50%,#3a9080 100%);-webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:-2px;filter:drop-shadow(0 4px 24px rgba(110,237,216,0.4))">436,450</div>
+
+        <!-- XP math breakdown -->
+        <div style="display:flex;justify-content:center;align-items:center;gap:6px;margin-top:10px;flex-wrap:wrap;font-size:11px;color:rgba(255,255,255,0.55);font-weight:500">
+          <span style="color:rgba(255,255,255,0.85);font-weight:700">175</span><span style="opacity:0.6">P base</span>
+          <span style="opacity:0.3">×</span>
+          <span style="color:rgba(255,255,255,0.85);font-weight:700">1,247</span><span style="opacity:0.6">explorers</span>
+          <span style="opacity:0.3">×</span>
+          <span style="color:#9fdcc9;font-weight:700">×2</span><span style="opacity:0.6">combo</span>
+          <span style="opacity:0.3">×</span>
+          <span style="color:#e8b658;font-weight:700">×1.15</span><span style="opacity:0.6">streak</span>
+        </div>
+        <div style="margin-top:6px;font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:0.5px">Snapshot locked at submission · combo lost if you abandon this chapter</div>
+      </div>
+
+      <!-- Rules / prereqs -->
+      <div style="position:relative;padding:0 26px 20px">
+        <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:14px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px 20px">
+          <div>
+            <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.45);letter-spacing:1.2px;text-transform:uppercase">Time window</div>
+            <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.92);margin-top:2px">Ends in <span style="color:#e8b658">2d 4h</span></div>
+          </div>
+          <div>
+            <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.45);letter-spacing:1.2px;text-transform:uppercase">Retries</div>
+            <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.92);margin-top:2px">1 attempt · no retry</div>
+          </div>
+          <div>
+            <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.45);letter-spacing:1.2px;text-transform:uppercase">Prerequisites</div>
+            <div style="font-size:13px;font-weight:700;color:#9fdcc9;margin-top:2px">All met ✓</div>
+          </div>
+          <div>
+            <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.45);letter-spacing:1.2px;text-transform:uppercase">Unlocks</div>
+            <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.92);margin-top:2px">Final Stakeholder Round</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chapter preview strip -->
+      <div style="position:relative;padding:0 26px 20px">
+        <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.45);letter-spacing:1.3px;text-transform:uppercase;margin-bottom:8px">Chapter 2 · Debate progress</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <div style="flex:1;height:6px;background:linear-gradient(90deg,#fcb300 50%,rgba(110,237,216,0.3) 50%);border-radius:3px;box-shadow:inset 0 1px 2px rgba(0,0,0,0.4)"></div>
+          <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.75)">1 / 3</div>
+        </div>
+      </div>
+
+      <!-- Bottom CTA -->
+      <div style="position:relative;padding:16px 26px 22px;background:linear-gradient(180deg,transparent,rgba(0,0,0,0.4));border-top:1px solid rgba(255,255,255,0.06);display:flex;gap:12px;align-items:center">
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.75);padding:11px 18px;border-radius:13px;font-weight:700;font-size:12px;cursor:pointer">Back to Map</div>
+        <div style="flex:1;background:linear-gradient(180deg,#9fdcc9,#6eedd8 50%,#3a9080);color:#0a2520;padding:13px 22px;border-radius:13px;font-weight:800;font-size:14px;letter-spacing:0.5px;text-align:center;cursor:pointer;box-shadow:0 8px 24px rgba(110,237,216,0.4),inset 0 1px 0 rgba(255,255,255,0.5),inset 0 -1px 0 rgba(0,0,0,0.2)">BEGIN DEBATE ▶</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:24px;text-align:center">Click if the briefing structure works. Tell me if I should add / remove sections (e.g. a "reward recipients" line when the quest supports team-owned flows).</p>

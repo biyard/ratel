@@ -1,0 +1,82 @@
+<h2>What's in V1 scope?</h2>
+<p class="subtitle">Click every screen that should be part of the renewal you're asking for. Items with "(stub OK)" can show <em>placeholder</em> data from a future system without blocking V1.</p>
+
+<div class="label" style="margin-top:24px">Inside the Space — Action UI proper</div>
+<div class="options" data-multiselect>
+  <div class="option" data-choice="action-list" onclick="toggleSelect(this)">
+    <div class="letter">1</div>
+    <div class="content">
+      <h3>Action list page (Quest Map)</h3>
+      <p>Replace the grid of cards with a vertical quest map. Per-space progress bar at the top, locked/unlocked states, action cards become quest tiles. <strong>The headline change.</strong></p>
+    </div>
+  </div>
+  <div class="option" data-choice="quest-briefing" onclick="toggleSelect(this)">
+    <div class="letter">2</div>
+    <div class="content">
+      <h3>Quest briefing screen</h3>
+      <p>New "briefing" overlay before participation: shows stakes, reward (+XP, +P, combo bonus), time window, prerequisites, retry policy. Replaces today's quiz "Overview" tab + adds it to polls/discussion/follow.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="action-player" onclick="toggleSelect(this)">
+    <div class="letter">3</div>
+    <div class="content">
+      <h3>Action player (poll / quiz / discussion / follow)</h3>
+      <p>Restyle the question-by-question interaction with arcade-bold treatment: progress dots, combo meter, animated answer feedback, big chunky bottom bar.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="completion" onclick="toggleSelect(this)">
+    <div class="letter">4</div>
+    <div class="content">
+      <h3>Completion / level-up moment</h3>
+      <p>The dopamine peak: animated +XP popup, combo break/extend, streak bump, "you unlocked Quest 4" reveal, optional level-up overlay if you crossed a threshold.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="space-leaderboard" onclick="toggleSelect(this)">
+    <div class="letter">5</div>
+    <div class="content">
+      <h3>Per-space leaderboard (full page)</h3>
+      <p>Today's small ranking widget gets a full-page treatment: podium for top 3, scrollable rest, "you are here" highlight. Lives at <code>/spaces/{id}/leaderboard</code> or as a tab on the action page.</p>
+    </div>
+  </div>
+</div>
+
+<div class="label" style="margin-top:24px">Cross-space — Global RPG layer</div>
+<div class="options" data-multiselect>
+  <div class="option" data-choice="player-profile" onclick="toggleSelect(this)">
+    <div class="letter">6</div>
+    <div class="content">
+      <h3>Global player profile (level, XP, class)</h3>
+      <p>A persistent identity card that shows up in the navbar / user menu and on a profile page. Aggregates XP from every space. <em>(Backend: new global score table.)</em></p>
+    </div>
+  </div>
+  <div class="option" data-choice="achievements" onclick="toggleSelect(this)">
+    <div class="letter">7</div>
+    <div class="content">
+      <h3>Achievements collection</h3>
+      <p>Unlockable badges across all spaces — "Voted in 10 polls", "First perfect quiz", "Completed all actions in a Space". A new page that lists owned + locked achievements.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="seasons" onclick="toggleSelect(this)">
+    <div class="letter">8</div>
+    <div class="content">
+      <h3>Seasons / leagues</h3>
+      <p>Bronze → Silver → Gold → Diamond tiers, weekly/monthly resets. Separate seasonal XP that decays. New backend.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="skill-tree" onclick="toggleSelect(this)">
+    <div class="letter">9</div>
+    <div class="content">
+      <h3>Skill tree (Voter / Debater / Scholar / Networker)</h3>
+      <p>Each action type levels its own track. Browseable as a tree. New backend (per-category XP).</p>
+    </div>
+  </div>
+  <div class="option" data-choice="global-leaderboard" onclick="toggleSelect(this)">
+    <div class="letter">10</div>
+    <div class="content">
+      <h3>Global cross-space leaderboard</h3>
+      <p>Top players across the entire platform. Filter by season / category. Lives at <code>/leaderboard</code>.</p>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:24px;text-align:center">Click every box you want in V1. My recommendation: <strong>1-5 in V1</strong> (Space-scoped), with <strong>6 (player profile) as a stub</strong> using existing per-space score → so the rest can ship later as a clean expansion. But you decide.</p>

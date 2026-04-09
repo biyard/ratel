@@ -64,6 +64,5 @@ user.json
 
 .playwright-mcp
 /playwright/admin1.json
-/docs/superpowers/
 /app/ratel/test-build-target/
 /playwright/admin.json

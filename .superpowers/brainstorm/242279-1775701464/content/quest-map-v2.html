@@ -1,0 +1,188 @@
+<h2>Refined — gradients, glass, semi-3D depth</h2>
+<p class="subtitle">Same structure (Dungeon Hero + Quest Map DAG), but the treatment is layered glass with golden/teal gradients and soft glows instead of flat saturated color.</p>
+
+<div class="mockup" onclick="toggleSelect(this)" data-choice="quest-map-v2">
+  <div class="mockup-header">Preview · /spaces/seoul-climate-2026 → /actions (refined)</div>
+  <div class="mockup-body" style="padding:0;background:radial-gradient(ellipse at top,#1a1a23 0%,#08080d 60%,#000 100%);font-family:'Space Grotesk',Inter,system-ui,sans-serif;color:rgba(255,255,255,0.92);overflow:hidden;position:relative">
+
+    <!-- Atmospheric backdrop -->
+    <div style="position:absolute;inset:0;background:radial-gradient(circle at 20% 0%,rgba(252,179,0,0.08),transparent 40%),radial-gradient(circle at 80% 30%,rgba(110,237,216,0.05),transparent 40%);pointer-events:none"></div>
+
+    <!-- ============== DUNGEON HERO BAND ============== -->
+    <div style="position:relative;padding:26px 30px 22px;backdrop-filter:blur(20px);background:linear-gradient(180deg,rgba(20,16,8,0.7) 0%,rgba(8,8,13,0.4) 100%);border-bottom:1px solid rgba(252,179,0,0.2);box-shadow:0 24px 48px -24px rgba(252,179,0,0.15),inset 0 1px 0 rgba(255,255,255,0.05)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap">
+
+        <!-- Left: title -->
+        <div style="flex:1;min-width:280px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <div style="width:18px;height:1px;background:linear-gradient(90deg,transparent,#d49600)"></div>
+            <div style="font-size:9px;font-weight:700;color:#d49600;letter-spacing:3px;text-transform:uppercase">Dungeon · Floor 3</div>
+            <div style="width:18px;height:1px;background:linear-gradient(90deg,#d49600,transparent)"></div>
+          </div>
+          <div style="font-size:32px;font-weight:800;letter-spacing:-1.2px;line-height:1.05;background:linear-gradient(180deg,#fff8e7 0%,#f0d28a 60%,#a07a30 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 4px 32px rgba(252,179,0,0.2);filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5))">SEOUL CLIMATE 2026</div>
+          <div style="display:flex;gap:18px;margin-top:12px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,0.7)"><span style="color:#9fdcc9">⚔</span><strong style="color:rgba(255,255,255,0.95);font-weight:700">1,247</strong><span style="opacity:0.55">explorers</span></div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,0.7)"><span style="color:#e8b658">🏆</span><strong style="color:rgba(255,255,255,0.95);font-weight:700">12</strong><span style="opacity:0.55">quests</span></div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,0.7)"><span style="color:#e8b658">⏳</span><strong style="color:rgba(255,255,255,0.95);font-weight:700">4d 12h</strong><span style="opacity:0.55">remaining</span></div>
+          </div>
+        </div>
+
+        <!-- Right: leaderboard rail (glass) -->
+        <div style="background:linear-gradient(135deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:12px 16px;min-width:230px;box-shadow:0 8px 32px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.06)">
+          <div style="font-size:9px;font-weight:700;color:#9fdcc9;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Leaderboard</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <div style="width:32px;height:32px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#ffe082,#d49600);color:#1a1a1a;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;box-shadow:0 4px 12px rgba(252,179,0,0.4),inset 0 1px 0 rgba(255,255,255,0.4)">1</div>
+            <div style="width:28px;height:28px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#c4f5e8,#5fbfa6);color:#0a2520;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;box-shadow:0 3px 8px rgba(110,237,216,0.3),inset 0 1px 0 rgba(255,255,255,0.4)">2</div>
+            <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,rgba(255,255,255,0.3),rgba(255,255,255,0.1));color:rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;border:1px solid rgba(255,255,255,0.15)">3</div>
+            <div style="margin-left:auto;background:linear-gradient(135deg,rgba(252,179,0,0.18),rgba(252,179,0,0.05));border:1px solid rgba(252,179,0,0.4);color:#e8b658;padding:5px 12px;border-radius:11px;font-weight:700;font-size:11px">YOU · #34</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============== Player XP HUD (glass with gradient depth) ============== -->
+      <div style="margin-top:18px;background:linear-gradient(135deg,rgba(255,255,255,0.05),rgba(255,255,255,0.01));backdrop-filter:blur(20px);border:1px solid rgba(252,179,0,0.25);border-radius:18px;padding:14px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:0 16px 40px -16px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.06),0 0 60px -20px rgba(252,179,0,0.2)">
+        <div style="background:radial-gradient(circle at 30% 30%,#ffe082 0%,#fcb300 40%,#8a5d00 100%);color:#1a1208;width:54px;height:54px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;flex-shrink:0;box-shadow:0 8px 20px rgba(252,179,0,0.4),inset 0 2px 0 rgba(255,255,255,0.5),inset 0 -2px 0 rgba(0,0,0,0.2)">
+          <div style="font-size:8px;letter-spacing:1px;opacity:0.7">LVL</div>
+          <div style="font-size:20px;line-height:1">8</div>
+        </div>
+        <div style="flex:1;min-width:200px">
+          <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:600;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px">
+            <span>Citizen · Tier IV</span><span>47% to Lvl 9</span>
+          </div>
+          <div style="height:10px;background:linear-gradient(180deg,rgba(0,0,0,0.5),rgba(0,0,0,0.2));border-radius:6px;overflow:hidden;border:1px solid rgba(0,0,0,0.4);box-shadow:inset 0 2px 4px rgba(0,0,0,0.6)">
+            <div style="height:100%;width:47%;background:linear-gradient(90deg,#a07a30,#fcb300 40%,#ffe082 70%,#9fdcc9 100%);border-radius:5px;box-shadow:0 0 16px rgba(252,179,0,0.6),inset 0 1px 0 rgba(255,255,255,0.4)"></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <div style="background:linear-gradient(135deg,rgba(252,179,0,0.18),rgba(212,150,0,0.05));backdrop-filter:blur(8px);border:1px solid rgba(252,179,0,0.3);color:#e8b658;padding:8px 14px;border-radius:14px;font-weight:700;font-size:12px;box-shadow:0 4px 12px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.08)"><span style="filter:drop-shadow(0 0 4px rgba(252,179,0,0.5))">🔥</span> 12-day streak</div>
+          <div style="background:linear-gradient(135deg,rgba(110,237,216,0.18),rgba(95,191,166,0.05));backdrop-filter:blur(8px);border:1px solid rgba(110,237,216,0.3);color:#9fdcc9;padding:8px 14px;border-radius:14px;font-weight:700;font-size:12px;box-shadow:0 4px 12px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.08)"><span style="filter:drop-shadow(0 0 4px rgba(110,237,216,0.5))">⚡</span> ×2 combo armed</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============== QUEST MAP ============== -->
+    <div style="padding:28px 30px 36px;position:relative;perspective:1200px">
+
+      <!-- Chapter 0 -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div style="font-size:10px;font-weight:700;color:#d49600;letter-spacing:3px;text-transform:uppercase">Chapter 0 · Qualify</div>
+        <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(212,150,0,0.4),transparent)"></div>
+        <div style="font-size:10px;font-weight:700;color:#9fdcc9;letter-spacing:1px">2 / 2 ✓</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:36px">
+        <!-- Cleared quest tile -->
+        <div style="background:linear-gradient(135deg,rgba(252,179,0,0.12) 0%,rgba(212,150,0,0.04) 50%,rgba(0,0,0,0.3) 100%);backdrop-filter:blur(16px);border:1px solid rgba(252,179,0,0.35);border-radius:18px;padding:16px;position:relative;box-shadow:0 12px 32px -8px rgba(0,0,0,0.5),0 0 32px -16px rgba(252,179,0,0.3),inset 0 1px 0 rgba(255,255,255,0.06);transform:translateZ(0)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="background:linear-gradient(135deg,rgba(252,179,0,0.3),rgba(212,150,0,0.1));border:1px solid rgba(252,179,0,0.4);color:#e8b658;padding:4px 10px;border-radius:8px;font-weight:700;font-size:9px;letter-spacing:1.2px">QUIZ</div>
+            <div style="background:radial-gradient(circle at 30% 30%,#ffe082,#fcb300);color:#1a1208;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;box-shadow:0 4px 12px rgba(252,179,0,0.5),inset 0 1px 0 rgba(255,255,255,0.5)">✓</div>
+          </div>
+          <div style="font-weight:700;font-size:15px;color:rgba(255,255,255,0.95)">Climate Pledge</div>
+          <div style="font-size:11px;color:#e8b658;font-weight:600;margin-top:4px;letter-spacing:0.3px">+74,820 XP earned</div>
+        </div>
+        <div style="background:linear-gradient(135deg,rgba(252,179,0,0.12) 0%,rgba(212,150,0,0.04) 50%,rgba(0,0,0,0.3) 100%);backdrop-filter:blur(16px);border:1px solid rgba(252,179,0,0.35);border-radius:18px;padding:16px;box-shadow:0 12px 32px -8px rgba(0,0,0,0.5),0 0 32px -16px rgba(252,179,0,0.3),inset 0 1px 0 rgba(255,255,255,0.06)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="background:linear-gradient(135deg,rgba(252,179,0,0.3),rgba(212,150,0,0.1));border:1px solid rgba(252,179,0,0.4);color:#e8b658;padding:4px 10px;border-radius:8px;font-weight:700;font-size:9px;letter-spacing:1.2px">POLL</div>
+            <div style="background:radial-gradient(circle at 30% 30%,#ffe082,#fcb300);color:#1a1208;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;box-shadow:0 4px 12px rgba(252,179,0,0.5),inset 0 1px 0 rgba(255,255,255,0.5)">✓</div>
+          </div>
+          <div style="font-weight:700;font-size:15px;color:rgba(255,255,255,0.95)">District Selection</div>
+          <div style="font-size:11px;color:#e8b658;font-weight:600;margin-top:4px;letter-spacing:0.3px">+62,350 XP earned</div>
+        </div>
+      </div>
+
+      <!-- Chapter 1 -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+        <div style="font-size:10px;font-weight:700;color:#9fdcc9;letter-spacing:3px;text-transform:uppercase">Chapter 1 · Participate</div>
+        <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(159,220,201,0.4),transparent)"></div>
+        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:1px">2 / 5</div>
+      </div>
+
+      <div style="position:relative">
+        <!-- SVG with gradient strokes -->
+        <svg viewBox="0 0 600 360" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="goldFlow" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#fcb300" stop-opacity="0.7"/>
+              <stop offset="100%" stop-color="#9fdcc9" stop-opacity="0.7"/>
+            </linearGradient>
+            <linearGradient id="lockedFade" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#9fdcc9" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#444" stop-opacity="0.2"/>
+            </linearGradient>
+          </defs>
+          <line x1="150" y1="55" x2="150" y2="135" stroke="url(#goldFlow)" stroke-width="2.5"/>
+          <line x1="450" y1="55" x2="450" y2="135" stroke="url(#goldFlow)" stroke-width="2.5"/>
+          <path d="M 150 170 Q 150 200 300 230" stroke="url(#goldFlow)" stroke-width="2.5" fill="none"/>
+          <path d="M 450 170 Q 450 200 300 230" stroke="url(#goldFlow)" stroke-width="2.5" fill="none"/>
+          <path d="M 300 270 Q 300 300 150 320" stroke="url(#lockedFade)" stroke-width="2" stroke-dasharray="5,5" fill="none"/>
+          <path d="M 300 270 Q 300 300 450 320" stroke="url(#lockedFade)" stroke-width="2" stroke-dasharray="5,5" fill="none"/>
+        </svg>
+
+        <!-- Row 1: 2 cleared roots -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px;position:relative;z-index:1">
+          <div style="background:linear-gradient(135deg,rgba(252,179,0,0.1) 0%,rgba(0,0,0,0.3) 100%);backdrop-filter:blur(16px);border:1px solid rgba(252,179,0,0.3);border-radius:18px;padding:14px 16px;box-shadow:0 12px 32px -8px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.05)">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <div style="background:linear-gradient(135deg,rgba(252,179,0,0.25),rgba(212,150,0,0.05));border:1px solid rgba(252,179,0,0.35);color:#e8b658;padding:4px 10px;border-radius:8px;font-weight:700;font-size:9px;letter-spacing:1.2px">POLL</div>
+              <div style="background:radial-gradient(circle at 30% 30%,#ffe082,#fcb300);color:#1a1208;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;box-shadow:0 4px 12px rgba(252,179,0,0.4),inset 0 1px 0 rgba(255,255,255,0.5)">✓</div>
+            </div>
+            <div style="font-weight:700;font-size:14px;color:rgba(255,255,255,0.95)">2030 Emission Target</div>
+            <div style="font-size:11px;color:#e8b658;font-weight:600;margin-top:3px">+89,220 XP earned</div>
+          </div>
+          <div style="background:linear-gradient(135deg,rgba(252,179,0,0.1) 0%,rgba(0,0,0,0.3) 100%);backdrop-filter:blur(16px);border:1px solid rgba(252,179,0,0.3);border-radius:18px;padding:14px 16px;box-shadow:0 12px 32px -8px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.05)">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <div style="background:linear-gradient(135deg,rgba(252,179,0,0.25),rgba(212,150,0,0.05));border:1px solid rgba(252,179,0,0.35);color:#e8b658;padding:4px 10px;border-radius:8px;font-weight:700;font-size:9px;letter-spacing:1.2px">QUIZ</div>
+              <div style="background:radial-gradient(circle at 30% 30%,#ffe082,#fcb300);color:#1a1208;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;box-shadow:0 4px 12px rgba(252,179,0,0.4),inset 0 1px 0 rgba(255,255,255,0.5)">✓</div>
+            </div>
+            <div style="font-weight:700;font-size:14px;color:rgba(255,255,255,0.95)">Climate Science Basics</div>
+            <div style="font-size:11px;color:#e8b658;font-weight:600;margin-top:3px">+102,400 XP earned</div>
+          </div>
+        </div>
+
+        <!-- Row 2: HERO active quest -->
+        <div style="display:flex;justify-content:center;margin-bottom:34px;position:relative;z-index:1;perspective:800px">
+          <div style="width:64%;background:linear-gradient(155deg,rgba(110,237,216,0.18) 0%,rgba(20,40,38,0.6) 40%,rgba(0,0,0,0.6) 100%);backdrop-filter:blur(24px);border:1px solid rgba(110,237,216,0.5);border-radius:24px;padding:22px 24px;cursor:pointer;box-shadow:0 24px 60px -16px rgba(0,0,0,0.8),0 0 80px -20px rgba(110,237,216,0.4),inset 0 1px 0 rgba(255,255,255,0.1),inset 0 -1px 0 rgba(0,0,0,0.4);transform:translateZ(0) rotateX(1deg);position:relative;overflow:hidden">
+            <!-- glow accent -->
+            <div style="position:absolute;top:-40%;left:-10%;width:60%;height:140%;background:radial-gradient(ellipse,rgba(110,237,216,0.18),transparent 60%);pointer-events:none"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;position:relative">
+              <div style="background:linear-gradient(135deg,rgba(110,237,216,0.3),rgba(95,191,166,0.1));border:1px solid rgba(110,237,216,0.5);color:#9fdcc9;padding:5px 12px;border-radius:10px;font-weight:700;font-size:10px;letter-spacing:1.5px">▶ DEBATE · UNLOCKED</div>
+              <div style="background:linear-gradient(135deg,rgba(110,237,216,0.2),rgba(95,191,166,0.05));border:1px solid rgba(110,237,216,0.4);color:#9fdcc9;padding:5px 12px;border-radius:10px;font-weight:700;font-size:10px">×2 COMBO READY</div>
+            </div>
+            <div style="font-weight:800;font-size:20px;color:rgba(255,255,255,0.98);margin-bottom:6px;position:relative">Public Transit Investment</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.55);margin-bottom:14px;position:relative">2 prerequisites met · ends in 2d 4h</div>
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;position:relative">
+              <div>
+                <div style="font-size:9px;color:#9fdcc9;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:2px">XP at stake</div>
+                <div style="font-size:30px;font-weight:800;background:linear-gradient(180deg,#e6fff8 0%,#9fdcc9 60%,#3a7a6a 100%);-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1;letter-spacing:-1px">348,800</div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:4px">175 P × 1,247 explorers × ×2 combo</div>
+              </div>
+              <div style="background:linear-gradient(180deg,#9fdcc9 0%,#6eedd8 50%,#3a9080 100%);color:#0a2520;padding:12px 24px;border-radius:14px;font-weight:800;font-size:13px;letter-spacing:0.5px;box-shadow:0 8px 20px rgba(110,237,216,0.4),inset 0 1px 0 rgba(255,255,255,0.5),inset 0 -1px 0 rgba(0,0,0,0.2)">BEGIN ▶</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 3: 2 locked -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;position:relative;z-index:1">
+          <div style="background:linear-gradient(135deg,rgba(255,255,255,0.02),rgba(0,0,0,0.3));backdrop-filter:blur(8px);border:1px dashed rgba(255,255,255,0.1);border-radius:18px;padding:14px;opacity:0.6">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);padding:4px 10px;border-radius:8px;font-weight:700;font-size:9px;letter-spacing:1.2px">FOLLOW</div>
+              <div style="color:rgba(255,255,255,0.4);font-size:14px">🔒</div>
+            </div>
+            <div style="font-weight:700;font-size:14px;color:rgba(255,255,255,0.5)">Mayor's Office</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:3px">Complete Public Transit to unlock</div>
+          </div>
+          <div style="background:linear-gradient(135deg,rgba(255,255,255,0.02),rgba(0,0,0,0.3));backdrop-filter:blur(8px);border:1px dashed rgba(255,255,255,0.1);border-radius:18px;padding:14px;opacity:0.6">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);padding:4px 10px;border-radius:8px;font-weight:700;font-size:9px;letter-spacing:1.2px">POLL</div>
+              <div style="color:rgba(255,255,255,0.4);font-size:14px">🔒</div>
+            </div>
+            <div style="font-weight:700;font-size:14px;color:rgba(255,255,255,0.5)">Final Vote</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:3px">Complete Public Transit to unlock</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:24px;text-align:center">Same structure, refined tone. Click if it works, or tell me to push further (more depth, less glow, warmer/cooler, etc.).</p>

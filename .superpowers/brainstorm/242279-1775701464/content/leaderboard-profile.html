@@ -1,0 +1,248 @@
+<h2>Per-space Leaderboard + Global Player Profile</h2>
+<p class="subtitle">Two screens stacked so you can see both. Top = per-space leaderboard page (item 5 in scope). Bottom = global player profile (item 6 in scope).</p>
+
+<!-- ========================================== -->
+<!-- SCREEN A · Per-space Leaderboard           -->
+<!-- ========================================== -->
+<div class="mockup" onclick="toggleSelect(this)" data-choice="leaderboard">
+  <div class="mockup-header">Preview · /spaces/seoul-climate-2026/leaderboard</div>
+  <div class="mockup-body" style="padding:0;background:radial-gradient(ellipse at top,#1a1a23 0%,#08080d 60%,#000 100%);font-family:'Space Grotesk',Inter,system-ui,sans-serif;color:rgba(255,255,255,0.92);position:relative">
+
+    <div style="position:absolute;inset:0;background:radial-gradient(circle at 20% 0%,rgba(252,179,0,0.08),transparent 40%),radial-gradient(circle at 80% 30%,rgba(110,237,216,0.05),transparent 40%);pointer-events:none"></div>
+
+    <!-- Dungeon hero band (same persistent component) -->
+    <div style="position:relative;padding:18px 28px;background:linear-gradient(180deg,rgba(20,16,8,0.7),rgba(8,8,13,0.4));border-bottom:1px solid rgba(252,179,0,0.2)">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:9px;font-weight:700;color:#d49600;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:2px">⚔ Seoul Climate 2026 · Leaderboard</div>
+          <div style="font-size:20px;font-weight:800;letter-spacing:-0.5px;background:linear-gradient(180deg,#fff8e7,#f0d28a 60%,#a07a30);-webkit-background-clip:text;background-clip:text;color:transparent">Dungeon Standings</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <div style="background:linear-gradient(135deg,rgba(252,179,0,0.2),rgba(212,150,0,0.05));border:1px solid rgba(252,179,0,0.4);color:#e8b658;padding:6px 12px;border-radius:11px;font-weight:700;font-size:10px;letter-spacing:0.5px">All chapters</div>
+          <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);padding:6px 12px;border-radius:11px;font-weight:700;font-size:10px">Chapter 2</div>
+          <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);padding:6px 12px;border-radius:11px;font-weight:700;font-size:10px">This week</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============== PODIUM ============== -->
+    <div style="position:relative;padding:42px 28px 28px">
+      <div style="display:flex;justify-content:center;align-items:flex-end;gap:16px;max-width:520px;margin:0 auto">
+
+        <!-- 2nd place -->
+        <div style="flex:1;text-align:center">
+          <div style="width:72px;height:72px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#e3f8f0,#9fdcc9,#3a7a6a);margin:0 auto 8px;box-shadow:0 12px 32px rgba(110,237,216,0.4),inset 0 2px 0 rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#0a2520;border:3px solid rgba(110,237,216,0.5)">K</div>
+          <div style="font-size:13px;font-weight:800;color:rgba(255,255,255,0.92);margin-bottom:2px">kim.sejun</div>
+          <div style="font-size:10px;color:#9fdcc9;font-weight:700">2,182,400 XP</div>
+          <div style="background:linear-gradient(180deg,rgba(159,220,201,0.2) 0%,rgba(110,237,216,0.4) 100%);border:1px solid rgba(110,237,216,0.4);border-top-left-radius:12px;border-top-right-radius:12px;height:74px;margin-top:10px;display:flex;align-items:flex-start;justify-content:center;padding-top:8px;font-size:32px;font-weight:900;color:#9fdcc9;box-shadow:0 12px 32px -8px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.08)">2</div>
+        </div>
+
+        <!-- 1st place (tallest, crowned) -->
+        <div style="flex:1;text-align:center">
+          <div style="font-size:24px;margin-bottom:2px;filter:drop-shadow(0 0 12px rgba(252,179,0,0.8))">👑</div>
+          <div style="width:88px;height:88px;border-radius:50%;background:radial-gradient(circle at 32% 30%,#fff8e7,#ffe082,#fcb300,#8a5d00);margin:0 auto 8px;box-shadow:0 16px 40px rgba(252,179,0,0.5),0 0 60px rgba(252,179,0,0.2),inset 0 3px 0 rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:800;color:#1a1208;border:3px solid rgba(252,179,0,0.6)">M</div>
+          <div style="font-size:14px;font-weight:800;color:rgba(255,255,255,0.98);margin-bottom:2px">min.soyoung</div>
+          <div style="font-size:11px;color:#e8b658;font-weight:700">3,412,900 XP</div>
+          <div style="background:linear-gradient(180deg,rgba(252,179,0,0.25) 0%,rgba(212,150,0,0.45) 100%);border:1px solid rgba(252,179,0,0.5);border-top-left-radius:14px;border-top-right-radius:14px;height:110px;margin-top:10px;display:flex;align-items:flex-start;justify-content:center;padding-top:10px;font-size:40px;font-weight:900;color:#fcb300;box-shadow:0 16px 40px -8px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.12),0 0 40px -10px rgba(252,179,0,0.4)">1</div>
+        </div>
+
+        <!-- 3rd place -->
+        <div style="flex:1;text-align:center">
+          <div style="width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#f5e8d0,#b08d5c,#5a4220);margin:0 auto 8px;box-shadow:0 10px 28px rgba(176,141,92,0.35),inset 0 2px 0 rgba(255,255,255,0.35);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#1a1208;border:3px solid rgba(176,141,92,0.5)">H</div>
+          <div style="font-size:12px;font-weight:800;color:rgba(255,255,255,0.92);margin-bottom:2px">han.jiyoung</div>
+          <div style="font-size:10px;color:#b08d5c;font-weight:700">1,874,600 XP</div>
+          <div style="background:linear-gradient(180deg,rgba(176,141,92,0.2) 0%,rgba(176,141,92,0.4) 100%);border:1px solid rgba(176,141,92,0.4);border-top-left-radius:10px;border-top-right-radius:10px;height:56px;margin-top:10px;display:flex;align-items:flex-start;justify-content:center;padding-top:6px;font-size:26px;font-weight:900;color:#b08d5c;box-shadow:0 10px 28px -8px rgba(0,0,0,0.5)">3</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ============== SCROLLABLE LIST ============== -->
+    <div style="padding:0 28px 28px">
+      <div style="background:linear-gradient(135deg,rgba(255,255,255,0.03),rgba(0,0,0,0.3));border:1px solid rgba(255,255,255,0.06);border-radius:16px;overflow:hidden">
+
+        <!-- Header row -->
+        <div style="display:grid;grid-template-columns:50px 1fr 100px 80px 100px;padding:10px 18px;font-size:9px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:1.3px;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.06)">
+          <span>Rank</span><span>Player</span><span style="text-align:right">XP in space</span><span style="text-align:right">Quests</span><span style="text-align:right">Level</span>
+        </div>
+
+        <!-- Row 4 -->
+        <div style="display:grid;grid-template-columns:50px 1fr 100px 80px 100px;padding:12px 18px;align-items:center;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px">
+          <span style="color:rgba(255,255,255,0.5);font-weight:700">4</span>
+          <div style="display:flex;gap:10px;align-items:center"><div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#3a4b6a,#1a2030);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px">L</div><span style="font-weight:700;color:rgba(255,255,255,0.9)">lee.minho</span></div>
+          <span style="text-align:right;color:rgba(255,255,255,0.9);font-weight:700">1,542,800</span>
+          <span style="text-align:right;color:rgba(255,255,255,0.7);font-weight:600">8</span>
+          <span style="text-align:right;color:#e8b658;font-weight:700">Lv 14</span>
+        </div>
+        <div style="display:grid;grid-template-columns:50px 1fr 100px 80px 100px;padding:12px 18px;align-items:center;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px">
+          <span style="color:rgba(255,255,255,0.5);font-weight:700">5</span>
+          <div style="display:flex;gap:10px;align-items:center"><div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#6a3a4b,#301a20);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px">P</div><span style="font-weight:700;color:rgba(255,255,255,0.9)">park.seulgi</span></div>
+          <span style="text-align:right;color:rgba(255,255,255,0.9);font-weight:700">1,398,200</span>
+          <span style="text-align:right;color:rgba(255,255,255,0.7);font-weight:600">7</span>
+          <span style="text-align:right;color:#e8b658;font-weight:700">Lv 13</span>
+        </div>
+
+        <!-- "..." gap -->
+        <div style="padding:8px 18px;text-align:center;color:rgba(255,255,255,0.3);font-size:11px;letter-spacing:3px;border-bottom:1px solid rgba(255,255,255,0.04)">· · ·</div>
+
+        <!-- Row 29 -->
+        <div style="display:grid;grid-template-columns:50px 1fr 100px 80px 100px;padding:12px 18px;align-items:center;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px">
+          <span style="color:rgba(255,255,255,0.5);font-weight:700">29</span>
+          <div style="display:flex;gap:10px;align-items:center"><div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#2a4a3a,#0a201a);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px">C</div><span style="font-weight:700;color:rgba(255,255,255,0.9)">choi.donghyun</span></div>
+          <span style="text-align:right;color:rgba(255,255,255,0.9);font-weight:700">612,400</span>
+          <span style="text-align:right;color:rgba(255,255,255,0.7);font-weight:600">4</span>
+          <span style="text-align:right;color:#e8b658;font-weight:700">Lv 9</span>
+        </div>
+
+        <!-- YOU row - highlighted -->
+        <div style="display:grid;grid-template-columns:50px 1fr 100px 80px 100px;padding:14px 18px;align-items:center;background:linear-gradient(90deg,rgba(252,179,0,0.15),rgba(252,179,0,0.03));border-top:1px solid rgba(252,179,0,0.4);border-bottom:1px solid rgba(252,179,0,0.4);box-shadow:inset 0 0 32px rgba(252,179,0,0.08);font-size:13px">
+          <span style="color:#fcb300;font-weight:800">30 ▴5</span>
+          <div style="display:flex;gap:10px;align-items:center"><div style="width:32px;height:32px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#ffe082,#fcb300,#8a5d00);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#1a1208;box-shadow:0 4px 12px rgba(252,179,0,0.5)">Y</div><span style="font-weight:800;color:#fff">you (hackartist) <span style="background:rgba(252,179,0,0.25);border:1px solid rgba(252,179,0,0.5);color:#e8b658;padding:2px 8px;border-radius:8px;font-size:9px;font-weight:800;margin-left:6px">YOU</span></span></div>
+          <span style="text-align:right;color:#fff;font-weight:800">601,250</span>
+          <span style="text-align:right;color:rgba(255,255,255,0.85);font-weight:700">3</span>
+          <span style="text-align:right;color:#fcb300;font-weight:800">Lv 8</span>
+        </div>
+
+        <!-- Row 31 -->
+        <div style="display:grid;grid-template-columns:50px 1fr 100px 80px 100px;padding:12px 18px;align-items:center;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px">
+          <span style="color:rgba(255,255,255,0.5);font-weight:700">31</span>
+          <div style="display:flex;gap:10px;align-items:center"><div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#4a3a2a,#201a0a);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px">K</div><span style="font-weight:700;color:rgba(255,255,255,0.9)">kang.minji</span></div>
+          <span style="text-align:right;color:rgba(255,255,255,0.9);font-weight:700">598,900</span>
+          <span style="text-align:right;color:rgba(255,255,255,0.7);font-weight:600">4</span>
+          <span style="text-align:right;color:#e8b658;font-weight:700">Lv 9</span>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- SCREEN B · Global Player Profile          -->
+<!-- ========================================== -->
+<div class="mockup" style="margin-top:24px" onclick="toggleSelect(this)" data-choice="profile">
+  <div class="mockup-header">Preview · /me/profile (global, across every space)</div>
+  <div class="mockup-body" style="padding:0;background:radial-gradient(ellipse at top,#1a1a23 0%,#08080d 60%,#000 100%);font-family:'Space Grotesk',Inter,system-ui,sans-serif;color:rgba(255,255,255,0.92);position:relative">
+
+    <div style="position:absolute;inset:0;background:radial-gradient(circle at 20% 0%,rgba(252,179,0,0.1),transparent 40%),radial-gradient(circle at 80% 30%,rgba(110,237,216,0.05),transparent 40%);pointer-events:none"></div>
+
+    <div style="position:relative;padding:32px 28px">
+
+      <!-- ============== HERO PLAYER CARD ============== -->
+      <div style="background:linear-gradient(165deg,rgba(252,179,0,0.12) 0%,rgba(20,16,8,0.5) 30%,rgba(8,8,13,0.9) 80%);border:1px solid rgba(252,179,0,0.35);border-radius:24px;padding:26px 30px;box-shadow:0 30px 80px -20px rgba(0,0,0,0.7),0 0 120px -30px rgba(252,179,0,0.25),inset 0 1px 0 rgba(255,255,255,0.08);position:relative;overflow:hidden;margin-bottom:24px">
+        <div style="position:absolute;top:-20%;right:-10%;width:60%;height:80%;background:radial-gradient(ellipse,rgba(252,179,0,0.18),transparent 60%);pointer-events:none"></div>
+        <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap;position:relative">
+
+          <!-- Avatar + level -->
+          <div style="position:relative;flex-shrink:0">
+            <div style="width:104px;height:104px;border-radius:26px;background:radial-gradient(circle at 32% 30%,#fff8e7,#ffe082,#fcb300,#8a5d00);display:flex;align-items:center;justify-content:center;font-size:42px;font-weight:900;color:#1a1208;box-shadow:0 16px 40px rgba(252,179,0,0.5),0 0 60px rgba(252,179,0,0.2),inset 0 3px 0 rgba(255,255,255,0.5);transform:rotate(-2deg)">H</div>
+            <div style="position:absolute;bottom:-10px;right:-10px;background:radial-gradient(circle at 30% 30%,#fff8e7,#ffe082,#fcb300);color:#1a1208;width:40px;height:40px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:900;box-shadow:0 6px 18px rgba(252,179,0,0.5),inset 0 1.5px 0 rgba(255,255,255,0.5);border:2px solid #0a0a0c"><div style="font-size:6px;letter-spacing:0.5px;opacity:0.7">LVL</div><div style="font-size:16px;line-height:0.9">8</div></div>
+          </div>
+
+          <!-- Identity -->
+          <div style="flex:1;min-width:240px">
+            <div style="font-size:10px;font-weight:700;color:#d49600;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:2px">Citizen · Tier IV</div>
+            <div style="font-size:30px;font-weight:800;letter-spacing:-0.8px;line-height:1;background:linear-gradient(180deg,#fff8e7,#f0d28a 60%,#a07a30);-webkit-background-clip:text;background-clip:text;color:transparent">hackartist</div>
+
+            <!-- XP bar -->
+            <div style="margin-top:12px;max-width:440px">
+              <div style="display:flex;justify-content:space-between;font-size:9px;color:rgba(255,255,255,0.5);font-weight:700;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:4px">
+                <span>Global XP</span><span>4,217,300 / 5,000,000</span>
+              </div>
+              <div style="height:10px;background:linear-gradient(180deg,rgba(0,0,0,0.6),rgba(0,0,0,0.3));border-radius:5px;overflow:hidden;border:1px solid rgba(0,0,0,0.5);box-shadow:inset 0 2px 4px rgba(0,0,0,0.6)">
+                <div style="height:100%;width:84%;background:linear-gradient(90deg,#a07a30,#fcb300 40%,#ffe082 70%,#9fdcc9 100%);box-shadow:0 0 16px rgba(252,179,0,0.6),inset 0 1px 0 rgba(255,255,255,0.4)"></div>
+              </div>
+              <div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:4px">782,700 XP to Level 9</div>
+            </div>
+          </div>
+
+          <!-- Streak + combo chips -->
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="background:linear-gradient(135deg,rgba(252,179,0,0.2),rgba(212,150,0,0.05));border:1px solid rgba(252,179,0,0.4);color:#e8b658;padding:8px 14px;border-radius:12px;font-weight:700;font-size:11px;box-shadow:0 4px 12px rgba(0,0,0,0.4)">🔥 13-day streak</div>
+            <div style="background:linear-gradient(135deg,rgba(110,237,216,0.2),rgba(95,191,166,0.05));border:1px solid rgba(110,237,216,0.4);color:#9fdcc9;padding:8px 14px;border-radius:12px;font-weight:700;font-size:11px;box-shadow:0 4px 12px rgba(0,0,0,0.4)">⚡ ×3 combo</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============== STATS GRID ============== -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px">
+        <div style="background:linear-gradient(135deg,rgba(255,255,255,0.03),rgba(0,0,0,0.3));border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:16px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.04)">
+          <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.45);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:6px">Total XP</div>
+          <div style="font-size:22px;font-weight:800;color:rgba(255,255,255,0.95);line-height:1">4.21M</div>
+          <div style="font-size:10px;color:#9fdcc9;margin-top:4px;font-weight:700">+436K this week</div>
+        </div>
+        <div style="background:linear-gradient(135deg,rgba(255,255,255,0.03),rgba(0,0,0,0.3));border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:16px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.04)">
+          <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.45);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:6px">Ratel Points</div>
+          <div style="font-size:22px;font-weight:800;color:rgba(255,255,255,0.95);line-height:1">42,180</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.55);margin-top:4px">earned + creator fees</div>
+        </div>
+        <div style="background:linear-gradient(135deg,rgba(255,255,255,0.03),rgba(0,0,0,0.3));border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:16px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.04)">
+          <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.45);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:6px">Dungeons</div>
+          <div style="font-size:22px;font-weight:800;color:rgba(255,255,255,0.95);line-height:1">7</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.55);margin-top:4px">3 active · 4 cleared</div>
+        </div>
+        <div style="background:linear-gradient(135deg,rgba(255,255,255,0.03),rgba(0,0,0,0.3));border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:16px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.04)">
+          <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.45);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:6px">Quests cleared</div>
+          <div style="font-size:22px;font-weight:800;color:rgba(255,255,255,0.95);line-height:1">28</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.55);margin-top:4px">3.1 per dungeon</div>
+        </div>
+      </div>
+
+      <!-- ============== CREATOR EARNINGS ============== -->
+      <div style="background:linear-gradient(135deg,rgba(255,220,140,0.1),rgba(20,16,8,0.4));border:1px solid rgba(252,179,0,0.35);border-radius:16px;padding:18px 22px;margin-bottom:24px;display:flex;align-items:center;gap:16px;box-shadow:0 12px 32px -8px rgba(0,0,0,0.5),0 0 50px -20px rgba(252,179,0,0.25)">
+        <div style="background:radial-gradient(circle at 30% 30%,#ffe082,#fcb300 40%,#8a5d00);color:#1a1208;width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;box-shadow:0 6px 16px rgba(252,179,0,0.4),inset 0 1.5px 0 rgba(255,255,255,0.5)">👑</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:9px;font-weight:700;color:#d49600;letter-spacing:1.5px;text-transform:uppercase">Creator Earnings · 2 spaces you authored</div>
+          <div style="display:flex;gap:20px;margin-top:4px">
+            <div>
+              <div style="font-size:20px;font-weight:800;background:linear-gradient(180deg,#fff8e7,#f0d28a 60%,#a07a30);-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1">1,247,300</div>
+              <div style="font-size:9px;color:rgba(255,255,255,0.45);margin-top:2px;letter-spacing:0.5px;text-transform:uppercase">XP</div>
+            </div>
+            <div>
+              <div style="font-size:20px;font-weight:800;background:linear-gradient(180deg,#fff8e7,#f0d28a 60%,#a07a30);-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1">8,920 P</div>
+              <div style="font-size:9px;color:rgba(255,255,255,0.45);margin-top:2px;letter-spacing:0.5px;text-transform:uppercase">Ratel points</div>
+            </div>
+          </div>
+        </div>
+        <div style="background:rgba(252,179,0,0.12);border:1px solid rgba(252,179,0,0.4);color:#e8b658;padding:8px 14px;border-radius:12px;font-weight:700;font-size:11px">Breakdown →</div>
+      </div>
+
+      <!-- ============== SPACE STANDINGS ============== -->
+      <div style="background:linear-gradient(135deg,rgba(255,255,255,0.03),rgba(0,0,0,0.3));border:1px solid rgba(255,255,255,0.06);border-radius:16px;overflow:hidden">
+        <div style="padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:1.5px;text-transform:uppercase">Dungeon standings</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.35);font-weight:600">7 total</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 110px 70px;gap:10px;padding:12px 18px;align-items:center;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px">
+          <div>
+            <div style="font-weight:700;color:rgba(255,255,255,0.92)">Seoul Climate 2026</div>
+            <div style="font-size:9px;color:rgba(255,255,255,0.45);margin-top:1px">Active · Chapter 2</div>
+          </div>
+          <div style="height:4px;background:rgba(0,0,0,0.4);border-radius:2px;overflow:hidden"><div style="height:100%;width:40%;background:linear-gradient(90deg,#fcb300,#9fdcc9)"></div></div>
+          <div style="text-align:right"><span style="color:#fcb300;font-weight:800">#30</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 110px 70px;gap:10px;padding:12px 18px;align-items:center;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px">
+          <div>
+            <div style="font-weight:700;color:rgba(255,255,255,0.92)">Seoul Housing Review</div>
+            <div style="font-size:9px;color:rgba(255,255,255,0.45);margin-top:1px">Active · Chapter 1</div>
+          </div>
+          <div style="height:4px;background:rgba(0,0,0,0.4);border-radius:2px;overflow:hidden"><div style="height:100%;width:25%;background:linear-gradient(90deg,#fcb300,#9fdcc9)"></div></div>
+          <div style="text-align:right"><span style="color:#fcb300;font-weight:800">#112</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 110px 70px;gap:10px;padding:12px 18px;align-items:center;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px">
+          <div>
+            <div style="font-weight:700;color:rgba(255,255,255,0.75)">Busan Port 2030 <span style="background:rgba(159,220,201,0.15);color:#9fdcc9;padding:2px 6px;border-radius:6px;font-size:8px;font-weight:700;margin-left:4px">CLEARED</span></div>
+            <div style="font-size:9px;color:rgba(255,255,255,0.35);margin-top:1px">Finished · all 5 chapters</div>
+          </div>
+          <div style="height:4px;background:rgba(0,0,0,0.4);border-radius:2px;overflow:hidden"><div style="height:100%;width:100%;background:linear-gradient(90deg,#9fdcc9,#6eedd8)"></div></div>
+          <div style="text-align:right"><span style="color:#9fdcc9;font-weight:800">#8</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:24px;text-align:center">Click either mockup if it works, or tell me to rearrange sections. Next section is the creator chapter editor.</p>

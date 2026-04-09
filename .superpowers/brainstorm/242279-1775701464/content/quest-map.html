@@ -1,0 +1,173 @@
+<h2>The Dungeon Entry — `/spaces/{id}` lands here</h2>
+<p class="subtitle">Persistent Dungeon Hero band (top, lives in <code>SpaceLayout</code> — visible on every sub-page) + Quest Map below (only on <code>/actions</code>). Click anywhere on the mockup to acknowledge / give feedback.</p>
+
+<div class="mockup" onclick="toggleSelect(this)" data-choice="quest-map">
+  <div class="mockup-header">Preview · /spaces/seoul-climate-2026/actions (default landing)</div>
+  <div class="mockup-body" style="padding:0;background:#0a0a0c;font-family:'Space Grotesk',Inter,sans-serif;color:#fff">
+
+    <!-- ============== DUNGEON HERO BAND (lives in SpaceLayout) ============== -->
+    <div style="position:relative;background:linear-gradient(135deg,#1a1209 0%,#0a0a0c 60%),radial-gradient(circle at 20% 0%,rgba(252,179,0,0.12),transparent 60%);border-bottom:2px solid #fcb300;padding:22px 26px 18px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap">
+
+        <!-- Left: title + party stats -->
+        <div style="flex:1;min-width:280px">
+          <div style="font-size:9px;font-weight:900;color:#fcb300;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px">⚔ Dungeon · Floor 3</div>
+          <div style="font-size:30px;font-weight:900;letter-spacing:-1px;line-height:1.05;text-shadow:0 0 24px rgba(252,179,0,0.25)">SEOUL CLIMATE 2026</div>
+          <div style="display:flex;gap:14px;margin-top:10px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:rgba(255,255,255,0.8)"><span style="color:#6eedd8">⚔</span> <strong style="color:#fff">1,247</strong> <span style="opacity:0.6">explorers</span></div>
+            <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:rgba(255,255,255,0.8)"><span style="color:#fcb300">🏆</span> <strong style="color:#fff">12</strong> <span style="opacity:0.6">quests</span></div>
+            <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:rgba(255,255,255,0.8)"><span style="color:#fcb300">⏳</span> <strong style="color:#fff">4d 12h</strong> <span style="opacity:0.6">left</span></div>
+          </div>
+        </div>
+
+        <!-- Right: leaderboard rail -->
+        <div style="background:rgba(252,179,0,0.06);border:1px solid rgba(252,179,0,0.3);border-radius:14px;padding:10px 14px;min-width:220px">
+          <div style="font-size:9px;font-weight:900;color:#fcb300;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">⚡ Leaderboard</div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <div style="width:30px;height:30px;border-radius:50%;background:#fcb300;color:#000;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;border:2px solid #fff">1</div>
+            <div style="width:26px;height:26px;border-radius:50%;background:#6eedd8;color:#000;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:11px">2</div>
+            <div style="width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,0.3);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:11px">3</div>
+            <div style="margin-left:auto;background:#fcb300;color:#000;padding:4px 10px;border-radius:10px;font-weight:900;font-size:11px">YOU · #34</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============== Player XP HUD (chunky strip) ============== -->
+      <div style="margin-top:16px;background:#0e0e10;border:2px solid #fcb300;border-radius:16px;padding:12px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <div style="background:#fcb300;color:#000;width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;flex-shrink:0">L8</div>
+        <div style="flex:1;min-width:180px">
+          <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:700;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:1px">
+            <span>Level 8 · Citizen</span><span>47% to Lvl 9</span>
+          </div>
+          <div style="height:8px;background:#1a1a1a;border-radius:4px;margin-top:4px;overflow:hidden">
+            <div style="height:100%;width:47%;background:linear-gradient(90deg,#fcb300,#6eedd8);border-radius:4px;box-shadow:0 0 8px rgba(252,179,0,0.5)"></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <div style="background:rgba(252,179,0,0.15);border:1.5px solid #fcb300;color:#fcb300;padding:6px 12px;border-radius:14px;font-weight:900;font-size:12px">🔥 12d</div>
+          <div style="background:rgba(110,237,216,0.15);border:1.5px solid #6eedd8;color:#6eedd8;padding:6px 12px;border-radius:14px;font-weight:900;font-size:12px">⚡ ×2 ARMED</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============== QUEST MAP (the body of /actions) ============== -->
+    <div style="padding:24px 26px 30px">
+
+      <!-- Chapter 0 -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:900;color:#fcb300;letter-spacing:3px;text-transform:uppercase">CHAPTER 0 · QUALIFY</div>
+        <div style="flex:1;height:1px;background:linear-gradient(90deg,#fcb300,transparent)"></div>
+        <div style="font-size:11px;font-weight:900;color:#6eedd8">2/2 ✓</div>
+      </div>
+
+      <div style="display:flex;gap:12px;margin-bottom:32px;flex-wrap:wrap">
+        <div style="background:rgba(252,179,0,0.1);border:2px solid #fcb300;border-radius:18px;padding:14px 18px;flex:1;min-width:200px;position:relative">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="background:#fcb300;color:#000;padding:3px 8px;border-radius:8px;font-weight:900;font-size:10px;letter-spacing:1px">QUIZ</div>
+            <div style="background:#fcb300;color:#000;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px">✓</div>
+          </div>
+          <div style="font-weight:900;font-size:14px">Climate Pledge</div>
+          <div style="font-size:11px;color:#fcb300;font-weight:900;margin-top:2px">+74,820 XP earned</div>
+        </div>
+        <div style="background:rgba(252,179,0,0.1);border:2px solid #fcb300;border-radius:18px;padding:14px 18px;flex:1;min-width:200px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="background:#fcb300;color:#000;padding:3px 8px;border-radius:8px;font-weight:900;font-size:10px;letter-spacing:1px">POLL</div>
+            <div style="background:#fcb300;color:#000;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px">✓</div>
+          </div>
+          <div style="font-weight:900;font-size:14px">District Selection</div>
+          <div style="font-size:11px;color:#fcb300;font-weight:900;margin-top:2px">+62,350 XP earned</div>
+        </div>
+      </div>
+
+      <!-- Chapter 1 -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:900;color:#6eedd8;letter-spacing:3px;text-transform:uppercase">CHAPTER 1 · PARTICIPATE</div>
+        <div style="flex:1;height:1px;background:linear-gradient(90deg,#6eedd8,transparent)"></div>
+        <div style="font-size:11px;font-weight:900;color:rgba(255,255,255,0.6)">2/5</div>
+      </div>
+
+      <!-- DAG: 2 columns x 4 rows -->
+      <div style="position:relative">
+        <!-- SVG connection lines -->
+        <svg viewBox="0 0 600 360" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0" preserveAspectRatio="none">
+          <line x1="150" y1="55" x2="150" y2="135" stroke="#fcb300" stroke-width="3" stroke-dasharray="0"/>
+          <line x1="450" y1="55" x2="450" y2="135" stroke="#fcb300" stroke-width="3" stroke-dasharray="0"/>
+          <line x1="150" y1="170" x2="300" y2="225" stroke="#6eedd8" stroke-width="3" stroke-dasharray="0"/>
+          <line x1="450" y1="170" x2="300" y2="225" stroke="#6eedd8" stroke-width="3" stroke-dasharray="0"/>
+          <line x1="300" y1="265" x2="150" y2="320" stroke="#444" stroke-width="3" stroke-dasharray="6,4"/>
+          <line x1="300" y1="265" x2="450" y2="320" stroke="#444" stroke-width="3" stroke-dasharray="6,4"/>
+        </svg>
+
+        <!-- Row 1: 2 root quests -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:30px;position:relative;z-index:1">
+          <div style="background:rgba(252,179,0,0.08);border:2px solid #fcb300;border-radius:18px;padding:14px;position:relative">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <div style="background:#fcb300;color:#000;padding:3px 8px;border-radius:8px;font-weight:900;font-size:10px;letter-spacing:1px">POLL</div>
+              <div style="background:#fcb300;color:#000;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px">✓</div>
+            </div>
+            <div style="font-weight:900;font-size:14px">2030 Emission Target</div>
+            <div style="font-size:11px;color:#fcb300;font-weight:900;margin-top:2px">+89,220 XP earned</div>
+          </div>
+          <div style="background:rgba(252,179,0,0.08);border:2px solid #fcb300;border-radius:18px;padding:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <div style="background:#fcb300;color:#000;padding:3px 8px;border-radius:8px;font-weight:900;font-size:10px;letter-spacing:1px">QUIZ</div>
+              <div style="background:#fcb300;color:#000;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px">✓</div>
+            </div>
+            <div style="font-weight:900;font-size:14px">Climate Science Basics</div>
+            <div style="font-size:11px;color:#fcb300;font-weight:900;margin-top:2px">+102,400 XP earned</div>
+          </div>
+        </div>
+
+        <!-- Row 2: 1 active quest (depends on both above) -->
+        <div style="display:flex;justify-content:center;margin-bottom:30px;position:relative;z-index:1">
+          <div style="background:#0e0e10;border:3px solid #6eedd8;border-radius:22px;padding:18px 22px;box-shadow:0 0 32px rgba(110,237,216,0.4);width:60%;cursor:pointer;animation:pulse 2s infinite">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <div style="background:#6eedd8;color:#000;padding:4px 10px;border-radius:8px;font-weight:900;font-size:10px;letter-spacing:1px">▶ DEBATE · UNLOCKED</div>
+              <div style="background:rgba(110,237,216,0.2);color:#6eedd8;padding:4px 10px;border-radius:8px;font-weight:900;font-size:10px">×2 COMBO READY</div>
+            </div>
+            <div style="font-weight:900;font-size:18px;margin-bottom:4px">Public Transit Investment</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:8px">2 prerequisites met · ends in 2d 4h</div>
+            <div style="display:flex;justify-content:space-between;align-items:flex-end">
+              <div>
+                <div style="font-size:9px;color:#6eedd8;font-weight:900;letter-spacing:1px;text-transform:uppercase">XP at stake</div>
+                <div style="font-size:24px;font-weight:900;color:#6eedd8;line-height:1">348,800</div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.5)">175 P × 1,247 explorers × ×2 combo</div>
+              </div>
+              <div style="background:#6eedd8;color:#000;padding:10px 20px;border-radius:14px;font-weight:900;font-size:13px">BEGIN ▶</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 3: 2 locked quests (depend on Debate) -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;position:relative;z-index:1">
+          <div style="background:rgba(255,255,255,0.02);border:2px dashed #444;border-radius:18px;padding:14px;opacity:0.55">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <div style="background:#1a1a1a;color:#666;padding:3px 8px;border-radius:8px;font-weight:900;font-size:10px;letter-spacing:1px;border:1px solid #444">FOLLOW</div>
+              <div style="color:#666;font-weight:900;font-size:16px">🔒</div>
+            </div>
+            <div style="font-weight:900;font-size:14px;color:rgba(255,255,255,0.5)">Mayor's Office</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px">Complete Public Transit to unlock</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.02);border:2px dashed #444;border-radius:18px;padding:14px;opacity:0.55">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <div style="background:#1a1a1a;color:#666;padding:3px 8px;border-radius:8px;font-weight:900;font-size:10px;letter-spacing:1px;border:1px solid #444">POLL</div>
+              <div style="color:#666;font-weight:900;font-size:16px">🔒</div>
+            </div>
+            <div style="font-weight:900;font-size:14px;color:rgba(255,255,255,0.5)">Final Vote</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px">Complete Public Transit to unlock</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 32px rgba(110,237,216,0.4); }
+  50% { box-shadow: 0 0 48px rgba(110,237,216,0.7); }
+}
+</style>
+
+<p class="subtitle" style="margin-top:24px;text-align:center">This is Section 3 of the design — the headline visual. <strong>Click the mockup if it works.</strong> Tell me in terminal if you want to amend anything (e.g., move the leaderboard rail elsewhere, change the chapter labels, soften the glow, etc.).</p>

@@ -1,0 +1,76 @@
+<h2>Pick the quest map shape</h2>
+<p class="subtitle">Each shape changes how creators set things up and how the lock/unlock logic works. Click the one that feels right.</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="manual" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0e0e10;padding:24px;font-family:'Space Grotesk',Inter,sans-serif">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+        <div style="background:#fcb300;color:#000;padding:10px 18px;border-radius:14px;font-weight:900;font-size:13px">✓ Quest 1 — Vote</div>
+        <div style="width:2px;height:14px;background:#fcb300"></div>
+        <div style="background:#fcb300;color:#000;padding:10px 18px;border-radius:14px;font-weight:900;font-size:13px">✓ Quest 2 — Quiz</div>
+        <div style="width:2px;height:14px;background:#6eedd8"></div>
+        <div style="background:#6eedd8;color:#000;padding:10px 18px;border-radius:14px;font-weight:900;font-size:13px;box-shadow:0 0 12px rgba(110,237,216,0.5)">▶ Quest 3 — Debate</div>
+        <div style="width:2px;height:14px;background:#444"></div>
+        <div style="background:#1a1a1a;color:#666;padding:10px 18px;border-radius:14px;font-weight:900;font-size:13px;border:1px dashed #444">🔒 Quest 4 — Follow</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Manual linear chain</h3>
+      <p>Creator drags actions into an ordered list. Each quest unlocks the next. <strong>Most game-feel.</strong> Backend: new <code>chain_index</code> field on actions. Creator UI: a drag-arrange list. Clearest progression but adds creator setup burden and means the order is rigid.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="chrono" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0e0e10;padding:24px;font-family:'Space Grotesk',Inter,sans-serif">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px"><div style="font-size:10px;color:#6eedd8;width:46px;font-weight:700;letter-spacing:1px">MAR 1</div><div style="background:#fcb300;color:#000;padding:8px 14px;border-radius:14px;font-weight:900;font-size:12px;flex:1">✓ Vote</div></div>
+        <div style="display:flex;align-items:center;gap:10px"><div style="font-size:10px;color:#6eedd8;width:46px;font-weight:700;letter-spacing:1px">MAR 4</div><div style="background:#fcb300;color:#000;padding:8px 14px;border-radius:14px;font-weight:900;font-size:12px;flex:1">✓ Quiz</div></div>
+        <div style="display:flex;align-items:center;gap:10px"><div style="font-size:10px;color:#6eedd8;width:46px;font-weight:700;letter-spacing:1px">MAR 8</div><div style="background:#6eedd8;color:#000;padding:8px 14px;border-radius:14px;font-weight:900;font-size:12px;flex:1;box-shadow:0 0 8px rgba(110,237,216,0.5)">▶ Debate</div></div>
+        <div style="display:flex;align-items:center;gap:10px"><div style="font-size:10px;color:#666;width:46px;font-weight:700;letter-spacing:1px">MAR 15</div><div style="background:#1a1a1a;color:#666;padding:8px 14px;border-radius:14px;font-weight:900;font-size:12px;flex:1;border:1px dashed #444">🕒 Follow</div></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Chronological by start date</h3>
+      <p>Order = each action's <code>started_at</code>. Lock = "starts at MAR 15". <strong>Zero new backend.</strong> Creators already pick start dates today. Reads as a campaign timeline. Downside: if two actions share a start time, the order is undefined; and the "lock" is pure time gating, not story gating.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="two-phase" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0e0e10;padding:18px;font-family:'Space Grotesk',Inter,sans-serif">
+      <div style="font-size:9px;color:#fcb300;letter-spacing:2px;font-weight:900;margin-bottom:8px">CHAPTER 0 · QUALIFY</div>
+      <div style="display:flex;gap:6px;margin-bottom:14px">
+        <div style="background:#fcb300;color:#000;padding:8px 10px;border-radius:12px;font-weight:900;font-size:11px;flex:1">✓ Entry Quiz</div>
+        <div style="background:#fcb300;color:#000;padding:8px 10px;border-radius:12px;font-weight:900;font-size:11px;flex:1">✓ Pledge</div>
+      </div>
+      <div style="font-size:9px;color:#6eedd8;letter-spacing:2px;font-weight:900;margin-bottom:8px">CHAPTER 1 · PARTICIPATE</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <div style="background:#6eedd8;color:#000;padding:8px 10px;border-radius:12px;font-weight:900;font-size:11px;flex:1;min-width:70px">▶ Vote</div>
+        <div style="background:#1a1a1a;color:#888;padding:8px 10px;border-radius:12px;font-weight:900;font-size:11px;flex:1;min-width:70px;border:1px solid #333">Debate</div>
+        <div style="background:#1a1a1a;color:#888;padding:8px 10px;border-radius:12px;font-weight:900;font-size:11px;flex:1;min-width:70px;border:1px solid #333">Follow</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Two-phase chapters (from existing prerequisite flag)</h3>
+      <p>Reuses the existing <code>prerequisite: bool</code>. Actions with prereq=true become <strong>Chapter 0: Qualify</strong>. Actions with prereq=false become <strong>Chapter 1: Participate</strong>. Within each chapter, actions are parallel (no inner order). <strong>Zero new backend.</strong> Maps perfectly to today's Candidate→Participant role transition.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="freeform" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0e0e10;padding:24px;font-family:'Space Grotesk',Inter,sans-serif">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="background:#fcb300;color:#000;padding:12px;border-radius:14px;font-weight:900;font-size:11px;text-align:center">✓ Vote<br/><span style="font-size:9px;opacity:0.7">+5,400 XP</span></div>
+        <div style="background:#fcb300;color:#000;padding:12px;border-radius:14px;font-weight:900;font-size:11px;text-align:center">✓ Quiz<br/><span style="font-size:9px;opacity:0.7">+8,200 XP</span></div>
+        <div style="background:#6eedd8;color:#000;padding:12px;border-radius:14px;font-weight:900;font-size:11px;text-align:center;box-shadow:0 0 8px rgba(110,237,216,0.5)">▶ Debate<br/><span style="font-size:9px;opacity:0.7">10,000 XP</span></div>
+        <div style="background:#1a1a1a;color:#666;padding:12px;border-radius:14px;font-weight:900;font-size:11px;text-align:center;border:1px dashed #444">🕒 Follow<br/><span style="font-size:9px;opacity:0.5">opens MAR 15</span></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>D — Free-form grid (just prettier)</h3>
+      <p>Keep the current grid. No ordering at all. "Locked" only means time window not yet open. <strong>Zero new backend, zero new creator effort.</strong> The "quest map" is just a beautified, larger, big-XP-number version of today's grid.</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:24px;text-align:center">My recommendation: <strong>C (two-phase chapters)</strong>. It reuses the existing prereq flag, gives the journey a beginning and middle, requires no creator UX change, and naturally story-frames the existing Candidate→Participant role transition.</p>
