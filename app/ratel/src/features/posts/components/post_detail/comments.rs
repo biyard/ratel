@@ -43,7 +43,7 @@ pub fn CommentSection(
                     placeholder: t.share_your_thoughts,
                     value: comment_input(),
                     oninput: move |e: Event<FormData>| comment_input.set(e.value()),
-                    onkeydown: move |evt: KeyboardEvent| {
+                    onkeydown: move |evt: KeyboardEvent| async move {
                         if evt.key() == Key::Enter
                             && (evt.modifiers().contains(Modifiers::CONTROL)
                                 || evt.modifiers().contains(Modifiers::META))
@@ -55,13 +55,11 @@ pub fn CommentSection(
                             }
                             is_submitting.set(true);
                             comment_input.set(String::new());
-                            spawn(async move {
-                                if add_comment_handler(post_pk_signal(), content).await.is_ok() {
-                                    comment_count.set(comment_count() + 1);
-                                    on_refresh.call(());
-                                }
-                                is_submitting.set(false);
-                            });
+                            if add_comment_handler(post_pk_signal(), content).await.is_ok() {
+                                comment_count.set(comment_count() + 1);
+                                on_refresh.call(());
+                            }
+                            is_submitting.set(false);
                         }
                     },
                 }
@@ -71,20 +69,18 @@ pub fn CommentSection(
                     size: ButtonSize::Icon,
                     class: "size-10 shrink-0 !p-0 inline-flex items-center justify-center",
                     disabled: comment_input().trim().is_empty() || is_submitting(),
-                    onclick: move |_| {
+                    onclick: move |_| async move {
                         let content = comment_input().trim().to_string();
                         if content.is_empty() || is_submitting() {
                             return;
                         }
                         is_submitting.set(true);
                         comment_input.set(String::new());
-                        spawn(async move {
-                            if add_comment_handler(post_pk_signal(), content).await.is_ok() {
-                                comment_count.set(comment_count() + 1);
-                                on_refresh.call(());
-                            }
-                            is_submitting.set(false);
-                        });
+                        if add_comment_handler(post_pk_signal(), content).await.is_ok() {
+                            comment_count.set(comment_count() + 1);
+                            on_refresh.call(());
+                        }
+                        is_submitting.set(false);
                     },
                     if comment_input().trim().is_empty() {
                         span { class: "inline-flex items-center justify-center leading-none",
@@ -211,24 +207,24 @@ fn CommentItem(
                         let pk = post_pk.clone();
                         let sk = comment_sk_for_like.clone();
                         move |_| {
-                            if is_processing() {
-                                return;
-                            }
-                            let new_like = !optimistic_liked();
-                            let prev = optimistic_likes();
-                            let delta: i64 = if new_like { 1 } else { -1 };
-                            optimistic_liked.set(new_like);
-                            optimistic_likes.set((prev + delta).max(0));
-                            is_processing.set(true);
-
                             let pk = pk.clone();
                             let sk = sk.clone();
-                            spawn(async move {
-                                if like_comment_handler(pk, sk.clone(), new_like).await.is_ok() {
+                            async move {
+                                if is_processing() {
+                                    return;
+                                }
+                                let new_like = !optimistic_liked();
+                                let prev = optimistic_likes();
+                                let delta: i64 = if new_like { 1 } else { -1 };
+                                optimistic_liked.set(new_like);
+                                optimistic_likes.set((prev + delta).max(0));
+                                is_processing.set(true);
+
+                                if like_comment_handler(pk, sk, new_like).await.is_ok() {
                                     on_refresh.call(());
                                 }
                                 is_processing.set(false);
-                            });
+                            }
                         }
                     },
                     if optimistic_liked() {
@@ -248,7 +244,7 @@ fn CommentItem(
                         placeholder: t.contents_hint,
                         value: reply_text(),
                         oninput: move |e: Event<FormData>| reply_text.set(e.value()),
-                        onkeydown: move |evt: KeyboardEvent| {
+                        onkeydown: move |evt: KeyboardEvent| async move {
                             if evt.key() == Key::Enter
                                 && (evt.modifiers().contains(Modifiers::CONTROL)
                                     || evt.modifiers().contains(Modifiers::META))
@@ -259,23 +255,17 @@ fn CommentItem(
                                     return;
                                 }
                                 is_reply_submitting.set(true);
-                                spawn(async move {
-                                    if reply_to_comment_handler(
-                                            post_pk_signal(),
-                                            comment_sk_signal(),
-                                            content,
-                                        )
-                                        .await
-                                        .is_ok()
-                                    {
-                                        reply_count.set(reply_count() + 1);
-                                        on_comment_count_inc.call(());
-                                        replies.refresh();
-                                        show_replies.set(true);
-                                    }
-                                    reply_text.set(String::new());
-                                    is_reply_submitting.set(false);
-                                });
+                                if reply_to_comment_handler(post_pk_signal(), comment_sk_signal(), content)
+                                    .await
+                                    .is_ok()
+                                {
+                                    reply_count.set(reply_count() + 1);
+                                    on_comment_count_inc.call(());
+                                    replies.refresh();
+                                    show_replies.set(true);
+                                }
+                                reply_text.set(String::new());
+                                is_reply_submitting.set(false);
                             }
                         },
                     }
@@ -286,25 +276,23 @@ fn CommentItem(
                             size: ButtonSize::Icon,
                             class: "size-10 !p-0 inline-flex items-center justify-center",
                             disabled: reply_text().trim().is_empty() || is_reply_submitting(),
-                            onclick: move |_| {
+                            onclick: move |_| async move {
                                 let content = reply_text().trim().to_string();
                                 if content.is_empty() || is_reply_submitting() {
                                     return;
                                 }
                                 is_reply_submitting.set(true);
-                                spawn(async move {
-                                    if reply_to_comment_handler(post_pk_signal(), comment_sk_signal(), content)
-                                        .await
-                                        .is_ok()
-                                    {
-                                        reply_count.set(reply_count() + 1);
-                                        on_comment_count_inc.call(());
-                                        replies.refresh();
-                                        show_replies.set(true);
-                                    }
-                                    reply_text.set(String::new());
-                                    is_reply_submitting.set(false);
-                                });
+                                if reply_to_comment_handler(post_pk_signal(), comment_sk_signal(), content)
+                                    .await
+                                    .is_ok()
+                                {
+                                    reply_count.set(reply_count() + 1);
+                                    on_comment_count_inc.call(());
+                                    replies.refresh();
+                                    show_replies.set(true);
+                                }
+                                reply_text.set(String::new());
+                                is_reply_submitting.set(false);
                             },
                             span { class: "inline-flex items-center justify-center leading-none",
                                 icons::chat::SquareChat { class: "size-5 [&>path]:stroke-btn-primary-text [&>path]:fill-transparent" }
@@ -371,24 +359,24 @@ fn ReplyItem(
                         let pk = post_pk.clone();
                         let sk = reply.sk.clone();
                         move |_| {
-                            if is_processing() {
-                                return;
-                            }
-                            let new_like = !optimistic_liked();
-                            let prev = optimistic_likes();
-                            let delta: i64 = if new_like { 1 } else { -1 };
-                            optimistic_liked.set(new_like);
-                            optimistic_likes.set((prev + delta).max(0));
-                            is_processing.set(true);
-
                             let pk = pk.clone();
                             let sk = sk.clone();
-                            spawn(async move {
-                                if like_comment_handler(pk, sk.clone(), new_like).await.is_ok() {
+                            async move {
+                                if is_processing() {
+                                    return;
+                                }
+                                let new_like = !optimistic_liked();
+                                let prev = optimistic_likes();
+                                let delta: i64 = if new_like { 1 } else { -1 };
+                                optimistic_liked.set(new_like);
+                                optimistic_likes.set((prev + delta).max(0));
+                                is_processing.set(true);
+
+                                if like_comment_handler(pk, sk, new_like).await.is_ok() {
                                     on_refresh.call(());
                                 }
                                 is_processing.set(false);
-                            });
+                            }
                         }
                     },
                     if optimistic_liked() {

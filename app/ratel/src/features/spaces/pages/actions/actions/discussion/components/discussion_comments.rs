@@ -64,7 +64,7 @@ pub fn DiscussionComments(
                         placeholder: "{tr.write_comment}",
                         value: comment_input(),
                         oninput: move |e: Event<FormData>| comment_input.set(e.value()),
-                        onkeydown: move |evt: KeyboardEvent| {
+                        onkeydown: move |evt: KeyboardEvent| async move {
                             if evt.key() == Key::Enter
                                 && (evt.modifiers().contains(Modifiers::CONTROL)
                                     || evt.modifiers().contains(Modifiers::META))
@@ -77,20 +77,18 @@ pub fn DiscussionComments(
                                 comment_input.set(String::new());
                                 let mut comments_query = ctx.comments;
                                 let mut discussion_query = discussion_ctx.discussion;
-                                spawn(async move {
-                                    let req = AddCommentRequest { content };
-                                    match add_comment(space_id(), discussion_id(), req).await {
-                                        Ok(comment) => {
-                                            comments_query.insert(comment);
-                                            discussion_query.restart();
-                                            query.invalidate(&space_ranking_key(&space_id()));
-                                            query.invalidate(&space_my_score_key(&space_id()));
-                                        }
-                                        Err(e) => {
-                                            error!("Failed to add comment: {:?}", e);
-                                        }
+                                let req = AddCommentRequest { content };
+                                match add_comment(space_id(), discussion_id(), req).await {
+                                    Ok(comment) => {
+                                        comments_query.insert(comment);
+                                        discussion_query.restart();
+                                        query.invalidate(&space_ranking_key(&space_id()));
+                                        query.invalidate(&space_my_score_key(&space_id()));
                                     }
-                                });
+                                    Err(e) => {
+                                        error!("Failed to add comment: {:?}", e);
+                                    }
+                                }
                             }
                         },
                     }
@@ -101,29 +99,25 @@ pub fn DiscussionComments(
                         size: ButtonSize::Icon,
                         class: "inline-flex justify-center items-center size-10 shrink-0 !p-0".to_string(),
                         disabled: comment_input().trim().is_empty(),
-                        onclick: {
-                            move |_| {
-                                let content = comment_input().trim().to_string();
-                                if content.is_empty() {
-                                    return;
+                        onclick: move |_| async move {
+                            let content = comment_input().trim().to_string();
+                            if content.is_empty() {
+                                return;
+                            }
+                            comment_input.set(String::new());
+                            let mut comments_query = ctx.comments;
+                            let mut discussion_query = discussion_ctx.discussion;
+                            let req = AddCommentRequest { content };
+                            match add_comment(space_id(), discussion_id(), req).await {
+                                Ok(comment) => {
+                                    comments_query.insert(comment);
+                                    discussion_query.restart();
+                                    query.invalidate(&space_ranking_key(&space_id()));
+                                    query.invalidate(&space_my_score_key(&space_id()));
                                 }
-                                comment_input.set(String::new());
-                                let mut comments_query = ctx.comments;
-                                let mut discussion_query = discussion_ctx.discussion;
-                                spawn(async move {
-                                    let req = AddCommentRequest { content };
-                                    match add_comment(space_id(), discussion_id(), req).await {
-                                        Ok(comment) => {
-                                            comments_query.insert(comment);
-                                            discussion_query.restart();
-                                            query.invalidate(&space_ranking_key(&space_id()));
-                                            query.invalidate(&space_my_score_key(&space_id()));
-                                        }
-                                        Err(e) => {
-                                            error!("Failed to add comment: {:?}", e);
-                                        }
-                                    }
-                                });
+                                Err(e) => {
+                                    error!("Failed to add comment: {:?}", e);
+                                }
                             }
                         },
                         if comment_input().trim().is_empty() {
@@ -315,12 +309,12 @@ fn CommentItem(
                                     onclick: move |_| {
                                         let target = delete_target.clone();
                                         show_action_menu.set(false);
-                                        spawn(async move {
+                                        async move {
                                             match delete_comment(space_id(), discussion_id(), target).await {
                                                 Ok(_) => on_refresh_comments.call(()),
                                                 Err(e) => error!("Failed to delete comment: {:?}", e),
                                             }
-                                        });
+                                        }
                                     },
                                     "{tr.delete}"
                                 }
@@ -354,12 +348,12 @@ fn CommentItem(
                             size: ButtonSize::Small,
                             disabled: edit_content().trim().is_empty(),
                             onclick: move |_| {
-                                let content = edit_content().trim().to_string();
-                                if content.is_empty() {
-                                    return;
-                                }
                                 let target = edit_target.clone();
-                                spawn(async move {
+                                async move {
+                                    let content = edit_content().trim().to_string();
+                                    if content.is_empty() {
+                                        return;
+                                    }
                                     let req = UpdateCommentRequest { content };
                                     match update_comment(space_id(), discussion_id(), target, req).await {
                                         Ok(_) => {
@@ -368,7 +362,7 @@ fn CommentItem(
                                         }
                                         Err(e) => error!("Failed to update comment: {:?}", e),
                                     }
-                                });
+                                }
                             },
                             "{tr.complete_edit}"
                         }
@@ -542,12 +536,12 @@ fn ReplyItem(
                                     onclick: move |_| {
                                         let target = delete_target.clone();
                                         show_action_menu.set(false);
-                                        spawn(async move {
+                                        async move {
                                             match delete_comment(space_id(), discussion_id(), target).await {
                                                 Ok(_) => on_deleted.call(()),
                                                 Err(e) => error!("Failed to delete reply: {:?}", e),
                                             }
-                                        });
+                                        }
                                     },
                                     "{tr.delete}"
                                 }
@@ -581,12 +575,12 @@ fn ReplyItem(
                             size: ButtonSize::Small,
                             disabled: edit_content().trim().is_empty(),
                             onclick: move |_| {
-                                let content = edit_content().trim().to_string();
-                                if content.is_empty() {
-                                    return;
-                                }
                                 let target = edit_target.clone();
-                                spawn(async move {
+                                async move {
+                                    let content = edit_content().trim().to_string();
+                                    if content.is_empty() {
+                                        return;
+                                    }
                                     let req = UpdateCommentRequest { content };
                                     match update_comment(space_id(), discussion_id(), target, req).await {
                                         Ok(_) => {
@@ -596,7 +590,7 @@ fn ReplyItem(
                                         }
                                         Err(e) => error!("Failed to update reply: {:?}", e),
                                     }
-                                });
+                                }
                             },
                             "{tr.complete_edit}"
                         }
@@ -714,7 +708,7 @@ fn ReplyInput(
                 placeholder: "{tr.write_reply}",
                 value: reply_input(),
                 oninput: move |e: Event<FormData>| reply_input.set(e.value()),
-                onkeydown: move |evt: KeyboardEvent| {
+                onkeydown: move |evt: KeyboardEvent| async move {
                     if evt.key() == Key::Enter
                         && (evt.modifiers().contains(Modifiers::CONTROL)
                             || evt.modifiers().contains(Modifiers::META))
@@ -724,22 +718,19 @@ fn ReplyInput(
                         if content.is_empty() {
                             return;
                         }
-                        spawn(async move {
-                            let req = ReplyCommentRequest { content };
-                            match reply_comment(space_id(), discussion_id(), comment_sk(), req).await
-                            {
-                                Ok(_) => {
-                                    reply_input.set(String::new());
-                                    show_reply_input.set(false);
-                                    on_success.call(());
-                                    query.invalidate(&space_ranking_key(&space_id()));
-                                    query.invalidate(&space_my_score_key(&space_id()));
-                                }
-                                Err(e) => {
-                                    error!("Failed to reply: {:?}", e);
-                                }
+                        let req = ReplyCommentRequest { content };
+                        match reply_comment(space_id(), discussion_id(), comment_sk(), req).await {
+                            Ok(_) => {
+                                reply_input.set(String::new());
+                                show_reply_input.set(false);
+                                on_success.call(());
+                                query.invalidate(&space_ranking_key(&space_id()));
+                                query.invalidate(&space_my_score_key(&space_id()));
                             }
-                        });
+                            Err(e) => {
+                                error!("Failed to reply: {:?}", e);
+                            }
+                        }
                     }
                 },
             }
@@ -750,28 +741,23 @@ fn ReplyInput(
                     size: ButtonSize::Icon,
                     class: "inline-flex justify-center items-center size-10 !p-0".to_string(),
                     disabled: reply_input().trim().is_empty(),
-                    onclick: {
-                        move |_| {
-                            let content = reply_input().trim().to_string();
-                            if content.is_empty() {
-                                return;
+                    onclick: move |_| async move {
+                        let content = reply_input().trim().to_string();
+                        if content.is_empty() {
+                            return;
+                        }
+                        let req = ReplyCommentRequest { content };
+                        match reply_comment(space_id(), discussion_id(), comment_sk(), req).await {
+                            Ok(_) => {
+                                reply_input.set(String::new());
+                                show_reply_input.set(false);
+                                on_success.call(());
+                                query.invalidate(&space_ranking_key(&space_id()));
+                                query.invalidate(&space_my_score_key(&space_id()));
                             }
-                            spawn(async move {
-                                let req = ReplyCommentRequest { content };
-                                match reply_comment(space_id(), discussion_id(), comment_sk(), req).await
-                                {
-                                    Ok(_) => {
-                                        reply_input.set(String::new());
-                                        show_reply_input.set(false);
-                                        on_success.call(());
-                                        query.invalidate(&space_ranking_key(&space_id()));
-                                        query.invalidate(&space_my_score_key(&space_id()));
-                                    }
-                                    Err(e) => {
-                                        error!("Failed to reply: {:?}", e);
-                                    }
-                                }
-                            });
+                            Err(e) => {
+                                error!("Failed to reply: {:?}", e);
+                            }
                         }
                     },
                     span { class: "inline-flex justify-center items-center leading-none",
