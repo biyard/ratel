@@ -8,6 +8,7 @@ use crate::common::types::{NotificationData, SpacePublishState, SpaceVisibility}
 use crate::features::auth::UserTeamGroup;
 use crate::features::posts::models::{Team, TeamOwner};
 use crate::features::posts::types::TeamGroupPermissions;
+use crate::common::models::space::SpaceParticipant;
 use crate::features::spaces::space_common::services::handle_space_status_change;
 
 /// Smoke test: handler accepts an event for an unknown transition and returns Ok.
@@ -192,4 +193,203 @@ async fn test_handle_publish_to_open_notifies_team_members() {
         "expected notification to include team owner email. all={:?}",
         all_emails
     );
+}
+
+// ── Task 10 ──────────────────────────────────────────────────────────────────
+
+/// Helper: insert a minimal user-owned (non-team) space directly into DynamoDB.
+async fn insert_user_space(
+    ctx: &TestContext,
+    user_pk: Partition,
+    status: Option<SpaceStatus>,
+) -> SpaceCommon {
+    let post_id = uuid::Uuid::new_v4().to_string();
+    let now = crate::common::utils::time::get_now_timestamp_millis();
+    let space_pk = Partition::Space(post_id.clone());
+    let post_pk = Partition::Feed(post_id);
+
+    let mut space = SpaceCommon::default();
+    space.pk = space_pk.clone();
+    space.sk = EntityType::SpaceCommon;
+    space.created_at = now;
+    space.updated_at = now;
+    space.status = status;
+    space.publish_state = SpacePublishState::Published;
+    space.visibility = SpaceVisibility::Public;
+    space.post_pk = post_pk.clone();
+    space.user_pk = user_pk;
+    space.author_display_name = "user".to_string();
+    space.author_profile_url = String::new();
+    space.author_username = "user".to_string();
+    space.create(&ctx.ddb).await.unwrap();
+
+    let post = crate::features::posts::models::Post {
+        pk: post_pk,
+        sk: EntityType::Post,
+        title: "User Space".to_string(),
+        ..Default::default()
+    };
+    post.create(&ctx.ddb).await.unwrap();
+
+    space
+}
+
+#[tokio::test]
+async fn test_handle_publish_to_open_skips_user_authored() {
+    let ctx = TestContext::setup().await;
+    let space = insert_user_space(&ctx, ctx.test_user.0.pk.clone(), None).await;
+
+    let before = notifications_matching(&ctx, |n| {
+        matches!(n.data, NotificationData::SendSpaceStatusUpdate { .. })
+    })
+    .await
+    .len();
+
+    handle_space_status_change(SpaceStatusChangeEvent::new(
+        space.pk.clone(),
+        None,
+        SpaceStatus::Open,
+    ))
+    .await
+    .expect("handler failed");
+
+    let after = notifications_matching(&ctx, |n| {
+        matches!(n.data, NotificationData::SendSpaceStatusUpdate { .. })
+    })
+    .await
+    .len();
+
+    assert_eq!(
+        before,
+        after,
+        "expected zero new notifications for user-authored publish; before={} after={}",
+        before,
+        after
+    );
+}
+
+// ── Task 11 ──────────────────────────────────────────────────────────────────
+
+/// Helper: insert a SpaceParticipant row for the given user in the given space.
+async fn insert_participant_for(
+    ctx: &TestContext,
+    space_pk: &Partition,
+    user: &crate::features::auth::User,
+) {
+    let sp = SpaceParticipant::new_non_anonymous(space_pk.clone(), user.clone());
+    sp.create(&ctx.ddb).await.unwrap();
+}
+
+#[tokio::test]
+async fn test_handle_open_to_ongoing_notifies_participants() {
+    let ctx = TestContext::setup().await;
+    let space =
+        insert_user_space(&ctx, ctx.test_user.0.pk.clone(), Some(SpaceStatus::Open)).await;
+
+    let p1 = create_test_user(&ctx.ddb).await;
+    let p2 = create_test_user(&ctx.ddb).await;
+    insert_participant_for(&ctx, &space.pk, &p1).await;
+    insert_participant_for(&ctx, &space.pk, &p2).await;
+
+    handle_space_status_change(SpaceStatusChangeEvent::new(
+        space.pk.clone(),
+        Some(SpaceStatus::Open),
+        SpaceStatus::Ongoing,
+    ))
+    .await
+    .expect("handler failed");
+
+    let rows = notifications_matching(&ctx, |n| {
+        matches!(n.data, NotificationData::SendSpaceStatusUpdate { .. })
+    })
+    .await;
+    let emails: Vec<String> = rows
+        .iter()
+        .flat_map(|n| {
+            if let NotificationData::SendSpaceStatusUpdate { emails, .. } = &n.data {
+                emails.clone()
+            } else {
+                vec![]
+            }
+        })
+        .collect();
+
+    assert!(emails.contains(&p1.email), "emails={:?}", emails);
+    assert!(emails.contains(&p2.email), "emails={:?}", emails);
+}
+
+// ── Task 12 ──────────────────────────────────────────────────────────────────
+
+#[tokio::test]
+async fn test_handle_ongoing_to_finished_notifies_participants() {
+    let ctx = TestContext::setup().await;
+    let space =
+        insert_user_space(&ctx, ctx.test_user.0.pk.clone(), Some(SpaceStatus::Ongoing)).await;
+
+    let p1 = create_test_user(&ctx.ddb).await;
+    insert_participant_for(&ctx, &space.pk, &p1).await;
+
+    handle_space_status_change(SpaceStatusChangeEvent::new(
+        space.pk.clone(),
+        Some(SpaceStatus::Ongoing),
+        SpaceStatus::Finished,
+    ))
+    .await
+    .expect("handler failed");
+
+    let rows = notifications_matching(&ctx, |n| {
+        matches!(n.data, NotificationData::SendSpaceStatusUpdate { .. })
+    })
+    .await;
+    let emails: Vec<String> = rows
+        .iter()
+        .flat_map(|n| {
+            if let NotificationData::SendSpaceStatusUpdate {
+                emails, headline, ..
+            } = &n.data
+            {
+                if headline.contains("has ended") {
+                    emails.clone()
+                } else {
+                    vec![]
+                }
+            } else {
+                vec![]
+            }
+        })
+        .collect();
+
+    assert!(emails.contains(&p1.email), "emails={:?}", emails);
+}
+
+// ── Task 13 ──────────────────────────────────────────────────────────────────
+
+#[tokio::test]
+async fn test_handle_no_recipients_is_noop_participants() {
+    let ctx = TestContext::setup().await;
+    let space =
+        insert_user_space(&ctx, ctx.test_user.0.pk.clone(), Some(SpaceStatus::Open)).await;
+    // No participants inserted.
+
+    let before = notifications_matching(&ctx, |n| {
+        matches!(n.data, NotificationData::SendSpaceStatusUpdate { .. })
+    })
+    .await
+    .len();
+
+    handle_space_status_change(SpaceStatusChangeEvent::new(
+        space.pk.clone(),
+        Some(SpaceStatus::Open),
+        SpaceStatus::Ongoing,
+    ))
+    .await
+    .expect("handler failed");
+
+    let after = notifications_matching(&ctx, |n| {
+        matches!(n.data, NotificationData::SendSpaceStatusUpdate { .. })
+    })
+    .await
+    .len();
+
+    assert_eq!(before, after, "expected zero new notifications");
 }
