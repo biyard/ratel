@@ -270,6 +270,12 @@ pub enum Error {
     #[translate(from)]
     Member(#[from] crate::features::social::pages::member::types::MemberError),
 
+    #[error("{0}")]
+    #[translate(from)]
+    SpaceStatusChange(
+        #[from] crate::features::spaces::space_common::types::SpaceStatusChangeError,
+    ),
+
     // Post related errors
     #[error("Invalid username")]
     #[translate(
@@ -378,6 +384,7 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             Error::ExchangePoints(e) => e.status_code(),
             Error::McpServer(e) => e.status_code(),
             Error::Member(e) => e.status_code(),
+            Error::SpaceStatusChange(e) => e.status_code(),
             Error::AiModerator(e) => e.status_code(),
             Error::Activity(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
