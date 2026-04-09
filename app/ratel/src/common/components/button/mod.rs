@@ -73,16 +73,16 @@ pub enum ButtonShape {
 )]
 pub enum ButtonSize {
     #[default]
-    #[strum(serialize = "py-3 px-5 text-[14px]/[16px] font-bold")]
+    #[strum(serialize = "py-3 px-5 font-bold text-[14px]/[16px]")]
     Medium,
 
-    #[strum(serialize = "py-0 px-0 text-[15px]/[24px] font-medium")]
+    #[strum(serialize = "py-0 px-0 font-medium text-[15px]/[24px]")]
     Inline,
 
-    #[strum(serialize = "p-1 text-[14px]/[14px] font-medium")]
+    #[strum(serialize = "p-1 font-medium text-[14px]/[14px]")]
     Icon,
 
-    #[strum(serialize = "py-1.5 px-3 text-[13px]/[16px] font-semibold")]
+    #[strum(serialize = "py-1.5 px-3 font-semibold text-[13px]/[16px]")]
     Small,
 }
 
@@ -110,12 +110,17 @@ pub enum ButtonStyle {
     Secondary,
 
     #[strum(
-        serialize = "bg-btn-outline-bg border-btn-outline-outline text-btn-outline-text hover:bg-btn-outline-hover-bg hover:border-btn-outline-hover-outline hover:text-btn-outline-hover-text disabled:bg-btn-outline-disable-bg disabled:border-btn-outline-disable-outline disabled:text-btn-outline-disable-text border"
+        serialize = "border bg-btn-outline-bg border-btn-outline-outline text-btn-outline-text hover:bg-btn-outline-hover-bg hover:border-btn-outline-hover-outline hover:text-btn-outline-hover-text disabled:bg-btn-outline-disable-bg disabled:border-btn-outline-disable-outline disabled:text-btn-outline-disable-text"
     )]
     Outline,
 
     #[strum(
-        serialize = "bg-transparent border-transparent text-text-primary hover:bg-hover disabled:bg-transparent disabled:border-transparent disabled:text-text-secondary"
+        serialize = "bg-transparent border-transparent disabled:bg-transparent disabled:border-transparent text-text-primary hover:bg-hover disabled:text-text-secondary"
     )]
     Text,
+
+    #[strum(
+        serialize = "font-extrabold tracking-wide bg-gradient-to-b border disabled:opacity-50 from-[#ffe082] via-[#fcb300] to-[#8a5d00] text-[#1a1208] border-[color:rgba(252,179,0,0.6)] shadow-[var(--depth-sm),var(--rim-glow-primary)] hover:brightness-110"
+    )]
+    Hero,
 }
