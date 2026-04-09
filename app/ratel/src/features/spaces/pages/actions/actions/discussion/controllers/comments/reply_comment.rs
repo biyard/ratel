@@ -7,6 +7,8 @@ use crate::features::spaces::space_common::models::space_reward::SpaceReward;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReplyCommentRequest {
     pub content: String,
+    #[serde(default)]
+    pub images: Vec<String>,
 }
 
 #[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments/{comment_sk}/reply", role: SpaceUserRole, member: SpaceUser, space: SpaceCommon, user: crate::features::auth::User)]
@@ -59,6 +61,7 @@ pub async fn reply_comment(
         space_post_pk,
         comment_sk_entity,
         req.content,
+        req.images,
         &member,
     )
     .await?;

@@ -26,6 +26,9 @@ pub struct SpacePostComment {
     pub content: String,
 
     #[serde(default)]
+    pub images: Vec<String>,
+
+    #[serde(default)]
     pub likes: u64,
 
     #[serde(default)]
@@ -60,6 +63,7 @@ impl SpacePostComment {
         space_pk: SpacePartition,
         space_post_sk: SpacePostPartition,
         content: String,
+        images: Vec<String>,
         author: &crate::common::models::space::SpaceUser,
     ) -> Self {
         use crate::common::utils::time::get_now_timestamp;
@@ -76,6 +80,7 @@ impl SpacePostComment {
             created_at: now,
             updated_at: now,
             content,
+            images,
             author_pk: author.pk.clone(),
             author_display_name: author.display_name.clone(),
             author_username: author.username.clone(),
@@ -118,6 +123,7 @@ impl SpacePostComment {
         space_post_pk: SpacePostPartition,
         parent_comment_sk: EntityType,
         content: String,
+        images: Vec<String>,
         author: &crate::common::models::space::SpaceUser,
     ) -> crate::features::spaces::pages::actions::actions::discussion::Result<Self> {
         let space_post_pk_p: Partition = space_post_pk.clone().into();
@@ -144,7 +150,7 @@ impl SpacePostComment {
             .increase_comments(1)
             .transact_write_item();
 
-        let mut comment = Self::new(space_pk, space_post_pk, content, author)
+        let mut comment = Self::new(space_pk, space_post_pk, content, images, author)
             .with_parent_comment_sk(parent_comment_sk.clone());
 
         let uuid = uuid::Uuid::new_v4().to_string();
