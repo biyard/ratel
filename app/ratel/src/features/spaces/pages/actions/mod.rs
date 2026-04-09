@@ -16,7 +16,7 @@ use models::*;
 use types::*;
 
 pub use access::*;
-pub use gamification::{models::*, types::*};
+pub use gamification::{components::quest_map::*, models::*, types::*};
 pub use menu::*;
 pub use views::*;
 
