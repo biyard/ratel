@@ -457,3 +457,158 @@ async fn test_handle_dedupes_duplicate_emails() {
         count_matching
     );
 }
+
+// ── Tasks 16 + 18: Controller integration tests ─────────────────────────────
+
+/// Create a draft space via the HTTP API. Returns (post_pk_str, space_id_str).
+/// The test user will be the Creator of this space.
+async fn create_draft_space(ctx: &TestContext) -> (String, String) {
+    // Step 1: Create a draft post
+    let (status, _, body) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: "/api/posts",
+        headers: ctx.test_user.1.clone(),
+    };
+    assert_eq!(status, 200, "create_post failed: {:?}", body);
+    let post_pk_str = body["post_pk"].as_str().unwrap().to_string();
+
+    // Extract just the ID from "FEED#<uuid>"
+    let feed_id = post_pk_str
+        .strip_prefix("FEED#")
+        .unwrap_or(&post_pk_str)
+        .to_string();
+
+    // Step 2: Create a space on that post
+    let (status, _, body) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: "/api/spaces/create",
+        headers: ctx.test_user.1.clone(),
+        body: { "req": { "post_id": feed_id } }
+    };
+    assert_eq!(status, 200, "create_space failed: {:?}", body);
+    let space_id = body["space_id"].as_str().unwrap().to_string();
+
+    (post_pk_str, space_id)
+}
+
+/// Scan DynamoDB for SpaceStatusChangeEvent rows whose space_pk matches.
+async fn find_status_change_events_for(
+    ctx: &TestContext,
+    space_pk: &Partition,
+) -> Vec<SpaceStatusChangeEvent> {
+    let rows: Vec<SpaceStatusChangeEvent> =
+        scan_items_with_sk_prefix(ctx, "SPACE_STATUS_CHANGE_EVENT#").await;
+    rows.into_iter().filter(|r| &r.space_pk == space_pk).collect()
+}
+
+#[tokio::test]
+async fn test_publish_creates_status_change_event() {
+    let ctx = TestContext::setup().await;
+    let (_post_pk_str, space_id) = create_draft_space(&ctx).await;
+    let space_pk = Partition::Space(space_id.clone());
+
+    let (status, _, body) = crate::test_patch! {
+        app: ctx.app.clone(),
+        path: &format!("/api/spaces/{}", space_id),
+        headers: ctx.test_user.1.clone(),
+        body: { "req": { "publish": true, "visibility": "Public" } }
+    };
+    assert_eq!(status, 200, "publish failed: {:?}", body);
+
+    let events = find_status_change_events_for(&ctx, &space_pk).await;
+    assert_eq!(events.len(), 1, "expected 1 event, got {:?}", events);
+    assert_eq!(events[0].old_status, None);
+    assert_eq!(events[0].new_status, SpaceStatus::Open);
+}
+
+#[tokio::test]
+async fn test_start_creates_status_change_event() {
+    let ctx = TestContext::setup().await;
+    let (_post_pk_str, space_id) = create_draft_space(&ctx).await;
+    let space_pk = Partition::Space(space_id.clone());
+
+    // Publish first (Designing → Open)
+    let (s, _, _) = crate::test_patch! {
+        app: ctx.app.clone(),
+        path: &format!("/api/spaces/{}", space_id),
+        headers: ctx.test_user.1.clone(),
+        body: { "req": { "publish": true, "visibility": "Public" } }
+    };
+    assert_eq!(s, 200, "publish failed");
+
+    // Start (Open → Ongoing)
+    let (status, _, body) = crate::test_patch! {
+        app: ctx.app.clone(),
+        path: &format!("/api/spaces/{}", space_id),
+        headers: ctx.test_user.1.clone(),
+        body: { "req": { "start": true } }
+    };
+    assert_eq!(status, 200, "start failed: {:?}", body);
+
+    let events = find_status_change_events_for(&ctx, &space_pk).await;
+    assert!(events.len() >= 2, "expected >= 2 events, got {:?}", events);
+    assert!(events.iter().any(|e| e.old_status == Some(SpaceStatus::Open)
+        && e.new_status == SpaceStatus::Ongoing));
+}
+
+#[tokio::test]
+async fn test_finish_creates_status_change_event() {
+    let ctx = TestContext::setup().await;
+    let (_post_pk_str, space_id) = create_draft_space(&ctx).await;
+    let space_pk = Partition::Space(space_id.clone());
+
+    // Publish
+    let (s, _, _) = crate::test_patch! {
+        app: ctx.app.clone(),
+        path: &format!("/api/spaces/{}", space_id),
+        headers: ctx.test_user.1.clone(),
+        body: { "req": { "publish": true, "visibility": "Public" } }
+    };
+    assert_eq!(s, 200, "publish failed");
+
+    // Start
+    let (s, _, _) = crate::test_patch! {
+        app: ctx.app.clone(),
+        path: &format!("/api/spaces/{}", space_id),
+        headers: ctx.test_user.1.clone(),
+        body: { "req": { "start": true } }
+    };
+    assert_eq!(s, 200, "start failed");
+
+    // Finish (Ongoing → Finished)
+    let (status, _, body) = crate::test_patch! {
+        app: ctx.app.clone(),
+        path: &format!("/api/spaces/{}", space_id),
+        headers: ctx.test_user.1.clone(),
+        body: { "req": { "finished": true } }
+    };
+    assert_eq!(status, 200, "finish failed: {:?}", body);
+
+    let events = find_status_change_events_for(&ctx, &space_pk).await;
+    assert!(
+        events.iter().any(|e| e.old_status == Some(SpaceStatus::Ongoing)
+            && e.new_status == SpaceStatus::Finished),
+        "expected Ongoing→Finished event, got {:?}",
+        events
+    );
+}
+
+#[tokio::test]
+async fn test_title_update_creates_no_status_change_event() {
+    let ctx = TestContext::setup().await;
+    let (_post_pk_str, space_id) = create_draft_space(&ctx).await;
+    let space_pk = Partition::Space(space_id.clone());
+
+    let before = find_status_change_events_for(&ctx, &space_pk).await.len();
+
+    let (status, _, body) = crate::test_patch! {
+        app: ctx.app.clone(),
+        path: &format!("/api/spaces/{}", space_id),
+        headers: ctx.test_user.1.clone(),
+        body: { "req": { "title": "Renamed" } }
+    };
+    assert_eq!(status, 200, "title update failed: {:?}", body);
+
+    let after = find_status_change_events_for(&ctx, &space_pk).await.len();
+    assert_eq!(before, after, "expected no event on title update");
+}
