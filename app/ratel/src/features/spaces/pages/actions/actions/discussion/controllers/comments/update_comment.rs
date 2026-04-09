@@ -26,9 +26,24 @@ pub async fn update_comment(
     .await?
     .ok_or(Error::SpaceActionNotFound)?;
 
-    if !crate::features::spaces::pages::actions::can_execute_space_action_legacy(
+    let chapter = if let Some(ref chapter_entity_type) = space_action.chapter_id {
+        let chapter_sk = EntityType::SpaceChapter(chapter_entity_type.to_string());
+        let chapter_space_pk: Partition = space_id.clone().into();
+        crate::features::spaces::pages::actions::gamification::models::SpaceChapter::get(
+            cli,
+            &chapter_space_pk,
+            Some(chapter_sk),
+        )
+        .await?
+        .unwrap_or_default()
+    } else {
+        crate::features::spaces::pages::actions::default_chapter_for_legacy_action(role)
+    };
+    if !crate::features::spaces::pages::actions::can_execute_space_action(
         role,
-        space_action.prerequisite,
+        &chapter,
+        true,
+        true,
         space.status,
         space.join_anytime,
     ) {
