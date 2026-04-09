@@ -138,5 +138,22 @@ pub async fn reply_comment(
         }
     }
 
+    // Award XP for reply (V1: always award, dedup at service level later)
+    if let Err(e) = crate::features::spaces::pages::actions::gamification::services::award_xp(
+        cli,
+        &member.pk,
+        space_id.clone(),
+        discussion_sk.to_string(),
+    )
+    .await
+    {
+        tracing::error!(
+            space_pk = %space_id,
+            action_id = %discussion_sk,
+            error = %e,
+            "Failed to award XP for discussion reply"
+        );
+    }
+
     Ok(comment.into())
 }

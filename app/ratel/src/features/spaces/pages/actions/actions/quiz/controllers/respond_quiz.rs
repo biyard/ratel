@@ -24,7 +24,7 @@ pub async fn respond_quiz(
     quiz_id: SpaceQuizEntityType,
     #[mcp(description = "Quiz answers. Each answer: {\"answer_type\": \"single_choice\", \"answer\": <index>} or {\"answer_type\": \"multiple_choice\", \"answer\": [<indices>]}")]
     req: RespondQuizRequest,
-) -> Result<()> {
+) -> Result<Option<crate::features::spaces::pages::actions::gamification::types::XpGainResponse>> {
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let space_id = space_pk;
@@ -159,8 +159,30 @@ pub async fn respond_quiz(
                 tracing::error!(error = %e, "Failed to record quiz activity");
             }
         }
+        // Award XP on first pass
+        let xp_response = match crate::features::spaces::pages::actions::gamification::services::award_xp(
+            cli,
+            &member.pk,
+            space_id.clone(),
+            quiz_action_id.clone(),
+        )
+        .await
+        {
+            Ok(xp_resp) => Some(xp_resp),
+            Err(e) => {
+                tracing::error!(
+                    space_pk = %space_id,
+                    action_id = %quiz_sk,
+                    error = %e,
+                    "Failed to award XP for quiz pass"
+                );
+                None
+            }
+        };
+
+        return Ok(xp_response);
     }
-    Ok(())
+    Ok(None)
 }
 
 fn calculate_score(

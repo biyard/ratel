@@ -10,6 +10,13 @@ pub struct AddCommentRequest {
     pub content: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct AddCommentResponse {
+    pub comment: DiscussionCommentResponse,
+    #[serde(default)]
+    pub xp: Option<crate::features::spaces::pages::actions::gamification::types::XpGainResponse>,
+}
+
 #[mcp_tool(name = "add_comment", description = "Add a comment to a discussion. Requires participant role and discussion in progress.")]
 #[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments", role: SpaceUserRole, member: SpaceUser, space: SpaceCommon, user: crate::features::auth::User )]
 pub async fn add_comment(
@@ -19,7 +26,7 @@ pub async fn add_comment(
     discussion_sk: SpacePostEntityType,
     #[mcp(description = "Comment content as JSON: {\"content\": \"text\"}")]
     req: AddCommentRequest,
-) -> Result<DiscussionCommentResponse> {
+) -> Result<AddCommentResponse> {
     SpacePost::can_view(&role)?;
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
@@ -132,5 +139,29 @@ pub async fn add_comment(
         }
     }
 
-    Ok(comment.into())
+    // Award XP for comment (V1: always award, dedup at service level later)
+    let xp = match crate::features::spaces::pages::actions::gamification::services::award_xp(
+        cli,
+        &member.pk,
+        space_id.clone(),
+        discussion_sk.to_string(),
+    )
+    .await
+    {
+        Ok(xp_resp) => Some(xp_resp),
+        Err(e) => {
+            tracing::error!(
+                space_pk = %space_id,
+                action_id = %discussion_sk,
+                error = %e,
+                "Failed to award XP for discussion comment"
+            );
+            None
+        }
+    };
+
+    Ok(AddCommentResponse {
+        comment: comment.into(),
+        xp,
+    })
 }

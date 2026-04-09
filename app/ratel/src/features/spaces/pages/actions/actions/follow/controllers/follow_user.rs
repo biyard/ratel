@@ -21,7 +21,7 @@ pub async fn follow_user(
     follow_id: SpaceActionFollowEntityType,
     #[mcp(description = "Target user partition key to follow (e.g. 'USER#<uuid>')")]
     target_pk: Partition,
-) -> Result<()> {
+) -> Result<Option<crate::features::spaces::pages::actions::gamification::types::XpGainResponse>> {
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
 
@@ -45,7 +45,7 @@ pub async fn follow_user(
         .await?
         .is_some()
     {
-        return Ok(());
+        return Ok(None);
     }
 
     let (follower_record, following_record) =
@@ -142,5 +142,26 @@ pub async fn follow_user(
         }
     }
 
-    Ok(())
+    // Award XP for follow action
+    let xp = match crate::features::spaces::pages::actions::gamification::services::award_xp(
+        cli,
+        &user.pk,
+        space_id.clone(),
+        follow_id.to_string(),
+    )
+    .await
+    {
+        Ok(xp_resp) => Some(xp_resp),
+        Err(e) => {
+            tracing::error!(
+                space_pk = %space_id,
+                action_id = %follow_id,
+                error = %e,
+                "Failed to award XP for follow action"
+            );
+            None
+        }
+    };
+
+    Ok(xp)
 }

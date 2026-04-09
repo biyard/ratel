@@ -10,8 +10,11 @@ pub struct RespondPollRequest {
     pub answers: Vec<Answer>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct RespondPollResponse {}
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub struct RespondPollResponse {
+    #[serde(default)]
+    pub xp: Option<crate::features::spaces::pages::actions::gamification::types::XpGainResponse>,
+}
 
 #[cfg(feature = "server")]
 #[derive(Debug, Clone, Serialize)]
@@ -334,5 +337,30 @@ pub async fn respond_poll(
         }
     }
 
-    Ok(RespondPollResponse {})
+    // Award XP for first-time submission (not edits)
+    let xp = if existing.is_none() {
+        match crate::features::spaces::pages::actions::gamification::services::award_xp(
+            cli,
+            &member.pk,
+            space_partition.clone(),
+            poll_action_id.clone(),
+        )
+        .await
+        {
+            Ok(xp_resp) => Some(xp_resp),
+            Err(e) => {
+                tracing::error!(
+                    space_pk = %space_partition,
+                    action_id = %poll_action_id,
+                    error = %e,
+                    "Failed to award XP for poll response"
+                );
+                None
+            }
+        }
+    } else {
+        None
+    };
+
+    Ok(RespondPollResponse { xp })
 }
