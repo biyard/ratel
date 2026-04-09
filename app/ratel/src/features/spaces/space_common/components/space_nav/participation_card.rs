@@ -12,149 +12,102 @@ pub fn ParticipationCard(
     credential_path: Option<String>,
     on_login: EventHandler<()>,
 ) -> Element {
-    let mut query = use_query_store();
     let ctx = crate::features::spaces::space_common::providers::use_space_context();
     let tr: ParticipationCardTranslate = use_translate();
+    let lang = use_language();
     let mut layover = use_layover();
-    let navigator = use_navigator();
     let mut space = ctx.space;
     let mut role = ctx.role;
     let mut current_role = ctx.current_role;
-    let panel_requirements_query_key = vec![
-        "Space".to_string(),
-        space_id().to_string(),
-        "PanelRequirements".to_string(),
-    ];
-    // Use use_server_future instead of use_query to avoid Suspense panics on
-    // unmount when navigating away from a Space as a Viewer.
-    let panel_requirements_resource = use_server_future({
-        move || async move {
-            crate::features::spaces::controllers::panel_requirements::get_panel_requirements(
-                space_id(),
-            )
-            .await
-        }
-    })?;
-    let panel_requirements = panel_requirements_resource
-        .read()
-        .as_ref()
-        .and_then(|r| r.as_ref().ok())
-        .cloned()
-        .unwrap_or_default();
-    let all_requirements_satisfied = panel_requirements
-        .iter()
-        .all(|requirement| requirement.satisfied);
-    let participate_credential_path = credential_path.clone();
-    let credential_button_path = credential_path.clone();
-    let login_for_participate = on_login.clone();
-    let login_for_credentials = on_login;
-    let layover_requirements = panel_requirements.clone();
-    let layover_credential_path = credential_path.clone();
-    let layover_login = login_for_participate.clone();
+    let panel_requirements = ctx.panel_requirements;
 
-    let handle_participate = move |_| {
-        if participate_credential_path.is_none() {
-            login_for_participate.call(());
-            return;
-        }
-
-        if !all_requirements_satisfied {
-            let mut refresh_panel_requirements = panel_requirements_resource;
-            let panel_requirements_query_key_for_verified = panel_requirements_query_key.clone();
-            let on_verified_refresh = move |_| {
-                query.invalidate(&panel_requirements_query_key_for_verified);
-                refresh_panel_requirements.restart();
-                space.restart();
-                role.restart();
+    // Closure invoked by the layover's "Join Space" button after the
+    // user explicitly checks the consent checkbox in the
+    // See your Difference step. Persists the consent flag onto the
+    // SpaceParticipant record via `participate_space`.
+    let on_join_after_consent = move |_| async move {
+        let req =
+            crate::features::spaces::controllers::participate_space::ParticipateSpaceRequest {
+                informed_agreed: true,
             };
-            let mut refresh_panel_requirements = panel_requirements_resource;
-            let panel_requirements_query_key_for_completed = panel_requirements_query_key.clone();
-            let on_completed = move |_| {
-                query.invalidate(&panel_requirements_query_key_for_completed);
-                refresh_panel_requirements.restart();
-                space.restart();
-                role.restart();
-            };
-            layover
-                .open(
-                    "space-participation-requirements".to_string(),
-                    String::new(),
-                    rsx! {
-                        ParticipationRequirementsLayover {
-                            space_id: space_id(),
-                            requirements: layover_requirements.clone(),
-                            on_verified_refresh,
-                            on_completed,
-                        }
-                    },
-                )
-                .set_size(LayoverSize::Medium);
-            return;
-        }
-
-        spawn(async move {
-            let space_detail = crate::features::spaces::space_common::types::space_key(&space_id());
-            let panel_requirements_key = vec![
-                "Space".to_string(),
-                space_id().to_string(),
-                "PanelRequirements".to_string(),
-            ];
-            if crate::features::spaces::controllers::participate_space::participate_space(
-                space_id(),
-            )
-            .await
-            .is_ok()
+        if crate::features::spaces::controllers::participate_space::participate_space(
+            space_id(),
+            req,
+        )
+        .await
+        .is_ok()
+        {
+            let prerequisite_actions = if let Ok(actions) =
+                crate::features::spaces::pages::actions::controllers::list_actions(space_id()).await
             {
-                // Fetch prerequisite actions BEFORE updating role,
-                // because role change unmounts this component
-                let prerequisite_actions = if let Ok(actions) =
-                    crate::features::spaces::pages::actions::controllers::list_actions(
-                        space_id(),
+                let filtered: Vec<
+                    crate::features::spaces::pages::actions::types::SpaceActionSummary,
+                > = actions.into_iter().filter(|a| a.prerequisite).collect();
+                filtered
+            } else {
+                vec![]
+            };
+
+            let mut layover = layover;
+            // Close the join layover before swapping role / opening
+            // the prerequisite actions layover.
+            layover.close();
+
+            if !prerequisite_actions.is_empty() {
+                layover
+                    .open(
+                        "space-prerequisite-actions".to_string(),
+                        String::new(),
+                        rsx! {
+                            PrerequisiteActionsLayover {
+                                space_id: space_id(),
+                                actions: prerequisite_actions,
+                            }
+                        },
                     )
-                    .await
-                {
-                    let filtered: Vec<
-                        crate::features::spaces::pages::actions::types::SpaceActionSummary,
-                    > = actions.into_iter().filter(|a| a.prerequisite).collect();
-                    filtered
-                } else {
-                    vec![]
-                };
-
-                // Show prerequisite actions layover before role change
-                if !prerequisite_actions.is_empty() {
-                    layover
-                        .open(
-                            "space-prerequisite-actions".to_string(),
-                            String::new(),
-                            rsx! {
-                                PrerequisiteActionsLayover {
-                                    space_id: space_id(),
-                                    actions: prerequisite_actions,
-                                }
-                            },
-                        )
-                        .set_size(LayoverSize::Medium);
-                }
-
-                // Now update role — this will unmount ParticipationCard
-                // Space is InProgress when participation card is shown, so user becomes Candidate
-                current_role.set(SpaceUserRole::Candidate);
-                query.invalidate(&space_detail);
-                query.invalidate(&panel_requirements_key);
-                space.restart();
-                role.restart();
+                    .set_size(LayoverSize::Medium);
             }
-        });
+
+            if let Ok(next_role) =
+                crate::features::spaces::space_common::controllers::get_user_role(space_id()).await
+            {
+                current_role.set(next_role);
+            }
+
+            space.restart();
+            role.restart();
+        }
     };
 
-    // let handle_open_credentials = move |_| {
-    //     if let Some(path) = &credential_button_path {
-    //         navigator.push(path.clone());
-    //     } else {
-    //         login_for_credentials.call(());
-    //     }
-    // };
+    let handle_participate = move |_| {
+        if credential_path.is_none() {
+            on_login.call(());
+            return;
+        }
+
+        // Always open the join layover. The "See your Difference" step
+        // either shows the consent checkbox + Join button (when all
+        // requirements are satisfied) or routes the user through the
+        // "Improve My Credential" verification flow.
+        let on_verified_refresh = move |_| {
+            space.restart();
+            role.restart();
+        };
+        layover
+            .open(
+                "space-participation-requirements".to_string(),
+                String::new(),
+                rsx! {
+                    ParticipationRequirementsLayover {
+                        space_id: space_id(),
+                        requirements: panel_requirements(),
+                        on_verified_refresh,
+                        on_join: on_join_after_consent.clone(),
+                    }
+                },
+            )
+            .set_size(LayoverSize::Medium);
+    };
 
     rsx! {
         div { class: "px-4 w-full",
@@ -175,7 +128,7 @@ pub fn ParticipationCard(
                                 ParticipationRequirementTag {
                                     key: "{requirement.attribute:?}",
                                     kind: if requirement.satisfied { ParticipationTag::Success } else { ParticipationTag::Warning },
-                                    label: panel_requirement_label(requirement.attribute, &tr),
+                                    label: requirement.attribute.translate(&lang()),
                                 }
                             }
                         }
@@ -190,32 +143,8 @@ pub fn ParticipationCard(
                         onclick: handle_participate,
                         {tr.participate}
                     }
-                                // Button {
-                //     class: "w-full",
-                //     style: ButtonStyle::Outline,
-                //     size: ButtonSize::Small,
-                //     onclick: handle_open_credentials,
-                //     {tr.see_my_credential}
-                // }
                 }
             }
-        }
-    }
-}
-
-fn panel_requirement_label(
-    attribute: crate::features::spaces::controllers::panel_requirements::PanelRequirementAttribute,
-    tr: &ParticipationCardTranslate,
-) -> String {
-    match attribute {
-        crate::features::spaces::controllers::panel_requirements::PanelRequirementAttribute::Age => {
-            tr.age.to_string()
-        }
-        crate::features::spaces::controllers::panel_requirements::PanelRequirementAttribute::Gender => {
-            tr.gender.to_string()
-        }
-        crate::features::spaces::controllers::panel_requirements::PanelRequirementAttribute::University => {
-            tr.university.to_string()
         }
     }
 }
@@ -266,28 +195,8 @@ translate! {
         ko: "모든 내용을 읽을 수 있지만, 게시, 투표, 댓글은 검증이 필요합니다.",
     },
 
-    age: {
-        en: "Age",
-        ko: "나이",
-    },
-
-    gender: {
-        en: "Gender",
-        ko: "성별",
-    },
-
-    university: {
-        en: "University",
-        ko: "대학교",
-    },
-
     participate: {
         en: "Participate",
         ko: "참여하기",
-    },
-
-    see_my_credential: {
-        en: "See My Credential",
-        ko: "내 Credential 보기",
     },
 }

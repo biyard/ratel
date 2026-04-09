@@ -30,6 +30,7 @@ VOTER_TAG_SECRET ?= test
 # cargo run -p attr-voting --bin attr-voting-keygen
 ATTR_VOTING_AUTHORITY_JSON ?=
 RUST_LOG ?= debug
+RUSTFLAGS ?= "-D warnings"
 
 PORT ?= 8080
 RUN_FEATURES ?= local-dev
@@ -49,7 +50,6 @@ BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					RUST_LOG=$(RUST_LOG) \
 					ENV=$(ENV) \
 					COMMIT=$(COMMIT) \
-					RUST_LOG=$(RUST_LOG) \
 					PORT=$(PORT) \
 					PORTONE_STORE_ID=$(PORTONE_STORE_ID) \
 					PORTONE_KPN_CHANNEL_KEY=$(PORTONE_KPN_CHANNEL_KEY) \
@@ -79,7 +79,7 @@ test:
 	$(BUILD_ENV) CARGO_TARGET_DIR=./test-build-target cargo test --features server,bypass --tests -- --test-threads=1
 
 run:
-	$(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web --features $(RUN_FEATURES)
+	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web --features $(RUN_FEATURES)
 
 
 build:

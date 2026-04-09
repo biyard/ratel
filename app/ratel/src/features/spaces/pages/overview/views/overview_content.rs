@@ -6,7 +6,6 @@ use crate::common::icons::{edit::Edit1, other_devices::Save};
 use crate::common::lucide_dioxus::Users;
 use crate::features::posts::controllers::like_post::like_post_handler;
 use crate::features::spaces::pages::apps::apps::file::components::{FileCard, FileUploadZone};
-use crate::features::spaces::pages::apps::apps::file::UpdateSpaceFilesRequest;
 use crate::features::spaces::space_common::hooks::use_space_query;
 use common::utils::time::time_ago;
 
@@ -26,22 +25,17 @@ pub fn OverviewContent(
     let mut is_saving = use_signal(|| false);
     let mut error = use_signal(|| None::<String>);
     let mut files = use_signal(Vec::<File>::new);
+    let mut original_files = use_signal(Vec::<File>::new);
     let mut is_like_processing = use_signal(|| false);
-    let mut did_load = use_signal(|| false);
+
+    let mut file_loader = use_loader(move || async move {
+        crate::features::spaces::pages::apps::apps::file::get_overview_files(space_id()).await
+    })?;
 
     use_effect(move || {
-        if did_load() {
-            return;
+        if !is_editing() {
+            files.set(file_loader());
         }
-        did_load.set(true);
-
-        spawn(async move {
-            if let Ok(loaded_files) =
-                crate::features::spaces::pages::apps::apps::file::get_space_files(space_id()).await
-            {
-                files.set(loaded_files);
-            }
-        });
     });
 
     let allow_edit = editable && is_editing();
@@ -63,6 +57,7 @@ pub fn OverviewContent(
                                     class: "inline-flex gap-2 items-center",
                                     onclick: move |_| {
                                         if !is_saving() {
+                                            original_files.set(files());
                                             is_editing.set(true);
                                         }
                                     },
@@ -86,6 +81,7 @@ pub fn OverviewContent(
                                             let space_pk = space_id();
                                             let html = content();
                                             let current_files = files();
+                                            let orig_files = original_files();
 
                                             spawn(async move {
                                                 match crate::features::spaces::pages::overview::controllers::update_space_content(
@@ -96,23 +92,55 @@ pub fn OverviewContent(
                                                     )
                                                     .await
                                                 {
-                                                    Ok(_) => {}
-                                                    Err(err) => {
-                                                        error.set(Some(err.to_string()));
-                                                    }
-                                                }
+                                                    Ok(_) => {
+                                                        let orig_urls: std::collections::HashSet<String> = orig_files
+                                                            .iter()
+                                                            .filter_map(|f| f.url.clone())
+                                                            .collect();
+                                                        let current_urls: std::collections::HashSet<String> = current_files
+                                                            .iter()
+                                                            .filter_map(|f| f.url.clone())
+                                                            .collect();
 
-                                                match crate::features::spaces::pages::apps::apps::file::update_space_files(
-                                                        space_pk,
-                                                        UpdateSpaceFilesRequest {
-                                                            files: current_files,
-                                                        },
-                                                    )
-                                                    .await
-                                                {
-                                                    Ok(updated) => {
-                                                        files.set(updated);
+                                                        for file in &current_files {
+                                                            if let Some(url) = &file.url {
+                                                                if !orig_urls.contains(url) {
+                                                                    if let Err(e) = crate::features::spaces::pages::apps::apps::file::create_file_link(
+                                                                            space_pk.clone(),
+                                                                            crate::features::spaces::pages::apps::apps::file::CreateFileLinkRequest {
+                                                                                file_url: url.clone(),
+                                                                                file_name: Some(file.name.clone()),
+                                                                                link_target: crate::features::spaces::pages::apps::apps::file::FileLinkTarget::Overview,
+                                                                            },
+                                                                        )
+                                                                        .await
+                                                                    {
+                                                                        error!("Failed to create file link: {:?}", e);
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+
+                                                        for file in &orig_files {
+                                                            if let Some(url) = &file.url {
+                                                                if !current_urls.contains(url) {
+                                                                    if let Err(e) = crate::features::spaces::pages::apps::apps::file::delete_file_link(
+                                                                            space_pk.clone(),
+                                                                            crate::features::spaces::pages::apps::apps::file::DeleteFileLinkRequest {
+                                                                                file_url: url.clone(),
+                                                                                link_target: crate::features::spaces::pages::apps::apps::file::FileLinkTarget::Overview,
+                                                                            },
+                                                                        )
+                                                                        .await
+                                                                    {
+                                                                        error!("Failed to delete file link: {:?}", e);
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+
                                                         is_editing.set(false);
+                                                        file_loader.restart();
                                                     }
                                                     Err(err) => {
                                                         error.set(Some(err.to_string()));

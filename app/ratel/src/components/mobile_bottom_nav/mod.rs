@@ -1,7 +1,7 @@
-use crate::*;
 use crate::common::components::sidebar::*;
 use crate::features::auth::LoginModal;
 use crate::features::posts::controllers::create_post::create_post_handler;
+use crate::*;
 
 translate! {
     MobileBottomNavTranslate;
@@ -94,7 +94,7 @@ fn MobileCreatePostButton(label: String) -> Element {
 
     rsx! {
         button {
-            class: "flex justify-center items-center w-12 h-12 rounded-full cursor-pointer bg-primary shadow-lg",
+            class: "flex justify-center items-center w-12 h-12 rounded-full shadow-lg cursor-pointer bg-primary",
             "aria-label": "{label}",
             "data-testid": "mobile-create-post-btn",
             onclick: move |_| {
@@ -112,10 +112,7 @@ fn MobileCreatePostButton(label: String) -> Element {
                     }
                 }
             },
-            lucide_dioxus::Plus {
-                size: 24,
-                class: "[&>path]:stroke-background",
-            }
+            lucide_dioxus::Plus { size: 24, class: "[&>path]:stroke-background" }
         }
     }
 }
@@ -138,7 +135,7 @@ fn MoreMenuPanel(show: Signal<bool>) -> Element {
     rsx! {
         // Backdrop
         button {
-            class: "fixed inset-0 z-998 hidden max-tablet:block",
+            class: "hidden fixed inset-0 z-998 max-tablet:block",
             "data-testid": "mobile-more-backdrop",
             r#type: "button",
             "aria-label": "{tr.close_menu}",
@@ -147,7 +144,7 @@ fn MoreMenuPanel(show: Signal<bool>) -> Element {
 
         // Menu panel
         div {
-            class: "fixed left-0 z-999 w-full border-t hidden max-tablet:block border-separator bg-background bottom-[calc(var(--mobile-bottom-nav-height)+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)]",
+            class: "hidden fixed left-0 w-full border-t z-999 max-tablet:block border-separator bg-background bottom-[calc(var(--mobile-bottom-nav-height)+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)]",
             "data-testid": "mobile-more-panel",
 
             div { class: "flex flex-col py-2",
@@ -175,13 +172,11 @@ fn MoreMenuPanel(show: Signal<bool>) -> Element {
                         size: 20,
                         class: "[&>path]:stroke-icon-primary [&>circle]:stroke-icon-primary [&>line]:stroke-icon-primary",
                     }
-                    span { class: "text-sm text-foreground uppercase",
-                        "{tr.language}: {lang()}"
-                    }
+                    span { class: "text-sm uppercase text-foreground", "{tr.language}: {lang()}" }
                 }
 
                 // Divider
-                div { class: "mx-4 my-1 h-px bg-separator" }
+                div { class: "my-1 mx-4 h-px bg-separator" }
 
                 // Sign In
                 button {
@@ -191,8 +186,7 @@ fn MoreMenuPanel(show: Signal<bool>) -> Element {
                         show.set(false);
                         popup.open(rsx! {
                             LoginModal {}
-                        })
-                        .with_title(tr.join_the_movement);
+                        }).with_title(tr.join_the_movement);
                     },
                     lucide_dioxus::LogIn {
                         size: 20,
@@ -213,14 +207,14 @@ fn MoreMenuPanel(show: Signal<bool>) -> Element {
 pub fn MobileBottomNav() -> Element {
     let tr: MobileBottomNavTranslate = use_translate();
     let user_ctx = crate::features::auth::hooks::use_user_context();
-    let ctx = use_sidebar();
+    let mut ctx = use_sidebar();
     let logged_in = user_ctx().is_logged_in();
     let mut show_more_menu = use_signal(|| false);
 
     rsx! {
         // Bottom navigation bar - only visible on mobile (< tablet breakpoint)
         nav {
-            class: "fixed bottom-0 left-0 z-50 w-full border-t hidden max-tablet:block border-separator bg-background pb-[env(safe-area-inset-bottom)]",
+            class: "hidden fixed bottom-0 left-0 z-50 w-full border-t max-tablet:block border-separator bg-background pb-[env(safe-area-inset-bottom)]",
             "data-testid": "mobile-bottom-nav",
             "aria-label": "{tr.mobile_navigation}",
             div { class: "flex justify-around items-center h-14",

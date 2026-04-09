@@ -25,15 +25,13 @@ pub fn ParticipationVerificationSection(
         .collect::<Vec<_>>();
 
     rsx! {
-        div { class: "flex flex-1 flex-col gap-6 bg-[#1A1A1A] px-[30px] py-[30px] max-tablet:px-5 max-tablet:py-5 max-mobile:px-4 max-mobile:py-4",
-            div { class: "flex w-full flex-col gap-[10px]",
-                h3 { class: "font-bold text-[24px]/[28px] tracking-[-0.24px] text-white",
-                    {tr.title}
-                }
+        div { class: "flex flex-col flex-1 gap-6 px-[30px] py-[30px] max-tablet:px-5 max-tablet:py-5 max-mobile:px-4 max-mobile:py-4",
+            div { class: "flex flex-col w-full gap-[10px]",
+                h3 { class: "font-bold text-[24px]/[28px] tracking-[-0.24px]", {tr.title} }
             }
 
             if let Some(error_message) = error_message() {
-                div { class: "inline-flex w-full items-center rounded-full bg-[rgba(239,68,68,0.1)] px-5 py-[10px]",
+                div { class: "inline-flex items-center px-5 w-full rounded-full bg-[rgba(239,68,68,0.1)] py-[10px]",
                     div { class: "flex items-center gap-[10px]",
                         crate::common::lucide_dioxus::CircleAlert { size: 18, class: "text-[#EF4444] shrink-0" }
                         span { class: "font-medium text-[13px]/[16px] tracking-[-0.14px] text-[#EF4444]",
@@ -43,24 +41,24 @@ pub fn ParticipationVerificationSection(
                 }
             }
 
-            div { class: "grid w-full grid-cols-2 gap-4 max-tablet:grid-cols-1",
-                div { class: "flex h-full flex-col rounded-[12px] border border-[#404040] bg-[#262626] px-4 py-5",
+            div { class: "grid grid-cols-2 gap-4 w-full max-tablet:grid-cols-1",
+                div { class: "flex flex-col py-5 px-4 h-full border rounded-[12px] border-[#404040] bg-card-bg-3",
                     div { class: "flex flex-col gap-2",
-                        h4 { class: "font-bold text-[15px]/[18px] tracking-[-0.16px] text-white",
+                        h4 { class: "font-bold text-[15px]/[18px] tracking-[-0.16px]",
                             {tr.method_title}
                         }
-                        p { class: "font-medium text-[13px]/[20px] text-[#D4D4D4]",
+                        p { class: "font-medium text-[13px]/[20px] text-desc-text",
                             {tr.method_description}
                         }
                     }
 
-                    div { class: "mt-5 flex flex-1 flex-col rounded-[12px] border border-[#FCB300] bg-[rgba(252,179,0,0.05)] px-4 py-5",
-                        div { class: "flex items-start justify-between gap-3",
+                    div { class: "flex flex-col flex-1 py-5 px-4 mt-5 border rounded-[12px] border-[#FCB300] bg-[rgba(252,179,0,0.05)]",
+                        div { class: "flex gap-3 justify-between items-start",
                             div { class: "flex flex-col gap-2",
-                                span { class: "font-bold text-[15px]/[18px] tracking-[-0.16px] text-white",
+                                span { class: "font-bold text-[15px]/[18px] tracking-[-0.16px]",
                                     {tr.portone_title}
                                 }
-                                p { class: "font-medium text-[13px]/[20px] text-[#D4D4D4]",
+                                p { class: "font-medium text-[13px]/[20px] text-desc-text",
                                     {tr.portone_description}
                                 }
                             }
@@ -68,23 +66,23 @@ pub fn ParticipationVerificationSection(
                     }
                 }
 
-                div { class: "flex h-full flex-col rounded-[12px] border border-[#404040] bg-[#262626] px-4 py-5",
+                div { class: "flex flex-col py-5 px-4 h-full border rounded-[12px] border-[#404040] bg-card-bg-3",
                     div { class: "flex flex-col gap-2",
-                        h4 { class: "font-bold text-[15px]/[18px] tracking-[-0.16px] text-white",
+                        h4 { class: "font-bold text-[15px]/[18px] tracking-[-0.16px]",
                             {tr.import_title}
                         }
-                        p { class: "font-medium text-[13px]/[20px] text-[#D4D4D4]",
+                        p { class: "font-medium text-[13px]/[20px] text-desc-text",
                             {tr.import_description}
                         }
                     }
 
-                    div { class: "mt-5 flex flex-1 flex-col gap-[10px] rounded-[12px] bg-[#262626]",
+                    div { class: "flex flex-col flex-1 mt-5 gap-[10px] rounded-[12px] bg-card-bg-3",
                         for label in imported_attributes.iter() {
                             div { class: "flex items-center gap-[10px]",
-                                div { class: "flex size-5 items-center justify-center rounded-[4px] bg-[#FCB300]",
+                                div { class: "flex justify-center items-center size-5 rounded-[4px] bg-[#FCB300]",
                                     icons::validations::Check { class: "size-5 [&>path]:stroke-[#0A0A0A]" }
                                 }
-                                span { class: "font-semibold text-[15px]/[18px] tracking-[-0.16px] text-white",
+                                span { class: "font-semibold text-[15px]/[18px] tracking-[-0.16px]",
                                     {label.clone()}
                                 }
                             }
@@ -93,7 +91,7 @@ pub fn ParticipationVerificationSection(
                 }
             }
 
-            div { class: "mt-auto flex w-full justify-end gap-3 pt-5",
+            div { class: "flex gap-3 justify-end pt-5 mt-auto w-full",
                 Button {
                     style: ButtonStyle::Text,
                     class: "!rounded-[10px] !px-5 !py-3 !text-white hover:!bg-white/5 hover:!text-white",
@@ -203,13 +201,13 @@ translate! {
     },
 
     portone_title: {
-        en: "PortOne Verification",
-        ko: "PortOne 인증",
+        en: "Identity Verification",
+        ko: "본인 인증",
     },
 
     portone_description: {
-        en: "Use PortOne identity verification to import the required attributes into your credential.",
-        ko: "PortOne 본인 인증으로 필요한 속성을 Credential에 가져옵니다.",
+        en: "Use identity verification to import the required attributes into your credential.",
+        ko: "본인 인증으로 필요한 속성을 Credential에 가져옵니다.",
     },
 
     import_title: {

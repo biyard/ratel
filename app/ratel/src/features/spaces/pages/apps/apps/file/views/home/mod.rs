@@ -6,6 +6,7 @@ enum FileTab {
     All,
     Overview,
     Boards,
+    Quiz,
 }
 
 fn is_image_ext(ext: &FileExtension) -> bool {
@@ -72,6 +73,17 @@ pub fn SpaceFileAppPage(space_id: SpacePartition) -> Element {
                 let linked_urls: Vec<String> = links
                     .iter()
                     .filter(|link| matches!(link.link_target, FileLinkTarget::Board(_)))
+                    .map(|link| link.file_url.clone())
+                    .collect();
+                all_files
+                    .into_iter()
+                    .filter(|f| f.url.as_ref().is_some_and(|url| linked_urls.contains(url)))
+                    .collect()
+            }
+            FileTab::Quiz => {
+                let linked_urls: Vec<String> = links
+                    .iter()
+                    .filter(|link| matches!(link.link_target, FileLinkTarget::Quiz(_)))
                     .map(|link| link.file_url.clone())
                     .collect();
                 all_files
@@ -152,72 +164,20 @@ pub fn SpaceFileAppPage(space_id: SpacePartition) -> Element {
                             }
                         }
                     }
-                }
-
-                div { class: "flex gap-2",
-                    if editing() {
-                        Button {
-                            class: "!px-4 !py-2 !text-sm !font-semibold !rounded-[8px]".to_string(),
-                            style: ButtonStyle::Primary,
-                            shape: ButtonShape::Square,
-                            disabled: is_saving(),
-                            onclick: {
-                                let space_id = space_id.clone();
-                                move |_| {
-                                    if is_saving() {
-                                        return;
-                                    }
-                                    is_saving.set(true);
-                                    let current_files = files();
-                                    let space_id = space_id.clone();
-
-                                    spawn(async move {
-                                        match update_space_files(
-                                                space_id,
-                                                UpdateSpaceFilesRequest {
-                                                    files: current_files,
-                                                },
-                                            )
-                                            .await
-                                        {
-                                            Ok(updated) => {
-                                                files.set(updated);
-                                            }
-                                            Err(err) => {
-                                                error!("Failed to save files: {:?}", err);
-                                            }
-                                        }
-                                        is_saving.set(false);
-                                        editing.set(false);
-                                    });
-                                }
-                            },
-                            {tr.btn_save}
-                        }
-                        Button {
-                            class: "!px-4 !py-2 !text-sm !font-semibold !rounded-[8px]".to_string(),
-                            style: ButtonStyle::Outline,
-                            shape: ButtonShape::Square,
-                            onclick: move |_| {
-                                files.set(original_files());
-                                editing.set(false);
-                            },
-                            {tr.btn_discard}
-                        }
-                    } else {
-                        Button {
-                            class: "!px-4 !py-2 !text-sm !font-semibold !rounded-[8px] hover:!bg-card-hover"
-                                .to_string(),
-                            style: ButtonStyle::Outline,
-                            shape: ButtonShape::Square,
-                            onclick: move |_| {
-                                original_files.set(files());
-                                editing.set(true);
-                            },
-                            {tr.btn_edit}
+                    {
+                        let (style, class) = tab_button_props(FileTab::Quiz);
+                        rsx! {
+                            Button {
+                                class: class.to_string(),
+                                style,
+                                shape: ButtonShape::Square,
+                                onclick: move |_| active_tab.set(FileTab::Quiz),
+                                {tr.tab_quiz}
+                            }
                         }
                     }
                 }
+
             }
 
             if editing() {
@@ -237,15 +197,64 @@ pub fn SpaceFileAppPage(space_id: SpacePartition) -> Element {
             } else {
                 div { class: "flex flex-col gap-2.5",
                     for file in displayed_files.iter() {
-                        FileCard {
-                            key: "{file.id}",
-                            file: file.clone(),
-                            editable: editing(),
-                            on_delete: move |file_id: String| {
-                                let mut current = files();
-                                current.retain(|f| f.id != file_id);
-                                files.set(current);
-                            },
+                        {
+                            let file = file.clone();
+                            let space_id = space_id.clone();
+                            rsx! {
+                                FileCard {
+                                    key: "{file.id}",
+                                    file: file.clone(),
+                                    editable: editing(),
+                                    on_delete: move |file_id: String| {
+                                        let space_id = space_id.clone();
+                                        async move {
+                                        let current = files();
+                                        if let Some(f) = current.iter().find(|f| f.id == file_id) {
+                                            if let Some(url) = f.url.clone() {
+                                                let links = file_links();
+                                                let matched = links.iter().find(|l| l.file_url == url);
+                                                if let Some(link) = matched {
+                                                    let link_target = link.link_target.clone();
+                                                    if let Err(e) = crate::features::spaces::pages::apps::apps::file::delete_file_link(
+                                                        space_id.clone(),
+                                                        crate::features::spaces::pages::apps::apps::file::DeleteFileLinkRequest {
+                                                            file_url: url.clone(),
+                                                            link_target: link_target.clone(),
+                                                        },
+                                                    ).await {
+                                                        error!("Failed to delete file link: {:?}", e);
+                                                    }
+                                                    match link_target {
+                                                        FileLinkTarget::Quiz(quiz_id) => {
+                                                            if let Err(e) = crate::features::spaces::pages::actions::actions::quiz::controllers::remove_quiz_file(
+                                                                space_id.clone(),
+                                                                quiz_id.into(),
+                                                                crate::features::spaces::pages::actions::actions::quiz::controllers::RemoveQuizFileRequest { file_url: url },
+                                                            ).await {
+                                                                error!("Failed to remove quiz file: {:?}", e);
+                                                            }
+                                                        }
+                                                        FileLinkTarget::Board(discussion_id) => {
+                                                            if let Err(e) = crate::features::spaces::pages::actions::actions::discussion::controllers::remove_discussion_file(
+                                                                space_id.clone(),
+                                                                discussion_id.into(),
+                                                                crate::features::spaces::pages::actions::actions::discussion::controllers::RemoveDiscussionFileRequest { file_url: url },
+                                                            ).await {
+                                                                error!("Failed to remove discussion file: {:?}", e);
+                                                            }
+                                                        }
+                                                        _ => {}
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        let mut updated = files();
+                                        updated.retain(|f| f.id != file_id);
+                                        files.set(updated);
+                                    }
+                                    },
+                                }
+                            }
                         }
                     }
                 }

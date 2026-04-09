@@ -15,3 +15,6 @@ pub use delete_discussion::*;
 
 mod get_discussion_detail;
 pub use get_discussion_detail::*;
+
+mod remove_discussion_file;
+pub use remove_discussion_file::*;

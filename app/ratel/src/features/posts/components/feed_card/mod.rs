@@ -151,15 +151,49 @@ fn FeedBody(post: PostResponse, on_edit: Option<EventHandler<MouseEvent>>) -> El
 
 #[component]
 pub fn FeedContents(contents: String, urls: Vec<String>) -> Element {
+    let _ = urls;
+    let preview = strip_html_tags(&contents);
     rsx! {
         div { class: "px-5 mt-2 break-all text-desc-text",
             div {
                 class: "border-none truncate whitespace-nowrap",
                 style: "min-height: 22px; max-height: 22px; overflow: hidden;",
-                dangerous_inner_html: contents,
+                "{preview}"
             }
         }
     }
+}
+
+fn strip_html_tags(input: &str) -> String {
+    let mut out = String::with_capacity(input.len());
+    let mut in_tag = false;
+    let mut last_was_space = false;
+
+    for ch in input.chars() {
+        match ch {
+            '<' => in_tag = true,
+            '>' => {
+                in_tag = false;
+                if !last_was_space && !out.is_empty() {
+                    out.push(' ');
+                    last_was_space = true;
+                }
+            }
+            _ if in_tag => {}
+            c if c.is_whitespace() => {
+                if !last_was_space && !out.is_empty() {
+                    out.push(' ');
+                    last_was_space = true;
+                }
+            }
+            c => {
+                out.push(c);
+                last_was_space = false;
+            }
+        }
+    }
+
+    out.trim().to_string()
 }
 
 #[component]

@@ -3,14 +3,13 @@ use crate::features::spaces::pages::apps::apps::general::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AddSpaceAdminRequest {
-    pub username: String,
+    /// Either a username or an email address. The handler decides which
+    /// lookup to perform based on the presence of `@`.
+    pub target: String,
 }
 
 #[post("/api/spaces/{space_id}/admins", role: SpaceUserRole)]
-pub async fn add_space_admin(
-    space_id: SpacePartition,
-    body: AddSpaceAdminRequest,
-) -> Result<()> {
+pub async fn add_space_admin(space_id: SpacePartition, body: AddSpaceAdminRequest) -> Result<()> {
     use crate::common::models::auth::User;
 
     if role != SpaceUserRole::Creator {
@@ -27,13 +26,24 @@ pub async fn add_space_admin(
         .await?
         .ok_or(Error::SpaceNotFound)?;
 
-    // Find user by username
-    let (users, _) =
-        User::find_by_username(dynamo, &body.username, User::opt().limit(1)).await?;
-    let user = users
-        .into_iter()
-        .find(|u| u.username == body.username)
-        .ok_or(Error::NotFound("User not found".to_string()))?;
+    // Look the user up by email if the input contains `@`, otherwise by
+    // username. The Administrators panel allows admins to add new admins
+    // by either identifier.
+    let identifier = body.target.trim();
+    let user = if identifier.contains('@') {
+        let email = identifier.to_ascii_lowercase();
+        let (users, _) = User::find_by_email(dynamo, &email, User::opt().limit(1)).await?;
+        users
+            .into_iter()
+            .find(|u| u.email.eq_ignore_ascii_case(&email))
+            .ok_or(Error::NotFound("User not found".to_string()))?
+    } else {
+        let (users, _) = User::find_by_username(dynamo, identifier, User::opt().limit(1)).await?;
+        users
+            .into_iter()
+            .find(|u| u.username == identifier)
+            .ok_or(Error::NotFound("User not found".to_string()))?
+    };
 
     // Prevent adding the space owner as a Space Admin (they already have Creator role)
     if space.user_pk == user.pk {
@@ -42,10 +52,7 @@ pub async fn add_space_admin(
 
     // Check if already a Space Admin
     let (pk, sk) = SpaceAdmin::keys(&space_pk, &user.pk);
-    if SpaceAdmin::get(dynamo, &pk, Some(&sk))
-        .await?
-        .is_some()
-    {
+    if SpaceAdmin::get(dynamo, &pk, Some(&sk)).await?.is_some() {
         return Ok(());
     }
 

@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import {
   click,
+  clickNoNav,
   fill,
   goto,
   getLocator,
@@ -91,6 +92,18 @@ async function signUpFromSpace(browser, spaceUrl) {
 /**
  * Participate in the space and complete the prerequisite poll.
  * The page should already be on spaceUrl/dashboard as a logged-in user.
+ *
+ * Updated flow (post-consent-checkbox redesign):
+ *   1. Click "Participate" — this no longer calls the /participate API
+ *      directly. It opens the "Join Space" layover with the
+ *      "See your Difference" step.
+ *   2. The required attributes for this space happen to all be
+ *      satisfied for the test users, so the layover shows a consent
+ *      checkbox + "Join Space" button instead of the
+ *      "Improve My Credential" path.
+ *   3. Tick the consent checkbox.
+ *   4. Click "Join Space" — only now is /participate called.
+ *   5. The "Required Actions" layover appears with the prerequisite poll.
  */
 async function participateAndCompletePoll(page, spaceUrl, pollOptionText) {
   await goto(page, spaceUrl + "/dashboard");
@@ -100,23 +113,19 @@ async function participateAndCompletePoll(page, spaceUrl, pollOptionText) {
     timeout: 10000,
   });
 
-  // The WASM onclick handlers may not be attached immediately after goto()
-  // returns (SSR markup is present but Dioxus hydration is still wiring
-  // event listeners). Retry the click until the participate API is actually
-  // called, confirming the handler fired.
-  let participated = false;
+  // Step 1: Click "Participate" to open the Join Space layover. The
+  // WASM onclick handlers may not be attached immediately after goto()
+  // returns (SSR markup is present but Dioxus hydration is still
+  // wiring event listeners), so retry until the layover is actually
+  // open.
+  let layoverOpen = false;
   for (let attempt = 0; attempt < 3; attempt++) {
-    const participatePromise = page.waitForResponse(
-      (r) =>
-        r.url().includes("/participate") && r.request().method() === "POST",
-      { timeout: 10000 },
-    );
-
     await click(page, { text: "Participate" });
-
     try {
-      await participatePromise;
-      participated = true;
+      await expect(
+        page.getByText("Requirements to Unlock", { exact: true })
+      ).toBeVisible({ timeout: 5000 });
+      layoverOpen = true;
       break;
     } catch {
       // Handler didn't fire — wait briefly for hydration then retry
@@ -124,23 +133,44 @@ async function participateAndCompletePoll(page, spaceUrl, pollOptionText) {
     }
   }
 
-  if (!participated) {
-    throw new Error("Participate API was never called after 3 click attempts");
+  if (!layoverOpen) {
+    throw new Error(
+      "Join Space layover never opened after 3 Participate click attempts"
+    );
   }
 
-  // The "Required Actions" layover appears after the participate call
-  // followed by a list_actions server call, so it needs a generous timeout
-  // (CI can be slow with back-to-back server calls).
-  await expect(
-    page.getByText("Required Actions", { exact: true }),
-  ).toBeVisible({ timeout: 30000 });
+  // Step 2/3: Tick the "I understand and agree…" consent checkbox.
+  // The checkbox carries aria-label="Participation consent checkbox"
+  // (set in `ParticipationAttributesSection`) which is the only
+  // stable selector for the dioxus-primitives Checkbox.
+  await clickNoNav(page, { label: "Participation consent checkbox" });
+
+  // Step 4: Click "Join Space" — this is what actually calls the
+  // /participate API. The text "Join Space" appears twice in the
+  // layover (the header and the submit button), so we target the
+  // button by its `data-testid` via the shared `click` helper to
+  // stay within the playwright-tests convention rules.
+  const participatePromise = page.waitForResponse(
+    (r) => r.url().includes("/participate") && r.request().method() === "POST",
+    { timeout: 15000 }
+  );
+  await clickNoNav(page, { testId: "join-space-confirm" });
+  await participatePromise;
+
+  // Step 5: The "Required Actions" layover appears after the
+  // participate call followed by a list_actions server call, so it
+  // needs a generous timeout (CI can be slow with back-to-back server
+  // calls).
+  await expect(page.getByText("Required Actions", { exact: true })).toBeVisible(
+    { timeout: 30000 }
+  );
 
   // Click the prerequisite poll (action card shows the poll title)
   await click(page, { text: "Team Poll: Budget Allocation" });
   await page.waitForURL(/\/actions\/polls\//, { waitUntil: "load" });
   // Wait for Dioxus hydration on the poll page before interacting
   await page.waitForFunction(
-    () => document.querySelector("[data-dioxus-id]") !== null,
+    () => document.querySelector("[data-dioxus-id]") !== null
   );
 
   // Wait for poll options to be visible before clicking
@@ -157,7 +187,7 @@ async function participateAndCompletePoll(page, spaceUrl, pollOptionText) {
   await expect(
     page.getByText("Once submitted, this response cannot be edited", {
       exact: false,
-    }),
+    })
   ).toBeVisible({ timeout: 5000 });
   // Click the "Submit" button inside the confirmation popup
   await click(page, { testId: "poll-confirm-submit" });
@@ -245,25 +275,23 @@ test.describe.serial("Space with actions created by a team", () => {
     await fill(
       page,
       { placeholder: "Enter discussion title..." },
-      "Team Discussion: Governance Framework",
+      "Team Discussion: Governance Framework"
     );
     await fill(
       page,
       { placeholder: "Enter category (optional)..." },
-      "Governance",
+      "Governance"
     );
 
     const editor = await getEditor(page);
     await editor.fill(
-      "This discussion was created by a team to explore governance frameworks and decision-making processes within the space.",
+      "This discussion was created by a team to explore governance frameworks and decision-making processes within the space."
     );
 
     await click(page, { text: "Save" });
   });
 
-  test("Create a poll action (prerequisite) in the space", async ({
-    page,
-  }) => {
+  test("Create a poll action (prerequisite) in the space", async ({ page }) => {
     await goto(page, spaceUrl + "/actions");
     await click(page, { text: "Select Action Type" });
     await click(page, { testId: "action-type-poll" });
@@ -275,7 +303,7 @@ test.describe.serial("Space with actions created by a team", () => {
     await fill(
       page,
       { placeholder: "Enter poll title..." },
-      "Team Poll: Budget Allocation",
+      "Team Poll: Budget Allocation"
     );
     await page.keyboard.press("Tab");
     await page.waitForLoadState("load");
@@ -316,12 +344,12 @@ test.describe.serial("Space with actions created by a team", () => {
     await fill(
       page,
       { placeholder: "Enter quiz title..." },
-      "Team Quiz: Protocol Knowledge Check",
+      "Team Quiz: Protocol Knowledge Check"
     );
 
     const editor = await getEditor(page);
     await editor.fill(
-      "This quiz tests knowledge about the governance protocol. Created by the team for participant engagement.",
+      "This quiz tests knowledge about the governance protocol. Created by the team for participant engagement."
     );
     await click(page, { text: "Save" });
 
@@ -392,12 +420,10 @@ test.describe.serial("Space with actions created by a team", () => {
 
   // ─── 4. NewUser: Sign up and participate ──────────────────────────────────
 
-  test("NewUser: Sign up and participate in the space", async ({
-    browser,
-  }) => {
+  test("NewUser: Sign up and participate in the space", async ({ browser }) => {
     const { context, page, displayName } = await signUpFromSpace(
       browser,
-      spaceUrl,
+      spaceUrl
     );
     try {
       await participateAndCompletePoll(page, spaceUrl, "Invest in R&D");
@@ -431,7 +457,11 @@ test.describe.serial("Space with actions created by a team", () => {
       await goto(page, spaceUrl + "/dashboard");
       await click(page, { text: "Sign In" });
       await waitPopup(page, { visible: true });
-      await fill(page, { placeholder: "Enter your email address" }, user2.email);
+      await fill(
+        page,
+        { placeholder: "Enter your email address" },
+        user2.email
+      );
       await click(page, { text: "Continue" });
       await fill(page, { placeholder: "Enter your password" }, user2.password);
       await click(page, { text: "Continue" });
@@ -442,7 +472,7 @@ test.describe.serial("Space with actions created by a team", () => {
       await participateAndCompletePoll(
         page,
         spaceUrl,
-        "Increase marketing spend",
+        "Increase marketing spend"
       );
 
       // Navigate back to dashboard to verify participation
@@ -487,7 +517,7 @@ test.describe.serial("Space with actions created by a team", () => {
         timeout: 15000,
       });
       await page.waitForFunction(
-        () => document.querySelector("[data-dioxus-id]") !== null,
+        () => document.querySelector("[data-dioxus-id]") !== null
       );
 
       // Click "Follow" on the first non-creator user (the team creator)
@@ -516,7 +546,7 @@ test.describe.serial("Space with actions created by a team", () => {
         timeout: 15000,
       });
       await page.waitForFunction(
-        () => document.querySelector("[data-dioxus-id]") !== null,
+        () => document.querySelector("[data-dioxus-id]") !== null
       );
 
       const followBtn = page.getByRole("button", { name: "Follow" }).first();
@@ -543,7 +573,7 @@ test.describe.serial("Space with actions created by a team", () => {
 
       // Wait for the quiz action card to be visible before clicking
       await expect(
-        page.getByText("Team Quiz: Protocol Knowledge Check", { exact: true }),
+        page.getByText("Team Quiz: Protocol Knowledge Check", { exact: true })
       ).toBeVisible({ timeout: 10000 });
       await click(page, { text: "Team Quiz: Protocol Knowledge Check" });
       await page.waitForURL(/\/actions\/quizzes\//, {
@@ -552,7 +582,7 @@ test.describe.serial("Space with actions created by a team", () => {
       });
       // Wait for Dioxus hydration on the quiz page
       await page.waitForFunction(
-        () => document.querySelector("[data-dioxus-id]") !== null,
+        () => document.querySelector("[data-dioxus-id]") !== null
       );
 
       // Wait for quiz overview to fully load (data-testid on the overview)
@@ -570,15 +600,15 @@ test.describe.serial("Space with actions created by a team", () => {
 
       // Q1 (Single Choice): Select "To enable collective decision-making"
       await expect(
-        page.getByText("To enable collective decision-making", { exact: true }),
+        page.getByText("To enable collective decision-making", { exact: true })
       ).toBeVisible({ timeout: 10000 });
       await click(page, { text: "To enable collective decision-making" });
       // Auto-advances to Q2 after single-choice selection
 
       // Q2 (Multiple Choice): Wait for options to appear, then select
-      await expect(
-        page.getByText("Transparency", { exact: true }),
-      ).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText("Transparency", { exact: true })).toBeVisible(
+        { timeout: 10000 }
+      );
       await click(page, { text: "Transparency" });
       await click(page, { text: "Community participation" });
 
@@ -606,7 +636,7 @@ test.describe.serial("Space with actions created by a team", () => {
 
       // Wait for the quiz action card to be visible before clicking
       await expect(
-        page.getByText("Team Quiz: Protocol Knowledge Check", { exact: true }),
+        page.getByText("Team Quiz: Protocol Knowledge Check", { exact: true })
       ).toBeVisible({ timeout: 10000 });
       await click(page, { text: "Team Quiz: Protocol Knowledge Check" });
       await page.waitForURL(/\/actions\/quizzes\//, {
@@ -615,7 +645,7 @@ test.describe.serial("Space with actions created by a team", () => {
       });
       // Wait for Dioxus hydration on the quiz page
       await page.waitForFunction(
-        () => document.querySelector("[data-dioxus-id]") !== null,
+        () => document.querySelector("[data-dioxus-id]") !== null
       );
 
       // Wait for quiz overview to fully load
@@ -632,14 +662,14 @@ test.describe.serial("Space with actions created by a team", () => {
 
       // Q1: Select "To enable collective decision-making"
       await expect(
-        page.getByText("To enable collective decision-making", { exact: true }),
+        page.getByText("To enable collective decision-making", { exact: true })
       ).toBeVisible({ timeout: 10000 });
       await click(page, { text: "To enable collective decision-making" });
 
       // Q2: Wait for options, then select
-      await expect(
-        page.getByText("Transparency", { exact: true }),
-      ).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText("Transparency", { exact: true })).toBeVisible(
+        { timeout: 10000 }
+      );
       await click(page, { text: "Transparency" });
       await click(page, { text: "Community participation" });
 
@@ -775,11 +805,7 @@ test.describe.serial("Space with actions created by a team", () => {
         const userComments = comments.filter((c) => c.user === "newUser");
         for (const c of userComments) {
           await goto(userPage, discussionUrl);
-          await fill(
-            userPage,
-            { placeholder: "Write a comment..." },
-            c.text,
-          );
+          await fill(userPage, { placeholder: "Write a comment..." }, c.text);
           await click(userPage, { testId: "comment-send-btn" });
         }
       } finally {
@@ -800,11 +826,7 @@ test.describe.serial("Space with actions created by a team", () => {
         const userComments = comments.filter((c) => c.user === "user2");
         for (const c of userComments) {
           await goto(userPage, discussionUrl);
-          await fill(
-            userPage,
-            { placeholder: "Write a comment..." },
-            c.text,
-          );
+          await fill(userPage, { placeholder: "Write a comment..." }, c.text);
           await click(userPage, { testId: "comment-send-btn" });
         }
       } finally {
@@ -829,10 +851,18 @@ test.describe.serial("Space with actions created by a team", () => {
 
     await page.waitForURL(/\/actions\/polls\//, { waitUntil: "load" });
 
+    // The space has already been started by this point in the
+    // scenario, so the brand-new poll's `started_at` (defaulted to
+    // creation time) means `is_action_locked` returns true and the
+    // creator lands on the Participant view with a "Settings" toggle
+    // in the top-right corner. Click that toggle to open the creator
+    // configuration UI before we can fill in the poll fields.
+    await click(page, { testId: "action-settings-switch" });
+
     await fill(
       page,
       { placeholder: "Enter poll title..." },
-      "Final Survey: Space Experience",
+      "Final Survey: Space Experience"
     );
     await page.keyboard.press("Tab");
     await page.waitForLoadState("load");
@@ -869,7 +899,7 @@ test.describe.serial("Space with actions created by a team", () => {
     try {
       await goto(page, spaceUrl + "/actions");
       await expect(
-        page.getByText("Final Survey: Space Experience", { exact: true }),
+        page.getByText("Final Survey: Space Experience", { exact: true })
       ).toBeVisible({ timeout: 10000 });
       await click(page, { text: "Final Survey: Space Experience" });
       await page.waitForURL(/\/actions\/polls\//, {
@@ -877,13 +907,13 @@ test.describe.serial("Space with actions created by a team", () => {
         timeout: 15000,
       });
       await page.waitForFunction(
-        () => document.querySelector("[data-dioxus-id]") !== null,
+        () => document.querySelector("[data-dioxus-id]") !== null
       );
 
       // Wait for poll option to be visible, then answer
-      await expect(
-        page.getByText("Excellent", { exact: true }),
-      ).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText("Excellent", { exact: true })).toBeVisible({
+        timeout: 10000,
+      });
       await click(page, { text: "Excellent" });
       await click(page, { text: "Submit" });
       await page.waitForLoadState("load");
@@ -903,7 +933,7 @@ test.describe.serial("Space with actions created by a team", () => {
     try {
       await goto(page, spaceUrl + "/actions");
       await expect(
-        page.getByText("Final Survey: Space Experience", { exact: true }),
+        page.getByText("Final Survey: Space Experience", { exact: true })
       ).toBeVisible({ timeout: 10000 });
       await click(page, { text: "Final Survey: Space Experience" });
       await page.waitForURL(/\/actions\/polls\//, {
@@ -911,7 +941,7 @@ test.describe.serial("Space with actions created by a team", () => {
         timeout: 15000,
       });
       await page.waitForFunction(
-        () => document.querySelector("[data-dioxus-id]") !== null,
+        () => document.querySelector("[data-dioxus-id]") !== null
       );
 
       // Wait for poll option to be visible, then answer

@@ -13,7 +13,7 @@ pub async fn get_discussion_detail(
 
     let post = SpacePost::get(cli, &space_pk, Some(discussion_sk_entity.clone()))
         .await?
-        .ok_or(Error::NotFound("Discussion not found".into()))?;
+        .ok_or(SpaceActionDiscussionError::NotFound)?;
 
     let space_action = crate::features::spaces::pages::actions::models::SpaceAction::get(
         cli,
