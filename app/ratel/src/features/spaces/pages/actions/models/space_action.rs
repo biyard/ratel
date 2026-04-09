@@ -31,6 +31,22 @@ pub struct SpaceAction {
     pub activity_score: i64,
     #[serde(default)]
     pub additional_score: i64,
+
+    /// Quest Map chapter this action belongs to.
+    ///
+    /// Optional during the Phase 2 rollout so existing records still
+    /// deserialize; the Phase 2 migration binary backfills every
+    /// existing action based on its `prerequisite` flag, and later
+    /// phases treat it as required.
+    #[serde(default)]
+    pub chapter_id: Option<crate::common::SpaceChapterEntityType>,
+
+    /// DAG parent action ids inside the **same chapter**. Empty vec
+    /// means the action has no prerequisites beyond the chapter gate.
+    /// Cross-chapter dependencies are forbidden by server-side
+    /// validation and return `GamificationError::CrossChapterDependency`.
+    #[serde(default)]
+    pub depends_on: Vec<String>,
 }
 
 #[cfg(feature = "server")]
@@ -59,6 +75,8 @@ impl SpaceAction {
             total_points: 0,
             activity_score: 0,
             additional_score: 0,
+            chapter_id: None,
+            depends_on: Vec::new(),
         }
     }
 }
