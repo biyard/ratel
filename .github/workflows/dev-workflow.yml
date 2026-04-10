@@ -232,11 +232,11 @@ jobs:
           VOTER_TAG_SECRET: ${{ secrets.DEV_VOTER_TAG_SECRET }}
           ATTR_VOTING_AUTHORITY_JSON: ${{ secrets.DEV_ATTR_VOTING_AUTHORITY_JSON }}
         run: |
+          npm i
           rm -rf target/dx
 
           cd app/ratel
 
-          npm install -D tailwindcss @tailwindcss/cli
           make build
           make docker
           make docker.push
@@ -408,10 +408,10 @@ jobs:
           VOTER_TAG_SECRET: ${{ secrets.DEV_VOTER_TAG_SECRET }}
           ATTR_VOTING_AUTHORITY_JSON: ${{ secrets.DEV_ATTR_VOTING_AUTHORITY_JSON }}
         run: |
+          npm i
           rm -rf target/dx
 
           cd app/ratel
-          npm install -D tailwindcss @tailwindcss/cli
           make build-lambda
           make docker
           make docker.push
