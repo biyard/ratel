@@ -1,3 +1,5 @@
+use crate::features::spaces::pages::actions::actions::poll::controllers::get_poll;
+use crate::features::spaces::pages::actions::actions::poll::types::Question;
 use crate::features::spaces::pages::actions::types::SpaceActionSummary;
 use crate::features::spaces::pages::index::*;
 
@@ -7,7 +9,26 @@ pub fn PollActionCard(action: SpaceActionSummary, space_id: ReadSignal<SpacePart
     let lang = use_language();
     let nav = use_navigator();
 
+    let poll_id: SpacePollEntityType = action.action_id.clone().into();
+    let poll_id = use_signal(move || poll_id);
+    let poll = use_loader(move || async move { get_poll(space_id(), poll_id()).await })?;
+    let poll = poll();
+
+    // Extract first question's options for preview
+    let options: Vec<String> = poll
+        .questions
+        .first()
+        .map(|q| match q {
+            Question::SingleChoice(c) => c.options.clone(),
+            Question::MultipleChoice(c) => c.options.clone(),
+            Question::Checkbox(c) => c.options.clone(),
+            Question::Dropdown(c) => c.options.clone(),
+            _ => vec![],
+        })
+        .unwrap_or_default();
+
     rsx! {
+        document::Link { rel: "stylesheet", href: asset!("./style.css") }
         div {
             class: "quest-card quest-card--poll",
             "data-type": "poll",
@@ -63,21 +84,18 @@ pub fn PollActionCard(action: SpaceActionSummary, space_id: ReadSignal<SpacePart
             div { class: "quest-card__body",
                 div { class: "quest-card__title", "{action.title}" }
                 if !action.description.is_empty() {
-                    div { class: "quest-card__desc", "{action.description}" }
+                    div { class: "quest-card__desc", dangerous_inner_html: "{action.description}" }
                 }
                 div { class: "quest-card__detail",
-                    div { class: "quest-detail-chip",
-                        svg {
-                            fill: "none",
-                            stroke: "currentColor",
-                            stroke_width: "2",
-                            view_box: "0 0 24 24",
-                            xmlns: "http://www.w3.org/2000/svg",
-                            path { d: "M18 20V10" }
-                            path { d: "M12 20V4" }
-                            path { d: "M6 20v-6" }
+                    if !options.is_empty() {
+                        div { class: "quest-poll-options",
+                            for option in options.iter() {
+                                div { class: "quest-poll-option",
+                                    span { class: "quest-poll-option__dot" }
+                                    " {option}"
+                                }
+                            }
                         }
-                        "{tr.vote_to_participate}"
                     }
                 }
             }

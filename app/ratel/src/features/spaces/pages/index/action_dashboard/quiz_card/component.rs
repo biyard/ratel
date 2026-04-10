@@ -11,6 +11,7 @@ pub fn QuizActionCard(
     let nav = use_navigator();
 
     rsx! {
+        document::Link { rel: "stylesheet", href: asset!("./style.css") }
         div {
             class: "quest-card quest-card--quiz",
             "data-type": "quiz",
@@ -76,7 +77,7 @@ pub fn QuizActionCard(
             div { class: "quest-card__body",
                 div { class: "quest-card__title", "{action.title}" }
                 if !action.description.is_empty() {
-                    div { class: "quest-card__desc", "{action.description}" }
+                    div { class: "quest-card__desc", dangerous_inner_html: "{action.description}" }
                 }
                 div { class: "quest-card__detail",
                     div { class: "quest-quiz-stats",
