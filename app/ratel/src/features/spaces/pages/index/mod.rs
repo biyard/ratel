@@ -10,10 +10,10 @@ mod signin_card;
 mod verification_card;
 
 pub use component::*;
+pub use arena_topbar::*;
 use action_dashboard::*;
-use arena_topbar::*;
 use arena_viewer::*;
-use i18n::*;
+pub use i18n::*;
 use overview_panel::*;
 use participate_card::*;
 use settings_panel::*;
