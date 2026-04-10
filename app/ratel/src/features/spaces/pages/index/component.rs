@@ -54,8 +54,6 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let leaderboard_open = active_panel() == ActivePanel::Leaderboard;
     let settings_open = active_panel() == ActivePanel::Settings;
 
-    let is_participant = matches!(role, SpaceUserRole::Participant | SpaceUserRole::Candidate);
-
     rsx! {
         document::Link { rel: "preconnect", href: "https://fonts.googleapis.com" }
         document::Link {
@@ -77,9 +75,19 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
                 active_panel,
             }
 
-            if is_participant {
+            if matches!(role, SpaceUserRole::Participant) {
                 SuspenseBoundary {
                     ActionDashboard { space_id }
+                }
+            } else if matches!(role, SpaceUserRole::Candidate) {
+                ArenaViewer {
+                    space_id,
+                    dimmed,
+                    candidate_view: rsx! {
+                        SuspenseBoundary {
+                            CandidateView { space_id }
+                        }
+                    },
                 }
             } else {
                 ArenaViewer { space_id, dimmed }
@@ -138,6 +146,27 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
             None => rsx! {},
         }
         PopupZone {}
+    }
+}
+
+#[component]
+fn CandidateView(space_id: ReadSignal<SpacePartition>) -> Element {
+    let actions = use_loader(move || async move {
+        crate::features::spaces::pages::actions::controllers::list_actions(space_id()).await
+    })?;
+    let actions = actions();
+
+    let prereqs: Vec<_> = actions.iter().filter(|a| a.prerequisite).cloned().collect();
+    let all_done = prereqs.is_empty() || prereqs.iter().all(|a| a.user_participated);
+
+    if all_done {
+        rsx! {
+            WaitingCard { prereqs }
+        }
+    } else {
+        rsx! {
+            PrerequisiteCard { space_id }
+        }
     }
 }
 
