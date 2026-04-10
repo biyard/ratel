@@ -25,6 +25,7 @@ Ratel is a decentralized legislative platform. Monorepo: Dioxus 0.7 fullstack ap
 ## Task Workflows
 
 - **Feature development**: `.claude/rules/workflows/feature-development.md`
+- **UI design/redesign**: `.claude/rules/workflows/ui-design-implementation.md`
 - **Bugfix**: `.claude/rules/workflows/bugfix.md`
 - **MCP tools**: `.claude/rules/workflows/implement-mcp-tools.md`
 - **Code review**: `.claude/rules/workflows/code-review.md`

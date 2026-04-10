@@ -196,3 +196,54 @@ status.to_string()
 // GOOD — Translate trait for enum in UI
 status.translate(&lang())
 ```
+
+## HTML-First Components
+
+### Missing `defer` on Script
+
+```rust
+// BAD — script runs before DOM exists, getElementById returns null
+document::Script { src: asset!("./script.js") }
+
+// GOOD — defer ensures script runs after DOM is parsed
+document::Script { defer: true, src: asset!("./script.js") }
+```
+
+### Renaming class names from HTML mockup
+
+```rust
+// BAD — renamed from mockup's "carousel-track", breaks JS selectors
+div { class: "action-carousel__track", id: "action-carousel-track", ... }
+
+// GOOD — exact same class/ID as the HTML mockup
+div { class: "carousel-track", id: "carousel-track", ... }
+```
+
+### Using data attributes for JS-controlled state
+
+```rust
+// BAD — Dioxus re-renders overwrite data-active, breaking JS scroll detection
+div { class: "quest-card", "data-active": some_signal(), ... }
+
+// GOOD — JS toggles .active class via classList, Dioxus doesn't interfere
+div { class: "quest-card", ... }
+// JS: card.classList.toggle('active', i === closest);
+```
+
+### Simplifying specialized mockup content
+
+```rust
+// BAD — generic card that ignores the mockup's specialized content per action type
+div { class: "quest-card",
+    div { class: "quest-card__title", "{action.title}" }
+    div { class: "quest-card__desc", "{action.description}" }
+}
+
+// GOOD — specialized content matching the HTML mockup for each action type
+// Poll: show vote option preview rows
+// Discussion: show topic tags + comment count
+// Quiz: show questions/pass-rate/time stats
+// Follow: show inline user list with follow buttons
+```
+
+When an HTML mockup includes specialized content for each variant, the Dioxus implementation must reproduce all of it — not simplify to a generic card.

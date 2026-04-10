@@ -20,6 +20,7 @@ use crate::features::spaces::pages::apps::apps::incentive_pool::SpaceIncentivePo
 use crate::features::spaces::pages::apps::apps::panels::SpacePanelsAppPage;
 use crate::features::spaces::pages::apps::Layout as SpaceAppsLayout;
 use crate::features::spaces::pages::apps::SpaceAppsPage;
+use crate::features::spaces::pages::index::SpaceIndexPage;
 
 // Space Actions
 use crate::features::spaces::pages::actions::actions::discussion::{
@@ -67,9 +68,9 @@ use crate::features::social::pages::setting::SubscriptionPage as TeamSettingSubs
 use crate::features::social::pages::credentials::Home as CredentialPage;
 use crate::features::social::pages::post::Home as UserPosts;
 use crate::features::social::pages::space::Home as UserSpaces;
+use crate::features::social::pages::team_membership::Home as TeamMemberships;
 use crate::features::social::pages::user_draft::Home as UserDrafts;
 use crate::features::social::pages::user_membership::Home as UserMemberships;
-use crate::features::social::pages::team_membership::Home as TeamMemberships;
 use crate::features::social::pages::user_reward::Home as UserRewards;
 use crate::features::social::pages::user_setting::Home as UserSettingPage;
 use crate::features::social::user_views::Home as UserHomeRoot;
@@ -159,6 +160,8 @@ pub enum Route {
 
         #[nest("/spaces/:space_id")]
             #[layout(SpaceLayout)]
+                #[route("/")]
+                SpaceIndexPage { space_id: SpacePartition },
                 #[route("/dashboard")]
                 SpaceDashboardPage { space_id: SpacePartition },
                 #[route("/overview")]
@@ -213,8 +216,6 @@ pub enum Route {
                         SpaceIncentivePoolAppPage { space_id: SpacePartition },
                     #[end_layout]
                 #[end_nest]
-
-                #[redirect("/", |space_id: SpacePartition| Route::SpaceDashboardPage { space_id })]
             #[end_layout]
         #[end_nest]
 

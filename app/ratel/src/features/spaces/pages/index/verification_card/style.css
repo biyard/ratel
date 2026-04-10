@@ -1,0 +1,170 @@
+/* ── Verification Card ────────────────────────────── */
+
+.verification-card {
+  --vcard-bg: var(--dark, rgba(12, 12, 26, 0.65)) var(--light, rgba(255, 255, 255, 0.72));
+  --vcard-border: var(--dark, rgba(255, 255, 255, 0.06)) var(--light, rgba(0, 0, 0, 0.08));
+  --vcard-text: var(--dark, #8888a8) var(--light, #6b6b80);
+  --vcard-text-dim: var(--dark, #55556a) var(--light, #9999aa);
+  --vcard-text-primary: var(--dark, #f0f0f5) var(--light, #12121a);
+  --vcard-shadow: var(--dark, rgba(0,0,0,0.4)) var(--light, rgba(0,0,0,0.08));
+  --vcard-req-bg: var(--dark, rgba(255,255,255,0.03)) var(--light, rgba(0,0,0,0.03));
+
+  width: 380px;
+  padding: 36px 32px 32px;
+  background: var(--vcard-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--vcard-border);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  box-shadow:
+    0 8px 60px var(--vcard-shadow),
+    0 0 80px rgba(252,179,0,0.04),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+  animation: card-float 6s ease-in-out infinite;
+}
+
+.verification-card__heading {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--vcard-text);
+}
+
+.verification-card__alert {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 100px;
+  background: rgba(249,115,22,0.08);
+  border: 1px solid rgba(249,115,22,0.2);
+  font-size: 12px;
+  font-weight: 600;
+  color: #F97316;
+}
+
+.verification-card__alert-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.verification-card__error {
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.2);
+  font-size: 12px;
+  font-weight: 500;
+  color: #EF4444;
+  text-align: center;
+}
+
+.verification-card__requirements {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--vcard-req-bg);
+  border: 1px solid var(--vcard-border);
+}
+
+.verification-card__req-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--vcard-text-dim);
+  margin-bottom: 4px;
+}
+
+.verification-card__req-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--vcard-border);
+}
+
+.verification-card__req-row[data-satisfied="true"] {
+  border-color: rgba(34,197,94,0.3);
+  background: rgba(34,197,94,0.06);
+}
+.verification-card__req-row[data-satisfied="false"] {
+  border-color: rgba(239,68,68,0.3);
+  background: rgba(239,68,68,0.06);
+}
+
+.verification-card__req-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.verification-card__req-icon--ok { color: #22C55E; }
+.verification-card__req-icon--missing { color: #EF4444; }
+
+.verification-card__req-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--vcard-text-primary);
+  flex: 1;
+}
+
+.verification-card__req-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.verification-card__req-value {
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+.verification-card__req-value--mine {
+  background: #FCB300;
+  color: #0A0A0A;
+}
+.verification-card__req-value--other {
+  background: var(--dark, rgba(255,255,255,0.12)) var(--light, rgba(0,0,0,0.08));
+  color: var(--vcard-text-primary);
+}
+
+.cta-verify {
+  width: 100%;
+  padding: 14px 24px;
+  border: 1px solid rgba(249,115,22,0.4);
+  border-radius: 12px;
+  background: rgba(249,115,22,0.08);
+  color: #F97316;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.cta-verify:hover {
+  background: rgba(249,115,22,0.15);
+  border-color: rgba(249,115,22,0.6);
+  box-shadow: 0 0 24px rgba(249,115,22,0.1);
+  transform: translateY(-2px);
+}
+.cta-verify:active { transform: translateY(0); }
+
+@media (max-width: 500px) {
+  .verification-card { width: calc(100vw - 32px); padding: 28px 20px 24px; }
+}

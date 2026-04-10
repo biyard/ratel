@@ -28,24 +28,20 @@
 - Test success, error, and unauthenticated cases
 - **References**: conventions/server-function-tests.md
 
-## Step 7: Design Frontend UI
-- Design UI layout, component hierarchy, and visual style before implementation
-- **References**: conventions/styling.md, conventions/figma-design-system.md, conventions/design-system-guide.md
-- **Skills**: frontend-design, figma:figma-implement-design
+## Step 7: Design & Implement Frontend UI
+- For new pages or major visual redesigns → follow `workflows/ui-design-implementation.md` (HTML-first approach)
+- For minor UI additions using existing components → implement directly in RSX
+- **References**: conventions/html-first-components.md, conventions/styling.md, conventions/figma-design-system.md, conventions/design-system-guide.md, conventions/dioxus-app.md, conventions/i18n.md, conventions/anti-patterns.md
+- **Skills**: frontend-design, figma:figma-implement-design, dioxus-knowledge-patch, rust-knowledge-patch
 
-## Step 8: Implement Frontend
-- Create components, views, hooks, i18n
-- **References**: conventions/dioxus-app.md, conventions/styling.md, conventions/i18n.md, conventions/design-system-guide.md, conventions/anti-patterns.md
-- **Skills**: dioxus-knowledge-patch, rust-knowledge-patch
-
-## Step 9: Lint & Format
+## Step 8: Lint & Format
 - **References**: conventions/lint-and-format.md
 
-## Step 10: Verify Build
+## Step 9: Verify Build
 - **References**: conventions/build-commands.md
 - **Skills**: superpowers:verification-before-completion
 
-## Step 11: Test
+## Step 10: Test
 - Write and run e2e tests
 - **References**: conventions/playwright-tests.md
 - **Skills**: playwright-scenario-writer
