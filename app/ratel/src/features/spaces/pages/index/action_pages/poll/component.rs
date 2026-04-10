@@ -1,6 +1,7 @@
 use crate::features::spaces::pages::actions::actions::poll::components::*;
 use crate::features::spaces::pages::actions::actions::poll::controllers::*;
 use crate::features::spaces::pages::actions::actions::poll::*;
+use crate::features::spaces::pages::index::action_pages::quiz::ActiveActionOverlaySignal;
 use crate::features::spaces::pages::index::*;
 use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
 use crate::features::spaces::space_common::types::{
@@ -67,6 +68,7 @@ pub fn ActionPollViewer(
         space.join_anytime,
     );
     let nav = navigator();
+    let overlay: Option<ActiveActionOverlaySignal> = try_consume_context();
 
     let mut answers: Signal<HashMap<usize, Answer>> = use_signal(|| {
         let mut map = HashMap::new();
@@ -127,7 +129,11 @@ pub fn ActionPollViewer(
                     query.invalidate(&space_ranking_key(&space_id()));
                     query.invalidate(&space_my_score_key(&space_id()));
                     toast.info(tr.submit_success);
-                    nav.replace(crate::Route::SpaceIndexPage { space_id: space_id() });
+                    if let Some(mut ov) = overlay {
+                        ov.0.set(None);
+                    } else {
+                        nav.replace(crate::Route::SpaceIndexPage { space_id: space_id() });
+                    }
                 }
                 Err(err) => { toast.error(err); },
             }
