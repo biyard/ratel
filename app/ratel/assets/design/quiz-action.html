@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz Action — Arena Style</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg-void:#06060e;
+      --bg-glass:rgba(12,12,26,0.65);
+      --bg-glass-strong:rgba(12,12,26,0.85);
+      --bg-glass-hover:rgba(20,20,40,0.80);
+      --border-subtle:rgba(255,255,255,0.06);
+      --border-quiz:rgba(168,85,247,0.18);
+      --text-primary:#f0f0f5;
+      --text-muted:#8888a8;
+      --text-dim:#55556a;
+      --accent-gold:#fcb300;
+      --accent-teal:#6eedd8;
+      --quiz-color:#a855f7;
+      --quiz-bg:rgba(168,85,247,0.08);
+      --quiz-border:rgba(168,85,247,0.18);
+      --quiz-glow:rgba(168,85,247,0.12);
+      --quiz-glow-strong:rgba(168,85,247,0.25);
+      --font-display:'Orbitron',sans-serif;
+      --font-body:'Outfit',sans-serif;
+    }
+    html,body{height:100%;overflow:hidden;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body)}
+
+    /* ── Arena shell ─────────────────────────────────── */
+    .quiz-arena{
+      position:relative;width:100%;height:100vh;
+      display:flex;flex-direction:column;overflow:hidden;
+    }
+    .quiz-arena::before{
+      content:'';position:absolute;inset:0;z-index:0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 40%, rgba(168,85,247,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 120% 100% at 50% 120%, rgba(110,237,216,0.03) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, var(--bg-void) 0%, var(--bg-void) 100%);
+    }
+
+    /* ── Top bar ─────────────────────────────────────── */
+    .quiz-topbar{
+      position:relative;z-index:20;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:20px 28px;flex-shrink:0;
+    }
+    .quiz-topbar__left{display:flex;align-items:center;gap:14px}
+    .quiz-topbar__back{
+      width:40px;height:40px;border-radius:10px;
+      background:var(--bg-glass);backdrop-filter:blur(16px);
+      border:1px solid var(--border-subtle);
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;transition:all 0.25s ease;padding:0;
+    }
+    .quiz-topbar__back:hover{border-color:var(--quiz-border);background:var(--bg-glass-hover)}
+    .quiz-topbar__back svg{width:18px;height:18px;color:var(--text-muted);transition:color 0.2s}
+    .quiz-topbar__back:hover svg{color:var(--quiz-color)}
+    .quiz-topbar__title{
+      font-family:var(--font-display);font-size:14px;font-weight:700;
+      letter-spacing:0.06em;text-transform:uppercase;
+    }
+    .quiz-topbar__badge{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:5px 12px;border-radius:8px;
+      font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;
+      background:var(--quiz-bg);color:var(--quiz-color);border:1px solid var(--quiz-border);
+    }
+    .quiz-topbar__badge svg{width:14px;height:14px}
+    .quiz-topbar__right{display:flex;align-items:center;gap:14px}
+
+    /* ── Progress ring ───────────────────────────────── */
+    .progress-ring{position:relative;width:48px;height:48px;flex-shrink:0}
+    .progress-ring__svg{width:48px;height:48px;transform:rotate(-90deg)}
+    .progress-ring__bg{fill:none;stroke:rgba(255,255,255,0.06);stroke-width:4}
+    .progress-ring__fill{
+      fill:none;stroke:var(--quiz-color);stroke-width:4;
+      stroke-linecap:round;
+      transition:stroke-dashoffset 0.6s cubic-bezier(0.16,1,0.3,1);
+      filter:drop-shadow(0 0 6px var(--quiz-glow));
+    }
+    .progress-ring__label{
+      position:absolute;inset:0;
+      display:flex;align-items:center;justify-content:center;
+      font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--text-primary);
+    }
+
+    /* ── Attempts chip ───────────────────────────────── */
+    .attempts-chip{
+      display:flex;align-items:center;gap:6px;
+      padding:6px 14px;border-radius:100px;
+      background:var(--bg-glass);backdrop-filter:blur(16px);
+      border:1px solid var(--border-subtle);
+      font-size:11px;font-weight:600;color:var(--text-muted);
+    }
+    .attempts-chip__icon{width:14px;height:14px;color:var(--quiz-color)}
+
+    /* ═══════════════════════════════════════════════════
+       SCREEN 1 — OVERVIEW
+       ═══════════════════════════════════════════════════ */
+    .quiz-overview{
+      position:relative;z-index:10;
+      flex:1;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;
+      padding:0 28px;gap:32px;overflow-y:auto;
+    }
+
+    /* Big progress ring for overview */
+    .overview-ring{position:relative;width:140px;height:140px;flex-shrink:0}
+    .overview-ring__svg{width:140px;height:140px;transform:rotate(-90deg)}
+    .overview-ring__bg{fill:none;stroke:rgba(255,255,255,0.04);stroke-width:6}
+    .overview-ring__fill{
+      fill:none;stroke:var(--quiz-color);stroke-width:6;
+      stroke-linecap:round;
+      filter:drop-shadow(0 0 12px var(--quiz-glow-strong));
+    }
+    .overview-ring__center{
+      position:absolute;inset:0;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    }
+    .overview-ring__number{font-family:var(--font-display);font-size:32px;font-weight:800;color:var(--quiz-color)}
+    .overview-ring__label{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim)}
+
+    /* Overview glass card */
+    .overview-card{
+      max-width:520px;width:100%;
+      padding:32px;
+      background:var(--bg-glass);backdrop-filter:blur(16px);
+      border:1px solid var(--border-quiz);border-radius:20px;
+      box-shadow:0 12px 60px rgba(0,0,0,0.4),0 0 40px var(--quiz-glow);
+      display:flex;flex-direction:column;align-items:center;gap:20px;
+      text-align:center;
+    }
+    .overview-card__title{
+      font-size:24px;font-weight:700;line-height:1.3;color:var(--text-primary);
+    }
+    .overview-card__desc{
+      font-size:14px;line-height:1.7;color:var(--text-muted);
+      max-width:420px;
+    }
+
+    /* Stats row */
+    .overview-stats{display:flex;gap:24px;justify-content:center;flex-wrap:wrap}
+    .overview-stat{
+      display:flex;flex-direction:column;align-items:center;gap:4px;
+      padding:12px 20px;border-radius:12px;
+      background:rgba(168,85,247,0.04);
+      border:1px solid rgba(168,85,247,0.1);
+      min-width:90px;
+    }
+    .overview-stat__value{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--quiz-color)}
+    .overview-stat__label{font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-dim)}
+
+    /* Files */
+    .overview-files{
+      display:flex;gap:8px;flex-wrap:wrap;justify-content:center;
+      width:100%;
+    }
+    .overview-file{
+      display:flex;align-items:center;gap:8px;
+      padding:8px 14px;border-radius:10px;
+      background:rgba(255,255,255,0.03);
+      border:1px solid var(--border-subtle);
+      font-size:12px;font-weight:500;color:var(--text-muted);
+      cursor:pointer;transition:all 0.2s;
+    }
+    .overview-file:hover{border-color:var(--quiz-border);color:var(--quiz-color)}
+    .overview-file svg{width:14px;height:14px;flex-shrink:0}
+
+    /* Begin button */
+    .quiz-begin-btn{
+      padding:14px 40px;border-radius:12px;border:none;
+      font-family:var(--font-display);font-size:13px;font-weight:700;
+      letter-spacing:0.1em;text-transform:uppercase;
+      cursor:pointer;transition:all 0.3s ease;
+      background:linear-gradient(135deg, var(--quiz-color), #7c3aed);
+      color:#fff;
+      box-shadow:0 4px 24px var(--quiz-glow-strong);
+    }
+    .quiz-begin-btn:hover{
+      box-shadow:0 8px 40px var(--quiz-glow-strong);
+      transform:translateY(-2px);
+    }
+
+    /* ═══════════════════════════════════════════════════
+       SCREEN 2 — QUESTION
+       ═══════════════════════════════════════════════════ */
+    .quiz-question-area{
+      position:relative;z-index:10;
+      flex:1;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;
+      padding:0 28px 120px;gap:24px;
+      overflow-y:auto;scrollbar-width:none;
+    }
+    .quiz-question-area::-webkit-scrollbar{display:none}
+
+    /* Question card */
+    .question-card{
+      max-width:640px;width:100%;
+      padding:32px;
+      background:var(--bg-glass);backdrop-filter:blur(16px);
+      border:1px solid var(--border-quiz);border-radius:20px;
+      box-shadow:0 8px 40px rgba(0,0,0,0.3),0 0 30px var(--quiz-glow);
+      display:flex;flex-direction:column;gap:24px;
+      animation:cardSlideIn 0.4s cubic-bezier(0.16,1,0.3,1);
+    }
+
+    /* Question header */
+    .question-header{display:flex;align-items:center;justify-content:space-between}
+    .question-number{
+      font-family:var(--font-display);font-size:11px;font-weight:600;
+      letter-spacing:0.1em;text-transform:uppercase;color:var(--quiz-color);
+    }
+    .question-required{
+      padding:3px 8px;border-radius:100px;
+      font-size:9px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;
+      background:rgba(252,179,0,0.1);color:var(--accent-gold);border:1px solid rgba(252,179,0,0.2);
+    }
+
+    /* Question title */
+    .question-title{
+      font-size:22px;font-weight:700;line-height:1.4;
+      color:var(--text-primary);text-align:center;
+    }
+    .question-desc{
+      font-size:13px;line-height:1.6;color:var(--text-muted);text-align:center;
+    }
+
+    /* ── Option tiles (single/multiple choice) ─────── */
+    .option-grid{
+      display:grid;grid-template-columns:1fr 1fr;gap:12px;
+      width:100%;
+    }
+    .option-tile{
+      position:relative;
+      display:flex;align-items:center;
+      min-height:64px;padding:14px 18px;
+      background:rgba(255,255,255,0.03);
+      border:1px solid var(--border-subtle);border-radius:14px;
+      cursor:pointer;transition:all 0.3s ease;
+      overflow:hidden;
+    }
+    .option-tile:hover{
+      border-color:var(--quiz-border);
+      background:rgba(168,85,247,0.04);
+    }
+    .option-tile[aria-selected="true"]{
+      border-color:var(--quiz-color);
+      background:linear-gradient(135deg, rgba(168,85,247,0.12), rgba(124,58,237,0.08));
+      box-shadow:0 4px 20px var(--quiz-glow),inset 0 0 20px rgba(168,85,247,0.06);
+    }
+    .option-tile__accent{
+      position:absolute;left:0;top:0;bottom:0;width:4px;
+      background:transparent;border-radius:4px 0 0 4px;
+      transition:background 0.3s;
+    }
+    .option-tile[aria-selected="true"] .option-tile__accent{
+      background:var(--quiz-color);
+      box-shadow:0 0 8px var(--quiz-glow);
+    }
+    .option-tile__content{
+      flex:1;display:flex;align-items:center;gap:12px;
+      padding-left:8px;
+    }
+    .option-tile__letter{
+      width:28px;height:28px;border-radius:8px;
+      display:flex;align-items:center;justify-content:center;
+      font-family:var(--font-display);font-size:11px;font-weight:700;
+      background:rgba(255,255,255,0.04);
+      border:1px solid var(--border-subtle);
+      color:var(--text-dim);transition:all 0.3s;
+      flex-shrink:0;
+    }
+    .option-tile[aria-selected="true"] .option-tile__letter{
+      background:var(--quiz-color);border-color:var(--quiz-color);color:#fff;
+    }
+    .option-tile__text{
+      font-size:15px;font-weight:500;color:var(--text-muted);transition:color 0.3s;
+    }
+    .option-tile[aria-selected="true"] .option-tile__text{
+      color:var(--text-primary);font-weight:600;
+    }
+    .option-tile__check{
+      width:22px;height:22px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      background:transparent;transition:all 0.3s;flex-shrink:0;
+    }
+    .option-tile[aria-selected="true"] .option-tile__check{
+      background:var(--quiz-color);
+    }
+    .option-tile__check svg{width:12px;height:12px;color:#fff;opacity:0;transition:opacity 0.3s}
+    .option-tile[aria-selected="true"] .option-tile__check svg{opacity:1}
+
+    /* Full-width option for many options */
+    .option-grid--single{grid-template-columns:1fr}
+
+    /* ── Subjective input ──────────────────────────── */
+    .subjective-input{
+      width:100%;padding:16px 20px;
+      background:rgba(255,255,255,0.03);
+      border:1px solid var(--border-subtle);border-radius:14px;
+      font-family:var(--font-body);font-size:15px;color:var(--text-primary);
+      outline:none;resize:vertical;min-height:120px;
+      transition:border-color 0.3s;
+    }
+    .subjective-input::placeholder{color:var(--text-dim)}
+    .subjective-input:focus{border-color:var(--quiz-color);box-shadow:0 0 12px var(--quiz-glow)}
+
+    /* Short answer */
+    .short-input{
+      width:100%;padding:14px 20px;
+      background:rgba(255,255,255,0.03);
+      border:1px solid var(--border-subtle);border-radius:14px;
+      font-family:var(--font-body);font-size:15px;color:var(--text-primary);
+      outline:none;transition:border-color 0.3s;
+    }
+    .short-input::placeholder{color:var(--text-dim)}
+    .short-input:focus{border-color:var(--quiz-color);box-shadow:0 0 12px var(--quiz-glow)}
+
+    /* ── Checkbox option ───────────────────────────── */
+    .checkbox-tile{
+      display:flex;align-items:center;gap:12px;
+      padding:12px 18px;
+      background:rgba(255,255,255,0.03);
+      border:1px solid var(--border-subtle);border-radius:12px;
+      cursor:pointer;transition:all 0.3s ease;
+    }
+    .checkbox-tile:hover{border-color:var(--quiz-border);background:rgba(168,85,247,0.04)}
+    .checkbox-tile[aria-selected="true"]{
+      border-color:var(--quiz-color);background:rgba(168,85,247,0.08);
+    }
+    .checkbox-tile__box{
+      width:20px;height:20px;border-radius:5px;
+      border:2px solid var(--text-dim);
+      display:flex;align-items:center;justify-content:center;
+      transition:all 0.3s;flex-shrink:0;
+    }
+    .checkbox-tile[aria-selected="true"] .checkbox-tile__box{
+      background:var(--quiz-color);border-color:var(--quiz-color);
+    }
+    .checkbox-tile__box svg{width:12px;height:12px;color:#fff;opacity:0;transition:opacity 0.3s}
+    .checkbox-tile[aria-selected="true"] .checkbox-tile__box svg{opacity:1}
+    .checkbox-tile__label{font-size:14px;font-weight:500;color:var(--text-muted);transition:color 0.3s}
+    .checkbox-tile[aria-selected="true"] .checkbox-tile__label{color:var(--text-primary)}
+
+    /* ── Linear scale ──────────────────────────────── */
+    .scale-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+    .scale-btn{
+      width:44px;height:44px;border-radius:10px;
+      display:flex;align-items:center;justify-content:center;
+      border:1px solid var(--border-subtle);
+      background:rgba(255,255,255,0.03);
+      font-family:var(--font-display);font-size:13px;font-weight:600;
+      color:var(--text-muted);cursor:pointer;transition:all 0.3s;
+    }
+    .scale-btn:hover{border-color:var(--quiz-border);background:rgba(168,85,247,0.06)}
+    .scale-btn[aria-selected="true"]{
+      background:var(--quiz-color);border-color:var(--quiz-color);
+      color:#fff;box-shadow:0 0 12px var(--quiz-glow);
+    }
+    .scale-labels{
+      display:flex;justify-content:space-between;
+      font-size:11px;color:var(--text-dim);width:100%;
+    }
+
+    /* ── Bottom bar ──────────────────────────────────── */
+    .quiz-bottom{
+      position:fixed;bottom:0;left:0;right:0;z-index:30;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:16px 28px;
+      background:var(--bg-glass-strong);backdrop-filter:blur(24px);
+      border-top:1px solid var(--border-subtle);
+    }
+    .quiz-bottom__left{display:flex;align-items:center;gap:12px}
+    .quiz-bottom__right{display:flex;align-items:center;gap:10px}
+
+    /* Question dots */
+    .question-dots{display:flex;gap:6px;align-items:center}
+    .question-dot{
+      width:8px;height:8px;border-radius:50%;
+      background:rgba(255,255,255,0.1);
+      border:none;cursor:pointer;transition:all 0.3s ease;padding:0;
+    }
+    .question-dot--answered{background:var(--quiz-color);opacity:0.5}
+    .question-dot--current{
+      width:24px;border-radius:4px;
+      background:var(--quiz-color);opacity:1;
+      box-shadow:0 0 8px var(--quiz-glow);
+    }
+
+    /* Nav buttons */
+    .quiz-nav-btn{
+      padding:10px 24px;border-radius:10px;
+      font-family:var(--font-display);font-size:11px;font-weight:700;
+      letter-spacing:0.08em;text-transform:uppercase;
+      cursor:pointer;transition:all 0.25s ease;
+      border:1px solid var(--border-subtle);
+      background:var(--bg-glass);color:var(--text-muted);
+    }
+    .quiz-nav-btn:hover{border-color:var(--quiz-border);color:var(--quiz-color)}
+    .quiz-nav-btn--primary{
+      background:linear-gradient(135deg, var(--quiz-color), #7c3aed);
+      color:#fff;border-color:transparent;
+      box-shadow:0 2px 12px var(--quiz-glow);
+    }
+    .quiz-nav-btn--primary:hover{
+      box-shadow:0 4px 24px var(--quiz-glow-strong);
+      transform:translateY(-1px);
+    }
+    .quiz-nav-btn--submit{
+      background:linear-gradient(135deg, var(--accent-gold), #e5a200);
+      color:#0a0a0a;border-color:transparent;
+      box-shadow:0 2px 12px rgba(252,179,0,0.2);
+    }
+    .quiz-nav-btn--submit:hover{
+      box-shadow:0 4px 24px rgba(252,179,0,0.35);
+      transform:translateY(-1px);
+    }
+    .quiz-nav-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none !important}
+
+    /* ── Transition animation ────────────────────────── */
+    @keyframes cardSlideIn{
+      0%{opacity:0;transform:translateX(40px) scale(0.96)}
+      100%{opacity:1;transform:translateX(0) scale(1)}
+    }
+
+    /* ── Responsive ──────────────────────────────────── */
+    @media(max-width:500px){
+      .quiz-topbar{padding:16px}
+      .quiz-topbar__title{font-size:12px}
+      .overview-card{padding:24px 20px}
+      .overview-card__title{font-size:20px}
+      .overview-ring{width:100px;height:100px}
+      .overview-ring__svg{width:100px;height:100px}
+      .overview-ring__number{font-size:24px}
+      .overview-stats{gap:12px}
+      .overview-stat{padding:10px 14px;min-width:70px}
+      .overview-stat__value{font-size:15px}
+      .question-card{padding:24px 20px}
+      .question-title{font-size:18px}
+      .option-grid{grid-template-columns:1fr}
+      .option-tile{min-height:56px;padding:12px 14px}
+      .quiz-bottom{padding:14px 16px}
+      .quiz-nav-btn{padding:9px 18px;font-size:10px}
+      .quiz-question-area{padding:0 16px 120px}
+    }
+
+    /* ── Screen switching ────────────────────────────── */
+    .screen{display:none}
+    .screen.active{display:flex;flex-direction:column;flex:1}
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════
+       SCREEN 1: OVERVIEW
+       ═══════════════════════════════════════════════════ -->
+  <div class="quiz-arena" id="quiz-arena">
+
+    <!-- Top bar (shared) -->
+    <div class="quiz-topbar">
+      <div class="quiz-topbar__left">
+        <button class="quiz-topbar__back" aria-label="Go back" id="btn-go-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        </button>
+        <span class="quiz-topbar__title" id="topbar-title">Climate Science Fundamentals</span>
+        <span class="quiz-topbar__badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Quiz
+        </span>
+      </div>
+      <div class="quiz-topbar__right">
+        <!-- Progress ring (hidden on overview, shown during quiz) -->
+        <div class="progress-ring" id="topbar-ring" style="display:none">
+          <svg class="progress-ring__svg" viewBox="0 0 48 48">
+            <circle class="progress-ring__bg" cx="24" cy="24" r="20"/>
+            <circle class="progress-ring__fill" cx="24" cy="24" r="20"
+              stroke-dasharray="125.66"
+              stroke-dashoffset="125.66"
+              id="ring-fill"/>
+          </svg>
+          <div class="progress-ring__label" id="ring-label">0/5</div>
+        </div>
+        <div class="attempts-chip" id="attempts-chip">
+          <svg class="attempts-chip__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+          <span id="attempts-text">2 / 3 attempts left</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 1: Overview -->
+    <div class="screen active" id="screen-overview">
+      <div class="quiz-overview">
+        <!-- Big ring -->
+        <div class="overview-ring">
+          <svg class="overview-ring__svg" viewBox="0 0 140 140">
+            <circle class="overview-ring__bg" cx="70" cy="70" r="60"/>
+            <circle class="overview-ring__fill" cx="70" cy="70" r="60"
+              stroke-dasharray="376.99"
+              stroke-dashoffset="0"/>
+          </svg>
+          <div class="overview-ring__center">
+            <span class="overview-ring__number" id="overview-q-count">5</span>
+            <span class="overview-ring__label">Questions</span>
+          </div>
+        </div>
+
+        <!-- Glass card -->
+        <div class="overview-card">
+          <div class="overview-card__title">Climate Science Fundamentals</div>
+          <div class="overview-card__desc">
+            Test your knowledge on climate change science, greenhouse effects, and renewable energy solutions for a sustainable future.
+          </div>
+
+          <!-- Stats -->
+          <div class="overview-stats">
+            <div class="overview-stat">
+              <span class="overview-stat__value">5</span>
+              <span class="overview-stat__label">Questions</span>
+            </div>
+            <div class="overview-stat">
+              <span class="overview-stat__value">70%</span>
+              <span class="overview-stat__label">Pass Score</span>
+            </div>
+            <div class="overview-stat">
+              <span class="overview-stat__value">75</span>
+              <span class="overview-stat__label">Credits</span>
+            </div>
+          </div>
+
+          <!-- Files (optional) -->
+          <div class="overview-files">
+            <div class="overview-file">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              study-guide.pdf
+            </div>
+            <div class="overview-file">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              reference-data.xlsx
+            </div>
+          </div>
+
+          <!-- Begin button -->
+          <button class="quiz-begin-btn" id="btn-begin">Begin Quiz</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 2: Question solving -->
+    <div class="screen" id="screen-quiz">
+      <div class="quiz-question-area" id="question-area">
+        <!-- Questions are rendered dynamically by JS -->
+      </div>
+
+      <!-- Bottom bar -->
+      <div class="quiz-bottom">
+        <div class="quiz-bottom__left">
+          <div class="question-dots" id="question-dots"></div>
+        </div>
+        <div class="quiz-bottom__right">
+          <button class="quiz-nav-btn" id="btn-back" disabled>Back</button>
+          <button class="quiz-nav-btn quiz-nav-btn--primary" id="btn-next">Next</button>
+          <button class="quiz-nav-btn quiz-nav-btn--submit" id="btn-submit" style="display:none">Submit</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    (function () {
+      // ── Mock quiz data ──────────────────────────────
+      var quiz = {
+        title: "Climate Science Fundamentals",
+        questions: [
+          {
+            type: "SingleChoice",
+            title: "What is the primary greenhouse gas responsible for climate change?",
+            description: "Select the most significant contributor to the greenhouse effect.",
+            options: ["Carbon Dioxide (CO\u2082)", "Methane (CH\u2084)", "Nitrous Oxide (N\u2082O)", "Water Vapor"],
+            required: true,
+          },
+          {
+            type: "MultipleChoice",
+            title: "Which of the following are renewable energy sources?",
+            description: "Select all that apply.",
+            options: ["Solar", "Wind", "Natural Gas", "Hydroelectric", "Coal"],
+            required: true,
+          },
+          {
+            type: "Checkbox",
+            title: "Select all effects of ocean acidification:",
+            options: ["Coral bleaching", "Shellfish dissolution", "Increased fish population", "Reduced biodiversity"],
+            required: false,
+          },
+          {
+            type: "ShortAnswer",
+            title: "What year was the Paris Climate Agreement adopted?",
+            required: true,
+          },
+          {
+            type: "LinearScale",
+            title: "How urgent do you think climate action is?",
+            min: 1, max: 10,
+            minLabel: "Not urgent", maxLabel: "Extremely urgent",
+            required: false,
+          },
+        ],
+      };
+
+      var currentQuestion = 0;
+      var answers = new Array(quiz.questions.length).fill(null);
+      var totalQuestions = quiz.questions.length;
+      var letters = ["A", "B", "C", "D", "E", "F", "G", "H"];
+
+      // ── DOM refs ────────────────────────────────────
+      var screenOverview = document.getElementById("screen-overview");
+      var screenQuiz = document.getElementById("screen-quiz");
+      var topbarRing = document.getElementById("topbar-ring");
+      var ringFill = document.getElementById("ring-fill");
+      var ringLabel = document.getElementById("ring-label");
+      var questionArea = document.getElementById("question-area");
+      var dotsContainer = document.getElementById("question-dots");
+      var btnBack = document.getElementById("btn-back");
+      var btnNext = document.getElementById("btn-next");
+      var btnSubmit = document.getElementById("btn-submit");
+
+      // ── Helpers: create SVG check icon ──────────────
+      function createCheckSvg(size) {
+        var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("viewBox", "0 0 24 24");
+        svg.setAttribute("fill", "none");
+        svg.setAttribute("stroke", "currentColor");
+        svg.setAttribute("stroke-width", "3");
+        svg.setAttribute("stroke-linecap", "round");
+        svg.setAttribute("stroke-linejoin", "round");
+        svg.style.width = size + "px";
+        svg.style.height = size + "px";
+        svg.style.color = "#fff";
+        var polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+        polyline.setAttribute("points", "20 6 9 17 4 12");
+        svg.appendChild(polyline);
+        return svg;
+      }
+
+      function el(tag, className, textContent) {
+        var node = document.createElement(tag);
+        if (className) node.className = className;
+        if (textContent) node.textContent = textContent;
+        return node;
+      }
+
+      // ── Screen switching ────────────────────────────
+      function startQuiz() {
+        screenOverview.classList.remove("active");
+        screenQuiz.classList.add("active");
+        topbarRing.style.display = "";
+        renderDots();
+        renderQuestion(0);
+      }
+
+      function goBack() {
+        if (screenQuiz.classList.contains("active") && currentQuestion === 0) {
+          screenQuiz.classList.remove("active");
+          screenOverview.classList.add("active");
+          topbarRing.style.display = "none";
+        } else if (screenQuiz.classList.contains("active")) {
+          prevQuestion();
+        }
+      }
+
+      // ── Render dots ─────────────────────────────────
+      function renderDots() {
+        while (dotsContainer.firstChild) dotsContainer.removeChild(dotsContainer.firstChild);
+        for (var i = 0; i < totalQuestions; i++) {
+          var dot = el("button", "question-dot");
+          if (i === currentQuestion) dot.classList.add("question-dot--current");
+          else if (answers[i] !== null) dot.classList.add("question-dot--answered");
+          (function(idx) {
+            dot.addEventListener("click", function() { goToQuestion(idx); });
+          })(i);
+          dotsContainer.appendChild(dot);
+        }
+      }
+
+      // ── Update progress ring ────────────────────────
+      function updateRing() {
+        var answered = answers.filter(function(a) { return a !== null; }).length;
+        var circumference = 2 * Math.PI * 20;
+        var offset = circumference - (answered / totalQuestions) * circumference;
+        ringFill.setAttribute("stroke-dashoffset", offset);
+        ringLabel.textContent = answered + "/" + totalQuestions;
+      }
+
+      // ── Go to specific question ─────────────────────
+      function goToQuestion(idx) {
+        currentQuestion = idx;
+        renderQuestion(idx);
+      }
+
+      // ── Build option tile ───────────────────────────
+      function buildOptionTile(qIdx, optIdx, text, selected, onClick) {
+        var tile = el("button", "option-tile");
+        tile.setAttribute("aria-selected", String(selected));
+        tile.addEventListener("click", onClick);
+
+        var accent = el("div", "option-tile__accent");
+        var content = el("div", "option-tile__content");
+        var letter = el("span", "option-tile__letter", letters[optIdx] || "");
+        var textSpan = el("span", "option-tile__text", text);
+        content.appendChild(letter);
+        content.appendChild(textSpan);
+
+        var check = el("div", "option-tile__check");
+        check.appendChild(createCheckSvg(12));
+
+        tile.appendChild(accent);
+        tile.appendChild(content);
+        tile.appendChild(check);
+        return tile;
+      }
+
+      // ── Render question ─────────────────────────────
+      function renderQuestion(idx) {
+        var q = quiz.questions[idx];
+        while (questionArea.firstChild) questionArea.removeChild(questionArea.firstChild);
+
+        var card = el("div", "question-card");
+
+        // Header
+        var header = el("div", "question-header");
+        header.appendChild(el("span", "question-number", "Question " + (idx + 1) + " of " + totalQuestions));
+        if (q.required) header.appendChild(el("span", "question-required", "Required"));
+        card.appendChild(header);
+
+        // Title
+        card.appendChild(el("div", "question-title", q.title));
+        if (q.description) card.appendChild(el("div", "question-desc", q.description));
+
+        // ── Type-specific content ──────────────────
+        if (q.type === "SingleChoice") {
+          var grid = el("div", "option-grid" + (q.options.length > 4 ? " option-grid--single" : ""));
+          for (var i = 0; i < q.options.length; i++) {
+            (function(oi) {
+              var sel = answers[idx] === oi;
+              grid.appendChild(buildOptionTile(idx, oi, q.options[oi], sel, function() {
+                answers[idx] = answers[idx] === oi ? null : oi;
+                renderQuestion(idx);
+              }));
+            })(i);
+          }
+          card.appendChild(grid);
+        }
+        else if (q.type === "MultipleChoice") {
+          var selected = answers[idx] || [];
+          var grid2 = el("div", "option-grid" + (q.options.length > 4 ? " option-grid--single" : ""));
+          for (var j = 0; j < q.options.length; j++) {
+            (function(oj) {
+              var sel2 = selected.indexOf(oj) !== -1;
+              grid2.appendChild(buildOptionTile(idx, oj, q.options[oj], sel2, function() {
+                var cur = answers[idx] || [];
+                var pos = cur.indexOf(oj);
+                if (pos !== -1) cur.splice(pos, 1); else cur.push(oj);
+                answers[idx] = cur.length > 0 ? cur : null;
+                renderQuestion(idx);
+              }));
+            })(j);
+          }
+          card.appendChild(grid2);
+        }
+        else if (q.type === "Checkbox") {
+          var checked = answers[idx] || [];
+          var grid3 = el("div", "option-grid option-grid--single");
+          for (var k = 0; k < q.options.length; k++) {
+            (function(ok) {
+              var ck = checked.indexOf(ok) !== -1;
+              var tile = el("button", "checkbox-tile");
+              tile.setAttribute("aria-selected", String(ck));
+              tile.addEventListener("click", function() {
+                var cur = answers[idx] || [];
+                var pos = cur.indexOf(ok);
+                if (pos !== -1) cur.splice(pos, 1); else cur.push(ok);
+                answers[idx] = cur.length > 0 ? cur : null;
+                renderQuestion(idx);
+              });
+              var box = el("div", "checkbox-tile__box");
+              box.appendChild(createCheckSvg(12));
+              tile.appendChild(box);
+              tile.appendChild(el("span", "checkbox-tile__label", q.options[ok]));
+              grid3.appendChild(tile);
+            })(k);
+          }
+          card.appendChild(grid3);
+        }
+        else if (q.type === "ShortAnswer") {
+          var input = el("input", "short-input");
+          input.type = "text";
+          input.placeholder = "Type your answer...";
+          input.value = answers[idx] || "";
+          input.addEventListener("input", function() {
+            answers[idx] = input.value.trim() ? input.value : null;
+            updateRing();
+            updateButtons();
+            renderDots();
+          });
+          card.appendChild(input);
+        }
+        else if (q.type === "LinearScale") {
+          var labels = el("div", "scale-labels");
+          labels.appendChild(el("span", null, q.minLabel));
+          labels.appendChild(el("span", null, q.maxLabel));
+          card.appendChild(labels);
+          var row = el("div", "scale-row");
+          for (var s = q.min; s <= q.max; s++) {
+            (function(sv) {
+              var btn = el("button", "scale-btn", String(sv));
+              btn.setAttribute("aria-selected", String(answers[idx] === sv));
+              btn.addEventListener("click", function() {
+                answers[idx] = answers[idx] === sv ? null : sv;
+                renderQuestion(idx);
+              });
+              row.appendChild(btn);
+            })(s);
+          }
+          card.appendChild(row);
+        }
+
+        questionArea.appendChild(card);
+
+        renderDots();
+        updateRing();
+        updateButtons();
+      }
+
+      // ── Navigation ──────────────────────────────────
+      function prevQuestion() {
+        if (currentQuestion > 0) {
+          currentQuestion--;
+          renderQuestion(currentQuestion);
+        }
+      }
+      function nextQuestion() {
+        if (currentQuestion < totalQuestions - 1) {
+          currentQuestion++;
+          renderQuestion(currentQuestion);
+        }
+      }
+      function updateButtons() {
+        var isLast = currentQuestion === totalQuestions - 1;
+        btnBack.disabled = currentQuestion === 0;
+        btnNext.style.display = isLast ? "none" : "";
+        btnSubmit.style.display = isLast ? "" : "none";
+        var allAnswered = answers.every(function(a) { return a !== null; });
+        btnSubmit.disabled = !allAnswered;
+      }
+
+      // ── Event bindings ──────────────────────────────
+      document.getElementById("btn-begin").addEventListener("click", startQuiz);
+      document.getElementById("btn-go-back").addEventListener("click", goBack);
+      btnBack.addEventListener("click", prevQuestion);
+      btnNext.addEventListener("click", nextQuestion);
+      btnSubmit.addEventListener("click", function() {
+        // In production, this calls the respond_quiz server function
+        var msg = "Quiz submitted! Answers: " + JSON.stringify(answers);
+        // Using console.log instead of alert to avoid dialog blocking
+        console.log(msg);
+        // Visual feedback: show success state
+        btnSubmit.textContent = "Submitted!";
+        btnSubmit.disabled = true;
+      });
+    })();
+  </script>
+
+</body>
+</html>

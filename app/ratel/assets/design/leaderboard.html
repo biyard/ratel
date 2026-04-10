@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Space Index — Leaderboard Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+      --border-subtle:rgba(255,255,255,0.06);--text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+      --accent-gold:#fcb300;--accent-teal:#6eedd8;
+      --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
+    }
+    html[data-theme="dark"]{ --dark: ; --light: initial; }
+    html[data-theme="light"]{ --dark: initial; --light: ; }
+    html,body{height:100%;overflow:hidden;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body)}
+
+    /* ── Arena shell (simplified for mockup) ── */
+    .arena{position:relative;width:100%;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+    .arena::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(252,179,0,0.06) 0%,transparent 60%),radial-gradient(ellipse 120% 100% at 50% 120%,rgba(110,237,216,0.04) 0%,transparent 50%),radial-gradient(circle at 50% 50%,var(--bg-void) 0%,var(--bg-void) 100%);z-index:0}
+
+    /* ── Top bar ── */
+    .arena-topbar{position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:20px 28px;flex-shrink:0}
+    .arena-topbar__brand{display:flex;align-items:center;gap:14px}
+    .arena-topbar__logo{width:40px;height:40px;border-radius:10px;object-fit:cover;border:1px solid rgba(252,179,0,0.15);box-shadow:0 2px 12px rgba(0,0,0,0.3)}
+    .arena-topbar__title{font-family:var(--font-display);font-weight:700;font-size:16px;letter-spacing:0.06em;text-transform:uppercase}
+    .arena-topbar__status{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;background:rgba(110,237,216,0.08);border:1px solid rgba(110,237,216,0.15);font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent-teal);margin-left:12px}
+    .arena-topbar__status::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--accent-teal);box-shadow:0 0 6px var(--accent-teal)}
+    .arena-topbar__actions{display:flex;gap:10px}
+
+    /* ── HUD Buttons ── */
+    .hud-btn{width:40px;height:40px;border-radius:10px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s ease;padding:0;position:relative}
+    .hud-btn:hover{background:var(--bg-glass-hover);border-color:rgba(252,179,0,0.2);box-shadow:0 0 20px rgba(252,179,0,0.08)}
+    .hud-btn svg{width:18px;height:18px;color:var(--text-muted);transition:color 0.2s}
+    .hud-btn:hover svg{color:var(--accent-gold)}
+    .hud-btn[aria-pressed="true"]{background:rgba(252,179,0,0.12);border-color:rgba(252,179,0,0.3)}
+    .hud-btn[aria-pressed="true"] svg{color:var(--accent-gold)}
+    .hud-btn .tooltip{position:absolute;bottom:-32px;right:0;padding:4px 10px;background:var(--bg-void);border:1px solid var(--border-subtle);border-radius:6px;font-size:11px;color:var(--text-muted);white-space:nowrap;opacity:0;pointer-events:none;transform:translateY(-4px);transition:all 0.2s ease}
+    .hud-btn:hover .tooltip{opacity:1;transform:translateY(0)}
+
+    /* ── Leaderboard Panel ──────────────────────────── */
+    .leaderboard-panel {
+      --panel-bg: var(--dark, rgba(12,12,26,1.00)) var(--light, rgba(255,255,255,1.00));
+      --panel-border: var(--dark, rgba(255,255,255,0.06)) var(--light, rgba(0,0,0,0.08));
+      --panel-title: var(--dark, #f0f0f5) var(--light, #12121a);
+      --panel-text: var(--dark, #8888a8) var(--light, #6b6b80);
+      --panel-text-dim: var(--dark, #55556a) var(--light, #9999aa);
+      --panel-card-bg: var(--dark, rgba(255,255,255,0.03)) var(--light, rgba(0,0,0,0.03));
+      --panel-close-hover: var(--dark, rgba(20,20,40,0.80)) var(--light, rgba(240,240,240,0.80));
+      --panel-shadow: var(--dark, rgba(0,0,0,0.4)) var(--light, rgba(0,0,0,0.08));
+
+      position: absolute;
+      top: 0; right: 0;
+      width: 520px;
+      height: 100vh;
+      z-index: 25;
+      background: var(--panel-bg);
+      backdrop-filter: blur(32px);
+      -webkit-backdrop-filter: blur(32px);
+      border-left: 1px solid var(--panel-border);
+      box-shadow: -8px 0 60px var(--panel-shadow);
+      transform: translateX(100%);
+      transition: transform 0.45s cubic-bezier(0.16,1,0.3,1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .leaderboard-panel[data-open="true"] { transform: translateX(0); }
+
+    /* Header */
+    .leaderboard-panel__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 28px 20px;
+      border-bottom: 1px solid var(--panel-border);
+      flex-shrink: 0;
+    }
+    .leaderboard-panel__title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 14px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--panel-title);
+    }
+    .leaderboard-panel__close {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: transparent;
+      border: 1px solid var(--panel-border);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s ease;
+      color: var(--panel-text); padding: 0;
+    }
+    .leaderboard-panel__close:hover {
+      background: var(--panel-close-hover);
+      border-color: rgba(252,179,0,0.2); color: #fcb300;
+    }
+    .leaderboard-panel__close svg { width: 16px; height: 16px; }
+
+    /* My rank card */
+    .leaderboard-my-rank {
+      margin: 20px 28px 0;
+      padding: 16px 20px;
+      border-radius: 14px;
+      background: rgba(252,179,0,0.06);
+      border: 1px solid rgba(252,179,0,0.15);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+    .leaderboard-my-rank__position {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: rgba(252,179,0,0.12);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 16px; font-weight: 700;
+      color: #fcb300;
+    }
+    .leaderboard-my-rank__info {
+      flex: 1; min-width: 0;
+    }
+    .leaderboard-my-rank__label {
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--panel-text-dim);
+      margin-bottom: 2px;
+    }
+    .leaderboard-my-rank__name {
+      font-size: 14px; font-weight: 600;
+      color: var(--panel-title);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .leaderboard-my-rank__score {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 18px; font-weight: 700;
+      color: #fcb300;
+    }
+    .leaderboard-my-rank__score-label {
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--panel-text-dim);
+      margin-top: 2px;
+      text-align: right;
+    }
+
+    /* Score breakdown */
+    .leaderboard-breakdown {
+      margin: 12px 28px 0;
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .leaderboard-breakdown__item {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: var(--panel-card-bg);
+      border: 1px solid var(--panel-border);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      align-items: center;
+    }
+    .leaderboard-breakdown__value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 13px; font-weight: 700;
+      color: var(--panel-title);
+    }
+    .leaderboard-breakdown__label {
+      font-size: 9px; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--panel-text-dim);
+    }
+    .leaderboard-breakdown__item--poll .leaderboard-breakdown__value { color: #818cf8; }
+    .leaderboard-breakdown__item--quiz .leaderboard-breakdown__value { color: #a855f7; }
+    .leaderboard-breakdown__item--discussion .leaderboard-breakdown__value { color: #22d3ee; }
+    .leaderboard-breakdown__item--follow .leaderboard-breakdown__value { color: #fb923c; }
+
+    /* Table section */
+    .leaderboard-panel__body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 28px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .leaderboard-panel__body::-webkit-scrollbar { width: 4px; }
+    .leaderboard-panel__body::-webkit-scrollbar-track { background: transparent; }
+    .leaderboard-panel__body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+    .leaderboard-section-label {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--panel-text-dim);
+      margin-bottom: 12px;
+    }
+
+    /* Podium (top 3) */
+    .leaderboard-podium {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 12px;
+      padding: 8px 0 20px;
+      margin-bottom: 20px;
+    }
+    .leaderboard-podium__entry {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      width: 120px;
+    }
+    .leaderboard-podium__entry--1st {
+      order: 2;
+    }
+    .leaderboard-podium__entry--2nd {
+      order: 1;
+    }
+    .leaderboard-podium__entry--3rd {
+      order: 3;
+    }
+    .leaderboard-podium__avatar-wrap {
+      position: relative;
+    }
+    .leaderboard-podium__avatar {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--panel-border);
+    }
+    .leaderboard-podium__entry--1st .leaderboard-podium__avatar {
+      width: 64px; height: 64px;
+      border-color: rgba(252,179,0,0.4);
+      box-shadow: 0 0 24px rgba(252,179,0,0.15);
+    }
+    .leaderboard-podium__entry--2nd .leaderboard-podium__avatar {
+      border-color: rgba(192,192,192,0.3);
+    }
+    .leaderboard-podium__entry--3rd .leaderboard-podium__avatar {
+      border-color: rgba(205,127,50,0.3);
+    }
+    .leaderboard-podium__medal {
+      position: absolute;
+      bottom: -4px; right: -4px;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 800;
+      border: 2px solid var(--bg-void);
+    }
+    .leaderboard-podium__entry--1st .leaderboard-podium__medal {
+      background: linear-gradient(135deg, #fcb300, #e0a000);
+      color: #1a1400;
+    }
+    .leaderboard-podium__entry--2nd .leaderboard-podium__medal {
+      background: linear-gradient(135deg, #c0c0c0, #a0a0a0);
+      color: #1a1a1a;
+    }
+    .leaderboard-podium__entry--3rd .leaderboard-podium__medal {
+      background: linear-gradient(135deg, #cd7f32, #a86520);
+      color: #1a1400;
+    }
+    .leaderboard-podium__name {
+      font-size: 12px; font-weight: 600;
+      color: var(--panel-title);
+      text-align: center;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      max-width: 100%;
+    }
+    .leaderboard-podium__score {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 12px; font-weight: 700;
+      color: var(--panel-text);
+    }
+    .leaderboard-podium__entry--1st .leaderboard-podium__score { color: #fcb300; }
+
+    /* Ranking list (4th onward) */
+    .leaderboard-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .leaderboard-entry {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      transition: background 0.15s ease;
+    }
+    .leaderboard-entry:hover {
+      background: var(--panel-card-bg);
+    }
+    .leaderboard-entry--me {
+      background: rgba(252,179,0,0.06);
+      border: 1px solid rgba(252,179,0,0.1);
+    }
+    .leaderboard-entry__rank {
+      width: 28px;
+      font-size: 13px; font-weight: 600;
+      color: var(--panel-text-dim);
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .leaderboard-entry__avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid var(--panel-border);
+      flex-shrink: 0;
+    }
+    .leaderboard-entry__avatar-placeholder {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: rgba(252,179,0,0.12);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 600;
+      color: #fcb300;
+      flex-shrink: 0;
+    }
+    .leaderboard-entry__name {
+      flex: 1; min-width: 0;
+      font-size: 13px; font-weight: 500;
+      color: var(--panel-title);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .leaderboard-entry__me-badge {
+      padding: 2px 8px;
+      border-radius: 100px;
+      background: rgba(252,179,0,0.1);
+      font-size: 10px; font-weight: 700;
+      color: #fcb300;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+    .leaderboard-entry__score {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 13px; font-weight: 600;
+      color: var(--panel-text);
+      text-align: right;
+      flex-shrink: 0;
+      min-width: 48px;
+    }
+    .leaderboard-entry--me .leaderboard-entry__score {
+      color: #fcb300;
+    }
+
+    /* Divider */
+    .leaderboard-divider {
+      height: 1px;
+      background: var(--panel-border);
+      margin: 8px 16px;
+    }
+
+    /* Empty state */
+    .leaderboard-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      gap: 12px;
+    }
+    .leaderboard-empty__icon {
+      width: 48px; height: 48px;
+      color: var(--panel-text-dim);
+      opacity: 0.5;
+    }
+    .leaderboard-empty__text {
+      font-size: 13px;
+      color: var(--panel-text-dim);
+      text-align: center;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 500px) {
+      .arena-topbar { padding: 16px; }
+      .arena-topbar__logo { width: 32px; height: 32px; }
+      .arena-topbar__title { font-size: 13px; }
+      .hud-btn { width: 36px; height: 36px; }
+      .leaderboard-panel { width: 100%; }
+      .leaderboard-my-rank { margin: 16px 16px 0; }
+      .leaderboard-breakdown { margin: 10px 16px 0; }
+      .leaderboard-panel__body { padding: 16px; }
+      .leaderboard-panel__header { padding: 20px 16px 16px; }
+      .leaderboard-podium { gap: 8px; }
+      .leaderboard-podium__entry { width: 90px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="arena">
+    <!-- ── Top Bar ── -->
+    <div class="arena-topbar">
+      <div class="arena-topbar__brand">
+        <img class="arena-topbar__logo" src="https://metadata.ratel.foundation/logos/logo-symbol.png" alt="Logo" />
+        <span class="arena-topbar__title">Governance Space</span>
+        <span class="arena-topbar__status">Open</span>
+      </div>
+      <div class="arena-topbar__actions">
+        <!-- Overview button -->
+        <button class="hud-btn" aria-label="Overview" aria-pressed="false">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/>
+          </svg>
+          <span class="tooltip">Overview</span>
+        </button>
+        <!-- Leaderboard button (NEW — between overview and settings) -->
+        <button class="hud-btn" aria-label="Leaderboard" aria-pressed="true" onclick="toggleLeaderboard()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <path d="M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15"/>
+            <path d="M11 12 5.12 2.2"/>
+            <path d="m13 12 5.88-9.8"/>
+            <path d="M8 7h8"/>
+            <circle cx="12" cy="17" r="5"/>
+            <path d="M12 18v-2h-.5"/>
+          </svg>
+          <span class="tooltip">Leaderboard</span>
+        </button>
+        <!-- Settings button -->
+        <button class="hud-btn" aria-label="Settings" aria-pressed="false">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          <span class="tooltip">Settings</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Placeholder content ── -->
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;z-index:1;opacity:0.3">
+      <span style="font-family:var(--font-display);font-size:13px;letter-spacing:0.2em;text-transform:uppercase">Arena Content</span>
+    </div>
+
+    <!-- ── Leaderboard Panel ── -->
+    <div class="leaderboard-panel" data-open="true" data-testid="leaderboard-panel">
+      <!-- Header -->
+      <div class="leaderboard-panel__header">
+        <span class="leaderboard-panel__title">Leaderboard</span>
+        <button class="leaderboard-panel__close" aria-label="Close leaderboard" onclick="toggleLeaderboard()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- My Rank Card -->
+      <div class="leaderboard-my-rank">
+        <div class="leaderboard-my-rank__position">#7</div>
+        <div class="leaderboard-my-rank__info">
+          <div class="leaderboard-my-rank__label">Your Rank</div>
+          <div class="leaderboard-my-rank__name">hackartist.eth</div>
+        </div>
+        <div style="text-align:right">
+          <div class="leaderboard-my-rank__score">2,480</div>
+          <div class="leaderboard-my-rank__score-label">Total Score</div>
+        </div>
+      </div>
+
+      <!-- Score Breakdown -->
+      <div class="leaderboard-breakdown">
+        <div class="leaderboard-breakdown__item leaderboard-breakdown__item--poll">
+          <span class="leaderboard-breakdown__value">820</span>
+          <span class="leaderboard-breakdown__label">Poll</span>
+        </div>
+        <div class="leaderboard-breakdown__item leaderboard-breakdown__item--quiz">
+          <span class="leaderboard-breakdown__value">640</span>
+          <span class="leaderboard-breakdown__label">Quiz</span>
+        </div>
+        <div class="leaderboard-breakdown__item leaderboard-breakdown__item--discussion">
+          <span class="leaderboard-breakdown__value">580</span>
+          <span class="leaderboard-breakdown__label">Discussion</span>
+        </div>
+        <div class="leaderboard-breakdown__item leaderboard-breakdown__item--follow">
+          <span class="leaderboard-breakdown__value">440</span>
+          <span class="leaderboard-breakdown__label">Follow</span>
+        </div>
+      </div>
+
+      <!-- Scrollable body -->
+      <div class="leaderboard-panel__body">
+        <span class="leaderboard-section-label">Top Participants</span>
+
+        <!-- Podium (top 3) -->
+        <div class="leaderboard-podium">
+          <!-- 2nd place -->
+          <div class="leaderboard-podium__entry leaderboard-podium__entry--2nd">
+            <div class="leaderboard-podium__avatar-wrap">
+              <img class="leaderboard-podium__avatar" src="https://i.pravatar.cc/96?img=12" alt="Alice" />
+              <div class="leaderboard-podium__medal">2</div>
+            </div>
+            <span class="leaderboard-podium__name">alice.eth</span>
+            <span class="leaderboard-podium__score">8,420</span>
+          </div>
+          <!-- 1st place -->
+          <div class="leaderboard-podium__entry leaderboard-podium__entry--1st">
+            <div class="leaderboard-podium__avatar-wrap">
+              <img class="leaderboard-podium__avatar" src="https://i.pravatar.cc/128?img=5" alt="CryptoKing" />
+              <div class="leaderboard-podium__medal">1</div>
+            </div>
+            <span class="leaderboard-podium__name">CryptoKing</span>
+            <span class="leaderboard-podium__score">12,350</span>
+          </div>
+          <!-- 3rd place -->
+          <div class="leaderboard-podium__entry leaderboard-podium__entry--3rd">
+            <div class="leaderboard-podium__avatar-wrap">
+              <img class="leaderboard-podium__avatar" src="https://i.pravatar.cc/96?img=33" alt="bob_dev" />
+              <div class="leaderboard-podium__medal">3</div>
+            </div>
+            <span class="leaderboard-podium__name">bob_dev</span>
+            <span class="leaderboard-podium__score">6,890</span>
+          </div>
+        </div>
+
+        <div class="leaderboard-divider"></div>
+
+        <!-- Ranking list (4th onward) -->
+        <div class="leaderboard-list">
+          <div class="leaderboard-entry">
+            <span class="leaderboard-entry__rank">4</span>
+            <img class="leaderboard-entry__avatar" src="https://i.pravatar.cc/64?img=15" alt="carol" />
+            <span class="leaderboard-entry__name">carol_vote</span>
+            <span class="leaderboard-entry__score">5,210</span>
+          </div>
+          <div class="leaderboard-entry">
+            <span class="leaderboard-entry__rank">5</span>
+            <img class="leaderboard-entry__avatar" src="https://i.pravatar.cc/64?img=22" alt="dave" />
+            <span class="leaderboard-entry__name">dave_web3</span>
+            <span class="leaderboard-entry__score">4,780</span>
+          </div>
+          <div class="leaderboard-entry">
+            <span class="leaderboard-entry__rank">6</span>
+            <div class="leaderboard-entry__avatar-placeholder">E</div>
+            <span class="leaderboard-entry__name">emma_dao</span>
+            <span class="leaderboard-entry__score">3,150</span>
+          </div>
+
+          <!-- Current user (highlighted) -->
+          <div class="leaderboard-entry leaderboard-entry--me">
+            <span class="leaderboard-entry__rank">7</span>
+            <img class="leaderboard-entry__avatar" src="https://i.pravatar.cc/64?img=8" alt="hackartist" />
+            <span class="leaderboard-entry__name">hackartist.eth</span>
+            <span class="leaderboard-entry__me-badge">You</span>
+            <span class="leaderboard-entry__score">2,480</span>
+          </div>
+
+          <div class="leaderboard-entry">
+            <span class="leaderboard-entry__rank">8</span>
+            <img class="leaderboard-entry__avatar" src="https://i.pravatar.cc/64?img=28" alt="frank" />
+            <span class="leaderboard-entry__name">frank_protocol</span>
+            <span class="leaderboard-entry__score">2,340</span>
+          </div>
+          <div class="leaderboard-entry">
+            <span class="leaderboard-entry__rank">9</span>
+            <div class="leaderboard-entry__avatar-placeholder">G</div>
+            <span class="leaderboard-entry__name">grace_gov</span>
+            <span class="leaderboard-entry__score">1,920</span>
+          </div>
+          <div class="leaderboard-entry">
+            <span class="leaderboard-entry__rank">10</span>
+            <img class="leaderboard-entry__avatar" src="https://i.pravatar.cc/64?img=44" alt="henry" />
+            <span class="leaderboard-entry__name">henry_stake</span>
+            <span class="leaderboard-entry__score">1,580</span>
+          </div>
+          <div class="leaderboard-entry">
+            <span class="leaderboard-entry__rank">11</span>
+            <img class="leaderboard-entry__avatar" src="https://i.pravatar.cc/64?img=50" alt="iris" />
+            <span class="leaderboard-entry__name">iris_defi</span>
+            <span class="leaderboard-entry__score">1,340</span>
+          </div>
+          <div class="leaderboard-entry">
+            <span class="leaderboard-entry__rank">12</span>
+            <div class="leaderboard-entry__avatar-placeholder">J</div>
+            <span class="leaderboard-entry__name">jake_nft</span>
+            <span class="leaderboard-entry__score">1,120</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleLeaderboard() {
+      var panel = document.querySelector('.leaderboard-panel');
+      var btn = document.querySelector('.hud-btn[aria-label="Leaderboard"]');
+      var isOpen = panel.getAttribute('data-open') === 'true';
+      panel.setAttribute('data-open', isOpen ? 'false' : 'true');
+      btn.setAttribute('aria-pressed', isOpen ? 'false' : 'true');
+    }
+
+    // Theme toggle via keyboard shortcut (T key)
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 't' || e.key === 'T') {
+        var html = document.documentElement;
+        var current = html.getAttribute('data-theme');
+        html.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+      }
+    });
+  </script>
+</body>
+</html>
