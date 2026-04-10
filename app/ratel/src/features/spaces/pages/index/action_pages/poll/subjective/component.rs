@@ -1,5 +1,5 @@
 use crate::features::spaces::pages::actions::actions::poll::*;
-use crate::features::spaces::pages::index::action_pages::poll::ActionPollTranslate;
+use super::super::ActionPollTranslate;
 use crate::features::spaces::pages::index::*;
 
 #[component]

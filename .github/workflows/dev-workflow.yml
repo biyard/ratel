@@ -232,6 +232,7 @@ jobs:
           VOTER_TAG_SECRET: ${{ secrets.DEV_VOTER_TAG_SECRET }}
           ATTR_VOTING_AUTHORITY_JSON: ${{ secrets.DEV_ATTR_VOTING_AUTHORITY_JSON }}
         run: |
+          npm i
           rm -rf target/dx
 
           cd app/ratel
@@ -407,6 +408,7 @@ jobs:
           VOTER_TAG_SECRET: ${{ secrets.DEV_VOTER_TAG_SECRET }}
           ATTR_VOTING_AUTHORITY_JSON: ${{ secrets.DEV_ATTR_VOTING_AUTHORITY_JSON }}
         run: |
+          npm i
           rm -rf target/dx
 
           cd app/ratel

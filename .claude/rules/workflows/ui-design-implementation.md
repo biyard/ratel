@@ -23,7 +23,7 @@ Workflow for designing new UI pages/components or redesigning existing ones. Fol
 
 ## Step 3: Create Standalone HTML Mockup
 
-- Create a single-file HTML mockup in `docs/design/<feature>.html` for user review
+- Create a single-file HTML mockup in `app/ratel/assets/design/<feature>.html` for user review
 - Include inline CSS and JS for self-contained preview
 - Use realistic placeholder data matching actual API response fields
 - Add interactive states (hover, active, panel toggles) so the user can evaluate UX

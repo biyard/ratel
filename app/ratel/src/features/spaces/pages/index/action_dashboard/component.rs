@@ -1,5 +1,6 @@
 use crate::features::spaces::pages::actions::controllers::list_actions;
 use crate::features::spaces::pages::actions::types::{SpaceActionSummary, SpaceActionType};
+use crate::features::spaces::pages::index::action_pages::quiz::CompletedQuizAction;
 use crate::features::spaces::pages::index::*;
 use crate::features::spaces::space_common::hooks::use_space;
 
@@ -87,6 +88,19 @@ pub fn ActionDashboard(space_id: ReadSignal<SpacePartition>) -> Element {
     };
 
     let mut show_archive = use_signal(|| false);
+    let mut completed_quiz: CompletedQuizAction = use_context();
+    let archive_action_id = completed_quiz.0();
+
+    // Clear completed signal after JS has time to pick it up for animation
+    use_effect(move || {
+        if completed_quiz.0().is_some() {
+            spawn(async move {
+                #[cfg(feature = "web")]
+                gloo_timers::future::sleep(std::time::Duration::from_millis(1500)).await;
+                completed_quiz.0.set(None);
+            });
+        }
+    });
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
@@ -115,7 +129,10 @@ pub fn ActionDashboard(space_id: ReadSignal<SpacePartition>) -> Element {
             }
         } else {
             div { class: "carousel-wrapper",
-                div { class: "carousel-track", id: "carousel-track",
+                div {
+                    class: "carousel-track",
+                    id: "carousel-track",
+                    "data-archive-action": archive_action_id.clone().unwrap_or_default(),
                     for action in active.iter() {
                         {
                             let action = action.clone();
