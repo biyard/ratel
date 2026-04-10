@@ -6,6 +6,8 @@ pub fn PollViewerPage(
     poll_id: ReadSignal<SpacePollEntityType>,
 ) -> Element {
     rsx! {
-        PollContent { space_id, poll_id, can_respond: false }
+        div { class: "flex flex-col w-full",
+            PollContent { space_id, poll_id, can_respond: false }
+        }
     }
 }
