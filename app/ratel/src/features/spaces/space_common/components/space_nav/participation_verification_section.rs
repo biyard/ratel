@@ -80,7 +80,7 @@ pub fn ParticipationVerificationSection(
                         for label in imported_attributes.iter() {
                             div { class: "flex items-center gap-[10px]",
                                 div { class: "flex justify-center items-center size-5 rounded-[4px] bg-[#FCB300]",
-                                    icons::validations::Check { class: "size-5 [&>path]:stroke-[#0A0A0A]" }
+                                    icons::validations::Check { class: "size-5 [&>path]:fill-none [&>path]:stroke-[#0A0A0A]" }
                                 }
                                 span { class: "font-semibold text-[15px]/[18px] tracking-[-0.16px]",
                                     {label.clone()}

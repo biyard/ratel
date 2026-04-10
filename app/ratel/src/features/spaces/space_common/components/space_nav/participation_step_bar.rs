@@ -63,7 +63,7 @@ pub fn ParticipationStepBar(current_step: ParticipationLayoverStep) -> Element {
 
     rsx! {
         div { class: "flex flex-col items-start w-full",
-            div { class: "flex gap-5 justify-center items-center py-6 px-5 w-full border-y border-[#262626] max-mobile:flex-col max-mobile:items-start max-mobile:gap-3",
+            div { class: "flex gap-5 justify-center items-center py-6 px-5 w-full border-y border-separator max-mobile:flex-col max-mobile:items-start max-mobile:gap-3",
                 StepBarItem {
                     step: 1,
                     label: tr.see_your_difference.to_string(),
@@ -90,9 +90,9 @@ pub fn ParticipationStepBar(current_step: ParticipationLayoverStep) -> Element {
 #[component]
 fn StepBarItem(step: u8, label: String, active: bool, show_line: bool) -> Element {
     let circle_class = if active {
-        "bg-primary text-[#0A0A0A]"
+        "bg-primary text-btn-primary-text"
     } else {
-        "bg-[#737373] text-[#0A0A0A]"
+        "bg-(--gray-500) text-white"
     };
     let text_class = if active {
         "text-web-font-primary"
@@ -109,7 +109,7 @@ fn StepBarItem(step: u8, label: String, active: bool, show_line: bool) -> Elemen
                 {label}
             }
             if show_line {
-                div { class: "h-px w-[58px] shrink-0 bg-[#737373] max-mobile:hidden" }
+                div { class: "h-px w-14.5 shrink-0 bg-(--gray-500) max-mobile:hidden" }
             }
         }
     }

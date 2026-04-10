@@ -16,38 +16,38 @@ pub fn ParticipationCredentialSection(
             div { class: "flex flex-col gap-5 justify-center items-center px-[30px] pt-[30px] max-tablet:px-5 max-tablet:pt-5 max-mobile:px-4 max-mobile:pt-4",
                 div { class: "flex flex-row justify-between items-center w-full gap-[10px]",
                     div { class: "flex flex-row items-center gap-[10px]",
-                        div { class: "flex relative justify-center items-center rounded-full border-2 size-8 shrink-0 border-[#FCB300] bg-[rgba(252,179,0,0.15)]",
-                            icons::validations::Check { class: "size-8 [&>path]:stroke-[#FCB300]" }
+                        div { class: "flex relative justify-center items-center rounded-full border-2 size-8 shrink-0 border-primary bg-primary/15",
+                            icons::validations::Check { class: "size-8 [&>path]:fill-none [&>path]:stroke-primary" }
                         }
                         h3 { class: "font-bold font-raleway text-[24px]/[28px] tracking-[-0.24px]",
                             {tr.verified_title}
                         }
                     }
 
-                    div { class: "inline-flex items-center px-2 rounded-full border gap-[4px] border-[#FCB300] py-[3px]",
+                    div { class: "inline-flex items-center px-2 rounded-full border gap-[4px] border-primary py-[3px]",
                         icons::security::ShieldGood {
                             width: "14",
                             height: "14",
-                            class: "[&>path]:stroke-[#FCB300]",
+                            class: "[&>path]:fill-none [&>path]:stroke-primary",
                         }
-                        span { class: "font-semibold font-raleway text-[12px]/[16px] text-[#FCB300]",
+                        span { class: "font-semibold font-raleway text-[12px]/[16px] text-primary",
                             {tr.verified_badge}
                         }
                     }
                 }
 
-                p { class: "w-full font-medium font-raleway text-[15px]/[22px] text-desc-text",
+                p { class: "w-full font-medium font-raleway text-[15px]/[22px] text-foreground-muted",
                     {tr.verified_description}
                 }
             }
 
             div { class: "flex flex-col flex-1 gap-5 px-[30px] py-[30px] max-tablet:px-5 max-tablet:py-5 max-mobile:px-4 max-mobile:py-4",
-                div { class: "flex flex-col py-5 px-4 w-full border gap-[10px] rounded-[12px] border-[#404040] bg-card-bg-3",
+                div { class: "flex flex-col py-5 px-4 w-full border gap-[10px] rounded-[12px] border-border bg-card-bg-3",
                     div { class: "flex flex-col gap-1 items-start w-full",
                         p { class: "font-bold font-raleway text-[15px]/[18px] tracking-[-0.16px]",
                             {tr.unlocked_attributes_title}
                         }
-                        p { class: "font-medium font-raleway text-[13px]/[20px] text-desc-text",
+                        p { class: "font-medium font-raleway text-[13px]/[20px] text-foreground-muted",
                             {tr.unlocked_attributes_description}
                         }
                     }
@@ -58,18 +58,18 @@ pub fn ParticipationCredentialSection(
                         }
                     }
 
-                    div { class: "flex flex-row items-start px-5 w-full border rounded-[12px] border-[#404040] bg-card-bg-3 py-[15px]",
+                    div { class: "flex flex-row items-start px-5 w-full border rounded-[12px] border-border bg-card-bg-3 py-[15px]",
                         div { class: "flex flex-row gap-1 items-start w-full",
                             icons::security::ShieldGood {
                                 width: "18",
                                 height: "18",
-                                class: "mt-0.5 shrink-0 [&>path]:stroke-[#737373]",
+                                class: "mt-0.5 shrink-0 [&>path]:fill-none [&>path]:stroke-foreground-muted",
                             }
                             div { class: "flex flex-col gap-1 items-start",
-                                p { class: "font-bold font-raleway text-[13px]/[16px] tracking-[-0.14px] text-desc-text",
+                                p { class: "font-bold font-raleway text-[13px]/[16px] tracking-[-0.14px] text-foreground-muted",
                                     {tr.notice_title}
                                 }
-                                p { class: "font-medium font-raleway text-[12px]/[16px] text-desc-text",
+                                p { class: "font-medium font-raleway text-[12px]/[16px] text-foreground-muted",
                                     {tr.notice_description}
                                 }
                             }
@@ -87,7 +87,7 @@ pub fn ParticipationCredentialSection(
                             ctx.role.restart();
                             on_completed.call(());
                         },
-                        span { class: "font-bold font-raleway text-[14px]/[16px] text-[#0A0A0A]",
+                        span { class: "font-bold font-raleway text-[14px]/[16px] text-btn-primary-text",
                             {tr.enter_space}
                         }
                     }

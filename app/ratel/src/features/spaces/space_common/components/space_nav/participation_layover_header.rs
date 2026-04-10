@@ -5,17 +5,17 @@ pub fn ParticipationLayoverHeader(title: String) -> Element {
     let mut layover = use_layover();
 
     rsx! {
-        div { class: "flex flex-row gap-5 items-start py-5 px-5 w-full border-b shrink-0 border-neutral-800",
+        div { class: "flex flex-row gap-5 items-start py-5 px-5 w-full border-b shrink-0 border-separator",
             Button {
                 size: ButtonSize::Icon,
                 style: ButtonStyle::Text,
                 shape: ButtonShape::Square,
-                class: "flex justify-center items-center p-0 bg-transparent border hover:bg-transparent size-6 rounded-[4px] border-[#262626]",
+                class: "flex justify-center items-center p-0 bg-transparent border hover:bg-transparent size-6 rounded-[4px] border-border",
                 onclick: move |_| layover.close(),
                 icons::ratel::XMarkIcon {
                     width: "16",
                     height: "16",
-                    class: "w-4 h-4 [&>path]:stroke-[#737373]",
+                    class: "w-4 h-4 [&>path]:stroke-foreground-muted",
                 }
             }
 

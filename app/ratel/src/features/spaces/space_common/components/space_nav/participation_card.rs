@@ -171,7 +171,7 @@ fn ParticipationRequirementTag(kind: ParticipationTag, label: String) -> Element
                     if kind == ParticipationTag::Warning {
                         crate::common::lucide_dioxus::CircleAlert { size: 15, class: "text-red-500" }
                     } else {
-                        icons::validations::Check { class: "w-[15px] h-[15px] [&>path]:stroke-green-500" }
+                        icons::validations::Check { class: "w-[15px] h-[15px] [&>path]:fill-none [&>path]:stroke-green-500" }
                     }
                 }
                 span { class: "font-bold font-raleway text-[12px]/[14px] tracking-[-0.12px] {text_class}",

@@ -28,12 +28,12 @@ pub fn ParticipationAttributesSection(
                 }
             }
 
-            div { class: "flex flex-col items-start py-5 px-4 w-full border gap-[10px] rounded-[12px] border-[#404040] bg-card-bg-3",
+            div { class: "flex flex-col items-start py-5 px-4 w-full border gap-[10px] rounded-[12px] border-border bg-card-bg-3",
                 div { class: "flex flex-col gap-1 items-start w-full",
                     p { class: "font-bold text-text-secondary text-[15px]/[18px] tracking-[-0.16px]",
                         {tr.requirements_to_unlock}
                     }
-                    p { class: "font-medium text-[13px]/[20px] text-text-third",
+                    p { class: "font-medium text-[13px]/[20px] text-foreground-muted",
                         {tr.requirements_description}
                     }
                 }
@@ -50,7 +50,7 @@ pub fn ParticipationAttributesSection(
                     class: "!rounded-[10px] !px-5 !py-3 max-mobile:!w-full",
                     style: ButtonStyle::Primary,
                     onclick: move |_| on_continue.call(()),
-                    span { class: "font-bold text-[14px]/[16px] text-[#0A0A0A]",
+                    span { class: "font-bold text-[14px]/[16px] text-btn-primary-text",
                         {tr.improve_my_credential}
                     }
                 }
@@ -70,7 +70,7 @@ fn AttributeRequirementRow(
             "bg-[rgba(34,197,94,0.1)] border-[0.5px] border-[#22C55E]",
             "bg-[rgba(34,197,94,0.1)] border-[0.5px] border-[#22C55E]",
             rsx! {
-                icons::validations::Check { class: "size-[18px] [&>path]:stroke-[#22C55E] shrink-0" }
+                icons::validations::Check { class: "size-[18px] shrink-0 [&>path]:fill-none [&>path]:stroke-[#22C55E]" }
             },
         )
     } else {

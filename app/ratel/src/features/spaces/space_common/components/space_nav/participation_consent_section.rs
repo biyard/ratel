@@ -100,7 +100,7 @@ fn AttributeRequirementRow(
             "bg-[rgba(34,197,94,0.1)] border-[0.5px] border-[#22C55E]",
             "bg-[rgba(34,197,94,0.1)] border-[0.5px] border-[#22C55E]",
             rsx! {
-                icons::validations::Check { class: "size-[18px] [&>path]:stroke-[#22C55E] shrink-0" }
+                icons::validations::Check { class: "size-[18px] [&>path]:stroke-[#22C55E] [&>path]:fill-none shrink-0" }
             },
         )
     } else {
