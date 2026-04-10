@@ -45,14 +45,22 @@ app/ratel/src/features/<module>/pages/<page>/
 
 ### CSS Rules
 - Use CSS classes with BEM-like naming (`.block__element--modifier`)
-- Use `data-*` attributes for state-driven styling (`[data-open="true"]`, `[data-dimmed="true"]`, `[aria-selected="true"]`, `[aria-pressed="true"]`)
+- Use `data-*` / `aria-*` attributes for Dioxus-controlled state (`[data-open="true"]`, `[aria-pressed="true"]`)
+- Use CSS classes (`.active`, `.open`) for JS-controlled state (scroll position, carousel)
 - Avoid Tailwind utilities in CSS files — Tailwind is for RSX `class:` attributes only
 - Keep animations and transitions in CSS
+- Use space toggle for dark/light: `var(--dark, #0c0c1a) var(--light, #ffffff)`
 
 ### JS Rules
 - Register helpers on `window.ratel.<module>` namespace
 - Keep JS minimal — prefer Dioxus signals/events for state management
-- JS is for DOM manipulation that can't be done via RSX attributes (e.g., complex panel orchestration)
+- JS is for DOM manipulation that can't be done via RSX attributes (e.g., scroll-based active card detection, animations)
+- Use `classList.toggle` for JS state, not `setAttribute('data-*')` (Dioxus re-renders overwrite attributes)
+
+### Critical: Class Name Consistency
+- **Keep the exact same CSS class names and element IDs** from the HTML mockup when converting to RSX
+- JS queries elements by these names — renaming breaks selectors silently
+- If mockup uses `.carousel-track`, RSX must use `class: "carousel-track"`, not `class: "action-carousel__track"`
 
 ## Step 5: Convert HTML to RSX
 
@@ -61,8 +69,9 @@ dx translate -f <path>/page.html
 ```
 
 - Copy the RSX output into `component.rs`
-- Replace static `id` attributes with Dioxus signals and event handlers
+- **Keep all class names and IDs identical** to the HTML mockup — JS depends on them
 - Replace hardcoded text with `translate!` macro references
+- Replace static content with data from hooks/props
 
 ## Step 6: Build Dioxus Component
 
@@ -71,11 +80,13 @@ Structure the page as a parent component with sub-components in named subdirecto
 ### Key patterns
 - Each sub-component gets its own directory with `mod.rs`, `component.rs`, `style.css`
 - Each sub-component loads its own `style.css` via `document::Link { href: asset!("./style.css") }`
+- Always use `document::Script { defer: true, src: asset!("./script.js") }` — defer is required
 - Parent `mod.rs` declares and re-exports sub-component modules
 - i18n is shared at the page level — sub-components import from the parent
 - Extract a sub-component when it is self-contained (panel, modal, card) and > ~50 lines of RSX
-- Use `data-*` attributes for CSS-driven state instead of conditional class strings
-- Use `aria-selected`, `aria-pressed` for interactive state (Dioxus sets these reactively)
+- Dioxus-controlled state → `data-*` / `aria-*` attributes
+- JS-controlled state (scroll, animations) → CSS classes (`.active`) via `classList.toggle`
+- **Reproduce the HTML mockup faithfully** — specialized card content per action type, unique detail sections, type-specific colors/icons must all be translated, not simplified
 - **References**: conventions/html-first-components.md
 
 ## Step 7: Implement Logic & Event Handlers

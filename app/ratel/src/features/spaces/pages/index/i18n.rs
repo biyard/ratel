@@ -209,4 +209,34 @@ translate! {
         en: "Start",
         ko: "시작",
     },
+
+    vote_to_participate: {
+        en: "Cast your vote",
+        ko: "투표하기",
+    },
+
+    join_discussion: {
+        en: "Join the conversation",
+        ko: "토론 참여",
+    },
+
+    questions: {
+        en: "Questions",
+        ko: "문항",
+    },
+
+    follow_users: {
+        en: "Follow to complete",
+        ko: "팔로우하여 완료",
+    },
+
+    followed_label: {
+        en: "followed",
+        ko: "팔로우됨",
+    },
+
+    vote_label: {
+        en: "Vote",
+        ko: "투표",
+    },
 }
