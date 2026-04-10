@@ -8,6 +8,13 @@ use crate::features::spaces::space_common::types::{
 };
 use std::collections::HashMap;
 
+use super::single_choice::*;
+use super::multi_choice::*;
+use super::subjective::*;
+use super::linear_scale::*;
+use super::checkbox_choice::*;
+use super::dropdown_choice::*;
+
 translate! {
     ActionPollTranslate;
 
@@ -56,7 +63,7 @@ pub fn ActionPollViewer(
     let can_execute_action = crate::features::spaces::pages::actions::can_execute_space_action(
         role,
         poll.space_action.prerequisite,
-        space.status,
+        space.status.clone(),
         space.join_anytime,
     );
     let nav = navigator();
@@ -73,13 +80,9 @@ pub fn ActionPollViewer(
     let all_answered = use_memo({
         let poll = poll.clone();
         move || {
-            if poll.questions.is_empty() {
-                return false;
-            }
+            if poll.questions.is_empty() { return false; }
             let answers_read = answers.read();
-            poll.questions
-                .iter()
-                .enumerate()
+            poll.questions.iter().enumerate()
                 .all(|(idx, q)| has_answer_for_question(q, answers_read.get(&idx)))
         }
     });
@@ -87,8 +90,7 @@ pub fn ActionPollViewer(
     let is_in_progress = poll.status == PollStatus::InProgress;
     let has_response = poll.my_response.is_some();
     let can_submit = can_respond && can_execute_action && is_in_progress && !has_response;
-    let can_update =
-        can_respond && can_execute_action && is_in_progress && has_response && poll.response_editable;
+    let can_update = can_respond && can_execute_action && is_in_progress && has_response && poll.response_editable;
     let total = poll.questions.len();
     let current_idx = question_index().min(total.saturating_sub(1));
     let current_answer = answers.read().get(&current_idx).cloned();
@@ -101,124 +103,76 @@ pub fn ActionPollViewer(
     let is_last = total == 0 || current_idx + 1 >= total;
     let next_disabled = can_submit && !has_current_answer;
     let show_submit = can_respond && (can_submit || can_update);
-    let disabled =
-        !can_respond || !can_execute_action || !is_in_progress || (!can_submit && !can_update);
-    let progress_pct = if total > 0 {
-        ((current_idx + 1) as f64 / total as f64 * 100.0) as u32
-    } else {
-        0
-    };
+    let disabled = !can_respond || !can_execute_action || !is_in_progress || (!can_submit && !can_update);
+    let progress_pct = if total > 0 { ((current_idx + 1) as f64 / total as f64 * 100.0) as u32 } else { 0 };
 
     // Hide sidebar
     let layout_ui = crate::features::spaces::layout::use_space_layout_ui();
     let sidebar_visible = layout_ui.sidebar_visible;
-    use_effect(move || {
-        let mut sv = sidebar_visible;
-        sv.set(false);
-    });
-    use_drop(move || {
-        let mut sv = sidebar_visible;
-        sv.set(true);
-    });
+    use_effect(move || { let mut sv = sidebar_visible; sv.set(false); });
+    use_drop(move || { let mut sv = sidebar_visible; sv.set(true); });
 
-    // Submit handler
-    let build_submit = {
-        let questions = poll.questions.clone();
-        move || {
-            let questions = questions.clone();
-            move || {
-                let questions = questions.clone();
-                spawn(async move {
-                    let m = answers.read().clone();
-                    let payload: Vec<Answer> = (0..questions.len())
-                        .map(|i| m.get(&i).cloned().unwrap_or_default())
-                        .collect();
-                    match respond_poll(space_id(), poll_id(), RespondPollRequest { answers: payload })
-                        .await
-                    {
-                        Ok(_) => {
-                            query.invalidate(&space_page_actions_poll_key(&space_id(), &poll_id()));
-                            query.invalidate(&space_ranking_key(&space_id()));
-                            query.invalidate(&space_my_score_key(&space_id()));
-                            toast.info(tr.submit_success);
-                            nav.replace(crate::Route::SpaceActionsPage { space_id: space_id() });
-                        }
-                        Err(err) => { toast.error(err); },
-                    }
-                });
+    // Submit handler — Callback is Copy so it can be used in multiple closures
+    let questions_for_submit = poll.questions.clone();
+    let do_submit = Callback::new(move |_: ()| {
+        let questions = questions_for_submit.clone();
+        spawn(async move {
+            let m = answers.read().clone();
+            let payload: Vec<Answer> = (0..questions.len())
+                .map(|i| m.get(&i).cloned().unwrap_or_default())
+                .collect();
+            match respond_poll(space_id(), poll_id(), RespondPollRequest { answers: payload }).await {
+                Ok(_) => {
+                    query.invalidate(&space_page_actions_poll_key(&space_id(), &poll_id()));
+                    query.invalidate(&space_ranking_key(&space_id()));
+                    query.invalidate(&space_my_score_key(&space_id()));
+                    toast.info(tr.submit_success);
+                    nav.replace(crate::Route::SpaceIndexPage { space_id: space_id() });
+                }
+                Err(err) => { toast.error(err); },
             }
-        }
-    };
+        });
+    });
+    let mut show_confirm = use_signal(|| false);
     let on_submit = move |_| {
         if can_submit && !poll.response_editable {
-            let mut popup = popup;
-            let confirm = build_submit();
-            popup
-                .open(rsx! {
-                    SubmitConfirmDialog {
-                        cancel_label: tr.submit_confirm_cancel,
-                        confirm_label: tr.submit_confirm_action,
-                        on_cancel: move |_| popup.close(),
-                        on_confirm: move |_| {
-                            popup.close();
-                            confirm();
-                        },
-                    }
-                })
-                .with_title(tr.submit_confirm_title)
-                .with_description(tr.submit_confirm_desc);
+            show_confirm.set(true);
         } else {
-            build_submit()();
+            do_submit.call(());
         }
     };
 
-    // Status badge class
-    let status_class = match poll.status {
-        PollStatus::InProgress => "poll-header__status",
-        PollStatus::NotStarted => "poll-header__status poll-header__status--not-started",
-        PollStatus::Finish => "poll-header__status poll-header__status--finished",
-    };
     let status_text = match poll.status {
         PollStatus::InProgress => tr.in_progress.to_string(),
         PollStatus::NotStarted => tr.not_started.to_string(),
         PollStatus::Finish => tr.finished.to_string(),
     };
 
+    let status_class = match poll.status {
+        PollStatus::InProgress => "poll-header__status",
+        PollStatus::NotStarted => "poll-header__status poll-header__status--not-started",
+        PollStatus::Finish => "poll-header__status poll-header__status--finished",
+    };
+
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
 
         div { class: "poll-arena",
-            // ─── Header ───
+            // ─── Header (HTML design poll-header) ───
             div { class: "poll-header",
                 div { class: "poll-header__left",
                     button {
                         class: "poll-header__back",
                         onclick: move |_| {
-                            nav.push(crate::Route::SpaceActionsPage {
-                                space_id: space_id(),
-                            });
+                            nav.push(crate::Route::SpaceIndexPage { space_id: space_id() });
                         },
-                        svg {
-                            xmlns: "http://www.w3.org/2000/svg",
-                            view_box: "0 0 24 24",
-                            fill: "none",
-                            stroke: "currentColor",
-                            "stroke-width": "2",
-                            "stroke-linecap": "round",
-                            "stroke-linejoin": "round",
+                        svg { xmlns: "http://www.w3.org/2000/svg", view_box: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round",
                             polyline { points: "15 18 9 12 15 6" }
                         }
                     }
                     div { class: "poll-header__info",
                         span { class: "poll-header__type",
-                            svg {
-                                xmlns: "http://www.w3.org/2000/svg",
-                                view_box: "0 0 24 24",
-                                fill: "none",
-                                stroke: "currentColor",
-                                "stroke-width": "2",
-                                "stroke-linecap": "round",
-                                "stroke-linejoin": "round",
+                            svg { xmlns: "http://www.w3.org/2000/svg", view_box: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round",
                                 path { d: "M3 3v18h18" }
                                 path { d: "M7 16h4v-6H7z" }
                                 path { d: "M13 16h4V8h-4z" }
@@ -232,14 +186,7 @@ pub fn ActionPollViewer(
                     span { class: "{status_class}", {status_text} }
                     if poll.space_action.activity_score > 0 {
                         span { class: "poll-header__reward",
-                            svg {
-                                xmlns: "http://www.w3.org/2000/svg",
-                                view_box: "0 0 24 24",
-                                fill: "none",
-                                stroke: "currentColor",
-                                "stroke-width": "2",
-                                "stroke-linecap": "round",
-                                "stroke-linejoin": "round",
+                            svg { xmlns: "http://www.w3.org/2000/svg", view_box: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round",
                                 polygon { points: "12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" }
                             }
                             "+{poll.space_action.activity_score} {tr.pts_suffix}"
@@ -283,12 +230,11 @@ pub fn ActionPollViewer(
                                 let is_active = dot_idx == current_idx;
                                 let is_answered = answers.read().contains_key(&dot_idx);
                                 rsx! {
-                                    button {
+                                    span {
                                         key: "dot-{dot_idx}",
                                         class: "poll-progress__dot",
                                         "data-active": is_active,
                                         "data-answered": !is_active && is_answered,
-                                        onclick: move |_| question_index.set(dot_idx),
                                     }
                                 }
                             }
@@ -313,7 +259,6 @@ pub fn ActionPollViewer(
                     rsx! {
                         div { key: "poll-q-{idx}", class: "question-stage",
                             div { class: "question-card",
-                                // Number + required badge
                                 div { class: "question-card__number",
                                     "{tr.question_prefix} {idx + 1:02}"
                                     {
@@ -333,15 +278,11 @@ pub fn ActionPollViewer(
                                         }
                                     }
                                 }
-                                // Title
                                 h2 { class: "question-card__title", {question.title()} }
-                                // Description
                                 {
                                     let desc = match &question {
                                         Question::SingleChoice(q) => q.description.clone(),
                                         Question::MultipleChoice(q) => q.description.clone(),
-                                        // Image
-                                        // Answer input
                                         Question::ShortAnswer(q) => {
                                             Some(q.description.clone()).filter(|d| !d.is_empty())
                                         }
@@ -553,11 +494,64 @@ pub fn ActionPollViewer(
                     }
                 }
             }
+
+            // ─── Confirm Modal ───
+            if show_confirm() {
+                {
+                    rsx! {
+                        div { class: "poll-confirm-overlay", onclick: move |_| show_confirm.set(false),
+                            div { class: "poll-confirm-modal", onclick: move |e| e.stop_propagation(),
+                                div { class: "poll-confirm-modal__icon",
+                                    svg {
+                                        xmlns: "http://www.w3.org/2000/svg",
+                                        view_box: "0 0 24 24",
+                                        fill: "none",
+                                        stroke: "currentColor",
+                                        "stroke-width": "2",
+                                        "stroke-linecap": "round",
+                                        "stroke-linejoin": "round",
+                                        path { d: "M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" }
+                                        line {
+                                            x1: "12",
+                                            y1: "9",
+                                            x2: "12",
+                                            y2: "13",
+                                        }
+                                        line {
+                                            x1: "12",
+                                            y1: "17",
+                                            x2: "12.01",
+                                            y2: "17",
+                                        }
+                                    }
+                                }
+                                h3 { class: "poll-confirm-modal__title", {tr.submit_confirm_title} }
+                                p { class: "poll-confirm-modal__desc", {tr.submit_confirm_desc} }
+                                div { class: "poll-confirm-modal__actions",
+                                    button {
+                                        class: "poll-btn poll-btn--back",
+                                        onclick: move |_| show_confirm.set(false),
+                                        {tr.submit_confirm_cancel}
+                                    }
+                                    button {
+                                        class: "poll-btn poll-btn--submit",
+                                        "data-testid": "poll-confirm-submit",
+                                        onclick: move |_| {
+                                            show_confirm.set(false);
+                                            do_submit.call(());
+                                        },
+                                        {tr.submit_confirm_action}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
+
     }
 }
-
-// ─── Submit Confirm ────────────────────────────────────────────────────────
 
 #[component]
 fn SubmitConfirmDialog(
@@ -582,357 +576,6 @@ fn SubmitConfirmDialog(
                 class: "min-w-[120px]",
                 onclick: move |e| on_confirm.call(e),
                 {confirm_label}
-            }
-        }
-    }
-}
-
-// ─── Single Choice ─────────────────────────────────────────────────────────
-
-#[component]
-fn PollSingleChoice(
-    idx: usize,
-    question: ChoiceQuestion,
-    answer: Option<Answer>,
-    disabled: bool,
-    on_change: EventHandler<Answer>,
-) -> Element {
-    let selected = match &answer {
-        Some(Answer::SingleChoice { answer, .. }) => *answer,
-        _ => None,
-    };
-    let letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
-
-    rsx! {
-        div { class: "options-single",
-            for (opt_idx , option) in question.options.iter().enumerate() {
-                {
-                    let is_sel = selected == Some(opt_idx as i32);
-                    let oi = opt_idx as i32;
-                    let letter = letters.get(opt_idx).copied().unwrap_or('?');
-                    let on_change = on_change.clone();
-                    rsx! {
-                        div {
-                            key: "sc-{idx}-{oi}",
-                            class: "option-single",
-                            "data-selected": is_sel,
-                            "data-disabled": disabled,
-                            onclick: move |_| {
-                                if !disabled {
-                                    on_change
-                                        .call(Answer::SingleChoice {
-                                            answer: if is_sel { None } else { Some(oi) },
-                                            other: None,
-                                        });
-                                }
-                            },
-                            span { class: "option-single__letter", "{letter}" }
-                            div { class: "option-single__radio",
-                                div { class: "option-single__radio-dot" }
-                            }
-                            span { class: "option-single__label", "{option}" }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-// ─── Multiple Choice ───────────────────────────────────────────────────────
-
-#[component]
-fn PollMultipleChoice(
-    idx: usize,
-    question: ChoiceQuestion,
-    answer: Option<Answer>,
-    disabled: bool,
-    on_change: EventHandler<Answer>,
-) -> Element {
-    let selected: Vec<i32> = match &answer {
-        Some(Answer::MultipleChoice { answer, .. }) => answer.clone().unwrap_or_default(),
-        _ => vec![],
-    };
-
-    rsx! {
-        div { class: "options-multi",
-            for (opt_idx , option) in question.options.iter().enumerate() {
-                {
-                    let is_sel = selected.contains(&(opt_idx as i32));
-                    let oi = opt_idx as i32;
-                    let selected = selected.clone();
-                    let on_change = on_change.clone();
-                    rsx! {
-                        div {
-                            key: "mc-{idx}-{oi}",
-                            class: "option-multi",
-                            "data-selected": is_sel,
-                            "data-disabled": disabled,
-                            onclick: move |_| {
-                                if !disabled {
-                                    let mut next = selected.clone();
-                                    if next.contains(&oi) {
-                                        next.retain(|&x| x != oi);
-                                    } else {
-                                        next.push(oi);
-                                    }
-                                    on_change
-                                        .call(Answer::MultipleChoice {
-                                            answer: Some(next),
-                                            other: None,
-                                        });
-                                }
-                            },
-                            div { class: "option-multi__checkbox",
-                                span { class: "option-multi__check",
-                                    svg {
-                                        xmlns: "http://www.w3.org/2000/svg",
-                                        view_box: "0 0 24 24",
-                                        fill: "none",
-                                        stroke: "currentColor",
-                                        "stroke-width": "3",
-                                        "stroke-linecap": "round",
-                                        "stroke-linejoin": "round",
-                                        polyline { points: "20 6 9 17 4 12" }
-                                    }
-                                }
-                            }
-                            span { class: "option-multi__label", "{option}" }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-// ─── Subjective ────────────────────────────────────────────────────────────
-
-#[component]
-fn PollSubjective(
-    idx: usize,
-    question: SubjectiveQuestion,
-    answer: Option<Answer>,
-    disabled: bool,
-    is_short: bool,
-    on_change: EventHandler<Answer>,
-) -> Element {
-    let tr: ActionPollTranslate = use_translate();
-    let current_value = match &answer {
-        Some(Answer::ShortAnswer { answer }) => answer.clone().unwrap_or_default(),
-        Some(Answer::Subjective { answer }) => answer.clone().unwrap_or_default(),
-        _ => String::new(),
-    };
-    let mut draft = use_signal(|| current_value.clone());
-    let mut synced = use_signal(|| current_value.clone());
-    use_effect(use_reactive((&current_value,), move |(cv,)| {
-        if synced() != cv {
-            synced.set(cv.clone());
-            draft.set(cv);
-        }
-    }));
-    let char_count = draft().len();
-
-    rsx! {
-        div { class: "subjective-wrap",
-            if is_short {
-                input {
-                    class: "subjective-input",
-                    r#type: "text",
-                    placeholder: tr.subjective_placeholder,
-                    disabled,
-                    value: "{draft()}",
-                    oninput: move |evt: Event<FormData>| {
-                        let v = evt.value().to_string();
-                        draft.set(v.clone());
-                        on_change
-                            .call(Answer::ShortAnswer {
-                                answer: Some(v),
-                            });
-                    },
-                }
-            } else {
-                textarea {
-                    class: "subjective-textarea",
-                    placeholder: tr.subjective_placeholder,
-                    disabled,
-                    value: "{draft()}",
-                    maxlength: 2000,
-                    oninput: move |evt: Event<FormData>| {
-                        let v = evt.value().to_string();
-                        draft.set(v.clone());
-                        on_change
-                            .call(Answer::Subjective {
-                                answer: Some(v),
-                            });
-                    },
-                }
-                span { class: "subjective-counter", "{char_count} / 2000" }
-            }
-        }
-    }
-}
-
-// ─── Linear Scale ──────────────────────────────────────────────────────────
-
-#[component]
-fn PollLinearScale(
-    idx: usize,
-    question: LinearScaleQuestion,
-    answer: Option<Answer>,
-    disabled: bool,
-    on_change: EventHandler<Answer>,
-) -> Element {
-    let selected = match &answer {
-        Some(Answer::LinearScale { answer }) => *answer,
-        _ => None,
-    };
-
-    rsx! {
-        div { class: "scale-wrap",
-            div { class: "scale-labels",
-                span { class: "scale-label scale-label--min", {question.min_label} }
-                span { class: "scale-label scale-label--max", {question.max_label} }
-            }
-            div { class: "scale-track",
-                for val in question.min_value..=question.max_value {
-                    {
-                        let is_sel = selected == Some(val as i32);
-                        let in_range = selected
-                            .map_or(
-                                false,
-                                |s| (val as i32) < s && (val as i32) >= (question.min_value as i32),
-                            );
-                        let on_change = on_change.clone();
-                        rsx! {
-                            button {
-                                key: "sc-{idx}-{val}",
-                                class: "scale-point",
-                                "data-selected": is_sel,
-                                "data-in-range": in_range,
-                                "data-disabled": disabled,
-                                disabled,
-                                onclick: move |_| {
-                                    on_change
-                                        .call(Answer::LinearScale {
-                                            answer: Some(val as i32),
-                                        });
-                                },
-                                "{val}"
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-// ─── Checkbox ──────────────────────────────────────────────────────────────
-
-#[component]
-fn PollCheckbox(
-    idx: usize,
-    question: CheckboxQuestion,
-    answer: Option<Answer>,
-    disabled: bool,
-    on_change: EventHandler<Answer>,
-) -> Element {
-    let selected: Vec<i32> = match &answer {
-        Some(Answer::Checkbox { answer }) => answer.clone().unwrap_or_default(),
-        _ => vec![],
-    };
-
-    rsx! {
-        div { class: "options-multi",
-            for (opt_idx , option) in question.options.iter().enumerate() {
-                {
-                    let is_sel = selected.contains(&(opt_idx as i32));
-                    let oi = opt_idx as i32;
-                    let selected = selected.clone();
-                    let is_multi = question.is_multi;
-                    let on_change = on_change.clone();
-                    rsx! {
-                        div {
-                            key: "cb-{idx}-{oi}",
-                            class: "option-multi",
-                            "data-selected": is_sel,
-                            "data-disabled": disabled,
-                            onclick: move |_| {
-                                if !disabled {
-                                    let mut next = selected.clone();
-                                    if is_multi {
-                                        if next.contains(&oi) {
-                                            next.retain(|&x| x != oi);
-                                        } else {
-                                            next.push(oi);
-                                        }
-                                    } else if is_sel {
-                                        next.clear();
-                                    } else {
-                                        next = vec![oi];
-                                    }
-                                    on_change
-                                        .call(Answer::Checkbox {
-                                            answer: Some(next),
-                                        });
-                                }
-                            },
-                            div { class: "option-multi__checkbox",
-                                span { class: "option-multi__check",
-                                    svg {
-                                        xmlns: "http://www.w3.org/2000/svg",
-                                        view_box: "0 0 24 24",
-                                        fill: "none",
-                                        stroke: "currentColor",
-                                        "stroke-width": "3",
-                                        "stroke-linecap": "round",
-                                        "stroke-linejoin": "round",
-                                        polyline { points: "20 6 9 17 4 12" }
-                                    }
-                                }
-                            }
-                            span { class: "option-multi__label", "{option}" }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-// ─── Dropdown ──────────────────────────────────────────────────────────────
-
-#[component]
-fn PollDropdown(
-    idx: usize,
-    question: DropdownQuestion,
-    answer: Option<Answer>,
-    disabled: bool,
-    on_change: EventHandler<Answer>,
-) -> Element {
-    let selected = match &answer {
-        Some(Answer::Dropdown { answer }) => *answer,
-        _ => None,
-    };
-
-    rsx! {
-        select {
-            class: "subjective-input",
-            disabled,
-            onchange: move |evt| {
-                let idx: Option<i32> = evt.value().to_string().parse().ok();
-                on_change.call(Answer::Dropdown { answer: idx });
-            },
-            option { value: "", selected: selected.is_none(), "Select..." }
-            for (oi , opt) in question.options.iter().enumerate() {
-                {
-                    let v = format!("{oi}");
-                    let is_sel = selected == Some(oi as i32);
-                    rsx! {
-                        option { value: "{v}", selected: is_sel, "{opt}" }
-                    }
-                }
             }
         }
     }

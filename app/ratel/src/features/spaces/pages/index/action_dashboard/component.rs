@@ -228,12 +228,14 @@ pub fn ActionDashboard(space_id: ReadSignal<SpacePartition>) -> Element {
                         ArchiveItem {
                             action: action.clone(),
                             status: ActionStatus::Completed,
+                            space_id: space_id(),
                         }
                     }
                     for action in skipped.iter() {
                         ArchiveItem {
                             action: action.clone(),
                             status: ActionStatus::Skipped,
+                            space_id: space_id(),
                         }
                     }
                 }
@@ -243,13 +245,24 @@ pub fn ActionDashboard(space_id: ReadSignal<SpacePartition>) -> Element {
 }
 
 #[component]
-fn ArchiveItem(action: SpaceActionSummary, status: ActionStatus) -> Element {
+fn ArchiveItem(action: SpaceActionSummary, status: ActionStatus, space_id: SpacePartition) -> Element {
     let lang = use_language();
     let tr: SpaceViewerTranslate = use_translate();
     let is_completed = status == ActionStatus::Completed;
+    let is_poll = action.action_type == SpaceActionType::Poll;
+    let can_reopen = is_completed && is_poll;
+    let nav = navigator();
+    let url = action.get_url(&space_id);
 
     rsx! {
-        div { class: "archive-item",
+        div {
+            class: "archive-item",
+            style: if can_reopen { "cursor: pointer;" } else { "" },
+            onclick: move |_| {
+                if can_reopen {
+                    nav.push(url.clone());
+                }
+            },
             div { class: "archive-item__info",
                 div { class: "archive-item__title", "{action.title}" }
                 div { class: "archive-item__meta",
