@@ -1,4 +1,5 @@
 mod action_dashboard;
+mod action_poll;
 mod component;
 mod i18n;
 mod overview_panel;
@@ -9,6 +10,7 @@ mod verification_card;
 
 pub use component::*;
 use action_dashboard::*;
+pub use action_poll::*;
 use i18n::*;
 use overview_panel::*;
 use participate_card::*;
