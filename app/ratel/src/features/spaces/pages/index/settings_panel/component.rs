@@ -1,3 +1,4 @@
+use crate::features::auth::hooks::use_user_context;
 use crate::features::spaces::pages::index::*;
 
 #[component]
@@ -6,6 +7,8 @@ pub fn SettingsPanel(open: bool, on_close: EventHandler<()>) -> Element {
     let mut theme_service = use_theme();
     let current_theme = theme_service.current();
     let lang = use_language();
+    let user_ctx = use_user_context();
+    let is_logged_in = user_ctx.read().user.is_some();
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
@@ -158,6 +161,43 @@ pub fn SettingsPanel(open: bool, on_close: EventHandler<()>) -> Element {
                             },
                             span { class: "settings-opt__icon", "KO" }
                             "{tr.korean}"
+                        }
+                    }
+                }
+
+                // Logout
+                if is_logged_in {
+                    div { class: "settings-logout",
+                        button {
+                            class: "settings-logout__btn",
+                            "data-testid": "btn-logout",
+                            onclick: move |_| async move {
+                                let _ = crate::features::auth::controllers::logout_handler().await;
+                                #[cfg(target_arch = "wasm32")]
+                                {
+                                    if let Some(window) = web_sys::window() {
+                                        let _ = window.location().reload();
+                                    }
+                                }
+                            },
+                            svg {
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                stroke_width: "1.5",
+                                view_box: "0 0 24 24",
+                                xmlns: "http://www.w3.org/2000/svg",
+                                path { d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" }
+                                polyline { points: "16 17 21 12 16 7" }
+                                line {
+                                    x1: "21",
+                                    x2: "9",
+                                    y1: "12",
+                                    y2: "12",
+                                }
+                            }
+                            "{tr.logout}"
                         }
                     }
                 }

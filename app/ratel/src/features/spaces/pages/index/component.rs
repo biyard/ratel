@@ -1,7 +1,5 @@
 use super::*;
 use crate::features::auth::hooks::use_user_context;
-use crate::features::auth::LoginModal;
-use crate::features::spaces::space_common::controllers::get_user_role;
 use crate::features::spaces::space_common::hooks::use_space;
 use crate::features::spaces::space_common::hooks::use_space_role;
 use crate::features::spaces::space_common::providers::use_space_context;
@@ -26,7 +24,6 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let user_ctx = use_user_context();
     let is_logged_in = user_ctx.read().user.is_some();
     let mut active_panel = use_signal(|| ActivePanel::None);
-    let mut popup = use_popup();
 
     if role.is_admin() {
         return rsx! {
@@ -62,10 +59,24 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let overview_open = active_panel() == ActivePanel::Overview;
     let settings_open = active_panel() == ActivePanel::Settings;
 
+    let is_participant = matches!(role, SpaceUserRole::Participant | SpaceUserRole::Candidate);
     let show_participate =
         matches!(role, SpaceUserRole::Viewer) && !space.participated && space.can_participate;
 
+    // Participants/candidates see the action dashboard
+    if is_participant {
+        return rsx! {
+            SuspenseBoundary {
+                ActionDashboard { space_id }
+            }
+        };
+    }
+
     let mut ctx = use_space_context();
+    let panel_requirements = ctx.panel_requirements();
+    let has_unsatisfied = panel_requirements.iter().any(|r| !r.satisfied);
+    let has_requirements = !panel_requirements.is_empty();
+    let needs_verification = has_requirements && has_unsatisfied;
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
@@ -167,79 +178,41 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
                 class: "portal",
                 "data-testid": "portal",
                 "data-dimmed": dimmed,
-                img { alt: "Space logo", class: "portal-logo", src: "{logo}" }
-                h1 { class: "portal-title", "{space.title}" }
+                div { class: "portal-header",
+                    img {
+                        alt: "Space logo",
+                        class: "portal-logo",
+                        src: "{logo}",
+                    }
+                    h1 { class: "portal-title", "{space.title}" }
+                }
                 div { class: "portal-status", "{status_text}" }
 
-                if is_logged_in && show_participate {
-                    div {
-                        class: "participate-card",
-                        "data-testid": "card-participate",
-                        span { class: "participate-card__heading", "{tr.join_heading}" }
-                        p { class: "participate-card__desc", "{tr.join_desc}" }
-                        div { class: "participate-card__stats",
-                            div { class: "stat",
-                                span { class: "stat__value", "{participants}" }
-                                span { class: "stat__label", "{tr.participants}" }
-                            }
-                            div { class: "stat",
-                                span { class: "stat__value", "{remaining}" }
-                                span { class: "stat__label", "{tr.remaining}" }
-                            }
-                            div { class: "stat",
-                                span { class: "stat__value", "{rewards}" }
-                                span { class: "stat__label", "{tr.rewards}" }
-                            }
-                        }
-                        button {
-                            class: "cta-participate",
-                            "data-testid": "btn-participate",
-                            onclick: move |_| {},
-                            "{tr.participate}"
-                        }
+                if is_logged_in && show_participate && needs_verification {
+                    VerificationCard {
+                        space_id,
+                        requirements: panel_requirements.clone(),
+                        on_verified: move |_next_requirements| {
+                            ctx.space.restart();
+                            ctx.role.restart();
+                            ctx.panel_requirements.restart();
+                        },
+                    }
+                } else if is_logged_in && show_participate {
+                    ParticipateCard {
+                        space_id,
+                        participants: participants.clone(),
+                        remaining: remaining.clone(),
+                        rewards: rewards.clone(),
+                        require_consent: has_requirements,
+                        on_joined: move |_| {},
                     }
                 } else if !is_logged_in {
-                    div {
-                        class: "participate-card",
-                        "data-testid": "card-signin",
-                        span { class: "participate-card__heading", "{tr.welcome_heading}" }
-                        p { class: "participate-card__desc", "{tr.welcome_desc}" }
-                        div { class: "participate-card__stats",
-                            div { class: "stat",
-                                span { class: "stat__value", "{participants}" }
-                                span { class: "stat__label", "{tr.participants}" }
-                            }
-                            div { class: "stat",
-                                span { class: "stat__value", "{remaining}" }
-                                span { class: "stat__label", "{tr.remaining}" }
-                            }
-                            div { class: "stat",
-                                span { class: "stat__value", "{rewards}" }
-                                span { class: "stat__label", "{tr.rewards}" }
-                            }
-                        }
-                        button {
-                            class: "cta-signin",
-                            "data-testid": "btn-signin",
-                            onclick: move |_| {
-                                let mut space_loader = ctx.space;
-                                let mut role_loader = ctx.role;
-                                let mut current_role = ctx.current_role;
-                                let cb = Callback::new(move |_| {
-                                    space_loader.restart();
-                                    role_loader.restart();
-                                    spawn(async move {
-                                        if let Ok(new_role) = get_user_role(space_id()).await {
-                                            current_role.set(new_role);
-                                        }
-                                    });
-                                });
-                                popup.open(rsx! {
-                                    LoginModal { on_success: cb }
-                                }).with_title(tr.login_title);
-                            },
-                            "{tr.sign_in}"
-                        }
+                    SigninCard {
+                        space_id,
+                        participants: participants.clone(),
+                        remaining: remaining.clone(),
+                        rewards: rewards.clone(),
                     }
                 }
             }
