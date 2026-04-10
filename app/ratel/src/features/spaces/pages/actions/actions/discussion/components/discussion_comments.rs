@@ -1,8 +1,12 @@
 use crate::common::components::{
-    Button, ButtonShape, ButtonSize, ButtonStyle, TextArea,
+    image_upload_preview::PendingImage,
+    mention_autocomplete::{MentionAutocomplete, MentionCandidate, MentionInsert},
+    paste_image_uploader, Button, ButtonShape, ButtonSize, ButtonStyle, CommentImageGrid,
+    ImageUploadPreview, TextArea,
 };
 use crate::common::hooks::use_infinite_query;
 use crate::common::query::use_query_store;
+use crate::common::utils::mention::{parse_mention_segments, ContentSegment};
 use crate::common::utils::time::time_ago;
 use crate::features::spaces::pages::actions::actions::discussion::*;
 use crate::features::spaces::space_common::types::{space_my_score_key, space_ranking_key};
@@ -21,6 +25,9 @@ translate! {
     responses: { en: "responses", ko: "응답" },
     show_more: { en: "More", ko: "더보기" },
     show_less: { en: "Close", ko: "접기" },
+    image_too_large: { en: "Image must be under 10MB", ko: "이미지는 10MB 이하여야 합니다" },
+    max_images_reached: { en: "Maximum 4 images per comment", ko: "댓글당 최대 4장의 이미지를 첨부할 수 있습니다" },
+    image_upload_failed: { en: "Failed to upload image", ko: "이미지 업로드에 실패했습니다" },
 }
 
 fn to_millis(ts: i64) -> i64 {
@@ -42,46 +49,146 @@ pub fn DiscussionComments(
     can_comment: bool,
     can_manage_comments: bool,
     current_user_pk: Option<String>,
+    #[props(default)] comment_count: Signal<usize>,
 ) -> Element {
     let tr: DiscussionCommentsTranslate = use_translate();
     let discussion_ctx = use_discussion_context();
     DiscussionCommentContext::init(space_id, discussion_id)?;
     let mut comment_input = use_signal(String::new);
+    let mut pending_images: Signal<Vec<PendingImage>> = use_signal(Vec::new);
+    let mut tracked_mentions: Signal<Vec<(String, String)>> = use_signal(Vec::new);
+    let members: Signal<Vec<MentionCandidate>> = use_signal(Vec::new);
+    use_effect(move || {
+        let mut members = members;
+        spawn(async move {
+            if let Ok(response) =
+                crate::features::spaces::space_common::controllers::list_space_members(
+                    space_id(),
+                    None,
+                )
+                .await
+            {
+                let candidates: Vec<MentionCandidate> = response
+                    .items
+                    .into_iter()
+                    .map(|m| MentionCandidate {
+                        user_pk: m.user_id.to_string(),
+                        display_name: m.display_name,
+                        username: m.username,
+                        profile_url: m.profile_url,
+                    })
+                    .collect();
+                members.set(candidates);
+            }
+        });
+    });
     let mut ctx = use_discussion_comment_context();
     let mut query = use_query_store();
     let comments = ctx.comments.items();
     let more_comments = ctx.comments.more_element();
-    let comment_count = discussion_ctx.discussion().post.comments.max(0) as usize;
+    let mut comment_count = comment_count;
 
     rsx! {
         div { class: "flex flex-col gap-4",
-            h2 { class: "text-lg font-bold text-text-primary", "{tr.comments} ({comment_count})" }
             if can_comment {
-                div { class: "flex gap-2 items-end",
-                    TextArea {
-                        class: "flex-1 min-h-10 resize-none rounded-[10px] border border-input-box-border bg-input-box-bg px-3 py-2 text-sm text-text-primary outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[1px]"
-                            .to_string(),
-                        placeholder: "{tr.write_comment}",
-                        value: comment_input(),
-                        oninput: move |e: Event<FormData>| comment_input.set(e.value()),
-                        onkeydown: move |evt: KeyboardEvent| async move {
-                            if evt.key() == Key::Enter
-                                && (evt.modifiers().contains(Modifiers::CONTROL)
-                                    || evt.modifiers().contains(Modifiers::META))
-                            {
-                                evt.prevent_default();
-                                let content = comment_input().trim().to_string();
-                                if content.is_empty() {
+                div { class: "flex flex-col gap-2",
+                    div { class: "flex gap-2 items-start",
+                        div {
+                            class: "flex-1",
+                            onpaste: move |evt: ClipboardEvent| {
+                                paste_image_uploader::handle_paste_event(&evt, pending_images);
+                            },
+                            MentionAutocomplete {
+                                text: comment_input,
+                                on_select: move |insert: MentionInsert| {
+                                    let mut val = comment_input();
+                                    if insert.start_offset <= val.len()
+                                        && insert.end_offset <= val.len()
+                                    {
+                                        val.replace_range(
+                                            insert.start_offset..insert.end_offset,
+                                            &insert.display_text,
+                                        );
+                                        comment_input.set(val);
+                                        tracked_mentions.write().push((insert.display_name, insert.user_pk));
+                                    }
+                                },
+                                members,
+                                TextArea {
+                                    class: "w-full min-h-5 resize-none rounded-[10px] border border-input-box-border bg-input-box-bg px-3 py-2 text-sm text-text-primary outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[1px]",
+                                    placeholder: "{tr.write_comment}",
+                                    value: comment_input(),
+                                    oninput: move |e: Event<FormData>| comment_input.set(e.value()),
+                                    onkeydown: move |evt: KeyboardEvent| async move {
+                                        if evt.key() == Key::Enter
+                                            && (evt.modifiers().contains(Modifiers::CONTROL)
+                                                || evt.modifiers().contains(Modifiers::META))
+                                        {
+                                            evt.prevent_default();
+                                            let raw_content = comment_input().trim().to_string();
+                                            let images: Vec<String> = pending_images
+                                                .read()
+                                                .iter()
+                                                .filter_map(|img| img.remote_url.clone())
+                                                .collect();
+                                            if raw_content.is_empty() && images.is_empty() {
+                                                return;
+                                            }
+                                            let content = crate::common::utils::mention::apply_mention_markup(&raw_content, &tracked_mentions.read());
+                                            comment_input.set(String::new());
+                                            pending_images.set(Vec::new());
+                                            tracked_mentions.set(Vec::new());
+                                            let mut comments_query = ctx.comments;
+                                            let req = AddCommentRequest { content, images };
+                                            match add_comment(space_id(), discussion_id(), req).await
+                                            {
+                                                Ok(comment) => {
+                                                    comments_query.insert(comment);
+                                                    comment_count += 1;
+                                                    query.invalidate(
+                                                        &space_ranking_key(&space_id()),
+                                                    );
+                                                    query.invalidate(
+                                                        &space_my_score_key(&space_id()),
+                                                    );
+                                                }
+                                                Err(e) => {
+                                                    error!("Failed to add comment: {:?}", e);
+                                                }
+                                            }
+                                        }
+                                    },
+                                }
+                            }
+                        }
+                        Button {
+                            "data-testid": "comment-send-btn",
+                            style: ButtonStyle::Primary,
+                            shape: ButtonShape::Rounded,
+                            size: ButtonSize::Icon,
+                            class: "inline-flex justify-center items-center size-10 shrink-0 !p-0",
+                            disabled: (comment_input().trim().is_empty() && pending_images.read().is_empty())
+                                || pending_images.read().iter().any(|img| img.uploading),
+                            onclick: move |_| async move {
+                                let raw_content = comment_input().trim().to_string();
+                                let images: Vec<String> = pending_images
+                                    .read()
+                                    .iter()
+                                    .filter_map(|img| img.remote_url.clone())
+                                    .collect();
+                                if raw_content.is_empty() && images.is_empty() {
                                     return;
                                 }
+                                let content = crate::common::utils::mention::apply_mention_markup(&raw_content, &tracked_mentions.read());
                                 comment_input.set(String::new());
+                                pending_images.set(Vec::new());
+                                tracked_mentions.set(Vec::new());
                                 let mut comments_query = ctx.comments;
-                                let mut discussion_query = discussion_ctx.discussion;
-                                let req = AddCommentRequest { content };
+                                let req = AddCommentRequest { content, images };
                                 match add_comment(space_id(), discussion_id(), req).await {
                                     Ok(comment) => {
                                         comments_query.insert(comment);
-                                        discussion_query.restart();
+                                        comment_count += 1;
                                         query.invalidate(&space_ranking_key(&space_id()));
                                         query.invalidate(&space_my_score_key(&space_id()));
                                     }
@@ -89,47 +196,19 @@ pub fn DiscussionComments(
                                         error!("Failed to add comment: {:?}", e);
                                     }
                                 }
-                            }
-                        },
-                    }
-                    Button {
-                        "data-testid": "comment-send-btn",
-                        style: ButtonStyle::Primary,
-                        shape: ButtonShape::Rounded,
-                        size: ButtonSize::Icon,
-                        class: "inline-flex justify-center items-center size-10 shrink-0 !p-0".to_string(),
-                        disabled: comment_input().trim().is_empty(),
-                        onclick: move |_| async move {
-                            let content = comment_input().trim().to_string();
-                            if content.is_empty() {
-                                return;
-                            }
-                            comment_input.set(String::new());
-                            let mut comments_query = ctx.comments;
-                            let mut discussion_query = discussion_ctx.discussion;
-                            let req = AddCommentRequest { content };
-                            match add_comment(space_id(), discussion_id(), req).await {
-                                Ok(comment) => {
-                                    comments_query.insert(comment);
-                                    discussion_query.restart();
-                                    query.invalidate(&space_ranking_key(&space_id()));
-                                    query.invalidate(&space_my_score_key(&space_id()));
+                            },
+                            if comment_input().trim().is_empty() && pending_images.read().is_empty() {
+                                span { class: "inline-flex justify-center items-center leading-none",
+                                    icons::chat::SquareChat { class: "size-5 [&>path]:stroke-btn-primary-disable-text [&>path]:fill-transparent" }
                                 }
-                                Err(e) => {
-                                    error!("Failed to add comment: {:?}", e);
+                            } else {
+                                span { class: "inline-flex justify-center items-center leading-none",
+                                    icons::chat::SquareChat { class: "size-5 [&>path]:stroke-btn-primary-text [&>path]:fill-transparent" }
                                 }
-                            }
-                        },
-                        if comment_input().trim().is_empty() {
-                            span { class: "inline-flex justify-center items-center leading-none",
-                                icons::chat::SquareChat { class: "size-5 [&>path]:stroke-btn-primary-disable-text [&>path]:fill-transparent" }
-                            }
-                        } else {
-                            span { class: "inline-flex justify-center items-center leading-none",
-                                icons::chat::SquareChat { class: "size-5 [&>path]:stroke-btn-primary-text [&>path]:fill-transparent" }
                             }
                         }
                     }
+                    ImageUploadPreview { images: pending_images }
                 }
             }
             div { class: "flex flex-col divide-y divide-divider",
@@ -138,7 +217,6 @@ pub fn DiscussionComments(
                         let comment = comment.clone();
                         let comment_sk: SpacePostCommentEntityType = comment.sk.clone().into();
                         let mut comments_query = ctx.comments;
-                        let mut discussion_query = discussion_ctx.discussion;
                         rsx! {
                             div { key: "{comment.sk}", class: "py-3 first:pt-0 last:pb-0",
                                 CommentItem {
@@ -151,7 +229,7 @@ pub fn DiscussionComments(
                                     current_user_pk: current_user_pk.clone(),
                                     on_refresh_comments: move |_| {
                                         comments_query.refresh();
-                                        discussion_query.restart();
+                                        comment_count += 1;
                                     },
                                 }
                             }
@@ -194,7 +272,18 @@ fn CollapsibleCommentBody(
     rsx! {
         div { class: "flex flex-col gap-2 items-start w-full",
             div { class: "w-full",
-                p { class: "{body_class}", {content} }
+                p { class: "{body_class}",
+                    for segment in parse_mention_segments(&content) {
+                        match segment {
+                            ContentSegment::Text(t) => rsx! {
+                                span { "{t}" }
+                            },
+                            ContentSegment::Mention { display_name, .. } => rsx! {
+                                span { class: "font-medium text-primary", "@{display_name}" }
+                            },
+                        }
+                    }
+                }
             }
             if collapsible && !expanded() {
                 div { class: "-mt-5 w-full h-5 bg-gradient-to-t to-transparent from-card via-card/80" }
@@ -283,7 +372,7 @@ fn CommentItem(
                         Button {
                             size: ButtonSize::Icon,
                             style: ButtonStyle::Text,
-                            class: "text-text-secondary hover:text-text-primary".to_string(),
+                            class: "text-text-secondary hover:text-text-primary",
                             onclick: move |_| show_action_menu.set(!show_action_menu()),
                             crate::common::icons::validations::Extra { class: "size-4 [&>circle]:fill-current" }
                         }
@@ -292,8 +381,7 @@ fn CommentItem(
                                 Button {
                                     size: ButtonSize::Small,
                                     style: ButtonStyle::Text,
-                                    class: "w-full text-xs text-left rounded hover:bg-transparent focus:bg-transparent !justify-start text-text-primary"
-                                        .to_string(),
+                                    class: "w-full text-xs text-left rounded hover:bg-transparent focus:bg-transparent !justify-start text-text-primary",
                                     onclick: move |_| {
                                         edit_content.set(original_content_for_edit.clone());
                                         is_editing.set(true);
@@ -304,8 +392,7 @@ fn CommentItem(
                                 Button {
                                     size: ButtonSize::Small,
                                     style: ButtonStyle::Text,
-                                    class: "w-full text-xs text-left text-red-500 rounded hover:bg-transparent focus:bg-transparent !justify-start"
-                                        .to_string(),
+                                    class: "w-full text-xs text-left text-destructive rounded hover:bg-transparent focus:bg-transparent !justify-start",
                                     onclick: move |_| {
                                         let target = delete_target.clone();
                                         show_action_menu.set(false);
@@ -326,8 +413,7 @@ fn CommentItem(
             if is_editing() {
                 div { class: "flex flex-col gap-2",
                     TextArea {
-                        class: "py-2 px-3 w-full text-sm rounded-lg border outline-none resize-none min-h-[84px] bg-input-box-bg border-input-box-border text-text-primary"
-                            .to_string(),
+                        class: "py-2 px-3 w-full text-sm rounded-lg border outline-none resize-none min-h-[84px] bg-input-box-bg border-input-box-border text-text-primary",
                         value: edit_content(),
                         oninput: move |e: Event<FormData>| edit_content.set(e.value()),
                     }
@@ -354,7 +440,7 @@ fn CommentItem(
                                     if content.is_empty() {
                                         return;
                                     }
-                                    let req = UpdateCommentRequest { content };
+                                    let req = UpdateCommentRequest { content, images: None };
                                     match update_comment(space_id(), discussion_id(), target, req).await {
                                         Ok(_) => {
                                             is_editing.set(false);
@@ -370,12 +456,13 @@ fn CommentItem(
                 }
             } else {
                 CollapsibleCommentBody { content: comment.content.clone() }
+                CommentImageGrid { images: comment.images.clone() }
             }
             div { class: "flex justify-between items-center text-xs text-text-secondary",
                 Button {
                     size: ButtonSize::Inline,
                     style: ButtonStyle::Text,
-                    class: "inline-flex items-center text-text-secondary hover:text-primary".to_string(),
+                    class: "inline-flex items-center text-text-secondary hover:text-primary",
                     onclick: move |_| {
                         if can_comment {
                             let is_open = show_replies() || show_reply_input();
@@ -510,7 +597,7 @@ fn ReplyItem(
                         Button {
                             size: ButtonSize::Icon,
                             style: ButtonStyle::Text,
-                            class: "text-text-secondary hover:text-text-primary".to_string(),
+                            class: "text-text-secondary hover:text-text-primary",
                             onclick: move |_| show_action_menu.set(!show_action_menu()),
                             crate::common::icons::validations::Extra { class: "size-4 [&>circle]:fill-current" }
                         }
@@ -519,8 +606,7 @@ fn ReplyItem(
                                 Button {
                                     size: ButtonSize::Small,
                                     style: ButtonStyle::Text,
-                                    class: "w-full text-xs text-left rounded hover:bg-transparent focus:bg-transparent !justify-start text-text-primary"
-                                        .to_string(),
+                                    class: "w-full text-xs text-left rounded hover:bg-transparent focus:bg-transparent !justify-start text-text-primary",
                                     onclick: move |_| {
                                         edit_content.set(original_reply_for_edit.clone());
                                         is_editing.set(true);
@@ -531,8 +617,7 @@ fn ReplyItem(
                                 Button {
                                     size: ButtonSize::Small,
                                     style: ButtonStyle::Text,
-                                    class: "w-full text-xs text-left text-red-500 rounded hover:bg-transparent focus:bg-transparent !justify-start"
-                                        .to_string(),
+                                    class: "w-full text-xs text-left text-destructive rounded hover:bg-transparent focus:bg-transparent !justify-start",
                                     onclick: move |_| {
                                         let target = delete_target.clone();
                                         show_action_menu.set(false);
@@ -553,8 +638,7 @@ fn ReplyItem(
             if is_editing() {
                 div { class: "flex flex-col gap-2",
                     TextArea {
-                        class: "py-2 px-3 w-full text-sm rounded-lg border outline-none resize-none min-h-[84px] bg-input-box-bg border-input-box-border text-text-primary"
-                            .to_string(),
+                        class: "py-2 px-3 w-full text-sm rounded-lg border outline-none resize-none min-h-[84px] bg-input-box-bg border-input-box-border text-text-primary",
                         value: edit_content(),
                         oninput: move |e: Event<FormData>| edit_content.set(e.value()),
                     }
@@ -581,7 +665,7 @@ fn ReplyItem(
                                     if content.is_empty() {
                                         return;
                                     }
-                                    let req = UpdateCommentRequest { content };
+                                    let req = UpdateCommentRequest { content, images: None };
                                     match update_comment(space_id(), discussion_id(), target, req).await {
                                         Ok(_) => {
                                             is_editing.set(false);
@@ -598,6 +682,7 @@ fn ReplyItem(
                 }
             } else {
                 CollapsibleCommentBody { content: reply.content.clone(), collapsed_lines: 4 }
+                CommentImageGrid { images: reply.images.clone() }
             }
             div { class: "flex justify-end pt-1",
                 LikeButton {
@@ -640,9 +725,7 @@ fn LikeButton(
         Button {
             size: ButtonSize::Inline,
             style: ButtonStyle::Text,
-            class: if optimistic_liked() { "inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary"
-                .to_string() } else { "inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-primary"
-                .to_string() },
+            class: if optimistic_liked() { "inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary" } else { "inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-primary" },
             disabled: is_processing(),
             onclick: {
                 move |_| {
@@ -703,8 +786,7 @@ fn ReplyInput(
     rsx! {
         div { class: "p-3 mt-1 rounded-xl bg-card-bg-secondary",
             TextArea {
-                class: "py-2 px-3 w-full h-20 text-sm rounded-lg border outline-none resize-none bg-input-box-bg border-input-box-border text-text-primary placeholder:text-text-tertiary"
-                    .to_string(),
+                class: "py-2 px-3 w-full h-20 text-sm rounded-lg border outline-none resize-none bg-input-box-bg border-input-box-border text-text-primary placeholder:text-text-tertiary",
                 placeholder: "{tr.write_reply}",
                 value: reply_input(),
                 oninput: move |e: Event<FormData>| reply_input.set(e.value()),
@@ -718,7 +800,7 @@ fn ReplyInput(
                         if content.is_empty() {
                             return;
                         }
-                        let req = ReplyCommentRequest { content };
+                        let req = ReplyCommentRequest { content, images: vec![] };
                         match reply_comment(space_id(), discussion_id(), comment_sk(), req).await {
                             Ok(_) => {
                                 reply_input.set(String::new());
@@ -739,14 +821,14 @@ fn ReplyInput(
                     style: ButtonStyle::Primary,
                     shape: ButtonShape::Rounded,
                     size: ButtonSize::Icon,
-                    class: "inline-flex justify-center items-center size-10 !p-0".to_string(),
+                    class: "inline-flex justify-center items-center size-10 !p-0",
                     disabled: reply_input().trim().is_empty(),
                     onclick: move |_| async move {
                         let content = reply_input().trim().to_string();
                         if content.is_empty() {
                             return;
                         }
-                        let req = ReplyCommentRequest { content };
+                        let req = ReplyCommentRequest { content, images: vec![] };
                         match reply_comment(space_id(), discussion_id(), comment_sk(), req).await {
                             Ok(_) => {
                                 reply_input.set(String::new());

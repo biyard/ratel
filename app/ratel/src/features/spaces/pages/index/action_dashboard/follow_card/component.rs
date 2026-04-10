@@ -23,6 +23,7 @@ pub fn FollowActionCard(
     let followed_count = users.iter().filter(|u| u.subscribed).count();
 
     rsx! {
+        document::Link { rel: "stylesheet", href: asset!("./style.css") }
         div {
             class: "quest-card quest-card--follow",
             "data-type": "follow",
@@ -98,6 +99,7 @@ pub fn FollowActionCard(
                                 user: user.clone(),
                                 space_id,
                                 follow_id: follow_id.clone(),
+                                credits_per_follow: if total > 0 { action.credits / total as u64 } else { 0 },
                                 on_followed: move |_| {
                                     follow_users.restart();
                                 },
@@ -134,6 +136,7 @@ fn FollowUserRow(
     user: ReadSignal<FollowUserItem>,
     space_id: ReadSignal<SpacePartition>,
     follow_id: ReadSignal<SpaceActionFollowEntityType>,
+    credits_per_follow: u64,
     on_followed: EventHandler<()>,
 ) -> Element {
     let profile = if user().profile_url.is_empty() {
@@ -147,6 +150,7 @@ fn FollowUserRow(
         user().description.clone()
     };
     let display_name = user().display_name;
+    let mut show_points = use_signal(|| false);
 
     rsx! {
         div { class: "quest-follow-user",
@@ -160,13 +164,25 @@ fn FollowUserRow(
                 div { class: "quest-follow-user__bio", "{bio}" }
             }
             if user().subscribed {
-                button { class: "quest-follow-user__btn", "data-followed": "true", "Following" }
+                div { class: "quest-follow-user__btn-wrap",
+                    button {
+                        class: "quest-follow-user__btn",
+                        "data-followed": "true",
+                        "Following"
+                    }
+                    if show_points() {
+                        span { class: "points-anim", "+{credits_per_follow}" }
+                    }
+                }
             } else {
                 button {
                     class: "quest-follow-user__btn",
                     onclick: move |_| async move {
                         let _ = follow_user(space_id(), follow_id(), user().user_pk).await;
+                        show_points.set(true);
                         on_followed.call(());
+                        crate::common::utils::time::sleep(std::time::Duration::from_secs(1)).await;
+                        show_points.set(false);
                     },
                     "Follow"
                 }

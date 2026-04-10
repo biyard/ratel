@@ -9,11 +9,22 @@ use crate::features::spaces::space_common::types::space_page_actions_discussion_
 use creator::CreatorMain;
 use viewer::ViewerMain;
 
+/// Wrapper types so two `Signal<bool>` can coexist in context without ambiguity.
+#[derive(Clone, Copy)]
+pub struct SideDrawerOpen(pub Signal<bool>);
+
+#[derive(Clone, Copy)]
+pub struct BottomDrawerOpen(pub Signal<bool>);
+
 #[component]
 pub fn DiscussionActionPage(
     space_id: ReadSignal<SpacePartition>,
     discussion_id: ReadSignal<SpacePostEntityType>,
 ) -> Element {
+    // Drawer signals live ABOVE the suspend point — they survive re-mounts.
+    use_context_provider(|| SideDrawerOpen(Signal::new(false)));
+    use_context_provider(|| BottomDrawerOpen(Signal::new(false)));
+
     let role = use_space_role()();
 
     // `Context::init` already loads the discussion (and provides the

@@ -239,4 +239,9 @@ translate! {
         en: "Vote",
         ko: "투표",
     },
+
+    skipped_label: {
+        en: "Skipped",
+        ko: "건너뜀",
+    },
 }
