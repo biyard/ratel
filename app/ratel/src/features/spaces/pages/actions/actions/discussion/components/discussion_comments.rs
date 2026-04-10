@@ -1,12 +1,12 @@
 use crate::common::components::{
-    Button, ButtonShape, ButtonSize, ButtonStyle, CommentImageGrid, ImageUploadPreview, TextArea,
     image_upload_preview::PendingImage,
     mention_autocomplete::{MentionAutocomplete, MentionCandidate, MentionInsert},
-    paste_image_uploader,
+    paste_image_uploader, Button, ButtonShape, ButtonSize, ButtonStyle, CommentImageGrid,
+    ImageUploadPreview, TextArea,
 };
 use crate::common::hooks::use_infinite_query;
 use crate::common::query::use_query_store;
-use crate::common::utils::mention::{ContentSegment, parse_mention_segments};
+use crate::common::utils::mention::{parse_mention_segments, ContentSegment};
 use crate::common::utils::time::time_ago;
 use crate::features::spaces::pages::actions::actions::discussion::*;
 use crate::features::spaces::space_common::types::{space_my_score_key, space_ranking_key};
@@ -49,6 +49,7 @@ pub fn DiscussionComments(
     can_comment: bool,
     can_manage_comments: bool,
     current_user_pk: Option<String>,
+    #[props(default)] comment_count: Signal<usize>,
 ) -> Element {
     let tr: DiscussionCommentsTranslate = use_translate();
     let discussion_ctx = use_discussion_context();
@@ -85,14 +86,13 @@ pub fn DiscussionComments(
     let mut query = use_query_store();
     let comments = ctx.comments.items();
     let more_comments = ctx.comments.more_element();
-    let comment_count = discussion_ctx.discussion().post.comments.max(0) as usize;
+    let mut comment_count = comment_count;
 
     rsx! {
         div { class: "flex flex-col gap-4",
-            h2 { class: "text-lg font-bold text-text-primary", "{tr.comments} ({comment_count})" }
             if can_comment {
                 div { class: "flex flex-col gap-2",
-                    div { class: "flex gap-2 items-end",
+                    div { class: "flex gap-2 items-start",
                         div {
                             class: "flex-1",
                             onpaste: move |evt: ClipboardEvent| {
@@ -115,7 +115,7 @@ pub fn DiscussionComments(
                                 },
                                 members,
                                 TextArea {
-                                    class: "w-full min-h-10 resize-none rounded-[10px] border border-input-box-border bg-input-box-bg px-3 py-2 text-sm text-text-primary outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[1px]",
+                                    class: "w-full min-h-5 resize-none rounded-[10px] border border-input-box-border bg-input-box-bg px-3 py-2 text-sm text-text-primary outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[1px]",
                                     placeholder: "{tr.write_comment}",
                                     value: comment_input(),
                                     oninput: move |e: Event<FormData>| comment_input.set(e.value()),
@@ -139,13 +139,12 @@ pub fn DiscussionComments(
                                             pending_images.set(Vec::new());
                                             tracked_mentions.set(Vec::new());
                                             let mut comments_query = ctx.comments;
-                                            let mut discussion_query = discussion_ctx.discussion;
                                             let req = AddCommentRequest { content, images };
                                             match add_comment(space_id(), discussion_id(), req).await
                                             {
                                                 Ok(comment) => {
                                                     comments_query.insert(comment);
-                                                    discussion_query.restart();
+                                                    comment_count += 1;
                                                     query.invalidate(
                                                         &space_ranking_key(&space_id()),
                                                     );
@@ -185,12 +184,11 @@ pub fn DiscussionComments(
                                 pending_images.set(Vec::new());
                                 tracked_mentions.set(Vec::new());
                                 let mut comments_query = ctx.comments;
-                                let mut discussion_query = discussion_ctx.discussion;
                                 let req = AddCommentRequest { content, images };
                                 match add_comment(space_id(), discussion_id(), req).await {
                                     Ok(comment) => {
                                         comments_query.insert(comment);
-                                        discussion_query.restart();
+                                        comment_count += 1;
                                         query.invalidate(&space_ranking_key(&space_id()));
                                         query.invalidate(&space_my_score_key(&space_id()));
                                     }
@@ -219,7 +217,6 @@ pub fn DiscussionComments(
                         let comment = comment.clone();
                         let comment_sk: SpacePostCommentEntityType = comment.sk.clone().into();
                         let mut comments_query = ctx.comments;
-                        let mut discussion_query = discussion_ctx.discussion;
                         rsx! {
                             div { key: "{comment.sk}", class: "py-3 first:pt-0 last:pb-0",
                                 CommentItem {
@@ -232,7 +229,7 @@ pub fn DiscussionComments(
                                     current_user_pk: current_user_pk.clone(),
                                     on_refresh_comments: move |_| {
                                         comments_query.refresh();
-                                        discussion_query.restart();
+                                        comment_count += 1;
                                     },
                                 }
                             }

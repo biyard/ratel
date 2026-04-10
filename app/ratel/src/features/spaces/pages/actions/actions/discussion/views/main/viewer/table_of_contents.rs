@@ -36,8 +36,9 @@ pub fn DiscussionToc() -> Element {
                     {
                         let is_active = active.as_deref() == Some(entry.id.as_str());
                         let indent = match entry.level {
-                            1 | 2 => "pl-0",
-                            _ => "pl-3",
+                            1 => "pl-0",
+                            2 => "pl-3",
+                            _ => "pl-6",
                         };
                         let class = format!(
                             "block truncate transition-colors hover:text-text-primary {indent} aria-current:font-medium aria-current:text-text-primary"
