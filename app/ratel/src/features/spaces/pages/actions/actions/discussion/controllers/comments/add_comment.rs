@@ -8,6 +8,8 @@ use crate::features::spaces::space_common::models::space_reward::SpaceReward;
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct AddCommentRequest {
     pub content: String,
+    #[serde(default)]
+    pub images: Vec<String>,
 }
 
 #[mcp_tool(name = "add_comment", description = "Add a comment to a discussion. Requires participant role and discussion in progress.")]
@@ -56,7 +58,7 @@ pub async fn add_comment(
     }
 
     let comment =
-        SpacePost::comment(cli, space_id.clone(), space_post_id, req.content, &member).await?;
+        SpacePost::comment(cli, space_id.clone(), space_post_id, req.content, req.images, &member).await?;
 
     let space_pk: Partition = space_id.clone().into();
     let agg_item =
@@ -115,6 +117,19 @@ pub async fn add_comment(
         ).await {
             tracing::error!(error = %e, "Failed to record discussion activity");
         }
+    }
+
+    // Send mention notifications
+    {
+        let cta_url = format!("/spaces/{}/actions/discussion/{}", space_id, discussion_sk);
+        crate::common::utils::mention::create_mention_notifications(
+            cli,
+            &comment.content,
+            &member.pk,
+            &member.display_name,
+            &cta_url,
+        )
+        .await;
     }
 
     Ok(comment.into())

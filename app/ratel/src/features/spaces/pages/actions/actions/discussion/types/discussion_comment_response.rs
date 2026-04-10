@@ -9,6 +9,8 @@ pub struct DiscussionCommentResponse {
     pub created_at: i64,
 
     pub content: String,
+    #[serde(default)]
+    pub images: Vec<String>,
 
     pub likes: u64,
     pub replies: u64,
@@ -32,6 +34,7 @@ impl From<(SpacePostComment, bool)> for DiscussionCommentResponse {
             created_at: comment.created_at,
             updated_at: comment.updated_at,
             content: comment.content,
+            images: comment.images,
             likes: comment.likes,
             replies: comment.replies,
             parent_comment_sk: comment.parent_comment_sk,
@@ -53,6 +56,7 @@ impl From<SpacePostComment> for DiscussionCommentResponse {
             created_at: comment.created_at,
             updated_at: comment.updated_at,
             content: comment.content,
+            images: comment.images,
             likes: comment.likes,
             replies: comment.replies,
             parent_comment_sk: comment.parent_comment_sk,
