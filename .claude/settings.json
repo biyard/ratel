@@ -1,4 +1,13 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(npx rustywind:*)",
+      "Bash(dx fmt:*)"
+    ],
+    "additionalDirectories": [
+      "/Users/leechanhui/Projects/ratel-copy/ratel/app/ratel/src/features/spaces/pages/actions/actions/poll/views/main/participant"
+    ]
+  },
   "enabledPlugins": {
     "dioxus-knowledge-patch@nevaberry-plugins": true
   }

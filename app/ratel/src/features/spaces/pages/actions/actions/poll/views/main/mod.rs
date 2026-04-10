@@ -54,11 +54,15 @@ pub fn PollActionPage(space_id: SpacePartition, poll_id: SpacePollEntityType) ->
     };
 
     rsx! {
-        div { class: "flex flex-col flex-1 mx-auto w-full min-h-0 max-w-desktop",
+        div { class: "flex flex-col flex-1 mx-auto w-full min-h-0",
             if !show_creator_view {
-                SettingsSwitchButton {}
+                div { class: "flex flex-col flex-1 w-full",
+                    SettingsSwitchButton {}
+                    {content.clone()}
+                }
+            } else {
+                div { class: "flex flex-col flex-1 w-full", {content.clone()} }
             }
-            {content}
         }
     }
 }
