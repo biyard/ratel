@@ -35,12 +35,19 @@ pub struct SpaceAction {
 
 #[cfg(feature = "server")]
 impl SpaceAction {
+    pub fn default_schedule(now: i64) -> (i64, i64) {
+        let started_at = now + 60 * 60 * 1000;
+        let ended_at = started_at + 7 * 24 * 60 * 60 * 1000;
+        (started_at, ended_at)
+    }
+
     pub fn new(
         space_id: SpacePartition,
         action_id: String,
         space_action_type: SpaceActionType,
     ) -> Self {
         let now = get_now_timestamp_millis();
+        let (started_at, ended_at) = Self::default_schedule(now);
         let space_pk: Partition = space_id.clone().into();
 
         Self {
@@ -53,8 +60,8 @@ impl SpaceAction {
             prerequisite: false,
             created_at: now,
             updated_at: now,
-            started_at: now,
-            ended_at: now + 7 * 24 * 60 * 60 * 1000, // Default 7 days
+            started_at,
+            ended_at,
             credits: 0,
             total_points: 0,
             activity_score: 0,
