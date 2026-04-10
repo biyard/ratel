@@ -1,0 +1,170 @@
+/* ── Prerequisite Card ─────────────────────────── */
+
+.prereq-card {
+  --prereq-bg: var(--dark, rgba(12, 12, 26, 0.65)) var(--light, rgba(255, 255, 255, 0.72));
+  --prereq-border: var(--dark, rgba(255, 255, 255, 0.06)) var(--light, rgba(0, 0, 0, 0.08));
+  --prereq-text: var(--dark, #8888a8) var(--light, #6b6b80);
+  --prereq-text-primary: var(--dark, #f0f0f5) var(--light, #12121a);
+  --prereq-shadow: var(--dark, rgba(0,0,0,0.4)) var(--light, rgba(0,0,0,0.08));
+  --prereq-item-bg: var(--dark, rgba(255,255,255,0.03)) var(--light, rgba(0,0,0,0.03));
+  --prereq-done-border: rgba(34,197,94,0.3);
+  --prereq-done-bg: rgba(34,197,94,0.06);
+
+  width: 380px;
+  max-height: 70vh;
+  padding: 32px 28px 28px;
+  background: var(--prereq-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--prereq-border);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  box-shadow:
+    0 8px 60px var(--prereq-shadow),
+    0 0 80px rgba(252,179,0,0.04),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+  animation: card-float 6s ease-in-out infinite;
+}
+
+.prereq-card__heading {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #fcb300;
+}
+
+.prereq-card__desc {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--prereq-text);
+  text-align: center;
+  max-width: 300px;
+}
+
+.prereq-card__progress {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.prereq-card__progress-bar-wrap {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--dark, rgba(255,255,255,0.08)) var(--light, rgba(0,0,0,0.06));
+  overflow: hidden;
+}
+
+.prereq-card__progress-bar {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #fcb300, #e5a200);
+  transition: width 0.4s ease;
+}
+
+.prereq-card__progress-text {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--prereq-text);
+  white-space: nowrap;
+}
+
+.prereq-card__list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+.prereq-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--prereq-border);
+  background: var(--prereq-item-bg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.prereq-item:hover:not([data-done="true"]) {
+  border-color: rgba(252,179,0,0.25);
+  background: var(--dark, rgba(252,179,0,0.04)) var(--light, rgba(252,179,0,0.06));
+}
+.prereq-item[data-done="true"] {
+  border-color: var(--prereq-done-border);
+  background: var(--prereq-done-bg);
+  cursor: default;
+}
+
+.prereq-item__icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--prereq-text);
+}
+.prereq-item[data-done="true"] .prereq-item__icon {
+  color: #22C55E;
+}
+
+.prereq-item__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.prereq-item__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--prereq-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.prereq-item__type {
+  font-size: 11px;
+  color: var(--prereq-text);
+}
+
+.prereq-item__status {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.prereq-item__status--done {
+  color: #22C55E;
+}
+.prereq-item__status--done svg {
+  width: 18px;
+  height: 18px;
+}
+
+.prereq-item__status--pending {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fcb300;
+}
+.prereq-item__status--pending svg {
+  width: 14px;
+  height: 14px;
+}
+
+@media (max-width: 500px) {
+  .prereq-card { width: calc(100vw - 32px); padding: 24px 18px 20px; }
+}
