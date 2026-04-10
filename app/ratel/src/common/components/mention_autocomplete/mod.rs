@@ -33,7 +33,10 @@ pub fn MentionAutocomplete(
         let val = text();
         if let Some(pos) = find_active_at(&val) {
             let after_at = &val[pos + 1..];
-            let q: String = after_at.chars().take_while(|c| !c.is_whitespace()).collect();
+            let q: String = after_at
+                .chars()
+                .take_while(|c| !c.is_whitespace())
+                .collect();
             query.set(q);
             at_position.set(pos);
             show_dropdown.set(true);
@@ -48,10 +51,8 @@ pub fn MentionAutocomplete(
         members()
             .into_iter()
             .filter(|m| {
-                m.display_name.to_lowercase().contains(&q)
-                    || m.username.to_lowercase().contains(&q)
+                m.display_name.to_lowercase().contains(&q) || m.username.to_lowercase().contains(&q)
             })
-            .take(5)
             .collect()
     } else {
         vec![]
@@ -96,7 +97,7 @@ pub fn MentionAutocomplete(
 
             if show_dropdown() && !filtered.is_empty() {
                 div {
-                    class: "absolute right-0 left-0 z-50 mt-1 rounded-lg border shadow-lg bg-popover border-border",
+                    class: "absolute right-0 left-0 z-50 mt-1 max-h-[200px] overflow-y-auto rounded-lg shadow-lg bg-popover",
                     role: "listbox",
                     for (i , member) in filtered.iter().enumerate() {
                         {
@@ -105,7 +106,7 @@ pub fn MentionAutocomplete(
                             rsx! {
                                 button {
                                     key: "{member.user_pk}",
-                                    class: "flex gap-2 items-center py-2 px-3 w-full text-sm text-left transition-colors text-text-primary aria-selected:bg-hover hover:bg-hover",
+                                    class: "flex gap-2 items-center py-1 px-3 w-full text-left transition-colors text-text-primary aria-selected:bg-hover hover:bg-hover",
                                     role: "option",
                                     "aria-selected": is_selected,
                                     onclick: move |_| {
@@ -115,14 +116,20 @@ pub fn MentionAutocomplete(
                                     },
                                     if !member.profile_url.is_empty() {
                                         img {
-                                            class: "object-cover w-6 h-6 rounded-full",
+                                            class: "object-cover w-6 h-6 rounded",
                                             src: "{member.profile_url}",
                                             alt: "{member.display_name}",
                                         }
+                                    } else {
+                                        div { class: "flex justify-center items-center w-6 h-6 rounded bg-hover text-foreground-muted text-sm font-medium",
+                                            "{member.display_name.chars().next().unwrap_or('?')}"
+                                        }
                                     }
-                                    div { class: "flex flex-col",
-                                        span { class: "font-medium", "{member.display_name}" }
-                                        span { class: "text-xs text-foreground-muted", "@{member.username}" }
+                                    span { class: "flex-1 text-sm font-semibold", "{member.display_name}" }
+                                    if is_selected {
+                                        span { class: "py-0.5 px-2 text-xs rounded border text-foreground-muted border-border",
+                                            "Enter"
+                                        }
                                     }
                                 }
                             }
@@ -135,8 +142,7 @@ pub fn MentionAutocomplete(
 }
 
 fn build_mention_insert(member: &MentionCandidate, at_pos: usize, q: &str) -> MentionInsert {
-    let display_text =
-        crate::common::utils::mention::mention_display(&member.display_name);
+    let display_text = crate::common::utils::mention::mention_display(&member.display_name);
     MentionInsert {
         start_offset: at_pos,
         end_offset: at_pos + 1 + q.len(),

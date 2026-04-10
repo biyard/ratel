@@ -1,10 +1,7 @@
-use crate::features::spaces::pages::actions::actions::discussion::views::main::viewer::{
-    DiscussionContentBody, DiscussionToc,
-};
+use crate::features::spaces::pages::actions::actions::discussion::views::main::viewer::DiscussionContentBody;
 use crate::features::spaces::pages::actions::actions::discussion::*;
 
-fn heading_count(html: &str) -> usize {
-    // Count case-insensitive occurrences of `<h1`, `<h2`, `<h3` followed by `>` or whitespace.
+pub fn heading_count(html: &str) -> usize {
     let bytes = html.as_bytes();
     let mut count = 0usize;
     let mut i = 0usize;
@@ -25,20 +22,7 @@ fn heading_count(html: &str) -> usize {
 
 #[component]
 pub fn NotionLayout(html_contents: String) -> Element {
-    let has_toc = heading_count(&html_contents) >= 3;
-
-    if has_toc {
-        rsx! {
-            div { class: "grid grid-cols-1 gap-8 desktop:grid-cols-[minmax(0,720px)_200px] desktop:gap-16 desktop:justify-center",
-                DiscussionContentBody { html_contents }
-                DiscussionToc {}
-            }
-        }
-    } else {
-        rsx! {
-            div { class: "mx-auto w-full max-w-[720px]",
-                DiscussionContentBody { html_contents }
-            }
-        }
+    rsx! {
+        DiscussionContentBody { html_contents }
     }
 }
