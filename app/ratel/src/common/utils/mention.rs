@@ -133,8 +133,25 @@ pub async fn create_mention_notifications(
         if pk_str == author_pk_str {
             continue;
         }
+        // Look up the mentioned user's email
+        let pk: crate::common::types::Partition = pk_str.parse().unwrap_or_default();
+        let user = match crate::common::models::User::get(cli, &pk, Some(crate::common::types::EntityType::User)).await {
+            Ok(Some(u)) => u,
+            Ok(None) => {
+                tracing::warn!("Mentioned user not found: {}", pk_str);
+                continue;
+            }
+            Err(e) => {
+                tracing::error!("Failed to look up mentioned user {}: {}", pk_str, e);
+                continue;
+            }
+        };
+        if user.email.is_empty() {
+            continue;
+        }
         let notification = crate::common::models::notification::Notification::new(
             crate::common::types::NotificationData::MentionInComment {
+                email: user.email,
                 mentioned_by_name: author_name.to_string(),
                 comment_preview: preview.clone(),
                 cta_url: cta_url.to_string(),
