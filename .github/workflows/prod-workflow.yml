@@ -173,6 +173,7 @@ jobs:
 
           WALLETCONNECT_PROJECT_ID: ${{ secrets.WALLETCONNECT_PROJECT_ID }}
         run: |
+          npm i
           rm -rf target/dx
 
           cd app/ratel
@@ -328,6 +329,7 @@ jobs:
 
           WALLETCONNECT_PROJECT_ID: ${{ secrets.WALLETCONNECT_PROJECT_ID }}
         run: |
+          npm i
           rm -rf target/dx
 
           cd app/ratel
