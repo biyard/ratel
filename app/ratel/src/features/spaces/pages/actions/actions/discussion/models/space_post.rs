@@ -54,10 +54,11 @@ impl SpacePost {
     ) -> Self {
         let pk: Partition = space_pk.into();
         let now = crate::common::utils::time::get_now_timestamp_millis();
+        let (default_started_at, default_ended_at) =
+            crate::features::spaces::pages::actions::models::SpaceAction::default_schedule(now);
         let uuid = uuid::Uuid::now_v7().to_string();
-        let started_at = started_at.unwrap_or(now);
-        // End At is 7 days after start date
-        let ended_at = ended_at.unwrap_or(now + 7 * 24 * 60 * 60 * 1000);
+        let started_at = started_at.unwrap_or(default_started_at);
+        let ended_at = ended_at.unwrap_or(default_ended_at);
         Self {
             pk,
             sk: EntityType::SpacePost(uuid),
