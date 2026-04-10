@@ -56,8 +56,8 @@ async function signUpFromSpace(
   });
   const page = await context.newPage();
 
-  await goto(page, spaceUrl + "/dashboard");
-  await click(page, { text: "Sign In" });
+  await goto(page, spaceUrl);
+  await click(page, { testId: "btn-signin" });
   // "Create an account" link is inside the modal — waiting for it implies modal is open
   await click(page, { text: "Create an account" });
 
@@ -91,15 +91,10 @@ async function signUpAndSkipPrereq(browser, user, spaceUrl) {
   const { context, page } = await signUpFromSpace(browser, user, spaceUrl);
 
   try {
-    await goto(page, spaceUrl + "/dashboard");
-    await click(page, { text: "Participate" });
-    // Required Actions layover appears — do nothing (close / navigate away)
-    await getLocator(page, { text: "Required Actions" });
-    // Go back without completing the prereq
-    await goto(page, spaceUrl + "/dashboard");
-    // Verify they appear as a participant (not yet fully active)
-    const profile = page.locator("#space-user-profile");
-    await expect(profile).toBeVisible();
+    await goto(page, spaceUrl);
+    await click(page, { testId: "btn-participate" });
+    // PrerequisiteCard appears — user sees the checklist but doesn't complete anything
+    await expect(page.getByTestId("card-prerequisite")).toBeVisible();
   } finally {
     await context.close();
   }
@@ -112,30 +107,35 @@ async function signUpAndParticipate(browser, user, spaceUrl) {
   const { context, page } = await signUpFromSpace(browser, user, spaceUrl);
 
   try {
-    await goto(page, spaceUrl + "/dashboard");
-    await click(page, { text: "Participate" });
-    await getLocator(page, { text: "Required Actions" });
+    await goto(page, spaceUrl);
+    await click(page, { testId: "btn-participate" });
+    // PrerequisiteCard appears with the checklist
+    await expect(page.getByTestId("card-prerequisite")).toBeVisible();
 
-    // Navigate to the prerequisite preliminary poll
+    // Click the prerequisite poll item — opens the full-screen poll overlay
     await click(page, { text: "Opinion Survey: Pre-study" });
-    await page.waitForURL(/\/actions\/polls\//, { waitUntil: "load" });
+    // Poll overlay appears (no page navigation)
+    await expect(page.getByTestId("poll-arena-overlay")).toBeVisible();
 
-    // Select the first available option
-    const options = page.locator('[data-pw="poll-option"]');
+    // Select the first radio option inside the overlay
+    const options = page.locator(
+      '[data-testid="poll-arena-overlay"] input[type="radio"]:visible'
+    );
     if ((await options.count()) > 0) {
       await options.first().click();
     } else {
-      await page.locator('input[type="radio"]:visible').first().click();
+      await page
+        .locator('[data-testid="poll-arena-overlay"] [data-pw="poll-option"]')
+        .first()
+        .click();
     }
 
+    // Submit the poll — overlay closes automatically after submission
     await click(page, { text: "Submit" });
-    await page.waitForLoadState("load");
+    await expect(page.getByTestId("poll-arena-overlay")).toBeHidden();
 
-    // Return to dashboard and verify participation card
-    await goto(page, spaceUrl + "/dashboard");
-    const profile = page.locator("#space-user-profile");
-    await expect(profile).toBeVisible();
-    await expect(profile).toContainText(user.name);
+    // After completing all prerequisites, user should see the WaitingCard
+    await expect(page.getByTestId("card-waiting")).toBeVisible();
   } finally {
     await context.close();
   }
@@ -627,23 +627,23 @@ test.describe.serial("Space governance scenario", () => {
 
   // ─── 12. Viewer: sign up + Participate (no prereq completion) ────────────
 
-  // test("Viewer: Sign up from space and Participate without completing prereq", async ({
-  //   browser,
-  // }) => {
-  //   await signUpAndSkipPrereq(browser, viewer, spaceUrl);
-  // });
+  test("Viewer: Sign up from space and Participate without completing prereq", async ({
+    browser,
+  }) => {
+    await signUpAndSkipPrereq(browser, viewer, spaceUrl);
+  });
 
-  // // ─── 13–14. Participants: sign up + complete prerequisite poll ───────────
+  // ─── 13–14. Participants: sign up + complete prerequisite poll ───────────
 
-  // test("Participant2: Sign up from space and complete prerequisite poll", async ({
-  //   browser,
-  // }) => {
-  //   await signUpAndParticipate(browser, participant2, spaceUrl);
-  // });
+  test("Participant2: Sign up from space and complete prerequisite poll", async ({
+    browser,
+  }) => {
+    await signUpAndParticipate(browser, participant2, spaceUrl);
+  });
 
-  // test("Participant3: Sign up from space and complete prerequisite poll", async ({
-  //   browser,
-  // }) => {
-  //   await signUpAndParticipate(browser, participant3, spaceUrl);
-  // });
+  test("Participant3: Sign up from space and complete prerequisite poll", async ({
+    browser,
+  }) => {
+    await signUpAndParticipate(browser, participant3, spaceUrl);
+  });
 });
