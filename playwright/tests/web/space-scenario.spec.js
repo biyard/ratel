@@ -133,18 +133,9 @@ async function signUpAndParticipate(browser, user, spaceUrl) {
     // Poll overlay appears (no page navigation)
     await expect(page.getByTestId("poll-arena-overlay")).toBeVisible();
 
-    // Select the first radio option inside the overlay
-    const options = page.locator(
-      '[data-testid="poll-arena-overlay"] input[type="radio"]:visible'
-    );
-    if ((await options.count()) > 0) {
-      await options.first().click();
-    } else {
-      await page
-        .locator('[data-testid="poll-arena-overlay"] [data-pw="poll-option"]')
-        .first()
-        .click();
-    }
+    // Select the first poll option inside the overlay (options are styled divs, not radio inputs)
+    const overlay = page.getByTestId("poll-arena-overlay");
+    await overlay.locator(".option-single").first().click();
 
     // Submit the poll — confirm dialog appears (response_editable is false by default)
     await click(page, { text: "Submit" });
