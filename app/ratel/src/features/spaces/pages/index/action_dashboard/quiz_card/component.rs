@@ -77,7 +77,7 @@ pub fn QuizActionCard(
             div { class: "quest-card__body",
                 div { class: "quest-card__title", "{action.title}" }
                 if !action.description.is_empty() {
-                    div { class: "quest-card__desc", "{action.description}" }
+                    div { class: "quest-card__desc", dangerous_inner_html: "{action.description}" }
                 }
                 div { class: "quest-card__detail",
                     div { class: "quest-quiz-stats",
