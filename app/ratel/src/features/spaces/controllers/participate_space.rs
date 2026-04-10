@@ -206,19 +206,12 @@ async fn check_if_satisfying_panel_attribute(
         .map(|value| !value.is_empty())
         .unwrap_or(false);
 
-    let (collective_panels, conditional_panels): (Vec<_>, Vec<_>) =
+    let (_, conditional_panels): (Vec<_>, Vec<_>) =
         panel_quota.into_iter().partition(is_collective_panel);
 
-    for q in &collective_panels {
-        if !crate::features::spaces::controllers::panel_requirements::panel_matches_user(
-            age,
-            gender,
-            has_university,
-            q,
-        ) {
-            return Err(Error::LackOfVerifiedAttributes);
-        }
-    }
+    // Collective panels collect self-declared demographics during or after
+    // participation — no pre-existing attributes are required.  Only
+    // conditional (verifiable) panels need the user to already satisfy them.
 
     if conditional_panels.is_empty() {
         if space.quota > 0 {
