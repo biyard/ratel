@@ -33,36 +33,25 @@ pub fn PollActionPage(space_id: SpacePartition, poll_id: SpacePollEntityType) ->
     let edit_mode = use_context_provider(|| ActionEditMode(Signal::new(false)));
     let show_creator_view = !locked || edit_mode.0();
 
-    let content = match (role, show_creator_view) {
-        // Creators see the configuration UI either before the action
-        // starts, or when they explicitly enable edit mode from the
-        // participant view.
-        (SpaceUserRole::Creator, true) => rsx! {
+    let content = match role {
+        // Creators always see the configuration/creator UI
+        SpaceUserRole::Creator => rsx! {
             PollCreatorPage { space_id, poll_id }
         },
 
-        // Default: creators after start, and all participants/candidates,
-        // see the participant view.
-        (SpaceUserRole::Creator, false)
-        | (SpaceUserRole::Participant | SpaceUserRole::Candidate, _) => rsx! {
+        // Participants and candidates see the gamified viewer
+        SpaceUserRole::Participant | SpaceUserRole::Candidate => rsx! {
             PollParticipantPage { space_id, poll_id }
         },
 
-        (SpaceUserRole::Viewer, _) => rsx! {
+        SpaceUserRole::Viewer => rsx! {
             PollViewerPage { space_id, poll_id }
         },
     };
 
     rsx! {
         div { class: "flex flex-col flex-1 mx-auto w-full min-h-0",
-            if !show_creator_view {
-                div { class: "flex flex-col flex-1 w-full",
-                    SettingsSwitchButton {}
-                    {content.clone()}
-                }
-            } else {
-                div { class: "flex flex-col flex-1 w-full", {content.clone()} }
-            }
+            {content}
         }
     }
 }
