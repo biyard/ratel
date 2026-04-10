@@ -13,7 +13,7 @@ use crate::{
 pub struct SpaceContextProvider {
     pub role: Loader<SpaceUserRole>,
     pub space: Loader<SpaceResponse>,
-    pub current_role: Signal<SpaceUserRole>,
+    pub current_role: Memo<SpaceUserRole>,
     pub panel_requirements: Loader<Vec<PanelRequirementStatus>>,
 }
 
@@ -28,7 +28,7 @@ impl SpaceContextProvider {
             .await
         })?;
 
-        let mut current_role = use_signal(|| role());
+        let mut current_role = use_memo(move || role());
 
         let srv = Self {
             role,

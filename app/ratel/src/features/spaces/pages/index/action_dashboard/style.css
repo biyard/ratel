@@ -1,73 +1,7 @@
 /* ── Action Dashboard ────────────────────────────── */
 /* Uses same class names as docs/design/space-participant.html */
-
-.arena {
-  position: relative;
-  width: 100%;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: var(--dark, #06060e) var(--light, #f4f3ef);
-  color: var(--dark, #f0f0f5) var(--light, #12121a);
-  font-family: 'Outfit', sans-serif;
-}
-.arena::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 80% 60% at 50% 50%, rgba(252,179,0,0.04) 0%, transparent 60%),
-    radial-gradient(ellipse 120% 100% at 50% 120%, rgba(110,237,216,0.03) 0%, transparent 50%);
-  z-index: 0;
-}
-
-/* ── Top bar ─────────────────────────────────────── */
-.arena-topbar {
-  position: relative; z-index: 20;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 20px 28px; flex-shrink: 0;
-}
-.arena-topbar__brand { display: flex; align-items: center; gap: 14px; }
-.arena-topbar__logo {
-  width: 40px; height: 40px; border-radius: 10px; object-fit: cover;
-  border: 1px solid rgba(252,179,0,0.15);
-  box-shadow: 0 2px 12px var(--dark, rgba(0,0,0,0.3)) var(--light, rgba(0,0,0,0.08));
-}
-.arena-topbar__title {
-  font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 16px;
-  letter-spacing: 0.06em; text-transform: uppercase;
-}
-.arena-topbar__status {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 3px 10px; border-radius: 100px;
-  background: rgba(110,237,216,0.08); border: 1px solid rgba(110,237,216,0.15);
-  font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
-  color: #6eedd8; margin-left: 12px;
-}
-.arena-topbar__status::before {
-  content: ''; width: 5px; height: 5px; border-radius: 50%;
-  background: #6eedd8; box-shadow: 0 0 6px #6eedd8;
-}
-.arena-topbar__actions { display: flex; gap: 10px; }
-
-/* HUD buttons */
-.hud-btn {
-  width: 40px; height: 40px; border-radius: 10px;
-  background: var(--dark, rgba(12,12,26,0.65)) var(--light, rgba(255,255,255,0.72));
-  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--dark, rgba(255,255,255,0.06)) var(--light, rgba(0,0,0,0.08));
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: all 0.25s ease; padding: 0;
-}
-.hud-btn:hover {
-  background: var(--dark, rgba(20,20,40,0.80)) var(--light, rgba(255,255,255,0.88));
-  border-color: rgba(252,179,0,0.2); box-shadow: 0 0 20px rgba(252,179,0,0.08);
-}
-.hud-btn svg { width: 18px; height: 18px; color: var(--dark, #8888a8) var(--light, #6b6b80); transition: color 0.2s; }
-.hud-btn:hover svg { color: #fcb300; }
-.hud-btn[aria-pressed="true"] { background: rgba(252,179,0,0.12); border-color: rgba(252,179,0,0.3); }
-.hud-btn[aria-pressed="true"] svg { color: #fcb300; }
+/* .arena base styles are in parent index/style.css */
+/* Topbar + HUD buttons are in arena_topbar/style.css */
 
 /* ── Section label ───────────────────────────────── */
 .quest-label {
@@ -129,11 +63,7 @@
   background: #fcb300; border-radius: 3px 0 0 3px;
 }
 
-/* Type glow */
-.quest-card--poll.active       { border-color: rgba(99,102,241,0.18);  box-shadow: 0 12px 60px rgba(0,0,0,0.5), 0 0 40px rgba(99,102,241,0.12); }
-.quest-card--discuss.active    { border-color: rgba(34,211,238,0.18);  box-shadow: 0 12px 60px rgba(0,0,0,0.5), 0 0 40px rgba(34,211,238,0.12); }
-.quest-card--quiz.active       { border-color: rgba(168,85,247,0.18);  box-shadow: 0 12px 60px rgba(0,0,0,0.5), 0 0 40px rgba(168,85,247,0.12); }
-.quest-card--follow.active     { border-color: rgba(251,146,60,0.18);  box-shadow: 0 12px 60px rgba(0,0,0,0.5), 0 0 40px rgba(251,146,60,0.12); }
+/* Type-specific glow: moved to each card's own style.css */
 
 /* Hero watermark */
 .quest-card__hero { position: absolute; right: -20px; top: -20px; width: 140px; height: 140px; opacity: 0.04; pointer-events: none; transition: opacity 0.5s; }
@@ -282,13 +212,9 @@
 
 /* ── Responsive ──────────────────────────────────── */
 @media (max-width: 500px) {
-  .arena-topbar { padding: 16px; }
-  .arena-topbar__logo { width: 32px; height: 32px; }
-  .arena-topbar__title { font-size: 13px; }
   .quest-card { width: 320px; min-height: 340px; padding: 22px 20px 20px; }
   .carousel-track { padding-left: calc(50vw - 160px); padding-right: calc(50vw - 160px); gap: 20px; }
   .carousel-wrapper::before, .carousel-wrapper::after { width: 60px; }
-  .hud-btn { width: 36px; height: 36px; }
   .bottom-bar { padding: 14px 16px 20px; }
   .archive-panel { right: 16px; width: calc(100vw - 32px); }
 }

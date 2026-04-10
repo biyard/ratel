@@ -1,0 +1,22 @@
+/* ── Discussion Action Card ──────────────────────── */
+
+.quest-card--discuss.active {
+  border-color: rgba(34,211,238,0.18);
+  box-shadow: 0 12px 60px var(--dark, rgba(0,0,0,0.5)) var(--light, rgba(0,0,0,0.12)), 0 0 40px rgba(34,211,238,0.12);
+}
+
+.quest-discuss-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.quest-discuss-tag {
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background: rgba(34,211,238,0.08);
+  border: 1px solid rgba(34,211,238,0.18);
+  color: #22d3ee;
+}
