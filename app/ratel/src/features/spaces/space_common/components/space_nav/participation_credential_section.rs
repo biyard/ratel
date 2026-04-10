@@ -63,7 +63,7 @@ pub fn ParticipationCredentialSection(
                             icons::security::ShieldGood {
                                 width: "18",
                                 height: "18",
-                                class: "mt-0.5 shrink-0 [&>path]:fill-none [&>path]:stroke-foreground-muted",
+                                class: "mt-0.5 shrink-0 [&>path]:fill-none [&>path]:stroke-text-primary",
                             }
                             div { class: "flex flex-col gap-1 items-start",
                                 p { class: "font-bold font-raleway text-[13px]/[16px] tracking-[-0.14px] text-foreground-muted",
