@@ -63,7 +63,7 @@ pub fn RankingTable(data: RankingTableData) -> Element {
                 div { class: "h-full min-h-0 overflow-y-auto",
                     for entry in page_entries.iter() {
                         div {
-                            class: "flex items-stretch self-stretch min-w-[620px] max-tablet:min-w-[520px] max-mobile:min-w-0",
+                            class: "flex items-stretch self-stretch min-w-[620px] max-tablet:min-w-[520px] max-mobile:min-w-0 [&:last-child>div]:border-b-0",
 
                             // Rank
                             div { class: "flex w-[88px] max-tablet:w-[80px] max-mobile:w-[80px] items-center border-b border-separator pl-[30px] pr-4 max-tablet:px-5 py-4 max-mobile:px-4 max-mobile:py-3",

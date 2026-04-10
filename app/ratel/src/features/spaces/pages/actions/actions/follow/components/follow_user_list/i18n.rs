@@ -9,15 +9,15 @@ translate! {
     }
     subscribe: {
         en: "Follow",
-        ko: "팔로우"
+        ko: "Follow"
     }
     unsubscribe: {
         en: "Unfollow",
-        ko: "언팔로우"
+        ko: "Unfollow"
     }
     subscribed: {
         en: "Following",
-        ko: "팔로잉"
+        ko: "Following"
     }
     subscribed_toast: {
         en: "Followed.",

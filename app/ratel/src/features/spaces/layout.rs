@@ -22,7 +22,7 @@ pub fn use_space_layout_ui() -> SpaceLayoutUiContext {
 
 #[component]
 pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
-    let ctx = SpaceContextProvider::init(space_id)?;
+    let mut ctx = SpaceContextProvider::init(space_id)?;
 
     use_context_provider(|| PopupService::new());
     use_context_provider(|| LayoverService::new());
@@ -121,6 +121,10 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
                     user,
                     anonymous_user_profile,
                     role,
+                    real_role: ctx.role(),
+                    on_role_change: move |new_role| {
+                        ctx.current_role.set(new_role);
+                    },
                     show_participation_card: show_participate,
                     credential_path: credential_path.clone(),
                     login_handler: move |_| {

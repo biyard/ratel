@@ -1,8 +1,8 @@
-use crate::features::spaces::pages::actions::actions::follow::models::SpaceFollowUser;
-use crate::features::spaces::pages::actions::actions::follow::*;
 use crate::common::models::auth::UserFollow;
 use crate::common::models::space::SpaceCommon;
 use crate::features::posts::models::Team;
+use crate::features::spaces::pages::actions::actions::follow::models::SpaceFollowUser;
+use crate::features::spaces::pages::actions::actions::follow::*;
 use std::collections::HashSet;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
@@ -12,6 +12,7 @@ pub struct FollowUserItem {
     pub display_name: String,
     pub profile_url: String,
     pub username: String,
+    pub description: String,
     pub user_type: UserType,
     pub subscribed: bool,
 }
@@ -50,6 +51,7 @@ pub async fn list_follow_users(
             space.author_display_name.clone(),
             space.author_profile_url.clone(),
             space.author_username.clone(),
+            String::new(),
         );
         let mut creator_pk = space.user_pk.clone();
 
@@ -62,7 +64,12 @@ pub async fn list_follow_users(
                 .find(|team| team.username == space.author_username)
             {
                 creator_pk = team.pk.clone();
-                creator_profile = (team.display_name, team.profile_url, team.username);
+                creator_profile = (
+                    team.display_name,
+                    team.profile_url,
+                    team.username,
+                    team.description,
+                );
                 resolved = true;
             }
         }
@@ -83,7 +90,12 @@ pub async fn list_follow_users(
             };
             if let Some(user) = users.into_iter().next() {
                 creator_pk = user.pk.clone();
-                creator_profile = (user.display_name, user.profile_url, user.username);
+                creator_profile = (
+                    user.display_name,
+                    user.profile_url,
+                    user.username,
+                    user.description,
+                );
             }
         }
 
@@ -120,14 +132,25 @@ pub async fn list_follow_users(
             display_name: u.display_name,
             profile_url: u.profile_url,
             username: u.username,
+            description: u.description,
             user_type: u.user_type,
             subscribed: subscribed_targets.contains(&u.user_pk.to_string()),
         })
         .collect();
 
+    if let Some(creator) = items.iter_mut().find(|u| u.user_pk == creator_pk) {
+        if creator.description.is_empty() {
+            creator.description = creator_profile.3.clone();
+        }
+    }
+
     let creator_item = if let Some(idx) = items.iter().position(|u| u.user_pk == creator_pk) {
         let item = items.remove(idx);
-        if is_first_page { Some(item) } else { None }
+        if is_first_page {
+            Some(item)
+        } else {
+            None
+        }
     } else {
         if is_first_page {
             let creator_sk = EntityType::SpaceSubscriptionUser(creator_pk.to_string());
@@ -138,19 +161,22 @@ pub async fn list_follow_users(
                     display_name: u.display_name,
                     profile_url: u.profile_url,
                     username: u.username,
+                    description: u.description,
                     user_type: u.user_type,
                     subscribed: subscribed_targets.contains(&u.user_pk.to_string()),
                 });
             if creator.is_some() {
                 creator
             } else if let Some(user) =
-                crate::features::auth::User::get(cli, creator_pk.clone(), Some(EntityType::User)).await?
+                crate::features::auth::User::get(cli, creator_pk.clone(), Some(EntityType::User))
+                    .await?
             {
                 Some(FollowUserItem {
                     user_pk: creator_pk.clone(),
                     display_name: user.display_name,
                     profile_url: user.profile_url,
                     username: user.username,
+                    description: user.description,
                     user_type: user.user_type,
                     subscribed: subscribed_targets.contains(&creator_pk.to_string()),
                 })
@@ -160,6 +186,7 @@ pub async fn list_follow_users(
                     display_name: creator_profile.0,
                     profile_url: creator_profile.1,
                     username: creator_profile.2,
+                    description: creator_profile.3,
                     user_type: match creator_pk {
                         Partition::Team(_) => UserType::Team,
                         _ => UserType::Individual,
