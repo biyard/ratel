@@ -5,7 +5,7 @@ use crate::features::spaces::pages::index::action_pages::quiz::ActiveActionOverl
 use crate::features::spaces::pages::index::*;
 use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
 use crate::features::spaces::space_common::types::{
-    space_my_score_key, space_page_actions_poll_key, space_ranking_key,
+    space_my_score_key, space_page_actions_key, space_page_actions_poll_key, space_ranking_key,
 };
 use std::collections::HashMap;
 
@@ -126,6 +126,7 @@ pub fn ActionPollViewer(
             match respond_poll(space_id(), poll_id(), RespondPollRequest { answers: payload }).await {
                 Ok(_) => {
                     query.invalidate(&space_page_actions_poll_key(&space_id(), &poll_id()));
+                    query.invalidate(&space_page_actions_key(&space_id()));
                     query.invalidate(&space_ranking_key(&space_id()));
                     query.invalidate(&space_my_score_key(&space_id()));
                     toast.info(tr.submit_success);
@@ -578,7 +579,6 @@ pub fn ActionPollViewer(
                 }
             }
         }
-
     }
 }
 

@@ -143,7 +143,10 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
 
 #[component]
 fn CandidateView(space_id: ReadSignal<SpacePartition>) -> Element {
-    let actions = use_loader(move || async move {
+    use crate::features::spaces::space_common::types::space_page_actions_key;
+
+    let key = space_page_actions_key(&space_id());
+    let actions = use_query(&key, move || async move {
         crate::features::spaces::pages::actions::controllers::list_actions(space_id()).await
     })?;
     let actions = actions();
