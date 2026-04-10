@@ -100,6 +100,7 @@ pub fn FloatingCommentsButton(open: Signal<bool>, comment_count: ReadSignal<usiz
                 size: ButtonSize::Icon,
                 shape: ButtonShape::Rounded,
                 class: "flex justify-center items-center w-14 h-14 shadow-lg transition-transform hover:scale-105",
+                "data-testid": "open-comments-btn",
                 "aria-label": "{tr.open_comments}",
                 onclick: move |_| open_sig.set(true),
                 MessageCircle { class: "w-6 h-6 [&>path]:stroke-icon-primary" }
