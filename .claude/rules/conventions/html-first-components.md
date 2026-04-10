@@ -105,7 +105,21 @@ rsx! {
 }
 ```
 
-**Important:** Always use `defer: true` on `document::Script`. Without it, the script runs before the component's DOM elements exist, causing `getElementById` to return null.
+**Important:** Always use `defer: true` AND wrap the script in a MutationObserver pattern. `defer` handles SSR (initial page load), but CSR (client-side navigation) renders components asynchronously — the script may run before DOM elements exist. The MutationObserver catches both cases:
+
+```js
+(function () {
+  function init() {
+    var el = document.getElementById("my-element");
+    if (!el || el.dataset.bound) return;
+    el.dataset.bound = "true";
+    // ... setup logic
+  }
+  init(); // SSR
+  new MutationObserver(function () { init(); })
+    .observe(document.body, { childList: true, subtree: true }); // CSR
+})();
+```
 
 ## CSS Dark/Light Theme Colors
 

@@ -28,6 +28,11 @@ pub enum EmailOperation {
         space_title: String,
         cta_url: String,
     },
+    MentionNotification {
+        mentioned_by_name: String,
+        comment_preview: String,
+        cta_url: String,
+    },
 }
 
 impl Default for EmailOperation {
@@ -50,6 +55,7 @@ impl EmailOperation {
             EmailOperation::SignupSecurityCode { .. } => "signup_code",
             EmailOperation::SpaceInviteVerification { .. } => "email_verification",
             EmailOperation::SpaceStatusNotification { .. } => "space_status_notification",
+            EmailOperation::MentionNotification { .. } => "mention_notification",
         }
     }
 }

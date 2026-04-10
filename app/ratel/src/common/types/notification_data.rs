@@ -18,6 +18,12 @@ pub enum NotificationData {
         author_display_name: String,
         cta_url: String,
     },
+    MentionInComment {
+        email: String,
+        mentioned_by_name: String,
+        comment_preview: String,
+        cta_url: String,
+    },
     SendSpaceStatusUpdate {
         emails: Vec<String>,
         headline: String,
@@ -75,6 +81,24 @@ impl NotificationData {
 
                 let template = EmailTemplate {
                     targets: emails.clone(),
+                    operation,
+                };
+                template.send_email(ses).await?;
+            }
+            NotificationData::MentionInComment {
+                email,
+                mentioned_by_name,
+                comment_preview,
+                cta_url,
+            } => {
+                let operation = EmailOperation::MentionNotification {
+                    mentioned_by_name: mentioned_by_name.clone(),
+                    comment_preview: comment_preview.clone(),
+                    cta_url: cta_url.clone(),
+                };
+
+                let template = EmailTemplate {
+                    targets: vec![email.clone()],
                     operation,
                 };
                 template.send_email(ses).await?;

@@ -329,12 +329,13 @@ impl Post {
         cli: &aws_sdk_dynamodb::Client,
         post_pk: Partition,
         content: String,
+        images: Vec<String>,
         user: crate::features::auth::User,
     ) -> Result<PostComment> {
         let post = Post::updater(&post_pk, EntityType::Post)
             .increase_comments(1)
             .transact_write_item();
-        let comment = PostComment::new(post_pk, content, user);
+        let comment = PostComment::new(post_pk, content, images, user);
         let comment_tx = comment.create_transact_write_item();
 
         cli.transact_write_items()

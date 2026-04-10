@@ -94,6 +94,7 @@ impl SpacePost {
         space_pk: SpacePartition,
         space_post_pk: SpacePostPartition,
         content: String,
+        images: Vec<String>,
         author: &crate::common::models::space::SpaceUser,
     ) -> crate::features::spaces::pages::actions::actions::discussion::Result<SpacePostComment>
     {
@@ -101,7 +102,7 @@ impl SpacePost {
         let post = SpacePost::updater(&pk, sk)
             .increase_comments(1)
             .transact_write_item();
-        let comment = SpacePostComment::new(space_pk, space_post_pk, content, author);
+        let comment = SpacePostComment::new(space_pk, space_post_pk, content, images, author);
         let comment_tx = comment.create_transact_write_item();
 
         crate::transact_write_items!(cli, vec![comment_tx, post]).map_err(|e| {

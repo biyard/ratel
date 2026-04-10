@@ -96,6 +96,7 @@ pub async fn handle_ai_moderator_event(post: SpacePost) -> Result<()> {
         space_id,
         space_post_pk,
         reply_text,
+        vec![],
         &ai_author,
     )
     .await

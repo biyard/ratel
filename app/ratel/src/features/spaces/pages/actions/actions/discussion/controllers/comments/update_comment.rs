@@ -5,6 +5,8 @@ use crate::features::spaces::pages::actions::models::SpaceAction;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpdateCommentRequest {
     pub content: String,
+    #[serde(default)]
+    pub images: Option<Vec<String>>,
 }
 
 #[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments/{comment_sk}", role: SpaceUserRole, user: crate::features::auth::User, space: SpaceCommon)]
@@ -61,12 +63,16 @@ pub async fn update_comment(
     }
 
     let now = chrono::Utc::now().timestamp();
-    let comment = SpacePostComment::updater(&space_post_pk, &comment_sk_entity)
+    let mut updater = SpacePostComment::updater(&space_post_pk, &comment_sk_entity)
         .with_content(req.content)
         .with_updated_at(now)
-        .with_updated_at_align(format!("{:020}", now))
-        .execute(cli)
-        .await?;
+        .with_updated_at_align(format!("{:020}", now));
+
+    if let Some(images) = req.images {
+        updater = updater.with_images(images);
+    }
+
+    let comment = updater.execute(cli).await?;
 
     Ok(comment)
 }

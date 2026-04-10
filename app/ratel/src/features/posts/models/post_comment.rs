@@ -16,6 +16,9 @@ pub struct PostComment {
     pub content: String,
 
     #[serde(default)]
+    pub images: Vec<String>,
+
+    #[serde(default)]
     pub likes: u64,
     #[serde(default)]
     pub reports: i64,
@@ -36,6 +39,7 @@ impl PostComment {
     pub fn new(
         pk: Partition,
         content: String,
+        images: Vec<String>,
         User {
             pk: author_pk,
             display_name: author_display_name,
@@ -52,6 +56,7 @@ impl PostComment {
             sk: EntityType::PostComment(uuid.to_string()),
             updated_at: now,
             content,
+            images,
             author_pk,
             author_display_name,
             author_username,
@@ -93,6 +98,7 @@ impl PostComment {
         post_pk: Partition,
         parent_comment_sk: EntityType,
         content: String,
+        images: Vec<String>,
         user: User,
     ) -> Result<Self> {
         let parent_comment = Self::updater(&post_pk, &parent_comment_sk)
@@ -111,7 +117,7 @@ impl PostComment {
             .increase_comments(1)
             .transact_write_item();
 
-        let mut comment = Self::new(Partition::PostReply(post_pk.to_string()), content, user)
+        let mut comment = Self::new(Partition::PostReply(post_pk.to_string()), content, images, user)
             .with_parent_comment_sk(parent_comment_sk.clone());
 
         let uuid = crate::features::auth::utils::uuid::sorted_uuid();

@@ -234,7 +234,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-          npm i
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
       - name: Download Docker image artifact
