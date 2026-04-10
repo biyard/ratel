@@ -60,7 +60,9 @@ pub fn ParticipationRequirementsLayover(
 
     rsx! {
         div { class: "flex flex-col w-full h-full bg-modal-card-bg text-web-font-primary",
-            ParticipationLayoverHeader { title: tr.join_space }
+            div { class: "sticky top-0 z-20 shrink-0 bg-modal-card-bg",
+                ParticipationLayoverHeader { title: tr.join_space }
+            }
             if current_step() != ParticipationLayoverStep::ConsentParticipate {
                 ParticipationStepBar { current_step: current_step() }
             }
