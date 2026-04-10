@@ -9,9 +9,7 @@ pub fn WaitingCard(prereqs: Vec<SpaceActionSummary>) -> Element {
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
 
-        div {
-            class: "waiting-card",
-            "data-testid": "card-waiting",
+        div { class: "waiting-card", "data-testid": "card-waiting",
 
             // Success icon
             div { class: "waiting-card__icon",
@@ -35,9 +33,7 @@ pub fn WaitingCard(prereqs: Vec<SpaceActionSummary>) -> Element {
             if !prereqs.is_empty() {
                 div { class: "waiting-card__list",
                     for action in prereqs.iter() {
-                        div {
-                            key: "{action.action_id}",
-                            class: "waiting-item",
+                        div { key: "{action.action_id}", class: "waiting-item",
                             div { class: "waiting-item__icon",
                                 svg {
                                     fill: "none",

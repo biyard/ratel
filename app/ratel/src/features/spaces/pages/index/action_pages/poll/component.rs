@@ -170,15 +170,31 @@ pub fn ActionPollViewer(
                     button {
                         class: "poll-header__back",
                         onclick: move |_| {
-                            nav.push(crate::Route::SpaceIndexPage { space_id: space_id() });
+                            nav.push(crate::Route::SpaceIndexPage {
+                                space_id: space_id(),
+                            });
                         },
-                        svg { xmlns: "http://www.w3.org/2000/svg", view_box: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round",
+                        svg {
+                            xmlns: "http://www.w3.org/2000/svg",
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            "stroke-width": "2",
+                            "stroke-linecap": "round",
+                            "stroke-linejoin": "round",
                             polyline { points: "15 18 9 12 15 6" }
                         }
                     }
                     div { class: "poll-header__info",
                         span { class: "poll-header__type",
-                            svg { xmlns: "http://www.w3.org/2000/svg", view_box: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round",
+                            svg {
+                                xmlns: "http://www.w3.org/2000/svg",
+                                view_box: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                "stroke-width": "2",
+                                "stroke-linecap": "round",
+                                "stroke-linejoin": "round",
                                 path { d: "M3 3v18h18" }
                                 path { d: "M7 16h4v-6H7z" }
                                 path { d: "M13 16h4V8h-4z" }
@@ -192,7 +208,14 @@ pub fn ActionPollViewer(
                     span { class: "{status_class}", {status_text} }
                     if poll.space_action.activity_score > 0 {
                         span { class: "poll-header__reward",
-                            svg { xmlns: "http://www.w3.org/2000/svg", view_box: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round",
+                            svg {
+                                xmlns: "http://www.w3.org/2000/svg",
+                                view_box: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                "stroke-width": "2",
+                                "stroke-linecap": "round",
+                                "stroke-linejoin": "round",
                                 polygon { points: "12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" }
                             }
                             "+{poll.space_action.activity_score} {tr.pts_suffix}"

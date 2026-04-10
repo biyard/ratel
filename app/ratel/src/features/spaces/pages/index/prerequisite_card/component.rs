@@ -34,9 +34,7 @@ pub fn PrerequisiteCard(space_id: ReadSignal<SpacePartition>) -> Element {
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
 
-        div {
-            class: "prereq-card",
-            "data-testid": "card-prerequisite",
+        div { class: "prereq-card", "data-testid": "card-prerequisite",
             span { class: "prereq-card__heading", "{tr.prereq_heading}" }
             p { class: "prereq-card__desc", "{tr.prereq_desc}" }
 
@@ -48,9 +46,7 @@ pub fn PrerequisiteCard(space_id: ReadSignal<SpacePartition>) -> Element {
                         style: "width: {progress_pct}%",
                     }
                 }
-                span { class: "prereq-card__progress-text",
-                    "{done_count} / {total_count}"
-                }
+                span { class: "prereq-card__progress-text", "{done_count} / {total_count}" }
             }
 
             // Action checklist
@@ -71,18 +67,28 @@ pub fn PrerequisiteCard(space_id: ReadSignal<SpacePartition>) -> Element {
                                         if !is_done {
                                             match action.action_type {
                                                 SpaceActionType::Poll => {
-                                                    let poll_id: SpacePollEntityType =
-                                                        action.action_id.clone().into();
-                                                    overlay.0.set(Some(
-                                                        ActiveActionOverlay::Poll(space_id(), poll_id),
-                                                    ));
+
+                                                    // Type icon
+
+                                                    // Info
+
+                                                    // Status
+                                                    let poll_id: SpacePollEntityType = action
+                                                        .action_id
+                                                        .clone()
+                                                        .into();
+                                                    overlay
+                                                        .0
+                                                        .set(Some(ActiveActionOverlay::Poll(space_id(), poll_id)));
                                                 }
                                                 SpaceActionType::Quiz => {
-                                                    let quiz_id: SpaceQuizEntityType =
-                                                        action.action_id.clone().into();
-                                                    overlay.0.set(Some(
-                                                        ActiveActionOverlay::Quiz(space_id(), quiz_id),
-                                                    ));
+                                                    let quiz_id: SpaceQuizEntityType = action
+                                                        .action_id
+                                                        .clone()
+                                                        .into();
+                                                    overlay
+                                                        .0
+                                                        .set(Some(ActiveActionOverlay::Quiz(space_id(), quiz_id)));
                                                 }
                                                 SpaceActionType::TopicDiscussion => {
                                                     let route = action.get_url(&space_id());
@@ -97,20 +103,13 @@ pub fn PrerequisiteCard(space_id: ReadSignal<SpacePartition>) -> Element {
                                     }
                                 },
 
-                                // Type icon
-                                div { class: "prereq-item__icon",
-                                    {action_type_icon(&action.action_type)}
-                                }
+                                div { class: "prereq-item__icon", {action_type_icon(&action.action_type)} }
 
-                                // Info
                                 div { class: "prereq-item__info",
                                     span { class: "prereq-item__title", "{action.title}" }
-                                    span { class: "prereq-item__type",
-                                        "{action.action_type.translate(&lang())}"
-                                    }
+                                    span { class: "prereq-item__type", "{action.action_type.translate(&lang())}" }
                                 }
 
-                                // Status
                                 if is_done {
                                     div { class: "prereq-item__status prereq-item__status--done",
                                         svg {
@@ -176,7 +175,12 @@ fn action_type_icon(action_type: &SpaceActionType) -> Element {
                 xmlns: "http://www.w3.org/2000/svg",
                 circle { cx: "12", cy: "12", r: "10" }
                 path { d: "M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" }
-                line { x1: "12", x2: "12.01", y1: "17", y2: "17" }
+                line {
+                    x1: "12",
+                    x2: "12.01",
+                    y1: "17",
+                    y2: "17",
+                }
             }
         },
         SpaceActionType::TopicDiscussion => rsx! {
@@ -202,8 +206,18 @@ fn action_type_icon(action_type: &SpaceActionType) -> Element {
                 xmlns: "http://www.w3.org/2000/svg",
                 path { d: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" }
                 circle { cx: "9", cy: "7", r: "4" }
-                line { x1: "19", x2: "19", y1: "8", y2: "14" }
-                line { x1: "22", x2: "16", y1: "11", y2: "11" }
+                line {
+                    x1: "19",
+                    x2: "19",
+                    y1: "8",
+                    y2: "14",
+                }
+                line {
+                    x1: "22",
+                    x2: "16",
+                    y1: "11",
+                    y2: "11",
+                }
             }
         },
     }
