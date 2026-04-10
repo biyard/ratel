@@ -503,6 +503,7 @@ pub fn ActionPollViewer(
                     if is_last && show_submit && total > 0 {
                         button {
                             class: "poll-btn poll-btn--submit",
+                            "data-testid": "poll-submit",
                             disabled: !all_answered(),
                             onclick: on_submit,
                             if can_update {

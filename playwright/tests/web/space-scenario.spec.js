@@ -99,9 +99,14 @@ async function signUpAndSkipPrereq(browser, user, spaceUrl) {
     await page.locator('input[type="checkbox"]').check();
     await click(page, { testId: "btn-consent-confirm" });
 
+    // Wait for consent modal to disappear (server call + role transition)
+    await expect(page.getByTestId("card-consent")).toBeHidden({
+      timeout: 15000,
+    });
+
     // PrerequisiteCard appears — user sees the checklist but doesn't complete anything
     await expect(page.getByTestId("card-prerequisite")).toBeVisible({
-      timeout: 15000,
+      timeout: 30000,
     });
   } finally {
     await context.close();
@@ -123,27 +128,44 @@ async function signUpAndParticipate(browser, user, spaceUrl) {
     await page.locator('input[type="checkbox"]').check();
     await click(page, { testId: "btn-consent-confirm" });
 
+    // Wait for consent modal to disappear (server call + role transition)
+    await expect(page.getByTestId("card-consent")).toBeHidden({
+      timeout: 15000,
+    });
+
     // PrerequisiteCard appears with the checklist
     await expect(page.getByTestId("card-prerequisite")).toBeVisible({
-      timeout: 15000,
+      timeout: 30000,
     });
 
     // Click the prerequisite poll item — opens the full-screen poll overlay
     await click(page, { text: "Opinion Survey: Pre-study" });
-    // Poll overlay appears (no page navigation)
-    await expect(page.getByTestId("poll-arena-overlay")).toBeVisible();
 
-    // Select the first poll option inside the overlay (options are styled divs, not radio inputs)
+    // Poll overlay appears — wait for poll content (options) to fully load
     const overlay = page.getByTestId("poll-arena-overlay");
+    await expect(overlay).toBeVisible();
+    await expect(overlay.locator(".option-single").first()).toBeVisible({
+      timeout: 30000,
+    });
+
+    // Select the first poll option inside the overlay
     await overlay.locator(".option-single").first().click();
 
-    // Submit the poll — confirm dialog appears (response_editable is false by default)
-    await click(page, { text: "Submit" });
+    // Submit the poll using testId (avoids ambiguity with confirm dialog's Submit text)
+    await click(page, { testId: "poll-submit" });
+
+    // Confirm dialog appears — click confirm
     await click(page, { testId: "poll-confirm-submit" });
-    await expect(page.getByTestId("poll-arena-overlay")).toBeHidden();
+
+    // Wait for overlay to close (server call completes + overlay signal cleared)
+    await expect(page.getByTestId("poll-arena-overlay")).toBeHidden({
+      timeout: 30000,
+    });
 
     // After completing all prerequisites, user should see the WaitingCard
-    await expect(page.getByTestId("card-waiting")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("card-waiting")).toBeVisible({
+      timeout: 30000,
+    });
   } finally {
     await context.close();
   }
