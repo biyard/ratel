@@ -1,5 +1,5 @@
 mod action_dashboard;
-mod action_poll;
+mod action_pages;
 mod arena_topbar;
 mod arena_viewer;
 mod component;
@@ -11,7 +11,7 @@ mod signin_card;
 mod verification_card;
 
 use action_dashboard::*;
-pub use action_poll::*;
+pub use action_pages::*;
 use arena_topbar::*;
 use arena_viewer::*;
 pub use component::*;
