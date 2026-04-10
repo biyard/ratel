@@ -19,6 +19,7 @@ pub enum NotificationData {
         cta_url: String,
     },
     MentionInComment {
+        email: String,
         mentioned_by_name: String,
         comment_preview: String,
         cta_url: String,
@@ -85,15 +86,22 @@ impl NotificationData {
                 template.send_email(ses).await?;
             }
             NotificationData::MentionInComment {
+                email,
                 mentioned_by_name,
                 comment_preview,
-                ..
+                cta_url,
             } => {
-                tracing::info!(
-                    "Mention notification: {} mentioned in comment: {}",
-                    mentioned_by_name,
-                    &comment_preview[..comment_preview.len().min(50)]
-                );
+                let operation = EmailOperation::MentionNotification {
+                    mentioned_by_name: mentioned_by_name.clone(),
+                    comment_preview: comment_preview.clone(),
+                    cta_url: cta_url.clone(),
+                };
+
+                let template = EmailTemplate {
+                    targets: vec![email.clone()],
+                    operation,
+                };
+                template.send_email(ses).await?;
             }
             NotificationData::SendSpaceStatusUpdate {
                 emails,
