@@ -11,11 +11,11 @@ mod settings_panel;
 mod signin_card;
 mod verification_card;
 
-pub use component::*;
 use action_dashboard::*;
 pub use action_pages::*;
 use arena_topbar::*;
 use arena_viewer::*;
+pub use component::*;
 use i18n::*;
 use leaderboard_panel::*;
 use overview_panel::*;
