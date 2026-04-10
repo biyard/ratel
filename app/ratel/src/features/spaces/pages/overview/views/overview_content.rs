@@ -214,7 +214,7 @@ pub fn OverviewContent(
 
                 SpaceCard { class: "border-none shadow-none !bg-transparent !p-0",
                     TiptapEditor {
-                        class: "w-full h-fit [&>div]:border-0 [&>div]:bg-transparent [&_[data-tiptap-toolbar]]:hidden [&_[contenteditable='true']]:px-0 [&_[contenteditable='true']]:py-0 [&_[contenteditable='true']]:text-[15px]/[24px] [&_[contenteditable='true']]:tracking-[0.5px] [&_[contenteditable='true']]:text-title-text",
+                        class: "w-full h-fit [&>div]:border-0 [&>div]:bg-transparent [&_[contenteditable='true']]:px-0 [&_[contenteditable='true']]:py-0 [&_[contenteditable='true']]:text-[15px]/[24px] [&_[contenteditable='true']]:tracking-[0.5px] [&_[contenteditable='true']]:text-title-text",
                         content: content(),
                         editable: allow_edit,
                         placeholder: tr.placeholder,
