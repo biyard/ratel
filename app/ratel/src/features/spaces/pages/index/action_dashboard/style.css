@@ -202,8 +202,15 @@
 .archive-item__info { flex: 1; min-width: 0; }
 .archive-item__title { font-size: 13px; font-weight: 600; }
 .archive-item__meta { font-size: 11px; color: var(--dark, #55556a) var(--light, #9999aa); }
-.archive-item__check { color: #22c55e; }
+.archive-item__check { color: #22c55e; flex-shrink: 0; }
 .archive-item__check svg { width: 16px; height: 16px; }
+.archive-item__skipped {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--dark, #55556a) var(--light, #9999aa);
+  padding: 2px 8px; border-radius: 4px;
+  background: var(--dark, rgba(255,255,255,0.04)) var(--light, rgba(0,0,0,0.04));
+  flex-shrink: 0;
+}
 
 /* ── Empty state ─────────────────────────────────── */
 .quest-empty {

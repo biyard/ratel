@@ -3,6 +3,57 @@ use crate::features::spaces::pages::actions::types::{SpaceActionSummary, SpaceAc
 use crate::features::spaces::pages::index::*;
 use crate::features::spaces::space_common::hooks::use_space;
 
+#[derive(Clone, Copy, PartialEq)]
+pub(super) enum ActionStatus {
+    Active,
+    Completed,
+    Skipped,
+}
+
+pub(super) fn derive_action_status(action: &SpaceActionSummary) -> ActionStatus {
+    let now = crate::common::utils::time::get_now_timestamp_millis();
+    let ended = action.ended_at.map(|t| now >= t).unwrap_or(false);
+
+    match action.action_type {
+        SpaceActionType::Poll => {
+            if action.user_participated {
+                ActionStatus::Completed
+            } else if ended {
+                ActionStatus::Skipped
+            } else {
+                ActionStatus::Active
+            }
+        }
+        SpaceActionType::TopicDiscussion => {
+            if action.user_participated {
+                ActionStatus::Completed
+            } else if ended {
+                ActionStatus::Skipped
+            } else {
+                ActionStatus::Active
+            }
+        }
+        SpaceActionType::Quiz => {
+            if action.quiz_passed == Some(true) {
+                ActionStatus::Completed
+            } else if ended || action.quiz_passed == Some(false) {
+                ActionStatus::Skipped
+            } else {
+                ActionStatus::Active
+            }
+        }
+        SpaceActionType::Follow => {
+            if action.user_participated {
+                ActionStatus::Completed
+            } else if ended {
+                ActionStatus::Skipped
+            } else {
+                ActionStatus::Active
+            }
+        }
+    }
+}
+
 #[component]
 pub fn ActionDashboard(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: SpaceViewerTranslate = use_translate();
@@ -10,18 +61,25 @@ pub fn ActionDashboard(space_id: ReadSignal<SpacePartition>) -> Element {
     let actions = actions();
     let lang = use_language();
 
-    let incomplete: Vec<_> = actions
+    let active: Vec<_> = actions
         .iter()
-        .filter(|a| !a.user_participated)
+        .filter(|a| derive_action_status(a) == ActionStatus::Active)
         .cloned()
         .collect();
     let completed: Vec<_> = actions
         .iter()
-        .filter(|a| a.user_participated)
+        .filter(|a| derive_action_status(a) == ActionStatus::Completed)
         .cloned()
         .collect();
+    let skipped: Vec<_> = actions
+        .iter()
+        .filter(|a| derive_action_status(a) == ActionStatus::Skipped)
+        .cloned()
+        .collect();
+
     let total = actions.len();
     let done = completed.len();
+    let skipped_count = skipped.len();
     let progress_pct = if total > 0 {
         (done as f64 / total as f64 * 100.0) as u32
     } else {
@@ -38,7 +96,7 @@ pub fn ActionDashboard(space_id: ReadSignal<SpacePartition>) -> Element {
             span { class: "quest-label__title", "{tr.your_quests}" }
         }
 
-        if incomplete.is_empty() {
+        if active.is_empty() {
             div { class: "quest-empty",
                 div { class: "quest-empty__icon",
                     svg {
@@ -58,7 +116,7 @@ pub fn ActionDashboard(space_id: ReadSignal<SpacePartition>) -> Element {
         } else {
             div { class: "carousel-wrapper",
                 div { class: "carousel-track", id: "carousel-track",
-                    for action in incomplete.iter() {
+                    for action in active.iter() {
                         {
                             let action = action.clone();
                             let key = action.action_id.clone();
@@ -82,7 +140,7 @@ pub fn ActionDashboard(space_id: ReadSignal<SpacePartition>) -> Element {
             }
 
             div { class: "carousel-dots", id: "carousel-dots",
-                for action in incomplete.iter() {
+                for action in active.iter() {
                     button {
                         class: "carousel-dot",
                         "data-type": quest_type_css(&action.action_type),
@@ -91,6 +149,7 @@ pub fn ActionDashboard(space_id: ReadSignal<SpacePartition>) -> Element {
             }
         }
 
+        // Bottom bar
         div { class: "bottom-bar",
             div { class: "quest-progress",
                 span { class: "quest-progress__label", "{tr.quest_progress}" }
@@ -120,12 +179,13 @@ pub fn ActionDashboard(space_id: ReadSignal<SpacePartition>) -> Element {
                     xmlns: "http://www.w3.org/2000/svg",
                     path { d: "m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" }
                 }
-                if done > 0 {
-                    span { class: "archive-btn__count", "{done}" }
+                if done + skipped_count > 0 {
+                    span { class: "archive-btn__count", "{done + skipped_count}" }
                 }
             }
         }
 
+        // Archive panel
         div {
             class: "archive-panel",
             "data-open": show_archive(),
@@ -161,33 +221,57 @@ pub fn ActionDashboard(space_id: ReadSignal<SpacePartition>) -> Element {
                 }
             }
             div { class: "archive-panel__list",
-                if completed.is_empty() {
+                if completed.is_empty() && skipped.is_empty() {
                     div { class: "archive-panel__empty", "{tr.no_completed_yet}" }
                 } else {
                     for action in completed.iter() {
-                        div { class: "archive-item",
-                            div { class: "archive-item__info",
-                                div { class: "archive-item__title", "{action.title}" }
-                                div { class: "archive-item__meta",
-                                    "{action.action_type.translate(&lang())} · {action.credits} CR"
-                                }
-                            }
-                            div { class: "archive-item__check",
-                                svg {
-                                    fill: "none",
-                                    stroke: "currentColor",
-                                    stroke_linecap: "round",
-                                    stroke_linejoin: "round",
-                                    stroke_width: "2",
-                                    view_box: "0 0 24 24",
-                                    xmlns: "http://www.w3.org/2000/svg",
-                                    path { d: "M22 11.08V12a10 10 0 1 1-5.93-9.14" }
-                                    polyline { points: "22 4 12 14.01 9 11.01" }
-                                }
-                            }
+                        ArchiveItem {
+                            action: action.clone(),
+                            status: ActionStatus::Completed,
+                        }
+                    }
+                    for action in skipped.iter() {
+                        ArchiveItem {
+                            action: action.clone(),
+                            status: ActionStatus::Skipped,
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+#[component]
+fn ArchiveItem(action: SpaceActionSummary, status: ActionStatus) -> Element {
+    let lang = use_language();
+    let tr: SpaceViewerTranslate = use_translate();
+    let is_completed = status == ActionStatus::Completed;
+
+    rsx! {
+        div { class: "archive-item",
+            div { class: "archive-item__info",
+                div { class: "archive-item__title", "{action.title}" }
+                div { class: "archive-item__meta",
+                    "{action.action_type.translate(&lang())} · {action.credits} CR"
+                }
+            }
+            if is_completed {
+                div { class: "archive-item__check",
+                    svg {
+                        fill: "none",
+                        stroke: "currentColor",
+                        stroke_linecap: "round",
+                        stroke_linejoin: "round",
+                        stroke_width: "2",
+                        view_box: "0 0 24 24",
+                        xmlns: "http://www.w3.org/2000/svg",
+                        path { d: "M22 11.08V12a10 10 0 1 1-5.93-9.14" }
+                        polyline { points: "22 4 12 14.01 9 11.01" }
+                    }
+                }
+            } else {
+                div { class: "archive-item__skipped", "{tr.skipped_label}" }
             }
         }
     }
