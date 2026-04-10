@@ -61,6 +61,23 @@ Define CSS variables in `tailwind.css` with the space toggle pattern, never use 
 - Token definitions: `app/ratel/tailwind.css` + `app/ratel/assets/tailwind-colors.css`
 - Component theme: `app/ratel/assets/dx-components-theme.css`
 
+### Space Toggle Pattern (for custom CSS files)
+
+In component `style.css` files (HTML-first pattern), use the space toggle for dark/light colors:
+
+```css
+.my-component {
+  --comp-bg: var(--dark, #0c0c1a) var(--light, #ffffff);
+  --comp-text: var(--dark, #f0f0f5) var(--light, #12121a);
+  --comp-border: var(--dark, rgba(255,255,255,0.06)) var(--light, rgba(0,0,0,0.08));
+
+  background: var(--comp-bg);
+  color: var(--comp-text);
+}
+```
+
+This leverages `--dark` / `--light` custom properties from `dx-components-theme.css`. Never hardcode colors in component CSS — always provide both dark and light values.
+
 ## Breakpoints
 
 ```

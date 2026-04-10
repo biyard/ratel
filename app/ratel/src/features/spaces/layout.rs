@@ -33,7 +33,12 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
     let lang = use_language();
     let show_sidebar = sidebar_visible();
 
-    let mut query = use_query_store();
+    if !role.is_admin() {
+        return rsx! {
+            Outlet::<Route> {}
+        };
+    }
+
     let user_ctx = use_user_context();
     let user = user_ctx.read().user.clone();
     let anonymous_user_profile = if space.anonymous_participation
