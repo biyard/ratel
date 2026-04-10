@@ -236,6 +236,7 @@ jobs:
 
           cd app/ratel
 
+          npm install -D tailwindcss @tailwindcss/cli
           make build
           make docker
           make docker.push
@@ -410,6 +411,7 @@ jobs:
           rm -rf target/dx
 
           cd app/ratel
+          npm install -D tailwindcss @tailwindcss/cli
           make build-lambda
           make docker
           make docker.push

@@ -140,6 +140,7 @@ jobs:
           ECR: ratel/app-shell
         run: |
           cd app/ratel
+          npm install -D tailwindcss @tailwindcss/cli
           make build-testing
           make docker
 
