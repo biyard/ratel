@@ -13,14 +13,15 @@
 - If yes, design an EventBridge integration
 - **References**: conventions/implementing-event-bridge.md
 
-## Step 4: Design Frontend UI (if UI changes needed)
-- Design UI layout, component hierarchy, and visual style before implementation
-- **References**: conventions/styling.md, conventions/figma-design-system.md, conventions/design-system-guide.md
+## Step 4: Design & Implement Frontend UI (if UI changes needed)
+- For major visual redesigns or new pages → follow `workflows/ui-design-implementation.md` (HTML-first approach)
+- For minor UI tweaks using existing components → implement directly in RSX
+- **References**: conventions/html-first-components.md, conventions/styling.md, conventions/figma-design-system.md, conventions/design-system-guide.md
 - **Skills**: frontend-design, figma:figma-implement-design
 
 ## Step 5: Implement Changes
 - Modify existing controllers, models, components as needed
-- **References**: conventions/server-functions.md, conventions/dynamodb-patterns.md, conventions/dioxus-app.md, conventions/styling.md, conventions/error-handling.md, conventions/i18n.md, conventions/design-system-guide.md, conventions/anti-patterns.md
+- **References**: conventions/server-functions.md, conventions/dynamodb-patterns.md, conventions/dioxus-app.md, conventions/styling.md, conventions/error-handling.md, conventions/i18n.md, conventions/design-system-guide.md, conventions/html-first-components.md, conventions/anti-patterns.md
 - **Skills**: dioxus-knowledge-patch, rust-knowledge-patch
 
 ## Step 6: Write/Update Server Function Tests

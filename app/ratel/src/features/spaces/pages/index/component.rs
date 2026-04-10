@@ -1,0 +1,114 @@
+use super::*;
+use crate::features::spaces::space_common::hooks::use_space;
+use crate::features::spaces::space_common::hooks::use_space_role;
+use crate::spaces::pages::dashboard::SpaceDashboardPage;
+
+const DEFAULT_LOGO: &str = "https://metadata.ratel.foundation/logos/logo-symbol.png";
+
+#[derive(Clone, Copy, PartialEq, Default)]
+pub(super) enum ActivePanel {
+    #[default]
+    None,
+    Overview,
+    Settings,
+}
+
+#[component]
+pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
+    let tr: SpaceViewerTranslate = use_translate();
+    let space = use_space()();
+    let role = use_space_role()();
+    let mut active_panel = use_signal(|| ActivePanel::None);
+
+    if role.is_admin() {
+        return rsx! {
+            SpaceDashboardPage { space_id: space_id() }
+        };
+    }
+
+    let logo = if space.logo.is_empty() {
+        DEFAULT_LOGO.to_string()
+    } else {
+        space.logo.clone()
+    };
+    let status_text = match space.status {
+        Some(SpaceStatus::Open) => tr.status_open.to_string(),
+        Some(SpaceStatus::Ongoing) => tr.status_ongoing.to_string(),
+        Some(SpaceStatus::Finished) => tr.status_finished.to_string(),
+        _ => tr.status_open.to_string(),
+    };
+    let participant_count = space.quota - space.remains;
+    let participants = format_number(participant_count);
+    let remaining = format_number(space.remains);
+    let rewards = space
+        .rewards
+        .map(|r| format_number(r))
+        .unwrap_or_else(|| "0".to_string());
+
+    let dimmed = active_panel() != ActivePanel::None;
+    let overview_open = active_panel() == ActivePanel::Overview;
+    let settings_open = active_panel() == ActivePanel::Settings;
+
+    let is_participant = matches!(role, SpaceUserRole::Participant | SpaceUserRole::Candidate);
+
+    rsx! {
+        document::Link { rel: "preconnect", href: "https://fonts.googleapis.com" }
+        document::Link {
+            rel: "preconnect",
+            href: "https://fonts.gstatic.com",
+            crossorigin: "anonymous",
+        }
+        document::Link {
+            rel: "stylesheet",
+            href: "https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap",
+        }
+        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+
+        div { class: "arena", "data-testid": "space-index-page",
+            ArenaTopbar {
+                logo: logo.clone(),
+                title: space.title.clone(),
+                status_text: status_text.clone(),
+                active_panel,
+            }
+
+            if is_participant {
+                SuspenseBoundary {
+                    ActionDashboard { space_id }
+                }
+            } else {
+                ArenaViewer { space_id, dimmed }
+            }
+
+            // Panels (shared)
+            OverviewPanel {
+                open: overview_open,
+                on_close: move |_| {
+                    active_panel.set(ActivePanel::None);
+                },
+                space: space.clone(),
+                participants: participants.clone(),
+                remaining: remaining.clone(),
+                rewards: rewards.clone(),
+            }
+
+            SettingsPanel {
+                open: settings_open,
+                on_close: move |_| {
+                    active_panel.set(ActivePanel::None);
+                },
+            }
+        }
+        PopupZone {}
+    }
+}
+
+pub(super) fn format_number(n: i64) -> String {
+    if n >= 1_000_000 {
+        format!("{}M", n / 1_000_000)
+    } else if n >= 1_000 {
+        format!("{}K", n / 1_000)
+    } else {
+        n.to_string()
+    }
+}

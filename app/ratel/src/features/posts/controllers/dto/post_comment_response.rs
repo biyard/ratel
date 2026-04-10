@@ -12,6 +12,9 @@ pub struct PostCommentResponse {
 
     pub content: String,
 
+    #[serde(default)]
+    pub images: Vec<String>,
+
     pub likes: u64,
     pub reports: i64,
     pub replies: u64,
@@ -34,6 +37,7 @@ impl From<(PostComment, bool, bool)> for PostCommentResponse {
             sk: comment.sk.into(),
             updated_at: comment.updated_at,
             content: comment.content,
+            images: comment.images,
             likes: comment.likes,
             reports: comment.reports,
             replies: comment.replies,
@@ -55,6 +59,7 @@ impl From<PostComment> for PostCommentResponse {
             sk: comment.sk.into(),
             updated_at: comment.updated_at,
             content: comment.content,
+            images: comment.images,
             likes: comment.likes,
             reports: comment.reports,
             replies: comment.replies,

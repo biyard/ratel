@@ -788,6 +788,7 @@ test.describe.serial("Space with actions created by a team", () => {
     const creatorComments = comments.filter((c) => c.user === "creator");
     for (const c of creatorComments) {
       await goto(page, discussionUrl);
+      await click(page, { testId: "open-comments-btn" });
       await fill(page, { placeholder: "Write a comment..." }, c.text);
       await click(page, { testId: "comment-send-btn" });
     }
@@ -805,6 +806,7 @@ test.describe.serial("Space with actions created by a team", () => {
         const userComments = comments.filter((c) => c.user === "newUser");
         for (const c of userComments) {
           await goto(userPage, discussionUrl);
+          await click(userPage, { testId: "open-comments-btn" });
           await fill(userPage, { placeholder: "Write a comment..." }, c.text);
           await click(userPage, { testId: "comment-send-btn" });
         }
@@ -826,6 +828,7 @@ test.describe.serial("Space with actions created by a team", () => {
         const userComments = comments.filter((c) => c.user === "user2");
         for (const c of userComments) {
           await goto(userPage, discussionUrl);
+          await click(userPage, { testId: "open-comments-btn" });
           await fill(userPage, { placeholder: "Write a comment..." }, c.text);
           await click(userPage, { testId: "comment-send-btn" });
         }
@@ -836,6 +839,7 @@ test.describe.serial("Space with actions created by a team", () => {
 
     // Verify total comment count from creator's perspective
     await goto(page, discussionUrl);
+    await click(page, { testId: "open-comments-btn" });
     const commentHeader = page.getByText(/Comments \(\d+\)/);
     await expect(commentHeader).toBeVisible();
   });
