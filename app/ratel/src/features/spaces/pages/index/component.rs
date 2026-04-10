@@ -122,24 +122,16 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
         }
         match action_overlay.0() {
             Some(ActiveActionOverlay::Quiz(sid, qid)) => rsx! {
-                div {
-                    class: "fixed inset-0 z-[100]",
-                    "data-testid": "quiz-arena-overlay",
+                div { class: "fixed inset-0 z-[100]", "data-testid": "quiz-arena-overlay",
                     SuspenseBoundary {
                         QuizArenaPage { space_id: sid.clone(), quiz_id: qid.clone() }
                     }
                 }
             },
             Some(ActiveActionOverlay::Poll(sid, pid)) => rsx! {
-                div {
-                    class: "fixed inset-0 z-[100]",
-                    "data-testid": "poll-arena-overlay",
+                div { class: "fixed inset-0 z-[100]", "data-testid": "poll-arena-overlay",
                     SuspenseBoundary {
-                        ActionPollViewer {
-                            space_id: sid.clone(),
-                            poll_id: pid.clone(),
-                            can_respond: true,
-                        }
+                        ActionPollViewer { space_id: sid.clone(), poll_id: pid.clone(), can_respond: true }
                     }
                 }
             },
