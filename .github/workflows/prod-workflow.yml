@@ -99,11 +99,6 @@ jobs:
         run: |
           cargo binstall dioxus-cli@0.7.3 --force
 
-      - name: Setup pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@10.15.0 --activate
-
       - name: Building APIs
         env:
           REGION: ap-northeast-2
@@ -260,11 +255,6 @@ jobs:
         run: |
           cargo binstall dioxus-cli@0.7.3 --force
 
-      - name: Setup pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@10.15.0 --activate
-
       - name: Building APIs
         env:
           REGION: ap-northeast-2
@@ -346,3 +336,20 @@ jobs:
           make build-lambda
           make docker
           make docker.push
+
+      - name: Deploy to S3
+        env:
+          BUCKET: ${{ secrets.PROD_RATEL_BUCKET }}
+          CDN: ${{ secrets.PROD_RATEL_CDN }}
+        run: |
+          aws s3 sync target/dx/app-shell/release/web/public $BUCKET
+          aws cloudfront create-invalidation --distribution-id $CDN --paths "/*"
+          tar czvf app-shell-lambda.tar.gz target/dx/app-shell/release/web
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-shell-lambda-${{ github.sha }}
+          path: ${{ github.workspace }}/app-shell.tar.gz
+          if-no-files-found: error
+          retention-days: 7

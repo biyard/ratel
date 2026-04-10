@@ -54,10 +54,11 @@ impl SpacePost {
     ) -> Self {
         let pk: Partition = space_pk.into();
         let now = crate::common::utils::time::get_now_timestamp_millis();
+        let (default_started_at, default_ended_at) =
+            crate::features::spaces::pages::actions::models::SpaceAction::default_schedule(now);
         let uuid = uuid::Uuid::now_v7().to_string();
-        let started_at = started_at.unwrap_or(now);
-        // End At is 7 days after start date
-        let ended_at = ended_at.unwrap_or(now + 7 * 24 * 60 * 60 * 1000);
+        let started_at = started_at.unwrap_or(default_started_at);
+        let ended_at = ended_at.unwrap_or(default_ended_at);
         Self {
             pk,
             sk: EntityType::SpacePost(uuid),
@@ -93,6 +94,7 @@ impl SpacePost {
         space_pk: SpacePartition,
         space_post_pk: SpacePostPartition,
         content: String,
+        images: Vec<String>,
         author: &crate::common::models::space::SpaceUser,
     ) -> crate::features::spaces::pages::actions::actions::discussion::Result<SpacePostComment>
     {
@@ -100,7 +102,7 @@ impl SpacePost {
         let post = SpacePost::updater(&pk, sk)
             .increase_comments(1)
             .transact_write_item();
-        let comment = SpacePostComment::new(space_pk, space_post_pk, content, author);
+        let comment = SpacePostComment::new(space_pk, space_post_pk, content, images, author);
         let comment_tx = comment.create_transact_write_item();
 
         crate::transact_write_items!(cli, vec![comment_tx, post]).map_err(|e| {

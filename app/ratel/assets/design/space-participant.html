@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Space Participant — Quest Carousel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+      --border-subtle:rgba(255,255,255,0.06);--text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+      --accent-gold:#fcb300;--accent-teal:#6eedd8;
+      --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
+      --poll-color:#818cf8;--poll-bg:rgba(99,102,241,0.08);--poll-border:rgba(99,102,241,0.18);--poll-glow:rgba(99,102,241,0.12);
+      --discussion-color:#22d3ee;--discussion-bg:rgba(34,211,238,0.08);--discussion-border:rgba(34,211,238,0.18);--discussion-glow:rgba(34,211,238,0.12);
+      --quiz-color:#a855f7;--quiz-bg:rgba(168,85,247,0.08);--quiz-border:rgba(168,85,247,0.18);--quiz-glow:rgba(168,85,247,0.12);
+      --follow-color:#fb923c;--follow-bg:rgba(251,146,60,0.08);--follow-border:rgba(251,146,60,0.18);--follow-glow:rgba(251,146,60,0.12);
+    }
+    html,body{height:100%;overflow:hidden;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body)}
+
+    .arena{position:relative;width:100%;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+    .arena::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(252,179,0,0.04) 0%,transparent 60%),radial-gradient(ellipse 120% 100% at 50% 120%,rgba(110,237,216,0.03) 0%,transparent 50%),radial-gradient(circle at 50% 50%,var(--bg-void) 0%,var(--bg-void) 100%);z-index:0}
+
+    /* Top bar */
+    .arena-topbar{position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:20px 28px;flex-shrink:0}
+    .arena-topbar__brand{display:flex;align-items:center;gap:14px}
+    .arena-topbar__logo{width:40px;height:40px;border-radius:10px;object-fit:cover;border:1px solid rgba(252,179,0,0.15);box-shadow:0 2px 12px rgba(0,0,0,0.3)}
+    .arena-topbar__title{font-family:var(--font-display);font-weight:700;font-size:16px;letter-spacing:0.06em;text-transform:uppercase}
+    .arena-topbar__status{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;background:rgba(110,237,216,0.08);border:1px solid rgba(110,237,216,0.15);font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent-teal);margin-left:12px}
+    .arena-topbar__status::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--accent-teal);box-shadow:0 0 6px var(--accent-teal)}
+    .arena-topbar__actions{display:flex;gap:10px}
+    .hud-btn{width:40px;height:40px;border-radius:10px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s ease;padding:0}
+    .hud-btn:hover{background:var(--bg-glass-hover);border-color:rgba(252,179,0,0.2)}
+    .hud-btn svg{width:18px;height:18px;color:var(--text-muted);transition:color 0.2s}
+    .hud-btn:hover svg{color:var(--accent-gold)}
+
+    .quest-label{position:relative;z-index:10;text-align:center;padding:0 28px;margin-bottom:8px}
+    .quest-label__title{font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-dim)}
+
+    /* Carousel */
+    .carousel-wrapper{position:relative;z-index:10;flex:1;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
+    .carousel-wrapper::before,.carousel-wrapper::after{content:'';position:absolute;top:0;bottom:0;width:220px;z-index:15;pointer-events:none}
+    .carousel-wrapper::before{left:0;background:linear-gradient(to right,var(--bg-void),transparent)}
+    .carousel-wrapper::after{right:0;background:linear-gradient(to left,var(--bg-void),transparent)}
+    .carousel-track{display:flex;align-items:center;gap:28px;padding:60px 0;scroll-snap-type:x mandatory;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;padding-left:calc(50vw - 200px);padding-right:calc(50vw - 200px)}
+    .carousel-track::-webkit-scrollbar{display:none}
+
+    /* Quest Card base */
+    .quest-card{flex-shrink:0;width:400px;min-height:380px;padding:28px 26px 24px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);border-radius:20px;display:flex;flex-direction:column;gap:16px;cursor:pointer;scroll-snap-align:center;position:relative;overflow:hidden;transform:scale(0.75);opacity:0.25;filter:blur(6px);transition:all 0.5s cubic-bezier(0.16,1,0.3,1)}
+    .quest-card.active{transform:scale(1.05);opacity:1;filter:blur(0);box-shadow:0 12px 60px rgba(0,0,0,0.5)}
+    .quest-card[data-prerequisite="true"]::after{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent-gold);border-radius:3px 0 0 3px}
+    .quest-card--poll.active{border-color:var(--poll-border);box-shadow:0 12px 60px rgba(0,0,0,0.5),0 0 40px var(--poll-glow)}
+    .quest-card--discuss.active{border-color:var(--discussion-border);box-shadow:0 12px 60px rgba(0,0,0,0.5),0 0 40px var(--discussion-glow)}
+    .quest-card--quiz.active{border-color:var(--quiz-border);box-shadow:0 12px 60px rgba(0,0,0,0.5),0 0 40px var(--quiz-glow)}
+    .quest-card--follow.active{border-color:var(--follow-border);box-shadow:0 12px 60px rgba(0,0,0,0.5),0 0 40px var(--follow-glow)}
+
+    .quest-card__hero{position:absolute;right:-20px;top:-20px;width:140px;height:140px;opacity:0.04;pointer-events:none;transition:opacity 0.5s}
+    .quest-card.active .quest-card__hero{opacity:0.07}
+
+    .quest-card__top{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1}
+    .quest-card__type{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:8px;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase}
+    .quest-card__type svg{width:15px;height:15px}
+    .quest-card__type--poll{background:var(--poll-bg);color:var(--poll-color);border:1px solid var(--poll-border)}
+    .quest-card__type--discussion{background:var(--discussion-bg);color:var(--discussion-color);border:1px solid var(--discussion-border)}
+    .quest-card__type--quiz{background:var(--quiz-bg);color:var(--quiz-color);border:1px solid var(--quiz-border)}
+    .quest-card__type--follow{background:var(--follow-bg);color:var(--follow-color);border:1px solid var(--follow-border)}
+    .quest-card__badges{display:flex;gap:6px}
+    .quest-card__badge{padding:3px 8px;border-radius:100px;font-size:10px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase}
+    .quest-card__badge--prerequisite{background:rgba(252,179,0,0.1);color:var(--accent-gold);border:1px solid rgba(252,179,0,0.2)}
+
+    .quest-card__body{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;gap:10px}
+    .quest-card__title{font-size:20px;font-weight:700;color:var(--text-primary);line-height:1.3}
+    .quest-card__desc{font-size:14px;line-height:1.6;color:var(--text-muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+    .quest-card__detail{display:flex;gap:10px;flex-wrap:wrap;padding:10px 0;position:relative;z-index:1}
+    .quest-detail-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;background:rgba(255,255,255,0.04);border:1px solid var(--border-subtle);color:var(--text-muted)}
+    .quest-detail-chip svg{width:13px;height:13px}
+
+    /* Poll options */
+    .quest-poll-options{display:flex;flex-direction:column;gap:6px;width:100%}
+    .quest-poll-option{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:rgba(99,102,241,0.04);border:1px solid rgba(99,102,241,0.1);font-size:13px;font-weight:500;color:var(--text-muted)}
+    .quest-poll-option__dot{width:8px;height:8px;border-radius:50%;border:2px solid var(--poll-color);flex-shrink:0}
+
+    /* Discussion tags */
+    .quest-discuss-tags{display:flex;gap:6px;flex-wrap:wrap}
+    .quest-discuss-tag{padding:4px 10px;border-radius:100px;font-size:10px;font-weight:600;letter-spacing:0.04em;background:var(--discussion-bg);border:1px solid var(--discussion-border);color:var(--discussion-color)}
+
+    /* Quiz stats */
+    .quest-quiz-stats{display:flex;gap:16px}
+    .quest-quiz-stat{display:flex;flex-direction:column;align-items:center;gap:2px}
+    .quest-quiz-stat__value{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--quiz-color)}
+    .quest-quiz-stat__label{font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-dim)}
+
+    /* Follow — inline user list with follow buttons */
+    .quest-follow-list{display:flex;flex-direction:column;gap:8px;width:100%}
+    .quest-follow-user{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:rgba(251,146,60,0.03);border:1px solid rgba(251,146,60,0.08)}
+    .quest-follow-user__avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;border:1px solid var(--border-subtle);flex-shrink:0}
+    .quest-follow-user__info{flex:1;min-width:0}
+    .quest-follow-user__name{font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .quest-follow-user__bio{font-size:11px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .quest-follow-user__btn{padding:5px 14px;border-radius:6px;border:1px solid var(--follow-border);background:var(--follow-bg);color:var(--follow-color);font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;transition:all 0.25s ease;flex-shrink:0;position:relative;overflow:hidden}
+    .quest-follow-user__btn:hover{background:rgba(251,146,60,0.2);border-color:var(--follow-color);box-shadow:0 0 12px var(--follow-glow)}
+    .quest-follow-user__btn[data-followed="true"]{background:rgba(34,197,94,0.1);border-color:rgba(34,197,94,0.2);color:#22c55e;cursor:default}
+
+    /* Points animation */
+    @keyframes points-fly{
+      0%{opacity:1;transform:translateY(0) scale(1)}
+      80%{opacity:0.8;transform:translateY(-40px) scale(1.1)}
+      100%{opacity:0;transform:translateY(-60px) scale(0.8)}
+    }
+    .points-anim{position:absolute;right:10px;top:-5px;font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--accent-gold);pointer-events:none;animation:points-fly 1s cubic-bezier(0.16,1,0.3,1) forwards;text-shadow:0 0 8px rgba(252,179,0,0.4)}
+
+    /* Footer */
+    .quest-card__footer{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--border-subtle);margin-top:auto;position:relative;z-index:1}
+    .quest-card__reward{display:flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--accent-gold)}
+    .quest-card__reward svg{width:16px;height:16px}
+    .quest-card__cta{padding:9px 20px;border-radius:8px;border:none;font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all 0.25s ease}
+    .quest-card__cta--start{background:linear-gradient(135deg,var(--accent-gold),#e5a200);color:#0a0a0a;box-shadow:0 2px 12px rgba(252,179,0,0.2)}
+    .quest-card__cta--start:hover{box-shadow:0 4px 20px rgba(252,179,0,0.35);transform:translateY(-1px)}
+
+    /* Dots */
+    .carousel-dots{position:relative;z-index:10;display:flex;justify-content:center;gap:8px;padding:12px 0 20px}
+    .carousel-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;cursor:pointer;transition:all 0.3s ease;padding:0}
+    .carousel-dot.active{width:28px;border-radius:4px}
+    .carousel-dot.active--poll{background:var(--poll-color);box-shadow:0 0 8px var(--poll-glow)}
+    .carousel-dot.active--discuss{background:var(--discussion-color);box-shadow:0 0 8px var(--discussion-glow)}
+    .carousel-dot.active--quiz{background:var(--quiz-color);box-shadow:0 0 8px var(--quiz-glow)}
+    .carousel-dot.active--follow{background:var(--follow-color);box-shadow:0 0 8px var(--follow-glow)}
+
+    /* Bottom bar: progress + archive */
+    .bottom-bar{position:relative;z-index:10;display:flex;align-items:center;gap:14px;padding:14px 28px 20px;flex-shrink:0}
+    .quest-progress{display:flex;align-items:center;gap:14px;flex:1}
+    .quest-progress__label{font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim);white-space:nowrap}
+    .quest-progress__bar-wrap{flex:1;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden}
+    .quest-progress__bar{height:100%;background:linear-gradient(90deg,var(--accent-gold),#e5a200);border-radius:2px;transition:width 0.6s cubic-bezier(0.16,1,0.3,1)}
+    .quest-progress__fraction{font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--accent-gold);white-space:nowrap}
+
+    /* Archive button */
+    .archive-btn{width:40px;height:40px;border-radius:10px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s ease;padding:0;position:relative;flex-shrink:0}
+    .archive-btn:hover{background:var(--bg-glass-hover);border-color:rgba(34,197,94,0.3)}
+    .archive-btn svg{width:18px;height:18px;color:var(--text-muted);transition:color 0.2s}
+    .archive-btn:hover svg{color:#22c55e}
+    .archive-btn__count{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;border-radius:8px;background:#22c55e;color:#0a0a0a;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;transition:transform 0.3s ease}
+    .archive-btn--flash{animation:archive-flash 0.6s ease}
+    .archive-btn--flash .archive-btn__count{transform:scale(1.4)}
+    @keyframes archive-flash{0%{box-shadow:0 0 0 rgba(34,197,94,0)}30%{box-shadow:0 0 20px rgba(34,197,94,0.4);border-color:rgba(34,197,94,0.5)}100%{box-shadow:0 0 0 rgba(34,197,94,0);border-color:var(--border-subtle)}}
+
+    /* Archive panel */
+    .archive-panel{position:absolute;bottom:70px;right:28px;width:340px;z-index:30;background:rgba(12,12,26,0.95);backdrop-filter:blur(24px);border:1px solid var(--border-subtle);border-radius:16px;box-shadow:0 -8px 40px rgba(0,0,0,0.5);transform:translateY(10px);opacity:0;pointer-events:none;transition:all 0.3s cubic-bezier(0.16,1,0.3,1);max-height:320px;display:flex;flex-direction:column;overflow:hidden}
+    .archive-panel.open{transform:translateY(0);opacity:1;pointer-events:auto}
+    .archive-panel__header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid var(--border-subtle);flex-shrink:0}
+    .archive-panel__title{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-primary)}
+    .archive-panel__close{width:24px;height:24px;border-radius:6px;background:transparent;border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-muted);padding:0;transition:all 0.2s}
+    .archive-panel__close:hover{border-color:rgba(252,179,0,0.2);color:var(--accent-gold)}
+    .archive-panel__close svg{width:12px;height:12px}
+    .archive-panel__list{flex:1;overflow-y:auto;padding:8px}
+    .archive-panel__list::-webkit-scrollbar{width:3px}
+    .archive-panel__list::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px}
+    .archive-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;transition:background 0.2s;cursor:pointer}
+    .archive-item:hover{background:rgba(255,255,255,0.03)}
+    .archive-item__icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .archive-item__icon--poll{background:var(--poll-bg);color:var(--poll-color)}
+    .archive-item__icon--follow{background:var(--follow-bg);color:var(--follow-color)}
+    .archive-item__icon svg{width:16px;height:16px}
+    .archive-item__info{flex:1;min-width:0}
+    .archive-item__title{font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .archive-item__meta{font-size:11px;color:var(--text-dim)}
+    .archive-item__check{color:#22c55e;flex-shrink:0}
+    .archive-item__check svg{width:16px;height:16px}
+
+    @media(max-width:500px){
+      .arena-topbar{padding:16px}.arena-topbar__logo{width:32px;height:32px}.arena-topbar__title{font-size:13px}
+      .quest-card{width:320px;min-height:340px;padding:22px 20px 20px}
+      .carousel-track{padding-left:calc(50vw - 160px);padding-right:calc(50vw - 160px);gap:20px}
+      .carousel-wrapper::before,.carousel-wrapper::after{width:60px}
+      .hud-btn,.archive-btn{width:36px;height:36px}
+      .bottom-bar{padding:14px 16px 20px}
+      .archive-panel{right:16px;width:calc(100vw - 32px)}
+    }
+  </style>
+</head>
+<body>
+  <div class="arena">
+    <div class="arena-topbar">
+      <div class="arena-topbar__brand">
+        <img class="arena-topbar__logo" src="https://metadata.ratel.foundation/logos/logo-symbol.png" alt="Space logo" />
+        <span class="arena-topbar__title">Climate Action DAO</span>
+        <span class="arena-topbar__status">Ongoing</span>
+      </div>
+      <div class="arena-topbar__actions">
+        <button class="hud-btn" aria-label="Overview"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></button>
+        <button class="hud-btn" aria-label="Settings"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
+    </div>
+
+    <div class="quest-label"><span class="quest-label__title">Your Quests</span></div>
+
+    <div class="carousel-wrapper">
+      <div class="carousel-track" id="carousel-track">
+
+        <!-- FOLLOW (prerequisite, incomplete) -->
+        <div class="quest-card quest-card--follow" data-type="follow" data-prerequisite="true" data-completed="false" data-index="0">
+          <svg class="quest-card__hero" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+          <div class="quest-card__top">
+            <span class="quest-card__type quest-card__type--follow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>Follow</span>
+            <div class="quest-card__badges"><span class="quest-card__badge quest-card__badge--prerequisite">Required</span></div>
+          </div>
+          <div class="quest-card__body">
+            <div class="quest-card__title">Follow Community Leaders</div>
+            <div class="quest-card__detail">
+              <div class="quest-follow-list">
+                <div class="quest-follow-user">
+                  <img class="quest-follow-user__avatar" src="https://metadata.ratel.foundation/ratel/default-profile.png" alt="" />
+                  <div class="quest-follow-user__info">
+                    <div class="quest-follow-user__name">ClimateDAO Team</div>
+                    <div class="quest-follow-user__bio">Space creator · Climate activist</div>
+                  </div>
+                  <button class="quest-follow-user__btn" data-points="10" onclick="handleFollow(this)">Follow</button>
+                </div>
+                <div class="quest-follow-user">
+                  <img class="quest-follow-user__avatar" src="https://metadata.ratel.foundation/ratel/default-profile.png" alt="" />
+                  <div class="quest-follow-user__info">
+                    <div class="quest-follow-user__name">Dr. Sarah Chen</div>
+                    <div class="quest-follow-user__bio">Marine biologist · Ocean research</div>
+                  </div>
+                  <button class="quest-follow-user__btn" data-points="10" onclick="handleFollow(this)">Follow</button>
+                </div>
+                <div class="quest-follow-user">
+                  <img class="quest-follow-user__avatar" src="https://metadata.ratel.foundation/ratel/default-profile.png" alt="" />
+                  <div class="quest-follow-user__info">
+                    <div class="quest-follow-user__name">GreenTech Labs</div>
+                    <div class="quest-follow-user__bio">Renewable energy research</div>
+                  </div>
+                  <button class="quest-follow-user__btn" data-points="10" onclick="handleFollow(this)">Follow</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="quest-card__footer">
+            <div class="quest-card__reward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12"/><path d="M16 10H8"/></svg>30 CR</div>
+            <span style="font-size:11px;color:var(--text-dim)">0 / 3 followed</span>
+          </div>
+        </div>
+
+        <!-- DISCUSSION -->
+        <div class="quest-card quest-card--discuss" data-type="discuss" data-completed="false" data-index="1">
+          <svg class="quest-card__hero" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <div class="quest-card__top">
+            <span class="quest-card__type quest-card__type--discussion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Discussion</span>
+            <div class="quest-card__badges"></div>
+          </div>
+          <div class="quest-card__body">
+            <div class="quest-card__title">Carbon Offset Strategies</div>
+            <div class="quest-card__desc">Join the discussion on the most effective carbon offset methods for urban areas and share your perspective.</div>
+            <div class="quest-card__detail">
+              <div class="quest-discuss-tags">
+                <span class="quest-discuss-tag">Carbon Credits</span>
+                <span class="quest-discuss-tag">Urban Policy</span>
+                <span class="quest-discuss-tag">Reforestation</span>
+              </div>
+              <div class="quest-detail-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>24 comments</div>
+            </div>
+          </div>
+          <div class="quest-card__footer">
+            <div class="quest-card__reward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12"/><path d="M16 10H8"/></svg>100 CR</div>
+            <button class="quest-card__cta quest-card__cta--start">Start</button>
+          </div>
+        </div>
+
+        <!-- QUIZ -->
+        <div class="quest-card quest-card--quiz" data-type="quiz" data-completed="false" data-index="2">
+          <svg class="quest-card__hero" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div class="quest-card__top">
+            <span class="quest-card__type quest-card__type--quiz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Quiz</span>
+            <div class="quest-card__badges"></div>
+          </div>
+          <div class="quest-card__body">
+            <div class="quest-card__title">Climate Science Fundamentals</div>
+            <div class="quest-card__desc">Test your knowledge on climate change science, greenhouse effects, and renewable energy.</div>
+            <div class="quest-card__detail">
+              <div class="quest-quiz-stats">
+                <div class="quest-quiz-stat"><span class="quest-quiz-stat__value">10</span><span class="quest-quiz-stat__label">Questions</span></div>
+                <div class="quest-quiz-stat"><span class="quest-quiz-stat__value">70%</span><span class="quest-quiz-stat__label">Pass Rate</span></div>
+                <div class="quest-quiz-stat"><span class="quest-quiz-stat__value">5m</span><span class="quest-quiz-stat__label">Est. Time</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="quest-card__footer">
+            <div class="quest-card__reward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12"/><path d="M16 10H8"/></svg>75 CR</div>
+            <button class="quest-card__cta quest-card__cta--start">Start</button>
+          </div>
+        </div>
+
+        <!-- POLL (incomplete) -->
+        <div class="quest-card quest-card--poll" data-type="poll" data-completed="false" data-index="3">
+          <svg class="quest-card__hero" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.5"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+          <div class="quest-card__top">
+            <span class="quest-card__type quest-card__type--poll"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>Poll</span>
+            <div class="quest-card__badges"></div>
+          </div>
+          <div class="quest-card__body">
+            <div class="quest-card__title">Renewable Energy Preference</div>
+            <div class="quest-card__desc">Share your preference on solar vs wind energy investment for coastal communities.</div>
+            <div class="quest-card__detail">
+              <div class="quest-poll-options">
+                <div class="quest-poll-option"><span class="quest-poll-option__dot"></span> Solar energy</div>
+                <div class="quest-poll-option"><span class="quest-poll-option__dot"></span> Wind energy</div>
+                <div class="quest-poll-option"><span class="quest-poll-option__dot"></span> Hybrid approach</div>
+              </div>
+            </div>
+          </div>
+          <div class="quest-card__footer">
+            <div class="quest-card__reward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12"/><path d="M16 10H8"/></svg>50 CR</div>
+            <button class="quest-card__cta quest-card__cta--start">Vote</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="carousel-dots" id="carousel-dots"></div>
+
+    <!-- Bottom bar: progress + archive -->
+    <div class="bottom-bar">
+      <div class="quest-progress">
+        <span class="quest-progress__label">Progress</span>
+        <div class="quest-progress__bar-wrap"><div class="quest-progress__bar" style="width:40%"></div></div>
+        <span class="quest-progress__fraction">2 / 5</span>
+      </div>
+      <button class="archive-btn" id="archive-btn" aria-label="Completed quests">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+        <span class="archive-btn__count">2</span>
+      </button>
+    </div>
+
+    <!-- Archive panel -->
+    <div class="archive-panel" id="archive-panel">
+      <div class="archive-panel__header">
+        <span class="archive-panel__title">Completed</span>
+        <button class="archive-panel__close" id="archive-close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="archive-panel__list">
+        <div class="archive-item">
+          <div class="archive-item__icon archive-item__icon--poll"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg></div>
+          <div class="archive-item__info">
+            <div class="archive-item__title">Community Priority Vote</div>
+            <div class="archive-item__meta">Poll · 50 CR earned</div>
+          </div>
+          <div class="archive-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+        </div>
+        <div class="archive-item">
+          <div class="archive-item__icon archive-item__icon--follow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+          <div class="archive-item__info">
+            <div class="archive-item__title">Follow Early Contributors</div>
+            <div class="archive-item__meta">Follow · 30 CR earned</div>
+          </div>
+          <div class="archive-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Carousel
+    const track = document.getElementById('carousel-track');
+    const cards = Array.from(track.querySelectorAll('.quest-card'));
+    const dotsContainer = document.getElementById('carousel-dots');
+    let activeIndex = 0;
+
+    cards.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'carousel-dot';
+      dot.dataset.type = cards[i].dataset.type;
+      dot.addEventListener('click', () => scrollToCard(i));
+      dotsContainer.appendChild(dot);
+    });
+    const dots = Array.from(dotsContainer.querySelectorAll('.carousel-dot'));
+
+    function updateActive() {
+      const trackRect = track.getBoundingClientRect();
+      const center = trackRect.left + trackRect.width / 2;
+      let closest = 0, closestDist = Infinity;
+      cards.forEach((card, i) => {
+        const rect = card.getBoundingClientRect();
+        const dist = Math.abs(center - (rect.left + rect.width / 2));
+        if (dist < closestDist) { closestDist = dist; closest = i; }
+      });
+      activeIndex = closest;
+      const activeType = cards[activeIndex].dataset.type;
+      cards.forEach((c, i) => c.classList.toggle('active', i === activeIndex));
+      dots.forEach((d, i) => {
+        d.classList.remove('active', 'active--poll', 'active--discuss', 'active--quiz', 'active--follow');
+        if (i === activeIndex) d.classList.add('active', 'active--' + activeType);
+      });
+    }
+
+    function scrollToCard(index) {
+      const card = cards[index];
+      const trackRect = track.getBoundingClientRect();
+      const cardRect = card.getBoundingClientRect();
+      const offset = cardRect.left - trackRect.left + track.scrollLeft - (trackRect.width / 2) + (cardRect.width / 2);
+      track.scrollTo({ left: offset, behavior: 'smooth' });
+    }
+
+    track.addEventListener('scroll', updateActive, { passive: true });
+    requestAnimationFrame(() => { scrollToCard(0); setTimeout(updateActive, 100); });
+
+    // Archive panel
+    const archiveBtn = document.getElementById('archive-btn');
+    const archivePanel = document.getElementById('archive-panel');
+    const archiveClose = document.getElementById('archive-close');
+    archiveBtn.addEventListener('click', () => archivePanel.classList.toggle('open'));
+    archiveClose.addEventListener('click', () => archivePanel.classList.remove('open'));
+
+    // Follow button with points animation
+    function handleFollow(btn) {
+      if (btn.dataset.followed === 'true') return;
+      btn.dataset.followed = 'true';
+      btn.textContent = 'Following';
+
+      // Animate points
+      const points = btn.dataset.points || '10';
+      const anim = document.createElement('span');
+      anim.className = 'points-anim';
+      anim.textContent = '+' + points;
+      btn.parentElement.appendChild(anim);
+      setTimeout(function() { anim.remove(); }, 1000);
+
+      // Update follow count
+      const card = btn.closest('.quest-card');
+      const followBtns = card.querySelectorAll('.quest-follow-user__btn');
+      const followedCount = Array.from(followBtns).filter(function(b) { return b.dataset.followed === 'true'; }).length;
+      const totalCount = followBtns.length;
+      const footerSpan = card.querySelector('.quest-card__footer span');
+      if (footerSpan) footerSpan.textContent = followedCount + ' / ' + totalCount + ' followed';
+
+      // All followed: fly card to archive
+      if (followedCount === totalCount) {
+        setTimeout(function() { archiveCard(card); }, 600);
+      }
+    }
+
+    function archiveCard(card) {
+      var cardRect = card.getBoundingClientRect();
+      var archiveRect = archiveBtn.getBoundingClientRect();
+      var targetX = archiveRect.left + archiveRect.width / 2;
+      var targetY = archiveRect.top + archiveRect.height / 2;
+
+      // Clone card as fixed ghost for fly animation
+      var ghost = card.cloneNode(true);
+      ghost.style.position = 'fixed';
+      ghost.style.left = cardRect.left + 'px';
+      ghost.style.top = cardRect.top + 'px';
+      ghost.style.width = cardRect.width + 'px';
+      ghost.style.height = cardRect.height + 'px';
+      ghost.style.zIndex = '100';
+      ghost.style.margin = '0';
+      ghost.style.pointerEvents = 'none';
+      ghost.style.opacity = '1';
+      ghost.style.transform = 'scale(1)';
+      ghost.style.filter = 'blur(0)';
+      ghost.style.transition = 'all 0.7s cubic-bezier(0.4, 0, 0.2, 1)';
+      ghost.style.borderRadius = '20px';
+      ghost.style.overflow = 'hidden';
+      document.body.appendChild(ghost);
+
+      // Hide original
+      card.style.transition = 'none';
+      card.style.opacity = '0';
+      card.style.pointerEvents = 'none';
+
+      // Trigger fly
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          ghost.style.left = (targetX - 20) + 'px';
+          ghost.style.top = (targetY - 20) + 'px';
+          ghost.style.width = '40px';
+          ghost.style.height = '40px';
+          ghost.style.opacity = '0';
+          ghost.style.borderRadius = '10px';
+          ghost.style.transform = 'scale(0.1)';
+          ghost.style.filter = 'blur(8px)';
+        });
+      });
+
+      // After animation: cleanup
+      setTimeout(function() {
+        ghost.remove();
+        card.remove();
+
+        // Rebuild carousel
+        var remainingCards = Array.from(track.querySelectorAll('.quest-card'));
+        cards.length = 0;
+        cards.push.apply(cards, remainingCards);
+        dotsContainer.textContent = '';
+        cards.forEach(function(c, i) {
+          var dot = document.createElement('button');
+          dot.className = 'carousel-dot';
+          dot.dataset.type = c.dataset.type;
+          dot.addEventListener('click', function() { scrollToCard(i); });
+          dotsContainer.appendChild(dot);
+        });
+        dots.length = 0;
+        dots.push.apply(dots, Array.from(dotsContainer.querySelectorAll('.carousel-dot')));
+
+        if (cards.length > 0) {
+          var nextIndex = Math.min(activeIndex, cards.length - 1);
+          scrollToCard(nextIndex);
+          setTimeout(updateActive, 150);
+        }
+
+        // Flash archive button
+        archiveBtn.classList.add('archive-btn--flash');
+        setTimeout(function() { archiveBtn.classList.remove('archive-btn--flash'); }, 600);
+
+        // Bump count
+        var countEl = archiveBtn.querySelector('.archive-btn__count');
+        countEl.textContent = (parseInt(countEl.textContent, 10) || 0) + 1;
+
+        // Add archive list entry via DOM methods
+        var list = archivePanel.querySelector('.archive-panel__list');
+        var item = document.createElement('div');
+        item.className = 'archive-item';
+
+        var iconDiv = document.createElement('div');
+        iconDiv.className = 'archive-item__icon archive-item__icon--follow';
+        iconDiv.appendChild(createSvg('M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2', 'M9 7a4 4 0 1 0 0 0.01'));
+        item.appendChild(iconDiv);
+
+        var infoDiv = document.createElement('div');
+        infoDiv.className = 'archive-item__info';
+        var titleEl = document.createElement('div');
+        titleEl.className = 'archive-item__title';
+        titleEl.textContent = 'Follow Community Leaders';
+        var metaEl = document.createElement('div');
+        metaEl.className = 'archive-item__meta';
+        metaEl.textContent = 'Follow \u00b7 30 CR earned';
+        infoDiv.appendChild(titleEl);
+        infoDiv.appendChild(metaEl);
+        item.appendChild(infoDiv);
+
+        var checkDiv = document.createElement('div');
+        checkDiv.className = 'archive-item__check';
+        checkDiv.appendChild(createSvg('M22 11.08V12a10 10 0 1 1-5.93-9.14', 'M22 4L12 14.01 9 11.01'));
+        item.appendChild(checkDiv);
+
+        list.appendChild(item);
+      }, 750);
+    }
+
+    // Helper: create inline SVG with paths
+    function createSvg() {
+      var ns = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 24 24');
+      svg.setAttribute('fill', 'none');
+      svg.setAttribute('stroke', 'currentColor');
+      svg.setAttribute('stroke-width', '2');
+      svg.setAttribute('stroke-linecap', 'round');
+      svg.setAttribute('stroke-linejoin', 'round');
+      for (var i = 0; i < arguments.length; i++) {
+        var path = document.createElementNS(ns, 'path');
+        path.setAttribute('d', arguments[i]);
+        svg.appendChild(path);
+      }
+      return svg;
+    }
+  </script>
+</body>
+</html>

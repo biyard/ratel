@@ -3,12 +3,23 @@ use crate::features::posts::types::*;
 use crate::features::posts::*;
 use crate::features::auth::User;
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct AddPostCommentRequest {
+    pub content: String,
+    #[serde(default)]
+    pub images: Vec<String>,
+}
+
 #[post("/api/posts/:post_id/comments", user: User)]
-pub async fn add_comment_handler(post_id: FeedPartition, content: String) -> Result<PostComment> {
+pub async fn add_comment_handler(
+    post_id: FeedPartition,
+    req: AddPostCommentRequest,
+) -> Result<PostComment> {
     let conf = crate::features::posts::config::get();
     let cli = conf.dynamodb();
 
-    let post_pk: Partition = post_id.into();
+    let post_pk: Partition = post_id.clone().into();
 
     let post = Post::get(cli, &post_pk, Some(EntityType::Post))
         .await?
@@ -21,7 +32,20 @@ pub async fn add_comment_handler(post_id: FeedPartition, content: String) -> Res
         _ => {}
     }
 
-    let comment = Post::comment(cli, post.pk.clone(), content, user).await?;
+    let comment = Post::comment(cli, post.pk.clone(), req.content, req.images, user.clone()).await?;
+
+    // Send mention notifications
+    {
+        let cta_url = format!("/posts/{}", post_id);
+        crate::common::utils::mention::create_mention_notifications(
+            cli,
+            &comment.content,
+            &user.pk,
+            &user.display_name,
+            &cta_url,
+        )
+        .await;
+    }
 
     Ok(comment)
 }

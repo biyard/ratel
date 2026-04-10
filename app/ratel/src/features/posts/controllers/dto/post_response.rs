@@ -36,14 +36,15 @@ pub struct PostResponse {
 }
 
 impl PostResponse {
-    pub fn url(&self) -> String {
+    pub fn url(&self) -> Route {
         if let Some(space_pk) = &self.space_pk {
-            format!(
-                "/spaces/{}/dashboard",
-                Into::<SpacePartition>::into(space_pk.clone())
-            )
+            Route::SpaceIndexPage {
+                space_id: space_pk.clone().into(),
+            }
         } else {
-            format!("/posts/{}", Into::<FeedPartition>::into(self.pk.clone()))
+            Route::PostDetail {
+                post_id: self.pk.clone().into(),
+            }
         }
     }
 
@@ -84,4 +85,3 @@ impl From<Post> for PostResponse {
         }
     }
 }
-

@@ -113,7 +113,7 @@ pub fn SpaceAnalyzeDetailPage(
                         let download_started_text = download_started_text.clone();
                         spawn(async move {
                             match download_analyze_excel(DownloadAnalyzeExcelRequest {
-                                    file_name: build_excel_file_name(&poll),
+                                    file_name: build_excel_file_name(&space_id()),
                                     sheet_name: "Responses".to_string(),
                                     rows: excel_data.rows,
                                     merges: excel_data.merges,
@@ -615,18 +615,8 @@ fn humanize_group_value(value: &str, tr: &SpaceAnalyzesAppTranslate) -> String {
     }
 }
 
-fn build_excel_file_name(poll: &PollResponse) -> String {
-    let slug = poll
-        .title
-        .chars()
-        .map(|ch| if ch.is_ascii_alphanumeric() { ch } else { '-' })
-        .collect::<String>()
-        .trim_matches('-')
-        .to_lowercase();
-    format!(
-        "{}-analysis.xlsx",
-        if slug.is_empty() { "poll" } else { &slug }
-    )
+fn build_excel_file_name(space_id: &SpacePartition) -> String {
+    format!("{}-analysis.xlsx", space_id)
 }
 
 #[derive(Debug, Clone, Default, PartialEq)]

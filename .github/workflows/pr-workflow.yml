@@ -124,11 +124,6 @@ jobs:
         run: |
           cargo binstall dioxus-cli@0.7.3 --force
 
-      - name: Setup pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@10.15.0 --activate
-
       - name: Building test
         id: build
         env:
@@ -145,6 +140,7 @@ jobs:
           ECR: ratel/app-shell
         run: |
           npm i
+
           cd app/ratel
           make build-testing
           make docker
@@ -203,11 +199,6 @@ jobs:
         run: |
           cargo binstall dioxus-cli@0.7.3 --force
 
-      - name: Setup pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@10.15.0 --activate
-
       - name: Start infrastructure
         run: |
           docker compose --profile infra up -d localstack qdrant
@@ -228,7 +219,7 @@ jobs:
           RUST_LOG: info
           ENV: local
         run: |
-          npm install -D tailwindcss @tailwindcss/cli
+          npm i
           make test
 
   playwright-tests:
