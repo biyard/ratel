@@ -170,10 +170,23 @@ pub fn ActionDashboard(space_id: ReadSignal<SpacePartition>) -> Element {
                 div { class: "carousel-wrapper",
                     div { class: "carousel-track", id: "carousel-track",
                         for action in incomplete.iter() {
-                            QuestCard {
-                                key: "{action.action_id}",
-                                action: action.clone(),
-                                space_id,
+                            {
+                                let action = action.clone();
+                                let key = action.action_id.clone();
+                                match action.action_type {
+                                    SpaceActionType::Poll => rsx! {
+                                        PollActionCard { key: "{key}", action, space_id }
+                                    },
+                                    SpaceActionType::TopicDiscussion => rsx! {
+                                        DiscussionActionCard { key: "{key}", action, space_id }
+                                    },
+                                    SpaceActionType::Quiz => rsx! {
+                                        QuizActionCard { key: "{key}", action, space_id }
+                                    },
+                                    SpaceActionType::Follow => rsx! {
+                                        FollowActionCard { key: "{key}", action, space_id }
+                                    },
+                                }
                             }
                         }
                     }
@@ -309,77 +322,6 @@ pub fn ActionDashboard(space_id: ReadSignal<SpacePartition>) -> Element {
                 on_close: move |_| {
                     active_panel.set(ActivePanel::None);
                 },
-            }
-        }
-    }
-}
-
-/// Quest card using the same class names as space-participant.html
-#[component]
-fn QuestCard(action: SpaceActionSummary, space_id: ReadSignal<SpacePartition>) -> Element {
-    let tr: SpaceViewerTranslate = use_translate();
-    let lang = use_language();
-    let nav = use_navigator();
-    let type_css = quest_type_css(&action.action_type);
-    let card_modifier = format!("quest-card--{type_css}");
-    let type_badge_class = match action.action_type {
-        SpaceActionType::Poll => "quest-card__type--poll",
-        SpaceActionType::TopicDiscussion => "quest-card__type--discussion",
-        SpaceActionType::Quiz => "quest-card__type--quiz",
-        SpaceActionType::Follow => "quest-card__type--follow",
-    };
-
-    rsx! {
-        div {
-            class: "quest-card {card_modifier}",
-            "data-type": type_css,
-            "data-prerequisite": action.prerequisite,
-            "data-testid": "quest-card-{action.action_id}",
-            onclick: move |_| {
-                let route = action.get_url(&space_id());
-                nav.push(route);
-            },
-
-            div { class: "quest-card__top",
-                span { class: "quest-card__type {type_badge_class}",
-                    "{action.action_type.translate(&lang())}"
-                }
-                div { class: "quest-card__badges",
-                    if action.prerequisite {
-                        span { class: "quest-card__badge quest-card__badge--prerequisite",
-                            "{tr.required_label}"
-                        }
-                    }
-                    if action.credits > 0 {
-                        span { class: "quest-card__badge quest-card__badge--credits",
-                            "+{action.credits} CR"
-                        }
-                    }
-                }
-            }
-
-            div { class: "quest-card__body",
-                div { class: "quest-card__title", "{action.title}" }
-                if !action.description.is_empty() {
-                    div { class: "quest-card__desc", "{action.description}" }
-                }
-            }
-
-            div { class: "quest-card__footer",
-                div { class: "quest-card__reward",
-                    svg {
-                        fill: "none",
-                        stroke: "currentColor",
-                        stroke_width: "2",
-                        view_box: "0 0 24 24",
-                        xmlns: "http://www.w3.org/2000/svg",
-                        circle { cx: "12", cy: "12", r: "10" }
-                        path { d: "M12 6v12" }
-                        path { d: "M16 10H8" }
-                    }
-                    "{action.credits} CR"
-                }
-                button { class: "quest-card__cta", "{tr.start_quest}" }
             }
         }
     }

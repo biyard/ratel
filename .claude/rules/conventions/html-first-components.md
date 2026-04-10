@@ -71,18 +71,23 @@ pub fn MySubComponent(open: bool, on_close: EventHandler<()>) -> Element {
 }
 ```
 
-## Reference implementation
+## Reference Implementations
 
-`app/ratel/src/features/spaces/pages/index/` — Space viewer arena page with:
-- `overview_panel/` sub-component (slide-in overview panel)
-- `settings_panel/` sub-component (slide-in theme/language settings)
+| Page | Path | Description |
+|------|------|-------------|
+| Space viewer (portal) | `features/spaces/pages/index/` | Viewer splash, participation flow, arena aesthetic |
+| Action dashboard | `features/spaces/pages/index/action_dashboard/` | Carousel quest board for participants |
+
+HTML mockups in `docs/design/`:
+- `space-viewer.html` — viewer portal with participate/signin/verification cards
+- `space-participant.html` — participant action carousel with quest cards
 
 ## Conversion Flow
 
 ```
 1. Write HTML mockup (docs/design/<name>.html)
-2. Approve design with user
-3. Split into page.html + style.css + script.js
+2. Approve design with user — iterate in browser
+3. Split into page.html + style.css + script.js in component directory
 4. Run: dx translate -f page.html
 5. Paste RSX output into component.rs
 6. Replace static IDs/text with signals + translate!
@@ -131,10 +136,11 @@ Define component-scoped CSS variables at the root element of each component:
 
 ## CSS State Management
 
-Use data attributes and ARIA attributes for CSS-driven state instead of conditional class strings:
+Use data attributes and ARIA attributes for Dioxus-controlled state, and CSS classes for JS-controlled state:
+
+### Dioxus-controlled state → `data-*` / `aria-*` attributes
 
 ```css
-/* CSS */
 .panel[data-open="true"] { transform: translateX(0); }
 .portal[data-dimmed="true"] { opacity: 0.15; filter: blur(6px); }
 .settings-opt[aria-selected="true"] { color: #fcb300; }
@@ -144,8 +150,49 @@ Use data attributes and ARIA attributes for CSS-driven state instead of conditio
 ```rust
 // RSX — Dioxus sets attributes reactively
 div { class: "panel", "data-open": is_open, ... }
-div { class: "settings-opt", "aria-selected": is_active, onclick: move |_| { ... }, ... }
+div { class: "settings-opt", "aria-selected": is_active, ... }
 ```
+
+### JS-controlled state → CSS classes (`.active`, `.open`)
+
+When JS needs to toggle state on scroll/interaction (e.g., carousel active card), use CSS classes — **not** `data-*` attributes. Dioxus re-renders reset attributes it manages, but won't touch classes added by JS.
+
+```css
+.quest-card { opacity: 0.25; filter: blur(6px); transform: scale(0.75); }
+.quest-card.active { opacity: 1; filter: blur(0); transform: scale(1.05); }
+
+.carousel-dot { width: 8px; }
+.carousel-dot.active { width: 28px; }
+```
+
+```js
+// JS toggles .active class on scroll
+cards.forEach((c, i) => c.classList.toggle('active', i === closest));
+```
+
+**Rule:** If Dioxus owns the state (signals), use `data-*` attributes. If JS owns the state (scroll position, animation), use CSS classes.
+
+## Class Name Consistency
+
+**Critical:** When converting an HTML mockup to a Dioxus component, keep the **exact same CSS class names and element IDs** as the mockup. The JS file queries elements by these names. Renaming classes (e.g., `carousel-track` → `action-carousel__track`) breaks JS selectors silently.
+
+Checklist:
+- CSS class names in `style.css` match the HTML mockup exactly
+- Element IDs in RSX match what `script.js` queries via `getElementById`
+- JS selectors (`.querySelector`, `.querySelectorAll`) match the CSS classes
+- If the mockup uses `.quest-card`, the RSX uses `class: "quest-card"`, not `class: "action-card"`
+
+## JS Patterns for Scroll-Based UI
+
+For carousels and scroll-snap UIs where the active element depends on scroll position:
+
+1. **Let JS own the active state** — don't try to sync scroll position into a Dioxus signal
+2. **Use `classList.toggle`** — not `setAttribute('data-active', ...)` which Dioxus would overwrite
+3. **Use `defer: true`** on the script tag — the DOM must exist before JS queries it
+4. **Use `scroll-snap-type: x mandatory`** on the track and `scroll-snap-align: center` on cards
+5. **Calculate closest-to-center card** on each scroll event using `getBoundingClientRect`
+
+Reference implementation: `features/spaces/pages/index/action_dashboard/script.js`
 
 ## JS Namespace Convention
 
@@ -160,7 +207,7 @@ Register JS helpers under `window.ratel.<module>`:
 })();
 ```
 
-Keep JS minimal — prefer Dioxus signals and event handlers for state management. Use JS only for DOM operations that RSX cannot express.
+Keep JS minimal — prefer Dioxus signals and event handlers for state management. Use JS only for DOM operations that RSX cannot express (scroll-based active detection, fly-to-archive animations, etc.).
 
 ## When NOT to Use This Pattern
 
