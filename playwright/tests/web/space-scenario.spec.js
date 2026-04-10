@@ -93,8 +93,16 @@ async function signUpAndSkipPrereq(browser, user, spaceUrl) {
   try {
     await goto(page, spaceUrl);
     await click(page, { testId: "btn-participate" });
+
+    // ConsentModal appears — check the consent checkbox and confirm
+    await expect(page.getByTestId("card-consent")).toBeVisible();
+    await page.locator('input[type="checkbox"]').check();
+    await click(page, { testId: "btn-consent-confirm" });
+
     // PrerequisiteCard appears — user sees the checklist but doesn't complete anything
-    await expect(page.getByTestId("card-prerequisite")).toBeVisible();
+    await expect(page.getByTestId("card-prerequisite")).toBeVisible({
+      timeout: 15000,
+    });
   } finally {
     await context.close();
   }
@@ -109,8 +117,16 @@ async function signUpAndParticipate(browser, user, spaceUrl) {
   try {
     await goto(page, spaceUrl);
     await click(page, { testId: "btn-participate" });
+
+    // ConsentModal appears — check the consent checkbox and confirm
+    await expect(page.getByTestId("card-consent")).toBeVisible();
+    await page.locator('input[type="checkbox"]').check();
+    await click(page, { testId: "btn-consent-confirm" });
+
     // PrerequisiteCard appears with the checklist
-    await expect(page.getByTestId("card-prerequisite")).toBeVisible();
+    await expect(page.getByTestId("card-prerequisite")).toBeVisible({
+      timeout: 15000,
+    });
 
     // Click the prerequisite poll item — opens the full-screen poll overlay
     await click(page, { text: "Opinion Survey: Pre-study" });
@@ -130,12 +146,13 @@ async function signUpAndParticipate(browser, user, spaceUrl) {
         .click();
     }
 
-    // Submit the poll — overlay closes automatically after submission
+    // Submit the poll — confirm dialog appears (response_editable is false by default)
     await click(page, { text: "Submit" });
+    await click(page, { testId: "poll-confirm-submit" });
     await expect(page.getByTestId("poll-arena-overlay")).toBeHidden();
 
     // After completing all prerequisites, user should see the WaitingCard
-    await expect(page.getByTestId("card-waiting")).toBeVisible();
+    await expect(page.getByTestId("card-waiting")).toBeVisible({ timeout: 15000 });
   } finally {
     await context.close();
   }
