@@ -1,0 +1,32 @@
+/* ── Poll Action Card ────────────────────────────── */
+
+.quest-card--poll.active {
+  border-color: rgba(99,102,241,0.18);
+  box-shadow: 0 12px 60px var(--dark, rgba(0,0,0,0.5)) var(--light, rgba(0,0,0,0.12)), 0 0 40px rgba(99,102,241,0.12);
+}
+
+.quest-poll-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+.quest-poll-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(99,102,241,0.04);
+  border: 1px solid rgba(99,102,241,0.1);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--dark, #8888a8) var(--light, #6b6b80);
+}
+.quest-poll-option__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid #818cf8;
+  flex-shrink: 0;
+}

@@ -11,6 +11,7 @@ pub fn DiscussionActionCard(
     let nav = use_navigator();
 
     rsx! {
+        document::Link { rel: "stylesheet", href: asset!("./style.css") }
         div {
             class: "quest-card quest-card--discuss",
             "data-type": "discuss",

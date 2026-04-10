@@ -11,6 +11,7 @@ pub fn QuizActionCard(
     let nav = use_navigator();
 
     rsx! {
+        document::Link { rel: "stylesheet", href: asset!("./style.css") }
         div {
             class: "quest-card quest-card--quiz",
             "data-type": "quiz",

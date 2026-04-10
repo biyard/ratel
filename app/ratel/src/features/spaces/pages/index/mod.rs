@@ -1,4 +1,6 @@
 mod action_dashboard;
+mod arena_topbar;
+mod arena_viewer;
 mod component;
 mod i18n;
 mod overview_panel;
@@ -9,6 +11,8 @@ mod verification_card;
 
 pub use component::*;
 use action_dashboard::*;
+use arena_topbar::*;
+use arena_viewer::*;
 use i18n::*;
 use overview_panel::*;
 use participate_card::*;

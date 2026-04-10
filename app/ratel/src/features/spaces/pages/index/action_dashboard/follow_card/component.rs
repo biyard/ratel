@@ -23,6 +23,7 @@ pub fn FollowActionCard(
     let followed_count = users.iter().filter(|u| u.subscribed).count();
 
     rsx! {
+        document::Link { rel: "stylesheet", href: asset!("./style.css") }
         div {
             class: "quest-card quest-card--follow",
             "data-type": "follow",
