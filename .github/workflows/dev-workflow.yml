@@ -152,11 +152,6 @@ jobs:
         run: |
           cargo binstall dioxus-cli@0.7.3 --force
 
-      - name: Setup pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@10.15.0 --activate
-
       - name: Building APIs
         env:
           REGION: ap-northeast-2
@@ -237,7 +232,6 @@ jobs:
           VOTER_TAG_SECRET: ${{ secrets.DEV_VOTER_TAG_SECRET }}
           ATTR_VOTING_AUTHORITY_JSON: ${{ secrets.DEV_ATTR_VOTING_AUTHORITY_JSON }}
         run: |
-          npm i
           rm -rf target/dx
 
           cd app/ratel
@@ -413,13 +407,30 @@ jobs:
           VOTER_TAG_SECRET: ${{ secrets.DEV_VOTER_TAG_SECRET }}
           ATTR_VOTING_AUTHORITY_JSON: ${{ secrets.DEV_ATTR_VOTING_AUTHORITY_JSON }}
         run: |
-          npm i
           rm -rf target/dx
 
           cd app/ratel
           make build-lambda
           make docker
           make docker.push
+
+      - name: Deploy to S3
+        env:
+          BUCKET: ${{ secrets.DEV_RATEL_BUCKET }}
+          CDN: ${{ secrets.DEV_RATEL_CDN }}
+        run: |
+          aws s3 sync target/dx/app-shell/release/web/public $BUCKET
+          aws cloudfront create-invalidation --distribution-id $CDN --paths "/*"
+          tar czvf app-shell-lambda.tar.gz target/dx/app-shell/release/web
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-shell-lambda-${{ github.sha }}
+          path: ${{ github.workspace }}/app-shell-lambda.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+
 
       - name: Save cache
         if: always()
@@ -737,291 +748,3 @@ jobs:
           head: dev
           token: ${{ secrets.GITHUB_TOKEN }}
 
-  # main-api-testing:
-  #   runs-on: ubuntu-22.04
-
-  #   defaults:
-  #     run:
-  #       working-directory: packages/main-api
-
-  #   outputs:
-  #     image: ${{ steps.build.outputs.image }}
-
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         submodules: recursive
-  #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
-
-  #     - uses: actions-rust-lang/setup-rust-toolchain@v1
-  #       with:
-  #         components: clippy, rustfmt
-  #         target: wasm32-unknown-unknown
-  #         toolchain: stable
-
-  #     - name: Set up Docker Buildx
-  #       uses: docker/setup-buildx-action@v3
-
-  #     - uses: cargo-bins/cargo-binstall@main
-  #     - name: Install toml-cli
-  #       run: |
-  #         cargo binstall toml-cli
-
-  #     - name: Cache builder
-  #       id: main-api-build-cache
-  #       uses: actions/cache@v4
-  #       with:
-  #         key: main-api-build-${{ hashFiles('Cargo.lock') }}
-  #         restore-keys: |
-  #           main-api-build-
-  #         path: |
-  #           packages/main-api/target
-
-  #     - name: Setup pnpm
-  #       run: |
-  #         corepack enable
-  #         corepack prepare pnpm@10.15.0 --activate
-
-  #     - name: Build and cache Docker image
-  #       id: build
-  #       env:
-  #         AWS_REGION: ap-northeast-2
-  #         AWS_ACCESS_KEY_ID: test
-  #         AWS_SECRET_ACCESS_KEY: test
-  #         ENV: dev
-  #         SERVICE: main-api
-  #         DOMAIN: api.dev.ratel.foundation
-  #         ECR_NAME: main-api
-  #         COMMIT: testing-${{ github.sha }}
-  #         RUST_LOG: info
-  #         DYNAMO_TABLE_PREFIX: ratel-local
-  #         RUST_FLAG: "--features bypass,no-secret"
-  #       run: |
-  #         # Build and tag image
-  #         make dist
-  #         make docker.build
-
-  #         # Save image to cache
-  #         docker save $ECR_NAME:$COMMIT | gzip > /tmp/main-api-image.tar.gz
-  #         echo "image=$ECR_NAME:$COMMIT" >> $GITHUB_OUTPUT
-
-  #     - name: Upload main-api image artifact
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: main-api-image-${{ github.sha }}
-  #         path: /tmp/main-api-image.tar.gz
-  #         if-no-files-found: error
-  #         retention-days: 7
-
-  # playwright-tests:
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 30
-  #   needs: [main-api-testing]
-
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         submodules: recursive
-  #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
-
-  #     - name: Install system dependencies
-  #       run: |
-  #         sudo apt-get update
-  #         sudo apt-get install -y docker-compose
-
-  #     - name: Setup pnpm
-  #       run: |
-  #         corepack enable
-  #         corepack prepare pnpm@10.15.0 --activate
-
-  #     - name: Install dependencies
-  #       run: pnpm i
-
-  #     - name: Install Playwright Browsers
-  #       run: npx playwright install --with-deps chromium
-
-  #     - name: Download main-api image artifact
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: main-api-image-${{ github.sha }}
-  #         path: /tmp
-
-  #     - name: Load Docker images
-  #       run: |
-  #         docker load < /tmp/main-api-image.tar.gz
-  #         docker images
-
-  #     - name: Setup test environment
-  #       env:
-  #         COMMIT: testing-${{ github.sha }}
-  #       run: |
-  #         docker-compose --profile testing up -d
-
-  #     - name: Wait for services to be ready
-  #       run: |
-  #         # Check service health with retry loop and timeout
-  #         echo "Waiting for services to be ready..."
-
-  #         # Wait for Main API (180 second timeout for container startup)
-  #         echo "🔄 Checking Main API..."
-  #         timeout=180
-  #         interval=10
-  #         elapsed=0
-  #         while [ $elapsed -lt $timeout ]; do
-  #           if curl -f -s http://localhost:3000/version > /dev/null 2>&1; then
-  #             echo "✅ Main API is responding (took ${elapsed}s)"
-  #             break
-  #           fi
-  #           echo "⏳ Main API not ready yet... (${elapsed}/${timeout}s)"
-  #           sleep $interval
-  #           elapsed=$((elapsed + interval))
-  #         done
-
-  #         if [ $elapsed -ge $timeout ]; then
-  #           echo "❌ Main API failed to respond with 200 status within ${timeout}s"
-  #           echo "🔍 Checking Docker services status:"
-  #           docker-compose -f docker-compose.yaml ps
-  #           echo "🔍 Main API logs:"
-  #           docker-compose -f docker-compose.yaml logs main-api-testing --tail=50
-  #           exit 1
-  #         fi
-
-  #         echo "🎉 All services are ready!"
-
-  #     - name: Run Playwright Tests
-  #       env:
-  #         CI: true
-  #         RATEL_TEST_PLAYWRIGHT_URL: http://localhost:3000
-  #       run: |
-  #         cd ts-packages/web
-  #         make test
-
-  #     - name: Move Playwright Tests
-  #       if: always()
-  #       run: |
-  #         mv ts-packages/web/playwright-report ./
-
-  #     - name: Upload test results
-  #       uses: actions/upload-artifact@v4
-  #       if: always()
-  #       with:
-  #         name: playwright-report
-  #         path: |
-  #           playwright-report/
-  #         retention-days: 30
-
-  # deploy-report:
-  #   if: ${{ !cancelled() }}
-  #   needs: [playwright-tests]
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     contents: read
-  #     pages: write
-  #     id-token: write
-  #   environment:
-  #     name: github-pages
-  #     url: ${{ steps.deployment.outputs.page_url }}
-
-  #   steps:
-  #     - name: Download test report artifact
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: playwright-report
-  #         path: playwright-report/
-  #       continue-on-error: true
-
-  #     - name: Setup Pages
-  #       uses: actions/configure-pages@v4
-
-  #     - name: Upload to GitHub Pages
-  #       uses: actions/upload-pages-artifact@v3
-  #       with:
-  #         path: playwright-report/
-
-  #     - name: Deploy to GitHub Pages
-  #       id: deployment
-  #       uses: actions/deploy-pages@v4
-
-  #     - name: Comment PR with test report link
-  #       if: github.event_name == 'pull_request'
-  #       uses: actions/github-script@v7
-  #       with:
-  #         script: |
-  #           const reportUrl = `${{ steps.deployment.outputs.page_url }}`;
-  #           const runUrl = `https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}`;
-
-  #           const comment = `## 🎭 Playwright Test Results
-
-  #           **📊 Test Report:** [View interactive test report](${reportUrl})
-
-  #           **📁 Test Artifacts:**
-  #           - Playwright report and screenshots are available in [GitHub Actions artifacts](${runUrl})
-
-  #           **📋 Test Summary:**
-  #           - Workflow: Playwright Tests
-  #           - Trigger: ${{ github.event_name }}
-  #           - Commit: ${{ github.sha }}
-  #           - Status: ${{ needs.test.result }}
-
-  #           ---
-  #           *Test report automatically deployed to GitHub Pages*`;
-
-  #           // Find existing comment to update or create new one
-  #           const { data: comments } = await github.rest.issues.listComments({
-  #             issue_number: context.issue.number,
-  #             owner: context.repo.owner,
-  #             repo: context.repo.repo,
-  #           });
-
-  #           const existingComment = comments.find(comment =>
-  #             comment.body.includes('🎭 Playwright Test Results') &&
-  #             comment.user.type === 'Bot'
-  #           );
-
-  #           if (existingComment) {
-  #             await github.rest.issues.updateComment({
-  #               comment_id: existingComment.id,
-  #               owner: context.repo.owner,
-  #               repo: context.repo.repo,
-  #               body: comment
-  #             });
-  #           } else {
-  #             await github.rest.issues.createComment({
-  #               issue_number: context.issue.number,
-  #               owner: context.repo.owner,
-  #               repo: context.repo.repo,
-  #               body: comment
-  #             });
-  #           }
-  # deploy-pdf-ai-agent:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         submodules: recursive
-  #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
-
-  #     - uses: aws-actions/configure-aws-credentials@v2
-  #       with:
-  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #         aws-region: ap-northeast-2
-
-  #     - name: Setup Node.js
-  #       uses: actions/setup-node@v3
-  #       with:
-  #         node-version: "20"
-  #         cache: "npm"
-  #         cache-dependency-path: cdk/package-lock.json
-
-  #     - name: Deploy AI Agent Stack
-  #       env:
-  #         ENV: dev
-  #         AWS_REGION: ap-northeast-2
-  #         ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #         AGENT_NAME: pdf
-  #         BUCKET_PREFIX: "dev/spaces/"
-  #       run: |
-  #         npm i -g aws-cdk
-  #         make cdk-deploy-ai-stack
