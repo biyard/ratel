@@ -294,4 +294,37 @@ translate! {
         en: "No ranking data yet. Complete actions to earn your place!",
         ko: "아직 랭킹 데이터가 없습니다. 활동을 완료하여 순위를 올리세요!",
     },
+
+    prereq_heading: {
+        en: "Complete Required Actions",
+        ko: "필수 액션 완료",
+    },
+    prereq_desc: {
+        en: "Complete the following actions to secure your spot in this space.",
+        ko: "이 스페이스에 참여하려면 다음 액션을 완료해주세요.",
+    },
+    prereq_progress: {
+        en: "Progress",
+        ko: "진행도",
+    },
+    prereq_completed: {
+        en: "Completed",
+        ko: "완료",
+    },
+    prereq_pending: {
+        en: "Start",
+        ko: "시작",
+    },
+    waiting_heading: {
+        en: "You're All Set!",
+        ko: "준비 완료!",
+    },
+    waiting_desc: {
+        en: "You've completed all required actions. Waiting for the space to start.",
+        ko: "모든 필수 액션을 완료했습니다. 스페이스 시작을 기다리고 있습니다.",
+    },
+    waiting_status: {
+        en: "Waiting for Space to Start",
+        ko: "스페이스 시작 대기 중",
+    },
 }
