@@ -11,6 +11,7 @@ const DEFAULT_PROFILE: &str = "https://metadata.ratel.foundation/ratel/default-p
 pub fn ArenaViewer(
     space_id: ReadSignal<SpacePartition>,
     dimmed: bool,
+    #[props(default)] candidate_view: Option<Element>,
 ) -> Element {
     let tr: SpaceViewerTranslate = use_translate();
     let space = use_space()();
@@ -81,7 +82,9 @@ pub fn ArenaViewer(
                 }
                 div { class: "portal-status", "{status_text}" }
 
-                if is_logged_in && show_participate && needs_verification {
+                if let Some(view) = candidate_view {
+                    {view}
+                } else if is_logged_in && show_participate && needs_verification {
                     VerificationCard {
                         space_id,
                         requirements: panel_requirements.clone(),
