@@ -47,6 +47,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Restore cache
+        id: dx-check-cache
+        uses: actions/cache/restore@v4
+        with:
+          key: app-shell-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            app-shell-build-${{ runner.os }}-rust-
+          path: |
+            ~/.cargo/bin
+            target
+
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
