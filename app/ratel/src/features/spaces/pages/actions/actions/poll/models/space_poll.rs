@@ -46,6 +46,8 @@ impl SpacePoll {
         let sk = EntityType::SpacePoll(uuid::Uuid::now_v7().to_string());
 
         let now = get_now_timestamp_millis();
+        let (started_at, ended_at) =
+            crate::features::spaces::pages::actions::models::SpaceAction::default_schedule(now);
 
         Ok(Self {
             pk,
@@ -54,8 +56,8 @@ impl SpacePoll {
             updated_at: now,
             user_response_count: 0,
             response_editable: false,
-            started_at: now,
-            ended_at: now + 7 * 24 * 60 * 60 * 1000, // Default to 7 days later
+            started_at,
+            ended_at,
             title: String::new(),
             description: String::new(),
             questions: Vec::new(),
@@ -205,6 +207,8 @@ impl TryFrom<Partition> for SpacePoll {
         let pk = value;
         let sk = EntityType::SpacePoll(uuid);
         let now = get_now_timestamp_millis();
+        let (started_at, ended_at) =
+            crate::features::spaces::pages::actions::models::SpaceAction::default_schedule(now);
 
         Ok(Self {
             pk,
@@ -213,8 +217,8 @@ impl TryFrom<Partition> for SpacePoll {
             updated_at: now,
             user_response_count: 0,
             response_editable: false,
-            started_at: now,
-            ended_at: now + 7 * 24 * 60 * 60 * 1000,
+            started_at,
+            ended_at,
             title: String::new(),
             description: String::new(),
             questions: Vec::new(),
