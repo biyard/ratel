@@ -10,10 +10,16 @@ use crate::features::spaces::space_common::types::{
     space_my_score_key, space_page_actions_quiz_key, space_ranking_key,
 };
 
-/// Context signal to open the quiz arena overlay from the action dashboard.
-/// Set to `Some((space_id, quiz_id))` to open, `None` to close.
+/// Generic overlay for prerequisite/action pages (poll + quiz).
+#[derive(Clone, PartialEq)]
+pub enum ActiveActionOverlay {
+    Poll(SpacePartition, SpacePollEntityType),
+    Quiz(SpacePartition, SpaceQuizEntityType),
+}
+
+/// Context signal wrapping the overlay state.
 #[derive(Clone, Copy)]
-pub struct ActiveQuizOverlay(pub Signal<Option<(SpacePartition, SpaceQuizEntityType)>>);
+pub struct ActiveActionOverlaySignal(pub Signal<Option<ActiveActionOverlay>>);
 
 /// Context signal set when a quiz is completed (passed).
 /// Holds the action_id so the dashboard can animate the card into the archive.
@@ -103,7 +109,7 @@ pub fn QuizArenaPage(
         RING_CIRCUMFERENCE - (answered_count() as f64 / total_questions as f64) * RING_CIRCUMFERENCE
     });
 
-    let mut overlay: ActiveQuizOverlay = use_context();
+    let mut overlay: ActiveActionOverlaySignal = use_context();
     let mut completed: CompletedQuizAction = use_context();
 
     let mut close_overlay = move || {
