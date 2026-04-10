@@ -21,7 +21,7 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let space = use_space()();
     let role = use_space_role()();
     let mut active_panel = use_signal(|| ActivePanel::None);
-    let quiz_overlay = use_context_provider(|| ActiveQuizOverlay(Signal::new(None)));
+    let action_overlay = use_context_provider(|| ActiveActionOverlaySignal(Signal::new(None)));
     let _completed_quiz = use_context_provider(|| CompletedQuizAction(Signal::new(None)));
 
     if role.is_admin() {
@@ -112,14 +112,30 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
                 },
             }
         }
-        if let Some((sid, qid)) = quiz_overlay.0() {
-            div {
-                class: "fixed inset-0 z-[100]",
-                "data-testid": "quiz-arena-overlay",
-                SuspenseBoundary {
-                    QuizArenaPage { space_id: sid.clone(), quiz_id: qid.clone() }
+        match action_overlay.0() {
+            Some(ActiveActionOverlay::Quiz(sid, qid)) => rsx! {
+                div {
+                    class: "fixed inset-0 z-[100]",
+                    "data-testid": "quiz-arena-overlay",
+                    SuspenseBoundary {
+                        QuizArenaPage { space_id: sid.clone(), quiz_id: qid.clone() }
+                    }
                 }
-            }
+            },
+            Some(ActiveActionOverlay::Poll(sid, pid)) => rsx! {
+                div {
+                    class: "fixed inset-0 z-[100]",
+                    "data-testid": "poll-arena-overlay",
+                    SuspenseBoundary {
+                        ActionPollViewer {
+                            space_id: sid.clone(),
+                            poll_id: pid.clone(),
+                            can_respond: true,
+                        }
+                    }
+                }
+            },
+            None => rsx! {},
         }
         PopupZone {}
     }
