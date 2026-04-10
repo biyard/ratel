@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Space Viewer — Portal Arena</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Reset ───────────────────────────────────── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-void:        #06060e;
+      --bg-surface:     #0c0c1a;
+      --bg-glass:       rgba(12, 12, 26, 0.65);
+      --bg-glass-hover: rgba(20, 20, 40, 0.80);
+      --accent-gold:    #fcb300;
+      --accent-teal:    #6eedd8;
+      --accent-pink:    #db2780;
+      --text-primary:   #f0f0f5;
+      --text-muted:     #8888a8;
+      --text-dim:       #55556a;
+      --ring-glow:      rgba(252, 179, 0, 0.25);
+      --border-subtle:  rgba(255, 255, 255, 0.06);
+      --font-display:   'Orbitron', sans-serif;
+      --font-body:      'Outfit', sans-serif;
+    }
+
+    /* ── Light theme ────────────────────────────── */
+    [data-theme="light"] {
+      --bg-void:        #f4f3ef;
+      --bg-surface:     #ffffff;
+      --bg-glass:       rgba(255, 255, 255, 0.72);
+      --bg-glass-hover: rgba(255, 255, 255, 0.88);
+      --text-primary:   #12121a;
+      --text-muted:     #6b6b80;
+      --text-dim:       #9999aa;
+      --border-subtle:  rgba(0, 0, 0, 0.08);
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg-void);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      transition: background 0.4s ease, color 0.4s ease;
+    }
+
+    /* ── Full-screen Arena Container ────────────── */
+    .arena {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* ── Animated Background — radial rings ─────── */
+    .arena::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 50%, rgba(252,179,0,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 120% 100% at 50% 120%, rgba(110,237,216,0.04) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, var(--bg-void) 0%, var(--bg-void) 100%);
+      z-index: 0;
+    }
+
+    /* Rotating ring */
+    .arena-ring {
+      position: absolute;
+      width: 700px;
+      height: 700px;
+      border-radius: 50%;
+      border: 1px solid rgba(252,179,0,0.08);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: ring-spin 60s linear infinite;
+      z-index: 0;
+    }
+    .arena-ring:nth-child(2) {
+      width: 520px;
+      height: 520px;
+      border-color: rgba(110,237,216,0.06);
+      animation-duration: 45s;
+      animation-direction: reverse;
+    }
+    .arena-ring:nth-child(3) {
+      width: 340px;
+      height: 340px;
+      border-color: rgba(252,179,0,0.04);
+      animation-duration: 30s;
+    }
+
+    @keyframes ring-spin {
+      from { transform: translate(-50%, -50%) rotate(0deg); }
+      to   { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    /* Floating particles */
+    .particle {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: var(--accent-gold);
+      border-radius: 50%;
+      opacity: 0;
+      animation: particle-float 8s ease-in-out infinite;
+      z-index: 0;
+    }
+    .particle:nth-child(4)  { top: 20%; left: 15%; animation-delay: 0s; }
+    .particle:nth-child(5)  { top: 70%; left: 80%; animation-delay: 2s; }
+    .particle:nth-child(6)  { top: 40%; left: 90%; animation-delay: 4s; width: 3px; height: 3px; background: var(--accent-teal); }
+    .particle:nth-child(7)  { top: 80%; left: 25%; animation-delay: 1s; }
+    .particle:nth-child(8)  { top: 10%; left: 60%; animation-delay: 3s; width: 3px; height: 3px; }
+    .particle:nth-child(9)  { top: 55%; left: 10%; animation-delay: 5s; background: var(--accent-teal); }
+    .particle:nth-child(10) { top: 30%; left: 70%; animation-delay: 6s; }
+    .particle:nth-child(11) { top: 85%; left: 50%; animation-delay: 7s; width: 3px; height: 3px; background: var(--accent-teal); }
+
+    @keyframes particle-float {
+      0%   { opacity: 0; transform: translateY(0) scale(1); }
+      20%  { opacity: 0.8; }
+      80%  { opacity: 0.6; }
+      100% { opacity: 0; transform: translateY(-60px) scale(0.5); }
+    }
+
+    /* ── HUD: Top-right buttons ─────────────────── */
+    .hud-top-right {
+      position: absolute;
+      top: 28px;
+      right: 32px;
+      z-index: 30;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .hud-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--bg-glass);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      position: relative;
+    }
+    .hud-btn:hover {
+      background: var(--bg-glass-hover);
+      border-color: rgba(252,179,0,0.2);
+      box-shadow: 0 0 20px rgba(252,179,0,0.08);
+    }
+    .hud-btn:hover svg { color: var(--accent-gold); }
+    .hud-btn.active {
+      background: rgba(252,179,0,0.12);
+      border-color: rgba(252,179,0,0.3);
+    }
+    .hud-btn.active svg { color: var(--accent-gold); }
+    .hud-btn svg {
+      width: 20px;
+      height: 20px;
+      color: var(--text-muted);
+      transition: color 0.25s ease;
+    }
+    .hud-btn .tooltip {
+      position: absolute;
+      bottom: -32px;
+      right: 0;
+      padding: 4px 10px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-4px);
+      transition: all 0.2s ease;
+    }
+    .hud-btn:hover .tooltip {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── Central Portal ─────────────────────────── */
+    .portal {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      animation: portal-enter 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+      transition: opacity 0.4s ease, transform 0.4s ease, filter 0.4s ease;
+    }
+    .portal.dimmed {
+      opacity: 0.15;
+      transform: scale(0.96);
+      filter: blur(6px);
+      pointer-events: none;
+    }
+
+    @keyframes portal-enter {
+      from { opacity: 0; transform: scale(0.92) translateY(20px); filter: blur(8px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+    }
+
+    /* Space Logo */
+    .portal-logo {
+      width: 96px;
+      height: 96px;
+      border-radius: 24px;
+      object-fit: cover;
+      border: 2px solid rgba(252,179,0,0.15);
+      box-shadow:
+        0 0 40px rgba(252,179,0,0.12),
+        0 0 80px rgba(252,179,0,0.06),
+        0 4px 32px rgba(0,0,0,0.5);
+      margin-bottom: 28px;
+      animation: logo-glow 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes logo-glow {
+      from { box-shadow: 0 0 40px rgba(252,179,0,0.12), 0 0 80px rgba(252,179,0,0.06), 0 4px 32px rgba(0,0,0,0.5); }
+      to   { box-shadow: 0 0 50px rgba(252,179,0,0.18), 0 0 100px rgba(252,179,0,0.08), 0 4px 32px rgba(0,0,0,0.5); }
+    }
+
+    /* Space Title */
+    .portal-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 28px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-primary);
+      text-align: center;
+      margin-bottom: 8px;
+      text-shadow: 0 0 40px rgba(252,179,0,0.15);
+    }
+
+    /* Space Status */
+    .portal-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 14px;
+      border-radius: 100px;
+      background: rgba(110,237,216,0.08);
+      border: 1px solid rgba(110,237,216,0.15);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent-teal);
+      margin-bottom: 40px;
+    }
+    .portal-status::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-teal);
+      box-shadow: 0 0 8px var(--accent-teal);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    /* ── Participate Card (Glass) ───────────────── */
+    .participate-card {
+      width: 380px;
+      padding: 36px 32px 32px;
+      background: var(--bg-glass);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      box-shadow:
+        0 8px 60px rgba(0,0,0,0.4),
+        0 0 80px rgba(252,179,0,0.04),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+      animation: card-float 6s ease-in-out infinite;
+    }
+
+    @keyframes card-float {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-6px); }
+    }
+
+    .participate-card__heading {
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .participate-card__desc {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text-muted);
+      text-align: center;
+      max-width: 300px;
+    }
+
+    .participate-card__stats {
+      display: flex;
+      gap: 32px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border-subtle);
+      border-bottom: 1px solid var(--border-subtle);
+      width: 100%;
+      justify-content: center;
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .stat__value {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .stat__label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    /* ── Primary CTA Button ─────────────────────── */
+    .cta-participate {
+      width: 100%;
+      padding: 14px 24px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent-gold) 0%, #e5a200 100%);
+      color: #0a0a0a;
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 24px rgba(252,179,0,0.25);
+    }
+    .cta-participate:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(252,179,0,0.35);
+    }
+    .cta-participate:active { transform: translateY(0); }
+    .cta-participate::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 60%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+      animation: shine-sweep 3s ease-in-out infinite;
+    }
+    @keyframes shine-sweep {
+      0%   { left: -100%; }
+      50%  { left: 120%; }
+      100% { left: 120%; }
+    }
+
+    /* ── Sign In Button ─────────────────────────── */
+    .cta-signin {
+      width: 100%;
+      padding: 14px 24px;
+      border: 1px solid rgba(252,179,0,0.3);
+      border-radius: 12px;
+      background: transparent;
+      color: var(--accent-gold);
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .cta-signin:hover {
+      background: rgba(252,179,0,0.08);
+      border-color: rgba(252,179,0,0.5);
+      box-shadow: 0 0 24px rgba(252,179,0,0.1);
+      transform: translateY(-2px);
+    }
+    .cta-signin:active { transform: translateY(0); }
+
+    /* ── Author badge ───────────────────────────── */
+    .portal-author {
+      position: absolute;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px 8px 8px;
+      background: var(--bg-glass);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 100px;
+      animation: fade-up 1s 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+      transition: opacity 0.3s ease;
+    }
+    .portal-author.dimmed { opacity: 0.15; pointer-events: none; }
+
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
+    .portal-author__avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid var(--border-subtle);
+    }
+    .portal-author__name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+    .portal-author__label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    /* ── Overview Panel (slides from right) ─────── */
+    .overview-panel {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 480px;
+      height: 100vh;
+      z-index: 25;
+      background: var(--bg-glass);
+      backdrop-filter: blur(32px);
+      -webkit-backdrop-filter: blur(32px);
+      border-left: 1px solid var(--border-subtle);
+      box-shadow: -8px 0 60px rgba(0,0,0,0.4);
+      transform: translateX(100%);
+      transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .overview-panel.open {
+      transform: translateX(0);
+    }
+
+    .overview-panel__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 28px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+    .overview-panel__title {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-primary);
+    }
+    .overview-panel__close {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: var(--text-muted);
+    }
+    .overview-panel__close:hover {
+      background: var(--bg-glass-hover);
+      border-color: rgba(252,179,0,0.2);
+      color: var(--accent-gold);
+    }
+    .overview-panel__close svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .overview-panel__body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Scrollbar styling */
+    .overview-panel__body::-webkit-scrollbar { width: 4px; }
+    .overview-panel__body::-webkit-scrollbar-track { background: transparent; }
+    .overview-panel__body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+    .overview-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .overview-section__label {
+      font-family: var(--font-display);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    .overview-section__content {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--text-muted);
+    }
+    .overview-section__content a {
+      color: var(--accent-gold);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(252,179,0,0.3);
+      transition: border-color 0.2s;
+    }
+    .overview-section__content a:hover {
+      border-color: var(--accent-gold);
+    }
+
+    .overview-tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .overview-tag {
+      padding: 4px 12px;
+      border-radius: 100px;
+      background: rgba(252,179,0,0.06);
+      border: 1px solid rgba(252,179,0,0.12);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent-gold);
+      letter-spacing: 0.05em;
+    }
+
+    .overview-info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .overview-info-card {
+      padding: 16px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .overview-info-card__value {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .overview-info-card__label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    /* ── Settings Panel (slides from right, below overview) ── */
+    .settings-panel {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 360px;
+      height: 100vh;
+      z-index: 25;
+      background: var(--bg-glass);
+      backdrop-filter: blur(32px);
+      -webkit-backdrop-filter: blur(32px);
+      border-left: 1px solid var(--border-subtle);
+      box-shadow: -8px 0 60px rgba(0,0,0,0.4);
+      transform: translateX(100%);
+      transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .settings-panel.open {
+      transform: translateX(0);
+    }
+
+    .settings-panel__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 28px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+    .settings-panel__title {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-primary);
+    }
+    .settings-panel__close {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: var(--text-muted);
+    }
+    .settings-panel__close:hover {
+      background: var(--bg-glass-hover);
+      border-color: rgba(252,179,0,0.2);
+      color: var(--accent-gold);
+    }
+    .settings-panel__close svg { width: 16px; height: 16px; }
+
+    .settings-panel__body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .settings-group {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .settings-group__label {
+      font-family: var(--font-display);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    .settings-options {
+      display: flex;
+      gap: 8px;
+    }
+
+    .settings-opt {
+      flex: 1;
+      padding: 12px 16px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border-subtle);
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .settings-opt:hover {
+      background: rgba(252,179,0,0.04);
+      border-color: rgba(252,179,0,0.15);
+    }
+    .settings-opt.active {
+      background: rgba(252,179,0,0.08);
+      border-color: rgba(252,179,0,0.3);
+      color: var(--accent-gold);
+    }
+    .settings-opt svg {
+      width: 22px;
+      height: 22px;
+    }
+    .settings-opt__icon {
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    /* ── Responsive ─────────────────────────────── */
+    @media (max-width: 500px) {
+      .portal-title {
+        font-size: 20px;
+        letter-spacing: 0.05em;
+      }
+      .portal-logo {
+        width: 72px;
+        height: 72px;
+        border-radius: 18px;
+        margin-bottom: 20px;
+      }
+      .participate-card {
+        width: calc(100vw - 32px);
+        padding: 28px 20px 24px;
+      }
+      .arena-ring { display: none; }
+      .hud-top-right {
+        top: 16px;
+        right: 16px;
+        gap: 8px;
+      }
+      .hud-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+      }
+      .portal-author { bottom: 20px; }
+      .overview-panel { width: 100%; }
+      .settings-panel { width: 100%; }
+    }
+
+    /* ── Toggle State ───────────────────────────── */
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="arena">
+    <!-- Background rings -->
+    <div class="arena-ring"></div>
+    <div class="arena-ring"></div>
+    <div class="arena-ring"></div>
+
+    <!-- Floating particles -->
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+
+    <!-- HUD: Top-right buttons -->
+    <div class="hud-top-right">
+      <button class="hud-btn" id="btn-overview" aria-label="Overview">
+        <!-- Post/document icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <line x1="10" y1="9" x2="8" y2="9"/>
+        </svg>
+        <span class="tooltip">Overview</span>
+      </button>
+
+      <button class="hud-btn" id="btn-settings" aria-label="Settings">
+        <!-- Gear icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        <span class="tooltip">Settings</span>
+      </button>
+    </div>
+
+    <!-- Central Portal -->
+    <div class="portal" id="portal">
+      <img
+        class="portal-logo"
+        src="https://metadata.ratel.foundation/logos/logo-symbol.png"
+        alt="Space logo"
+      />
+      <h1 class="portal-title">Climate Action DAO</h1>
+      <div class="portal-status">Open for Participation</div>
+
+      <!-- Participate Card — logged in viewer -->
+      <div class="participate-card" id="card-participate">
+        <span class="participate-card__heading">Join the Arena</span>
+        <p class="participate-card__desc">
+          Enter this space to vote on proposals, discuss topics, and earn rewards alongside other participants.
+        </p>
+        <div class="participate-card__stats">
+          <div class="stat">
+            <span class="stat__value">142</span>
+            <span class="stat__label">Participants</span>
+          </div>
+          <div class="stat">
+            <span class="stat__value">58</span>
+            <span class="stat__label">Remaining</span>
+          </div>
+          <div class="stat">
+            <span class="stat__value">5K</span>
+            <span class="stat__label">Rewards</span>
+          </div>
+        </div>
+        <button class="cta-participate" id="btn-participate">Participate</button>
+      </div>
+
+      <!-- Sign In Card — not logged in -->
+      <div class="participate-card hidden" id="card-signin">
+        <span class="participate-card__heading">Welcome, Explorer</span>
+        <p class="participate-card__desc">
+          Sign in to participate in this space, vote on proposals, and earn rewards.
+        </p>
+        <div class="participate-card__stats">
+          <div class="stat">
+            <span class="stat__value">142</span>
+            <span class="stat__label">Participants</span>
+          </div>
+          <div class="stat">
+            <span class="stat__value">58</span>
+            <span class="stat__label">Remaining</span>
+          </div>
+          <div class="stat">
+            <span class="stat__value">5K</span>
+            <span class="stat__label">Rewards</span>
+          </div>
+        </div>
+        <button class="cta-signin" id="btn-signin">Sign In</button>
+      </div>
+    </div>
+
+    <!-- Author badge -->
+    <div class="portal-author" id="portal-author">
+      <img
+        class="portal-author__avatar"
+        src="https://metadata.ratel.foundation/ratel/default-profile.png"
+        alt="Author"
+      />
+      <div>
+        <div class="portal-author__name">ClimateDAO Team</div>
+        <div class="portal-author__label">Space Creator</div>
+      </div>
+    </div>
+
+    <!-- ── Overview Panel (slides from right) ──── -->
+    <div class="overview-panel" id="overview-panel">
+      <div class="overview-panel__header">
+        <span class="overview-panel__title">Overview</span>
+        <button class="overview-panel__close" id="overview-close" aria-label="Close overview">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="overview-panel__body">
+        <div class="overview-section">
+          <span class="overview-section__label">About</span>
+          <div class="overview-section__content">
+            A decentralized initiative empowering communities to collectively fund, vote on, and track climate action projects worldwide. Members propose solutions, allocate treasury funds, and measure real-world environmental impact through transparent on-chain governance.
+          </div>
+        </div>
+
+        <div class="overview-section">
+          <span class="overview-section__label">Key Metrics</span>
+          <div class="overview-info-grid">
+            <div class="overview-info-card">
+              <span class="overview-info-card__value">142</span>
+              <span class="overview-info-card__label">Participants</span>
+            </div>
+            <div class="overview-info-card">
+              <span class="overview-info-card__value">58</span>
+              <span class="overview-info-card__label">Spots Left</span>
+            </div>
+            <div class="overview-info-card">
+              <span class="overview-info-card__value">5,000</span>
+              <span class="overview-info-card__label">Reward Pool</span>
+            </div>
+            <div class="overview-info-card">
+              <span class="overview-info-card__value">12</span>
+              <span class="overview-info-card__label">Active Polls</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="overview-section">
+          <span class="overview-section__label">Topics</span>
+          <div class="overview-tag-list">
+            <span class="overview-tag">Renewable Energy</span>
+            <span class="overview-tag">Carbon Credits</span>
+            <span class="overview-tag">Reforestation</span>
+            <span class="overview-tag">Ocean Cleanup</span>
+            <span class="overview-tag">Policy Advocacy</span>
+          </div>
+        </div>
+
+        <div class="overview-section">
+          <span class="overview-section__label">Links</span>
+          <div class="overview-section__content">
+            <a href="#">Official Website</a><br />
+            <a href="#">Discord Community</a><br />
+            <a href="#">Governance Forum</a>
+          </div>
+        </div>
+
+        <div class="overview-section">
+          <span class="overview-section__label">Created by</span>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <img src="https://metadata.ratel.foundation/ratel/default-profile.png" alt="Author" style="width:32px; height:32px; border-radius:50%; border:1px solid var(--border-subtle);" />
+            <div>
+              <div style="font-size:14px; font-weight:500; color:var(--text-primary);">ClimateDAO Team</div>
+              <div style="font-size:11px; color:var(--text-dim); letter-spacing:0.05em;">@climatedao</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Settings Panel (slides from right) ──── -->
+    <div class="settings-panel" id="settings-panel">
+      <div class="settings-panel__header">
+        <span class="settings-panel__title">Settings</span>
+        <button class="settings-panel__close" id="settings-close" aria-label="Close settings">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="settings-panel__body">
+        <!-- Theme -->
+        <div class="settings-group">
+          <span class="settings-group__label">Theme</span>
+          <div class="settings-options">
+            <div class="settings-opt active" data-theme-opt="dark">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+              </svg>
+              Dark
+            </div>
+            <div class="settings-opt" data-theme-opt="light">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
+              </svg>
+              Light
+            </div>
+            <div class="settings-opt" data-theme-opt="system">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+              </svg>
+              System
+            </div>
+          </div>
+        </div>
+
+        <!-- Language -->
+        <div class="settings-group">
+          <span class="settings-group__label">Language</span>
+          <div class="settings-options">
+            <div class="settings-opt active" data-lang-opt="en">
+              <span class="settings-opt__icon">EN</span>
+              English
+            </div>
+            <div class="settings-opt" data-lang-opt="ko">
+              <span class="settings-opt__icon">KO</span>
+              Korean
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── State ──────────────────────────────────
+    let isLoggedIn = true;
+    let overviewOpen = false;
+    let settingsOpen = false;
+
+    const portal        = document.getElementById('portal');
+    const portalAuthor  = document.getElementById('portal-author');
+    const cardPart      = document.getElementById('card-participate');
+    const cardSign      = document.getElementById('card-signin');
+    const overviewPanel = document.getElementById('overview-panel');
+    const settingsPanel = document.getElementById('settings-panel');
+    const btnOverview   = document.getElementById('btn-overview');
+    const btnSettings   = document.getElementById('btn-settings');
+
+    // ── Auth state ────────────────────────────
+    function renderAuth() {
+      if (isLoggedIn) {
+        cardPart.classList.remove('hidden');
+        cardSign.classList.add('hidden');
+      } else {
+        cardPart.classList.add('hidden');
+        cardSign.classList.remove('hidden');
+      }
+    }
+
+    // ── Panel helpers ─────────────────────────
+    function closeAllPanels() {
+      overviewPanel.classList.remove('open');
+      settingsPanel.classList.remove('open');
+      btnOverview.classList.remove('active');
+      btnSettings.classList.remove('active');
+      portal.classList.remove('dimmed');
+      portalAuthor.classList.remove('dimmed');
+      overviewOpen = false;
+      settingsOpen = false;
+    }
+
+    function openPanel(which) {
+      closeAllPanels();
+      if (which === 'overview') {
+        overviewPanel.classList.add('open');
+        btnOverview.classList.add('active');
+        overviewOpen = true;
+      } else if (which === 'settings') {
+        settingsPanel.classList.add('open');
+        btnSettings.classList.add('active');
+        settingsOpen = true;
+      }
+      portal.classList.add('dimmed');
+      portalAuthor.classList.add('dimmed');
+    }
+
+    // ── Overview toggle ───────────────────────
+    btnOverview.addEventListener('click', () => {
+      if (overviewOpen) { closeAllPanels(); }
+      else { openPanel('overview'); }
+    });
+    document.getElementById('overview-close').addEventListener('click', closeAllPanels);
+
+    // ── Settings toggle ───────────────────────
+    btnSettings.addEventListener('click', () => {
+      if (settingsOpen) { closeAllPanels(); }
+      else { openPanel('settings'); }
+    });
+    document.getElementById('settings-close').addEventListener('click', closeAllPanels);
+
+    // ── Theme switching ───────────────────────
+    document.querySelectorAll('[data-theme-opt]').forEach(el => {
+      el.addEventListener('click', () => {
+        const theme = el.dataset.themeOpt;
+        let resolved = theme;
+        if (theme === 'system') {
+          resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.setAttribute('data-theme', resolved);
+
+        // Update active state
+        document.querySelectorAll('[data-theme-opt]').forEach(o => o.classList.remove('active'));
+        el.classList.add('active');
+      });
+    });
+
+    // ── Language switching ─────────────────────
+    document.querySelectorAll('[data-lang-opt]').forEach(el => {
+      el.addEventListener('click', () => {
+        document.querySelectorAll('[data-lang-opt]').forEach(o => o.classList.remove('active'));
+        el.classList.add('active');
+        // In real app: set locale via use_language / translate! system
+      });
+    });
+
+    // ── CTA handlers ──────────────────────────
+    document.getElementById('btn-participate').addEventListener('click', () => {
+      alert('Participation flow opens here');
+    });
+    document.getElementById('btn-signin').addEventListener('click', () => {
+      isLoggedIn = true;
+      renderAuth();
+    });
+
+    // ── Keyboard shortcuts ────────────────────
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeAllPanels();
+      if (e.key === 's' || e.key === 'S') { isLoggedIn = !isLoggedIn; renderAuth(); }
+    });
+
+    renderAuth();
+  </script>
+</body>
+</html>

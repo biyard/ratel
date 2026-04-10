@@ -124,11 +124,6 @@ jobs:
         run: |
           cargo binstall dioxus-cli@0.7.3 --force
 
-      - name: Setup pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@10.15.0 --activate
-
       - name: Building test
         id: build
         env:
@@ -144,7 +139,6 @@ jobs:
           COMMIT: pr-${{ github.sha }}
           ECR: ratel/app-shell
         run: |
-          npm i
           cd app/ratel
           make build-testing
           make docker
@@ -240,6 +234,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+          npm i
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
       - name: Download Docker image artifact

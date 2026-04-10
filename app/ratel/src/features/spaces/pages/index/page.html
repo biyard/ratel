@@ -1,0 +1,198 @@
+<div class="arena" data-testid="space-viewer-arena">
+  <div class="arena-ring"></div>
+  <div class="arena-ring arena-ring--mid"></div>
+  <div class="arena-ring arena-ring--inner"></div>
+
+  <div class="particle"></div>
+  <div class="particle particle--2"></div>
+  <div class="particle particle--3"></div>
+  <div class="particle particle--4"></div>
+  <div class="particle particle--5"></div>
+  <div class="particle particle--6"></div>
+  <div class="particle particle--7"></div>
+  <div class="particle particle--8"></div>
+
+  <div class="hud-top-right">
+    <button class="hud-btn" id="btn-overview" aria-label="Overview" data-testid="btn-overview">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+        <line x1="10" y1="9" x2="8" y2="9"></line>
+      </svg>
+      <span class="tooltip">Overview</span>
+    </button>
+
+    <button class="hud-btn" id="btn-settings" aria-label="Settings" data-testid="btn-settings">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+      </svg>
+      <span class="tooltip">Settings</span>
+    </button>
+  </div>
+
+  <div class="portal" id="portal" data-testid="portal">
+    <img class="portal-logo" id="portal-logo" alt="Space logo" />
+    <h1 class="portal-title" id="portal-title"></h1>
+    <div class="portal-status" id="portal-status"></div>
+
+    <div class="participate-card" id="card-participate" data-testid="card-participate">
+      <span class="participate-card__heading">Join the Arena</span>
+      <p class="participate-card__desc">Enter this space to vote on proposals, discuss topics, and earn rewards alongside other participants.</p>
+      <div class="participate-card__stats">
+        <div class="stat">
+          <span class="stat__value" id="stat-participants"></span>
+          <span class="stat__label">Participants</span>
+        </div>
+        <div class="stat">
+          <span class="stat__value" id="stat-remaining"></span>
+          <span class="stat__label">Remaining</span>
+        </div>
+        <div class="stat">
+          <span class="stat__value" id="stat-rewards"></span>
+          <span class="stat__label">Rewards</span>
+        </div>
+      </div>
+      <button class="cta-participate" id="btn-participate" data-testid="btn-participate">Participate</button>
+    </div>
+
+    <div class="participate-card hidden" id="card-signin" data-testid="card-signin">
+      <span class="participate-card__heading">Welcome, Explorer</span>
+      <p class="participate-card__desc">Sign in to participate in this space, vote on proposals, and earn rewards.</p>
+      <div class="participate-card__stats">
+        <div class="stat">
+          <span class="stat__value" id="stat-participants-2"></span>
+          <span class="stat__label">Participants</span>
+        </div>
+        <div class="stat">
+          <span class="stat__value" id="stat-remaining-2"></span>
+          <span class="stat__label">Remaining</span>
+        </div>
+        <div class="stat">
+          <span class="stat__value" id="stat-rewards-2"></span>
+          <span class="stat__label">Rewards</span>
+        </div>
+      </div>
+      <button class="cta-signin" id="btn-signin" data-testid="btn-signin">Sign In</button>
+    </div>
+  </div>
+
+  <div class="portal-author" id="portal-author">
+    <img class="portal-author__avatar" id="author-avatar" alt="Author" />
+    <div>
+      <div class="portal-author__name" id="author-name"></div>
+      <div class="portal-author__label">Space Creator</div>
+    </div>
+  </div>
+
+  <div class="overview-panel" id="overview-panel" data-testid="overview-panel">
+    <div class="overview-panel__header">
+      <span class="overview-panel__title">Overview</span>
+      <button class="overview-panel__close" id="overview-close" aria-label="Close overview">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    <div class="overview-panel__body">
+      <div class="overview-section">
+        <span class="overview-section__label">About</span>
+        <div class="overview-section__content" id="overview-about"></div>
+      </div>
+      <div class="overview-section">
+        <span class="overview-section__label">Key Metrics</span>
+        <div class="overview-info-grid">
+          <div class="overview-info-card">
+            <span class="overview-info-card__value" id="ov-participants"></span>
+            <span class="overview-info-card__label">Participants</span>
+          </div>
+          <div class="overview-info-card">
+            <span class="overview-info-card__value" id="ov-remaining"></span>
+            <span class="overview-info-card__label">Spots Left</span>
+          </div>
+          <div class="overview-info-card">
+            <span class="overview-info-card__value" id="ov-rewards"></span>
+            <span class="overview-info-card__label">Reward Pool</span>
+          </div>
+          <div class="overview-info-card">
+            <span class="overview-info-card__value" id="ov-likes"></span>
+            <span class="overview-info-card__label">Likes</span>
+          </div>
+        </div>
+      </div>
+      <div class="overview-section">
+        <span class="overview-section__label">Created by</span>
+        <div class="overview-author-row">
+          <img class="overview-author-avatar" id="ov-author-avatar" alt="Author" />
+          <div>
+            <div class="overview-author-name" id="ov-author-name"></div>
+            <div class="overview-author-username" id="ov-author-username"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="settings-panel" id="settings-panel" data-testid="settings-panel">
+    <div class="settings-panel__header">
+      <span class="settings-panel__title">Settings</span>
+      <button class="settings-panel__close" id="settings-close" aria-label="Close settings">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    <div class="settings-panel__body">
+      <div class="settings-group">
+        <span class="settings-group__label">Theme</span>
+        <div class="settings-options">
+          <div class="settings-opt" data-theme-opt="dark" data-testid="theme-dark">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+            </svg>
+            Dark
+          </div>
+          <div class="settings-opt" data-theme-opt="light" data-testid="theme-light">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="4"></circle>
+              <path d="M12 2v2"></path>
+              <path d="M12 20v2"></path>
+              <path d="m4.93 4.93 1.41 1.41"></path>
+              <path d="m17.66 17.66 1.41 1.41"></path>
+              <path d="M2 12h2"></path>
+              <path d="M20 12h2"></path>
+              <path d="m6.34 17.66-1.41 1.41"></path>
+              <path d="m19.07 4.93-1.41 1.41"></path>
+            </svg>
+            Light
+          </div>
+          <div class="settings-opt" data-theme-opt="system" data-testid="theme-system">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+            System
+          </div>
+        </div>
+      </div>
+      <div class="settings-group">
+        <span class="settings-group__label">Language</span>
+        <div class="settings-options">
+          <div class="settings-opt" data-lang-opt="en" data-testid="lang-en">
+            <span class="settings-opt__icon">EN</span>
+            English
+          </div>
+          <div class="settings-opt" data-lang-opt="ko" data-testid="lang-ko">
+            <span class="settings-opt__icon">KO</span>
+            Korean
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
