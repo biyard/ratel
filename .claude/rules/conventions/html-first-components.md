@@ -95,10 +95,12 @@ pub fn MySubComponent(open: bool, on_close: EventHandler<()>) -> Element {
 ```rust
 rsx! {
     document::Link { rel: "stylesheet", href: asset!("./style.css") }
-    document::Script { src: asset!("./script.js") }
+    document::Script { defer: true, src: asset!("./script.js") }
     // ... component RSX
 }
 ```
+
+**Important:** Always use `defer: true` on `document::Script`. Without it, the script runs before the component's DOM elements exist, causing `getElementById` to return null.
 
 ## CSS Dark/Light Theme Colors
 

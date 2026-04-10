@@ -119,4 +119,94 @@ translate! {
         en: "Join the Movement",
         ko: "로그인 및 회원가입",
     },
+
+    verification_heading: {
+        en: "Verification Required",
+        ko: "인증 필요",
+    },
+
+    verification_alert: {
+        en: "Some required attributes are missing",
+        ko: "필수 속성이 부족합니다",
+    },
+
+    required_attributes: {
+        en: "Required Attributes",
+        ko: "필수 속성",
+    },
+
+    verify_credentials: {
+        en: "Verify Credentials",
+        ko: "자격 증명 인증",
+    },
+
+    verification_failed: {
+        en: "Some required attributes are still missing after verification.",
+        ko: "인증 후에도 일부 필수 속성이 부족합니다.",
+    },
+
+    logout: {
+        en: "Log Out",
+        ko: "로그아웃",
+    },
+
+    consent_heading: {
+        en: "Confirm Participation",
+        ko: "참여 확인",
+    },
+
+    consent_desc: {
+        en: "Please review and confirm your consent before joining this space.",
+        ko: "이 스페이스에 참여하기 전에 동의 사항을 확인해 주세요.",
+    },
+
+    consent_label: {
+        en: "I understand and agree to participate in this Space, including sharing the required attributes for verification.",
+        ko: "이 스페이스에 참여하며, 검증에 필요한 속성 공유에 동의합니다.",
+    },
+
+    consent_cancel: {
+        en: "Back",
+        ko: "뒤로",
+    },
+
+    consent_confirm: {
+        en: "Join Space",
+        ko: "스페이스 참여",
+    },
+
+    your_quests: {
+        en: "Your Quests",
+        ko: "나의 퀘스트",
+    },
+
+    quest_progress: {
+        en: "Progress",
+        ko: "진행도",
+    },
+
+    completed: {
+        en: "Completed",
+        ko: "완료됨",
+    },
+
+    no_completed_yet: {
+        en: "No completed quests yet",
+        ko: "아직 완료된 퀘스트가 없습니다",
+    },
+
+    all_quests_done: {
+        en: "All quests completed! Great work.",
+        ko: "모든 퀘스트를 완료했습니다!",
+    },
+
+    required_label: {
+        en: "Required",
+        ko: "필수",
+    },
+
+    start_quest: {
+        en: "Start",
+        ko: "시작",
+    },
 }
