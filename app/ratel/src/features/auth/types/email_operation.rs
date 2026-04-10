@@ -22,6 +22,12 @@ pub enum EmailOperation {
         author_username: String,
         cta_url: String,
     },
+    SpaceStatusNotification {
+        headline: String,
+        body: String,
+        space_title: String,
+        cta_url: String,
+    },
 }
 
 impl Default for EmailOperation {
@@ -43,6 +49,7 @@ impl EmailOperation {
         match self {
             EmailOperation::SignupSecurityCode { .. } => "signup_code",
             EmailOperation::SpaceInviteVerification { .. } => "email_verification",
+            EmailOperation::SpaceStatusNotification { .. } => "space_status_notification",
         }
     }
 }

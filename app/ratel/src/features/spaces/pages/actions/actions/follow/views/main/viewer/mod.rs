@@ -2,7 +2,7 @@ use crate::common::hooks::use_infinite_query;
 use crate::common::query::use_query_store;
 use crate::common::use_toast;
 use crate::features::spaces::pages::actions::actions::follow::components::follow_user_list::i18n::FollowUserListTranslate;
-use crate::features::spaces::pages::actions::actions::follow::components::FollowUserList;
+use crate::features::spaces::pages::actions::actions::follow::components::FollowViewerCards;
 use crate::features::spaces::pages::actions::actions::follow::controllers::{
     follow_user, list_follow_users, unfollow_user,
 };
@@ -78,6 +78,7 @@ pub fn FollowViewerPage(
 
     rsx! {
         FullActionLayover {
+            content_class: "gap-5".to_string(),
             bottom_right: rsx! {
                 Button {
                     style: ButtonStyle::Outline,
@@ -90,11 +91,8 @@ pub fn FollowViewerPage(
                 }
             },
             div { class: "w-full",
-                FollowUserList {
-                    space_id: space_id(),
+                FollowViewerCards {
                     users,
-                    can_delete: false,
-                    on_refresh: on_refresh_list,
                     on_follow,
                     on_unfollow,
                     more_element,
