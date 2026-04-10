@@ -87,8 +87,10 @@ pub async fn list_actions(
     }
 
     // Creators can preview upcoming actions. Other roles only see actions after start time.
+    // Prerequisite actions are always visible regardless of started_at — Candidates need them
+    // during the Open phase before the individual action timer starts.
     let now = crate::common::utils::time::get_now_timestamp_millis();
-    actions.retain(|action| is_visible_for_role(&role, action.started_at, now));
+    actions.retain(|action| action.prerequisite || is_visible_for_role(&role, action.started_at, now));
 
     if !matches!(role, SpaceUserRole::Creator) {
         actions.retain(|action| {
