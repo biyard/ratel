@@ -7,7 +7,7 @@ use crate::spaces::pages::dashboard::SpaceDashboardPage;
 const DEFAULT_LOGO: &str = "https://metadata.ratel.foundation/logos/logo-symbol.png";
 
 #[derive(Clone, Copy, PartialEq, Default)]
-pub(super) enum ActivePanel {
+pub enum ActivePanel {
     #[default]
     None,
     Overview,
