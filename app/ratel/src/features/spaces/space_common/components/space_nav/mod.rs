@@ -50,9 +50,12 @@ pub fn SpaceNav(
             class: "flex z-40 flex-col gap-2.5 justify-between pt-2.5 w-full h-full shrink-0 divide-divider {class} max-tablet:flex-row max-tablet:h-16 max-tablet:items-stretch max-tablet:justify-around max-tablet:sticky max-tablet:bottom-0 max-tablet:bg-space-bg",
             "data-testid": "space-nav-root",
             div { class: "flex flex-col flex-1 gap-2.5 pb-4 w-full",
-                img {
-                    src: "{logo}",
-                    class: "mx-4 mt-5 mb-2.5 w-25 max-tablet:hidden",
+                Link {
+                    to: Route::SpaceDashboardPage {
+                        space_id: space_id.clone(),
+                    },
+                    class: "mx-4 mt-5 mb-2.5 max-tablet:hidden",
+                    img { src: "{logo}", class: "w-25" }
                 }
 
                 div { class: "max-tablet:hidden",

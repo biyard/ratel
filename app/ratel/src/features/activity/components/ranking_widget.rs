@@ -27,7 +27,7 @@ pub fn RankingWidget(space_id: ReadSignal<SpacePartition>) -> Element {
     }
 
     rsx! {
-        Card { variant: CardVariant::Outlined, class: "mx-4 my-2 !py-2.5",
+        Card { variant: CardVariant::Outlined, class: "mx-4 my-2 py-2! px-2!",
             Col { class: "w-full",
 
                 Row {
