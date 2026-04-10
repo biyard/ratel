@@ -1,0 +1,30 @@
+/* ── Quiz Action Card ────────────────────────────── */
+
+.quest-card--quiz.active {
+  border-color: rgba(168,85,247,0.18);
+  box-shadow: 0 12px 60px var(--dark, rgba(0,0,0,0.5)) var(--light, rgba(0,0,0,0.12)), 0 0 40px rgba(168,85,247,0.12);
+}
+
+.quest-quiz-stats {
+  display: flex;
+  gap: 16px;
+}
+.quest-quiz-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.quest-quiz-stat__value {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #a855f7;
+}
+.quest-quiz-stat__label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dark, #55556a) var(--light, #9999aa);
+}
