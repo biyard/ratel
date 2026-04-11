@@ -1,8 +1,9 @@
 use crate::features::spaces::pages::actions::controllers::list_actions;
 use crate::features::spaces::pages::actions::types::{SpaceActionSummary, SpaceActionType};
-use crate::features::spaces::pages::index::action_pages::quiz::CompletedQuizAction;
+use crate::features::spaces::pages::index::action_pages::quiz::CompletedActionCard;
 use crate::features::spaces::pages::index::*;
 use crate::features::spaces::space_common::hooks::use_space;
+use crate::features::spaces::space_common::types::space_page_actions_key;
 
 #[derive(Clone, Copy, PartialEq)]
 pub(super) enum ActionStatus {
@@ -58,9 +59,11 @@ pub(super) fn derive_action_status(action: &SpaceActionSummary) -> ActionStatus 
 #[component]
 pub fn ActionDashboard(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: SpaceViewerTranslate = use_translate();
-    let actions = use_loader(move || async move { list_actions(space_id()).await })?;
-    let actions = actions();
+    let actions_key = space_page_actions_key(&space_id());
+    let actions_loader = use_query(&actions_key, move || list_actions(space_id()))?;
+    let actions = actions_loader();
     let lang = use_language();
+    let mut query = use_query_store();
 
     let active: Vec<_> = actions
         .iter()
@@ -88,16 +91,18 @@ pub fn ActionDashboard(space_id: ReadSignal<SpacePartition>) -> Element {
     };
 
     let mut show_archive = use_signal(|| false);
-    let mut completed_quiz: CompletedQuizAction = use_context();
-    let archive_action_id = completed_quiz.0();
+    let mut completed_action: CompletedActionCard = use_context();
+    let archive_action_id = completed_action.0();
 
-    // Clear completed signal after JS has time to pick it up for animation
+    // After fly animation: clear signal and refresh the actions list
     use_effect(move || {
-        if completed_quiz.0().is_some() {
+        if completed_action.0().is_some() {
+            let actions_key = space_page_actions_key(&space_id());
             spawn(async move {
                 #[cfg(feature = "web")]
                 gloo_timers::future::sleep(std::time::Duration::from_millis(1500)).await;
-                completed_quiz.0.set(None);
+                completed_action.0.set(None);
+                query.invalidate(&actions_key);
             });
         }
     });

@@ -22,7 +22,7 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let role = use_space_role()();
     let mut active_panel = use_signal(|| ActivePanel::None);
     let action_overlay = use_context_provider(|| ActiveActionOverlaySignal(Signal::new(None)));
-    let _completed_quiz = use_context_provider(|| CompletedQuizAction(Signal::new(None)));
+    let _completed_quiz = use_context_provider(|| CompletedActionCard(Signal::new(None)));
 
     if role.is_admin() {
         return rsx! {

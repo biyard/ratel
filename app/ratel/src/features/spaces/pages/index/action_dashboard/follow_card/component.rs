@@ -2,6 +2,7 @@ use crate::features::spaces::pages::actions::actions::follow::controllers::{
     follow_user, list_follow_users, FollowUserItem,
 };
 use crate::features::spaces::pages::actions::types::SpaceActionSummary;
+use crate::features::spaces::pages::index::action_pages::quiz::CompletedActionCard;
 use crate::features::spaces::pages::index::*;
 
 const DEFAULT_PROFILE: &str = "https://metadata.ratel.foundation/ratel/default-profile.png";
@@ -21,6 +22,7 @@ pub fn FollowActionCard(
     let users = users_response.items.clone();
     let total = users.len();
     let followed_count = users.iter().filter(|u| u.subscribed).count();
+    let mut completed_action: CompletedActionCard = use_context();
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
@@ -29,6 +31,7 @@ pub fn FollowActionCard(
             "data-type": "follow",
             "data-prerequisite": action.prerequisite,
             "data-testid": "quest-card-{action.action_id}",
+            "data-credits": "{action.credits}",
 
             svg {
                 class: "quest-card__hero",
@@ -94,15 +97,25 @@ pub fn FollowActionCard(
                 div { class: "quest-card__detail",
                     div { class: "quest-follow-list",
                         for user in users.iter() {
-                            FollowUserRow {
-                                key: "{user.user_pk}",
-                                user: user.clone(),
-                                space_id,
-                                follow_id: follow_id.clone(),
-                                credits_per_follow: if total > 0 { action.credits / total as u64 } else { 0 },
-                                on_followed: move |_| {
-                                    follow_users.restart();
-                                },
+                            {
+                                let action_id = action.action_id.clone();
+                                // After this follow, check if all are now followed
+                                let new_followed = followed_count + 1;
+                                rsx! {
+                                    FollowUserRow {
+                                        key: "{user.user_pk}",
+                                        user: user.clone(),
+                                        space_id,
+                                        follow_id: follow_id.clone(),
+                                        credits_per_follow: if total > 0 { action.credits / total as u64 } else { 0 },
+                                        on_followed: move |_| {
+                                            follow_users.restart();
+                                            if new_followed >= total {
+                                                completed_action.0.set(Some(action_id.clone()));
+                                            }
+                                        },
+                                    }
+                                }
                             }
                         }
                     }

@@ -7,7 +7,7 @@ use crate::features::spaces::pages::index::action_pages::quiz::*;
 use crate::features::spaces::pages::index::*;
 use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
 use crate::features::spaces::space_common::types::{
-    space_my_score_key, space_page_actions_quiz_key, space_ranking_key,
+    space_my_score_key, space_page_actions_key, space_page_actions_quiz_key, space_ranking_key,
 };
 
 /// Generic overlay for prerequisite/action pages (poll + quiz).
@@ -21,10 +21,10 @@ pub enum ActiveActionOverlay {
 #[derive(Clone, Copy)]
 pub struct ActiveActionOverlaySignal(pub Signal<Option<ActiveActionOverlay>>);
 
-/// Context signal set when a quiz is completed (passed).
+/// Context signal set when an action card is completed (quiz passed, all followed, etc.).
 /// Holds the action_id so the dashboard can animate the card into the archive.
 #[derive(Clone, Copy)]
-pub struct CompletedQuizAction(pub Signal<Option<String>>);
+pub struct CompletedActionCard(pub Signal<Option<String>>);
 
 const LETTERS: &[&str] = &["A", "B", "C", "D", "E", "F", "G", "H"];
 const RING_CIRCUMFERENCE: f64 = 2.0 * std::f64::consts::PI * 20.0;
@@ -110,7 +110,7 @@ pub fn QuizArenaPage(
     });
 
     let mut overlay: ActiveActionOverlaySignal = use_context();
-    let mut completed: CompletedQuizAction = use_context();
+    let mut completed: CompletedActionCard = use_context();
 
     let mut close_overlay = move || {
         overlay.0.set(None);
@@ -132,6 +132,8 @@ pub fn QuizArenaPage(
                 query.invalidate(&keys);
                 query.invalidate(&space_ranking_key(&space_id()));
                 query.invalidate(&space_my_score_key(&space_id()));
+                // Invalidate actions list so dashboard refreshes after animation
+                query.invalidate(&space_page_actions_key(&space_id()));
                 toast.info(tr.submit_success);
                 // Signal the dashboard to animate this card into archive
                 completed.0.set(Some(quiz_id().to_string()));
