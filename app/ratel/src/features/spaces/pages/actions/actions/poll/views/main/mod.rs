@@ -33,24 +33,33 @@ pub fn PollActionPage(space_id: SpacePartition, poll_id: SpacePollEntityType) ->
     let edit_mode = use_context_provider(|| ActionEditMode(Signal::new(false)));
     let show_creator_view = !locked || edit_mode.0();
 
-    let content = match role {
-        // Creators always see the configuration/creator UI
-        SpaceUserRole::Creator => rsx! {
+    let content = match (role, show_creator_view) {
+        // Creator before the action starts (or edit mode on): configuration UI
+        (SpaceUserRole::Creator, true) => rsx! {
             PollCreatorPage { space_id, poll_id }
         },
 
-        // Participants and candidates see the gamified viewer
-        SpaceUserRole::Participant | SpaceUserRole::Candidate => rsx! {
+        // Creator after start/end: legacy viewer with submit enabled so they
+        // can still respond. Settings button above toggles edit mode.
+        (SpaceUserRole::Creator, false) => rsx! {
+            PollContent { space_id, poll_id, can_respond: true }
+        },
+
+        // Participants and candidates see the new gamified viewer.
+        (SpaceUserRole::Participant | SpaceUserRole::Candidate, _) => rsx! {
             PollParticipantPage { space_id, poll_id }
         },
 
-        SpaceUserRole::Viewer => rsx! {
+        (SpaceUserRole::Viewer, _) => rsx! {
             PollViewerPage { space_id, poll_id }
         },
     };
 
     rsx! {
         div { class: "flex flex-col flex-1 mx-auto w-full min-h-0",
+            if !show_creator_view {
+                SettingsSwitchButton {}
+            }
             {content}
         }
     }
