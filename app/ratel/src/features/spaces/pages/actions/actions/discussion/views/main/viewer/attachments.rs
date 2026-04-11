@@ -1,5 +1,6 @@
-use crate::features::spaces::pages::actions::actions::discussion::views::main::viewer::DiscussionViewerTranslate;
 use crate::features::spaces::pages::actions::actions::discussion::*;
+use crate::features::spaces::pages::actions::actions::discussion::views::main::viewer::DiscussionViewerTranslate;
+use crate::features::spaces::pages::apps::apps::file::components::FileCard;
 
 #[component]
 pub fn DiscussionAttachments(files: Vec<File>) -> Element {
@@ -9,23 +10,17 @@ pub fn DiscussionAttachments(files: Vec<File>) -> Element {
     }
 
     rsx! {
-        div { class: "disc-files",
-            span { class: "disc-files__label", "{tr.attachments}" }
-            div { class: "disc-files__grid",
+        section { class: "flex flex-col gap-2",
+            h2 { class: "text-xs font-medium tracking-wide uppercase text-foreground-muted",
+                "{tr.attachments}"
+            }
+            div { class: "grid grid-cols-1 gap-2.5 md:grid-cols-2 desktop:grid-cols-3",
                 for file in files.iter() {
-                    a {
-                        class: "file-card",
+                    FileCard {
                         key: "{file.id}",
-                        href: file.url.as_deref().unwrap_or("#"),
-                        target: "_blank",
-                        rel: "noopener noreferrer",
-                        div { class: "file-card__icon",
-                            lucide_dioxus::FileText { class: "w-[18px] h-[18px]" }
-                        }
-                        div { class: "file-card__info",
-                            div { class: "file-card__name", "{file.name}" }
-                            div { class: "file-card__size", "{file.size}" }
-                        }
+                        file: file.clone(),
+                        editable: false,
+                        on_delete: None,
                     }
                 }
             }
