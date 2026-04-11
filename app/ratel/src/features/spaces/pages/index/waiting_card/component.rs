@@ -1,4 +1,4 @@
-use crate::features::spaces::pages::actions::types::{SpaceActionSummary, SpaceActionType};
+use crate::features::spaces::pages::actions::types::SpaceActionSummary;
 use crate::features::spaces::pages::index::*;
 
 #[component]
