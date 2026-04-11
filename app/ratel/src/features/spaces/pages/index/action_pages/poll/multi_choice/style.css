@@ -21,3 +21,18 @@
 .option-multi[data-selected="true"] .option-multi__check svg { opacity: 1; transform: scale(1); }
 .option-multi__label { font-size: 15px; font-weight: 500; color: var(--dark, #f0f0f5) var(--light, #1a1a2e); flex: 1; }
 .option-multi[data-disabled="true"] { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+
+.option-multi__other-input {
+  flex: 1;
+  padding: 6px 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--dark, #f0f0f5) var(--light, #1a1a2e);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+}
+.option-multi__other-input::placeholder {
+  color: var(--dark, #55556a) var(--light, #9999aa);
+}

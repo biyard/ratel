@@ -1,3 +1,9 @@
+use super::checkbox_choice::*;
+use super::dropdown_choice::*;
+use super::linear_scale::*;
+use super::multi_choice::*;
+use super::single_choice::*;
+use super::subjective::*;
 use crate::features::spaces::pages::actions::actions::poll::components::*;
 use crate::features::spaces::pages::actions::actions::poll::controllers::*;
 use crate::features::spaces::pages::actions::actions::poll::*;
@@ -7,14 +13,6 @@ use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
 use crate::features::spaces::space_common::types::{
     space_my_score_key, space_page_actions_key, space_page_actions_poll_key, space_ranking_key,
 };
-use std::collections::HashMap;
-
-use super::single_choice::*;
-use super::multi_choice::*;
-use super::subjective::*;
-use super::linear_scale::*;
-use super::checkbox_choice::*;
-use super::dropdown_choice::*;
 
 translate! {
     ActionPollTranslate;
@@ -42,6 +40,35 @@ translate! {
     already_responded: { en: "You have already participated.", ko: "이미 이 투표에 참여했습니다." },
     no_questions: { en: "No questions yet.", ko: "아직 질문이 없습니다." },
     subjective_placeholder: { en: "Share your thoughts here...", ko: "의견을 자유롭게 작성해 주세요..." },
+    other_placeholder: { en: "Enter your answer...", ko: "기타 응답을 입력하세요..." },
+    questions_label: { en: "Questions", ko: "질문" },
+    credits_label: { en: "Credits", ko: "크레딧" },
+    reward_label: { en: "Reward", ko: "보상" },
+    begin_poll: { en: "Begin Poll", ko: "투표 시작" },
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum PollStep {
+    Overview,
+    Poll,
+}
+
+fn default_poll_answer(question: &Question) -> Answer {
+    match question {
+        Question::SingleChoice(_) => Answer::SingleChoice {
+            answer: None,
+            other: None,
+        },
+        Question::MultipleChoice(_) => Answer::MultipleChoice {
+            answer: None,
+            other: None,
+        },
+        Question::ShortAnswer(_) => Answer::ShortAnswer { answer: None },
+        Question::Subjective(_) => Answer::Subjective { answer: None },
+        Question::Checkbox(_) => Answer::Checkbox { answer: None },
+        Question::Dropdown(_) => Answer::Dropdown { answer: None },
+        Question::LinearScale(_) => Answer::LinearScale { answer: None },
+    }
 }
 
 #[component]
@@ -52,78 +79,87 @@ pub fn ActionPollViewer(
 ) -> Element {
     let tr: ActionPollTranslate = use_translate();
     let mut query = use_query_store();
-    let mut popup = use_popup();
     let mut toast = use_toast();
-    let mut question_index = use_signal(|| 0usize);
-    let key = space_page_actions_poll_key(&space_id(), &poll_id());
-
-    let poll_loader = use_query(&key, { move || get_poll(space_id(), poll_id()) })?;
-    let poll = poll_loader.read().clone();
-    let space = use_space().read().clone();
+    let nav = navigator();
     let role = use_space_role()();
+    let space = use_space()();
+
+    let key = space_page_actions_poll_key(&space_id(), &poll_id());
+    let poll_loader = use_query(&key, move || get_poll(space_id(), poll_id()))?;
+    let poll = poll_loader();
+    let questions = poll.questions.clone();
+    let total = questions.len();
+
     let can_execute_action = crate::features::spaces::pages::actions::can_execute_space_action(
         role,
         poll.space_action.prerequisite,
-        space.status.clone(),
+        space.status,
         space.join_anytime,
     );
-    let nav = navigator();
-    let overlay: Option<ActiveActionOverlaySignal> = try_consume_context();
-
-    let mut answers: Signal<HashMap<usize, Answer>> = use_signal(|| {
-        let mut map = HashMap::new();
-        if let Some(ref my_resp) = poll.my_response {
-            for (i, ans) in my_resp.iter().enumerate() {
-                map.insert(i, ans.clone());
-            }
-        }
-        map
-    });
-    let all_answered = use_memo({
-        let poll = poll.clone();
-        move || {
-            if poll.questions.is_empty() { return false; }
-            let answers_read = answers.read();
-            poll.questions.iter().enumerate()
-                .all(|(idx, q)| has_answer_for_question(q, answers_read.get(&idx)))
-        }
-    });
 
     let is_in_progress = poll.status == PollStatus::InProgress;
     let has_response = poll.my_response.is_some();
     let can_submit = can_respond && can_execute_action && is_in_progress && !has_response;
-    let can_update = can_respond && can_execute_action && is_in_progress && has_response && poll.response_editable;
-    let total = poll.questions.len();
+    let can_update = can_respond
+        && can_execute_action
+        && is_in_progress
+        && has_response
+        && poll.response_editable;
+    let show_submit = can_respond && (can_submit || can_update);
+    let disabled =
+        !can_respond || !can_execute_action || !is_in_progress || (!can_submit && !can_update);
+    let response_editable = poll.response_editable;
+
+    let mut question_index = use_signal(|| 0usize);
+    let mut step = use_signal(|| PollStep::Overview);
+    let mut show_confirm = use_signal(|| false);
+
+    // Pre-fill with defaults so `write()[idx] = ans` never panics even if
+    // `my_response` has fewer entries than current questions.
+    let initial_answers: Vec<Answer> = {
+        let mut base: Vec<Answer> = questions.iter().map(default_poll_answer).collect();
+        if let Some(resp) = poll.my_response.clone() {
+            for (i, ans) in resp.into_iter().enumerate().take(base.len()) {
+                base[i] = ans;
+            }
+        }
+        base
+    };
+    let mut answers = use_signal(|| initial_answers);
+
+    let questions_for_memo = questions.clone();
+    let all_answered = use_memo(move || {
+        if total == 0 {
+            return false;
+        }
+        let ans = answers.read();
+        questions_for_memo
+            .iter()
+            .enumerate()
+            .all(|(i, q)| has_answer_for_question(q, ans.get(i)))
+    });
+
     let current_idx = question_index().min(total.saturating_sub(1));
-    let current_answer = answers.read().get(&current_idx).cloned();
-    let current_question = poll.questions.get(current_idx).cloned();
-    let has_current_answer = current_question
-        .as_ref()
-        .map(|q| has_answer_for_question(q, current_answer.as_ref()))
-        .unwrap_or(false);
     let is_first = total == 0 || current_idx == 0;
     let is_last = total == 0 || current_idx + 1 >= total;
-    let next_disabled = can_submit && !has_current_answer;
-    let show_submit = can_respond && (can_submit || can_update);
-    let disabled = !can_respond || !can_execute_action || !is_in_progress || (!can_submit && !can_update);
-    let progress_pct = if total > 0 { ((current_idx + 1) as f64 / total as f64 * 100.0) as u32 } else { 0 };
+    let progress_pct = if total > 0 {
+        ((current_idx + 1) as f64 / total as f64 * 100.0) as u32
+    } else {
+        0
+    };
 
-    // Hide sidebar
+    // Hide sidebar while overlay is open.
     let layout_ui = crate::features::spaces::layout::use_space_layout_ui();
-    let sidebar_visible = layout_ui.sidebar_visible;
-    use_effect(move || { let mut sv = sidebar_visible; sv.set(false); });
-    use_drop(move || { let mut sv = sidebar_visible; sv.set(true); });
+    let mut sidebar_visible = layout_ui.sidebar_visible;
+    use_effect(move || sidebar_visible.set(false));
+    use_drop(move || sidebar_visible.set(true));
 
-    // Submit handler — Callback is Copy so it can be used in multiple closures
-    let questions_for_submit = poll.questions.clone();
+    let overlay: Option<ActiveActionOverlaySignal> = try_consume_context();
+
     let do_submit = Callback::new(move |_: ()| {
-        let questions = questions_for_submit.clone();
         spawn(async move {
-            let m = answers.read().clone();
-            let payload: Vec<Answer> = (0..questions.len())
-                .map(|i| m.get(&i).cloned().unwrap_or_default())
-                .collect();
-            match respond_poll(space_id(), poll_id(), RespondPollRequest { answers: payload }).await {
+            let req = RespondPollRequest { answers: answers() };
+            match respond_poll(space_id(), poll_id(), req).await {
                 Ok(_) => {
                     query.invalidate(&space_page_actions_poll_key(&space_id(), &poll_id()));
                     query.invalidate(&space_page_actions_key(&space_id()));
@@ -133,16 +169,20 @@ pub fn ActionPollViewer(
                     if let Some(mut ov) = overlay {
                         ov.0.set(None);
                     } else {
-                        nav.replace(crate::Route::SpaceIndexPage { space_id: space_id() });
+                        nav.replace(crate::Route::SpaceIndexPage {
+                            space_id: space_id(),
+                        });
                     }
                 }
-                Err(err) => { toast.error(err); },
+                Err(err) => {
+                    toast.error(err);
+                }
             }
         });
     });
-    let mut show_confirm = use_signal(|| false);
+
     let on_submit = move |_| {
-        if can_submit && !poll.response_editable {
+        if can_submit && !response_editable {
             show_confirm.set(true);
         } else {
             do_submit.call(());
@@ -154,12 +194,18 @@ pub fn ActionPollViewer(
         PollStatus::NotStarted => tr.not_started.to_string(),
         PollStatus::Finish => tr.finished.to_string(),
     };
-
     let status_class = match poll.status {
         PollStatus::InProgress => "poll-header__status",
         PollStatus::NotStarted => "poll-header__status poll-header__status--not-started",
         PollStatus::Finish => "poll-header__status poll-header__status--finished",
     };
+
+    let current_question = questions.get(current_idx).cloned();
+    let has_current_answer = current_question
+        .as_ref()
+        .map(|q| has_answer_for_question(q, answers.read().get(current_idx)))
+        .unwrap_or(false);
+    let next_disabled = can_submit && !has_current_answer;
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
@@ -171,9 +217,13 @@ pub fn ActionPollViewer(
                     button {
                         class: "poll-header__back",
                         onclick: move |_| {
-                            nav.push(crate::Route::SpaceIndexPage {
-                                space_id: space_id(),
-                            });
+                            if let Some(mut ov) = overlay {
+                                ov.0.set(None);
+                            } else {
+                                nav.push(crate::Route::SpaceIndexPage {
+                                    space_id: space_id(),
+                                });
+                            }
                         },
                         svg {
                             xmlns: "http://www.w3.org/2000/svg",
@@ -202,7 +252,7 @@ pub fn ActionPollViewer(
                             }
                             {tr.poll_type}
                         }
-                        span { class: "poll-header__title", {poll.title.clone()} }
+                        span { class: "poll-header__title", "{poll.title}" }
                     }
                 }
                 div { class: "poll-header__right",
@@ -241,8 +291,87 @@ pub fn ActionPollViewer(
                 div { class: "poll-banner poll-banner--info", {tr.already_responded} }
             }
 
-            // ─── Progress ───
-            if total > 0 {
+            // ─── SCREEN 1: Overview ───
+            if step() == PollStep::Overview {
+                div {
+                    class: "poll-overview",
+                    "data-testid": "poll-arena-overview",
+
+                    div { class: "poll-overview-ring",
+                        svg {
+                            class: "poll-overview-ring__svg",
+                            view_box: "0 0 140 140",
+                            circle {
+                                class: "poll-overview-ring__bg",
+                                cx: "70",
+                                cy: "70",
+                                r: "60",
+                            }
+                            circle {
+                                class: "poll-overview-ring__fill",
+                                cx: "70",
+                                cy: "70",
+                                r: "60",
+                                stroke_dasharray: "376.99",
+                                stroke_dashoffset: "0",
+                            }
+                        }
+                        div { class: "poll-overview-ring__center",
+                            span { class: "poll-overview-ring__number", "{total}" }
+                            span { class: "poll-overview-ring__label", {tr.questions_label} }
+                        }
+                    }
+
+                    div { class: "poll-overview-card",
+                        div { class: "poll-overview-card__title", "{poll.title}" }
+                        if !poll.description.is_empty() {
+                            div {
+                                class: "poll-overview-card__desc",
+                                dangerous_inner_html: "{poll.description}",
+                            }
+                        }
+
+                        div { class: "poll-overview-stats",
+                            div { class: "poll-overview-stat",
+                                span { class: "poll-overview-stat__value", "{total}" }
+                                span { class: "poll-overview-stat__label", {tr.questions_label} }
+                            }
+                            if poll.space_action.activity_score > 0 {
+                                div { class: "poll-overview-stat",
+                                    span { class: "poll-overview-stat__value",
+                                        "+{poll.space_action.activity_score}"
+                                    }
+                                    span { class: "poll-overview-stat__label", {tr.reward_label} }
+                                }
+                            }
+                            if poll.space_action.credits > 0 {
+                                div { class: "poll-overview-stat",
+                                    span { class: "poll-overview-stat__value",
+                                        "{poll.space_action.credits}"
+                                    }
+                                    span { class: "poll-overview-stat__label", {tr.credits_label} }
+                                }
+                            }
+                        }
+
+                        button {
+                            class: "poll-begin-btn",
+                            "data-testid": "poll-arena-begin",
+                            // Allow viewing questions even when the poll has ended
+                            // or the user cannot submit — read-only mode.
+                            disabled: total == 0,
+                            onclick: move |_| {
+                                question_index.set(0);
+                                step.set(PollStep::Poll);
+                            },
+                            {tr.begin_poll}
+                        }
+                    }
+                }
+            }
+
+            // ─── Progress (only when step is Poll) ───
+            if step() == PollStep::Poll && total > 0 {
                 div { class: "poll-progress",
                     div { class: "poll-progress__top",
                         span { class: "poll-progress__label", {tr.progress} }
@@ -258,7 +387,10 @@ pub fn ActionPollViewer(
                         for dot_idx in 0..total {
                             {
                                 let is_active = dot_idx == current_idx;
-                                let is_answered = answers.read().contains_key(&dot_idx);
+                                let is_answered = questions
+                                    .get(dot_idx)
+                                    .map(|q| has_answer_for_question(q, answers.read().get(dot_idx)))
+                                    .unwrap_or(false);
                                 rsx! {
                                     span {
                                         key: "dot-{dot_idx}",
@@ -273,18 +405,19 @@ pub fn ActionPollViewer(
                 }
             }
 
-            // ─── Question Card ───
-            if total == 0 {
+            // ─── Question Card (only when step is Poll) ───
+            if step() == PollStep::Poll && total == 0 {
                 div { class: "question-stage",
                     div { class: "question-card",
                         span { class: "question-card__desc", {tr.no_questions} }
                     }
                 }
             }
-            if total > 0 {
+            if step() == PollStep::Poll && total > 0 {
                 {
                     let idx = current_idx;
-                    let question = poll.questions[idx].clone();
+                    let question = questions[idx].clone();
+                    let current_answer = answers.read().get(idx).cloned();
                     let can_next = idx + 1 < total;
                     rsx! {
                         div { key: "poll-q-{idx}", class: "question-stage",
@@ -360,7 +493,7 @@ pub fn ActionPollViewer(
                                             answer: current_answer.clone(),
                                             disabled,
                                             on_change: move |ans: Answer| {
-                                                answers.write().insert(idx, ans.clone());
+                                                answers.write()[idx] = ans.clone();
                                                 if can_submit && can_next && should_auto_next(&question, &ans) {
                                                     question_index.set(idx + 1);
                                                 }
@@ -374,7 +507,7 @@ pub fn ActionPollViewer(
                                             answer: current_answer.clone(),
                                             disabled,
                                             on_change: move |ans: Answer| {
-                                                answers.write().insert(idx, ans);
+                                                answers.write()[idx] = ans;
                                             },
                                         }
                                     },
@@ -386,7 +519,7 @@ pub fn ActionPollViewer(
                                             disabled,
                                             is_short: false,
                                             on_change: move |ans: Answer| {
-                                                answers.write().insert(idx, ans);
+                                                answers.write()[idx] = ans;
                                             },
                                         }
                                     },
@@ -398,7 +531,7 @@ pub fn ActionPollViewer(
                                             disabled,
                                             is_short: true,
                                             on_change: move |ans: Answer| {
-                                                answers.write().insert(idx, ans);
+                                                answers.write()[idx] = ans;
                                             },
                                         }
                                     },
@@ -412,7 +545,7 @@ pub fn ActionPollViewer(
                                                     answer: current_answer.clone(),
                                                     disabled,
                                                     on_change: move |ans: Answer| {
-                                                        answers.write().insert(idx, ans.clone());
+                                                        answers.write()[idx] = ans.clone();
                                                         if can_submit && can_next
                                                             && should_auto_next(&Question::LinearScale(q_auto.clone()), &ans)
                                                         {
@@ -430,7 +563,7 @@ pub fn ActionPollViewer(
                                             answer: current_answer.clone(),
                                             disabled,
                                             on_change: move |ans: Answer| {
-                                                answers.write().insert(idx, ans);
+                                                answers.write()[idx] = ans;
                                             },
                                         }
                                     },
@@ -441,7 +574,7 @@ pub fn ActionPollViewer(
                                             answer: current_answer.clone(),
                                             disabled,
                                             on_change: move |ans: Answer| {
-                                                answers.write().insert(idx, ans);
+                                                answers.write()[idx] = ans;
                                             },
                                         }
                                     },
@@ -453,78 +586,80 @@ pub fn ActionPollViewer(
             }
 
             // ─── Footer ───
-            div { class: "poll-footer",
-                div { class: "poll-footer__nav",
-                    if !is_first && total > 0 {
-                        button {
-                            class: "poll-btn poll-btn--back",
-                            onclick: move |_| {
-                                if current_idx > 0 {
-                                    question_index.set(current_idx - 1);
+            if step() == PollStep::Poll {
+                div { class: "poll-footer",
+                    div { class: "poll-footer__nav",
+                        if !is_first && total > 0 {
+                            button {
+                                class: "poll-btn poll-btn--back",
+                                onclick: move |_| {
+                                    if current_idx > 0 {
+                                        question_index.set(current_idx - 1);
+                                    }
+                                },
+                                svg {
+                                    xmlns: "http://www.w3.org/2000/svg",
+                                    view_box: "0 0 24 24",
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    "stroke-width": "2",
+                                    "stroke-linecap": "round",
+                                    "stroke-linejoin": "round",
+                                    polyline { points: "15 18 9 12 15 6" }
                                 }
-                            },
-                            svg {
-                                xmlns: "http://www.w3.org/2000/svg",
-                                view_box: "0 0 24 24",
-                                fill: "none",
-                                stroke: "currentColor",
-                                "stroke-width": "2",
-                                "stroke-linecap": "round",
-                                "stroke-linejoin": "round",
-                                polyline { points: "15 18 9 12 15 6" }
+                                {tr.btn_back}
                             }
-                            {tr.btn_back}
+                        }
+                    }
+                    div { class: "poll-footer__nav",
+                        if !is_last && total > 0 {
+                            button {
+                                class: "poll-btn poll-btn--next",
+                                disabled: next_disabled,
+                                onclick: move |_| {
+                                    if current_idx + 1 < total {
+                                        question_index.set(current_idx + 1);
+                                    }
+                                },
+                                {tr.btn_next}
+                                svg {
+                                    xmlns: "http://www.w3.org/2000/svg",
+                                    view_box: "0 0 24 24",
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    "stroke-width": "2",
+                                    "stroke-linecap": "round",
+                                    "stroke-linejoin": "round",
+                                    polyline { points: "9 18 15 12 9 6" }
+                                }
+                            }
+                        }
+                        if is_last && show_submit && total > 0 {
+                            button {
+                                class: "poll-btn poll-btn--submit",
+                                "data-testid": "poll-submit",
+                                disabled: !all_answered(),
+                                onclick: on_submit,
+                                if can_update {
+                                    {tr.btn_update}
+                                } else {
+                                    {tr.btn_submit}
+                                }
+                                svg {
+                                    xmlns: "http://www.w3.org/2000/svg",
+                                    view_box: "0 0 24 24",
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    "stroke-width": "2",
+                                    "stroke-linecap": "round",
+                                    "stroke-linejoin": "round",
+                                    polyline { points: "20 6 9 17 4 12" }
+                                }
+                            }
                         }
                     }
                 }
-                div { class: "poll-footer__nav",
-                    if !is_last && total > 0 {
-                        button {
-                            class: "poll-btn poll-btn--next",
-                            disabled: next_disabled,
-                            onclick: move |_| {
-                                if current_idx + 1 < total {
-                                    question_index.set(current_idx + 1);
-                                }
-                            },
-                            {tr.btn_next}
-                            svg {
-                                xmlns: "http://www.w3.org/2000/svg",
-                                view_box: "0 0 24 24",
-                                fill: "none",
-                                stroke: "currentColor",
-                                "stroke-width": "2",
-                                "stroke-linecap": "round",
-                                "stroke-linejoin": "round",
-                                polyline { points: "9 18 15 12 9 6" }
-                            }
-                        }
-                    }
-                    if is_last && show_submit && total > 0 {
-                        button {
-                            class: "poll-btn poll-btn--submit",
-                            "data-testid": "poll-submit",
-                            disabled: !all_answered(),
-                            onclick: on_submit,
-                            if can_update {
-                                {tr.btn_update}
-                            } else {
-                                {tr.btn_submit}
-                            }
-                            svg {
-                                xmlns: "http://www.w3.org/2000/svg",
-                                view_box: "0 0 24 24",
-                                fill: "none",
-                                stroke: "currentColor",
-                                "stroke-width": "2",
-                                "stroke-linecap": "round",
-                                "stroke-linejoin": "round",
-                                polyline { points: "20 6 9 17 4 12" }
-                            }
-                        }
-                    }
-                }
-            }
+            } // end if step == Poll (footer)
 
             // ─── Confirm Modal ───
             if show_confirm() {
