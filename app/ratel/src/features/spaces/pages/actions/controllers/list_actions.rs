@@ -58,11 +58,6 @@ pub async fn list_actions(
             continue;
         }
 
-        // For non-quiz types, only check user_participated when prerequisite is true
-        if !action.prerequisite {
-            continue;
-        }
-
         if let Some(user) = current_user.as_ref() {
             match action.action_type {
                 SpaceActionType::Poll => {

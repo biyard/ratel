@@ -245,6 +245,11 @@ translate! {
         ko: "건너뜀",
     },
 
+    switch_to_creator: {
+        en: "Creator Mode",
+        ko: "관리자 모드",
+    },
+
     leaderboard: {
         en: "Leaderboard",
         ko: "리더보드",

@@ -88,6 +88,9 @@ pub fn SpaceTop(
                         class: "flex flex-row gap-1 justify-center items-center max-tablet:p-0 max-tablet:w-9 max-tablet:h-9 max-tablet:border-0",
                         onclick: move |_| {
                             ctx.toggle_role();
+                            nav.push(Route::SpaceIndexPage {
+                                space_id: ctx.space().id,
+                            });
                         },
                         if can_preview {
                             Eye { class: "w-4 h-4 [&>path]:fill-icon-secondary [&>path]:stroke-icon-secondary [&>circle]:stroke-icon-secondary max-tablet:w-5 max-tablet:h-5 max-tablet:[&>path]:fill-icon-primary max-tablet:[&>path]:stroke-icon-primary max-tablet:[&>circle]:stroke-icon-primary" }

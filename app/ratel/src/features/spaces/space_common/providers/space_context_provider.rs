@@ -47,14 +47,15 @@ impl SpaceContextProvider {
         let role = (self.role)();
 
         match (current_role, role) {
-            (SpaceUserRole::Viewer, SpaceUserRole::Creator) => {
+            (SpaceUserRole::Creator, SpaceUserRole::Creator) => {
+                self.current_role.set(SpaceUserRole::Participant);
+                Ok(())
+            }
+            (_, SpaceUserRole::Creator) => {
                 self.current_role.set(SpaceUserRole::Creator);
                 Ok(())
             }
-            (SpaceUserRole::Creator, SpaceUserRole::Creator) => {
-                self.current_role.set(SpaceUserRole::Viewer);
-                Ok(())
-            }
+
             _ => Err(Error::UnauthorizedAccess),
         }
     }
