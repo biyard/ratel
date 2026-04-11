@@ -7,9 +7,11 @@ mod i18n;
 mod leaderboard_panel;
 mod overview_panel;
 mod participate_card;
+mod prerequisite_card;
 mod settings_panel;
 mod signin_card;
 mod verification_card;
+mod waiting_card;
 
 pub use component::*;
 pub use arena_topbar::*;
@@ -20,8 +22,10 @@ use arena_viewer::*;
 use leaderboard_panel::*;
 use overview_panel::*;
 use participate_card::*;
+use prerequisite_card::*;
 use settings_panel::*;
 use signin_card::*;
 use verification_card::*;
+use waiting_card::*;
 
 use crate::features::spaces::*;

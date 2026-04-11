@@ -164,7 +164,11 @@ pub async fn respond_poll(
         ));
     }
 
-    if poll.status() != PollStatus::InProgress {
+    // Prerequisite polls are available during the Open phase regardless of their
+    // individual started_at timer, but finished polls are never respondable.
+    if poll.status() != PollStatus::InProgress
+        && !(space_action.prerequisite && poll.status() == PollStatus::NotStarted)
+    {
         return Err(Error::BadRequest("Poll is not in progress".into()));
     }
 

@@ -238,4 +238,5 @@
     attributes: true,
     attributeFilter: ["data-archive-action"],
   });
+
 })();

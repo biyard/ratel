@@ -1,10 +1,11 @@
 use crate::features::spaces::pages::actions::actions::poll::components::*;
 use crate::features::spaces::pages::actions::actions::poll::controllers::*;
 use crate::features::spaces::pages::actions::actions::poll::*;
+use crate::features::spaces::pages::index::action_pages::quiz::ActiveActionOverlaySignal;
 use crate::features::spaces::pages::index::*;
 use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
 use crate::features::spaces::space_common::types::{
-    space_my_score_key, space_page_actions_poll_key, space_ranking_key,
+    space_my_score_key, space_page_actions_key, space_page_actions_poll_key, space_ranking_key,
 };
 use std::collections::HashMap;
 
@@ -67,6 +68,7 @@ pub fn ActionPollViewer(
         space.join_anytime,
     );
     let nav = navigator();
+    let overlay: Option<ActiveActionOverlaySignal> = try_consume_context();
 
     let mut answers: Signal<HashMap<usize, Answer>> = use_signal(|| {
         let mut map = HashMap::new();
@@ -124,10 +126,15 @@ pub fn ActionPollViewer(
             match respond_poll(space_id(), poll_id(), RespondPollRequest { answers: payload }).await {
                 Ok(_) => {
                     query.invalidate(&space_page_actions_poll_key(&space_id(), &poll_id()));
+                    query.invalidate(&space_page_actions_key(&space_id()));
                     query.invalidate(&space_ranking_key(&space_id()));
                     query.invalidate(&space_my_score_key(&space_id()));
                     toast.info(tr.submit_success);
-                    nav.replace(crate::Route::SpaceIndexPage { space_id: space_id() });
+                    if let Some(mut ov) = overlay {
+                        ov.0.set(None);
+                    } else {
+                        nav.replace(crate::Route::SpaceIndexPage { space_id: space_id() });
+                    }
                 }
                 Err(err) => { toast.error(err); },
             }
@@ -164,15 +171,31 @@ pub fn ActionPollViewer(
                     button {
                         class: "poll-header__back",
                         onclick: move |_| {
-                            nav.push(crate::Route::SpaceIndexPage { space_id: space_id() });
+                            nav.push(crate::Route::SpaceIndexPage {
+                                space_id: space_id(),
+                            });
                         },
-                        svg { xmlns: "http://www.w3.org/2000/svg", view_box: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round",
+                        svg {
+                            xmlns: "http://www.w3.org/2000/svg",
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            "stroke-width": "2",
+                            "stroke-linecap": "round",
+                            "stroke-linejoin": "round",
                             polyline { points: "15 18 9 12 15 6" }
                         }
                     }
                     div { class: "poll-header__info",
                         span { class: "poll-header__type",
-                            svg { xmlns: "http://www.w3.org/2000/svg", view_box: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round",
+                            svg {
+                                xmlns: "http://www.w3.org/2000/svg",
+                                view_box: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                "stroke-width": "2",
+                                "stroke-linecap": "round",
+                                "stroke-linejoin": "round",
                                 path { d: "M3 3v18h18" }
                                 path { d: "M7 16h4v-6H7z" }
                                 path { d: "M13 16h4V8h-4z" }
@@ -186,7 +209,14 @@ pub fn ActionPollViewer(
                     span { class: "{status_class}", {status_text} }
                     if poll.space_action.activity_score > 0 {
                         span { class: "poll-header__reward",
-                            svg { xmlns: "http://www.w3.org/2000/svg", view_box: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round",
+                            svg {
+                                xmlns: "http://www.w3.org/2000/svg",
+                                view_box: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                "stroke-width": "2",
+                                "stroke-linecap": "round",
+                                "stroke-linejoin": "round",
                                 polygon { points: "12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" }
                             }
                             "+{poll.space_action.activity_score} {tr.pts_suffix}"
@@ -473,6 +503,7 @@ pub fn ActionPollViewer(
                     if is_last && show_submit && total > 0 {
                         button {
                             class: "poll-btn poll-btn--submit",
+                            "data-testid": "poll-submit",
                             disabled: !all_answered(),
                             onclick: on_submit,
                             if can_update {
@@ -549,7 +580,6 @@ pub fn ActionPollViewer(
                 }
             }
         }
-
     }
 }
 
