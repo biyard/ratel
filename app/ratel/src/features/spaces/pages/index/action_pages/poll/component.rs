@@ -43,6 +43,16 @@ translate! {
     no_questions: { en: "No questions yet.", ko: "아직 질문이 없습니다." },
     subjective_placeholder: { en: "Share your thoughts here...", ko: "의견을 자유롭게 작성해 주세요..." },
     other_placeholder: { en: "Enter your answer...", ko: "기타 응답을 입력하세요..." },
+    questions_label: { en: "Questions", ko: "질문" },
+    credits_label: { en: "Credits", ko: "크레딧" },
+    reward_label: { en: "Reward", ko: "보상" },
+    begin_poll: { en: "Begin Poll", ko: "투표 시작" },
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum PollStep {
+    Overview,
+    Poll,
 }
 
 #[component]
@@ -56,6 +66,7 @@ pub fn ActionPollViewer(
     let mut popup = use_popup();
     let mut toast = use_toast();
     let mut question_index = use_signal(|| 0usize);
+    let mut step = use_signal(|| PollStep::Overview);
     let key = space_page_actions_poll_key(&space_id(), &poll_id());
 
     let poll_loader = use_query(&key, { move || get_poll(space_id(), poll_id()) })?;
@@ -172,9 +183,13 @@ pub fn ActionPollViewer(
                     button {
                         class: "poll-header__back",
                         onclick: move |_| {
-                            nav.push(crate::Route::SpaceIndexPage {
-                                space_id: space_id(),
-                            });
+                            if let Some(mut ov) = overlay {
+                                ov.0.set(None);
+                            } else {
+                                nav.push(crate::Route::SpaceIndexPage {
+                                    space_id: space_id(),
+                                });
+                            }
                         },
                         svg {
                             xmlns: "http://www.w3.org/2000/svg",
@@ -242,8 +257,85 @@ pub fn ActionPollViewer(
                 div { class: "poll-banner poll-banner--info", {tr.already_responded} }
             }
 
-            // ─── Progress ───
-            if total > 0 {
+            // ─── SCREEN 1: Overview ───
+            if step() == PollStep::Overview {
+                div {
+                    class: "poll-overview",
+                    "data-testid": "poll-arena-overview",
+
+                    div { class: "poll-overview-ring",
+                        svg {
+                            class: "poll-overview-ring__svg",
+                            view_box: "0 0 140 140",
+                            circle {
+                                class: "poll-overview-ring__bg",
+                                cx: "70",
+                                cy: "70",
+                                r: "60",
+                            }
+                            circle {
+                                class: "poll-overview-ring__fill",
+                                cx: "70",
+                                cy: "70",
+                                r: "60",
+                                stroke_dasharray: "376.99",
+                                stroke_dashoffset: "0",
+                            }
+                        }
+                        div { class: "poll-overview-ring__center",
+                            span { class: "poll-overview-ring__number", "{total}" }
+                            span { class: "poll-overview-ring__label", {tr.questions_label} }
+                        }
+                    }
+
+                    div { class: "poll-overview-card",
+                        div { class: "poll-overview-card__title", "{poll.title}" }
+                        if !poll.description.is_empty() {
+                            div {
+                                class: "poll-overview-card__desc",
+                                dangerous_inner_html: "{poll.description}",
+                            }
+                        }
+
+                        div { class: "poll-overview-stats",
+                            div { class: "poll-overview-stat",
+                                span { class: "poll-overview-stat__value", "{total}" }
+                                span { class: "poll-overview-stat__label", {tr.questions_label} }
+                            }
+                            if poll.space_action.activity_score > 0 {
+                                div { class: "poll-overview-stat",
+                                    span { class: "poll-overview-stat__value",
+                                        "+{poll.space_action.activity_score}"
+                                    }
+                                    span { class: "poll-overview-stat__label", {tr.reward_label} }
+                                }
+                            }
+                            if poll.space_action.credits > 0 {
+                                div { class: "poll-overview-stat",
+                                    span { class: "poll-overview-stat__value",
+                                        "{poll.space_action.credits}"
+                                    }
+                                    span { class: "poll-overview-stat__label", {tr.credits_label} }
+                                }
+                            }
+                        }
+
+                        button {
+                            class: "poll-begin-btn",
+                            "data-testid": "poll-arena-begin",
+                            disabled: total == 0 || (!can_submit && !can_update),
+                            onclick: move |_| {
+                                question_index.set(0);
+                                step.set(PollStep::Poll);
+                            },
+                            {tr.begin_poll}
+                        }
+                    }
+                }
+            }
+
+            // ─── Progress (only when step is Poll) ───
+            if step() == PollStep::Poll && total > 0 {
                 div { class: "poll-progress",
                     div { class: "poll-progress__top",
                         span { class: "poll-progress__label", {tr.progress} }
@@ -274,15 +366,15 @@ pub fn ActionPollViewer(
                 }
             }
 
-            // ─── Question Card ───
-            if total == 0 {
+            // ─── Question Card (only when step is Poll) ───
+            if step() == PollStep::Poll && total == 0 {
                 div { class: "question-stage",
                     div { class: "question-card",
                         span { class: "question-card__desc", {tr.no_questions} }
                     }
                 }
             }
-            if total > 0 {
+            if step() == PollStep::Poll && total > 0 {
                 {
                     let idx = current_idx;
                     let question = poll.questions[idx].clone();
@@ -454,78 +546,80 @@ pub fn ActionPollViewer(
             }
 
             // ─── Footer ───
-            div { class: "poll-footer",
-                div { class: "poll-footer__nav",
-                    if !is_first && total > 0 {
-                        button {
-                            class: "poll-btn poll-btn--back",
-                            onclick: move |_| {
-                                if current_idx > 0 {
-                                    question_index.set(current_idx - 1);
+            if step() == PollStep::Poll {
+                div { class: "poll-footer",
+                    div { class: "poll-footer__nav",
+                        if !is_first && total > 0 {
+                            button {
+                                class: "poll-btn poll-btn--back",
+                                onclick: move |_| {
+                                    if current_idx > 0 {
+                                        question_index.set(current_idx - 1);
+                                    }
+                                },
+                                svg {
+                                    xmlns: "http://www.w3.org/2000/svg",
+                                    view_box: "0 0 24 24",
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    "stroke-width": "2",
+                                    "stroke-linecap": "round",
+                                    "stroke-linejoin": "round",
+                                    polyline { points: "15 18 9 12 15 6" }
                                 }
-                            },
-                            svg {
-                                xmlns: "http://www.w3.org/2000/svg",
-                                view_box: "0 0 24 24",
-                                fill: "none",
-                                stroke: "currentColor",
-                                "stroke-width": "2",
-                                "stroke-linecap": "round",
-                                "stroke-linejoin": "round",
-                                polyline { points: "15 18 9 12 15 6" }
+                                {tr.btn_back}
                             }
-                            {tr.btn_back}
+                        }
+                    }
+                    div { class: "poll-footer__nav",
+                        if !is_last && total > 0 {
+                            button {
+                                class: "poll-btn poll-btn--next",
+                                disabled: next_disabled,
+                                onclick: move |_| {
+                                    if current_idx + 1 < total {
+                                        question_index.set(current_idx + 1);
+                                    }
+                                },
+                                {tr.btn_next}
+                                svg {
+                                    xmlns: "http://www.w3.org/2000/svg",
+                                    view_box: "0 0 24 24",
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    "stroke-width": "2",
+                                    "stroke-linecap": "round",
+                                    "stroke-linejoin": "round",
+                                    polyline { points: "9 18 15 12 9 6" }
+                                }
+                            }
+                        }
+                        if is_last && show_submit && total > 0 {
+                            button {
+                                class: "poll-btn poll-btn--submit",
+                                "data-testid": "poll-submit",
+                                disabled: !all_answered(),
+                                onclick: on_submit,
+                                if can_update {
+                                    {tr.btn_update}
+                                } else {
+                                    {tr.btn_submit}
+                                }
+                                svg {
+                                    xmlns: "http://www.w3.org/2000/svg",
+                                    view_box: "0 0 24 24",
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    "stroke-width": "2",
+                                    "stroke-linecap": "round",
+                                    "stroke-linejoin": "round",
+                                    polyline { points: "20 6 9 17 4 12" }
+                                }
+                            }
                         }
                     }
                 }
-                div { class: "poll-footer__nav",
-                    if !is_last && total > 0 {
-                        button {
-                            class: "poll-btn poll-btn--next",
-                            disabled: next_disabled,
-                            onclick: move |_| {
-                                if current_idx + 1 < total {
-                                    question_index.set(current_idx + 1);
-                                }
-                            },
-                            {tr.btn_next}
-                            svg {
-                                xmlns: "http://www.w3.org/2000/svg",
-                                view_box: "0 0 24 24",
-                                fill: "none",
-                                stroke: "currentColor",
-                                "stroke-width": "2",
-                                "stroke-linecap": "round",
-                                "stroke-linejoin": "round",
-                                polyline { points: "9 18 15 12 9 6" }
-                            }
-                        }
-                    }
-                    if is_last && show_submit && total > 0 {
-                        button {
-                            class: "poll-btn poll-btn--submit",
-                            "data-testid": "poll-submit",
-                            disabled: !all_answered(),
-                            onclick: on_submit,
-                            if can_update {
-                                {tr.btn_update}
-                            } else {
-                                {tr.btn_submit}
-                            }
-                            svg {
-                                xmlns: "http://www.w3.org/2000/svg",
-                                view_box: "0 0 24 24",
-                                fill: "none",
-                                stroke: "currentColor",
-                                "stroke-width": "2",
-                                "stroke-linecap": "round",
-                                "stroke-linejoin": "round",
-                                polyline { points: "20 6 9 17 4 12" }
-                            }
-                        }
-                    }
-                }
-            }
+            } // end if step == Poll (footer)
 
             // ─── Confirm Modal ───
             if show_confirm() {
