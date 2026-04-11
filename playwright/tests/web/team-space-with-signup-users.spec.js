@@ -1,7 +1,6 @@
 import { test, expect } from "@playwright/test";
 import {
   click,
-  clickNoNav,
   fill,
   goto,
   getLocator,
@@ -20,8 +19,8 @@ import {
 //   1.  Creator: Create team + post with space
 //   2.  Creator: Add Discussion, Poll (prerequisite), Quiz, Follow actions
 //   3.  Creator: Publish space publicly
-//   4.  NewUser: Sign up and participate (complete prerequisite poll)
-//   5.  User2: Log in and participate (complete prerequisite poll)
+//   4.  NewUser: Sign up via ArenaViewer, participate + complete prereq poll (overlay)
+//   5.  User2: Log in via ArenaViewer, participate + complete prereq poll (overlay)
 //   6.  Creator: Start the space
 //   7.  Both participants: Complete follow action (follow the team)
 //   8.  Both participants: Complete quiz action
@@ -59,9 +58,8 @@ async function signUpFromSpace(browser, spaceUrl) {
   });
   const page = await context.newPage();
 
-  await goto(page, spaceUrl + "/dashboard");
-  await click(page, { text: "Sign In" });
-  await waitPopup(page, { visible: true });
+  await goto(page, spaceUrl);
+  await click(page, { testId: "btn-signin" });
   await click(page, { text: "Create an account" });
 
   const signupEmail = `e2e_signup_${Date.now()}@biyard.co`;
@@ -91,107 +89,56 @@ async function signUpFromSpace(browser, spaceUrl) {
 
 /**
  * Participate in the space and complete the prerequisite poll.
- * The page should already be on spaceUrl/dashboard as a logged-in user.
  *
- * Updated flow (post-consent-checkbox redesign):
- *   1. Click "Participate" — this no longer calls the /participate API
- *      directly. It opens the "Join Space" layover with the
- *      "See your Difference" step.
- *   2. The required attributes for this space happen to all be
- *      satisfied for the test users, so the layover shows a consent
- *      checkbox + "Join Space" button instead of the
- *      "Improve My Credential" path.
- *   3. Tick the consent checkbox.
- *   4. Click "Join Space" — only now is /participate called.
- *   5. The "Required Actions" layover appears with the prerequisite poll.
+ * Updated flow (arena prerequisite-card redesign):
+ *   1. Navigate to the space root URL (ArenaViewer).
+ *   2. Click "Participate" — this space has no panel requirements so
+ *      the participate call fires directly (no consent modal).
+ *   3. After participation the user becomes a Candidate and sees the
+ *      PrerequisiteCard with the checklist of required actions.
+ *   4. Click the prerequisite poll item — opens a full-screen overlay.
+ *   5. Select a poll option inside the overlay, submit, and confirm.
+ *   6. After the overlay closes the WaitingCard appears (all done).
  */
 async function participateAndCompletePoll(page, spaceUrl, pollOptionText) {
-  await goto(page, spaceUrl + "/dashboard");
+  await goto(page, spaceUrl);
 
-  // Wait for user profile to confirm full hydration before interacting
-  await expect(page.locator("#space-user-profile")).toBeVisible({
-    timeout: 10000,
+  // Click participate button on the ArenaViewer
+  await click(page, { testId: "btn-participate" });
+
+  // PrerequisiteCard appears (no consent modal since no panels configured)
+  await expect(page.getByTestId("card-prerequisite")).toBeVisible({
+    timeout: 30000,
   });
 
-  // Step 1: Click "Participate" to open the Join Space layover. The
-  // WASM onclick handlers may not be attached immediately after goto()
-  // returns (SSR markup is present but Dioxus hydration is still
-  // wiring event listeners), so retry until the layover is actually
-  // open.
-  let layoverOpen = false;
-  for (let attempt = 0; attempt < 3; attempt++) {
-    await click(page, { text: "Participate" });
-    try {
-      await expect(
-        page.getByText("Requirements to Unlock", { exact: true })
-      ).toBeVisible({ timeout: 5000 });
-      layoverOpen = true;
-      break;
-    } catch {
-      // Handler didn't fire — wait briefly for hydration then retry
-      await page.waitForTimeout(2000);
-    }
-  }
-
-  if (!layoverOpen) {
-    throw new Error(
-      "Join Space layover never opened after 3 Participate click attempts"
-    );
-  }
-
-  // Step 2/3: Tick the "I understand and agree…" consent checkbox.
-  // The checkbox carries aria-label="Participation consent checkbox"
-  // (set in `ParticipationAttributesSection`) which is the only
-  // stable selector for the dioxus-primitives Checkbox.
-  await clickNoNav(page, { label: "Participation consent checkbox" });
-
-  // Step 4: Click "Join Space" — this is what actually calls the
-  // /participate API. The text "Join Space" appears twice in the
-  // layover (the header and the submit button), so we target the
-  // button by its `data-testid` via the shared `click` helper to
-  // stay within the playwright-tests convention rules.
-  const participatePromise = page.waitForResponse(
-    (r) => r.url().includes("/participate") && r.request().method() === "POST",
-    { timeout: 15000 }
-  );
-  await clickNoNav(page, { testId: "join-space-confirm" });
-  await participatePromise;
-
-  // Step 5: The "Required Actions" layover appears after the
-  // participate call followed by a list_actions server call, so it
-  // needs a generous timeout (CI can be slow with back-to-back server
-  // calls).
-  await expect(page.getByText("Required Actions", { exact: true })).toBeVisible(
-    { timeout: 30000 }
-  );
-
-  // Click the prerequisite poll (action card shows the poll title)
+  // Click the prerequisite poll item — opens the full-screen poll overlay
   await click(page, { text: "Team Poll: Budget Allocation" });
-  await page.waitForURL(/\/actions\/polls\//, { waitUntil: "load" });
-  // Wait for Dioxus hydration on the poll page before interacting
-  await page.waitForFunction(
-    () => document.querySelector("[data-dioxus-id]") !== null
-  );
 
-  // Wait for poll options to be visible before clicking
-  await expect(page.getByText(pollOptionText, { exact: true })).toBeVisible({
-    timeout: 10000,
+  // Poll overlay appears — wait for poll content (options) to fully load
+  const overlay = page.getByTestId("poll-arena-overlay");
+  await expect(overlay).toBeVisible();
+  await expect(overlay.locator(".option-single").first()).toBeVisible({
+    timeout: 30000,
   });
-  await click(page, { text: pollOptionText });
 
-  // Click Submit — this opens a confirmation popup (response_editable is false
-  // by default, so the poll shows a "Submit response" confirmation dialog).
-  await click(page, { text: "Submit" });
+  // Select the specific poll option inside the overlay
+  await overlay.getByText(pollOptionText, { exact: true }).click();
 
-  // Wait for the confirmation popup to appear, then confirm
-  await expect(
-    page.getByText("Once submitted, this response cannot be edited", {
-      exact: false,
-    })
-  ).toBeVisible({ timeout: 5000 });
-  // Click the "Submit" button inside the confirmation popup
+  // Submit the poll using testId (avoids ambiguity with confirm dialog)
+  await click(page, { testId: "poll-submit" });
+
+  // Confirm dialog appears — click confirm
   await click(page, { testId: "poll-confirm-submit" });
-  await page.waitForLoadState("load");
+
+  // Wait for overlay to close (server call completes + overlay signal cleared)
+  await expect(page.getByTestId("poll-arena-overlay")).toBeHidden({
+    timeout: 30000,
+  });
+
+  // After completing all prerequisites, user should see the WaitingCard
+  await expect(page.getByTestId("card-waiting")).toBeVisible({
+    timeout: 30000,
+  });
 }
 
 // ─── Test suite ─────────────────────────────────────────────────────────────
@@ -421,18 +368,12 @@ test.describe.serial("Space with actions created by a team", () => {
   // ─── 4. NewUser: Sign up and participate ──────────────────────────────────
 
   test("NewUser: Sign up and participate in the space", async ({ browser }) => {
-    const { context, page, displayName } = await signUpFromSpace(
+    const { context, page } = await signUpFromSpace(
       browser,
       spaceUrl
     );
     try {
       await participateAndCompletePoll(page, spaceUrl, "Invest in R&D");
-
-      // Navigate back to dashboard and verify participation
-      await goto(page, spaceUrl + "/dashboard");
-      const userProfile = page.locator("#space-user-profile");
-      await expect(userProfile).toBeVisible();
-      await expect(userProfile).toContainText(displayName);
 
       // Save storage state for reuse
       newUserStoragePath = `e2e-newuser-${Date.now()}.json`;
@@ -453,10 +394,9 @@ test.describe.serial("Space with actions created by a team", () => {
     const page = await context.newPage();
 
     try {
-      // Navigate to space dashboard and log in from there.
-      await goto(page, spaceUrl + "/dashboard");
-      await click(page, { text: "Sign In" });
-      await waitPopup(page, { visible: true });
+      // Navigate to space and log in via the ArenaViewer SigninCard.
+      await goto(page, spaceUrl);
+      await click(page, { testId: "btn-signin" });
       await fill(
         page,
         { placeholder: "Enter your email address" },
@@ -467,18 +407,12 @@ test.describe.serial("Space with actions created by a team", () => {
       await click(page, { text: "Continue" });
       await waitPopup(page, { visible: false });
 
-      // Use the shared helper for robust participation (handles re-navigation,
-      // hydration wait, and retry logic for the Participate click).
+      // Use the shared helper for robust participation.
       await participateAndCompletePoll(
         page,
         spaceUrl,
         "Increase marketing spend"
       );
-
-      // Navigate back to dashboard to verify participation
-      await goto(page, spaceUrl + "/dashboard");
-      const userProfile = page.locator("#space-user-profile");
-      await expect(userProfile).toBeVisible();
 
       // Save storage state for reuse
       user2StoragePath = `e2e-user2-${Date.now()}.json`;
