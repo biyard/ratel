@@ -244,4 +244,54 @@ translate! {
         en: "Skipped",
         ko: "건너뜀",
     },
+
+    leaderboard: {
+        en: "Leaderboard",
+        ko: "리더보드",
+    },
+
+    your_rank: {
+        en: "Your Rank",
+        ko: "내 순위",
+    },
+
+    total_score: {
+        en: "Total Score",
+        ko: "총 점수",
+    },
+
+    poll_label: {
+        en: "Poll",
+        ko: "투표",
+    },
+
+    quiz_label: {
+        en: "Quiz",
+        ko: "퀴즈",
+    },
+
+    discussion_label: {
+        en: "Discussion",
+        ko: "토론",
+    },
+
+    follow_label: {
+        en: "Follow",
+        ko: "팔로우",
+    },
+
+    top_participants: {
+        en: "Top Participants",
+        ko: "상위 참가자",
+    },
+
+    you: {
+        en: "You",
+        ko: "나",
+    },
+
+    no_ranking_yet: {
+        en: "No ranking data yet. Complete actions to earn your place!",
+        ko: "아직 랭킹 데이터가 없습니다. 활동을 완료하여 순위를 올리세요!",
+    },
 }

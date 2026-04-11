@@ -1,4 +1,5 @@
 use super::*;
+use crate::features::spaces::pages::index::action_pages::quiz::*;
 use crate::features::spaces::space_common::hooks::use_space;
 use crate::features::spaces::space_common::hooks::use_space_role;
 use crate::spaces::pages::dashboard::SpaceDashboardPage;
@@ -6,10 +7,11 @@ use crate::spaces::pages::dashboard::SpaceDashboardPage;
 const DEFAULT_LOGO: &str = "https://metadata.ratel.foundation/logos/logo-symbol.png";
 
 #[derive(Clone, Copy, PartialEq, Default)]
-pub(super) enum ActivePanel {
+pub enum ActivePanel {
     #[default]
     None,
     Overview,
+    Leaderboard,
     Settings,
 }
 
@@ -19,6 +21,8 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let space = use_space()();
     let role = use_space_role()();
     let mut active_panel = use_signal(|| ActivePanel::None);
+    let quiz_overlay = use_context_provider(|| ActiveQuizOverlay(Signal::new(None)));
+    let _completed_quiz = use_context_provider(|| CompletedQuizAction(Signal::new(None)));
 
     if role.is_admin() {
         return rsx! {
@@ -47,6 +51,7 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
 
     let dimmed = active_panel() != ActivePanel::None;
     let overview_open = active_panel() == ActivePanel::Overview;
+    let leaderboard_open = active_panel() == ActivePanel::Leaderboard;
     let settings_open = active_panel() == ActivePanel::Settings;
 
     let is_participant = matches!(role, SpaceUserRole::Participant | SpaceUserRole::Candidate);
@@ -92,11 +97,28 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
                 rewards: rewards.clone(),
             }
 
+            LeaderboardPanel {
+                space_id,
+                open: leaderboard_open,
+                on_close: move |_| {
+                    active_panel.set(ActivePanel::None);
+                },
+            }
+
             SettingsPanel {
                 open: settings_open,
                 on_close: move |_| {
                     active_panel.set(ActivePanel::None);
                 },
+            }
+        }
+        if let Some((sid, qid)) = quiz_overlay.0() {
+            div {
+                class: "fixed inset-0 z-[100]",
+                "data-testid": "quiz-arena-overlay",
+                SuspenseBoundary {
+                    QuizArenaPage { space_id: sid.clone(), quiz_id: qid.clone() }
+                }
             }
         }
         PopupZone {}
