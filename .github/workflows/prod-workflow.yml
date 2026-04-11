@@ -350,6 +350,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-shell-lambda-${{ github.sha }}
-          path: ${{ github.workspace }}/app-shell.tar.gz
+          path: ${{ github.workspace }}/app-shell-lambda.tar.gz
           if-no-files-found: error
           retention-days: 7
