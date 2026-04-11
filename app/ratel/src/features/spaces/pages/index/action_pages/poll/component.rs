@@ -42,6 +42,7 @@ translate! {
     already_responded: { en: "You have already participated.", ko: "이미 이 투표에 참여했습니다." },
     no_questions: { en: "No questions yet.", ko: "아직 질문이 없습니다." },
     subjective_placeholder: { en: "Share your thoughts here...", ko: "의견을 자유롭게 작성해 주세요..." },
+    other_placeholder: { en: "Enter your answer...", ko: "기타 응답을 입력하세요..." },
 }
 
 #[component]
