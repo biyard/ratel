@@ -62,45 +62,37 @@ pub fn PrerequisiteCard(space_id: ReadSignal<SpacePartition>) -> Element {
                                 onclick: {
                                     let action = action.clone();
                                     move |_| {
-                                        if !is_done {
-                                            match action.action_type {
-                                                SpaceActionType::Poll => {
-
-                    // Type icon
-
-                    // Info
-
-                    // Status
-
-
-
-
-                                                    let poll_id: SpacePollEntityType = action
-                                                        .action_id
-                                                        .clone()
-                                                        .into();
-                                                    overlay
-                                                        .0
-                                                        .set(Some(ActiveActionOverlay::Poll(space_id(), poll_id)));
-                                                }
-                                                SpaceActionType::Quiz => {
-                                                    let quiz_id: SpaceQuizEntityType = action
-                                                        .action_id
-                                                        .clone()
-                                                        .into();
-                                                    overlay
-                                                        .0
-                                                        .set(Some(ActiveActionOverlay::Quiz(space_id(), quiz_id)));
-                                                }
-                                                SpaceActionType::TopicDiscussion => {
-                                                    let route = action.get_url(&space_id());
-                                                    nav.push(route);
-                                                }
-                                                SpaceActionType::Follow => {
-                                                    let route = action.get_url(&space_id());
-                                                    nav.push(route);
-                                                }
+                                        match action.action_type {
+                                            // Poll is always clickable — the poll page handles
+                                            // response editability internally.
+                                            SpaceActionType::Poll => {
+                                                let poll_id: SpacePollEntityType = action
+                                                    .action_id
+                                                    .clone()
+                                                    .into();
+                                                overlay
+                                                    .0
+                                                    .set(Some(ActiveActionOverlay::Poll(space_id(), poll_id)));
                                             }
+                                            // Others stay gated by is_done.
+                                            SpaceActionType::Quiz if !is_done => {
+                                                let quiz_id: SpaceQuizEntityType = action
+                                                    .action_id
+                                                    .clone()
+                                                    .into();
+                                                overlay
+                                                    .0
+                                                    .set(Some(ActiveActionOverlay::Quiz(space_id(), quiz_id)));
+                                            }
+                                            SpaceActionType::TopicDiscussion if !is_done => {
+                                                let route = action.get_url(&space_id());
+                                                nav.push(route);
+                                            }
+                                            SpaceActionType::Follow if !is_done => {
+                                                let route = action.get_url(&space_id());
+                                                nav.push(route);
+                                            }
+                                            _ => {}
                                         }
                                     }
                                 },
