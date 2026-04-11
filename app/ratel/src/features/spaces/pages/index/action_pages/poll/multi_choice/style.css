@@ -1,0 +1,23 @@
+.options-multi { display: flex; flex-direction: column; gap: 10px; }
+.option-multi {
+  display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 12px;
+  background: var(--dark, rgba(255,255,255,0.02)) var(--light, rgba(0,0,0,0.02));
+  border: 1px solid var(--dark, rgba(255,255,255,0.08)) var(--light, rgba(0,0,0,0.08));
+  cursor: pointer; transition: all 0.25s ease;
+}
+.option-multi:hover { background: rgba(129,140,248,0.04); border-color: rgba(129,140,248,0.2); }
+.option-multi[data-selected="true"] {
+  background: var(--dark, rgba(99,102,241,0.15)) var(--light, rgba(99,102,241,0.08));
+  border-color: var(--dark, rgba(99,102,241,0.5)) var(--light, rgba(99,102,241,0.4));
+  box-shadow: 0 0 20px rgba(129,140,248,0.12);
+}
+.option-multi__checkbox {
+  width: 20px; height: 20px; border-radius: 6px;
+  border: 2px solid var(--dark, rgba(255,255,255,0.08)) var(--light, rgba(0,0,0,0.08));
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.25s;
+}
+.option-multi[data-selected="true"] .option-multi__checkbox { border-color: #818cf8; background: #818cf8; }
+.option-multi__check svg { width: 12px; height: 12px; color: #fff; opacity: 0; transform: scale(0); transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1); }
+.option-multi[data-selected="true"] .option-multi__check svg { opacity: 1; transform: scale(1); }
+.option-multi__label { font-size: 15px; font-weight: 500; color: var(--dark, #f0f0f5) var(--light, #1a1a2e); flex: 1; }
+.option-multi[data-disabled="true"] { opacity: 0.5; cursor: not-allowed; pointer-events: none; }

@@ -828,6 +828,12 @@ a {
   --color-action-preview-submit-bg: var(--dark, rgba(37, 99, 235, 0.2)) var(--light, rgba(37, 99, 235, 0.1));
 }
 
+/* Poll viewer card entrance animation */
+@keyframes card-enter {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 /* =============================================================
    Headings
    ========================================================== */
