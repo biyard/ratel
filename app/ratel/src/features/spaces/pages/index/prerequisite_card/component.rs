@@ -4,13 +4,11 @@ use crate::features::spaces::pages::index::action_pages::quiz::{
     ActiveActionOverlay, ActiveActionOverlaySignal,
 };
 use crate::features::spaces::pages::index::*;
-use crate::features::spaces::space_common::hooks::use_space;
 
 #[component]
 pub fn PrerequisiteCard(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: SpaceViewerTranslate = use_translate();
     let lang = use_language();
-    let space = use_space()();
     let nav = use_navigator();
     let mut overlay: ActiveActionOverlaySignal = use_context();
 
@@ -68,11 +66,15 @@ pub fn PrerequisiteCard(space_id: ReadSignal<SpacePartition>) -> Element {
                                             match action.action_type {
                                                 SpaceActionType::Poll => {
 
-                                                    // Type icon
+                    // Type icon
 
-                                                    // Info
+                    // Info
 
-                                                    // Status
+                    // Status
+
+
+
+
                                                     let poll_id: SpacePollEntityType = action
                                                         .action_id
                                                         .clone()
