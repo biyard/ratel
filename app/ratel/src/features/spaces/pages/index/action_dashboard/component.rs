@@ -27,7 +27,7 @@ pub(super) fn derive_action_status(action: &SpaceActionSummary) -> ActionStatus 
             }
         }
         SpaceActionType::TopicDiscussion => {
-            if action.user_participated {
+            if ended && action.user_participated {
                 ActionStatus::Completed
             } else if ended {
                 ActionStatus::Skipped
