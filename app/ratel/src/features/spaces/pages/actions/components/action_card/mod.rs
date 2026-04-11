@@ -129,11 +129,13 @@ pub fn ActionCard(
             onclick: {
                 move |_| {
                     if role != SpaceUserRole::Creator {
-                        let enable_action = matches!(status, ActionStatus::Ongoing)
-                            && action.prerequisite;
-
+                        let space_status = space().status;
+                        let enable_action = action.prerequisite
+                            && matches!(
+                                space_status,
+                                Some(SpaceStatus::Open | SpaceStatus::Ongoing)
+                            );
                         if !enable_action {
-                            let space_status = space().status;
                             if !matches!(space_status, Some(SpaceStatus::Ongoing)) {
                                 toast.error(crate::common::Error::SpaceNotStarted);
                                 return;
@@ -175,7 +177,7 @@ pub fn ActionCard(
                     }
                 }
 
-                div { class: "flex items-center gap-2 max-mobile:self-end",
+                div { class: "flex gap-2 items-center max-mobile:self-end",
                     if let Some(period) = period {
                         span { class: "font-medium text-[0.75rem]/[1rem] text-neutral-500",
                             {period}
@@ -195,9 +197,9 @@ pub fn ActionCard(
                         button {
                             r#type: "button",
                             "aria-label": tr.delete_action,
-                            class: "inline-flex h-8 w-8 items-center justify-center text-neutral-500 transition-colors duration-150 hover:text-neutral-200 light:hover:text-neutral-700",
+                            class: "inline-flex justify-center items-center w-8 h-8 transition-colors duration-150 text-neutral-500 light:hover:text-neutral-700 hover:text-neutral-200",
                             onclick: on_delete_click,
-                            icons::edit::Delete2 { class: "h-4 w-4 [&>path]:stroke-current [&>path]:fill-none" }
+                            icons::edit::Delete2 { class: "w-4 h-4 [&>path]:stroke-current [&>path]:fill-none" }
                         }
                     }
                 }

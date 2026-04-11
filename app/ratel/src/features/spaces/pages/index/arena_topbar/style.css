@@ -60,6 +60,19 @@
 }
 .hud-btn:hover .tooltip { opacity: 1; transform: translateY(0); }
 
+/* ── Creator Switch Button ───────────────────────── */
+
+.hud-btn--creator {
+  border-color: rgba(252,179,0,0.25);
+  background: var(--dark, rgba(252,179,0,0.08)) var(--light, rgba(252,179,0,0.06));
+}
+.hud-btn--creator svg { color: #fcb300; }
+.hud-btn--creator:hover {
+  border-color: rgba(252,179,0,0.4);
+  background: var(--dark, rgba(252,179,0,0.15)) var(--light, rgba(252,179,0,0.12));
+  box-shadow: 0 0 20px rgba(252,179,0,0.12);
+}
+
 /* ── Responsive ──────────────────────────────────── */
 
 @media (max-width: 500px) {

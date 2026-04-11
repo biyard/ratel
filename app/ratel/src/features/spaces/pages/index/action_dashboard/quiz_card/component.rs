@@ -1,5 +1,5 @@
 use crate::features::spaces::pages::actions::types::SpaceActionSummary;
-use crate::features::spaces::pages::index::action_pages::quiz::ActiveQuizOverlay;
+use crate::features::spaces::pages::index::action_pages::quiz::{ActiveActionOverlay, ActiveActionOverlaySignal};
 use crate::features::spaces::pages::index::*;
 
 #[component]
@@ -9,7 +9,7 @@ pub fn QuizActionCard(
 ) -> Element {
     let tr: SpaceViewerTranslate = use_translate();
     let lang = use_language();
-    let mut overlay: ActiveQuizOverlay = use_context();
+    let mut overlay: ActiveActionOverlaySignal = use_context();
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
@@ -21,7 +21,7 @@ pub fn QuizActionCard(
             "data-credits": "{action.credits}",
             onclick: move |_| {
                 let quiz_id: SpaceQuizEntityType = action.action_id.clone().into();
-                overlay.0.set(Some((space_id(), quiz_id)));
+                overlay.0.set(Some(ActiveActionOverlay::Quiz(space_id(), quiz_id)));
             },
 
             svg {

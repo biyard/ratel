@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { click, fill, goto, getLocator, getEditor, waitPopup } from "../utils";
 
 // This test requires the backend to be built with --features bypass
@@ -482,12 +482,11 @@ test.describe
     const page = await context.newPage();
 
     try {
-      // Navigate to the published space
-      await goto(page, spaceUrl + "/dashboard");
+      // Navigate to the published space (ArenaViewer at root URL)
+      await goto(page, spaceUrl);
 
-      // Click Sign In on the space sidebar
-      await click(page, { text: "Sign In" });
-      await waitPopup(page, { visible: true });
+      // Click Sign In on the ArenaViewer's SigninCard
+      await click(page, { testId: "btn-signin" });
 
       // Switch to signup
       await click(page, { text: "Create an account" });
@@ -509,6 +508,9 @@ test.describe
         "000000",
       );
       await click(page, { text: "Verify" });
+      await expect(page.getByText("Send", { exact: true })).toBeHidden({
+        timeout: 10000,
+      });
 
       // Fill password
       await fill(page, { placeholder: "Enter your password" }, "Test!234");
@@ -532,68 +534,56 @@ test.describe
       await waitPopup(page, { visible: false });
 
       // Reload the space page as logged-in user
-      await goto(page, spaceUrl + "/dashboard");
+      await goto(page, spaceUrl);
 
-      // Click Participate button
-      await click(page, { text: "Participate" });
+      // Click Participate button on the ArenaViewer
+      await click(page, { testId: "btn-participate" });
 
-      // The participation flow may show:
-      // 1. "Required Actions" layover (if prerequisite actions exist)
-      // 2. "Your Attributes is a Partial Match" (if KYC attributes needed)
-      // 3. "Match Required Attributes" (KYC verification step)
-      //
-      // Since Age and Gender panels are configured, the user will need to
-      // verify attributes. In a test environment without PortOne, we verify
-      // the flow reaches the attribute matching step.
+      // Since Age and Gender panels are configured (collective type),
+      // the ConsentModal appears. Collective panels collect self-declared
+      // demographics during consent — no credential verification needed.
+      await expect(page.getByTestId("card-consent")).toBeVisible();
+      await page.locator('input[type="checkbox"]').check();
+      await click(page, { testId: "btn-consent-confirm" });
 
-      // Check if "Required Actions" layover appears (prerequisite poll)
-      const requiredActions = page.getByText("Required Actions");
-      if ((await requiredActions.count()) > 0) {
-        // The prerequisite poll should be listed
-        await click(page, {
-          text: "How should the budget be allocated?",
-        });
+      // Wait for consent modal to disappear (server call + role transition)
+      await expect(page.getByTestId("card-consent")).toBeHidden({
+        timeout: 15000,
+      });
 
-        // Wait for poll page
-        await page.waitForURL(/\/actions\/polls\//, {
-          waitUntil: "load",
-        });
+      // PrerequisiteCard appears with the checklist
+      await expect(page.getByTestId("card-prerequisite")).toBeVisible({
+        timeout: 30000,
+      });
 
-        // Answer the poll
-        await click(page, { text: "Marketing" });
-        await click(page, { text: "Submit" });
-        await page.waitForLoadState("load");
+      // Click the prerequisite poll item — opens the full-screen poll overlay
+      await click(page, { text: "Prerequisite Poll: Budget Allocation" });
 
-        // Navigate back to dashboard
-        await goto(page, spaceUrl + "/dashboard");
+      // Poll overlay appears — wait for poll content (options) to fully load
+      const overlay = page.getByTestId("poll-arena-overlay");
+      await expect(overlay).toBeVisible();
+      await expect(overlay.locator(".option-single").first()).toBeVisible({
+        timeout: 30000,
+      });
 
-        // Try to participate again after completing prerequisite
-        await click(page, { text: "Participate" });
-      }
+      // Select the first poll option inside the overlay
+      await overlay.locator(".option-single").first().click();
 
-      // At this point, the user may see attribute matching requirements
-      // since Age and Gender panels are configured. Verify the UI shows
-      // the verification section.
-      const partialMatch = page.getByText("Your Attributes is a Partial Match");
-      const matchAttributes = page.getByText("Match Required Attributes");
+      // Submit the poll using testId
+      await click(page, { testId: "poll-submit" });
 
-      // Verify that the participation flow acknowledges panel requirements
-      const hasPartialMatch = (await partialMatch.count()) > 0;
-      const hasMatchAttributes = (await matchAttributes.count()) > 0;
+      // Confirm dialog appears — click confirm
+      await click(page, { testId: "poll-confirm-submit" });
 
-      if (hasPartialMatch) {
-        // User sees attribute requirements — click to improve credential
-        await click(page, { text: "Improve My Credential" });
-        // Should see "Match Required Attributes" verification page
-        await getLocator(page, { role: "heading", text: "Match Required Attributes" });
-      } else if (hasMatchAttributes) {
-        // Already on the verification page
-        await getLocator(page, { text: "Choose a verification method" });
-      }
+      // Wait for overlay to close
+      await expect(page.getByTestId("poll-arena-overlay")).toBeHidden({
+        timeout: 30000,
+      });
 
-      // KYC verification via PortOne is not available in test environment.
-      // We verify that the flow correctly reaches the verification step,
-      // confirming that panel attributes (Age + Gender) are enforced.
+      // After completing all prerequisites, user should see the WaitingCard
+      await expect(page.getByTestId("card-waiting")).toBeVisible({
+        timeout: 30000,
+      });
     } finally {
       await context.close();
     }
