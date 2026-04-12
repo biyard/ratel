@@ -66,7 +66,7 @@ export async function fill(page, opt, value) {
 
 export async function getLocator(
   page,
-  { placeholder, text, role, label, testId }
+  { placeholder, text, role, label, testId },
 ) {
   let selected;
 
@@ -123,7 +123,7 @@ export async function goto(page, url) {
   // Wait for Dioxus WASM to hydrate — SSR markup already contains
   // [data-dioxus-id], so also verify the interpreter is initialised.
   await page.waitForFunction(
-    () => document.querySelector("[data-dioxus-id]") !== null
+    () => document.querySelector("[data-dioxus-id]") !== null,
   );
 }
 

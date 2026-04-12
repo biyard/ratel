@@ -36,7 +36,7 @@ pub struct SpaceAction {
 #[cfg(feature = "server")]
 impl SpaceAction {
     pub fn default_schedule(now: i64) -> (i64, i64) {
-        let started_at = now + 60 * 60 * 1000;
+        let started_at = now;
         let ended_at = started_at + 7 * 24 * 60 * 60 * 1000;
         (started_at, ended_at)
     }

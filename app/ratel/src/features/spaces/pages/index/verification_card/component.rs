@@ -12,7 +12,6 @@ pub fn VerificationCard(
     let mut error_message = use_signal(|| Option::<String>::None);
     let mut toast = use_toast();
     let user_ctx = crate::features::auth::hooks::use_user_context();
-    let mut query = use_query_store();
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
@@ -115,7 +114,7 @@ pub fn VerificationCard(
             button {
                 class: "cta-verify",
                 "data-testid": "btn-verify",
-                onclick: move |_| {
+                onclick: move |_| async move {
                     #[cfg(not(feature = "server"))]
                     {
                         let conf = crate::features::social::pages::credentials::config::get();
@@ -123,49 +122,39 @@ pub fn VerificationCard(
                         let channel_key = conf.portone.inicis_channel_key.to_string();
                         let prefix = user_ctx().user_id().unwrap_or_default();
                         let verification_failed_msg = tr.verification_failed.to_string();
-
-                        spawn(async move {
-                            match crate::features::social::pages::credentials::interop::verify_identity(
-                                    &store_id,
-                                    &channel_key,
-                                    &prefix,
-                                )
-                                .await
-                            {
-                                Ok(_) => {
-                                    let panel_requirements_key = vec![
-                                        "Space".to_string(),
-                                        space_id().to_string(),
-                                        "PanelRequirements".to_string(),
-                                    ];
-                                    query.invalidate(&panel_requirements_key);
-
-                                    match crate::features::spaces::controllers::panel_requirements::get_panel_requirements(
-                                            space_id(),
-                                        )
-                                        .await
-                                    {
-                                        Ok(next_requirements) => {
-                                            let all_satisfied = next_requirements
-                                                .iter()
-                                                .all(|r| r.satisfied);
-                                            if all_satisfied {
-                                                error_message.set(None);
-                                                on_verified.call(next_requirements);
-                                            } else {
-                                                error_message.set(Some(verification_failed_msg));
-                                            }
-                                        }
-                                        Err(err) => {
-                                            toast.error(err);
+                        match crate::features::social::pages::credentials::interop::verify_identity(
+                                &store_id,
+                                &channel_key,
+                                &prefix,
+                            )
+                            .await
+                        {
+                            Ok(_) => {
+                                match crate::features::spaces::controllers::panel_requirements::get_panel_requirements(
+                                        space_id(),
+                                    )
+                                    .await
+                                {
+                                    Ok(next_requirements) => {
+                                        let all_satisfied = next_requirements
+                                            .iter()
+                                            .all(|r| r.satisfied);
+                                        if all_satisfied {
+                                            error_message.set(None);
+                                            on_verified.call(next_requirements);
+                                        } else {
+                                            error_message.set(Some(verification_failed_msg));
                                         }
                                     }
-                                }
-                                Err(err) => {
-                                    toast.error(err);
+                                    Err(err) => {
+                                        toast.error(err);
+                                    }
                                 }
                             }
-                        });
+                            Err(err) => {
+                                toast.error(err);
+                            }
+                        }
                     }
                 },
                 "{tr.verify_credentials}"

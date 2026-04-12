@@ -61,8 +61,8 @@ Follow these steps strictly in order. Do NOT skip steps.
 
 1. Make the planned changes
 2. After implementation, run build verification:
-   - `cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev dx check --features web` for frontend changes
-   - `cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev dx check --features server` for server changes
+   - `cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev RUSTFLAGS='-D warnings' dx check --features web` for frontend changes
+   - `cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev RUSTFLAGS='-D warnings' dx check --features server` for server changes
    - `cd packages/main-api && cargo check` for API changes
 3. Fix any compilation errors before proceeding
 
