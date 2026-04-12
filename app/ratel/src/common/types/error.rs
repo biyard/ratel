@@ -330,6 +330,116 @@ pub enum Error {
     #[error("{0}")]
     #[translate(from)]
     Activity(#[from] crate::features::activity::types::ActivityError),
+
+    // Unit variants for common errors
+    #[error("Internal error")]
+    #[translate(
+        en = "An unexpected error occurred",
+        ko = "예기치 않은 오류가 발생했습니다."
+    )]
+    Internal,
+
+    #[error("Unsupported operation")]
+    #[translate(
+        en = "This operation is not supported",
+        ko = "지원되지 않는 작업입니다."
+    )]
+    UnsupportedOperation,
+
+    #[error("Missing space ID")]
+    #[translate(en = "Space ID is required", ko = "스페이스 ID가 필요합니다.")]
+    MissingSpaceId,
+
+    #[error("Invalid format")]
+    #[translate(en = "Invalid data format", ko = "잘못된 데이터 형식입니다.")]
+    InvalidFormat,
+
+    #[error("Invalid team context")]
+    #[translate(
+        en = "Invalid team context",
+        ko = "유효하지 않은 팀 컨텍스트입니다."
+    )]
+    InvalidTeamContext,
+
+    #[error("User not found in context")]
+    #[translate(en = "User not found", ko = "사용자를 찾을 수 없습니다.")]
+    UserNotFoundInContext,
+
+    #[error("Space role check failed")]
+    #[translate(
+        en = "Authorization check failed",
+        ko = "권한 확인에 실패했습니다."
+    )]
+    SpaceUserRoleFailed,
+
+    // Feature-specific error enums
+    #[error("{0}")]
+    #[translate(from)]
+    Auth(#[from] crate::features::auth::types::AuthError),
+
+    #[error("{0}")]
+    #[translate(from)]
+    Post(#[from] crate::features::posts::types::PostError),
+
+    #[error("{0}")]
+    #[translate(from)]
+    Social(#[from] crate::features::social::types::SocialError),
+
+    #[error("{0}")]
+    #[translate(from)]
+    MembershipPayment(
+        #[from] crate::features::membership::types::MembershipPaymentError,
+    ),
+
+    #[error("{0}")]
+    #[translate(from)]
+    Timeline(#[from] crate::features::timeline::types::TimelineError),
+
+    #[error("{0}")]
+    #[translate(from)]
+    Admin(#[from] crate::features::admin::types::AdminError),
+
+    #[error("{0}")]
+    #[translate(from)]
+    Service(#[from] crate::common::services::ServiceError),
+
+    #[error("{0}")]
+    #[translate(from)]
+    Infra(#[from] crate::common::utils::InfraError),
+
+    #[error("{0}")]
+    #[translate(from)]
+    FileUpload(#[from] crate::common::components::file_uploader::FileUploadError),
+
+    #[error("{0}")]
+    #[translate(from)]
+    SpaceAction(
+        #[from] crate::features::spaces::pages::actions::types::SpaceActionError,
+    ),
+
+    #[error("{0}")]
+    #[translate(from)]
+    SpacePoll(
+        #[from]
+        crate::features::spaces::pages::actions::actions::poll::types::SpacePollError,
+    ),
+
+    #[error("{0}")]
+    #[translate(from)]
+    SpaceFollow(
+        #[from]
+        crate::features::spaces::pages::actions::actions::follow::types::SpaceFollowError,
+    ),
+
+    #[error("{0}")]
+    #[translate(from)]
+    SpaceApp(#[from] crate::features::spaces::pages::apps::types::SpaceAppError),
+
+    #[error("{0}")]
+    #[translate(from)]
+    SpaceReport(
+        #[from] crate::features::spaces::pages::report::types::SpaceReportError,
+    ),
 }
 
 #[cfg(feature = "server")]
@@ -364,7 +474,9 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
         use bdk::prelude::axum::response::IntoResponse;
 
         let status = match &self {
-            Error::UnauthorizedAccess | Error::NoSessionFound => StatusCode::UNAUTHORIZED,
+            Error::UnauthorizedAccess
+            | Error::NoSessionFound
+            | Error::UserNotFoundInContext => StatusCode::UNAUTHORIZED,
             Error::InvalidPartitionKey(_)
             | Error::NotSupported(_)
             | Error::InvalidBookmark
@@ -375,7 +487,11 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             | Error::LackOfVerifiedAttributes
             | Error::FullQuota
             | Error::AlreadyParticipating
-            | Error::ParticipationNotOpen => StatusCode::BAD_REQUEST,
+            | Error::ParticipationNotOpen
+            | Error::UnsupportedOperation
+            | Error::MissingSpaceId
+            | Error::InvalidFormat
+            | Error::InvalidTeamContext => StatusCode::BAD_REQUEST,
             Error::NotFound(_) | Error::InvitationNotFound => StatusCode::NOT_FOUND,
             Error::Follow(e) => e.status_code(),
             Error::SpaceReward(e) => e.status_code(),
@@ -387,6 +503,20 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             Error::SpaceStatusChange(e) => e.status_code(),
             Error::AiModerator(e) => e.status_code(),
             Error::Activity(e) => e.status_code(),
+            Error::Auth(e) => e.status_code(),
+            Error::Post(e) => e.status_code(),
+            Error::Social(e) => e.status_code(),
+            Error::MembershipPayment(e) => e.status_code(),
+            Error::Timeline(e) => e.status_code(),
+            Error::Admin(e) => e.status_code(),
+            Error::Service(e) => e.status_code(),
+            Error::Infra(e) => e.status_code(),
+            Error::FileUpload(e) => e.status_code(),
+            Error::SpaceAction(e) => e.status_code(),
+            Error::SpacePoll(e) => e.status_code(),
+            Error::SpaceFollow(e) => e.status_code(),
+            Error::SpaceApp(e) => e.status_code(),
+            Error::SpaceReport(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
@@ -412,7 +542,10 @@ impl From<serde_dynamo::Error> for Error {
 impl From<Error> for rmcp::ErrorData {
     fn from(e: Error) -> Self {
         match &e {
-            Error::UnauthorizedAccess | Error::NoSessionFound | Error::Unauthorized(_) => {
+            Error::UnauthorizedAccess
+            | Error::NoSessionFound
+            | Error::Unauthorized(_)
+            | Error::UserNotFoundInContext => {
                 rmcp::ErrorData::invalid_request(e.to_string(), None)
             }
             Error::NotFound(_) | Error::InvitationNotFound | Error::SpaceNotFound => {
@@ -422,7 +555,13 @@ impl From<Error> for rmcp::ErrorData {
             | Error::Duplicate(_)
             | Error::NoPermission
             | Error::InvalidPartitionKey(_)
-            | Error::McpServer(_) => rmcp::ErrorData::invalid_params(e.to_string(), None),
+            | Error::McpServer(_)
+            | Error::UnsupportedOperation
+            | Error::MissingSpaceId
+            | Error::InvalidFormat
+            | Error::InvalidTeamContext => {
+                rmcp::ErrorData::invalid_params(e.to_string(), None)
+            }
             _ => {
                 tracing::error!("MCP internal error: {e}");
                 rmcp::ErrorData::internal_error(
@@ -445,9 +584,10 @@ impl dioxus::fullstack::AsStatusCode for Error {
     fn as_status_code(&self) -> bdk::prelude::axum::http::StatusCode {
         use bdk::prelude::axum::http::StatusCode;
         match self {
-            Error::UnauthorizedAccess | Error::NoSessionFound | Error::Unauthorized(_) => {
-                StatusCode::UNAUTHORIZED
-            }
+            Error::UnauthorizedAccess
+            | Error::NoSessionFound
+            | Error::Unauthorized(_)
+            | Error::UserNotFoundInContext => StatusCode::UNAUTHORIZED,
             Error::InvalidPartitionKey(_)
             | Error::NotSupported(_)
             | Error::InvalidBookmark
@@ -464,7 +604,11 @@ impl dioxus::fullstack::AsStatusCode for Error {
             | Error::SendSmsFailed(_)
             | Error::NotFoundVerificationCode
             | Error::ExpiredVerification
-            | Error::InvalidVerificationCode => StatusCode::BAD_REQUEST,
+            | Error::InvalidVerificationCode
+            | Error::UnsupportedOperation
+            | Error::MissingSpaceId
+            | Error::InvalidFormat
+            | Error::InvalidTeamContext => StatusCode::BAD_REQUEST,
             Error::NotFound(_) | Error::InvitationNotFound => StatusCode::NOT_FOUND,
             Error::Follow(e) => e.status_code(),
             Error::SpaceReward(e) => e.status_code(),
@@ -475,6 +619,20 @@ impl dioxus::fullstack::AsStatusCode for Error {
             Error::Member(e) => e.status_code(),
             Error::AiModerator(e) => e.status_code(),
             Error::Activity(e) => e.status_code(),
+            Error::Auth(e) => e.status_code(),
+            Error::Post(e) => e.status_code(),
+            Error::Social(e) => e.status_code(),
+            Error::MembershipPayment(e) => e.status_code(),
+            Error::Timeline(e) => e.status_code(),
+            Error::Admin(e) => e.status_code(),
+            Error::Service(e) => e.status_code(),
+            Error::Infra(e) => e.status_code(),
+            Error::FileUpload(e) => e.status_code(),
+            Error::SpaceAction(e) => e.status_code(),
+            Error::SpacePoll(e) => e.status_code(),
+            Error::SpaceFollow(e) => e.status_code(),
+            Error::SpaceApp(e) => e.status_code(),
+            Error::SpaceReport(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

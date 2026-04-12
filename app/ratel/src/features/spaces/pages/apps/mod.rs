@@ -5,7 +5,7 @@ mod hooks;
 mod layout;
 mod menu;
 mod models;
-mod types;
+pub mod types;
 mod views;
 
 use context::*;

@@ -3,6 +3,7 @@ mod config;
 pub mod controllers;
 mod menu;
 pub mod models;
+pub mod types;
 pub mod utils;
 mod views;
 

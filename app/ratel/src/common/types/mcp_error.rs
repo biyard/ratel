@@ -47,13 +47,20 @@ pub enum McpServerError {
     #[error("Deprecated operation")]
     #[translate(en = "This operation is deprecated", ko = "이 작업은 더 이상 지원되지 않습니다.")]
     DeprecatedOperation,
+
+    #[error("Oneshot routing failed")]
+    #[translate(en = "Internal routing failed", ko = "내부 라우팅에 실패했습니다.")]
+    OneshotRoutingFailed,
 }
 
 #[cfg(feature = "server")]
 impl McpServerError {
     pub fn status_code(&self) -> bdk::prelude::axum::http::StatusCode {
         use bdk::prelude::axum::http::StatusCode;
-        StatusCode::BAD_REQUEST
+        match self {
+            McpServerError::OneshotRoutingFailed => StatusCode::INTERNAL_SERVER_ERROR,
+            _ => StatusCode::BAD_REQUEST,
+        }
     }
 }
 

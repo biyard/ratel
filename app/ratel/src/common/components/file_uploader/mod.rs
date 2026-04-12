@@ -1,3 +1,6 @@
+mod error;
+pub use error::FileUploadError;
+
 #[cfg(feature = "web")]
 use crate::common::{
     controllers::AssetPresignedUris, wasm_bindgen, wasm_bindgen_futures, web_sys, Error,
