@@ -190,10 +190,7 @@ fn ConsentModal(
                             .is_ok()
                         {
                             on_joined.call(());
-                            ctx.space.restart();
-                            if let Ok(new_role) = get_user_role(space_id()).await {
-                                ctx.current_role.set(new_role);
-                            }
+                            ctx.restart();
                         }
                     },
                     "{tr.consent_confirm}"
