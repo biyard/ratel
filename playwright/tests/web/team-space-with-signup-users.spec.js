@@ -677,26 +677,83 @@ test.describe.serial("Space with actions created by a team", () => {
     // in the comment textarea ("Share your thoughts..."), and clicks "Post".
 
     const comments = [
-      { user: "creator", text: "Welcome to the governance discussion. Let's explore how we can improve decision-making." },
-      { user: "newUser", text: "I think transparency should be our top priority in any governance model." },
-      { user: "user2", text: "Agreed on transparency. But we also need to consider efficiency." },
-      { user: "creator", text: "Good points. Let's consider a delegated voting system as a middle ground." },
-      { user: "newUser", text: "Delegated voting sounds promising. How do we prevent vote concentration?" },
-      { user: "user2", text: "We could implement term limits for delegates and require periodic re-delegation." },
-      { user: "creator", text: "Both proposals have merit. Let's think about implementation costs." },
-      { user: "newUser", text: "Smart contracts could automate the delegation and term limit logic." },
-      { user: "user2", text: "We should also consider gas costs. A layer-2 solution might be necessary." },
-      { user: "creator", text: "Excellent technical considerations. Let me summarize the key proposals." },
-      { user: "newUser", text: "I'd suggest we look at quadratic voting as an alternative." },
-      { user: "user2", text: "Quadratic voting is interesting but complex. We need good UX design." },
-      { user: "creator", text: "UX is critical. We should test with a small group before full deployment." },
+      {
+        user: "creator",
+        text: "Welcome to the governance discussion. Let's explore how we can improve decision-making.",
+      },
+      {
+        user: "newUser",
+        text: "I think transparency should be our top priority in any governance model.",
+      },
+      {
+        user: "user2",
+        text: "Agreed on transparency. But we also need to consider efficiency.",
+      },
+      {
+        user: "creator",
+        text: "Good points. Let's consider a delegated voting system as a middle ground.",
+      },
+      {
+        user: "newUser",
+        text: "Delegated voting sounds promising. How do we prevent vote concentration?",
+      },
+      {
+        user: "user2",
+        text: "We could implement term limits for delegates and require periodic re-delegation.",
+      },
+      {
+        user: "creator",
+        text: "Both proposals have merit. Let's think about implementation costs.",
+      },
+      {
+        user: "newUser",
+        text: "Smart contracts could automate the delegation and term limit logic.",
+      },
+      {
+        user: "user2",
+        text: "We should also consider gas costs. A layer-2 solution might be necessary.",
+      },
+      {
+        user: "creator",
+        text: "Excellent technical considerations. Let me summarize the key proposals.",
+      },
+      {
+        user: "newUser",
+        text: "I'd suggest we look at quadratic voting as an alternative.",
+      },
+      {
+        user: "user2",
+        text: "Quadratic voting is interesting but complex. We need good UX design.",
+      },
+      {
+        user: "creator",
+        text: "UX is critical. We should test with a small group before full deployment.",
+      },
       { user: "newUser", text: "I volunteer to be part of the testing group." },
-      { user: "user2", text: "Count me in. We could run a pilot governance vote on a non-critical decision." },
-      { user: "creator", text: "Let's plan the pilot for next month. I'll create a timeline proposal." },
-      { user: "newUser", text: "For the pilot, I suggest we vote on the community event theme." },
-      { user: "user2", text: "Great idea. We should document the entire process." },
-      { user: "creator", text: "Agreed on documentation. Thank you both for the productive discussion!" },
-      { user: "newUser", text: "Thank you for moderating! Looking forward to the pilot vote." },
+      {
+        user: "user2",
+        text: "Count me in. We could run a pilot governance vote on a non-critical decision.",
+      },
+      {
+        user: "creator",
+        text: "Let's plan the pilot for next month. I'll create a timeline proposal.",
+      },
+      {
+        user: "newUser",
+        text: "For the pilot, I suggest we vote on the community event theme.",
+      },
+      {
+        user: "user2",
+        text: "Great idea. We should document the entire process.",
+      },
+      {
+        user: "creator",
+        text: "Agreed on documentation. Thank you both for the productive discussion!",
+      },
+      {
+        user: "newUser",
+        text: "Thank you for moderating! Looking forward to the pilot vote.",
+      },
     ];
 
     // Helper: open discussion overlay from the ActionDashboard carousel
@@ -704,6 +761,7 @@ test.describe.serial("Space with actions created by a team", () => {
       await goto(pg, spaceUrl);
       const discCard = pg.locator('[data-type="discuss"]').first();
       await expect(discCard).toBeVisible({ timeout: 10000 });
+      await pg.waitForTimeout(500);
       await discCard.click();
       await expect(pg.getByTestId("discussion-arena-overlay")).toBeVisible({
         timeout: 10000,
@@ -717,7 +775,9 @@ test.describe.serial("Space with actions created by a team", () => {
       await textarea.fill(text);
       await pg.locator(".comment-input__submit").click();
       // Wait for the comment to appear
-      await expect(pg.locator(".comment-item__text", { hasText: text })).toBeVisible({
+      await expect(
+        pg.locator(".comment-item__text", { hasText: text }),
+      ).toBeVisible({
         timeout: 10000,
       });
     }
@@ -747,7 +807,9 @@ test.describe.serial("Space with actions created by a team", () => {
           await openDiscussionOverlay(userPage);
           await postComment(userPage, c.text);
           await clickNoNav(userPage, { testId: "discussion-arena-back" });
-          await expect(userPage.getByTestId("discussion-arena-overlay")).toBeHidden({
+          await expect(
+            userPage.getByTestId("discussion-arena-overlay"),
+          ).toBeHidden({
             timeout: 10000,
           });
         }
@@ -770,7 +832,9 @@ test.describe.serial("Space with actions created by a team", () => {
           await openDiscussionOverlay(userPage);
           await postComment(userPage, c.text);
           await clickNoNav(userPage, { testId: "discussion-arena-back" });
-          await expect(userPage.getByTestId("discussion-arena-overlay")).toBeHidden({
+          await expect(
+            userPage.getByTestId("discussion-arena-overlay"),
+          ).toBeHidden({
             timeout: 10000,
           });
         }
