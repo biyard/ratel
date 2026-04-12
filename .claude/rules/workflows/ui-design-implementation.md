@@ -121,7 +121,7 @@ dx fmt -f <file>.rs
 ## Step 11: Verify Build
 
 ```bash
-cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev dx check --web --features web
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev RUSTFLAGS='-D warnings' dx check --web --features web
 ```
 
 - **References**: conventions/build-commands.md

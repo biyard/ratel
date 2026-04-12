@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { click, fill, goto, getLocator, getEditor, waitPopup } from "../utils";
+import { click, clickNoNav, fill, goto, getLocator, getEditor, waitPopup } from "../utils";
 import { CONFIGS } from "../config";
 
 /**
@@ -143,11 +143,8 @@ test.describe.serial("Space publish and invitation (event-driven notification)",
     try {
       await goto(page, spaceUrl + "/dashboard");
 
-      // Verify the dashboard page loaded
-      await getLocator(page, { text: "Dashboard" });
-
-      // An anonymous user should see the "Sign In" button on the space page
-      await getLocator(page, { text: "Sign In" });
+      // Verify the dashboard page loaded — check for dashboard content
+      await expect(page.getByText("Space Views")).toBeVisible({ timeout: 10000 });
     } finally {
       await context.close();
     }
@@ -176,11 +173,15 @@ test.describe.serial("Space publish and invitation (event-driven notification)",
     const page = await context.newPage();
 
     try {
-      // Navigate to the published space
-      await goto(page, spaceUrl + "/dashboard");
+      // Navigate to the published space (ArenaViewer)
+      await goto(page, spaceUrl);
+      // Pause card-float animation so Playwright clicks don't miss
+      await page.addStyleTag({
+        content: "*, *::before, *::after { animation-play-state: paused !important; }",
+      });
 
-      // Click Sign In on the space sidebar
-      await click(page, { text: "Sign In" });
+      // Click Sign In on the ArenaViewer's SigninCard
+      await clickNoNav(page, { testId: "btn-signin" });
       await waitPopup(page, { visible: true });
 
       // Switch to signup modal

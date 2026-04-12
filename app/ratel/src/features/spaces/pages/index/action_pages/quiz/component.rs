@@ -10,11 +10,12 @@ use crate::features::spaces::space_common::types::{
     space_my_score_key, space_page_actions_key, space_page_actions_quiz_key, space_ranking_key,
 };
 
-/// Generic overlay for prerequisite/action pages (poll + quiz).
+/// Generic overlay for prerequisite/action pages (poll + quiz + discussion).
 #[derive(Clone, PartialEq)]
 pub enum ActiveActionOverlay {
     Poll(SpacePartition, SpacePollEntityType),
     Quiz(SpacePartition, SpaceQuizEntityType),
+    Discussion(SpacePartition, SpacePostEntityType),
 }
 
 /// Context signal wrapping the overlay state.

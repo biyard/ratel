@@ -61,6 +61,9 @@ pub mod stream_handler;
 #[cfg(all(feature = "server", feature = "local-dev"))]
 pub mod stream_poller;
 
+#[cfg(all(feature = "server", feature = "local-dev"))]
+pub mod design_preview;
+
 #[cfg(feature = "server")]
 pub mod mcp;
 #[cfg(feature = "server")]

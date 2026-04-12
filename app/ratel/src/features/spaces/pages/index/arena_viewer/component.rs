@@ -49,10 +49,7 @@ pub fn ArenaViewer(
     let panel_requirements = ctx.panel_requirements();
     let has_unsatisfied = panel_requirements.iter().any(|r| !r.satisfied);
     let has_requirements = !panel_requirements.is_empty();
-    // Only require identity verification for non-collective (verifiable) attributes.
-    // Collective panels collect self-declared demographics during consent, not credential verification.
-    let needs_verification =
-        has_requirements && panel_requirements.iter().any(|r| !r.satisfied && !r.collective);
+    let needs_verification = has_requirements && has_unsatisfied;
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }

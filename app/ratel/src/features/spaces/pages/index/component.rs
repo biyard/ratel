@@ -135,6 +135,13 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
                     }
                 }
             },
+            Some(ActiveActionOverlay::Discussion(sid, did)) => rsx! {
+                div { class: "fixed inset-0 z-[100]", "data-testid": "discussion-arena-overlay",
+                    SuspenseBoundary {
+                        DiscussionArenaPage { space_id: sid.clone(), discussion_id: did.clone() }
+                    }
+                }
+            },
             None => rsx! {},
         }
         PopupZone {}
