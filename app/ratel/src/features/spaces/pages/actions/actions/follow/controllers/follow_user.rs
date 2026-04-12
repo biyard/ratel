@@ -3,6 +3,7 @@ use crate::common::models::space::SpaceCommon;
 use crate::features::posts::models::Team;
 use crate::features::spaces::pages::actions::actions::follow::models::SpaceFollowUser;
 use crate::features::spaces::pages::actions::actions::follow::*;
+use crate::features::spaces::pages::actions::actions::follow::types::SpaceFollowError;
 #[cfg(feature = "server")]
 use crate::features::spaces::space_common::models::space_reward::SpaceReward;
 
@@ -26,7 +27,7 @@ pub async fn follow_user(
     let cli = common_config.dynamodb();
 
     if target_pk == user.pk {
-        return Err(Error::BadRequest("Cannot follow yourself".into()));
+        return Err(SpaceFollowError::CannotFollowSelf.into());
     }
 
     let is_allowed_target = if target_pk == space.user_pk {
@@ -37,7 +38,7 @@ pub async fn follow_user(
     };
 
     if !is_allowed_target {
-        return Err(Error::BadRequest("Invalid follow target".into()));
+        return Err(SpaceFollowError::InvalidFollowTarget.into());
     }
 
     let (follower_pk, follower_sk) = UserFollow::follower_keys(&target_pk, &user.pk);
@@ -62,7 +63,7 @@ pub async fn follow_user(
         Partition::Team(_) => Team::updater(target_pk.clone(), EntityType::Team)
             .increase_followers(1)
             .transact_write_item(),
-        _ => return Err(Error::BadRequest("Invalid target".into())),
+        _ => return Err(SpaceFollowError::InvalidTarget.into()),
     };
     let follower_update =
         crate::common::models::auth::User::updater(user.pk.clone(), EntityType::User)
@@ -79,8 +80,8 @@ pub async fn follow_user(
         .send()
         .await
         .map_err(|e| {
-            error!("Failed to follow user: {:?}", e);
-            Error::Unknown("Failed to follow user".into())
+            crate::error!("Failed to follow user: {:?}", e);
+            SpaceFollowError::FollowFailed
         })?;
 
     match SpaceReward::get_by_action(

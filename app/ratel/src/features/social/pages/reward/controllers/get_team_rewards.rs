@@ -1,4 +1,5 @@
 use super::super::{dto::TeamRewardsResponse, *};
+use crate::features::social::types::SocialError;
 
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 
@@ -11,9 +12,7 @@ pub async fn get_team_rewards_handler(
     let team_pk: Partition = team_pk.into();
     let can_view = permissions.contains(TeamGroupPermission::TeamAdmin);
     if !can_view {
-        return Err(Error::Unauthorized(
-            "You don't have permission to view team rewards.".to_string(),
-        ));
+        return Err(SocialError::SessionNotFound.into());
     }
 
     let month = month.unwrap_or_else(|| utils::time::current_month());

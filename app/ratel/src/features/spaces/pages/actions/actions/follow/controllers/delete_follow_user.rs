@@ -1,6 +1,7 @@
 use crate::common::models::space::SpaceCommon;
 use crate::features::spaces::pages::actions::actions::follow::models::SpaceFollowUser;
 use crate::features::spaces::pages::actions::actions::follow::*;
+use crate::features::spaces::pages::actions::actions::follow::types::SpaceFollowError;
 
 #[delete("/api/spaces/{space_id}/follows/users", role: SpaceUserRole)]
 pub async fn delete_follow_user(space_id: SpacePartition, user_pk: Partition) -> Result<()> {
@@ -14,7 +15,7 @@ pub async fn delete_follow_user(space_id: SpacePartition, user_pk: Partition) ->
         .ok_or(Error::SpaceNotFound)?;
 
     if user_pk == space.user_pk {
-        return Err(Error::BadRequest("Creator cannot be removed".into()));
+        return Err(SpaceFollowError::CreatorCannotBeRemoved.into());
     }
 
     let (pk, sk) = SpaceFollowUser::keys(&space_id, &user_pk);

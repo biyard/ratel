@@ -33,7 +33,7 @@ pub async fn follow_user(target_pk: Partition) -> Result<()> {
         Partition::Team(_) => Team::updater(target_pk.clone(), EntityType::Team)
             .increase_followers(1)
             .transact_write_item(),
-        _ => return Err(Error::BadRequest("Invalid target".into())),
+        _ => return Err(FollowError::InvalidTarget.into()),
     };
     let follower_update = crate::common::models::auth::User::updater(user.pk.clone(), EntityType::User)
         .increase_followings_count(1)
@@ -49,8 +49,8 @@ pub async fn follow_user(target_pk: Partition) -> Result<()> {
         .send()
         .await
         .map_err(|e| {
-            error!("Failed to follow user: {:?}", e);
-            Error::Unknown("Failed to follow user".into())
+            crate::error!("follow failed: {e}");
+            FollowError::FollowFailed
         })?;
 
     Ok(())

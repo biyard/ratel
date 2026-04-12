@@ -1,5 +1,5 @@
 use crate::features::posts::models::Post;
-use crate::features::posts::types::TeamGroupPermission;
+use crate::features::posts::types::{PostError, TeamGroupPermission};
 use crate::features::posts::*;
 use crate::common::models::space::{SpaceCommon, SpaceParticipant};
 use crate::common::types::SpacePartition;
@@ -27,7 +27,7 @@ pub async fn create_space_handler(req: CreateSpaceRequest) -> Result<CreateSpace
     let (post, has_perm) =
         Post::has_permission(cli, &post_pk, Some(&user.pk), TeamGroupPermission::PostEdit).await?;
     if !has_perm {
-        return Err(Error::Unauthorized("No permission".into()));
+        return Err(PostError::NotAccessible.into());
     }
 
     let space = SpaceCommon::new(

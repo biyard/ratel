@@ -48,7 +48,7 @@ pub async fn update_poll(
             ended_at,
         } => {
             if started_at >= ended_at {
-                return Err(Error::BadRequest("Invalid time range".into()));
+                return Err(SpacePollError::InvalidTimeRange.into());
             }
             poll_updater = poll_updater
                 .with_started_at(started_at)
@@ -56,7 +56,7 @@ pub async fn update_poll(
         }
         UpdatePollRequest::Question { questions } => {
             if questions.is_empty() {
-                return Err(Error::BadRequest("Questions cannot be empty".into()));
+                return Err(SpacePollError::QuestionsEmpty.into());
             }
             let description = questions
                 .first()
@@ -76,9 +76,7 @@ pub async fn update_poll(
         } => {
             let env = crate::common::config::Environment::default();
             if env == crate::common::config::Environment::Production {
-                return Err(Error::BadRequest(
-                    "Canister upload is not available in production".into(),
-                ));
+                return Err(SpacePollError::InvalidQuestionFormat.into());
             }
             poll_updater = poll_updater.with_canister_upload_enabled(canister_upload_enabled);
             // When enabling encrypted upload, force response_editable to false

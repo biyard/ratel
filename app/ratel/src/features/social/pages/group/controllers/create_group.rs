@@ -1,5 +1,6 @@
 use super::super::dto::{CreateGroupRequest, CreateGroupResponse};
 use super::super::*;
+use crate::features::social::types::SocialError;
 
 use crate::features::posts::models::{Team, TeamGroup};
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
@@ -25,9 +26,7 @@ pub async fn create_group_handler(
     };
 
     if !can_edit {
-        return Err(Error::Unauthorized(
-            "You don't have permission to create groups.".to_string(),
-        ));
+        return Err(SocialError::SessionNotFound.into());
     }
 
     let group = TeamGroup::new(

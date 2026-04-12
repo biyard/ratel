@@ -1,11 +1,10 @@
+use crate::features::posts::types::PostError;
 use crate::features::posts::*;
 
 pub fn validate_title(title: &str) -> Result<()> {
     let len = title.chars().count();
     if len < 3 || len > 50 {
-        return Err(Error::BadRequest(
-            "Title must be between 3 and 50 characters".into(),
-        ));
+        return Err(PostError::ContentTooShort.into());
     }
     Ok(())
 }

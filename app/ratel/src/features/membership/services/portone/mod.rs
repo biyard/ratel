@@ -16,7 +16,8 @@ pub struct PortOne {
 #[cfg(feature = "server")]
 impl PortOne {
     fn map_reqwest(err: reqwest::Error) -> Error {
-        Error::BadRequest(err.to_string())
+        crate::error!("portone reqwest: {err}");
+        crate::features::membership::types::MembershipPaymentError::PortOneRequestFailed.into()
     }
 
     pub fn new(api_secret: &str) -> Self {
@@ -48,7 +49,10 @@ impl PortOne {
             .map_err(Self::map_reqwest)?;
         let j: serde_json::Value = res.json().await.map_err(Self::map_reqwest)?;
         let parsed: IdentifyResponse =
-            serde_json::from_value(j).map_err(|e| Error::BadRequest(e.to_string()))?;
+            serde_json::from_value(j).map_err(|e| {
+                crate::error!("portone identify parse: {e}");
+                Error::from(crate::features::membership::types::MembershipPaymentError::PortOneRequestFailed)
+            })?;
         Ok(parsed)
     }
 
@@ -96,10 +100,8 @@ impl PortOne {
 
         if !res.status().is_success() {
             let err_text = res.text().await.unwrap_or_default();
-            return Err(Error::BadRequest(format!(
-                "PortOne get billing key error: {}",
-                err_text
-            )));
+            crate::error!("PortOne get billing key error: {err_text}");
+            return Err(crate::features::membership::types::MembershipPaymentError::PortOneRequestFailed.into());
         }
 
         Ok(res.json().await.map_err(Self::map_reqwest)?)
@@ -153,10 +155,8 @@ impl PortOne {
 
         if !res.status().is_success() {
             let err_text = res.text().await.unwrap_or_default();
-            return Err(Error::BadRequest(format!(
-                "PortOne payment error: {}",
-                err_text
-            )));
+            crate::error!("PortOne payment error: {err_text}");
+            return Err(crate::features::membership::types::MembershipPaymentError::PortOnePaymentFailed.into());
         }
 
         Ok((res.json().await.map_err(Self::map_reqwest)?, payment_id))
@@ -216,10 +216,8 @@ impl PortOne {
 
         if !res.status().is_success() {
             let err_text = res.text().await.unwrap_or_default();
-            return Err(Error::BadRequest(format!(
-                "PortOne schedule payment error: {}",
-                err_text
-            )));
+            crate::error!("PortOne schedule payment error: {err_text}");
+            return Err(crate::features::membership::types::MembershipPaymentError::PortOneScheduleFailed.into());
         }
 
         Ok((res.json().await.map_err(Self::map_reqwest)?, payment_id))
@@ -245,10 +243,8 @@ impl PortOne {
 
         if !res.status().is_success() {
             let err_text = res.text().await.unwrap_or_default();
-            return Err(Error::BadRequest(format!(
-                "PortOne cancel schedule error: {}",
-                err_text
-            )));
+            crate::error!("PortOne cancel schedule error: {err_text}");
+            return Err(crate::features::membership::types::MembershipPaymentError::PortOneCancelFailed.into());
         }
 
         Ok(res.json().await.map_err(Self::map_reqwest)?)

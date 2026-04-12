@@ -182,14 +182,10 @@ pub async fn login_with_phone(
 
         user
     } else {
-        let user_phone = res.first().cloned().ok_or(Error::Unauthorized(
-            "No user linked with the given phone number".into(),
-        ))?;
+        let user_phone = res.first().cloned().ok_or(AuthError::PhoneNotFound)?;
         User::get(cli, &user_phone.pk, Some(EntityType::User))
             .await?
-            .ok_or(Error::Unauthorized(
-                "No user linked with the given phone number".into(),
-            ))?
+            .ok_or(AuthError::UserNotFound)?
     };
 
     Ok(user)
@@ -208,9 +204,7 @@ pub async fn login_with_oauth(
         .0
         .get(0)
         .cloned()
-        .ok_or(Error::Unauthorized(
-            "No user found with the given email".into(),
-        ))?;
+        .ok_or(AuthError::UserNotFound)?;
 
     Ok(user)
 }
@@ -231,7 +225,7 @@ pub async fn login_with_email(
     let user = u
         .get(0)
         .cloned()
-        .ok_or(Error::Unauthorized("Invalid email or password".into()))?;
+        .ok_or(AuthError::InvalidCredentials)?;
 
     // FIXME(migrate): fallback to tricky migration from postgres
     // let user = if user.is_none() {
@@ -255,8 +249,8 @@ pub async fn login_with_telegram(
 ) -> Result<User> {
     let telegram_user =
         crate::features::auth::utils::telegram::parse_telegram_raw(telegram_raw.clone()).map_err(|e| {
-            tracing::error!("Failed to parse telegram raw data: {}", e);
-            Error::Unauthorized("Invalid telegram data".into())
+            crate::error!("Failed to parse telegram raw data: {e}");
+            AuthError::InvalidTelegramData
         })?;
     tracing::debug!("Parsed telegram user: {:?}", telegram_user);
     let (res, _) = UserTelegram::find_by_telegram_id(
@@ -296,14 +290,10 @@ pub async fn login_with_telegram(
         )?;
         user
     } else {
-        let user_telegram = res.first().cloned().ok_or(Error::Unauthorized(
-            "No user linked with the given telegram account".into(),
-        ))?;
+        let user_telegram = res.first().cloned().ok_or(AuthError::UserNotFound)?;
         User::get(cli, &user_telegram.pk, Some(EntityType::User))
             .await?
-            .ok_or(Error::Unauthorized(
-                "No user linked with the given telegram account".into(),
-            ))?
+            .ok_or(AuthError::UserNotFound)?
     };
 
     Ok(user)
@@ -323,19 +313,22 @@ pub async fn wallet_login_handler(
     let stored_nonce: Option<String> = session
         .get("wallet_nonce")
         .await
-        .map_err(|e| Error::Unknown(format!("Session error: {}", e)))?;
+        .map_err(|e| {
+            crate::error!("session: {e}");
+            AuthError::SessionFailed
+        })?;
 
     let stored_nonce =
-        stored_nonce.ok_or_else(|| Error::Unauthorized("No nonce found in session".into()))?;
+        stored_nonce.ok_or_else(|| AuthError::NonceNotFound)?;
 
     if !message.contains(&stored_nonce) {
-        return Err(Error::Unauthorized("Nonce mismatch".into()));
+        return Err(AuthError::NonceMismatch.into());
     }
 
     // Verify signature
     let recovered_address = recover_address(&message, &signature)?;
     if recovered_address.to_lowercase() != address.to_lowercase() {
-        return Err(Error::Unauthorized("Invalid signature".into()));
+        return Err(AuthError::InvalidSignature.into());
     }
 
     // Clear nonce (one-time use)
@@ -351,15 +344,11 @@ pub async fn wallet_login_handler(
     if let Some(evm_record) = evm_records.first() {
         let user = User::get(cli, &evm_record.pk, Some(EntityType::User))
             .await?
-            .ok_or(Error::Unauthorized(
-                "User not found for this wallet address".into(),
-            ))?;
+            .ok_or(AuthError::UserNotFound)?;
 
         return Ok(user);
     }
-    Err(Error::Unauthorized(
-        "User not found for this wallet address".into(),
-    ))
+    Err(AuthError::UserNotFound.into())
 }
 
 // ── Wallet address check ────────────────────────────────────────────
@@ -411,7 +400,10 @@ pub async fn wallet_nonce_handler() -> crate::common::Result<WalletNonceResponse
     session
         .insert("wallet_nonce", nonce.clone())
         .await
-        .map_err(|e| Error::Unknown(format!("Session error: {}", e)))?;
+        .map_err(|e| {
+            crate::error!("session: {e}");
+            AuthError::SessionFailed
+        })?;
 
     Ok(WalletNonceResponse { nonce, message })
 }

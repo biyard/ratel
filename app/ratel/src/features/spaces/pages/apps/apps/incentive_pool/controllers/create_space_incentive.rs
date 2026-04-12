@@ -1,5 +1,6 @@
 use crate::features::spaces::pages::apps::apps::incentive_pool::models::SpaceIncentive;
 use crate::features::spaces::pages::apps::apps::incentive_pool::*;
+use crate::features::spaces::pages::apps::types::SpaceAppError;
 #[cfg(feature = "server")]
 use crate::common::SpaceUserRole;
 
@@ -17,15 +18,11 @@ pub async fn create_space_incentive(
     SpaceIncentive::can_edit(role)?;
 
     if req.contract_address.is_empty() {
-        return Err(Error::BadRequest(
-            "contract_address is required".to_string(),
-        ));
+        return Err(SpaceAppError::IncentiveAddressRequired.into());
     }
 
     if req.deploy_block < 0 {
-        return Err(Error::BadRequest(
-            "deploy_block must be 0 or greater".to_string(),
-        ));
+        return Err(SpaceAppError::IncentiveChainRequired.into());
     }
 
     let common_config = crate::common::CommonConfig::default();
