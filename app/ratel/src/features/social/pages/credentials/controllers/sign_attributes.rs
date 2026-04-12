@@ -1,6 +1,6 @@
-use super::get_credentials::CredentialResponse;
 use super::super::models::{AttributeCode, VerifiedAttributes};
 use super::super::*;
+use super::get_credentials::CredentialResponse;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
@@ -67,7 +67,7 @@ async fn add_attributes_by_code(
     Ok(attrs)
 }
 
-#[cfg(feature = "server")]
+#[cfg(all(feature = "server", not(feature = "bypass")))]
 async fn portone_sign_attributes(
     cli: &crate::common::aws_sdk_dynamodb::Client,
     user: &crate::features::auth::User,
@@ -86,6 +86,31 @@ async fn portone_sign_attributes(
     };
 
     let birth_date = verified.birth_date.replace('-', "");
+
+    let (pk, sk) = VerifiedAttributes::keys(&user.pk);
+    let mut attrs = VerifiedAttributes::get(cli, pk.clone(), Some(sk.clone()))
+        .await?
+        .unwrap_or_default();
+    attrs.pk = pk;
+    attrs.sk = sk;
+    attrs.birth_date = Some(birth_date);
+    attrs.gender = gender.or(attrs.gender);
+
+    attrs.upsert(cli).await?;
+    Ok(attrs)
+}
+
+#[cfg(all(feature = "server", feature = "bypass"))]
+async fn portone_sign_attributes(
+    cli: &crate::common::aws_sdk_dynamodb::Client,
+    user: &crate::features::auth::User,
+    id: String,
+) -> Result<VerifiedAttributes> {
+    use super::super::services::PortOneClient;
+
+    let gender = Some(crate::common::attribute::Gender::Male);
+
+    let birth_date = "20000101".to_string();
 
     let (pk, sk) = VerifiedAttributes::keys(&user.pk);
     let mut attrs = VerifiedAttributes::get(cli, pk.clone(), Some(sk.clone()))
