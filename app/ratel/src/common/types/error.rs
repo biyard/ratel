@@ -4,33 +4,14 @@ pub use thiserror::Error;
 
 #[derive(Debug, Error, Serialize, Deserialize, Translate)]
 pub enum Error {
-    #[error("Unknown: {0}")]
-    #[translate(en = "Unknown error", ko = "알수없는 에러가 발생하였습니다.")]
-    Unknown(String),
-
     // NOTE: Built-in errors for Some macros
     #[error("Invalid partition key: {0}")]
     #[translate(en = "No data found", ko = "데이터를 찾을 수 없습니다.")]
     InvalidPartitionKey(String),
 
-    #[error("Not supported: {0}")]
-    #[translate(en = "Not supported", ko = "지원되지 않는 기능입니다.")]
-    NotSupported(String),
-
     #[error("Unauthorized access")]
     #[translate(en = "Unauthorized access", ko = "인증되지 않은 접근입니다.")]
     UnauthorizedAccess,
-    #[error("Unauthorized access: {0}")]
-    #[translate(en = "Unauthorized access", ko = "인증되지 않은 접근입니다.")]
-    Unauthorized(String),
-
-    #[error("Internal server error: {0}")]
-    #[translate(
-        en = "Internal server error",
-        ko = "서버 내부 오류가 발생하였습니다. 잠시 후 다시 시도해주세요."
-    )]
-    InternalServerError(String),
-
     #[error("Bookmark is invalid")]
     #[translate(en = "Please refresh the page", ko = "페이지를 새로고침 해주세요.")]
     InvalidBookmark,
@@ -53,10 +34,6 @@ pub enum Error {
     #[error("Session error: {0}")]
     #[translate(en = "Please sign in first", ko = "먼저 로그인 해주세요.")]
     Session(#[from] tower_sessions::session::Error),
-
-    #[error("Bad request: {0}")]
-    #[translate(en = "Bad request", ko = "잘못된 요청입니다.")]
-    BadRequest(String),
 
     #[error("Username already exists")]
     #[translate(
@@ -445,7 +422,8 @@ pub enum Error {
 #[cfg(feature = "server")]
 impl From<qdrant_client::QdrantError> for Error {
     fn from(e: qdrant_client::QdrantError) -> Self {
-        Error::InternalServerError(format!("Qdrant error: {e}"))
+        tracing::error!("Qdrant error: {e}");
+        Error::Infra(crate::common::utils::InfraError::QdrantFailed)
     }
 }
 
@@ -457,13 +435,15 @@ impl From<std::convert::Infallible> for Error {
 
 impl From<String> for Error {
     fn from(s: String) -> Self {
-        Error::Unknown(s)
+        tracing::error!("Untyped string error: {s}");
+        Error::Internal
     }
 }
 
 impl From<base64::DecodeError> for Error {
     fn from(e: base64::DecodeError) -> Self {
-        Error::Unknown(e.to_string())
+        tracing::error!("Base64 decode error: {e}");
+        Error::Internal
     }
 }
 
@@ -478,9 +458,7 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             | Error::NoSessionFound
             | Error::UserNotFoundInContext => StatusCode::UNAUTHORIZED,
             Error::InvalidPartitionKey(_)
-            | Error::NotSupported(_)
             | Error::InvalidBookmark
-            | Error::BadRequest(_)
             | Error::Duplicate(_)
             | Error::NoPermission
             | Error::ParticipationBlocked
@@ -544,15 +522,13 @@ impl From<Error> for rmcp::ErrorData {
         match &e {
             Error::UnauthorizedAccess
             | Error::NoSessionFound
-            | Error::Unauthorized(_)
             | Error::UserNotFoundInContext => {
                 rmcp::ErrorData::invalid_request(e.to_string(), None)
             }
             Error::NotFound(_) | Error::InvitationNotFound | Error::SpaceNotFound => {
                 rmcp::ErrorData::invalid_params(e.to_string(), None)
             }
-            Error::BadRequest(_)
-            | Error::Duplicate(_)
+            Error::Duplicate(_)
             | Error::NoPermission
             | Error::InvalidPartitionKey(_)
             | Error::McpServer(_)
@@ -575,7 +551,8 @@ impl From<Error> for rmcp::ErrorData {
 
 impl From<ServerFnError> for Error {
     fn from(e: ServerFnError) -> Self {
-        Error::Unknown(format!("Server function error: {}", e))
+        tracing::error!("Server function error: {e}");
+        Error::Internal
     }
 }
 
@@ -586,12 +563,9 @@ impl dioxus::fullstack::AsStatusCode for Error {
         match self {
             Error::UnauthorizedAccess
             | Error::NoSessionFound
-            | Error::Unauthorized(_)
             | Error::UserNotFoundInContext => StatusCode::UNAUTHORIZED,
             Error::InvalidPartitionKey(_)
-            | Error::NotSupported(_)
             | Error::InvalidBookmark
-            | Error::BadRequest(_)
             | Error::Duplicate(_)
             | Error::NoPermission
             | Error::ParticipationBlocked
