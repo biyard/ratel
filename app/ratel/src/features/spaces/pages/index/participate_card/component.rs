@@ -65,7 +65,14 @@ pub fn ParticipateCard(
                                 .is_ok()
                             {
                                 on_joined.call(());
-                                ctx.restart();
+                                ctx.space.restart();
+                                if ctx.panel_requirements.is_empty()
+                                    && matches!(ctx.space().status, Some(SpaceStatus::Ongoing))
+                                {
+                                    ctx.role.set(SpaceUserRole::Participant);
+                                } else {
+                                    ctx.role.set(SpaceUserRole::Candidate);
+                                }
                             }
                         }
                     },
