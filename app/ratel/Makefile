@@ -86,7 +86,7 @@ build:
 	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web --platform web @server --features server --platform server
 
 build-testing:
-	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web --platform web @server --features server,bypass --platform server
+	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web,bypass --platform web @server --features server,bypass --platform server
 
 build-arm:
 	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web --platform web @server --features server --platform server --target aarch64-unknown-linux-gnu

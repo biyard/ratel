@@ -3,7 +3,7 @@ use wasm_bindgen_futures::JsFuture;
 use web_sys::js_sys::Promise;
 
 use super::{
-    controllers::{CredentialResponse, SignAttributesRequest, sign_attributes_handler},
+    controllers::{sign_attributes_handler, CredentialResponse, SignAttributesRequest},
     *,
 };
 #[wasm_bindgen(js_namespace = ["window", "ratel", "user_credential"])]
@@ -19,6 +19,16 @@ extern "C" {
     ) -> Promise;
 }
 
+#[cfg(feature = "bypass")]
+pub async fn verify_identity(
+    _store_id: &str,
+    _channel_key: &str,
+    _prefix: &str,
+) -> Result<CredentialResponse> {
+    sign_attributes_handler(SignAttributesRequest::PortOne { id: "".to_string() }).await
+}
+
+#[cfg(not(feature = "bypass"))]
 pub async fn verify_identity(
     store_id: &str,
     channel_key: &str,
