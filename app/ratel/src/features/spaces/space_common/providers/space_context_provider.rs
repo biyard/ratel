@@ -31,6 +31,10 @@ impl SpaceContextProvider {
         let mut current_role = use_memo(move || {
             let space = space();
             let role = role();
+            debug!(
+                "Calculating current role with space status: {:?} and user role: {:?}",
+                space.status, role
+            );
             match (role, space.status) {
                 (SpaceUserRole::Creator, Some(SpaceStatus::Ongoing)) => SpaceUserRole::Participant,
                 _ => role,
@@ -47,6 +51,12 @@ impl SpaceContextProvider {
         use_context_provider(move || srv);
 
         Ok(srv)
+    }
+
+    pub fn restart(&mut self) {
+        self.role.restart();
+        self.space.restart();
+        self.panel_requirements.restart();
     }
 
     pub fn toggle_role(&mut self) -> Result<()> {
