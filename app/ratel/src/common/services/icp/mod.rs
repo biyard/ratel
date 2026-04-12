@@ -1,6 +1,8 @@
 use crate::common::*;
 
 #[cfg(feature = "server")]
+use super::ServiceError;
+#[cfg(feature = "server")]
 use candid::{Decode, Encode};
 #[cfg(feature = "server")]
 use ic_agent::Agent;
@@ -32,23 +34,35 @@ impl CanisterService {
 
         let agent = builder
             .build()
-            .map_err(|e| Error::InternalServerError(format!("IC agent error: {}", e)))?;
+            .map_err(|e| {
+                crate::error!("IC agent: {e}");
+                ServiceError::IcpAgentFailed
+            })?;
 
         if !ic_url.contains("ic0.app") {
             agent
                 .fetch_root_key()
                 .await
-                .map_err(|e| Error::InternalServerError(format!("IC root key error: {}", e)))?;
+                .map_err(|e| {
+                    crate::error!("IC root key: {e}");
+                    ServiceError::IcpRootKeyFailed
+                })?;
         }
 
         let canister_id = candid::Principal::from_text(canister_id.trim())
-            .map_err(|e| Error::BadRequest(format!("Invalid RATEL_CANISTER_ID: {}", e)))?;
+            .map_err(|e| {
+                crate::error!("Invalid canister ID: {e}");
+                ServiceError::InvalidCanisterId
+            })?;
 
         Ok(Self { agent, canister_id })
     }
 
     pub async fn health(&self) -> Result<String> {
-        let args = Encode!().map_err(|e| Error::Unknown(format!("Candid encode error: {}", e)))?;
+        let args = Encode!().map_err(|e| {
+            crate::error!("Candid encode: {e}");
+            ServiceError::IcpCandidEncodeFailed
+        })?;
 
         let response = self
             .agent
@@ -56,10 +70,16 @@ impl CanisterService {
             .with_arg(args)
             .call()
             .await
-            .map_err(|e| Error::Unknown(format!("IC query error: {}", e)))?;
+            .map_err(|e| {
+                crate::error!("IC query: {e}");
+                ServiceError::IcpQueryFailed
+            })?;
 
         Decode!(response.as_slice(), String)
-            .map_err(|e| Error::Unknown(format!("Candid decode error: {}", e)))
+            .map_err(|e| {
+                crate::error!("Candid decode: {e}");
+                Error::from(ServiceError::IcpCandidDecodeFailed)
+            })
     }
 }
 
@@ -74,7 +94,10 @@ impl CanisterService {
         ballot: VoteBallot,
     ) -> Result<SubmitVoteResult> {
         let args = Encode!(&vote_key.to_string(), &voter_tag.to_string(), &ballot)
-            .map_err(|e| Error::InternalServerError(format!("Candid encode error: {}", e)))?;
+            .map_err(|e| {
+                crate::error!("Candid encode: {e}");
+                ServiceError::IcpCandidEncodeFailed
+            })?;
 
         let response = self
             .agent
@@ -82,15 +105,24 @@ impl CanisterService {
             .with_arg(args)
             .call_and_wait()
             .await
-            .map_err(|e| Error::InternalServerError(format!("IC call error: {}", e)))?;
+            .map_err(|e| {
+                crate::error!("IC call: {e}");
+                ServiceError::IcpCallFailed
+            })?;
 
         Decode!(response.as_slice(), SubmitVoteResult)
-            .map_err(|e| Error::InternalServerError(format!("Candid decode error: {}", e)))
+            .map_err(|e| {
+                crate::error!("Candid decode: {e}");
+                Error::from(ServiceError::IcpCandidDecodeFailed)
+            })
     }
 
     pub async fn get_vote_counts(&self, vote_key: &str) -> Result<Vec<QuestionOptionCount>> {
         let args = Encode!(&vote_key.to_string())
-            .map_err(|e| Error::InternalServerError(format!("Candid encode error: {}", e)))?;
+            .map_err(|e| {
+                crate::error!("Candid encode: {e}");
+                ServiceError::IcpCandidEncodeFailed
+            })?;
 
         let response = self
             .agent
@@ -98,10 +130,16 @@ impl CanisterService {
             .with_arg(args)
             .call()
             .await
-            .map_err(|e| Error::InternalServerError(format!("IC query error: {}", e)))?;
+            .map_err(|e| {
+                crate::error!("IC query: {e}");
+                ServiceError::IcpQueryFailed
+            })?;
 
         Decode!(response.as_slice(), Vec<QuestionOptionCount>)
-            .map_err(|e| Error::InternalServerError(format!("Candid decode error: {}", e)))
+            .map_err(|e| {
+                crate::error!("Candid decode: {e}");
+                Error::from(ServiceError::IcpCandidDecodeFailed)
+            })
     }
 
     pub async fn get_ballot_by_tag(
@@ -110,7 +148,10 @@ impl CanisterService {
         voter_tag: &str,
     ) -> Result<Option<VoteBallot>> {
         let args = Encode!(&vote_key.to_string(), &voter_tag.to_string())
-            .map_err(|e| Error::InternalServerError(format!("Candid encode error: {}", e)))?;
+            .map_err(|e| {
+                crate::error!("Candid encode: {e}");
+                ServiceError::IcpCandidEncodeFailed
+            })?;
 
         let response = self
             .agent
@@ -118,10 +159,16 @@ impl CanisterService {
             .with_arg(args)
             .call()
             .await
-            .map_err(|e| Error::InternalServerError(format!("IC query error: {}", e)))?;
+            .map_err(|e| {
+                crate::error!("IC query: {e}");
+                ServiceError::IcpQueryFailed
+            })?;
 
         Decode!(response.as_slice(), Option<VoteBallot>)
-            .map_err(|e| Error::InternalServerError(format!("Candid decode error: {}", e)))
+            .map_err(|e| {
+                crate::error!("Candid decode: {e}");
+                Error::from(ServiceError::IcpCandidDecodeFailed)
+            })
     }
 }
 
@@ -131,7 +178,10 @@ impl CanisterService {
 impl CanisterService {
     pub async fn run_sampling(&self, input: SamplingInput) -> Result<SamplingResult> {
         let args =
-            Encode!(&input).map_err(|e| Error::Unknown(format!("Candid encode error: {}", e)))?;
+            Encode!(&input).map_err(|e| {
+                crate::error!("Candid encode: {e}");
+                ServiceError::IcpCandidEncodeFailed
+            })?;
 
         let response = self
             .agent
@@ -139,15 +189,24 @@ impl CanisterService {
             .with_arg(args)
             .call_and_wait()
             .await
-            .map_err(|e| Error::Unknown(format!("IC call error: {}", e)))?;
+            .map_err(|e| {
+                crate::error!("IC call: {e}");
+                ServiceError::IcpCallFailed
+            })?;
 
         Decode!(response.as_slice(), SamplingResult)
-            .map_err(|e| Error::Unknown(format!("Candid decode error: {}", e)))
+            .map_err(|e| {
+                crate::error!("Candid decode: {e}");
+                Error::from(ServiceError::IcpCandidDecodeFailed)
+            })
     }
 
     pub async fn get_model(&self, id: &str) -> Result<Option<ModelParams>> {
         let args = Encode!(&id.to_string())
-            .map_err(|e| Error::Unknown(format!("Candid encode error: {}", e)))?;
+            .map_err(|e| {
+                crate::error!("Candid encode: {e}");
+                ServiceError::IcpCandidEncodeFailed
+            })?;
 
         let response = self
             .agent
@@ -155,9 +214,15 @@ impl CanisterService {
             .with_arg(args)
             .call()
             .await
-            .map_err(|e| Error::Unknown(format!("IC query error: {}", e)))?;
+            .map_err(|e| {
+                crate::error!("IC query: {e}");
+                ServiceError::IcpQueryFailed
+            })?;
 
         Decode!(response.as_slice(), Option<ModelParams>)
-            .map_err(|e| Error::Unknown(format!("Candid decode error: {}", e)))
+            .map_err(|e| {
+                crate::error!("Candid decode: {e}");
+                Error::from(ServiceError::IcpCandidDecodeFailed)
+            })
     }
 }

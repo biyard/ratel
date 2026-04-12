@@ -32,13 +32,20 @@ impl OauthProvider {
             .bearer_auth(access_token)
             .send()
             .await
-            .map_err(|e| crate::common::Error::InternalServerError(format!("OAuth request failed: {}", e)))?
+            .map_err(|e| {
+                crate::error!("OAuth: {e}");
+                crate::common::services::ServiceError::OAuthRequestFailed
+            })?
             .error_for_status()
-            .map_err(|e| crate::common::Error::InternalServerError(format!("OAuth request failed: {}", e)))?
+            .map_err(|e| {
+                crate::error!("OAuth: {e}");
+                crate::common::services::ServiceError::OAuthRequestFailed
+            })?
             .json()
             .await
             .map_err(|e| {
-                crate::common::Error::InternalServerError(format!("OAuth response parse failed: {}", e))
+                crate::error!("OAuth parse: {e}");
+                crate::common::services::ServiceError::OAuthParseFailed
             })?;
 
         Ok(email)
