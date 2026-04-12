@@ -57,9 +57,7 @@ pub fn parse_telegram_raw(telegram_raw: String) -> Result<TelegramUser> {
     if let Some(validation_result) = validation_result {
         Ok(validation_result)
     } else {
-        return Err(Error::InternalServerError(
-            "Failed to validate and parse Telegram data".into(),
-        ));
+        return Err(AuthError::TelegramBotTokenMissing.into());
     }
 }
 

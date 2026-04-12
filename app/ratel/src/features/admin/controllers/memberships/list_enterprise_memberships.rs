@@ -1,6 +1,7 @@
 use crate::common::models::auth::{AdminUser, User};
 use crate::common::types::MembershipPartition;
 use crate::features::admin::*;
+use crate::features::admin::types::AdminError;
 #[cfg(feature = "server")]
 use crate::features::membership::models::{
     ensure_team_membership_monthly_refill, ensure_user_membership_monthly_refill,
@@ -48,7 +49,10 @@ fn parse_bookmark(bookmark: Option<String>) -> Result<(EnterpriseMembershipPhase
             EnterpriseMembershipPhase::Team,
             Some(bookmark[TEAM_BOOKMARK_PREFIX.len()..].to_string()),
         )),
-        Some(bookmark) => Err(Error::BadRequest(format!("Invalid bookmark: {bookmark}"))),
+        Some(bookmark) => {
+            crate::error!("invalid bookmark: {bookmark}");
+            Err(AdminError::InvalidBookmark.into())
+        }
     }
 }
 

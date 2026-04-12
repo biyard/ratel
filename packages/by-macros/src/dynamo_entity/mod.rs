@@ -1902,9 +1902,7 @@ fn generate_query_common_fn() -> proc_macro2::TokenStream {
                         bookmark.push(format!("{};;;{}", k, s));
                     }
                     _ => {
-                        return Err(crate::Error::InternalServerError(
-                            "Unsupported AttributeValue type in LEK".into(),
-                        ));
+                        return Err(crate::Error::Internal);
                     }
                 }
             }

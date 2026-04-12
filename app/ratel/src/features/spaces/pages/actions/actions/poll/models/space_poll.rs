@@ -182,7 +182,7 @@ impl SpacePoll {
                 if self.status() == PollStatus::InProgress {
                     return Ok(());
                 }
-                return Err(Error::BadRequest("Poll is not in progress".into()));
+                return Err(SpacePollError::PollNotInProgress.into());
             }
             _ => Err(crate::features::spaces::pages::actions::actions::poll::Error::NoPermission),
         }
@@ -198,9 +198,7 @@ impl TryFrom<Partition> for SpacePoll {
         let uuid = match value {
             Partition::Space(ref s) => s.clone(),
             _ => {
-                return Err(crate::features::spaces::pages::actions::actions::poll::Error::InternalServerError(
-                    "server error".to_string(),
-                ));
+                return Err(SpacePollError::CreateFailed.into());
             }
         };
 

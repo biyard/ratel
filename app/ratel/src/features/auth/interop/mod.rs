@@ -34,7 +34,7 @@ pub async fn sign_in() -> crate::common::Result<UserInfo> {
 pub async fn sign_in() -> crate::common::Result<UserInfo> {
     let js_value = JsFuture::from(sign_in_promise())
         .await
-        .map_err(|e| Error::Unknown(format!("{:?}", e)))?;
+        .map_err(|_e| AuthError::UserInfoParseFailed)?;
     serde_wasm_bindgen::from_value(js_value)
-        .map_err(|e| Error::Unknown(format!("Failed to parse UserInfo: {}", e)))
+        .map_err(|_e| AuthError::UserInfoParseFailed.into())
 }

@@ -51,7 +51,7 @@ impl SpaceUserRole {
 #[cfg(feature = "server")]
 fn prerequisite_check_error(context: &str, err: impl std::fmt::Display) -> Error {
     error!("{context}: {err}");
-    Error::InternalServerError(format!("{err}"))
+    Error::SpaceUserRoleFailed
 }
 
 #[cfg(feature = "server")]

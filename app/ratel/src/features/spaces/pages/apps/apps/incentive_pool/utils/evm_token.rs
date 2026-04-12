@@ -2,6 +2,7 @@ use std::collections::HashSet;
 use std::sync::Arc;
 
 use crate::features::spaces::pages::apps::apps::incentive_pool::*;
+use crate::features::spaces::pages::apps::types::SpaceAppError;
 use ethers::contract::abigen;
 use ethers::providers::{Http, Middleware, Provider};
 use ethers::types::{Address, BlockNumber, Filter, Log, H256, U256, U64};
@@ -18,7 +19,7 @@ abigen!(
 pub fn parse_address(value: &str) -> Result<Address> {
     value
         .parse::<Address>()
-        .map_err(|_| Error::BadRequest("Invalid EVM address".to_string()))
+        .map_err(|_| Error::from(SpaceAppError::InvalidEvmAddress))
 }
 
 pub fn format_addr(addr: Address) -> String {
@@ -50,12 +51,12 @@ pub async fn fetch_transfer_logs(
         .to_block(to_block);
 
     let mut logs = provider.get_logs(&filter_from).await.map_err(|err| {
-        error!("archive get_logs failed: {err:?}");
-        Error::InternalServerError("archive get_logs failed".to_string())
+        crate::error!("archive get_logs failed: {err:?}");
+        SpaceAppError::ArchiveLogsFailed
     })?;
     let mut logs_to = provider.get_logs(&filter_to).await.map_err(|err| {
-        error!("archive get_logs failed: {err:?}");
-        Error::InternalServerError("archive get_logs failed".to_string())
+        crate::error!("archive get_logs failed: {err:?}");
+        SpaceAppError::ArchiveLogsFailed
     })?;
     logs.append(&mut logs_to);
 

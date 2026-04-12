@@ -3,6 +3,7 @@ use crate::features::posts::models::*;
 use crate::features::timeline::controllers::dto::*;
 use crate::features::timeline::models::*;
 use crate::features::timeline::*;
+use crate::features::timeline::types::TimelineError;
 
 /// Query a single timeline category.
 ///
@@ -17,12 +18,12 @@ pub async fn list_timeline_handler(
 
     let reason: TimelineReason = category
         .parse()
-        .map_err(|e: String| Error::BadRequest(e))?;
+        .map_err(|_e: String| TimelineError::InvalidBookmark)?;
 
     let user_id = match &user.pk {
         Partition::User(id) => id.clone(),
         _ => {
-            return Err(Error::BadRequest("Invalid user".into()));
+            return Err(TimelineError::InvalidUser.into());
         }
     };
 
@@ -47,7 +48,7 @@ pub async fn list_timeline_feed_handler(
     let user_id = match &user.pk {
         Partition::User(id) => id.clone(),
         _ => {
-            return Err(Error::BadRequest("Invalid user".into()));
+            return Err(TimelineError::InvalidUser.into());
         }
     };
 

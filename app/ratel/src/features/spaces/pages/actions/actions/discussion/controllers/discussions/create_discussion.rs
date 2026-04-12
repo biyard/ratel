@@ -38,9 +38,8 @@ pub async fn create_discussion(
         ),
     );
     crate::transact_write_items!(cli, items).map_err(|e| {
-        crate::features::spaces::pages::actions::actions::discussion::Error::Unknown(format!(
-            "Failed to create discussion: {e}"
-        ))
+        crate::error!("Failed to create discussion: {e}");
+        SpaceActionDiscussionError::CreateFailed
     })?;
 
     Ok(post)

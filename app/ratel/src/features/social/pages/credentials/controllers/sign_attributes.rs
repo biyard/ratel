@@ -1,6 +1,7 @@
 use super::super::models::{AttributeCode, VerifiedAttributes};
 use super::super::*;
 use super::get_credentials::CredentialResponse;
+use crate::features::social::types::SocialError;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
@@ -35,9 +36,7 @@ async fn add_attributes_by_code(
 ) -> Result<VerifiedAttributes> {
     let code = code.trim().to_string();
     if code.is_empty() {
-        return Err(Error::BadRequest(
-            "Verification code is required".to_string(),
-        ));
+        return Err(SocialError::InvalidVerificationAttribute.into());
     }
 
     let code_item = AttributeCode::get(
@@ -82,7 +81,7 @@ async fn portone_sign_attributes(
     let gender = match verified.gender.to_lowercase().as_str() {
         "male" => Some(crate::common::attribute::Gender::Male),
         "female" => Some(crate::common::attribute::Gender::Female),
-        _ => return Err(Error::BadRequest("Invalid gender".to_string())),
+        _ => return Err(SocialError::InvalidGender.into()),
     };
 
     let birth_date = verified.birth_date.replace('-', "");

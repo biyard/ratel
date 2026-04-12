@@ -26,9 +26,7 @@ pub async fn verify_vote(
     use crate::features::spaces::pages::actions::services::vote_crypto::VOTE_CRYPTO_SERVICE;
     let crypto = VOTE_CRYPTO_SERVICE
         .as_ref()
-        .ok_or(Error::InternalServerError(
-            "Encrypted voting is not configured".into(),
-        ))?;
+        .ok_or(SpacePollError::VoteVerificationFailed)?;
     let voter_tag = crypto.build_voter_tag(&poll_sk_entity, &member.pk)?;
 
     let canister = common_config.canister();
@@ -40,9 +38,7 @@ pub async fn verify_vote(
     let decrypted = crypto.decrypt(&poll_sk_entity, &member.pk, &ballot.ciphertext_blob)?;
 
     if decrypted.ciphertext_hash != ballot.ciphertext_hash {
-        return Err(Error::InternalServerError(
-            "On-chain ciphertext hash mismatch".into(),
-        ));
+        return Err(SpacePollError::VoteVerificationFailed.into());
     }
 
     Ok(VerifyVoteResponse {

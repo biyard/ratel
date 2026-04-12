@@ -1,4 +1,5 @@
 use crate::features::spaces::pages::apps::apps::panels::*;
+use crate::features::spaces::pages::apps::types::SpaceAppError;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct DeletePanelKey {
@@ -31,7 +32,10 @@ pub async fn delete_panel_quotas(
         .collect();
 
     crate::transact_write_items!(cli, items)
-        .map_err(|e| Error::InternalServerError(format!("Failed to delete panel quotas: {e}")))?;
+        .map_err(|e| {
+            crate::error!("Failed to delete panel quotas: {e}");
+            SpaceAppError::PanelQuotaDeleteFailed
+        })?;
 
     Ok(true)
 }

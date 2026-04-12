@@ -88,8 +88,8 @@ pub(super) async fn write_timeline_entries(
             .send()
             .await
             .map_err(|e| {
-                tracing::error!("Failed to write timeline entries: {}", e);
-                Error::InternalServerError("Failed to write timeline entries".into())
+                crate::error!("Failed to write timeline entries: {e}");
+                crate::features::timeline::types::TimelineError::FanOutFailed
             })?;
     }
 

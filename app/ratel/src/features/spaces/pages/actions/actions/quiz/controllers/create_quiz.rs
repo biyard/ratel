@@ -21,9 +21,8 @@ pub async fn create_quiz(
         space_action.create_transact_write_item(),
     ];
     crate::transact_write_items!(cli, items).map_err(|e| {
-        crate::features::spaces::pages::actions::actions::quiz::Error::Unknown(format!(
-            "Failed to create quiz: {e}"
-        ))
+        crate::error!("Failed to create quiz: {e}");
+        SpaceActionQuizError::CreateFailed
     })?;
 
     let quiz_id: SpaceQuizEntityType = match &quiz.sk {

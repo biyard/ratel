@@ -217,9 +217,7 @@ impl TryInto<Partition> for EntityType {
     fn try_into(self) -> Result<Partition> {
         Ok(match self {
             EntityType::SpacePoll(v) => Partition::Poll(v),
-            _ => Err(crate::common::Error::NotSupported(
-                "It is not a type supported converting to Partition.".to_string(),
-            ))?,
+            _ => Err(crate::common::Error::UnsupportedOperation)?,
         })
     }
 }

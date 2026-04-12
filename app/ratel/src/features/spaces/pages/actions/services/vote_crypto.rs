@@ -1,4 +1,5 @@
 use crate::common::types::{EntityType, Error, Partition};
+use crate::features::spaces::pages::actions::actions::poll::types::SpacePollError;
 use dioxus::fullstack::Lazy;
 
 pub static VOTE_CRYPTO_SERVICE: Lazy<Option<VoteCryptoService>> = Lazy::new(|| async move {
@@ -43,7 +44,10 @@ pub struct VoteCryptoService {
 impl VoteCryptoService {
     pub fn new(voter_tag_secret: &str, authority_json: &str) -> Result<Self, Error> {
         let authority = VotingAuthority::from_json(authority_json)
-            .map_err(|e| Error::InternalServerError(format!("Authority parse error: {}", e)))?;
+            .map_err(|e| {
+                crate::error!("Authority parse error: {e}");
+                SpacePollError::EncryptionFailed
+            })?;
         Ok(Self {
             voter_tag_secret: voter_tag_secret.to_string(),
             authority,
@@ -59,7 +63,10 @@ impl VoteCryptoService {
         let message = format!("{}:{}", action_sk, user_id);
 
         let mut mac = HmacSha256::new_from_slice(self.voter_tag_secret.as_bytes())
-            .map_err(|e| Error::InternalServerError(format!("HMAC init error: {}", e)))?;
+            .map_err(|e| {
+                crate::error!("HMAC init error: {e}");
+                SpacePollError::EncryptionFailed
+            })?;
         mac.update(message.as_bytes());
         let result = mac.finalize().into_bytes();
 
@@ -77,12 +84,18 @@ impl VoteCryptoService {
         let voter_tag = self.build_voter_tag(action_sk, user_pk)?;
 
         let choice_str = serde_json::to_string(choice)
-            .map_err(|e| Error::InternalServerError(format!("Choice serialize error: {}", e)))?;
+            .map_err(|e| {
+                crate::error!("Choice serialize error: {e}");
+                SpacePollError::EncryptionFailed
+            })?;
 
         let metadata_value = metadata
             .map(|m| serde_json::to_value(m))
             .transpose()
-            .map_err(|e| Error::InternalServerError(format!("Metadata serialize error: {}", e)))?;
+            .map_err(|e| {
+                crate::error!("Metadata serialize error: {e}");
+                SpacePollError::EncryptionFailed
+            })?;
 
         let payload = VotePayload {
             choice: choice_str,
@@ -90,10 +103,14 @@ impl VoteCryptoService {
         };
 
         let encrypted = encrypt_vote(&self.authority.public_key, &voter_tag, &payload)
-            .map_err(|e| Error::InternalServerError(format!("ABE encrypt error: {}", e)))?;
+            .map_err(|e| {
+                crate::error!("ABE encrypt error: {e}");
+                SpacePollError::EncryptionFailed
+            })?;
 
         let ciphertext_json = serde_json::to_string(&encrypted).map_err(|e| {
-            Error::InternalServerError(format!("Ciphertext serialize error: {}", e))
+            crate::error!("Ciphertext serialize error: {e}");
+            SpacePollError::EncryptionFailed
         })?;
 
         use sha2::Digest;
@@ -117,21 +134,31 @@ impl VoteCryptoService {
         let voter_sk_json = self.generate_voter_sk(&voter_tag)?;
 
         let ciphertext_json = String::from_utf8(ciphertext_blob.to_vec())
-            .map_err(|e| Error::InternalServerError(format!("Invalid ciphertext blob: {}", e)))?;
+            .map_err(|e| {
+                crate::error!("Invalid ciphertext blob: {e}");
+                SpacePollError::DecryptionFailed
+            })?;
 
         use sha2::Digest;
         let computed_hash = hex::encode(sha2::Sha256::digest(ciphertext_blob));
 
         let ciphertext =
             attr_voting::vote::EncryptedVote::from_json(&ciphertext_json).map_err(|e| {
-                Error::InternalServerError(format!("Ciphertext deserialize error: {}", e))
+                crate::error!("Ciphertext deserialize error: {e}");
+                SpacePollError::DecryptionFailed
             })?;
 
         let sk = VotingAuthority::deserialize_key(&voter_sk_json)
-            .map_err(|e| Error::InternalServerError(format!("SK deserialize error: {}", e)))?;
+            .map_err(|e| {
+                crate::error!("SK deserialize error: {e}");
+                SpacePollError::DecryptionFailed
+            })?;
 
         let payload = attr_voting::vote::decrypt_vote(&sk, &ciphertext)
-            .map_err(|e| Error::InternalServerError(format!("Decrypt error: {}", e)))?;
+            .map_err(|e| {
+                crate::error!("Decrypt error: {e}");
+                SpacePollError::DecryptionFailed
+            })?;
 
         Ok(DecryptedVote {
             voter_tag,
@@ -146,10 +173,16 @@ impl VoteCryptoService {
         let sk = self
             .authority
             .generate_user_key(&attrs)
-            .map_err(|e| Error::InternalServerError(format!("Keygen error: {}", e)))?;
+            .map_err(|e| {
+                crate::error!("Keygen error: {e}");
+                SpacePollError::EncryptionFailed
+            })?;
 
         VotingAuthority::serialize_key(&sk)
-            .map_err(|e| Error::InternalServerError(format!("SK serialize error: {}", e)))
+            .map_err(|e| {
+                crate::error!("SK serialize error: {e}");
+                Error::from(SpacePollError::EncryptionFailed)
+            })
     }
 }
 

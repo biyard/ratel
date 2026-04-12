@@ -1,4 +1,5 @@
 use crate::features::spaces::pages::apps::apps::incentive_pool::*;
+use crate::features::spaces::pages::apps::types::SpaceAppError;
 
 #[cfg(feature = "server")]
 use std::collections::HashSet;
@@ -45,8 +46,8 @@ pub async fn refresh_space_incentive_tokens(
         .unwrap_or_else(|| "https://archive-en-kairos.node.kaia.io".to_string());
 
     let provider = Provider::<Http>::try_from(archive_endpoint).map_err(|err| {
-        error!("archive provider init failed: {err:?}");
-        Error::InternalServerError("archive provider init failed".to_string())
+        crate::error!("archive provider init failed: {err:?}");
+        SpaceAppError::ArchiveProviderFailed
     })?;
 
     let mut last_block = if incentive.last_block > 0 {
@@ -65,8 +66,8 @@ pub async fn refresh_space_incentive_tokens(
     }
 
     let latest = provider.get_block_number().await.map_err(|err| {
-        error!("archive get block failed: {err:?}");
-        Error::InternalServerError("archive get block failed".to_string())
+        crate::error!("archive get block failed: {err:?}");
+        SpaceAppError::ArchiveBlockFailed
     })?;
 
     let mut updated = 0;

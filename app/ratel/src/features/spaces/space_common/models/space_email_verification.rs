@@ -81,10 +81,8 @@ impl SpaceEmailVerification {
                         .send()
                         .await
                         .map_err(|e| {
-                            tracing::error!("Failed to update verifications: {:?}", e);
-                            Error::InternalServerError(
-                                "Failed to update verifications".into(),
-                            )
+                            crate::error!("Failed to update verifications: {:?}", e);
+                            SpaceError::EmailVerificationFailed
                         })?;
 
                     tx.clear();
@@ -103,8 +101,8 @@ impl SpaceEmailVerification {
                 .send()
                 .await
                 .map_err(|e| {
-                    tracing::error!("Failed to update verifications: {:?}", e);
-                    Error::InternalServerError("Failed to update verifications".into())
+                    crate::error!("Failed to update verifications: {:?}", e);
+                    SpaceError::EmailVerificationFailed
                 })?;
         }
 

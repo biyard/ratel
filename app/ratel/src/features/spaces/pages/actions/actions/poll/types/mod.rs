@@ -1,4 +1,6 @@
+mod error;
 mod space_poll_status;
+pub use error::SpacePollError;
 pub use space_poll_status::*;
 
 mod answer;

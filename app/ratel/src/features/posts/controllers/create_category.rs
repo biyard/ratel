@@ -15,9 +15,7 @@ pub async fn create_category_handler(req: CreateCategoryRequest) -> Result<Categ
     let cli = conf.dynamodb();
 
     if req.name.trim().is_empty() {
-        return Err(crate::Error::BadRequest(
-            "Category name cannot be empty".into(),
-        ));
+        return Err(crate::features::posts::types::PostError::CategoryNameRequired.into());
     }
 
     Category::get_or_create_by_name(cli, req.name.trim().to_string())

@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::features::spaces::pages::report::models::*;
 use crate::features::spaces::pages::report::*;
+use crate::features::spaces::pages::report::types::SpaceReportError;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateAIReportResponse {
@@ -128,7 +129,10 @@ pub async fn create_ai_report(space_pk: SpacePartition) -> Result<CreateAIReport
         .with_html_contents(html_contents.clone())
         .execute(dynamo)
         .await
-        .map_err(|e| Error::InternalServerError(format!("failed to update analyze: {e:?}")))?;
+        .map_err(|e| {
+            crate::error!("failed to update analyze: {e:?}");
+            SpaceReportError::AnalyzeUpdateFailed
+        })?;
 
     Ok(CreateAIReportResponse { html_contents })
 }

@@ -14,6 +14,14 @@ pub enum ActivityError {
     #[error("invalid activity data")]
     #[translate(en = "Invalid activity data", ko = "잘못된 활동 데이터입니다")]
     InvalidData,
+
+    #[error("score load failed")]
+    #[translate(en = "Failed to load score", ko = "점수 로드에 실패했습니다.")]
+    ScoreLoadFailed,
+
+    #[error("ranking load failed")]
+    #[translate(en = "Failed to load ranking", ko = "랭킹 로드에 실패했습니다.")]
+    RankingLoadFailed,
 }
 
 #[cfg(feature = "server")]
@@ -22,7 +30,9 @@ impl ActivityError {
         use bdk::prelude::axum::http::StatusCode;
         match self {
             ActivityError::AlreadyRecorded => StatusCode::CONFLICT,
-            ActivityError::AggregationFailed => StatusCode::INTERNAL_SERVER_ERROR,
+            ActivityError::AggregationFailed
+            | ActivityError::ScoreLoadFailed
+            | ActivityError::RankingLoadFailed => StatusCode::INTERNAL_SERVER_ERROR,
             ActivityError::InvalidData => StatusCode::BAD_REQUEST,
         }
     }
