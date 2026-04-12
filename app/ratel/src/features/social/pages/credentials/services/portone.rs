@@ -70,7 +70,7 @@ impl PortOneClient {
 
         res.json().await.map_err(|e| {
             crate::error!("portone json: {e}");
-            SocialError::PortOneRequestFailed
+            Error::from(SocialError::PortOneRequestFailed)
         })
     }
 }

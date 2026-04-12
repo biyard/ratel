@@ -1,5 +1,5 @@
 use crate::features::spaces::pages::overview::*;
-use crate::features::spaces::types::error::SpaceError;
+use crate::features::spaces::types::SpaceError;
 #[cfg(feature = "server")]
 use crate::common::models::space::SpaceCommon;
 #[cfg(feature = "server")]

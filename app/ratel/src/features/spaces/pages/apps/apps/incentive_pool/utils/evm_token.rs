@@ -19,7 +19,7 @@ abigen!(
 pub fn parse_address(value: &str) -> Result<Address> {
     value
         .parse::<Address>()
-        .map_err(|_| SpaceAppError::InvalidEvmAddress)
+        .map_err(|_| Error::from(SpaceAppError::InvalidEvmAddress))
 }
 
 pub fn format_addr(addr: Address) -> String {

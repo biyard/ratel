@@ -41,7 +41,7 @@ impl DashboardAggregate {
                 .await
                 .map_err(|e| {
                     crate::error!("Failed to create dashboard aggregate: {e}");
-                    crate::features::spaces::types::error::SpaceError::UpdateFailed
+                    crate::features::spaces::types::SpaceError::UpdateFailed
                 })?;
         }
 

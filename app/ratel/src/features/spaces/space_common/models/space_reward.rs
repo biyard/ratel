@@ -4,7 +4,7 @@ use crate::common::{
     utils::time::get_now_timestamp_millis,
     *,
 };
-use crate::features::spaces::types::error::SpaceError;
+use crate::features::spaces::types::SpaceError;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, DynamoEntity)]
 pub struct SpaceReward {
