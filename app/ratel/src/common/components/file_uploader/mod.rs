@@ -138,9 +138,7 @@ async fn upload_via_presigned(
     // }
 
     if web_file.size() > 100_f64 * 1024_f64 * 1024_f64 {
-        return Err(Error::NotSupported(
-            "Files larger than 100MB are not supported.".to_string(),
-        ));
+        return Err(FileUploadError::FileSizeLimitExceeded.into());
     }
 
     let file_type = guess_file_type(&file, &web_file);
@@ -164,27 +162,34 @@ async fn upload_via_presigned(
     opts.set_body(&body);
 
     let request = web_sys::Request::new_with_str_and_init(&presigned_url, &opts)
-        .map_err(|e| Error::Unknown(js_error_to_string(e)))?;
+        .map_err(|e| {
+            web_log_error(&format!("upload: {}", js_error_to_string(e)));
+            Error::from(FileUploadError::UploadFailed)
+        })?;
     if !content_type.is_empty() {
         request
             .headers()
             .set("Content-Type", &content_type)
-            .map_err(|e| Error::Unknown(js_error_to_string(e)))?;
+            .map_err(|e| {
+                web_log_error(&format!("upload: {}", js_error_to_string(e)));
+                Error::from(FileUploadError::UploadFailed)
+            })?;
     }
 
     let window =
         web_sys::window().ok_or_else(|| Error::NotFound("No window available.".to_string()))?;
     let resp_value = wasm_bindgen_futures::JsFuture::from(window.fetch_with_request(&request))
         .await
-        .map_err(|e| Error::Unknown(js_error_to_string(e)))?;
+        .map_err(|e| {
+            web_log_error(&format!("upload: {}", js_error_to_string(e)));
+            Error::from(FileUploadError::UploadFailed)
+        })?;
     let resp: web_sys::Response = resp_value
         .dyn_into()
-        .map_err(|_| Error::Unknown("Invalid upload response.".to_string()))?;
+        .map_err(|_| Error::from(FileUploadError::InvalidUploadResponse))?;
     if !resp.ok() {
-        return Err(Error::InternalServerError(format!(
-            "Upload failed ({})",
-            resp.status()
-        )));
+        web_log_error(&format!("Upload failed ({})", resp.status()));
+        return Err(FileUploadError::UploadFailed.into());
     }
 
     on_upload_success.call(public_url.clone());

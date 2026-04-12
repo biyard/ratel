@@ -50,13 +50,13 @@ pub async fn mcp_oneshot<T: serde::de::DeserializeOwned>(
     };
 
     let req = builder.body(body).map_err(|e| {
-        crate::common::Error::InternalServerError(format!(
-            "Failed to build MCP oneshot request: {e}"
-        ))
+        crate::error!("MCP oneshot: Failed to build request: {e}");
+        crate::common::McpServerError::OneshotRoutingFailed
     })?;
 
     let res = router.oneshot(req).await.map_err(|e| {
-        crate::common::Error::InternalServerError(format!("MCP oneshot failed: {e}"))
+        crate::error!("MCP oneshot: routing failed: {e}");
+        crate::common::McpServerError::OneshotRoutingFailed
     })?;
     crate::debug!(
         transport = "mcp",
@@ -70,20 +70,18 @@ pub async fn mcp_oneshot<T: serde::de::DeserializeOwned>(
     let bytes = axum::body::to_bytes(body, 10 * 1024 * 1024)
         .await
         .map_err(|e| {
-            crate::common::Error::InternalServerError(format!(
-                "Failed to read MCP oneshot response: {e}"
-            ))
+            crate::error!("MCP oneshot: Failed to read response: {e}");
+            crate::common::McpServerError::OneshotRoutingFailed
         })?;
 
     if !parts.status.is_success() {
-        crate::error!(status = %parts.status, "MCP oneshot response error");
         let msg = String::from_utf8_lossy(&bytes).to_string();
-        return Err(crate::common::Error::InternalServerError(msg));
+        crate::error!(status = %parts.status, "MCP oneshot response error: {msg}");
+        return Err(crate::common::Error::from(crate::common::McpServerError::OneshotRoutingFailed));
     }
 
     serde_json::from_slice(&bytes).map_err(|e| {
-        crate::common::Error::InternalServerError(format!(
-            "Failed to parse MCP oneshot response: {e}"
-        ))
+        crate::error!("MCP oneshot: Failed to parse response: {e}");
+        crate::common::Error::from(crate::common::McpServerError::OneshotRoutingFailed)
     })
 }

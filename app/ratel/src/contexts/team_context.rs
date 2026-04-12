@@ -22,7 +22,7 @@ pub async fn get_user_teams_handler() -> crate::Result<Vec<TeamItem>> {
     let user_pk: String = session
         .get::<String>("user_id")
         .await?
-        .ok_or(crate::Error::Unauthorized("no session".to_string()))?;
+        .ok_or(crate::Error::NoSessionFound)?;
 
     let cli = crate::config::get().dynamodb();
     let user_pk: crate::common::types::Partition = user_pk.parse().unwrap_or_default();
@@ -76,7 +76,7 @@ pub async fn create_team_handler(body: CreateTeamRequest) -> crate::Result<Creat
     let user_pk: String = session
         .get::<String>("user_id")
         .await?
-        .ok_or(crate::Error::Unauthorized("no session".to_string()))?;
+        .ok_or(crate::Error::NoSessionFound)?;
 
     let cli = crate::config::get().dynamodb();
     let user_pk: crate::common::types::Partition = user_pk.parse().unwrap_or_default();
@@ -88,9 +88,7 @@ pub async fn create_team_handler(body: CreateTeamRequest) -> crate::Result<Creat
             .chars()
             .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_')
     {
-        return Err(crate::Error::BadRequest(
-            "Username must be at least 3 characters and contain only lowercase letters, digits, or underscores".to_string(),
-        ));
+        return Err(crate::Error::InvalidTeamContext);
     }
 
     // Check username uniqueness
@@ -101,16 +99,14 @@ pub async fn create_team_handler(body: CreateTeamRequest) -> crate::Result<Creat
     let (existing, _): (Vec<Team>, _) = Team::find_by_username_prefix(cli, &username, opt).await?;
 
     if !existing.is_empty() {
-        return Err(crate::Error::BadRequest(
-            "Username is already taken".to_string(),
-        ));
+        return Err(crate::Error::InvalidTeamContext);
     }
 
     // Get the user
     use crate::common::models::User;
     let user: User = User::get(cli, user_pk, Some(crate::common::types::EntityType::User))
         .await?
-        .ok_or(crate::Error::Unauthorized("User not found".to_string()))?;
+        .ok_or(crate::Error::UserNotFoundInContext)?;
 
     let team_pk: crate::common::types::Partition = Team::create_new_team(
         &user,
