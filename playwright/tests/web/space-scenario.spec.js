@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { click, fill, goto, getLocator, getEditor, waitPopup } from "../utils";
+import { click, clickNoNav, fill, goto, getLocator, getEditor, waitPopup } from "../utils";
 
 /**
  * Space Governance Scenario — Full E2E
@@ -57,7 +57,12 @@ async function signUpFromSpace(
   const page = await context.newPage();
 
   await goto(page, spaceUrl);
-  await click(page, { testId: "btn-signin" });
+  // Pause card-float animation so Playwright clicks don't miss
+  await page.addStyleTag({
+    content: "*, *::before, *::after { animation-play-state: paused !important; }",
+  });
+  await clickNoNav(page, { testId: "btn-signin" });
+  await waitPopup(page, { visible: true });
   // "Create an account" link is inside the modal — waiting for it implies modal is open
   await click(page, { text: "Create an account" });
 
@@ -91,8 +96,14 @@ async function signUpAndSkipPrereq(browser, user, spaceUrl) {
   const { context, page } = await signUpFromSpace(browser, user, spaceUrl);
 
   try {
-    await goto(page, spaceUrl);
-    await click(page, { testId: "btn-participate" });
+    // Verify credential (bypass mode — just click the button)
+    await page.getByTestId("btn-verify").click({ force: true });
+    await page.waitForLoadState();
+
+    await page.addStyleTag({
+      content: "*, *::before, *::after { animation-play-state: paused !important; }",
+    });
+    await clickNoNav(page, { testId: "btn-participate" });
 
     // ConsentModal appears — check the consent checkbox and confirm
     await expect(page.getByTestId("card-consent")).toBeVisible();
@@ -120,8 +131,14 @@ async function signUpAndParticipate(browser, user, spaceUrl) {
   const { context, page } = await signUpFromSpace(browser, user, spaceUrl);
 
   try {
-    await goto(page, spaceUrl);
-    await click(page, { testId: "btn-participate" });
+    // Verify credential (bypass mode — just click the button)
+    await page.getByTestId("btn-verify").click({ force: true });
+    await page.waitForLoadState();
+
+    await page.addStyleTag({
+      content: "*, *::before, *::after { animation-play-state: paused !important; }",
+    });
+    await clickNoNav(page, { testId: "btn-participate" });
 
     // ConsentModal appears — check the consent checkbox and confirm
     await expect(page.getByTestId("card-consent")).toBeVisible();
@@ -139,11 +156,17 @@ async function signUpAndParticipate(browser, user, spaceUrl) {
     });
 
     // Click the prerequisite poll item — opens the full-screen poll overlay
-    await click(page, { text: "Opinion Survey: Pre-study" });
+    const prereqItem = page.getByTestId("card-prerequisite").locator(".prereq-item").first();
+    await prereqItem.click();
 
-    // Poll overlay appears — wait for poll content (options) to fully load
+    // Poll overlay appears with an Overview screen first
     const overlay = page.getByTestId("poll-arena-overlay");
     await expect(overlay).toBeVisible();
+
+    // Click "Begin Poll" to enter the question view
+    await clickNoNav(page, { testId: "poll-arena-begin" });
+
+    // Wait for poll options to load
     await expect(overlay.locator(".option-single").first()).toBeVisible({
       timeout: 30000,
     });
@@ -152,7 +175,7 @@ async function signUpAndParticipate(browser, user, spaceUrl) {
     await overlay.locator(".option-single").first().click();
 
     // Submit the poll using testId (avoids ambiguity with confirm dialog's Submit text)
-    await click(page, { testId: "poll-submit" });
+    await clickNoNav(page, { testId: "poll-submit" });
 
     // Confirm dialog appears — click confirm
     await click(page, { testId: "poll-confirm-submit" });
