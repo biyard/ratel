@@ -162,4 +162,4 @@ async fn test_mcp_tool_my_tool() {
 - [ ] Tool name matches between `#[mcp_tool]` and `#[rmcp::tool]`
 - [ ] Import `_mcp_handler` or `_mcp_impl` + request type in `server.rs`
 - [ ] Integration test added in `mcp_tests.rs`
-- [ ] Build passes: `cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev dx check --features web`
+- [ ] Build passes: `cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev RUSTFLAGS='-D warnings' dx check --features web`

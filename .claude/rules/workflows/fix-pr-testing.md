@@ -20,7 +20,7 @@ Reproduce the failure locally before changing any code:
 
 ```bash
 # dx-check failure
-cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev dx check --features web
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev RUSTFLAGS='-D warnings' dx check --features web
 
 # Server function test failure
 cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- <test_name>
@@ -49,7 +49,7 @@ cd contracts && make test
 
 ```bash
 # 1. Compile check
-cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev dx check --features web
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev RUSTFLAGS='-D warnings' dx check --features web
 
 # 2. Server function tests
 cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass"
