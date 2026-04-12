@@ -668,116 +668,72 @@ test.describe.serial("Space with actions created by a team", () => {
   // ─── 9. Discussion: 20 replies across three users ─────────────────────────
   // Creator moderates; NewUser and User2 discuss the topic.
 
-  test.skip("Discussion: All three users post 20 comments", async ({
+  test("Discussion: All three users post 20 comments", async ({
     page,
     browser,
   }) => {
-    // The discussion URL was saved earlier when the creator created it.
-    // Each user will post comments in round-robin fashion.
+    // Discussion now opens as an overlay from the ActionDashboard carousel.
+    // Each user navigates to spaceUrl, clicks the discussion card, types
+    // in the comment textarea ("Share your thoughts..."), and clicks "Post".
 
     const comments = [
-      // Round 1 (comments 1-3)
-      {
-        user: "creator",
-        text: "Welcome to the governance discussion. Let's explore how we can improve decision-making in our community.",
-      },
-      {
-        user: "newUser",
-        text: "Thanks for starting this. I think transparency should be our top priority in any governance model.",
-      },
-      {
-        user: "user2",
-        text: "Agreed on transparency. But we also need to consider efficiency. Too many votes slow things down.",
-      },
-      // Round 2 (comments 4-6)
-      {
-        user: "creator",
-        text: "Good points from both of you. Let's consider a delegated voting system as a middle ground.",
-      },
-      {
-        user: "newUser",
-        text: "Delegated voting sounds promising. How do we prevent vote concentration among a few delegates?",
-      },
-      {
-        user: "user2",
-        text: "We could implement term limits for delegates and require periodic re-delegation.",
-      },
-      // Round 3 (comments 7-9)
-      {
-        user: "creator",
-        text: "As moderator, I'd like to note that both proposals have merit. Let's think about implementation costs.",
-      },
-      {
-        user: "newUser",
-        text: "Implementation-wise, smart contracts could automate the delegation and term limit logic.",
-      },
-      {
-        user: "user2",
-        text: "We should also consider gas costs. A layer-2 solution might be necessary for frequent votes.",
-      },
-      // Round 4 (comments 10-12)
-      {
-        user: "creator",
-        text: "Excellent technical considerations. Let me summarize the key proposals so far.",
-      },
-      {
-        user: "newUser",
-        text: "I'd also suggest we look at quadratic voting as an alternative to simple majority rules.",
-      },
-      {
-        user: "user2",
-        text: "Quadratic voting is interesting but complex for new users. We need good UX design around it.",
-      },
-      // Round 5 (comments 13-15)
-      {
-        user: "creator",
-        text: "UX is critical. We should test any voting mechanism with a small group before full deployment.",
-      },
-      {
-        user: "newUser",
-        text: "I volunteer to be part of the testing group. The quiz we took earlier gave me good context.",
-      },
-      {
-        user: "user2",
-        text: "Count me in too. We could run a pilot governance vote on a non-critical decision first.",
-      },
-      // Round 6 (comments 16-18)
-      {
-        user: "creator",
-        text: "Perfect. Let's plan the pilot for next month. I'll create a timeline proposal.",
-      },
-      {
-        user: "newUser",
-        text: "For the pilot, I suggest we vote on the community event theme. Low stakes, good learning opportunity.",
-      },
-      {
-        user: "user2",
-        text: "Great idea. We should document the entire process so other communities can learn from us.",
-      },
-      // Round 7 (comments 19-20)
-      {
-        user: "creator",
-        text: "Agreed on documentation. I'll set up a shared doc. Thank you both for the productive discussion!",
-      },
-      {
-        user: "newUser",
-        text: "Thank you for moderating! Looking forward to the pilot governance vote next month.",
-      },
+      { user: "creator", text: "Welcome to the governance discussion. Let's explore how we can improve decision-making." },
+      { user: "newUser", text: "I think transparency should be our top priority in any governance model." },
+      { user: "user2", text: "Agreed on transparency. But we also need to consider efficiency." },
+      { user: "creator", text: "Good points. Let's consider a delegated voting system as a middle ground." },
+      { user: "newUser", text: "Delegated voting sounds promising. How do we prevent vote concentration?" },
+      { user: "user2", text: "We could implement term limits for delegates and require periodic re-delegation." },
+      { user: "creator", text: "Both proposals have merit. Let's think about implementation costs." },
+      { user: "newUser", text: "Smart contracts could automate the delegation and term limit logic." },
+      { user: "user2", text: "We should also consider gas costs. A layer-2 solution might be necessary." },
+      { user: "creator", text: "Excellent technical considerations. Let me summarize the key proposals." },
+      { user: "newUser", text: "I'd suggest we look at quadratic voting as an alternative." },
+      { user: "user2", text: "Quadratic voting is interesting but complex. We need good UX design." },
+      { user: "creator", text: "UX is critical. We should test with a small group before full deployment." },
+      { user: "newUser", text: "I volunteer to be part of the testing group." },
+      { user: "user2", text: "Count me in. We could run a pilot governance vote on a non-critical decision." },
+      { user: "creator", text: "Let's plan the pilot for next month. I'll create a timeline proposal." },
+      { user: "newUser", text: "For the pilot, I suggest we vote on the community event theme." },
+      { user: "user2", text: "Great idea. We should document the entire process." },
+      { user: "creator", text: "Agreed on documentation. Thank you both for the productive discussion!" },
+      { user: "newUser", text: "Thank you for moderating! Looking forward to the pilot vote." },
     ];
 
-    // Post creator comments (hi+user1@biyard.co — uses default storageState)
-    const creatorComments = comments.filter((c) => c.user === "creator");
-    for (const c of creatorComments) {
-      await goto(page, discussionUrl);
-      await click(page, { testId: "open-comments-btn" });
-      await expect(
-        page.getByPlaceholder("Write a comment...", { exact: true }),
-      ).toBeVisible({ timeout: 10000 });
-      await fill(page, { placeholder: "Write a comment..." }, c.text);
-      await click(page, { testId: "comment-send-btn" });
+    // Helper: open discussion overlay from the ActionDashboard carousel
+    async function openDiscussionOverlay(pg) {
+      await goto(pg, spaceUrl);
+      const discCard = pg.locator('[data-type="discuss"]').first();
+      await expect(discCard).toBeVisible({ timeout: 10000 });
+      await discCard.click();
+      await expect(pg.getByTestId("discussion-arena-overlay")).toBeVisible({
+        timeout: 10000,
+      });
     }
 
-    // Post newUser comments
+    // Helper: post a comment in the discussion overlay textarea
+    async function postComment(pg, text) {
+      const textarea = pg.locator(".comment-input__textarea");
+      await expect(textarea).toBeVisible({ timeout: 10000 });
+      await textarea.fill(text);
+      await pg.locator(".comment-input__submit").click();
+      // Wait for the comment to appear
+      await expect(pg.locator(".comment-item__text", { hasText: text })).toBeVisible({
+        timeout: 10000,
+      });
+    }
+
+    // ── Creator comments ──
+    const creatorComments = comments.filter((c) => c.user === "creator");
+    for (const c of creatorComments) {
+      await openDiscussionOverlay(page);
+      await postComment(page, c.text);
+      await clickNoNav(page, { testId: "discussion-arena-back" });
+      await expect(page.getByTestId("discussion-arena-overlay")).toBeHidden({
+        timeout: 10000,
+      });
+    }
+
+    // ── NewUser comments ──
     {
       const context = await browser.newContext({
         storageState: newUserStoragePath,
@@ -785,24 +741,22 @@ test.describe.serial("Space with actions created by a team", () => {
         locale: "en-US",
       });
       const userPage = await context.newPage();
-
       try {
         const userComments = comments.filter((c) => c.user === "newUser");
         for (const c of userComments) {
-          await goto(userPage, discussionUrl);
-          await click(userPage, { testId: "open-comments-btn" });
-          await expect(
-            userPage.getByPlaceholder("Write a comment...", { exact: true }),
-          ).toBeVisible({ timeout: 10000 });
-          await fill(userPage, { placeholder: "Write a comment..." }, c.text);
-          await click(userPage, { testId: "comment-send-btn" });
+          await openDiscussionOverlay(userPage);
+          await postComment(userPage, c.text);
+          await clickNoNav(userPage, { testId: "discussion-arena-back" });
+          await expect(userPage.getByTestId("discussion-arena-overlay")).toBeHidden({
+            timeout: 10000,
+          });
         }
       } finally {
         await context.close();
       }
     }
 
-    // Post user2 comments
+    // ── User2 comments ──
     {
       const context = await browser.newContext({
         storageState: user2StoragePath,
@@ -810,28 +764,25 @@ test.describe.serial("Space with actions created by a team", () => {
         locale: "en-US",
       });
       const userPage = await context.newPage();
-
       try {
         const userComments = comments.filter((c) => c.user === "user2");
         for (const c of userComments) {
-          await goto(userPage, discussionUrl);
-          await click(userPage, { testId: "open-comments-btn" });
-          await expect(
-            userPage.getByPlaceholder("Write a comment...", { exact: true }),
-          ).toBeVisible({ timeout: 10000 });
-          await fill(userPage, { placeholder: "Write a comment..." }, c.text);
-          await click(userPage, { testId: "comment-send-btn" });
+          await openDiscussionOverlay(userPage);
+          await postComment(userPage, c.text);
+          await clickNoNav(userPage, { testId: "discussion-arena-back" });
+          await expect(userPage.getByTestId("discussion-arena-overlay")).toBeHidden({
+            timeout: 10000,
+          });
         }
       } finally {
         await context.close();
       }
     }
 
-    // Verify total comment count from creator's perspective
-    await goto(page, discussionUrl);
-    await click(page, { testId: "open-comments-btn" });
-    const commentHeader = page.getByText(/Comments \(\d+\)/);
-    await expect(commentHeader).toBeVisible();
+    // Verify comment count from creator's perspective
+    await openDiscussionOverlay(page);
+    const countBadge = page.locator(".comments-panel__count");
+    await expect(countBadge).toBeVisible();
   });
 
   // ─── 10. Creator: Add final survey poll ───────────────────────────────────
