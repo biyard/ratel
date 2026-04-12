@@ -4,6 +4,7 @@ use crate::common::{
     utils::time::get_now_timestamp_millis,
     *,
 };
+use crate::features::spaces::types::error::SpaceError;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, DynamoEntity)]
 pub struct SpaceReward {
@@ -203,9 +204,8 @@ impl SpaceReward {
                 }
             }
 
-            return Err(Error::Unknown(format!(
-                "failed to write reward transaction: {err}"
-            )));
+            crate::error!("failed to write reward transaction: {err}");
+            return Err(SpaceError::RewardDistributionFailed.into());
         }
 
         // Award points via Biyard service (best-effort, after DB tx committed)

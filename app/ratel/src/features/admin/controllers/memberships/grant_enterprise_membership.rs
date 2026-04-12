@@ -1,5 +1,6 @@
 use crate::common::models::auth::{AdminUser, User};
 use crate::features::admin::*;
+use crate::features::admin::types::AdminError;
 use crate::features::membership::models::{
     ENTERPRISE_MAX_CREDITS_PER_SPACE, ENTERPRISE_MONTHLY_REFILL_CREDITS, Membership,
     MembershipResponse, MembershipTier, TeamMembership, UserMembership,
@@ -68,7 +69,7 @@ pub async fn grant_enterprise_membership(
 
     let username = req.username.trim().to_string();
     if username.is_empty() {
-        return Err(Error::BadRequest("Username is required".to_string()));
+        return Err(AdminError::UsernameRequired.into());
     }
 
     let enterprise_tier = MembershipTier::Enterprise(ENTERPRISE_NAME.to_string());

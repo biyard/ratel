@@ -1,4 +1,5 @@
 use crate::features::social::*;
+use crate::features::social::types::SocialError;
 
 #[derive(Debug, Clone)]
 pub struct PortOneClient {
@@ -55,17 +56,21 @@ impl PortOneClient {
             ))
             .send()
             .await
-            .map_err(|e| Error::Unknown(e.to_string()))?;
+            .map_err(|e| {
+                crate::error!("portone: {e}");
+                SocialError::PortOneRequestFailed
+            })?;
 
         if !res.status().is_success() {
             let status = res.status();
             let text = res.text().await.unwrap_or_default();
-            return Err(Error::BadRequest(format!(
-                "PortOne identify failed ({}): {}",
-                status, text
-            )));
+            crate::error!("PortOne identify failed ({status}): {text}");
+            return Err(SocialError::PortOneBadStatus.into());
         }
 
-        res.json().await.map_err(|e| Error::Unknown(e.to_string()))
+        res.json().await.map_err(|e| {
+            crate::error!("portone json: {e}");
+            SocialError::PortOneRequestFailed
+        })
     }
 }

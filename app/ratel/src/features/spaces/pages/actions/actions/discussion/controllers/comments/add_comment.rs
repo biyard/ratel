@@ -40,14 +40,12 @@ pub async fn add_comment(
         space.status,
         space.join_anytime,
     ) {
-        return Err(Error::BadRequest(
-            "Discussion is not available in the current space status".into(),
-        ));
+        return Err(SpaceActionDiscussionError::NotAvailableInCurrentStatus.into());
     }
 
     let space_post_id = match &discussion_sk_entity {
         EntityType::SpacePost(id) => SpacePostPartition(id.clone()),
-        _ => return Err(Error::BadRequest("Invalid discussion id".into())),
+        _ => return Err(SpaceActionDiscussionError::InvalidDiscussionId.into()),
     };
     let (post_pk, post_sk) = SpacePost::keys(&space_id, &space_post_id);
     let post = SpacePost::get(cli, &post_pk, Some(post_sk))

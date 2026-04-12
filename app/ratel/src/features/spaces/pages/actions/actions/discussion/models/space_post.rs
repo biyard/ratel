@@ -106,11 +106,8 @@ impl SpacePost {
         let comment_tx = comment.create_transact_write_item();
 
         crate::transact_write_items!(cli, vec![comment_tx, post]).map_err(|e| {
-            tracing::error!("Failed to add comment: {}", e);
-            crate::features::spaces::pages::actions::actions::discussion::Error::Unknown(format!(
-                "Failed to add comment: {}",
-                e
-            ))
+            crate::error!("Failed to add comment: {}", e);
+            SpaceActionDiscussionError::CreateFailed
         })?;
 
         Ok(comment)
@@ -143,11 +140,8 @@ impl SpacePost {
             .create_transact_write_item();
 
         crate::transact_write_items!(cli, vec![comment_tx, pl_tx]).map_err(|e| {
-            tracing::error!("Failed to like comment: {}", e);
-            crate::features::spaces::pages::actions::actions::discussion::Error::Unknown(format!(
-                "Failed to like comment: {}",
-                e
-            ))
+            crate::error!("Failed to like comment: {}", e);
+            SpaceActionDiscussionError::CreateFailed
         })?;
 
         Ok(())
@@ -179,11 +173,8 @@ impl SpacePost {
         let pl_tx = SpacePostCommentLike::delete_transact_write_item(&pcl.pk, &pcl.sk);
 
         crate::transact_write_items!(cli, vec![comment_tx, pl_tx]).map_err(|e| {
-            tracing::error!("Failed to unlike comment: {}", e);
-            crate::features::spaces::pages::actions::actions::discussion::Error::Unknown(format!(
-                "Failed to unlike comment: {}",
-                e
-            ))
+            crate::error!("Failed to unlike comment: {}", e);
+            SpaceActionDiscussionError::DeleteFailed
         })?;
 
         Ok(())

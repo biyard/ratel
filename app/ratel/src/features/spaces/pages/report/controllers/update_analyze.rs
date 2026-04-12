@@ -1,5 +1,6 @@
 use crate::features::spaces::pages::report::models::SpaceAnalyze;
 use crate::features::spaces::pages::report::*;
+use crate::features::spaces::pages::report::types::SpaceReportError;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpdateAnalyzeHtmlRequest {
@@ -20,8 +21,8 @@ pub async fn update_analyze(
     let analyze = SpaceAnalyze::get(dynamo, &partition, Some(EntityType::SpaceAnalyze))
         .await
         .map_err(|e| {
-            error!("update_analyze: failed to load analyze: {:?}", e);
-            Error::InternalServerError(format!("failed to load analyze: {e}"))
+            crate::error!("update_analyze: failed to load analyze: {:?}", e);
+            SpaceReportError::AnalyzeLoadFailed
         })?;
     let mut analyze = analyze.unwrap_or_default();
     analyze.pk = partition.clone();
@@ -31,7 +32,10 @@ pub async fn update_analyze(
         .with_html_contents(req.html_contents.clone())
         .execute(dynamo)
         .await
-        .map_err(|e| Error::InternalServerError(format!("failed to update analyze: {e:?}")))?;
+        .map_err(|e| {
+            crate::error!("failed to update analyze: {e:?}");
+            SpaceReportError::AnalyzeUpdateFailed
+        })?;
     analyze.html_contents = Some(req.html_contents);
 
     Ok(analyze)

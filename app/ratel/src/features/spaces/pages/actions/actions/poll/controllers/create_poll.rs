@@ -28,7 +28,10 @@ pub async fn create_poll(
     ];
     items.push(DashboardAggregate::inc_polls(&space_pk_partition, 1));
     crate::transact_write_items!(cli, items)
-        .map_err(|e| Error::Unknown(format!("Failed to create poll: {e}")))?;
+        .map_err(|e| {
+            crate::error!("Failed to create poll: {e}");
+            SpacePollError::CreateFailed
+        })?;
 
     let mut ret: PollResponse = poll.into();
     ret.space_action = space_action;

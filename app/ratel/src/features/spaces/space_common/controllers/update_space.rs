@@ -122,9 +122,7 @@ pub async fn update_space(
             let post_pk = space_pk.clone().to_post_key()?;
 
             if !publish {
-                return Err(Error::BadRequest(
-                    "it does not support unpublished now".into(),
-                ));
+                return Err(SpaceError::StartNowNotSupported.into());
             }
 
             su = su
@@ -174,13 +172,11 @@ pub async fn update_space(
             use crate::features::spaces::space_common::models::SpaceEmailVerification;
 
             if updated_space.status != Some(SpaceStatus::Open) {
-                return Err(Error::BadRequest(
-                    "Start is not available for the current status.".into(),
-                ));
+                return Err(SpaceError::StartNowNotSupported.into());
             }
 
             if !start {
-                return Err(Error::BadRequest("it does not support start now".into()));
+                return Err(SpaceError::StartNowNotSupported.into());
             }
 
             su = su.with_status(SpaceStatus::Ongoing);
@@ -192,13 +188,11 @@ pub async fn update_space(
         }
         UpdateSpaceRequest::Finish { finished } => {
             if updated_space.status != Some(SpaceStatus::Ongoing) {
-                return Err(Error::BadRequest(
-                    "Finish is not available for the current status.".into(),
-                ));
+                return Err(SpaceError::FinishNowNotSupported.into());
             }
 
             if !finished {
-                return Err(Error::BadRequest("it does not support finish now".into()));
+                return Err(SpaceError::FinishNowNotSupported.into());
             }
 
             su = su.with_status(SpaceStatus::Finished);
@@ -220,9 +214,7 @@ pub async fn update_space(
         }
         UpdateSpaceRequest::ChangeVisibility { .. } => {
             tracing::error!("ChangeVisibility is deprecated");
-            return Err(Error::InternalServerError(
-                "ChangeVisibility is deprecated".to_string(),
-            ));
+            return Err(SpaceError::UpdateFailed.into());
         }
         UpdateSpaceRequest::Logo { logo } => {
             su = su.with_logo(logo.clone());
@@ -233,7 +225,7 @@ pub async fn update_space(
             let remains = updated_space.remains + (quotas - updated_space.quota);
 
             if remains < 0 {
-                return Err(Error::BadRequest("Invalid panel quota".into()));
+                return Err(SpaceError::InvalidPanelQuota.into());
             }
 
             su = su.with_quota(quotas).with_remains(remains);
@@ -253,7 +245,10 @@ pub async fn update_space(
         let post_pk = space_pk.clone().to_post_key()?;
         let post = Post::get(dynamo, &post_pk, Some(&EntityType::Post))
             .await?
-            .ok_or_else(|| Error::InternalServerError("Failed to get post".to_string()))?;
+            .ok_or_else(|| {
+                crate::error!("Failed to get post after publish");
+                SpaceError::UpdateFailed
+            })?;
 
         SpaceInvitationMember::send_email(dynamo, &updated_space, post.title).await?;
     }
