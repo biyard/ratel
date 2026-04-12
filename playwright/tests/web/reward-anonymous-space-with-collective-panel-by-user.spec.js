@@ -1,5 +1,13 @@
 import { test, expect } from "@playwright/test";
-import { click, clickNoNav, fill, goto, getLocator, getEditor, waitPopup } from "../utils";
+import {
+  click,
+  clickNoNav,
+  fill,
+  goto,
+  getLocator,
+  getEditor,
+  waitPopup,
+} from "../utils";
 
 // This test requires the backend to be built with --features bypass
 // for signup verification with hardcoded code "000000".
@@ -533,11 +541,9 @@ test.describe
       await click(page, { text: "Finished Sign-up" });
       await waitPopup(page, { visible: false });
 
-      // Reload the space page as logged-in user
-      await goto(page, spaceUrl);
+      await page.getByTestId("btn-verify").click({ force: true });
+      await page.waitForLoadState();
 
-      // Click Participate button on the ArenaViewer
-      // Pause animations again after page reload
       await page.addStyleTag({
         content:
           "*, *::before, *::after { animation-play-state: paused !important; }",
@@ -565,7 +571,10 @@ test.describe
 
       // Click the prerequisite poll item — opens the full-screen poll overlay.
       // The prereq list shows the poll question as the title, not the poll name.
-      const prereqItem = page.getByTestId("card-prerequisite").locator(".prereq-item").first();
+      const prereqItem = page
+        .getByTestId("card-prerequisite")
+        .locator(".prereq-item")
+        .first();
       await prereqItem.click();
 
       // Poll overlay appears with an Overview screen first
