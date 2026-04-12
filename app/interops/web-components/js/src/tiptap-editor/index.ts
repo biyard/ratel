@@ -251,6 +251,11 @@ class TiptapEditor extends HTMLElement {
       ],
       content,
       editable,
+      editorProps: {
+        transformPastedHTML(html: string) {
+          return html.replace(/\s*color\s*:\s*[^;]+;?/gi, "");
+        },
+      },
       onUpdate: ({ editor }) => {
         this._value = editor.getHTML();
 
