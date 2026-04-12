@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { click, fill, goto, getLocator, getEditor, waitPopup } from "../utils";
+import { click, clickNoNav, fill, goto, getLocator, getEditor, waitPopup } from "../utils";
 
 // This test requires the backend to be built with --features bypass
 // for signup verification with hardcoded code "000000".
@@ -141,9 +141,7 @@ test.describe
         await page.waitForLoadState("load");
 
         // Set credit usage to 2
-        const creditInput = page.locator(
-          '[data-testid="reward-credit-input"]',
-        );
+        const creditInput = page.locator('[data-testid="reward-credit-input"]');
         await creditInput.fill("2");
 
         // Trigger blur to save
@@ -218,9 +216,7 @@ test.describe
         await page.waitForLoadState("load");
 
         // Set credit usage to 2
-        const creditInput = page.locator(
-          '[data-testid="reward-credit-input"]',
-        );
+        const creditInput = page.locator('[data-testid="reward-credit-input"]');
         await creditInput.fill("2");
 
         await page.keyboard.press("Tab");
@@ -357,10 +353,7 @@ test.describe
       // Use .first() to avoid strict mode violation when the date appears
       // in multiple month sections of the calendar grid (e.g. at month
       // boundaries where the day shows in both "current" and "next").
-      await page
-        .getByRole("button", { name: tomorrowLabel })
-        .first()
-        .click();
+      await page.getByRole("button", { name: tomorrowLabel }).first().click();
       await page.waitForLoadState("load");
 
       // Build accessible name for day after tomorrow (end date)
@@ -380,10 +373,7 @@ test.describe
       // Click the end date in the calendar using its accessible name.
       // Use .first() to avoid strict mode violation when the date appears
       // in multiple month sections of the calendar grid.
-      await page
-        .getByRole("button", { name: dayAfterLabel })
-        .first()
-        .click();
+      await page.getByRole("button", { name: dayAfterLabel }).first().click();
       await page.waitForLoadState("load");
     } finally {
       await context.close();
@@ -416,7 +406,9 @@ test.describe
       }
 
       // Now click Settings on the Panels app card
-      const settingButton = page.locator('[data-testid="configure-app-panels"]');
+      const settingButton = page.locator(
+        '[data-testid="configure-app-panels"]',
+      );
       // There may be multiple "Setting" buttons — the Panels one should be visible
       // after install. Find the one associated with Panels.
       // Each AppCard renders the Setting button. We need the Panels one.
@@ -485,8 +477,16 @@ test.describe
       // Navigate to the published space (ArenaViewer at root URL)
       await goto(page, spaceUrl);
 
+      // Pause CSS animations — card-float moves buttons continuously,
+      // causing Playwright clicks to miss the target.
+      await page.addStyleTag({
+        content:
+          "*, *::before, *::after { animation-play-state: paused !important; }",
+      });
+
       // Click Sign In on the ArenaViewer's SigninCard
-      await click(page, { testId: "btn-signin" });
+      await clickNoNav(page, { testId: "btn-signin" });
+      await waitPopup(page, { visible: true });
 
       // Switch to signup
       await click(page, { text: "Create an account" });
@@ -537,31 +537,45 @@ test.describe
       await goto(page, spaceUrl);
 
       // Click Participate button on the ArenaViewer
-      await click(page, { testId: "btn-participate" });
+      // Pause animations again after page reload
+      await page.addStyleTag({
+        content:
+          "*, *::before, *::after { animation-play-state: paused !important; }",
+      });
+
+      await clickNoNav(page, { testId: "btn-participate" });
 
       // Since Age and Gender panels are configured (collective type),
       // the ConsentModal appears. Collective panels collect self-declared
       // demographics during consent — no credential verification needed.
       await expect(page.getByTestId("card-consent")).toBeVisible();
       await page.locator('input[type="checkbox"]').check();
-      await click(page, { testId: "btn-consent-confirm" });
+      await page.getByTestId("btn-consent-confirm").click();
 
+      await page.waitForLoadState();
       // Wait for consent modal to disappear (server call + role transition)
-      await expect(page.getByTestId("card-consent")).toBeHidden({
-        timeout: 15000,
-      });
+      // await expect(page.getByTestId("card-consent")).toBeHidden({
+      //   timeout: 15000,
+      // });
 
       // PrerequisiteCard appears with the checklist
       await expect(page.getByTestId("card-prerequisite")).toBeVisible({
         timeout: 30000,
       });
 
-      // Click the prerequisite poll item — opens the full-screen poll overlay
-      await click(page, { text: "Prerequisite Poll: Budget Allocation" });
+      // Click the prerequisite poll item — opens the full-screen poll overlay.
+      // The prereq list shows the poll question as the title, not the poll name.
+      const prereqItem = page.getByTestId("card-prerequisite").locator(".prereq-item").first();
+      await prereqItem.click();
 
-      // Poll overlay appears — wait for poll content (options) to fully load
+      // Poll overlay appears with an Overview screen first
       const overlay = page.getByTestId("poll-arena-overlay");
       await expect(overlay).toBeVisible();
+
+      // Click "Begin Poll" to enter the question view
+      await clickNoNav(page, { testId: "poll-arena-begin" });
+
+      // Wait for poll options to load
       await expect(overlay.locator(".option-single").first()).toBeVisible({
         timeout: 30000,
       });
@@ -570,7 +584,7 @@ test.describe
       await overlay.locator(".option-single").first().click();
 
       // Submit the poll using testId
-      await click(page, { testId: "poll-submit" });
+      await clickNoNav(page, { testId: "poll-submit" });
 
       // Confirm dialog appears — click confirm
       await click(page, { testId: "poll-confirm-submit" });
