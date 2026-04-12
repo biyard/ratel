@@ -852,7 +852,9 @@ test.describe.serial("Space with actions created by a team", () => {
   // ─── 10. Creator: Add final survey poll ───────────────────────────────────
 
   test("Creator: Add a final survey poll", async ({ page }) => {
-    await goto(page, spaceUrl + "/actions");
+    await goto(page, spaceUrl);
+    await click(page, { testId: "btn-switch-creator" });
+    await click(page, { text: "Actions" });
     await click(page, { text: "Select Action Type" });
     await click(page, { testId: "action-type-poll" });
     await hideFab(page);
