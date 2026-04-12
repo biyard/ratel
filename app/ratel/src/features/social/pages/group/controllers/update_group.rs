@@ -1,5 +1,6 @@
 use super::super::dto::UpdateGroupRequest;
 use super::super::*;
+use crate::features::social::types::SocialError;
 
 use crate::features::posts::models::TeamGroup;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
@@ -24,9 +25,7 @@ pub async fn update_group_handler(
     };
 
     if !can_edit {
-        return Err(Error::Unauthorized(
-            "You don't have permission to update groups.".to_string(),
-        ));
+        return Err(SocialError::SessionNotFound.into());
     }
 
     let mut updater = TeamGroup::updater(team_pk, EntityType::TeamGroup(group_sk));

@@ -327,7 +327,5 @@ pub async fn handle_portone_webhook(req: PortoneRequest) -> Result<()> {
 
 #[cfg(not(feature = "server"))]
 pub async fn handle_portone_webhook(_req: PortoneRequest) -> Result<()> {
-    Err(Error::Unknown(
-        "PortOne webhook is only available on the server target".to_string(),
-    ))
+    Err(crate::features::membership::types::MembershipPaymentError::WebhookProcessingFailed.into())
 }

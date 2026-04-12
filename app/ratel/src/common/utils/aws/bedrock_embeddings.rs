@@ -2,6 +2,7 @@ use aws_sdk_bedrockruntime::Client;
 use aws_sdk_bedrockruntime::primitives::Blob;
 
 use crate::common::{Error, Result};
+use crate::common::utils::InfraError;
 
 const MODEL_ID: &str = "amazon.titan-embed-text-v2:0";
 const MAX_INPUT_CHARS: usize = 20_000;
@@ -36,26 +37,26 @@ impl BedrockEmbeddingsClient {
             .model_id(MODEL_ID)
             .content_type("application/json")
             .body(Blob::new(serde_json::to_vec(&body).map_err(|e| {
-                Error::InternalServerError(format!("Failed to serialize embedding request: {}", e))
+                tracing::error!("Failed to serialize embedding request: {e}");
+                InfraError::BedrockSerializeFailed
             })?))
             .send()
             .await
             .map_err(|e| {
-                Error::InternalServerError(format!("Bedrock invoke_model failed: {}", e))
+                tracing::error!("Bedrock invoke_model failed: {e}");
+                InfraError::BedrockInvokeFailed
             })?;
 
         let response_body: serde_json::Value =
             serde_json::from_slice(response.body().as_ref()).map_err(|e| {
-                Error::InternalServerError(format!(
-                    "Failed to parse embedding response: {}",
-                    e
-                ))
+                tracing::error!("Failed to parse embedding response: {e}");
+                Error::from(InfraError::BedrockParseFailed)
             })?;
 
         let embedding = response_body["embedding"]
             .as_array()
             .ok_or_else(|| {
-                Error::InternalServerError("No embedding in response".to_string())
+                Error::from(InfraError::BedrockNoEmbedding)
             })?
             .iter()
             .map(|v| v.as_f64().unwrap_or(0.0) as f32)

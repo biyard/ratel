@@ -1,4 +1,5 @@
 use crate::features::spaces::pages::overview::*;
+use crate::features::spaces::types::SpaceError;
 #[cfg(feature = "server")]
 use crate::common::models::space::SpaceCommon;
 #[cfg(feature = "server")]
@@ -26,7 +27,10 @@ pub async fn update_space_content(
         .with_content(req.content)
         .execute(dynamo)
         .await
-        .map_err(|e| Error::InternalServerError(format!("failed to update content: {e:?}")))?;
+        .map_err(|e| {
+            crate::error!("failed to update content: {e:?}");
+            SpaceError::UpdateFailed
+        })?;
 
     Ok(())
 }

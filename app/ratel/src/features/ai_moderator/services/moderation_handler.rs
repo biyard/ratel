@@ -4,7 +4,8 @@ use aws_sdk_bedrockruntime::types::{
 };
 use aws_sdk_bedrockruntime::Client as BedrockClient;
 
-use crate::common::{Error, Result};
+use crate::common::Result;
+use crate::features::ai_moderator::types::AiModeratorError;
 use crate::features::ai_moderator::models::*;
 use crate::common::types::*;
 
@@ -88,7 +89,10 @@ pub async fn generate_moderation_reply(
         .role(ConversationRole::User)
         .content(ContentBlock::Text(full_prompt))
         .build()
-        .map_err(|e| Error::InternalServerError(format!("Failed to build message: {e:?}")))?;
+        .map_err(|e| {
+            crate::error!("Failed to build message: {e:?}");
+            AiModeratorError::MessageBuildFailed
+        })?;
 
     let response = client
         .converse()
@@ -101,7 +105,10 @@ pub async fn generate_moderation_reply(
         .messages(message)
         .send()
         .await
-        .map_err(|e| Error::InternalServerError(format!("Bedrock converse failed: {e:?}")))?;
+        .map_err(|e| {
+            crate::error!("Bedrock converse failed: {e:?}");
+            AiModeratorError::BedrockConverseFailed
+        })?;
 
     let mut text = String::new();
     if let Some(output) = response.output() {

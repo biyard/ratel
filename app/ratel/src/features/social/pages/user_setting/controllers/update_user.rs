@@ -1,4 +1,5 @@
 use super::super::*;
+use crate::features::social::types::SocialError;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
@@ -83,9 +84,7 @@ pub async fn update_user_handler(body: UpdateUserRequest) -> Result<UserDetailRe
                 .await?;
         }
         UpdateUserRequest::Theme { .. } => {
-            return Err(Error::NotSupported(
-                "Theme update is not supported in settings".to_string(),
-            ));
+            return Err(Error::UnsupportedOperation);
         }
     }
 

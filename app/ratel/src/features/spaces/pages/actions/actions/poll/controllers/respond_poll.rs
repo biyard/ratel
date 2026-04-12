@@ -159,9 +159,7 @@ pub async fn respond_poll(
         space.status,
         space.join_anytime,
     ) {
-        return Err(Error::BadRequest(
-            "Poll is not available in the current space status".into(),
-        ));
+        return Err(SpacePollError::PollNotInProgress.into());
     }
 
     // Prerequisite polls are available during the Open phase regardless of their
@@ -169,18 +167,18 @@ pub async fn respond_poll(
     if poll.status() != PollStatus::InProgress
         && !(space_action.prerequisite && poll.status() == PollStatus::NotStarted)
     {
-        return Err(Error::BadRequest("Poll is not in progress".into()));
+        return Err(SpacePollError::PollNotInProgress.into());
     }
 
     if !validate_answers(poll.questions.clone(), req.answers.clone()) {
-        return Err(Error::BadRequest("Answers do not match questions".into()));
+        return Err(SpacePollError::AnswerMismatch.into());
     }
 
     let existing =
         SpacePollUserAnswer::find_one(cli, &space_pk, &poll_sk_entity, &member.pk).await?;
 
     if existing.is_some() && !poll.response_editable {
-        return Err(Error::BadRequest("Response editing not allowed".into()));
+        return Err(SpacePollError::EditNotAllowed.into());
     }
 
     let env = crate::common::config::Environment::default();
@@ -189,9 +187,7 @@ pub async fn respond_poll(
         use crate::features::spaces::pages::actions::services::vote_crypto::VOTE_CRYPTO_SERVICE;
         let crypto = VOTE_CRYPTO_SERVICE
             .as_ref()
-            .ok_or(Error::InternalServerError(
-                "Encrypted voting is not configured (VOTER_TAG_SECRET / ATTR_VOTING_AUTHORITY_JSON missing)".into(),
-            ))?;
+            .ok_or(SpacePollError::VoteVerificationFailed)?;
         let metadata = PollMetadata {
             poll_sk: poll_sk_entity.to_string(),
             submitted_at_ms: now,

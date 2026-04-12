@@ -1,6 +1,7 @@
 use crate::common::models::space::SpaceCommon;
 use crate::features::spaces::pages::actions::actions::follow::models::*;
 use crate::features::spaces::pages::actions::actions::follow::*;
+use crate::features::spaces::pages::actions::actions::follow::types::SpaceFollowError;
 
 #[mcp_tool(name = "create_follow", description = "Create a follow action in a space. Requires creator role.")]
 #[post(
@@ -40,9 +41,8 @@ pub async fn create_follow(
         space_action.create_transact_write_item(),
     ];
     crate::transact_write_items!(cli, items).map_err(|e| {
-        crate::features::spaces::pages::actions::actions::follow::Error::Unknown(format!(
-            "Failed to create follow: {e}"
-        ))
+        crate::error!("Failed to create follow: {e}");
+        SpaceFollowError::CreateFailed
     })?;
 
     Ok(follow)

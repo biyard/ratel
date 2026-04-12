@@ -4,6 +4,7 @@ pub mod config;
 pub mod controllers;
 pub mod models;
 pub mod services;
+pub mod types;
 #[cfg(feature = "server")]
 pub mod server;
 

@@ -1,4 +1,5 @@
-use crate::common::{Error, Result};
+use crate::common::Result;
+use crate::features::ai_moderator::types::AiModeratorError;
 use crate::common::types::*;
 use crate::features::ai_moderator::models::*;
 use crate::features::ai_moderator::services::moderation_handler;
@@ -100,7 +101,10 @@ pub async fn handle_ai_moderator_event(post: SpacePost) -> Result<()> {
         &ai_author,
     )
     .await
-    .map_err(|e| Error::InternalServerError(format!("Failed to save AI moderator reply: {e}")))?;
+    .map_err(|e| {
+        crate::error!("Failed to save AI moderator reply: {e}");
+        AiModeratorError::ReplySaveFailed
+    })?;
 
     tracing::info!(
         comment_sk = %comment.sk,

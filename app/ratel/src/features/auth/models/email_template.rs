@@ -31,8 +31,9 @@ impl EmailTemplate {
         #[cfg(all(not(test), not(feature = "bypass")))]
         {
             let template_name = self.operation.template_name();
-            let data: serde_json::Value = serde_json::to_value(&self.operation).map_err(|_| {
-                Error::InternalServerError("Failed to serialize email template data".into())
+            let data: serde_json::Value = serde_json::to_value(&self.operation).map_err(|e| {
+                crate::error!("email template: {e}");
+                AuthError::EmailTemplateFailed
             })?;
 
             let recipients: Vec<(String, Option<serde_json::Value>)> = self

@@ -55,30 +55,27 @@ pub struct WalletConnectResult {
 pub async fn wallet_connect() -> crate::common::Result<WalletConnectResult> {
     let js_value = JsFuture::from(wallet_connect_promise())
         .await
-        .map_err(|e| {
-            let msg = format!("{:?}", e);
-            Error::Unknown(msg)
-        })?;
+        .map_err(|_e| AuthError::WalletConnectFailed)?;
 
     serde_wasm_bindgen::from_value(js_value)
-        .map_err(|e| Error::Unknown(format!("Failed to parse WalletConnectResult: {}", e)))
+        .map_err(|_e| AuthError::WalletConnectFailed.into())
 }
 
 /// Sign a message using the active session
 pub async fn wallet_sign_message(message: &str) -> crate::common::Result<String> {
     let js_value = JsFuture::from(wallet_sign_message_promise(message))
         .await
-        .map_err(|e| Error::Unknown(format!("Sign message failed: {:?}", e)))?;
+        .map_err(|_e| AuthError::WalletConnectFailed)?;
 
     js_value
         .as_string()
-        .ok_or_else(|| Error::Unknown("Signature is not a string".into()))
+        .ok_or_else(|| AuthError::WalletConnectFailed.into())
 }
 
 pub async fn wallet_get_address() -> crate::common::Result<Option<String>> {
     let js_value = JsFuture::from(wallet_get_address_promise())
         .await
-        .map_err(|e| Error::Unknown(format!("Failed to get address: {:?}", e)))?;
+        .map_err(|_e| AuthError::WalletConnectFailed)?;
     Ok(js_value.as_string())
 }
 
@@ -86,13 +83,13 @@ pub async fn wallet_get_address() -> crate::common::Result<Option<String>> {
 pub async fn wallet_open_app() -> crate::common::Result<()> {
     JsFuture::from(wallet_open_app_promise())
         .await
-        .map_err(|e| Error::Unknown(format!("Failed to open wallet app: {:?}", e)))?;
+        .map_err(|_e| AuthError::WalletConnectFailed)?;
     Ok(())
 }
 
 pub async fn wallet_disconnect() -> crate::common::Result<()> {
     JsFuture::from(wallet_disconnect_promise())
         .await
-        .map_err(|e| Error::Unknown(format!("Wallet disconnect failed: {:?}", e)))?;
+        .map_err(|_e| AuthError::WalletConnectFailed)?;
     Ok(())
 }

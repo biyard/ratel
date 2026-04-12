@@ -12,8 +12,14 @@ use base64::Engine;
 #[cfg(feature = "server")]
 fn serializable_post_error(context: &str, err: Error) -> Error {
     match err {
-        Error::Aws(err) => Error::InternalServerError(format!("{context}: {err}")),
-        Error::Session(err) => Error::InternalServerError(format!("{context}: {err}")),
+        Error::Aws(ref inner) => {
+            crate::error!("{context}: {inner}");
+            PostError::ListFailed.into()
+        }
+        Error::Session(ref inner) => {
+            crate::error!("{context}: {inner}");
+            PostError::ListFailed.into()
+        }
         other => other,
     }
 }

@@ -57,7 +57,7 @@ pub async fn update_post_handler(post_id: FeedPartition, req: UpdatePostRequest)
     let (mut post, has_permission) =
         Post::has_permission(cli, &post_pk, Some(&user.pk), TeamGroupPermission::PostEdit).await?;
     if !has_permission {
-        return Err(Error::Unauthorized("No permission".into()));
+        return Err(PostError::NotAccessible.into());
     }
 
     let now = chrono::Utc::now().timestamp_millis();

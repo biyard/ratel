@@ -8,7 +8,7 @@ pub async fn unfollow_user(target_pk: Partition) -> Result<()> {
     let cli = common_config.dynamodb();
 
     if target_pk == user.pk {
-        return Err(Error::BadRequest("Cannot unfollow yourself".into()));
+        return Err(FollowError::CannotUnfollowSelf.into());
     }
 
     let (follower_pk, follower_sk) = UserFollow::follower_keys(&target_pk, &user.pk);
@@ -32,7 +32,7 @@ pub async fn unfollow_user(target_pk: Partition) -> Result<()> {
         Partition::Team(_) => Team::updater(target_pk.clone(), EntityType::Team)
             .decrease_followers(1)
             .transact_write_item(),
-        _ => return Err(Error::BadRequest("Invalid target".into())),
+        _ => return Err(FollowError::InvalidTarget.into()),
     };
     let follower_update = crate::common::models::auth::User::updater(user.pk.clone(), EntityType::User)
         .decrease_followings_count(1)
@@ -48,8 +48,8 @@ pub async fn unfollow_user(target_pk: Partition) -> Result<()> {
         .send()
         .await
         .map_err(|e| {
-            error!("Failed to unfollow user: {:?}", e);
-            Error::Unknown("Failed to unfollow user".into())
+            crate::error!("unfollow failed: {e}");
+            FollowError::UnfollowFailed
         })?;
 
     Ok(())

@@ -150,7 +150,7 @@ where
             }
         }
         let space_id_str = space_id_str
-            .ok_or_else(|| Error::BadRequest("Missing space_id in path".to_string()))?;
+            .ok_or(Error::MissingSpaceId)?;
 
         let space_id: SpacePartition = space_id_str.parse()?;
         let space_pk: Partition = space_id.into();

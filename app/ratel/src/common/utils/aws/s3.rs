@@ -9,6 +9,7 @@ use aws_sdk_s3::{
 use uuid::Uuid;
 
 use crate::common::{Error, Result};
+use crate::common::utils::InfraError;
 
 #[allow(unused)]
 #[derive(Debug, Clone)]
@@ -102,7 +103,7 @@ impl S3Client {
             .await
             .map_err(|e| {
                 tracing::error!("Failed to upload object: {}", e);
-                Error::InternalServerError(e.to_string())
+                Error::from(InfraError::S3OperationFailed)
             })?;
         Ok(())
     }
@@ -117,12 +118,12 @@ impl S3Client {
             .await
             .map_err(|e| {
                 tracing::error!("Failed to get object: {}", e);
-                Error::InternalServerError(e.to_string())
+                Error::from(InfraError::S3OperationFailed)
             })?;
         let content_type = res.content_type().as_deref().map(ContentType::from);
         let data = res.body.collect().await.map_err(|e| {
             tracing::error!("Failed to read object body: {}", e);
-            Error::InternalServerError(e.to_string())
+            Error::from(InfraError::S3OperationFailed)
         })?;
         Ok(S3Object {
             key: key.to_string(),
@@ -159,13 +160,13 @@ impl S3Client {
                     PresigningConfig::expires_in(std::time::Duration::from_secs(expire_time))
                         .map_err(|e| {
                             tracing::error!("Failed to set expire time: {}", e);
-                            Error::InternalServerError(e.to_string())
+                            Error::from(InfraError::S3OperationFailed)
                         })?,
                 )
                 .await
                 .map_err(|e| {
                     tracing::error!("Failed to presign upload: {}", e);
-                    Error::InternalServerError(e.to_string())
+                    Error::from(InfraError::S3OperationFailed)
                 })?;
 
             result.push(PutObjectResult {
@@ -191,14 +192,14 @@ impl S3Client {
                 PresigningConfig::expires_in(std::time::Duration::from_secs(expire)).map_err(
                     |e| {
                         tracing::error!("Failed to set expire time: {}", e);
-                        Error::InternalServerError(e.to_string())
+                        Error::from(InfraError::S3OperationFailed)
                     },
                 )?,
             )
             .await
             .map_err(|e| {
                 tracing::error!("Failed to presign download: {}", e);
-                Error::InternalServerError(e.to_string())
+                Error::from(InfraError::S3OperationFailed)
             })?;
 
         Ok(presigned.uri().to_string())
@@ -221,7 +222,7 @@ impl S3Client {
             .build()
             .map_err(|e| {
                 tracing::error!("Failed to build Delete: {}", e);
-                Error::InternalServerError(e.to_string())
+                Error::from(InfraError::S3OperationFailed)
             })?;
 
         self.client
@@ -232,7 +233,7 @@ impl S3Client {
             .await
             .map_err(|e| {
                 tracing::error!("Failed to delete objects: {}", e);
-                Error::InternalServerError(e.to_string())
+                Error::from(InfraError::S3OperationFailed)
             })?;
 
         Ok(())
