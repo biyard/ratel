@@ -1,4 +1,7 @@
 use crate::features::spaces::pages::actions::types::SpaceActionSummary;
+use crate::features::spaces::pages::index::action_pages::quiz::{
+    ActiveActionOverlay, ActiveActionOverlaySignal,
+};
 use crate::features::spaces::pages::index::*;
 
 #[component]
@@ -8,7 +11,7 @@ pub fn DiscussionActionCard(
 ) -> Element {
     let tr: SpaceViewerTranslate = use_translate();
     let lang = use_language();
-    let nav = use_navigator();
+    let mut overlay: ActiveActionOverlaySignal = use_context();
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
@@ -18,8 +21,8 @@ pub fn DiscussionActionCard(
             "data-prerequisite": action.prerequisite,
             "data-testid": "quest-card-{action.action_id}",
             onclick: move |_| {
-                let route = action.get_url(&space_id());
-                nav.push(route);
+                let discussion_id: SpacePostEntityType = action.action_id.clone().into();
+                overlay.0.set(Some(ActiveActionOverlay::Discussion(space_id(), discussion_id)));
             },
 
             svg {
@@ -63,7 +66,10 @@ pub fn DiscussionActionCard(
             div { class: "quest-card__body",
                 div { class: "quest-card__title", "{action.title}" }
                 if !action.description.is_empty() {
-                    div { class: "quest-card__desc", dangerous_inner_html: "{action.description}" }
+                    div {
+                        class: "quest-card__desc",
+                        dangerous_inner_html: "{action.description}",
+                    }
                 }
                 div { class: "quest-card__detail",
                     div { class: "quest-detail-chip",
