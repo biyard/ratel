@@ -42,6 +42,13 @@ fn serve(app: fn() -> Element) {
             crate::common::stream_poller::spawn_stream_poller();
         }
 
+        #[cfg(feature = "local-dev")]
+        let app = {
+            let design_dir =
+                std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("assets/design");
+            crate::common::design_preview::merge_design_routes(app, &design_dir)
+        };
+
         dioxus::serve(move || {
             let app = app.clone();
 
