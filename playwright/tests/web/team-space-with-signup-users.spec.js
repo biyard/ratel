@@ -923,6 +923,7 @@ test.describe.serial("Space with actions created by a team", () => {
         () => document.querySelector("[data-dioxus-id]") !== null,
       );
 
+      await click(page, { testId: "poll-arena-begin" });
       // Wait for poll option to be visible, then answer
       await expect(page.getByText("Excellent", { exact: true })).toBeVisible({
         timeout: 10000,
@@ -960,6 +961,8 @@ test.describe.serial("Space with actions created by a team", () => {
       );
 
       // Wait for poll option to be visible, then answer
+      await click(page, { testId: "poll-arena-begin" });
+
       await expect(page.getByText("Good", { exact: true })).toBeVisible({
         timeout: 10000,
       });
