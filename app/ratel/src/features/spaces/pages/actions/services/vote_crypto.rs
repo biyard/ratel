@@ -1,5 +1,5 @@
 use crate::common::types::{EntityType, Error, Partition};
-use crate::features::spaces::pages::actions::actions::poll::types::error::SpacePollError;
+use crate::features::spaces::pages::actions::actions::poll::types::SpacePollError;
 use dioxus::fullstack::Lazy;
 
 pub static VOTE_CRYPTO_SERVICE: Lazy<Option<VoteCryptoService>> = Lazy::new(|| async move {
@@ -181,7 +181,7 @@ impl VoteCryptoService {
         VotingAuthority::serialize_key(&sk)
             .map_err(|e| {
                 crate::error!("SK serialize error: {e}");
-                SpacePollError::EncryptionFailed
+                Error::from(SpacePollError::EncryptionFailed)
             })
     }
 }
