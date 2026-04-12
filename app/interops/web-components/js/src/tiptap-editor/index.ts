@@ -218,8 +218,8 @@ class TiptapEditor extends HTMLElement {
         }),
         Placeholder.configure({ placeholder }),
         TextStyle,
-        Color,
-        Highlight.configure({ multicolor: true }),
+        // Color,
+        // Highlight.configure({ multicolor: true }),
         TextAlign.configure({
           types: ["heading", "paragraph"],
           alignments: ["left", "center", "right"],
