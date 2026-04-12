@@ -977,7 +977,9 @@ test.describe.serial("Space with actions created by a team", () => {
   // ─── 12. Creator: Finish the space ────────────────────────────────────────
 
   test("Creator: Finish the space", async ({ page }) => {
-    await goto(page, spaceUrl + "/dashboard");
+    await goto(page, spaceUrl);
+    await click(page, { testId: "btn-switch-creator" });
+
     await click(page, { text: "Finish" });
     await click(page, { testId: "end-space-button" });
     await page.waitForLoadState("load");
