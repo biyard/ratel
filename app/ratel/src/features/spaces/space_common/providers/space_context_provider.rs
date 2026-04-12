@@ -28,7 +28,14 @@ impl SpaceContextProvider {
             .await
         })?;
 
-        let mut current_role = use_memo(move || role());
+        let mut current_role = use_memo(move || {
+            let space = space();
+            let role = role();
+            match (role, space.status) {
+                (SpaceUserRole::Creator, Some(SpaceStatus::Ongoing)) => SpaceUserRole::Participant,
+                _ => role,
+            }
+        });
 
         let srv = Self {
             role,
