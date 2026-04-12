@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import {
   click,
+  clickNoNav,
   fill,
   goto,
   getLocator,
@@ -59,7 +60,12 @@ async function signUpFromSpace(browser, spaceUrl) {
   const page = await context.newPage();
 
   await goto(page, spaceUrl);
-  await click(page, { testId: "btn-signin" });
+  // Pause card-float animation so Playwright clicks don't miss
+  await page.addStyleTag({
+    content: "*, *::before, *::after { animation-play-state: paused !important; }",
+  });
+  await clickNoNav(page, { testId: "btn-signin" });
+  await waitPopup(page, { visible: true });
   await click(page, { text: "Create an account" });
 
   const signupEmail = `e2e_signup_${Date.now()}@biyard.co`;
@@ -100,11 +106,21 @@ async function signUpFromSpace(browser, spaceUrl) {
  *   5. Select a poll option inside the overlay, submit, and confirm.
  *   6. After the overlay closes the WaitingCard appears (all done).
  */
-async function participateAndCompletePoll(page, spaceUrl, pollOptionText) {
-  await goto(page, spaceUrl);
+async function participateAndCompletePoll(page, _spaceUrl, pollOptionText) {
+  // Verify credential if the button exists (bypass mode — just click it)
+  const verifyBtn = page.getByTestId("btn-verify");
+  if (await verifyBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+    await verifyBtn.click({ force: true });
+    await page.waitForLoadState();
+  }
+
+  // Pause card-float animation
+  await page.addStyleTag({
+    content: "*, *::before, *::after { animation-play-state: paused !important; }",
+  });
 
   // Click participate button on the ArenaViewer
-  await click(page, { testId: "btn-participate" });
+  await clickNoNav(page, { testId: "btn-participate" });
 
   // PrerequisiteCard appears (no consent modal since no panels configured)
   await expect(page.getByTestId("card-prerequisite")).toBeVisible({
@@ -112,11 +128,17 @@ async function participateAndCompletePoll(page, spaceUrl, pollOptionText) {
   });
 
   // Click the prerequisite poll item — opens the full-screen poll overlay
-  await click(page, { text: "Team Poll: Budget Allocation" });
+  const prereqItem = page.getByTestId("card-prerequisite").locator(".prereq-item").first();
+  await prereqItem.click();
 
-  // Poll overlay appears — wait for poll content (options) to fully load
+  // Poll overlay appears with an Overview screen first
   const overlay = page.getByTestId("poll-arena-overlay");
   await expect(overlay).toBeVisible();
+
+  // Click "Begin Poll" to enter the question view
+  await clickNoNav(page, { testId: "poll-arena-begin" });
+
+  // Wait for poll options to load
   await expect(overlay.locator(".option-single").first()).toBeVisible({
     timeout: 30000,
   });
@@ -125,7 +147,7 @@ async function participateAndCompletePoll(page, spaceUrl, pollOptionText) {
   await overlay.getByText(pollOptionText, { exact: true }).click();
 
   // Submit the poll using testId (avoids ambiguity with confirm dialog)
-  await click(page, { testId: "poll-submit" });
+  await clickNoNav(page, { testId: "poll-submit" });
 
   // Confirm dialog appears — click confirm
   await click(page, { testId: "poll-confirm-submit" });
@@ -396,7 +418,11 @@ test.describe.serial("Space with actions created by a team", () => {
     try {
       // Navigate to space and log in via the ArenaViewer SigninCard.
       await goto(page, spaceUrl);
-      await click(page, { testId: "btn-signin" });
+      await page.addStyleTag({
+        content: "*, *::before, *::after { animation-play-state: paused !important; }",
+      });
+      await clickNoNav(page, { testId: "btn-signin" });
+      await waitPopup(page, { visible: true });
       await fill(
         page,
         { placeholder: "Enter your email address" },
