@@ -3,6 +3,7 @@ package-lock.json
 .vscode/*
 /.build/
 .DS_Store
+.superpowers/
 /packages/main-api/.build/
 target/
 /packages/main-ui/public/dep.js
