@@ -418,7 +418,6 @@ pub fn ActionPollViewer(
                     let idx = current_idx;
                     let question = questions[idx].clone();
                     let current_answer = answers.read().get(idx).cloned();
-                    let can_next = idx + 1 < total;
                     rsx! {
                         div { key: "poll-q-{idx}", class: "question-stage",
                             div { class: "question-card",
@@ -493,10 +492,7 @@ pub fn ActionPollViewer(
                                             answer: current_answer.clone(),
                                             disabled,
                                             on_change: move |ans: Answer| {
-                                                answers.write()[idx] = ans.clone();
-                                                if can_submit && can_next && should_auto_next(&question, &ans) {
-                                                    question_index.set(idx + 1);
-                                                }
+                                                answers.write()[idx] = ans;
                                             },
                                         }
                                     },
@@ -537,7 +533,6 @@ pub fn ActionPollViewer(
                                     },
                                     Question::LinearScale(q) => rsx! {
                                         {
-                                            let q_auto = q.clone();
                                             rsx! {
                                                 PollLinearScale {
                                                     idx,
@@ -545,12 +540,7 @@ pub fn ActionPollViewer(
                                                     answer: current_answer.clone(),
                                                     disabled,
                                                     on_change: move |ans: Answer| {
-                                                        answers.write()[idx] = ans.clone();
-                                                        if can_submit && can_next
-                                                            && should_auto_next(&Question::LinearScale(q_auto.clone()), &ans)
-                                                        {
-                                                            question_index.set(idx + 1);
-                                                        }
+                                                        answers.write()[idx] = ans;
                                                     },
                                                 }
                                             }

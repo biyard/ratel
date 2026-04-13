@@ -10,9 +10,7 @@ use crate::features::spaces::pages::actions::actions::discussion::{
     DiscussionCommentResponse, DiscussionStatus, SpacePostCommentTargetEntityType,
 };
 use crate::features::spaces::pages::index::action_pages::discussion::*;
-use crate::features::spaces::pages::index::action_pages::quiz::{
-    ActiveActionOverlaySignal, CompletedActionCard,
-};
+use crate::features::spaces::pages::index::action_pages::quiz::ActiveActionOverlaySignal;
 use crate::features::spaces::pages::index::*;
 use crate::features::spaces::space_common::controllers::list_space_members;
 use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
@@ -60,7 +58,6 @@ pub fn DiscussionArenaPage(
     let comments = comments_data.items.clone();
 
     let mut overlay: ActiveActionOverlaySignal = use_context();
-    let mut completed: CompletedActionCard = use_context();
 
     let mut comment_text = use_signal(String::new);
     let mut tracked_mentions: Signal<Vec<(String, String)>> = use_signal(Vec::new);
@@ -124,7 +121,6 @@ pub fn DiscussionArenaPage(
                 comment_text.set(String::new());
                 tracked_mentions.set(Vec::new());
                 toast.info(tr.comment_success);
-                completed.0.set(Some(discussion_id().to_string()));
             }
             Err(err) => {
                 tracing::error!("Failed to post comment: {:?}", err);

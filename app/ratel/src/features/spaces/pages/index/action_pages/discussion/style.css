@@ -366,9 +366,9 @@
 .sheet-handle { display: none; }
 /* ── Responsive: Bottom Sheet ─────────────────── */
 @media (max-width: 900px) {
-  .discussion-layout { flex-direction: column; overflow: visible; }
-  .discussion-arena { height: auto; min-height: 100vh; overflow: visible; }
-  .discussion-main { padding: 24px 20px 100px; overflow: visible; }
+  .discussion-layout { flex-direction: column; flex: 1; min-height: 0; }
+  .discussion-arena { height: 100%; overflow: hidden; }
+  .discussion-main { padding: 24px 20px 100px; overflow-y: auto; flex: 1; min-height: 0; }
   .disc-files__grid { grid-template-columns: 1fr; }
 
   /* Convert comments-panel to bottom sheet */
