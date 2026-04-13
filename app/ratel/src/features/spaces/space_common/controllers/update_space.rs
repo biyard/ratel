@@ -48,6 +48,9 @@ pub enum UpdateSpaceRequest {
     Logo {
         logo: String,
     },
+    StartTime {
+        started_at: Option<i64>,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
@@ -67,6 +70,7 @@ pub struct UpdateSpaceResponse {
     pub remains: i64,
     #[serde(default)]
     pub logo: String,
+    pub started_at: Option<i64>,
 }
 
 #[cfg(feature = "server")]
@@ -86,6 +90,7 @@ impl From<SpaceCommon> for UpdateSpaceResponse {
             quota: s.quota,
             remains: s.remains,
             logo: s.logo,
+            started_at: s.started_at,
         }
     }
 }
@@ -220,6 +225,13 @@ pub async fn update_space(
             su = su.with_logo(logo.clone());
 
             updated_space.logo = logo;
+        }
+        UpdateSpaceRequest::StartTime { started_at } => {
+            if let Some(ts) = started_at {
+                su = su.with_started_at(ts);
+            }
+
+            updated_space.started_at = started_at;
         }
         UpdateSpaceRequest::Quota { quotas } => {
             let remains = updated_space.remains + (quotas - updated_space.quota);

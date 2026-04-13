@@ -211,4 +211,16 @@ translate! {
         en: "Space logo updated successfully.",
         ko: "스페이스 로고가 변경되었습니다.",
     },
+    start_time_setting: {
+        en: "Start Time",
+        ko: "시작 시간",
+    },
+    start_time_description: {
+        en: "Set when this space will start. A countdown will be shown to participants.",
+        ko: "스페이스 시작 시간을 설정합니다. 참여자에게 카운트다운이 표시됩니다.",
+    },
+    start_time_updated_successfully: {
+        en: "Start time updated successfully.",
+        ko: "시작 시간이 변경되었습니다.",
+    },
 }
