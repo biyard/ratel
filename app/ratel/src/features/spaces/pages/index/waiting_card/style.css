@@ -52,6 +52,81 @@
   max-width: 300px;
 }
 
+/* ── Countdown ──────────────────────────────────── */
+
+.waiting-card__countdown {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 14px;
+  /* background: var(--dark, rgba(252,179,0,0.06)) var(--light, rgba(252,179,0,0.08)); */
+  /* border: 1px solid rgba(252,179,0,0.15); */
+}
+
+.waiting-card__countdown-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fcb300;
+}
+
+.waiting-card__countdown-timer {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.waiting-card__countdown-unit {
+  display: flex;
+  align-items: baseline;
+  gap: 1px;
+}
+
+.waiting-card__countdown-value {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--waiting-text-primary);
+  min-width: 2ch;
+  text-align: center;
+}
+
+.waiting-card__countdown-suffix {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--waiting-text);
+  text-transform: uppercase;
+}
+
+.waiting-card__participants {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  border-radius: 12px;
+  background: var(--dark, rgba(255,255,255,0.04)) var(--light, rgba(0,0,0,0.03));
+  border: 1px solid var(--waiting-border);
+}
+
+.waiting-card__participants-count {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fcb300;
+}
+
+.waiting-card__participants-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--waiting-text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 .waiting-card__list {
   width: 100%;
   display: flex;
