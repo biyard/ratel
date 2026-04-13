@@ -71,11 +71,14 @@ pub fn DiscussionComments(
                 let candidates: Vec<MentionCandidate> = response
                     .items
                     .into_iter()
-                    .map(|m| MentionCandidate {
-                        user_pk: m.user_id.to_string(),
-                        display_name: m.display_name,
-                        username: m.username,
-                        profile_url: m.profile_url,
+                    .map(|m| {
+                        let pk: crate::common::types::Partition = m.user_id.clone().into();
+                        MentionCandidate {
+                            user_pk: pk.to_string(),
+                            display_name: m.display_name,
+                            username: m.username,
+                            profile_url: m.profile_url,
+                        }
                     })
                     .collect();
                 members.set(candidates);
