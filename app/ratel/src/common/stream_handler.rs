@@ -56,11 +56,25 @@ pub async fn handle_stream_record(
 
             if sk.starts_with("SPACE_POST_COMMENT#") {
                 // AiModeratorReplyIndex: index comment into Qdrant
-                let comment = deserialize(image)?;
+                let comment: crate::features::spaces::pages::actions::actions::discussion::SpacePostComment = deserialize(image)?;
                 if let Err(e) =
-                    crate::features::rag::qdrant::indexers::reply_indexer::index_reply(comment).await
+                    crate::features::rag::qdrant::indexers::reply_indexer::index_reply(comment.clone()).await
                 {
                     tracing::error!(error = %e, "stream: AiModeratorReplyIndex failed");
+                }
+                // DiscussionXpRecord: record XP for discussion comment
+                if let Err(e) =
+                    crate::features::activity::services::handle_discussion_xp(comment).await
+                {
+                    tracing::error!(error = %e, "stream: DiscussionXpRecord failed");
+                }
+            } else if sk.starts_with("SPACE_POST_COMMENT_REPLY#") {
+                // DiscussionXpRecord: record XP for discussion reply
+                let comment = deserialize(image)?;
+                if let Err(e) =
+                    crate::features::activity::services::handle_discussion_xp(comment).await
+                {
+                    tracing::error!(error = %e, "stream: DiscussionXpRecord (reply) failed");
                 }
             } else if sk == "POST" || sk.starts_with("POST") {
                 // PostVectorIndex for newly inserted published posts
@@ -97,6 +111,30 @@ pub async fn handle_stream_record(
                     .await
                 {
                     tracing::error!(error = %e, "stream: SpaceStatusChangeEvent failed");
+                }
+            } else if sk.starts_with("SPACE_POLL_USER_ANSWER#") {
+                // PollXpRecord: record XP for poll answer
+                let answer = deserialize(image)?;
+                if let Err(e) =
+                    crate::features::activity::services::handle_poll_xp(answer).await
+                {
+                    tracing::error!(error = %e, "stream: PollXpRecord failed");
+                }
+            } else if sk.starts_with("SPACE_QUIZ_ATTEMPT#") {
+                // QuizXpRecord: record XP for quiz attempt
+                let attempt = deserialize(image)?;
+                if let Err(e) =
+                    crate::features::activity::services::handle_quiz_xp(attempt).await
+                {
+                    tracing::error!(error = %e, "stream: QuizXpRecord failed");
+                }
+            } else if sk.starts_with("FOLLOWER#") {
+                // FollowXpRecord: record XP for follow action
+                let follow = deserialize(image)?;
+                if let Err(e) =
+                    crate::features::activity::services::handle_follow_xp(follow).await
+                {
+                    tracing::error!(error = %e, "stream: FollowXpRecord failed");
                 }
             }
         }

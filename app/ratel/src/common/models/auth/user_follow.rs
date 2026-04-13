@@ -12,6 +12,14 @@ pub struct UserFollow {
 
     pub user_pk: Partition,
     pub target_user_pk: Partition,
+    #[serde(default)]
+    pub space_id: Option<String>,
+    #[serde(default)]
+    pub action_id: Option<String>,
+    #[serde(default)]
+    pub display_name: Option<String>,
+    #[serde(default)]
+    pub profile_url: Option<String>,
 }
 
 #[cfg(feature = "server")]
@@ -19,6 +27,17 @@ impl UserFollow {
     pub fn new_follow_records(
         follower_pk: Partition,
         target_pk: Partition,
+    ) -> (Self, Self) {
+        Self::new_follow_records_with_space(follower_pk, target_pk, None, None, None, None)
+    }
+
+    pub fn new_follow_records_with_space(
+        follower_pk: Partition,
+        target_pk: Partition,
+        space_id: Option<String>,
+        action_id: Option<String>,
+        display_name: Option<String>,
+        profile_url: Option<String>,
     ) -> (Self, Self) {
         let now = get_now_timestamp_millis();
         let follower_id = follower_pk.to_string();
@@ -30,6 +49,10 @@ impl UserFollow {
             created_at: now,
             user_pk: follower_pk.clone(),
             target_user_pk: target_pk.clone(),
+            space_id: space_id.clone(),
+            action_id: action_id.clone(),
+            display_name: display_name.clone(),
+            profile_url: profile_url.clone(),
         };
 
         let following_record = UserFollow {
@@ -38,6 +61,10 @@ impl UserFollow {
             created_at: now,
             user_pk: follower_pk,
             target_user_pk: target_pk,
+            space_id,
+            action_id,
+            display_name,
+            profile_url,
         };
 
         (follower_record, following_record)

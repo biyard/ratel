@@ -16,7 +16,6 @@ pub enum UpdateSpaceActionRequest {
     Credits { credits: u64 },
     Time { started_at: i64, ended_at: i64 },
     Prerequisite { prerequisite: bool },
-    ActivityScore { activity_score: i64, additional_score: i64 },
 }
 
 #[post(
@@ -87,23 +86,6 @@ pub async fn update_space_action(
                 .await
                 .map_err(|e| {
                     crate::error!("Failed to update space action: {e:?}");
-                    SpaceActionError::ActionUpdateFailed
-                })?;
-        }
-        UpdateSpaceActionRequest::ActivityScore {
-            activity_score,
-            additional_score,
-        } => {
-            space_action.activity_score = activity_score;
-            space_action.additional_score = additional_score;
-            SpaceAction::updater(&pk, &EntityType::SpaceAction)
-                .with_activity_score(activity_score)
-                .with_additional_score(additional_score)
-                .with_updated_at(now)
-                .execute(cli)
-                .await
-                .map_err(|e| {
-                    crate::error!("Failed to update activity score: {e:?}");
                     SpaceActionError::ActionUpdateFailed
                 })?;
         }

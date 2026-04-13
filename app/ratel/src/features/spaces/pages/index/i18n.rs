@@ -260,9 +260,9 @@ translate! {
         ko: "내 순위",
     },
 
-    total_score: {
-        en: "Total Score",
-        ko: "총 점수",
+    total_xp: {
+        en: "Total XP",
+        ko: "총 경험치",
     },
 
     poll_label: {
@@ -296,8 +296,13 @@ translate! {
     },
 
     no_ranking_yet: {
-        en: "No ranking data yet. Complete actions to earn your place!",
-        ko: "아직 랭킹 데이터가 없습니다. 활동을 완료하여 순위를 올리세요!",
+        en: "No ranking data yet. Complete actions to earn XP!",
+        ko: "아직 랭킹 데이터가 없습니다. 활동을 완료하여 경험치를 얻으세요!",
+    },
+
+    xp_label: {
+        en: "XP",
+        ko: "경험치",
     },
 
     prereq_heading: {
