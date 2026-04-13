@@ -17,6 +17,20 @@ pub enum ExchangePointsError {
         ko = "예상 토큰 수량이 0입니다"
     )]
     EstimatedTokensZero,
+
+    #[error("No wallet connected")]
+    #[translate(
+        en = "Please install Kaia Wallet or MetaMask",
+        ko = "Kaia Wallet 또는 MetaMask를 설치해주세요"
+    )]
+    NoWalletConnected,
+
+    #[error("Claim transaction failed")]
+    #[translate(
+        en = "Token claim failed. Please try again.",
+        ko = "토큰 클레임에 실패했습니다. 다시 시도해주세요."
+    )]
+    ClaimFailed,
 }
 
 #[cfg(feature = "server")]
