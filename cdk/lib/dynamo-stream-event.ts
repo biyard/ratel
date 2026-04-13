@@ -545,5 +545,233 @@ export class DynamoStreamEventStack extends Stack {
       },
       targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
     });
+
+    // ── Pipe 9: Poll Answer Insert → PollXpRecord ────────────────────
+    // Triggers when a new SpacePollUserAnswer is inserted (user responds to poll)
+    new pipes.CfnPipe(this, "PollXpPipe", {
+      name: `ratel-${stage}-poll-xp-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["INSERT"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: [{ prefix: "SPACE_POLL_USER_ANSWER#" }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "PollXpRecord",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    // ── Rule: Route PollXpRecord events to app-shell Lambda ──────────
+    new events.Rule(this, "PollXpRecordRule", {
+      eventBus,
+      description:
+        "Route poll answer events to app-shell for XP recording",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["PollXpRecord"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
+    // ── Pipe 10: Quiz Attempt Insert → QuizXpRecord ──────────────────
+    // Triggers when a new SpaceQuizAttempt is inserted (user attempts quiz)
+    new pipes.CfnPipe(this, "QuizXpPipe", {
+      name: `ratel-${stage}-quiz-xp-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["INSERT"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: [{ prefix: "SPACE_QUIZ_ATTEMPT#" }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "QuizXpRecord",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    // ── Rule: Route QuizXpRecord events to app-shell Lambda ──────────
+    new events.Rule(this, "QuizXpRecordRule", {
+      eventBus,
+      description:
+        "Route quiz attempt events to app-shell for XP recording",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["QuizXpRecord"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
+    // ── Pipe 11: Discussion Comment Insert → DiscussionXpRecord ──────
+    // Triggers when a new SpacePostComment is inserted (comment on discussion)
+    new pipes.CfnPipe(this, "DiscussionCommentXpPipe", {
+      name: `ratel-${stage}-discussion-comment-xp-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["INSERT"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: [{ prefix: "SPACE_POST_COMMENT#" }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "DiscussionXpRecord",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    // ── Pipe 11b: Discussion Reply Insert → DiscussionXpRecord ───────
+    // Triggers when a new SpacePostCommentReply is inserted (reply to comment)
+    new pipes.CfnPipe(this, "DiscussionReplyXpPipe", {
+      name: `ratel-${stage}-discussion-reply-xp-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["INSERT"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: [{ prefix: "SPACE_POST_COMMENT_REPLY#" }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "DiscussionXpRecord",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    // ── Rule: Route DiscussionXpRecord events to app-shell Lambda ────
+    new events.Rule(this, "DiscussionXpRecordRule", {
+      eventBus,
+      description:
+        "Route discussion comment/reply events to app-shell for XP recording",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["DiscussionXpRecord"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
+    // ── Pipe 12: Follow Insert → FollowXpRecord ─────────────────────
+    // Triggers when a new Follower record is inserted (user follows someone)
+    new pipes.CfnPipe(this, "FollowXpPipe", {
+      name: `ratel-${stage}-follow-xp-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["INSERT"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: [{ prefix: "FOLLOWER#" }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "FollowXpRecord",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    // ── Rule: Route FollowXpRecord events to app-shell Lambda ────────
+    new events.Rule(this, "FollowXpRecordRule", {
+      eventBus,
+      description:
+        "Route follow events to app-shell for XP recording",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["FollowXpRecord"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
   }
 }
