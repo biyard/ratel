@@ -15,7 +15,7 @@ pub async fn list_replies(
     let discussion_sk_entity: EntityType = discussion_sk.into();
     let space_post_pk: SpacePostPartition = match &discussion_sk_entity {
         EntityType::SpacePost(id) => SpacePostPartition(id.clone()),
-        _ => return Err(Error::BadRequest("Invalid discussion id".into())),
+        _ => return Err(SpaceActionDiscussionError::InvalidDiscussionId.into()),
     };
     let comment_sk_entity: EntityType = comment_sk.into();
 

@@ -1,5 +1,6 @@
 use super::super::dto::DeleteGroupResponse;
 use super::super::*;
+use crate::features::social::types::SocialError;
 
 #[cfg(feature = "server")]
 use aws_sdk_dynamodb::types::TransactWriteItem;
@@ -20,9 +21,7 @@ pub async fn delete_group_handler(
         || permissions.contains(TeamGroupPermission::GroupEdit);
 
     if !can_edit {
-        return Err(Error::Unauthorized(
-            "You don't have permission to delete groups.".to_string(),
-        ));
+        return Err(SocialError::SessionNotFound.into());
     }
 
     let mut target_group: Option<TeamGroup> = None;
@@ -89,8 +88,8 @@ pub async fn delete_group_handler(
             .send()
             .await
             .map_err(|e| {
-                tracing::error!("Failed to delete group entities: {}", e);
-                Error::InternalServerError("Failed to delete group".into())
+                crate::error!("Failed to delete group entities: {e}");
+                SocialError::GroupDeleteFailed
             })?;
     }
 

@@ -75,10 +75,10 @@ pub async fn apply_selected_action_dates(
                 let entity_type: EntityType = action
                     .action_id
                     .parse()
-                    .map_err(|_| Error::BadRequest("Invalid poll action id".to_string()))?;
+                    .map_err(|_| SpaceActionError::ActionUpdateFailed)?;
                 let poll_id: SpacePollEntityType = entity_type
                     .try_into()
-                    .map_err(|_| Error::BadRequest("Invalid poll action id".to_string()))?;
+                    .map_err(|_| SpaceActionError::ActionUpdateFailed)?;
 
                 update_poll(
                     space_id.clone(),
@@ -94,10 +94,10 @@ pub async fn apply_selected_action_dates(
                 let entity_type: EntityType = action
                     .action_id
                     .parse()
-                    .map_err(|_| Error::BadRequest("Invalid discussion action id".to_string()))?;
+                    .map_err(|_| SpaceActionError::ActionUpdateFailed)?;
                 let discussion_id: SpacePostEntityType = entity_type
                     .try_into()
-                    .map_err(|_| Error::BadRequest("Invalid discussion action id".to_string()))?;
+                    .map_err(|_| SpaceActionError::ActionUpdateFailed)?;
 
                 update_discussion(
                     space_id.clone(),
@@ -114,9 +114,7 @@ pub async fn apply_selected_action_dates(
                 .await?;
             }
             SpaceActionType::Follow | SpaceActionType::Quiz => {
-                return Err(Error::NotSupported(
-                    "This action type is not supported yet.".to_string(),
-                ));
+                return Err(SpaceActionError::ActionUpdateFailed.into());
             }
         }
     }

@@ -1,6 +1,8 @@
 use crate::common::*;
 
 #[cfg(feature = "server")]
+use super::ServiceError;
+#[cfg(feature = "server")]
 use reqwest;
 #[cfg(feature = "server")]
 use serde::de::DeserializeOwned;
@@ -171,25 +173,29 @@ impl BiyardService {
             .json(&body)
             .send()
             .await
-            .map_err(|e| Error::Unknown(e.to_string()))?;
+            .map_err(|e| {
+                crate::error!("Biyard API: {e}");
+                ServiceError::BiyardApiRequestFailed
+            })?;
 
         if !res.status().is_success() {
             let status = res.status();
             let text = res.text().await.unwrap_or_default();
-            return Err(Error::BadRequest(format!(
-                "Biyard API error ({}): {}",
-                status, text
-            )));
+            crate::error!("Biyard API bad status: {status} {text}");
+            return Err(Error::from(ServiceError::BiyardApiBadStatus));
         }
 
         let responses: Vec<TransactPointResponse> = res
             .json()
             .await
-            .map_err(|e| Error::Unknown(e.to_string()))?;
+            .map_err(|e| {
+                crate::error!("Biyard API: {e}");
+                ServiceError::BiyardApiRequestFailed
+            })?;
         responses
             .into_iter()
             .next()
-            .ok_or_else(|| Error::Unknown("Biyard API returned empty response".to_string()))
+            .ok_or_else(|| Error::from(ServiceError::BiyardApiEmptyResponse))
     }
 
     pub async fn exchange_points(
@@ -216,25 +222,29 @@ impl BiyardService {
             .json(&body)
             .send()
             .await
-            .map_err(|e| Error::Unknown(e.to_string()))?;
+            .map_err(|e| {
+                crate::error!("Biyard API: {e}");
+                ServiceError::BiyardApiRequestFailed
+            })?;
 
         if !res.status().is_success() {
             let status = res.status();
             let text = res.text().await.unwrap_or_default();
-            return Err(Error::BadRequest(format!(
-                "Biyard API error ({}): {}",
-                status, text
-            )));
+            crate::error!("Biyard API bad status: {status} {text}");
+            return Err(Error::from(ServiceError::BiyardApiBadStatus));
         }
 
         let responses: Vec<TransactPointResponse> = res
             .json()
             .await
-            .map_err(|e| Error::Unknown(e.to_string()))?;
+            .map_err(|e| {
+                crate::error!("Biyard API: {e}");
+                ServiceError::BiyardApiRequestFailed
+            })?;
         responses
             .into_iter()
             .next()
-            .ok_or_else(|| Error::Unknown("Biyard API returned empty response".to_string()))
+            .ok_or_else(|| Error::from(ServiceError::BiyardApiEmptyResponse))
     }
 
     pub async fn get_token_balance(
@@ -267,27 +277,29 @@ impl BiyardService {
             .json(&body)
             .send()
             .await
-            .map_err(|e| Error::Unknown(e.to_string()))?;
+            .map_err(|e| {
+                crate::error!("Biyard API: {e}");
+                ServiceError::BiyardApiRequestFailed
+            })?;
 
         if !res.status().is_success() {
             let status = res.status();
             let text = res.text().await.unwrap_or_default();
-            return Err(Error::BadRequest(format!(
-                "Biyard API error ({}): {}",
-                status, text
-            )));
+            crate::error!("Biyard API bad status: {status} {text}");
+            return Err(Error::from(ServiceError::BiyardApiBadStatus));
         }
 
-        res.json().await.map_err(|e| Error::Unknown(e.to_string()))
+        res.json().await.map_err(|e| {
+            crate::error!("Biyard API: {e}");
+            Error::from(ServiceError::BiyardApiRequestFailed)
+        })
     }
 
     fn convert_user_id(user_pk: &Partition) -> Result<String> {
         match user_pk {
             Partition::User(id) => Ok(id.clone()),
             Partition::Team(id) => Ok(id.clone()),
-            _ => Err(Error::BadRequest(
-                "Biyard target pk must be user or team".to_string(),
-            )),
+            _ => Err(Error::from(ServiceError::BiyardApiBadStatus)),
         }
     }
 
@@ -297,17 +309,21 @@ impl BiyardService {
             .get(&path)
             .send()
             .await
-            .map_err(|e| Error::Unknown(e.to_string()))?;
+            .map_err(|e| {
+                crate::error!("Biyard API: {e}");
+                ServiceError::BiyardApiRequestFailed
+            })?;
 
         if !res.status().is_success() {
             let status = res.status();
             let text = res.text().await.unwrap_or_default();
-            return Err(Error::BadRequest(format!(
-                "Biyard API error ({}): {}",
-                status, text
-            )));
+            crate::error!("Biyard API bad status: {status} {text}");
+            return Err(Error::from(ServiceError::BiyardApiBadStatus));
         }
 
-        res.json().await.map_err(|e| Error::Unknown(e.to_string()))
+        res.json().await.map_err(|e| {
+            crate::error!("Biyard API: {e}");
+            Error::from(ServiceError::BiyardApiRequestFailed)
+        })
     }
 }

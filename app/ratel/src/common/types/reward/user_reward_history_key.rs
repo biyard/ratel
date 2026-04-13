@@ -22,7 +22,7 @@ impl FromStr for UserRewardHistoryKey {
     fn from_str(s: &str) -> crate::common::Result<Self> {
         let parts: Vec<&str> = s.splitn(2, "###").collect();
         if parts.len() != 2 {
-            return Err(Error::BadRequest("Invalid format".to_string()));
+            return Err(Error::InvalidFormat);
         }
         let reward_key = RewardKey::from_str(parts[0])?;
         let time_key = parts[1].to_string();

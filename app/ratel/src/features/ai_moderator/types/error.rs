@@ -22,6 +22,18 @@ pub enum AiModeratorError {
     #[error("Material not found")]
     #[translate(en = "Reference material not found", ko = "참고 자료를 찾을 수 없습니다")]
     MaterialNotFound,
+
+    #[error("Failed to save AI moderator reply")]
+    #[translate(en = "AI moderator reply failed", ko = "AI ��재자 답변에 실패했습니다")]
+    ReplySaveFailed,
+
+    #[error("Failed to build AI message")]
+    #[translate(en = "AI service failed", ko = "AI 서비스에 실패��습니다")]
+    MessageBuildFailed,
+
+    #[error("Bedrock converse failed")]
+    #[translate(en = "AI service failed", ko = "AI 서비스에 실패했습니다")]
+    BedrockConverseFailed,
 }
 
 #[cfg(feature = "server")]
@@ -32,6 +44,9 @@ impl AiModeratorError {
             AiModeratorError::ConfigNotFound | AiModeratorError::MaterialNotFound => {
                 StatusCode::NOT_FOUND
             }
+            AiModeratorError::ReplySaveFailed
+            | AiModeratorError::MessageBuildFailed
+            | AiModeratorError::BedrockConverseFailed => StatusCode::INTERNAL_SERVER_ERROR,
             _ => StatusCode::BAD_REQUEST,
         }
     }

@@ -11,6 +11,7 @@ pub async fn handle_stream_record(
     old_image: Option<&std::collections::HashMap<String, serde_dynamo::AttributeValue>>,
 ) -> crate::common::Result<()> {
     use crate::common::Error;
+    use crate::common::utils::InfraError;
 
     // Helper to get sk string from a DynamoDB image
     fn get_sk(
@@ -42,14 +43,15 @@ pub async fn handle_stream_record(
         image: &std::collections::HashMap<String, serde_dynamo::AttributeValue>,
     ) -> crate::common::Result<T> {
         serde_dynamo::from_item(image.clone())
-            .map_err(|e| Error::InternalServerError(format!("stream deserialize: {e}")))
+            .map_err(|e| {
+                tracing::error!("stream deserialize: {e}");
+                Error::from(InfraError::StreamDeserializeFailed)
+            })
     }
 
     match event_name {
         "INSERT" => {
-            let image = new_image.ok_or(Error::InternalServerError(
-                "INSERT event missing NewImage".into(),
-            ))?;
+            let image = new_image.ok_or(Error::from(InfraError::StreamMissingImage))?;
             let sk = get_sk(image).unwrap_or_default();
 
             if sk.starts_with("SPACE_POST_COMMENT#") {
@@ -99,9 +101,7 @@ pub async fn handle_stream_record(
             }
         }
         "MODIFY" => {
-            let image = new_image.ok_or(Error::InternalServerError(
-                "MODIFY event missing NewImage".into(),
-            ))?;
+            let image = new_image.ok_or(Error::from(InfraError::StreamMissingImage))?;
             let sk = get_sk(image).unwrap_or_default();
 
             if sk.starts_with("SPACE_POST#") {
@@ -142,9 +142,7 @@ pub async fn handle_stream_record(
             }
         }
         "REMOVE" => {
-            let image = old_image.ok_or(Error::InternalServerError(
-                "REMOVE event missing OldImage".into(),
-            ))?;
+            let image = old_image.ok_or(Error::from(InfraError::StreamMissingImage))?;
             let sk = get_sk(image).unwrap_or_default();
 
             if sk == "POST" || sk.starts_with("POST") {

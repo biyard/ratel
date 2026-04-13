@@ -1,5 +1,6 @@
 use super::dto::DeleteTeamResponse;
 use super::super::*;
+use crate::features::social::types::SocialError;
 
 #[cfg(feature = "server")]
 use aws_sdk_dynamodb::types::TransactWriteItem;
@@ -17,9 +18,7 @@ pub async fn delete_team_handler(username: String) -> Result<DeleteTeamResponse>
         .ok_or(Error::NotFound("Team owner not found".into()))?;
 
     if team_owner.user_pk != user.pk {
-        return Err(Error::Unauthorized(
-            "Only the team owner can delete a team".into(),
-        ));
+        return Err(SocialError::SessionNotFound.into());
     }
 
     let mut transact_items: Vec<TransactWriteItem> = Vec::new();
@@ -105,8 +104,8 @@ pub async fn delete_team_handler(username: String) -> Result<DeleteTeamResponse>
             .send()
             .await
             .map_err(|e| {
-                tracing::error!("Failed to delete team entities: {}", e);
-                Error::InternalServerError("Failed to delete team".into())
+                crate::error!("Failed to delete team entities: {e}");
+                SocialError::TeamDeleteFailed
             })?;
     }
 
