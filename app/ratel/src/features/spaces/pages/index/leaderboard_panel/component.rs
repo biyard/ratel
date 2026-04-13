@@ -98,7 +98,7 @@ fn LeaderboardContent(space_id: ReadSignal<SpacePartition>) -> Element {
                 }
                 div {
                     div { class: "leaderboard-my-rank__score", "{my_score.total_score}" }
-                    div { class: "leaderboard-my-rank__score-label", "{tr.total_score}" }
+                    div { class: "leaderboard-my-rank__score-label", "{tr.total_xp}" }
                 }
             }
 
@@ -197,7 +197,7 @@ fn PodiumEntry(
                 div { class: "leaderboard-podium__medal", "{place}" }
             }
             span { class: "leaderboard-podium__name", "{entry.name}" }
-            span { class: "leaderboard-podium__score", "{entry.total_score}" }
+            span { class: "leaderboard-podium__score", "{entry.total_score} XP" }
         }
     }
 }
@@ -232,7 +232,7 @@ fn LeaderboardEntry(
             if is_me {
                 span { class: "leaderboard-entry__me-badge", "{you_label}" }
             }
-            span { class: "leaderboard-entry__score", "{entry.total_score}" }
+            span { class: "leaderboard-entry__score", "{entry.total_score} XP" }
         }
     }
 }

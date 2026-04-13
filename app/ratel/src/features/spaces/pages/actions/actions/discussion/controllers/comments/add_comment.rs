@@ -104,8 +104,6 @@ pub async fn add_comment(
             author_partition,
             discussion_sk.to_string(),
             crate::features::spaces::pages::actions::types::SpaceActionType::TopicDiscussion,
-            space_action.activity_score,
-            space_action.additional_score,
             crate::features::activity::types::SpaceActivityData::Discussion {
                 discussion_id: discussion_sk.to_string(),
                 is_first_contribution: true,

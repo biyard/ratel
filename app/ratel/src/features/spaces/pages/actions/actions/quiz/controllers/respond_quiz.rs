@@ -88,11 +88,9 @@ pub async fn respond_quiz(
     }
 
     let already_passed = attempts.iter().any(|a| a.score >= quiz.pass_score);
-    if score >= quiz.pass_score && !already_passed {
-        let activity_user_pk = user.pk.clone();
-        let activity_user_name = member.display_name.clone();
-        let activity_user_avatar = member.profile_url.clone();
+    let passed = score >= quiz.pass_score;
 
+    if passed && !already_passed {
         match SpaceReward::get_by_action(
             cli,
             space_id.clone(),
@@ -103,7 +101,7 @@ pub async fn respond_quiz(
         {
             Ok(space_reward) => {
                 if let Err(e) =
-                    SpaceReward::award(cli, &space_reward, user.pk, Some(space.user_pk.clone()))
+                    SpaceReward::award(cli, &space_reward, user.pk.clone(), Some(space.user_pk.clone()))
                         .await
                 {
                     tracing::error!(
@@ -123,27 +121,26 @@ pub async fn respond_quiz(
                 );
             }
         }
+    }
 
-        {
-            if let Err(e) = crate::features::activity::controllers::record_activity(
-                cli,
-                space_id.clone(),
-                crate::features::activity::types::AuthorPartition::from(activity_user_pk),
-                quiz_action_id.clone(),
-                crate::features::spaces::pages::actions::types::SpaceActionType::Quiz,
-                space_action.activity_score,
-                space_action.additional_score,
-                crate::features::activity::types::SpaceActivityData::Quiz {
-                    quiz_id: quiz_id.to_string(),
-                    passed: true,
-                    correct_count: score as u32,
-                    pass_threshold: quiz.pass_score as u32,
-                },
-                activity_user_name,
-                activity_user_avatar,
-            ).await {
-                tracing::error!(error = %e, "Failed to record quiz activity");
-            }
+    // Record XP for both passed and failed attempts
+    {
+        if let Err(e) = crate::features::activity::controllers::record_activity(
+            cli,
+            space_id.clone(),
+            crate::features::activity::types::AuthorPartition::from(user.pk),
+            quiz_action_id.clone(),
+            crate::features::spaces::pages::actions::types::SpaceActionType::Quiz,
+            crate::features::activity::types::SpaceActivityData::Quiz {
+                quiz_id: quiz_id.to_string(),
+                passed,
+                correct_count: score as u32,
+                pass_threshold: quiz.pass_score as u32,
+            },
+            member.display_name.clone(),
+            member.profile_url.clone(),
+        ).await {
+            tracing::error!(error = %e, "Failed to record quiz activity");
         }
     }
     Ok(())

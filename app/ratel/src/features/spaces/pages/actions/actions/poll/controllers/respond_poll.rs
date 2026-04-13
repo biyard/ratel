@@ -306,8 +306,6 @@ pub async fn respond_poll(
                 crate::features::activity::types::AuthorPartition::from(activity_user_pk),
                 poll_action_id.clone(),
                 SpaceActionType::Poll,
-                space_action.activity_score,
-                space_action.additional_score,
                 crate::features::activity::types::SpaceActivityData::Poll {
                     poll_id: poll_sk.to_string(),
                     answered_optional_count: optional_count,
