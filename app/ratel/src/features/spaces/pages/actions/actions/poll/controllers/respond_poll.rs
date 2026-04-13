@@ -230,7 +230,6 @@ pub async fn respond_poll(
             .await?;
     } else {
         let respondent = get_respondent_from_panels(cli, &space_pk, &member.pk).await?;
-        let activity_answers = req.answers.clone();
         let answer_record = SpacePollUserAnswer::new(
             space_pk.clone(),
             poll_sk_entity.clone(),
@@ -250,10 +249,6 @@ pub async fn respond_poll(
                 &space_pk, 1,
             );
         crate::transact_write_items!(cli, vec![agg_item]).ok();
-
-        let activity_user_pk = user.pk.clone();
-        let activity_user_name = member.display_name.clone();
-        let activity_user_avatar = member.profile_url.clone();
 
         match SpaceReward::get_by_action(
             cli,
@@ -286,38 +281,7 @@ pub async fn respond_poll(
             }
         }
 
-        {
-            let optional_count = poll.questions.iter().enumerate().filter(|(i, q)| {
-                let is_required = match q {
-                    Question::SingleChoice(cq) => cq.is_required,
-                    Question::MultipleChoice(cq) => cq.is_required,
-                    Question::ShortAnswer(sq) => sq.is_required,
-                    Question::Subjective(sq) => sq.is_required,
-                    Question::Checkbox(cq) => cq.is_required,
-                    Question::Dropdown(dq) => dq.is_required,
-                    Question::LinearScale(lq) => lq.is_required,
-                };
-                is_required != Some(true) && activity_answers.get(*i).is_some()
-            }).count() as u32;
-
-            if let Err(e) = crate::features::activity::controllers::record_activity(
-                cli,
-                space_partition.clone(),
-                crate::features::activity::types::AuthorPartition::from(activity_user_pk),
-                poll_action_id.clone(),
-                SpaceActionType::Poll,
-                space_action.activity_score,
-                space_action.additional_score,
-                crate::features::activity::types::SpaceActivityData::Poll {
-                    poll_id: poll_sk.to_string(),
-                    answered_optional_count: optional_count,
-                },
-                activity_user_name,
-                activity_user_avatar,
-            ).await {
-                tracing::error!(error = %e, "Failed to record poll activity");
-            }
-        }
+        // XP recording is now handled via EventBridge on SPACE_POLL_USER_ANSWER# INSERT
     }
 
     Ok(RespondPollResponse {})
