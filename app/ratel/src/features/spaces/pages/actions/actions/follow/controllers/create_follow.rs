@@ -26,10 +26,12 @@ pub async fn create_follow(
     }
 
     let follow = SpaceFollowAction::new(space_pk.clone());
-    let mut space_action = crate::features::spaces::pages::actions::models::SpaceAction::new(
+    let is_published = !matches!(space.status, None | Some(SpaceStatus::Designing));
+    let mut space_action = crate::features::spaces::pages::actions::models::SpaceAction::new_with_published(
         space_pk.clone(),
         SpaceActionFollowEntityType::from(follow.sk.clone()).to_string(),
         crate::features::spaces::pages::actions::types::SpaceActionType::Follow,
+        is_published,
     );
     space_action.title = if space.author_display_name.is_empty() {
         space.author_username
