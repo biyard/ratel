@@ -31,7 +31,10 @@ pub async fn list_actions(
 
     let (space_actions, _) = SpaceAction::find_by_space(cli, &space_pk, SpaceAction::opt())
         .await
-        .map_err(|e| Error::InternalServerError(format!("failed to load actions: {e:?}")))?;
+        .map_err(|e| {
+            crate::error!("failed to load actions: {e:?}");
+            SpaceActionError::ActionLoadFailed
+        })?;
 
     let mut actions: Vec<SpaceActionSummary> = space_actions.into_iter().map(Into::into).collect();
 
@@ -148,9 +151,8 @@ async fn has_completed_discussion_action(
             let (comments, next_bookmark) = SpacePostComment::find_by_user_pk(cli, user_pk, opt)
                 .await
                 .map_err(|err| {
-                    Error::InternalServerError(format!(
-                        "failed to verify discussion prerequisite: {err}"
-                    ))
+                    crate::error!("failed to verify discussion prerequisite: {err}");
+                    SpaceActionError::ActionLoadFailed
                 })?;
 
             if comments.iter().any(|comment| comment.pk == discussion_pk) {
@@ -196,9 +198,8 @@ async fn has_completed_follow_action(
         let (users, next_bookmark) = SpaceFollowUser::query(cli, space_pk.clone(), opt)
             .await
             .map_err(|err| {
-                Error::InternalServerError(format!(
-                    "failed to load follow prerequisite targets: {err}"
-                ))
+                crate::error!("failed to load follow prerequisite targets: {err}");
+                SpaceActionError::ActionLoadFailed
             })?;
 
         target_user_pks.extend(
@@ -241,7 +242,8 @@ async fn has_completed_follow_action(
     }
 
     let follows = UserFollow::batch_get(cli, keys).await.map_err(|err| {
-        Error::InternalServerError(format!("failed to verify follow prerequisite: {err}"))
+        crate::error!("failed to verify follow prerequisite: {err}");
+        SpaceActionError::ActionLoadFailed
     })?;
 
     Ok(follows.len() == deduped_targets.len())

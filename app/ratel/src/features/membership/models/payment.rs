@@ -43,7 +43,10 @@ impl std::str::FromStr for Currency {
         match s.to_ascii_uppercase().as_str() {
             "USD" => Ok(Currency::Usd),
             "KRW" => Ok(Currency::Krw),
-            _ => Err(Error::BadRequest(format!("invalid currency: {}", s))),
+            _ => {
+                crate::error!("invalid currency: {s}");
+                Err(crate::features::membership::types::MembershipPaymentError::InvalidCurrency.into())
+            }
         }
     }
 }
@@ -199,7 +202,7 @@ impl UserPayment {
                 expiry_month,
                 birth_or_business_registration_number,
                 password_two_digits,
-            } = card_info.ok_or_else(|| Error::BadRequest("Card info required".to_string()))?;
+            } = card_info.ok_or_else(|| Error::from(crate::features::membership::types::MembershipPaymentError::MissingCardInfo))?;
 
             // Store masked card number before passing to Portone
             let digits: String = card_number.chars().filter(|c| c.is_ascii_digit()).collect();
@@ -294,7 +297,7 @@ impl UserPayment {
         portone: &PortOne,
     ) -> Result<()> {
         if self.billing_key.is_none() {
-            return Err(Error::BadRequest("Missing billing key".to_string()));
+            return Err(crate::features::membership::types::MembershipPaymentError::MissingBillingKey.into());
         }
 
         let _ = portone
@@ -449,7 +452,7 @@ impl TeamPayment {
                 expiry_month,
                 birth_or_business_registration_number,
                 password_two_digits,
-            } = card_info.ok_or_else(|| Error::BadRequest("Card info required".to_string()))?;
+            } = card_info.ok_or_else(|| Error::from(crate::features::membership::types::MembershipPaymentError::MissingCardInfo))?;
 
             let digits: String = card_number.chars().filter(|c| c.is_ascii_digit()).collect();
             let last4 = if digits.len() >= 4 {
@@ -543,7 +546,7 @@ impl TeamPayment {
         portone: &PortOne,
     ) -> Result<()> {
         if self.billing_key.is_none() {
-            return Err(Error::BadRequest("Missing billing key".to_string()));
+            return Err(crate::features::membership::types::MembershipPaymentError::MissingBillingKey.into());
         }
 
         let _ = portone

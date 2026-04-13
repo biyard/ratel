@@ -1,5 +1,6 @@
 use crate::common::models::space::SpaceAdmin;
 use crate::features::spaces::pages::apps::apps::general::*;
+use crate::features::spaces::pages::apps::types::SpaceAppError;
 
 #[delete("/api/spaces/{space_id}/admins/{user_id}", role: SpaceUserRole)]
 pub async fn remove_space_admin(
@@ -23,9 +24,7 @@ pub async fn remove_space_admin(
         .ok_or(Error::SpaceNotFound)?;
 
     if space.user_pk == user_pk {
-        return Err(Error::BadRequest(
-            "Cannot remove the space owner from admins".to_string(),
-        ));
+        return Err(SpaceAppError::CreatorCannotBeRemoved.into());
     }
 
     let (pk, sk) = SpaceAdmin::keys(&space_pk, &user_pk);

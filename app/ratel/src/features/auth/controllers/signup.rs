@@ -80,7 +80,10 @@ pub async fn signup_handler(req: SignupRequest) -> Result<SignupResponse> {
 
     tracing::info!("signup_handler: req = {:?}", req);
     req.validate()
-        .map_err(|e| Error::BadRequest(format!("Invalid input: {}", e)))?;
+        .map_err(|e| {
+            crate::error!("signup: {e}");
+            AuthError::InvalidInput
+        })?;
 
     let user = match req.signup_type.clone() {
         SignupType::Email {
@@ -314,17 +317,20 @@ async fn signup_with_wallet(
     let stored_nonce: String = session
         .get("wallet_nonce")
         .await
-        .map_err(|e| Error::Unknown(format!("Session error: {}", e)))?
-        .ok_or_else(|| Error::Unauthorized("No nonce found in session".into()))?;
+        .map_err(|e| {
+            crate::error!("session: {e}");
+            AuthError::SessionFailed
+        })?
+        .ok_or_else(|| AuthError::NonceNotFound)?;
 
     if !message.contains(&stored_nonce) {
-        return Err(Error::Unauthorized("Nonce mismatch".into()));
+        return Err(AuthError::NonceMismatch.into());
     }
 
     // Verify the signature
     let recovered = recover_address(&message, &signature)?;
     if recovered.to_lowercase() != evm_address.to_lowercase() {
-        return Err(Error::Unauthorized("Invalid wallet signature".into()));
+        return Err(AuthError::InvalidSignature.into());
     }
 
     // Clear nonce (one-time use)

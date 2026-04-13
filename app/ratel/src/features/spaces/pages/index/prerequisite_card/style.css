@@ -167,4 +167,15 @@
 
 @media (max-width: 500px) {
   .prereq-card { width: calc(100vw - 32px); padding: 24px 18px 20px; }
+  .prereq-card__progress-bar-wrap { display: none; }
+  .prereq-card__progress-text::before {
+    content: '';
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 6px rgba(34,197,94,0.4);
+    margin-right: 6px;
+    vertical-align: middle;
+  }
 }

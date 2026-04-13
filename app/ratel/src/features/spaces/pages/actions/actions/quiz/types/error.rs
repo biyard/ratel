@@ -108,6 +108,10 @@ pub enum SpaceActionQuizError {
     #[error("Quiz not found")]
     #[translate(en = "Quiz not found", ko = "퀴즈를 찾을 수 없습니다.")]
     NotFound,
+
+    #[error("create failed")]
+    #[translate(en = "Failed to create quiz", ko = "퀴즈 생성에 실패했습니다.")]
+    CreateFailed,
 }
 
 #[cfg(feature = "server")]
@@ -116,6 +120,7 @@ impl SpaceActionQuizError {
         use bdk::prelude::axum::http::StatusCode;
         match self {
             SpaceActionQuizError::NotFound => StatusCode::NOT_FOUND,
+            SpaceActionQuizError::CreateFailed => StatusCode::INTERNAL_SERVER_ERROR,
             _ => StatusCode::BAD_REQUEST,
         }
     }

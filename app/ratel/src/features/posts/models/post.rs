@@ -275,7 +275,7 @@ impl Post {
                 let has_perm = &post.user_pk == user_pk;
                 Ok((post, has_perm))
             }
-            _ => Err(Error::InternalServerError("Invalid post author".into())),
+            _ => Err(PostError::InvalidAuthor.into()),
         }
     }
 
@@ -295,8 +295,8 @@ impl Post {
             .send()
             .await
             .map_err(|e| {
-                tracing::error!("Failed to like post: {}", e);
-                Error::InternalServerError("Failed to like post".into())
+                crate::error!("like post failed: {e}");
+                PostError::LikeFailed
             })?;
 
         Ok(())
@@ -318,8 +318,8 @@ impl Post {
             .send()
             .await
             .map_err(|e| {
-                tracing::error!("Failed to unlike post: {}", e);
-                Error::InternalServerError("Failed to unlike post".into())
+                crate::error!("unlike post failed: {e}");
+                PostError::UnlikeFailed
             })?;
 
         Ok(())
@@ -343,8 +343,8 @@ impl Post {
             .send()
             .await
             .map_err(|e| {
-                tracing::error!("Failed to add comment: {}", e);
-                Error::InternalServerError("Failed to add comment".into())
+                crate::error!("add comment failed: {e}");
+                PostError::CommentFailed
             })?;
 
         Ok(comment)
@@ -372,8 +372,8 @@ impl Post {
             .send()
             .await
             .map_err(|e| {
-                tracing::error!("Failed to like comment: {}", e);
-                Error::InternalServerError("Failed to like comment".into())
+                crate::error!("like comment failed: {e}");
+                PostError::CommentLikeFailed
             })?;
         Ok(())
     }
@@ -401,8 +401,8 @@ impl Post {
             .send()
             .await
             .map_err(|e| {
-                tracing::error!("Failed to unlike comment: {}", e);
-                Error::InternalServerError("Failed to unlike comment".into())
+                crate::error!("unlike comment failed: {e}");
+                PostError::CommentUnlikeFailed
             })?;
         Ok(())
     }

@@ -20,7 +20,7 @@ pub async fn delete_post_handler(post_id: FeedPartition, force: Option<bool>) ->
     .await?
     .1
     {
-        return Err(Error::Unauthorized("No permission".into()));
+        return Err(PostError::NotAccessible.into());
     }
 
     let dependancies: Vec<Partition> = vec![];
@@ -30,7 +30,7 @@ pub async fn delete_post_handler(post_id: FeedPartition, force: Option<bool>) ->
     if force {
         tracing::warn!("Force delete is not implemented yet");
     } else if !dependancies.is_empty() {
-        return Err(Error::BadRequest("Has dependencies".into()));
+        return Err(PostError::HasDependencies.into());
     }
 
     let post = Post::delete(cli, post_pk, Some(EntityType::Post)).await?;

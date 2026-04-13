@@ -1,5 +1,6 @@
 use super::super::dto::{RemoveMemberRequest, RemoveMemberResponse};
 use super::super::*;
+use crate::features::social::types::SocialError;
 
 use crate::features::posts::models::Team;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
@@ -17,9 +18,7 @@ pub async fn remove_member_handler(
         || permissions.contains(TeamGroupPermission::TeamEdit)
         || permissions.contains(TeamGroupPermission::GroupEdit);
     if !can_edit {
-        return Err(Error::Unauthorized(
-            "You don't have permission to remove members.".to_string(),
-        ));
+        return Err(SocialError::SessionNotFound.into());
     }
 
     let user_team_group_sk =

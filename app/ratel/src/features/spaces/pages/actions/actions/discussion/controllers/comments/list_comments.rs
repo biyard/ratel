@@ -21,7 +21,7 @@ pub async fn list_comments(
 
     let space_post_pk: SpacePostPartition = match &discussion_sk_entity {
         EntityType::SpacePost(id) => SpacePostPartition(id.clone()),
-        _ => return Err(Error::BadRequest("Invalid discussion id".into())),
+        _ => return Err(SpaceActionDiscussionError::InvalidDiscussionId.into()),
     };
 
     // Use GSI3 (find_replies_by_likes) with ROOT_PARENT

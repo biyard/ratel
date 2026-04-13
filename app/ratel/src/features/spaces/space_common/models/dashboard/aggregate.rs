@@ -40,7 +40,8 @@ impl DashboardAggregate {
                 .send()
                 .await
                 .map_err(|e| {
-                    crate::features::spaces::space_common::Error::Unknown(format!("Failed to create dashboard aggregate: {e}"))
+                    crate::error!("Failed to create dashboard aggregate: {e}");
+                    crate::features::spaces::types::SpaceError::UpdateFailed
                 })?;
         }
 

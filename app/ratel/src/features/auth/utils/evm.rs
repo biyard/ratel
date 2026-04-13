@@ -32,13 +32,13 @@ pub fn recover_address(message: &str, signature: &str) -> Result<String> {
     let msg_hash = Keccak256::digest(prefixed.as_bytes());
 
     let sig_bytes = hex::decode(signature.trim_start_matches("0x"))
-        .map_err(|e| Error::BadRequest(format!("Invalid signature hex: {}", e)))?;
+        .map_err(|e| {
+            crate::error!("evm: {e}");
+            AuthError::InvalidSignatureHex
+        })?;
 
     if sig_bytes.len() != 65 {
-        return Err(Error::BadRequest(format!(
-            "Invalid signature length: expected 65, got {}",
-            sig_bytes.len()
-        )));
+        return Err(AuthError::SignatureLengthInvalid.into());
     }
 
     let r = &sig_bytes[0..32];
@@ -49,18 +49,27 @@ pub fn recover_address(message: &str, signature: &str) -> Result<String> {
     use k256::ecdsa::{RecoveryId, Signature, VerifyingKey};
 
     let recovery_id = RecoveryId::try_from(recovery_id)
-        .map_err(|e| Error::BadRequest(format!("Invalid recovery id: {}", e)))?;
+        .map_err(|e| {
+            crate::error!("evm: {e}");
+            AuthError::InvalidRecoveryId
+        })?;
 
     let mut sig_bytes_64 = [0u8; 64];
     sig_bytes_64[..32].copy_from_slice(r);
     sig_bytes_64[32..].copy_from_slice(s);
 
     let signature = Signature::from_bytes((&sig_bytes_64).into())
-        .map_err(|e| Error::BadRequest(format!("Invalid signature: {}", e)))?;
+        .map_err(|e| {
+            crate::error!("evm: {e}");
+            AuthError::InvalidSignature
+        })?;
 
     let verifying_key =
         VerifyingKey::recover_from_prehash(msg_hash.as_slice(), &signature, recovery_id)
-            .map_err(|e| Error::BadRequest(format!("Failed to recover public key: {}", e)))?;
+            .map_err(|e| {
+                crate::error!("evm: {e}");
+                AuthError::PublicKeyRecoveryFailed
+            })?;
 
     let public_key_bytes = verifying_key.to_encoded_point(false);
     let public_key_hash = Keccak256::digest(&public_key_bytes.as_bytes()[1..]);

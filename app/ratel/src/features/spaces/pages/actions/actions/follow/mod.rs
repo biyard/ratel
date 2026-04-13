@@ -1,5 +1,6 @@
 mod components;
 mod models;
+pub mod types;
 mod views;
 
 pub mod controllers;
