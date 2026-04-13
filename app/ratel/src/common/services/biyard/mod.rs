@@ -7,10 +7,14 @@ use reqwest;
 #[cfg(feature = "server")]
 use serde::de::DeserializeOwned;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct TokenResponse {
     pub name: String,
     pub symbol: String,
+    #[serde(default)]
+    pub contract_address: Option<String>,
+    #[serde(default)]
+    pub chain_id: Option<u64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -79,6 +83,42 @@ pub struct PointTransactionResponse {
     pub created_at: i64,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub struct MonthlySummaryItem {
+    pub month: String,
+    pub total_earned: i64,
+    pub total_spent: i64,
+    pub balance: i64,
+    pub project_total_points: i64,
+    pub monthly_token_supply: i64,
+    pub exchanged: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub struct MonthlySummariesResponse {
+    pub months: Vec<MonthlySummaryItem>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct ClaimSignatureRequest {
+    pub meta_user_id: String,
+    pub month: String,
+    pub wallet_address: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct ClaimSignatureResponse {
+    pub month_index: String,
+    pub amount: String,
+    pub max_claimable: String,
+    pub nonce: String,
+    pub deadline: String,
+    pub signature: String,
+    pub contract_address: String,
+    pub chain_id: u64,
+}
+
 #[cfg(feature = "server")]
 #[derive(Debug, Clone)]
 pub struct BiyardService {
@@ -120,7 +160,7 @@ impl BiyardService {
     ) -> Result<UserPointBalanceResponse> {
         let user_id = Self::convert_user_id(&user_pk)?;
         let path = format!(
-            "{}/v1/projects/{}/points/{}?date={}",
+            "{}/v1/projects/{}/points/{}?month={}",
             self.base_url, self.project_id, user_id, month
         );
         self.get_json(path).await
@@ -135,7 +175,7 @@ impl BiyardService {
     ) -> Result<ListResponse<PointTransactionResponse>> {
         let user_id = Self::convert_user_id(&user_pk)?;
         let mut path = format!(
-            "{}/v1/projects/{}/points/{}/transactions?date={}",
+            "{}/v1/projects/{}/points/{}/transactions?month={}",
             self.base_url, self.project_id, user_id, month
         );
         if let Some(bookmark) = bookmark {
@@ -167,16 +207,10 @@ impl BiyardService {
             }],
         };
 
-        let res = self
-            .cli
-            .post(&path)
-            .json(&body)
-            .send()
-            .await
-            .map_err(|e| {
-                crate::error!("Biyard API: {e}");
-                ServiceError::BiyardApiRequestFailed
-            })?;
+        let res = self.cli.post(&path).json(&body).send().await.map_err(|e| {
+            crate::error!("Biyard API: {e}");
+            ServiceError::BiyardApiRequestFailed
+        })?;
 
         if !res.status().is_success() {
             let status = res.status();
@@ -185,13 +219,10 @@ impl BiyardService {
             return Err(Error::from(ServiceError::BiyardApiBadStatus));
         }
 
-        let responses: Vec<TransactPointResponse> = res
-            .json()
-            .await
-            .map_err(|e| {
-                crate::error!("Biyard API: {e}");
-                ServiceError::BiyardApiRequestFailed
-            })?;
+        let responses: Vec<TransactPointResponse> = res.json().await.map_err(|e| {
+            crate::error!("Biyard API: {e}");
+            ServiceError::BiyardApiRequestFailed
+        })?;
         responses
             .into_iter()
             .next()
@@ -216,16 +247,10 @@ impl BiyardService {
             }],
         };
 
-        let res = self
-            .cli
-            .post(&path)
-            .json(&body)
-            .send()
-            .await
-            .map_err(|e| {
-                crate::error!("Biyard API: {e}");
-                ServiceError::BiyardApiRequestFailed
-            })?;
+        let res = self.cli.post(&path).json(&body).send().await.map_err(|e| {
+            crate::error!("Biyard API: {e}");
+            ServiceError::BiyardApiRequestFailed
+        })?;
 
         if !res.status().is_success() {
             let status = res.status();
@@ -234,23 +259,64 @@ impl BiyardService {
             return Err(Error::from(ServiceError::BiyardApiBadStatus));
         }
 
-        let responses: Vec<TransactPointResponse> = res
-            .json()
-            .await
-            .map_err(|e| {
-                crate::error!("Biyard API: {e}");
-                ServiceError::BiyardApiRequestFailed
-            })?;
+        let responses: Vec<TransactPointResponse> = res.json().await.map_err(|e| {
+            crate::error!("Biyard API: {e}");
+            ServiceError::BiyardApiRequestFailed
+        })?;
         responses
             .into_iter()
             .next()
             .ok_or_else(|| Error::from(ServiceError::BiyardApiEmptyResponse))
     }
 
-    pub async fn get_token_balance(
+    pub async fn get_monthly_summaries(
         &self,
         user_pk: Partition,
-    ) -> Result<TokenBalanceResponse> {
+    ) -> Result<MonthlySummariesResponse> {
+        let user_id = Self::convert_user_id(&user_pk)?;
+        let path = format!(
+            "{}/v1/projects/{}/points/{}/monthly-summaries",
+            self.base_url, self.project_id, user_id
+        );
+        self.get_json(path).await
+    }
+
+    pub async fn request_claim_signature(
+        &self,
+        user_pk: Partition,
+        month: String,
+        wallet_address: String,
+    ) -> Result<ClaimSignatureResponse> {
+        let user_id = Self::convert_user_id(&user_pk)?;
+        let path = format!(
+            "{}/v1/projects/{}/tokens/claim-signature",
+            self.base_url, self.project_id
+        );
+        let body = ClaimSignatureRequest {
+            meta_user_id: user_id,
+            month,
+            wallet_address,
+        };
+
+        let res = self.cli.post(&path).json(&body).send().await.map_err(|e| {
+            crate::error!("Biyard API: {e}");
+            ServiceError::BiyardApiRequestFailed
+        })?;
+
+        if !res.status().is_success() {
+            let status = res.status();
+            let text = res.text().await.unwrap_or_default();
+            crate::error!("Biyard API bad status: {status} {text}");
+            return Err(Error::from(ServiceError::BiyardApiBadStatus));
+        }
+
+        res.json().await.map_err(|e| {
+            crate::error!("Biyard API: {e}");
+            Error::from(ServiceError::BiyardApiRequestFailed)
+        })
+    }
+
+    pub async fn get_token_balance(&self, user_pk: Partition) -> Result<TokenBalanceResponse> {
         let user_id = Self::convert_user_id(&user_pk)?;
         let path = format!(
             "{}/v1/projects/{}/tokens/balances/{}",
@@ -271,16 +337,10 @@ impl BiyardService {
         );
         let body = MintTokenRequest { amount };
 
-        let res = self
-            .cli
-            .post(&path)
-            .json(&body)
-            .send()
-            .await
-            .map_err(|e| {
-                crate::error!("Biyard API: {e}");
-                ServiceError::BiyardApiRequestFailed
-            })?;
+        let res = self.cli.post(&path).json(&body).send().await.map_err(|e| {
+            crate::error!("Biyard API: {e}");
+            ServiceError::BiyardApiRequestFailed
+        })?;
 
         if !res.status().is_success() {
             let status = res.status();
@@ -304,15 +364,10 @@ impl BiyardService {
     }
 
     async fn get_json<T: DeserializeOwned>(&self, path: String) -> Result<T> {
-        let res = self
-            .cli
-            .get(&path)
-            .send()
-            .await
-            .map_err(|e| {
-                crate::error!("Biyard API: {e}");
-                ServiceError::BiyardApiRequestFailed
-            })?;
+        let res = self.cli.get(&path).send().await.map_err(|e| {
+            crate::error!("Biyard API: {e}");
+            ServiceError::BiyardApiRequestFailed
+        })?;
 
         if !res.status().is_success() {
             let status = res.status();

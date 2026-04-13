@@ -1,8 +1,12 @@
+pub mod claim_signature;
 pub mod error;
 pub mod exchange_points;
+pub mod get_monthly_summaries;
 pub mod get_rewards;
 pub mod list_transactions;
+pub use claim_signature::*;
 pub use error::*;
 pub use exchange_points::*;
+pub use get_monthly_summaries::*;
 pub use get_rewards::*;
 pub use list_transactions::*;

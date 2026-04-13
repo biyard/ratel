@@ -95,27 +95,7 @@ pub async fn add_comment(
         }
     }
 
-    {
-        let author_partition = crate::features::activity::types::AuthorPartition::from(member.pk.clone());
-
-        if let Err(e) = crate::features::activity::controllers::record_activity(
-            cli,
-            space_id.clone(),
-            author_partition,
-            discussion_sk.to_string(),
-            crate::features::spaces::pages::actions::types::SpaceActionType::TopicDiscussion,
-            space_action.activity_score,
-            space_action.additional_score,
-            crate::features::activity::types::SpaceActivityData::Discussion {
-                discussion_id: discussion_sk.to_string(),
-                is_first_contribution: true,
-            },
-            member.display_name.clone(),
-            member.profile_url.clone(),
-        ).await {
-            tracing::error!(error = %e, "Failed to record discussion activity");
-        }
-    }
+    // XP recording is now handled via EventBridge on SPACE_POST_COMMENT# INSERT
 
     // Send mention notifications
     {
