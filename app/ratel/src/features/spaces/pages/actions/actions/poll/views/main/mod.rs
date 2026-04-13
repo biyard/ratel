@@ -56,7 +56,7 @@ pub fn PollActionPage(space_id: SpacePartition, poll_id: SpacePollEntityType) ->
     };
 
     rsx! {
-        div { class: "flex flex-col flex-1 mx-auto w-full min-h-0 max-w-desktop",
+        div { class: if !show_creator_view { "flex flex-col flex-1 w-full h-full min-h-0" } else { "flex flex-col flex-1 mx-auto w-full min-h-0 max-w-desktop" },
             if !show_creator_view {
                 SettingsSwitchButton {}
             }
