@@ -44,7 +44,7 @@ pub fn OverviewContent(
         div { class: "flex justify-center px-4 pt-5 mx-auto w-full",
             div { class: "flex flex-col gap-5 w-full max-w-desktop",
                 div { class: "flex gap-2.5 justify-between items-start",
-                    h1 { class: "flex-1 font-bold text-[28px]/[32px] max-mobile:text-xl text-text-primary",
+                    h1 { class: "flex-1 min-w-0 font-bold text-[28px]/[32px] max-mobile:text-xl text-text-primary truncate",
                         "{space.title}"
                     }
                     div { class: "flex gap-2 items-center",
@@ -159,7 +159,7 @@ pub fn OverviewContent(
                     }
                 }
 
-                div { class: "flex flex-wrap justify-between items-center gap-y-2 py-4 border-y border-card-border",
+                div { class: "flex flex-wrap gap-y-2 justify-between items-center py-4 border-y border-card-border",
                     div { class: "flex gap-2.5 items-center min-w-0",
                         div { class: "flex flex-row items-center min-w-0 gap-[8px]",
                             {render_author_avatar(&space.author_profile_url, &space.author_display_name)}
