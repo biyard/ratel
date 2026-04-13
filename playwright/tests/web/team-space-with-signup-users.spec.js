@@ -39,6 +39,39 @@ const user2 = {
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
+/**
+ * Set the action start date+time to now via the Settings tab.
+ * Clicks today in the date picker, then sets the hour to the current
+ * hour (or one hour earlier) so the action is immediately In Progress.
+ * Assumes the Settings tab is already active.
+ */
+async function setStartDateToToday(page) {
+  // 1. Click the first date picker trigger (start date) and select today
+  const datePickerTriggers = page.locator(".date-picker-group");
+  await datePickerTriggers.first().click();
+  const todayCell = page.locator('[data-today="true"]');
+  await todayCell.first().click();
+  await page.waitForLoadState("load");
+
+  // 2. Open the first time picker (start time) and pick the current hour
+  const timePickers = page.locator(".time-picker-trigger");
+  await timePickers.first().click();
+  const now = new Date();
+  const currentHour = String(now.getHours()).padStart(2, "0");
+  const hourCell = page.locator(
+    `.time-picker-cell[data-selected="false"]:text-is("${currentHour}")`
+  );
+  // If current hour cell exists and is not already selected, click it
+  if ((await hourCell.count()) > 0) {
+    await hourCell.first().click();
+  } else {
+    // Already selected or not found — click the selected one to close
+    const selected = page.locator('.time-picker-cell[data-selected="true"]').first();
+    await selected.click();
+  }
+  await page.waitForLoadState("load");
+}
+
 /** Hide the floating action button that may overlap modal buttons. */
 async function hideFab(page) {
   await page.evaluate(() => {
@@ -862,13 +895,9 @@ test.describe.serial("Space with actions created by a team", () => {
 
     await page.waitForURL(/\/actions\/polls\//, { waitUntil: "load" });
 
-    // The space has already been started by this point in the
-    // scenario, so the brand-new poll's `started_at` (defaulted to
-    // creation time) means `is_action_locked` returns true and the
-    // creator lands on the Participant view with a "Settings" toggle
-    // in the top-right corner. Click that toggle to open the creator
-    // configuration UI before we can fill in the poll fields.
-    await click(page, { testId: "action-settings-switch" });
+    // After the space is published, new actions default to started_at =
+    // now + 1 hour, so is_action_locked is false and the creator lands
+    // directly on PollCreatorPage — no settings toggle needed.
 
     await fill(
       page,
@@ -895,6 +924,11 @@ test.describe.serial("Space with actions created by a team", () => {
 
     await page.keyboard.press("Tab");
     await page.waitForLoadState("load");
+
+    // Set start date to today so the final survey is In Progress
+    await page.getByRole("tab", { name: "Settings" }).click();
+    await page.waitForLoadState("load");
+    await setStartDateToToday(page);
   });
 
   // ─── 11. Both participants: Complete final survey ─────────────────────────
