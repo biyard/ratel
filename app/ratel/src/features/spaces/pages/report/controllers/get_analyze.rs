@@ -1,5 +1,6 @@
 use crate::features::spaces::pages::report::models::SpaceAnalyze;
 use crate::features::spaces::pages::report::*;
+use crate::features::spaces::pages::report::types::SpaceReportError;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GetAnalyzeResponse {
@@ -16,7 +17,10 @@ pub async fn get_analyze(space_pk: SpacePartition) -> Result<GetAnalyzeResponse>
 
     let analyze = SpaceAnalyze::get(dynamo, &partition, Some(EntityType::SpaceAnalyze))
         .await
-        .map_err(|e| Error::InternalServerError(format!("failed to load analyze: {e}")))?;
+        .map_err(|e| {
+            crate::error!("failed to load analyze: {e}");
+            SpaceReportError::AnalyzeLoadFailed
+        })?;
     let html_contents = analyze.and_then(|item| item.html_contents);
 
     Ok(GetAnalyzeResponse { html_contents })

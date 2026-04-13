@@ -132,7 +132,7 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                         }
                         popup.close();
                     }
-                    Err(Error::Unauthorized(_)) => {
+                    Err(Error::Auth(AuthError::UserNotFound)) => {
                         popup.close();
                         popup.open(rsx! {
                             SignupModal { initial_email: oauth_email, on_success }

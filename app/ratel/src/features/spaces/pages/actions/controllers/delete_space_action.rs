@@ -44,9 +44,7 @@ pub async fn delete_space_action(space_id: SpacePartition, action_id: String) ->
             .ok_or(Error::NotFound("Poll not found".into()))?;
 
             if poll.user_response_count > 0 {
-                return Err(Error::BadRequest(
-                    "Polls with responses cannot be deleted.".into(),
-                ));
+                return Err(SpaceActionError::ActionDeleteFailed.into());
             }
 
             let txs = vec![
@@ -58,7 +56,8 @@ pub async fn delete_space_action(space_id: SpacePartition, action_id: String) ->
                 DashboardAggregate::inc_polls(&space_pk, -1),
             ];
             crate::transact_write_items!(cli, txs).map_err(|e| {
-                Error::InternalServerError(format!("Failed to delete poll action: {e}"))
+                crate::error!("Failed to delete poll action: {e}");
+                SpaceActionError::ActionDeleteFailed
             })?;
         }
         SpaceActionType::TopicDiscussion => {
@@ -75,9 +74,7 @@ pub async fn delete_space_action(space_id: SpacePartition, action_id: String) ->
                 )?;
 
             if discussion.comments > 0 {
-                return Err(Error::BadRequest(
-                    "Discussions with comments cannot be deleted.".into(),
-                ));
+                return Err(SpaceActionError::ActionDeleteFailed.into());
             }
 
             let txs = vec![
@@ -89,7 +86,8 @@ pub async fn delete_space_action(space_id: SpacePartition, action_id: String) ->
                 DashboardAggregate::inc_posts(&space_pk, -1),
             ];
             crate::transact_write_items!(cli, txs).map_err(|e| {
-                Error::InternalServerError(format!("Failed to delete discussion action: {e}"))
+                crate::error!("Failed to delete discussion action: {e}");
+                SpaceActionError::ActionDeleteFailed
             })?;
         }
         SpaceActionType::Quiz => {
@@ -103,9 +101,7 @@ pub async fn delete_space_action(space_id: SpacePartition, action_id: String) ->
             .ok_or(Error::NotFound("Quiz not found".into()))?;
 
             if quiz.user_response_count > 0 {
-                return Err(Error::BadRequest(
-                    "Quizzes with responses cannot be deleted.".into(),
-                ));
+                return Err(SpaceActionError::ActionDeleteFailed.into());
             }
 
             let quiz_answer_sk = EntityType::SpaceQuizAnswer(action_id);
@@ -134,7 +130,8 @@ pub async fn delete_space_action(space_id: SpacePartition, action_id: String) ->
             }
 
             crate::transact_write_items!(cli, txs).map_err(|e| {
-                Error::InternalServerError(format!("Failed to delete quiz action: {e}"))
+                crate::error!("Failed to delete quiz action: {e}");
+                SpaceActionError::ActionDeleteFailed
             })?;
         }
         SpaceActionType::Follow => {

@@ -15,7 +15,7 @@ impl TryInto<MembershipTier> for TransactionType {
     fn try_into(self) -> Result<MembershipTier> {
         match self {
             TransactionType::PurchaseMembership(tier) => Ok(tier),
-            _ => Err(Error::BadRequest("Invalid membership tier".to_string())),
+            _ => Err(crate::features::social::types::SocialError::InvalidMembershipTier.into()),
         }
     }
 

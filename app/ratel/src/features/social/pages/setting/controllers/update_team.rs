@@ -1,5 +1,6 @@
 use super::dto::{TeamResponse, UpdateTeamRequest};
 use super::super::*;
+use crate::features::social::types::SocialError;
 
 use crate::features::posts::models::Team;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
@@ -15,9 +16,7 @@ pub async fn update_team_handler(
     let can_edit = permissions.contains(TeamGroupPermission::TeamEdit)
         || permissions.contains(TeamGroupPermission::TeamAdmin);
     if !can_edit {
-        return Err(Error::Unauthorized(
-            "You don't have permission to edit this team.".to_string(),
-        ));
+        return Err(SocialError::SessionNotFound.into());
     }
 
     let mut need_update_user_team = false;

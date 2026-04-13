@@ -1,6 +1,7 @@
 use crate::features::posts::models::Team;
 use crate::features::spaces::pages::actions::actions::follow::models::SpaceFollowUser;
 use crate::features::spaces::pages::actions::actions::follow::*;
+use crate::features::spaces::pages::actions::actions::follow::types::SpaceFollowError;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
@@ -39,7 +40,7 @@ pub async fn add_follow_users(
 
     for raw_identifier in req.identifiers {
         let (identifier, is_email) = normalize_identifier(&raw_identifier)
-            .ok_or_else(|| Error::BadRequest(format!("Invalid identifier: {}", raw_identifier)))?;
+            .ok_or_else(|| SpaceFollowError::InvalidTarget)?;
         let de_key = if is_email {
             format!("email:{}", identifier)
         } else {

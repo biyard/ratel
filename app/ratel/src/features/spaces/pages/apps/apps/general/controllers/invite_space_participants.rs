@@ -1,4 +1,5 @@
 use crate::features::spaces::pages::apps::apps::general::*;
+use crate::features::spaces::pages::apps::types::SpaceAppError;
 #[cfg(feature = "server")]
 use crate::common::SpaceUserRole;
 #[cfg(feature = "server")]
@@ -148,7 +149,7 @@ pub async fn invite_space_participants(
 
     for raw_email in req.emails {
         let email = normalize_email(&raw_email)
-            .ok_or_else(|| Error::BadRequest(format!("Invalid email: {}", raw_email)))?;
+            .ok_or_else(|| SpaceAppError::InvalidInvitationEmail)?;
 
         if !seen.insert(email.clone()) {
             continue;

@@ -37,7 +37,10 @@ pub async fn update_space_action(
 
     let mut space_action = SpaceAction::get(cli, pk.clone(), Some(EntityType::SpaceAction))
         .await
-        .map_err(|e| Error::InternalServerError(format!("Failed to get space action: {e:?}")))?
+        .map_err(|e| {
+            crate::error!("Failed to get space action: {e:?}");
+            SpaceActionError::ActionLoadFailed
+        })?
         .ok_or(Error::NotFound("Space action not found".into()))?;
 
     match req {
@@ -60,7 +63,7 @@ pub async fn update_space_action(
             ended_at,
         } => {
             if started_at >= ended_at {
-                return Err(Error::BadRequest("Invalid time range".into()));
+                return Err(SpaceActionError::InvalidTimeRange.into());
             }
             space_action.started_at = started_at;
             space_action.ended_at = ended_at;
@@ -71,7 +74,8 @@ pub async fn update_space_action(
                 .execute(cli)
                 .await
                 .map_err(|e| {
-                    Error::InternalServerError(format!("Failed to update space action: {e:?}"))
+                    crate::error!("Failed to update space action: {e:?}");
+                    SpaceActionError::ActionUpdateFailed
                 })?;
         }
         UpdateSpaceActionRequest::Prerequisite { prerequisite } => {
@@ -82,7 +86,8 @@ pub async fn update_space_action(
                 .execute(cli)
                 .await
                 .map_err(|e| {
-                    Error::InternalServerError(format!("Failed to update space action: {e:?}"))
+                    crate::error!("Failed to update space action: {e:?}");
+                    SpaceActionError::ActionUpdateFailed
                 })?;
         }
         UpdateSpaceActionRequest::ActivityScore {
@@ -98,7 +103,8 @@ pub async fn update_space_action(
                 .execute(cli)
                 .await
                 .map_err(|e| {
-                    Error::InternalServerError(format!("Failed to update activity score: {e:?}"))
+                    crate::error!("Failed to update activity score: {e:?}");
+                    SpaceActionError::ActionUpdateFailed
                 })?;
         }
     }
@@ -177,7 +183,8 @@ async fn set_credits(
             TeamMembership::get(cli, space.user_pk.clone(), Some(EntityType::TeamMembership))
                 .await
                 .map_err(|e| {
-                    Error::InternalServerError(format!("Failed to get team membership: {e:?}"))
+                    crate::error!("Failed to get team membership: {e:?}");
+                    SpaceActionError::MembershipCheckFailed
                 })?
                 .ok_or(SpaceRewardError::CreditsExceedBalance)?;
         team_membership = ensure_team_membership_monthly_refill(cli, team_membership).await?;
@@ -185,7 +192,10 @@ async fn set_credits(
         let membership_pk: Partition = team_membership.membership_pk.clone().into();
         let membership = Membership::get(cli, membership_pk, Some(EntityType::Membership))
             .await
-            .map_err(|e| Error::InternalServerError(format!("Failed to get membership: {e:?}")))?;
+            .map_err(|e| {
+                crate::error!("Failed to get membership: {e:?}");
+                SpaceActionError::MembershipCheckFailed
+            })?;
         let max_per_space = membership.as_ref().map_or(0, |m| m.max_credits_per_space);
         if max_per_space > 0 && credits as i64 > max_per_space {
             return Err(SpaceRewardError::CreditsExceedMaxPerSpace.into());
@@ -202,7 +212,8 @@ async fn set_credits(
             UserMembership::get(cli, user.pk.clone(), Some(EntityType::UserMembership))
                 .await
                 .map_err(|e| {
-                    Error::InternalServerError(format!("Failed to get user membership: {e:?}"))
+                    crate::error!("Failed to get user membership: {e:?}");
+                    SpaceActionError::MembershipCheckFailed
                 })?
                 .ok_or(SpaceRewardError::CreditsExceedBalance)?;
         user_membership = ensure_user_membership_monthly_refill(cli, user_membership).await?;
@@ -210,7 +221,10 @@ async fn set_credits(
         let membership_pk: Partition = user_membership.membership_pk.clone().into();
         let membership = Membership::get(cli, membership_pk, Some(EntityType::Membership))
             .await
-            .map_err(|e| Error::InternalServerError(format!("Failed to get membership: {e:?}")))?;
+            .map_err(|e| {
+                crate::error!("Failed to get membership: {e:?}");
+                SpaceActionError::MembershipCheckFailed
+            })?;
         let max_per_space = membership.as_ref().map_or(0, |m| m.max_credits_per_space);
         if max_per_space > 0 && credits as i64 > max_per_space {
             return Err(SpaceRewardError::CreditsExceedMaxPerSpace.into());
@@ -232,7 +246,10 @@ async fn set_credits(
         update_action_credits_item(pk, credits, total_points, now),
     ];
     crate::transact_write_items!(cli, items)
-        .map_err(|e| Error::InternalServerError(format!("Failed to execute transaction: {e:?}")))?;
+        .map_err(|e| {
+            crate::error!("Failed to execute transaction: {e:?}");
+            SpaceActionError::TransactionFailed
+        })?;
 
     Ok(())
 }
@@ -273,7 +290,8 @@ async fn remove_credits(
                 )
                 .await
                 .map_err(|e| {
-                    Error::InternalServerError(format!("Failed to get team membership: {e:?}"))
+                    crate::error!("Failed to get team membership: {e:?}");
+                    SpaceActionError::MembershipCheckFailed
                 })? {
                     let team_membership =
                         ensure_team_membership_monthly_refill(cli, team_membership.clone())
@@ -289,7 +307,8 @@ async fn remove_credits(
                 UserMembership::get(cli, user.pk.clone(), Some(EntityType::UserMembership))
                     .await
                     .map_err(|e| {
-                    Error::InternalServerError(format!("Failed to get user membership: {e:?}"))
+                    crate::error!("Failed to get user membership: {e:?}");
+                    SpaceActionError::MembershipCheckFailed
                 })?
             {
                 let um = ensure_user_membership_monthly_refill(cli, um.clone()).await?;
@@ -306,7 +325,10 @@ async fn remove_credits(
 
     items.push(update_action_credits_item(pk, 0, 0, now));
     crate::transact_write_items!(cli, items)
-        .map_err(|e| Error::InternalServerError(format!("Failed to execute transaction: {e:?}")))?;
+        .map_err(|e| {
+            crate::error!("Failed to execute transaction: {e:?}");
+            SpaceActionError::TransactionFailed
+        })?;
 
     Ok(())
 }
@@ -324,7 +346,10 @@ async fn get_or_create_reward(
         Some(behavior.clone()),
     )
     .await
-    .map_err(|e| Error::InternalServerError(format!("Failed to get reward template: {e:?}")))?;
+    .map_err(|e| {
+        crate::error!("Failed to get reward template: {e:?}");
+        SpaceActionError::RewardTemplateFailed
+    })?;
 
     match existing {
         Some(r) => Ok((r.point, r.period, r.condition)),
@@ -336,7 +361,8 @@ async fn get_or_create_reward(
                 RewardCondition::None,
             );
             reward.create(cli).await.map_err(|e| {
-                Error::InternalServerError(format!("Failed to create reward template: {e:?}"))
+                crate::error!("Failed to create reward template: {e:?}");
+                SpaceActionError::RewardTemplateFailed
             })?;
             Ok((reward.point, reward.period, reward.condition))
         }

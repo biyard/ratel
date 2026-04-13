@@ -105,11 +105,9 @@ impl SpacePostComment {
         let parent_comment_id = match comment_sk {
             EntityType::SpacePostComment(id) => id,
             _ => {
-                tracing::error!("Invalid parent comment sk: {:?}", comment_sk);
+                crate::error!("Invalid parent comment sk: {:?}", comment_sk);
                 return Err(
-                    crate::features::spaces::pages::actions::actions::discussion::Error::Unknown(
-                        "Invalid parent comment sk".to_string(),
-                    ),
+                    SpaceActionDiscussionError::InvalidDiscussionId.into(),
                 );
             }
         };
@@ -135,11 +133,9 @@ impl SpacePostComment {
         let parent_comment_id = match &parent_comment_sk {
             EntityType::SpacePostComment(id) => id.to_string(),
             _ => {
-                tracing::error!("Invalid parent_comment_sk: {:?}", parent_comment_sk);
+                crate::error!("Invalid parent_comment_sk: {:?}", parent_comment_sk);
                 return Err(
-                    crate::features::spaces::pages::actions::actions::discussion::Error::Unknown(
-                        "Invalid parent comment sk".to_string(),
-                    ),
+                    SpaceActionDiscussionError::InvalidDiscussionId.into(),
                 );
             }
         };
@@ -160,11 +156,8 @@ impl SpacePostComment {
         let comment_tx = comment.create_transact_write_item();
 
         crate::transact_write_items!(cli, vec![parent_comment, comment_tx, post]).map_err(|e| {
-            tracing::error!("Failed to reply comment: {}", e);
-            crate::features::spaces::pages::actions::actions::discussion::Error::Unknown(format!(
-                "Failed to reply comment: {}",
-                e
-            ))
+            crate::error!("Failed to reply comment: {}", e);
+            SpaceActionDiscussionError::CreateFailed
         })?;
 
         Ok(comment)

@@ -22,7 +22,10 @@ pub async fn install_space_app(
 
     let items = vec![app.create_transact_write_item()];
     crate::transact_write_items!(dynamo, items)
-        .map_err(|e| crate::features::spaces::pages::apps::Error::Unknown(format!("Failed to install app: {e}")))?;
+        .map_err(|e| {
+            crate::error!("Failed to install app: {e}");
+            SpaceAppError::InstallFailed
+        })?;
 
     Ok(app)
 }

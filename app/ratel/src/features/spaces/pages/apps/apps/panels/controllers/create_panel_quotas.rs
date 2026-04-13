@@ -1,4 +1,5 @@
 use crate::features::spaces::pages::apps::apps::panels::*;
+use crate::features::spaces::pages::apps::types::SpaceAppError;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct CreatePanelQuotaRequest {
@@ -45,7 +46,10 @@ pub async fn create_panel_quotas(
         .collect();
 
     crate::transact_write_items!(cli, items)
-        .map_err(|e| Error::InternalServerError(format!("Failed to create panel quotas: {e}")))?;
+        .map_err(|e| {
+            crate::error!("Failed to create panel quotas: {e}");
+            SpaceAppError::PanelQuotaCreateFailed
+        })?;
 
     Ok(panels.into_iter().map(Into::into).collect())
 }

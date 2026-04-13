@@ -40,9 +40,16 @@ pub(crate) fn mask_card_number(card_number: &str) -> String {
 
 #[cfg(feature = "server")]
 pub(crate) fn normalize_error(err: Error) -> Error {
+    use crate::features::membership::types::MembershipPaymentError;
     match err {
-        Error::Aws(e) => Error::Unknown(format!("AWS error: {}", e)),
-        Error::Session(e) => Error::Unknown(format!("Session error: {}", e)),
+        Error::Aws(e) => {
+            crate::error!("AWS error: {e}");
+            MembershipPaymentError::AwsConversionFailed.into()
+        }
+        Error::Session(e) => {
+            crate::error!("Session error: {e}");
+            MembershipPaymentError::SessionConversionFailed.into()
+        }
         other => other,
     }
 }

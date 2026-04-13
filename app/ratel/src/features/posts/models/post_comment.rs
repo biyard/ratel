@@ -77,7 +77,7 @@ impl PostComment {
         let parent_comment_id = match comment_sk {
             EntityType::PostComment(id) => id,
             _ => {
-                return Err(Error::BadRequest("comment_sk must be a PostComment".into()));
+                return Err(PostError::InvalidCommentKey.into());
             }
         };
 
@@ -108,8 +108,8 @@ impl PostComment {
         let parent_comment_id = match &parent_comment_sk {
             EntityType::PostComment(id) => id.to_string(),
             _ => {
-                tracing::error!("Invalid parent_comment_sk: {:?}", parent_comment_sk);
-                return Err(Error::InternalServerError("Failed to reply".into()));
+                crate::error!("reply failed: invalid parent_comment_sk: {:?}", parent_comment_sk);
+                return Err(PostError::ReplyFailed.into());
             }
         };
 
@@ -130,8 +130,8 @@ impl PostComment {
             .send()
             .await
             .map_err(|e| {
-                tracing::error!("Failed to reply: {}", e);
-                Error::InternalServerError("Failed to reply".into())
+                crate::error!("reply failed: {e}");
+                PostError::ReplyFailed
             })?;
 
         Ok(comment)

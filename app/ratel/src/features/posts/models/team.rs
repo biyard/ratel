@@ -152,12 +152,12 @@ impl Team {
         perm: TeamGroupPermission,
     ) -> Result<Self> {
         if !Self::has_permission(cli, &team_pk, &user_pk, perm).await? {
-            return Err(Error::NotFound("Team not found".to_string()));
+            return Err(PostError::TeamNotFound.into());
         }
 
         let team = Self::get(cli, team_pk, Some(EntityType::Team))
             .await?
-            .ok_or(Error::NotFound("Team not found".to_string()))?;
+            .ok_or::<Error>(PostError::TeamNotFound.into())?;
 
         Ok(team)
     }
@@ -183,7 +183,7 @@ impl Team {
         let group = group
             .first()
             .cloned()
-            .ok_or(Error::NotFound("Team not found".to_string()))?;
+            .ok_or::<Error>(PostError::TeamNotFound.into())?;
 
         let permissions: TeamGroupPermissions = group.team_group_permissions.into();
 
@@ -241,16 +241,12 @@ fn extract_team_identifier(parts: &Parts) -> Result<String> {
     // /:username/... (SSR page URL)
     if let Some(&first) = segments.first() {
         if first.eq_ignore_ascii_case("api") {
-            return Err(Error::BadRequest(
-                "Invalid team path: missing team identifier".to_string(),
-            ));
+            return Err(PostError::InvalidTeamContext.into());
         }
         return Ok(first.to_string());
     }
 
-    Err(Error::BadRequest(
-        "Missing team identifier in path".to_string(),
-    ))
+    Err(PostError::InvalidTeamContext.into())
 }
 
 #[cfg(feature = "server")]
@@ -273,7 +269,7 @@ async fn resolve_team_from_identifier(
     teams
         .into_iter()
         .find(|t| t.username == team_id)
-        .ok_or(Error::NotFound("Team not found".to_string()))
+        .ok_or::<Error>(PostError::TeamNotFound.into())
 }
 
 #[cfg(feature = "server")]
