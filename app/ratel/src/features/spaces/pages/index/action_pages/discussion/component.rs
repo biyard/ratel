@@ -135,6 +135,7 @@ pub fn DiscussionArenaPage(
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Script { defer: true, src: asset!("./script.js") }
 
         div { class: "discussion-arena",
 
@@ -258,8 +259,29 @@ pub fn DiscussionArenaPage(
                     }
                 }
 
-                // Right: Comments Panel
-                div { class: "comments-panel",
+                // Right: Comments Panel (bottom sheet on mobile)
+                div { class: "comments-panel", id: "discussion-comments-sheet",
+                    // Sheet handle (visible on mobile only)
+                    div { class: "sheet-handle",
+                        div { class: "sheet-handle__bar" }
+                        div { class: "sheet-handle__row",
+                            div { class: "sheet-handle__left",
+                                span { class: "sheet-handle__title", "{tr.comments_title}" }
+                                span { class: "sheet-handle__count", "{post.comments}" }
+                            }
+                            svg {
+                                class: "sheet-handle__chevron",
+                                view_box: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_width: "2",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                polyline { points: "6 9 12 15 18 9" }
+                            }
+                        }
+                    }
+                    // Desktop header
                     div { class: "comments-panel__header",
                         span { class: "comments-panel__title", "{tr.comments_title}" }
                         span { class: "comments-panel__count", "{post.comments}" }
