@@ -1,11 +1,14 @@
-use crate::common::*;
 use crate::common::models::space::{SpaceCommon, SpaceParticipant};
 use crate::common::models::{OptionalUser, User};
+use crate::common::*;
 use crate::features::posts::models::Post;
 use crate::features::posts::types::{BoosterType, SpaceType};
 use crate::spaces::{InvitationStatus, SpaceInvitationMember};
 
-#[mcp_tool(name = "get_space", description = "Get space details by ID, including status, visibility, participation info.")]
+#[mcp_tool(
+    name = "get_space",
+    description = "Get space details by ID, including status, visibility, participation info."
+)]
 #[get("/api/spaces/{space_id}", user: OptionalUser)]
 pub async fn get_space(
     #[mcp(description = "Space partition key (e.g. 'SPACE#<uuid>' or '<uuid>')")]
@@ -72,7 +75,8 @@ pub async fn get_space(
     let has_prerequisite = {
         use crate::features::spaces::pages::actions::models::SpaceAction;
         let opt = SpaceAction::opt_all();
-        let (actions, _) = SpaceAction::find_by_space(dynamo, space_pk_partition.clone(), opt).await
+        let (actions, _) = SpaceAction::find_by_space(dynamo, space_pk_partition.clone(), opt)
+            .await
             .unwrap_or_default();
         actions.iter().any(|a| a.prerequisite)
     };
@@ -112,6 +116,7 @@ pub async fn get_space(
         anonymous_participation: space.anonymous_participation,
         join_anytime: space.join_anytime,
         can_participate,
+        participants: space.participants,
         participated,
         participant_display_name,
         participant_profile_url,
@@ -121,6 +126,7 @@ pub async fn get_space(
         is_report: false,
         logo: space.logo,
         has_prerequisite,
+        started_at: space.started_at,
     })
 }
 
@@ -157,6 +163,7 @@ pub struct SpaceResponse {
     #[serde(default)]
     pub join_anytime: bool,
     pub can_participate: bool,
+    pub participants: i64,
     pub participated: bool,
     pub participant_display_name: Option<String>,
     pub participant_profile_url: Option<String>,
@@ -168,6 +175,7 @@ pub struct SpaceResponse {
     pub logo: String,
     #[serde(default)]
     pub has_prerequisite: bool,
+    pub started_at: Option<i64>,
 }
 
 #[cfg(feature = "server")]

@@ -23,9 +23,11 @@ pub fn SigninCard(
                     span { class: "stat__value", "{participants}" }
                     span { class: "stat__label", "{tr.participants}" }
                 }
-                div { class: "stat",
-                    span { class: "stat__value", "{remaining}" }
-                    span { class: "stat__label", "{tr.remaining}" }
+                if ctx.space().quota > 0 {
+                    div { class: "stat",
+                        span { class: "stat__value", "{remaining}" }
+                        span { class: "stat__label", "{tr.remaining}" }
+                    }
                 }
                 div { class: "stat",
                     span { class: "stat__value", "{rewards}" }
