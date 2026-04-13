@@ -119,16 +119,12 @@ pub fn ActionCommonSettings(
                     initial_ended_at: Some(setting.ended_at),
                     on_change: move |range: DateTimeRange| async move {
                         if let (Some(start_date), Some(end_date)) = (range.start_date, range.end_date) {
-                            let started_at = range.timezone.local_to_utc_millis(
-                                start_date,
-                                range.start_hour,
-                                range.start_minute,
-                            );
-                            let ended_at = range.timezone.local_to_utc_millis(
-                                end_date,
-                                range.end_hour,
-                                range.end_minute,
-                            );
+                            let started_at = range
+                                .timezone
+                                .local_to_utc_millis(start_date, range.start_hour, range.start_minute);
+                            let ended_at = range
+                                .timezone
+                                .local_to_utc_millis(end_date, range.end_hour, range.end_minute);
                             let req = UpdateSpaceActionRequest::Time {
                                 started_at,
                                 ended_at,
@@ -193,8 +189,7 @@ pub fn ActionCommonSettings(
                     }
                 },
             }
-
-            crate::features::activity::components::ActivityScoreSetting { space_id, action_id, action_setting }
+        
         }
     }
 }
