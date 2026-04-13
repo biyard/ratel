@@ -50,7 +50,14 @@ pub async fn follow_user(
     }
 
     let (follower_record, following_record) =
-        UserFollow::new_follow_records(user.pk.clone(), target_pk.clone());
+        UserFollow::new_follow_records_with_space(
+            user.pk.clone(),
+            target_pk.clone(),
+            Some(space_id.to_string()),
+            Some(follow_id.to_string()),
+            Some(member.display_name.clone()),
+            Some(member.profile_url.clone()),
+        );
 
     let follow_tx = follower_record.create_transact_write_item();
     let following_tx = following_record.create_transact_write_item();
@@ -117,22 +124,7 @@ pub async fn follow_user(
         }
     }
 
-    {
-        if let Err(e) = crate::features::activity::controllers::record_activity(
-            cli,
-            space_id.clone(),
-            crate::features::activity::types::AuthorPartition::from(user.pk.clone()),
-            follow_id.to_string(),
-            crate::features::spaces::pages::actions::types::SpaceActionType::Follow,
-            crate::features::activity::types::SpaceActivityData::Follow {
-                follow_id: follow_id.to_string(),
-            },
-            member.display_name.clone(),
-            member.profile_url.clone(),
-        ).await {
-            tracing::error!(error = %e, "Failed to record follow activity");
-        }
-    }
+    // XP recording is now handled via EventBridge on FOLLOWER# INSERT
 
     Ok(())
 }

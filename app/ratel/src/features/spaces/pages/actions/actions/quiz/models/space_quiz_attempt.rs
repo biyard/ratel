@@ -24,15 +24,21 @@ pub struct SpaceQuizAttempt {
     pub profile_url: Option<String>,
     #[serde(default)]
     pub username: Option<String>,
+    #[serde(default)]
+    pub space_id: Option<String>,
+    #[serde(default)]
+    pub pass_threshold: Option<i64>,
 }
 
 #[cfg(feature = "server")]
 impl SpaceQuizAttempt {
     pub fn new(
+        space_id: SpacePartition,
         quiz_id: SpaceQuizEntityType,
         author: crate::common::models::space::SpaceUser,
         answers: Vec<Answer>,
         score: i64,
+        pass_threshold: i64,
     ) -> Self {
         let created_at = get_now_timestamp_millis();
         let attempt_id = uuid::Uuid::now_v7().to_string();
@@ -51,6 +57,8 @@ impl SpaceQuizAttempt {
             display_name: Some(author.display_name),
             profile_url: Some(author.profile_url),
             username: Some(author.username),
+            space_id: Some(space_id.to_string()),
+            pass_threshold: Some(pass_threshold),
         }
     }
 

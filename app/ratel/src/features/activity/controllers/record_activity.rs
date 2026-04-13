@@ -27,7 +27,7 @@ fn calculate_xp(data: &SpaceActivityData) -> i64 {
 }
 
 #[cfg(feature = "server")]
-pub(crate) async fn record_activity(
+pub async fn record_activity(
     cli: &aws_sdk_dynamodb::Client,
     space_id: SpacePartition,
     author: AuthorPartition,

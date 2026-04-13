@@ -6,4 +6,4 @@ mod record_activity;
 pub use get_ranking::*;
 pub use get_my_score::*;
 #[cfg(feature = "server")]
-pub(crate) use record_activity::*;
+pub use record_activity::*;

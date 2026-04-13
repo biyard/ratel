@@ -77,7 +77,7 @@ pub async fn respond_quiz(
         return Err(SpaceActionQuizError::NoRemainingAttempts.into());
     }
     let score = calculate_score(&quiz.questions, &correct.answers, &req.answers)?;
-    let attempt = SpaceQuizAttempt::new(quiz_id.clone(), member.clone(), req.answers, score);
+    let attempt = SpaceQuizAttempt::new(space_id.clone(), quiz_id.clone(), member.clone(), req.answers, score, quiz.pass_score);
     attempt.create(cli).await?;
 
     if attempts.is_empty() {
@@ -123,26 +123,7 @@ pub async fn respond_quiz(
         }
     }
 
-    // Record XP for both passed and failed attempts
-    {
-        if let Err(e) = crate::features::activity::controllers::record_activity(
-            cli,
-            space_id.clone(),
-            crate::features::activity::types::AuthorPartition::from(user.pk),
-            quiz_action_id.clone(),
-            crate::features::spaces::pages::actions::types::SpaceActionType::Quiz,
-            crate::features::activity::types::SpaceActivityData::Quiz {
-                quiz_id: quiz_id.to_string(),
-                passed,
-                correct_count: score as u32,
-                pass_threshold: quiz.pass_score as u32,
-            },
-            member.display_name.clone(),
-            member.profile_url.clone(),
-        ).await {
-            tracing::error!(error = %e, "Failed to record quiz activity");
-        }
-    }
+    // XP recording is now handled via EventBridge on SPACE_QUIZ_ATTEMPT# INSERT
     Ok(())
 }
 
