@@ -72,11 +72,8 @@ pub async fn delete_comment(
     }
 
     crate::transact_write_items!(cli, txs).map_err(|e| {
-        tracing::error!("Failed to delete comment: {}", e);
-        crate::features::spaces::pages::actions::actions::discussion::Error::Unknown(format!(
-            "Failed to delete comment: {}",
-            e
-        ))
+        crate::error!("Failed to delete comment: {}", e);
+        SpaceActionDiscussionError::DeleteFailed
     })?;
 
     Ok(())

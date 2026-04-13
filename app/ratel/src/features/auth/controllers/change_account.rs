@@ -32,24 +32,22 @@ pub async fn change_account_handler(req: ChangeAccountRequest) -> Result<ChangeA
 
     let rt = UserRefreshToken::get(cli, &req.user_pk, Some(target_sk))
         .await?
-        .ok_or(Error::Unauthorized(
-            "Account not found for this device".into(),
-        ))?;
+        .ok_or(AuthError::UserNotFound)?;
 
     let now_ts = crate::common::utils::time::now();
 
     if rt.revoked {
-        return Err(Error::Unauthorized("Token revoked".into()));
+        return Err(AuthError::TokenRevoked.into());
     }
     if let Some(exp) = rt.expired_at {
         if exp < now_ts {
-            return Err(Error::Unauthorized("Token expired".into()));
+            return Err(AuthError::TokenExpired.into());
         }
     }
 
     let req_hash = sha256_base64url(&req.refresh_token);
     if rt.token_hash != req_hash {
-        return Err(Error::Unauthorized("Invalid refresh token".into()));
+        return Err(AuthError::InvalidRefreshToken.into());
     }
 
     let new_plain = sorted_uuid();

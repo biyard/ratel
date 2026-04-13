@@ -1,4 +1,5 @@
 use crate::features::spaces::pages::apps::apps::analyzes::*;
+use crate::features::spaces::pages::apps::types::SpaceAppError;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct DownloadAnalyzeExcelRequest {
@@ -59,12 +60,12 @@ extern "C" {
 #[cfg(not(feature = "server"))]
 pub async fn download_analyze_excel(req: DownloadAnalyzeExcelRequest) -> Result<()> {
     let js_req = crate::common::serde_wasm_bindgen::to_value(&req)
-        .map_err(|err| Error::Unknown(format!("failed to serialize excel request: {err}")))?;
+        .map_err(|_err| SpaceAppError::ExcelExportFailed)?;
 
-    let promise = download_excel_js(&js_req).map_err(|err| Error::Unknown(format_js_error(err)))?;
+    let promise = download_excel_js(&js_req).map_err(|_err| SpaceAppError::ExcelExportFailed)?;
     JsFuture::from(promise)
         .await
-        .map_err(|err| Error::Unknown(format_js_error(err)))?;
+        .map_err(|_err| SpaceAppError::ExcelExportFailed)?;
 
     Ok(())
 }
@@ -72,9 +73,9 @@ pub async fn download_analyze_excel(req: DownloadAnalyzeExcelRequest) -> Result<
 #[cfg(not(feature = "server"))]
 pub fn render_analyze_bar_chart(req: &RenderAnalyzeBarChartRequest) -> Result<()> {
     let js_req = crate::common::serde_wasm_bindgen::to_value(req)
-        .map_err(|err| Error::Unknown(format!("failed to serialize bar chart request: {err}")))?;
+        .map_err(|_err| SpaceAppError::ChartRenderFailed)?;
 
-    render_bar_chart_js(&js_req).map_err(|err| Error::Unknown(format_js_error(err)))?;
+    render_bar_chart_js(&js_req).map_err(|_err| SpaceAppError::ChartRenderFailed)?;
     Ok(())
 }
 
@@ -86,9 +87,9 @@ pub fn render_analyze_bar_chart(_req: &RenderAnalyzeBarChartRequest) -> Result<(
 #[cfg(not(feature = "server"))]
 pub fn render_analyze_pie_chart(req: &RenderAnalyzePieChartRequest) -> Result<()> {
     let js_req = crate::common::serde_wasm_bindgen::to_value(req)
-        .map_err(|err| Error::Unknown(format!("failed to serialize pie chart request: {err}")))?;
+        .map_err(|_err| SpaceAppError::ChartRenderFailed)?;
 
-    render_pie_chart_js(&js_req).map_err(|err| Error::Unknown(format_js_error(err)))?;
+    render_pie_chart_js(&js_req).map_err(|_err| SpaceAppError::ChartRenderFailed)?;
     Ok(())
 }
 
@@ -99,9 +100,7 @@ pub fn render_analyze_pie_chart(_req: &RenderAnalyzePieChartRequest) -> Result<(
 
 #[cfg(feature = "server")]
 pub async fn download_analyze_excel(_req: DownloadAnalyzeExcelRequest) -> Result<()> {
-    Err(Error::NotSupported(
-        "excel download is only available on web".to_string(),
-    ))
+    Err(SpaceAppError::UnsupportedOnServer.into())
 }
 
 #[cfg(not(feature = "server"))]

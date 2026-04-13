@@ -138,7 +138,7 @@ pub fn AdminPage(username: String, context: TeamDao) -> Element {
                         is_popup_open.set(false);
                     }
                     Err(err) => {
-                        toast.error(crate::common::Error::Unknown(format!("Failed to register DAO: {}", err)));
+                        toast.error(crate::common::Error::Internal);
                     }
                 }
 

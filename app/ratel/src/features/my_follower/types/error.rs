@@ -14,13 +14,26 @@ pub enum FollowError {
     #[error("Invalid follow target")]
     #[translate(en = "Invalid follow target", ko = "유효하지 않은 팔로우 대상입니다.")]
     InvalidTarget,
+
+    #[error("follow failed")]
+    #[translate(en = "Failed to follow user", ko = "팔로우에 실패했습니다.")]
+    FollowFailed,
+
+    #[error("unfollow failed")]
+    #[translate(en = "Failed to unfollow user", ko = "언팔로우에 실패했습니다.")]
+    UnfollowFailed,
 }
 
 #[cfg(feature = "server")]
 impl FollowError {
     pub fn status_code(&self) -> bdk::prelude::axum::http::StatusCode {
         use bdk::prelude::axum::http::StatusCode;
-        StatusCode::BAD_REQUEST
+        match self {
+            FollowError::FollowFailed | FollowError::UnfollowFailed => {
+                StatusCode::INTERNAL_SERVER_ERROR
+            }
+            _ => StatusCode::BAD_REQUEST,
+        }
     }
 }
 

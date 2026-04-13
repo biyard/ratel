@@ -1,4 +1,5 @@
 use crate::features::spaces::pages::apps::apps::incentive_pool::*;
+use crate::features::spaces::pages::apps::types::SpaceAppError;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct DeploySpaceIncentiveRequest {
@@ -69,16 +70,16 @@ pub async fn deploy_space_incentive(
     };
 
     let js_req = crate::common::serde_wasm_bindgen::to_value(&js_req)
-        .map_err(|err| Error::Unknown(format!("failed to serialize deploy request: {err}")))?;
+        .map_err(|_err| SpaceAppError::DeployFailed)?;
 
     let promise =
-        deploy_space_incentive_js(&js_req).map_err(|err| Error::Unknown(format_js_error(err)))?;
+        deploy_space_incentive_js(&js_req).map_err(|_err| SpaceAppError::DeployFailed)?;
     let value = JsFuture::from(promise)
         .await
-        .map_err(|err| Error::Unknown(format_js_error(err)))?;
+        .map_err(|_err| SpaceAppError::DeployFailed)?;
 
     let res: JsDeployResponse = crate::common::serde_wasm_bindgen::from_value(value)
-        .map_err(|err| Error::Unknown(format!("invalid deploy response: {err}")))?;
+        .map_err(|_err| SpaceAppError::DeployFailed)?;
 
     Ok(DeploySpaceIncentiveResponse {
         incentive_address: res.incentiveAddress,
@@ -92,25 +93,21 @@ pub async fn deploy_space_incentive(
 pub async fn deploy_space_incentive(
     _req: DeploySpaceIncentiveRequest,
 ) -> Result<DeploySpaceIncentiveResponse> {
-    Err(Error::NotSupported(
-        "deploy is only available on web".to_string(),
-    ))
+    Err(SpaceAppError::UnsupportedOnServer.into())
 }
 
 #[cfg(not(feature = "server"))]
 pub async fn copy_text(text: String) -> Result<()> {
-    let promise = copy_text_js(&text).map_err(|err| Error::Unknown(format_js_error(err)))?;
+    let promise = copy_text_js(&text).map_err(|_err| SpaceAppError::CopyTextFailed)?;
     JsFuture::from(promise)
         .await
-        .map_err(|err| Error::Unknown(format_js_error(err)))?;
+        .map_err(|_err| SpaceAppError::CopyTextFailed)?;
     Ok(())
 }
 
 #[cfg(feature = "server")]
 pub async fn copy_text(_text: String) -> Result<()> {
-    Err(Error::NotSupported(
-        "clipboard is only available on web".to_string(),
-    ))
+    Err(SpaceAppError::UnsupportedOnServer.into())
 }
 
 #[cfg(not(feature = "server"))]

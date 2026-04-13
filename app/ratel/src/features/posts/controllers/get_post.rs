@@ -38,9 +38,7 @@ pub async fn get_post_handler(post_id: FeedPartition) -> Result<PostDetailRespon
 
     let permissions = post.get_permissions(cli, user.clone()).await?;
     if !permissions.contains(TeamGroupPermission::PostRead) {
-        return Err(Error::Unauthorized(
-            "You do not have permission to view this post".into(),
-        ));
+        return Err(PostError::NotAccessible.into());
     }
     let can_read_space = permissions.contains(TeamGroupPermission::SpaceRead);
 

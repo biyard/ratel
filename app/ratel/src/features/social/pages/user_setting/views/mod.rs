@@ -632,19 +632,19 @@ fn SubscriptionCard() -> Element {
 
 #[cfg(not(feature = "server"))]
 async fn connect_wallet_address() -> AppResult<Option<String>> {
+    use crate::features::social::types::SocialError;
     let promise =
-        super::interop::connect_wallet().map_err(|e| Error::Unknown(format_js_error(e)))?;
+        super::interop::connect_wallet().map_err(|_e| SocialError::WalletConnectFailed)?;
     let value = wasm_bindgen_futures::JsFuture::from(promise)
         .await
-        .map_err(|e| Error::Unknown(format_js_error(e)))?;
+        .map_err(|_e| SocialError::WalletConnectFailed)?;
     Ok(value.as_string())
 }
 
 #[cfg(feature = "server")]
 async fn connect_wallet_address() -> AppResult<Option<String>> {
-    Err(Error::NotSupported(
-        "Wallet connection is only available on web".to_string(),
-    ))
+    use crate::features::social::types::SocialError;
+    Err(SocialError::WalletConnectFailed.into())
 }
 
 #[cfg(not(feature = "server"))]

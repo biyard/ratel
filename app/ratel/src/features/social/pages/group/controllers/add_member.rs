@@ -1,5 +1,6 @@
 use super::super::dto::{AddMemberRequest, AddMemberResponse};
 use super::super::*;
+use crate::features::social::types::SocialError;
 
 use crate::features::posts::models::Team;
 use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
@@ -18,9 +19,7 @@ pub async fn add_member_handler(
         || permissions.contains(TeamGroupPermission::TeamEdit)
         || permissions.contains(TeamGroupPermission::GroupEdit);
     if !can_edit {
-        return Err(Error::Unauthorized(
-            "You don't have permission to invite members.".to_string(),
-        ));
+        return Err(SocialError::SessionNotFound.into());
     }
 
     let group_permissions: i64 = match group_sk.as_str() {

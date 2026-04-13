@@ -1,4 +1,5 @@
 use super::super::*;
+use crate::features::social::types::SocialError;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
@@ -22,22 +23,16 @@ pub async fn change_password_handler(body: ChangePasswordRequest) -> Result<Chan
 
     let stored_password = user.password.clone().unwrap_or_default();
     if stored_password.is_empty() {
-        return Err(Error::BadRequest(
-            "Password login is not set up for this account.".to_string(),
-        ));
+        return Err(SocialError::IncorrectCurrentPassword.into());
     }
 
     let current_hashed = hash_password(&body.current_password);
     if current_hashed != stored_password {
-        return Err(Error::Unauthorized(
-            "Current password is incorrect".to_string(),
-        ));
+        return Err(SocialError::IncorrectCurrentPassword.into());
     }
 
     if body.new_password.len() < 8 {
-        return Err(Error::BadRequest(
-            "Password must be at least 8 characters".to_string(),
-        ));
+        return Err(SocialError::PasswordTooShort.into());
     }
 
     let new_hashed = hash_password(&body.new_password);

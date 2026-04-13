@@ -83,7 +83,7 @@ pub async fn get_space(
         sk: space.sk,
         title: post.title,
         content: if space.content.is_empty() {
-            post.html_contents
+            strip_color_styles(&post.html_contents)
         } else {
             space.content
         },
@@ -168,6 +168,12 @@ pub struct SpaceResponse {
     pub logo: String,
     #[serde(default)]
     pub has_prerequisite: bool,
+}
+
+#[cfg(feature = "server")]
+fn strip_color_styles(html: &str) -> String {
+    let re = regex::Regex::new(r"(?i)\s*color\s*:\s*[^;]+;?").unwrap();
+    re.replace_all(html, "").to_string()
 }
 
 impl SpaceResponse {
