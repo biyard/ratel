@@ -151,8 +151,8 @@
 .quiz-question-area {
   position: relative; z-index: 10;
   flex: 1; display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  padding: 0 28px 120px; gap: 24px;
+  align-items: center;
+  padding: 24px 28px 120px; gap: 24px;
   overflow-y: auto; scrollbar-width: none;
 }
 .quiz-question-area::-webkit-scrollbar { display: none; }
