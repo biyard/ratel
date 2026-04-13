@@ -332,4 +332,28 @@ translate! {
         en: "Waiting for Space to Start",
         ko: "스페이스 시작 대기 중",
     },
+    waiting_participants: {
+        en: "Participants",
+        ko: "참여자",
+    },
+    waiting_starts_in: {
+        en: "Starts In",
+        ko: "시작까지",
+    },
+    waiting_days: {
+        en: "D",
+        ko: "일",
+    },
+    waiting_hours: {
+        en: "H",
+        ko: "시",
+    },
+    waiting_minutes: {
+        en: "M",
+        ko: "분",
+    },
+    waiting_seconds: {
+        en: "S",
+        ko: "초",
+    },
 }

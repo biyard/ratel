@@ -34,16 +34,18 @@ pub fn ArenaViewer(
         Some(SpaceStatus::Finished) => tr.status_finished.to_string(),
         _ => tr.status_open.to_string(),
     };
-    let participant_count = space.quota - space.remains;
-    let participants = format_number(participant_count);
-    let remaining = format_number(space.remains);
+    let participants = format_number(space.participants);
+    let remaining = if space.quota == 0 {
+        "-".to_string()
+    } else {
+        format_number(space.remains)
+    };
     let rewards = space
         .rewards
         .map(|r| format_number(r))
         .unwrap_or_else(|| "0".to_string());
 
-    let show_participate =
-        !space.participated && space.can_participate;
+    let show_participate = !space.participated && space.can_participate;
 
     let mut ctx = use_space_context();
     let panel_requirements = ctx.panel_requirements();

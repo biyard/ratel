@@ -215,7 +215,7 @@ pub fn SpaceTitle(title: String) -> Element {
                 }
             } else {
                 div {
-                    class: "font-bold text-[15px] text-web-font-primary max-tablet:truncate max-tablet:text-sm",
+                    class: "font-bold text-[15px] text-web-font-primary truncate max-tablet:text-sm",
                     onclick: move |_| {
                         if role().can_edit() {
                             editing.set(true);

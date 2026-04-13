@@ -93,6 +93,8 @@
   display: flex;
   align-items: center;
   gap: 14px;
+  flex: 1;
+  min-width: 0;
 }
 .poll-header__back {
   width: 36px;
@@ -122,6 +124,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 }
 .poll-header__type {
   display: inline-flex;
@@ -142,11 +145,15 @@
   font-weight: 700;
   line-height: 1.3;
   color: var(--dark, #f0f0f5) var(--light, #1a1a2e);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .poll-header__right {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-shrink: 0;
 }
 .poll-header__status {
   display: inline-flex;

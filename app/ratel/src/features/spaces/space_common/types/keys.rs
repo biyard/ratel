@@ -10,6 +10,7 @@ pub const SPACE_PAGE_ACTIONS_DISCUSSION_QUERY_KEY: &str = "Discussion";
 pub const SPACE_PAGE_ACTIONS_DISCUSSION_COMMENTS_QUERY_KEY: &str = "Comments";
 pub const SPACE_PAGE_ACTIONS_QUIZ_QUERY_KEY: &str = "Quiz";
 pub const SPACE_PAGE_DASHBOARD_QUERY_KEY: &str = "Dashboard";
+pub const SPACE_MEMBERS_QUERY_KEY: &str = "Members";
 pub const SPACE_RANKING_QUERY_KEY: &str = "Ranking";
 pub const SPACE_MY_SCORE_QUERY_KEY: &str = "MyScore";
 
@@ -71,6 +72,12 @@ pub fn space_page_actions_quiz_key(
 pub fn space_page_dashboard_key(space_id: &SpacePartition) -> QueryKey {
     let mut k = space_key(space_id);
     k.push(SPACE_PAGE_DASHBOARD_QUERY_KEY.into());
+    k
+}
+
+pub fn space_members_key(space_id: &SpacePartition) -> QueryKey {
+    let mut k = space_key(space_id);
+    k.push(SPACE_MEMBERS_QUERY_KEY.into());
     k
 }
 

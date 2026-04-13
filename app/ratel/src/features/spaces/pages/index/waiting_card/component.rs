@@ -1,10 +1,38 @@
 use crate::features::spaces::pages::actions::types::SpaceActionSummary;
 use crate::features::spaces::pages::index::*;
+use crate::features::spaces::space_common::hooks::use_space;
 
 #[component]
 pub fn WaitingCard(prereqs: Vec<SpaceActionSummary>) -> Element {
     let tr: SpaceViewerTranslate = use_translate();
     let lang = use_language();
+    let space = use_space()();
+    let participants = format_number(space.participants);
+
+    let started_at = space.started_at;
+    let mut remaining_secs = use_signal(|| 0i64);
+
+    use_effect(move || {
+        #[cfg(feature = "web")]
+        if let Some(start_ms) = started_at {
+            spawn(async move {
+                loop {
+                    let now_ms = js_sys::Date::now() as i64;
+                    let diff = (start_ms - now_ms) / 1000;
+                    remaining_secs.set(diff.max(0));
+                    if diff <= 0 {
+                        break;
+                    }
+                    gloo_timers::future::sleep(std::time::Duration::from_secs(1)).await;
+                }
+            });
+        }
+    });
+
+    let days = remaining_secs() / 86400;
+    let hours = (remaining_secs() % 86400) / 3600;
+    let minutes = (remaining_secs() % 3600) / 60;
+    let seconds = remaining_secs() % 60;
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
@@ -27,7 +55,39 @@ pub fn WaitingCard(prereqs: Vec<SpaceActionSummary>) -> Element {
             }
 
             span { class: "waiting-card__heading", "{tr.waiting_heading}" }
-            p { class: "waiting-card__desc", "{tr.waiting_desc}" }
+
+            // Countdown timer
+            if started_at.is_some() && remaining_secs() > 0 {
+                div { class: "waiting-card__countdown",
+                    span { class: "waiting-card__countdown-label", "{tr.waiting_starts_in}" }
+                    div { class: "waiting-card__countdown-timer",
+                        if days > 0 {
+                            div { class: "waiting-card__countdown-unit",
+                                span { class: "waiting-card__countdown-value", "{days}" }
+                                span { class: "waiting-card__countdown-suffix", "{tr.waiting_days}" }
+                            }
+                        }
+                        div { class: "waiting-card__countdown-unit",
+                            span { class: "waiting-card__countdown-value", "{hours:02}" }
+                            span { class: "waiting-card__countdown-suffix", "{tr.waiting_hours}" }
+                        }
+                        div { class: "waiting-card__countdown-unit",
+                            span { class: "waiting-card__countdown-value", "{minutes:02}" }
+                            span { class: "waiting-card__countdown-suffix", "{tr.waiting_minutes}" }
+                        }
+                        div { class: "waiting-card__countdown-unit",
+                            span { class: "waiting-card__countdown-value", "{seconds:02}" }
+                            span { class: "waiting-card__countdown-suffix", "{tr.waiting_seconds}" }
+                        }
+                    }
+                }
+            }
+
+            // Participant count
+            div { class: "waiting-card__participants",
+                span { class: "waiting-card__participants-count", "{participants}" }
+                span { class: "waiting-card__participants-label", "{tr.waiting_participants}" }
+            }
 
             // Completed checklist summary
             if !prereqs.is_empty() {

@@ -62,10 +62,24 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
             crossorigin: "anonymous",
         }
         document::Link {
+            rel: "preload",
+            href: "https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap",
+            r#as: "style",
+        }
+        document::Link {
             rel: "stylesheet",
             href: "https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap",
         }
+        document::Link { rel: "preload", href: asset!("./style.css"), r#as: "style" }
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        // Preload sub-component CSS to prevent flash of unstyled content
+        document::Link { rel: "preload", href: asset!("./arena_topbar/style.css"), r#as: "style" }
+        document::Link { rel: "preload", href: asset!("./arena_viewer/style.css"), r#as: "style" }
+        document::Link { rel: "preload", href: asset!("./prerequisite_card/style.css"), r#as: "style" }
+        document::Link { rel: "preload", href: asset!("./action_dashboard/style.css"), r#as: "style" }
+        document::Link { rel: "preload", href: asset!("./action_pages/poll/style.css"), r#as: "style" }
+        document::Link { rel: "preload", href: asset!("./action_pages/quiz/style.css"), r#as: "style" }
+        document::Link { rel: "preload", href: asset!("./action_pages/discussion/style.css"), r#as: "style" }
 
         div { class: "arena", "data-testid": "space-index-page",
             ArenaTopbar {
