@@ -10,7 +10,7 @@ pub enum SpaceActivityData {
         answered_optional_count: u32,
     },
     Quiz {
-        quiz_id: String,
+        quiz_id: SpaceQuizAttemptEntityType,
         passed: bool,
         correct_count: u32,
         pass_threshold: u32,
@@ -19,7 +19,9 @@ pub enum SpaceActivityData {
         follow_id: String,
     },
     Discussion {
-        discussion_id: String,
+        discussion_id: SpacePostPartition,
+        #[serde(default)]
+        comment_id: SpacePostCommentEntityType,
         is_first_contribution: bool,
     },
 }
