@@ -85,6 +85,8 @@ pub fn AdminPage(team_pk: TeamPartition) -> Element {
         total_points: rewards.total_points,
         points: rewards.team_points,
         monthly_token_supply: rewards.monthly_token_supply,
+        chain_id: None,
+        contract_address: None,
     };
 
     let estimated_tokens = if rewards.total_points > 0 {
