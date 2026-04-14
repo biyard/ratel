@@ -1,4 +1,5 @@
 use crate::features::spaces::pages::apps::apps::panels::*;
+use dioxus::fullstack::Loader;
 use dioxus_primitives::{ContentAlign, ContentSide};
 
 translate! {
@@ -39,11 +40,11 @@ pub fn CollectivePanel(
     space_id: ReadSignal<SpacePartition>,
     panels: Vec<SpacePanelQuotaResponse>,
     current_quota: i64,
-    panels_query_key: Vec<String>,
+    panels_loader: Loader<Vec<SpacePanelQuotaResponse>>,
 ) -> Element {
     let tr: CollectivePanelTranslate = use_translate();
     let mut toast = use_toast();
-    let mut query = use_query_store();
+    let mut panels_loader = panels_loader;
     let mut show_menu = use_signal(|| false);
 
     let has_university_collective = is_collective_option(PanelOption::University, &panels);
@@ -63,13 +64,10 @@ pub fn CollectivePanel(
     let move_to_conditional = {
         move |option: PanelOption| {
             let panels = panels.clone();
-            let panels_query_key = panels_query_key.clone();
             let mut toast = toast;
-            let mut query = query;
 
             move |_: MouseEvent| {
                 let panels = panels.clone();
-                let panels_query_key = panels_query_key.clone();
                 show_menu.set(false);
 
                 let will_age_be_conditional = option == PanelOption::Age || is_age_conditional;
@@ -96,7 +94,7 @@ pub fn CollectivePanel(
 
                 spawn(async move {
                     match rebuild_panels(space_id(), keys, groups).await {
-                        Ok(_) => query.invalidate(&panels_query_key),
+                        Ok(_) => panels_loader.restart(),
                         Err(err) => {
                             error!("Failed to move to conditional: {:?}", err);
                             toast.error(err);

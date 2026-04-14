@@ -6,9 +6,7 @@ use crate::features::spaces::pages::actions::actions::quiz::QuizResponse;
 use crate::features::spaces::pages::index::action_pages::quiz::*;
 use crate::features::spaces::pages::index::*;
 use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
-use crate::features::spaces::space_common::types::{
-    space_my_score_key, space_page_actions_key, space_page_actions_quiz_key, space_ranking_key,
-};
+use crate::features::spaces::space_common::providers::use_space_context;
 
 /// Generic overlay for prerequisite/action pages (poll + quiz + discussion).
 #[derive(Clone, PartialEq)]
@@ -44,12 +42,11 @@ pub fn QuizArenaPage(
     let tr: QuizArenaTranslate = use_translate();
     let nav = use_navigator();
     let mut toast = use_toast();
-    let mut query = use_query_store();
+    let mut space_ctx = use_space_context();
     let role = use_space_role()();
     let space = use_space()();
 
-    let key = space_page_actions_quiz_key(&space_id(), &quiz_id());
-    let quiz_loader = use_query(&key, move || get_quiz(space_id(), quiz_id()))?;
+    let mut quiz_loader = use_loader(move || get_quiz(space_id(), quiz_id()))?;
     let quiz = quiz_loader();
     let questions = quiz.questions.clone();
 
@@ -129,12 +126,11 @@ pub fn QuizArenaPage(
         let req = RespondQuizRequest { answers: answers() };
         match respond_quiz(space_id(), quiz_id(), req).await {
             Ok(_) => {
-                let keys = space_page_actions_quiz_key(&space_id(), &quiz_id());
-                query.invalidate(&keys);
-                query.invalidate(&space_ranking_key(&space_id()));
-                query.invalidate(&space_my_score_key(&space_id()));
-                // Invalidate actions list so dashboard refreshes after animation
-                query.invalidate(&space_page_actions_key(&space_id()));
+                quiz_loader.restart();
+                space_ctx.ranking.restart();
+                space_ctx.my_score.restart();
+                // Restart actions list so dashboard refreshes after animation
+                space_ctx.actions.restart();
                 toast.info(tr.submit_success);
                 // Signal the dashboard to animate this card into archive
                 completed.0.set(Some(quiz_id().to_string()));

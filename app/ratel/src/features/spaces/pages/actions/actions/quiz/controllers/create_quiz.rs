@@ -1,23 +1,26 @@
 use crate::features::spaces::pages::actions::actions::quiz::*;
 
-#[mcp_tool(name = "create_quiz", description = "Create a new quiz action in a space. Requires creator role.")]
+#[mcp_tool(
+    name = "create_quiz",
+    description = "Create a new quiz action in a space. Requires creator role."
+)]
 #[post("/api/spaces/{space_pk}/quizzes", role: SpaceUserRole, space: crate::common::models::space::SpaceCommon)]
 pub async fn create_quiz(
-    #[mcp(description = "Space partition key")]
-    space_pk: SpacePartition,
+    #[mcp(description = "Space partition key")] space_pk: SpacePartition,
 ) -> Result<QuizResponse> {
     SpaceQuiz::can_edit(&role)?;
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
-    let is_published = !matches!(space.status, None | Some(SpaceStatus::Designing));
+    let is_published = space.is_published();
     let quiz = SpaceQuiz::new(space_pk.clone())?;
 
-    let space_action = crate::features::spaces::pages::actions::models::SpaceAction::new_with_published(
-        space_pk.clone(),
-        SpaceQuizEntityType::from(quiz.sk.clone()).to_string(),
-        crate::features::spaces::pages::actions::types::SpaceActionType::Quiz,
-        is_published,
-    );
+    let space_action =
+        crate::features::spaces::pages::actions::models::SpaceAction::new_with_published(
+            space_pk.clone(),
+            SpaceQuizEntityType::from(quiz.sk.clone()).to_string(),
+            crate::features::spaces::pages::actions::types::SpaceActionType::Quiz,
+            is_published,
+        );
     let items = vec![
         quiz.create_transact_write_item(),
         space_action.create_transact_write_item(),

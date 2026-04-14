@@ -62,7 +62,7 @@ pub fn OverviewPanel(
                 div { class: "overview-section",
                     span { class: "overview-section__label", "{tr.about}" }
                     div {
-                        class: "overview-section__content",
+                        class: "overview-section__content ProseMirror",
                         dangerous_inner_html: "{space.content}",
                     }
                 }

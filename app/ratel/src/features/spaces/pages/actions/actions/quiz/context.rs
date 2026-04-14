@@ -1,6 +1,5 @@
 use super::*;
 use crate::features::spaces::space_common::hooks::use_space_role;
-use crate::features::spaces::space_common::types::space_page_actions_quiz_key;
 
 #[derive(Clone, Copy, DioxusController)]
 pub struct Context {
@@ -27,20 +26,12 @@ impl Context {
         quiz_id: ReadSignal<SpaceQuizEntityType>,
     ) -> Result<Self, Loading> {
         let role = use_space_role()();
-        let quiz_key = space_page_actions_quiz_key(&space_id(), &quiz_id());
-        let quiz = use_query(&quiz_key, { move || get_quiz(space_id(), quiz_id()) })?;
-        let answer_key = {
-            let mut key = quiz_key.clone();
-            key.push("answers".into());
-            key
-        };
-        let answer = use_query(&answer_key, {
-            move || async move {
-                if role == SpaceUserRole::Creator {
-                    get_quiz_answer(space_id(), quiz_id()).await
-                } else {
-                    Ok(QuizAnswerResponse::default())
-                }
+        let quiz = use_loader(move || get_quiz(space_id(), quiz_id()))?;
+        let answer = use_loader(move || async move {
+            if role == SpaceUserRole::Creator {
+                get_quiz_answer(space_id(), quiz_id()).await
+            } else {
+                Ok(QuizAnswerResponse::default())
             }
         })?;
 

@@ -1,3 +1,7 @@
+use crate::common::components::mention_autocomplete::{
+    MentionAutocomplete, MentionCandidate, MentionInsert,
+};
+use crate::common::utils::mention::{apply_mention_markup, parse_mention_segments, ContentSegment};
 use crate::features::spaces::pages::actions::actions::discussion::controllers::{
     add_comment, get_discussion_detail, like_comment, list_comments, list_replies, reply_comment,
     AddCommentRequest, LikeCommentRequest, ReplyCommentRequest,
@@ -10,11 +14,9 @@ use crate::features::spaces::pages::index::action_pages::quiz::{
     ActiveActionOverlaySignal, CompletedActionCard,
 };
 use crate::features::spaces::pages::index::*;
+use crate::features::spaces::space_common::controllers::list_space_members;
 use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
-use crate::features::spaces::space_common::types::{
-    space_page_actions_discussion_comments_key, space_page_actions_discussion_key,
-    space_page_actions_key,
-};
+use crate::features::spaces::space_common::providers::use_space_context;
 
 #[component]
 pub fn DiscussionArenaPage(
@@ -23,12 +25,11 @@ pub fn DiscussionArenaPage(
 ) -> Element {
     let tr: DiscussionArenaTranslate = use_translate();
     let mut toast = use_toast();
-    let mut query = use_query_store();
+    let mut space_ctx = use_space_context();
     let role = use_space_role()();
     let space = use_space()();
 
-    let disc_key = space_page_actions_discussion_key(&space_id(), &discussion_id());
-    let disc_loader = use_query(&disc_key, move || {
+    let disc_loader = use_loader(move || {
         get_discussion_detail(space_id(), discussion_id())
     })?;
     let disc = disc_loader();
@@ -46,8 +47,7 @@ pub fn DiscussionArenaPage(
     );
     let can_comment = can_respond && can_execute && is_in_progress;
 
-    let comments_key = space_page_actions_discussion_comments_key(&space_id(), &discussion_id());
-    let comments_loader = use_query(&comments_key, move || {
+    let mut comments_loader = use_loader(move || {
         list_comments(space_id(), discussion_id(), None)
     })?;
     let comments_data = comments_loader();
@@ -57,6 +57,25 @@ pub fn DiscussionArenaPage(
     let mut completed: CompletedActionCard = use_context();
 
     let mut comment_text = use_signal(String::new);
+    let mut tracked_mentions: Signal<Vec<(String, String)>> = use_signal(Vec::new);
+
+    let members_loader = use_loader(move || {
+        list_space_members(space_id(), None)
+    })?;
+    let members: Vec<MentionCandidate> = members_loader()
+        .items
+        .into_iter()
+        .map(|m| {
+            let pk: Partition = m.user_id.clone().into();
+            MentionCandidate {
+                user_pk: pk.to_string(),
+                display_name: m.display_name,
+                username: m.username,
+                profile_url: m.profile_url,
+            }
+        })
+        .collect();
+    let members = use_signal(|| members);
 
     let status_text = match status {
         DiscussionStatus::InProgress => tr.status_in_progress.to_string(),
@@ -80,21 +99,21 @@ pub fn DiscussionArenaPage(
     };
 
     let on_submit_comment = move |_| async move {
-        let text = comment_text().trim().to_string();
-        if text.is_empty() {
+        let raw_text = comment_text().trim().to_string();
+        if raw_text.is_empty() {
             return;
         }
+        let content = apply_mention_markup(&raw_text, &tracked_mentions.read());
         let req = AddCommentRequest {
-            content: text,
+            content,
             images: vec![],
         };
         match add_comment(space_id(), discussion_id(), req).await {
             Ok(_) => {
-                let keys =
-                    space_page_actions_discussion_comments_key(&space_id(), &discussion_id());
-                query.invalidate(&keys);
-                query.invalidate(&space_page_actions_key(&space_id()));
+                comments_loader.restart();
+                space_ctx.actions.restart();
                 comment_text.set(String::new());
+                tracked_mentions.set(Vec::new());
                 toast.info(tr.comment_success);
                 completed.0.set(Some(discussion_id().to_string()));
             }
@@ -242,14 +261,34 @@ pub fn DiscussionArenaPage(
                         div { class: "comment-input",
                             div { class: "comment-input__wrapper",
                                 div { class: "comment-input__body",
-                                    textarea {
-                                        class: "comment-input__textarea",
-                                        placeholder: "{tr.comment_placeholder}",
-                                        rows: "2",
-                                        value: "{comment_text}",
-                                        oninput: move |e| {
-                                            comment_text.set(e.value());
+                                    MentionAutocomplete {
+                                        text: comment_text,
+                                        on_select: move |insert: MentionInsert| {
+                                            let mut val = comment_text();
+                                            if insert.start_offset <= val.len()
+                                                && insert.end_offset <= val.len()
+                                            {
+                                                val.replace_range(
+                                                    insert.start_offset..insert.end_offset,
+                                                    &insert.display_text,
+                                                );
+                                                comment_text.set(val);
+                                                tracked_mentions.write().push((
+                                                    insert.display_name,
+                                                    insert.user_pk,
+                                                ));
+                                            }
                                         },
+                                        members,
+                                        textarea {
+                                            class: "comment-input__textarea",
+                                            placeholder: "{tr.comment_placeholder}",
+                                            rows: "2",
+                                            value: "{comment_text}",
+                                            oninput: move |e| {
+                                                comment_text.set(e.value());
+                                            },
+                                        }
                                     }
                                     div { class: "comment-input__footer",
                                         button {
@@ -274,6 +313,8 @@ pub fn DiscussionArenaPage(
                                     space_id,
                                     discussion_id,
                                     can_comment,
+                                    members,
+                                    comments_loader,
                                 }
                             }
                         }
@@ -291,13 +332,16 @@ fn CommentItem(
     space_id: ReadSignal<SpacePartition>,
     discussion_id: ReadSignal<SpacePostEntityType>,
     can_comment: bool,
+    members: ReadSignal<Vec<MentionCandidate>>,
+    comments_loader: Loader<ListResponse<DiscussionCommentResponse>>,
 ) -> Element {
     let tr: DiscussionArenaTranslate = use_translate();
-    let mut query = use_query_store();
+    let mut comments_loader = comments_loader;
     let mut toast = use_toast();
 
     let mut show_replies = use_signal(|| false);
     let mut reply_text = use_signal(String::new);
+    let mut reply_tracked_mentions: Signal<Vec<(String, String)>> = use_signal(Vec::new);
     let mut replies: Signal<Vec<DiscussionCommentResponse>> = use_signal(Vec::new);
 
     let time_ago = format_time_ago(comment.created_at);
@@ -311,9 +355,7 @@ fn CommentItem(
         let req = LikeCommentRequest { like: !liked };
         match like_comment(space_id(), discussion_id(), target_sk, req).await {
             Ok(_) => {
-                let keys =
-                    space_page_actions_discussion_comments_key(&space_id(), &discussion_id());
-                query.invalidate(&keys);
+                comments_loader.restart();
             }
             Err(err) => {
                 tracing::error!("Failed to toggle like: {:?}", err);
@@ -340,14 +382,15 @@ fn CommentItem(
     };
 
     let on_submit_reply = move |_| async move {
-        let text = reply_text().trim().to_string();
-        if text.is_empty() {
+        let raw_text = reply_text().trim().to_string();
+        if raw_text.is_empty() {
             return;
         }
+        let content = apply_mention_markup(&raw_text, &reply_tracked_mentions.read());
         let comment_sk_entity: SpacePostCommentEntityType =
             comment_sk().try_into().unwrap_or_default();
         let req = ReplyCommentRequest {
-            content: text,
+            content,
             images: vec![],
         };
         match reply_comment(space_id(), discussion_id(), comment_sk_entity, req).await {
@@ -356,9 +399,8 @@ fn CommentItem(
                 current.insert(0, new_reply);
                 replies.set(current);
                 reply_text.set(String::new());
-                let keys =
-                    space_page_actions_discussion_comments_key(&space_id(), &discussion_id());
-                query.invalidate(&keys);
+                reply_tracked_mentions.set(Vec::new());
+                comments_loader.restart();
                 toast.info(tr.reply_success);
             }
             Err(err) => {
@@ -380,7 +422,18 @@ fn CommentItem(
                     span { class: "comment-item__name", "{comment.author_display_name}" }
                     span { class: "comment-item__time", "{time_ago}" }
                 }
-                div { class: "comment-item__text", "{comment.content}" }
+                div { class: "comment-item__text",
+                    for segment in parse_mention_segments(&comment.content) {
+                        match segment {
+                            ContentSegment::Text(t) => rsx! {
+                                span { "{t}" }
+                            },
+                            ContentSegment::Mention { display_name, .. } => rsx! {
+                                span { class: "font-medium text-primary", "@{display_name}" }
+                            },
+                        }
+                    }
+                }
                 div { class: "comment-item__actions",
                     button {
                         class: if liked { "comment-action comment-action--liked" } else { "comment-action" },
@@ -453,7 +506,18 @@ fn CommentItem(
                                     "{format_time_ago(reply.created_at)}"
                                 }
                             }
-                            div { class: "comment-item__text", "{reply.content}" }
+                            div { class: "comment-item__text",
+                                for segment in parse_mention_segments(&reply.content) {
+                                    match segment {
+                                        ContentSegment::Text(t) => rsx! {
+                                            span { "{t}" }
+                                        },
+                                        ContentSegment::Mention { display_name, .. } => rsx! {
+                                            span { class: "font-medium text-primary", "@{display_name}" }
+                                        },
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -462,13 +526,33 @@ fn CommentItem(
             // Reply input
             if can_comment {
                 div { class: "reply-input",
-                    input {
-                        class: "reply-input__field",
-                        placeholder: "{tr.reply_placeholder}",
-                        value: "{reply_text}",
-                        oninput: move |e| {
-                            reply_text.set(e.value());
+                    MentionAutocomplete {
+                        text: reply_text,
+                        on_select: move |insert: MentionInsert| {
+                            let mut val = reply_text();
+                            if insert.start_offset <= val.len()
+                                && insert.end_offset <= val.len()
+                            {
+                                val.replace_range(
+                                    insert.start_offset..insert.end_offset,
+                                    &insert.display_text,
+                                );
+                                reply_text.set(val);
+                                reply_tracked_mentions.write().push((
+                                    insert.display_name,
+                                    insert.user_pk,
+                                ));
+                            }
                         },
+                        members,
+                        input {
+                            class: "reply-input__field",
+                            placeholder: "{tr.reply_placeholder}",
+                            value: "{reply_text}",
+                            oninput: move |e| {
+                                reply_text.set(e.value());
+                            },
+                        }
                     }
                     button { class: "reply-input__send", onclick: on_submit_reply,
                         svg {

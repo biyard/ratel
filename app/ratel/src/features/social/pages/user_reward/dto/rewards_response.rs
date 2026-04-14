@@ -9,4 +9,8 @@ pub struct RewardsResponse {
     pub total_points: i64,
     pub points: i64,
     pub monthly_token_supply: i64,
+    #[serde(default)]
+    pub chain_id: Option<u64>,
+    #[serde(default)]
+    pub contract_address: Option<String>,
 }

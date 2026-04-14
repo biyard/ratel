@@ -260,9 +260,9 @@ translate! {
         ko: "내 순위",
     },
 
-    total_score: {
-        en: "Total Score",
-        ko: "총 점수",
+    total_xp: {
+        en: "Total XP",
+        ko: "총 경험치",
     },
 
     poll_label: {
@@ -296,8 +296,13 @@ translate! {
     },
 
     no_ranking_yet: {
-        en: "No ranking data yet. Complete actions to earn your place!",
-        ko: "아직 랭킹 데이터가 없습니다. 활동을 완료하여 순위를 올리세요!",
+        en: "No ranking data yet. Complete actions to earn XP!",
+        ko: "아직 랭킹 데이터가 없습니다. 활동을 완료하여 경험치를 얻으세요!",
+    },
+
+    xp_label: {
+        en: "XP",
+        ko: "경험치",
     },
 
     prereq_heading: {
@@ -331,5 +336,29 @@ translate! {
     waiting_status: {
         en: "Waiting for Space to Start",
         ko: "스페이스 시작 대기 중",
+    },
+    waiting_participants: {
+        en: "Participants",
+        ko: "참여자",
+    },
+    waiting_starts_in: {
+        en: "Starts In",
+        ko: "시작까지",
+    },
+    waiting_days: {
+        en: "D",
+        ko: "일",
+    },
+    waiting_hours: {
+        en: "H",
+        ko: "시",
+    },
+    waiting_minutes: {
+        en: "M",
+        ko: "분",
+    },
+    waiting_seconds: {
+        en: "S",
+        ko: "초",
     },
 }

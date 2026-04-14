@@ -9,6 +9,7 @@ use dioxus::fullstack::Lazy;
 #[cfg(feature = "server")]
 #[derive(Debug, Clone, Copy)]
 pub struct BiyardConfig {
+    pub api_url: &'static str,
     pub api_secret: &'static str,
     pub project_id: &'static str,
 }
@@ -17,6 +18,12 @@ pub struct BiyardConfig {
 impl Default for BiyardConfig {
     fn default() -> Self {
         Self {
+            api_url: option_env!("BIYARD_API_URL").unwrap_or_else(|| {
+                tracing::warn!(
+                    "BIYARD_API_URL not set, using default value. Some features may not work properly."
+                );
+                "https://api.biyard.co"
+            }),
             api_secret: option_env!("BIYARD_API_KEY").unwrap_or_else(|| {
                 tracing::warn!(
                     "BIYARD_API_KEY not set, using default value. Some features may not work properly."
@@ -38,6 +45,6 @@ pub static BIYARD_SERVICE: Lazy<BiyardService> = Lazy::new(|| async move {
     dioxus::Ok(BiyardService::new(
         config.api_secret.to_string(),
         config.project_id.to_string(),
-        "https://api.biyard.co".to_string(),
+        config.api_url.to_string(),
     ))
 });

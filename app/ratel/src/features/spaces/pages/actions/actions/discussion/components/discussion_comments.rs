@@ -5,11 +5,10 @@ use crate::common::components::{
     ImageUploadPreview, TextArea,
 };
 use crate::common::hooks::use_infinite_query;
-use crate::common::query::use_query_store;
 use crate::common::utils::mention::{parse_mention_segments, ContentSegment};
 use crate::common::utils::time::time_ago;
 use crate::features::spaces::pages::actions::actions::discussion::*;
-use crate::features::spaces::space_common::types::{space_my_score_key, space_ranking_key};
+use crate::features::spaces::space_common::providers::use_space_context;
 
 translate! {
     DiscussionCommentsTranslate;
@@ -71,11 +70,14 @@ pub fn DiscussionComments(
                 let candidates: Vec<MentionCandidate> = response
                     .items
                     .into_iter()
-                    .map(|m| MentionCandidate {
-                        user_pk: m.user_id.to_string(),
-                        display_name: m.display_name,
-                        username: m.username,
-                        profile_url: m.profile_url,
+                    .map(|m| {
+                        let pk: crate::common::types::Partition = m.user_id.clone().into();
+                        MentionCandidate {
+                            user_pk: pk.to_string(),
+                            display_name: m.display_name,
+                            username: m.username,
+                            profile_url: m.profile_url,
+                        }
                     })
                     .collect();
                 members.set(candidates);
@@ -83,7 +85,7 @@ pub fn DiscussionComments(
         });
     });
     let mut ctx = use_discussion_comment_context();
-    let mut query = use_query_store();
+    let mut space_ctx = use_space_context();
     let comments = ctx.comments.items();
     let more_comments = ctx.comments.more_element();
     let mut comment_count = comment_count;
@@ -145,12 +147,8 @@ pub fn DiscussionComments(
                                                 Ok(comment) => {
                                                     comments_query.insert(comment);
                                                     comment_count += 1;
-                                                    query.invalidate(
-                                                        &space_ranking_key(&space_id()),
-                                                    );
-                                                    query.invalidate(
-                                                        &space_my_score_key(&space_id()),
-                                                    );
+                                                    space_ctx.ranking.restart();
+                                                    space_ctx.my_score.restart();
                                                 }
                                                 Err(e) => {
                                                     error!("Failed to add comment: {:?}", e);
@@ -189,8 +187,8 @@ pub fn DiscussionComments(
                                     Ok(comment) => {
                                         comments_query.insert(comment);
                                         comment_count += 1;
-                                        query.invalidate(&space_ranking_key(&space_id()));
-                                        query.invalidate(&space_my_score_key(&space_id()));
+                                        space_ctx.ranking.restart();
+                                        space_ctx.my_score.restart();
                                     }
                                     Err(e) => {
                                         error!("Failed to add comment: {:?}", e);
@@ -781,7 +779,7 @@ fn ReplyInput(
     let tr: DiscussionCommentsTranslate = use_translate();
     let mut reply_input = reply_input;
     let mut show_reply_input = show_reply_input;
-    let mut query = use_query_store();
+    let mut space_ctx = use_space_context();
 
     rsx! {
         div { class: "p-3 mt-1 rounded-xl bg-card-bg-secondary",
@@ -806,8 +804,8 @@ fn ReplyInput(
                                 reply_input.set(String::new());
                                 show_reply_input.set(false);
                                 on_success.call(());
-                                query.invalidate(&space_ranking_key(&space_id()));
-                                query.invalidate(&space_my_score_key(&space_id()));
+                                space_ctx.ranking.restart();
+                                space_ctx.my_score.restart();
                             }
                             Err(e) => {
                                 error!("Failed to reply: {:?}", e);
@@ -834,8 +832,8 @@ fn ReplyInput(
                                 reply_input.set(String::new());
                                 show_reply_input.set(false);
                                 on_success.call(());
-                                query.invalidate(&space_ranking_key(&space_id()));
-                                query.invalidate(&space_my_score_key(&space_id()));
+                                space_ctx.ranking.restart();
+                                space_ctx.my_score.restart();
                             }
                             Err(e) => {
                                 error!("Failed to reply: {:?}", e);

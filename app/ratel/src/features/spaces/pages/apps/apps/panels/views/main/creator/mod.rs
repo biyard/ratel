@@ -1,7 +1,5 @@
 use super::*;
 
-const PANELS_QUERY_KEY: &str = "Panels";
-
 translate! {
     PanelPageTranslate;
 
@@ -15,14 +13,6 @@ translate! {
     },
 }
 
-fn panels_key(space_id: &SpacePartition) -> Vec<String> {
-    vec![
-        "Space".to_string(),
-        space_id.to_string(),
-        PANELS_QUERY_KEY.to_string(),
-    ]
-}
-
 #[derive(Clone, Copy, PartialEq)]
 enum SaveStatus {
     Idle,
@@ -33,8 +23,7 @@ enum SaveStatus {
 #[component]
 pub fn PanelPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: PanelPageTranslate = use_translate();
-    let panels_query_key = panels_key(&space_id());
-    let panels_loader = use_query(&panels_query_key, { move || list_panels(space_id()) })?;
+    let panels_loader = use_loader(move || list_panels(space_id()))?;
 
     let panels: Vec<SpacePanelQuotaResponse> = panels_loader.read().clone();
     let space = use_space();
@@ -73,7 +62,7 @@ pub fn PanelPage(space_id: ReadSignal<SpacePartition>) -> Element {
                         space_id,
                         panels: panels.clone(),
                         current_quota,
-                        panels_query_key: panels_query_key.clone(),
+                        panels_loader,
                     }
                 }
 
@@ -82,12 +71,12 @@ pub fn PanelPage(space_id: ReadSignal<SpacePartition>) -> Element {
                         space_id,
                         panels: panels.clone(),
                         current_quota,
-                        panels_query_key: panels_query_key.clone(),
+                        panels_loader,
                     }
                 }
 
                 if has_conditional {
-                    PanelsTable { space_id, panels, panels_query_key }
+                    PanelsTable { space_id, panels, panels_loader }
                 }
             }
 

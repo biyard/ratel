@@ -4,6 +4,7 @@ import membership from "./membership";
 import spaces from "./spaces";
 import auth from "./auth";
 import common from "./common";
+import tokens from "./tokens";
 
 if (typeof window !== "undefined") {
   if (typeof window.ratel === "undefined") {
@@ -20,6 +21,7 @@ if (typeof window !== "undefined") {
     spaces,
     auth,
     common,
+    tokens,
     user_credential: users.credential,
 
     social: {
