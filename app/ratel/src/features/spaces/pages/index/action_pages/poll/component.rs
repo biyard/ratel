@@ -7,14 +7,15 @@ use super::subjective::*;
 use crate::features::spaces::pages::actions::actions::poll::components::*;
 use crate::features::spaces::pages::actions::actions::poll::controllers::*;
 use crate::features::spaces::pages::actions::actions::poll::*;
-use crate::features::spaces::pages::index::action_pages::quiz::ActiveActionOverlaySignal;
+use crate::features::spaces::pages::index::action_pages::quiz::{
+    ActiveActionOverlaySignal, CompletedActionCard,
+};
 use crate::features::spaces::pages::index::*;
 use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
 
 translate! {
     ActionPollTranslate;
 
-    progress: { en: "Progress", ko: "진행률" },
     question_prefix: { en: "Question", ko: "질문" },
     required: { en: "Required", ko: "필수" },
     poll_type: { en: "Poll", ko: "투표" },
@@ -138,11 +139,6 @@ pub fn ActionPollViewer(
     let current_idx = question_index().min(total.saturating_sub(1));
     let is_first = total == 0 || current_idx == 0;
     let is_last = total == 0 || current_idx + 1 >= total;
-    let progress_pct = if total > 0 {
-        ((current_idx + 1) as f64 / total as f64 * 100.0) as u32
-    } else {
-        0
-    };
 
     // Hide sidebar while overlay is open.
     let layout_ui = crate::features::spaces::layout::use_space_layout_ui();
@@ -151,20 +147,26 @@ pub fn ActionPollViewer(
     use_drop(move || sidebar_visible.set(true));
 
     let overlay: Option<ActiveActionOverlaySignal> = try_consume_context();
+    let completed: Option<CompletedActionCard> = try_consume_context();
 
     let do_submit = Callback::new(move |_: ()| {
         spawn(async move {
             let req = RespondPollRequest { answers: answers() };
             match respond_poll(space_id(), poll_id(), req).await {
                 Ok(_) => {
-                    poll_loader.restart();
-                    space_ctx.actions.restart();
                     space_ctx.ranking.restart();
                     space_ctx.my_score.restart();
+                    // Restart actions list so dashboard refreshes after animation
+                    space_ctx.actions.restart();
                     toast.info(tr.submit_success);
                     if let Some(mut ov) = overlay {
+                        // Signal the dashboard to animate this card into archive
+                        if let Some(mut c) = completed {
+                            c.0.set(Some(poll_id().to_string()));
+                        }
                         ov.0.set(None);
                     } else {
+                        poll_loader.restart();
                         nav.replace(crate::Route::SpaceIndexPage {
                             space_id: space_id(),
                         });
@@ -252,6 +254,9 @@ pub fn ActionPollViewer(
                     }
                 }
                 div { class: "poll-header__right",
+                    if step() == PollStep::Poll && total > 0 {
+                        span { class: "poll-header__counter", "{current_idx + 1}/{total}" }
+                    }
                     span { class: "{status_class}", {status_text} }
                     if poll.space_action.activity_score > 0 {
                         span { class: "poll-header__reward",
@@ -308,8 +313,6 @@ pub fn ActionPollViewer(
                                 cx: "70",
                                 cy: "70",
                                 r: "60",
-                                stroke_dasharray: "376.99",
-                                stroke_dashoffset: "0",
                             }
                         }
                         div { class: "poll-overview-ring__center",
@@ -361,41 +364,6 @@ pub fn ActionPollViewer(
                                 step.set(PollStep::Poll);
                             },
                             {tr.begin_poll}
-                        }
-                    }
-                }
-            }
-
-            // ─── Progress (only when step is Poll) ───
-            if step() == PollStep::Poll && total > 0 {
-                div { class: "poll-progress",
-                    div { class: "poll-progress__top",
-                        span { class: "poll-progress__label", {tr.progress} }
-                        span { class: "poll-progress__fraction", "{current_idx + 1} / {total}" }
-                    }
-                    div { class: "poll-progress__bar-wrap",
-                        div {
-                            class: "poll-progress__bar",
-                            style: "width: {progress_pct}%",
-                        }
-                    }
-                    div { class: "poll-progress__dots",
-                        for dot_idx in 0..total {
-                            {
-                                let is_active = dot_idx == current_idx;
-                                let is_answered = questions
-                                    .get(dot_idx)
-                                    .map(|q| has_answer_for_question(q, answers.read().get(dot_idx)))
-                                    .unwrap_or(false);
-                                rsx! {
-                                    span {
-                                        key: "dot-{dot_idx}",
-                                        class: "poll-progress__dot",
-                                        "data-active": is_active,
-                                        "data-answered": !is_active && is_answered,
-                                    }
-                                }
-                            }
                         }
                     }
                 }
@@ -584,7 +552,8 @@ pub fn ActionPollViewer(
             // ─── Footer ───
             if step() == PollStep::Poll {
                 div { class: "poll-footer",
-                    div { class: "poll-footer__nav",
+                    // Right: nav buttons
+                    div { class: "poll-footer__right",
                         if !is_first && total > 0 {
                             button {
                                 class: "poll-btn poll-btn--back",
@@ -606,8 +575,6 @@ pub fn ActionPollViewer(
                                 {tr.btn_back}
                             }
                         }
-                    }
-                    div { class: "poll-footer__nav",
                         if !is_last && total > 0 {
                             button {
                                 class: "poll-btn poll-btn--next",

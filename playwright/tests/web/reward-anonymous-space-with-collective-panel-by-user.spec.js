@@ -595,8 +595,9 @@ test.describe
       // Submit the poll using testId
       await clickNoNav(page, { testId: "poll-submit" });
 
-      // Confirm dialog appears — click confirm
-      await click(page, { testId: "poll-confirm-submit" });
+      // Confirm dialog appears — click confirm. Poll submit closes the
+      // overlay in place (no navigation).
+      await clickNoNav(page, { testId: "poll-confirm-submit" });
 
       // Wait for overlay to close
       await expect(page.getByTestId("poll-arena-overlay")).toBeHidden({

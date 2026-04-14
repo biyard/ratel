@@ -1,14 +1,17 @@
 use crate::features::spaces::pages::actions::actions::discussion::*;
 
-#[mcp_tool(name = "create_discussion", description = "Create a new discussion in a space.")]
-#[post("/api/spaces/{space_id}/discussions", role: SpaceUserRole, member: crate::common::models::space::SpaceUser)]
+#[mcp_tool(
+    name = "create_discussion",
+    description = "Create a new discussion in a space."
+)]
+#[post("/api/spaces/{space_id}/discussions", role: SpaceUserRole, member: crate::common::models::space::SpaceUser, space: crate::common::models::space::SpaceCommon)]
 pub async fn create_discussion(
-    #[mcp(description = "Space partition key (e.g. 'SPACE#<uuid>')")]
-    space_id: SpacePartition,
+    #[mcp(description = "Space partition key (e.g. 'SPACE#<uuid>')")] space_id: SpacePartition,
 ) -> Result<SpacePost> {
     SpacePost::can_edit(&role)?;
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
+    let is_published = space.is_published();
     let post = SpacePost::new(
         space_id.clone(),
         String::new(),
@@ -19,11 +22,13 @@ pub async fn create_discussion(
         None,
     );
 
-    let space_action = crate::features::spaces::pages::actions::models::SpaceAction::new(
-        space_id.clone(),
-        SpacePostEntityType::from(post.sk.clone()).to_string(),
-        crate::features::spaces::pages::actions::types::SpaceActionType::TopicDiscussion,
-    );
+    let space_action =
+        crate::features::spaces::pages::actions::models::SpaceAction::new_with_published(
+            space_id.clone(),
+            SpacePostEntityType::from(post.sk.clone()).to_string(),
+            crate::features::spaces::pages::actions::types::SpaceActionType::TopicDiscussion,
+            is_published,
+        );
     let space_pk: Partition = space_id.into();
     let _ =
         crate::features::spaces::space_common::models::aggregate::DashboardAggregate::get_or_create(cli, &space_pk).await?;
