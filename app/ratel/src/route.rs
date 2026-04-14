@@ -59,10 +59,10 @@ use crate::features::social::pages::group::Home as TeamGroup;
 use crate::features::social::pages::home::Home as TeamHome;
 use crate::features::social::pages::member::Home as TeamMember;
 use crate::features::social::pages::reward::Home as TeamReward;
-use crate::features::social::pages::setting::layout::TeamSettingLayout;
 use crate::features::social::pages::setting::Home as TeamSetting;
 use crate::features::social::pages::setting::ManagementPage as TeamSettingMember;
 use crate::features::social::pages::setting::SubscriptionPage as TeamSettingSubscription;
+use crate::features::social::pages::team_arena::TeamArenaLayout;
 
 // User pages
 use crate::features::social::pages::credentials::Home as CredentialPage;
@@ -132,6 +132,8 @@ pub enum Route {
                     CredentialPage { username: String },
                     #[route("/spaces")]
                     UserSpaces { username: String },
+                #[end_layout]
+                #[layout(TeamArenaLayout)]
                     #[route("/home")]
                     TeamHome { username: String },
                     #[route("/team-drafts")]
@@ -146,8 +148,6 @@ pub enum Route {
                     TeamReward { username: String },
                     #[route("/team-memberships")]
                     TeamMemberships { username: String },
-                #[end_layout]
-                #[layout(TeamSettingLayout)]
                     #[route("/team-settings")]
                     TeamSetting { username: String },
                     #[route("/team-settings/members")]

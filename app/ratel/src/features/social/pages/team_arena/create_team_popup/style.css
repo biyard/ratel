@@ -1,0 +1,279 @@
+/* ── Arena Create-Team Modal (ported from space consent-card) ── */
+
+/* Nullify PopupZone's default chrome when hosting the arena modal so we don't
+   get a double-bordered / double-rounded look. The arena modal provides its
+   own glass panel, shadow, and close button. */
+div:has(> #popup-zone-1 > .arena-create-team),
+div:has(> .arena-create-team) {
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
+}
+#popup-zone-1:has(> .arena-create-team) {
+  gap: 0 !important;
+  padding: 0 !important;
+}
+
+.arena-create-team {
+  --bg-void: #06060e;
+  --bg-glass: rgba(12, 12, 26, 0.65);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --text-primary: #f0f0f5;
+  --text-muted: #8888a8;
+  --text-dim: #55556a;
+  --accent-gold: #fcb300;
+  --accent-teal: #6eedd8;
+
+  width: 440px;
+  max-width: calc(100vw - 32px);
+  padding: 28px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow:
+    0 8px 60px rgba(0, 0, 0, 0.4),
+    0 0 80px rgba(252, 179, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  font-family: 'Outfit', sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+html[data-theme="light"] .arena-create-team,
+[data-theme="light"] .arena-create-team {
+  --bg-void: #f4f3ef;
+  --bg-glass: rgba(255, 255, 255, 0.78);
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --text-primary: #1a1a24;
+  --text-muted: #5f6075;
+  --text-dim: #9d9db3;
+  --accent-gold: #c68700;
+  --accent-teal: #12a58a;
+
+  box-shadow:
+    0 8px 60px rgba(0, 0, 0, 0.12),
+    0 0 60px rgba(198, 135, 0, 0.04);
+}
+
+/* ── Header ── */
+.arena-create-team__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-right: 36px; /* reserve space for absolute close btn */
+  position: relative;
+  width: 100%;
+}
+
+.arena-create-team__label {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.arena-create-team__title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, var(--accent-gold), #ffd24a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+html[data-theme="light"] .arena-create-team__title,
+[data-theme="light"] .arena-create-team__title {
+  background: linear-gradient(135deg, #c68700, #8d5f00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.arena-create-team__subhead {
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text-muted);
+  max-width: 260px;
+}
+
+.arena-create-team__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 28px;
+  height: 28px;
+  z-index: 2;
+  padding: 0;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.arena-create-team__close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  border-color: rgba(252, 179, 0, 0.3);
+}
+html[data-theme="light"] .arena-create-team__close:hover,
+[data-theme="light"] .arena-create-team__close:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+.arena-create-team__close svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  fill: none;
+  display: block;
+}
+
+/* ── Body: wraps the TeamCreationForm ── */
+.arena-create-team__body {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  overflow: hidden;
+}
+
+/* Force the form's outer flex container to fill our modal width instead of
+   its default fixed w-100 (400px) which overflows the card. */
+.arena-create-team__body > div {
+  width: 100% !important;
+  max-width: 100% !important;
+  gap: 20px !important;
+}
+
+/* Shrink the huge default logo uploader (was size-40 = 160px) */
+.arena-create-team__body > div > :first-child {
+  width: 96px !important;
+  height: 96px !important;
+  max-width: 96px !important;
+  margin: 0 auto !important;
+  flex-shrink: 0 !important;
+}
+.arena-create-team img[alt="logo"] {
+  width: 96px !important;
+  height: 96px !important;
+  border-radius: 50% !important;
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 0 28px rgba(252, 179, 0, 0.14);
+}
+.arena-create-team img[alt="logo"] + div {
+  width: 96px !important;
+  height: 96px !important;
+  font-size: 10px !important;
+  border-radius: 50% !important;
+  inset: 0 !important;
+}
+
+.arena-create-team input[type="text"],
+.arena-create-team textarea {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  background: rgba(6, 6, 14, 0.5) !important;
+  border: 1px solid var(--border-subtle) !important;
+  color: var(--text-primary) !important;
+  font-family: 'Outfit', sans-serif !important;
+  border-radius: 12px !important;
+  padding: 11px 14px !important;
+  font-size: 13px !important;
+  transition: all 0.25s !important;
+}
+html[data-theme="light"] .arena-create-team input[type="text"],
+html[data-theme="light"] .arena-create-team textarea,
+[data-theme="light"] .arena-create-team input[type="text"],
+[data-theme="light"] .arena-create-team textarea {
+  background: rgba(0, 0, 0, 0.03) !important;
+}
+/* Preserve the @-prefix left padding for the Team ID input */
+.arena-create-team .relative > input[type="text"] {
+  padding-left: 36px !important;
+}
+
+.arena-create-team input[type="text"]::placeholder,
+.arena-create-team textarea::placeholder {
+  color: var(--text-dim) !important;
+}
+.arena-create-team input[type="text"]:focus,
+.arena-create-team textarea:focus {
+  border-color: rgba(252, 179, 0, 0.3) !important;
+  box-shadow: 0 0 14px rgba(252, 179, 0, 0.1) !important;
+  outline: none !important;
+}
+
+.arena-create-team .text-c-secondary { color: var(--text-muted) !important; }
+
+/* Form buttons (cancel + create) — scoped to form body, not the close X. */
+.arena-create-team__body button {
+  font-family: 'Orbitron', sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  border-radius: 12px !important;
+  padding: 11px 16px !important;
+  transition: all 0.25s !important;
+  cursor: pointer;
+  border: 1px solid var(--border-subtle) !important;
+}
+
+/* Cancel — transparent glass */
+.arena-create-team__body button:first-of-type:not([disabled]) {
+  background: rgba(255, 255, 255, 0.03) !important;
+  color: var(--text-primary) !important;
+}
+.arena-create-team__body button:first-of-type:not([disabled]):hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+html[data-theme="light"] .arena-create-team__body button:first-of-type:not([disabled]),
+[data-theme="light"] .arena-create-team__body button:first-of-type:not([disabled]) {
+  background: rgba(0, 0, 0, 0.03) !important;
+}
+
+/* Create — gold gradient */
+.arena-create-team__body button:last-of-type {
+  background: linear-gradient(135deg, rgba(252, 179, 0, 0.28), rgba(110, 237, 216, 0.14)) !important;
+  border-color: rgba(252, 179, 0, 0.35) !important;
+  color: var(--accent-gold) !important;
+  box-shadow: 0 0 18px rgba(252, 179, 0, 0.12) !important;
+}
+.arena-create-team__body button:last-of-type:hover:not([disabled]) {
+  background: linear-gradient(135deg, rgba(252, 179, 0, 0.40), rgba(110, 237, 216, 0.20)) !important;
+  box-shadow: 0 0 28px rgba(252, 179, 0, 0.24) !important;
+  transform: translateY(-1px);
+}
+.arena-create-team__body button:last-of-type[disabled] {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Error text */
+.arena-create-team .text-red-500 {
+  color: #ef4444 !important;
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px !important;
+}
