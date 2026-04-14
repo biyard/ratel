@@ -1,14 +1,21 @@
 use super::space_card::*;
 use super::*;
 use crate::common::components::{Robots, SeoMeta};
+use crate::common::types::ListResponse;
 use crate::common::use_loader;
 use crate::features::auth::LoginModal;
 use crate::features::posts::controllers::create_post::create_post_handler;
 use crate::features::spaces::pages::index::SettingsPanel;
 use crate::features::spaces::space_common::controllers::{
-    HotSpaceHeat, HotSpaceResponse, list_hot_spaces_handler,
+    HotSpaceHeat, HotSpaceResponse, list_hot_spaces_handler, list_my_home_spaces_handler,
 };
 use crate::*;
+
+#[derive(Clone, Copy, PartialEq)]
+enum HomeTab {
+    Hot,
+    Mine,
+}
 
 #[component]
 pub fn Index() -> Element {
@@ -41,10 +48,31 @@ pub fn Index() -> Element {
     let hot_spaces = use_loader(move || async move {
         list_hot_spaces_handler(None).await
     })?;
-    let list = hot_spaces();
-    let cards = list.items;
+    let my_spaces = use_loader(move || async move {
+        if has_user {
+            list_my_home_spaces_handler(None).await
+        } else {
+            Ok(ListResponse::default())
+        }
+    })?;
 
-    let active_spaces = cards.len() as i64;
+    let hot_cards = hot_spaces().items;
+    let mine_cards = my_spaces().items;
+
+    let default_tab = if has_user && !mine_cards.is_empty() {
+        HomeTab::Mine
+    } else {
+        HomeTab::Hot
+    };
+    let mut active_tab = use_signal(|| default_tab);
+    let current_tab = active_tab();
+
+    let cards = match current_tab {
+        HomeTab::Hot => hot_cards.clone(),
+        HomeTab::Mine => mine_cards.clone(),
+    };
+
+    let active_spaces = hot_cards.len() as i64;
 
     let go_create_post = move |_: Event<MouseData>| {
         if !has_user {
@@ -301,9 +329,35 @@ pub fn Index() -> Element {
                 span { class: "section-label__dash" }
             }
 
+            // TABS (only visible when logged in)
+            if has_user {
+                div { class: "section-tabs",
+                    button {
+                        class: "section-tab",
+                        aria_selected: current_tab == HomeTab::Hot,
+                        "data-testid": "home-tab-hot",
+                        onclick: move |_| active_tab.set(HomeTab::Hot),
+                        "{t.tab_hot}"
+                    }
+                    button {
+                        class: "section-tab",
+                        aria_selected: current_tab == HomeTab::Mine,
+                        "data-testid": "home-tab-mine",
+                        onclick: move |_| active_tab.set(HomeTab::Mine),
+                        "{t.tab_mine}"
+                    }
+                }
+            }
+
             // CAROUSEL
             if cards.is_empty() {
-                div { class: "home-arena__empty", "No hot spaces yet. Check back soon." }
+                div { class: "home-arena__empty",
+                    if current_tab == HomeTab::Mine {
+                        "{t.empty_mine}"
+                    } else {
+                        "{t.empty_hot}"
+                    }
+                }
             } else {
                 div { class: "carousel-wrapper",
                     div { class: "carousel-track", id: "home-carousel-track",

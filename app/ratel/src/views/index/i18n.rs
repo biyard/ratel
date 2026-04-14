@@ -53,6 +53,26 @@ translate! {
         ko: "스페이스",
     },
 
+    tab_hot: {
+        en: "Hot Spaces",
+        ko: "인기 스페이스",
+    },
+
+    tab_mine: {
+        en: "My Spaces",
+        ko: "내 스페이스",
+    },
+
+    empty_hot: {
+        en: "No hot spaces yet. Check back soon.",
+        ko: "아직 인기 스페이스가 없습니다.",
+    },
+
+    empty_mine: {
+        en: "You haven't joined any spaces yet.",
+        ko: "아직 참여한 스페이스가 없습니다.",
+    },
+
     heat_blazing: {
         en: "Blazing",
         ko: "불타는",
