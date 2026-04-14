@@ -1,5 +1,7 @@
 use crate::features::spaces::pages::actions::types::{SpaceActionSummary, SpaceActionType};
-use crate::features::spaces::pages::index::action_pages::quiz::CompletedActionCard;
+use crate::features::spaces::pages::index::action_pages::quiz::{
+    ActiveActionOverlay, ActiveActionOverlaySignal, CompletedActionCard,
+};
 use crate::features::spaces::pages::index::*;
 
 #[derive(Clone, Copy, PartialEq)]
@@ -267,8 +269,9 @@ fn ArchiveItem(action: SpaceActionSummary, status: ActionStatus, space_id: Space
     let is_completed = status == ActionStatus::Completed;
     let is_poll = action.action_type == SpaceActionType::Poll;
     let can_reopen = is_completed && is_poll;
-    let nav = navigator();
-    let url = action.get_url(&space_id);
+    let mut overlay: ActiveActionOverlaySignal = use_context();
+    let action_id = action.action_id.clone();
+    let space_id_for_click = space_id.clone();
 
     rsx! {
         div {
@@ -276,7 +279,10 @@ fn ArchiveItem(action: SpaceActionSummary, status: ActionStatus, space_id: Space
             style: if can_reopen { "cursor: pointer;" } else { "" },
             onclick: move |_| {
                 if can_reopen {
-                    nav.push(url.clone());
+                    let pid: SpacePollEntityType = action_id.clone().into();
+                    overlay
+                        .0
+                        .set(Some(ActiveActionOverlay::Poll(space_id_for_click.clone(), pid)));
                 }
             },
             div { class: "archive-item__info",
