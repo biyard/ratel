@@ -187,8 +187,9 @@ async function participateAndCompletePoll(page, _spaceUrl, pollOptionText) {
   // Submit the poll using testId (avoids ambiguity with confirm dialog)
   await clickNoNav(page, { testId: "poll-submit" });
 
-  // Confirm dialog appears — click confirm
-  await click(page, { testId: "poll-confirm-submit" });
+  // Confirm dialog appears — click confirm. Poll submit closes the overlay
+  // in place (no navigation), so we must not wait for a load event.
+  await clickNoNav(page, { testId: "poll-confirm-submit" });
 
   // Wait for overlay to close (server call completes + overlay signal cleared)
   await expect(page.getByTestId("poll-arena-overlay")).toBeHidden({
@@ -945,26 +946,26 @@ test.describe.serial("Space with actions created by a team", () => {
       // Navigate to space root — ActionDashboard shows poll card in carousel
       await goto(page, spaceUrl);
 
-      // Click the poll card — it navigates to the poll page
+      // Clicking the poll card now opens the full-screen poll overlay
+      // in place (no navigation).
       const pollCard = page.locator('[data-type="poll"]').first();
       await expect(pollCard).toBeVisible({ timeout: 10000 });
       await pollCard.click();
-      await page.waitForURL(/\/actions\/polls\//, {
-        waitUntil: "load",
-        timeout: 15000,
-      });
-      await page.waitForFunction(
-        () => document.querySelector("[data-dioxus-id]") !== null,
-      );
 
-      await click(page, { testId: "poll-arena-begin" });
-      // Wait for poll option to be visible, then answer
-      await expect(page.getByText("Excellent", { exact: true })).toBeVisible({
-        timeout: 10000,
-      });
-      await click(page, { text: "Excellent" });
-      await click(page, { text: "Submit" });
-      await page.waitForLoadState("load");
+      const overlay = page.getByTestId("poll-arena-overlay");
+      await expect(overlay).toBeVisible({ timeout: 15000 });
+
+      await clickNoNav(page, { testId: "poll-arena-begin" });
+
+      await expect(
+        overlay.getByText("Excellent", { exact: true }),
+      ).toBeVisible({ timeout: 10000 });
+      await overlay.getByText("Excellent", { exact: true }).click();
+
+      await clickNoNav(page, { testId: "poll-submit" });
+      await clickNoNav(page, { testId: "poll-confirm-submit" });
+
+      await expect(overlay).toBeHidden({ timeout: 30000 });
     } finally {
       await context.close();
     }
@@ -982,27 +983,26 @@ test.describe.serial("Space with actions created by a team", () => {
       // Navigate to space root — ActionDashboard shows poll card in carousel
       await goto(page, spaceUrl);
 
-      // Click the poll card — it navigates to the poll page
+      // Clicking the poll card now opens the full-screen poll overlay
+      // in place (no navigation).
       const pollCard = page.locator('[data-type="poll"]').first();
       await expect(pollCard).toBeVisible({ timeout: 10000 });
       await pollCard.click();
-      await page.waitForURL(/\/actions\/polls\//, {
-        waitUntil: "load",
-        timeout: 15000,
-      });
-      await page.waitForFunction(
-        () => document.querySelector("[data-dioxus-id]") !== null,
-      );
 
-      // Wait for poll option to be visible, then answer
-      await click(page, { testId: "poll-arena-begin" });
+      const overlay = page.getByTestId("poll-arena-overlay");
+      await expect(overlay).toBeVisible({ timeout: 15000 });
 
-      await expect(page.getByText("Good", { exact: true })).toBeVisible({
+      await clickNoNav(page, { testId: "poll-arena-begin" });
+
+      await expect(overlay.getByText("Good", { exact: true })).toBeVisible({
         timeout: 10000,
       });
-      await click(page, { text: "Good" });
-      await click(page, { text: "Submit" });
-      await page.waitForLoadState("load");
+      await overlay.getByText("Good", { exact: true }).click();
+
+      await clickNoNav(page, { testId: "poll-submit" });
+      await clickNoNav(page, { testId: "poll-confirm-submit" });
+
+      await expect(overlay).toBeHidden({ timeout: 30000 });
     } finally {
       await context.close();
     }
