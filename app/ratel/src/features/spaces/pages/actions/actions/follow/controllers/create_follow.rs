@@ -1,9 +1,12 @@
 use crate::common::models::space::SpaceCommon;
 use crate::features::spaces::pages::actions::actions::follow::models::*;
-use crate::features::spaces::pages::actions::actions::follow::*;
 use crate::features::spaces::pages::actions::actions::follow::types::SpaceFollowError;
+use crate::features::spaces::pages::actions::actions::follow::*;
 
-#[mcp_tool(name = "create_follow", description = "Create a follow action in a space. Requires creator role.")]
+#[mcp_tool(
+    name = "create_follow",
+    description = "Create a follow action in a space. Requires creator role."
+)]
 #[post(
     "/api/spaces/{space_pk}/follows",
     role: SpaceUserRole,
@@ -11,8 +14,7 @@ use crate::features::spaces::pages::actions::actions::follow::types::SpaceFollow
     space: SpaceCommon
 )]
 pub async fn create_follow(
-    #[mcp(description = "Space partition key")]
-    space_pk: SpacePartition,
+    #[mcp(description = "Space partition key")] space_pk: SpacePartition,
 ) -> Result<SpaceFollowAction> {
     SpaceFollowAction::can_edit(&role)?;
     let common_config = crate::common::CommonConfig::default();
@@ -26,11 +28,14 @@ pub async fn create_follow(
     }
 
     let follow = SpaceFollowAction::new(space_pk.clone());
-    let mut space_action = crate::features::spaces::pages::actions::models::SpaceAction::new(
-        space_pk.clone(),
-        SpaceActionFollowEntityType::from(follow.sk.clone()).to_string(),
-        crate::features::spaces::pages::actions::types::SpaceActionType::Follow,
-    );
+    let is_published = space.is_published();
+    let mut space_action =
+        crate::features::spaces::pages::actions::models::SpaceAction::new_with_published(
+            space_pk.clone(),
+            SpaceActionFollowEntityType::from(follow.sk.clone()).to_string(),
+            crate::features::spaces::pages::actions::types::SpaceActionType::Follow,
+            is_published,
+        );
     space_action.title = if space.author_display_name.is_empty() {
         space.author_username
     } else {

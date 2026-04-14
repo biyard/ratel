@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Poll Viewer — Gamified (2-Step)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+    /* ─── CSS Variables (space toggle) ─── */
+    :root{
+      --bg-void:#06060e; --bg-glass:rgba(12,12,26,0.65); --bg-glass-hover:rgba(20,20,40,0.80);
+      --bg-card:rgba(16,16,32,0.7); --border-subtle:rgba(255,255,255,0.06);
+      --border-option:rgba(255,255,255,0.08); --text-primary:#f0f0f5;
+      --text-muted:#8888a8; --text-dim:#55556a; --accent-gold:#fcb300;
+      --accent-teal:#6eedd8; --poll-color:#818cf8; --poll-bg:rgba(99,102,241,0.08);
+      --poll-border:rgba(99,102,241,0.18); --poll-glow:rgba(99,102,241,0.12);
+      --selected-bg:rgba(99,102,241,0.15); --selected-border:rgba(99,102,241,0.5);
+    }
+    html[data-theme="light"]{
+      --bg-void:#f5f5f8; --bg-glass:rgba(255,255,255,0.85); --bg-glass-hover:rgba(240,240,245,0.95);
+      --bg-card:rgba(255,255,255,0.9); --border-subtle:rgba(0,0,0,0.06);
+      --border-option:rgba(0,0,0,0.08); --text-primary:#1a1a2e;
+      --text-muted:#6b6b8a; --text-dim:#9999aa;
+      --selected-bg:rgba(99,102,241,0.08); --selected-border:rgba(99,102,241,0.4);
+    }
+    html,body{height:100%;background:var(--bg-void);color:var(--text-primary);font-family:'Outfit',sans-serif;overflow-x:hidden}
+
+    /* ─── Poll Arena (main wrapper) ─── */
+    .poll-arena{min-height:100vh;display:flex;flex-direction:column;position:relative}
+    .poll-arena::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 30%,rgba(129,140,248,0.06) 0%,transparent 60%);pointer-events:none;z-index:0}
+
+    /* ─── Header ─── */
+    .poll-header{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:20px 28px;backdrop-filter:blur(16px);border-bottom:1px solid var(--border-subtle)}
+    .poll-header__left{display:flex;align-items:center;gap:14px}
+    .poll-header__back{width:36px;height:36px;border-radius:10px;background:var(--bg-glass);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s;color:var(--text-muted);padding:0}
+    .poll-header__back:hover{border-color:rgba(129,140,248,0.3);color:var(--poll-color)}
+    .poll-header__back svg{width:18px;height:18px}
+    .poll-header__info{display:flex;flex-direction:column;gap:2px}
+    .poll-header__type{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--poll-color)}
+    .poll-header__type svg{width:14px;height:14px}
+    .poll-header__title{font-size:18px;font-weight:700;color:var(--text-primary);line-height:1.3}
+    .poll-header__right{display:flex;align-items:center;gap:12px}
+    .poll-header__status{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:100px;background:rgba(110,237,216,0.08);border:1px solid rgba(110,237,216,0.15);font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent-teal)}
+    .poll-header__status::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--accent-teal);box-shadow:0 0 6px var(--accent-teal)}
+    .poll-header__reward{display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:100px;background:rgba(252,179,0,0.08);border:1px solid rgba(252,179,0,0.15);font-size:12px;font-weight:700;color:var(--accent-gold)}
+    .poll-header__reward svg{width:14px;height:14px}
+
+    /* ─── Overview (Screen 1) ─── */
+    .poll-overview{position:relative;z-index:10;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;gap:32px;overflow-y:auto;animation:pollOverviewFadeIn 0.6s ease}
+    @keyframes pollOverviewFadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+    .poll-overview-ring{position:relative;width:140px;height:140px;flex-shrink:0}
+    .poll-overview-ring__svg{width:140px;height:140px;transform:rotate(-90deg)}
+    .poll-overview-ring__bg{fill:none;stroke:rgba(255,255,255,0.04);stroke-width:6}
+    .poll-overview-ring__fill{fill:none;stroke:var(--poll-color);stroke-width:6;stroke-linecap:round;filter:drop-shadow(0 0 12px rgba(129,140,248,0.25));stroke-dasharray:376.99;stroke-dashoffset:376.99;animation:pollRingDraw 1.2s cubic-bezier(0.16,1,0.3,1) 0.3s forwards}
+    @keyframes pollRingDraw{to{stroke-dashoffset:0}}
+    .poll-overview-ring__center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+    .poll-overview-ring__number{font-family:'Orbitron',sans-serif;font-size:32px;font-weight:800;color:var(--poll-color)}
+    .poll-overview-ring__label{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim)}
+
+    .poll-overview-card{max-width:520px;width:100%;padding:32px;background:var(--bg-card);backdrop-filter:blur(16px);border:1px solid var(--poll-border);border-radius:20px;box-shadow:0 12px 60px rgba(0,0,0,0.4),0 0 40px rgba(129,140,248,0.12);display:flex;flex-direction:column;align-items:center;gap:20px;text-align:center;animation:pollCardSlideUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.2s both}
+    @keyframes pollCardSlideUp{from{opacity:0;transform:translateY(40px) scale(0.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+    .poll-overview-card__title{font-size:24px;font-weight:700;line-height:1.3;color:var(--text-primary)}
+    .poll-overview-card__desc{font-size:14px;line-height:1.7;color:var(--text-muted);max-width:420px}
+    .poll-overview-stats{display:flex;gap:24px;justify-content:center;flex-wrap:wrap}
+    .poll-overview-stat{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 20px;border-radius:12px;background:rgba(129,140,248,0.04);border:1px solid rgba(129,140,248,0.1);min-width:90px;transition:all 0.3s}
+    .poll-overview-stat:hover{background:rgba(129,140,248,0.08);border-color:rgba(129,140,248,0.2);transform:translateY(-2px)}
+    .poll-overview-stat__value{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;color:var(--poll-color)}
+    .poll-overview-stat__label{font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-dim)}
+    .poll-begin-btn{padding:14px 40px;border-radius:12px;border:none;font-size:13px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.3s;background:linear-gradient(135deg,var(--poll-color),#6366f1);color:#fff;box-shadow:0 4px 24px rgba(129,140,248,0.25)}
+    .poll-begin-btn:hover{box-shadow:0 8px 40px rgba(129,140,248,0.25);transform:translateY(-2px)}
+
+    /* ─── Progress (Screen 2) ─── */
+    .poll-progress{position:relative;z-index:10;padding:0 28px;margin-top:20px}
+    .poll-progress__top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+    .poll-progress__label{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim)}
+    .poll-progress__fraction{font-size:13px;font-weight:700;color:var(--poll-color)}
+    .poll-progress__bar-wrap{width:100%;height:6px;background:rgba(255,255,255,0.04);border-radius:3px;overflow:hidden}
+    .poll-progress__bar{height:100%;background:linear-gradient(90deg,var(--poll-color),#a78bfa);border-radius:3px;transition:width 0.5s cubic-bezier(0.16,1,0.3,1)}
+    .poll-progress__dots{display:flex;justify-content:center;gap:6px;margin-top:12px}
+    .poll-progress__dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.08);border:none;transition:all 0.3s;padding:0}
+    .poll-progress__dot.active{background:var(--poll-color);box-shadow:0 0 8px var(--poll-glow);transform:scale(1.3)}
+    .poll-progress__dot.answered{background:rgba(129,140,248,0.4)}
+
+    /* ─── Question Card ─── */
+    .question-stage{position:relative;z-index:10;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 28px 120px;gap:24px;margin:auto 0}
+    .question-card{width:100%;max-width:680px;background:var(--bg-glass);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:1px solid var(--poll-border);border-radius:20px;padding:32px;display:flex;flex-direction:column;gap:24px;box-shadow:0 8px 40px rgba(0,0,0,0.3),0 0 30px var(--poll-glow);animation:poll-card-enter 0.4s cubic-bezier(0.16,1,0.3,1)}
+    @keyframes poll-card-enter{from{opacity:0;transform:translateY(20px) scale(0.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+    .question-card__number{font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--poll-color);display:flex;align-items:center;gap:8px}
+    .question-card__number::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--poll-border),transparent)}
+    .question-card__required{font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:2px 8px;border-radius:4px;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2)}
+    .question-card__title{font-size:22px;font-weight:700;line-height:1.4;color:var(--text-primary)}
+    .question-card__desc{font-size:14px;line-height:1.6;color:var(--text-muted)}
+
+    /* ─── Single Choice Options ─── */
+    .options-single{display:flex;flex-direction:column;gap:10px}
+    .option-single{display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid var(--border-option);cursor:pointer;transition:all 0.25s}
+    .option-single:hover{background:rgba(129,140,248,0.04);border-color:rgba(129,140,248,0.2)}
+    .option-single.selected{background:var(--selected-bg);border-color:var(--selected-border);box-shadow:0 0 20px var(--poll-glow)}
+    .option-single__letter{font-size:11px;font-weight:700;letter-spacing:0.06em;color:var(--text-dim);width:24px;height:24px;border-radius:6px;background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.25s}
+    .option-single.selected .option-single__letter{background:var(--poll-bg);color:var(--poll-color)}
+    .option-single__radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--border-option);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.25s}
+    .option-single.selected .option-single__radio{border-color:var(--poll-color)}
+    .option-single__radio-dot{width:10px;height:10px;border-radius:50%;background:var(--poll-color);transform:scale(0);transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1)}
+    .option-single.selected .option-single__radio-dot{transform:scale(1)}
+    .option-single__label{font-size:15px;font-weight:500;color:var(--text-primary);flex:1}
+    .option-single__other-input{flex:1;padding:6px 0;border:none;outline:none;background:transparent;color:var(--text-primary);font-family:inherit;font-size:15px;font-weight:500}
+    .option-single__other-input::placeholder{color:var(--text-dim)}
+
+    /* ─── Multiple Choice Options ─── */
+    .options-multi{display:flex;flex-direction:column;gap:10px}
+    .option-multi{display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid var(--border-option);cursor:pointer;transition:all 0.25s}
+    .option-multi:hover{background:rgba(129,140,248,0.04);border-color:rgba(129,140,248,0.2)}
+    .option-multi.selected{background:var(--selected-bg);border-color:var(--selected-border);box-shadow:0 0 20px var(--poll-glow)}
+    .option-multi__checkbox{width:20px;height:20px;border-radius:6px;border:2px solid var(--border-option);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.25s}
+    .option-multi.selected .option-multi__checkbox{border-color:var(--poll-color);background:var(--poll-color)}
+    .option-multi__check svg{width:12px;height:12px;color:#fff;opacity:0;transform:scale(0);transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1)}
+    .option-multi.selected .option-multi__check svg{opacity:1;transform:scale(1)}
+    .option-multi__label{font-size:15px;font-weight:500;color:var(--text-primary);flex:1}
+    .option-multi__other-input{flex:1;padding:6px 0;border:none;outline:none;background:transparent;color:var(--text-primary);font-family:inherit;font-size:15px;font-weight:500}
+    .option-multi__other-input::placeholder{color:var(--text-dim)}
+
+    /* ─── Subjective ─── */
+    .subjective-wrap{display:flex;flex-direction:column;gap:8px}
+    .subjective-input,.subjective-textarea{width:100%;padding:16px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid var(--border-option);color:var(--text-primary);font-family:'Outfit',sans-serif;font-size:15px;line-height:1.7;transition:border-color 0.25s;outline:none}
+    .subjective-textarea{min-height:160px;resize:vertical}
+    .subjective-input::placeholder,.subjective-textarea::placeholder{color:var(--text-dim)}
+    .subjective-input:focus,.subjective-textarea:focus{border-color:var(--poll-color);box-shadow:0 0 0 3px var(--poll-glow)}
+    .subjective-counter{text-align:right;font-size:12px;color:var(--text-dim);letter-spacing:0.05em}
+
+    /* ─── Linear Scale ─── */
+    .scale-wrap{display:flex;flex-direction:column;gap:16px;padding:8px 0}
+    .scale-labels{display:flex;justify-content:space-between}
+    .scale-label{font-size:12px;font-weight:600;color:var(--text-muted);max-width:120px}
+    .scale-track{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+    .scale-point{width:52px;height:52px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid var(--border-option);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--text-muted);cursor:pointer;transition:all 0.25s;padding:0}
+    .scale-point:hover{background:rgba(129,140,248,0.06);border-color:rgba(129,140,248,0.2);transform:translateY(-2px)}
+    .scale-point.selected{background:var(--poll-color);border-color:var(--poll-color);color:#fff;box-shadow:0 4px 20px var(--poll-glow);transform:translateY(-3px) scale(1.08)}
+    .scale-point.in-range{background:rgba(129,140,248,0.08);border-color:rgba(129,140,248,0.25);color:var(--poll-color)}
+
+    /* ─── Footer ─── */
+    .poll-footer{position:fixed;bottom:0;left:0;right:0;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:16px 28px 24px;border-top:1px solid var(--border-subtle);backdrop-filter:blur(16px);background:rgba(6,6,14,0.8)}
+    .poll-footer__nav{display:flex;gap:10px}
+    .poll-btn{padding:10px 24px;border-radius:10px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all 0.25s;border:none;display:inline-flex;align-items:center;gap:8px}
+    .poll-btn svg{width:16px;height:16px}
+    .poll-btn--back{background:var(--bg-glass);border:1px solid var(--border-subtle);color:var(--text-muted)}
+    .poll-btn--back:hover{border-color:rgba(129,140,248,0.2);color:var(--text-primary)}
+    .poll-btn--next{background:var(--bg-glass);border:1px solid var(--poll-border);color:var(--poll-color)}
+    .poll-btn--next:hover{background:rgba(129,140,248,0.1);box-shadow:0 0 16px var(--poll-glow)}
+    .poll-btn--next:disabled{opacity:0.3;cursor:not-allowed}
+    .poll-btn--submit{background:linear-gradient(135deg,var(--accent-gold),#e5a200);color:#0a0a0a;box-shadow:0 2px 16px rgba(252,179,0,0.25)}
+    .poll-btn--submit:hover{box-shadow:0 4px 24px rgba(252,179,0,0.4);transform:translateY(-1px)}
+
+    /* ─── Confirm Modal ─── */
+    .poll-confirm-overlay{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;animation:poll-overlay-in 0.2s}
+    .poll-confirm-overlay.open{display:flex}
+    @keyframes poll-overlay-in{from{opacity:0}to{opacity:1}}
+    .poll-confirm-modal{width:100%;max-width:420px;margin:0 20px;background:var(--bg-card);backdrop-filter:blur(24px);border:1px solid var(--border-subtle);border-radius:20px;padding:32px;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;animation:poll-modal-in 0.3s cubic-bezier(0.16,1,0.3,1)}
+    @keyframes poll-modal-in{from{opacity:0;transform:scale(0.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+    .poll-confirm-modal__icon{width:48px;height:48px;border-radius:50%;background:rgba(252,179,0,0.1);border:1px solid rgba(252,179,0,0.2);display:flex;align-items:center;justify-content:center;color:var(--accent-gold)}
+    .poll-confirm-modal__icon svg{width:24px;height:24px}
+    .poll-confirm-modal__title{font-size:18px;font-weight:700;color:var(--text-primary)}
+    .poll-confirm-modal__desc{font-size:14px;line-height:1.6;color:var(--text-muted)}
+    .poll-confirm-modal__actions{display:flex;gap:10px;width:100%;margin-top:8px}
+    .poll-confirm-modal__actions .poll-btn{flex:1;justify-content:center}
+
+    /* ─── Banner ─── */
+    .poll-banner{margin:0 28px;padding:12px 16px;border-radius:10px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:10px;position:relative;z-index:10}
+    .poll-banner--info{background:rgba(129,140,248,0.08);border:1px solid var(--poll-border);color:var(--poll-color)}
+
+    /* ─── Theme toggle ─── */
+    .theme-toggle{position:fixed;top:20px;right:20px;z-index:100;width:36px;height:36px;border-radius:10px;background:var(--bg-glass);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-muted);transition:all 0.25s}
+    .theme-toggle:hover{border-color:var(--accent-gold);color:var(--accent-gold)}
+    .theme-toggle svg{width:16px;height:16px}
+
+    /* ─── Responsive ─── */
+    @media(max-width:600px){
+      .poll-header{padding:16px}
+      .poll-header__title{font-size:15px}
+      .poll-progress{padding:0 16px}
+      .question-stage{padding:20px 16px 12px}
+      .question-card{padding:24px 20px;border-radius:16px}
+      .question-card__title{font-size:18px}
+      .poll-footer{padding:12px 16px 20px}
+      .scale-point{width:44px;height:44px;font-size:14px}
+    }
+  </style>
+</head>
+<body>
+
+<button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+</button>
+
+<div class="poll-arena">
+  <!-- ─── Header ─── -->
+  <div class="poll-header">
+    <div class="poll-header__left">
+      <button class="poll-header__back" onclick="goBack()" aria-label="Back">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="poll-header__info">
+        <span class="poll-header__type">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16h4v-6H7z"/><path d="M13 16h4V8h-4z"/></svg>
+          Poll
+        </span>
+        <span class="poll-header__title">Q2 Budget Allocation Survey</span>
+      </div>
+    </div>
+    <div class="poll-header__right">
+      <span class="poll-header__status">In Progress</span>
+      <span class="poll-header__reward">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        +50 pts
+      </span>
+    </div>
+  </div>
+
+  <!-- ─── Screen 1: Overview ─── -->
+  <div class="poll-overview" id="screen-overview">
+    <div class="poll-overview-ring">
+      <svg class="poll-overview-ring__svg" viewBox="0 0 140 140">
+        <circle class="poll-overview-ring__bg" cx="70" cy="70" r="60"/>
+        <circle class="poll-overview-ring__fill" cx="70" cy="70" r="60"/>
+      </svg>
+      <div class="poll-overview-ring__center">
+        <span class="poll-overview-ring__number">4</span>
+        <span class="poll-overview-ring__label">Questions</span>
+      </div>
+    </div>
+    <div class="poll-overview-card">
+      <div class="poll-overview-card__title">Q2 Budget Allocation Survey</div>
+      <div class="poll-overview-card__desc">Help the team decide how to allocate the Q2 budget by answering a few questions.</div>
+      <div class="poll-overview-stats">
+        <div class="poll-overview-stat">
+          <span class="poll-overview-stat__value">4</span>
+          <span class="poll-overview-stat__label">Questions</span>
+        </div>
+        <div class="poll-overview-stat">
+          <span class="poll-overview-stat__value">+50</span>
+          <span class="poll-overview-stat__label">Reward</span>
+        </div>
+        <div class="poll-overview-stat">
+          <span class="poll-overview-stat__value">10</span>
+          <span class="poll-overview-stat__label">Credits</span>
+        </div>
+      </div>
+      <button class="poll-begin-btn" onclick="beginPoll()">Begin Poll</button>
+    </div>
+  </div>
+
+  <!-- ─── Screen 2: Poll Questions ─── -->
+  <div id="screen-poll" style="display:none;flex:1;display:none;flex-direction:column">
+    <!-- Progress -->
+    <div class="poll-progress">
+      <div class="poll-progress__top">
+        <span class="poll-progress__label">Progress</span>
+        <span class="poll-progress__fraction" id="progress-fraction">1 / 4</span>
+      </div>
+      <div class="poll-progress__bar-wrap">
+        <div class="poll-progress__bar" id="progress-bar" style="width:25%"></div>
+      </div>
+      <div class="poll-progress__dots" id="progress-dots">
+        <span class="poll-progress__dot active"></span>
+        <span class="poll-progress__dot"></span>
+        <span class="poll-progress__dot"></span>
+        <span class="poll-progress__dot"></span>
+      </div>
+    </div>
+
+    <!-- Q1: Single Choice -->
+    <div class="question-stage" id="q0">
+      <div class="question-card">
+        <div class="question-card__number">Question 01 <span class="question-card__required">Required</span></div>
+        <h2 class="question-card__title">How should the team allocate the Q2 budget?</h2>
+        <p class="question-card__desc">Select the option that best reflects your preference.</p>
+        <div class="options-single">
+          <div class="option-single" onclick="selectSingle(this,0)"><span class="option-single__letter">A</span><div class="option-single__radio"><div class="option-single__radio-dot"></div></div><span class="option-single__label">Increase marketing spend</span></div>
+          <div class="option-single" onclick="selectSingle(this,0)"><span class="option-single__letter">B</span><div class="option-single__radio"><div class="option-single__radio-dot"></div></div><span class="option-single__label">Invest in R&D</span></div>
+          <div class="option-single" onclick="selectSingle(this,0)"><span class="option-single__letter">C</span><div class="option-single__radio"><div class="option-single__radio-dot"></div></div><span class="option-single__label">Save for reserves</span></div>
+          <div class="option-single" onclick="selectSingle(this,0)"><span class="option-single__letter">D</span><div class="option-single__radio"><div class="option-single__radio-dot"></div></div><span class="option-single__label">Expand the engineering team</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q2: Multiple Choice -->
+    <div class="question-stage" id="q1" style="display:none">
+      <div class="question-card">
+        <div class="question-card__number">Question 02</div>
+        <h2 class="question-card__title">Which areas should receive priority? (Select all)</h2>
+        <div class="options-multi">
+          <div class="option-multi" onclick="toggleMulti(this,1)"><div class="option-multi__checkbox"><span class="option-multi__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span></div><span class="option-multi__label">Infrastructure & Security</span></div>
+          <div class="option-multi" onclick="toggleMulti(this,1)"><div class="option-multi__checkbox"><span class="option-multi__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span></div><span class="option-multi__label">Community Building</span></div>
+          <div class="option-multi" onclick="toggleMulti(this,1)"><div class="option-multi__checkbox"><span class="option-multi__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span></div><span class="option-multi__label">Token Economics Research</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q3: Subjective -->
+    <div class="question-stage" id="q2" style="display:none">
+      <div class="question-card">
+        <div class="question-card__number">Question 03</div>
+        <h2 class="question-card__title">Describe your vision for Q3 and beyond.</h2>
+        <div class="subjective-wrap">
+          <textarea class="subjective-textarea" placeholder="Share your thoughts here..." maxlength="2000" oninput="updateCounter(this)"></textarea>
+          <span class="subjective-counter">0 / 2000</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q4: Linear Scale -->
+    <div class="question-stage" id="q3" style="display:none">
+      <div class="question-card">
+        <div class="question-card__number">Question 04</div>
+        <h2 class="question-card__title">How satisfied are you with governance?</h2>
+        <div class="scale-wrap">
+          <div class="scale-labels">
+            <span class="scale-label">Very Dissatisfied</span>
+            <span class="scale-label" style="text-align:right">Very Satisfied</span>
+          </div>
+          <div class="scale-track">
+            <button class="scale-point" onclick="selectScale(this,3)">1</button>
+            <button class="scale-point" onclick="selectScale(this,3)">2</button>
+            <button class="scale-point" onclick="selectScale(this,3)">3</button>
+            <button class="scale-point" onclick="selectScale(this,3)">4</button>
+            <button class="scale-point" onclick="selectScale(this,3)">5</button>
+            <button class="scale-point" onclick="selectScale(this,3)">6</button>
+            <button class="scale-point" onclick="selectScale(this,3)">7</button>
+            <button class="scale-point" onclick="selectScale(this,3)">8</button>
+            <button class="scale-point" onclick="selectScale(this,3)">9</button>
+            <button class="scale-point" onclick="selectScale(this,3)">10</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Footer (only in poll step) ─── -->
+  <div class="poll-footer" id="poll-footer" style="display:none">
+    <div class="poll-footer__nav">
+      <button class="poll-btn poll-btn--back" id="btn-back" style="display:none" onclick="goBack()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+      </button>
+    </div>
+    <div class="poll-footer__nav">
+      <button class="poll-btn poll-btn--next" id="btn-next" onclick="goNext()">
+        Next
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <button class="poll-btn poll-btn--submit" id="btn-submit" style="display:none" onclick="showConfirmModal()">
+        Submit
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Confirm Modal ─── -->
+<div class="poll-confirm-overlay" id="confirm-modal">
+  <div class="poll-confirm-modal">
+    <div class="poll-confirm-modal__icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    <h3 class="poll-confirm-modal__title">Submit response</h3>
+    <p class="poll-confirm-modal__desc">Once submitted, this response cannot be edited. Do you want to submit?</p>
+    <div class="poll-confirm-modal__actions">
+      <button class="poll-btn poll-btn--back" onclick="hideConfirmModal()">Cancel</button>
+      <button class="poll-btn poll-btn--submit" onclick="submitPoll()">Submit</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const TOTAL = 4;
+  let current = 0;
+  let step = 'overview'; // 'overview' | 'poll'
+  const answered = new Set();
+
+  function toggleTheme() {
+    const html = document.documentElement;
+    html.dataset.theme = html.dataset.theme === 'dark' ? 'light' : 'dark';
+  }
+
+  function beginPoll() {
+    step = 'poll';
+    document.getElementById('screen-overview').style.display = 'none';
+    const sp = document.getElementById('screen-poll');
+    sp.style.display = 'flex';
+    sp.style.flexDirection = 'column';
+    document.getElementById('poll-footer').style.display = 'flex';
+    showQuestion(0);
+  }
+
+  function goBack() {
+    if (step === 'poll' && current === 0) {
+      // Return to overview
+      step = 'overview';
+      document.getElementById('screen-overview').style.display = '';
+      document.getElementById('screen-poll').style.display = 'none';
+      document.getElementById('poll-footer').style.display = 'none';
+    }
+  }
+
+  function showQuestion(idx) {
+    for (let i = 0; i < TOTAL; i++) document.getElementById('q'+i).style.display = i===idx ? '' : 'none';
+    current = idx;
+    updateUI();
+  }
+
+  function updateUI() {
+    document.getElementById('progress-fraction').textContent = (current+1)+' / '+TOTAL;
+    document.getElementById('progress-bar').style.width = ((current+1)/TOTAL*100)+'%';
+    const dots = document.querySelectorAll('.poll-progress__dot');
+    dots.forEach((d,i) => { d.className = 'poll-progress__dot' + (i===current?' active':'') + (answered.has(i)&&i!==current?' answered':''); });
+    document.getElementById('btn-back').style.display = current > 0 ? '' : 'none';
+    document.getElementById('btn-next').style.display = current < TOTAL-1 ? '' : 'none';
+    document.getElementById('btn-submit').style.display = current === TOTAL-1 ? '' : 'none';
+  }
+
+  function goNext() { if (current < TOTAL-1) showQuestion(current+1); }
+
+  function selectSingle(el, qIdx) {
+    el.parentElement.querySelectorAll('.option-single').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    answered.add(qIdx);
+    updateUI();
+    setTimeout(() => { if (current < TOTAL-1) goNext(); }, 400);
+  }
+
+  function toggleMulti(el, qIdx) {
+    el.classList.toggle('selected');
+    if (el.parentElement.querySelector('.selected')) answered.add(qIdx); else answered.delete(qIdx);
+    updateUI();
+  }
+
+  function updateCounter(ta) {
+    ta.nextElementSibling.textContent = ta.value.length + ' / ' + ta.maxLength;
+    if (ta.value.trim()) answered.add(2); else answered.delete(2);
+    updateUI();
+  }
+
+  function selectScale(el, qIdx) {
+    el.parentElement.querySelectorAll('.scale-point').forEach(p => p.classList.remove('selected','in-range'));
+    el.classList.add('selected');
+    const val = parseInt(el.textContent);
+    el.parentElement.querySelectorAll('.scale-point').forEach(p => {
+      if (parseInt(p.textContent) < val) p.classList.add('in-range');
+    });
+    answered.add(qIdx);
+    updateUI();
+  }
+
+  function showConfirmModal() { document.getElementById('confirm-modal').classList.add('open'); }
+  function hideConfirmModal() { document.getElementById('confirm-modal').classList.remove('open'); }
+  function submitPoll() { hideConfirmModal(); alert('Poll submitted!'); }
+
+  updateUI();
+</script>
+</body>
+</html>

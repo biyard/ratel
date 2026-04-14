@@ -42,12 +42,19 @@ impl SpacePoll {
     pub fn new(
         space_pk: SpacePartition,
     ) -> crate::features::spaces::pages::actions::actions::poll::Result<Self> {
+        Self::new_with_published(space_pk, false)
+    }
+
+    pub fn new_with_published(
+        space_pk: SpacePartition,
+        is_published: bool,
+    ) -> crate::features::spaces::pages::actions::actions::poll::Result<Self> {
         let pk: Partition = space_pk.into();
         let sk = EntityType::SpacePoll(uuid::Uuid::now_v7().to_string());
 
         let now = get_now_timestamp_millis();
         let (started_at, ended_at) =
-            crate::features::spaces::pages::actions::models::SpaceAction::default_schedule(now);
+            crate::features::spaces::pages::actions::models::SpaceAction::default_schedule_with_published(now, is_published);
 
         Ok(Self {
             pk,

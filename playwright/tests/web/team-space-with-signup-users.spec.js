@@ -39,6 +39,39 @@ const user2 = {
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
+/**
+ * Set the action start date+time to now via the Settings tab.
+ * Clicks today in the date picker, then sets the hour to the current
+ * hour (or one hour earlier) so the action is immediately In Progress.
+ * Assumes the Settings tab is already active.
+ */
+async function setStartDateToToday(page) {
+  // 1. Click the first date picker trigger (start date) and select today
+  const datePickerTriggers = page.locator(".date-picker-group");
+  await datePickerTriggers.first().click();
+  const todayCell = page.locator('[data-today="true"]');
+  await todayCell.first().click();
+  await page.waitForLoadState("load");
+
+  // 2. Open the first time picker (start time) and pick the current hour
+  const timePickers = page.locator(".time-picker-trigger");
+  await timePickers.first().click();
+  const now = new Date();
+  const currentHour = String(now.getHours()).padStart(2, "0");
+  const hourCell = page.locator(
+    `.time-picker-cell[data-selected="false"]:text-is("${currentHour}")`
+  );
+  // If current hour cell exists and is not already selected, click it
+  if ((await hourCell.count()) > 0) {
+    await hourCell.first().click();
+  } else {
+    // Already selected or not found — click the selected one to close
+    const selected = page.locator('.time-picker-cell[data-selected="true"]').first();
+    await selected.click();
+  }
+  await page.waitForLoadState("load");
+}
+
 /** Hide the floating action button that may overlap modal buttons. */
 async function hideFab(page) {
   await page.evaluate(() => {
@@ -154,8 +187,9 @@ async function participateAndCompletePoll(page, _spaceUrl, pollOptionText) {
   // Submit the poll using testId (avoids ambiguity with confirm dialog)
   await clickNoNav(page, { testId: "poll-submit" });
 
-  // Confirm dialog appears — click confirm
-  await click(page, { testId: "poll-confirm-submit" });
+  // Confirm dialog appears — click confirm. Poll submit closes the overlay
+  // in place (no navigation), so we must not wait for a load event.
+  await clickNoNav(page, { testId: "poll-confirm-submit" });
 
   // Wait for overlay to close (server call completes + overlay signal cleared)
   await expect(page.getByTestId("poll-arena-overlay")).toBeHidden({
@@ -862,13 +896,9 @@ test.describe.serial("Space with actions created by a team", () => {
 
     await page.waitForURL(/\/actions\/polls\//, { waitUntil: "load" });
 
-    // The space has already been started by this point in the
-    // scenario, so the brand-new poll's `started_at` (defaulted to
-    // creation time) means `is_action_locked` returns true and the
-    // creator lands on the Participant view with a "Settings" toggle
-    // in the top-right corner. Click that toggle to open the creator
-    // configuration UI before we can fill in the poll fields.
-    await click(page, { testId: "action-settings-switch" });
+    // After the space is published, new actions default to started_at =
+    // now + 1 hour, so is_action_locked is false and the creator lands
+    // directly on PollCreatorPage — no settings toggle needed.
 
     await fill(
       page,
@@ -895,6 +925,11 @@ test.describe.serial("Space with actions created by a team", () => {
 
     await page.keyboard.press("Tab");
     await page.waitForLoadState("load");
+
+    // Set start date to today so the final survey is In Progress
+    await page.getByRole("tab", { name: "Settings" }).click();
+    await page.waitForLoadState("load");
+    await setStartDateToToday(page);
   });
 
   // ─── 11. Both participants: Complete final survey ─────────────────────────
@@ -911,26 +946,26 @@ test.describe.serial("Space with actions created by a team", () => {
       // Navigate to space root — ActionDashboard shows poll card in carousel
       await goto(page, spaceUrl);
 
-      // Click the poll card — it navigates to the poll page
+      // Clicking the poll card now opens the full-screen poll overlay
+      // in place (no navigation).
       const pollCard = page.locator('[data-type="poll"]').first();
       await expect(pollCard).toBeVisible({ timeout: 10000 });
       await pollCard.click();
-      await page.waitForURL(/\/actions\/polls\//, {
-        waitUntil: "load",
-        timeout: 15000,
-      });
-      await page.waitForFunction(
-        () => document.querySelector("[data-dioxus-id]") !== null,
-      );
 
-      await click(page, { testId: "poll-arena-begin" });
-      // Wait for poll option to be visible, then answer
-      await expect(page.getByText("Excellent", { exact: true })).toBeVisible({
-        timeout: 10000,
-      });
-      await click(page, { text: "Excellent" });
-      await click(page, { text: "Submit" });
-      await page.waitForLoadState("load");
+      const overlay = page.getByTestId("poll-arena-overlay");
+      await expect(overlay).toBeVisible({ timeout: 15000 });
+
+      await clickNoNav(page, { testId: "poll-arena-begin" });
+
+      await expect(
+        overlay.getByText("Excellent", { exact: true }),
+      ).toBeVisible({ timeout: 10000 });
+      await overlay.getByText("Excellent", { exact: true }).click();
+
+      await clickNoNav(page, { testId: "poll-submit" });
+      await clickNoNav(page, { testId: "poll-confirm-submit" });
+
+      await expect(overlay).toBeHidden({ timeout: 30000 });
     } finally {
       await context.close();
     }
@@ -948,27 +983,26 @@ test.describe.serial("Space with actions created by a team", () => {
       // Navigate to space root — ActionDashboard shows poll card in carousel
       await goto(page, spaceUrl);
 
-      // Click the poll card — it navigates to the poll page
+      // Clicking the poll card now opens the full-screen poll overlay
+      // in place (no navigation).
       const pollCard = page.locator('[data-type="poll"]').first();
       await expect(pollCard).toBeVisible({ timeout: 10000 });
       await pollCard.click();
-      await page.waitForURL(/\/actions\/polls\//, {
-        waitUntil: "load",
-        timeout: 15000,
-      });
-      await page.waitForFunction(
-        () => document.querySelector("[data-dioxus-id]") !== null,
-      );
 
-      // Wait for poll option to be visible, then answer
-      await click(page, { testId: "poll-arena-begin" });
+      const overlay = page.getByTestId("poll-arena-overlay");
+      await expect(overlay).toBeVisible({ timeout: 15000 });
 
-      await expect(page.getByText("Good", { exact: true })).toBeVisible({
+      await clickNoNav(page, { testId: "poll-arena-begin" });
+
+      await expect(overlay.getByText("Good", { exact: true })).toBeVisible({
         timeout: 10000,
       });
-      await click(page, { text: "Good" });
-      await click(page, { text: "Submit" });
-      await page.waitForLoadState("load");
+      await overlay.getByText("Good", { exact: true }).click();
+
+      await clickNoNav(page, { testId: "poll-submit" });
+      await clickNoNav(page, { testId: "poll-confirm-submit" });
+
+      await expect(overlay).toBeHidden({ timeout: 30000 });
     } finally {
       await context.close();
     }
