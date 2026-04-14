@@ -28,6 +28,7 @@
   font-family: var(--font-body);
 }
 
+.composer-arena { isolation: isolate; }
 .composer-arena::before {
   content: '';
   position: fixed;
@@ -35,7 +36,7 @@
   background:
     radial-gradient(ellipse 80% 60% at 50% 30%, rgba(252, 179, 0, 0.04) 0%, transparent 60%),
     radial-gradient(ellipse 120% 100% at 50% 120%, rgba(110, 237, 216, 0.03) 0%, transparent 50%);
-  z-index: 0;
+  z-index: -1;
   pointer-events: none;
 }
 
@@ -157,8 +158,6 @@
 
 /* ─── Layout ─────────────────────────────────────── */
 .composer-page {
-  position: relative;
-  z-index: 1;
   flex: 1;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;

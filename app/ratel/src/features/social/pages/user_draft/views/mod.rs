@@ -5,10 +5,12 @@ use dioxus::prelude::*;
 use crate::common::hooks::use_infinite_query;
 use crate::common::utils::time::{now, time_ago};
 use crate::common::FeedPartition;
+use crate::features::posts::controllers::create_post::create_post_handler;
 use crate::features::posts::controllers::delete_post::delete_post_handler;
 use crate::features::posts::controllers::dto::*;
 use crate::features::posts::controllers::list_user_drafts::list_user_drafts_handler;
 use crate::features::social::pages::user_draft::*;
+use crate::route::Route;
 
 use i18n::UserDraftsTranslate;
 
@@ -85,6 +87,21 @@ pub fn Home(username: String) -> Element {
     let _ = username;
     let tr: UserDraftsTranslate = use_translate();
     let nav = use_navigator();
+
+    let go_create_post = use_callback(move |_: ()| {
+        spawn(async move {
+            match create_post_handler(None).await {
+                Ok(resp) => {
+                    nav.push(Route::PostEdit {
+                        post_id: resp.post_pk.into(),
+                    });
+                }
+                Err(e) => {
+                    dioxus::logger::tracing::error!("Failed to create post: {:?}", e);
+                }
+            }
+        });
+    });
 
     let mut drafts_query = use_infinite_query(move |bookmark| async move {
         list_user_drafts_handler(bookmark).await
@@ -202,9 +219,7 @@ pub fn Home(username: String) -> Element {
                 div { class: "arena-topbar__right",
                     button {
                         class: "topbar-btn topbar-btn--primary",
-                        onclick: move |_| {
-                            nav.push("/");
-                        },
+                        onclick: move |_| go_create_post.call(()),
                         svg {
                             view_box: "0 0 24 24",
                             fill: "none",
@@ -389,9 +404,7 @@ pub fn Home(username: String) -> Element {
                         title: tr.empty_title,
                         desc: tr.empty_desc,
                         cta: tr.empty_cta,
-                        on_cta: move |_| {
-                            nav.push("/");
-                        },
+                        on_cta: move |_| go_create_post.call(()),
                     }
                 } else if sorted_is_empty {
                     EmptyState {
