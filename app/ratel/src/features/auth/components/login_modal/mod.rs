@@ -138,7 +138,7 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                         popup.open(rsx! {
                             SignupModal {
                                 initial_email: oauth_email,
-                                initial_oauth_access_token: Some(access_token),
+                                initial_oauth_access_token: access_token,
                                 on_success,
                             }
                         });
