@@ -2,21 +2,25 @@ use crate::features::spaces::pages::actions::actions::poll::*;
 use crate::features::spaces::pages::actions::models::SpaceAction;
 use crate::features::spaces::space_common::models::aggregate::DashboardAggregate;
 
-#[mcp_tool(name = "create_poll", description = "Create a new poll action in a space. Requires creator role.")]
-#[post("/api/spaces/{space_pk}/polls", role: SpaceUserRole)]
+#[mcp_tool(
+    name = "create_poll",
+    description = "Create a new poll action in a space. Requires creator role."
+)]
+#[post("/api/spaces/{space_pk}/polls", role: SpaceUserRole, space: crate::common::models::space::SpaceCommon)]
 pub async fn create_poll(
-    #[mcp(description = "Space partition key")]
-    space_pk: SpacePartition,
+    #[mcp(description = "Space partition key")] space_pk: SpacePartition,
 ) -> Result<PollResponse> {
     SpacePoll::can_edit(&role)?;
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
-    let poll = SpacePoll::new(space_pk.clone())?;
+    let is_published = space.is_published();
+    let poll = SpacePoll::new_with_published(space_pk.clone(), is_published)?;
 
-    let space_action = SpaceAction::new(
+    let space_action = SpaceAction::new_with_published(
         space_pk.clone(),
         SpacePollEntityType::from(poll.sk.clone()).to_string(),
         crate::features::spaces::pages::actions::types::SpaceActionType::Poll,
+        is_published,
     );
 
     let space_pk_partition: Partition = space_pk.into();
@@ -27,11 +31,10 @@ pub async fn create_poll(
         space_action.create_transact_write_item(),
     ];
     items.push(DashboardAggregate::inc_polls(&space_pk_partition, 1));
-    crate::transact_write_items!(cli, items)
-        .map_err(|e| {
-            crate::error!("Failed to create poll: {e}");
-            SpacePollError::CreateFailed
-        })?;
+    crate::transact_write_items!(cli, items).map_err(|e| {
+        crate::error!("Failed to create poll: {e}");
+        SpacePollError::CreateFailed
+    })?;
 
     let mut ret: PollResponse = poll.into();
     ret.space_action = space_action;

@@ -26,7 +26,7 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
     use_context_provider(|| LayoverService::new());
     let sidebar_visible = use_signal(|| true);
     use_context_provider(move || SpaceLayoutUiContext { sidebar_visible });
-    let role = ctx.current_role();
+    let role = ctx.role();
     let space = ctx.space();
     let lang = use_language();
     let show_sidebar = sidebar_visible();

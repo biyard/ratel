@@ -36,7 +36,15 @@ pub struct SpaceAction {
 #[cfg(feature = "server")]
 impl SpaceAction {
     pub fn default_schedule(now: i64) -> (i64, i64) {
-        let started_at = now;
+        Self::default_schedule_with_published(now, false)
+    }
+
+    pub fn default_schedule_with_published(now: i64, is_published: bool) -> (i64, i64) {
+        let started_at = if is_published {
+            now + 60 * 60 * 1000 // 1 hour after now
+        } else {
+            now
+        };
         let ended_at = started_at + 7 * 24 * 60 * 60 * 1000;
         (started_at, ended_at)
     }
@@ -46,8 +54,17 @@ impl SpaceAction {
         action_id: String,
         space_action_type: SpaceActionType,
     ) -> Self {
+        Self::new_with_published(space_id, action_id, space_action_type, false)
+    }
+
+    pub fn new_with_published(
+        space_id: SpacePartition,
+        action_id: String,
+        space_action_type: SpaceActionType,
+        is_published: bool,
+    ) -> Self {
         let now = get_now_timestamp_millis();
-        let (started_at, ended_at) = Self::default_schedule(now);
+        let (started_at, ended_at) = Self::default_schedule_with_published(now, is_published);
         let space_pk: Partition = space_id.clone().into();
 
         Self {
