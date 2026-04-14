@@ -1,4 +1,5 @@
 use crate::features::spaces::pages::apps::apps::panels::*;
+use dioxus::fullstack::Loader;
 use dioxus_primitives::{ContentAlign, ContentSide};
 use std::collections::HashMap;
 
@@ -194,11 +195,11 @@ fn panel_attributes(panel: &SpacePanelQuotaResponse) -> Vec<PanelAttribute> {
 pub fn PanelsTable(
     space_id: ReadSignal<SpacePartition>,
     panels: Vec<SpacePanelQuotaResponse>,
-    panels_query_key: Vec<String>,
+    panels_loader: Loader<Vec<SpacePanelQuotaResponse>>,
 ) -> Element {
     let tr: PanelsTableTranslate = use_translate();
     let mut toast = use_toast();
-    let mut query = use_query_store();
+    let mut panels_loader = panels_loader;
     let mut editing_quotas = use_signal(HashMap::<String, String>::new);
     let space = use_space();
     let space_quota = space().quota;
@@ -277,9 +278,6 @@ pub fn PanelsTable(
                                         let input_key_for_input = input_key.clone();
                                         let input_key_for_confirm = input_key.clone();
                                         let input_key_for_blur = input_key.clone();
-                                        let panels_query_key_for_confirm = panels_query_key.clone();
-                                        let panels_query_key_for_blur = panels_query_key.clone();
-                                        let panels_query_key_for_delete = panels_query_key.clone();
                                         let panel_for_confirm = panel.clone();
                                         let panel_for_blur = panel.clone();
                                         let panel_for_delete = panel.clone();
@@ -330,7 +328,6 @@ pub fn PanelsTable(
                                                                     map.remove(&input_key_for_confirm);
                                                                 });
                                                             let panel_id = panel_for_confirm.panel_id.clone();
-                                                            let panels_query_key = panels_query_key_for_confirm.clone();
                                                             let mut toast = toast;
                                                             spawn(async move {
                                                                 match update_panel_quota(
@@ -342,7 +339,7 @@ pub fn PanelsTable(
                                                                     )
                                                                     .await
                                                                 {
-                                                                    Ok(_) => query.invalidate(&panels_query_key),
+                                                                    Ok(_) => panels_loader.restart(),
                                                                     Err(err) => {
                                                                         error!("Failed to update panel row quota: {:?}", err);
                                                                         toast.error(err);
@@ -361,7 +358,6 @@ pub fn PanelsTable(
                                                                     map.remove(&input_key_for_blur);
                                                                 });
                                                             let panel_id = panel_for_blur.panel_id.clone();
-                                                            let panels_query_key = panels_query_key_for_blur.clone();
                                                             let mut toast = toast;
                                                             spawn(async move {
                                                                 match update_panel_quota(
@@ -373,7 +369,7 @@ pub fn PanelsTable(
                                                                     )
                                                                     .await
                                                                 {
-                                                                    Ok(_) => query.invalidate(&panels_query_key),
+                                                                    Ok(_) => panels_loader.restart(),
                                                                     Err(err) => {
                                                                         error!("Failed to update panel row quota: {:?}", err);
                                                                         toast.error(err);
@@ -390,7 +386,6 @@ pub fn PanelsTable(
                                                         class: "flex items-center justify-center size-8 !p-0 rounded-full !text-text-secondary hover:!bg-hover hover:!text-text-primary"
                                                             .to_string(),
                                                         onclick: move |_| {
-                                                            let panels_query_key = panels_query_key_for_delete.clone();
                                                             let keys = vec![
                                                                 DeletePanelKey {
                                                                     panel_id: panel_for_delete.panel_id.clone(),
@@ -400,7 +395,7 @@ pub fn PanelsTable(
                                                             spawn(async move {
                                                                 match delete_panel_quotas(space_id(), DeletePanelQuotaRequest { keys }).await
                                                                 {
-                                                                    Ok(_) => query.invalidate(&panels_query_key),
+                                                                    Ok(_) => panels_loader.restart(),
                                                                     Err(err) => {
                                                                         error!("Failed to delete panel row: {:?}", err);
                                                                         toast.error(err);

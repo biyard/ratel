@@ -1,10 +1,18 @@
 use dioxus::fullstack::{Loader, Loading};
 
 use crate::{
-    features::spaces::space_common::{
-        controllers::{get_user_role, SpaceResponse},
-        hooks::*,
-        *,
+    features::{
+        activity::controllers::{
+            get_my_score_handler, get_ranking_handler, MyScoreResponse, RankingEntryResponse,
+        },
+        spaces::{
+            pages::actions::{controllers::list_actions, types::SpaceActionSummary},
+            space_common::{
+                controllers::{get_user_role, SpaceResponse},
+                hooks::*,
+                *,
+            },
+        },
     },
     spaces::controllers::panel_requirements::PanelRequirementStatus,
 };
@@ -15,6 +23,9 @@ pub struct SpaceContextProvider {
     pub space: Loader<SpaceResponse>,
     pub current_role: Memo<SpaceUserRole>,
     pub panel_requirements: Loader<Vec<PanelRequirementStatus>>,
+    pub actions: Loader<Vec<SpaceActionSummary>>,
+    pub ranking: Loader<ListResponse<RankingEntryResponse>>,
+    pub my_score: Loader<MyScoreResponse>,
 }
 
 impl SpaceContextProvider {
@@ -27,6 +38,11 @@ impl SpaceContextProvider {
             )
             .await
         })?;
+        let actions = use_loader(move || async move { list_actions(space_id()).await })?;
+        let ranking =
+            use_loader(move || async move { get_ranking_handler(space_id(), None).await })?;
+        let my_score =
+            use_loader(move || async move { get_my_score_handler(space_id()).await })?;
 
         let mut current_role = use_memo(move || {
             let space = space();
@@ -46,6 +62,9 @@ impl SpaceContextProvider {
             space,
             current_role,
             panel_requirements,
+            actions,
+            ranking,
+            my_score,
         };
         debug!("Initialized SpaceContextProvider");
         use_context_provider(move || srv);
@@ -57,6 +76,9 @@ impl SpaceContextProvider {
         self.role.restart();
         self.space.restart();
         self.panel_requirements.restart();
+        self.actions.restart();
+        self.ranking.restart();
+        self.my_score.restart();
     }
 
     pub fn toggle_role(&mut self) -> Result<()> {

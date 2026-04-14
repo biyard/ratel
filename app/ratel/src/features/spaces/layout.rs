@@ -2,9 +2,7 @@ use super::*;
 use crate::features::auth::hooks::use_user_context;
 use crate::features::auth::{LoginModal, UserContextStoreExt};
 use crate::features::spaces::space_common::controllers::get_user_role;
-use crate::features::spaces::space_common::hooks::use_space_query;
 use crate::features::spaces::space_common::providers::SpaceContextProvider;
-use crate::features::spaces::space_common::types::space_key;
 use crate::features::spaces::space_common::{
     components::{SpaceNav, SpaceNavItem, SpaceTop, SpaceTopLabel},
     hooks::use_space_role,

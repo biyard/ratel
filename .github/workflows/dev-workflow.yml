@@ -202,7 +202,6 @@ jobs:
           BEDROCK_AGENT_ID: ${{ secrets.DEV_BEDROCK_AGENT_ID }}
           BEDROCK_AGENT_ALIAS_ID: ${{ secrets.DEV_BEDROCK_AGENT_ALIAS_ID }}
 
-          BIYARD_API_URL: https://api.dev.biyard.co
           BIYARD_API_KEY: ${{ secrets.DEV_BIYARD_API_KEY }}
           BIYARD_PROJECT_ID: ${{ secrets.DEV_BIYARD_PROJECT_ID }}
 
@@ -378,7 +377,6 @@ jobs:
           BEDROCK_AGENT_ID: ${{ secrets.DEV_BEDROCK_AGENT_ID }}
           BEDROCK_AGENT_ALIAS_ID: ${{ secrets.DEV_BEDROCK_AGENT_ALIAS_ID }}
 
-          BIYARD_API_URL: https://api.dev.biyard.co
           BIYARD_API_KEY: ${{ secrets.DEV_BIYARD_API_KEY }}
           BIYARD_PROJECT_ID: ${{ secrets.DEV_BIYARD_PROJECT_ID }}
 
@@ -432,7 +430,6 @@ jobs:
           path: ${{ github.workspace }}/app-shell-lambda.tar.gz
           if-no-files-found: error
           retention-days: 7
-
 
       - name: Save cache
         if: always()
@@ -749,4 +746,3 @@ jobs:
           base: main
           head: dev
           token: ${{ secrets.GITHUB_TOKEN }}
-
