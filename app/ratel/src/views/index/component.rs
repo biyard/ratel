@@ -86,8 +86,9 @@ pub fn Index() -> Element {
         spawn(async move {
             match create_post_handler(None).await {
                 Ok(resp) => {
-                    let post_pk: FeedPartition = resp.post_pk.into();
-                    nav.push(format!("/posts/{post_pk}/edit"));
+                    nav.push(Route::PostEdit {
+                        post_id: resp.post_pk.into(),
+                    });
                 }
                 Err(e) => {
                     dioxus::logger::tracing::error!("Failed to create post: {:?}", e);
@@ -106,7 +107,9 @@ pub fn Index() -> Element {
                 .with_title("Join the movement");
             return;
         }
-        nav.push(format!("/{}/drafts", drafts_username));
+        nav.push(Route::UserDrafts {
+            username: drafts_username.clone(),
+        });
     };
 
     let rewards_username = username.clone();
@@ -119,7 +122,9 @@ pub fn Index() -> Element {
                 .with_title("Join the movement");
             return;
         }
-        nav.push(format!("/{}/rewards", rewards_username));
+        nav.push(Route::UserRewards {
+            username: rewards_username.clone(),
+        });
     };
 
     let go_credentials = move |_: Event<MouseData>| {
@@ -131,7 +136,7 @@ pub fn Index() -> Element {
                 .with_title("Join the movement");
             return;
         }
-        nav.push("/credentials");
+        nav.push(Route::CredentialsHome {});
     };
 
     let open_settings = move |_: Event<MouseData>| {
@@ -139,7 +144,7 @@ pub fn Index() -> Element {
     };
 
     let go_browse_all = move |_: Event<MouseData>| {
-        nav.push("/posts");
+        nav.push(Route::PostIndex {});
     };
 
     rsx! {
