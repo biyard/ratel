@@ -14,11 +14,7 @@ use crate::features::spaces::pages::index::action_pages::quiz::ActiveActionOverl
 use crate::features::spaces::pages::index::*;
 use crate::features::spaces::space_common::controllers::list_space_members;
 use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
-use crate::features::spaces::space_common::types::space_members_key;
-use crate::features::spaces::space_common::types::{
-    space_page_actions_discussion_comments_key, space_page_actions_discussion_key,
-    space_page_actions_key,
-};
+use crate::features::spaces::space_common::providers::use_space_context;
 
 #[component]
 pub fn DiscussionArenaPage(
@@ -27,12 +23,11 @@ pub fn DiscussionArenaPage(
 ) -> Element {
     let tr: DiscussionArenaTranslate = use_translate();
     let mut toast = use_toast();
-    let mut query = use_query_store();
+    let mut space_ctx = use_space_context();
     let role = use_space_role()();
     let space = use_space()();
 
-    let disc_key = space_page_actions_discussion_key(&space_id(), &discussion_id());
-    let disc_loader = use_query(&disc_key, move || {
+    let disc_loader = use_loader(move || {
         get_discussion_detail(space_id(), discussion_id())
     })?;
     let disc = disc_loader();
@@ -50,8 +45,7 @@ pub fn DiscussionArenaPage(
     );
     let can_comment = can_respond && can_execute && is_in_progress;
 
-    let comments_key = space_page_actions_discussion_comments_key(&space_id(), &discussion_id());
-    let comments_loader = use_query(&comments_key, move || {
+    let mut comments_loader = use_loader(move || {
         list_comments(space_id(), discussion_id(), None)
     })?;
     let comments_data = comments_loader();
@@ -62,8 +56,7 @@ pub fn DiscussionArenaPage(
     let mut comment_text = use_signal(String::new);
     let mut tracked_mentions: Signal<Vec<(String, String)>> = use_signal(Vec::new);
 
-    let members_key = space_members_key(&space_id());
-    let members_loader = use_query(&members_key, move || {
+    let members_loader = use_loader(move || {
         list_space_members(space_id(), None)
     })?;
     let members: Vec<MentionCandidate> = members_loader()
@@ -114,10 +107,8 @@ pub fn DiscussionArenaPage(
         };
         match add_comment(space_id(), discussion_id(), req).await {
             Ok(_) => {
-                let keys =
-                    space_page_actions_discussion_comments_key(&space_id(), &discussion_id());
-                query.invalidate(&keys);
-                query.invalidate(&space_page_actions_key(&space_id()));
+                comments_loader.restart();
+                space_ctx.actions.restart();
                 comment_text.set(String::new());
                 tracked_mentions.set(Vec::new());
                 toast.info(tr.comment_success);
@@ -341,6 +332,7 @@ pub fn DiscussionArenaPage(
                                     discussion_id,
                                     can_comment,
                                     members,
+                                    comments_loader,
                                 }
                             }
                         }
@@ -359,9 +351,10 @@ fn CommentItem(
     discussion_id: ReadSignal<SpacePostEntityType>,
     can_comment: bool,
     members: ReadSignal<Vec<MentionCandidate>>,
+    comments_loader: Loader<ListResponse<DiscussionCommentResponse>>,
 ) -> Element {
     let tr: DiscussionArenaTranslate = use_translate();
-    let mut query = use_query_store();
+    let mut comments_loader = comments_loader;
     let mut toast = use_toast();
 
     let mut show_replies = use_signal(|| false);
@@ -380,9 +373,7 @@ fn CommentItem(
         let req = LikeCommentRequest { like: !liked };
         match like_comment(space_id(), discussion_id(), target_sk, req).await {
             Ok(_) => {
-                let keys =
-                    space_page_actions_discussion_comments_key(&space_id(), &discussion_id());
-                query.invalidate(&keys);
+                comments_loader.restart();
             }
             Err(err) => {
                 tracing::error!("Failed to toggle like: {:?}", err);
@@ -427,9 +418,7 @@ fn CommentItem(
                 replies.set(current);
                 reply_text.set(String::new());
                 reply_tracked_mentions.set(Vec::new());
-                let keys =
-                    space_page_actions_discussion_comments_key(&space_id(), &discussion_id());
-                query.invalidate(&keys);
+                comments_loader.restart();
                 toast.info(tr.reply_success);
             }
             Err(err) => {

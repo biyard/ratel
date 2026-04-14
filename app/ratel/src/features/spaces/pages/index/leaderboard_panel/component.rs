@@ -1,6 +1,5 @@
-use crate::features::activity::controllers::{get_my_score_handler, get_ranking_handler};
 use crate::features::spaces::pages::index::*;
-use crate::features::spaces::space_common::types::{space_my_score_key, space_ranking_key};
+use crate::features::spaces::space_common::hooks::{use_my_score, use_ranking};
 
 #[component]
 pub fn LeaderboardPanel(
@@ -62,15 +61,8 @@ pub fn LeaderboardPanel(
 fn LeaderboardContent(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: SpaceViewerTranslate = use_translate();
 
-    let ranking_key = space_ranking_key(&space_id());
-    let ranking_loader = use_query(&ranking_key, move || async move {
-        get_ranking_handler(space_id(), None).await
-    })?;
-
-    let my_score_key = space_my_score_key(&space_id());
-    let my_score_loader = use_query(&my_score_key, move || async move {
-        get_my_score_handler(space_id()).await
-    })?;
+    let ranking_loader = use_ranking();
+    let my_score_loader = use_my_score();
 
     let ranking = ranking_loader();
     let my_score = my_score_loader();
@@ -98,7 +90,7 @@ fn LeaderboardContent(space_id: ReadSignal<SpacePartition>) -> Element {
                 }
                 div {
                     div { class: "leaderboard-my-rank__score", "{my_score.total_score}" }
-                    div { class: "leaderboard-my-rank__score-label", "{tr.total_score}" }
+                    div { class: "leaderboard-my-rank__score-label", "{tr.total_xp}" }
                 }
             }
 
@@ -197,7 +189,7 @@ fn PodiumEntry(
                 div { class: "leaderboard-podium__medal", "{place}" }
             }
             span { class: "leaderboard-podium__name", "{entry.name}" }
-            span { class: "leaderboard-podium__score", "{entry.total_score}" }
+            span { class: "leaderboard-podium__score", "{entry.total_score} XP" }
         }
     }
 }
@@ -232,7 +224,7 @@ fn LeaderboardEntry(
             if is_me {
                 span { class: "leaderboard-entry__me-badge", "{you_label}" }
             }
-            span { class: "leaderboard-entry__score", "{entry.total_score}" }
+            span { class: "leaderboard-entry__score", "{entry.total_score} XP" }
         }
     }
 }

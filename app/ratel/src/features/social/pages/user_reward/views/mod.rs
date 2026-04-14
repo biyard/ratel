@@ -1,13 +1,18 @@
-use super::components::{exchange_preview_card, points_summary_card, transaction_list};
-use super::controllers::{get_user_rewards_handler, list_user_transactions_handler};
+use super::components::{
+    exchange_preview_card, points_summary_card, transaction_list, PastMonthsList,
+};
+use super::controllers::{
+    get_monthly_summaries_handler, get_user_rewards_handler, list_user_transactions_handler,
+};
 use super::dto::RewardsResponse;
 use super::*;
-use crate::common::services::PointTransactionResponse;
+use crate::common::services::{MonthlySummaryItem, PointTransactionResponse};
 use dioxus::prelude::*;
 
 #[component]
 pub fn Home(username: ReadSignal<String>) -> Element {
     let tr: RewardsPageTranslate = use_translate();
+    let current_month = utils::time::current_month();
 
     let rewards_resource = use_server_future(use_reactive((&username,), |(name,)| async move {
         get_user_rewards_handler(name(), None).await
@@ -15,7 +20,12 @@ pub fn Home(username: ReadSignal<String>) -> Element {
 
     let transactions_resource =
         use_server_future(use_reactive((&username,), |(name,)| async move {
-            list_user_transactions_handler(name(), None, None).await
+            list_user_transactions_handler(name(), Some(utils::time::current_month()), None).await
+        }))?;
+
+    let summaries_resource =
+        use_server_future(use_reactive((&username,), |(name,)| async move {
+            get_monthly_summaries_handler(name()).await
         }))?;
 
     let rewards_binding = rewards_resource.read();
@@ -32,6 +42,17 @@ pub fn Home(username: ReadSignal<String>) -> Element {
         .cloned()
         .unwrap_or_default();
 
+    let summaries_binding = summaries_resource.read();
+    let summaries_failed = summaries_binding
+        .as_ref()
+        .is_some_and(|r| r.is_err());
+    let past_months: Vec<MonthlySummaryItem> = summaries_binding
+        .as_ref()
+        .and_then(|r| r.as_ref().ok())
+        .map(|r| r.months.clone())
+        .unwrap_or_default();
+    let past_months = past_months.clone();
+
     let mut transactions = use_signal(Vec::<PointTransactionResponse>::new);
     let mut next_bookmark = use_signal(|| Option::<String>::None);
     let mut transactions_loaded = use_signal(|| false);
@@ -41,7 +62,14 @@ pub fn Home(username: ReadSignal<String>) -> Element {
         if *transactions_loaded.read() {
             return;
         }
-        transactions.set(initial_transactions.items.clone());
+        let current = current_month.clone();
+        let filtered: Vec<_> = initial_transactions
+            .items
+            .iter()
+            .filter(|tx| tx.month == current)
+            .cloned()
+            .collect();
+        transactions.set(filtered);
         next_bookmark.set(initial_transactions.bookmark.clone());
         transactions_loaded.set(true);
     });
@@ -84,24 +112,17 @@ pub fn Home(username: ReadSignal<String>) -> Element {
     };
 
     rsx! {
-        div { class: "w-full max-w-desktop mx-auto px-4 py-6",
+        div { class: "py-6 px-4 mx-auto w-full max-w-desktop",
             {points_summary_card(&tr, &rewards, estimated_tokens)}
 
             {exchange_preview_card(&tr, &rewards, estimated_tokens)}
 
             div { class: "mt-6",
-                {
-                    transaction_list(
-                        &tr,
-                        transactions.read().as_slice(),
-                        false,
-                        false,
-                    )
-                }
+                {transaction_list(&tr, transactions.read().as_slice(), false, false)}
 
                 if has_next {
                     button {
-                        class: "mt-4 py-3 text-center text-sm font-medium text-text-primary hover:text-white transition-colors disabled:opacity-50",
+                        class: "py-3 mt-4 text-sm font-medium text-center transition-colors hover:text-white disabled:opacity-50 text-text-primary",
                         onclick: on_load_more,
                         disabled: is_fetching_next_value,
                         if is_fetching_next_value {
@@ -109,6 +130,28 @@ pub fn Home(username: ReadSignal<String>) -> Element {
                         } else {
                             "{tr.load_more}"
                         }
+                    }
+                }
+            }
+
+            div { class: "mt-8",
+                h3 { class: "mb-3 text-base font-semibold text-text-primary", "{tr.past_months}" }
+                if summaries_failed {
+                    div { class: "py-8 text-center",
+                        p { class: "text-sm italic text-foreground-muted",
+                            "{tr.past_months_preparing}"
+                        }
+                    }
+                } else if past_months.is_empty() {
+                    div { class: "py-8 text-center",
+                        p { class: "text-sm italic text-foreground-muted", "{tr.past_months_empty}" }
+                    }
+                } else {
+                    PastMonthsList {
+                        username,
+                        months: past_months.clone(),
+                        contract_address: rewards.contract_address.clone(),
+                        chain_id: rewards.chain_id,
                     }
                 }
             }
@@ -261,5 +304,20 @@ translate! {
     yours: {
         en: "Yours",
         ko: "내 지분",
+    },
+
+    past_months: {
+        en: "Reward History",
+        ko: "리워드 히스토리",
+    },
+
+    past_months_preparing: {
+        en: "Token claim is being prepared",
+        ko: "토큰 클레임 준비 중입니다",
+    },
+
+    past_months_empty: {
+        en: "No past month rewards yet",
+        ko: "아직 지난 달 리워드가 없습니다",
     },
 }

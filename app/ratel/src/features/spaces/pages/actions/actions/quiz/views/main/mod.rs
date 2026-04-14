@@ -22,11 +22,7 @@ pub fn QuizActionPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) ->
     // Lightweight standalone fetch to read the quiz's started_at — used
     // only to decide which view to render. The creator/participant pages
     // each set up their own full Context::init independently.
-    let key = crate::features::spaces::space_common::types::space_page_actions_quiz_key(
-        &space_id_sig(),
-        &quiz_id_sig(),
-    );
-    let quiz_loader = use_query(&key, move || get_quiz(space_id_sig(), quiz_id_sig()))?;
+    let quiz_loader = use_loader(move || get_quiz(space_id_sig(), quiz_id_sig()))?;
     let space = crate::features::spaces::space_common::hooks::use_space()();
     let locked = crate::features::spaces::pages::actions::is_action_locked(
         space.status,

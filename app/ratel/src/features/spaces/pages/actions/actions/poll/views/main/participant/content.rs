@@ -5,9 +5,7 @@ use crate::features::spaces::pages::actions::actions::poll::controllers::*;
 use crate::features::spaces::pages::actions::actions::poll::*;
 use crate::features::spaces::pages::actions::components::FullActionLayover;
 use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
-use crate::features::spaces::space_common::types::{
-    space_my_score_key, space_page_actions_poll_key, space_ranking_key,
-};
+use crate::features::spaces::space_common::providers::use_space_context;
 use std::collections::HashMap;
 
 #[component]
@@ -17,13 +15,12 @@ pub fn PollContent(
     can_respond: bool,
 ) -> Element {
     let tr: participant::i18n::PollParticipantTranslate = use_translate();
-    let mut query = use_query_store();
+    let mut space_ctx = use_space_context();
     let mut popup = use_popup();
     let mut toast = use_toast();
     let mut question_index = use_signal(|| 0usize);
-    let key = space_page_actions_poll_key(&space_id(), &poll_id());
 
-    let poll_loader = use_query(&key, { move || get_poll(space_id(), poll_id()) })?;
+    let mut poll_loader = use_loader(move || get_poll(space_id(), poll_id()))?;
 
     let poll = poll_loader.read().clone();
     let space = use_space().read().clone();
@@ -97,10 +94,9 @@ pub fn PollContent(
 
                     match respond_poll(space_id(), poll_id(), req).await {
                         Ok(_) => {
-                            let keys = space_page_actions_poll_key(&space_id(), &poll_id());
-                            query.invalidate(&keys);
-                            query.invalidate(&space_ranking_key(&space_id()));
-                            query.invalidate(&space_my_score_key(&space_id()));
+                            poll_loader.restart();
+                            space_ctx.ranking.restart();
+                            space_ctx.my_score.restart();
                             toast.info(tr.submit_success);
                             nav.replace(crate::Route::SpaceActionsPage {
                                 space_id: space_id(),

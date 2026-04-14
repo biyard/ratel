@@ -164,13 +164,8 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
 
 #[component]
 fn CandidateView(space_id: ReadSignal<SpacePartition>) -> Element {
-    use crate::features::spaces::space_common::types::space_page_actions_key;
-
-    let key = space_page_actions_key(&space_id());
-    let actions = use_query(&key, move || async move {
-        crate::features::spaces::pages::actions::controllers::list_actions(space_id()).await
-    })?;
-    let actions = actions();
+    let actions_loader = crate::features::spaces::space_common::hooks::use_actions();
+    let actions = actions_loader();
 
     let prereqs: Vec<_> = actions.iter().filter(|a| a.prerequisite).cloned().collect();
     let all_done = prereqs.is_empty() || prereqs.iter().all(|a| a.user_participated);
