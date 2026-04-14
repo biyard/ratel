@@ -19,7 +19,7 @@ pub fn SpaceAppGrid(children: Element) -> Element {
 #[component]
 pub fn SpaceAppsPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let mut ctx = use_space_apps_context();
-    let role = ctx.role();
+    let role = ctx.space_ctx.role();
 
     let tr: AppMainTranslate = use_translate();
     let navigator = use_navigator();
@@ -101,7 +101,10 @@ pub fn SpaceAppsPage(space_id: ReadSignal<SpacePartition>) -> Element {
                                             }
                                         }
                                     });
-                                let setting_testid = format!("setting-{}-app", format!("{app_type:?}").to_lowercase());
+                                let setting_testid = format!(
+                                    "setting-{}-app",
+                                    format!("{app_type:?}").to_lowercase(),
+                                );
                                 rsx! {
                                     AppCard { app_type, header_action,
                                         Button {
@@ -109,10 +112,7 @@ pub fn SpaceAppsPage(space_id: ReadSignal<SpacePartition>) -> Element {
                                             style: ButtonStyle::Primary,
                                             shape: ButtonShape::Square,
                                             disabled: is_progress,
-                                            "data-testid": format!(
-                                                "configure-app-{}",
-                                                app_type.to_string().to_lowercase()
-                                            ),
+                                            "data-testid": format!("configure-app-{}", app_type.to_string().to_lowercase()),
                                             onclick: move |_| {
                                                 let settings_path = app_type.settings_path(space_id());
                                                 navigator.push(settings_path);
@@ -140,7 +140,10 @@ pub fn SpaceAppsPage(space_id: ReadSignal<SpacePartition>) -> Element {
                                         None => false,
                                     };
 
-                                    let install_testid = format!("install-{}-app", format!("{app_type:?}").to_lowercase());
+                                    let install_testid = format!(
+                                        "install-{}-app",
+                                        format!("{app_type:?}").to_lowercase(),
+                                    );
                                     rsx! {
                                         AppCard { app_type,
                                             Button {
@@ -148,10 +151,7 @@ pub fn SpaceAppsPage(space_id: ReadSignal<SpacePartition>) -> Element {
                                                 style: ButtonStyle::Primary,
                                                 shape: ButtonShape::Square,
                                                 disabled: in_progress().is_some(),
-                                                "data-testid": format!(
-                                                    "install-app-{}",
-                                                    app_type.to_string().to_lowercase()
-                                                ),
+                                                "data-testid": format!("install-app-{}", app_type.to_string().to_lowercase()),
                                                 onclick: move |_| handle_toggle_app(app_type, false),
                                                 if is_progress {
                                                     {tr.installing}
