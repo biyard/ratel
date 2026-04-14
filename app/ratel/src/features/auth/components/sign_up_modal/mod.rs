@@ -12,12 +12,16 @@ use crate::features::auth::*;
 #[component]
 pub fn SignupModal(
     #[props(optional)] initial_email: Option<String>,
+    #[props(optional)] initial_oauth_access_token: Option<String>,
     #[props(optional)] initial_wallet_address: Option<String>,
     #[props(optional)] on_success: Option<Callback<()>>,
 ) -> Element {
     let tr: SignupModalTranslate = use_translate();
     let is_wallet_signup = initial_wallet_address.is_some();
+    let is_oauth_signup = initial_oauth_access_token.is_some();
     let wallet_address = use_signal(|| initial_wallet_address.clone().unwrap_or_default());
+    let oauth_access_token =
+        use_signal(|| initial_oauth_access_token.clone().unwrap_or_default());
     let mut email = use_signal(|| initial_email.clone().unwrap_or_default());
     let mut password = use_signal(|| String::new());
     let mut confirm_password = use_signal(|| String::new());
@@ -30,7 +34,8 @@ pub fn SignupModal(
     let mut agreed_tos = use_signal(|| false);
     let mut agreed_news = use_signal(|| false);
     let mut sent_code = use_signal(|| false);
-    let mut is_valid_email = use_signal(|| false);
+    // OAuth-verified emails are trusted from the provider, so skip email verification entirely.
+    let mut is_valid_email = use_signal(|| is_oauth_signup);
     let mut loading = use_signal(|| false);
     let mut email_warning = use_signal(|| String::new());
     let mut password_warning = use_signal(|| String::new());
@@ -76,20 +81,20 @@ pub fn SignupModal(
         || !is_valid_username(&username())
         || display_name().trim().is_empty()
         || (!is_wallet_signup && !is_valid_email())
-        || (!is_wallet_signup && password() != confirm_password());
+        || (!is_wallet_signup && !is_oauth_signup && password() != confirm_password());
 
     rsx! {
         div {
             class: "overflow-y-scroll w-full max-h-[80vh] momentum scrollbar-hide",
             id: "signup_popup",
-            div { class: "flex flex-col gap-4 w-full max-w-100 mx-auto",
+            div { class: "flex flex-col gap-4 mx-auto w-full max-w-100",
 
                 // Logo
                 div { class: "flex justify-center",
                     img {
                         src: RATEL_LOGO,
                         alt: "Ratel",
-                        class: "h-10 object-contain",
+                        class: "object-contain h-10",
                     }
                 }
 
@@ -101,7 +106,7 @@ pub fn SignupModal(
                 if is_wallet_signup {
                     div { class: "flex flex-col w-full gap-1.25",
                         label { class: "font-bold text-c-cg-30 text-base/7", {tr.wallet_address} }
-                        div { class: "flex px-5 w-full h-11 items-center text-base font-medium border bg-input-box-bg border-input-box-border rounded-lg text-text-primary opacity-70",
+                        div { class: "flex items-center px-5 w-full h-11 text-base font-medium rounded-lg border opacity-70 bg-input-box-bg border-input-box-border text-text-primary",
                             {
                                 format!(
                                     "{}...{}",
@@ -116,10 +121,10 @@ pub fn SignupModal(
                 // Email + Verification Code (hidden for wallet signup)
                 div { class: if is_wallet_signup { "hidden" } else { "flex flex-col w-full gap-1.25" },
                     label { class: "font-bold text-c-cg-30 text-base/7", {tr.email} }
-                    div { class: "flex flex-row gap-2.5 w-full items-center",
+                    div { class: "flex flex-row gap-2.5 items-center w-full",
                         input {
                             autocomplete: "email",
-                            class: "flex px-5 w-full min-w-0 h-11 text-base font-medium border outline-none bg-input-box-bg border-input-box-border rounded-lg placeholder-gray-500 text-text-primary disabled:opacity-50 disabled:cursor-not-allowed",
+                            class: "flex px-5 w-full min-w-0 h-11 text-base font-medium placeholder-gray-500 rounded-lg border outline-none disabled:opacity-50 disabled:cursor-not-allowed bg-input-box-bg border-input-box-border text-text-primary",
                             disabled: loading() || is_valid_email(),
                             name: "email",
                             placeholder: "{tr.email_placeholder}",
@@ -137,7 +142,7 @@ pub fn SignupModal(
                         }
                         if !is_valid_email() {
                             button {
-                                class: "inline-flex gap-2.5 justify-center items-center py-1.5 px-4 h-auto text-xs font-bold whitespace-nowrap rounded-full transition-all outline-none bg-btn-secondary-bg text-btn-secondary-text border-btn-secondary-outline hover:bg-btn-secondary-hover-bg hover:text-btn-secondary-hover-text disabled:opacity-50 disabled:pointer-events-none",
+                                class: "inline-flex gap-2.5 justify-center items-center py-1.5 px-4 h-auto text-xs font-bold whitespace-nowrap rounded-full transition-all outline-none disabled:opacity-50 disabled:pointer-events-none bg-btn-secondary-bg text-btn-secondary-text border-btn-secondary-outline hover:bg-btn-secondary-hover-bg hover:text-btn-secondary-hover-text",
                                 disabled: loading(),
                                 onclick: move |_| async move {
                                     if !is_valid_email_format(&email()) {
@@ -174,9 +179,9 @@ pub fn SignupModal(
                     // Verification code row
                     div {
                         aria_hidden: if !sent_code() || is_valid_email() { "true" } else { "false" },
-                        class: "flex flex-row gap-2.5 w-full items-center aria-hidden:hidden",
+                        class: "flex flex-row gap-2.5 items-center w-full aria-hidden:hidden",
                         input {
-                            class: "flex px-5 w-full min-w-0 h-11 text-base font-medium border outline-none bg-input-box-bg border-input-box-border rounded-lg placeholder-gray-500 text-text-primary disabled:opacity-50 disabled:cursor-not-allowed",
+                            class: "flex px-5 w-full min-w-0 h-11 text-base font-medium placeholder-gray-500 rounded-lg border outline-none disabled:opacity-50 disabled:cursor-not-allowed bg-input-box-bg border-input-box-border text-text-primary",
                             disabled: loading(),
                             name: "otp",
                             placeholder: "{tr.code_placeholder}",
@@ -187,7 +192,7 @@ pub fn SignupModal(
                             },
                         }
                         button {
-                            class: "inline-flex gap-2.5 justify-center items-center py-1.5 px-4 h-auto text-xs font-bold whitespace-nowrap rounded-full transition-all outline-none bg-btn-secondary-bg text-btn-secondary-text border-btn-secondary-outline hover:bg-btn-secondary-hover-bg hover:text-btn-secondary-hover-text disabled:opacity-50 disabled:pointer-events-none",
+                            class: "inline-flex gap-2.5 justify-center items-center py-1.5 px-4 h-auto text-xs font-bold whitespace-nowrap rounded-full transition-all outline-none disabled:opacity-50 disabled:pointer-events-none bg-btn-secondary-bg text-btn-secondary-text border-btn-secondary-outline hover:bg-btn-secondary-hover-bg hover:text-btn-secondary-hover-text",
                             disabled: loading(),
                             onclick: move |_| async move {
                                 loading.set(true);
@@ -215,11 +220,11 @@ pub fn SignupModal(
                     }
                 }
 
-                // Password (hidden for wallet signup)
-                div { class: if is_wallet_signup { "hidden" } else { "flex flex-col w-full gap-1.25" },
+                // Password (hidden for wallet or OAuth signup)
+                div { class: if is_wallet_signup || is_oauth_signup { "hidden" } else { "flex flex-col w-full gap-1.25" },
                     label { class: "font-bold text-c-cg-30 text-base/7", {tr.password} }
                     input {
-                        class: "flex px-5 w-full min-w-0 h-11 text-base font-medium border outline-none bg-input-box-bg border-input-box-border rounded-lg placeholder-gray-500 text-text-primary disabled:opacity-50 disabled:cursor-not-allowed",
+                        class: "flex px-5 w-full min-w-0 h-11 text-base font-medium placeholder-gray-500 rounded-lg border outline-none disabled:opacity-50 disabled:cursor-not-allowed bg-input-box-bg border-input-box-border text-text-primary",
                         disabled: loading(),
                         placeholder: "{tr.password_placeholder}",
                         r#type: "password",
@@ -239,11 +244,11 @@ pub fn SignupModal(
                     }
                 }
 
-                // Confirm Password (hidden for wallet signup)
-                div { class: if is_wallet_signup { "hidden" } else { "flex flex-col w-full gap-1.25" },
+                // Confirm Password (hidden for wallet or OAuth signup)
+                div { class: if is_wallet_signup || is_oauth_signup { "hidden" } else { "flex flex-col w-full gap-1.25" },
                     label { class: "font-bold text-c-cg-30 text-base/7", {tr.confirm_password} }
                     input {
-                        class: "flex px-5 w-full min-w-0 h-11 text-base font-medium border outline-none bg-input-box-bg border-input-box-border rounded-lg placeholder-gray-500 text-text-primary disabled:opacity-50 disabled:cursor-not-allowed",
+                        class: "flex px-5 w-full min-w-0 h-11 text-base font-medium placeholder-gray-500 rounded-lg border outline-none disabled:opacity-50 disabled:cursor-not-allowed bg-input-box-bg border-input-box-border text-text-primary",
                         disabled: loading(),
                         placeholder: "{tr.confirm_password_placeholder}",
                         r#type: "password",
@@ -267,7 +272,7 @@ pub fn SignupModal(
                 div { class: "flex flex-col w-full gap-1.25",
                     label { class: "font-bold text-c-cg-30 text-base/7", {tr.display_name} }
                     input {
-                        class: "flex px-5 w-full min-w-0 h-11 text-base font-medium border outline-none bg-input-box-bg border-input-box-border rounded-lg placeholder-gray-500 text-text-primary disabled:opacity-50 disabled:cursor-not-allowed",
+                        class: "flex px-5 w-full min-w-0 h-11 text-base font-medium placeholder-gray-500 rounded-lg border outline-none disabled:opacity-50 disabled:cursor-not-allowed bg-input-box-bg border-input-box-border text-text-primary",
                         disabled: loading(),
                         placeholder: "{tr.display_name_placeholder}",
                         r#type: "text",
@@ -282,7 +287,7 @@ pub fn SignupModal(
                 div { class: "flex flex-col w-full gap-1.25",
                     label { class: "font-bold text-c-cg-30 text-base/7", {tr.user_name} }
                     input {
-                        class: "flex px-5 w-full min-w-0 h-11 text-base font-medium border outline-none bg-input-box-bg border-input-box-border rounded-lg placeholder-gray-500 text-text-primary disabled:opacity-50 disabled:cursor-not-allowed",
+                        class: "flex px-5 w-full min-w-0 h-11 text-base font-medium placeholder-gray-500 rounded-lg border outline-none disabled:opacity-50 disabled:cursor-not-allowed bg-input-box-bg border-input-box-border text-text-primary",
                         disabled: loading(),
                         placeholder: "{tr.username_placeholder}",
                         r#type: "text",
@@ -342,7 +347,7 @@ pub fn SignupModal(
 
                 // Submit Button
                 button {
-                    class: "flex justify-center items-center py-3 px-5 w-full font-bold text-submit-button-text rounded-lg transition-all bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:pointer-events-none",
+                    class: "flex justify-center items-center py-3 px-5 w-full font-bold rounded-lg transition-all disabled:opacity-50 disabled:pointer-events-none text-submit-button-text bg-primary hover:bg-primary/90",
                     disabled: submit_disabled || loading(),
                     onclick: move |_| async move {
                         terms_error.set(String::new());
@@ -409,8 +414,7 @@ pub fn SignupModal(
                                         popup.close();
                                     }
                                     Err(Error::UsernameAlreadyExists) => {
-                                        username_warning
-                                            .set(tr.username_already_exists.to_string());
+                                        username_warning.set(tr.username_already_exists.to_string());
                                     }
                                     Err(e) => {
                                         error_message.set(Some(format!("{e}")));
@@ -422,12 +426,20 @@ pub fn SignupModal(
                                 loading.set(false);
                             }
                         } else {
-                            let req = SignupRequest {
-                                signup_type: SignupType::Email {
+                            let signup_type = if is_oauth_signup {
+                                SignupType::OAuth {
+                                    provider: OauthProvider::Google,
+                                    access_token: oauth_access_token.read().clone(),
+                                }
+                            } else {
+                                SignupType::Email {
                                     email: email.read().clone(),
                                     password: password.read().clone(),
                                     code: auth_code.read().clone(),
-                                },
+                                }
+                            };
+                            let req = SignupRequest {
+                                signup_type,
                                 display_name: display_name.read().clone(),
                                 username: username.read().clone(),
                                 profile_url: profile_url.read().clone(),
@@ -471,7 +483,7 @@ pub fn SignupModal(
                 // Footer
                 div { class: "flex flex-row gap-2.5 justify-center items-center w-full",
                     button {
-                        class: "font-medium cursor-pointer text-neutral-400 text-xs/3.5 bg-transparent border-none p-0",
+                        class: "p-0 font-medium bg-transparent border-none cursor-pointer text-neutral-400 text-xs/3.5",
                         onclick: move |_| {
                             popup.close();
                             navigator.push("/privacy");
@@ -479,7 +491,7 @@ pub fn SignupModal(
                         {tr.privacy_policy}
                     }
                     button {
-                        class: "font-medium cursor-pointer text-neutral-400 text-xs/3.5 bg-transparent border-none p-0",
+                        class: "p-0 font-medium bg-transparent border-none cursor-pointer text-neutral-400 text-xs/3.5",
                         onclick: move |_| {
                             popup.close();
                             navigator.push("/terms");
