@@ -1,5 +1,4 @@
 #![allow(unused)]
-pub mod components;
 pub mod config;
 pub mod controllers;
 pub mod hooks;
@@ -22,12 +21,3 @@ use dioxus::prelude::*;
 
 type Result<T> = crate::common::Result<T>;
 type DioxusResult<T> = dioxus::prelude::Result<T>;
-
-use serde::{Deserialize, Serialize};
-
-#[derive(Clone, Copy, PartialEq, Default)]
-pub enum HomeViewMode {
-    #[default]
-    List,
-    Card,
-}

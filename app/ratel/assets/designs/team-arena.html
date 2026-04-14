@@ -687,6 +687,106 @@
     .hud-btn{width:32px;height:32px}
     .hud-stat{flex:1 1 100%}
   }
+
+  /* ═══════════ Light theme override ═══════════ */
+  [data-theme="light"] {
+    --bg-void: #f4f3ef;
+    --bg-glass: rgba(255, 255, 255, 0.78);
+    --bg-glass-hover: rgba(255, 255, 255, 0.92);
+    --border-subtle: rgba(0, 0, 0, 0.08);
+    --text-primary: #1a1a24;
+    --text-muted: #5f6075;
+    --text-dim: #9d9db3;
+    --accent-gold: #c68700;
+    --accent-teal: #12a58a;
+    --accent-poll: #4f46e5;
+    --accent-quiz: #7e22ce;
+    --accent-discuss: #0891b2;
+  }
+  [data-theme="light"] body { background: var(--bg-void); color: var(--text-primary); }
+  [data-theme="light"] .star { background: rgba(20, 20, 40, 0.45); }
+  [data-theme="light"] .shooting {
+    background: linear-gradient(90deg, transparent, rgba(198, 135, 0, 0.75), rgba(198, 135, 0, 0));
+  }
+  [data-theme="light"] .bg-grid__plane {
+    background:
+      linear-gradient(rgba(198, 135, 0, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(198, 135, 0, 0.06) 1px, transparent 1px);
+  }
+  [data-theme="light"] .bg-orb { opacity: 0.12; mix-blend-mode: multiply; }
+  [data-theme="light"] .bg-scanline {
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.015) 2px, rgba(0,0,0,0.015) 4px);
+  }
+  [data-theme="light"] .arena::before,
+  [data-theme="light"] .team-arena::before {
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 50%, rgba(252, 179, 0, 0.09) 0%, transparent 60%),
+      radial-gradient(ellipse 120% 100% at 50% 120%, rgba(110, 237, 216, 0.06) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, var(--bg-void) 0%, var(--bg-void) 100%);
+  }
+  [data-theme="light"] .post-card,
+  [data-theme="light"] .action-card,
+  [data-theme="light"] .tier-card,
+  [data-theme="light"] .draft-card,
+  [data-theme="light"] .member-card,
+  [data-theme="light"] .setting-card,
+  [data-theme="light"] .reward-card,
+  [data-theme="light"] .hud-stat,
+  [data-theme="light"] .team-intro__chip,
+  [data-theme="light"] .enterprise-card,
+  [data-theme="light"] .page-header {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 4px 20px rgba(0,0,0,0.06);
+  }
+  [data-theme="light"] .post-card.active {
+    box-shadow: 0 12px 60px rgba(0, 0, 0, 0.15);
+    border-color: rgba(252, 179, 0, 0.35);
+  }
+  [data-theme="light"] .post-card__thumb,
+  [data-theme="light"] .arena-topbar__logo {
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+  [data-theme="light"] .arena-topbar__title,
+  [data-theme="light"] .modal__title,
+  [data-theme="light"] .hero__title-ko {
+    background: linear-gradient(135deg, #c68700, #8d5f00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  [data-theme="light"] .arena-topbar__status { background: rgba(18, 165, 138, 0.10); border-color: rgba(18, 165, 138, 0.25); color: #0d7f6b; }
+  [data-theme="light"] .arena-topbar__status::before { background: #0d7f6b; box-shadow: 0 0 6px #0d7f6b; }
+
+  /* Theme toggle floating button */
+  .theme-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 200;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-glass);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .theme-toggle:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+  }
+  .theme-toggle svg { width: 18px; height: 18px; }
+  .theme-toggle .icon-sun { display: none; }
+  .theme-toggle .icon-moon { display: block; }
+  [data-theme="light"] .theme-toggle .icon-sun { display: block; }
+  [data-theme="light"] .theme-toggle .icon-moon { display: none; }
+
 </style>
 </head>
 <body>
@@ -1219,5 +1319,21 @@
     });
   });
 </script>
+<button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+</button>
+<script>
+(function(){
+  var btn = document.getElementById('theme-toggle');
+  if(!btn) return;
+  btn.addEventListener('click', function(){
+    var root = document.documentElement;
+    var cur = root.getAttribute('data-theme') || 'dark';
+    root.setAttribute('data-theme', cur === 'light' ? 'dark' : 'light');
+  });
+})();
+</script>
+
 </body>
 </html>
