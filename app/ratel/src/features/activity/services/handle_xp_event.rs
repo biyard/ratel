@@ -82,7 +82,7 @@ pub async fn handle_quiz_xp(
         quiz_id.clone(),
         crate::features::spaces::pages::actions::types::SpaceActionType::Quiz,
         crate::features::activity::types::SpaceActivityData::Quiz {
-            quiz_id,
+            quiz_id: attempt.sk.clone().into(),
             passed,
             correct_count: attempt.score as u32,
             pass_threshold: pass_threshold as u32,
@@ -114,8 +114,7 @@ pub async fn handle_discussion_xp(
     };
     let space_partition = crate::common::types::SpacePartition(space_id_str);
 
-    let author =
-        crate::features::activity::types::AuthorPartition::from(comment.author_pk.clone());
+    let author = crate::features::activity::types::AuthorPartition::from(comment.author_pk.clone());
 
     // pk is the SpacePost partition (discussion reference), use as action_id
     let discussion_id = comment.pk.to_string();
@@ -129,7 +128,8 @@ pub async fn handle_discussion_xp(
         discussion_id.clone(),
         crate::features::spaces::pages::actions::types::SpaceActionType::TopicDiscussion,
         crate::features::activity::types::SpaceActivityData::Discussion {
-            discussion_id,
+            discussion_id: comment.pk.clone().into(),
+            comment_id: comment.sk.clone().into(),
             is_first_contribution,
         },
         comment.author_display_name,

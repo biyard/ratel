@@ -1,4 +1,5 @@
 use crate::features::spaces::pages::apps::apps::panels::*;
+use dioxus::fullstack::Loader;
 use std::collections::HashSet;
 
 translate! {
@@ -300,11 +301,10 @@ pub fn AttributeGroups(
     space_id: ReadSignal<SpacePartition>,
     panels: Vec<SpacePanelQuotaResponse>,
     current_quota: i64,
-    panels_query_key: Vec<String>,
+    panels_loader: Loader<Vec<SpacePanelQuotaResponse>>,
 ) -> Element {
     let tr: AttributeGroupsTranslate = use_translate();
     let mut toast = use_toast();
-    let mut query = use_query_store();
     let has_university = is_selected_option(PanelOption::University, &panels);
     let has_age = is_selected_option(PanelOption::Age, &panels);
     let has_gender = is_selected_option(PanelOption::Gender, &panels);
@@ -323,9 +323,8 @@ pub fn AttributeGroups(
     let make_toggle = {
         move |option: PanelOption| {
             let keys = managed_keys.clone();
-            let panels_query_key = panels_query_key.clone();
             let mut toast = toast;
-            let mut query = query;
+            let mut panels_loader = panels_loader;
 
             let (next_uni, next_age, next_gender) = match option {
                 PanelOption::University => (!has_university, has_age, has_gender),
@@ -346,7 +345,6 @@ pub fn AttributeGroups(
 
             move |_| {
                 let keys = keys.clone();
-                let panels_query_key = panels_query_key.clone();
                 spawn(async move {
                     let mut groups = build_collective_groups(
                         next_uni,
@@ -370,7 +368,7 @@ pub fn AttributeGroups(
                     }
 
                     match rebuild_panels(space_id(), keys, groups).await {
-                        Ok(_) => query.invalidate(&panels_query_key),
+                        Ok(_) => panels_loader.restart(),
                         Err(err) => {
                             error!("Failed to toggle panel: {:?}", err);
                             toast.error(err);

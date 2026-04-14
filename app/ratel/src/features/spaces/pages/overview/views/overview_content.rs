@@ -6,7 +6,8 @@ use crate::common::icons::{edit::Edit1, other_devices::Save};
 use crate::common::lucide_dioxus::Users;
 use crate::features::posts::controllers::like_post::like_post_handler;
 use crate::features::spaces::pages::apps::apps::file::components::{FileCard, FileUploadZone};
-use crate::features::spaces::space_common::hooks::use_space_query;
+use crate::features::spaces::space_common::hooks::use_space;
+use crate::features::spaces::space_common::providers::use_space_context;
 use common::utils::time::time_ago;
 
 const DEFAULT_PROFILE_IMAGE: &str = "https://metadata.ratel.foundation/ratel/default-profile.png";
@@ -17,8 +18,9 @@ pub fn OverviewContent(
     #[props(default = false)] editable: bool,
 ) -> Element {
     let tr: OverviewTranslate = use_translate();
-    let mut space_loader = use_space_query(&space_id())?;
-    let space = space_loader.read().clone();
+    let mut space_ctx = use_space_context();
+    let space_loader = use_space();
+    let space = space_loader();
 
     let mut content = use_signal(|| space.content.clone());
     let mut is_editing = use_signal(|| false);
@@ -187,7 +189,7 @@ pub fn OverviewContent(
                                 let post_id = space.post_id.clone();
                                 spawn(async move {
                                     let _ = like_post_handler(post_id, !space.liked).await;
-                                    space_loader.restart();
+                                    space_ctx.space.restart();
                                     is_like_processing.set(false);
                                 });
                             },

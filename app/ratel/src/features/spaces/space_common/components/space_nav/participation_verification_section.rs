@@ -12,7 +12,7 @@ pub fn ParticipationVerificationSection(
         Vec<crate::features::spaces::controllers::panel_requirements::PanelRequirementStatus>,
     >,
 ) -> Element {
-    let mut query = use_query_store();
+    let mut space_ctx = crate::features::spaces::space_common::providers::use_space_context();
     let tr: ParticipationVerificationSectionTranslate = use_translate();
     let mut error_message = use_signal(|| Option::<String>::None);
     let mut toast = use_toast();
@@ -123,12 +123,7 @@ pub fn ParticipationVerificationSection(
                                     .await
                                 {
                                     Ok(_) => {
-                                        let panel_requirements_key = vec![
-                                            "Space".to_string(),
-                                            space_id.to_string(),
-                                            "PanelRequirements".to_string(),
-                                        ];
-                                        query.invalidate(&panel_requirements_key);
+                                        space_ctx.panel_requirements.restart();
 
                                         match crate::features::spaces::controllers::panel_requirements::get_panel_requirements(
                                                 space_id.clone(),
