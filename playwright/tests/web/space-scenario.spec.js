@@ -177,8 +177,9 @@ async function signUpAndParticipate(browser, user, spaceUrl) {
     // Submit the poll using testId (avoids ambiguity with confirm dialog's Submit text)
     await clickNoNav(page, { testId: "poll-submit" });
 
-    // Confirm dialog appears — click confirm
-    await click(page, { testId: "poll-confirm-submit" });
+    // Confirm dialog appears — click confirm. Poll submit now closes the
+    // overlay in place (no navigation), so we must not wait for a load event.
+    await clickNoNav(page, { testId: "poll-confirm-submit" });
 
     // Wait for overlay to close (server call completes + overlay signal cleared)
     await expect(page.getByTestId("poll-arena-overlay")).toBeHidden({
