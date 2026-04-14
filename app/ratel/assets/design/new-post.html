@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — New Post</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+      --bg-input:rgba(255,255,255,0.025);--bg-input-focus:rgba(255,255,255,0.04);
+      --border-subtle:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);
+      --text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+      --accent-gold:#fcb300;--accent-teal:#6eedd8;--accent-coral:#ef4444;
+      --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
+    }
+    html,body{min-height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body)}
+    body{overflow-x:hidden}
+
+    .arena{position:relative;min-height:100vh;display:flex;flex-direction:column}
+    .arena::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 30%,rgba(252,179,0,0.04) 0%,transparent 60%),radial-gradient(ellipse 120% 100% at 50% 120%,rgba(110,237,216,0.03) 0%,transparent 50%);z-index:0;pointer-events:none}
+
+    /* ─── Top bar ────────────────────────────────────────── */
+    .arena-topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:18px 28px;background:rgba(6,6,14,0.80);backdrop-filter:blur(20px);border-bottom:1px solid var(--border-subtle)}
+    .arena-topbar__left{display:flex;align-items:center;gap:14px}
+    .back-btn{width:38px;height:38px;border-radius:10px;background:var(--bg-glass);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s ease;padding:0}
+    .back-btn:hover{border-color:rgba(252,179,0,0.25);background:var(--bg-glass-hover)}
+    .back-btn svg{width:18px;height:18px;color:var(--text-muted);transition:color 0.2s}
+    .back-btn:hover svg{color:var(--accent-gold)}
+
+    .topbar-title{display:flex;flex-direction:column;gap:2px}
+    .topbar-title__eyebrow{font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-dim)}
+    .topbar-title__main{font-family:var(--font-display);font-size:16px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-primary)}
+
+    .arena-topbar__right{display:flex;align-items:center;gap:10px}
+    .autosave{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:100px;background:rgba(110,237,216,0.06);border:1px solid rgba(110,237,216,0.14);font-size:11px;font-weight:600;letter-spacing:0.04em;color:var(--accent-teal);margin-right:4px}
+    .autosave::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent-teal);box-shadow:0 0 6px var(--accent-teal);animation:pulse-dot 2s ease-in-out infinite}
+    @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.4}}
+
+    .topbar-btn{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 16px;border-radius:10px;border:1px solid var(--border-subtle);background:var(--bg-glass);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-muted);cursor:pointer;transition:all 0.25s ease}
+    .topbar-btn:hover{border-color:rgba(252,179,0,0.25);color:var(--accent-gold);background:var(--bg-glass-hover)}
+    .topbar-btn svg{width:13px;height:13px}
+    .topbar-btn--primary{background:linear-gradient(135deg,var(--accent-gold),#e5a200);color:#0a0a0a;border-color:transparent;box-shadow:0 2px 14px rgba(252,179,0,0.20)}
+    .topbar-btn--primary:hover{background:linear-gradient(135deg,#ffd24a,var(--accent-gold));border-color:transparent;color:#0a0a0a;box-shadow:0 4px 22px rgba(252,179,0,0.40);transform:translateY(-1px)}
+
+    /* ─── Layout ─────────────────────────────────────────── */
+    .composer-page{position:relative;z-index:1;flex:1;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:28px;padding:32px 28px 100px;max-width:1280px;margin:0 auto;width:100%}
+
+    /* ─── Composer (left/main) ───────────────────────────── */
+    .composer{display:flex;flex-direction:column;gap:20px;min-width:0}
+
+    /* Type segmented selector */
+    .type-segmented{display:inline-flex;align-self:flex-start;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);border-radius:12px;padding:4px;gap:2px}
+    .type-seg{position:relative;padding:9px 18px;border-radius:9px;background:transparent;border:none;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-muted);cursor:pointer;transition:all 0.25s ease;display:inline-flex;align-items:center;gap:7px}
+    .type-seg svg{width:13px;height:13px}
+    .type-seg:hover{color:var(--text-primary)}
+    .type-seg[aria-selected="true"]{background:rgba(252,179,0,0.10);color:var(--accent-gold);box-shadow:inset 0 0 0 1px rgba(252,179,0,0.20)}
+
+    /* Title input */
+    .title-input{width:100%;padding:14px 0;background:transparent;border:none;outline:none;font-family:var(--font-body);font-size:34px;font-weight:700;color:var(--text-primary);line-height:1.2;letter-spacing:-0.01em}
+    .title-input::placeholder{color:var(--text-dim);font-weight:600}
+    .title-divider{height:1px;background:linear-gradient(90deg,var(--border-subtle),transparent);margin:0 0 4px}
+
+    /* Toolbar */
+    .toolbar{display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:12px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);position:sticky;top:84px;z-index:10}
+    .toolbar__group{display:flex;gap:2px}
+    .toolbar__divider{width:1px;height:18px;background:var(--border-subtle);margin:0 4px}
+    .tool-btn{width:32px;height:32px;border-radius:7px;background:transparent;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-muted);transition:all 0.2s ease;padding:0}
+    .tool-btn svg{width:15px;height:15px}
+    .tool-btn:hover{background:rgba(255,255,255,0.04);color:var(--text-primary)}
+    .tool-btn[aria-pressed="true"]{background:rgba(252,179,0,0.10);color:var(--accent-gold)}
+    .toolbar__spacer{flex:1}
+    .toolbar__count{font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.08em;color:var(--text-dim);padding:0 8px}
+
+    /* Body editor */
+    .body-editor{min-height:340px;padding:22px;border-radius:14px;background:var(--bg-input);border:1px solid var(--border-subtle);font-size:15.5px;line-height:1.75;color:var(--text-primary);outline:none;transition:all 0.25s ease}
+    .body-editor:focus,.body-editor:hover{background:var(--bg-input-focus);border-color:rgba(252,179,0,0.18)}
+    .body-editor[contenteditable="true"]:empty::before{content:attr(data-placeholder);color:var(--text-dim);font-style:italic}
+
+    /* Attachments strip */
+    .attachments{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .attachment{position:relative;width:84px;height:84px;border-radius:10px;overflow:hidden;border:1px solid var(--border-subtle);background:rgba(255,255,255,0.02)}
+    .attachment img{width:100%;height:100%;object-fit:cover}
+    .attachment__remove{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:rgba(6,6,14,0.85);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-primary);padding:0;opacity:0;transition:opacity 0.2s}
+    .attachment:hover .attachment__remove{opacity:1}
+    .attachment__remove svg{width:10px;height:10px}
+    .attachment-add{width:84px;height:84px;border-radius:10px;border:1px dashed var(--border-strong);background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--text-dim);cursor:pointer;transition:all 0.2s ease}
+    .attachment-add:hover{border-color:rgba(252,179,0,0.30);color:var(--accent-gold)}
+    .attachment-add svg{width:18px;height:18px}
+    .attachment-add span{font-family:var(--font-display);font-size:8px;font-weight:600;letter-spacing:0.10em;text-transform:uppercase}
+
+    /* ─── Side panel (right / mobile bottom-sheet) ───────── */
+    .side-panel{display:flex;flex-direction:column;gap:14px;align-self:start;position:sticky;top:84px}
+    .side-panel__head{display:none}
+    .side-panel__handle{display:none}
+
+    /* ─── Drawer backdrop (mobile only) ──────────────────── */
+    .drawer-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0);pointer-events:none;z-index:49;transition:background 0.3s ease;display:none}
+    .drawer-backdrop.open{background:rgba(0,0,0,0.55);pointer-events:auto}
+
+    /* ─── Bottom-bar mobile-only buttons hidden on desktop ─ */
+    .bottom-bar__btn--mobile{display:none}
+    .bottom-bar__btn--primary{background:linear-gradient(135deg,var(--accent-gold),#e5a200);color:#0a0a0a;border-color:transparent;box-shadow:0 2px 14px rgba(252,179,0,0.20)}
+
+    .side-card{position:relative;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:14px}
+    /* Card containing an open dropdown lifts above sibling cards */
+    .side-card:has(.as-dropdown[data-open="true"]){z-index:40}
+    .side-card__title{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);display:flex;align-items:center;gap:8px}
+    .side-card__title svg{width:13px;height:13px;color:var(--accent-gold)}
+
+    /* Posting-as dropdown */
+    .as-avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid var(--border-subtle);flex-shrink:0;background:#1a1a2a}
+    .as-avatar--team{border-radius:8px}
+    .as-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;text-align:left}
+    .as-text__name{font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .as-text__meta{font-size:11px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+    .as-dropdown{position:relative}
+    .as-dropdown__trigger{width:100%;display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:11px;background:var(--bg-input);border:1px solid var(--border-subtle);cursor:pointer;transition:all 0.2s ease;font-family:var(--font-body)}
+    .as-dropdown__trigger:hover{border-color:rgba(252,179,0,0.20);background:var(--bg-input-focus)}
+    .as-dropdown[data-open="true"] .as-dropdown__trigger{border-color:rgba(252,179,0,0.30);background:var(--bg-input-focus)}
+    .as-dropdown__chevron{color:var(--text-dim);flex-shrink:0;transition:transform 0.2s ease}
+    .as-dropdown__chevron svg{width:14px;height:14px;display:block}
+    .as-dropdown[data-open="true"] .as-dropdown__chevron{transform:rotate(180deg);color:var(--accent-gold)}
+
+    .as-dropdown__menu{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:20;background:rgba(10,10,22,0.96);backdrop-filter:blur(20px);border:1px solid var(--border-subtle);border-radius:12px;padding:6px;display:none;flex-direction:column;gap:2px;max-height:280px;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,0.5);overscroll-behavior:contain}
+    .as-dropdown[data-open="true"] .as-dropdown__menu{display:flex;animation:as-menu-in 0.18s ease-out}
+    @keyframes as-menu-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+
+    .as-dropdown__group-label{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);padding:8px 10px 4px}
+
+    .as-dropdown__item{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:9px;background:transparent;border:none;cursor:pointer;transition:background 0.15s ease;font-family:var(--font-body);width:100%}
+    .as-dropdown__item:hover{background:rgba(255,255,255,0.04)}
+    .as-dropdown__item[aria-selected="true"]{background:rgba(252,179,0,0.08)}
+    .as-dropdown__check{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border-strong);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s}
+    .as-dropdown__check svg{width:10px;height:10px;color:#0a0a0a;opacity:0}
+    .as-dropdown__item[aria-selected="true"] .as-dropdown__check{background:var(--accent-gold);border-color:var(--accent-gold)}
+    .as-dropdown__item[aria-selected="true"] .as-dropdown__check svg{opacity:1}
+
+    /* Custom scrollbar for menu */
+    .as-dropdown__menu::-webkit-scrollbar{width:4px}
+    .as-dropdown__menu::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.10);border-radius:2px}
+
+    /* Enable Space toggle card */
+    .space-toggle__head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .space-toggle__hint{font-size:11.5px;line-height:1.55;color:var(--text-dim)}
+    .space-toggle__active{display:none;align-items:flex-start;gap:8px;padding:10px 12px;border-radius:10px;background:rgba(110,237,216,0.05);border:1px solid rgba(110,237,216,0.15);font-size:11.5px;line-height:1.5;color:var(--accent-teal)}
+    .space-toggle__active svg{width:13px;height:13px;flex-shrink:0;margin-top:2px}
+    .space-toggle.space-toggle--on .space-toggle__active{display:flex}
+    .space-toggle.space-toggle--on{border-color:rgba(110,237,216,0.20);box-shadow:0 0 24px rgba(110,237,216,0.06)}
+
+    /* Disabled type-seg "Coming soon" */
+    .type-seg[aria-disabled="true"]{opacity:0.45;cursor:not-allowed}
+    .type-seg[aria-disabled="true"]:hover{color:var(--text-muted)}
+    .type-seg__soon{font-family:var(--font-display);font-size:8px;font-weight:700;letter-spacing:0.10em;padding:2px 6px;border-radius:100px;background:rgba(255,255,255,0.06);color:var(--text-dim);text-transform:uppercase;margin-left:4px}
+
+    /* Publish button — Space mode (teal accent) */
+    .topbar-btn--primary.topbar-btn--space{background:linear-gradient(135deg,var(--accent-teal),#3acab2);box-shadow:0 2px 14px rgba(110,237,216,0.25)}
+    .topbar-btn--primary.topbar-btn--space:hover{box-shadow:0 4px 22px rgba(110,237,216,0.40)}
+    .bottom-bar__btn--primary.bottom-bar__btn--space{background:linear-gradient(135deg,var(--accent-teal),#3acab2);color:#0a0a0a;border-color:transparent}
+
+    /* Tag input */
+    .tag-input{display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px;border-radius:10px;background:var(--bg-input);border:1px solid var(--border-subtle);min-height:42px;align-items:center;cursor:text;transition:all 0.2s ease}
+    .tag-input:focus-within{border-color:rgba(252,179,0,0.25);background:var(--bg-input-focus)}
+    .tag{display:inline-flex;align-items:center;gap:5px;padding:3px 8px 3px 10px;border-radius:6px;background:rgba(110,237,216,0.08);border:1px solid rgba(110,237,216,0.18);font-size:11px;font-weight:600;color:var(--accent-teal);letter-spacing:0.02em}
+    .tag__x{display:flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:4px;background:transparent;border:none;color:var(--accent-teal);cursor:pointer;padding:0;opacity:0.6;transition:all 0.15s}
+    .tag__x:hover{opacity:1;background:rgba(110,237,216,0.15)}
+    .tag__x svg{width:9px;height:9px}
+    .tag-input__field{flex:1;min-width:80px;background:transparent;border:none;outline:none;font-family:var(--font-body);font-size:12.5px;color:var(--text-primary);padding:4px 0}
+    .tag-input__field::placeholder{color:var(--text-dim)}
+
+    /* Visibility toggle */
+    .vis-row{display:flex;gap:6px}
+    .vis-opt{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid var(--border-subtle);cursor:pointer;transition:all 0.2s ease}
+    .vis-opt svg{width:16px;height:16px;color:var(--text-muted);transition:color 0.2s}
+    .vis-opt span{font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);transition:color 0.2s}
+    .vis-opt:hover{border-color:rgba(252,179,0,0.20)}
+    .vis-opt[aria-selected="true"]{background:rgba(252,179,0,0.06);border-color:rgba(252,179,0,0.25)}
+    .vis-opt[aria-selected="true"] svg,.vis-opt[aria-selected="true"] span{color:var(--accent-gold)}
+
+    /* Schedule row */
+    .schedule-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:var(--bg-input);border:1px solid var(--border-subtle);cursor:pointer;transition:all 0.2s ease}
+    .schedule-row:hover{border-color:rgba(252,179,0,0.20);background:var(--bg-input-focus)}
+    .schedule-row svg{width:14px;height:14px;color:var(--text-muted);flex-shrink:0}
+    .schedule-row__body{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+    .schedule-row__label{font-size:11px;color:var(--text-dim);font-weight:600;letter-spacing:0.04em}
+    .schedule-row__value{font-size:13px;font-weight:600;color:var(--text-primary)}
+    .switch{position:relative;width:34px;height:20px;border-radius:100px;background:rgba(255,255,255,0.06);border:1px solid var(--border-subtle);cursor:pointer;transition:all 0.25s;flex-shrink:0}
+    .switch::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--text-muted);transition:all 0.25s}
+    .switch[aria-checked="true"]{background:rgba(252,179,0,0.30);border-color:rgba(252,179,0,0.40)}
+    .switch[aria-checked="true"]::after{transform:translateX(14px);background:var(--accent-gold)}
+
+    /* Danger row */
+    .danger-row{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.12);color:var(--accent-coral);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;cursor:pointer;transition:all 0.2s ease}
+    .danger-row:hover{background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.22)}
+    .danger-row svg{width:13px;height:13px}
+
+    /* ─── Bottom bar ─────────────────────────────────────── */
+    .bottom-bar{position:fixed;bottom:0;left:0;right:0;z-index:25;display:flex;align-items:center;justify-content:space-between;padding:12px 28px;background:rgba(6,6,14,0.86);backdrop-filter:blur(20px);border-top:1px solid var(--border-subtle)}
+    .bottom-bar__left{display:flex;align-items:center;gap:18px;font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.08em;color:var(--text-dim)}
+    .bottom-bar__stat{display:inline-flex;align-items:center;gap:6px}
+    .bottom-bar__stat svg{width:13px;height:13px}
+    .bottom-bar__stat strong{color:var(--text-primary);font-weight:700;letter-spacing:0.04em}
+    .bottom-bar__right{display:flex;align-items:center;gap:8px}
+    .bottom-bar__btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:9px;background:transparent;border:1px solid var(--border-subtle);font-family:var(--font-display);font-size:9.5px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-muted);cursor:pointer;transition:all 0.2s ease}
+    .bottom-bar__btn:hover{border-color:rgba(252,179,0,0.25);color:var(--accent-gold)}
+    .bottom-bar__btn svg{width:12px;height:12px}
+
+    /* ─── Responsive ─────────────────────────────────────── */
+    @media (max-width:980px){
+      .composer-page{grid-template-columns:1fr;padding:20px 16px 110px;gap:18px}
+      .toolbar{position:static}
+
+      /* Side panel becomes a bottom-sheet drawer */
+      .side-panel{
+        position:fixed;left:0;right:0;bottom:0;top:auto;z-index:50;
+        background:rgba(8,8,18,0.96);backdrop-filter:blur(24px);
+        border-top:1px solid var(--border-subtle);
+        border-radius:20px 20px 0 0;
+        padding:8px 16px 22px;gap:12px;
+        max-height:85vh;overflow-y:auto;overscroll-behavior:contain;
+        box-shadow:0 -10px 40px rgba(0,0,0,0.5);
+        transform:translateY(100%);transition:transform 0.32s cubic-bezier(0.16,1,0.3,1)
+      }
+      .side-panel.open{transform:translateY(0)}
+      .side-panel__head{display:grid;grid-template-columns:30px 1fr 30px;align-items:center;padding:14px 4px 6px;position:sticky;top:0;background:linear-gradient(180deg,rgba(8,8,18,1) 60%,rgba(8,8,18,0));z-index:1}
+      .side-panel__handle{display:block;position:absolute;left:50%;top:6px;transform:translateX(-50%);width:40px;height:4px;border-radius:2px;background:var(--border-strong)}
+      .side-panel__title{grid-column:2;font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted);text-align:center}
+      .side-panel__close{grid-column:3;width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-muted);padding:0}
+      .side-panel__close svg{width:14px;height:14px}
+
+      .drawer-backdrop{display:block}
+
+      /* Top bar trims on mobile */
+      .autosave{display:none}
+      .topbar-btn:not(.topbar-btn--primary){display:none}
+      .topbar-btn--primary{display:none}
+
+      /* Bottom bar reorganized */
+      .bottom-bar__btn--desktop{display:none}
+      .bottom-bar__btn--mobile{display:inline-flex}
+      .bottom-bar__btn--mobile.bottom-bar__btn--primary{padding:10px 18px;font-size:11px}
+    }
+    @media (max-width:500px){
+      .arena-topbar{padding:12px 14px}
+      .topbar-title__eyebrow{display:none}
+      .topbar-title__main{font-size:13px}
+      .title-input{font-size:24px;padding:10px 0}
+      .body-editor{padding:16px;font-size:14.5px;min-height:260px;line-height:1.65}
+      .toolbar{flex-wrap:wrap;gap:4px;padding:6px}
+      .tool-btn{width:30px;height:30px}
+      .toolbar__count{font-size:9px;padding:0 4px;margin-left:auto}
+      .composer{gap:16px}
+      .type-segmented{padding:3px;width:100%;justify-content:space-between}
+      .type-seg{flex:1;padding:8px 10px;justify-content:center;font-size:9px}
+      .type-seg__soon{display:none}
+
+      .bottom-bar{padding:10px 14px;gap:8px}
+      .bottom-bar__left{flex:1;font-size:9px;gap:10px;overflow:hidden}
+      .bottom-bar__stat:nth-child(3){display:none}
+      .bottom-bar__right{gap:6px}
+      .bottom-bar__btn--mobile:not(.bottom-bar__btn--primary){padding:8px 10px;font-size:9px}
+
+      .side-card{padding:14px}
+      .vis-row{gap:5px}
+      .as-option{padding:9px}
+    }
+  </style>
+</head>
+<body>
+  <div class="arena">
+    <!-- ─── TOP BAR ─── -->
+    <div class="arena-topbar">
+      <div class="arena-topbar__left">
+        <button class="back-btn" aria-label="Back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="topbar-title">
+          <span class="topbar-title__eyebrow">Composer</span>
+          <span class="topbar-title__main">New Post</span>
+        </div>
+      </div>
+      <div class="arena-topbar__right">
+        <span class="autosave">Autosaved 2s ago</span>
+        <button class="topbar-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save Draft
+        </button>
+        <button class="topbar-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          Preview
+        </button>
+        <button class="topbar-btn topbar-btn--primary" id="publish-btn">
+          <svg id="publish-icon-default" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <svg id="publish-icon-space" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:none"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+          <span id="publish-label">Publish</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ─── COMPOSER PAGE ─── -->
+    <div class="composer-page">
+
+      <!-- LEFT: Composer -->
+      <main class="composer">
+
+        <!-- Type selector -->
+        <div class="type-segmented" role="tablist" aria-label="Post type">
+          <button class="type-seg" role="tab" aria-selected="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Post
+          </button>
+          <button class="type-seg" role="tab" aria-selected="false" aria-disabled="true" title="Coming soon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+            Repost
+            <span class="type-seg__soon">Soon</span>
+          </button>
+          <button class="type-seg" role="tab" aria-selected="false" aria-disabled="true" title="Coming soon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            Artwork
+            <span class="type-seg__soon">Soon</span>
+          </button>
+        </div>
+
+        <!-- Title -->
+        <div>
+          <input class="title-input" type="text" placeholder="Title your post…" value="The Future of Decentralized Governance" />
+          <div class="title-divider"></div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+          <div class="toolbar__group">
+            <button class="tool-btn" aria-label="Heading 1" aria-pressed="false">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16M6 12h12"/></svg>
+            </button>
+            <button class="tool-btn" aria-label="Bold" aria-pressed="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg>
+            </button>
+            <button class="tool-btn" aria-label="Italic">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg>
+            </button>
+            <button class="tool-btn" aria-label="Underline">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3"/><line x1="4" y1="21" x2="20" y2="21"/></svg>
+            </button>
+            <button class="tool-btn" aria-label="Strikethrough">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4H9a3 3 0 0 0-2.83 4M14 12a4 4 0 0 1 0 8H6"/><line x1="4" y1="12" x2="20" y2="12"/></svg>
+            </button>
+          </div>
+          <div class="toolbar__divider"></div>
+          <div class="toolbar__group">
+            <button class="tool-btn" aria-label="Bullet list">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            </button>
+            <button class="tool-btn" aria-label="Numbered list">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+            </button>
+            <button class="tool-btn" aria-label="Quote">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg>
+            </button>
+            <button class="tool-btn" aria-label="Code">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            </button>
+          </div>
+          <div class="toolbar__divider"></div>
+          <div class="toolbar__group">
+            <button class="tool-btn" aria-label="Link">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            </button>
+            <button class="tool-btn" aria-label="Insert image">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            </button>
+            <button class="tool-btn" aria-label="Mention">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/></svg>
+            </button>
+          </div>
+          <div class="toolbar__spacer"></div>
+          <span class="toolbar__count">324 / 5000</span>
+        </div>
+
+        <!-- Body -->
+        <div class="body-editor" contenteditable="true" data-placeholder="Tell your story… Use the toolbar to format text, add links, and embed images.">
+          <p>Decentralized governance is no longer a fringe experiment — it's becoming the default coordination layer for communities that want real ownership over their decisions.</p>
+          <p>In this post, I want to walk through three patterns I've seen working in DAOs over the past year, where the gap between proposal and execution stayed under 48 hours.</p>
+        </div>
+
+        <!-- Attachments -->
+        <div class="attachments">
+          <div class="attachment">
+            <img src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=200&q=80" alt="Attachment 1" />
+            <button class="attachment__remove" aria-label="Remove">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="attachment">
+            <img src="https://images.unsplash.com/photo-1620336655055-bd87ee87d6c1?w=200&q=80" alt="Attachment 2" />
+            <button class="attachment__remove" aria-label="Remove">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <button class="attachment-add">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Add</span>
+          </button>
+        </div>
+
+      </main>
+
+      <!-- RIGHT: Side panel (becomes bottom-sheet on mobile) -->
+      <aside class="side-panel" id="side-panel">
+        <div class="side-panel__head">
+          <span class="side-panel__handle"></span>
+          <span class="side-panel__title">Post Options</span>
+          <button class="side-panel__close" id="side-panel-close" aria-label="Close options">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <!-- Posting As -->
+        <div class="side-card">
+          <div class="side-card__title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Posting as
+          </div>
+          <div class="as-dropdown" id="as-dropdown" data-open="false">
+            <button class="as-dropdown__trigger" id="as-trigger" aria-haspopup="listbox" aria-expanded="false">
+              <img class="as-avatar" id="as-current-avatar" src="https://metadata.ratel.foundation/ratel/default-profile.png" alt="" />
+              <div class="as-text">
+                <span class="as-text__name" id="as-current-name">You · @hackartist</span>
+                <span class="as-text__meta" id="as-current-meta">Personal feed</span>
+              </div>
+              <span class="as-dropdown__chevron">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </span>
+            </button>
+
+            <div class="as-dropdown__menu" role="listbox">
+              <div class="as-dropdown__group-label">Personal</div>
+              <button class="as-dropdown__item" role="option" aria-selected="true"
+                      data-name="You · @hackartist" data-meta="Personal feed"
+                      data-avatar="https://metadata.ratel.foundation/ratel/default-profile.png" data-shape="circle">
+                <img class="as-avatar" src="https://metadata.ratel.foundation/ratel/default-profile.png" alt="" />
+                <div class="as-text">
+                  <span class="as-text__name">You · @hackartist</span>
+                  <span class="as-text__meta">Personal feed</span>
+                </div>
+                <span class="as-dropdown__check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
+              </button>
+
+              <div class="as-dropdown__group-label">Teams</div>
+              <button class="as-dropdown__item" role="option" aria-selected="false"
+                      data-name="Climate Action DAO" data-meta="Team · admin"
+                      data-avatar="https://metadata.ratel.foundation/logos/logo-symbol.png" data-shape="square">
+                <img class="as-avatar as-avatar--team" src="https://metadata.ratel.foundation/logos/logo-symbol.png" alt="" />
+                <div class="as-text">
+                  <span class="as-text__name">Climate Action DAO</span>
+                  <span class="as-text__meta">Team · admin</span>
+                </div>
+                <span class="as-dropdown__check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
+              </button>
+              <button class="as-dropdown__item" role="option" aria-selected="false"
+                      data-name="Decentralized Web Builders" data-meta="Team · member"
+                      data-avatar="https://metadata.ratel.foundation/logos/logo-symbol.png" data-shape="square">
+                <img class="as-avatar as-avatar--team" src="https://metadata.ratel.foundation/logos/logo-symbol.png" alt="" />
+                <div class="as-text">
+                  <span class="as-text__name">Decentralized Web Builders</span>
+                  <span class="as-text__meta">Team · member</span>
+                </div>
+                <span class="as-dropdown__check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
+              </button>
+              <button class="as-dropdown__item" role="option" aria-selected="false"
+                      data-name="Public Goods Treasury" data-meta="Team · admin"
+                      data-avatar="https://metadata.ratel.foundation/logos/logo-symbol.png" data-shape="square">
+                <img class="as-avatar as-avatar--team" src="https://metadata.ratel.foundation/logos/logo-symbol.png" alt="" />
+                <div class="as-text">
+                  <span class="as-text__name">Public Goods Treasury</span>
+                  <span class="as-text__meta">Team · admin</span>
+                </div>
+                <span class="as-dropdown__check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
+              </button>
+              <button class="as-dropdown__item" role="option" aria-selected="false"
+                      data-name="Indie Filmmakers Coalition" data-meta="Team · member"
+                      data-avatar="https://metadata.ratel.foundation/logos/logo-symbol.png" data-shape="square">
+                <img class="as-avatar as-avatar--team" src="https://metadata.ratel.foundation/logos/logo-symbol.png" alt="" />
+                <div class="as-text">
+                  <span class="as-text__name">Indie Filmmakers Coalition</span>
+                  <span class="as-text__meta">Team · member</span>
+                </div>
+                <span class="as-dropdown__check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Enable Space -->
+        <div class="side-card space-toggle" id="space-toggle-card">
+          <div class="space-toggle__head">
+            <div class="side-card__title" style="margin:0">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              Enable Space
+            </div>
+            <button class="switch" id="space-switch" aria-checked="false" role="switch" aria-label="Enable Space"></button>
+          </div>
+          <div class="space-toggle__hint">
+            Turn this post into a Space — a dedicated arena where members can vote, discuss, and earn rewards together.
+          </div>
+          <div class="space-toggle__active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Publish will take you to the Space designer to configure quests, rewards, and members.
+          </div>
+        </div>
+
+        <!-- Tags -->
+        <div class="side-card">
+          <div class="side-card__title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>
+            Tags
+          </div>
+          <div class="tag-input">
+            <span class="tag">governance
+              <button class="tag__x" aria-label="Remove tag">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </span>
+            <span class="tag">on-chain
+              <button class="tag__x" aria-label="Remove tag">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </span>
+            <input class="tag-input__field" type="text" placeholder="Add a tag…" />
+          </div>
+        </div>
+
+        <!-- Visibility -->
+        <div class="side-card">
+          <div class="side-card__title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Visibility
+          </div>
+          <div class="vis-row">
+            <button class="vis-opt" aria-selected="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              <span>Public</span>
+            </button>
+            <button class="vis-opt">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <span>Private</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Schedule -->
+        <div class="side-card">
+          <div class="side-card__title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Schedule
+          </div>
+          <div class="schedule-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <div class="schedule-row__body">
+              <span class="schedule-row__label">Publish at</span>
+              <span class="schedule-row__value">Immediately on Publish</span>
+            </div>
+            <button class="switch" aria-checked="false" role="switch" aria-label="Schedule toggle"></button>
+          </div>
+        </div>
+
+        <!-- Discard -->
+        <button class="danger-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+          Discard Draft
+        </button>
+
+      </aside>
+
+    </div>
+
+    <!-- Drawer backdrop (mobile only) -->
+    <div class="drawer-backdrop" id="drawer-backdrop"></div>
+
+    <!-- ─── BOTTOM BAR ─── -->
+    <div class="bottom-bar">
+      <div class="bottom-bar__left">
+        <span class="bottom-bar__stat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <strong>324</strong> words · <strong>2 min</strong> read
+        </span>
+        <span class="bottom-bar__stat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <strong>3</strong> images
+        </span>
+        <span class="bottom-bar__stat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Saved <strong>2s</strong> ago
+        </span>
+      </div>
+      <div class="bottom-bar__right">
+        <button class="bottom-bar__btn bottom-bar__btn--desktop">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Spell-check
+        </button>
+        <button class="bottom-bar__btn bottom-bar__btn--mobile" id="options-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+          Options
+        </button>
+        <button class="bottom-bar__btn bottom-bar__btn--mobile bottom-bar__btn--primary" id="publish-mobile-btn">
+          <svg id="publish-mobile-icon-default" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <svg id="publish-mobile-icon-space" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:none"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+          <span id="publish-mobile-label">Publish</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ─── Enable Space toggle → swap Publish label ───
+    const spaceSwitch = document.getElementById('space-switch');
+    const spaceCard = document.getElementById('space-toggle-card');
+    const publishBtn = document.getElementById('publish-btn');
+    const publishLabel = document.getElementById('publish-label');
+    const publishIconDefault = document.getElementById('publish-icon-default');
+    const publishIconSpace = document.getElementById('publish-icon-space');
+    const publishMobileLabel = document.getElementById('publish-mobile-label');
+    const publishMobileIconDefault = document.getElementById('publish-mobile-icon-default');
+    const publishMobileIconSpace = document.getElementById('publish-mobile-icon-space');
+
+    function setSpaceMode(on) {
+      spaceSwitch.setAttribute('aria-checked', String(on));
+      spaceCard.classList.toggle('space-toggle--on', on);
+      publishLabel.textContent = on ? 'Design Space' : 'Publish';
+      publishMobileLabel.textContent = on ? 'Design Space' : 'Publish';
+      publishIconDefault.style.display = on ? 'none' : '';
+      publishIconSpace.style.display = on ? '' : 'none';
+      publishMobileIconDefault.style.display = on ? 'none' : '';
+      publishMobileIconSpace.style.display = on ? '' : 'none';
+      publishBtn.classList.toggle('topbar-btn--space', on);
+      document.getElementById('publish-mobile-btn').classList.toggle('bottom-bar__btn--space', on);
+    }
+    spaceSwitch.addEventListener('click', () => {
+      const next = spaceSwitch.getAttribute('aria-checked') !== 'true';
+      setSpaceMode(next);
+    });
+
+    // ─── Mobile bottom-sheet drawer ───
+    const sidePanel = document.getElementById('side-panel');
+    const backdrop = document.getElementById('drawer-backdrop');
+    const optionsBtn = document.getElementById('options-btn');
+    const closeBtn = document.getElementById('side-panel-close');
+
+    function openDrawer() {
+      sidePanel.classList.add('open');
+      backdrop.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeDrawer() {
+      sidePanel.classList.remove('open');
+      backdrop.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    optionsBtn.addEventListener('click', openDrawer);
+    closeBtn.addEventListener('click', closeDrawer);
+    backdrop.addEventListener('click', closeDrawer);
+
+    // ─── Type segmented (block disabled tabs) ───
+    document.querySelectorAll('.type-seg').forEach(btn => {
+      btn.addEventListener('click', e => {
+        if (btn.getAttribute('aria-disabled') === 'true') { e.preventDefault(); return; }
+        document.querySelectorAll('.type-seg').forEach(b => b.setAttribute('aria-selected', 'false'));
+        btn.setAttribute('aria-selected', 'true');
+      });
+    });
+
+    // ─── Visibility toggle ───
+    document.querySelectorAll('.vis-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.vis-opt').forEach(b => b.setAttribute('aria-selected', 'false'));
+        btn.setAttribute('aria-selected', 'true');
+      });
+    });
+
+    // ─── Posting-as dropdown ───
+    const asDropdown = document.getElementById('as-dropdown');
+    const asTrigger = document.getElementById('as-trigger');
+    const asCurrentName = document.getElementById('as-current-name');
+    const asCurrentMeta = document.getElementById('as-current-meta');
+    const asCurrentAvatar = document.getElementById('as-current-avatar');
+
+    const asCard = asDropdown.closest('.side-card');
+    function setAsOpen(open) {
+      asDropdown.setAttribute('data-open', String(open));
+      asTrigger.setAttribute('aria-expanded', String(open));
+      // Fallback for browsers without :has() support — lift parent card
+      if (asCard) asCard.style.zIndex = open ? '40' : '';
+    }
+    asTrigger.addEventListener('click', e => {
+      e.stopPropagation();
+      const open = asDropdown.getAttribute('data-open') !== 'true';
+      setAsOpen(open);
+    });
+    document.addEventListener('click', e => {
+      if (!asDropdown.contains(e.target)) setAsOpen(false);
+    });
+
+    document.querySelectorAll('.as-dropdown__item').forEach(item => {
+      item.addEventListener('click', () => {
+        document.querySelectorAll('.as-dropdown__item').forEach(o => o.setAttribute('aria-selected', 'false'));
+        item.setAttribute('aria-selected', 'true');
+        asCurrentName.textContent = item.dataset.name;
+        asCurrentMeta.textContent = item.dataset.meta;
+        asCurrentAvatar.src = item.dataset.avatar;
+        asCurrentAvatar.classList.toggle('as-avatar--team', item.dataset.shape === 'square');
+        setAsOpen(false);
+      });
+    });
+
+    // ─── Categories chips removed; tags handled inline ───
+  </script>
+</body>
+</html>

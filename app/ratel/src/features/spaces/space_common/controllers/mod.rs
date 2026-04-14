@@ -9,3 +9,6 @@ pub use update_space::*;
 
 mod list_space_members;
 pub use list_space_members::*;
+
+mod list_hot_spaces;
+pub use list_hot_spaces::*;
