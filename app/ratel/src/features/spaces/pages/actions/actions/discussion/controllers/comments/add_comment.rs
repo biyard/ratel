@@ -99,7 +99,12 @@ pub async fn add_comment(
 
     // Send mention notifications
     {
-        let cta_url = format!("/spaces/{}/actions/discussion/{}", space_id, discussion_sk);
+        let cta_url = format!(
+            "{}/spaces/{}/actions/discussion/{}",
+            crate::common::config::site_base_url(),
+            space_id,
+            discussion_sk
+        );
         crate::common::utils::mention::create_mention_notifications(
             cli,
             &comment.content,

@@ -10,9 +10,7 @@ use crate::features::spaces::pages::actions::actions::discussion::{
     DiscussionCommentResponse, DiscussionStatus, SpacePostCommentTargetEntityType,
 };
 use crate::features::spaces::pages::index::action_pages::discussion::*;
-use crate::features::spaces::pages::index::action_pages::quiz::{
-    ActiveActionOverlaySignal, CompletedActionCard,
-};
+use crate::features::spaces::pages::index::action_pages::quiz::ActiveActionOverlaySignal;
 use crate::features::spaces::pages::index::*;
 use crate::features::spaces::space_common::controllers::list_space_members;
 use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
@@ -54,7 +52,6 @@ pub fn DiscussionArenaPage(
     let comments = comments_data.items.clone();
 
     let mut overlay: ActiveActionOverlaySignal = use_context();
-    let mut completed: CompletedActionCard = use_context();
 
     let mut comment_text = use_signal(String::new);
     let mut tracked_mentions: Signal<Vec<(String, String)>> = use_signal(Vec::new);
@@ -115,7 +112,6 @@ pub fn DiscussionArenaPage(
                 comment_text.set(String::new());
                 tracked_mentions.set(Vec::new());
                 toast.info(tr.comment_success);
-                completed.0.set(Some(discussion_id().to_string()));
             }
             Err(err) => {
                 tracing::error!("Failed to post comment: {:?}", err);
@@ -126,6 +122,7 @@ pub fn DiscussionArenaPage(
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Script { defer: true, src: asset!("./script.js") }
 
         div { class: "discussion-arena",
 
@@ -249,8 +246,29 @@ pub fn DiscussionArenaPage(
                     }
                 }
 
-                // Right: Comments Panel
-                div { class: "comments-panel",
+                // Right: Comments Panel (bottom sheet on mobile)
+                div { class: "comments-panel", id: "discussion-comments-sheet",
+                    // Sheet handle (visible on mobile only)
+                    div { class: "sheet-handle",
+                        div { class: "sheet-handle__bar" }
+                        div { class: "sheet-handle__row",
+                            div { class: "sheet-handle__left",
+                                span { class: "sheet-handle__title", "{tr.comments_title}" }
+                                span { class: "sheet-handle__count", "{post.comments}" }
+                            }
+                            svg {
+                                class: "sheet-handle__chevron",
+                                view_box: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_width: "2",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                polyline { points: "6 9 12 15 18 9" }
+                            }
+                        }
+                    }
+                    // Desktop header
                     div { class: "comments-panel__header",
                         span { class: "comments-panel__title", "{tr.comments_title}" }
                         span { class: "comments-panel__count", "{post.comments}" }

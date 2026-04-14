@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Discussion – Mobile Bottom Sheet Comments</title>
+<style>
+/* ── Reset ──────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Theme toggle (dark default) ────────────────── */
+html[data-theme="dark"] {
+  --dark: ;
+  --light: initial;
+}
+html[data-theme="light"] {
+  --dark: initial;
+  --light: ;
+}
+
+/* ── Variables ─────────────────────────────────── */
+:root {
+  --bg: var(--dark, #06060e) var(--light, #f4f3ef);
+  --text: var(--dark, #f0f0f5) var(--light, #12121a);
+  --text-muted: var(--dark, #8888a8) var(--light, #6b6b80);
+  --text-dim: var(--dark, #55556a) var(--light, #9999aa);
+  --glass: var(--dark, rgba(12,12,26,0.65)) var(--light, rgba(255,255,255,0.72));
+  --glass-solid: var(--dark, rgba(12,12,26,0.92)) var(--light, rgba(255,255,255,0.95));
+  --glass-hover: var(--dark, rgba(20,20,40,0.80)) var(--light, rgba(255,255,255,0.88));
+  --border: var(--dark, rgba(255,255,255,0.06)) var(--light, rgba(0,0,0,0.08));
+  --surface: var(--dark, #0c0c1a) var(--light, #ffffff);
+  --surface-raised: var(--dark, rgba(255,255,255,0.03)) var(--light, rgba(0,0,0,0.03));
+  --shadow: var(--dark, rgba(0,0,0,0.4)) var(--light, rgba(0,0,0,0.08));
+  --discuss-color: #22d3ee;
+  --discuss-glow: rgba(34,211,238,0.12);
+  --discuss-bg: rgba(34,211,238,0.06);
+  --discuss-border: rgba(34,211,238,0.15);
+  --gold: #fcb300;
+  --teal: #6eedd8;
+  --panel-bg: var(--dark, rgba(12,12,26,0.85)) var(--light, rgba(255,255,255,0.90));
+}
+
+body {
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Theme toggle button ───────────────────────── */
+.theme-toggle {
+  position: fixed; top: 10px; right: 10px; z-index: 9999;
+  padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--glass); color: var(--text); cursor: pointer;
+  font-size: 12px;
+}
+
+/* ── Arena (Full page) ─────────────────────────── */
+.discussion-arena {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ── Top Bar ───────────────────────────────────── */
+.topbar {
+  position: sticky; top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--glass-solid);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.topbar__left { display: flex; align-items: center; gap: 12px; }
+.topbar__back {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--glass); backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.25s ease; padding: 0;
+  color: var(--text-muted);
+}
+.topbar__back:hover { background: var(--glass-hover); border-color: rgba(34,211,238,0.2); color: var(--discuss-color); }
+.topbar__back svg { width: 18px; height: 18px; }
+.topbar__title {
+  font-size: 13px; font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.topbar__right { display: flex; align-items: center; gap: 10px; }
+.topbar__status {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 100px;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+}
+.topbar__status--active {
+  background: rgba(110,237,216,0.08); border: 1px solid rgba(110,237,216,0.15); color: #6eedd8;
+}
+.topbar__status--active::before {
+  content: ''; width: 5px; height: 5px; border-radius: 50%;
+  background: #6eedd8; box-shadow: 0 0 6px #6eedd8;
+  animation: disc-pulse-dot 2s ease-in-out infinite;
+}
+@keyframes disc-pulse-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.8); } }
+
+/* ── Discussion Content (Full width on mobile) ─── */
+.discussion-main {
+  flex: 1;
+  padding: 20px 16px 100px; /* bottom padding for bottom sheet handle */
+  overflow-y: auto;
+}
+.discussion-main__inner {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── Discussion Header ─────────────────────────── */
+.disc-header { display: flex; flex-direction: column; gap: 14px; }
+.disc-header__type {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 8px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  background: var(--discuss-bg); color: var(--discuss-color);
+  border: 1px solid var(--discuss-border); width: fit-content;
+}
+.disc-header__type svg { width: 14px; height: 14px; }
+.disc-header__title {
+  font-size: 22px; font-weight: 700;
+  letter-spacing: 0.02em; line-height: 1.3; color: var(--text);
+}
+.disc-header__meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.disc-header__author { display: flex; align-items: center; gap: 8px; }
+.disc-header__avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); background: var(--surface-raised); }
+.disc-header__author-name { font-size: 14px; font-weight: 500; color: var(--text); }
+.disc-header__separator { width: 3px; height: 3px; border-radius: 50%; background: var(--text-dim); }
+.disc-header__date { font-size: 13px; color: var(--text-muted); }
+
+/* ── Discussion Body ───────────────────────────── */
+.disc-body {
+  padding: 20px; background: var(--glass);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border); border-radius: 14px;
+  box-shadow: 0 4px 40px var(--shadow);
+}
+.disc-body__content { font-size: 15px; line-height: 1.8; color: var(--text); }
+.disc-body__content p { margin-bottom: 14px; }
+.disc-body__content p:last-child { margin-bottom: 0; }
+
+/* ── Dim overlay ──────────────────────────────── */
+.sheet-dim {
+  position: fixed; inset: 0; z-index: 90;
+  background: rgba(0,0,0,0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+.sheet-dim.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ── Bottom Sheet ─────────────────────────────── */
+.comments-sheet {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 100;
+  background: var(--panel-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid var(--border);
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -4px 40px var(--shadow);
+  transform: translateY(calc(100% - 64px)); /* collapsed: only handle visible */
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  will-change: transform;
+  touch-action: none;
+}
+.comments-sheet.expanded {
+  transform: translateY(0);
+}
+.comments-sheet.dragging {
+  transition: none;
+}
+
+/* ── Sheet Handle ─────────────────────────────── */
+.sheet-handle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 16px 10px;
+  cursor: grab;
+  flex-shrink: 0;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.sheet-handle:active { cursor: grabbing; }
+.sheet-handle__bar {
+  width: 36px; height: 4px; border-radius: 2px;
+  background: var(--dark, rgba(255,255,255,0.15)) var(--light, rgba(0,0,0,0.15));
+  margin-bottom: 10px;
+}
+.sheet-handle__row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sheet-handle__left {
+  display: flex; align-items: center; gap: 8px;
+}
+.sheet-handle__title {
+  font-size: 14px; font-weight: 600;
+  letter-spacing: 0.02em; color: var(--text);
+}
+.sheet-handle__count {
+  padding: 2px 8px; border-radius: 100px;
+  background: var(--discuss-bg); color: var(--discuss-color);
+  font-size: 12px; font-weight: 700;
+  border: 1px solid var(--discuss-border);
+}
+.sheet-handle__chevron {
+  width: 20px; height: 20px; color: var(--text-muted);
+  transition: transform 0.35s ease;
+}
+.comments-sheet.expanded .sheet-handle__chevron {
+  transform: rotate(180deg);
+}
+
+/* ── Sheet Content (scrollable) ───────────────── */
+.sheet-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 0 8px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--dark, rgba(255,255,255,0.06)) var(--light, rgba(0,0,0,0.04)) transparent;
+}
+.sheet-content::-webkit-scrollbar { width: 4px; }
+.sheet-content::-webkit-scrollbar-track { background: transparent; }
+.sheet-content::-webkit-scrollbar-thumb { background: var(--dark, rgba(255,255,255,0.06)) var(--light, rgba(0,0,0,0.06)); border-radius: 2px; }
+
+/* ── Comment Input (sticky at top of sheet) ───── */
+.comment-input {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.comment-input__body { display: flex; flex-direction: column; gap: 8px; }
+.comment-input__textarea {
+  width: 100%; min-height: 44px; max-height: 100px; resize: none;
+  border: 1px solid var(--border); border-radius: 10px;
+  background: var(--surface-raised); color: var(--text);
+  font-family: 'Outfit', sans-serif; font-size: 14px; line-height: 1.5;
+  padding: 10px 12px; outline: none; transition: border-color 0.25s;
+}
+.comment-input__textarea:focus { border-color: var(--discuss-border); }
+.comment-input__textarea::placeholder { color: var(--text-dim); }
+.comment-input__footer { display: flex; justify-content: flex-end; }
+.comment-input__submit {
+  padding: 7px 16px; border-radius: 8px; border: none;
+  background: linear-gradient(135deg, var(--discuss-color), #06b6d4);
+  color: #0a0a0a;
+  font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+  cursor: pointer; transition: all 0.25s ease;
+}
+.comment-input__submit:hover { box-shadow: 0 2px 16px var(--discuss-glow); }
+.comment-input__submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Comment List ─────────────────────────────── */
+.comment-list { display: flex; flex-direction: column; gap: 2px; }
+
+.comment-item { display: flex; gap: 10px; padding: 12px 16px; transition: background 0.2s ease; }
+.comment-item:active { background: var(--surface-raised); }
+.comment-item__avatar {
+  width: 28px; height: 28px; border-radius: 50%; object-fit: cover;
+  border: 1px solid var(--border); flex-shrink: 0; margin-top: 2px;
+  background: var(--surface-raised);
+}
+.comment-item__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.comment-item__top { display: flex; align-items: center; gap: 6px; }
+.comment-item__name { font-size: 13px; font-weight: 600; color: var(--text); }
+.comment-item__time { font-size: 11px; color: var(--text-dim); }
+.comment-item__text { font-size: 13px; line-height: 1.6; color: var(--text); word-break: break-word; }
+
+.comment-item__actions { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.comment-action {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 8px; border-radius: 6px; border: none; background: transparent;
+  cursor: pointer; transition: all 0.2s;
+  font-size: 12px; color: var(--text-dim);
+}
+.comment-action:active { background: var(--surface-raised); }
+.comment-action svg { width: 14px; height: 14px; }
+.comment-action--liked { color: #f43f5e; }
+.comment-action--liked svg { fill: #f43f5e; stroke: #f43f5e; }
+
+/* ── Replies ───────────────────────────────────── */
+.comment-replies {
+  margin-left: 38px; padding-left: 12px;
+  border-left: 2px solid var(--border);
+}
+.comment-replies .comment-item { padding: 8px 12px; }
+.comment-replies .comment-item__avatar { width: 22px; height: 22px; }
+.comment-replies .comment-item__name { font-size: 12px; }
+.comment-replies .comment-item__text { font-size: 12px; }
+
+.reply-toggle {
+  margin-left: 38px; padding: 4px 10px;
+  font-size: 11px; font-weight: 500; color: var(--discuss-color);
+  cursor: pointer; background: none; border: none;
+  display: inline-flex; align-items: center; gap: 5px;
+}
+.reply-toggle svg { width: 12px; height: 12px; }
+
+.reply-input {
+  margin-left: 38px; display: flex; gap: 8px;
+  padding: 10px 12px; background: var(--surface-raised);
+  border: 1px solid var(--border); border-radius: 10px;
+  margin-top: 4px; margin-right: 16px;
+}
+.reply-input:focus-within { border-color: var(--discuss-border); }
+.reply-input__field {
+  flex: 1; border: none; background: transparent; color: var(--text);
+  font-family: 'Outfit', sans-serif; font-size: 13px; outline: none;
+}
+.reply-input__field::placeholder { color: var(--text-dim); }
+.reply-input__send {
+  width: 28px; height: 28px; border-radius: 6px; border: none;
+  background: var(--discuss-bg); color: var(--discuss-color);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; padding: 0; flex-shrink: 0;
+}
+.reply-input__send svg { width: 14px; height: 14px; }
+
+/* ── Empty state ──────────────────────────────── */
+.comments-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 48px 20px; gap: 12px; color: var(--text-dim);
+}
+.comments-empty svg { width: 40px; height: 40px; opacity: 0.4; }
+.comments-empty__text { font-size: 14px; font-style: italic; }
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Theme</button>
+
+<div class="discussion-arena">
+
+  <!-- ── Top bar ──────────────────────────────── -->
+  <div class="topbar">
+    <div class="topbar__left">
+      <button class="topbar__back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5" /><path d="m12 19-7-7 7-7" />
+        </svg>
+      </button>
+      <span class="topbar__title">탈중앙화 거버넌스의 미래</span>
+    </div>
+    <div class="topbar__right">
+      <span class="topbar__status topbar__status--active">진행중</span>
+    </div>
+  </div>
+
+  <!-- ── Discussion Content ───────────────────── -->
+  <div class="discussion-main">
+    <div class="discussion-main__inner">
+
+      <div class="disc-header">
+        <span class="disc-header__type">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+          Discussion
+        </span>
+        <h1 class="disc-header__title">탈중앙화 거버넌스의 미래: DAO가 전통적 의사결정을 대체할 수 있을까?</h1>
+        <div class="disc-header__meta">
+          <div class="disc-header__author">
+            <div class="disc-header__avatar"></div>
+            <span class="disc-header__author-name">김철수</span>
+          </div>
+          <span class="disc-header__separator"></span>
+          <span class="disc-header__date">Apr 12, 2026</span>
+        </div>
+      </div>
+
+      <div class="disc-body">
+        <div class="disc-body__content">
+          <p>최근 DAO(분산 자율 조직)가 전통적인 거버넌스 모델의 대안으로 주목받고 있습니다. 토큰 기반 투표, 스마트 컨트랙트 기반 집행, 온체인 투명성 등의 장점이 있지만, 동시에 투표율 저하, 대규모 토큰 보유자의 영향력 집중, 법적 불확실성 등의 과제도 존재합니다.</p>
+          <p>여러분은 DAO가 기존의 중앙 집중식 의사결정 구조를 효과적으로 대체할 수 있다고 생각하시나요? 아니면 하이브리드 모델이 더 현실적인 대안일까요?</p>
+          <p>다음 관점에서 의견을 공유해주세요:</p>
+          <p>1. DAO의 가장 큰 강점과 약점<br/>2. 실제 사용 사례에서의 성공/실패 경험<br/>3. 개선이 필요한 영역</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Dim overlay ──────────────────────────── -->
+  <div class="sheet-dim" id="sheet-dim"></div>
+
+  <!-- ── Bottom Sheet Comments ────────────────── -->
+  <div class="comments-sheet" id="comments-sheet">
+
+    <!-- Handle -->
+    <div class="sheet-handle" id="sheet-handle">
+      <div class="sheet-handle__bar"></div>
+      <div class="sheet-handle__row">
+        <div class="sheet-handle__left">
+          <span class="sheet-handle__title">댓글</span>
+          <span class="sheet-handle__count">12</span>
+        </div>
+        <svg class="sheet-handle__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- Comment Input -->
+    <div class="comment-input">
+      <div class="comment-input__body">
+        <textarea class="comment-input__textarea" placeholder="의견을 남겨주세요..." rows="2"></textarea>
+        <div class="comment-input__footer">
+          <button class="comment-input__submit">게시</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scrollable Comments -->
+    <div class="sheet-content">
+      <div class="comment-list">
+
+        <!-- Comment 1 -->
+        <div class="comment-item">
+          <div class="comment-item__avatar"></div>
+          <div class="comment-item__body">
+            <div class="comment-item__top">
+              <span class="comment-item__name">이영희</span>
+              <span class="comment-item__time">2시간 전</span>
+            </div>
+            <div class="comment-item__text">DAO의 가장 큰 강점은 투명성이라고 생각합니다. 모든 의사결정 과정이 온체인에 기록되기 때문에 기존 조직에서 발생하는 정보 비대칭 문제를 해결할 수 있어요.</div>
+            <div class="comment-item__actions">
+              <button class="comment-action comment-action--liked">
+                <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
+                <span>5</span>
+              </button>
+              <button class="comment-action">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                </svg>
+                <span>답글</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Replies -->
+        <button class="reply-toggle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+          2개 답글
+        </button>
+        <div class="comment-replies">
+          <div class="comment-item">
+            <div class="comment-item__avatar"></div>
+            <div class="comment-item__body">
+              <div class="comment-item__top">
+                <span class="comment-item__name">박지성</span>
+                <span class="comment-item__time">1시간 전</span>
+              </div>
+              <div class="comment-item__text">동의합니다. 다만 투표율이 낮은 상태에서의 투명성은 소수 결정의 투명성이 될 수 있어서, 참여 인센티브 설계가 중요하다고 봐요.</div>
+            </div>
+          </div>
+          <div class="comment-item">
+            <div class="comment-item__avatar"></div>
+            <div class="comment-item__body">
+              <div class="comment-item__top">
+                <span class="comment-item__name">이영희</span>
+                <span class="comment-item__time">45분 전</span>
+              </div>
+              <div class="comment-item__text">맞는 말씀이에요. 위임 투표(delegate voting) 같은 메커니즘으로 보완할 수 있을 것 같습니다.</div>
+            </div>
+          </div>
+          <div class="reply-input">
+            <input class="reply-input__field" placeholder="답글 작성..." />
+            <button class="reply-input__send">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13" />
+                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Comment 2 -->
+        <div class="comment-item">
+          <div class="comment-item__avatar"></div>
+          <div class="comment-item__body">
+            <div class="comment-item__top">
+              <span class="comment-item__name">최민준</span>
+              <span class="comment-item__time">3시간 전</span>
+            </div>
+            <div class="comment-item__text">하이브리드 모델이 더 현실적이라고 봅니다. 핵심 의사결정은 DAO로, 실행과 운영은 전통적 구조로 가져가는 방식이요. MakerDAO가 좋은 사례입니다.</div>
+            <div class="comment-item__actions">
+              <button class="comment-action">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
+                <span>3</span>
+              </button>
+              <button class="comment-action">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                </svg>
+                <span>답글</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Comment 3 -->
+        <div class="comment-item">
+          <div class="comment-item__avatar"></div>
+          <div class="comment-item__body">
+            <div class="comment-item__top">
+              <span class="comment-item__name">정수연</span>
+              <span class="comment-item__time">5시간 전</span>
+            </div>
+            <div class="comment-item__text">법적 프레임워크가 없는 상태에서 DAO는 한계가 있다고 생각합니다. 와이오밍주에서 DAO LLC를 인정하기 시작했지만, 글로벌 수준에서는 아직 갈 길이 멀어요.</div>
+            <div class="comment-item__actions">
+              <button class="comment-action">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
+                <span>8</span>
+              </button>
+              <button class="comment-action">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                </svg>
+                <span>답글</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Comment 4 -->
+        <div class="comment-item">
+          <div class="comment-item__avatar"></div>
+          <div class="comment-item__body">
+            <div class="comment-item__top">
+              <span class="comment-item__name">김태호</span>
+              <span class="comment-item__time">6시간 전</span>
+            </div>
+            <div class="comment-item__text">실제로 Nouns DAO에 참여해본 경험으로는, 소규모 커뮤니티에서는 매우 효과적이었습니다. 하지만 규모가 커지면 거버넌스 피로도가 급격히 증가하더라고요.</div>
+            <div class="comment-item__actions">
+              <button class="comment-action">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
+                <span>2</span>
+              </button>
+              <button class="comment-action">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                </svg>
+                <span>답글</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  var sheet = document.getElementById('comments-sheet');
+  var handle = document.getElementById('sheet-handle');
+  var dim = document.getElementById('sheet-dim');
+  var expanded = false;
+  var startY = 0;
+  var startTranslate = 0;
+  var dragging = false;
+  var sheetHeight = 0;
+  var collapsedOffset = 0;
+
+  function getCollapsedOffset() {
+    return sheet.offsetHeight - 64;
+  }
+
+  function toggle() {
+    expanded = !expanded;
+    sheet.classList.toggle('expanded', expanded);
+    dim.classList.toggle('active', expanded);
+  }
+
+  // Click on handle toggles
+  handle.addEventListener('click', function (e) {
+    if (dragging) return;
+    toggle();
+  });
+
+  // Click on dim closes
+  dim.addEventListener('click', function () {
+    if (expanded) toggle();
+  });
+
+  // ── Touch drag ─────────────────────────────────
+  handle.addEventListener('touchstart', function (e) {
+    startY = e.touches[0].clientY;
+    sheetHeight = sheet.offsetHeight;
+    collapsedOffset = getCollapsedOffset();
+    var current = expanded ? 0 : collapsedOffset;
+    startTranslate = current;
+    dragging = false;
+    sheet.classList.add('dragging');
+  }, { passive: true });
+
+  handle.addEventListener('touchmove', function (e) {
+    var dy = e.touches[0].clientY - startY;
+    if (Math.abs(dy) < 5 && !dragging) return;
+    dragging = true;
+    e.preventDefault();
+    var next = Math.max(0, Math.min(collapsedOffset, startTranslate + dy));
+    sheet.style.transform = 'translateY(' + next + 'px)';
+  }, { passive: false });
+
+  handle.addEventListener('touchend', function (e) {
+    sheet.classList.remove('dragging');
+    if (!dragging) return; // let click handler deal with tap
+
+    var endY = e.changedTouches[0].clientY;
+    var dy = endY - startY;
+    var velocity = Math.abs(dy);
+
+    // If dragged more than 30% or fast swipe → toggle
+    if (expanded) {
+      if (dy > 60 || velocity > 80) {
+        expanded = false;
+      }
+    } else {
+      if (dy < -60 || velocity > 80) {
+        expanded = true;
+      }
+    }
+
+    sheet.style.transform = '';
+    sheet.classList.toggle('expanded', expanded);
+    dim.classList.toggle('active', expanded);
+
+    // Reset after transition
+    setTimeout(function () { dragging = false; }, 50);
+  });
+
+  // ── Mouse drag (for desktop testing) ───────────
+  handle.addEventListener('mousedown', function (e) {
+    startY = e.clientY;
+    sheetHeight = sheet.offsetHeight;
+    collapsedOffset = getCollapsedOffset();
+    startTranslate = expanded ? 0 : collapsedOffset;
+    dragging = false;
+    sheet.classList.add('dragging');
+
+    function onMouseMove(e) {
+      var dy = e.clientY - startY;
+      if (Math.abs(dy) < 5 && !dragging) return;
+      dragging = true;
+      var next = Math.max(0, Math.min(collapsedOffset, startTranslate + dy));
+      sheet.style.transform = 'translateY(' + next + 'px)';
+    }
+
+    function onMouseUp(e) {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      sheet.classList.remove('dragging');
+
+      if (!dragging) return;
+
+      var dy = e.clientY - startY;
+      if (expanded) {
+        if (dy > 60) expanded = false;
+      } else {
+        if (dy < -60) expanded = true;
+      }
+
+      sheet.style.transform = '';
+      sheet.classList.toggle('expanded', expanded);
+      dim.classList.toggle('active', expanded);
+      setTimeout(function () { dragging = false; }, 50);
+    }
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  });
+})();
+
+// Theme toggle
+function toggleTheme() {
+  var html = document.documentElement;
+  html.setAttribute('data-theme', html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+</script>
+</body>
+</html>
