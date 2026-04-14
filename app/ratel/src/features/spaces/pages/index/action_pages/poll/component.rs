@@ -7,7 +7,9 @@ use super::subjective::*;
 use crate::features::spaces::pages::actions::actions::poll::components::*;
 use crate::features::spaces::pages::actions::actions::poll::controllers::*;
 use crate::features::spaces::pages::actions::actions::poll::*;
-use crate::features::spaces::pages::index::action_pages::quiz::ActiveActionOverlaySignal;
+use crate::features::spaces::pages::index::action_pages::quiz::{
+    ActiveActionOverlaySignal, CompletedActionCard,
+};
 use crate::features::spaces::pages::index::*;
 use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
 
@@ -145,20 +147,26 @@ pub fn ActionPollViewer(
     use_drop(move || sidebar_visible.set(true));
 
     let overlay: Option<ActiveActionOverlaySignal> = try_consume_context();
+    let completed: Option<CompletedActionCard> = try_consume_context();
 
     let do_submit = Callback::new(move |_: ()| {
         spawn(async move {
             let req = RespondPollRequest { answers: answers() };
             match respond_poll(space_id(), poll_id(), req).await {
                 Ok(_) => {
-                    poll_loader.restart();
-                    space_ctx.actions.restart();
                     space_ctx.ranking.restart();
                     space_ctx.my_score.restart();
+                    // Restart actions list so dashboard refreshes after animation
+                    space_ctx.actions.restart();
                     toast.info(tr.submit_success);
                     if let Some(mut ov) = overlay {
+                        // Signal the dashboard to animate this card into archive
+                        if let Some(mut c) = completed {
+                            c.0.set(Some(poll_id().to_string()));
+                        }
                         ov.0.set(None);
                     } else {
+                        poll_loader.restart();
                         nav.replace(crate::Route::SpaceIndexPage {
                             space_id: space_id(),
                         });
