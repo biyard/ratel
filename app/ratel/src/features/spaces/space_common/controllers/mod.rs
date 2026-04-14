@@ -12,3 +12,6 @@ pub use list_space_members::*;
 
 mod list_hot_spaces;
 pub use list_hot_spaces::*;
+
+mod list_my_home_spaces;
+pub use list_my_home_spaces::*;

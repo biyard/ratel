@@ -203,6 +203,41 @@
   font-weight: 700;
 }
 
+/* ── Tabs ────────────────────────────────────────── */
+.home-arena .section-tabs {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 28px;
+  margin-bottom: 4px;
+}
+.home-arena .section-tab {
+  background: transparent;
+  border: 1px solid var(--ha-border-subtle);
+  padding: 6px 14px;
+  border-radius: 100px;
+  cursor: pointer;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ha-text-dim);
+  transition: all 0.2s ease;
+}
+.home-arena .section-tab:hover {
+  color: var(--ha-text-muted);
+  border-color: rgba(252, 179, 0, 0.2);
+}
+.home-arena .section-tab[aria-selected="true"] {
+  color: #fcb300;
+  background: rgba(252, 179, 0, 0.08);
+  border-color: rgba(252, 179, 0, 0.3);
+  box-shadow: 0 0 12px rgba(252, 179, 0, 0.15);
+}
+
 /* ── Carousel ────────────────────────────────────── */
 .home-arena .carousel-wrapper {
   position: relative;
