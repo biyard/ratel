@@ -11,9 +11,16 @@ function requestIdentityVerification(storeId, channelKey, prefix) {
     storeId,
     identityVerificationId,
     channelKey,
+    // bypass: {
+    //   inicisUnified: {
+    //     flgFixedUser: "N",
+    //     directAgency: "PASS",
+    //     logoUrl: "https://metadata.ratel.foundation/logos/logo-symbol.png",
+    //   },
+    // },
   };
   return window.PortOne.requestIdentityVerification(payload).then(
-    () => identityVerificationId
+    () => identityVerificationId,
   );
 }
 

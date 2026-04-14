@@ -17,6 +17,8 @@ async fn fetch_rewards(user_pk: Partition, month: Option<String>) -> Result<Rewa
         total_points: balance.project_total_points,
         points: balance.balance,
         monthly_token_supply: balance.monthly_token_supply,
+        chain_id: token.chain_id,
+        contract_address: token.contract_address,
     })
 }
 

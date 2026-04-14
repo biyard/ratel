@@ -7,9 +7,7 @@ use crate::features::spaces::pages::actions::actions::quiz::*;
 use crate::features::spaces::pages::actions::components::FullActionLayover;
 use crate::features::spaces::pages::apps::apps::file::components::FileCard;
 use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
-use crate::features::spaces::space_common::types::{
-    space_my_score_key, space_page_actions_quiz_key, space_ranking_key,
-};
+use crate::features::spaces::space_common::providers::use_space_context;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum QuizReadStep {
@@ -101,9 +99,9 @@ pub fn QuizReadPage(
     can_respond: bool,
 ) -> Element {
     let i18n: QuizReadTranslate = use_translate();
-    let ctx = Context::init(space_id, quiz_id)?;
+    let mut ctx = Context::init(space_id, quiz_id)?;
     let quiz = ctx.quiz.read().clone();
-    let mut query = use_query_store();
+    let mut space_ctx = use_space_context();
     let mut toast = use_toast();
     let mut step = use_signal(|| QuizReadStep::Overview);
     let mut question_index = use_signal(|| 0usize);
@@ -166,10 +164,10 @@ pub fn QuizReadPage(
         spawn(async move {
             match respond_quiz(space_id(), quiz_id(), req).await {
                 Ok(_) => {
-                    let keys = space_page_actions_quiz_key(&space_id(), &quiz_id());
-                    query.invalidate(&keys);
-                    query.invalidate(&space_ranking_key(&space_id()));
-                    query.invalidate(&space_my_score_key(&space_id()));
+                        ctx.quiz.restart();
+                    ctx.answer.restart();
+                    space_ctx.ranking.restart();
+                    space_ctx.my_score.restart();
                     toast.info(i18n.submit_success);
                     nav.push(format!("/spaces/{}/actions", space_id()));
                 }

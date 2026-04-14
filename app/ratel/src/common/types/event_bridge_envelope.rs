@@ -30,6 +30,10 @@ pub enum DetailType {
     AiModeratorReplyIndex,
     ActivityScoreAggregate,
     SpaceStatusChangeEvent,
+    PollXpRecord,
+    QuizXpRecord,
+    DiscussionXpRecord,
+    FollowXpRecord,
     #[serde(other)]
     Unknown,
 }
@@ -116,6 +120,22 @@ impl EventBridgeEnvelope {
                     DetailType::parse_detail(&self.detail)?;
                 crate::features::spaces::space_common::services::handle_space_status_change(event)
                     .await
+            }
+            DetailType::PollXpRecord => {
+                let answer = DetailType::parse_detail(&self.detail)?;
+                crate::features::activity::services::handle_poll_xp(answer).await
+            }
+            DetailType::QuizXpRecord => {
+                let attempt = DetailType::parse_detail(&self.detail)?;
+                crate::features::activity::services::handle_quiz_xp(attempt).await
+            }
+            DetailType::DiscussionXpRecord => {
+                let comment = DetailType::parse_detail(&self.detail)?;
+                crate::features::activity::services::handle_discussion_xp(comment).await
+            }
+            DetailType::FollowXpRecord => {
+                let follow = DetailType::parse_detail(&self.detail)?;
+                crate::features::activity::services::handle_follow_xp(follow).await
             }
             DetailType::Unknown => {
                 tracing::warn!(

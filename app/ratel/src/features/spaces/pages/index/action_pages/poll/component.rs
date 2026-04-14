@@ -10,9 +10,6 @@ use crate::features::spaces::pages::actions::actions::poll::*;
 use crate::features::spaces::pages::index::action_pages::quiz::ActiveActionOverlaySignal;
 use crate::features::spaces::pages::index::*;
 use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
-use crate::features::spaces::space_common::types::{
-    space_my_score_key, space_page_actions_key, space_page_actions_poll_key, space_ranking_key,
-};
 
 translate! {
     ActionPollTranslate;
@@ -77,14 +74,13 @@ pub fn ActionPollViewer(
     can_respond: bool,
 ) -> Element {
     let tr: ActionPollTranslate = use_translate();
-    let mut query = use_query_store();
+    let mut space_ctx = crate::features::spaces::space_common::providers::use_space_context();
     let mut toast = use_toast();
     let nav = navigator();
     let role = use_space_role()();
     let space = use_space()();
 
-    let key = space_page_actions_poll_key(&space_id(), &poll_id());
-    let poll_loader = use_query(&key, move || get_poll(space_id(), poll_id()))?;
+    let mut poll_loader = use_loader(move || get_poll(space_id(), poll_id()))?;
     let poll = poll_loader();
     let questions = poll.questions.clone();
     let total = questions.len();
@@ -155,10 +151,10 @@ pub fn ActionPollViewer(
             let req = RespondPollRequest { answers: answers() };
             match respond_poll(space_id(), poll_id(), req).await {
                 Ok(_) => {
-                    query.invalidate(&space_page_actions_poll_key(&space_id(), &poll_id()));
-                    query.invalidate(&space_page_actions_key(&space_id()));
-                    query.invalidate(&space_ranking_key(&space_id()));
-                    query.invalidate(&space_my_score_key(&space_id()));
+                    poll_loader.restart();
+                    space_ctx.actions.restart();
+                    space_ctx.ranking.restart();
+                    space_ctx.my_score.restart();
                     toast.info(tr.submit_success);
                     if let Some(mut ov) = overlay {
                         ov.0.set(None);

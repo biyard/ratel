@@ -23,6 +23,8 @@ pub struct SpacePollUserAnswer {
     pub display_name: Option<String>,
     pub profile_url: Option<String>,
     pub username: Option<String>,
+    #[serde(default)]
+    pub space_id: Option<String>,
 }
 
 #[cfg(feature = "server")]
@@ -37,6 +39,10 @@ impl SpacePollUserAnswer {
         let user_pk = author.pk;
         let created_at = get_now_timestamp_millis();
         let (pk, sk) = Self::keys(&user_pk, &poll_sk, &space_pk);
+        let space_id_str = match &space_pk {
+            Partition::Space(id) => id.clone(),
+            _ => space_pk.to_string(),
+        };
         Self {
             pk: pk.clone(),
             sk,
@@ -47,6 +53,7 @@ impl SpacePollUserAnswer {
             display_name: Some(author.display_name),
             profile_url: Some(author.profile_url),
             username: Some(author.username),
+            space_id: Some(space_id_str),
         }
     }
     // FIXME: Because of EntityType(String, String) Type cannot deserialize from string
