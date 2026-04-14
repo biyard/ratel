@@ -113,6 +113,7 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                     .email
                     .clone()
                     .filter(|email| !email.trim().is_empty());
+                let access_token = user_info.access_token.clone();
                 let result = login_handler(LoginRequest::OAuth {
                     provider: OauthProvider::Google,
                     access_token: user_info.access_token,
@@ -135,7 +136,11 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                     Err(Error::Auth(AuthError::UserNotFound)) => {
                         popup.close();
                         popup.open(rsx! {
-                            SignupModal { initial_email: oauth_email, on_success }
+                            SignupModal {
+                                initial_email: oauth_email,
+                                initial_oauth_access_token: access_token,
+                                on_success,
+                            }
                         });
                     }
                     Err(e) => {
