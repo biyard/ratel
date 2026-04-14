@@ -19,11 +19,7 @@ pub fn PollActionPage(space_id: SpacePartition, poll_id: SpacePollEntityType) ->
     // Read the poll's lifecycle status before deciding which view to
     // render. We do a lightweight standalone fetch here (NOT Context::init)
     // so we don't conflict with the child's own context initialization.
-    let key = crate::features::spaces::space_common::types::space_page_actions_poll_key(
-        &space_id(),
-        &poll_id(),
-    );
-    let poll_loader = use_query(&key, move || get_poll(space_id(), poll_id()))?;
+    let poll_loader = use_loader(move || get_poll(space_id(), poll_id()))?;
     let locked = is_action_locked(use_space()().status, poll_loader().started_at);
 
     // Edit-mode override: creators land on the participant view once

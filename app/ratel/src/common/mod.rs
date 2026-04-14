@@ -36,7 +36,6 @@ pub mod macros;
 #[cfg(feature = "server")]
 pub mod middlewares;
 pub mod models;
-pub mod query;
 pub mod services;
 pub mod utils;
 pub use macros::dynamo_entity::DynamoEntity;
@@ -47,7 +46,6 @@ pub use contexts::*;
 pub use dev_tools::*;
 pub use dioxus;
 pub use providers::*;
-pub use query::*;
 pub use run::*;
 
 pub use dioxus::prelude::*;

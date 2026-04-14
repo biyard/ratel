@@ -126,7 +126,7 @@ dx translate -f <path>/page.html
 
 ```rust
 rsx! {
-    document::Link { rel: "stylesheet", href: asset!("./style.css") }
+    document::Link { rel: "preload", href: asset!("./style.css"), r#as: "style" }
     document::Script { defer: true, src: asset!("./script.js") }  // only if JS exists
     // ... component RSX
 }
@@ -170,6 +170,8 @@ dx fmt -f <file>.rs
 
 ```bash
 cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev RUSTFLAGS='-D warnings' dx check --features web
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev RUSTFLAGS='-D warnings' cargo check --features web
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev RUSTFLAGS='-D warnings' cargo check --features server
 ```
 
 - **References**: conventions/build-commands.md
@@ -189,3 +191,5 @@ cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev RUSTFLAGS='-D warnings' dx check -
 - [ ] Module registered in parent `mod.rs`
 - [ ] `rustywind` + `dx fmt` applied
 - [ ] `dx check --features web` passes
+- [ ] `cargo check --features web` passes
+- [ ] `cargo check --features server` passes
