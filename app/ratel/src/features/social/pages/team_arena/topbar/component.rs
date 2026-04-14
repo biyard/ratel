@@ -61,8 +61,14 @@ pub fn ArenaTopbar(
         nav.push(Route::Index {});
     };
 
-    let go_home_root = move |_| {
-        nav.push(Route::Index {});
+    // Home icon routes to the current team's home page.
+    let go_team_home = {
+        let username = username.clone();
+        move |_| {
+            nav.push(Route::TeamHome {
+                username: username.clone(),
+            });
+        }
     };
 
     // Build the dropdown list. Always include the current team so the list never
@@ -125,7 +131,7 @@ pub fn ArenaTopbar(
                     class: "arena-topbar__back",
                     aria_label: "{tr.home}",
                     r#type: "button",
-                    onclick: go_home_root,
+                    onclick: go_team_home,
                     svg {
                         view_box: "0 0 24 24",
                         fill: "none",
