@@ -1,11 +1,4 @@
 {
-  "permissions": {
-    "allow": [
-      "Bash(dx fmt:*)",
-      "Bash(DYNAMO_TABLE_PREFIX=ratel-dev RUSTFLAGS='-D warnings' dx check --features web --platform web)",
-      "Bash(DYNAMO_TABLE_PREFIX=ratel-dev RUSTFLAGS='-D warnings' cargo check --features web)"
-    ]
-  },
   "enabledPlugins": {
     "dioxus-knowledge-patch@nevaberry-plugins": true
   }
