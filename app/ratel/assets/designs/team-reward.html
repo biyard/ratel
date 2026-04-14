@@ -1,0 +1,3188 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ratel — Rewards</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      :root {
+        --bg-void: #06060e;
+        --bg-glass: rgba(12, 12, 26, 0.65);
+        --bg-glass-hover: rgba(20, 20, 40, 0.8);
+        --bg-input: rgba(255, 255, 255, 0.025);
+        --border-subtle: rgba(255, 255, 255, 0.06);
+        --border-strong: rgba(255, 255, 255, 0.12);
+        --text-primary: #f0f0f5;
+        --text-muted: #8888a8;
+        --text-dim: #55556a;
+        --accent-gold: #fcb300;
+        --accent-teal: #6eedd8;
+        --accent-coral: #ef4444;
+        --accent-green: #22c55e;
+        --font-display: "Orbitron", sans-serif;
+        --font-body: "Outfit", sans-serif;
+      }
+      html,
+      body {
+        min-height: 100%;
+        background: var(--bg-void);
+        color: var(--text-primary);
+        font-family: var(--font-body);
+      }
+      body {
+        overflow-x: hidden;
+      }
+
+      .arena {
+        position: relative;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      .arena::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+          radial-gradient(
+            ellipse 80% 60% at 50% 30%,
+            rgba(252, 179, 0, 0.05) 0%,
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse 120% 100% at 50% 120%,
+            rgba(110, 237, 216, 0.04) 0%,
+            transparent 50%
+          );
+        z-index: 0;
+        pointer-events: none;
+      }
+
+      /* ─── Top bar ────────────────────────────────────────── */
+      .arena-topbar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 28px;
+        background: rgba(6, 6, 14, 0.8);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--border-subtle);
+      }
+      .arena-topbar__left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .back-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: var(--bg-glass);
+        border: 1px solid var(--border-subtle);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        padding: 0;
+      }
+      .back-btn:hover {
+        border-color: rgba(252, 179, 0, 0.25);
+        background: var(--bg-glass-hover);
+      }
+      .back-btn svg {
+        width: 18px;
+        height: 18px;
+        color: var(--text-muted);
+        transition: color 0.2s;
+      }
+      .back-btn:hover svg {
+        color: var(--accent-gold);
+      }
+      .topbar-title {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+      }
+      .topbar-title__main {
+        font-family: var(--font-display);
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-primary);
+      }
+      .topbar-title__cycle {
+        font-family: var(--font-display);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        color: var(--text-dim);
+      }
+      .topbar-title__cycle strong {
+        color: var(--accent-gold);
+      }
+
+      .chain-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 12px;
+        border-radius: 100px;
+        background: var(--bg-glass);
+        backdrop-filter: blur(16px);
+        border: 1px solid var(--border-subtle);
+        font-family: var(--font-body);
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .chain-chip:hover {
+        border-color: rgba(252, 179, 0, 0.2);
+        color: var(--text-primary);
+      }
+      .chain-chip__dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--accent-green);
+        box-shadow: 0 0 6px var(--accent-green);
+      }
+      .chain-chip__addr {
+        font-family: var(--font-display);
+        font-size: 10px;
+        letter-spacing: 0.04em;
+        color: var(--text-dim);
+      }
+      .chain-chip svg {
+        width: 12px;
+        height: 12px;
+        color: var(--text-dim);
+      }
+
+      /* ─── Page layout ────────────────────────────────────── */
+      .page {
+        position: relative;
+        z-index: 1;
+        flex: 1;
+        max-width: 980px;
+        margin: 0 auto;
+        width: 100%;
+        padding: 32px 28px 60px;
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+      }
+
+      /* ─── HERO cycle card ────────────────────────────────── */
+      .hero {
+        position: relative;
+        display: grid;
+        grid-template-columns: 1fr 280px;
+        gap: 32px;
+        padding: 32px 32px 28px;
+        background: var(--bg-glass);
+        backdrop-filter: blur(16px);
+        border: 1px solid var(--border-subtle);
+        border-radius: 20px;
+        overflow: hidden;
+      }
+      .hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(
+            ellipse 60% 50% at 80% 20%,
+            rgba(252, 179, 0, 0.08) 0%,
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse 50% 40% at 10% 90%,
+            rgba(110, 237, 216, 0.06) 0%,
+            transparent 60%
+          );
+        pointer-events: none;
+      }
+      .hero > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .hero__main {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        min-width: 0;
+      }
+      .hero__eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: var(--font-display);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+      }
+      .hero__eyebrow strong {
+        color: var(--accent-gold);
+        font-weight: 700;
+      }
+      .hero__eyebrow .pulse {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--accent-teal);
+        box-shadow: 0 0 6px var(--accent-teal);
+        animation: pulse 2s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
+      }
+
+      .hero__points {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .hero__points-value {
+        font-family: var(--font-display);
+        font-size: 64px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: var(--text-primary);
+        line-height: 1;
+        background: linear-gradient(135deg, #ffd24a, var(--accent-gold));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .hero__points-unit {
+        font-family: var(--font-display);
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+
+      .hero__share {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .hero__share-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 12.5px;
+      }
+      .hero__share-label {
+        font-family: var(--font-display);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+      }
+      .hero__share-value {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+      }
+      .hero__share-value strong {
+        font-family: var(--font-display);
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--accent-gold);
+      }
+      .hero__share-value small {
+        font-size: 11px;
+        color: var(--text-dim);
+      }
+      .hero__share-bar {
+        height: 6px;
+        border-radius: 100px;
+        background: rgba(255, 255, 255, 0.06);
+        overflow: hidden;
+        position: relative;
+      }
+      .hero__share-bar-fill {
+        height: 100%;
+        border-radius: 100px;
+        background: linear-gradient(90deg, var(--accent-gold), #ffd24a);
+        box-shadow: 0 0 12px rgba(252, 179, 0, 0.4);
+        transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .hero__share-meta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: var(--text-dim);
+        font-family: var(--font-display);
+        letter-spacing: 0.06em;
+      }
+
+      /* Right side: token estimate + countdown */
+      .hero__side {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 18px;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--border-subtle);
+        border-radius: 14px;
+      }
+      .hero__token-label {
+        font-family: var(--font-display);
+        font-size: 9px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .hero__token-label svg {
+        width: 11px;
+        height: 11px;
+        color: var(--accent-teal);
+      }
+      .hero__token-value {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+      }
+      .hero__token-value strong {
+        font-family: var(--font-display);
+        font-size: 30px;
+        font-weight: 700;
+        color: var(--accent-teal);
+        line-height: 1;
+      }
+      .hero__token-value small {
+        font-family: var(--font-display);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+      .hero__token-formula {
+        font-size: 11px;
+        line-height: 1.5;
+        color: var(--text-dim);
+        padding: 8px 10px;
+        background: rgba(110, 237, 216, 0.04);
+        border-radius: 8px;
+        border: 1px solid rgba(110, 237, 216, 0.1);
+      }
+      .hero__token-formula code {
+        font-family: var(--font-display);
+        color: var(--accent-teal);
+        font-size: 10px;
+        letter-spacing: 0.04em;
+      }
+
+      .hero__countdown {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: rgba(252, 179, 0, 0.05);
+        border: 1px solid rgba(252, 179, 0, 0.15);
+      }
+      .hero__countdown svg {
+        width: 14px;
+        height: 14px;
+        color: var(--accent-gold);
+        flex-shrink: 0;
+      }
+      .hero__countdown-text {
+        font-size: 11.5px;
+        color: var(--text-muted);
+        line-height: 1.4;
+      }
+      .hero__countdown-text strong {
+        font-family: var(--font-display);
+        color: var(--accent-gold);
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+
+      /* ─── Hero token USD line ───────────────────────────── */
+      .hero__token-usd {
+        font-size: 12px;
+        color: var(--text-muted);
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .hero__token-usd strong {
+        font-family: var(--font-display);
+        font-weight: 700;
+        color: var(--text-primary);
+        font-size: 13px;
+        letter-spacing: 0.02em;
+      }
+      .hero__token-usd-rate {
+        font-family: var(--font-display);
+        font-size: 9.5px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        color: var(--text-dim);
+        text-transform: uppercase;
+      }
+
+      /* ─── Token treasury card ───────────────────────────── */
+      .token-card {
+        display: grid;
+        grid-template-columns: 1fr 1.4fr;
+        gap: 0;
+        background: var(--bg-glass);
+        backdrop-filter: blur(16px);
+        border: 1px solid var(--border-subtle);
+        border-radius: 16px;
+        overflow: hidden;
+      }
+      .token-card__main {
+        padding: 22px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        border-right: 1px solid var(--border-subtle);
+      }
+      .token-card__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .token-card__label {
+        font-family: var(--font-display);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .token-card__label::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--accent-green);
+        box-shadow: 0 0 6px var(--accent-green);
+      }
+      .token-card__delta {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-family: var(--font-display);
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        padding: 4px 9px;
+        border-radius: 100px;
+      }
+      .token-card__delta svg {
+        width: 11px;
+        height: 11px;
+      }
+      .token-card__delta--up {
+        background: rgba(34, 197, 94, 0.08);
+        color: var(--accent-green);
+        border: 1px solid rgba(34, 197, 94, 0.18);
+      }
+      .token-card__delta--down {
+        background: rgba(239, 68, 68, 0.08);
+        color: var(--accent-coral);
+        border: 1px solid rgba(239, 68, 68, 0.18);
+      }
+
+      .token-card__price {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+      }
+      .token-card__price-num {
+        font-family: var(--font-display);
+        font-size: 46px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: var(--text-primary);
+        line-height: 1;
+      }
+      .token-card__price-unit {
+        font-family: var(--font-display);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+
+      .token-card__sub {
+        font-size: 11.5px;
+        line-height: 1.5;
+        color: var(--text-dim);
+      }
+
+      .token-card__stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: auto;
+        padding-top: 8px;
+        border-top: 1px solid var(--border-subtle);
+      }
+      .token-stat {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
+      .token-stat__label {
+        font-family: var(--font-display);
+        font-size: 9px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+      }
+      .token-stat__value {
+        font-family: var(--font-display);
+        font-size: 13.5px;
+        font-weight: 700;
+        color: var(--text-primary);
+        display: flex;
+        align-items: baseline;
+        gap: 3px;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      .token-stat__value small {
+        font-size: 9px;
+        font-weight: 600;
+        color: var(--text-dim);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .token-stat__value--green {
+        color: var(--accent-green);
+      }
+
+      .token-card__chart {
+        padding: 18px 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-width: 0;
+      }
+      .token-card__chart-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .token-card__chart-title {
+        font-family: var(--font-display);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+      }
+      .token-range {
+        display: inline-flex;
+        background: var(--bg-input);
+        border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+        padding: 2px;
+        gap: 1px;
+      }
+      .token-range__btn {
+        padding: 5px 10px;
+        border-radius: 6px;
+        background: transparent;
+        border: none;
+        font-family: var(--font-display);
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: var(--text-dim);
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      .token-range__btn:hover {
+        color: var(--text-primary);
+      }
+      .token-range__btn[aria-selected="true"] {
+        background: rgba(252, 179, 0, 0.1);
+        color: var(--accent-gold);
+        box-shadow: inset 0 0 0 1px rgba(252, 179, 0, 0.2);
+      }
+      .price-chart {
+        position: relative;
+        width: 100%;
+        flex: 1;
+        min-height: 170px;
+      }
+      .price-chart svg {
+        width: 100%;
+        display: block;
+      }
+
+      /* ─── Charts row ─────────────────────────────────────── */
+      .charts {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr;
+        gap: 14px;
+      }
+      .chart-card {
+        background: var(--bg-glass);
+        backdrop-filter: blur(16px);
+        border: 1px solid var(--border-subtle);
+        border-radius: 14px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        min-width: 0;
+      }
+      .chart-card__head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 12px;
+        padding-bottom: 4px;
+      }
+      .chart-card__title {
+        font-family: var(--font-display);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .chart-card__title::before {
+        content: "";
+        width: 3px;
+        height: 11px;
+        border-radius: 2px;
+        background: var(--accent-gold);
+      }
+      .chart-card__subtitle {
+        font-family: var(--font-display);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        color: var(--text-dim);
+      }
+      .chart-card__delta {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-family: var(--font-display);
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--accent-teal);
+        letter-spacing: 0.04em;
+      }
+      .chart-card__delta--down {
+        color: var(--accent-coral);
+      }
+      .chart-card__delta svg {
+        width: 11px;
+        height: 11px;
+      }
+
+      /* Combo chart (D3) */
+      .combo-chart {
+        position: relative;
+        width: 100%;
+        min-height: 240px;
+      }
+      .combo-chart svg {
+        width: 100%;
+        display: block;
+        overflow: visible;
+      }
+      .chart-legends {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+      }
+      .chart-legend {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--font-display);
+        font-size: 9.5px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+      }
+      .legend-swatch {
+        display: inline-block;
+        flex-shrink: 0;
+      }
+      .legend-swatch--bar {
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+        background: linear-gradient(180deg, #ffd24a, #fcb300);
+      }
+      .legend-swatch--line {
+        width: 16px;
+        height: 3px;
+        border-radius: 2px;
+        background: var(--accent-teal);
+        box-shadow: 0 0 6px rgba(110, 237, 216, 0.5);
+      }
+
+      /* Chart tooltip (shared across combo & price charts) */
+      .chart-tooltip {
+        position: absolute;
+        pointer-events: none;
+        background: rgba(10, 10, 22, 0.96);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-subtle);
+        border-radius: 10px;
+        padding: 9px 13px;
+        min-width: 160px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+        opacity: 0;
+        transition: opacity 0.15s ease;
+        z-index: 5;
+      }
+      .chart-tooltip__head {
+        font-family: var(--font-display);
+        font-size: 9.5px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+      }
+      .chart-tooltip__row {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 11.5px;
+        color: var(--text-muted);
+        margin-top: 3px;
+      }
+      .chart-tooltip__row strong {
+        font-family: var(--font-display);
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-left: auto;
+        letter-spacing: 0.04em;
+      }
+      .chart-tooltip__dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 2px;
+        flex-shrink: 0;
+      }
+      .chart-tooltip__rate {
+        font-family: var(--font-display);
+        font-size: 9px;
+        font-weight: 600;
+        color: var(--text-dim);
+        letter-spacing: 0.06em;
+        margin-top: 7px;
+        padding-top: 6px;
+        border-top: 1px solid var(--border-subtle);
+      }
+
+      /* Donut chart */
+      .donut-wrap {
+        display: grid;
+        grid-template-columns: 160px 1fr;
+        gap: 18px;
+        align-items: center;
+      }
+      .donut {
+        width: 160px;
+        height: 160px;
+        display: block;
+      }
+      .donut__bg {
+        stroke: rgba(255, 255, 255, 0.05);
+      }
+      .donut__seg {
+        transition: stroke-width 0.2s ease;
+        cursor: pointer;
+      }
+      .donut__seg:hover {
+        stroke-width: 26;
+      }
+      .donut__center-num {
+        font-family: "Orbitron", sans-serif;
+        font-size: 24px;
+        font-weight: 700;
+        fill: var(--text-primary);
+      }
+      .donut__center-label {
+        font-family: "Orbitron", sans-serif;
+        font-size: 8.5px;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        fill: var(--text-dim);
+      }
+
+      .donut-legend {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 0;
+      }
+      .legend-item {
+        display: grid;
+        grid-template-columns: 10px 1fr auto;
+        gap: 9px;
+        align-items: center;
+        font-size: 12.5px;
+        color: var(--text-muted);
+      }
+      .legend-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 2px;
+      }
+      .legend-name {
+        font-weight: 600;
+        color: var(--text-muted);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .legend-value {
+        font-family: var(--font-display);
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-primary);
+        letter-spacing: 0.04em;
+        display: flex;
+        align-items: baseline;
+        gap: 4px;
+      }
+      .legend-value small {
+        font-size: 9px;
+        color: var(--text-dim);
+        font-weight: 600;
+      }
+
+      /* ─── Section header ─────────────────────────────────── */
+      .section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 4px;
+      }
+      .section-head__title {
+        font-family: var(--font-display);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .section-head__title::before {
+        content: "";
+        width: 3px;
+        height: 14px;
+        border-radius: 2px;
+        background: var(--accent-gold);
+      }
+      .section-head__count {
+        font-family: var(--font-display);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        color: var(--text-dim);
+      }
+      .section-head__count strong {
+        color: var(--text-muted);
+      }
+
+      /* ─── Activity list (this cycle) ─────────────────────── */
+      .activity {
+        background: var(--bg-glass);
+        backdrop-filter: blur(16px);
+        border: 1px solid var(--border-subtle);
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      .activity__row {
+        display: grid;
+        grid-template-columns: 42px 1fr auto auto;
+        gap: 14px;
+        align-items: center;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--border-subtle);
+        transition: background 0.15s ease;
+      }
+      .activity__row:last-child {
+        border-bottom: none;
+      }
+      .activity__row:hover {
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .activity__icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        background: rgba(252, 179, 0, 0.08);
+        color: var(--accent-gold);
+      }
+      .activity__icon svg {
+        width: 16px;
+        height: 16px;
+      }
+      .activity__icon--in {
+        background: rgba(110, 237, 216, 0.08);
+        color: var(--accent-teal);
+      }
+      .activity__icon--out {
+        background: rgba(239, 68, 68, 0.06);
+        color: var(--accent-coral);
+      }
+      .activity__icon--swap {
+        background: rgba(168, 85, 247, 0.08);
+        color: #a855f7;
+      }
+      .activity__body {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
+      .activity__title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .activity__source {
+        font-size: 11.5px;
+        color: var(--text-dim);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .activity__source svg {
+        width: 11px;
+        height: 11px;
+      }
+      .activity__source a {
+        color: var(--text-muted);
+        text-decoration: none;
+        border-bottom: 1px dotted var(--border-strong);
+        transition: color 0.15s;
+      }
+      .activity__source a:hover {
+        color: var(--accent-gold);
+      }
+
+      .activity__amount {
+        font-family: var(--font-display);
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-align: right;
+      }
+      .activity__amount--in {
+        color: var(--accent-teal);
+      }
+      .activity__amount--out {
+        color: var(--accent-coral);
+      }
+      .activity__amount small {
+        font-size: 9px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        color: var(--text-dim);
+        margin-left: 3px;
+        text-transform: uppercase;
+      }
+
+      .activity__time {
+        font-family: var(--font-display);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        color: var(--text-dim);
+        text-align: right;
+        white-space: nowrap;
+      }
+
+      .activity__loadmore {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 14px;
+        background: transparent;
+        border: none;
+        border-top: 1px solid var(--border-subtle);
+        font-family: var(--font-display);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        width: 100%;
+      }
+      .activity__loadmore:hover {
+        background: rgba(252, 179, 0, 0.04);
+        color: var(--accent-gold);
+      }
+      .activity__loadmore svg {
+        width: 13px;
+        height: 13px;
+      }
+
+      /* ─── Past cycle cards ───────────────────────────────── */
+      .cycles {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .cycle-card {
+        display: grid;
+        grid-template-columns: 120px 1fr auto;
+        gap: 24px;
+        align-items: center;
+        padding: 20px 24px;
+        background: var(--bg-glass);
+        backdrop-filter: blur(16px);
+        border: 1px solid var(--border-subtle);
+        border-radius: 14px;
+        transition: all 0.2s ease;
+      }
+      .cycle-card:hover {
+        border-color: rgba(252, 179, 0, 0.18);
+        background: var(--bg-glass-hover);
+      }
+      .cycle-card--claimed {
+        opacity: 0.78;
+      }
+      .cycle-card--available {
+        border-color: rgba(252, 179, 0, 0.22);
+        box-shadow: 0 0 24px rgba(252, 179, 0, 0.06);
+      }
+
+      .cycle-card__month {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .cycle-card__month-label {
+        font-family: var(--font-display);
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: var(--text-primary);
+      }
+      .cycle-card__month-year {
+        font-family: var(--font-display);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+      }
+
+      .cycle-card__stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+        min-width: 0;
+      }
+      .cycle-stat {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 0;
+      }
+      .cycle-stat__label {
+        font-family: var(--font-display);
+        font-size: 9px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+      }
+      .cycle-stat__value {
+        font-family: var(--font-display);
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text-primary);
+        display: flex;
+        align-items: baseline;
+        gap: 3px;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      .cycle-stat__value small {
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--text-dim);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .cycle-stat--token .cycle-stat__value {
+        color: var(--accent-teal);
+      }
+
+      .cycle-card__action {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+      }
+      .cycle-card__claimed {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border-radius: 9px;
+        background: rgba(34, 197, 94, 0.06);
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        font-family: var(--font-display);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--accent-green);
+      }
+      .cycle-card__claimed svg {
+        width: 13px;
+        height: 13px;
+      }
+      .cycle-card__claim {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 10px 18px;
+        border-radius: 9px;
+        background: linear-gradient(135deg, var(--accent-gold), #e5a200);
+        color: #0a0a0a;
+        border: none;
+        font-family: var(--font-display);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 14px rgba(252, 179, 0, 0.2);
+      }
+      .cycle-card__claim:hover {
+        background: linear-gradient(135deg, #ffd24a, var(--accent-gold));
+        box-shadow: 0 4px 22px rgba(252, 179, 0, 0.4);
+        transform: translateY(-1px);
+        color: #0a0a0a;
+      }
+      .cycle-card__claim svg {
+        width: 12px;
+        height: 12px;
+      }
+      .cycle-card__expand {
+        width: 36px;
+        height: 36px;
+        border-radius: 9px;
+        background: transparent;
+        border: 1px solid var(--border-subtle);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        padding: 0;
+      }
+      .cycle-card__expand:hover {
+        border-color: rgba(252, 179, 0, 0.2);
+        color: var(--accent-gold);
+      }
+      .cycle-card__expand svg {
+        width: 14px;
+        height: 14px;
+        transition: transform 0.2s;
+      }
+      .cycle-card[data-expanded="true"] .cycle-card__expand svg {
+        transform: rotate(180deg);
+        color: var(--accent-gold);
+      }
+
+      .cycle-card__detail {
+        display: none;
+        grid-column: 1 / -1;
+        padding-top: 16px;
+        margin-top: 16px;
+        border-top: 1px solid var(--border-subtle);
+        flex-direction: column;
+        gap: 4px;
+      }
+      .cycle-card[data-expanded="true"] {
+        display: block;
+      }
+      .cycle-card[data-expanded="true"] {
+        display: grid;
+        grid-template-columns: 120px 1fr auto;
+      }
+      .cycle-card[data-expanded="true"] .cycle-card__detail {
+        display: flex;
+      }
+      .cycle-card__detail-row {
+        display: grid;
+        grid-template-columns: 32px 1fr auto auto;
+        gap: 12px;
+        align-items: center;
+        padding: 8px 0;
+        font-size: 12.5px;
+      }
+      .cycle-card__detail-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .cycle-card__detail-icon svg {
+        width: 12px;
+        height: 12px;
+      }
+      .cycle-card__detail-icon--in {
+        background: rgba(110, 237, 216, 0.06);
+        color: var(--accent-teal);
+      }
+      .cycle-card__detail-icon--out {
+        background: rgba(239, 68, 68, 0.05);
+        color: var(--accent-coral);
+      }
+      .cycle-card__detail-title {
+        font-size: 13px;
+        color: var(--text-muted);
+      }
+      .cycle-card__detail-amount {
+        font-family: var(--font-display);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: var(--text-muted);
+      }
+      .cycle-card__detail-amount--in {
+        color: var(--accent-teal);
+      }
+      .cycle-card__detail-amount--out {
+        color: var(--accent-coral);
+      }
+      .cycle-card__detail-time {
+        font-family: var(--font-display);
+        font-size: 9.5px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        color: var(--text-dim);
+        text-align: right;
+        white-space: nowrap;
+      }
+
+      .cycles__loadmore {
+        display: inline-flex;
+        align-self: center;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 22px;
+        background: transparent;
+        border: 1px solid var(--border-subtle);
+        border-radius: 10px;
+        font-family: var(--font-display);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-top: 6px;
+      }
+      .cycles__loadmore:hover {
+        border-color: rgba(252, 179, 0, 0.2);
+        color: var(--accent-gold);
+      }
+      .cycles__loadmore svg {
+        width: 13px;
+        height: 13px;
+      }
+
+      /* ─── Empty state ────────────────────────────────────── */
+      .empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+        padding: 40px 24px;
+        text-align: center;
+      }
+      .empty__icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        background: rgba(252, 179, 0, 0.06);
+        border: 1px solid rgba(252, 179, 0, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--accent-gold);
+      }
+      .empty__icon svg {
+        width: 24px;
+        height: 24px;
+      }
+      .empty__title {
+        font-family: var(--font-display);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+      .empty__desc {
+        font-size: 12.5px;
+        line-height: 1.55;
+        color: var(--text-dim);
+        max-width: 340px;
+      }
+
+      /* Cycle card mini sparkline */
+      .cycle-spark {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+      }
+      .cycle-spark__svg {
+        width: 80px;
+        height: 24px;
+        display: block;
+      }
+      .cycle-spark__label {
+        font-family: var(--font-display);
+        font-size: 9px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+      }
+
+      /* ─── Responsive ─────────────────────────────────────── */
+      @media (max-width: 880px) {
+        .page {
+          padding: 24px 18px 50px;
+          gap: 22px;
+        }
+        .hero {
+          grid-template-columns: 1fr;
+          gap: 22px;
+          padding: 24px 22px;
+        }
+        .hero__points-value {
+          font-size: 52px;
+        }
+        .token-card {
+          grid-template-columns: 1fr;
+        }
+        .token-card__main {
+          border-right: none;
+          border-bottom: 1px solid var(--border-subtle);
+        }
+        .token-card__price-num {
+          font-size: 38px;
+        }
+        .charts {
+          grid-template-columns: 1fr;
+        }
+        .donut-wrap {
+          grid-template-columns: 140px 1fr;
+          gap: 14px;
+        }
+        .donut {
+          width: 140px;
+          height: 140px;
+        }
+        .cycle-card {
+          grid-template-columns: 1fr;
+          gap: 16px;
+          padding: 18px 20px;
+        }
+        .cycle-card[data-expanded="true"] {
+          grid-template-columns: 1fr;
+        }
+        .cycle-card__action {
+          justify-content: flex-start;
+        }
+        .activity__row {
+          grid-template-columns: 36px 1fr auto;
+          gap: 11px;
+          padding: 12px 14px;
+        }
+        .activity__time {
+          display: none;
+        }
+      }
+      @media (max-width: 500px) {
+        .arena-topbar {
+          padding: 14px 16px;
+          gap: 10px;
+        }
+        .topbar-title__cycle {
+          display: none;
+        }
+        .chain-chip {
+          padding: 6px 10px;
+          font-size: 11px;
+        }
+        .chain-chip__addr {
+          display: none;
+        }
+        .hero__points-value {
+          font-size: 42px;
+        }
+        .hero__token-value strong {
+          font-size: 24px;
+        }
+        .cycle-card__stats {
+          grid-template-columns: repeat(2, 1fr) 1fr;
+          gap: 10px;
+        }
+        .cycle-stat__value {
+          font-size: 13px;
+        }
+        .cycle-card__claim {
+          padding: 8px 14px;
+          font-size: 9.5px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="arena">
+      <!-- ─── TOP BAR ─── -->
+      <div class="arena-topbar">
+        <div class="arena-topbar__left">
+          <button class="back-btn" aria-label="Back">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+          <div class="topbar-title">
+            <span class="topbar-title__main">Rewards</span>
+            <span class="topbar-title__cycle"
+              >Cycle <strong>April 2026</strong></span
+            >
+          </div>
+        </div>
+        <button class="chain-chip" aria-label="Token contract">
+          <span class="chain-chip__dot"></span>
+          <span>RATEL · Ethereum</span>
+          <span class="chain-chip__addr">0xab…f12c</span>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+            />
+            <polyline points="15 3 21 3 21 9" />
+            <line x1="10" y1="14" x2="21" y2="3" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- ─── PAGE ─── -->
+      <div class="page">
+        <!-- HERO -->
+        <div class="hero">
+          <div class="hero__main">
+            <div class="hero__eyebrow">
+              <span class="pulse"></span>
+              <span>Earning · this cycle</span>
+              <span style="color: var(--text-dim)">·</span>
+              <strong>April 2026</strong>
+            </div>
+
+            <div class="hero__points">
+              <span class="hero__points-value">1,840</span>
+              <span class="hero__points-unit">Points</span>
+            </div>
+
+            <div class="hero__share">
+              <div class="hero__share-row">
+                <span class="hero__share-label">Share of Pool</span>
+                <span class="hero__share-value"
+                  ><strong>0.62%</strong>
+                  <small>of 296,400 total pts</small></span
+                >
+              </div>
+              <div class="hero__share-bar">
+                <div class="hero__share-bar-fill" style="width: 24%"></div>
+              </div>
+              <div class="hero__share-meta">
+                <span>YOUR POSITION</span>
+                <span>RANK #312 / 8,420</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="hero__side">
+            <div>
+              <div class="hero__token-label">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 6v12" />
+                  <path d="M16 10H8" />
+                </svg>
+                Estimated tokens
+              </div>
+              <div class="hero__token-value">
+                <strong>62.0</strong>
+                <small>RATEL</small>
+              </div>
+              <div class="hero__token-usd">
+                ≈ <strong>$26.04</strong> USDC
+                <span class="hero__token-usd-rate">@ $0.42 / RATEL</span>
+              </div>
+            </div>
+            <div class="hero__token-formula">
+              (1,840 ÷ 296,400) × 10,000 supply = <code>62.0 RATEL</code>
+            </div>
+            <div class="hero__countdown">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+              <div class="hero__countdown-text">
+                Cycle locks in <strong>12d 04h</strong> — claim opens May 1.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TOKEN TREASURY -->
+        <div class="token-card">
+          <div class="token-card__main">
+            <div class="token-card__head">
+              <span class="token-card__label">RATEL · Treasury Rate</span>
+              <span class="token-card__delta token-card__delta--up">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                  <polyline points="17 6 23 6 23 12" />
+                </svg>
+                +5.2% · 24h
+              </span>
+            </div>
+            <div class="token-card__price">
+              <span class="token-card__price-num">$0.42</span>
+              <span class="token-card__price-unit">USDC per RATEL</span>
+            </div>
+            <div class="token-card__sub">
+              Backed 1:1 by treasury reserve. Rate updates every block.
+            </div>
+            <div class="token-card__stats">
+              <div class="token-stat">
+                <span class="token-stat__label">Treasury</span>
+                <span class="token-stat__value"
+                  >$1.18M <small>USDC</small></span
+                >
+              </div>
+              <div class="token-stat">
+                <span class="token-stat__label">Circulating</span>
+                <span class="token-stat__value"
+                  >2.81M <small>RATEL</small></span
+                >
+              </div>
+              <div class="token-stat">
+                <span class="token-stat__label">Backing</span>
+                <span class="token-stat__value token-stat__value--green"
+                  >100% <small>collateralized</small></span
+                >
+              </div>
+            </div>
+          </div>
+          <div class="token-card__chart">
+            <div class="token-card__chart-head">
+              <span class="token-card__chart-title">Price · last 30 days</span>
+              <div class="token-range">
+                <button class="token-range__btn" aria-selected="false">
+                  7D
+                </button>
+                <button class="token-range__btn" aria-selected="true">
+                  30D
+                </button>
+                <button class="token-range__btn" aria-selected="false">
+                  90D
+                </button>
+                <button class="token-range__btn" aria-selected="false">
+                  All
+                </button>
+              </div>
+            </div>
+            <div id="price-chart" class="price-chart"></div>
+          </div>
+        </div>
+
+        <!-- CHARTS -->
+        <div class="charts">
+          <!-- Combo: Points (bar) + Tokens (line) -->
+          <div class="chart-card">
+            <div class="chart-card__head">
+              <div>
+                <div class="chart-card__title">Points & Token Conversion</div>
+                <div class="chart-card__subtitle" style="margin-top: 4px">
+                  Last 6 cycles · Monthly
+                </div>
+              </div>
+              <div class="chart-legends">
+                <span class="chart-legend"
+                  ><span class="legend-swatch legend-swatch--bar"></span
+                  >Points</span
+                >
+                <span class="chart-legend"
+                  ><span class="legend-swatch legend-swatch--line"></span
+                  >RATEL</span
+                >
+              </div>
+            </div>
+            <div id="combo-chart" class="combo-chart"></div>
+          </div>
+
+          <!-- Donut: source breakdown -->
+          <div class="chart-card">
+            <div class="chart-card__head">
+              <div>
+                <div class="chart-card__title">Source Breakdown</div>
+                <div class="chart-card__subtitle" style="margin-top: 4px">
+                  This cycle · Earned points
+                </div>
+              </div>
+            </div>
+            <div class="donut-wrap">
+              <svg id="donut-chart" class="donut" viewBox="0 0 200 200"></svg>
+              <div class="donut-legend">
+                <div class="legend-item">
+                  <span class="legend-dot" style="background: #818cf8"></span
+                  ><span class="legend-name">Polls</span
+                  ><span class="legend-value">720 <small>· 39%</small></span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot" style="background: #fcb300"></span
+                  ><span class="legend-name">Posts</span
+                  ><span class="legend-value">460 <small>· 25%</small></span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot" style="background: #a855f7"></span
+                  ><span class="legend-name">Quizzes</span
+                  ><span class="legend-value">320 <small>· 17%</small></span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot" style="background: #22d3ee"></span
+                  ><span class="legend-name">Discussions</span
+                  ><span class="legend-value">240 <small>· 13%</small></span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot" style="background: #fb923c"></span
+                  ><span class="legend-name">Follows</span
+                  ><span class="legend-value">100 <small>· 5%</small></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACTIVITY -->
+        <div>
+          <div class="section-head">
+            <span class="section-head__title">This Cycle's Activity</span>
+            <span class="section-head__count"><strong>32</strong> entries</span>
+          </div>
+
+          <div class="activity" style="margin-top: 14px">
+            <div class="activity__row">
+              <div class="activity__icon activity__icon--in">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M18 20V10" />
+                  <path d="M12 20V4" />
+                  <path d="M6 20v-6" />
+                </svg>
+              </div>
+              <div class="activity__body">
+                <span class="activity__title">Voted on poll</span>
+                <span class="activity__source"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M2 12h20" />
+                  </svg>
+                  <a href="#">Climate Action DAO</a> — Renewable Energy
+                  Preference</span
+                >
+              </div>
+              <div class="activity__amount activity__amount--in">
+                +50 <small>pts</small>
+              </div>
+              <div class="activity__time">2h ago</div>
+            </div>
+
+            <div class="activity__row">
+              <div class="activity__icon activity__icon--in">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+              <div class="activity__body">
+                <span class="activity__title">Quiz completed · 90% score</span>
+                <span class="activity__source"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                  </svg>
+                  <a href="#">Decentralized Web Builders</a> — Climate Science
+                  Fundamentals</span
+                >
+              </div>
+              <div class="activity__amount activity__amount--in">
+                +75 <small>pts</small>
+              </div>
+              <div class="activity__time">5h ago</div>
+            </div>
+
+            <div class="activity__row">
+              <div class="activity__icon activity__icon--in">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                  />
+                </svg>
+              </div>
+              <div class="activity__body">
+                <span class="activity__title">Discussion contribution</span>
+                <span class="activity__source"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                    />
+                  </svg>
+                  <a href="#">Public Goods Treasury</a> — Round 12
+                  retrospective</span
+                >
+              </div>
+              <div class="activity__amount activity__amount--in">
+                +100 <small>pts</small>
+              </div>
+              <div class="activity__time">1d ago</div>
+            </div>
+
+            <div class="activity__row">
+              <div class="activity__icon activity__icon--in">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <line x1="19" y1="8" x2="19" y2="14" />
+                  <line x1="22" y1="11" x2="16" y2="11" />
+                </svg>
+              </div>
+              <div class="activity__body">
+                <span class="activity__title"
+                  >Followed 3 community leaders</span
+                >
+                <span class="activity__source"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                  </svg>
+                  <a href="#">Climate Action DAO</a> — Onboarding quest</span
+                >
+              </div>
+              <div class="activity__amount activity__amount--in">
+                +30 <small>pts</small>
+              </div>
+              <div class="activity__time">2d ago</div>
+            </div>
+
+            <div class="activity__row">
+              <div class="activity__icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                  />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
+              </div>
+              <div class="activity__body">
+                <span class="activity__title">Post published</span>
+                <span class="activity__source"
+                  >Personal feed —
+                  <a href="#">"The Future of Decentralized Governance"</a></span
+                >
+              </div>
+              <div class="activity__amount activity__amount--in">
+                +200 <small>pts</small>
+              </div>
+              <div class="activity__time">3d ago</div>
+            </div>
+
+            <div class="activity__row">
+              <div class="activity__icon activity__icon--out">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="19 12 12 19 5 12" />
+                  <line x1="12" y1="19" x2="12" y2="5" />
+                </svg>
+              </div>
+              <div class="activity__body">
+                <span class="activity__title">Boosted post visibility</span>
+                <span class="activity__source"
+                  ><a href="#">"Carbon Offset Strategies"</a> — 24h boost</span
+                >
+              </div>
+              <div class="activity__amount activity__amount--out">
+                −40 <small>pts</small>
+              </div>
+              <div class="activity__time">4d ago</div>
+            </div>
+
+            <button class="activity__loadmore">
+              Load more
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- PAST CYCLES -->
+        <div>
+          <div class="section-head">
+            <span class="section-head__title">Past Cycles</span>
+            <span class="section-head__count"
+              ><strong>5</strong> claimable</span
+            >
+          </div>
+
+          <div class="cycles" style="margin-top: 14px">
+            <!-- Available to claim -->
+            <div class="cycle-card cycle-card--available" data-expanded="false">
+              <div class="cycle-card__month">
+                <span class="cycle-card__month-label">March</span>
+                <span class="cycle-card__month-year">2026</span>
+              </div>
+              <div class="cycle-card__stats">
+                <div class="cycle-stat">
+                  <span class="cycle-stat__label">Points</span>
+                  <span class="cycle-stat__value">2,180</span>
+                </div>
+                <div class="cycle-stat">
+                  <span class="cycle-stat__label">Share</span>
+                  <span class="cycle-stat__value">0.74%</span>
+                </div>
+                <div class="cycle-stat cycle-stat--token">
+                  <span class="cycle-stat__label">Tokens</span>
+                  <span class="cycle-stat__value"
+                    >74.0 <small>RATEL</small></span
+                  >
+                </div>
+              </div>
+              <div class="cycle-card__action">
+                <button class="cycle-card__claim">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M5 6h14l-1 14H6L5 6z" />
+                    <path d="M9 11v6" />
+                    <path d="M15 11v6" />
+                  </svg>
+                  Swap All
+                </button>
+                <button class="cycle-card__expand" aria-label="Expand">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+              </div>
+              <div class="cycle-card__detail">
+                <div class="cycle-card__detail-row">
+                  <div
+                    class="cycle-card__detail-icon cycle-card__detail-icon--in"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </div>
+                  <div class="cycle-card__detail-title">
+                    Quiz · Climate Science Fundamentals
+                  </div>
+                  <div
+                    class="cycle-card__detail-amount cycle-card__detail-amount--in"
+                  >
+                    +75
+                  </div>
+                  <div class="cycle-card__detail-time">Mar 28</div>
+                </div>
+                <div class="cycle-card__detail-row">
+                  <div
+                    class="cycle-card__detail-icon cycle-card__detail-icon--in"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M18 20V10" />
+                      <path d="M12 20V4" />
+                      <path d="M6 20v-6" />
+                    </svg>
+                  </div>
+                  <div class="cycle-card__detail-title">
+                    Voted on 8 polls across 3 spaces
+                  </div>
+                  <div
+                    class="cycle-card__detail-amount cycle-card__detail-amount--in"
+                  >
+                    +400
+                  </div>
+                  <div class="cycle-card__detail-time">Mar 22</div>
+                </div>
+                <div class="cycle-card__detail-row">
+                  <div
+                    class="cycle-card__detail-icon cycle-card__detail-icon--in"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path
+                        d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                      />
+                      <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                  </div>
+                  <div class="cycle-card__detail-title">
+                    Post published · 4 articles
+                  </div>
+                  <div
+                    class="cycle-card__detail-amount cycle-card__detail-amount--in"
+                  >
+                    +800
+                  </div>
+                  <div class="cycle-card__detail-time">Mar 14</div>
+                </div>
+                <div class="cycle-card__detail-row">
+                  <div
+                    class="cycle-card__detail-icon cycle-card__detail-icon--out"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <polyline points="19 12 12 19 5 12" />
+                    </svg>
+                  </div>
+                  <div class="cycle-card__detail-title">Boosts (3×)</div>
+                  <div
+                    class="cycle-card__detail-amount cycle-card__detail-amount--out"
+                  >
+                    −120
+                  </div>
+                  <div class="cycle-card__detail-time">Mar 09</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Available to claim -->
+            <div class="cycle-card cycle-card--available" data-expanded="false">
+              <div class="cycle-card__month">
+                <span class="cycle-card__month-label">February</span>
+                <span class="cycle-card__month-year">2026</span>
+              </div>
+              <div class="cycle-card__stats">
+                <div class="cycle-stat">
+                  <span class="cycle-stat__label">Points</span>
+                  <span class="cycle-stat__value">1,510</span>
+                </div>
+                <div class="cycle-stat">
+                  <span class="cycle-stat__label">Share</span>
+                  <span class="cycle-stat__value">0.51%</span>
+                </div>
+                <div class="cycle-stat cycle-stat--token">
+                  <span class="cycle-stat__label">Tokens</span>
+                  <span class="cycle-stat__value"
+                    >51.4 <small>RATEL</small></span
+                  >
+                </div>
+              </div>
+              <div class="cycle-card__action">
+                <button class="cycle-card__claim">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M5 6h14l-1 14H6L5 6z" />
+                  </svg>
+                  Swap All
+                </button>
+                <button class="cycle-card__expand" aria-label="Expand">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+              </div>
+              <div class="cycle-card__detail">
+                <div class="cycle-card__detail-row">
+                  <div
+                    class="cycle-card__detail-icon cycle-card__detail-icon--in"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </div>
+                  <div class="cycle-card__detail-title">
+                    Onboarding quests · 4 completed
+                  </div>
+                  <div
+                    class="cycle-card__detail-amount cycle-card__detail-amount--in"
+                  >
+                    +520
+                  </div>
+                  <div class="cycle-card__detail-time">Feb 26</div>
+                </div>
+                <div class="cycle-card__detail-row">
+                  <div
+                    class="cycle-card__detail-icon cycle-card__detail-icon--in"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path
+                        d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                      />
+                    </svg>
+                  </div>
+                  <div class="cycle-card__detail-title">
+                    Discussion contributions
+                  </div>
+                  <div
+                    class="cycle-card__detail-amount cycle-card__detail-amount--in"
+                  >
+                    +680
+                  </div>
+                  <div class="cycle-card__detail-time">Feb 18</div>
+                </div>
+                <div class="cycle-card__detail-row">
+                  <div
+                    class="cycle-card__detail-icon cycle-card__detail-icon--in"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                      <circle cx="9" cy="7" r="4" />
+                    </svg>
+                  </div>
+                  <div class="cycle-card__detail-title">Followed 7 leaders</div>
+                  <div
+                    class="cycle-card__detail-amount cycle-card__detail-amount--in"
+                  >
+                    +310
+                  </div>
+                  <div class="cycle-card__detail-time">Feb 06</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Claimed -->
+            <div class="cycle-card cycle-card--claimed" data-expanded="false">
+              <div class="cycle-card__month">
+                <span class="cycle-card__month-label">January</span>
+                <span class="cycle-card__month-year">2026</span>
+              </div>
+              <div class="cycle-card__stats">
+                <div class="cycle-stat">
+                  <span class="cycle-stat__label">Points</span>
+                  <span class="cycle-stat__value">980</span>
+                </div>
+                <div class="cycle-stat">
+                  <span class="cycle-stat__label">Share</span>
+                  <span class="cycle-stat__value">0.36%</span>
+                </div>
+                <div class="cycle-stat cycle-stat--token">
+                  <span class="cycle-stat__label">Tokens</span>
+                  <span class="cycle-stat__value"
+                    >36.0 <small>RATEL</small></span
+                  >
+                </div>
+              </div>
+              <div class="cycle-card__action">
+                <span class="cycle-card__claimed">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  Claimed
+                </span>
+                <button class="cycle-card__expand" aria-label="Expand">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+              </div>
+              <div class="cycle-card__detail">
+                <div class="cycle-card__detail-row">
+                  <div
+                    class="cycle-card__detail-icon cycle-card__detail-icon--in"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M18 20V10" />
+                      <path d="M12 20V4" />
+                      <path d="M6 20v-6" />
+                    </svg>
+                  </div>
+                  <div class="cycle-card__detail-title">Polls voted</div>
+                  <div
+                    class="cycle-card__detail-amount cycle-card__detail-amount--in"
+                  >
+                    +340
+                  </div>
+                  <div class="cycle-card__detail-time">Jan 24</div>
+                </div>
+                <div class="cycle-card__detail-row">
+                  <div
+                    class="cycle-card__detail-icon cycle-card__detail-icon--in"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path
+                        d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                      />
+                    </svg>
+                  </div>
+                  <div class="cycle-card__detail-title">Posts published</div>
+                  <div
+                    class="cycle-card__detail-amount cycle-card__detail-amount--in"
+                  >
+                    +640
+                  </div>
+                  <div class="cycle-card__detail-time">Jan 12</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Claimed -->
+            <div class="cycle-card cycle-card--claimed" data-expanded="false">
+              <div class="cycle-card__month">
+                <span class="cycle-card__month-label">December</span>
+                <span class="cycle-card__month-year">2025</span>
+              </div>
+              <div class="cycle-card__stats">
+                <div class="cycle-stat">
+                  <span class="cycle-stat__label">Points</span>
+                  <span class="cycle-stat__value">1,240</span>
+                </div>
+                <div class="cycle-stat">
+                  <span class="cycle-stat__label">Share</span>
+                  <span class="cycle-stat__value">0.45%</span>
+                </div>
+                <div class="cycle-stat cycle-stat--token">
+                  <span class="cycle-stat__label">Tokens</span>
+                  <span class="cycle-stat__value"
+                    >45.0 <small>RATEL</small></span
+                  >
+                </div>
+              </div>
+              <div class="cycle-card__action">
+                <span class="cycle-card__claimed">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  Claimed
+                </span>
+                <button class="cycle-card__expand" aria-label="Expand">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+              </div>
+              <div class="cycle-card__detail">
+                <div class="cycle-card__detail-row">
+                  <div
+                    class="cycle-card__detail-icon cycle-card__detail-icon--in"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </div>
+                  <div class="cycle-card__detail-title">
+                    Activity (Dec 2025)
+                  </div>
+                  <div
+                    class="cycle-card__detail-amount cycle-card__detail-amount--in"
+                  >
+                    +1,240
+                  </div>
+                  <div class="cycle-card__detail-time">Dec 31</div>
+                </div>
+              </div>
+            </div>
+
+            <button class="cycles__loadmore">
+              Load older cycles
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+          </div>
+
+          <!--
+        ─── EMPTY STATE (uncomment to preview when no past cycles) ───
+        <div class="empty">
+          <div class="empty__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v12"/><path d="M16 10H8"/></svg>
+          </div>
+          <div class="empty__title">No past cycles yet</div>
+          <div class="empty__desc">Your first cycle wraps up at month-end. Tokens become claimable on the 1st of next month.</div>
+        </div>
+        --></div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script>
+      // ─── Expand / collapse cycle detail ───
+      document.querySelectorAll(".cycle-card").forEach((card) => {
+        const btn = card.querySelector(".cycle-card__expand");
+        if (!btn) return;
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          card.setAttribute(
+            "data-expanded",
+            String(card.getAttribute("data-expanded") !== "true")
+          );
+        });
+      });
+
+      // ─── Token range tabs (decorative) ───
+      document.querySelectorAll(".token-range__btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document
+            .querySelectorAll(".token-range__btn")
+            .forEach((o) => o.setAttribute("aria-selected", "false"));
+          btn.setAttribute("aria-selected", "true");
+          renderPriceChart();
+        });
+      });
+
+      // ═══════════════════════════════════════════════════════════════
+      // D3 CHARTS
+      // ═══════════════════════════════════════════════════════════════
+
+      if (typeof d3 !== "undefined") {
+        // ─── Data ─────────────────────────────────────────────────
+        const monthly = [
+          { month: "Nov", points: 720, tokens: 28.8 },
+          { month: "Dec", points: 1240, tokens: 45.0 },
+          { month: "Jan", points: 980, tokens: 36.0 },
+          { month: "Feb", points: 1510, tokens: 51.4 },
+          { month: "Mar", points: 2180, tokens: 74.0 },
+          { month: "Apr", points: 1840, tokens: 62.0 },
+        ];
+
+        const sources = [
+          { name: "Polls", value: 720, color: "#818cf8" },
+          { name: "Posts", value: 460, color: "#fcb300" },
+          { name: "Quizzes", value: 320, color: "#a855f7" },
+          { name: "Discussions", value: 240, color: "#22d3ee" },
+          { name: "Follows", value: 100, color: "#fb923c" },
+        ];
+
+        // Generate 30-day price walk (deterministic, anchored at 0.42 today)
+        function generatePrice(days) {
+          const out = [];
+          let p = 0.42;
+          const seedRand = (() => {
+            let s = 42;
+            return () => {
+              s = (s * 9301 + 49297) % 233280;
+              return s / 233280;
+            };
+          })();
+          for (let i = days - 1; i >= 0; i--) {
+            const t = new Date();
+            t.setDate(t.getDate() - i);
+            const drift = (seedRand() - 0.45) * 0.022;
+            p = Math.max(0.3, Math.min(0.55, p + drift));
+            out.push({ date: t, price: p });
+          }
+          // ensure last point is exactly current
+          out[out.length - 1].price = 0.42;
+          return out;
+        }
+
+        // ─── Combo chart: Points (bars) + Tokens (line) ────────────
+        function renderCombo() {
+          const box = document.getElementById("combo-chart");
+          if (!box) return;
+          d3.select(box).selectAll("*").remove();
+          const W = box.clientWidth,
+            H = 240;
+          const m = { top: 18, right: 50, bottom: 32, left: 50 };
+          const iw = W - m.left - m.right,
+            ih = H - m.top - m.bottom;
+          const svg = d3
+            .select(box)
+            .append("svg")
+            .attr("width", W)
+            .attr("height", H);
+          const g = svg
+            .append("g")
+            .attr("transform", `translate(${m.left},${m.top})`);
+
+          const x = d3
+            .scaleBand()
+            .domain(monthly.map((d) => d.month))
+            .range([0, iw])
+            .padding(0.42);
+          const yP = d3
+            .scaleLinear()
+            .domain([0, d3.max(monthly, (d) => d.points) * 1.18])
+            .nice()
+            .range([ih, 0]);
+          const yT = d3
+            .scaleLinear()
+            .domain([0, d3.max(monthly, (d) => d.tokens) * 1.2])
+            .nice()
+            .range([ih, 0]);
+
+          const defs = svg.append("defs");
+          const gBar = defs
+            .append("linearGradient")
+            .attr("id", "g-bar")
+            .attr("x1", 0)
+            .attr("x2", 0)
+            .attr("y1", 0)
+            .attr("y2", 1);
+          gBar
+            .append("stop")
+            .attr("offset", "0%")
+            .attr("stop-color", "#ffd24a");
+          gBar
+            .append("stop")
+            .attr("offset", "100%")
+            .attr("stop-color", "#fcb300")
+            .attr("stop-opacity", 0.85);
+
+          // Grid
+          g.append("g")
+            .selectAll("line")
+            .data(yP.ticks(4))
+            .join("line")
+            .attr("x1", 0)
+            .attr("x2", iw)
+            .attr("y1", (d) => yP(d))
+            .attr("y2", (d) => yP(d))
+            .attr("stroke", "rgba(255,255,255,0.04)")
+            .attr("stroke-dasharray", "2 4");
+
+          // Bars
+          g.selectAll("rect.bar")
+            .data(monthly)
+            .join("rect")
+            .attr("class", "bar")
+            .attr("x", (d) => x(d.month))
+            .attr("width", x.bandwidth())
+            .attr("y", ih)
+            .attr("height", 0)
+            .attr("rx", 5)
+            .attr("fill", "url(#g-bar)")
+            .transition()
+            .duration(900)
+            .delay((d, i) => i * 70)
+            .ease(d3.easeCubicOut)
+            .attr("y", (d) => yP(d.points))
+            .attr("height", (d) => ih - yP(d.points));
+
+          // Line for tokens
+          const lineGen = d3
+            .line()
+            .x((d) => x(d.month) + x.bandwidth() / 2)
+            .y((d) => yT(d.tokens))
+            .curve(d3.curveMonotoneX);
+
+          const linePath = g
+            .append("path")
+            .datum(monthly)
+            .attr("fill", "none")
+            .attr("stroke", "#6eedd8")
+            .attr("stroke-width", 2.5)
+            .attr("stroke-linecap", "round")
+            .attr("d", lineGen)
+            .style("filter", "drop-shadow(0 0 8px rgba(110,237,216,0.40))");
+          const len = linePath.node().getTotalLength();
+          linePath
+            .attr("stroke-dasharray", `${len} ${len}`)
+            .attr("stroke-dashoffset", len)
+            .transition()
+            .delay(450)
+            .duration(1100)
+            .ease(d3.easeCubicInOut)
+            .attr("stroke-dashoffset", 0);
+
+          // Dots
+          g.selectAll("circle.dot")
+            .data(monthly)
+            .join("circle")
+            .attr("class", "dot")
+            .attr("cx", (d) => x(d.month) + x.bandwidth() / 2)
+            .attr("cy", (d) => yT(d.tokens))
+            .attr("r", 0)
+            .attr("fill", "#06060e")
+            .attr("stroke", "#6eedd8")
+            .attr("stroke-width", 2)
+            .transition()
+            .delay((d, i) => 600 + i * 100)
+            .duration(380)
+            .ease(d3.easeBackOut)
+            .attr("r", 4);
+
+          // Axes
+          g.append("g")
+            .attr("transform", `translate(0,${ih})`)
+            .call(d3.axisBottom(x).tickSize(0).tickPadding(10))
+            .call((g) => g.select(".domain").remove())
+            .call((g) =>
+              g
+                .selectAll("text")
+                .style("font-family", "'Orbitron',sans-serif")
+                .style("font-size", "10px")
+                .style("font-weight", "600")
+                .style("letter-spacing", "0.10em")
+                .style("text-transform", "uppercase")
+                .style("fill", "#55556a")
+            );
+
+          g.append("g")
+            .call(
+              d3
+                .axisLeft(yP)
+                .ticks(4)
+                .tickSize(0)
+                .tickPadding(8)
+                .tickFormat((d) => (d >= 1000 ? d / 1000 + "k" : d))
+            )
+            .call((g) => g.select(".domain").remove())
+            .call((g) =>
+              g
+                .selectAll("text")
+                .style("font-family", "'Orbitron',sans-serif")
+                .style("font-size", "9.5px")
+                .style("font-weight", "600")
+                .style("fill", "rgba(252,179,0,0.65)")
+            );
+
+          g.append("g")
+            .attr("transform", `translate(${iw},0)`)
+            .call(
+              d3
+                .axisRight(yT)
+                .ticks(4)
+                .tickSize(0)
+                .tickPadding(8)
+                .tickFormat((d) => d3.format("d")(d))
+            )
+            .call((g) => g.select(".domain").remove())
+            .call((g) =>
+              g
+                .selectAll("text")
+                .style("font-family", "'Orbitron',sans-serif")
+                .style("font-size", "9.5px")
+                .style("font-weight", "600")
+                .style("fill", "rgba(110,237,216,0.65)")
+            );
+
+          // Tooltip
+          const tip = d3
+            .select(box)
+            .append("div")
+            .attr("class", "chart-tooltip");
+          const guide = g
+            .append("line")
+            .attr("y1", 0)
+            .attr("y2", ih)
+            .attr("stroke", "rgba(255,255,255,0.18)")
+            .attr("stroke-width", 1)
+            .style("display", "none");
+
+          g.selectAll("rect.hov")
+            .data(monthly)
+            .join("rect")
+            .attr("class", "hov")
+            .attr("x", (d) => x(d.month))
+            .attr("width", x.bandwidth())
+            .attr("y", 0)
+            .attr("height", ih)
+            .attr("fill", "transparent")
+            .style("cursor", "crosshair")
+            .on("mouseenter", (_, d) => {
+              const cx = x(d.month) + x.bandwidth() / 2;
+              guide.style("display", null).attr("x1", cx).attr("x2", cx);
+              const rate = ((d.tokens / d.points) * 1000).toFixed(2);
+              tip.style("opacity", 1).html(
+                `<div class="chart-tooltip__head">${d.month} 2026</div>
+               <div class="chart-tooltip__row"><span class="chart-tooltip__dot" style="background:#fcb300"></span>Points<strong>${d.points.toLocaleString()}</strong></div>
+               <div class="chart-tooltip__row"><span class="chart-tooltip__dot" style="background:#6eedd8"></span>Tokens<strong>${d.tokens.toFixed(1)} RATEL</strong></div>
+               <div class="chart-tooltip__rate">${rate} RATEL per 1k pts</div>`
+              );
+              const tw = tip.node().offsetWidth;
+              const left = Math.max(
+                8,
+                Math.min(W - tw - 8, cx + m.left - tw / 2)
+              );
+              tip.style("left", `${left}px`).style("top", `${m.top}px`);
+            })
+            .on("mouseleave", () => {
+              guide.style("display", "none");
+              tip.style("opacity", 0);
+            });
+        }
+
+        // ─── Donut: source breakdown ──────────────────────────────
+        function renderDonut() {
+          const svg = d3.select("#donut-chart");
+          if (svg.empty()) return;
+          svg.selectAll("*").remove();
+
+          const cx = 100,
+            cy = 100;
+          const arcGen = d3
+            .arc()
+            .innerRadius(70)
+            .outerRadius(91)
+            .cornerRadius(2)
+            .padAngle(0.022);
+          const pie = d3
+            .pie()
+            .value((d) => d.value)
+            .sort(null);
+
+          // Track
+          svg
+            .append("circle")
+            .attr("cx", cx)
+            .attr("cy", cy)
+            .attr("r", 80.5)
+            .attr("fill", "none")
+            .attr("stroke", "rgba(255,255,255,0.04)")
+            .attr("stroke-width", 21);
+
+          const g = svg.append("g").attr("transform", `translate(${cx},${cy})`);
+          const arcs = pie(sources);
+          g.selectAll("path")
+            .data(arcs)
+            .join("path")
+            .attr("fill", (d) => d.data.color)
+            .each(function (d) {
+              this._cur = { startAngle: d.startAngle, endAngle: d.startAngle };
+            })
+            .transition()
+            .duration(1100)
+            .delay((d, i) => i * 100)
+            .ease(d3.easeCubicInOut)
+            .attrTween("d", function (d) {
+              const i = d3.interpolate(this._cur, d);
+              this._cur = i(0);
+              return (t) => arcGen(i(t));
+            });
+
+          const total = d3.sum(sources, (d) => d.value);
+          const ctr = svg
+            .append("g")
+            .attr("text-anchor", "middle")
+            .attr("opacity", 0);
+          ctr
+            .append("text")
+            .attr("x", cx)
+            .attr("y", cy - 2)
+            .style("font-family", "'Orbitron',sans-serif")
+            .style("font-size", "24px")
+            .style("font-weight", "700")
+            .style("fill", "#f0f0f5")
+            .text(total.toLocaleString());
+          ctr
+            .append("text")
+            .attr("x", cx)
+            .attr("y", cy + 16)
+            .style("font-family", "'Orbitron',sans-serif")
+            .style("font-size", "8.5px")
+            .style("font-weight", "600")
+            .style("letter-spacing", "0.18em")
+            .style("fill", "#55556a")
+            .text("POINTS · APRIL");
+          ctr.transition().delay(700).duration(500).attr("opacity", 1);
+        }
+
+        // ─── Price chart: RATEL/USDC over time ────────────────────
+        let priceData = generatePrice(30);
+        function renderPriceChart() {
+          const box = document.getElementById("price-chart");
+          if (!box) return;
+
+          // Determine selected range
+          const selected = document.querySelector(
+            '.token-range__btn[aria-selected="true"]'
+          );
+          const label = selected ? selected.textContent.trim() : "30D";
+          const days =
+            label === "7D"
+              ? 7
+              : label === "30D"
+                ? 30
+                : label === "90D"
+                  ? 90
+                  : 180;
+          priceData = generatePrice(days);
+
+          d3.select(box).selectAll("*").remove();
+          const W = box.clientWidth,
+            H = Math.max(170, box.clientHeight || 170);
+          const m = { top: 14, right: 12, bottom: 26, left: 40 };
+          const iw = W - m.left - m.right,
+            ih = H - m.top - m.bottom;
+
+          const svg = d3
+            .select(box)
+            .append("svg")
+            .attr("width", W)
+            .attr("height", H);
+          const g = svg
+            .append("g")
+            .attr("transform", `translate(${m.left},${m.top})`);
+
+          const x = d3
+            .scaleTime()
+            .domain(d3.extent(priceData, (d) => d.date))
+            .range([0, iw]);
+          const yMin = d3.min(priceData, (d) => d.price);
+          const yMax = d3.max(priceData, (d) => d.price);
+          const pad = (yMax - yMin) * 0.25;
+          const y = d3
+            .scaleLinear()
+            .domain([yMin - pad, yMax + pad])
+            .nice()
+            .range([ih, 0]);
+
+          const defs = svg.append("defs");
+          const grad = defs
+            .append("linearGradient")
+            .attr("id", "g-price")
+            .attr("x1", 0)
+            .attr("x2", 0)
+            .attr("y1", 0)
+            .attr("y2", 1);
+          grad
+            .append("stop")
+            .attr("offset", "0%")
+            .attr("stop-color", "#22c55e")
+            .attr("stop-opacity", 0.3);
+          grad
+            .append("stop")
+            .attr("offset", "100%")
+            .attr("stop-color", "#22c55e")
+            .attr("stop-opacity", 0);
+
+          // Grid
+          g.append("g")
+            .selectAll("line")
+            .data(y.ticks(4))
+            .join("line")
+            .attr("x1", 0)
+            .attr("x2", iw)
+            .attr("y1", (d) => y(d))
+            .attr("y2", (d) => y(d))
+            .attr("stroke", "rgba(255,255,255,0.04)")
+            .attr("stroke-dasharray", "2 4");
+
+          const area = d3
+            .area()
+            .x((d) => x(d.date))
+            .y0(ih)
+            .y1((d) => y(d.price))
+            .curve(d3.curveMonotoneX);
+          const line = d3
+            .line()
+            .x((d) => x(d.date))
+            .y((d) => y(d.price))
+            .curve(d3.curveMonotoneX);
+
+          // Area fill
+          g.append("path")
+            .datum(priceData)
+            .attr("fill", "url(#g-price)")
+            .attr("d", area)
+            .attr("opacity", 0)
+            .transition()
+            .delay(300)
+            .duration(700)
+            .attr("opacity", 1);
+
+          // Line draw
+          const linePath = g
+            .append("path")
+            .datum(priceData)
+            .attr("fill", "none")
+            .attr("stroke", "#22c55e")
+            .attr("stroke-width", 2)
+            .attr("stroke-linecap", "round")
+            .attr("d", line)
+            .style("filter", "drop-shadow(0 0 6px rgba(34,197,94,0.35))");
+          const len = linePath.node().getTotalLength();
+          linePath
+            .attr("stroke-dasharray", `${len} ${len}`)
+            .attr("stroke-dashoffset", len)
+            .transition()
+            .duration(1000)
+            .ease(d3.easeCubicInOut)
+            .attr("stroke-dashoffset", 0);
+
+          // Current price marker (last point)
+          const last = priceData[priceData.length - 1];
+          g.append("circle")
+            .attr("cx", x(last.date))
+            .attr("cy", y(last.price))
+            .attr("r", 0)
+            .attr("fill", "#22c55e")
+            .attr("stroke", "#06060e")
+            .attr("stroke-width", 2)
+            .transition()
+            .delay(900)
+            .duration(400)
+            .ease(d3.easeBackOut)
+            .attr("r", 5);
+
+          // Pulsing ring on last point
+          const ring = g
+            .append("circle")
+            .attr("cx", x(last.date))
+            .attr("cy", y(last.price))
+            .attr("r", 5)
+            .attr("fill", "none")
+            .attr("stroke", "#22c55e")
+            .attr("stroke-width", 1.5)
+            .attr("opacity", 0);
+          function pulse() {
+            ring
+              .attr("r", 5)
+              .attr("opacity", 0.7)
+              .transition()
+              .duration(1600)
+              .ease(d3.easeCubicOut)
+              .attr("r", 16)
+              .attr("opacity", 0)
+              .on("end", pulse);
+          }
+          ring.transition().delay(1100).attr("opacity", 1).on("end", pulse);
+
+          // Axes
+          const tickCount = days <= 7 ? 7 : days <= 30 ? 6 : 8;
+          g.append("g")
+            .attr("transform", `translate(0,${ih})`)
+            .call(
+              d3
+                .axisBottom(x)
+                .ticks(tickCount)
+                .tickSize(0)
+                .tickPadding(8)
+                .tickFormat(d3.timeFormat(days <= 30 ? "%b %d" : "%b"))
+            )
+            .call((g) => g.select(".domain").remove())
+            .call((g) =>
+              g
+                .selectAll("text")
+                .style("font-family", "'Orbitron',sans-serif")
+                .style("font-size", "9px")
+                .style("font-weight", "600")
+                .style("letter-spacing", "0.06em")
+                .style("fill", "#55556a")
+            );
+
+          g.append("g")
+            .call(
+              d3
+                .axisLeft(y)
+                .ticks(4)
+                .tickSize(0)
+                .tickPadding(8)
+                .tickFormat((d) => "$" + d.toFixed(2))
+            )
+            .call((g) => g.select(".domain").remove())
+            .call((g) =>
+              g
+                .selectAll("text")
+                .style("font-family", "'Orbitron',sans-serif")
+                .style("font-size", "9.5px")
+                .style("font-weight", "600")
+                .style("fill", "rgba(34,197,94,0.65)")
+            );
+
+          // Tooltip + bisector
+          const tip = d3
+            .select(box)
+            .append("div")
+            .attr("class", "chart-tooltip");
+          const guide = g
+            .append("line")
+            .attr("y1", 0)
+            .attr("y2", ih)
+            .attr("stroke", "rgba(255,255,255,0.18)")
+            .attr("stroke-width", 1)
+            .style("display", "none");
+          const hoverDot = g
+            .append("circle")
+            .attr("r", 4)
+            .attr("fill", "#22c55e")
+            .attr("stroke", "#06060e")
+            .attr("stroke-width", 2)
+            .style("display", "none");
+
+          const bisect = d3.bisector((d) => d.date).left;
+          svg
+            .append("rect")
+            .attr("x", m.left)
+            .attr("y", m.top)
+            .attr("width", iw)
+            .attr("height", ih)
+            .attr("fill", "transparent")
+            .style("cursor", "crosshair")
+            .on("mousemove", function (e) {
+              const [mx] = d3.pointer(e, g.node());
+              const t = x.invert(mx);
+              const i = bisect(priceData, t);
+              const d = priceData[Math.min(i, priceData.length - 1)];
+              if (!d) return;
+              const cx = x(d.date),
+                cy = y(d.price);
+              guide.style("display", null).attr("x1", cx).attr("x2", cx);
+              hoverDot.style("display", null).attr("cx", cx).attr("cy", cy);
+              tip.style("opacity", 1).html(
+                `<div class="chart-tooltip__head">${d3.timeFormat("%b %d, %Y")(d.date)}</div>
+               <div class="chart-tooltip__row"><span class="chart-tooltip__dot" style="background:#22c55e"></span>RATEL<strong>$${d.price.toFixed(4)}</strong></div>
+               <div class="chart-tooltip__row"><span class="chart-tooltip__dot" style="background:#fcb300"></span>≈ Per 100<strong>$${(d.price * 100).toFixed(2)}</strong></div>`
+              );
+              const tw = tip.node().offsetWidth;
+              const left = Math.max(
+                8,
+                Math.min(W - tw - 8, cx + m.left - tw / 2)
+              );
+              tip.style("left", `${left}px`).style("top", `${m.top - 6}px`);
+            })
+            .on("mouseleave", () => {
+              guide.style("display", "none");
+              hoverDot.style("display", "none");
+              tip.style("opacity", 0);
+            });
+        }
+
+        function renderAll() {
+          renderCombo();
+          renderDonut();
+          renderPriceChart();
+        }
+
+        renderAll();
+
+        let resizeTimer;
+        window.addEventListener("resize", () => {
+          clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(() => {
+            renderCombo();
+            renderPriceChart();
+          }, 100);
+        });
+      }
+    </script>
+  </body>
+</html>

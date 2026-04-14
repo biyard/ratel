@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Team Arena</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+    --border-subtle:rgba(255,255,255,0.06);--text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+    --accent-gold:#fcb300;--accent-teal:#6eedd8;
+    --accent-poll:#818cf8;--accent-quiz:#a855f7;--accent-discuss:#22d3ee;
+    --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
+  }
+  html,body{height:100%;overflow:hidden;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body)}
+
+  .arena{position:relative;width:100%;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+  .arena::before{
+    content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 50%, rgba(252,179,0,0.04) 0%, transparent 60%),
+      radial-gradient(ellipse 120% 100% at 50% 120%, rgba(110,237,216,0.03) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, var(--bg-void) 0%, var(--bg-void) 100%);
+  }
+
+  /* ── Star field (static twinkling dots) ── */
+  .bg-stars{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .star{
+    position:absolute;border-radius:50%;
+    background:#fff;
+    animation:twinkle ease-in-out infinite;
+  }
+  @keyframes twinkle{
+    0%,100%{opacity:0.08;transform:scale(0.9)}
+    50%{opacity:0.9;transform:scale(1.3)}
+  }
+
+  /* ── Shooting stars (occasional streaks) ── */
+  .shooting{
+    position:absolute;width:120px;height:1px;
+    background:linear-gradient(90deg, transparent, rgba(252,179,0,0.8), rgba(252,179,0,0));
+    opacity:0;
+    animation: shoot 8s linear infinite;
+    transform-origin:left center;
+  }
+  @keyframes shoot{
+    0%{opacity:0;transform:translateX(0) translateY(0) rotate(-18deg) scaleX(0.1)}
+    4%{opacity:1;transform:translateX(0) translateY(0) rotate(-18deg) scaleX(1)}
+    14%{opacity:0;transform:translateX(400px) translateY(-130px) rotate(-18deg) scaleX(0.6)}
+    100%{opacity:0;transform:translateX(400px) translateY(-130px) rotate(-18deg) scaleX(0.6)}
+  }
+
+  /* ── Grid plane ── */
+  .bg-grid{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .bg-grid__plane{
+    position:absolute;bottom:-40%;left:-20%;right:-20%;height:120%;
+    background:
+      linear-gradient(rgba(252,179,0,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(252,179,0,0.025) 1px, transparent 1px);
+    background-size:80px 80px;
+    transform:perspective(600px) rotateX(55deg);
+    animation:gridScroll 20s linear infinite;
+    mask-image:linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 70%);
+  }
+  @keyframes gridScroll{0%{background-position:0 0}100%{background-position:0 80px}}
+
+  /* ── Floating orbs ── */
+  .bg-orbs{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .bg-orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.10;animation:orbFloat 25s ease-in-out infinite}
+  .bg-orb--1{width:500px;height:500px;background:radial-gradient(circle, var(--accent-gold), transparent 70%);top:-10%;right:10%}
+  .bg-orb--2{width:400px;height:400px;background:radial-gradient(circle, var(--accent-teal), transparent 70%);bottom:10%;left:-5%;animation-delay:-8s;animation-duration:30s}
+  .bg-orb--3{width:300px;height:300px;background:radial-gradient(circle, var(--accent-quiz), transparent 70%);top:40%;right:-5%;animation-delay:-15s;animation-duration:22s}
+  @keyframes orbFloat{
+    0%,100%{transform:translate(0,0) scale(1)}
+    25%{transform:translate(40px,-30px) scale(1.1)}
+    50%{transform:translate(-20px,20px) scale(0.95)}
+    75%{transform:translate(30px,40px) scale(1.05)}
+  }
+
+  /* ── Scanline ── */
+  .bg-scanline{
+    position:absolute;inset:0;z-index:0;pointer-events:none;
+    background:repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(255,255,255,0.006) 2px, rgba(255,255,255,0.006) 4px
+    );
+  }
+
+  /* ───── Top bar ───── */
+  .arena-topbar{
+    position:relative;z-index:20;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:20px 28px;flex-shrink:0;
+  }
+  .arena-topbar__brand{display:flex;align-items:center;gap:12px;min-width:0}
+
+  /* Home link (Ratel logo) */
+  .brand-home{
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    width:36px;height:36px;border-radius:10px;
+    background:rgba(12,12,26,0.6);backdrop-filter:blur(10px);
+    border:1px solid var(--border-subtle);
+    cursor:pointer;transition:all 0.25s;
+  }
+  .brand-home:hover{border-color:rgba(252,179,0,0.3);box-shadow:0 0 14px rgba(252,179,0,0.12);transform:translateY(-1px)}
+  .brand-home svg{width:18px;height:18px;color:var(--accent-gold)}
+  .brand-home__divider{width:1px;height:24px;background:var(--border-subtle);flex-shrink:0}
+
+  /* Team switcher (wraps name+handle + chevron in a pill) */
+  .team-switcher{
+    position:relative;
+    display:flex;align-items:center;gap:10px;
+    padding:4px 8px 4px 4px;border-radius:12px;
+    cursor:pointer;transition:all 0.25s;
+    min-width:0;
+    border:1px solid transparent;
+  }
+  .team-switcher:hover{background:rgba(255,255,255,0.03);border-color:var(--border-subtle)}
+  .team-switcher__body{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .team-switcher__chevron{
+    width:14px;height:14px;color:var(--text-muted);flex-shrink:0;
+    transition:transform 0.25s;
+  }
+  .team-switcher[aria-expanded="true"] .team-switcher__chevron{transform:rotate(180deg);color:var(--accent-gold)}
+
+  /* Dropdown */
+  .team-dd{
+    position:absolute;top:calc(100% + 8px);left:0;
+    min-width:280px;max-width:360px;
+    padding:8px;border-radius:14px;
+    background:var(--bg-glass);backdrop-filter:blur(20px);
+    border:1px solid var(--border-subtle);
+    box-shadow:0 12px 40px rgba(0,0,0,0.5);
+    opacity:0;visibility:hidden;transform:translateY(-4px);
+    transition:all 0.2s ease;
+    z-index:30;
+  }
+  .team-switcher[aria-expanded="true"] .team-dd{opacity:1;visibility:visible;transform:translateY(0)}
+  .team-dd__header{
+    padding:6px 10px 8px;margin-bottom:4px;
+    border-bottom:1px solid var(--border-subtle);
+    font-family:var(--font-display);font-size:9px;font-weight:700;
+    letter-spacing:0.18em;text-transform:uppercase;color:var(--text-dim);
+  }
+  .team-dd__item{
+    display:flex;align-items:center;gap:10px;
+    padding:8px 10px;border-radius:10px;
+    cursor:pointer;transition:background 0.15s;
+  }
+  .team-dd__item:hover{background:rgba(255,255,255,0.04)}
+  .team-dd__avatar{
+    width:32px;height:32px;border-radius:8px;flex-shrink:0;
+    background:linear-gradient(135deg, rgba(252,179,0,0.25), rgba(110,237,216,0.12));
+    border:1px solid var(--border-subtle);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-display);font-weight:800;font-size:13px;color:var(--accent-gold);
+  }
+  .team-dd__avatar--alt1{background:linear-gradient(135deg, rgba(168,85,247,0.3), rgba(34,211,238,0.12));color:var(--accent-quiz)}
+  .team-dd__avatar--alt2{background:linear-gradient(135deg, rgba(34,211,238,0.3), rgba(110,237,216,0.12));color:var(--accent-discuss)}
+  .team-dd__body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .team-dd__name{font-size:13px;color:var(--text-primary);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .team-dd__handle{font-size:10px;color:var(--text-muted);font-family:var(--font-display);letter-spacing:0.06em}
+  .team-dd__check{width:16px;height:16px;color:var(--accent-gold);flex-shrink:0}
+  .team-dd__footer{
+    margin-top:4px;padding:8px 10px;border-top:1px solid var(--border-subtle);
+    display:flex;align-items:center;gap:8px;
+    font-family:var(--font-display);font-size:10px;font-weight:700;
+    letter-spacing:0.1em;text-transform:uppercase;
+    color:var(--accent-teal);cursor:pointer;border-radius:8px;
+    transition:background 0.15s;
+  }
+  .team-dd__footer:hover{background:rgba(110,237,216,0.06)}
+  .team-dd__footer svg{width:12px;height:12px}
+  .arena-topbar__logo{
+    width:40px;height:40px;border-radius:10px;object-fit:cover;
+    border:1px solid rgba(252,179,0,0.15);
+    box-shadow:0 2px 12px rgba(0,0,0,0.3);
+    background:linear-gradient(135deg, rgba(252,179,0,0.3), rgba(110,237,216,0.15));
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--accent-gold);
+  }
+  .arena-topbar__title{
+    font-family:var(--font-display);font-weight:800;font-size:18px;
+    letter-spacing:0.10em;text-transform:uppercase;
+    background:linear-gradient(135deg,var(--accent-gold),#ffd24a);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px;
+  }
+  .arena-topbar__handle{
+    font-family:var(--font-display);font-size:11px;font-weight:500;
+    color:var(--text-muted);letter-spacing:0.08em;
+  }
+  .arena-topbar__status{
+    display:inline-flex;align-items:center;gap:5px;
+    padding:3px 10px;border-radius:100px;
+    background:rgba(110,237,216,0.08);border:1px solid rgba(110,237,216,0.15);
+    font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;
+    color:var(--accent-teal);margin-left:12px;
+  }
+  .arena-topbar__status::before{
+    content:'';width:5px;height:5px;border-radius:50%;
+    background:var(--accent-teal);box-shadow:0 0 6px var(--accent-teal);
+    animation:pulse-dot 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.4}}
+
+  .arena-topbar__actions{display:flex;gap:10px;align-items:center}
+  .hud-btn{
+    position:relative;width:42px;height:42px;border-radius:11px;
+    background:var(--bg-glass);backdrop-filter:blur(16px);
+    border:1px solid var(--border-subtle);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;transition:all 0.25s ease;padding:0;
+  }
+  .hud-btn:hover{
+    background:var(--bg-glass-hover);
+    border-color:rgba(252,179,0,0.25);transform:translateY(-1px);
+  }
+  .hud-btn svg{width:18px;height:18px;color:var(--text-muted);transition:color 0.2s}
+  .hud-btn:hover svg{color:var(--accent-gold)}
+  .hud-btn--primary{
+    background:linear-gradient(135deg,rgba(252,179,0,0.18),rgba(252,179,0,0.06));
+    border-color:rgba(252,179,0,0.3);
+  }
+  .hud-btn--primary svg{color:var(--accent-gold)}
+  .hud-btn--primary:hover{box-shadow:0 0 20px rgba(252,179,0,0.25)}
+  .hud-btn__label{
+    position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);
+    font-family:var(--font-display);font-size:9px;font-weight:600;
+    letter-spacing:0.08em;text-transform:uppercase;color:var(--text-dim);
+    white-space:nowrap;opacity:0;transition:opacity 0.2s ease;pointer-events:none;
+  }
+  .hud-btn:hover .hud-btn__label{opacity:1}
+
+  /* Follow button (text variant) */
+  .follow-btn{
+    padding:9px 18px;border-radius:11px;
+    background:linear-gradient(135deg,rgba(252,179,0,0.18),rgba(252,179,0,0.06));
+    border:1px solid rgba(252,179,0,0.3);
+    color:var(--accent-gold);
+    font-family:var(--font-display);font-size:11px;font-weight:700;
+    letter-spacing:0.1em;text-transform:uppercase;
+    cursor:pointer;transition:all 0.25s ease;
+    box-shadow:0 0 16px rgba(252,179,0,0.08);
+  }
+  .follow-btn:hover{
+    background:linear-gradient(135deg,rgba(252,179,0,0.28),rgba(252,179,0,0.1));
+    box-shadow:0 0 24px rgba(252,179,0,0.2);
+    transform:translateY(-1px);
+  }
+  .follow-btn--following{
+    background:rgba(255,255,255,0.04);
+    border-color:var(--border-subtle);
+    color:var(--text-muted);
+    box-shadow:none;
+  }
+
+  /* ───── Team intro strip (under topbar) ───── */
+  .team-intro{
+    position:relative;z-index:10;flex-shrink:0;
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    padding:0 28px 18px;
+  }
+  .team-intro__desc{
+    min-width:0;
+    font-size:13px;line-height:1.5;color:var(--text-muted);
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+    max-width:780px;
+  }
+  .team-intro__meta{
+    display:flex;align-items:center;gap:10px;flex-shrink:0;
+  }
+  .team-intro__chip{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:5px 12px;border-radius:100px;
+    background:var(--bg-glass);backdrop-filter:blur(10px);
+    border:1px solid var(--border-subtle);
+    font-family:var(--font-display);font-size:10px;font-weight:600;
+    letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);
+  }
+  .team-intro__chip svg{width:12px;height:12px;color:var(--text-muted)}
+  .team-intro__chip strong{color:var(--text-primary);font-weight:700}
+
+  /* ───── Section label ───── */
+  .section-label{
+    position:relative;z-index:10;text-align:center;
+    padding:0 28px;margin-bottom:8px;
+    display:flex;align-items:center;justify-content:center;gap:10px;flex-shrink:0;
+  }
+  .section-label__dash{width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--text-dim),transparent)}
+  .section-label__title{
+    font-family:var(--font-display);font-size:11px;font-weight:600;
+    letter-spacing:0.22em;text-transform:uppercase;color:var(--text-dim);
+  }
+  .section-label__title strong{color:var(--accent-gold);font-weight:700}
+
+  /* ───── Carousel ───── */
+  .carousel-wrapper{
+    position:relative;z-index:10;
+    flex:1;display:flex;flex-direction:column;justify-content:center;overflow:hidden;
+  }
+  .carousel-wrapper::before,.carousel-wrapper::after{
+    content:'';position:absolute;top:0;bottom:0;width:220px;z-index:15;pointer-events:none;
+  }
+  .carousel-wrapper::before{left:0;background:linear-gradient(to right,var(--bg-void),transparent)}
+  .carousel-wrapper::after{right:0;background:linear-gradient(to left,var(--bg-void),transparent)}
+  .carousel-track{
+    display:flex;align-items:center;gap:28px;padding:60px 0;
+    scroll-snap-type:x mandatory;overflow-x:auto;overflow-y:hidden;
+    scrollbar-width:none;
+    padding-left:calc(50vw - 200px);padding-right:calc(50vw - 200px);
+  }
+  .carousel-track::-webkit-scrollbar{display:none}
+
+  /* ───── Post card (3D carousel card) ───── */
+  .post-card{
+    flex-shrink:0;width:400px;min-height:440px;
+    padding:26px 26px 22px;
+    background:var(--bg-glass);backdrop-filter:blur(16px);
+    border:1px solid var(--border-subtle);
+    border-radius:20px;
+    display:flex;flex-direction:column;gap:16px;
+    cursor:pointer;scroll-snap-align:center;
+    position:relative;overflow:hidden;
+    transform:scale(0.78);opacity:0.30;filter:blur(5px);
+    transition:all 0.5s cubic-bezier(0.16,1,0.3,1);
+  }
+  .post-card.active{
+    transform:scale(1.05);opacity:1;filter:blur(0);
+    box-shadow:0 12px 60px rgba(0,0,0,0.5);
+    border-color:rgba(252,179,0,0.20);
+  }
+  .post-card.active::after{
+    content:'';position:absolute;inset:0;border-radius:20px;pointer-events:none;
+    box-shadow:0 0 50px rgba(252,179,0,0.12);
+  }
+
+  /* Wave aurora (only when active) */
+  .post-card__wave{position:absolute;inset:0;border-radius:20px;pointer-events:none;overflow:hidden;opacity:0;transition:opacity 0.8s ease;z-index:0}
+  .post-card.active .post-card__wave{opacity:1}
+  .post-card__wave::before,.post-card__wave::after{
+    content:'';position:absolute;inset:-40%;background-repeat:no-repeat;mix-blend-mode:screen;
+    will-change:transform,opacity;
+  }
+  .post-card__wave::before{
+    background:
+      radial-gradient(ellipse 55% 40% at 20% 30%, rgba(252,179,0,0.10) 0%, transparent 60%),
+      radial-gradient(ellipse 45% 35% at 75% 65%, rgba(110,237,216,0.08) 0%, transparent 65%);
+    animation: wave-drift-a 7s ease-in-out infinite;
+  }
+  .post-card__wave::after{
+    background:
+      radial-gradient(ellipse 50% 35% at 80% 30%, rgba(129,140,248,0.08) 0%, transparent 62%),
+      radial-gradient(ellipse 60% 45% at 25% 75%, rgba(168,85,247,0.06) 0%, transparent 65%);
+    animation: wave-drift-b 9s ease-in-out infinite reverse;
+  }
+  @keyframes wave-drift-a {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50%     { transform: translate(4%,-3%) scale(1.06); }
+  }
+  @keyframes wave-drift-b {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50%     { transform: translate(-3%,4%) scale(1.08); }
+  }
+
+  .post-card__top{
+    position:relative;z-index:1;
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+  }
+  .post-card__cat{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:5px 12px;border-radius:8px;
+    font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;
+    background:rgba(129,140,248,0.08);
+    color:var(--accent-poll);
+    border:1px solid rgba(129,140,248,0.20);
+  }
+  .post-card__cat svg{width:12px;height:12px}
+  .post-card__cat--discuss{background:rgba(34,211,238,0.08);color:var(--accent-discuss);border-color:rgba(34,211,238,0.20)}
+  .post-card__cat--quiz{background:rgba(168,85,247,0.08);color:var(--accent-quiz);border-color:rgba(168,85,247,0.20)}
+  .post-card__rank{
+    font-family:var(--font-display);font-size:10px;font-weight:600;
+    color:var(--text-dim);letter-spacing:0.12em;
+  }
+  .post-card__rank strong{color:var(--text-primary);font-weight:800;font-size:12px;margin-left:3px}
+
+  .post-card__identity{
+    position:relative;z-index:1;
+    display:flex;align-items:center;gap:12px;
+  }
+  .post-card__logo{
+    width:40px;height:40px;border-radius:10px;object-fit:cover;
+    background:linear-gradient(135deg,rgba(252,179,0,0.3),rgba(110,237,216,0.15));
+    border:1px solid var(--border-subtle);
+    flex-shrink:0;
+  }
+  .post-card__id{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .post-card__author{
+    font-size:11px;color:var(--text-muted);letter-spacing:0.04em;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .post-card__date{
+    font-family:var(--font-display);
+    font-size:10px;color:var(--text-dim);
+    letter-spacing:0.12em;text-transform:uppercase;font-weight:600;
+  }
+
+  .post-card__title{
+    position:relative;z-index:1;
+    font-size:19px;font-weight:700;line-height:1.35;color:var(--text-primary);
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  }
+
+  .post-card__thumb{
+    position:relative;z-index:1;
+    width:100%;height:140px;border-radius:12px;
+    object-fit:cover;
+    background:linear-gradient(135deg,rgba(129,140,248,0.15),rgba(168,85,247,0.08));
+    border:1px solid var(--border-subtle);
+  }
+
+  .post-card__desc{
+    position:relative;z-index:1;
+    font-size:13px;line-height:1.55;color:var(--text-muted);
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+  }
+
+  .post-card__stats{
+    position:relative;z-index:1;
+    display:flex;gap:0;padding-top:14px;
+    border-top:1px solid var(--border-subtle);
+  }
+  .post-card__stat{
+    flex:1;display:flex;flex-direction:column;gap:3px;align-items:flex-start;
+    padding:0 14px;
+    border-right:1px solid var(--border-subtle);
+  }
+  .post-card__stat:first-child{padding-left:0}
+  .post-card__stat:last-child{border-right:none}
+  .post-card__stat-value{
+    font-family:var(--font-display);font-size:16px;font-weight:700;color:var(--text-primary);
+  }
+  .post-card__stat-value--liked{color:#f43f5e}
+  .post-card__stat-label{
+    font-size:9px;color:var(--text-muted);
+    text-transform:uppercase;letter-spacing:0.1em;font-weight:600;
+  }
+
+  .post-card__chips{
+    position:relative;z-index:1;
+    display:flex;gap:6px;flex-wrap:wrap;
+  }
+  .post-card__chip{
+    display:inline-flex;align-items:center;
+    padding:4px 10px;border-radius:6px;
+    font-size:10px;font-weight:600;letter-spacing:0.04em;
+    background:rgba(255,255,255,0.03);color:var(--text-muted);
+    border:1px solid var(--border-subtle);
+  }
+
+  .post-card__footer{
+    position:relative;z-index:1;margin-top:auto;
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding-top:14px;border-top:1px solid var(--border-subtle);
+  }
+  .post-card__reward{
+    font-family:var(--font-display);font-size:12px;font-weight:700;
+    color:var(--accent-gold);letter-spacing:0.04em;
+    display:flex;align-items:center;gap:5px;
+  }
+  .post-card__reward svg{width:14px;height:14px}
+  .post-card__reward small{font-size:9px;color:var(--text-muted);font-weight:500;letter-spacing:0.1em;text-transform:uppercase;margin-left:2px}
+  .post-card__cta{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:8px 18px;border-radius:10px;
+    background:linear-gradient(135deg,rgba(252,179,0,0.20),rgba(110,237,216,0.10));
+    border:1px solid rgba(252,179,0,0.25);
+    color:var(--accent-gold);
+    font-family:var(--font-display);font-size:10px;font-weight:700;
+    letter-spacing:0.1em;text-transform:uppercase;
+    cursor:pointer;transition:all 0.3s;
+  }
+  .post-card__cta:hover{
+    background:linear-gradient(135deg,rgba(252,179,0,0.3),rgba(110,237,216,0.15));
+    box-shadow:0 0 24px rgba(252,179,0,0.18);
+    transform:translateY(-1px);
+  }
+  .post-card__cta svg{width:12px;height:12px}
+
+  /* ───── Carousel dots ───── */
+  .carousel-dots{
+    position:relative;z-index:10;display:flex;gap:8px;justify-content:center;
+    padding:0 28px 18px;flex-shrink:0;
+  }
+  .carousel-dot{
+    width:8px;height:8px;border-radius:50%;
+    background:rgba(255,255,255,0.15);border:none;padding:0;
+    cursor:pointer;transition:all 0.3s;
+  }
+  .carousel-dot:hover{background:rgba(255,255,255,0.3)}
+  .carousel-dot.active{
+    width:28px;border-radius:4px;
+    background:var(--accent-gold);box-shadow:0 0 12px rgba(252,179,0,0.4);
+  }
+
+  /* ───── Bottom bar (HUD stats + filter + action) ───── */
+  .bottom-bar{
+    position:relative;z-index:10;flex-shrink:0;
+    display:flex;flex-direction:column;gap:10px;
+    padding:10px 28px 20px;
+  }
+  .bottom-bar__row{
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  }
+  .bottom-bar__row--filters{
+    padding:6px 4px;
+    border-top:1px solid var(--border-subtle);
+  }
+  .cat-filters{display:flex;gap:6px;flex-wrap:wrap;flex:1;min-width:0}
+  .cat-filter{
+    padding:6px 14px;border-radius:8px;
+    background:rgba(255,255,255,0.02);
+    border:1px solid var(--border-subtle);
+    color:var(--text-muted);
+    font-family:var(--font-display);
+    font-size:10px;font-weight:600;
+    letter-spacing:0.1em;text-transform:uppercase;
+    cursor:pointer;transition:all 0.25s;backdrop-filter:blur(8px);
+  }
+  .cat-filter:hover{border-color:rgba(255,255,255,0.12);color:var(--text-primary)}
+  .cat-filter.active{
+    background:rgba(252,179,0,0.08);color:var(--accent-gold);
+    border-color:rgba(252,179,0,0.25);
+    box-shadow:0 0 12px rgba(252,179,0,0.08);
+  }
+  .cat-filter__count{margin-left:6px;color:var(--text-dim);font-weight:500}
+  .cat-filter.active .cat-filter__count{color:var(--accent-gold);opacity:0.7}
+  .hud-stat{
+    display:flex;align-items:center;gap:12px;
+    padding:10px 18px;border-radius:12px;
+    background:var(--bg-glass);backdrop-filter:blur(16px);
+    border:1px solid var(--border-subtle);
+    min-width:0;
+  }
+  .hud-stat__icon{
+    width:32px;height:32px;border-radius:8px;
+    background:rgba(252,179,0,0.08);
+    border:1px solid rgba(252,179,0,0.18);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .hud-stat__icon svg{width:16px;height:16px;color:var(--accent-gold)}
+  .hud-stat--accent .hud-stat__icon{background:rgba(110,237,216,0.08);border-color:rgba(110,237,216,0.18)}
+  .hud-stat--accent .hud-stat__icon svg{color:var(--accent-teal)}
+  .hud-stat__body{display:flex;flex-direction:column;min-width:0}
+  .hud-stat__label{
+    font-family:var(--font-display);font-size:9px;font-weight:600;
+    letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim);
+  }
+  .hud-stat__value{font-size:13px;color:var(--text-primary);font-weight:500;white-space:nowrap}
+  .hud-stat__value strong{font-family:var(--font-display);font-weight:800;font-size:15px;color:var(--text-primary)}
+  .hud-stat__value small{font-size:10px;color:var(--text-muted);margin-left:3px}
+
+  .browse-btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:11px 22px;border-radius:12px;
+    background:linear-gradient(135deg,rgba(252,179,0,0.18),rgba(110,237,216,0.08));
+    border:1px solid rgba(252,179,0,0.3);
+    color:var(--accent-gold);
+    font-family:var(--font-display);font-size:11px;font-weight:700;
+    letter-spacing:0.1em;text-transform:uppercase;
+    cursor:pointer;transition:all 0.3s;
+    box-shadow:0 0 16px rgba(252,179,0,0.08);
+  }
+  .browse-btn:hover{
+    background:linear-gradient(135deg,rgba(252,179,0,0.28),rgba(110,237,216,0.14));
+    box-shadow:0 0 24px rgba(252,179,0,0.2);
+    transform:translateY(-1px);
+  }
+  .browse-btn svg{width:14px;height:14px}
+
+  /* Empty state (no posts) */
+  .empty-state{
+    position:relative;z-index:10;
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+    padding:40px;
+  }
+  .empty-state__icon{
+    width:72px;height:72px;border-radius:18px;
+    background:rgba(252,179,0,0.06);border:1px solid rgba(252,179,0,0.16);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .empty-state__icon svg{width:32px;height:32px;color:var(--accent-gold)}
+  .empty-state__title{
+    font-family:var(--font-display);font-size:13px;font-weight:700;
+    letter-spacing:0.18em;text-transform:uppercase;color:var(--text-primary);
+  }
+  .empty-state__desc{font-size:13px;color:var(--text-muted)}
+
+  /* Responsive */
+  @media (max-width: 1024px){
+    .arena{height:100vh;overflow-y:auto}
+  }
+
+  @media (max-width: 720px){
+    /* Arena becomes scrollable on phones (100vh is too cramped) */
+    .arena{min-height:100vh;height:auto;overflow-x:hidden}
+
+    /* Top bar: collapse status chip; make title truncate earlier; shrink HUD */
+    .arena-topbar{padding:12px 14px;gap:8px;flex-wrap:nowrap}
+    .arena-topbar__logo{width:30px;height:30px;font-size:13px;border-radius:8px}
+    .arena-topbar__title{font-size:13px;max-width:100px}
+    .arena-topbar__handle{font-size:10px}
+    .arena-topbar__status{display:none}
+
+    .brand-home{width:32px;height:32px;border-radius:9px}
+    .brand-home svg{width:15px;height:15px}
+    .brand-home__divider{display:none}
+    .team-switcher{gap:6px;padding:3px 4px 3px 3px}
+    .team-switcher__chevron{width:12px;height:12px}
+    .team-dd{min-width:240px;max-width:calc(100vw - 32px)}
+
+    .arena-topbar__actions{gap:6px}
+    .hud-btn{width:34px;height:34px;border-radius:9px}
+    .hud-btn svg{width:14px;height:14px}
+    .hud-btn__label{display:none}
+    .follow-btn{padding:6px 10px;font-size:10px;letter-spacing:0.06em}
+
+    /* Intro */
+    .team-intro{padding:0 16px 14px;gap:8px}
+    .team-intro__desc{font-size:12px;-webkit-line-clamp:2}
+    .team-intro__chip{font-size:9px;padding:4px 10px}
+
+    .section-label{padding:0 16px;margin-bottom:4px}
+    .section-label__dash{width:24px}
+    .section-label__title{font-size:10px;letter-spacing:0.18em}
+
+    /* Carousel */
+    .carousel-wrapper::before,.carousel-wrapper::after{width:60px}
+    .carousel-track{
+      gap:14px;padding:30px 0 36px;
+      padding-left:calc(50vw - 140px);padding-right:calc(50vw - 140px);
+    }
+    .post-card{
+      width:280px;min-height:auto;padding:18px;
+      gap:12px;
+      transform:scale(0.86);filter:blur(3px);
+    }
+    .post-card.active{transform:scale(1);}
+    .post-card__title{font-size:16px}
+    .post-card__desc{font-size:12px;-webkit-line-clamp:2}
+    .post-card__stat{padding:0 10px}
+    .post-card__stat-value{font-size:14px}
+    .post-card__stat-label{font-size:8px}
+    .post-card__chip{font-size:9px;padding:3px 8px}
+    .post-card__cta{padding:6px 12px;font-size:9px}
+    .post-card__reward{font-size:11px}
+
+    .carousel-dots{padding:0 16px 10px}
+    .carousel-dot{width:6px;height:6px}
+    .carousel-dot.active{width:22px}
+
+    /* Bottom bar: stack vertically, simpler */
+    .bottom-bar{padding:8px 14px 20px;gap:8px}
+    .bottom-bar__row{gap:8px}
+    .bottom-bar__row:first-child{flex-wrap:wrap}
+    .hud-stat{flex:1 1 calc(50% - 6px);min-width:0;padding:8px 12px;gap:10px}
+    .hud-stat__icon{width:28px;height:28px}
+    .hud-stat__icon svg{width:14px;height:14px}
+    .hud-stat__label{font-size:8px;letter-spacing:0.1em}
+    .hud-stat__value{font-size:12px}
+    .hud-stat__value strong{font-size:13px}
+    .hud-stat__value small{font-size:9px}
+
+    .browse-btn{width:100%;justify-content:center;padding:12px;font-size:11px}
+
+    .bottom-bar__row--filters{padding:4px 0 0}
+    .cat-filters{gap:5px}
+    .cat-filter{padding:5px 10px;font-size:9px;letter-spacing:0.06em}
+  }
+
+  @media (max-width: 420px){
+    .arena-topbar__handle{display:none}
+    .hud-btn{width:32px;height:32px}
+    .hud-stat{flex:1 1 100%}
+  }
+</style>
+</head>
+<body>
+
+<div class="arena">
+
+  <!-- ═══════ BG LAYERS ═══════ -->
+  <div class="bg-grid"><div class="bg-grid__plane"></div></div>
+  <div class="bg-orbs">
+    <div class="bg-orb bg-orb--1"></div>
+    <div class="bg-orb bg-orb--2"></div>
+    <div class="bg-orb bg-orb--3"></div>
+  </div>
+  <div class="bg-stars" id="stars"></div>
+  <div class="bg-scanline"></div>
+
+  <!-- ═══════ TOP BAR ═══════ -->
+  <div class="arena-topbar">
+    <div class="arena-topbar__brand">
+      <!-- Back (history) -->
+      <button class="brand-home" id="brand-back" aria-label="Go back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"/>
+          <polyline points="12 19 5 12 12 5"/>
+        </svg>
+      </button>
+      <span class="brand-home__divider"></span>
+
+      <!-- Team switcher -->
+      <div class="team-switcher" id="team-switcher" aria-expanded="false" role="button" tabindex="0">
+        <div class="arena-topbar__logo">V</div>
+        <div class="team-switcher__body">
+          <span class="arena-topbar__title">victor_team</span>
+          <span class="arena-topbar__handle">@victor_team</span>
+        </div>
+        <svg class="team-switcher__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+
+        <!-- Dropdown -->
+        <div class="team-dd" role="menu">
+          <div class="team-dd__header">Switch Team</div>
+
+          <div class="team-dd__item">
+            <div class="team-dd__avatar">V</div>
+            <div class="team-dd__body">
+              <span class="team-dd__name">victor_team</span>
+              <span class="team-dd__handle">@victor_team</span>
+            </div>
+            <svg class="team-dd__check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+
+          <div class="team-dd__item">
+            <div class="team-dd__avatar team-dd__avatar--alt1">R</div>
+            <div class="team-dd__body">
+              <span class="team-dd__name">ratel_foundation</span>
+              <span class="team-dd__handle">@ratel_foundation</span>
+            </div>
+          </div>
+
+          <div class="team-dd__item">
+            <div class="team-dd__avatar team-dd__avatar--alt2">D</div>
+            <div class="team-dd__body">
+              <span class="team-dd__name">dao_builders</span>
+              <span class="team-dd__handle">@dao_builders</span>
+            </div>
+          </div>
+
+          <a class="team-dd__footer" href="/teams">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            Browse all teams
+          </a>
+        </div>
+      </div>
+
+      <span class="arena-topbar__status">Team · Active</span>
+    </div>
+
+    <div class="arena-topbar__actions">
+      <button class="hud-btn" aria-label="Drafts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+        <span class="hud-btn__label">Drafts</span>
+      </button>
+      <span class="brand-home__divider" style="margin:0 2px"></span>
+      <button class="hud-btn" aria-label="Members">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <span class="hud-btn__label">Members</span>
+      </button>
+      <button class="hud-btn" aria-label="Rewards">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
+        </svg>
+        <span class="hud-btn__label">Rewards</span>
+      </button>
+      <button class="hud-btn" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        <span class="hud-btn__label">Settings</span>
+      </button>
+      <button class="follow-btn">Follow</button>
+    </div>
+  </div>
+
+  <!-- ═══════ TEAM INTRO STRIP ═══════ -->
+  <div class="team-intro">
+    <p class="team-intro__desc">
+      Building the decentralized legislative platform — coordinating proposals, polls, and quizzes with the Ratel community.
+    </p>
+    <div class="team-intro__meta">
+      <span class="team-intro__chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Since <strong>Mar 2026</strong>
+      </span>
+    </div>
+  </div>
+
+  <!-- ═══════ SECTION LABEL ═══════ -->
+  <div class="section-label">
+    <span class="section-label__dash"></span>
+    <span class="section-label__title">Team <strong>Posts</strong></span>
+    <span class="section-label__dash"></span>
+  </div>
+
+  <!-- ═══════ CAROUSEL ═══════ -->
+  <div class="carousel-wrapper">
+    <div class="carousel-track" id="carousel-track">
+
+      <!-- Post 1 -->
+      <article class="post-card" data-index="0">
+        <div class="post-card__wave"></div>
+        <div class="post-card__top">
+          <span class="post-card__cat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+            Poll
+          </span>
+          <span class="post-card__date">Apr 14, 2026</span>
+        </div>
+
+        <div class="post-card__title">poll ui title</div>
+        <p class="post-card__desc">Exploring the new poll arena layout — showcases how the feed renders next to the team hero banner and stats.</p>
+
+        <div class="post-card__stats">
+          <div class="post-card__stat">
+            <span class="post-card__stat-value post-card__stat-value--liked">24</span>
+            <span class="post-card__stat-label">Likes</span>
+          </div>
+          <div class="post-card__stat">
+            <span class="post-card__stat-value">8</span>
+            <span class="post-card__stat-label">Comments</span>
+          </div>
+          <div class="post-card__stat">
+            <span class="post-card__stat-value">3</span>
+            <span class="post-card__stat-label">Shares</span>
+          </div>
+        </div>
+
+        <div class="post-card__chips">
+          <span class="post-card__chip">#poll</span>
+          <span class="post-card__chip">#governance</span>
+        </div>
+
+        <div class="post-card__footer">
+          <div class="post-card__reward">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12"/><path d="M16 10H8"/></svg>
+            120 <small>reward</small>
+          </div>
+          <button class="post-card__cta">
+            Read Post
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </article>
+
+      <!-- Post 2 -->
+      <article class="post-card" data-index="1">
+        <div class="post-card__wave"></div>
+        <div class="post-card__top">
+          <span class="post-card__cat post-card__cat--discuss">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Dev
+          </span>
+          <span class="post-card__date">Apr 14, 2026</span>
+        </div>
+
+        <div class="post-card__title">dsdssddssdsd</div>
+        <p class="post-card__desc">Quick dev note — testing out markdown rendering in the arena feed with a short paragraph of body copy.</p>
+
+        <div class="post-card__stats">
+          <div class="post-card__stat">
+            <span class="post-card__stat-value">3</span>
+            <span class="post-card__stat-label">Likes</span>
+          </div>
+          <div class="post-card__stat">
+            <span class="post-card__stat-value">0</span>
+            <span class="post-card__stat-label">Comments</span>
+          </div>
+          <div class="post-card__stat">
+            <span class="post-card__stat-value">0</span>
+            <span class="post-card__stat-label">Shares</span>
+          </div>
+        </div>
+
+        <div class="post-card__chips">
+          <span class="post-card__chip">#dev</span>
+        </div>
+
+        <div class="post-card__footer">
+          <div class="post-card__reward" style="color:var(--text-dim);">
+            &mdash;
+          </div>
+          <button class="post-card__cta">
+            Read Post
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </article>
+
+      <!-- Post 3 -->
+      <article class="post-card" data-index="2">
+        <div class="post-card__wave"></div>
+        <div class="post-card__top">
+          <span class="post-card__cat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+            Poll
+          </span>
+          <span class="post-card__date">Apr 14, 2026</span>
+        </div>
+
+        <div class="post-card__title">sdfsdf</div>
+        <p class="post-card__desc">Short teaser for the third card — multi-category post to show how tagging renders inside the 3D carousel.</p>
+
+        <div class="post-card__stats">
+          <div class="post-card__stat">
+            <span class="post-card__stat-value">11</span>
+            <span class="post-card__stat-label">Likes</span>
+          </div>
+          <div class="post-card__stat">
+            <span class="post-card__stat-value">2</span>
+            <span class="post-card__stat-label">Comments</span>
+          </div>
+          <div class="post-card__stat">
+            <span class="post-card__stat-value">1</span>
+            <span class="post-card__stat-label">Shares</span>
+          </div>
+        </div>
+
+        <div class="post-card__chips">
+          <span class="post-card__chip">#poll</span>
+          <span class="post-card__chip">#community</span>
+        </div>
+
+        <div class="post-card__footer">
+          <div class="post-card__reward" style="color:var(--text-dim);">&mdash;</div>
+          <button class="post-card__cta">
+            Read Post
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </article>
+
+      <!-- Post 4 -->
+      <article class="post-card" data-index="3">
+        <div class="post-card__wave"></div>
+        <div class="post-card__top">
+          <span class="post-card__cat post-card__cat--quiz">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Update
+          </span>
+          <span class="post-card__date">Apr 14, 2026</span>
+        </div>
+
+        <div class="post-card__title">victor team</div>
+        <p class="post-card__desc">Internal announcement to members — kicking off the next round of deliberations on the governance roadmap.</p>
+
+        <div class="post-card__stats">
+          <div class="post-card__stat">
+            <span class="post-card__stat-value">0</span>
+            <span class="post-card__stat-label">Likes</span>
+          </div>
+          <div class="post-card__stat">
+            <span class="post-card__stat-value">0</span>
+            <span class="post-card__stat-label">Comments</span>
+          </div>
+          <div class="post-card__stat">
+            <span class="post-card__stat-value">0</span>
+            <span class="post-card__stat-label">Shares</span>
+          </div>
+        </div>
+
+        <div class="post-card__chips">
+          <span class="post-card__chip">#victor</span>
+        </div>
+
+        <div class="post-card__footer">
+          <div class="post-card__reward" style="color:var(--text-dim);">&mdash;</div>
+          <button class="post-card__cta">
+            Read Post
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </article>
+
+      <!-- Post 5 -->
+      <article class="post-card" data-index="4">
+        <div class="post-card__wave"></div>
+        <div class="post-card__top">
+          <span class="post-card__cat post-card__cat--discuss">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Discussion
+          </span>
+          <span class="post-card__date">Apr 14, 2026</span>
+        </div>
+
+        <div class="post-card__title">deliberation title</div>
+        <p class="post-card__desc">Long-form deliberation post with multi-paragraph body — keeps the focus on content while preserving the team identity.</p>
+
+        <div class="post-card__stats">
+          <div class="post-card__stat">
+            <span class="post-card__stat-value">0</span>
+            <span class="post-card__stat-label">Likes</span>
+          </div>
+          <div class="post-card__stat">
+            <span class="post-card__stat-value">0</span>
+            <span class="post-card__stat-label">Comments</span>
+          </div>
+          <div class="post-card__stat">
+            <span class="post-card__stat-value">0</span>
+            <span class="post-card__stat-label">Shares</span>
+          </div>
+        </div>
+
+        <div class="post-card__chips">
+          <span class="post-card__chip">#deliberation</span>
+        </div>
+
+        <div class="post-card__footer">
+          <div class="post-card__reward" style="color:var(--text-dim);">&mdash;</div>
+          <button class="post-card__cta">
+            Read Post
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </article>
+
+    </div>
+
+    <div class="carousel-dots" id="carousel-dots"></div>
+  </div>
+
+  <!-- ═══════ BOTTOM BAR ═══════ -->
+  <div class="bottom-bar">
+    <!-- Row 1: HUD stats + Create -->
+    <div class="bottom-bar__row">
+      <div class="hud-stat">
+        <div class="hud-stat__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        </div>
+        <div class="hud-stat__body">
+          <span class="hud-stat__label">Posts Loaded</span>
+          <span class="hud-stat__value"><strong>5</strong></span>
+        </div>
+      </div>
+
+      <div class="hud-stat hud-stat--accent">
+        <div class="hud-stat__icon">
+          <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+        </div>
+        <div class="hud-stat__body">
+          <span class="hud-stat__label">Likes</span>
+          <span class="hud-stat__value"><strong>38</strong> <small>on page</small></span>
+        </div>
+      </div>
+
+      <div class="hud-stat">
+        <div class="hud-stat__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="hud-stat__body">
+          <span class="hud-stat__label">Comments</span>
+          <span class="hud-stat__value"><strong>10</strong> <small>on page</small></span>
+        </div>
+      </div>
+
+      <div style="flex:1"></div>
+
+      <button class="browse-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Create Post
+      </button>
+    </div>
+
+    <!-- Row 2: Category filter chips -->
+    <div class="bottom-bar__row bottom-bar__row--filters">
+      <div class="cat-filters">
+        <button class="cat-filter active">All <span class="cat-filter__count">5</span></button>
+        <button class="cat-filter">poll <span class="cat-filter__count">2</span></button>
+        <button class="cat-filter">dev <span class="cat-filter__count">1</span></button>
+        <button class="cat-filter">community <span class="cat-filter__count">1</span></button>
+        <button class="cat-filter">governance <span class="cat-filter__count">1</span></button>
+        <button class="cat-filter">victor <span class="cat-filter__count">1</span></button>
+        <button class="cat-filter">deliberation <span class="cat-filter__count">1</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Star field: generate ~90 twinkling dots + a few shooting stars
+  (function(){
+    const layer = document.getElementById('stars');
+    if(!layer) return;
+    const count = 90;
+    for(let i=0; i<count; i++){
+      const s = document.createElement('div');
+      s.className = 'star';
+      const size = Math.random() < 0.15 ? 2 + Math.random()*1.5 : 1 + Math.random()*0.8;
+      s.style.width = size + 'px';
+      s.style.height = size + 'px';
+      s.style.left = Math.random()*100 + '%';
+      s.style.top = Math.random()*100 + '%';
+      s.style.animationDuration = (3 + Math.random()*5).toFixed(2) + 's';
+      s.style.animationDelay = (-Math.random()*6).toFixed(2) + 's';
+      // Occasional gold star
+      if(Math.random() < 0.08){
+        s.style.background = '#fcb300';
+        s.style.boxShadow = '0 0 6px rgba(252,179,0,0.5)';
+      } else if(Math.random() < 0.10){
+        s.style.background = '#6eedd8';
+        s.style.boxShadow = '0 0 4px rgba(110,237,216,0.4)';
+      }
+      layer.appendChild(s);
+    }
+    // 2 shooting stars on distinct delay lanes
+    for(let i=0; i<2; i++){
+      const ss = document.createElement('div');
+      ss.className = 'shooting';
+      ss.style.top = (10 + i*38 + Math.random()*10) + '%';
+      ss.style.left = (Math.random()*40) + '%';
+      ss.style.animationDelay = (-Math.random()*8 + (i*3)).toFixed(2) + 's';
+      layer.appendChild(ss);
+    }
+  })();
+
+  // Carousel — active-detection pattern (scroll position → scale/opacity)
+  const track = document.getElementById('carousel-track');
+  const cards = Array.from(track.querySelectorAll('.post-card'));
+  const dotsContainer = document.getElementById('carousel-dots');
+  let activeIndex = 0;
+
+  cards.forEach((_, i) => {
+    const dot = document.createElement('button');
+    dot.className = 'carousel-dot';
+    dot.addEventListener('click', () => scrollToCard(i));
+    dotsContainer.appendChild(dot);
+  });
+  const dots = Array.from(dotsContainer.querySelectorAll('.carousel-dot'));
+
+  function updateActive() {
+    const trackRect = track.getBoundingClientRect();
+    const center = trackRect.left + trackRect.width / 2;
+    let closest = 0, closestDist = Infinity;
+    cards.forEach((card, i) => {
+      const rect = card.getBoundingClientRect();
+      const dist = Math.abs(center - (rect.left + rect.width / 2));
+      if (dist < closestDist) { closestDist = dist; closest = i; }
+    });
+    activeIndex = closest;
+    cards.forEach((c, i) => c.classList.toggle('active', i === activeIndex));
+    dots.forEach((d, i) => d.classList.toggle('active', i === activeIndex));
+  }
+
+  function scrollToCard(i) {
+    const card = cards[i];
+    const trackRect = track.getBoundingClientRect();
+    const cardRect = card.getBoundingClientRect();
+    const offset = cardRect.left - trackRect.left - (trackRect.width - cardRect.width) / 2;
+    track.scrollBy({ left: offset, behavior: 'smooth' });
+  }
+
+  track.addEventListener('scroll', updateActive, { passive: true });
+  window.addEventListener('resize', updateActive);
+  requestAnimationFrame(updateActive);
+
+  // Back button
+  (function(){
+    const back = document.getElementById('brand-back');
+    if(back){
+      back.addEventListener('click', () => {
+        if (window.history.length > 1) window.history.back();
+        else window.location.href = '/';
+      });
+    }
+  })();
+
+  // Team switcher dropdown toggle
+  (function(){
+    const sw = document.getElementById('team-switcher');
+    if(!sw) return;
+    const toggle = (e) => {
+      if(e.target.closest('.team-dd') && !e.target.closest('.team-dd__item,.team-dd__footer')) return;
+      const expanded = sw.getAttribute('aria-expanded') === 'true';
+      sw.setAttribute('aria-expanded', String(!expanded));
+    };
+    sw.addEventListener('click', toggle);
+    document.addEventListener('click', (e) => {
+      if(!sw.contains(e.target)) sw.setAttribute('aria-expanded', 'false');
+    });
+  })();
+
+  // Category filter (visual only)
+  document.querySelectorAll('.cat-filter').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.cat-filter').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>
