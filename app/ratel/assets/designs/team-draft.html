@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Team Drafts Arena</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+    --border-subtle:rgba(255,255,255,0.06);--text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+    --accent-gold:#fcb300;--accent-teal:#6eedd8;
+    --accent-poll:#818cf8;--accent-quiz:#a855f7;--accent-discuss:#22d3ee;
+    --accent-draft:#f59e0b;--accent-draft-bg:rgba(245,158,11,0.10);--accent-draft-bd:rgba(245,158,11,0.28);
+    --accent-danger:#ef4444;--accent-danger-bg:rgba(239,68,68,0.08);--accent-danger-bd:rgba(239,68,68,0.22);
+    --font-display:'Orbitron',sans-serif;--font-body:'Outfit','Noto Sans KR',sans-serif;
+  }
+  html,body{height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body)}
+
+  .arena{position:relative;width:100%;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
+  .arena::before{
+    content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 50%, rgba(252,179,0,0.04) 0%, transparent 60%),
+      radial-gradient(ellipse 120% 100% at 50% 120%, rgba(110,237,216,0.03) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, var(--bg-void) 0%, var(--bg-void) 100%);
+  }
+
+  /* ── BG layers ── */
+  .bg-stars{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .star{position:absolute;border-radius:50%;background:#fff;animation:twinkle ease-in-out infinite}
+  @keyframes twinkle{0%,100%{opacity:0.08;transform:scale(0.9)}50%{opacity:0.9;transform:scale(1.3)}}
+  .shooting{
+    position:absolute;width:120px;height:1px;
+    background:linear-gradient(90deg, transparent, rgba(252,179,0,0.8), rgba(252,179,0,0));
+    opacity:0;animation:shoot 8s linear infinite;transform-origin:left center;
+  }
+  @keyframes shoot{
+    0%{opacity:0;transform:translateX(0) translateY(0) rotate(-18deg) scaleX(0.1)}
+    4%{opacity:1;transform:translateX(0) translateY(0) rotate(-18deg) scaleX(1)}
+    14%{opacity:0;transform:translateX(400px) translateY(-130px) rotate(-18deg) scaleX(0.6)}
+    100%{opacity:0;transform:translateX(400px) translateY(-130px) rotate(-18deg) scaleX(0.6)}
+  }
+  .bg-grid{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .bg-grid__plane{
+    position:absolute;bottom:-40%;left:-20%;right:-20%;height:120%;
+    background:linear-gradient(rgba(252,179,0,0.025) 1px, transparent 1px),linear-gradient(90deg, rgba(252,179,0,0.025) 1px, transparent 1px);
+    background-size:80px 80px;
+    transform:perspective(600px) rotateX(55deg);
+    animation:gridScroll 20s linear infinite;
+    mask-image:linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 70%);
+  }
+  @keyframes gridScroll{0%{background-position:0 0}100%{background-position:0 80px}}
+  .bg-orbs{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .bg-orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.10;animation:orbFloat 25s ease-in-out infinite}
+  .bg-orb--1{width:500px;height:500px;background:radial-gradient(circle, var(--accent-gold), transparent 70%);top:-10%;right:10%}
+  .bg-orb--2{width:400px;height:400px;background:radial-gradient(circle, var(--accent-teal), transparent 70%);bottom:10%;left:-5%;animation-delay:-8s;animation-duration:30s}
+  .bg-orb--3{width:300px;height:300px;background:radial-gradient(circle, var(--accent-quiz), transparent 70%);top:40%;right:-5%;animation-delay:-15s;animation-duration:22s}
+  @keyframes orbFloat{
+    0%,100%{transform:translate(0,0) scale(1)}
+    25%{transform:translate(40px,-30px) scale(1.1)}
+    50%{transform:translate(-20px,20px) scale(0.95)}
+    75%{transform:translate(30px,40px) scale(1.05)}
+  }
+  .bg-scanline{position:absolute;inset:0;z-index:0;pointer-events:none;
+    background:repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.006) 2px, rgba(255,255,255,0.006) 4px);
+  }
+
+  /* ── Top bar ── */
+  .arena-topbar{position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:20px 28px;flex-shrink:0}
+  .arena-topbar__brand{display:flex;align-items:center;gap:12px;min-width:0}
+  .brand-home{
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    width:36px;height:36px;border-radius:10px;
+    background:rgba(12,12,26,0.6);backdrop-filter:blur(10px);
+    border:1px solid var(--border-subtle);
+    cursor:pointer;transition:all 0.25s;
+  }
+  .brand-home:hover{border-color:rgba(252,179,0,0.3);box-shadow:0 0 14px rgba(252,179,0,0.12);transform:translateY(-1px)}
+  .brand-home svg{width:18px;height:18px;color:var(--accent-gold)}
+  .brand-home__divider{width:1px;height:24px;background:var(--border-subtle);flex-shrink:0}
+
+  .team-switcher{position:relative;display:flex;align-items:center;gap:10px;padding:4px 8px 4px 4px;border-radius:12px;cursor:pointer;transition:all 0.25s;min-width:0;border:1px solid transparent}
+  .team-switcher:hover{background:rgba(255,255,255,0.03);border-color:var(--border-subtle)}
+  .team-switcher__body{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .team-switcher__chevron{width:14px;height:14px;color:var(--text-muted);flex-shrink:0;transition:transform 0.25s}
+  .arena-topbar__logo{
+    width:40px;height:40px;border-radius:10px;object-fit:cover;
+    border:1px solid rgba(252,179,0,0.15);
+    box-shadow:0 2px 12px rgba(0,0,0,0.3);
+    background:linear-gradient(135deg, rgba(252,179,0,0.3), rgba(110,237,216,0.15));
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--accent-gold);
+  }
+  .arena-topbar__title{font-family:var(--font-display);font-weight:800;font-size:18px;letter-spacing:0.10em;text-transform:uppercase;background:linear-gradient(135deg,var(--accent-gold),#ffd24a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px}
+  .arena-topbar__handle{font-family:var(--font-display);font-size:11px;font-weight:500;color:var(--text-muted);letter-spacing:0.08em}
+  .arena-topbar__status{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;background:rgba(110,237,216,0.08);border:1px solid rgba(110,237,216,0.15);font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent-teal);margin-left:12px}
+  .arena-topbar__status::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--accent-teal);box-shadow:0 0 6px var(--accent-teal);animation:pulse-dot 1.6s ease-in-out infinite}
+  @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.4}}
+
+  .arena-topbar__actions{display:flex;gap:10px;align-items:center}
+  .hud-btn{position:relative;width:42px;height:42px;border-radius:11px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s ease;padding:0}
+  .hud-btn:hover{background:var(--bg-glass-hover);border-color:rgba(252,179,0,0.25);transform:translateY(-1px)}
+  .hud-btn svg{width:18px;height:18px;color:var(--text-muted);transition:color 0.2s}
+  .hud-btn:hover svg{color:var(--accent-gold)}
+  .hud-btn--active{background:linear-gradient(135deg,rgba(252,179,0,0.18),rgba(252,179,0,0.06));border-color:rgba(252,179,0,0.3)}
+  .hud-btn--active svg{color:var(--accent-gold)}
+  .hud-btn__label{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-dim);white-space:nowrap;opacity:0;transition:opacity 0.2s ease;pointer-events:none}
+  .hud-btn:hover .hud-btn__label{opacity:1}
+
+  .follow-btn{padding:9px 18px;border-radius:11px;background:linear-gradient(135deg,rgba(252,179,0,0.18),rgba(252,179,0,0.06));border:1px solid rgba(252,179,0,0.3);color:var(--accent-gold);font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.25s ease;box-shadow:0 0 16px rgba(252,179,0,0.08)}
+  .follow-btn:hover{background:linear-gradient(135deg,rgba(252,179,0,0.28),rgba(252,179,0,0.1));box-shadow:0 0 24px rgba(252,179,0,0.2);transform:translateY(-1px)}
+
+  /* ── Section label ── */
+  .section-label{position:relative;z-index:10;text-align:center;padding:0 28px;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:10px;flex-shrink:0}
+  .section-label__dash{width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--text-dim),transparent)}
+  .section-label__title{font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:0.22em;text-transform:uppercase;color:var(--text-dim)}
+  .section-label__title strong{color:var(--accent-gold);font-weight:700}
+
+  /* ── Page container ── */
+  .page{position:relative;z-index:10;max-width:1080px;margin:0 auto;padding:8px 28px 80px;width:100%}
+
+  /* ── Page header ── */
+  .page-header{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding:18px 22px;margin-bottom:20px;
+    background:var(--bg-glass);backdrop-filter:blur(16px) saturate(1.3);
+    border:1px solid var(--border-subtle);border-radius:16px;
+    box-shadow:0 4px 24px rgba(0,0,0,0.25),inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+  .page-header__left{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .page-header__title{font-family:var(--font-display);font-size:20px;font-weight:800;color:var(--text-primary);letter-spacing:0.05em}
+  .page-header__sub{font-size:12px;color:var(--text-muted);letter-spacing:0.04em}
+  .page-header__sub strong{color:var(--accent-draft);font-weight:700;font-family:var(--font-display)}
+
+  .btn-primary{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:11px 20px;border-radius:11px;border:1px solid rgba(252,179,0,0.3);
+    background:linear-gradient(135deg,rgba(252,179,0,0.2),rgba(110,237,216,0.08));
+    color:var(--accent-gold);
+    font-family:var(--font-display);font-size:11px;font-weight:700;
+    letter-spacing:0.1em;text-transform:uppercase;
+    cursor:pointer;transition:all 0.3s;
+    box-shadow:0 0 16px rgba(252,179,0,0.1);white-space:nowrap;
+  }
+  .btn-primary:hover{background:linear-gradient(135deg,rgba(252,179,0,0.3),rgba(110,237,216,0.14));box-shadow:0 0 24px rgba(252,179,0,0.22);transform:translateY(-1px)}
+  .btn-primary svg{width:14px;height:14px}
+
+  /* ── Drafts grid ── */
+  .drafts-grid{display:grid;grid-template-columns:repeat(2, 1fr);gap:14px}
+
+  .draft-card{
+    position:relative;
+    display:flex;flex-direction:column;gap:12px;
+    padding:18px 20px 16px;
+    background:var(--bg-glass);backdrop-filter:blur(16px) saturate(1.2);
+    border:1px solid var(--border-subtle);border-radius:14px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.25);
+    transition:all 0.3s;
+    cursor:pointer;overflow:hidden;
+  }
+  .draft-card::before{
+    content:'';position:absolute;left:0;top:18%;bottom:18%;width:3px;
+    border-radius:0 3px 3px 0;
+    background:linear-gradient(180deg,var(--accent-draft),var(--accent-gold));
+    opacity:0;transition:opacity 0.3s;
+    box-shadow:0 0 10px rgba(245,158,11,0.3);
+  }
+  .draft-card:hover{
+    border-color:rgba(245,158,11,0.25);
+    transform:translateY(-2px);
+    box-shadow:0 8px 30px rgba(0,0,0,0.4),0 0 24px rgba(245,158,11,0.08);
+  }
+  .draft-card:hover::before{opacity:1}
+
+  .draft-card__head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .draft-card__meta-left{display:flex;align-items:center;gap:8px;min-width:0}
+  .draft-badge{
+    display:inline-flex;align-items:center;gap:5px;
+    padding:4px 9px;border-radius:7px;
+    background:var(--accent-draft-bg);color:var(--accent-draft);
+    border:1px solid var(--accent-draft-bd);
+    font-family:var(--font-display);font-size:9px;font-weight:800;
+    letter-spacing:0.12em;text-transform:uppercase;flex-shrink:0;
+  }
+  .draft-badge::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--accent-draft);box-shadow:0 0 6px var(--accent-draft)}
+  .draft-updated{
+    font-family:var(--font-display);font-size:10px;font-weight:500;
+    color:var(--text-dim);letter-spacing:0.08em;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+
+  .draft-action{
+    width:30px;height:30px;border-radius:8px;padding:0;flex-shrink:0;
+    background:rgba(255,255,255,0.02);border:1px solid var(--border-subtle);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--text-muted);cursor:pointer;transition:all 0.2s;
+  }
+  .draft-action:hover{background:var(--accent-danger-bg);color:var(--accent-danger);border-color:var(--accent-danger-bd)}
+  .draft-action svg{width:14px;height:14px}
+
+  .draft-card__title{
+    font-size:15px;font-weight:700;color:var(--text-primary);
+    line-height:1.45;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+    overflow:hidden;text-overflow:ellipsis;
+  }
+  .draft-card__preview{
+    font-size:12px;color:var(--text-muted);line-height:1.6;
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;
+    overflow:hidden;text-overflow:ellipsis;
+  }
+
+  .draft-card__foot{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    margin-top:auto;padding-top:10px;border-top:1px solid var(--border-subtle);
+  }
+  .draft-author{display:flex;align-items:center;gap:8px;min-width:0}
+  .draft-author__avatar{
+    width:24px;height:24px;border-radius:50%;flex-shrink:0;
+    background:linear-gradient(135deg, rgba(252,179,0,0.3), rgba(110,237,216,0.15));
+    border:1px solid var(--border-subtle);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-display);font-weight:800;font-size:10px;color:var(--accent-gold);
+  }
+  .draft-author__avatar--alt1{background:linear-gradient(135deg, rgba(168,85,247,0.3), rgba(34,211,238,0.12));color:var(--accent-quiz)}
+  .draft-author__avatar--alt2{background:linear-gradient(135deg, rgba(34,211,238,0.3), rgba(110,237,216,0.12));color:var(--accent-discuss)}
+  .draft-author__avatar--alt3{background:linear-gradient(135deg, rgba(110,237,216,0.3), rgba(252,179,0,0.12));color:var(--accent-teal)}
+  .draft-author__name{
+    font-size:12px;font-weight:600;color:var(--text-muted);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:0.02em;
+  }
+  .draft-edit-hint{
+    display:inline-flex;align-items:center;gap:4px;
+    font-family:var(--font-display);font-size:9px;font-weight:700;
+    letter-spacing:0.12em;text-transform:uppercase;
+    color:var(--text-dim);
+    transition:color 0.2s;
+  }
+  .draft-card:hover .draft-edit-hint{color:var(--accent-gold)}
+  .draft-edit-hint svg{width:10px;height:10px;transition:transform 0.2s}
+  .draft-card:hover .draft-edit-hint svg{transform:translateX(2px)}
+
+  /* ── Empty state ── */
+  .empty-state{
+    padding:60px 20px;text-align:center;
+    border:1px dashed var(--border-subtle);border-radius:14px;
+    background:rgba(12,12,26,0.3);
+  }
+  .empty-state__icon{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:56px;height:56px;border-radius:14px;
+    background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.16);
+    margin-bottom:12px;
+  }
+  .empty-state__icon svg{width:24px;height:24px;color:var(--accent-draft)}
+  .empty-state__title{font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;margin-bottom:6px;color:var(--text-primary)}
+  .empty-state__desc{font-size:12px;color:var(--text-muted)}
+
+  /* ── Delete confirm modal ── */
+  .modal-overlay{
+    position:fixed;inset:0;z-index:100;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(6,6,14,0.75);backdrop-filter:blur(8px);
+    padding:24px;
+    opacity:0;visibility:hidden;transition:all 0.25s;
+  }
+  .modal-overlay.open{opacity:1;visibility:visible}
+  .modal{
+    position:relative;width:100%;max-width:440px;
+    padding:28px 28px 24px;
+    background:linear-gradient(180deg, rgba(40,10,10,0.75) 0%, rgba(12,12,26,0.9) 100%);
+    backdrop-filter:blur(20px);
+    border:1px solid rgba(239,68,68,0.2);
+    border-radius:18px;
+    box-shadow:0 24px 80px rgba(0,0,0,0.6),0 0 40px rgba(239,68,68,0.08);
+    transform:translateY(20px) scale(0.96);
+    transition:transform 0.3s cubic-bezier(0.16,1,0.3,1);
+  }
+  .modal-overlay.open .modal{transform:translateY(0) scale(1)}
+  .modal__header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .modal__title{font-family:var(--font-display);font-size:14px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent-danger)}
+  .modal__close{
+    width:30px;height:30px;padding:0;border-radius:8px;
+    background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);
+    color:var(--text-muted);cursor:pointer;transition:all 0.2s;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .modal__close:hover{color:var(--text-primary);background:rgba(255,255,255,0.08)}
+  .modal__close svg{width:14px;height:14px}
+  .modal__body{display:flex;flex-direction:column;gap:14px}
+  .modal__desc{font-size:13px;line-height:1.6;color:var(--text-muted)}
+  .modal__desc strong{color:var(--text-primary);font-weight:600}
+  .modal__actions{display:flex;gap:10px;margin-top:4px}
+  .modal__cancel{
+    flex:1;padding:12px;border-radius:11px;
+    background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);
+    color:var(--text-primary);
+    font-family:var(--font-display);font-size:11px;font-weight:700;
+    letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;transition:all 0.25s;
+  }
+  .modal__cancel:hover{background:rgba(255,255,255,0.06)}
+  .modal__confirm-danger{
+    flex:1;padding:12px;border-radius:11px;
+    background:rgba(239,68,68,0.16);color:var(--accent-danger);
+    border:1px solid var(--accent-danger-bd);
+    font-family:var(--font-display);font-size:11px;font-weight:800;
+    letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;transition:all 0.25s;
+  }
+  .modal__confirm-danger:hover{background:rgba(239,68,68,0.26);box-shadow:0 0 18px rgba(239,68,68,0.2)}
+
+  /* ── Load more ── */
+  .load-more{
+    margin-top:18px;display:flex;justify-content:center;
+  }
+  .load-more-btn{
+    padding:11px 24px;border-radius:11px;
+    background:var(--bg-glass);backdrop-filter:blur(12px);
+    border:1px solid var(--border-subtle);color:var(--text-muted);
+    font-family:var(--font-display);font-size:11px;font-weight:700;
+    letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;transition:all 0.25s;
+    display:inline-flex;align-items:center;gap:8px;
+  }
+  .load-more-btn:hover{border-color:rgba(252,179,0,0.25);color:var(--accent-gold);box-shadow:0 0 16px rgba(252,179,0,0.08)}
+  .load-more-btn svg{width:12px;height:12px}
+
+  /* ── Responsive ── */
+  @media (max-width: 720px){
+    .arena-topbar{padding:12px 14px;gap:8px;flex-wrap:nowrap}
+    .arena-topbar__logo{width:30px;height:30px;font-size:13px;border-radius:8px}
+    .arena-topbar__title{font-size:13px;max-width:100px}
+    .arena-topbar__handle{font-size:10px}
+    .arena-topbar__status{display:none}
+    .brand-home{width:32px;height:32px;border-radius:9px}
+    .brand-home svg{width:15px;height:15px}
+    .brand-home__divider{display:none}
+    .team-switcher{gap:6px;padding:3px 4px 3px 3px}
+    .team-switcher__chevron{width:12px;height:12px}
+    .arena-topbar__actions{gap:6px}
+    .hud-btn{width:34px;height:34px;border-radius:9px}
+    .hud-btn svg{width:14px;height:14px}
+    .hud-btn__label{display:none}
+    .follow-btn{padding:6px 10px;font-size:10px}
+
+    .page{padding:8px 14px 60px}
+    .section-label{padding:0 14px;margin-bottom:14px}
+    .page-header{padding:14px 16px;gap:10px;flex-wrap:wrap}
+    .page-header__title{font-size:16px}
+    .btn-primary{padding:9px 14px;font-size:10px}
+
+    .drafts-grid{grid-template-columns:1fr;gap:10px}
+    .draft-card{padding:14px 14px 12px;gap:10px}
+    .draft-card__title{font-size:13px}
+    .draft-card__preview{font-size:11px;-webkit-line-clamp:2}
+    .draft-updated{font-size:9px}
+
+    .modal{padding:22px 20px 18px}
+    .modal__title{font-size:12px}
+  }
+</style>
+</head>
+<body>
+
+<div class="arena">
+
+  <!-- BG layers -->
+  <div class="bg-grid"><div class="bg-grid__plane"></div></div>
+  <div class="bg-orbs">
+    <div class="bg-orb bg-orb--1"></div>
+    <div class="bg-orb bg-orb--2"></div>
+    <div class="bg-orb bg-orb--3"></div>
+  </div>
+  <div class="bg-stars" id="stars"></div>
+  <div class="bg-scanline"></div>
+
+  <!-- ═══════ TOP BAR ═══════ -->
+  <div class="arena-topbar">
+    <div class="arena-topbar__brand">
+      <button class="brand-home" id="brand-back" aria-label="Go back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"/>
+          <polyline points="12 19 5 12 12 5"/>
+        </svg>
+      </button>
+      <span class="brand-home__divider"></span>
+
+      <div class="team-switcher">
+        <div class="arena-topbar__logo">V</div>
+        <div class="team-switcher__body">
+          <span class="arena-topbar__title">victor_team</span>
+          <span class="arena-topbar__handle">@victor_team</span>
+        </div>
+        <svg class="team-switcher__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </div>
+
+      <span class="arena-topbar__status">Team · Active</span>
+    </div>
+
+    <div class="arena-topbar__actions">
+      <button class="hud-btn hud-btn--active" aria-label="Drafts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+        <span class="hud-btn__label">Drafts</span>
+      </button>
+      <span class="brand-home__divider" style="margin:0 2px"></span>
+      <button class="hud-btn" aria-label="Members">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <span class="hud-btn__label">Members</span>
+      </button>
+      <button class="hud-btn" aria-label="Rewards">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
+        </svg>
+        <span class="hud-btn__label">Rewards</span>
+      </button>
+      <button class="hud-btn" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        <span class="hud-btn__label">Settings</span>
+      </button>
+      <button class="follow-btn">Follow</button>
+    </div>
+  </div>
+
+  <!-- ═══════ SECTION LABEL ═══════ -->
+  <div class="section-label">
+    <span class="section-label__dash"></span>
+    <span class="section-label__title">Team <strong>Drafts</strong></span>
+    <span class="section-label__dash"></span>
+  </div>
+
+  <!-- ═══════ PAGE ═══════ -->
+  <div class="page">
+
+    <!-- Page header -->
+    <div class="page-header">
+      <div class="page-header__left">
+        <h1 class="page-header__title">Drafts</h1>
+        <span class="page-header__sub"><strong>4</strong> unpublished · resume editing any time</span>
+      </div>
+      <button class="btn-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        New Post
+      </button>
+    </div>
+
+    <!-- Drafts grid -->
+    <div class="drafts-grid">
+
+      <!-- Draft 1 -->
+      <div class="draft-card">
+        <div class="draft-card__head">
+          <div class="draft-card__meta-left">
+            <span class="draft-badge">Draft</span>
+            <span class="draft-updated">Updated 2 hours ago</span>
+          </div>
+          <button class="draft-action" aria-label="Delete draft" data-delete>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </button>
+        </div>
+        <h3 class="draft-card__title">Proposal: Q2 Community Rewards Budget Allocation</h3>
+        <p class="draft-card__preview">We propose adjusting the Q2 rewards budget to prioritize active contributors in the research and governance spaces. The current allocation assumes a flat rate across all categories, but our engagement data shows…</p>
+        <div class="draft-card__foot">
+          <div class="draft-author">
+            <div class="draft-author__avatar">V</div>
+            <span class="draft-author__name">victor10</span>
+          </div>
+          <span class="draft-edit-hint">
+            Edit
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </span>
+        </div>
+      </div>
+
+      <!-- Draft 2 -->
+      <div class="draft-card">
+        <div class="draft-card__head">
+          <div class="draft-card__meta-left">
+            <span class="draft-badge">Draft</span>
+            <span class="draft-updated">Updated yesterday</span>
+          </div>
+          <button class="draft-action" aria-label="Delete draft" data-delete>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </button>
+        </div>
+        <h3 class="draft-card__title">Weekly Retrospective — Governance Participation Insights</h3>
+        <p class="draft-card__preview">Our team's weekly snapshot: vote turnout is trending upward, but proposal throughput has slowed since last month. Key findings include delayed reviewer availability and onboarding friction for newcomers…</p>
+        <div class="draft-card__foot">
+          <div class="draft-author">
+            <div class="draft-author__avatar draft-author__avatar--alt1">H</div>
+            <span class="draft-author__name">hackartist</span>
+          </div>
+          <span class="draft-edit-hint">
+            Edit
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </span>
+        </div>
+      </div>
+
+      <!-- Draft 3 -->
+      <div class="draft-card">
+        <div class="draft-card__head">
+          <div class="draft-card__meta-left">
+            <span class="draft-badge">Draft</span>
+            <span class="draft-updated">Updated 3 days ago</span>
+          </div>
+          <button class="draft-action" aria-label="Delete draft" data-delete>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </button>
+        </div>
+        <h3 class="draft-card__title">Draft: Space Reward Tier Rebalancing Discussion</h3>
+        <p class="draft-card__preview">Opening topic for community input on rebalancing space reward tiers. The current curve disproportionately favors early participants, and we want to surface alternative models — including linear, logarithmic, and reputation-weighted…</p>
+        <div class="draft-card__foot">
+          <div class="draft-author">
+            <div class="draft-author__avatar draft-author__avatar--alt2">S</div>
+            <span class="draft-author__name">sophia.eth</span>
+          </div>
+          <span class="draft-edit-hint">
+            Edit
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </span>
+        </div>
+      </div>
+
+      <!-- Draft 4 -->
+      <div class="draft-card">
+        <div class="draft-card__head">
+          <div class="draft-card__meta-left">
+            <span class="draft-badge">Draft</span>
+            <span class="draft-updated">Updated last week</span>
+          </div>
+          <button class="draft-action" aria-label="Delete draft" data-delete>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </button>
+        </div>
+        <h3 class="draft-card__title">Arena Launch — Announcement Draft</h3>
+        <p class="draft-card__preview">We're launching the Arena experience next month. This draft outlines the rollout plan, highlights the quest flow for participants, and includes copy for social announcements. Still needs final review from the…</p>
+        <div class="draft-card__foot">
+          <div class="draft-author">
+            <div class="draft-author__avatar draft-author__avatar--alt3">M</div>
+            <span class="draft-author__name">minji</span>
+          </div>
+          <span class="draft-edit-hint">
+            Edit
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Load more -->
+    <div class="load-more">
+      <button class="load-more-btn">
+        Load more
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Empty state example (hidden by default) -->
+    <div class="empty-state" style="margin-top:20px;display:none" id="empty-state">
+      <div class="empty-state__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+      </div>
+      <div class="empty-state__title">No drafts available</div>
+      <div class="empty-state__desc">Start a new post — your in-progress work will appear here.</div>
+    </div>
+
+  </div>
+
+  <!-- ═══════ DELETE CONFIRM MODAL ═══════ -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal" role="dialog" aria-labelledby="modal-title">
+      <div class="modal__header">
+        <span class="modal__title" id="modal-title">Delete Draft?</span>
+        <button class="modal__close" id="modal-close" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal__body">
+        <p class="modal__desc">
+          Are you sure you want to delete this draft? This action <strong>cannot be undone</strong>.
+        </p>
+        <div class="modal__actions">
+          <button class="modal__cancel" id="modal-cancel">Cancel</button>
+          <button class="modal__confirm-danger">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Back
+  document.getElementById('brand-back')?.addEventListener('click', () => {
+    if (window.history.length > 1) window.history.back();
+    else window.location.href = '/';
+  });
+
+  // Stars
+  (function(){
+    const layer = document.getElementById('stars');
+    if(!layer) return;
+    const count = 90;
+    for(let i=0; i<count; i++){
+      const s = document.createElement('div');
+      s.className = 'star';
+      const size = Math.random() < 0.15 ? 2 + Math.random()*1.5 : 1 + Math.random()*0.8;
+      s.style.width = size + 'px';
+      s.style.height = size + 'px';
+      s.style.left = Math.random()*100 + '%';
+      s.style.top = Math.random()*100 + '%';
+      s.style.animationDuration = (3 + Math.random()*5).toFixed(2) + 's';
+      s.style.animationDelay = (-Math.random()*6).toFixed(2) + 's';
+      if(Math.random() < 0.08){
+        s.style.background = '#fcb300';
+        s.style.boxShadow = '0 0 6px rgba(252,179,0,0.5)';
+      } else if(Math.random() < 0.10){
+        s.style.background = '#6eedd8';
+        s.style.boxShadow = '0 0 4px rgba(110,237,216,0.4)';
+      }
+      layer.appendChild(s);
+    }
+    for(let i=0; i<2; i++){
+      const ss = document.createElement('div');
+      ss.className = 'shooting';
+      ss.style.top = (10 + i*38 + Math.random()*10) + '%';
+      ss.style.left = (Math.random()*40) + '%';
+      ss.style.animationDelay = (-Math.random()*8 + (i*3)).toFixed(2) + 's';
+      layer.appendChild(ss);
+    }
+  })();
+
+  // Delete modal — open on any trash button, stop card click
+  const modal = document.getElementById('modal-overlay');
+  document.querySelectorAll('[data-delete]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      modal.classList.add('open');
+    });
+  });
+  document.getElementById('modal-close')?.addEventListener('click', () => modal.classList.remove('open'));
+  document.getElementById('modal-cancel')?.addEventListener('click', () => modal.classList.remove('open'));
+  modal?.addEventListener('click', (e) => {
+    if(e.target === modal) modal.classList.remove('open');
+  });
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape') modal.classList.remove('open');
+  });
+</script>
+</body>
+</html>
