@@ -5,6 +5,9 @@ mod participant;
 pub use participant::PollContent;
 use participant::PollParticipantPage;
 
+mod poll_read_page;
+pub use poll_read_page::PollReadPage;
+
 mod viewer;
 use super::*;
 use crate::features::spaces::pages::actions::components::{ActionEditMode, SettingsSwitchButton};

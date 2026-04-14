@@ -544,27 +544,6 @@ pub fn ActionPollViewer(
             // ─── Footer ───
             if step() == PollStep::Poll {
                 div { class: "poll-footer",
-                    // Left: question dots
-                    div { class: "poll-footer__left",
-                        div { class: "poll-question-dots",
-                            for dot_idx in 0..total {
-                                {
-                                    let is_current = dot_idx == current_idx;
-                                    let is_answered = questions
-                                        .get(dot_idx)
-                                        .map(|q| has_answer_for_question(q, answers.read().get(dot_idx)))
-                                        .unwrap_or(false);
-                                    rsx! {
-                                        span {
-                                            key: "dot-{dot_idx}",
-                                            class: "poll-question-dot",
-                                            class: if is_current { "poll-question-dot--current" } else if is_answered { "poll-question-dot--answered" } else { "" },
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
                     // Right: nav buttons
                     div { class: "poll-footer__right",
                         if !is_first && total > 0 {
