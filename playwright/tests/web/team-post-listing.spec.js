@@ -36,8 +36,16 @@ test.describe.serial("Team post listing (issue-1311)", () => {
     await goto(page, `/${teamUsername}/home`);
     await expect(page).toHaveURL(new RegExp(`/${teamUsername}/home`));
 
+    // Wait for the team arena layout to hydrate and propagate the owner
+    // role into the arena context — the Create Post button is gated by
+    // `arena.can_edit` which flips to true after the layout's use_effect
+    // runs (post-hydration).
+    await expect(page.getByTestId("team-home-create-post")).toBeVisible({
+      timeout: 15000,
+    });
+
     // Step 2: Create a post from the team home page
-    await click(page, { text: "Create" });
+    await click(page, { testId: "team-home-create-post" });
     await page.waitForURL(/\/posts\/.*\/edit/, { waitUntil: "load" });
 
     // Step 3: Fill in post content

@@ -16,7 +16,7 @@
 // 5. Verify individual plan card content
 
 import { test, expect } from "@playwright/test";
-import { click, goto, getLocator } from "../utils";
+import { click, goto } from "../utils";
 
 test.describe.serial(
   "Team settings subscription page navigation",
@@ -48,23 +48,31 @@ test.describe.serial(
       // Navigate directly to the team settings page
       await goto(page, `/${teamUsername}/team-settings`);
 
-      // Verify the settings page loaded by checking a unique nav item
+      // Verify the settings page loaded. The Subscription & Billing card is
+      // rendered for admins/owners and contains the Change Plan link.
       await expect(page).toHaveURL(new RegExp(`/${teamUsername}/team-settings`));
-      await getLocator(page, { text: "General settings" });
+      await expect(
+        page.getByText("Subscription & Billing", { exact: true }),
+      ).toBeVisible();
+      await expect(
+        page.getByTestId("team-settings-change-plan"),
+      ).toBeVisible();
     });
 
-    test("should click the Subscription tab and load the subscription page", async ({
+    test("should click the Change Plan link and load the subscription page", async ({
       page,
     }) => {
       // Navigate to team settings first (each test gets a fresh page from storageState)
       await goto(page, `/${teamUsername}/team-settings`);
 
-      // Verify we are on the settings page
-      await getLocator(page, { text: "General settings" });
+      // Wait for the admin view to render before clicking.
+      await expect(
+        page.getByText("Subscription & Billing", { exact: true }),
+      ).toBeVisible();
 
-      // The Subscription nav item is visible only for admins.
-      // Since the user created the team, they are the admin.
-      await click(page, { text: "Subscription" });
+      // The Change Plan link is visible only for admins/owners.
+      // Since the user created the team, they are the owner.
+      await click(page, { testId: "team-settings-change-plan" });
 
       // Wait for URL to update to the subscription route
       await page.waitForURL(
@@ -166,7 +174,7 @@ test.describe.serial(
       ).toBeVisible();
     });
 
-    test("should show the Subscription nav item as active in the sidebar", async ({
+    test("should remain on the subscription page after direct navigation", async ({
       page,
     }) => {
       await goto(page, `/${teamUsername}/team-settings/subscription`);
@@ -176,11 +184,10 @@ test.describe.serial(
         page.getByRole("heading", { name: "Membership Plans" }),
       ).toBeVisible();
 
-      // The settings sidebar should show "Subscription" as a navigation link.
-      // Verify the "Subscription" nav item is present within the team-setting-layout.
-      const layout = page.getByTestId("team-setting-layout");
-      const subscriptionLink = layout.getByText("Subscription", { exact: true });
-      await expect(subscriptionLink).toBeVisible();
+      // Confirm URL still matches (no redirect for admins/owners).
+      await expect(page).toHaveURL(
+        new RegExp(`/${teamUsername}/team-settings/subscription`),
+      );
     });
   },
 );

@@ -6,7 +6,6 @@ use crate::features::social::pages::setting::layout::TeamSettingLayout;
 // Team pages
 use crate::features::social::pages::dao::Home as DaoPage;
 use crate::features::social::pages::draft::Home as DraftPage;
-use crate::features::social::pages::group::Home as GroupPage;
 use crate::features::social::pages::home::Home as HomePage;
 use crate::features::social::pages::member::Home as MemberPage;
 use crate::features::social::pages::reward::Home as RewardPage;
@@ -72,7 +71,6 @@ macro_rules! define_owner_only_page {
 
 define_team_app_page!(TeamDao, DaoPage);
 define_team_app_page!(TeamDraft, DraftPage);
-define_team_app_page!(TeamGroup, GroupPage);
 define_team_app_page!(TeamHome, HomePage);
 define_team_app_page!(TeamMember, MemberPage);
 define_team_app_page!(TeamReward, RewardPage);
@@ -127,8 +125,6 @@ pub enum Route {
             TeamHome { username: String },
             #[route("/team-drafts")]
             TeamDraft { username: String },
-            #[route("/groups")]
-            TeamGroup { username: String },
             #[route("/dao")]
             TeamDao { username: String },
             #[route("/members")]

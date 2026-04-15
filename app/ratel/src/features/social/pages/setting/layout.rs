@@ -1,5 +1,4 @@
 use crate::common::*;
-use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use crate::features::social::pages::setting::i18n::TeamSettingsTranslate;
 use crate::features::social::*;
 use super::SettingsSaveContext;
@@ -9,17 +8,12 @@ pub fn TeamSettingLayout(username: String) -> Element {
     crate::common::contexts::TeamContext::init();
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let mut team_ctx = crate::common::contexts::use_team_context();
-    let _teams_loader = use_resource(move || async move {
-        let user = user_ctx().user.clone();
-        if user.is_some() {
-            match crate::get_user_teams_handler().await {
-                Ok(teams) => {
-                    team_ctx.set_teams(teams);
-                }
-                Err(e) => {
-                    debug!("TeamSettingLayout: failed to load teams: {:?}", e);
-                }
-            }
+    let teams_future = use_server_future(move || async move {
+        crate::get_user_teams_handler().await.unwrap_or_default()
+    })?;
+    use_effect(move || {
+        if let Some(teams) = teams_future.value().read().clone() {
+            team_ctx.set_teams(teams);
         }
     });
 
@@ -36,13 +30,19 @@ pub fn TeamSettingLayout(username: String) -> Element {
     let can_edit = {
         let teams = team_ctx.teams.read();
         teams.iter().find(|t| t.username == username).map_or(false, |t| {
-            t.has_permission(TeamGroupPermission::TeamAdmin)
-                || t.has_permission(TeamGroupPermission::TeamEdit)
+            let mut mask = 0i64;
+            for v in &t.permissions {
+                mask |= 1i64 << (*v as i32);
+            }
+            crate::features::social::pages::member::dto::TeamRole::from_legacy_permissions(mask)
+                .is_admin_or_owner()
         })
     };
 
     rsx! {
-        div { class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-team-bg text-text-primary", "data-testid": "team-setting-layout",
+        div {
+            class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-team-bg text-text-primary",
+            "data-testid": "team-setting-layout",
             div { class: "hidden tablet:flex",
                 SettingsSidemenu { username: username.clone() }
             }
@@ -63,9 +63,7 @@ pub fn TeamSettingLayout(username: String) -> Element {
                     }
                 }
                 div { class: "flex overflow-auto flex-1 justify-center px-6 py-8",
-                    div { class: "w-full max-w-2xl",
-                        Outlet::<Route> {}
-                    }
+                    div { class: "w-full max-w-2xl", Outlet::<Route> {} }
                 }
             }
         }
@@ -95,9 +93,11 @@ fn SettingsSidemenu(username: String) -> Element {
         None => (username.clone(), String::new(), 0i64),
     };
 
-    let permissions: TeamGroupPermissions = permissions_val.into();
-    let is_admin = permissions.contains(TeamGroupPermission::TeamAdmin);
-    let can_edit = is_admin || permissions.contains(TeamGroupPermission::TeamEdit);
+    let role = crate::features::social::pages::member::dto::TeamRole::from_legacy_permissions(
+        permissions_val,
+    );
+    let is_admin = role.is_owner();
+    let can_edit = role.is_admin_or_owner();
     let user_role = if is_admin {
         "Creator"
     } else if can_edit {
@@ -132,9 +132,7 @@ fn SettingsSidemenu(username: String) -> Element {
                 Link {
                     to: "{team_home_route}",
                     class: "flex items-center gap-1.5 text-sm text-foreground-muted hover:text-text-primary transition-colors",
-                    lucide_dioxus::ChevronLeft {
-                        class: "w-4 h-4 [&>polyline]:stroke-current shrink-0",
-                    }
+                    lucide_dioxus::ChevronLeft { class: "w-4 h-4 [&>polyline]:stroke-current shrink-0" }
                     "{tr.back_to_page}"
                 }
             }
@@ -180,7 +178,9 @@ fn SettingsSidemenu(username: String) -> Element {
                         div { class: "w-9 h-9 rounded-full bg-neutral-600 shrink-0" }
                     }
                     div { class: "flex flex-col min-w-0 flex-1",
-                        span { class: "text-sm font-semibold text-text-primary truncate", "{user_display}" }
+                        span { class: "text-sm font-semibold text-text-primary truncate",
+                            "{user_display}"
+                        }
                         span { class: "text-xs text-foreground-muted", "{user_role}" }
                     }
                 }

@@ -1,8 +1,9 @@
+mod team_header;
 mod user_posts_panel;
+use team_header::TeamHeader;
 use user_posts_panel::UserPostsPanel;
 
 use crate::common::*;
-use crate::features::social::pages::home::components::TeamHeader;
 use crate::features::posts::controllers::create_post::create_post_handler;
 use crate::features::posts::*;
 use crate::features::my_follower::controllers::{check_follow_status_handler, follow_user, unfollow_user};

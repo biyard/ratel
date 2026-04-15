@@ -53,7 +53,12 @@ pub fn SubscriptionPage(username: String) -> Element {
     let is_admin = {
         let teams = team_ctx.teams.read();
         teams.iter().find(|t| t.username == username).map_or(false, |t| {
-            t.has_permission(crate::features::posts::types::TeamGroupPermission::TeamAdmin)
+            let mut mask = 0i64;
+            for v in &t.permissions {
+                mask |= 1i64 << (*v as i32);
+            }
+            crate::features::social::pages::member::dto::TeamRole::from_legacy_permissions(mask)
+                .is_admin_or_owner()
         })
     };
     if !is_admin {
@@ -81,9 +86,7 @@ pub fn SubscriptionPage(username: String) -> Element {
     rsx! {
         document::Script { src: "https://cdn.portone.io/v2/browser-sdk.js" }
         div { class: "flex flex-col gap-6 w-full",
-            div { class: "flex flex-col gap-2",
-                MembershipPlanHeader {}
-            }
+            div { class: "flex flex-col gap-2", MembershipPlanHeader {} }
             div { class: "gap-2.5 mt-4 membership-plan-grid",
                 for (idx , membership) in memberships.read().iter().cloned().enumerate() {
                     MembershipCard {

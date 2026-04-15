@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { click, fill, goto, getLocator, getEditor } from "../utils";
+import { click, fill, goto, getEditor } from "../utils";
 
 /**
  * Team Draft Timeline — E2E
@@ -66,8 +66,14 @@ test.describe.serial("Team draft timeline on team home page", () => {
   test("Create a draft post for the team", async ({ page }) => {
     await goto(page, teamHomeUrl);
 
-    // Click the Create button on the team home page
-    await click(page, { text: "Create" });
+    // Wait for the team arena layout to hydrate and propagate the owner
+    // role into the arena context before clicking the Create Post button.
+    await expect(page.getByTestId("team-home-create-post")).toBeVisible({
+      timeout: 15000,
+    });
+
+    // Click the Create Post button on the team home page
+    await click(page, { testId: "team-home-create-post" });
 
     // Wait for post edit page to load
     await page.waitForURL(/\/posts\/.*\/edit/, {
@@ -92,39 +98,29 @@ test.describe.serial("Team draft timeline on team home page", () => {
     await expect(page).toHaveURL(/\/posts\/.*\/edit/);
   });
 
-  // --- 3. Verify the TeamDraftTimeline section appears on team home ---
+  // --- 3. Verify the team drafts page lists the draft ---
+  // The arena redesign moved drafts off the team home onto the dedicated
+  // `/team-drafts` page, so navigate there instead of the home URL.
 
-  test("Team draft timeline section is visible on team home page", async ({
-    page,
-  }) => {
-    await goto(page, teamHomeUrl);
+  test("Team drafts page shows the draft for creators", async ({ page }) => {
+    await goto(page, `/${teamUsername}/team-drafts`);
 
-    // The TeamDraftTimeline section should be visible for the team creator
-    const draftTimeline = await getLocator(page, {
-      testId: "team-draft-timeline",
-    });
-    await expect(draftTimeline).toBeVisible();
-
-    // The section should contain the "Drafts" heading
-    await expect(draftTimeline).toContainText("Drafts");
+    // The drafts page renders the team-arena layout plus the drafts grid.
+    await expect(
+      page.getByRole("heading", { name: "Drafts", exact: true }),
+    ).toBeVisible({ timeout: 15000 });
   });
 
   // --- 4. Verify draft card content ---
 
   test("Draft card displays title and Draft badge", async ({ page }) => {
-    await goto(page, teamHomeUrl);
+    await goto(page, `/${teamUsername}/team-drafts`);
 
-    // Verify the draft timeline section is visible
-    const draftTimeline = await getLocator(page, {
-      testId: "team-draft-timeline",
-    });
-    await expect(draftTimeline).toBeVisible();
+    // The draft card should display the post title.
+    await expect(page.getByText(postTitle)).toBeVisible({ timeout: 15000 });
 
-    // The draft card should display the post title
-    await expect(draftTimeline).toContainText(postTitle);
-
-    // The draft card should display a "Draft" status badge
-    await expect(draftTimeline).toContainText("Draft");
+    // The draft card should display a "Draft" status badge.
+    await expect(page.getByText("Draft", { exact: true }).first()).toBeVisible();
   });
 
   // --- 5. Click a draft card and verify navigation to the edit page ---
@@ -132,23 +128,19 @@ test.describe.serial("Team draft timeline on team home page", () => {
   test("Clicking a draft card navigates to the post edit page", async ({
     page,
   }) => {
-    await goto(page, teamHomeUrl);
+    await goto(page, `/${teamUsername}/team-drafts`);
 
-    // Verify the draft timeline section is visible
-    const draftTimeline = await getLocator(page, {
-      testId: "team-draft-timeline",
-    });
-    await expect(draftTimeline).toBeVisible();
+    // Wait for the draft list to render.
+    await expect(page.getByText(postTitle)).toBeVisible({ timeout: 15000 });
 
-    // Click the draft card containing the post title
-    // The card is a div with cursor-pointer that navigates to /posts/{pk}/edit
-    await draftTimeline.getByText(postTitle).click();
+    // Click the draft card containing the post title.
+    await page.getByText(postTitle).click();
     await page.waitForLoadState("load");
 
-    // Verify navigation to the post edit page
+    // Verify navigation to the post edit page.
     await expect(page).toHaveURL(/\/posts\/.*\/edit/);
 
-    // Verify the post title is in the editor
+    // Verify the post title is in the editor.
     const titleInput = page.getByPlaceholder("Title your post…");
     await expect(titleInput).toBeVisible();
     await expect(titleInput).toHaveValue(postTitle);
