@@ -694,6 +694,120 @@
     .arena { padding-top: 84px; }
   }
 
+
+  /* ── Member action menu ─────────────────────────── */
+  .member-action-wrap { position: relative; flex-shrink: 0; }
+  .member-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 200px;
+    padding: 6px;
+    background: var(--bg-glass);
+    backdrop-filter: blur(18px);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+    opacity: 0; visibility: hidden; transform: translateY(-4px);
+    transition: all 0.18s ease;
+    z-index: 40;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  [data-theme="light"] .member-menu { box-shadow: 0 12px 30px rgba(0,0,0,0.14); }
+  .member-action-wrap[aria-expanded="true"] .member-menu {
+    opacity: 1; visibility: visible; transform: translateY(0);
+  }
+  .member-menu__item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 11px; border-radius: 8px;
+    background: none; border: none; cursor: pointer;
+    color: var(--text-primary);
+    font-family: var(--font-body); font-size: 13px; font-weight: 500;
+    text-align: left; width: 100%;
+    transition: background 0.15s;
+  }
+  .member-menu__item:hover { background: rgba(255,255,255,0.05); }
+  [data-theme="light"] .member-menu__item:hover { background: rgba(0,0,0,0.05); }
+  .member-menu__item svg { width: 14px; height: 14px; color: var(--text-muted); flex-shrink: 0; }
+  .member-menu__item--danger { color: #ef4444; }
+  .member-menu__item--danger svg { color: #ef4444; }
+  [data-theme="light"] .member-menu__item--danger,
+  [data-theme="light"] .member-menu__item--danger svg { color: #b91c1c; }
+  .member-menu__item--danger:hover { background: rgba(239,68,68,0.08); }
+  .member-menu__divider { height: 1px; background: var(--border-subtle); margin: 2px 0; }
+
+
+  /* When a member action menu is open, allow the card to overflow so the
+     dropdown isn't clipped (the card has overflow: hidden by default). */
+  .member-card:has(.member-action-wrap[aria-expanded="true"]) {
+    overflow: visible !important;
+    z-index: 50;
+  }
+
+
+  /* Light theme: keep visible border on member-action hover */
+  [data-theme="light"] .member-action {
+    background: rgba(0,0,0,0.03);
+  }
+  [data-theme="light"] .member-action:hover {
+    background: rgba(0,0,0,0.06);
+    border-color: rgba(0,0,0,0.18);
+    color: var(--text-primary);
+  }
+
+
+  /* Light theme: Invite Member modal */
+  [data-theme="light"] .modal {
+    background: linear-gradient(180deg, #ffffff 0%, #faf8f3 100%);
+    border-color: rgba(198, 135, 0, 0.22);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.14), 0 0 30px rgba(198, 135, 0, 0.06);
+  }
+  [data-theme="light"] .field__input,
+  [data-theme="light"] .field__select {
+    background-color: rgba(0, 0, 0, 0.03);
+    color: var(--text-primary);
+    border-color: var(--border-subtle);
+  }
+  [data-theme="light"] .field__select {
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 14px;
+  }
+  [data-theme="light"] .field__input::placeholder { color: var(--text-dim); }
+  [data-theme="light"] .field__input:focus,
+  [data-theme="light"] .field__select:focus {
+    border-color: rgba(198, 135, 0, 0.35);
+    box-shadow: 0 0 14px rgba(198, 135, 0, 0.10);
+  }
+  [data-theme="light"] .field__select {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235f6075' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+  [data-theme="light"] .modal__close {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: var(--border-subtle);
+    color: var(--text-muted);
+  }
+  [data-theme="light"] .modal__close:hover {
+    background: rgba(0, 0, 0, 0.08);
+    color: var(--text-primary);
+  }
+  [data-theme="light"] .modal__submit {
+    background: linear-gradient(135deg, rgba(198, 135, 0, 0.22), rgba(18, 165, 138, 0.10));
+    border-color: rgba(198, 135, 0, 0.35);
+    color: var(--accent-gold);
+  }
+  [data-theme="light"] .modal__submit:hover {
+    background: linear-gradient(135deg, rgba(198, 135, 0, 0.32), rgba(18, 165, 138, 0.16));
+    box-shadow: 0 0 28px rgba(198, 135, 0, 0.24);
+  }
+  [data-theme="light"] .modal__title {
+    background: linear-gradient(135deg, #c68700, #8d5f00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
 </style>
 </head>
 <body>
@@ -833,9 +947,7 @@
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 17l10 5 10-5M2 12l10 5 10-5M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/></svg>
           Owner
         </span>
-        <button class="member-action" aria-label="More">
-          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
-        </button>
+
       </div>
 
       <!-- Admin -->
@@ -849,9 +961,22 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           Admin
         </span>
-        <button class="member-action" aria-label="More">
+              <div class="member-action-wrap" data-role="admin" aria-expanded="false">
+        <button class="member-action" aria-label="More" type="button">
           <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
         </button>
+        <div class="member-menu" role="menu">
+          <button class="member-menu__item" type="button" data-action="toggle-role">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            멤버로 변경
+          </button>
+          <div class="member-menu__divider"></div>
+          <button class="member-menu__item member-menu__item--danger" type="button" data-action="remove">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+            팀에서 제거
+          </button>
+        </div>
+      </div>
       </div>
 
       <!-- Member -->
@@ -865,9 +990,22 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           Member
         </span>
-        <button class="member-action" aria-label="More">
+              <div class="member-action-wrap" data-role="member" aria-expanded="false">
+        <button class="member-action" aria-label="More" type="button">
           <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
         </button>
+        <div class="member-menu" role="menu">
+          <button class="member-menu__item" type="button" data-action="toggle-role">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            관리자로 변경
+          </button>
+          <div class="member-menu__divider"></div>
+          <button class="member-menu__item member-menu__item--danger" type="button" data-action="remove">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+            팀에서 제거
+          </button>
+        </div>
+      </div>
       </div>
 
       <!-- Member -->
@@ -881,9 +1019,22 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           Member
         </span>
-        <button class="member-action" aria-label="More">
+              <div class="member-action-wrap" data-role="member" aria-expanded="false">
+        <button class="member-action" aria-label="More" type="button">
           <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
         </button>
+        <div class="member-menu" role="menu">
+          <button class="member-menu__item" type="button" data-action="toggle-role">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            관리자로 변경
+          </button>
+          <div class="member-menu__divider"></div>
+          <button class="member-menu__item member-menu__item--danger" type="button" data-action="remove">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+            팀에서 제거
+          </button>
+        </div>
+      </div>
       </div>
 
     </div>
@@ -1080,6 +1231,60 @@
       document.querySelectorAll('[data-ta-lang]').forEach(function(b){ b.setAttribute('aria-selected','false'); });
       el.setAttribute('aria-selected','true');
     });
+  });
+})();
+</script>
+
+
+<script>
+(function(){
+  document.addEventListener('click', function(e){
+    var toggle = e.target.closest('.member-action');
+    if(toggle && toggle.closest('.member-action-wrap')){
+      e.stopPropagation();
+      var wrap = toggle.closest('.member-action-wrap');
+      var isOpen = wrap.getAttribute('aria-expanded') === 'true';
+      document.querySelectorAll('.member-action-wrap[aria-expanded="true"]').forEach(function(w){ w.setAttribute('aria-expanded','false'); });
+      wrap.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+      return;
+    }
+    var item = e.target.closest('.member-menu__item');
+    if(item){
+      e.stopPropagation();
+      var wrap2 = item.closest('.member-action-wrap');
+      var card = wrap2.closest('.member-card');
+      var action = item.getAttribute('data-action');
+      var role = wrap2.getAttribute('data-role');
+      if(action === 'toggle-role'){
+        var badge = card.querySelector('.role-badge');
+        if(role === 'admin'){
+          badge.className = 'role-badge role-badge--member';
+          badge.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Member';
+          wrap2.setAttribute('data-role','member');
+          var btn = wrap2.querySelector('[data-action="toggle-role"]');
+          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> 관리자로 변경';
+        } else if(role === 'member'){
+          badge.className = 'role-badge role-badge--admin';
+          badge.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Admin';
+          wrap2.setAttribute('data-role','admin');
+          var btn2 = wrap2.querySelector('[data-action="toggle-role"]');
+          btn2.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> 멤버로 변경';
+        }
+      } else if(action === 'remove'){
+        card.style.transition = 'all 0.25s ease';
+        card.style.opacity = '0'; card.style.transform = 'translateX(16px)';
+        setTimeout(function(){ card.remove(); }, 260);
+      }
+      wrap2.setAttribute('aria-expanded','false');
+      return;
+    }
+    // Click outside: close all menus
+    document.querySelectorAll('.member-action-wrap[aria-expanded="true"]').forEach(function(w){ w.setAttribute('aria-expanded','false'); });
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){
+      document.querySelectorAll('.member-action-wrap[aria-expanded="true"]').forEach(function(w){ w.setAttribute('aria-expanded','false'); });
+    }
   });
 })();
 </script>
