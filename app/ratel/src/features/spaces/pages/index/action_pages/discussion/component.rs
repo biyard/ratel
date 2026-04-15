@@ -597,7 +597,12 @@ fn CommentItem(
 
 // ── Helpers ──────────────────────────────────────────
 
-fn format_time_ago(timestamp_millis: i64) -> String {
+fn format_time_ago(timestamp: i64) -> String {
+    let timestamp_millis = if timestamp.abs() < 1_000_000_000_000 {
+        timestamp.saturating_mul(1000)
+    } else {
+        timestamp
+    };
     let now = crate::common::utils::time::get_now_timestamp_millis();
     let diff_secs = (now - timestamp_millis) / 1000;
 
