@@ -71,44 +71,48 @@ test.describe
     const { context, page } = await loginAsAdmin(browser);
 
     try {
-      // Create team via profile dropdown
-      await click(page, { label: "User Profile" });
-      await click(page, { text: "Create Team" });
-
-      const nicknameInput = page.locator('[data-testid="team-nickname-input"]');
-      await nicknameInput.fill(teamNickname);
-
-      const usernameInput = page.locator('[data-testid="team-username-input"]');
-      await usernameInput.fill(teamUsername);
-
-      const descInput = page.locator('[data-testid="team-description-input"]');
-      await descInput.fill("E2E test team for reward panel flow");
-
-      await click(page, { text: "Create" });
-
-      await page.waitForURL(new RegExp(`/${teamUsername}/home`), {
-        waitUntil: "load",
+      // The home-ui renewal removed the profile-dropdown team creation UI and
+      // the post-edit "skip-space-checkbox" / "Go to Space" affordances.
+      // Drive team, post, and space setup through the REST endpoints.
+      const teamRes = await page.request.post("/api/teams/create", {
+        data: {
+          body: {
+            username: teamUsername,
+            nickname: teamNickname,
+            profile_url: "",
+            description: "E2E test team for reward panel flow",
+          },
+        },
       });
+      expect(teamRes.ok(), `create team: ${await teamRes.text()}`).toBeTruthy();
+      const teamPk = (await teamRes.json()).team_pk;
+      const teamId = teamPk.includes("#") ? teamPk.split("#")[1] : teamPk;
 
-      // Create a post with space from team home
-      await click(page, { text: "Create" });
-      await page.waitForURL(/\/posts\/.*\/edit/, { waitUntil: "load" });
+      const postRes = await page.request.post("/api/posts", {
+        data: { team_id: teamId },
+      });
+      expect(postRes.ok(), `create post: ${await postRes.text()}`).toBeTruthy();
+      const postPk = (await postRes.json()).post_pk;
+      const postId = postPk.includes("#") ? postPk.split("#")[1] : postPk;
 
-      await fill(page, { placeholder: "Title" }, postTitle);
-      await click(page, { testId: "skip-space-checkbox" });
-
+      await goto(page, `/posts/${postId}/edit`);
+      await fill(page, { placeholder: "Title your post…" }, postTitle);
       const editor = await getEditor(page);
       await editor.fill(postContents);
-
-      await click(page, { text: "Go to Space" });
-
-      await page.waitForURL(/\/spaces\/[a-z0-9-]+\/dashboard/, {
-        waitUntil: "load",
+      await expect(page.getByText("All changes saved")).toBeVisible({
+        timeout: 15000,
       });
-      await getLocator(page, { text: "Dashboard" });
 
-      const url = new URL(page.url());
-      spaceUrl = url.pathname.replace(/\/dashboard$/, "");
+      const spaceRes = await page.request.post("/api/spaces/create", {
+        data: { req: { post_id: postId } },
+      });
+      expect(spaceRes.ok(), `create space: ${await spaceRes.text()}`).toBeTruthy();
+      const spaceId = (await spaceRes.json()).space_id;
+
+      spaceUrl = `/spaces/${spaceId}`;
+
+      await goto(page, `${spaceUrl}/dashboard`);
+      await getLocator(page, { text: "Dashboard" });
     } finally {
       await context.close();
     }
