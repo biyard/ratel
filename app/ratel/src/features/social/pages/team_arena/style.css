@@ -20,10 +20,20 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
+  /* `overflow-x: hidden` would implicitly set overflow-y to auto and create
+     a new scroll context, breaking `position: sticky` on the topbar.
+     Use `clip` (no scroll context) for x and explicit `visible` for y. */
+  overflow-x: clip;
+  overflow-y: visible;
   background: var(--bg-void);
   color: var(--text-primary);
   font-family: 'Outfit', sans-serif;
+  /* Reserve room for the fixed topbar so the first content section isn't
+     hidden underneath. */
+  padding-top: 110px;
+}
+@media (max-width: 540px) {
+  .team-arena { padding-top: 84px; }
 }
 
 /* ── Light theme override (scoped to arena) ── */
@@ -88,6 +98,9 @@ body:has(.team-arena) [data-slot="sidebar-inset"] {
   margin: 0 !important;
   border-radius: 0 !important;
   box-shadow: none !important;
+  /* SidebarInset has Tailwind `overflow-x-hidden` which clips fixed children
+     and breaks the topbar pinning. Override it on team arena routes. */
+  overflow: visible !important;
 }
 
 /* ── Star field ── */
@@ -249,5 +262,5 @@ html[data-theme="light"] .team-arena .team-arena__bg-scanline,
   .team-arena { min-height: 100vh; height: auto; }
 }
 @media (max-width: 720px) {
-  .team-arena { min-height: 100vh; height: auto; overflow-x: hidden; }
+  .team-arena { min-height: 100vh; height: auto; overflow-x: clip; overflow-y: visible; }
 }
