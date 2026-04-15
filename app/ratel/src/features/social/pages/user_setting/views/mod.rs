@@ -704,7 +704,7 @@ fn McpServerCard() -> Element {
         let mcp_url = mcp_url.clone();
         move |_: MouseEvent| {
             if let Some(ref url) = mcp_url {
-                #[cfg(not(feature = "server"))]
+                #[cfg(feature = "web")]
                 {
                     let url = url.clone();
                     spawn(async move {
@@ -728,6 +728,10 @@ fn McpServerCard() -> Element {
                             }
                         }
                     });
+                }
+                #[cfg(not(feature = "web"))]
+                {
+                    let _ = url;
                 }
             }
         }

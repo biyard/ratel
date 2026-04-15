@@ -15,6 +15,15 @@ style = []
 # Additional JavaScript files
 script = []
 
+[bundle]
+identifier = "co.biyard.ratel"
+publisher = "Biyard Corp."
+icon = ["assets/icons/icon.icns","assets/favicon.ico"]
+copyright = "Copyright 2023 Biyard Corp."
+category = "Lifestyle"
+short_description = ""
+long_description = ""
+
 [web.resource.dev]
 
 # Javascript code file

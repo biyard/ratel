@@ -81,6 +81,27 @@ test:
 run:
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web --features $(RUN_FEATURES)
 
+ANDROID_NDK_HOME ?= /opt/android-ndk
+ANDROID_NDK_TOOLCHAIN ?= $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/linux-x86_64
+ANDROID_API_LEVEL ?= 24
+ANDROID_TARGET ?= aarch64-linux-android
+ANDROID_CC ?= $(ANDROID_NDK_TOOLCHAIN)/bin/$(ANDROID_TARGET)$(ANDROID_API_LEVEL)-clang
+
+ANDROID_ENV = \
+	CC_aarch64_linux_android=$(ANDROID_CC) \
+	CXX_aarch64_linux_android=$(ANDROID_CC)++ \
+	AR_aarch64_linux_android=$(ANDROID_NDK_TOOLCHAIN)/bin/llvm-ar \
+	CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$(ANDROID_CC) \
+	CC_armv7_linux_androideabi=$(ANDROID_NDK_TOOLCHAIN)/bin/armv7a-linux-androideabi$(ANDROID_API_LEVEL)-clang \
+	CXX_armv7_linux_androideabi=$(ANDROID_NDK_TOOLCHAIN)/bin/armv7a-linux-androideabi$(ANDROID_API_LEVEL)-clang++ \
+	AR_armv7_linux_androideabi=$(ANDROID_NDK_TOOLCHAIN)/bin/llvm-ar \
+	CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER=$(ANDROID_NDK_TOOLCHAIN)/bin/armv7a-linux-androideabi$(ANDROID_API_LEVEL)-clang
+
+android:
+	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --android --target $(ANDROID_TARGET) --features $(RUN_FEATURES)
+
+ios:
+	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --ios --features $(RUN_FEATURES)
 
 build:
 	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web --platform web @server --features server --platform server

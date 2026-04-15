@@ -10,7 +10,7 @@ pub fn DiscussionContentBody(html_contents: String) -> Element {
         return rsx! {};
     }
 
-    #[cfg(not(feature = "server"))]
+    #[cfg(feature = "web")]
     {
         let toc = use_discussion_toc_context();
         let html_dep = html_contents.clone();
@@ -31,7 +31,7 @@ pub fn DiscussionContentBody(html_contents: String) -> Element {
     }
 }
 
-#[cfg(not(feature = "server"))]
+#[cfg(feature = "web")]
 fn collect_headings(
     mut toc: crate::features::spaces::pages::actions::actions::discussion::views::main::viewer::DiscussionTocContext,
 ) {
