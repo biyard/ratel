@@ -103,6 +103,20 @@ body:has(.team-arena) [data-slot="sidebar-inset"] {
   overflow: visible !important;
 }
 
+/* Ensure the page is scrollable on mobile (some parent layouts set
+   overflow:hidden on body which traps scroll). */
+html:has(.team-arena),
+body:has(.team-arena) {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  height: auto !important;
+  min-height: 100vh;
+}
+body:has(.team-arena) [data-slot="sidebar-wrapper"] {
+  min-height: 100vh;
+  height: auto !important;
+}
+
 /* ── Star field ── */
 .team-arena__bg-stars {
   position: absolute;
