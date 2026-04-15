@@ -4,8 +4,6 @@ use crate::features::posts::models::Team;
 use crate::features::spaces::pages::actions::actions::follow::models::SpaceFollowUser;
 use crate::features::spaces::pages::actions::actions::follow::*;
 use crate::features::spaces::pages::actions::actions::follow::types::SpaceFollowError;
-#[cfg(feature = "server")]
-use crate::features::spaces::space_common::models::space_reward::SpaceReward;
 
 #[mcp_tool(name = "follow_user", description = "Follow a user as part of a space follow action. Requires participant role.")]
 #[post(
@@ -91,40 +89,8 @@ pub async fn follow_user(
             SpaceFollowError::FollowFailed
         })?;
 
-    match SpaceReward::get_by_action(
-        cli,
-        space_id.clone(),
-        follow_id.to_string(),
-        RewardUserBehavior::Follow,
-    )
-    .await
-    {
-        Ok(space_reward) => {
-            if let Err(e) =
-                SpaceReward::award(cli, &space_reward, user.pk.clone(), Some(space.user_pk.clone()))
-                    .await
-            {
-                tracing::error!(
-                    space_pk = %space_id,
-                    action_id = %follow_id,
-                    target_pk = %target_pk,
-                    error = %e,
-                    "Failed to award follow reward"
-                );
-            }
-        }
-        Err(e) => {
-            tracing::warn!(
-                space_pk = %space_id,
-                action_id = %follow_id,
-                target_pk = %target_pk,
-                error = %e,
-                "SpaceReward not found for follow action"
-            );
-        }
-    }
-
-    // XP recording is now handled via EventBridge on FOLLOWER# INSERT
+    // Reward payout + XP recording run on EventBridge via FOLLOWER# INSERT →
+    // handle_follow_xp. See features/activity/services/handle_xp_event.rs.
 
     Ok(())
 }

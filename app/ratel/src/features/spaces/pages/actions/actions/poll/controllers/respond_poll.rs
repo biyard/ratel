@@ -1,8 +1,6 @@
 use crate::common::models::space::{SpaceUser, SpaceCommon};
 use crate::features::spaces::pages::actions::actions::poll::*;
 use crate::features::spaces::pages::actions::models::SpaceAction;
-#[cfg(feature = "server")]
-use crate::features::spaces::space_common::models::space_reward::SpaceReward;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
@@ -136,7 +134,6 @@ pub async fn respond_poll(
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
     let space_partition = space_pk.clone();
-    let poll_action_id = poll_sk.to_string(); // UUID only, matches SpaceReward action_id
     let space_id = space_pk.clone();
     let space_pk: Partition = space_pk.into();
     let poll_sk_entity: EntityType = poll_sk.clone().into();
@@ -250,38 +247,8 @@ pub async fn respond_poll(
             );
         crate::transact_write_items!(cli, vec![agg_item]).ok();
 
-        match SpaceReward::get_by_action(
-            cli,
-            space_partition.clone(),
-            poll_action_id.clone(),
-            RewardUserBehavior::RespondPoll,
-        )
-        .await
-        {
-            Ok(space_reward) => {
-                if let Err(e) =
-                    SpaceReward::award(cli, &space_reward, user.pk, Some(space.user_pk.clone()))
-                        .await
-                {
-                    tracing::error!(
-                        space_pk = %space_partition,
-                        action_id = %poll_sk_entity,
-                        error = %e,
-                        "Failed to award poll reward"
-                    );
-                }
-            }
-            Err(e) => {
-                tracing::warn!(
-                    space_pk = %space_partition,
-                    action_id = %poll_sk_entity,
-                    error = %e,
-                    "SpaceReward not found for poll action"
-                );
-            }
-        }
-
-        // XP recording is now handled via EventBridge on SPACE_POLL_USER_ANSWER# INSERT
+        // Reward payout + XP recording run on EventBridge via SPACE_POLL_USER_ANSWER#
+        // INSERT → handle_poll_xp. See features/activity/services/handle_xp_event.rs.
     }
 
     Ok(RespondPollResponse {})
