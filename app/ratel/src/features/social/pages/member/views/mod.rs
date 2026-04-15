@@ -29,7 +29,7 @@ enum RoleFilter {
 }
 
 #[component]
-pub fn Home(username: String) -> Element {
+pub fn Home(username: ReadSignal<String>) -> Element {
     let tr: TeamMemberTranslate = use_translate();
     let mut toast = use_toast();
 
@@ -38,13 +38,13 @@ pub fn Home(username: String) -> Element {
     use_effect(move || arena.active_tab.set(TeamArenaTab::Members));
 
     // Load permission + team_pk for the current user.
-    let perm_resource = use_loader(use_reactive((&username,), |(name,)| async move {
+    let perm_resource = use_loader(move || async move {
         Ok::<_, super::Error>(
-            get_team_member_permission_handler(name)
+            get_team_member_permission_handler(username())
                 .await
                 .map_err(|e| e.to_string()),
         )
-    }))?;
+    })?;
 
     let perm_data = perm_resource.read();
     let perm_ctx = match perm_data.as_ref() {
@@ -52,7 +52,7 @@ pub fn Home(username: String) -> Element {
         Err(_) => {
             return rsx! {
                 document::Link { rel: "stylesheet", href: asset!("./style.css") }
-                ViewerPage { username: username.clone() }
+                ViewerPage { username: username() }
             }
         }
     };
@@ -61,17 +61,21 @@ pub fn Home(username: String) -> Element {
 
     // Fetch members list (refetched on demand via signal).
     let mut refresh = use_signal(|| 0u32);
-    let members_resource = use_loader(use_reactive(
-        (&team_pk, &refresh()),
-        |(pk, _r)| async move {
-            Ok::<_, super::Error>(
-                list_members_handler(pk, None, Some(100))
-                    .await
-                    .map(|resp| resp.items)
-                    .map_err(|e| e.to_string()),
-            )
-        },
-    ))?;
+    let members_resource = use_loader({
+        let team_pk = team_pk.clone();
+        move || {
+            let pk = team_pk.clone();
+            async move {
+                let _ = refresh();
+                Ok::<_, super::Error>(
+                    list_members_handler(pk, None, Some(100))
+                        .await
+                        .map(|resp| resp.items)
+                        .map_err(|e| e.to_string()),
+                )
+            }
+        }
+    })?;
     let members: Vec<TeamMemberResponse> =
         members_resource.read().clone().unwrap_or_default();
 

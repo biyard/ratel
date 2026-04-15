@@ -18,7 +18,7 @@ use super::controllers::get_team_drafts_permission_handler;
 use super::i18n::TeamDraftTranslate;
 
 #[component]
-pub fn Home(username: String) -> Element {
+pub fn Home(username: ReadSignal<String>) -> Element {
     let tr: TeamDraftTranslate = use_translate();
     let nav = use_navigator();
     let mut toast = use_toast();
@@ -28,20 +28,20 @@ pub fn Home(username: String) -> Element {
     use_effect(move || arena.active_tab.set(TeamArenaTab::Drafts));
 
     // Permission gate: only TeamEdit/TeamAdmin see the arena view.
-    let perm_resource = use_loader(use_reactive((&username,), |(name,)| async move {
+    let perm_resource = use_loader(move || async move {
         Ok::<_, super::Error>(
-            get_team_drafts_permission_handler(name)
+            get_team_drafts_permission_handler(username())
                 .await
                 .map_err(|e| e.to_string()),
         )
-    }))?;
+    })?;
     let perm_data = perm_resource.read();
     let perm_ctx = match perm_data.as_ref() {
         Ok(ctx) => ctx.clone(),
         Err(_) => {
             return rsx! {
                 document::Link { rel: "stylesheet", href: asset!("./style.css") }
-                ViewerPage { username: username.clone() }
+                ViewerPage { username: username() }
             }
         }
     };
@@ -49,7 +49,7 @@ pub fn Home(username: String) -> Element {
     if !can_edit {
         return rsx! {
             document::Link { rel: "stylesheet", href: asset!("./style.css") }
-            ViewerPage { username: username.clone() }
+            ViewerPage { username: username() }
         };
     }
 
@@ -57,17 +57,15 @@ pub fn Home(username: String) -> Element {
 
     // Drafts list.
     let mut refresh = use_signal(|| 0u32);
-    let drafts_resource = use_loader(use_reactive(
-        (&username, &refresh()),
-        |(name, _r)| async move {
-            Ok::<_, super::Error>(
-                list_team_drafts_handler(name, None)
-                    .await
-                    .map(|resp| resp.items)
-                    .map_err(|e| e.to_string()),
-            )
-        },
-    ))?;
+    let drafts_resource = use_loader(move || async move {
+        let _ = refresh();
+        Ok::<_, super::Error>(
+            list_team_drafts_handler(username(), None)
+                .await
+                .map(|resp| resp.items)
+                .map_err(|e| e.to_string()),
+        )
+    })?;
     let drafts: Vec<PostResponse> = drafts_resource.read().clone().unwrap_or_default();
     let count = drafts.len();
 
