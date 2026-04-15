@@ -2,7 +2,12 @@ use crate::features::auth::hooks::use_user_context;
 use crate::features::spaces::pages::index::*;
 
 #[component]
-pub fn SettingsPanel(open: bool, on_close: EventHandler<()>) -> Element {
+pub fn SettingsPanel(
+    open: bool,
+    on_close: EventHandler<()>,
+    #[props(default)] is_admin: bool,
+    space_id: ReadSignal<SpacePartition>,
+) -> Element {
     let tr: SpaceViewerTranslate = use_translate();
     let mut theme_service = use_theme();
     let current_theme = theme_service.current();
@@ -49,6 +54,11 @@ pub fn SettingsPanel(open: bool, on_close: EventHandler<()>) -> Element {
                 }
             }
             div { class: "settings-panel__body",
+                if is_admin {
+                    SuspenseBoundary {
+                        AppsSection { space_id }
+                    }
+                }
                 // Theme
                 div { class: "settings-group",
                     span { class: "settings-group__label", "{tr.theme}" }

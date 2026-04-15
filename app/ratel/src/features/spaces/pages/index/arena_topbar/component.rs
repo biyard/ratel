@@ -27,6 +27,23 @@ pub fn ArenaTopbar(
                 }
                 span { class: "arena-topbar__title", "{title}" }
                 span { class: "arena-topbar__status", "{status_text}" }
+                if is_admin {
+                    span {
+                        class: "arena-topbar__role",
+                        "data-testid": "arena-topbar-admin-badge",
+                        svg {
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            stroke_width: "2",
+                            view_box: "0 0 24 24",
+                            xmlns: "http://www.w3.org/2000/svg",
+                            path { d: "M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z" }
+                        }
+                        "{tr.admin_badge}"
+                    }
+                }
             }
             div { class: "arena-topbar__actions",
                 if is_admin {

@@ -31,7 +31,11 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
     let lang = use_language();
     let show_sidebar = sidebar_visible();
 
-    if !role.is_admin() {
+    let router = use_context::<dioxus::router::RouterContext>();
+    let current_route: Route = router.current();
+    let is_arena_route = matches!(current_route, Route::SpaceIndexPage { .. });
+
+    if !role.is_admin() || is_arena_route {
         return rsx! {
             Outlet::<Route> {}
         };
