@@ -56,11 +56,17 @@ pub(super) fn derive_action_status(action: &SpaceActionSummary) -> ActionStatus 
 }
 
 #[component]
-pub fn ActionDashboard(space_id: ReadSignal<SpacePartition>) -> Element {
+pub fn ActionDashboard(
+    space_id: ReadSignal<SpacePartition>,
+    #[props(default)] is_admin: bool,
+) -> Element {
     let tr: SpaceViewerTranslate = use_translate();
     let mut space_ctx = crate::features::spaces::space_common::providers::use_space_context();
     let actions = space_ctx.actions();
     let lang = use_language();
+    let mut type_picker_open = use_signal(|| false);
+    let nav = use_navigator();
+    let mut toast = use_toast();
 
     let active: Vec<_> = actions
         .iter()
@@ -111,7 +117,7 @@ pub fn ActionDashboard(space_id: ReadSignal<SpacePartition>) -> Element {
             span { class: "quest-label__title", "{tr.your_quests}" }
         }
 
-        if active.is_empty() {
+        if active.is_empty() && !is_admin {
             div { class: "quest-empty",
                 div { class: "quest-empty__icon",
                     svg {
@@ -140,18 +146,45 @@ pub fn ActionDashboard(space_id: ReadSignal<SpacePartition>) -> Element {
                             let key = action.action_id.clone();
                             match action.action_type {
                                 SpaceActionType::Poll => rsx! {
-                                    PollActionCard { key: "{key}", action, space_id }
+                                    PollActionCard {
+                                        key: "{key}",
+                                        action,
+                                        space_id,
+                                        is_admin,
+                                    }
                                 },
                                 SpaceActionType::TopicDiscussion => rsx! {
-                                    DiscussionActionCard { key: "{key}", action, space_id }
+                                    DiscussionActionCard {
+                                        key: "{key}",
+                                        action,
+                                        space_id,
+                                        is_admin,
+                                    }
                                 },
                                 SpaceActionType::Quiz => rsx! {
-                                    QuizActionCard { key: "{key}", action, space_id }
+                                    QuizActionCard {
+                                        key: "{key}",
+                                        action,
+                                        space_id,
+                                        is_admin,
+                                    }
                                 },
                                 SpaceActionType::Follow => rsx! {
-                                    FollowActionCard { key: "{key}", action, space_id }
+                                    FollowActionCard {
+                                        key: "{key}",
+                                        action,
+                                        space_id,
+                                        is_admin,
+                                    }
                                 },
                             }
+                        }
+                    }
+                    if is_admin {
+                        AddActionCard {
+                            on_click: move |_| {
+                                type_picker_open.set(true);
+                            },
                         }
                     }
                 }
@@ -164,6 +197,30 @@ pub fn ActionDashboard(space_id: ReadSignal<SpacePartition>) -> Element {
                         "data-type": quest_type_css(&action.action_type),
                     }
                 }
+                if is_admin {
+                    button { class: "carousel-dot", "data-type": "add" }
+                }
+            }
+        }
+
+        // Type picker modal (admin only)
+        if is_admin {
+            TypePickerModal {
+                open: type_picker_open(),
+                on_close: move |_| {
+                    type_picker_open.set(false);
+                },
+                on_pick: move |ty: SpaceActionType| async move {
+                    type_picker_open.set(false);
+                    match ty.create(space_id()).await {
+                        Ok(route) => {
+                            nav.push(route);
+                        }
+                        Err(err) => {
+                            toast.error(err);
+                        }
+                    }
+                },
             }
         }
 

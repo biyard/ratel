@@ -361,4 +361,86 @@ translate! {
         en: "S",
         ko: "초",
     },
+
+    // Admin overview edit
+    edit: { en: "Edit", ko: "편집" },
+    editing: { en: "Editing", ko: "편집 중" },
+    about_edit_hint: { en: "Markdown supported", ko: "마크다운 지원" },
+    files: { en: "Files", ko: "파일" },
+    files_hint: { en: "Up to 20 MB each", ko: "파일당 최대 20 MB" },
+    drop_files_title: { en: "Drop files to upload", ko: "파일을 놓아 업로드" },
+    drop_files_desc: {
+        en: "PDF, images, documents — up to 20 MB per file",
+        ko: "PDF, 이미지, 문서 — 파일당 최대 20 MB",
+    },
+    browse_files: { en: "or click to browse", ko: "또는 클릭하여 찾아보기" },
+    save: { en: "Save", ko: "저장" },
+    cancel: { en: "Cancel", ko: "취소" },
+
+    // Apps section
+    installed_apps: { en: "Installed Apps", ko: "설치된 앱" },
+    available_apps: { en: "Available Apps", ko: "사용 가능한 앱" },
+    app_general_name: { en: "General", ko: "일반" },
+    app_general_desc: { en: "Settings (Admin)", ko: "설정 (관리자)" },
+    app_file_name: { en: "File", ko: "파일" },
+    app_file_desc: {
+        en: "Manage and organize files shared in your space.",
+        ko: "스페이스에서 공유되는 파일을 관리하고 정리하세요.",
+    },
+    app_analyzes_name: { en: "Analyzes", ko: "분석" },
+    app_analyzes_desc: {
+        en: "Check out the poll results.",
+        ko: "투표 결과를 확인하세요.",
+    },
+    app_panels_name: { en: "Panels", ko: "패널" },
+    app_panels_desc: {
+        en: "Configure panel participation rules.",
+        ko: "패널 참여 규칙을 설정하세요.",
+    },
+    settings_btn: { en: "Settings", ko: "설정" },
+    install: { en: "Install", ko: "설치" },
+
+    // Add action card
+    new_action: { en: "New Action", ko: "새 액션" },
+    new_action_desc: {
+        en: "Create a new quest for participants. Pick a type to get started.",
+        ko: "참가자를 위한 새로운 퀘스트를 만드세요. 유형을 선택하여 시작하세요.",
+    },
+    create_action: { en: "Create Action", ko: "액션 만들기" },
+    admin_only: { en: "Admin only", ko: "관리자 전용" },
+
+    // Quest inline edit
+    editing_quest: { en: "Editing quest", ko: "퀘스트 편집 중" },
+    quest_title_placeholder: { en: "Quest title", ko: "퀘스트 제목" },
+    quest_desc_placeholder: {
+        en: "Describe this quest...",
+        ko: "이 퀘스트를 설명해 주세요...",
+    },
+    attachments: { en: "Attachments", ko: "첨부 파일" },
+
+    // Type picker
+    choose_action_type: { en: "Choose Action Type", ko: "액션 유형 선택" },
+    poll_name: { en: "Poll", ko: "투표" },
+    poll_desc: {
+        en: "Ask a question with multiple-choice options. Collect votes.",
+        ko: "객관식 질문을 하고 투표를 모으세요.",
+    },
+    discussion_name: { en: "Discussion", ko: "토론" },
+    discussion_desc: {
+        en: "Open a thread where members share perspectives and comment.",
+        ko: "구성원이 의견을 나누고 댓글을 다는 스레드를 여세요.",
+    },
+    quiz_name: { en: "Quiz", ko: "퀴즈" },
+    quiz_desc: {
+        en: "Test knowledge with timed questions. Reward pass-rate.",
+        ko: "시간 제한 질문으로 지식을 확인하고 통과율에 보상하세요.",
+    },
+    follow_name: { en: "Follow", ko: "팔로우" },
+    follow_desc: {
+        en: "Require participants to follow curated users or teams.",
+        ko: "참가자에게 지정된 사용자 또는 팀을 팔로우하도록 요구하세요.",
+    },
+
+    // Topbar
+    admin_badge: { en: "Admin", ko: "관리자" },
 }

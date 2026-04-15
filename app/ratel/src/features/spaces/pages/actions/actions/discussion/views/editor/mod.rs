@@ -6,7 +6,10 @@ pub fn DiscussionActionEditorPage(
     discussion_id: SpacePostEntityType,
 ) -> Element {
     let nav = navigator();
-    let ctx = use_discussion_context();
+    let space_id_signal: ReadSignal<SpacePartition> = use_signal(|| space_id.clone()).into();
+    let discussion_id_signal: ReadSignal<SpacePostEntityType> =
+        use_signal(|| discussion_id.clone()).into();
+    let ctx = Context::init(space_id_signal, discussion_id_signal)?;
 
     let discussion = ctx.discussion().post;
     let mut title = use_signal(|| discussion.title.clone());
