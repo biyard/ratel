@@ -1,5 +1,7 @@
 use dioxus::prelude::*;
 
+use crate::common::utils::time::sleep;
+
 use super::{use_toast, ToastItem, ToastLevel};
 
 #[component]
@@ -16,24 +18,11 @@ pub fn ToastCard(toast: ToastItem) -> Element {
     });
 
     // Auto-dismiss after 5 seconds
-    let _auto_dismiss = use_future(move || {
-        let mut svc = toast_svc;
-        async move {
-            #[cfg(feature = "web")]
-            {
-                gloo_timers::future::sleep(std::time::Duration::from_secs(5)).await;
-                svc.dismiss(id);
-                gloo_timers::future::sleep(std::time::Duration::from_millis(300)).await;
-                svc.remove(id);
-            }
-            #[cfg(feature = "server")]
-            {
-                tokio::time::sleep(std::time::Duration::from_secs(5)).await;
-                svc.dismiss(id);
-                tokio::time::sleep(std::time::Duration::from_millis(300)).await;
-                svc.remove(id);
-            }
-        }
+    let _auto_dismiss = use_future(move || async move {
+        sleep(std::time::Duration::from_secs(5)).await;
+        toast_svc.dismiss(id);
+        sleep(std::time::Duration::from_millis(300)).await;
+        toast_svc.remove(id);
     });
 
     let border_color = match toast.level {
@@ -81,10 +70,7 @@ pub fn ToastCard(toast: ToastItem) -> Element {
                 if off < -80.0 {
                     toast_svc.dismiss(id);
                     spawn(async move {
-                        #[cfg(feature = "web")]
-                        gloo_timers::future::sleep(std::time::Duration::from_millis(300)).await;
-                        #[cfg(feature = "server")]
-                        tokio::time::sleep(std::time::Duration::from_millis(300)).await;
+                        sleep(std::time::Duration::from_millis(300)).await;
                         toast_svc.remove(id);
                     });
                 } else {
@@ -99,7 +85,7 @@ pub fn ToastCard(toast: ToastItem) -> Element {
                 }
             },
 
-            span { class: "flex-1 text-sm text-[#e0e0e0] select-none", "{toast.message}" }
+            span { class: "flex-1 text-sm select-none text-[#e0e0e0]", "{toast.message}" }
             if has_link {
                 span { class: "text-xs text-blue-400", "↗" }
             }
