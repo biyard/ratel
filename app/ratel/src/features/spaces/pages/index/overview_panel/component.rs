@@ -265,6 +265,7 @@ pub fn OverviewPanel(
                     } else {
                         textarea {
                             class: "overview-section__input",
+                            "data-testid": "overview-about-input",
                             placeholder: "{tr.quest_desc_placeholder}",
                             rows: "5",
                             value: "{about_value()}",
