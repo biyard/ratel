@@ -36,7 +36,11 @@ pub async fn add_comment_handler(
 
     // Send mention notifications
     {
-        let cta_url = format!("/posts/{}", post_id);
+        let cta_url = format!(
+            "{}/posts/{}",
+            crate::common::config::site_base_url(),
+            post_id
+        );
         crate::common::utils::mention::create_mention_notifications(
             cli,
             &comment.content,

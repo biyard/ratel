@@ -164,11 +164,12 @@ test.describe.serial("Signup with email verification (event-driven notification)
 
   test("should be logged in after signup", async () => {
     // After signup, navigate to home to verify authenticated state.
-    // The user profile button should be visible in the navbar.
+    // After the home-ui renewal the old "User Profile" sidebar is gone; on the
+    // arena top bar the logged-in-only Drafts button appears instead (unlogged
+    // users see the Sign In button in its place).
     await goto(page, "/");
 
-    // The "Sign In" button/label should no longer be visible since user is logged in.
-    // Instead, the "User Profile" button should be visible.
-    await getLocator(page, { label: "User Profile" });
+    await getLocator(page, { testId: "home-btn-drafts" });
+    await expect(page.getByTestId("home-btn-signin")).toBeHidden();
   });
 });

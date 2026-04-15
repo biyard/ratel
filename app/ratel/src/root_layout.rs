@@ -3,6 +3,8 @@ use crate::*;
 
 #[component]
 pub fn RootLayout() -> Element {
+    TeamContext::init();
+
     rsx! {
         ErrorBoundary {
             handle_error: move |error: ErrorContext| {
@@ -35,7 +37,7 @@ fn ErrorPage(ctx: ErrorContext) -> Element {
     };
 
     rsx! {
-        div { class: "flex flex-col gap-6 justify-center items-center px-6 py-16 w-full min-h-screen bg-background",
+        div { class: "flex flex-col gap-6 justify-center items-center py-16 px-6 w-full min-h-screen bg-background",
             div { class: "flex flex-col gap-3 items-center max-w-md text-center",
                 h1 { class: "text-2xl font-bold text-text-primary", "{tr.title}" }
                 p { class: "text-sm text-foreground-muted", "{message}" }

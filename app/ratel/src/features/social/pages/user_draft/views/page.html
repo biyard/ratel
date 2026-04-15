@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Drafts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+      --bg-input:rgba(255,255,255,0.025);--bg-input-focus:rgba(255,255,255,0.04);
+      --border-subtle:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);
+      --text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+      --accent-gold:#fcb300;--accent-teal:#6eedd8;--accent-coral:#ef4444;
+      --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
+    }
+    html,body{min-height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body)}
+    body{overflow-x:hidden}
+
+    .arena{position:relative;min-height:100vh;display:flex;flex-direction:column}
+    .arena::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 30%,rgba(252,179,0,0.04) 0%,transparent 60%),radial-gradient(ellipse 120% 100% at 50% 120%,rgba(110,237,216,0.03) 0%,transparent 50%);z-index:0;pointer-events:none}
+
+    /* ─── Top bar ────────────────────────────────────────── */
+    .arena-topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:18px 28px;background:rgba(6,6,14,0.80);backdrop-filter:blur(20px);border-bottom:1px solid var(--border-subtle)}
+    .arena-topbar__left{display:flex;align-items:center;gap:14px}
+    .back-btn{width:38px;height:38px;border-radius:10px;background:var(--bg-glass);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s ease;padding:0}
+    .back-btn:hover{border-color:rgba(252,179,0,0.25);background:var(--bg-glass-hover)}
+    .back-btn svg{width:18px;height:18px;color:var(--text-muted);transition:color 0.2s}
+    .back-btn:hover svg{color:var(--accent-gold)}
+
+    .topbar-title{display:flex;align-items:baseline;gap:10px}
+    .topbar-title__main{font-family:var(--font-display);font-size:16px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-primary)}
+    .topbar-title__count{font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:0.10em;color:var(--text-dim)}
+    .topbar-title__count strong{color:var(--accent-gold)}
+
+    .arena-topbar__right{display:flex;align-items:center;gap:10px}
+    .topbar-btn{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 14px;border-radius:10px;border:1px solid var(--border-subtle);background:var(--bg-glass);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-muted);cursor:pointer;transition:all 0.25s ease}
+    .topbar-btn:hover{border-color:rgba(252,179,0,0.25);color:var(--accent-gold);background:var(--bg-glass-hover)}
+    .topbar-btn svg{width:13px;height:13px}
+    .topbar-btn--primary{background:linear-gradient(135deg,var(--accent-gold),#e5a200);color:#0a0a0a;border-color:transparent;box-shadow:0 2px 14px rgba(252,179,0,0.20)}
+    .topbar-btn--primary:hover{background:linear-gradient(135deg,#ffd24a,var(--accent-gold));border-color:transparent;color:#0a0a0a;box-shadow:0 4px 22px rgba(252,179,0,0.40);transform:translateY(-1px)}
+
+    /* ─── Page layout ────────────────────────────────────── */
+    .page{position:relative;z-index:1;flex:1;max-width:880px;margin:0 auto;width:100%;padding:32px 28px 60px;display:flex;flex-direction:column;gap:22px}
+
+    /* ─── Stats strip ────────────────────────────────────── */
+    .stats-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .stat-card{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);border-radius:12px}
+    .stat-card__icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:rgba(252,179,0,0.10);color:var(--accent-gold)}
+    .stat-card__icon svg{width:16px;height:16px}
+    .stat-card--teal .stat-card__icon{background:rgba(110,237,216,0.10);color:var(--accent-teal)}
+    .stat-card--coral .stat-card__icon{background:rgba(239,68,68,0.10);color:var(--accent-coral)}
+    .stat-card__body{display:flex;flex-direction:column;gap:1px;min-width:0}
+    .stat-card__label{font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-dim)}
+    .stat-card__value{font-family:var(--font-display);font-size:16px;font-weight:700;color:var(--text-primary);display:flex;align-items:baseline;gap:4px}
+    .stat-card__value small{font-size:10px;color:var(--text-dim);font-weight:600;letter-spacing:0.06em;text-transform:uppercase}
+
+    /* ─── Filter row ─────────────────────────────────────── */
+    .filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .filter-chips{display:flex;gap:6px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}
+    .filter-chips::-webkit-scrollbar{display:none}
+    .chip{flex-shrink:0;display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:100px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);cursor:pointer;transition:all 0.2s ease}
+    .chip:hover{border-color:rgba(252,179,0,0.20);color:var(--text-primary)}
+    .chip[aria-selected="true"]{background:rgba(252,179,0,0.10);color:var(--accent-gold);border-color:rgba(252,179,0,0.25)}
+    .chip__count{padding:1px 6px;border-radius:100px;background:rgba(255,255,255,0.06);font-size:9px;color:var(--text-dim);letter-spacing:0.04em}
+    .chip[aria-selected="true"] .chip__count{background:rgba(252,179,0,0.15);color:var(--accent-gold)}
+
+    /* Sort dropdown */
+    .sort{position:relative;flex-shrink:0}
+    .sort__btn{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 14px;border-radius:11px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);font-family:var(--font-body);font-size:13px;font-weight:500;color:var(--text-primary);cursor:pointer;transition:all 0.2s ease}
+    .sort__btn:hover{border-color:rgba(252,179,0,0.20)}
+    .sort__btn svg{width:13px;height:13px;color:var(--text-muted);transition:transform 0.2s}
+    .sort__btn small{font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-dim);margin-right:2px}
+    .sort[data-open="true"] .sort__btn svg:last-child{transform:rotate(180deg);color:var(--accent-gold)}
+    .sort__menu{position:absolute;right:0;top:calc(100% + 6px);z-index:30;min-width:200px;background:rgba(10,10,22,0.96);backdrop-filter:blur(20px);border:1px solid var(--border-subtle);border-radius:11px;padding:6px;display:none;flex-direction:column;gap:2px;box-shadow:0 12px 40px rgba(0,0,0,0.5)}
+    .sort[data-open="true"] .sort__menu{display:flex;animation:menu-in 0.18s ease-out}
+    @keyframes menu-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+    .sort__item{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:8px;background:transparent;border:none;cursor:pointer;font-family:var(--font-body);font-size:13px;color:var(--text-primary);text-align:left;transition:background 0.15s}
+    .sort__item:hover{background:rgba(255,255,255,0.04)}
+    .sort__item[aria-selected="true"]{color:var(--accent-gold)}
+    .sort__item svg{width:13px;height:13px;opacity:0}
+    .sort__item[aria-selected="true"] svg{opacity:1}
+
+    /* ─── Drafts list ────────────────────────────────────── */
+    .drafts-list{display:flex;flex-direction:column;gap:10px}
+
+    .draft-card{position:relative;display:grid;grid-template-columns:24px 1fr auto;gap:14px;padding:18px 20px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);border-radius:14px;cursor:pointer;transition:all 0.2s ease}
+    .draft-card:hover{border-color:rgba(252,179,0,0.20);background:var(--bg-glass-hover);transform:translateY(-1px)}
+    .draft-card--writing{border-color:rgba(110,237,216,0.20)}
+    .draft-card--writing::before{content:'';position:absolute;left:0;top:14px;bottom:14px;width:2px;border-radius:2px;background:var(--accent-teal);box-shadow:0 0 10px var(--accent-teal)}
+
+    /* Status dot column */
+    .draft-card__dot{display:flex;align-items:flex-start;justify-content:center;padding-top:5px}
+    .draft-card__dot span{width:8px;height:8px;border-radius:50%;background:var(--text-dim);display:block}
+    .draft-card--writing .draft-card__dot span{background:var(--accent-teal);box-shadow:0 0 8px var(--accent-teal);animation:pulse-dot 2s ease-in-out infinite}
+    @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.4}}
+
+    /* Body */
+    .draft-card__body{min-width:0;display:flex;flex-direction:column;gap:8px}
+    .draft-card__title-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .draft-card__title{font-size:16.5px;font-weight:700;color:var(--text-primary);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:1;min-width:0}
+    .draft-card__title--untitled{color:var(--text-dim);font-style:italic;font-weight:600}
+    .draft-card__badge{flex-shrink:0;display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:100px;font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase}
+    .draft-card__badge svg{width:10px;height:10px}
+    .draft-card__badge--space{background:rgba(110,237,216,0.08);color:var(--accent-teal);border:1px solid rgba(110,237,216,0.18)}
+    .draft-card__badge--writing{background:rgba(110,237,216,0.12);color:var(--accent-teal);border:1px solid rgba(110,237,216,0.22)}
+    .draft-card__badge--writing::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--accent-teal);box-shadow:0 0 6px var(--accent-teal);animation:pulse-dot 2s ease-in-out infinite}
+
+    .draft-card__excerpt{font-size:13.5px;line-height:1.55;color:var(--text-muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .draft-card__excerpt--empty{color:var(--text-dim);font-style:italic}
+
+    .draft-card__meta{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:11.5px;color:var(--text-dim)}
+    .draft-card__meta-item{display:inline-flex;align-items:center;gap:5px}
+    .draft-card__meta-item svg{width:12px;height:12px}
+    .draft-card__meta-item strong{color:var(--text-muted);font-weight:600}
+    .draft-card__tags{display:inline-flex;gap:4px;flex-wrap:wrap}
+    .draft-card__tag{padding:2px 8px;border-radius:6px;font-size:10px;font-weight:600;letter-spacing:0.02em;background:rgba(110,237,216,0.06);border:1px solid rgba(110,237,216,0.14);color:var(--accent-teal)}
+
+    /* Right actions */
+    .draft-card__actions{display:flex;align-items:center;gap:6px;align-self:flex-start;opacity:0.6;transition:opacity 0.2s ease}
+    .draft-card:hover .draft-card__actions{opacity:1}
+    .draft-card__resume{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:8px;background:rgba(252,179,0,0.10);border:1px solid rgba(252,179,0,0.25);font-family:var(--font-display);font-size:9.5px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--accent-gold);cursor:pointer;transition:all 0.2s ease}
+    .draft-card__resume:hover{background:rgba(252,179,0,0.18);box-shadow:0 0 14px rgba(252,179,0,0.20)}
+    .draft-card__resume svg{width:11px;height:11px}
+    .draft-card__more{width:32px;height:32px;border-radius:8px;background:transparent;border:1px solid transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-muted);transition:all 0.2s ease;padding:0}
+    .draft-card__more:hover{background:rgba(255,255,255,0.04);border-color:var(--border-subtle);color:var(--text-primary)}
+    .draft-card__more svg{width:16px;height:16px}
+
+    /* More menu */
+    .draft-menu{position:absolute;right:14px;top:calc(100% - 8px);z-index:20;min-width:180px;background:rgba(10,10,22,0.96);backdrop-filter:blur(20px);border:1px solid var(--border-subtle);border-radius:11px;padding:6px;display:none;flex-direction:column;gap:2px;box-shadow:0 12px 40px rgba(0,0,0,0.5)}
+    .draft-card[data-menu-open="true"]{z-index:25}
+    .draft-card[data-menu-open="true"] .draft-menu{display:flex;animation:menu-in 0.18s ease-out}
+    .draft-menu__item{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:8px;background:transparent;border:none;cursor:pointer;font-family:var(--font-body);font-size:13px;font-weight:500;color:var(--text-primary);text-align:left;transition:background 0.15s}
+    .draft-menu__item:hover{background:rgba(255,255,255,0.04)}
+    .draft-menu__item svg{width:14px;height:14px;color:var(--text-muted)}
+    .draft-menu__item--danger{color:var(--accent-coral)}
+    .draft-menu__item--danger svg{color:var(--accent-coral)}
+    .draft-menu__item--danger:hover{background:rgba(239,68,68,0.06)}
+    .draft-menu__separator{height:1px;background:var(--border-subtle);margin:4px 0}
+
+    /* ─── Section divider ────────────────────────────────── */
+    .section-label{display:flex;align-items:center;gap:10px;padding:8px 4px 0}
+    .section-label__title{font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-dim)}
+    .section-label__line{flex:1;height:1px;background:linear-gradient(90deg,var(--border-subtle),transparent)}
+
+    /* ─── Empty state ────────────────────────────────────── */
+    .empty-state{display:flex;flex-direction:column;align-items:center;gap:18px;padding:80px 24px;text-align:center}
+    .empty-state__icon{width:72px;height:72px;border-radius:18px;background:rgba(252,179,0,0.06);border:1px solid rgba(252,179,0,0.15);display:flex;align-items:center;justify-content:center;color:var(--accent-gold)}
+    .empty-state__icon svg{width:30px;height:30px}
+    .empty-state__title{font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-primary)}
+    .empty-state__desc{font-size:13.5px;line-height:1.55;color:var(--text-muted);max-width:380px}
+    .empty-state__cta{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;background:linear-gradient(135deg,var(--accent-gold),#e5a200);color:#0a0a0a;border:none;font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;cursor:pointer;box-shadow:0 2px 14px rgba(252,179,0,0.20);transition:all 0.2s ease;margin-top:6px}
+    .empty-state__cta:hover{box-shadow:0 4px 22px rgba(252,179,0,0.35);transform:translateY(-1px)}
+    .empty-state__cta svg{width:13px;height:13px}
+
+    /* ─── Responsive ─────────────────────────────────────── */
+    @media (max-width:760px){
+      .page{padding:22px 16px 40px;gap:18px}
+      .stats-strip{grid-template-columns:1fr 1fr;gap:8px}
+      .stats-strip > *:nth-child(3){grid-column:1 / -1}
+      .filter-row{gap:8px}
+      .sort{margin-left:auto}
+      .draft-card{grid-template-columns:18px 1fr;padding:14px 16px;gap:11px}
+      .draft-card__actions{grid-column:2;justify-self:flex-start;opacity:1;margin-top:4px}
+      .draft-card__resume{padding:6px 12px}
+    }
+    @media (max-width:500px){
+      .arena-topbar{padding:14px 16px}
+      .topbar-btn{display:none}
+      .topbar-title__main{font-size:13px}
+      .stat-card{padding:12px 14px}
+      .stat-card__value{font-size:14px}
+      .draft-card__title{font-size:15px}
+      .draft-card__excerpt{font-size:13px}
+      .draft-card__meta{font-size:11px;gap:6px 10px}
+    }
+  </style>
+</head>
+<body>
+  <div class="arena">
+    <!-- ─── TOP BAR ─── -->
+    <div class="arena-topbar">
+      <div class="arena-topbar__left">
+        <button class="back-btn" aria-label="Back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="topbar-title">
+          <span class="topbar-title__main">Drafts</span>
+          <span class="topbar-title__count"><strong>7</strong> total</span>
+        </div>
+      </div>
+      <div class="arena-topbar__right">
+        <button class="topbar-btn topbar-btn--primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Post
+        </button>
+      </div>
+    </div>
+
+    <!-- ─── PAGE ─── -->
+    <div class="page">
+
+      <!-- Stats -->
+      <div class="stats-strip">
+        <div class="stat-card">
+          <div class="stat-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div class="stat-card__body">
+            <span class="stat-card__label">Total drafts</span>
+            <span class="stat-card__value">7</span>
+          </div>
+        </div>
+        <div class="stat-card stat-card--teal">
+          <div class="stat-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          </div>
+          <div class="stat-card__body">
+            <span class="stat-card__label">Words written</span>
+            <span class="stat-card__value">3,128 <small>words</small></span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div class="stat-card__body">
+            <span class="stat-card__label">Last edited</span>
+            <span class="stat-card__value">2s <small>ago</small></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter row -->
+      <div class="filter-row">
+        <div class="filter-chips">
+          <button class="chip" aria-selected="true">All <span class="chip__count">7</span></button>
+          <button class="chip">Today <span class="chip__count">2</span></button>
+          <button class="chip">This Week <span class="chip__count">4</span></button>
+          <button class="chip">Older <span class="chip__count">1</span></button>
+          <button class="chip">Space-enabled <span class="chip__count">2</span></button>
+        </div>
+        <div class="sort" id="sort">
+          <button class="sort__btn" id="sort-btn">
+            <small>Sort</small>
+            <span id="sort-current">Recently edited</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="sort__menu" role="listbox">
+            <button class="sort__item" role="option" aria-selected="true" data-label="Recently edited">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Recently edited
+            </button>
+            <button class="sort__item" role="option" data-label="Oldest first">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Oldest first
+            </button>
+            <button class="sort__item" role="option" data-label="Title A → Z">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Title A → Z
+            </button>
+            <button class="sort__item" role="option" data-label="Most words">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Most words
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Today section -->
+      <div class="section-label">
+        <span class="section-label__title">Today</span>
+        <span class="section-label__line"></span>
+      </div>
+
+      <div class="drafts-list">
+
+        <!-- Currently writing draft -->
+        <div class="draft-card draft-card--writing" data-draft-id="1">
+          <div class="draft-card__dot"><span></span></div>
+          <div class="draft-card__body">
+            <div class="draft-card__title-row">
+              <span class="draft-card__title">The Future of Decentralized Governance</span>
+              <span class="draft-card__badge draft-card__badge--writing">Writing now</span>
+              <span class="draft-card__badge draft-card__badge--space">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                Space
+              </span>
+            </div>
+            <p class="draft-card__excerpt">Decentralized governance is no longer a fringe experiment — it's becoming the default coordination layer for communities that want real ownership over their decisions.</p>
+            <div class="draft-card__meta">
+              <span class="draft-card__meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <strong>324</strong> words
+              </span>
+              <span class="draft-card__meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <strong>3</strong> images
+              </span>
+              <span class="draft-card__meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Saved <strong>2s</strong> ago
+              </span>
+              <span class="draft-card__tags">
+                <span class="draft-card__tag">governance</span>
+                <span class="draft-card__tag">on-chain</span>
+              </span>
+            </div>
+          </div>
+          <div class="draft-card__actions">
+            <button class="draft-card__resume">
+              Resume
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+            <button class="draft-card__more" aria-label="More options" data-action="menu">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+            </button>
+          </div>
+          <!-- More menu -->
+          <div class="draft-menu">
+            <button class="draft-menu__item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              Resume editing
+            </button>
+            <button class="draft-menu__item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Duplicate
+            </button>
+            <button class="draft-menu__item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export as Markdown
+            </button>
+            <div class="draft-menu__separator"></div>
+            <button class="draft-menu__item draft-menu__item--danger">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+              Delete draft
+            </button>
+          </div>
+        </div>
+
+        <!-- Untitled draft -->
+        <div class="draft-card" data-draft-id="2">
+          <div class="draft-card__dot"><span></span></div>
+          <div class="draft-card__body">
+            <div class="draft-card__title-row">
+              <span class="draft-card__title draft-card__title--untitled">Untitled draft</span>
+            </div>
+            <p class="draft-card__excerpt draft-card__excerpt--empty">Tell your story… Use the toolbar to format text, add links, and embed images.</p>
+            <div class="draft-card__meta">
+              <span class="draft-card__meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <strong>18</strong> words
+              </span>
+              <span class="draft-card__meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Saved <strong>4h</strong> ago
+              </span>
+            </div>
+          </div>
+          <div class="draft-card__actions">
+            <button class="draft-card__resume">
+              Resume
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+            <button class="draft-card__more" aria-label="More options" data-action="menu">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+            </button>
+          </div>
+          <div class="draft-menu">
+            <button class="draft-menu__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>Resume editing</button>
+            <button class="draft-menu__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Duplicate</button>
+            <div class="draft-menu__separator"></div>
+            <button class="draft-menu__item draft-menu__item--danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>Delete draft</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- This week section -->
+      <div class="section-label">
+        <span class="section-label__title">This Week</span>
+        <span class="section-label__line"></span>
+      </div>
+
+      <div class="drafts-list">
+
+        <div class="draft-card" data-draft-id="3">
+          <div class="draft-card__dot"><span></span></div>
+          <div class="draft-card__body">
+            <div class="draft-card__title-row">
+              <span class="draft-card__title">Carbon Offset Strategies for Urban Areas</span>
+              <span class="draft-card__badge draft-card__badge--space">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                Space
+              </span>
+            </div>
+            <p class="draft-card__excerpt">A breakdown of effective carbon offset methods that cities are piloting in 2026 — what's actually moving the needle vs. what's PR theatre.</p>
+            <div class="draft-card__meta">
+              <span class="draft-card__meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><strong>1,210</strong> words</span>
+              <span class="draft-card__meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><strong>7</strong> images</span>
+              <span class="draft-card__meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Saved <strong>2d</strong> ago</span>
+              <span class="draft-card__tags">
+                <span class="draft-card__tag">climate</span>
+                <span class="draft-card__tag">policy</span>
+                <span class="draft-card__tag">urban</span>
+              </span>
+            </div>
+          </div>
+          <div class="draft-card__actions">
+            <button class="draft-card__resume">Resume<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+            <button class="draft-card__more" aria-label="More options" data-action="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+          </div>
+          <div class="draft-menu">
+            <button class="draft-menu__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>Resume editing</button>
+            <button class="draft-menu__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Duplicate</button>
+            <button class="draft-menu__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export as Markdown</button>
+            <div class="draft-menu__separator"></div>
+            <button class="draft-menu__item draft-menu__item--danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>Delete draft</button>
+          </div>
+        </div>
+
+        <div class="draft-card" data-draft-id="4">
+          <div class="draft-card__dot"><span></span></div>
+          <div class="draft-card__body">
+            <div class="draft-card__title-row">
+              <span class="draft-card__title">Notes on Quadratic Funding Round 12</span>
+            </div>
+            <p class="draft-card__excerpt">Round 12 saw 3.4× more matching distributed compared to Round 11, but the long tail of small grants is shrinking.</p>
+            <div class="draft-card__meta">
+              <span class="draft-card__meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><strong>684</strong> words</span>
+              <span class="draft-card__meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Saved <strong>3d</strong> ago</span>
+              <span class="draft-card__tags">
+                <span class="draft-card__tag">funding</span>
+                <span class="draft-card__tag">data</span>
+              </span>
+            </div>
+          </div>
+          <div class="draft-card__actions">
+            <button class="draft-card__resume">Resume<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+            <button class="draft-card__more" aria-label="More options" data-action="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+          </div>
+          <div class="draft-menu">
+            <button class="draft-menu__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>Resume editing</button>
+            <button class="draft-menu__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Duplicate</button>
+            <div class="draft-menu__separator"></div>
+            <button class="draft-menu__item draft-menu__item--danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>Delete draft</button>
+          </div>
+        </div>
+
+        <div class="draft-card" data-draft-id="5">
+          <div class="draft-card__dot"><span></span></div>
+          <div class="draft-card__body">
+            <div class="draft-card__title-row">
+              <span class="draft-card__title">Replication Study Bounty: Climate Sensitivity</span>
+            </div>
+            <p class="draft-card__excerpt">Proposing a 4-month replication bounty for the 2024 sensitivity paper — open to any lab able to reproduce the central estimate within 0.2°C.</p>
+            <div class="draft-card__meta">
+              <span class="draft-card__meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><strong>892</strong> words</span>
+              <span class="draft-card__meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Saved <strong>5d</strong> ago</span>
+              <span class="draft-card__tags">
+                <span class="draft-card__tag">science</span>
+                <span class="draft-card__tag">bounty</span>
+              </span>
+            </div>
+          </div>
+          <div class="draft-card__actions">
+            <button class="draft-card__resume">Resume<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+            <button class="draft-card__more" aria-label="More options" data-action="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+          </div>
+          <div class="draft-menu">
+            <button class="draft-menu__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>Resume editing</button>
+            <button class="draft-menu__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Duplicate</button>
+            <div class="draft-menu__separator"></div>
+            <button class="draft-menu__item draft-menu__item--danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>Delete draft</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Older section -->
+      <div class="section-label">
+        <span class="section-label__title">Older</span>
+        <span class="section-label__line"></span>
+      </div>
+
+      <div class="drafts-list">
+
+        <div class="draft-card" data-draft-id="6">
+          <div class="draft-card__dot"><span></span></div>
+          <div class="draft-card__body">
+            <div class="draft-card__title-row">
+              <span class="draft-card__title">Why Festival Picks Should Be Weighted by Crew Stake</span>
+            </div>
+            <p class="draft-card__excerpt">Using crew contribution stakes — not just director clout — to weight festival selection introduces a fairer signal to indie distribution.</p>
+            <div class="draft-card__meta">
+              <span class="draft-card__meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><strong>520</strong> words</span>
+              <span class="draft-card__meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Saved <strong>2w</strong> ago</span>
+              <span class="draft-card__tags">
+                <span class="draft-card__tag">film</span>
+                <span class="draft-card__tag">governance</span>
+              </span>
+            </div>
+          </div>
+          <div class="draft-card__actions">
+            <button class="draft-card__resume">Resume<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+            <button class="draft-card__more" aria-label="More options" data-action="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+          </div>
+          <div class="draft-menu">
+            <button class="draft-menu__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>Resume editing</button>
+            <button class="draft-menu__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Duplicate</button>
+            <div class="draft-menu__separator"></div>
+            <button class="draft-menu__item draft-menu__item--danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>Delete draft</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!--
+      ─── EMPTY STATE (uncomment to preview) ───
+      <div class="empty-state">
+        <div class="empty-state__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        </div>
+        <div class="empty-state__title">No drafts yet</div>
+        <div class="empty-state__desc">Start writing — every post is autosaved as a draft until you publish, so you can pick up exactly where you left off.</div>
+        <button class="empty-state__cta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Start a draft
+        </button>
+      </div>
+      -->
+
+    </div>
+  </div>
+
+  <script>
+    // ─── Filter chips ───
+    document.querySelectorAll('.filter-chips .chip').forEach(c => {
+      c.addEventListener('click', () => {
+        document.querySelectorAll('.filter-chips .chip').forEach(o => o.setAttribute('aria-selected', 'false'));
+        c.setAttribute('aria-selected', 'true');
+      });
+    });
+
+    // ─── Sort dropdown ───
+    const sort = document.getElementById('sort');
+    const sortBtn = document.getElementById('sort-btn');
+    const sortCurrent = document.getElementById('sort-current');
+    function setSortOpen(open) { sort.setAttribute('data-open', String(open)); }
+    sortBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const open = sort.getAttribute('data-open') !== 'true';
+      setSortOpen(open);
+    });
+    document.addEventListener('click', e => {
+      if (!sort.contains(e.target)) setSortOpen(false);
+    });
+    document.querySelectorAll('.sort__item').forEach(item => {
+      item.addEventListener('click', () => {
+        document.querySelectorAll('.sort__item').forEach(o => o.setAttribute('aria-selected', 'false'));
+        item.setAttribute('aria-selected', 'true');
+        sortCurrent.textContent = item.dataset.label;
+        setSortOpen(false);
+      });
+    });
+
+    // ─── Draft card more menu ───
+    document.querySelectorAll('.draft-card').forEach(card => {
+      const moreBtn = card.querySelector('.draft-card__more');
+      if (!moreBtn) return;
+      moreBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        const open = card.getAttribute('data-menu-open') !== 'true';
+        // close all other menus
+        document.querySelectorAll('.draft-card[data-menu-open="true"]').forEach(c => {
+          if (c !== card) c.setAttribute('data-menu-open', 'false');
+        });
+        card.setAttribute('data-menu-open', String(open));
+      });
+
+      // prevent menu items from triggering card click
+      card.querySelectorAll('.draft-menu__item').forEach(item => {
+        item.addEventListener('click', e => e.stopPropagation());
+      });
+
+      // clicking card body opens the draft (Resume)
+      card.addEventListener('click', e => {
+        if (e.target.closest('.draft-card__more, .draft-menu, .draft-card__resume')) return;
+        // Navigate to /new-post (or /post/:id/edit)
+      });
+    });
+
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.draft-card[data-menu-open="true"]').forEach(c => c.setAttribute('data-menu-open', 'false'));
+    });
+  </script>
+</body>
+</html>
