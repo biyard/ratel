@@ -5,9 +5,9 @@ use crate::common::types::EntityType;
 use crate::common::types::Partition;
 use crate::common::types::SpaceStatus;
 use crate::common::types::{NotificationData, SpacePublishState, SpaceVisibility};
-use crate::features::auth::UserTeamGroup;
+use crate::features::auth::UserTeam;
 use crate::features::posts::models::{Team, TeamOwner};
-use crate::features::posts::types::TeamGroupPermissions;
+use crate::features::social::pages::member::dto::TeamRole;
 use crate::common::models::space::SpaceParticipant;
 use crate::features::spaces::space_common::services::handle_space_status_change;
 
@@ -83,17 +83,24 @@ async fn create_team_with_members(
     .await
     .unwrap();
 
+    let team = Team::get(&ctx.ddb, &team_pk, Some(EntityType::Team))
+        .await
+        .unwrap()
+        .expect("team record should exist");
+
     let mut members = Vec::new();
     for _ in 0..member_count {
         let member = create_test_user(&ctx.ddb).await;
-        let admin_group_sk = EntityType::TeamGroup(format!("{}#Admin", team_pk));
-        let utg = UserTeamGroup::new(
+        let user_team = UserTeam::new(
             member.pk.clone(),
-            admin_group_sk,
-            i64::from(TeamGroupPermissions::member()),
             team_pk.clone(),
+            team.display_name.clone(),
+            team.profile_url.clone(),
+            team.username.clone(),
+            team.dao_address.clone(),
+            TeamRole::Member,
         );
-        utg.create(&ctx.ddb).await.unwrap();
+        user_team.create(&ctx.ddb).await.unwrap();
         members.push(member);
     }
 

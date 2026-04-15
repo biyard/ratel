@@ -227,6 +227,7 @@ pub fn Home(username: String) -> Element {
                         button {
                             class: "home-browse-btn",
                             r#type: "button",
+                            "data-testid": "team-home-create-post",
                             onclick: move |_| {
                                 let team_pk = team_pk_str.clone();
                                 let nav = nav;

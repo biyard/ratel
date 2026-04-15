@@ -16,11 +16,11 @@ import { goto } from "../utils";
  * testid.
  *
  * Layouts that ARE still wired and keep their testids:
- *   social-layout       → SocialLayout: /:username/posts | memberships | drafts
- *                         | credentials | spaces | home | team-drafts |
- *                         groups | dao | members | team-rewards |
- *                         team-memberships
- *   team-setting-layout → TeamSettingLayout: /:username/team-settings/*
+ *   social-layout       → SocialLayout: /:username/posts | memberships |
+ *                         drafts | credentials | spaces
+ *   team-arena-layout   → TeamArenaLayout: /:teamUsername/home |
+ *                         team-drafts | dao | members | team-rewards |
+ *                         team-memberships | team-settings*
  *   space-layout-container → SpaceLayout: /spaces/:id/*
  *
  * Test data is set up via REST API calls using page.request (which carries
@@ -214,46 +214,46 @@ test.describe.serial("Page entries accessibility", () => {
   test("GET /:username/settings", async ({ page }) =>
     checkPage(page, `/${data.username}/settings`, { text: "Settings" }));
 
-  // ── Team-specific pages (SocialLayout) ────────────────────────────────────
+  // ── Team-specific pages (TeamArenaLayout) ─────────────────────────────────
 
   test("GET /:teamUsername/home", async ({ page }) =>
-    checkPage(page, `/${data.teamUsername}/home`, { testId: "social-layout" }));
+    checkPage(page, `/${data.teamUsername}/home`, {
+      testId: "team-arena-layout",
+    }));
   test("GET /:teamUsername/team-drafts", async ({ page }) =>
     checkPage(page, `/${data.teamUsername}/team-drafts`, {
-      testId: "social-layout",
-    }));
-  test("GET /:teamUsername/groups", async ({ page }) =>
-    checkPage(page, `/${data.teamUsername}/groups`, {
-      testId: "social-layout",
+      testId: "team-arena-layout",
     }));
   test("GET /:teamUsername/dao", async ({ page }) =>
-    checkPage(page, `/${data.teamUsername}/dao`, { testId: "social-layout" }));
+    checkPage(page, `/${data.teamUsername}/dao`, {
+      testId: "team-arena-layout",
+    }));
   test("GET /:teamUsername/members", async ({ page }) =>
     checkPage(page, `/${data.teamUsername}/members`, {
-      testId: "social-layout",
+      testId: "team-arena-layout",
     }));
   test("GET /:teamUsername/team-rewards", async ({ page }) =>
     checkPage(page, `/${data.teamUsername}/team-rewards`, {
-      testId: "social-layout",
+      testId: "team-arena-layout",
     }));
   test("GET /:teamUsername/team-memberships", async ({ page }) =>
     checkPage(page, `/${data.teamUsername}/team-memberships`, {
-      testId: "social-layout",
+      testId: "team-arena-layout",
     }));
 
-  // ── Team settings pages (TeamSettingLayout) ───────────────────────────────
+  // ── Team settings pages (TeamArenaLayout, consolidated) ──────────────────
 
   test("GET /:teamUsername/team-settings", async ({ page }) =>
     checkPage(page, `/${data.teamUsername}/team-settings`, {
-      testId: "team-setting-layout",
+      testId: "team-arena-layout",
     }));
   test("GET /:teamUsername/team-settings/members", async ({ page }) =>
     checkPage(page, `/${data.teamUsername}/team-settings/members`, {
-      testId: "team-setting-layout",
+      testId: "team-arena-layout",
     }));
   test("GET /:teamUsername/team-settings/subscription", async ({ page }) =>
     checkPage(page, `/${data.teamUsername}/team-settings/subscription`, {
-      testId: "team-setting-layout",
+      testId: "team-arena-layout",
     }));
 
   // ── Space pages (SpaceLayout) ─────────────────────────────────────────────
