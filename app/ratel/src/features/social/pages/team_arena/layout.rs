@@ -19,6 +19,10 @@ pub struct TeamArenaContext {
     pub can_edit: Signal<bool>,
     pub is_admin: Signal<bool>,
     pub is_member: Signal<bool>,
+    /// Bump this signal to force the layout to refetch the team profile
+    /// (used by the settings page after Save Changes so the topbar reflects
+    /// the new name/logo immediately).
+    pub refresh_trigger: Signal<u32>,
 }
 
 pub fn use_team_arena() -> TeamArenaContext {
@@ -41,6 +45,7 @@ pub fn TeamArenaLayout(username: String) -> Element {
     let can_edit_signal = use_signal(|| false);
     let is_admin_signal = use_signal(|| false);
     let is_member_signal = use_signal(|| false);
+    let refresh_trigger = use_signal(|| 0u32);
 
     use_context_provider(|| TeamArenaContext {
         active_tab,
@@ -50,6 +55,7 @@ pub fn TeamArenaLayout(username: String) -> Element {
         can_edit: can_edit_signal,
         is_admin: is_admin_signal,
         is_member: is_member_signal,
+        refresh_trigger,
     });
 
     // Category filter signal consumed by TeamHome (carried over from SocialLayout).
@@ -71,11 +77,16 @@ pub fn TeamArenaLayout(username: String) -> Element {
     });
 
     // Fetch the team record so we have display name, logo, and permissions.
-    let team_resource = use_loader(use_reactive((&username,), |(name,)| async move {
-        Ok::<_, crate::features::social::Error>(
-            find_team_handler(name).await.map_err(|e| e.to_string()),
-        )
-    }))?;
+    // Re-runs whenever `username` changes OR `refresh_trigger` is bumped by a
+    // child page (e.g., the settings save handler).
+    let team_resource = use_loader(use_reactive(
+        (&username, &refresh_trigger()),
+        |(name, _)| async move {
+            Ok::<_, crate::features::social::Error>(
+                find_team_handler(name).await.map_err(|e| e.to_string()),
+            )
+        },
+    ))?;
 
     // Derive render-time values from the resource + team context fallback.
     let (display_name, profile_url, permissions_mask) = {

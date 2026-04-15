@@ -352,4 +352,37 @@ translate! {
         en: "Card updated successfully.",
         ko: "카드가 업데이트되었습니다.",
     },
+
+    // ── Arena setting page (consolidated) ──
+    settings_label: { en: "Settings", ko: "설정" },
+    team_profile: { en: "Team Profile", ko: "팀 프로필" },
+    logo_hint: {
+        en: "Recommended 256 × 256px (1:1) · Max file size 2MB",
+        ko: "권장 크기: 256 × 256px (1:1 비율) · 최대 파일 크기: 2MB",
+    },
+    team_name_placeholder: { en: "e.g. alpha_council", ko: "예: alpha_council" },
+    description_placeholder: {
+        en: "What is your team about?",
+        ko: "팀에 대한 설명을 입력해주세요.",
+    },
+    last_saved: { en: "Last saved", ko: "마지막 저장" },
+    save_success: { en: "Settings saved", ko: "설정이 저장되었습니다" },
+    plan_free: { en: "Free", ko: "무료" },
+    coming_soon: { en: "Coming soon", ko: "준비 중입니다" },
+    danger_zone: { en: "Danger Zone", ko: "위험 영역" },
+    danger_zone_desc: {
+        en: "Permanently delete this team and all associated data.",
+        ko: "팀과 관련된 모든 데이터를 영구적으로 삭제합니다.",
+    },
+    delete_team_confirm_title: { en: "Delete Team?", ko: "팀을 삭제하시겠습니까?" },
+    delete_confirm_pre: { en: "This will permanently delete ", ko: "다음 팀이 영구적으로 삭제됩니다: " },
+    delete_confirm_post: {
+        en: ", including members, posts, and any associated governance data. This action cannot be undone.",
+        ko: ". 멤버, 게시글, 거버넌스 데이터까지 모두 사라지며 되돌릴 수 없습니다.",
+    },
+    delete_success: { en: "Team deleted", ko: "팀이 삭제되었습니다" },
+    no_permission: {
+        en: "You don't have permission to view team settings.",
+        ko: "팀 설정을 볼 수 있는 권한이 없습니다.",
+    },
 }
