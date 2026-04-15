@@ -201,7 +201,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
         }
         if has_existing_space {
             if let Some(space_id) = existing_space_id_sig.peek().clone() {
-                nav.push(crate::Route::SpaceActionsPage {
+                nav.push(crate::Route::SpaceIndexPage {
                     space_id: SpacePartition(space_id),
                 });
                 return;
@@ -230,7 +230,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                 }
                 match create_space_handler(CreateSpaceRequest { post_id }).await {
                     Ok(resp) => {
-                        nav.push(crate::Route::SpaceActionsPage {
+                        nav.push(crate::Route::SpaceIndexPage {
                             space_id: resp.space_id,
                         });
                     }

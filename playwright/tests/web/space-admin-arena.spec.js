@@ -19,13 +19,14 @@ test.describe.serial("Space admin arena", () => {
     await editor.fill(postContents);
 
     await click(page, { text: "Go to Space" });
-    await page.waitForURL(/\/spaces\/[a-z0-9-]+\/dashboard/, {
-      waitUntil: "networkidle",
-    });
-    await getLocator(page, { text: "Dashboard" });
+    // Post-edit now navigates to SpaceIndexPage (arena) after space creation.
+    await page.waitForURL(/\/spaces\/[a-z0-9-]+\/?$/, { waitUntil: "load" });
+    await page.waitForFunction(
+      () => document.querySelector("[data-dioxus-id]") !== null,
+    );
 
     const url = new URL(page.url());
-    spaceUrl = url.pathname.replace(/\/dashboard$/, "");
+    spaceUrl = url.pathname.replace(/\/$/, "");
   }
 
   async function hideFab(page) {

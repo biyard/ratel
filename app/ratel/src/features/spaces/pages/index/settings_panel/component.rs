@@ -6,7 +6,7 @@ pub fn SettingsPanel(
     open: bool,
     on_close: EventHandler<()>,
     #[props(default)] is_admin: bool,
-    space_id: ReadSignal<SpacePartition>,
+    #[props(default)] space_id: Option<ReadSignal<SpacePartition>>,
 ) -> Element {
     let tr: SpaceViewerTranslate = use_translate();
     let mut theme_service = use_theme();
@@ -55,8 +55,10 @@ pub fn SettingsPanel(
             }
             div { class: "settings-panel__body",
                 if is_admin {
-                    SuspenseBoundary {
-                        AppsSection { space_id }
+                    if let Some(sid) = space_id {
+                        SuspenseBoundary {
+                            AppsSection { space_id: sid }
+                        }
                     }
                 }
                 // Theme
