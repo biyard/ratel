@@ -25,34 +25,22 @@ test.describe.serial(
     const teamUsername = `e2e_sub_${Date.now()}`;
 
     test("should create a team so the user is admin", async ({ page }) => {
-      // Navigate to home page
-      await goto(page, "/");
-
-      // Open profile dropdown
-      await click(page, { label: "User Profile" });
-
-      // Click "Create Team" in the dropdown
-      await click(page, { text: "Create Team" });
-
-      // Fill in team creation form
-      const nicknameInput = page.locator('[data-testid="team-nickname-input"]');
-      await nicknameInput.fill(teamNickname);
-
-      const usernameInput = page.locator('[data-testid="team-username-input"]');
-      await usernameInput.fill(teamUsername);
-
-      const descInput = page.locator('[data-testid="team-description-input"]');
-      await descInput.fill("E2E test team for subscription settings");
-
-      // Submit the form
-      await click(page, { text: "Create" });
-
-      // Wait for navigation to the team home page
-      await page.waitForURL(new RegExp(`/${teamUsername}/home`), {
-        waitUntil: "load",
+      // Team creation is setup for this suite; the renewed home arena no
+      // longer exposes a profile-dropdown "Create Team" path, so drive it
+      // through the same REST endpoint the form submits to.
+      const res = await page.request.post("/api/teams/create", {
+        data: {
+          body: {
+            username: teamUsername,
+            nickname: teamNickname,
+            profile_url: "",
+            description: "E2E test team for subscription settings",
+          },
+        },
       });
+      expect(res.ok(), `create team: ${await res.text()}`).toBeTruthy();
 
-      // Verify we are on the team home page
+      await goto(page, `/${teamUsername}/home`);
       await expect(page).toHaveURL(new RegExp(`/${teamUsername}/home`));
     });
 

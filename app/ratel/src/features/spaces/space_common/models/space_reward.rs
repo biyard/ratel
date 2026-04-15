@@ -107,12 +107,64 @@ impl SpaceReward {
 
 #[cfg(feature = "server")]
 impl SpaceReward {
+    /// Look up the reward for an action and award it to `target_pk` if
+    /// configured. Returns `Ok(None)` when no reward exists or the creator
+    /// set zero credits (i.e. the action carries no boost) so the caller
+    /// can treat "no reward configured" as a normal outcome.
+    pub async fn award_if_configured(
+        cli: &aws_sdk_dynamodb::Client,
+        space_pk: SpacePartition,
+        action_id: String,
+        behavior: RewardUserBehavior,
+        target_pk: Partition,
+        owner_pk: Option<Partition>,
+    ) -> crate::common::Result<Option<UserReward>> {
+        let space_reward =
+            match Self::get_by_action(cli, space_pk.clone(), action_id.clone(), behavior.clone())
+                .await
+            {
+                Ok(r) => r,
+                Err(e) => {
+                    tracing::debug!(
+                        space_pk = %space_pk,
+                        action_id = %action_id,
+                        behavior = ?behavior,
+                        error = %e,
+                        "no space reward configured for action — skipping"
+                    );
+                    return Ok(None);
+                }
+            };
+
+        if space_reward.credits <= 0 {
+            return Ok(None);
+        }
+
+        match Self::award(cli, &space_reward, target_pk, owner_pk).await {
+            Ok(user_reward) => Ok(Some(user_reward)),
+            // Repeat claims inside the same period are expected on subsequent
+            // activities — swallow them so the event handler stays idempotent.
+            Err(e) if matches!(
+                e,
+                crate::common::Error::SpaceReward(SpaceRewardError::AlreadyClaimedInPeriod)
+            ) =>
+            {
+                Ok(None)
+            }
+            Err(e) => Err(e),
+        }
+    }
+
     pub async fn award(
         cli: &aws_sdk_dynamodb::Client,
         space_reward: &SpaceReward,
         target_pk: Partition,
         owner_pk: Option<Partition>,
     ) -> crate::common::Result<UserReward> {
+        if space_reward.credits <= 0 {
+            return Err(SpaceRewardError::NoCreditsConfigured.into());
+        }
+
         let now = get_now_timestamp_millis();
         let space_pk = space_reward.pk.clone();
 
