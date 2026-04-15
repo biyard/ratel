@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { click, fill, goto, getLocator, getEditor } from "../utils";
+import { click, fill, goto, getEditor } from "../utils";
 
 // This test verifies the fix for issue #1311:
 // Team posts should appear in the Team Home list after creation.
@@ -19,42 +19,38 @@ test.describe.serial("Team post listing (issue-1311)", () => {
   test("Create a team and publish a post, then verify it appears in team home", async ({
     page,
   }) => {
-    // Step 1: Navigate to home and create a team
-    await goto(page, "/");
-    await click(page, { label: "User Profile" });
-    await click(page, { text: "Create Team" });
-
-    // Fill in team creation form
-    const nicknameInput = page.locator('[data-testid="team-nickname-input"]');
-    await nicknameInput.fill(teamNickname);
-
-    const usernameInput = page.locator('[data-testid="team-username-input"]');
-    await usernameInput.fill(teamUsername);
-
-    const descInput = page.locator('[data-testid="team-description-input"]');
-    await descInput.fill("E2E test team for post listing");
-
-    await click(page, { text: "Create" });
-
-    // Wait for navigation to team home
-    await page.waitForURL(new RegExp(`/${teamUsername}/home`), {
-      waitUntil: "load",
+    // Step 1: Create the team via API (the home-ui renewal removed the
+    // profile-dropdown "Create Team" path this test used to exercise).
+    const res = await page.request.post("/api/teams/create", {
+      data: {
+        body: {
+          username: teamUsername,
+          nickname: teamNickname,
+          profile_url: "",
+          description: "E2E test team for post listing",
+        },
+      },
     });
+    expect(res.ok(), `create team: ${await res.text()}`).toBeTruthy();
+
+    await goto(page, `/${teamUsername}/home`);
+    await expect(page).toHaveURL(new RegExp(`/${teamUsername}/home`));
 
     // Step 2: Create a post from the team home page
     await click(page, { text: "Create" });
     await page.waitForURL(/\/posts\/.*\/edit/, { waitUntil: "load" });
 
     // Step 3: Fill in post content
-    await fill(page, { placeholder: "Title" }, postTitle);
+    await fill(page, { placeholder: "Title your post…" }, postTitle);
 
     const editor = await getEditor(page);
     await editor.fill(postContents);
 
-    // Step 4: Publish the post
-    await click(page, { text: "Publish" }); // opens VisibilityModal
-    await click(page, { label: "Confirm visibility selection" }); // confirm publish
-    await page.waitForURL(/\/posts\//, { waitUntil: "load" });
+    // Step 4: Publish the post. The post-edit renewal dropped the old
+    // visibility modal — the top-bar Publish button now publishes directly
+    // using the inline visibility selector (defaults to Public).
+    await click(page, { role: "button", text: "Publish" });
+    await page.waitForURL(/\/posts\/[^/]+$/, { waitUntil: "load" });
 
     // Step 5: Navigate back to team home
     await goto(page, `/${teamUsername}/home`);
