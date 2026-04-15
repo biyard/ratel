@@ -3,7 +3,6 @@ use crate::features::posts::controllers::create_post::create_post_handler;
 use crate::features::posts::controllers::delete_post::delete_post_handler;
 use crate::features::posts::controllers::dto::PostResponse;
 use crate::features::posts::controllers::list_user_drafts::list_team_drafts_handler;
-use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use crate::features::social::pages::team_arena::{use_team_arena, TeamArenaTab};
 use crate::route::Route;
 
@@ -46,9 +45,7 @@ pub fn Home(username: String) -> Element {
             }
         }
     };
-    let permissions: TeamGroupPermissions = perm_ctx.permissions.into();
-    let can_edit = permissions.contains(TeamGroupPermission::TeamEdit)
-        || permissions.contains(TeamGroupPermission::TeamAdmin);
+    let can_edit = perm_ctx.role.is_admin_or_owner();
     if !can_edit {
         return rsx! {
             document::Link { rel: "stylesheet", href: asset!("./style.css") }
@@ -145,8 +142,18 @@ pub fn Home(username: String) -> Element {
                         stroke_width: "2.5",
                         stroke_linecap: "round",
                         stroke_linejoin: "round",
-                        line { x1: "12", y1: "5", x2: "12", y2: "19" }
-                        line { x1: "5", y1: "12", x2: "19", y2: "12" }
+                        line {
+                            x1: "12",
+                            y1: "5",
+                            x2: "12",
+                            y2: "19",
+                        }
+                        line {
+                            x1: "5",
+                            y1: "12",
+                            x2: "19",
+                            y2: "12",
+                        }
                     }
                     "{tr.new_post}"
                 }
@@ -203,8 +210,18 @@ pub fn Home(username: String) -> Element {
                                 stroke_width: "2.5",
                                 stroke_linecap: "round",
                                 stroke_linejoin: "round",
-                                line { x1: "18", y1: "6", x2: "6", y2: "18" }
-                                line { x1: "6", y1: "6", x2: "18", y2: "18" }
+                                line {
+                                    x1: "18",
+                                    y1: "6",
+                                    x2: "6",
+                                    y2: "18",
+                                }
+                                line {
+                                    x1: "6",
+                                    y1: "6",
+                                    x2: "18",
+                                    y2: "18",
+                                }
                             }
                         }
                     }
@@ -266,7 +283,9 @@ fn DraftCard(draft: PostResponse, on_delete: EventHandler<FeedPartition>) -> Ele
         div {
             class: "td-card",
             onclick: move |_| {
-                nav.push(Route::PostEdit { post_id: post_pk_for_card.clone() });
+                nav.push(Route::PostEdit {
+                    post_id: post_pk_for_card.clone(),
+                });
             },
             div { class: "td-card__head",
                 div { class: "td-card__meta-left",
@@ -321,7 +340,12 @@ fn DraftCard(draft: PostResponse, on_delete: EventHandler<FeedPartition>) -> Ele
                         stroke_width: "2.5",
                         stroke_linecap: "round",
                         stroke_linejoin: "round",
-                        line { x1: "5", y1: "12", x2: "19", y2: "12" }
+                        line {
+                            x1: "5",
+                            y1: "12",
+                            x2: "19",
+                            y2: "12",
+                        }
                         polyline { points: "12 5 19 12 12 19" }
                     }
                 }

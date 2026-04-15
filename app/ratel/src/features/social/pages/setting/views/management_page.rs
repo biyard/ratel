@@ -7,7 +7,6 @@ use crate::features::social::pages::member::controllers::{
 use crate::features::social::pages::member::dto::{TeamMemberResponse, TeamRole};
 use crate::features::social::pages::setting::i18n::TeamSettingsTranslate;
 use crate::features::social::*;
-use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use dioxus::prelude::*;
 use dioxus_primitives::scroll_area::ScrollDirection;
 
@@ -30,13 +29,7 @@ pub fn ManagementPage(username: String) -> Element {
     }))?;
 
     let (team_pk, can_manage) = match &*perm_res.read() {
-        Some(Ok(ctx)) => {
-            let permissions: TeamGroupPermissions = ctx.permissions.into();
-            let can = permissions.contains(TeamGroupPermission::TeamAdmin)
-                || permissions.contains(TeamGroupPermission::TeamEdit)
-                || permissions.contains(TeamGroupPermission::GroupEdit);
-            (ctx.team_pk.clone(), can)
-        }
+        Some(Ok(ctx)) => (ctx.team_pk.clone(), ctx.role.is_admin_or_owner()),
         Some(Err(_)) => {
             return rsx! {
                 div { class: "flex flex-col gap-2 p-4",

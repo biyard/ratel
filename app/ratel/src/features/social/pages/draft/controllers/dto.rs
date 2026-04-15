@@ -5,4 +5,6 @@ use super::super::*;
 pub struct TeamDraftPermission {
     pub team_pk: TeamPartition,
     pub permissions: i64,
+    #[serde(default)]
+    pub role: crate::features::social::pages::member::dto::TeamRole,
 }

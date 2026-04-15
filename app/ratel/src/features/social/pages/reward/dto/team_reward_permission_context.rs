@@ -6,4 +6,6 @@ pub struct TeamRewardPermission {
     pub team_pk: TeamPartition,
     pub permissions: i64,
     pub team_name: String,
+    #[serde(default)]
+    pub role: crate::features::social::pages::member::dto::TeamRole,
 }

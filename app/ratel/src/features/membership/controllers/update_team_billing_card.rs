@@ -8,18 +8,18 @@ use crate::features::membership::models::TeamPayment;
 use crate::features::membership::services::portone::PortOne;
 use crate::features::membership::*;
 use crate::features::posts::models::Team;
-use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
+use crate::features::social::pages::member::dto::TeamRole;
 
 #[cfg(feature = "server")]
 use super::mask_card_number;
 
-#[post("/v3/teams/:username/billing", user: User, team: Team, permissions: TeamGroupPermissions)]
+#[post("/v3/teams/:username/billing", user: User, team: Team, role: TeamRole)]
 pub async fn update_team_billing_card_handler(
     username: String,
     req: UpdateBillingCardRequest,
 ) -> Result<BillingInfoResponse> {
     let result = async {
-        if !permissions.contains(TeamGroupPermission::TeamAdmin) {
+        if !role.is_admin_or_owner() {
             return Err(Error::NotFound("Permission denied".to_string()));
         }
 

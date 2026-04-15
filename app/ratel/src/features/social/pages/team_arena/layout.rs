@@ -2,7 +2,6 @@ use crate::common::*;
 use crate::features::my_follower::controllers::{
     check_follow_status_handler, follow_user, unfollow_user,
 };
-use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use crate::features::social::controllers::find_team::find_team_handler;
 use crate::features::social::pages::team_arena::settings_panel::ArenaSettingsPanel;
 use crate::features::social::pages::team_arena::topbar::{ArenaTopbar, TeamArenaTab};
@@ -62,17 +61,12 @@ pub fn TeamArenaLayout(username: String) -> Element {
     use_context_provider(|| Signal::new(Option::<String>::None));
 
     // Hydrate team list into shared context (for switcher dropdown etc.)
-    let _teams_loader = use_resource(move || async move {
-        let user = user_ctx().user.clone();
-        if user.is_some() {
-            match crate::get_user_teams_handler().await {
-                Ok(teams) => {
-                    team_ctx.set_teams(teams);
-                }
-                Err(e) => {
-                    debug!("TeamArenaLayout: failed to load teams: {:?}", e);
-                }
-            }
+    let teams_future = use_server_future(move || async move {
+        crate::get_user_teams_handler().await.unwrap_or_default()
+    })?;
+    use_effect(move || {
+        if let Some(teams) = teams_future.value().read().clone() {
+            team_ctx.set_teams(teams);
         }
     });
 
@@ -142,9 +136,11 @@ pub fn TeamArenaLayout(username: String) -> Element {
         }
     };
 
-    let permissions: TeamGroupPermissions = permissions_mask.into();
-    let is_admin = permissions.contains(TeamGroupPermission::TeamAdmin);
-    let can_edit = is_admin || permissions.contains(TeamGroupPermission::TeamEdit);
+    let role = crate::features::social::pages::member::dto::TeamRole::from_legacy_permissions(
+        permissions_mask,
+    );
+    let is_admin = role.is_owner();
+    let can_edit = role.is_admin_or_owner();
     let is_member = permissions_mask != 0;
     let logged_in = user_ctx().user.is_some();
 

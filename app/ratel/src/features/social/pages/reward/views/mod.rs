@@ -8,7 +8,6 @@ use admin_page::*;
 use viewer_page::*;
 
 use super::controllers::get_team_reward_permission_handler;
-use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 
 #[component]
 pub fn Home(username: String) -> Element {
@@ -23,22 +22,9 @@ pub fn Home(username: String) -> Element {
     let data = resource.read();
 
     match data.as_ref() {
-        Ok(ctx) => {
-            let permissions: TeamGroupPermissions = ctx.permissions.into();
-            let can_view = permissions.contains(TeamGroupPermission::TeamAdmin);
-
-            if can_view {
-                rsx! {
-                    AdminPage {
-                        team_pk: ctx.team_pk.clone(),
-                    }
-                }
-            } else {
-                rsx! {
-                    ViewerPage { username }
-                }
-            }
-        }
+        Ok(ctx) => rsx! {
+            AdminPage { team_pk: ctx.team_pk.clone() }
+        },
         Err(_) => {
             rsx! {
                 ViewerPage { username }

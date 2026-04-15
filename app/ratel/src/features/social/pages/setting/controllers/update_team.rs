@@ -3,9 +3,8 @@ use super::super::*;
 use crate::features::social::types::SocialError;
 
 use crate::features::posts::models::Team;
-use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 
-#[patch("/api/teams/:username/settings", user: crate::features::auth::User, team: Team, permissions: TeamGroupPermissions)]
+#[patch("/api/teams/:username/settings", user: crate::features::auth::User, team: Team, role: crate::features::social::pages::member::dto::TeamRole)]
 pub async fn update_team_handler(
     username: String,
     body: UpdateTeamRequest,
@@ -13,9 +12,7 @@ pub async fn update_team_handler(
     let conf = super::super::config::get();
     let cli = conf.common.dynamodb();
     let mut team = team;
-    let can_edit = permissions.contains(TeamGroupPermission::TeamEdit)
-        || permissions.contains(TeamGroupPermission::TeamAdmin);
-    if !can_edit {
+    if !role.is_admin_or_owner() {
         return Err(SocialError::SessionNotFound.into());
     }
 
@@ -79,5 +76,5 @@ pub async fn update_team_handler(
         }
     }
 
-    Ok(TeamResponse::from((team, permissions.into())))
+    Ok(TeamResponse::from((team, role.to_legacy_permissions())))
 }

@@ -7,7 +7,7 @@ use crate::features::membership::services::portone::PortOne;
 use crate::features::membership::services::portone::VerifiedCustomer;
 use crate::features::membership::*;
 use crate::features::posts::models::Team;
-use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
+use crate::features::social::pages::member::dto::TeamRole;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -17,13 +17,13 @@ pub struct TeamIdentificationRequest {
     pub id: String,
 }
 
-#[post("/v3/teams/:username/payments/identify", user: User, team: Team, permissions: TeamGroupPermissions)]
+#[post("/v3/teams/:username/payments/identify", user: User, team: Team, role: TeamRole)]
 pub async fn identify_team_handler(
     username: String,
     req: TeamIdentificationRequest,
 ) -> Result<VerifiedCustomer> {
     let result = async {
-        if !permissions.contains(TeamGroupPermission::TeamAdmin) {
+        if !role.is_admin_or_owner() {
             return Err(Error::NotFound("Permission denied".to_string()));
         }
 

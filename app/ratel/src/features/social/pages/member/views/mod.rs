@@ -1,5 +1,4 @@
 use crate::common::*;
-use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use crate::features::social::pages::team_arena::{use_team_arena, TeamArenaTab};
 
 mod admin_page;
@@ -57,17 +56,7 @@ pub fn Home(username: String) -> Element {
             }
         }
     };
-    let permissions: TeamGroupPermissions = perm_ctx.permissions.into();
-    let can_edit = permissions.contains(TeamGroupPermission::TeamEdit)
-        || permissions.contains(TeamGroupPermission::TeamAdmin)
-        || permissions.contains(TeamGroupPermission::GroupEdit);
-    if !can_edit {
-        return rsx! {
-            document::Link { rel: "stylesheet", href: asset!("./style.css") }
-            ViewerPage { username: username.clone() }
-        };
-    }
-
+    let can_edit = perm_ctx.role.is_admin_or_owner();
     let team_pk = perm_ctx.team_pk.clone();
 
     // Fetch members list (refetched on demand via signal).
@@ -140,9 +129,7 @@ pub fn Home(username: String) -> Element {
             span { class: "tm-section-label__dash" }
         }
 
-        div {
-            class: "tm-page",
-            onclick: move |_| open_menu_pk.set(None),
+        div { class: "tm-page", onclick: move |_| open_menu_pk.set(None),
 
             div { class: "tm-page-header",
                 div { class: "tm-page-header__left",
@@ -152,26 +139,38 @@ pub fn Home(username: String) -> Element {
                         " {tr.members_subhead}"
                     }
                 }
-                button {
-                    class: "tm-btn-primary",
-                    r#type: "button",
-                    onclick: move |e: Event<MouseData>| {
-                        e.stop_propagation();
-                        invite_open.set(true);
-                    },
-                    svg {
-                        view_box: "0 0 24 24",
-                        fill: "none",
-                        stroke: "currentColor",
-                        stroke_width: "2.5",
-                        stroke_linecap: "round",
-                        stroke_linejoin: "round",
-                        path { d: "M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" }
-                        circle { cx: "8.5", cy: "7", r: "4" }
-                        line { x1: "20", y1: "8", x2: "20", y2: "14" }
-                        line { x1: "23", y1: "11", x2: "17", y2: "11" }
+                if can_edit {
+                    button {
+                        class: "tm-btn-primary",
+                        r#type: "button",
+                        onclick: move |e: Event<MouseData>| {
+                            e.stop_propagation();
+                            invite_open.set(true);
+                        },
+                        svg {
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_width: "2.5",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            path { d: "M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" }
+                            circle { cx: "8.5", cy: "7", r: "4" }
+                            line {
+                                x1: "20",
+                                y1: "8",
+                                x2: "20",
+                                y2: "14",
+                            }
+                            line {
+                                x1: "23",
+                                y1: "11",
+                                x2: "17",
+                                y2: "11",
+                            }
+                        }
+                        "{tr.add_member_btn}"
                     }
-                    "{tr.add_member_btn}"
                 }
             }
 
@@ -185,7 +184,12 @@ pub fn Home(username: String) -> Element {
                         stroke_linecap: "round",
                         stroke_linejoin: "round",
                         circle { cx: "11", cy: "11", r: "8" }
-                        line { x1: "21", y1: "21", x2: "16.65", y2: "16.65" }
+                        line {
+                            x1: "21",
+                            y1: "21",
+                            x2: "16.65",
+                            y2: "16.65",
+                        }
                     }
                     input {
                         class: "tm-search-input",
@@ -196,10 +200,30 @@ pub fn Home(username: String) -> Element {
                     }
                 }
                 div { class: "tm-role-tabs",
-                    RoleTab { label: tr.filter_all.to_string(), count: total, active: role_filter() == RoleFilter::All, on_click: move |_| role_filter.set(RoleFilter::All) }
-                    RoleTab { label: tr.filter_owner.to_string(), count: owner_count, active: role_filter() == RoleFilter::Owner, on_click: move |_| role_filter.set(RoleFilter::Owner) }
-                    RoleTab { label: tr.filter_admin.to_string(), count: admin_count, active: role_filter() == RoleFilter::Admin, on_click: move |_| role_filter.set(RoleFilter::Admin) }
-                    RoleTab { label: tr.filter_member.to_string(), count: member_count, active: role_filter() == RoleFilter::Member, on_click: move |_| role_filter.set(RoleFilter::Member) }
+                    RoleTab {
+                        label: tr.filter_all.to_string(),
+                        count: total,
+                        active: role_filter() == RoleFilter::All,
+                        on_click: move |_| role_filter.set(RoleFilter::All),
+                    }
+                    RoleTab {
+                        label: tr.filter_owner.to_string(),
+                        count: owner_count,
+                        active: role_filter() == RoleFilter::Owner,
+                        on_click: move |_| role_filter.set(RoleFilter::Owner),
+                    }
+                    RoleTab {
+                        label: tr.filter_admin.to_string(),
+                        count: admin_count,
+                        active: role_filter() == RoleFilter::Admin,
+                        on_click: move |_| role_filter.set(RoleFilter::Admin),
+                    }
+                    RoleTab {
+                        label: tr.filter_member.to_string(),
+                        count: member_count,
+                        active: role_filter() == RoleFilter::Member,
+                        on_click: move |_| role_filter.set(RoleFilter::Member),
+                    }
                 }
             }
 
@@ -227,10 +251,12 @@ pub fn Home(username: String) -> Element {
                             key: "{member.user_id}",
                             member: member.clone(),
                             team_pk: team_pk_for_actions.clone(),
+                            can_edit,
                             menu_open: open_menu_pk() == Some(member.user_id.clone()),
                             on_toggle_menu: move |id: String| {
                                 let cur = open_menu_pk();
-                                open_menu_pk.set(if cur.as_deref() == Some(id.as_str()) { None } else { Some(id) });
+                                open_menu_pk
+                                    .set(if cur.as_deref() == Some(id.as_str()) { None } else { Some(id) });
                             },
                             on_changed: move |_: ()| {
                                 refresh.with_mut(|n| *n = n.wrapping_add(1));
@@ -275,6 +301,7 @@ fn RoleTab(label: String, count: usize, active: bool, on_click: EventHandler<()>
 fn MemberCard(
     member: TeamMemberResponse,
     team_pk: TeamPartition,
+    can_edit: bool,
     menu_open: bool,
     on_toggle_menu: EventHandler<String>,
     on_changed: EventHandler<()>,
@@ -303,6 +330,7 @@ fn MemberCard(
         ("tm-role-badge tm-role-badge--owner", tr.role_owner)
     } else {
         match member.role {
+            TeamRole::Owner => ("tm-role-badge tm-role-badge--owner", tr.role_owner),
             TeamRole::Admin => ("tm-role-badge tm-role-badge--admin", tr.role_admin),
             TeamRole::Member => ("tm-role-badge tm-role-badge--member", tr.role_member),
         }
@@ -394,10 +422,8 @@ fn MemberCard(
                 span { class: "tm-member-handle", "{handle}" }
             }
             span { class: "{badge_class}", "{badge_label}" }
-            if !member.is_owner {
-                div {
-                    class: "tm-member-action-wrap",
-                    aria_expanded: menu_open,
+            if !member.is_owner && can_edit {
+                div { class: "tm-member-action-wrap", aria_expanded: menu_open,
                     button {
                         class: "tm-member-action",
                         r#type: "button",
@@ -406,9 +432,7 @@ fn MemberCard(
                             e.stop_propagation();
                             on_toggle_menu.call(user_pk_for_toggle.clone());
                         },
-                        svg {
-                            view_box: "0 0 24 24",
-                            fill: "currentColor",
+                        svg { view_box: "0 0 24 24", fill: "currentColor",
                             circle { cx: "5", cy: "12", r: "1.5" }
                             circle { cx: "12", cy: "12", r: "1.5" }
                             circle { cx: "19", cy: "12", r: "1.5" }
@@ -568,9 +592,7 @@ fn InviteMemberModal(
     };
 
     rsx! {
-        div {
-            class: "tm-modal-overlay",
-            onclick: move |_| on_close.call(()),
+        div { class: "tm-modal-overlay", onclick: move |_| on_close.call(()),
             div {
                 class: "tm-modal",
                 onclick: move |e: Event<MouseData>| e.stop_propagation(),
@@ -588,8 +610,18 @@ fn InviteMemberModal(
                             stroke_width: "2.5",
                             stroke_linecap: "round",
                             stroke_linejoin: "round",
-                            line { x1: "18", y1: "6", x2: "6", y2: "18" }
-                            line { x1: "6", y1: "6", x2: "18", y2: "18" }
+                            line {
+                                x1: "18",
+                                y1: "6",
+                                x2: "6",
+                                y2: "18",
+                            }
+                            line {
+                                x1: "6",
+                                y1: "6",
+                                x2: "18",
+                                y2: "18",
+                            }
                         }
                     }
                 }
@@ -647,8 +679,18 @@ fn InviteMemberModal(
                                                     stroke_width: "2.5",
                                                     stroke_linecap: "round",
                                                     stroke_linejoin: "round",
-                                                    line { x1: "18", y1: "6", x2: "6", y2: "18" }
-                                                    line { x1: "6", y1: "6", x2: "18", y2: "18" }
+                                                    line {
+                                                        x1: "18",
+                                                        y1: "6",
+                                                        x2: "6",
+                                                        y2: "18",
+                                                    }
+                                                    line {
+                                                        x1: "6",
+                                                        y1: "6",
+                                                        x2: "18",
+                                                        y2: "18",
+                                                    }
                                                 }
                                             }
                                         }
@@ -684,7 +726,7 @@ fn RoleDropdown(role: Signal<TeamRole>) -> Element {
     let tr: TeamMemberTranslate = use_translate();
     let mut open = use_signal(|| false);
     let label = match role() {
-        TeamRole::Admin => tr.invite_role_admin,
+        TeamRole::Owner | TeamRole::Admin => tr.invite_role_admin,
         TeamRole::Member => tr.invite_role_member,
     };
 
