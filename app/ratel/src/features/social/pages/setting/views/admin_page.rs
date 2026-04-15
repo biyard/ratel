@@ -7,7 +7,6 @@ use crate::features::membership::controllers::{
     update_team_billing_card_handler,
 };
 use crate::features::membership::models::CardInfo;
-use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use crate::features::social::pages::user_membership::components::format_membership_tier_label;
 use dioxus::prelude::*;
 
@@ -134,8 +133,7 @@ pub fn AdminPage(username: String, team: TeamResponse) -> Element {
         }
     };
 
-    let permissions: TeamGroupPermissions = team_state().permissions.unwrap_or(0).into();
-    let delete_team_permission = permissions.contains(TeamGroupPermission::TeamAdmin);
+    let delete_team_permission = team_state().role.is_owner();
     let last_saved = format_last_saved(team_state().updated_at);
 
     rsx! {

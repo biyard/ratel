@@ -5,4 +5,6 @@ use super::super::*;
 pub struct TeamMemberPermission {
     pub team_pk: TeamPartition,
     pub permissions: i64,
+    #[serde(default)]
+    pub role: super::TeamRole,
 }

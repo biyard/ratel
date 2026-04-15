@@ -8,7 +8,6 @@ use admin_page::*;
 use viewer_page::*;
 
 use super::controllers::get_team_dao_handler;
-use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 
 #[component]
 pub fn Home(username: String) -> Element {
@@ -20,8 +19,7 @@ pub fn Home(username: String) -> Element {
 
     match data.as_ref() {
         Ok(ctx) => {
-            let permissions: TeamGroupPermissions = ctx.permissions.into();
-            let is_admin = permissions.contains(TeamGroupPermission::TeamAdmin);
+            let is_admin = ctx.role.is_owner();
 
             if is_admin {
                 rsx! {

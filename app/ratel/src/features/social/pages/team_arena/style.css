@@ -1,0 +1,280 @@
+/* ── Team Arena Layout — Base shell + BG layers ─────────── */
+/* Direct port of assets/designs/team-arena.html with light mode. */
+
+.team-arena {
+  --bg-void: #06060e;
+  --bg-glass: rgba(12, 12, 26, 0.65);
+  --bg-glass-hover: rgba(20, 20, 40, 0.80);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --text-primary: #f0f0f5;
+  --text-muted: #8888a8;
+  --text-dim: #55556a;
+  --accent-gold: #fcb300;
+  --accent-teal: #6eedd8;
+  --accent-poll: #818cf8;
+  --accent-quiz: #a855f7;
+  --accent-discuss: #22d3ee;
+
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  /* `overflow-x: hidden` would implicitly set overflow-y to auto and create
+     a new scroll context, breaking `position: sticky` on the topbar.
+     Use `clip` (no scroll context) for x and explicit `visible` for y. */
+  overflow-x: clip;
+  overflow-y: visible;
+  background: var(--bg-void);
+  color: var(--text-primary);
+  font-family: 'Outfit', sans-serif;
+  /* Reserve room for the fixed topbar so the first content section isn't
+     hidden underneath. */
+  padding-top: 110px;
+}
+@media (max-width: 540px) {
+  .team-arena { padding-top: 84px; }
+}
+
+/* ── Light theme override (scoped to arena) ── */
+html[data-theme="light"] .team-arena,
+[data-theme="light"] .team-arena {
+  --bg-void: #f4f3ef;
+  --bg-glass: rgba(255, 255, 255, 0.78);
+  --bg-glass-hover: rgba(255, 255, 255, 0.92);
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --text-primary: #1a1a24;
+  --text-muted: #5f6075;
+  --text-dim: #9d9db3;
+  --accent-gold: #c68700;
+  --accent-teal: #12a58a;
+  --accent-poll: #4f46e5;
+  --accent-quiz: #7e22ce;
+  --accent-discuss: #0891b2;
+}
+
+.team-arena * {
+  box-sizing: border-box;
+}
+
+.team-arena::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 50%, rgba(252, 179, 0, 0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 120% 100% at 50% 120%, rgba(110, 237, 216, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, var(--bg-void) 0%, var(--bg-void) 100%);
+}
+html[data-theme="light"] .team-arena::before,
+[data-theme="light"] .team-arena::before {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 50%, rgba(252, 179, 0, 0.09) 0%, transparent 60%),
+    radial-gradient(ellipse 120% 100% at 50% 120%, rgba(110, 237, 216, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, var(--bg-void) 0%, var(--bg-void) 100%);
+}
+
+/* Make the SidebarInset parent follow the arena bg so no light seam bleeds through. */
+.sidebar-inset:has(.team-arena) {
+  background: var(--bg-void, #06060e) !important;
+}
+html[data-theme="light"] .sidebar-inset:has(.team-arena),
+[data-theme="light"] .sidebar-inset:has(.team-arena) {
+  background: #f4f3ef !important;
+}
+
+/* Hide the global AppMenu sidebar + mobile bottom nav on team arena routes.
+   IMPORTANT: `sidebar-wrapper` is the SidebarProvider root that wraps the
+   entire app (including the arena itself) — do NOT hide it. Only hide the
+   actual Sidebar aside + its container + mobile bottom nav. */
+body:has(.team-arena) [data-slot="sidebar"],
+body:has(.team-arena) [data-slot="sidebar-container"],
+body:has(.team-arena) [data-testid="mobile-bottom-nav"] {
+  display: none !important;
+}
+body:has(.team-arena) [data-slot="sidebar-inset"] {
+  margin: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  /* SidebarInset has Tailwind `overflow-x-hidden` which clips fixed children
+     and breaks the topbar pinning. Override it on team arena routes. */
+  overflow: visible !important;
+}
+
+/* Ensure the page is scrollable on mobile (some parent layouts set
+   overflow:hidden on body which traps scroll). */
+html:has(.team-arena),
+body:has(.team-arena) {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  height: auto !important;
+  min-height: 100vh;
+}
+body:has(.team-arena) [data-slot="sidebar-wrapper"] {
+  min-height: 100vh;
+  height: auto !important;
+}
+
+/* ── Star field ── */
+.team-arena__bg-stars {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.team-arena__star {
+  position: absolute;
+  border-radius: 50%;
+  background: #fff;
+  animation: team-arena-twinkle ease-in-out infinite;
+}
+html[data-theme="light"] .team-arena .team-arena__star,
+[data-theme="light"] .team-arena .team-arena__star {
+  background: rgba(20, 20, 40, 0.45);
+}
+@keyframes team-arena-twinkle {
+  0%, 100% { opacity: 0.08; transform: scale(0.9); }
+  50% { opacity: 0.9; transform: scale(1.3); }
+}
+.team-arena__shooting {
+  position: absolute;
+  width: 120px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(252, 179, 0, 0.8), rgba(252, 179, 0, 0));
+  opacity: 0;
+  animation: team-arena-shoot 8s linear infinite;
+  transform-origin: left center;
+}
+html[data-theme="light"] .team-arena .team-arena__shooting,
+[data-theme="light"] .team-arena .team-arena__shooting {
+  background: linear-gradient(90deg, transparent, rgba(198, 135, 0, 0.75), rgba(198, 135, 0, 0));
+}
+@keyframes team-arena-shoot {
+  0% { opacity: 0; transform: translateX(0) translateY(0) rotate(-18deg) scaleX(0.1); }
+  4% { opacity: 1; transform: translateX(0) translateY(0) rotate(-18deg) scaleX(1); }
+  14% { opacity: 0; transform: translateX(400px) translateY(-130px) rotate(-18deg) scaleX(0.6); }
+  100% { opacity: 0; transform: translateX(400px) translateY(-130px) rotate(-18deg) scaleX(0.6); }
+}
+
+/* ── Grid plane ── */
+.team-arena__bg-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.team-arena__bg-grid-plane {
+  position: absolute;
+  bottom: -40%;
+  left: -20%;
+  right: -20%;
+  height: 120%;
+  background:
+    linear-gradient(rgba(252, 179, 0, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(252, 179, 0, 0.025) 1px, transparent 1px);
+  background-size: 80px 80px;
+  transform: perspective(600px) rotateX(55deg);
+  animation: team-arena-grid-scroll 20s linear infinite;
+  mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, transparent 70%);
+}
+html[data-theme="light"] .team-arena .team-arena__bg-grid-plane,
+[data-theme="light"] .team-arena .team-arena__bg-grid-plane {
+  background:
+    linear-gradient(rgba(198, 135, 0, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(198, 135, 0, 0.06) 1px, transparent 1px);
+  background-size: 80px 80px;
+}
+@keyframes team-arena-grid-scroll {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 80px; }
+}
+
+/* ── Floating orbs ── */
+.team-arena__bg-orbs {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.team-arena__bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.10;
+  animation: team-arena-orb-float 25s ease-in-out infinite;
+}
+html[data-theme="light"] .team-arena .team-arena__bg-orb,
+[data-theme="light"] .team-arena .team-arena__bg-orb {
+  opacity: 0.12;
+  mix-blend-mode: multiply;
+}
+.team-arena__bg-orb--1 {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, var(--accent-gold), transparent 70%);
+  top: -10%; right: 10%;
+}
+.team-arena__bg-orb--2 {
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, var(--accent-teal), transparent 70%);
+  bottom: 10%; left: -5%;
+  animation-delay: -8s; animation-duration: 30s;
+}
+.team-arena__bg-orb--3 {
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, var(--accent-quiz), transparent 70%);
+  top: 40%; right: -5%;
+  animation-delay: -15s; animation-duration: 22s;
+}
+@keyframes team-arena-orb-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(40px, -30px) scale(1.1); }
+  50% { transform: translate(-20px, 20px) scale(0.95); }
+  75% { transform: translate(30px, 40px) scale(1.05); }
+}
+
+/* ── Scanline ── */
+.team-arena__bg-scanline {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.006) 2px,
+    rgba(255, 255, 255, 0.006) 4px
+  );
+}
+html[data-theme="light"] .team-arena .team-arena__bg-scanline,
+[data-theme="light"] .team-arena .team-arena__bg-scanline {
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.015) 2px,
+    rgba(0, 0, 0, 0.015) 4px
+  );
+}
+
+/* ── Outlet content wrapper ── */
+.team-arena__content {
+  position: relative;
+  z-index: 10;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+@media (max-width: 1024px) {
+  .team-arena { min-height: 100vh; height: auto; }
+}
+@media (max-width: 720px) {
+  .team-arena { min-height: 100vh; height: auto; overflow-x: clip; overflow-y: visible; }
+}

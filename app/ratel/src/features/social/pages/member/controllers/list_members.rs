@@ -2,10 +2,9 @@ use super::super::dto::*;
 use super::super::*;
 
 use crate::features::posts::models::TeamOwner;
-use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
-#[get("/api/teams/:team_pk/members?bookmark&limit", user: crate::features::auth::OptionalUser, permissions: TeamGroupPermissions)]
+#[get("/api/teams/:team_pk/members?bookmark&limit", user: crate::features::auth::OptionalUser)]
 pub async fn list_members_handler(
     team_pk: TeamPartition,
     bookmark: Option<String>,
@@ -14,35 +13,29 @@ pub async fn list_members_handler(
     let conf = super::super::config::get();
     let cli = conf.common.dynamodb();
     let team_pk: Partition = team_pk.into();
-
-    let user: Option<crate::features::auth::User> = user.into();
-    let Some(_user) = user else {
-        return Err(Error::NoPermission);
-    };
-
-    // Only team members (users with any permission) can view the member list
-    if permissions.0.is_empty() {
-        return Err(Error::NoPermission);
-    }
+    let _ = user;
 
     let is_first_page = bookmark.is_none();
     let page_limit = limit.unwrap_or(50).min(100);
-    let mut query_options = crate::features::auth::UserTeamGroupQueryOption::builder().limit(page_limit);
+
+    // Query all UserTeam records for this team via GSI.
+    let mut opts = crate::features::auth::UserTeamQueryOption::builder().limit(page_limit);
     if let Some(bookmark) = bookmark {
-        query_options = query_options.bookmark(bookmark);
+        opts = opts.bookmark(bookmark);
     }
+    let user_team_sk_prefix = EntityType::UserTeam(team_pk.to_string());
+    let (user_teams, next_bookmark) =
+        crate::features::auth::UserTeam::find_by_team(cli, &user_team_sk_prefix, opts).await?;
 
-    let (all_user_team_groups, next_bookmark) =
-        crate::features::auth::UserTeamGroup::find_by_team_pk(cli, team_pk.clone(), query_options).await?;
-
+    // Batch-fetch user records for display fields.
     let user_keys: Vec<_> = {
         let mut seen = HashSet::new();
-        all_user_team_groups
+        user_teams
             .iter()
-            .filter_map(|utg| {
-                let key = utg.pk.to_string();
+            .filter_map(|ut| {
+                let key = ut.pk.to_string();
                 if seen.insert(key) {
-                    Some((utg.pk.clone(), EntityType::User))
+                    Some((ut.pk.clone(), EntityType::User))
                 } else {
                     None
                 }
@@ -56,65 +49,45 @@ pub async fn list_members_handler(
         Vec::new()
     };
 
+    use std::collections::HashMap;
     let user_map: HashMap<String, crate::features::auth::User> =
         users.into_iter().map(|u| (u.pk.to_string(), u)).collect();
 
-    let mut members_map: HashMap<String, TeamMemberResponse> = HashMap::new();
-
-    for utg in all_user_team_groups {
-        let user_pk_str = utg.pk.to_string();
-
-        let Some(user) = user_map.get(&user_pk_str) else {
+    let mut members: Vec<TeamMemberResponse> = Vec::new();
+    for ut in user_teams {
+        let user_pk_str = ut.pk.to_string();
+        let Some(u) = user_map.get(&user_pk_str) else {
             continue;
         };
-
-        let perms: TeamGroupPermissions = utg.team_group_permissions.into();
-        let is_admin = perms.contains(TeamGroupPermission::TeamAdmin);
-        let role = if is_admin { TeamRole::Admin } else { TeamRole::Member };
-
-        let entry = members_map
-            .entry(user_pk_str.clone())
-            .or_insert_with(|| TeamMemberResponse {
-                user_id: user_pk_str.clone(),
-                username: user.username.clone(),
-                display_name: user.display_name.clone(),
-                profile_url: user.profile_url.clone(),
-                role,
-                is_owner: false,
-            });
-
-        // Admin wins if user has multiple groups
-        if is_admin {
-            entry.role = TeamRole::Admin;
-        }
+        members.push(TeamMemberResponse {
+            user_id: user_pk_str,
+            username: u.username.clone(),
+            display_name: u.display_name.clone(),
+            profile_url: u.profile_url.clone(),
+            role: ut.role,
+            is_owner: matches!(ut.role, TeamRole::Owner),
+        });
     }
 
-    let owner_member = if is_first_page {
-        match TeamOwner::get(cli, &team_pk, Some(&EntityType::TeamOwner)).await? {
-            Some(team_owner) => {
-                let owner_pk_str = team_owner.user_pk.to_string();
-                let mut entry = members_map.remove(&owner_pk_str).unwrap_or_else(|| TeamMemberResponse {
-                    user_id: owner_pk_str,
-                    username: team_owner.username.clone(),
-                    display_name: team_owner.display_name.clone(),
-                    profile_url: team_owner.profile_url.clone(),
-                    role: TeamRole::Admin,
-                    is_owner: true,
-                });
-                entry.is_owner = true;
-                Some(entry)
+    // Ensure owner record is on the first page (UserTeam.role may already
+    // be Owner but we also sync from TeamOwner as the authoritative source).
+    if is_first_page {
+        if let Some(team_owner) = TeamOwner::get(cli, &team_pk, Some(&EntityType::TeamOwner)).await? {
+            let owner_pk_str = team_owner.user_pk.to_string();
+            let existing_idx = members.iter().position(|m| m.user_id == owner_pk_str);
+            let entry = TeamMemberResponse {
+                user_id: owner_pk_str.clone(),
+                username: team_owner.username.clone(),
+                display_name: team_owner.display_name.clone(),
+                profile_url: team_owner.profile_url.clone(),
+                role: TeamRole::Owner,
+                is_owner: true,
+            };
+            if let Some(idx) = existing_idx {
+                members.remove(idx);
             }
-            None => None,
+            members.insert(0, entry);
         }
-    } else {
-        None
-    };
-
-    let mut members: Vec<TeamMemberResponse> = members_map.into_values().collect();
-    members.sort_by(|a, b| a.username.cmp(&b.username));
-
-    if let Some(owner) = owner_member {
-        members.insert(0, owner);
     }
 
     Ok(ListItemsResponse {

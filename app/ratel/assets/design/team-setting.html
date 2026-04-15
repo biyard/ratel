@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Team Settings Arena</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+    --border-subtle:rgba(255,255,255,0.06);--text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+    --accent-gold:#fcb300;--accent-teal:#6eedd8;
+    --accent-poll:#818cf8;--accent-quiz:#a855f7;--accent-discuss:#22d3ee;
+    --accent-danger:#ef4444;--accent-danger-bg:rgba(239,68,68,0.08);--accent-danger-bd:rgba(239,68,68,0.22);
+    --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
+  }
+  html,body{height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body)}
+
+  .arena{position:relative;width:100%;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
+  .arena::before{
+    content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 50%, rgba(252,179,0,0.04) 0%, transparent 60%),
+      radial-gradient(ellipse 120% 100% at 50% 120%, rgba(110,237,216,0.03) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, var(--bg-void) 0%, var(--bg-void) 100%);
+  }
+
+  /* ── BG layers (shared with team-arena) ── */
+  .bg-stars{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .star{position:absolute;border-radius:50%;background:#fff;animation:twinkle ease-in-out infinite}
+  @keyframes twinkle{0%,100%{opacity:0.08;transform:scale(0.9)}50%{opacity:0.9;transform:scale(1.3)}}
+  .shooting{
+    position:absolute;width:120px;height:1px;
+    background:linear-gradient(90deg, transparent, rgba(252,179,0,0.8), rgba(252,179,0,0));
+    opacity:0;animation:shoot 8s linear infinite;transform-origin:left center;
+  }
+  @keyframes shoot{
+    0%{opacity:0;transform:translateX(0) translateY(0) rotate(-18deg) scaleX(0.1)}
+    4%{opacity:1;transform:translateX(0) translateY(0) rotate(-18deg) scaleX(1)}
+    14%{opacity:0;transform:translateX(400px) translateY(-130px) rotate(-18deg) scaleX(0.6)}
+    100%{opacity:0;transform:translateX(400px) translateY(-130px) rotate(-18deg) scaleX(0.6)}
+  }
+  .bg-grid{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .bg-grid__plane{
+    position:absolute;bottom:-40%;left:-20%;right:-20%;height:120%;
+    background:linear-gradient(rgba(252,179,0,0.025) 1px, transparent 1px),linear-gradient(90deg, rgba(252,179,0,0.025) 1px, transparent 1px);
+    background-size:80px 80px;
+    transform:perspective(600px) rotateX(55deg);
+    animation:gridScroll 20s linear infinite;
+    mask-image:linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 70%);
+  }
+  @keyframes gridScroll{0%{background-position:0 0}100%{background-position:0 80px}}
+  .bg-orbs{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .bg-orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.10;animation:orbFloat 25s ease-in-out infinite}
+  .bg-orb--1{width:500px;height:500px;background:radial-gradient(circle, var(--accent-gold), transparent 70%);top:-10%;right:10%}
+  .bg-orb--2{width:400px;height:400px;background:radial-gradient(circle, var(--accent-teal), transparent 70%);bottom:10%;left:-5%;animation-delay:-8s;animation-duration:30s}
+  .bg-orb--3{width:300px;height:300px;background:radial-gradient(circle, var(--accent-quiz), transparent 70%);top:40%;right:-5%;animation-delay:-15s;animation-duration:22s}
+  @keyframes orbFloat{
+    0%,100%{transform:translate(0,0) scale(1)}
+    25%{transform:translate(40px,-30px) scale(1.1)}
+    50%{transform:translate(-20px,20px) scale(0.95)}
+    75%{transform:translate(30px,40px) scale(1.05)}
+  }
+  .bg-scanline{position:absolute;inset:0;z-index:0;pointer-events:none;
+    background:repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.006) 2px, rgba(255,255,255,0.006) 4px);
+  }
+
+  /* ── Top bar (identical to team-members) ── */
+  .arena-topbar{position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:20px 28px;flex-shrink:0}
+  .arena-topbar__brand{display:flex;align-items:center;gap:12px;min-width:0}
+  .brand-home{
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    width:36px;height:36px;border-radius:10px;
+    background:rgba(12,12,26,0.6);backdrop-filter:blur(10px);
+    border:1px solid var(--border-subtle);
+    cursor:pointer;transition:all 0.25s;
+  }
+  .brand-home:hover{border-color:rgba(252,179,0,0.3);box-shadow:0 0 14px rgba(252,179,0,0.12);transform:translateY(-1px)}
+  .brand-home svg{width:18px;height:18px;color:var(--accent-gold)}
+  .brand-home__divider{width:1px;height:24px;background:var(--border-subtle);flex-shrink:0}
+
+  .team-switcher{position:relative;display:flex;align-items:center;gap:10px;padding:4px 8px 4px 4px;border-radius:12px;cursor:pointer;transition:all 0.25s;min-width:0;border:1px solid transparent}
+  .team-switcher:hover{background:rgba(255,255,255,0.03);border-color:var(--border-subtle)}
+  .team-switcher__body{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .team-switcher__chevron{width:14px;height:14px;color:var(--text-muted);flex-shrink:0;transition:transform 0.25s}
+  .team-switcher[aria-expanded="true"] .team-switcher__chevron{transform:rotate(180deg);color:var(--accent-gold)}
+
+  .arena-topbar__logo{
+    width:40px;height:40px;border-radius:10px;object-fit:cover;
+    border:1px solid rgba(252,179,0,0.15);
+    box-shadow:0 2px 12px rgba(0,0,0,0.3);
+    background:linear-gradient(135deg, rgba(252,179,0,0.3), rgba(110,237,216,0.15));
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--accent-gold);
+  }
+  .arena-topbar__title{font-family:var(--font-display);font-weight:800;font-size:18px;letter-spacing:0.10em;text-transform:uppercase;background:linear-gradient(135deg,var(--accent-gold),#ffd24a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px}
+  .arena-topbar__handle{font-family:var(--font-display);font-size:11px;font-weight:500;color:var(--text-muted);letter-spacing:0.08em}
+  .arena-topbar__status{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;background:rgba(110,237,216,0.08);border:1px solid rgba(110,237,216,0.15);font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent-teal);margin-left:12px}
+  .arena-topbar__status::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--accent-teal);box-shadow:0 0 6px var(--accent-teal);animation:pulse-dot 1.6s ease-in-out infinite}
+  @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.4}}
+
+  .arena-topbar__actions{display:flex;gap:10px;align-items:center}
+  .hud-btn{position:relative;width:42px;height:42px;border-radius:11px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s ease;padding:0}
+  .hud-btn:hover{background:var(--bg-glass-hover);border-color:rgba(252,179,0,0.25);transform:translateY(-1px)}
+  .hud-btn svg{width:18px;height:18px;color:var(--text-muted);transition:color 0.2s}
+  .hud-btn:hover svg{color:var(--accent-gold)}
+  .hud-btn--active{background:linear-gradient(135deg,rgba(252,179,0,0.18),rgba(252,179,0,0.06));border-color:rgba(252,179,0,0.3)}
+  .hud-btn--active svg{color:var(--accent-gold)}
+  .hud-btn__label{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-dim);white-space:nowrap;opacity:0;transition:opacity 0.2s ease;pointer-events:none}
+  .hud-btn:hover .hud-btn__label{opacity:1}
+
+  .follow-btn{padding:9px 18px;border-radius:11px;background:linear-gradient(135deg,rgba(252,179,0,0.18),rgba(252,179,0,0.06));border:1px solid rgba(252,179,0,0.3);color:var(--accent-gold);font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.25s ease;box-shadow:0 0 16px rgba(252,179,0,0.08)}
+  .follow-btn:hover{background:linear-gradient(135deg,rgba(252,179,0,0.28),rgba(252,179,0,0.1));box-shadow:0 0 24px rgba(252,179,0,0.2);transform:translateY(-1px)}
+
+  /* ── Section label ── */
+  .section-label{position:relative;z-index:10;text-align:center;padding:0 28px;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:10px;flex-shrink:0}
+  .section-label__dash{width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--text-dim),transparent)}
+  .section-label__title{font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:0.22em;text-transform:uppercase;color:var(--text-dim)}
+  .section-label__title strong{color:var(--accent-gold);font-weight:700}
+
+  /* ── Page container (scroll) ── */
+  .page{position:relative;z-index:10;max-width:820px;margin:0 auto;padding:8px 28px 80px;width:100%;display:flex;flex-direction:column;gap:18px}
+
+  /* ── Setting card (glass panel) ── */
+  .setting-card{
+    position:relative;
+    padding:22px 24px;
+    background:var(--bg-glass);backdrop-filter:blur(16px) saturate(1.3);
+    border:1px solid var(--border-subtle);border-radius:16px;
+    box-shadow:0 4px 24px rgba(0,0,0,0.25),inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+  .setting-card__header{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+  .setting-card__title{font-family:var(--font-display);font-size:13px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;background:linear-gradient(135deg,var(--accent-gold),#ffd24a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .setting-card__dash{flex:1;height:1px;background:linear-gradient(90deg,rgba(252,179,0,0.2),transparent)}
+
+  /* ── Field ── */
+  .field{display:flex;flex-direction:column;margin-bottom:20px}
+  .field:last-of-type{margin-bottom:0}
+  .field__label{
+    font-family:var(--font-display);font-size:10px;font-weight:700;
+    letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted);
+    margin-bottom:10px;display:block;
+  }
+  .field__input,.field__textarea{
+    width:100%;padding:12px 14px;border-radius:11px;
+    background:rgba(6,6,14,0.6);border:1px solid var(--border-subtle);
+    color:var(--text-primary);font-family:var(--font-body);font-size:13px;
+    transition:all 0.25s;outline:none;resize:vertical;
+  }
+  .field__input::placeholder,.field__textarea::placeholder{color:var(--text-dim)}
+  .field__input:focus,.field__textarea:focus{border-color:rgba(252,179,0,0.3);box-shadow:0 0 14px rgba(252,179,0,0.1)}
+  .field__textarea{min-height:100px;line-height:1.55}
+
+  /* ── Team logo uploader ── */
+  .logo-row{display:flex;align-items:center;gap:16px}
+  .logo-thumb{
+    width:76px;height:76px;border-radius:14px;flex-shrink:0;
+    background:linear-gradient(135deg, rgba(252,179,0,0.9), rgba(252,179,0,0.55));
+    border:1px solid rgba(252,179,0,0.3);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 0 18px rgba(252,179,0,0.15);
+    overflow:hidden;
+  }
+  .logo-thumb svg{width:38px;height:38px;color:#0c0c1a}
+  .logo-upload-btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:9px 16px;border-radius:10px;
+    background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);
+    color:var(--text-primary);
+    font-family:var(--font-display);font-size:11px;font-weight:700;
+    letter-spacing:0.1em;text-transform:uppercase;
+    cursor:pointer;transition:all 0.25s;
+  }
+  .logo-upload-btn:hover{background:rgba(252,179,0,0.06);border-color:rgba(252,179,0,0.25);color:var(--accent-gold)}
+  .logo-upload-btn svg{width:13px;height:13px}
+  .field__hint{margin-top:8px;font-size:11px;color:var(--text-dim);letter-spacing:0.04em}
+
+  /* ── Save footer ── */
+  .save-footer{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:12px;margin-top:20px;flex-wrap:wrap;
+  }
+  .save-timestamp{
+    font-family:var(--font-display);font-size:10px;font-weight:500;
+    letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim);
+  }
+  .save-timestamp strong{color:var(--text-muted);font-weight:700}
+  .btn-primary{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:11px 24px;border-radius:11px;border:1px solid rgba(252,179,0,0.3);
+    background:linear-gradient(135deg,rgba(252,179,0,0.22),rgba(110,237,216,0.08));
+    color:var(--accent-gold);
+    font-family:var(--font-display);font-size:11px;font-weight:800;
+    letter-spacing:0.14em;text-transform:uppercase;
+    cursor:pointer;transition:all 0.3s;
+    box-shadow:0 0 16px rgba(252,179,0,0.1);white-space:nowrap;
+  }
+  .btn-primary:hover{background:linear-gradient(135deg,rgba(252,179,0,0.32),rgba(110,237,216,0.14));box-shadow:0 0 24px rgba(252,179,0,0.22);transform:translateY(-1px)}
+
+  /* ── Billing row ── */
+  .billing-row{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:14px;padding:14px 0;border-bottom:1px solid var(--border-subtle);
+  }
+  .billing-row:last-child{border-bottom:none;padding-bottom:4px}
+  .billing-row__label{font-size:13px;color:var(--text-muted);letter-spacing:0.04em}
+  .billing-row__right{display:flex;align-items:center;gap:12px}
+  .plan-badge{
+    display:inline-flex;align-items:center;gap:5px;
+    padding:5px 11px;border-radius:8px;
+    font-family:var(--font-display);font-size:10px;font-weight:700;
+    letter-spacing:0.14em;text-transform:uppercase;
+    background:rgba(110,237,216,0.08);color:var(--accent-teal);
+    border:1px solid rgba(110,237,216,0.22);
+  }
+  .plan-change-link{
+    font-family:var(--font-display);font-size:11px;font-weight:700;
+    letter-spacing:0.1em;text-transform:uppercase;color:var(--accent-gold);
+    cursor:pointer;background:none;border:none;padding:0;
+    transition:opacity 0.2s;
+  }
+  .plan-change-link:hover{opacity:0.8;text-decoration:underline;text-underline-offset:3px}
+  .credit-value{
+    font-family:var(--font-display);font-size:14px;font-weight:700;
+    color:var(--text-primary);letter-spacing:0.05em;
+  }
+  .credit-value span{color:var(--text-dim);font-weight:500}
+
+  /* ── Danger zone ── */
+  .danger-card{
+    border-color:rgba(239,68,68,0.18);
+    background:linear-gradient(180deg, rgba(239,68,68,0.04), rgba(12,12,26,0.65));
+  }
+  .danger-card__header{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .danger-card__left{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .danger-card__title{
+    font-family:var(--font-display);font-size:12px;font-weight:800;
+    letter-spacing:0.16em;text-transform:uppercase;color:var(--accent-danger);
+  }
+  .danger-card__desc{font-size:12px;color:var(--text-muted);letter-spacing:0.04em}
+  .btn-danger{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:10px 18px;border-radius:11px;
+    background:var(--accent-danger-bg);color:var(--accent-danger);
+    border:1px solid var(--accent-danger-bd);
+    font-family:var(--font-display);font-size:11px;font-weight:700;
+    letter-spacing:0.12em;text-transform:uppercase;
+    cursor:pointer;transition:all 0.25s;white-space:nowrap;
+  }
+  .btn-danger:hover{background:rgba(239,68,68,0.16);box-shadow:0 0 16px rgba(239,68,68,0.15);transform:translateY(-1px)}
+  .btn-danger svg{width:14px;height:14px}
+
+  /* ══════════════════════════════════════════════════
+     Delete confirm modal
+     ══════════════════════════════════════════════════ */
+  .modal-overlay{
+    position:fixed;inset:0;z-index:100;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(6,6,14,0.75);backdrop-filter:blur(8px);
+    padding:24px;
+    opacity:0;visibility:hidden;transition:all 0.25s;
+  }
+  .modal-overlay.open{opacity:1;visibility:visible}
+  .modal{
+    position:relative;width:100%;max-width:440px;
+    padding:28px 28px 24px;
+    background:linear-gradient(180deg, rgba(40,10,10,0.75) 0%, rgba(12,12,26,0.9) 100%);
+    backdrop-filter:blur(20px);
+    border:1px solid rgba(239,68,68,0.2);
+    border-radius:18px;
+    box-shadow:0 24px 80px rgba(0,0,0,0.6),0 0 40px rgba(239,68,68,0.08);
+    transform:translateY(20px) scale(0.96);
+    transition:transform 0.3s cubic-bezier(0.16,1,0.3,1);
+  }
+  .modal-overlay.open .modal{transform:translateY(0) scale(1)}
+  .modal__header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .modal__title{font-family:var(--font-display);font-size:14px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent-danger)}
+  .modal__close{
+    width:30px;height:30px;padding:0;border-radius:8px;
+    background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);
+    color:var(--text-muted);cursor:pointer;transition:all 0.2s;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .modal__close:hover{color:var(--text-primary);background:rgba(255,255,255,0.08)}
+  .modal__close svg{width:14px;height:14px}
+  .modal__body{display:flex;flex-direction:column;gap:14px}
+  .modal__desc{font-size:13px;line-height:1.6;color:var(--text-muted)}
+  .modal__desc strong{color:var(--text-primary);font-weight:600}
+  .modal__actions{display:flex;gap:10px;margin-top:4px}
+  .modal__cancel{
+    flex:1;padding:12px;border-radius:11px;
+    background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);
+    color:var(--text-primary);
+    font-family:var(--font-display);font-size:11px;font-weight:700;
+    letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;transition:all 0.25s;
+  }
+  .modal__cancel:hover{background:rgba(255,255,255,0.06)}
+  .modal__confirm-danger{
+    flex:1;padding:12px;border-radius:11px;
+    background:rgba(239,68,68,0.16);color:var(--accent-danger);
+    border:1px solid var(--accent-danger-bd);
+    font-family:var(--font-display);font-size:11px;font-weight:800;
+    letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;transition:all 0.25s;
+  }
+  .modal__confirm-danger:hover{background:rgba(239,68,68,0.26);box-shadow:0 0 18px rgba(239,68,68,0.2)}
+
+  /* ── Responsive ── */
+  @media (max-width: 720px){
+    .arena-topbar{padding:12px 14px;gap:8px;flex-wrap:nowrap}
+    .arena-topbar__logo{width:30px;height:30px;font-size:13px;border-radius:8px}
+    .arena-topbar__title{font-size:13px;max-width:100px}
+    .arena-topbar__handle{font-size:10px}
+    .arena-topbar__status{display:none}
+    .brand-home{width:32px;height:32px;border-radius:9px}
+    .brand-home svg{width:15px;height:15px}
+    .brand-home__divider{display:none}
+    .team-switcher{gap:6px;padding:3px 4px 3px 3px}
+    .team-switcher__chevron{width:12px;height:12px}
+    .arena-topbar__actions{gap:6px}
+    .hud-btn{width:34px;height:34px;border-radius:9px}
+    .hud-btn svg{width:14px;height:14px}
+    .hud-btn__label{display:none}
+    .follow-btn{padding:6px 10px;font-size:10px}
+
+    .page{padding:8px 14px 60px;gap:14px}
+    .section-label{padding:0 14px;margin-bottom:14px}
+    .setting-card{padding:18px 16px}
+    .setting-card__title{font-size:11px}
+
+    .logo-row{gap:12px}
+    .logo-thumb{width:60px;height:60px;border-radius:12px}
+    .logo-thumb svg{width:28px;height:28px}
+    .logo-upload-btn{padding:7px 12px;font-size:10px}
+
+    .save-footer{gap:8px}
+    .btn-primary{padding:9px 16px;font-size:10px;width:100%;justify-content:center}
+    .save-timestamp{font-size:9px}
+
+    .billing-row{flex-direction:row;align-items:center;gap:10px}
+    .billing-row__label{font-size:12px}
+
+    .danger-card__header{gap:10px}
+    .danger-card__title{font-size:11px}
+    .btn-danger{padding:9px 14px;font-size:10px;width:100%;justify-content:center}
+
+    .modal{padding:22px 20px 18px}
+    .modal__title{font-size:12px}
+  }
+
+  /* ═══════════ Light theme override ═══════════ */
+  [data-theme="light"] {
+    --bg-void: #f4f3ef;
+    --bg-glass: rgba(255, 255, 255, 0.78);
+    --bg-glass-hover: rgba(255, 255, 255, 0.92);
+    --border-subtle: rgba(0, 0, 0, 0.08);
+    --text-primary: #1a1a24;
+    --text-muted: #5f6075;
+    --text-dim: #9d9db3;
+    --accent-gold: #c68700;
+    --accent-teal: #12a58a;
+    --accent-poll: #4f46e5;
+    --accent-quiz: #7e22ce;
+    --accent-discuss: #0891b2;
+  }
+  [data-theme="light"] body { background: var(--bg-void); color: var(--text-primary); }
+  [data-theme="light"] .star { background: rgba(20, 20, 40, 0.45); }
+  [data-theme="light"] .shooting {
+    background: linear-gradient(90deg, transparent, rgba(198, 135, 0, 0.75), rgba(198, 135, 0, 0));
+  }
+  [data-theme="light"] .bg-grid__plane {
+    background:
+      linear-gradient(rgba(198, 135, 0, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(198, 135, 0, 0.06) 1px, transparent 1px);
+  }
+  [data-theme="light"] .bg-orb { opacity: 0.12; mix-blend-mode: multiply; }
+  [data-theme="light"] .bg-scanline {
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.015) 2px, rgba(0,0,0,0.015) 4px);
+  }
+  [data-theme="light"] .arena::before,
+  [data-theme="light"] .team-arena::before {
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 50%, rgba(252, 179, 0, 0.09) 0%, transparent 60%),
+      radial-gradient(ellipse 120% 100% at 50% 120%, rgba(110, 237, 216, 0.06) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, var(--bg-void) 0%, var(--bg-void) 100%);
+  }
+  [data-theme="light"] .post-card,
+  [data-theme="light"] .action-card,
+  [data-theme="light"] .tier-card,
+  [data-theme="light"] .draft-card,
+  [data-theme="light"] .member-card,
+  [data-theme="light"] .setting-card,
+  [data-theme="light"] .reward-card,
+  [data-theme="light"] .hud-stat,
+  [data-theme="light"] .team-intro__chip,
+  [data-theme="light"] .enterprise-card,
+  [data-theme="light"] .page-header {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 4px 20px rgba(0,0,0,0.06);
+  }
+  [data-theme="light"] .post-card.active {
+    box-shadow: 0 12px 60px rgba(0, 0, 0, 0.15);
+    border-color: rgba(252, 179, 0, 0.35);
+  }
+  [data-theme="light"] .post-card__thumb,
+  [data-theme="light"] .arena-topbar__logo {
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+  [data-theme="light"] .arena-topbar__title,
+  [data-theme="light"] .modal__title,
+  [data-theme="light"] .hero__title-ko {
+    background: linear-gradient(135deg, #c68700, #8d5f00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  [data-theme="light"] .arena-topbar__status { background: rgba(18, 165, 138, 0.10); border-color: rgba(18, 165, 138, 0.25); color: #0d7f6b; }
+  [data-theme="light"] .arena-topbar__status::before { background: #0d7f6b; box-shadow: 0 0 6px #0d7f6b; }
+
+
+  /* ══════════ Settings Sidebar (arena pattern) ══════════ */
+  .ta-sidebar-backdrop {
+    position: fixed; inset: 0; z-index: 140;
+    background: rgba(6, 6, 14, 0.45); backdrop-filter: blur(4px);
+    opacity: 0; visibility: hidden; transition: opacity 0.25s ease;
+  }
+  .ta-sidebar-backdrop[data-open="true"] { opacity: 1; visibility: visible; }
+
+  .ta-sidebar {
+    position: fixed; top: 0; right: 0;
+    width: 360px; height: 100vh; z-index: 150;
+    background: var(--bg-void);
+    backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px);
+    border-left: 1px solid var(--border-subtle);
+    box-shadow: -8px 0 60px rgba(0,0,0,0.4);
+    transform: translateX(100%); transition: transform 0.45s cubic-bezier(0.16,1,0.3,1);
+    display: flex; flex-direction: column; overflow: hidden;
+    color: var(--text-primary); font-family: var(--font-body);
+  }
+  [data-theme="light"] .ta-sidebar { box-shadow: -8px 0 60px rgba(0,0,0,0.12); }
+  .ta-sidebar[data-open="true"] { transform: translateX(0); }
+
+  .ta-sidebar__header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 24px 28px 20px; border-bottom: 1px solid var(--border-subtle); flex-shrink: 0;
+  }
+  .ta-sidebar__title {
+    font-family: var(--font-display); font-size: 14px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-primary);
+  }
+  .ta-sidebar__close {
+    width: 32px; height: 32px; border-radius: 8px; padding: 0;
+    background: transparent; border: 1px solid var(--border-subtle);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s; color: var(--text-muted);
+  }
+  .ta-sidebar__close:hover { background: rgba(20,20,40,0.8); border-color: rgba(252,179,0,0.2); color: var(--accent-gold); }
+  [data-theme="light"] .ta-sidebar__close:hover { background: rgba(0,0,0,0.06); }
+  .ta-sidebar__close svg { width: 16px; height: 16px; }
+
+  .ta-sidebar__body {
+    flex: 1; overflow-y: auto; padding: 28px;
+    display: flex; flex-direction: column; gap: 28px;
+  }
+  .ta-sidebar__group { display: flex; flex-direction: column; gap: 14px; }
+  .ta-sidebar__group-label {
+    font-family: var(--font-display); font-size: 10px; font-weight: 600;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim);
+  }
+  .ta-sidebar__options { display: flex; gap: 8px; }
+  .ta-sidebar__opt {
+    flex: 1; padding: 12px 16px; border-radius: 10px;
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle);
+    cursor: pointer; transition: all 0.25s;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    color: var(--text-muted); font-size: 12px; font-weight: 500;
+  }
+  [data-theme="light"] .ta-sidebar__opt { background: rgba(0,0,0,0.03); }
+  .ta-sidebar__opt:hover { background: rgba(252,179,0,0.04); border-color: rgba(252,179,0,0.15); }
+  .ta-sidebar__opt[aria-selected="true"] {
+    background: rgba(252,179,0,0.08); border-color: rgba(252,179,0,0.3); color: var(--accent-gold);
+  }
+  .ta-sidebar__opt svg { width: 22px; height: 22px; }
+  .ta-sidebar__opt-icon {
+    font-family: var(--font-display); font-size: 16px; font-weight: 700; line-height: 1;
+  }
+
+  .ta-sidebar__footer {
+    margin-top: auto; padding-top: 24px; border-top: 1px solid var(--border-subtle);
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .ta-sidebar__action {
+    width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 12px 16px; border-radius: 10px; font-family: var(--font-display);
+    font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+    cursor: pointer; transition: all 0.25s; border: 1px solid var(--border-subtle);
+    background: rgba(255,255,255,0.03); color: var(--text-primary); text-decoration: none;
+  }
+  [data-theme="light"] .ta-sidebar__action { background: rgba(0,0,0,0.03); }
+  .ta-sidebar__action:hover {
+    border-color: rgba(252,179,0,0.3); color: var(--accent-gold);
+    box-shadow: 0 0 14px rgba(252,179,0,0.06);
+  }
+  .ta-sidebar__action svg { width: 16px; height: 16px; }
+  .ta-sidebar__action--login {
+    background: linear-gradient(135deg,rgba(252,179,0,0.2),rgba(110,237,216,0.08));
+    border-color: rgba(252,179,0,0.3); color: var(--accent-gold);
+  }
+  .ta-sidebar__action--login:hover {
+    background: linear-gradient(135deg,rgba(252,179,0,0.3),rgba(110,237,216,0.14));
+    box-shadow: 0 0 24px rgba(252,179,0,0.22); transform: translateY(-1px);
+  }
+  .ta-sidebar__action--logout {
+    border-color: rgba(239,68,68,0.2); background: rgba(239,68,68,0.06); color: #ef4444;
+  }
+  .ta-sidebar__action--logout:hover {
+    background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.4);
+    box-shadow: 0 0 16px rgba(239,68,68,0.08); color: #ef4444;
+  }
+  @media (max-width: 500px) { .ta-sidebar { width: 100%; } }
+
+
+  /* ── Light theme: team-setting page overrides ── */
+  [data-theme="light"] .field__input,
+  [data-theme="light"] .field__textarea {
+    background: rgba(0, 0, 0, 0.03);
+    color: var(--text-primary);
+    border-color: var(--border-subtle);
+  }
+  [data-theme="light"] .field__input::placeholder,
+  [data-theme="light"] .field__textarea::placeholder { color: var(--text-dim); }
+  [data-theme="light"] .field__input:focus,
+  [data-theme="light"] .field__textarea:focus {
+    border-color: rgba(198,135,0,0.35);
+    box-shadow: 0 0 14px rgba(198,135,0,0.10);
+  }
+  [data-theme="light"] .setting-card__title {
+    background: linear-gradient(135deg, #c68700, #8d5f00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  [data-theme="light"] .setting-card__dash {
+    background: linear-gradient(90deg, rgba(198,135,0,0.3), transparent);
+  }
+  [data-theme="light"] .danger-card {
+    border-color: rgba(220, 38, 38, 0.24);
+    background: linear-gradient(180deg, rgba(220,38,38,0.05), rgba(255,255,255,0.78));
+  }
+  [data-theme="light"] .danger-card__title { color: #b91c1c; }
+  [data-theme="light"] .btn-danger {
+    background: rgba(220, 38, 38, 0.08);
+    color: #b91c1c;
+    border-color: rgba(220, 38, 38, 0.30);
+  }
+  [data-theme="light"] .btn-danger:hover {
+    background: rgba(220, 38, 38, 0.16);
+    box-shadow: 0 0 16px rgba(220, 38, 38, 0.18);
+    color: #b91c1c;
+  }
+  [data-theme="light"] .modal__title { color: #b91c1c; }
+  [data-theme="light"] .modal__confirm-danger {
+    background: rgba(220, 38, 38, 0.12);
+    color: #b91c1c;
+    border-color: rgba(220, 38, 38, 0.32);
+  }
+  [data-theme="light"] .modal__confirm-danger:hover {
+    background: rgba(220, 38, 38, 0.22);
+    box-shadow: 0 0 18px rgba(220, 38, 38, 0.22);
+  }
+  [data-theme="light"] .modal {
+    background: linear-gradient(180deg, #fff5f5 0%, #fff 100%);
+    border-color: rgba(220, 38, 38, 0.22);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.14), 0 0 28px rgba(220,38,38,0.06);
+  }
+  [data-theme="light"] .billing-row__label { color: var(--text-muted); }
+  [data-theme="light"] .credit-value { color: var(--text-primary); }
+  [data-theme="light"] .credit-value span { color: var(--text-dim); }
+  [data-theme="light"] .field__hint { color: var(--text-dim); }
+  [data-theme="light"] .save-timestamp { color: var(--text-muted); }
+  [data-theme="light"] .save-timestamp strong { color: var(--text-primary); }
+  [data-theme="light"] .logo-thumb {
+    background: linear-gradient(135deg, rgba(198,135,0,0.85), rgba(198,135,0,0.55));
+    border-color: rgba(198,135,0,0.40);
+  }
+  [data-theme="light"] .logo-thumb svg { color: #2a1d00; }
+  [data-theme="light"] .logo-upload-btn {
+    background: rgba(0, 0, 0, 0.03);
+    color: var(--text-primary);
+  }
+  [data-theme="light"] .logo-upload-btn:hover {
+    background: rgba(198,135,0,0.08);
+    border-color: rgba(198,135,0,0.30);
+    color: var(--accent-gold);
+  }
+
+
+  /* ── Back/Home buttons unified with HUD style ── */
+  .brand-home {
+    background: var(--bg-glass) !important;
+    border: 1px solid var(--border-subtle) !important;
+  }
+  .brand-home svg { color: var(--text-muted) !important; transition: color 0.2s; }
+  .brand-home:hover svg { color: var(--accent-gold) !important; }
+  .brand-home:hover {
+    background: var(--bg-glass-hover) !important;
+    border-color: rgba(252,179,0,0.25) !important;
+  }
+  [data-theme="light"] .brand-home:hover {
+    border-color: rgba(198,135,0,0.30) !important;
+  }
+
+  @media (max-width: 720px) {
+    .arena-topbar {
+      padding: 10px 12px;
+      gap: 6px;
+    }
+    /* Compress the team switcher so it doesn't squeeze the HUD row */
+    .arena-topbar__title { max-width: 88px; font-size: 12px; }
+    .arena-topbar__handle { display: none; }
+    .team-switcher__body { gap: 0; }
+    .arena-topbar__actions { gap: 4px; }
+    .hud-btn { width: 32px; height: 32px; border-radius: 8px; }
+    .hud-btn svg { width: 13px; height: 13px; }
+    .follow-btn { padding: 5px 10px; font-size: 10px; letter-spacing: 0.06em; }
+  }
+
+  @media (max-width: 540px) {
+    /* Hide the team title text entirely — keep only logo + chevron */
+    .arena-topbar { padding: 8px 10px; gap: 4px; }
+    .arena-topbar__title,
+    .team-switcher__body { display: none; }
+    .team-switcher { padding: 2px; gap: 0; }
+    .team-switcher__chevron { display: none; }
+    .arena-topbar__logo { width: 28px; height: 28px; font-size: 12px; border-radius: 7px; }
+
+    .brand-home { width: 30px; height: 30px; border-radius: 8px; }
+    .brand-home svg { width: 14px; height: 14px; }
+
+    .hud-btn { width: 30px; height: 30px; border-radius: 8px; }
+    .hud-btn svg { width: 13px; height: 13px; }
+
+    /* Follow becomes icon-only */
+    .follow-btn {
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      font-size: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .follow-btn::before {
+      content: '+';
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0;
+      color: var(--accent-gold);
+    }
+  }
+
+  @media (max-width: 380px) {
+    /* Very narrow phones — drop the team logo too */
+    .team-switcher,
+    .brand-home__divider { display: none; }
+  }
+
+
+  /* ── Topbar fixed with gradient fade (matches Dioxus implementation) ── */
+  .arena-topbar {
+    position: fixed !important;
+    top: 0; left: 0; right: 0;
+    z-index: 100 !important;
+    background: linear-gradient(180deg, var(--bg-void) 0%, rgba(6,6,14,0.85) 65%, transparent 100%) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: none !important;
+  }
+  [data-theme="light"] .arena-topbar {
+    background: linear-gradient(180deg, var(--bg-void) 0%, rgba(244,243,239,0.85) 65%, transparent 100%) !important;
+  }
+  .arena {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 100vh;
+    padding-top: 80px;
+  }
+  html, body {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 100vh;
+  }
+  @media (max-width: 540px) {
+    .arena { padding-top: 64px; }
+  }
+
+
+  /* ── Topbar fixed with gradient fade (matches Dioxus implementation) ── */
+  .arena-topbar {
+    position: fixed !important;
+    top: 0; left: 0; right: 0;
+    z-index: 100 !important;
+    background: linear-gradient(180deg, var(--bg-void) 0%, var(--bg-void) 70%, transparent 100%) !important;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: none !important;
+  }
+  [data-theme="light"] .arena-topbar {
+    background: linear-gradient(180deg, var(--bg-void) 0%, var(--bg-void) 70%, transparent 100%) !important;
+  }
+  .arena {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 100vh;
+    padding-top: 110px;
+  }
+  html, body {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 100vh;
+  }
+  @media (max-width: 540px) {
+    .arena { padding-top: 84px; }
+  }
+
+</style>
+</head>
+<body>
+
+<div class="arena">
+
+  <!-- BG layers -->
+  <div class="bg-grid"><div class="bg-grid__plane"></div></div>
+  <div class="bg-orbs">
+    <div class="bg-orb bg-orb--1"></div>
+    <div class="bg-orb bg-orb--2"></div>
+    <div class="bg-orb bg-orb--3"></div>
+  </div>
+  <div class="bg-stars" id="stars"></div>
+  <div class="bg-scanline"></div>
+
+  <!-- ═══════ TOP BAR ═══════ -->
+  <div class="arena-topbar">
+    <div class="arena-topbar__brand">
+      <button class="brand-home" id="brand-back" aria-label="Go back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"/>
+          <polyline points="12 19 5 12 12 5"/>
+        </svg>
+      </button>
+      <!-- Home (team home) -->
+      <button class="brand-home" id="brand-home" aria-label="Team home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6h-2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        </svg>
+      </button>
+      <span class="brand-home__divider"></span>
+
+      <div class="team-switcher" id="team-switcher" aria-expanded="false" role="button" tabindex="0">
+        <div class="arena-topbar__logo">V</div>
+        <div class="team-switcher__body">
+          <span class="arena-topbar__title">victor_team</span>
+          <span class="arena-topbar__handle">@victor_team</span>
+        </div>
+        <svg class="team-switcher__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </div>
+
+      <span class="arena-topbar__status">Team · Active</span>
+    </div>
+
+    <div class="arena-topbar__actions">
+      <button class="hud-btn" aria-label="Drafts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+        <span class="hud-btn__label">Drafts</span>
+      </button>
+      <span class="brand-home__divider" style="margin:0 2px"></span>
+      <button class="hud-btn" aria-label="Members">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <span class="hud-btn__label">Members</span>
+      </button>
+      <button class="hud-btn" aria-label="Rewards">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
+        </svg>
+        <span class="hud-btn__label">Rewards</span>
+      </button>
+      <button class="hud-btn hud-btn--active" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        <span class="hud-btn__label">Settings</span>
+      </button>
+      <button class="follow-btn">Follow</button>
+    </div>
+  </div>
+
+  <!-- ═══════ SECTION LABEL ═══════ -->
+  <div class="section-label">
+    <span class="section-label__dash"></span>
+    <span class="section-label__title">Team <strong>Settings</strong></span>
+    <span class="section-label__dash"></span>
+  </div>
+
+  <!-- ═══════ PAGE ═══════ -->
+  <div class="page">
+
+    <!-- Profile card -->
+    <div class="setting-card">
+      <div class="setting-card__header">
+        <span class="setting-card__title">Team Profile</span>
+        <span class="setting-card__dash"></span>
+      </div>
+
+      <!-- Team logo -->
+      <div class="field">
+        <label class="field__label">Team Logo</label>
+        <div class="logo-row">
+          <div class="logo-thumb">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.91 11.12L12 2L3.09 11.12c-.6.6-.6 1.57 0 2.17L11 21a2 2 0 0 0 2 0l7.91-7.71c.6-.6.6-1.57 0-2.17z"/>
+              <circle cx="12" cy="12" r="2.2" fill="currentColor"/>
+            </svg>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <button class="logo-upload-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              Upload Logo
+            </button>
+            <span class="field__hint">권장 크기: 256 × 256px (1:1 비율) · 최대 파일 크기: 2MB</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Team name -->
+      <div class="field">
+        <label class="field__label" for="team-name">Team Name</label>
+        <input class="field__input" id="team-name" type="text" value="team_post" placeholder="e.g. alpha_council" />
+      </div>
+
+      <!-- Description -->
+      <div class="field">
+        <label class="field__label" for="team-desc">Description</label>
+        <textarea class="field__textarea" id="team-desc" placeholder="What is your team about?">team_post</textarea>
+      </div>
+
+      <!-- Save footer -->
+      <div class="save-footer">
+        <span class="save-timestamp">Last saved <strong>2026-03-30 17:19</strong></span>
+        <button class="btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+          </svg>
+          Save Changes
+        </button>
+      </div>
+    </div>
+
+    <!-- Subscription & billing -->
+    <div class="setting-card">
+      <div class="setting-card__header">
+        <span class="setting-card__title">Subscription &amp; Billing</span>
+        <span class="setting-card__dash"></span>
+      </div>
+
+      <div class="billing-row">
+        <span class="billing-row__label">Current Plan</span>
+        <div class="billing-row__right">
+          <span class="plan-badge">Free</span>
+          <button class="plan-change-link">Change Plan</button>
+        </div>
+      </div>
+      <div class="billing-row">
+        <span class="billing-row__label">Credits</span>
+        <div class="billing-row__right">
+          <span class="credit-value">0<span> / 10</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Danger zone -->
+    <div class="setting-card danger-card">
+      <div class="danger-card__header">
+        <div class="danger-card__left">
+          <span class="danger-card__title">Danger Zone</span>
+          <span class="danger-card__desc">Permanently delete this team and all associated data.</span>
+        </div>
+        <button class="btn-danger" id="open-delete">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>
+          </svg>
+          Delete Team
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════ DELETE CONFIRM MODAL ═══════ -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal" role="dialog" aria-labelledby="modal-title">
+      <div class="modal__header">
+        <span class="modal__title" id="modal-title">Delete Team?</span>
+        <button class="modal__close" id="modal-close" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal__body">
+        <p class="modal__desc">
+          This will permanently delete <strong>team_post</strong>, including members, posts, and any associated governance data.
+          This action <strong>cannot be undone</strong>.
+        </p>
+        <div class="modal__actions">
+          <button class="modal__cancel" id="modal-cancel">Cancel</button>
+          <button class="modal__confirm-danger">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Back
+  document.getElementById('brand-back')?.addEventListener('click', () => {
+    if (window.history.length > 1) window.history.back();
+    else window.location.href = '/';
+  });
+
+  // Stars
+  (function(){
+    const layer = document.getElementById('stars');
+    if(!layer) return;
+    const count = 90;
+    for(let i=0; i<count; i++){
+      const s = document.createElement('div');
+      s.className = 'star';
+      const size = Math.random() < 0.15 ? 2 + Math.random()*1.5 : 1 + Math.random()*0.8;
+      s.style.width = size + 'px';
+      s.style.height = size + 'px';
+      s.style.left = Math.random()*100 + '%';
+      s.style.top = Math.random()*100 + '%';
+      s.style.animationDuration = (3 + Math.random()*5).toFixed(2) + 's';
+      s.style.animationDelay = (-Math.random()*6).toFixed(2) + 's';
+      if(Math.random() < 0.08){
+        s.style.background = '#fcb300';
+        s.style.boxShadow = '0 0 6px rgba(252,179,0,0.5)';
+      } else if(Math.random() < 0.10){
+        s.style.background = '#6eedd8';
+        s.style.boxShadow = '0 0 4px rgba(110,237,216,0.4)';
+      }
+      layer.appendChild(s);
+    }
+    for(let i=0; i<2; i++){
+      const ss = document.createElement('div');
+      ss.className = 'shooting';
+      ss.style.top = (10 + i*38 + Math.random()*10) + '%';
+      ss.style.left = (Math.random()*40) + '%';
+      ss.style.animationDelay = (-Math.random()*8 + (i*3)).toFixed(2) + 's';
+      layer.appendChild(ss);
+    }
+  })();
+
+  // Delete modal
+  const modal = document.getElementById('modal-overlay');
+  document.getElementById('open-delete')?.addEventListener('click', () => modal.classList.add('open'));
+  document.getElementById('modal-close')?.addEventListener('click', () => modal.classList.remove('open'));
+  document.getElementById('modal-cancel')?.addEventListener('click', () => modal.classList.remove('open'));
+  modal?.addEventListener('click', (e) => {
+    if(e.target === modal) modal.classList.remove('open');
+  });
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape') modal.classList.remove('open');
+  });
+</script>
+
+<!-- ══════════ SETTINGS SIDEBAR ══════════ -->
+<div class="ta-sidebar-backdrop" id="ta-sidebar-backdrop"></div>
+<aside class="ta-sidebar" id="ta-sidebar" aria-label="Settings">
+  <div class="ta-sidebar__header">
+    <span class="ta-sidebar__title">Settings</span>
+    <button class="ta-sidebar__close" id="ta-sidebar-close" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <div class="ta-sidebar__body">
+    <div class="ta-sidebar__group">
+      <span class="ta-sidebar__group-label">Theme</span>
+      <div class="ta-sidebar__options">
+        <div class="ta-sidebar__opt" data-ta-theme="dark" role="button" tabindex="0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+          Dark
+        </div>
+        <div class="ta-sidebar__opt" data-ta-theme="light" role="button" tabindex="0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+          Light
+        </div>
+        <div class="ta-sidebar__opt" data-ta-theme="system" role="button" tabindex="0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          System
+        </div>
+      </div>
+    </div>
+    <div class="ta-sidebar__group">
+      <span class="ta-sidebar__group-label">Language</span>
+      <div class="ta-sidebar__options">
+        <div class="ta-sidebar__opt" data-ta-lang="en" role="button" tabindex="0"><span class="ta-sidebar__opt-icon">EN</span>English</div>
+        <div class="ta-sidebar__opt" data-ta-lang="ko" role="button" tabindex="0"><span class="ta-sidebar__opt-icon">KO</span>Korean</div>
+      </div>
+    </div>
+    <div class="ta-sidebar__footer">
+      <a class="ta-sidebar__action" href="team-setting.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        Team Settings
+      </a>
+      <button class="ta-sidebar__action ta-sidebar__action--logout" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Log Out
+      </button>
+    </div>
+  </div>
+</aside>
+<script>
+(function(){
+  var sidebar = document.getElementById('ta-sidebar');
+  var backdrop = document.getElementById('ta-sidebar-backdrop');
+  var closeBtn = document.getElementById('ta-sidebar-close');
+  var settingsBtn = document.querySelector('.hud-btn[aria-label="Settings"]');
+  function open(){ sidebar.setAttribute('data-open','true'); backdrop.setAttribute('data-open','true'); }
+  function close(){ sidebar.setAttribute('data-open','false'); backdrop.setAttribute('data-open','false'); }
+  if(settingsBtn) settingsBtn.addEventListener('click', function(e){ e.preventDefault(); open(); });
+  if(closeBtn) closeBtn.addEventListener('click', close);
+  if(backdrop) backdrop.addEventListener('click', close);
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') close(); });
+
+  // Theme options
+  document.querySelectorAll('[data-ta-theme]').forEach(function(el){
+    el.addEventListener('click', function(){
+      var mode = el.getAttribute('data-ta-theme');
+      var html = document.documentElement;
+      if(mode === 'system'){
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        html.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+      } else {
+        html.setAttribute('data-theme', mode);
+      }
+      syncOptions();
+    });
+  });
+  function syncOptions(){
+    var cur = document.documentElement.getAttribute('data-theme') || 'dark';
+    document.querySelectorAll('[data-ta-theme]').forEach(function(el){
+      el.setAttribute('aria-selected', el.getAttribute('data-ta-theme') === cur ? 'true' : 'false');
+    });
+  }
+  syncOptions();
+
+  // Language options (visual-only for mockup)
+  document.querySelectorAll('[data-ta-lang]').forEach(function(el){
+    el.addEventListener('click', function(){
+      document.querySelectorAll('[data-ta-lang]').forEach(function(b){ b.setAttribute('aria-selected','false'); });
+      el.setAttribute('aria-selected','true');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

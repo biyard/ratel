@@ -5,7 +5,7 @@ use crate::common::models::notification::Notification;
 use crate::common::models::space::{SpaceCommon, SpaceStatusChangeEvent};
 use crate::common::types::{NotificationData, SpaceStatus};
 use crate::common::*;
-use crate::features::auth::UserTeamGroup;
+use crate::features::auth::UserTeam;
 use crate::features::posts::models::{Post, TeamOwner};
 use crate::features::spaces::space_common::types::SpaceStatusChangeError;
 
@@ -116,14 +116,15 @@ async fn resolve_team_member_user_pks(
 ) -> Result<Vec<Partition>> {
     let mut user_pks: HashSet<String> = HashSet::new();
 
-    // Paginate through UserTeamGroup::find_by_team_pk.
+    // Paginate through UserTeam::find_by_team.
+    let user_team_sk = EntityType::UserTeam(team_pk.to_string());
     let mut bookmark: Option<String> = None;
     for page in 0..MAX_PAGES {
-        let mut opt = UserTeamGroup::opt().limit(PAGE_SIZE);
+        let mut opt = crate::features::auth::UserTeamQueryOption::builder().limit(PAGE_SIZE);
         if let Some(bm) = bookmark.as_ref() {
             opt = opt.bookmark(bm.clone());
         }
-        let (rows, next) = UserTeamGroup::find_by_team_pk(cli, team_pk.clone(), opt).await?;
+        let (rows, next) = UserTeam::find_by_team(cli, &user_team_sk, opt).await?;
         for row in rows {
             user_pks.insert(row.pk.to_string());
         }
