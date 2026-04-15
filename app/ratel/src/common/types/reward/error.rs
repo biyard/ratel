@@ -68,6 +68,13 @@ pub enum SpaceRewardError {
         ko = "요청한 크레딧이 스페이스당 최대 허용 크레딧을 초과합니다."
     )]
     CreditsExceedMaxPerSpace,
+
+    #[error("No credits configured for this action")]
+    #[translate(
+        en = "This action has no reward credits configured",
+        ko = "이 액션에는 리워드 크레딧이 설정되어 있지 않습니다."
+    )]
+    NoCreditsConfigured,
 }
 
 #[cfg(feature = "server")]

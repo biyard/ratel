@@ -37,37 +37,27 @@ test.describe.serial("Team draft timeline on team home page", () => {
   let teamHomeUrl;
 
   // --- 1. Create a team ---
+  // The renewed home arena no longer exposes a profile-dropdown "Create Team"
+  // affordance, so team creation is driven via the REST API (the same endpoint
+  // the UI form submits to). This keeps this scenario focused on the draft
+  // timeline itself rather than the orthogonal team-creation UI.
 
   test("Create a team to get TeamAdmin permissions", async ({ page }) => {
-    await goto(page, "/");
-
-    // Open profile dropdown
-    await click(page, { label: "User Profile" });
-
-    // Click "Create Team" in the dropdown
-    await click(page, { text: "Create Team" });
-
-    // Fill in team creation form
-    const nicknameInput = page.locator('[data-testid="team-nickname-input"]');
-    await nicknameInput.fill(teamNickname);
-
-    const usernameInput = page.locator('[data-testid="team-username-input"]');
-    await usernameInput.fill(teamUsername);
-
-    const descInput = page.locator('[data-testid="team-description-input"]');
-    await descInput.fill("E2E test team for draft timeline");
-
-    // Submit the form
-    await click(page, { text: "Create" });
-
-    // Wait for navigation to team home page
-    await page.waitForURL(new RegExp(`/${teamUsername}/home`), {
-      waitUntil: "load",
+    const res = await page.request.post("/api/teams/create", {
+      data: {
+        body: {
+          username: teamUsername,
+          nickname: teamNickname,
+          profile_url: "",
+          description: "E2E test team for draft timeline",
+        },
+      },
     });
+    expect(res.ok(), `create team: ${await res.text()}`).toBeTruthy();
 
     teamHomeUrl = `/${teamUsername}/home`;
 
-    // Verify we are on the team home page
+    await goto(page, teamHomeUrl);
     await expect(page).toHaveURL(new RegExp(`/${teamUsername}/home`));
   });
 
@@ -85,7 +75,7 @@ test.describe.serial("Team draft timeline on team home page", () => {
     });
 
     // Fill in the title (post is saved as draft automatically)
-    await fill(page, { placeholder: "Title" }, postTitle);
+    await fill(page, { placeholder: "Title your post…" }, postTitle);
 
     // Fill in the post body using the rich text editor
     const editor = await getEditor(page);
@@ -159,7 +149,7 @@ test.describe.serial("Team draft timeline on team home page", () => {
     await expect(page).toHaveURL(/\/posts\/.*\/edit/);
 
     // Verify the post title is in the editor
-    const titleInput = page.getByPlaceholder("Title");
+    const titleInput = page.getByPlaceholder("Title your post…");
     await expect(titleInput).toBeVisible();
     await expect(titleInput).toHaveValue(postTitle);
   });
