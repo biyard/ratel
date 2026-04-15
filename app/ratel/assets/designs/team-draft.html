@@ -429,36 +429,239 @@
   [data-theme="light"] .arena-topbar__status { background: rgba(18, 165, 138, 0.10); border-color: rgba(18, 165, 138, 0.25); color: #0d7f6b; }
   [data-theme="light"] .arena-topbar__status::before { background: #0d7f6b; box-shadow: 0 0 6px #0d7f6b; }
 
-  /* Theme toggle floating button */
-  .theme-toggle {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 200;
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--bg-glass);
-    backdrop-filter: blur(16px);
-    border: 1px solid var(--border-subtle);
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s;
+
+  /* ══════════ Settings Sidebar (arena pattern) ══════════ */
+  .ta-sidebar-backdrop {
+    position: fixed; inset: 0; z-index: 140;
+    background: rgba(6, 6, 14, 0.45); backdrop-filter: blur(4px);
+    opacity: 0; visibility: hidden; transition: opacity 0.25s ease;
   }
-  .theme-toggle:hover {
-    transform: translateY(-2px);
-    border-color: var(--accent-gold);
-    color: var(--accent-gold);
+  .ta-sidebar-backdrop[data-open="true"] { opacity: 1; visibility: visible; }
+
+  .ta-sidebar {
+    position: fixed; top: 0; right: 0;
+    width: 360px; height: 100vh; z-index: 150;
+    background: var(--bg-void);
+    backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px);
+    border-left: 1px solid var(--border-subtle);
+    box-shadow: -8px 0 60px rgba(0,0,0,0.4);
+    transform: translateX(100%); transition: transform 0.45s cubic-bezier(0.16,1,0.3,1);
+    display: flex; flex-direction: column; overflow: hidden;
+    color: var(--text-primary); font-family: var(--font-body);
   }
-  .theme-toggle svg { width: 18px; height: 18px; }
-  .theme-toggle .icon-sun { display: none; }
-  .theme-toggle .icon-moon { display: block; }
-  [data-theme="light"] .theme-toggle .icon-sun { display: block; }
-  [data-theme="light"] .theme-toggle .icon-moon { display: none; }
+  [data-theme="light"] .ta-sidebar { box-shadow: -8px 0 60px rgba(0,0,0,0.12); }
+  .ta-sidebar[data-open="true"] { transform: translateX(0); }
+
+  .ta-sidebar__header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 24px 28px 20px; border-bottom: 1px solid var(--border-subtle); flex-shrink: 0;
+  }
+  .ta-sidebar__title {
+    font-family: var(--font-display); font-size: 14px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-primary);
+  }
+  .ta-sidebar__close {
+    width: 32px; height: 32px; border-radius: 8px; padding: 0;
+    background: transparent; border: 1px solid var(--border-subtle);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s; color: var(--text-muted);
+  }
+  .ta-sidebar__close:hover { background: rgba(20,20,40,0.8); border-color: rgba(252,179,0,0.2); color: var(--accent-gold); }
+  [data-theme="light"] .ta-sidebar__close:hover { background: rgba(0,0,0,0.06); }
+  .ta-sidebar__close svg { width: 16px; height: 16px; }
+
+  .ta-sidebar__body {
+    flex: 1; overflow-y: auto; padding: 28px;
+    display: flex; flex-direction: column; gap: 28px;
+  }
+  .ta-sidebar__group { display: flex; flex-direction: column; gap: 14px; }
+  .ta-sidebar__group-label {
+    font-family: var(--font-display); font-size: 10px; font-weight: 600;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim);
+  }
+  .ta-sidebar__options { display: flex; gap: 8px; }
+  .ta-sidebar__opt {
+    flex: 1; padding: 12px 16px; border-radius: 10px;
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle);
+    cursor: pointer; transition: all 0.25s;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    color: var(--text-muted); font-size: 12px; font-weight: 500;
+  }
+  [data-theme="light"] .ta-sidebar__opt { background: rgba(0,0,0,0.03); }
+  .ta-sidebar__opt:hover { background: rgba(252,179,0,0.04); border-color: rgba(252,179,0,0.15); }
+  .ta-sidebar__opt[aria-selected="true"] {
+    background: rgba(252,179,0,0.08); border-color: rgba(252,179,0,0.3); color: var(--accent-gold);
+  }
+  .ta-sidebar__opt svg { width: 22px; height: 22px; }
+  .ta-sidebar__opt-icon {
+    font-family: var(--font-display); font-size: 16px; font-weight: 700; line-height: 1;
+  }
+
+  .ta-sidebar__footer {
+    margin-top: auto; padding-top: 24px; border-top: 1px solid var(--border-subtle);
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .ta-sidebar__action {
+    width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 12px 16px; border-radius: 10px; font-family: var(--font-display);
+    font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+    cursor: pointer; transition: all 0.25s; border: 1px solid var(--border-subtle);
+    background: rgba(255,255,255,0.03); color: var(--text-primary); text-decoration: none;
+  }
+  [data-theme="light"] .ta-sidebar__action { background: rgba(0,0,0,0.03); }
+  .ta-sidebar__action:hover {
+    border-color: rgba(252,179,0,0.3); color: var(--accent-gold);
+    box-shadow: 0 0 14px rgba(252,179,0,0.06);
+  }
+  .ta-sidebar__action svg { width: 16px; height: 16px; }
+  .ta-sidebar__action--login {
+    background: linear-gradient(135deg,rgba(252,179,0,0.2),rgba(110,237,216,0.08));
+    border-color: rgba(252,179,0,0.3); color: var(--accent-gold);
+  }
+  .ta-sidebar__action--login:hover {
+    background: linear-gradient(135deg,rgba(252,179,0,0.3),rgba(110,237,216,0.14));
+    box-shadow: 0 0 24px rgba(252,179,0,0.22); transform: translateY(-1px);
+  }
+  .ta-sidebar__action--logout {
+    border-color: rgba(239,68,68,0.2); background: rgba(239,68,68,0.06); color: #ef4444;
+  }
+  .ta-sidebar__action--logout:hover {
+    background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.4);
+    box-shadow: 0 0 16px rgba(239,68,68,0.08); color: #ef4444;
+  }
+  @media (max-width: 500px) { .ta-sidebar { width: 100%; } }
+
+
+  /* ── Back/Home buttons unified with HUD style ── */
+  .brand-home {
+    background: var(--bg-glass) !important;
+    border: 1px solid var(--border-subtle) !important;
+  }
+  .brand-home svg { color: var(--text-muted) !important; transition: color 0.2s; }
+  .brand-home:hover svg { color: var(--accent-gold) !important; }
+  .brand-home:hover {
+    background: var(--bg-glass-hover) !important;
+    border-color: rgba(252,179,0,0.25) !important;
+  }
+  [data-theme="light"] .brand-home:hover {
+    border-color: rgba(198,135,0,0.30) !important;
+  }
+
+  @media (max-width: 720px) {
+    .arena-topbar {
+      padding: 10px 12px;
+      gap: 6px;
+    }
+    /* Compress the team switcher so it doesn't squeeze the HUD row */
+    .arena-topbar__title { max-width: 88px; font-size: 12px; }
+    .arena-topbar__handle { display: none; }
+    .team-switcher__body { gap: 0; }
+    .arena-topbar__actions { gap: 4px; }
+    .hud-btn { width: 32px; height: 32px; border-radius: 8px; }
+    .hud-btn svg { width: 13px; height: 13px; }
+    .follow-btn { padding: 5px 10px; font-size: 10px; letter-spacing: 0.06em; }
+  }
+
+  @media (max-width: 540px) {
+    /* Hide the team title text entirely — keep only logo + chevron */
+    .arena-topbar { padding: 8px 10px; gap: 4px; }
+    .arena-topbar__title,
+    .team-switcher__body { display: none; }
+    .team-switcher { padding: 2px; gap: 0; }
+    .team-switcher__chevron { display: none; }
+    .arena-topbar__logo { width: 28px; height: 28px; font-size: 12px; border-radius: 7px; }
+
+    .brand-home { width: 30px; height: 30px; border-radius: 8px; }
+    .brand-home svg { width: 14px; height: 14px; }
+
+    .hud-btn { width: 30px; height: 30px; border-radius: 8px; }
+    .hud-btn svg { width: 13px; height: 13px; }
+
+    /* Follow becomes icon-only */
+    .follow-btn {
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      font-size: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .follow-btn::before {
+      content: '+';
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0;
+      color: var(--accent-gold);
+    }
+  }
+
+  @media (max-width: 380px) {
+    /* Very narrow phones — drop the team logo too */
+    .team-switcher,
+    .brand-home__divider { display: none; }
+  }
+
+
+  /* ── Topbar fixed with gradient fade (matches Dioxus implementation) ── */
+  .arena-topbar {
+    position: fixed !important;
+    top: 0; left: 0; right: 0;
+    z-index: 100 !important;
+    background: linear-gradient(180deg, var(--bg-void) 0%, rgba(6,6,14,0.85) 65%, transparent 100%) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: none !important;
+  }
+  [data-theme="light"] .arena-topbar {
+    background: linear-gradient(180deg, var(--bg-void) 0%, rgba(244,243,239,0.85) 65%, transparent 100%) !important;
+  }
+  .arena {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 100vh;
+    padding-top: 80px;
+  }
+  html, body {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 100vh;
+  }
+  @media (max-width: 540px) {
+    .arena { padding-top: 64px; }
+  }
+
+
+  /* ── Topbar fixed with gradient fade (matches Dioxus implementation) ── */
+  .arena-topbar {
+    position: fixed !important;
+    top: 0; left: 0; right: 0;
+    z-index: 100 !important;
+    background: linear-gradient(180deg, var(--bg-void) 0%, var(--bg-void) 70%, transparent 100%) !important;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: none !important;
+  }
+  [data-theme="light"] .arena-topbar {
+    background: linear-gradient(180deg, var(--bg-void) 0%, var(--bg-void) 70%, transparent 100%) !important;
+  }
+  .arena {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 100vh;
+    padding-top: 110px;
+  }
+  html, body {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 100vh;
+  }
+  @media (max-width: 540px) {
+    .arena { padding-top: 84px; }
+  }
 
 </style>
 </head>
@@ -483,6 +686,12 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="19" y1="12" x2="5" y2="12"/>
           <polyline points="12 19 5 12 12 5"/>
+        </svg>
+      </button>
+      <!-- Home (team home) -->
+      <button class="brand-home" id="brand-home" aria-label="Team home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6h-2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
         </svg>
       </button>
       <span class="brand-home__divider"></span>
@@ -789,18 +998,96 @@
     if(e.key === 'Escape') modal.classList.remove('open');
   });
 </script>
-<button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
-  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-</button>
+
+<!-- ══════════ SETTINGS SIDEBAR ══════════ -->
+<div class="ta-sidebar-backdrop" id="ta-sidebar-backdrop"></div>
+<aside class="ta-sidebar" id="ta-sidebar" aria-label="Settings">
+  <div class="ta-sidebar__header">
+    <span class="ta-sidebar__title">Settings</span>
+    <button class="ta-sidebar__close" id="ta-sidebar-close" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <div class="ta-sidebar__body">
+    <div class="ta-sidebar__group">
+      <span class="ta-sidebar__group-label">Theme</span>
+      <div class="ta-sidebar__options">
+        <div class="ta-sidebar__opt" data-ta-theme="dark" role="button" tabindex="0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+          Dark
+        </div>
+        <div class="ta-sidebar__opt" data-ta-theme="light" role="button" tabindex="0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+          Light
+        </div>
+        <div class="ta-sidebar__opt" data-ta-theme="system" role="button" tabindex="0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          System
+        </div>
+      </div>
+    </div>
+    <div class="ta-sidebar__group">
+      <span class="ta-sidebar__group-label">Language</span>
+      <div class="ta-sidebar__options">
+        <div class="ta-sidebar__opt" data-ta-lang="en" role="button" tabindex="0"><span class="ta-sidebar__opt-icon">EN</span>English</div>
+        <div class="ta-sidebar__opt" data-ta-lang="ko" role="button" tabindex="0"><span class="ta-sidebar__opt-icon">KO</span>Korean</div>
+      </div>
+    </div>
+    <div class="ta-sidebar__footer">
+      <a class="ta-sidebar__action" href="team-setting.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        Team Settings
+      </a>
+      <button class="ta-sidebar__action ta-sidebar__action--logout" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Log Out
+      </button>
+    </div>
+  </div>
+</aside>
 <script>
 (function(){
-  var btn = document.getElementById('theme-toggle');
-  if(!btn) return;
-  btn.addEventListener('click', function(){
-    var root = document.documentElement;
-    var cur = root.getAttribute('data-theme') || 'dark';
-    root.setAttribute('data-theme', cur === 'light' ? 'dark' : 'light');
+  var sidebar = document.getElementById('ta-sidebar');
+  var backdrop = document.getElementById('ta-sidebar-backdrop');
+  var closeBtn = document.getElementById('ta-sidebar-close');
+  var settingsBtn = document.querySelector('.hud-btn[aria-label="Settings"]');
+  function open(){ sidebar.setAttribute('data-open','true'); backdrop.setAttribute('data-open','true'); }
+  function close(){ sidebar.setAttribute('data-open','false'); backdrop.setAttribute('data-open','false'); }
+  if(settingsBtn) settingsBtn.addEventListener('click', function(e){ e.preventDefault(); open(); });
+  if(closeBtn) closeBtn.addEventListener('click', close);
+  if(backdrop) backdrop.addEventListener('click', close);
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') close(); });
+
+  // Theme options
+  document.querySelectorAll('[data-ta-theme]').forEach(function(el){
+    el.addEventListener('click', function(){
+      var mode = el.getAttribute('data-ta-theme');
+      var html = document.documentElement;
+      if(mode === 'system'){
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        html.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+      } else {
+        html.setAttribute('data-theme', mode);
+      }
+      syncOptions();
+    });
+  });
+  function syncOptions(){
+    var cur = document.documentElement.getAttribute('data-theme') || 'dark';
+    document.querySelectorAll('[data-ta-theme]').forEach(function(el){
+      el.setAttribute('aria-selected', el.getAttribute('data-ta-theme') === cur ? 'true' : 'false');
+    });
+  }
+  syncOptions();
+
+  // Language options (visual-only for mockup)
+  document.querySelectorAll('[data-ta-lang]').forEach(function(el){
+    el.addEventListener('click', function(){
+      document.querySelectorAll('[data-ta-lang]').forEach(function(b){ b.setAttribute('aria-selected','false'); });
+      el.setAttribute('aria-selected','true');
+    });
   });
 })();
 </script>

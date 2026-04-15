@@ -1,14 +1,24 @@
 /* ── Team Arena Topbar — direct port from team-arena.html (dark + light) ── */
 
 .team-arena .arena-topbar {
-  position: relative;
-  z-index: 20;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 20px 28px;
   flex-shrink: 0;
   gap: 12px;
+  background: linear-gradient(180deg, var(--bg-void) 0%, var(--bg-void) 70%, transparent 100%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+html[data-theme="light"] .team-arena .arena-topbar,
+[data-theme="light"] .team-arena .arena-topbar {
+  background: linear-gradient(180deg, var(--bg-void) 0%, var(--bg-void) 70%, transparent 100%);
 }
 
 .team-arena .arena-topbar__brand {
@@ -32,16 +42,18 @@
   cursor: pointer;
   transition: all 0.25s;
   padding: 0;
-  color: var(--accent-gold);
+  color: var(--text-muted);
 }
 .team-arena .arena-topbar__back:hover {
-  border-color: rgba(252, 179, 0, 0.3);
-  box-shadow: 0 0 14px rgba(252, 179, 0, 0.12);
+  background: var(--bg-glass-hover);
+  border-color: rgba(252, 179, 0, 0.25);
+  color: var(--accent-gold);
   transform: translateY(-1px);
 }
 .team-arena .arena-topbar__back svg {
   width: 18px;
   height: 18px;
+  transition: color 0.2s;
 }
 
 .team-arena .arena-topbar__divider {
