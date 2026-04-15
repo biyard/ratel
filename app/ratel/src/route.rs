@@ -55,7 +55,6 @@ fn CredentialsHome() -> Element {
 use crate::features::social::layout::SocialLayout;
 use crate::features::social::pages::dao::Home as TeamDao;
 use crate::features::social::pages::draft::Home as TeamDraft;
-use crate::features::social::pages::group::Home as TeamGroup;
 use crate::features::social::pages::home::Home as TeamHome;
 use crate::features::social::pages::member::Home as TeamMember;
 use crate::features::social::pages::reward::Home as TeamReward;
@@ -138,8 +137,6 @@ pub enum Route {
                     TeamHome { username: String },
                     #[route("/team-drafts")]
                     TeamDraft { username: String },
-                    #[route("/groups")]
-                    TeamGroup { username: String },
                     #[route("/dao")]
                     TeamDao { username: String },
                     #[route("/members")]

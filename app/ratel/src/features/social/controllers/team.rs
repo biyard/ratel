@@ -91,13 +91,13 @@ pub async fn get_user_teams_handler() -> crate::features::social::Result<Vec<cra
             (Vec::new(), String::new())
         } else {
             let team_pk: crate::common::types::Partition = team_pk.parse().unwrap_or_default();
-            let perms = crate::features::posts::models::Team::get_permissions_by_team_pk(
-                cli,
-                &team_pk,
-                &user_pk,
+            let role = crate::features::posts::models::Team::get_user_role(
+                cli, &team_pk, &user_pk,
             )
             .await
-            .unwrap_or_else(|_| crate::features::posts::types::TeamGroupPermissions::empty());
+            .unwrap_or_default();
+            let perms: crate::features::posts::types::TeamGroupPermissions =
+                role.to_legacy_permissions().into();
             let description = crate::features::posts::models::Team::get(
                 cli,
                 &team_pk,

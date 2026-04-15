@@ -3,7 +3,7 @@ use crate::features::social::*;
 
 use crate::features::auth::*;
 use crate::features::posts::models::Team;
-use crate::features::posts::types::TeamGroupPermissions;
+use crate::features::social::pages::member::dto::TeamRole;
 
 #[get("/api/teams/find?username", user: OptionalUser)]
 pub async fn find_team_handler(username: String) -> Result<TeamResponse> {
@@ -24,10 +24,10 @@ pub async fn find_team_handler(username: String) -> Result<TeamResponse> {
     let user: Option<User> = user.into();
 
     let permissions: i64 = if let Some(user) = user {
-        let permissions = Team::get_permissions_by_team_pk(cli, &team.pk, &user.pk)
+        let role = Team::get_user_role(cli, &team.pk, &user.pk)
             .await
-            .unwrap_or_else(|_| TeamGroupPermissions::empty());
-        permissions.into()
+            .unwrap_or(TeamRole::Member);
+        role.to_legacy_permissions()
     } else {
         0
     };

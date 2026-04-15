@@ -1,5 +1,4 @@
 use crate::common::*;
-use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use crate::features::social::pages::team_arena::{use_team_arena, TeamArenaTab};
 use crate::route::Route;
 
@@ -45,14 +44,7 @@ pub fn Home(username: String) -> Element {
     };
 
     // Permission gate — viewers see a placeholder.
-    let can_edit = team
-        .as_ref()
-        .map(|t| {
-            let permissions: TeamGroupPermissions = t.permissions.unwrap_or(0).into();
-            permissions.contains(TeamGroupPermission::TeamEdit)
-                || permissions.contains(TeamGroupPermission::TeamAdmin)
-        })
-        .unwrap_or(false);
+    let can_edit = team.as_ref().map(|t| t.role.is_admin_or_owner()).unwrap_or(false);
 
     if !can_edit {
         return rsx! {
@@ -228,7 +220,12 @@ pub fn Home(username: String) -> Element {
                                     stroke_linecap: "round",
                                     stroke_linejoin: "round",
                                     path { d: "M20.91 11.12L12 2L3.09 11.12c-.6.6-.6 1.57 0 2.17L11 21a2 2 0 0 0 2 0l7.91-7.71c.6-.6.6-1.57 0-2.17z" }
-                                    circle { cx: "12", cy: "12", r: "2.2", fill: "currentColor" }
+                                    circle {
+                                        cx: "12",
+                                        cy: "12",
+                                        r: "2.2",
+                                        fill: "currentColor",
+                                    }
                                 }
                             }
                         }
@@ -237,8 +234,7 @@ pub fn Home(username: String) -> Element {
                                 accept: Some("image/*".to_string()),
                                 on_upload_success: move |url| profile_url.set(url),
                                 class: Some("ts-logo-upload-wrap".to_string()),
-                                span {
-                                    class: "ts-logo-upload-btn",
+                                span { class: "ts-logo-upload-btn",
                                     svg {
                                         view_box: "0 0 24 24",
                                         fill: "none",
@@ -248,7 +244,12 @@ pub fn Home(username: String) -> Element {
                                         stroke_linejoin: "round",
                                         path { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" }
                                         polyline { points: "17 8 12 3 7 8" }
-                                        line { x1: "12", y1: "3", x2: "12", y2: "15" }
+                                        line {
+                                            x1: "12",
+                                            y1: "3",
+                                            x2: "12",
+                                            y2: "15",
+                                        }
                                     }
                                     "{tr.upload_logo}"
                                 }
@@ -259,11 +260,7 @@ pub fn Home(username: String) -> Element {
                 }
 
                 div { class: "ts-field",
-                    label {
-                        class: "ts-field__label",
-                        r#for: "ts-team-name",
-                        "{tr.team_name}"
-                    }
+                    label { class: "ts-field__label", r#for: "ts-team-name", "{tr.team_name}" }
                     input {
                         id: "ts-team-name",
                         class: "ts-field__input",
@@ -275,11 +272,7 @@ pub fn Home(username: String) -> Element {
                 }
 
                 div { class: "ts-field",
-                    label {
-                        class: "ts-field__label",
-                        r#for: "ts-team-desc",
-                        "{tr.description}"
-                    }
+                    label { class: "ts-field__label", r#for: "ts-team-desc", "{tr.description}" }
                     textarea {
                         id: "ts-team-desc",
                         class: "ts-field__textarea",
@@ -369,8 +362,18 @@ pub fn Home(username: String) -> Element {
                                 stroke_width: "2.5",
                                 stroke_linecap: "round",
                                 stroke_linejoin: "round",
-                                line { x1: "18", y1: "6", x2: "6", y2: "18" }
-                                line { x1: "6", y1: "6", x2: "18", y2: "18" }
+                                line {
+                                    x1: "18",
+                                    y1: "6",
+                                    x2: "6",
+                                    y2: "18",
+                                }
+                                line {
+                                    x1: "6",
+                                    y1: "6",
+                                    x2: "18",
+                                    y2: "18",
+                                }
                             }
                         }
                     }
@@ -618,11 +621,7 @@ fn TsSubscriptionCard(username: String) -> Element {
                                 maxlength: "16",
                                 value: "{card_number}",
                                 oninput: move |e| {
-                                    let v = e
-                                        .value()
-                                        .chars()
-                                        .filter(|c| c.is_ascii_digit())
-                                        .collect::<String>();
+                                    let v = e.value().chars().filter(|c| c.is_ascii_digit()).collect::<String>();
                                     card_number.set(v);
                                 },
                             }
@@ -637,11 +636,7 @@ fn TsSubscriptionCard(username: String) -> Element {
                                     maxlength: "2",
                                     value: "{expiry_month}",
                                     oninput: move |e| {
-                                        let v = e
-                                            .value()
-                                            .chars()
-                                            .filter(|c| c.is_ascii_digit())
-                                            .collect::<String>();
+                                        let v = e.value().chars().filter(|c| c.is_ascii_digit()).collect::<String>();
                                         expiry_month.set(v);
                                     },
                                 }
@@ -655,11 +650,7 @@ fn TsSubscriptionCard(username: String) -> Element {
                                     maxlength: "2",
                                     value: "{expiry_year}",
                                     oninput: move |e| {
-                                        let v = e
-                                            .value()
-                                            .chars()
-                                            .filter(|c| c.is_ascii_digit())
-                                            .collect::<String>();
+                                        let v = e.value().chars().filter(|c| c.is_ascii_digit()).collect::<String>();
                                         expiry_year.set(v);
                                     },
                                 }
@@ -685,11 +676,7 @@ fn TsSubscriptionCard(username: String) -> Element {
                                 maxlength: "2",
                                 value: "{card_password}",
                                 oninput: move |e| {
-                                    let v = e
-                                        .value()
-                                        .chars()
-                                        .filter(|c| c.is_ascii_digit())
-                                        .collect::<String>();
+                                    let v = e.value().chars().filter(|c| c.is_ascii_digit()).collect::<String>();
                                     card_password.set(v);
                                 },
                             }

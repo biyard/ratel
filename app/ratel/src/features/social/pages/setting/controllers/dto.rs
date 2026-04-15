@@ -17,11 +17,16 @@ pub struct TeamResponse {
     pub allow_invite: bool,
     #[serde(default)]
     pub allow_create_space: bool,
+    #[serde(default)]
+    pub role: crate::features::social::pages::member::dto::TeamRole,
 }
 
 #[cfg(feature = "server")]
 impl From<(crate::features::posts::models::Team, i64)> for TeamResponse {
     fn from((team, permissions): (crate::features::posts::models::Team, i64)) -> Self {
+        let role = crate::features::social::pages::member::dto::TeamRole::from_legacy_permissions(
+            permissions,
+        );
         Self {
             id: team.pk.into(),
             created_at: team.created_at,
@@ -35,6 +40,7 @@ impl From<(crate::features::posts::models::Team, i64)> for TeamResponse {
             thumbnail_url: team.thumbnail_url,
             allow_invite: team.allow_invite,
             allow_create_space: team.allow_create_space,
+            role,
         }
     }
 }

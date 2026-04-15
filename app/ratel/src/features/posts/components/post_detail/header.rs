@@ -31,9 +31,11 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: FeedPartition) -> E
 
     let post_user_pk = post.user_pk.clone();
     let admin_state = use_memo(move || {
-        let permissions: TeamGroupPermissions = detail.permissions.into();
-        let can_edit = permissions.contains(TeamGroupPermission::PostEdit);
-        let can_delete = permissions.contains(TeamGroupPermission::PostDelete);
+        let role = crate::features::social::pages::member::dto::TeamRole::from_legacy_permissions(
+            detail.permissions,
+        );
+        let can_edit = role.is_admin_or_owner();
+        let can_delete = role.is_admin_or_owner();
         let is_post_owner = user_ctx()
             .user
             .as_ref()
