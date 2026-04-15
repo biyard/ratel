@@ -125,6 +125,12 @@ export async function goto(page, url) {
   await page.waitForFunction(
     () => document.querySelector("[data-dioxus-id]") !== null,
   );
+  // Stabilization wait: [data-dioxus-id] is in SSR markup, so the check above
+  // doesn't guarantee WASM has bound onclick handlers. Without this wait,
+  // automated clicks fire on hydrated DOM but no Rust handler is listening.
+  // 1500ms is a conservative heuristic — replace if Dioxus exposes a real
+  // hydration-complete signal.
+  await page.waitForTimeout(1500);
 }
 
 /**

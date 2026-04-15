@@ -33,7 +33,9 @@ pub fn AppsSection(space_id: ReadSignal<SpacePartition>) -> Element {
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
 
-        section { class: "settings-section apps-section",
+        section {
+            class: "settings-section apps-section",
+            "data-testid": "apps-section",
             div { class: "settings-section__sublabel",
                 span { class: "settings-section__sublabel-text", "{tr.installed_apps}" }
                 span { class: "settings-section__sublabel-count", "{installed_count}" }
@@ -102,6 +104,9 @@ fn AppRow(
     };
     let name = app_type.translate(&lang());
     let desc = app_type.description(&lang());
+    let app_slug = format!("{:?}", app_type).to_lowercase();
+    let install_testid = format!("install-app-{}", app_slug);
+    let settings_testid = format!("settings-app-{}", app_slug);
 
     rsx! {
         div { class: "app-row",
@@ -130,6 +135,7 @@ fn AppRow(
                 if installed {
                     button {
                         class: "app-row-btn",
+                        "data-testid": "{settings_testid}",
                         disabled: in_progress,
                         onclick: move |e| onclick.call(e),
                         "{tr.settings_btn}"
@@ -137,6 +143,7 @@ fn AppRow(
                 } else {
                     button {
                         class: "app-row-btn app-row-btn--install",
+                        "data-testid": "{install_testid}",
                         disabled: in_progress,
                         onclick: move |e| onclick.call(e),
                         svg {
