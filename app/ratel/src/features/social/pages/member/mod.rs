@@ -3,6 +3,7 @@ pub mod components;
 pub mod config;
 pub mod controllers;
 pub mod dto;
+#[path = "views/i18n.rs"]
 pub mod i18n;
 pub use i18n::*;
 pub mod hooks;

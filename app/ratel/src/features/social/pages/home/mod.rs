@@ -4,6 +4,7 @@ pub mod controllers;
 pub mod hooks;
 pub mod layout;
 pub mod models;
+#[path = "views/i18n.rs"]
 pub mod i18n;
 #[cfg(not(feature = "server"))]
 pub mod interop;
