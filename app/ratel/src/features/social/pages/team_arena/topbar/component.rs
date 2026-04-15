@@ -323,6 +323,39 @@ pub fn ArenaTopbar(
                     },
                 }
 
+                if can_edit {
+                    HudButton {
+                        label: tr.subscription.to_string(),
+                        active: false,
+                        to: Route::TeamSettingSubscription {
+                            username: username.clone(),
+                        },
+                        icon: rsx! {
+                            svg {
+                                view_box: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_width: "2",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                rect {
+                                    x: "2",
+                                    y: "5",
+                                    width: "20",
+                                    height: "14",
+                                    rx: "2",
+                                }
+                                line {
+                                    x1: "2",
+                                    y1: "10",
+                                    x2: "22",
+                                    y2: "10",
+                                }
+                            }
+                        },
+                    }
+                }
+
                 button {
                     class: "arena-topbar__hud",
                     r#type: "button",

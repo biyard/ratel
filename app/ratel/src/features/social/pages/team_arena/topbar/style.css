@@ -466,4 +466,7 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
 @media (max-width: 420px) {
   .team-arena .arena-topbar__handle { display: none; }
   .team-arena .arena-topbar__hud { width: 32px; height: 32px; }
+  /* Mobile: drop the team-switcher chip entirely so the topbar fits the
+   * brand button + HUD actions without overflow. */
+  .team-arena .arena-topbar__switcher { display: none !important; }
 }

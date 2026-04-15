@@ -3,11 +3,11 @@ mod i18n;
 
 pub use i18n::*;
 
-use crate::features::membership::*;
 use crate::common::chrono::TimeZone;
 use crate::common::components::Card;
 use crate::common::components::{Button, ButtonStyle};
 use crate::features::membership::components::MembershipTier;
+use crate::features::membership::*;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct MembershipReceiptData {
